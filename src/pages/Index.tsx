@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Database, Users, Building } from "lucide-react";
 
 const Index = () => {
   return (
