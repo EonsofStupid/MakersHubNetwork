@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 export function MainNav() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false); // TODO: Replace with actual auth state
 
   useEffect(() => {
@@ -21,16 +22,22 @@ export function MainNav() {
       setIsScrolled(window.scrollY > 0);
     };
     window.addEventListener("scroll", handleScroll);
+
+    // Trigger initial animation after component mount
+    setTimeout(() => setIsLoaded(true), 100);
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
     <header
       className={cn(
-        "fixed top-0 w-full z-50 transition-all duration-300 ease-in-out",
-        isScrolled
-          ? "bg-background/80 backdrop-blur-md shadow-md py-2"
-          : "bg-transparent py-4"
+        "fixed top-0 w-full z-50 transition-all duration-400 ease-in-out",
+        isScrolled || isLoaded
+          ? "bg-background/80 backdrop-blur-md shadow-md py-2 animate-morph-header"
+          : "bg-transparent py-4",
+        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary before:to-secondary before:opacity-0 before:transition-opacity before:duration-400",
+        (isScrolled || isLoaded) && "before:opacity-10"
       )}
     >
       <div className="container mx-auto px-4">

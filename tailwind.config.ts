@@ -63,9 +63,18 @@ export default {
             transform: "translateY(0)",
           },
         },
+        "morph-header": {
+          "0%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "100%": {
+            clipPath: "polygon(0 0, 100% 0, 95% 100%, 5% 100%)",
+          },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out",
+        "morph-header": "morph-header 0.4s ease-in-out forwards",
       },
     },
   },
