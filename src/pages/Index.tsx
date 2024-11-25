@@ -1,9 +1,11 @@
+import { MainNav } from "@/components/MainNav";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Database, Users, Building } from "lucide-react";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
+      <MainNav />
       <div className="container px-4 py-24 mx-auto">
         <div className="max-w-3xl mx-auto text-center animate-fade-up">
           <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
