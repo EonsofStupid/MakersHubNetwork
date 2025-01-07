@@ -51,6 +51,30 @@ export type Database = {
         }
         Relationships: []
       }
+      role_permissions: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          subject: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          subject: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          subject?: string
+        }
+        Relationships: []
+      }
       sensors: {
         Row: {
           accuracy: string | null
@@ -126,6 +150,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -134,7 +179,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "editor" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
