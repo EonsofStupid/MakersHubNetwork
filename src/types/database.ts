@@ -37,6 +37,23 @@ export interface Component {
   updated_at: string;
 }
 
+export type Database = {
+  public: {
+    Tables: {
+      sensors: {
+        Row: Sensor;
+        Insert: Omit<Sensor, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Sensor, 'id'>>;
+      };
+      components: {
+        Row: Component;
+        Insert: Omit<Component, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Component, 'id'>>;
+      };
+    };
+  };
+};
+
 export type DatabaseTables = {
   sensors: Sensor;
   components: Component;
