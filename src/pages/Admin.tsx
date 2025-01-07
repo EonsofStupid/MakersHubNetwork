@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
-import { importData } from '@/lib/supabase';
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Admin = () => {
@@ -22,7 +22,6 @@ const Admin = () => {
       if (file.name.endsWith('.json')) {
         data = JSON.parse(content);
       } else if (file.name.endsWith('.csv')) {
-        // Simple CSV parsing - you might want to use a library like Papa Parse for more robust parsing
         const lines = content.split('\n');
         const headers = lines[0].split(',');
         data = lines.slice(1).map(line => {
@@ -35,7 +34,6 @@ const Admin = () => {
       } else if (file.name.endsWith('.xml')) {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(content, 'text/xml');
-        // Convert XML to JSON - this is a simple example
         data = Array.from(xmlDoc.getElementsByTagName('item')).map(item => {
           const obj: Record<string, any> = {};
           Array.from(item.children).forEach(child => {
@@ -45,7 +43,12 @@ const Admin = () => {
         });
       }
 
-      await importData(data, selectedTable);
+      const { error } = await supabase
+        .from(selectedTable)
+        .insert(data);
+
+      if (error) throw error;
+
       toast({
         title: 'Success',
         description: 'Data imported successfully',
