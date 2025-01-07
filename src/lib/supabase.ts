@@ -4,6 +4,9 @@ import { Database } from '@/types/database';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+if (!supabaseUrl) throw new Error('VITE_SUPABASE_URL is not defined');
+if (!supabaseKey) throw new Error('VITE_SUPABASE_ANON_KEY is not defined');
+
 export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
 export async function uploadFile(file: File, bucket: string) {
