@@ -5,10 +5,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Database } from '@/integrations/supabase/types';
+
+type TableNames = keyof Database['public']['Tables'];
 
 const Admin = () => {
   const [importing, setImporting] = useState(false);
-  const [selectedTable, setSelectedTable] = useState('');
+  const [selectedTable, setSelectedTable] = useState<TableNames | ''>('');
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -72,7 +75,7 @@ const Admin = () => {
           <CardDescription>Import data from CSV, JSON, or XML files</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Select value={selectedTable} onValueChange={setSelectedTable}>
+          <Select value={selectedTable} onValueChange={(value) => setSelectedTable(value as TableNames)}>
             <SelectTrigger>
               <SelectValue placeholder="Select table" />
             </SelectTrigger>

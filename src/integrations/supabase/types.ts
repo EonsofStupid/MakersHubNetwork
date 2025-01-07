@@ -9,7 +9,123 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      components: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number | null
+          specifications: Json | null
+          trending: boolean | null
+          updated_at: string | null
+          value_rating: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price?: number | null
+          specifications?: Json | null
+          trending?: boolean | null
+          updated_at?: string | null
+          value_rating?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number | null
+          specifications?: Json | null
+          trending?: boolean | null
+          updated_at?: string | null
+          value_rating?: number | null
+        }
+        Relationships: []
+      }
+      sensors: {
+        Row: {
+          accuracy: string | null
+          average_price: number | null
+          average_rating: number | null
+          connector_type: string | null
+          cons: string[] | null
+          created_at: string | null
+          dimensions: string | null
+          english_reviews_count: number | null
+          firmware_compatibility: string[] | null
+          has_self_test: boolean | null
+          id: string
+          image_url: string | null
+          includes_alarm: boolean | null
+          mounting_type: string | null
+          printer_models: string[] | null
+          probe_material: string | null
+          pros: string[] | null
+          site_rating: number | null
+          summary: string | null
+          type: string
+          updated_at: string | null
+          weight: string | null
+        }
+        Insert: {
+          accuracy?: string | null
+          average_price?: number | null
+          average_rating?: number | null
+          connector_type?: string | null
+          cons?: string[] | null
+          created_at?: string | null
+          dimensions?: string | null
+          english_reviews_count?: number | null
+          firmware_compatibility?: string[] | null
+          has_self_test?: boolean | null
+          id?: string
+          image_url?: string | null
+          includes_alarm?: boolean | null
+          mounting_type?: string | null
+          printer_models?: string[] | null
+          probe_material?: string | null
+          pros?: string[] | null
+          site_rating?: number | null
+          summary?: string | null
+          type: string
+          updated_at?: string | null
+          weight?: string | null
+        }
+        Update: {
+          accuracy?: string | null
+          average_price?: number | null
+          average_rating?: number | null
+          connector_type?: string | null
+          cons?: string[] | null
+          created_at?: string | null
+          dimensions?: string | null
+          english_reviews_count?: number | null
+          firmware_compatibility?: string[] | null
+          has_self_test?: boolean | null
+          id?: string
+          image_url?: string | null
+          includes_alarm?: boolean | null
+          mounting_type?: string | null
+          printer_models?: string[] | null
+          probe_material?: string | null
+          pros?: string[] | null
+          site_rating?: number | null
+          summary?: string | null
+          type?: string
+          updated_at?: string | null
+          weight?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
