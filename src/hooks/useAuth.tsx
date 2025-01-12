@@ -9,7 +9,6 @@ import {
   selectIsLoading,
   selectError,
   selectIsAuthenticated,
-  selectIsAdmin,
 } from "@/stores/auth/selectors/auth.selectors";
 
 export const useAuth = () => {
@@ -20,7 +19,6 @@ export const useAuth = () => {
   const isLoading = useAuthStore(selectIsLoading);
   const error = useAuthStore(selectError);
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
-  const isAdmin = useAuthStore(selectIsAdmin);
   
   const {
     setUser,
@@ -30,7 +28,6 @@ export const useAuth = () => {
     setStatus,
     setInitialized,
     logout,
-    hasRole,
   } = useAuthStore();
 
   useEffect(() => {
@@ -50,12 +47,15 @@ export const useAuth = () => {
           
           if (rolesError) throw rolesError;
           setRoles(userRoles?.map(ur => ur.role) || []);
+          setStatus('authenticated');
+        } else {
+          setStatus('unauthenticated');
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
         setError((error as Error).message);
+        setStatus('unauthenticated');
       } finally {
-        setStatus('idle');
         setInitialized(true);
       }
     };
@@ -67,6 +67,7 @@ export const useAuth = () => {
         setUser(currentSession?.user ?? null);
 
         if (event === "SIGNED_IN" && currentSession?.user) {
+          setStatus('loading');
           const { data: userRoles, error: rolesError } = await supabase
             .from("user_roles")
             .select("role")
@@ -75,13 +76,16 @@ export const useAuth = () => {
           if (rolesError) {
             console.error("Error fetching roles:", rolesError);
             setError(rolesError.message);
+            setStatus('unauthenticated');
           } else {
             setRoles(userRoles?.map(ur => ur.role) || []);
+            setStatus('authenticated');
           }
         }
 
         if (event === "SIGNED_OUT") {
           setRoles([]);
+          setStatus('unauthenticated');
           navigate("/login");
         }
       }
@@ -101,8 +105,6 @@ export const useAuth = () => {
     isLoading,
     error,
     isAuthenticated,
-    isAdmin,
-    hasRole,
     logout,
   };
 };
