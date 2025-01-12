@@ -7,3 +7,5 @@ export const selectIsLoading = (state: AuthStore) => state.isLoading;
 export const selectError = (state: AuthStore) => state.error;
 export const selectIsInitialized = (state: AuthStore) => state.initialized;
 export const selectIsAuthenticated = (state: AuthStore) => !!state.user;
+export const selectHasRole = (role: string) => (state: AuthStore) => 
+  state.roles.includes(role as any);

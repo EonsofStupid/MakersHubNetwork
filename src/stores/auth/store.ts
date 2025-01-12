@@ -1,15 +1,45 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { createAuthSlice } from "./slices/auth.slice";
+import { createUserSlice } from "./slices/user.slice";
+import { createSessionSlice } from "./slices/session.slice";
+import { createUiSlice } from "./slices/ui.slice";
 import { authStorage } from "./middleware/persist.middleware";
 import { AuthStore } from "./types/auth.types";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useAuthStore = create<AuthStore>()(
   devtools(
     persist(
       subscribeWithSelector((...args) => ({
-        ...createAuthSlice(...args),
+        ...createUserSlice(...args),
+        ...createSessionSlice(...args),
+        ...createUiSlice(...args),
+        clearState: () => {
+          args[0]({
+            user: null,
+            session: null,
+            roles: [],
+            isLoading: false,
+            error: null,
+            initialized: true,
+          });
+        },
+        logout: async () => {
+          try {
+            await supabase.auth.signOut();
+            args[0]({
+              user: null,
+              session: null,
+              roles: [],
+              error: null,
+              isLoading: false,
+              initialized: true,
+            });
+          } catch (error) {
+            args[0]({ error: (error as Error).message });
+          }
+        },
       })),
       {
         name: "auth-storage",
