@@ -1,6 +1,8 @@
-import { User, Session } from "@supabase/supabase-js";
-import { Database } from "@/integrations/supabase/types";
-import { AuthStateSchemaType, AuthActionsSchemaType } from "../schemas/actions.schema";
+import { StateCreator } from "zustand";
+import { AuthState, AuthActions, AuthStore, AuthStatus } from "../types/auth.types";
+import { supabase } from "@/integrations/supabase/client";
+import { AuthError, AuthApiError } from "@supabase/supabase-js";
+import { AuthStateSchema } from "../schemas/state.schema";
 
 export type UserRole = Database["public"]["Enums"]["user_role"];
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
