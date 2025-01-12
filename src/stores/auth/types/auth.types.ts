@@ -2,10 +2,7 @@
 
 import { User, Session } from "@supabase/supabase-js";
 
-// Example user-role enumeration
 export type UserRole = "admin" | "editor" | "viewer";
-
-// Example status
 export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 
 /**
@@ -18,6 +15,12 @@ export interface AuthState {
   status: AuthStatus;
   error: string | null;
   initialized: boolean;
+
+  /**
+   * Additional boolean for easy "loading" checks
+   * even if you also have 'status: "loading"'.
+   */
+  isLoading: boolean;
 }
 
 /**
@@ -30,6 +33,12 @@ export interface AuthActions {
   setStatus: (status: AuthStatus) => void;
   setError: (error: string | null) => void;
   setInitialized: (initialized: boolean) => void;
+
+  /**
+   * setLoading - toggles the isLoading boolean
+   */
+  setLoading: (isLoading: boolean) => void;
+
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }

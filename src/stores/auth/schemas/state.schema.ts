@@ -1,28 +1,21 @@
+// src/stores/auth/schemas/state.schema.ts
+
 import { z } from "zod";
 import { User, Session } from "@supabase/supabase-js";
-import { Database } from "@/integrations/supabase/types";
 
-// Define the UserRole enum schema based on Supabase types
-export const UserRoleSchema = z.enum(['admin', 'editor', 'viewer'] as const);
-export type UserRole = z.infer<typeof UserRoleSchema>;
-
-// Define the AuthStatus enum schema
-export const AuthStatusSchema = z.enum([
-  'idle',
-  'loading',
-  'authenticated',
-  'unauthenticated'
-] as const);
-export type AuthStatus = z.infer<typeof AuthStatusSchema>;
-
-// Define the base state schema
+// Some existing code omitted for brevity
+// ...
+// The base state schema should include `isLoading`.
 export const AuthStateSchema = z.object({
   user: z.custom<User>().nullable(),
   session: z.custom<Session>().nullable(),
-  roles: z.array(UserRoleSchema),
-  status: AuthStatusSchema,
+  roles: z.array(z.enum(["admin", "editor", "viewer"])),
+  status: z.enum(["idle", "loading", "authenticated", "unauthenticated"]),
   error: z.string().nullable(),
   initialized: z.boolean(),
+
+  // Add `isLoading` here
+  isLoading: z.boolean(),
 });
 
-export type AuthStateSchemaType = z.infer<typeof AuthStateSchema>;
+// ...
