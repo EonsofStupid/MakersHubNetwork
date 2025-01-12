@@ -23,21 +23,24 @@ export const useAuth = () => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Get initial session
+        setLoading(true);
         const { data: { session: initialSession } } = await supabase.auth.getSession();
+        
         if (initialSession) {
           setSession(initialSession);
           setUser(initialSession.user);
           
           // Fetch user roles
-          const { data: userRoles } = await supabase
+          const { data: userRoles, error: rolesError } = await supabase
             .from("user_roles")
             .select("role")
             .eq("user_id", initialSession.user.id);
           
+          if (rolesError) throw rolesError;
           setRoles(userRoles?.map(ur => ur.role) || []);
         }
       } catch (error) {
+        console.error("Auth initialization error:", error);
         setError((error as Error).message);
       } finally {
         setLoading(false);
@@ -48,17 +51,20 @@ export const useAuth = () => {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
+        console.log("Auth state changed:", event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
-        if (event === "SIGNED_IN") {
-          // Fetch user roles on sign in
-          if (currentSession?.user) {
-            const { data: userRoles } = await supabase
-              .from("user_roles")
-              .select("role")
-              .eq("user_id", currentSession.user.id);
-            
+        if (event === "SIGNED_IN" && currentSession?.user) {
+          const { data: userRoles, error: rolesError } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", currentSession.user.id);
+          
+          if (rolesError) {
+            console.error("Error fetching roles:", rolesError);
+            setError(rolesError.message);
+          } else {
             setRoles(userRoles?.map(ur => ur.role) || []);
           }
         }
