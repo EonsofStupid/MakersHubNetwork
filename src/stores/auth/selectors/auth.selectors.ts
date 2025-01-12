@@ -1,14 +1,4 @@
 import { AuthStore } from "../types/auth.types";
-import { useAuth } from "@/hooks/useAuth";
-import {
-  selectUser,
-  selectSession,
-  selectRoles,
-  selectIsLoading,
-  selectError,
-  selectIsAuthenticated,
-} from "@/stores/auth/selectors/auth.selectors";
-
 
 export const selectUser = (state: AuthStore) => state.user;
 export const selectSession = (state: AuthStore) => state.session;
