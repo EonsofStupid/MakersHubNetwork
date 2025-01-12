@@ -6,7 +6,7 @@ export const createSessionSlice: StateCreator<
   [],
   [],
   Pick<AuthState, "session" | "initialized"> & Pick<AuthActions, "setSession" | "setInitialized">
-> = (set) => ({
+> = (set, get, _store) => ({
   session: null,
   initialized: false,
   setSession: (session) => set({ session }),

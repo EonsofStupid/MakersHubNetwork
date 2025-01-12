@@ -6,7 +6,7 @@ export const createUiSlice: StateCreator<
   [],
   [],
   Pick<AuthState, "isLoading" | "error"> & Pick<AuthActions, "setLoading" | "setError">
-> = (set) => ({
+> = (set, get, _store) => ({
   isLoading: true,
   error: null,
   setLoading: (isLoading) => set({ isLoading }),
