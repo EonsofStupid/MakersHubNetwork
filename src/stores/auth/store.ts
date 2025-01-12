@@ -15,6 +15,14 @@ export const useAuthStore = create<AuthStore>()(
         ...createUserSlice(...args),
         ...createSessionSlice(...args),
         ...createUiSlice(...args),
+        hasRole: (role) => {
+          const state = args[0]();
+          return state.roles.includes(role);
+        },
+        isAdmin: () => {
+          const state = args[0]();
+          return state.roles.includes('admin');
+        },
         clearState: () => {
           args[0]({
             user: null,

@@ -9,3 +9,5 @@ export const selectIsInitialized = (state: AuthStore) => state.initialized;
 export const selectIsAuthenticated = (state: AuthStore) => !!state.user;
 export const selectHasRole = (role: string) => (state: AuthStore) => 
   state.roles.includes(role as any);
+export const selectIsAdmin = (state: AuthStore) => 
+  state.roles.includes('admin');

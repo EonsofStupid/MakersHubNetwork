@@ -21,6 +21,8 @@ export interface AuthActions {
   setInitialized: (initialized: boolean) => void;
   logout: () => Promise<void>;
   clearState: () => void;
+  hasRole: (role: UserRole) => boolean;
+  isAdmin: () => boolean;
 }
 
 export type AuthStore = AuthState & AuthActions;
