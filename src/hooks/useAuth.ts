@@ -2,15 +2,25 @@ import { useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import {
+  selectUser,
+  selectSession,
+  selectRoles,
+  selectIsLoading,
+  selectError,
+  selectIsAuthenticated,
+} from "@/stores/auth/selectors/auth.selectors";
 
 export const useAuth = () => {
   const navigate = useNavigate();
+  const user = useAuthStore(selectUser);
+  const session = useAuthStore(selectSession);
+  const roles = useAuthStore(selectRoles);
+  const isLoading = useAuthStore(selectIsLoading);
+  const error = useAuthStore(selectError);
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  
   const {
-    user,
-    session,
-    roles,
-    isLoading,
-    error,
     setUser,
     setSession,
     setRoles,
@@ -30,7 +40,6 @@ export const useAuth = () => {
           setSession(initialSession);
           setUser(initialSession.user);
           
-          // Fetch user roles
           const { data: userRoles, error: rolesError } = await supabase
             .from("user_roles")
             .select("role")
@@ -48,7 +57,6 @@ export const useAuth = () => {
       }
     };
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         console.log("Auth state changed:", event);
@@ -89,7 +97,7 @@ export const useAuth = () => {
     roles,
     isLoading,
     error,
-    isAuthenticated: !!user,
+    isAuthenticated,
     logout,
   };
 };
