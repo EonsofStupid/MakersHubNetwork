@@ -34,10 +34,12 @@ export const createAuthSlice: StateCreator<
     try {
       set({ status: 'loading' });
       
+      // Get initial session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
 
       if (session) {
+        // Get user roles if authenticated
         const { data: roles, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
@@ -74,6 +76,7 @@ export const createAuthSlice: StateCreator<
       if (authError) throw authError;
       if (!session || !user) throw new Error('No session or user returned');
 
+      // Get user roles
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('role')
