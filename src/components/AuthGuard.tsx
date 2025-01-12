@@ -1,15 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  selectUser,
-  selectSession,
-  selectRoles,
-  selectIsLoading,
-  selectError,
-  selectIsAuthenticated,
-} from "@/stores/auth/selectors/auth.selectors";
-
+import { UserRole } from "@/stores/auth/types/auth.types";
 
 interface AuthGuardProps {
   children: React.ReactNode;
