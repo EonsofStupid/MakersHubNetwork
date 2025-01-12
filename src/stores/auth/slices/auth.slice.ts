@@ -7,7 +7,7 @@ export const createAuthSlice: StateCreator<
   [],
   [],
   AuthState & AuthActions
-> = (set) => ({
+> = (set, get) => ({
   // Initial state
   user: null,
   session: null,
@@ -23,6 +23,8 @@ export const createAuthSlice: StateCreator<
   setError: (error) => set({ error }),
   setLoading: (isLoading) => set({ isLoading }),
   setInitialized: (initialized) => set({ initialized }),
+  hasRole: (role) => get().roles.includes(role),
+  isAdmin: () => get().roles.includes('admin'),
   clearState: () => set({
     user: null,
     session: null,

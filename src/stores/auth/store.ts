@@ -11,20 +11,14 @@ import { supabase } from "@/integrations/supabase/client";
 export const useAuthStore = create<AuthStore>()(
   devtools(
     persist(
-      subscribeWithSelector((...args) => ({
-        ...createUserSlice(...args),
-        ...createSessionSlice(...args),
-        ...createUiSlice(...args),
-        hasRole: (role) => {
-          const state = args[0]();
-          return state.roles.includes(role);
-        },
-        isAdmin: () => {
-          const state = args[0]();
-          return state.roles.includes('admin');
-        },
+      subscribeWithSelector((set, get) => ({
+        ...createUserSlice(set, get),
+        ...createSessionSlice(set, get),
+        ...createUiSlice(set, get),
+        hasRole: (role) => get().roles.includes(role),
+        isAdmin: () => get().roles.includes('admin'),
         clearState: () => {
-          args[0]({
+          set({
             user: null,
             session: null,
             roles: [],
@@ -36,7 +30,7 @@ export const useAuthStore = create<AuthStore>()(
         logout: async () => {
           try {
             await supabase.auth.signOut();
-            args[0]({
+            set({
               user: null,
               session: null,
               roles: [],
@@ -45,7 +39,7 @@ export const useAuthStore = create<AuthStore>()(
               initialized: true,
             });
           } catch (error) {
-            args[0]({ error: (error as Error).message });
+            set({ error: (error as Error).message });
           }
         },
       })),
