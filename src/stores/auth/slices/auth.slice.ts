@@ -23,6 +23,14 @@ export const createAuthSlice: StateCreator<
   setError: (error) => set({ error }),
   setLoading: (isLoading) => set({ isLoading }),
   setInitialized: (initialized) => set({ initialized }),
+  clearState: () => set({
+    user: null,
+    session: null,
+    roles: [],
+    error: null,
+    isLoading: false,
+    initialized: true,
+  }),
   logout: async () => {
     try {
       await supabase.auth.signOut();
