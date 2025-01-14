@@ -49,3 +49,45 @@
     @apply font-heading;
   }
 }
+
+@layer components {
+  .data-stream {
+    @apply h-full w-full;
+    background-image: linear-gradient(0deg, transparent 0%, rgba(0, 240, 255, 0.1) 50%, transparent 100%);
+    background-size: 50px 100%;
+    animation: stream 20s linear infinite;
+  }
+
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(to right, rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+}
+
+@keyframes stream {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  animation: gradient 15s ease infinite;
+  background-size: 400% 400%;
+}
