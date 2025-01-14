@@ -4,19 +4,11 @@ import { ArrowRight, Database, Users, Building } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      <div className="cyberpunk-bg"></div>
-      <div className="noise-overlay"></div>
-      <div className="scanlines"></div>
-      
+    <div className="min-h-screen">
       <MainNav />
-      
-      <div className="container px-4 py-24 mx-auto relative">
+      <div className="container px-4 py-24 mx-auto">
         <div className="max-w-3xl mx-auto text-center animate-fade-up">
-          <h1 
-            className="text-5xl font-bold mb-6 glitch-text" 
-            data-text="Build Your Dream 3D Printer"
-          >
+          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Build Your Dream 3D Printer
           </h1>
           <p className="text-xl text-muted-foreground mb-8">
@@ -37,7 +29,7 @@ const Index = () => {
           {features.map((feature, i) => (
             <div
               key={feature.title}
-              className="p-6 rounded-lg bg-card/80 backdrop-blur-sm animate-fade-up"
+              className="p-6 rounded-lg bg-card animate-fade-up"
               style={{ animationDelay: `${i * 100}ms` }}
             >
               <feature.icon className="h-12 w-12 text-primary mb-4" />
