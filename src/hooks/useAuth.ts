@@ -25,7 +25,7 @@ export const useAuth = () => {
     setSession,
     setRoles,
     setError,
-    setStatus,
+    setLoading,
     setInitialized,
     logout,
   } = useAuthStore();
@@ -33,7 +33,7 @@ export const useAuth = () => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        setStatus('loading');
+        setLoading(true);
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         
         if (initialSession) {
@@ -52,7 +52,7 @@ export const useAuth = () => {
         console.error("Auth initialization error:", error);
         setError((error as Error).message);
       } finally {
-        setStatus('idle');
+        setLoading(false);
         setInitialized(true);
       }
     };
@@ -89,7 +89,7 @@ export const useAuth = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, setUser, setSession, setRoles, setError, setStatus, setInitialized]);
+  }, [navigate, setUser, setSession, setRoles, setError, setLoading, setInitialized]);
 
   return {
     user,
