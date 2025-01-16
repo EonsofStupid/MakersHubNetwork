@@ -76,7 +76,7 @@ export const BackgroundEffect = () => {
               value: 60,
               density: {
                 enable: true,
-                factor: 800,
+                area: 800,
               },
             },
             opacity: {
@@ -84,7 +84,7 @@ export const BackgroundEffect = () => {
               animation: {
                 enable: true,
                 speed: 1,
-                minimumValue: 0.1,
+                min: 0.1,
               },
             },
             size: {
@@ -92,7 +92,7 @@ export const BackgroundEffect = () => {
               animation: {
                 enable: true,
                 speed: 2,
-                minimumValue: 0.1,
+                min: 0.1,
               },
             },
             shape: {
