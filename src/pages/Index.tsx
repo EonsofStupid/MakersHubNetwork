@@ -1,12 +1,10 @@
 import { MainNav } from "@/components/MainNav";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Database, Users, Building } from "lucide-react";
-import { BackgroundEffect } from "@/components/BackgroundEffect";
 
 const Index = () => {
   return (
-    <div className="min-h-screen relative">
-      <BackgroundEffect />
+    <div className="min-h-screen relative bg-[#094B51]">
       <MainNav />
       <div className="container px-4 py-24 mx-auto">
         <div className="max-w-3xl mx-auto text-center animate-fade-up">
