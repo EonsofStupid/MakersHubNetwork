@@ -1,10 +1,12 @@
 import { MainNav } from "@/components/MainNav";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Database, Users, Building } from "lucide-react";
+import { BackgroundEffect } from "@/components/BackgroundEffect";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      <BackgroundEffect />
       <MainNav />
       <div className="container px-4 py-24 mx-auto">
         <div className="max-w-3xl mx-auto text-center animate-fade-up">
@@ -29,7 +31,7 @@ const Index = () => {
           {features.map((feature, i) => (
             <div
               key={feature.title}
-              className="p-6 rounded-lg bg-card animate-fade-up"
+              className="p-6 rounded-lg bg-card/50 backdrop-blur-sm animate-fade-up"
               style={{ animationDelay: `${i * 100}ms` }}
             >
               <feature.icon className="h-12 w-12 text-primary mb-4" />
