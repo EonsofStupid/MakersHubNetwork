@@ -11,6 +11,7 @@ export interface AuthState {
   status: AuthStatus;
   error: string | null;
   initialized: boolean;
+  isLoading: boolean;
 }
 
 export interface AuthActions {
@@ -20,6 +21,7 @@ export interface AuthActions {
   setError: (error: string | null) => void;
   setStatus: (status: AuthStatus) => void;
   setInitialized: (initialized: boolean) => void;
+  setLoading: (isLoading: boolean) => void;
   hasRole: (role: UserRole) => boolean;
   isAdmin: () => boolean;
   initialize: () => Promise<void>;

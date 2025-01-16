@@ -76,16 +76,24 @@ export const BackgroundEffect = () => {
               value: 60,
               density: {
                 enable: true,
-                value_area: 800,
+                area: 800,
               },
             },
             opacity: {
               value: 0.5,
-              random: true,
+              animation: {
+                enable: true,
+                minimumValue: 0.1,
+                speed: 1,
+              },
             },
             size: {
               value: { min: 1, max: 3 },
-              random: true,
+              animation: {
+                enable: true,
+                speed: 2,
+                minimumValue: 0.1,
+              },
             },
             shape: {
               type: "circle",
