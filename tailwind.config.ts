@@ -71,10 +71,25 @@ export default {
             clipPath: "polygon(0 0, 100% 0, 95% 100%, 5% 100%)",
           },
         },
+        gradient: {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+          "100%": { backgroundPosition: "0% 50%" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-20px)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out",
         "morph-header": "morph-header 0.4s ease-in-out forwards",
+        "gradient": "gradient 15s ease infinite",
+        "float": "float 6s ease-in-out infinite",
+        "float-delayed": "float 6s ease-in-out infinite 3s",
+      },
+      backgroundSize: {
+        "300%": "300% 300%",
       },
     },
   },
