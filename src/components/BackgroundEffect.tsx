@@ -11,7 +11,7 @@ export const BackgroundEffect = () => {
   return (
     <div className="fixed inset-0 -z-10">
       {/* Base Background Color */}
-      <div className="absolute inset-0 bg-[#0F0A2E] overflow-hidden">
+      <div className="absolute inset-0 bg-[#094B51] overflow-hidden">
         {/* Animated Gradient Overlay */}
         <div 
           className="absolute inset-0 opacity-30 bg-gradient-to-r from-[#0F0A2E] via-[#9F00FF] to-[#E1F500] bg-[length:300%_300%] animate-gradient"
