@@ -80,6 +80,10 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-20px)" },
         },
+        pulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out",
@@ -87,6 +91,7 @@ export default {
         "gradient": "gradient 15s ease infinite",
         "float": "float 6s ease-in-out infinite",
         "float-delayed": "float 6s ease-in-out infinite 3s",
+        "pulse-slow": "pulse 4s ease-in-out infinite",
       },
       backgroundSize: {
         "300%": "300% 300%",
