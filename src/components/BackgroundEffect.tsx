@@ -78,8 +78,7 @@ export const BackgroundEffect = () => {
               value: 80,
               density: {
                 enable: true,
-                width: 800,
-                height: 800
+                area: 800
               }
             },
             color: {
@@ -96,7 +95,7 @@ export const BackgroundEffect = () => {
                 startValue: "max",
                 destroy: "min",
                 sync: false,
-                minimumValue: 0.1
+                min: 0.1
               }
             },
             size: {
@@ -107,7 +106,7 @@ export const BackgroundEffect = () => {
                 startValue: "min",
                 destroy: "max",
                 sync: false,
-                minimumValue: 0.1
+                min: 0.1
               }
             },
             links: {
@@ -129,7 +128,7 @@ export const BackgroundEffect = () => {
               trail: {
                 enable: true,
                 length: 4,
-                fillColor: "#094B51",
+                color: "#094B51",
               },
             },
           },
