@@ -9,36 +9,28 @@ export const createAuthSlice: StateCreator<
   [],
   [],
   AuthStore
-> = (set, get, _store) => {
+> = (set, get) => {
   // Validate initial state with Zod schema
-  const initialState = AuthStateSchema.parse({
+  const initialState: AuthStore = {
     user: null,
     session: null,
     roles: [],
-    status: 'idle',
+    status: 'idle' as AuthStatus,
     error: null,
     initialized: false,
-  });
-
-  return {
-    ...initialState,
-
-    // State setters with validation
+    isLoading: false,
     setUser: (user) => set({ user }),
     setSession: (session) => set({ session }),
     setRoles: (roles) => set({ roles }),
     setError: (error) => set({ error }),
     setStatus: (status) => set({ status }),
     setInitialized: (initialized) => set({ initialized }),
-
-    // Computed getters
+    setLoading: (isLoading) => set({ isLoading }),
     hasRole: (role) => get().roles.includes(role),
     isAdmin: () => get().roles.includes('admin'),
-
-    // Actions
     initialize: async () => {
       try {
-        set({ status: 'loading' });
+        set({ status: 'loading', isLoading: true });
         
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
@@ -66,13 +58,12 @@ export const createAuthSlice: StateCreator<
           status: 'unauthenticated'
         });
       } finally {
-        set({ initialized: true });
+        set({ isLoading: false, initialized: true });
       }
     },
-
     login: async (email: string, password: string) => {
       try {
-        set({ status: 'loading', error: null });
+        set({ status: 'loading', isLoading: true, error: null });
         
         const { data: { session, user }, error: authError } = 
           await supabase.auth.signInWithPassword({ email, password });
@@ -99,24 +90,24 @@ export const createAuthSlice: StateCreator<
           error: error instanceof AuthError ? error.message : 'An error occurred during login',
           status: 'unauthenticated'
         });
+      } finally {
+        set({ isLoading: false });
       }
     },
-
     clearState: () => {
-      const clearedState = AuthStateSchema.parse({
+      set({
         user: null,
         session: null,
         roles: [],
         error: null,
         status: 'idle',
         initialized: true,
+        isLoading: false,
       });
-      set(clearedState);
     },
-
     logout: async () => {
       try {
-        set({ status: 'loading' });
+        set({ status: 'loading', isLoading: true });
         await supabase.auth.signOut();
         get().clearState();
       } catch (error) {
@@ -124,7 +115,11 @@ export const createAuthSlice: StateCreator<
           error: error instanceof AuthError ? error.message : 'An error occurred during logout',
           status: 'unauthenticated'
         });
+      } finally {
+        set({ isLoading: false });
       }
     },
   };
+
+  return initialState;
 };
