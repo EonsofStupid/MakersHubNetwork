@@ -95,7 +95,7 @@ export const BackgroundEffect = () => {
                 startValue: "max",
                 destroy: "min",
                 sync: false,
-                minimum: 0.1
+                minimumValue: 0.1
               }
             },
             size: {
@@ -106,7 +106,7 @@ export const BackgroundEffect = () => {
                 startValue: "min",
                 destroy: "max",
                 sync: false,
-                minimum: 0.1
+                minimumValue: 0.1
               }
             },
             links: {
@@ -128,7 +128,7 @@ export const BackgroundEffect = () => {
               trail: {
                 enable: true,
                 length: 4,
-                color: "#094B51",
+                fillColor: "#094B51",
               },
             },
           },
