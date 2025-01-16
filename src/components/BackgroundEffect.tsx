@@ -76,23 +76,23 @@ export const BackgroundEffect = () => {
               value: 60,
               density: {
                 enable: true,
-                area: 800,
+                value: 800,
               },
             },
             opacity: {
               value: 0.5,
-              animation: {
+              anim: {
                 enable: true,
-                minimumValue: 0.1,
                 speed: 1,
+                minValue: 0.1,
               },
             },
             size: {
               value: { min: 1, max: 3 },
-              animation: {
+              anim: {
                 enable: true,
                 speed: 2,
-                minimumValue: 0.1,
+                minValue: 0.1,
               },
             },
             shape: {
