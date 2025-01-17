@@ -52,7 +52,7 @@ export class SupabaseService {
       if (error) throw error;
 
       return {
-        data: (data as unknown) as Row<T>[],
+        data: data as Row<T>[],
         error: null,
         status: 200,
       };
@@ -70,13 +70,13 @@ export class SupabaseService {
       const { data, error } = await supabase
         .from(table)
         .select(columns || '*')
-        .eq('id' as keyof Tables[T]['Row'], id)
+        .eq('id' as string, id)
         .maybeSingle();
 
       if (error) throw error;
 
       return {
-        data: (data as unknown) as Row<T>,
+        data: data as Row<T>,
         error: null,
         status: 200,
       };
@@ -92,14 +92,14 @@ export class SupabaseService {
     try {
       const { data: inserted, error } = await supabase
         .from(table)
-        .insert(data as unknown as Tables[T]['Insert'])
+        .insert(data)
         .select()
         .single();
 
       if (error) throw error;
 
       return {
-        data: (inserted as unknown) as Row<T>,
+        data: inserted as Row<T>,
         error: null,
         status: 201,
       };
@@ -116,15 +116,15 @@ export class SupabaseService {
     try {
       const { data: updated, error } = await supabase
         .from(table)
-        .update(data as unknown as Tables[T]['Update'])
-        .eq('id' as keyof Tables[T]['Row'], id)
+        .update(data)
+        .eq('id' as string, id)
         .select()
         .single();
 
       if (error) throw error;
 
       return {
-        data: (updated as unknown) as Row<T>,
+        data: updated as Row<T>,
         error: null,
         status: 200,
       };
@@ -141,7 +141,7 @@ export class SupabaseService {
       const { error } = await supabase
         .from(table)
         .delete()
-        .eq('id' as keyof Tables[T]['Row'], id);
+        .eq('id' as string, id);
 
       if (error) throw error;
 
@@ -167,8 +167,8 @@ export class SupabaseService {
         { event: '*', schema: 'public', table, filter },
         (payload) => {
           callback({
-            new: (payload.new as unknown) as Row<T>,
-            old: (payload.old as unknown) as Row<T> | null,
+            new: payload.new as Row<T>,
+            old: payload.old as Row<T> | null,
             eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
           });
         }
