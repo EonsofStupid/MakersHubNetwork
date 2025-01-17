@@ -27,10 +27,10 @@ export function useSupabase<T extends TableName>(table: T) {
     }
   };
 
-  const getOne = async (id: string, columns?: string) => {
+  const getById = async (id: string, columns?: string) => {
     setIsLoading(true);
     try {
-      return await supabaseService.getOne(table, id, columns);
+      return await supabaseService.getById(table, id, columns);
     } catch (error) {
       handleError(error);
       return { data: null, error, status: 500 };
@@ -39,10 +39,10 @@ export function useSupabase<T extends TableName>(table: T) {
     }
   };
 
-  const insert = async (data: Insert<T>) => {
+  const create = async (data: Insert<T>) => {
     setIsLoading(true);
     try {
-      return await supabaseService.insert(table, data);
+      return await supabaseService.create(table, data);
     } catch (error) {
       handleError(error);
       return { data: null, error, status: 500 };
@@ -79,8 +79,8 @@ export function useSupabase<T extends TableName>(table: T) {
     new: Row<T>;
     old: Row<T> | null;
     eventType: 'INSERT' | 'UPDATE' | 'DELETE';
-  }) => void, filter?: Record<string, any>) => {
-    return supabaseService.subscribe(table, callback, filter);
+  }) => void) => {
+    return supabaseService.subscribe(table, callback);
   };
 
   useEffect(() => {
@@ -92,8 +92,8 @@ export function useSupabase<T extends TableName>(table: T) {
   return {
     isLoading,
     getAll,
-    getOne,
-    insert,
+    getById,
+    create,
     update,
     remove,
     subscribe,
