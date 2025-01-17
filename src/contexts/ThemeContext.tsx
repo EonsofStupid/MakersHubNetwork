@@ -43,9 +43,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
       if (componentsError) throw componentsError;
 
+      // Transform components to ensure styles is an object
+      const transformedComponents = components.map(component => ({
+        ...component,
+        styles: typeof component.styles === 'string' 
+          ? JSON.parse(component.styles)
+          : component.styles
+      }));
+
       setCurrentTheme(theme);
       setThemeTokens(tokens);
-      setThemeComponents(components);
+      setThemeComponents(transformedComponents);
 
       // Apply theme tokens to document
       tokens.forEach((token) => {
