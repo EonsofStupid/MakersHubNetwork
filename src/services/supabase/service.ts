@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError, RealtimeChannel } from '@supabase/supabase-js';
-import { TableName, Row, Insert, Update, ServiceResponse, SubscriptionCallback } from './types';
+import { TableName, Row, Insert, Update, ServiceResponse, SubscriptionCallback, QueryOptions } from './types';
 
 export class SupabaseService {
   private static instance: SupabaseService;
@@ -29,10 +29,7 @@ export class SupabaseService {
 
   async getAll<T extends TableName>(
     table: T,
-    options?: {
-      columns?: string;
-      filter?: Record<string, any>;
-    }
+    options?: QueryOptions
   ): Promise<ServiceResponse<Row<T>[]>> {
     try {
       let query = supabase.from(table).select(options?.columns || '*');
@@ -88,7 +85,7 @@ export class SupabaseService {
     try {
       const { data: inserted, error } = await supabase
         .from(table)
-        .insert(data)
+        .insert(data as any)
         .select()
         .maybeSingle();
 
@@ -112,7 +109,7 @@ export class SupabaseService {
     try {
       const { data: updated, error } = await supabase
         .from(table)
-        .update(data)
+        .update(data as any)
         .eq('id', id)
         .select()
         .maybeSingle();
@@ -150,13 +147,13 @@ export class SupabaseService {
 
   subscribe<T extends TableName>(
     table: T,
-    callback: SubscriptionCallback<Row<T>>,
+    callback: SubscriptionCallback<T>,
     filter?: Record<string, any>
   ): () => void {
     const channel = supabase
       .channel(`public:${table}`)
       .on(
-        'postgres_changes',
+        'postgres_changes' as any,
         { event: '*', schema: 'public', table, filter },
         (payload: any) => {
           callback({
