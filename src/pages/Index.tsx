@@ -2,14 +2,55 @@ import { MainNav } from "@/components/MainNav";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Database, Users, Building } from "lucide-react";
-import { CSSProperties } from "react";
+import { CSSProperties, useState } from "react";
 
 // Define custom CSS properties interface
 interface CustomCSSProperties extends CSSProperties {
   '--stream-duration': string;
 }
 
+// Define hover colors array
+const hoverColors = [
+  '#8B5CF6', // Vivid Purple
+  '#D946EF', // Magenta Pink
+  '#F97316', // Bright Orange
+  '#0EA5E9', // Ocean Blue
+  '#1EAEDB', // Bright Blue
+  '#33C3F0', // Sky Blue
+];
+
+const animations = [
+  'hover:animate-morph-header',
+  'hover:animate-float',
+  'hover:animate-pulse-slow'
+];
+
 const Index = () => {
+  const [hoveredStates, setHoveredStates] = useState<{ [key: number]: string }>({});
+
+  const getRandomColor = () => {
+    return hoverColors[Math.floor(Math.random() * hoverColors.length)];
+  };
+
+  const getRandomAnimation = (index: number) => {
+    return animations[index % animations.length];
+  };
+
+  const handleMouseEnter = (index: number) => {
+    setHoveredStates(prev => ({
+      ...prev,
+      [index]: getRandomColor()
+    }));
+  };
+
+  const handleMouseLeave = (index: number) => {
+    setHoveredStates(prev => {
+      const newState = { ...prev };
+      delete newState[index];
+      return newState;
+    });
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden pb-[400px]">
       {/* Enhanced Background System */}
@@ -125,11 +166,31 @@ const Index = () => {
           {features.map((feature, i) => (
             <div
               key={feature.title}
-              className="p-6 rounded-lg bg-card/50 backdrop-blur-sm animate-fade-up"
-              style={{ animationDelay: `${i * 100}ms` }}
+              className={`p-6 rounded-lg backdrop-blur-sm animate-fade-up transition-all duration-300 ${getRandomAnimation(i)}`}
+              style={{
+                animationDelay: `${i * 100}ms`,
+                backgroundColor: hoveredStates[i] ? `${hoveredStates[i]}10` : 'rgba(0, 0, 0, 0.5)',
+                borderColor: hoveredStates[i],
+                borderWidth: hoveredStates[i] ? '1px' : '0px',
+                boxShadow: hoveredStates[i] 
+                  ? `0 0 20px ${hoveredStates[i]}40` 
+                  : 'none',
+              }}
+              onMouseEnter={() => handleMouseEnter(i)}
+              onMouseLeave={() => handleMouseLeave(i)}
             >
-              <feature.icon className="h-12 w-12 text-primary mb-4" />
-              <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+              <feature.icon 
+                className="h-12 w-12 mb-4 transition-colors duration-300" 
+                style={{ 
+                  color: hoveredStates[i] || 'var(--primary)' 
+                }}
+              />
+              <h3 className="text-xl font-bold mb-2 transition-colors duration-300"
+                  style={{ 
+                    color: hoveredStates[i] || 'white' 
+                  }}>
+                {feature.title}
+              </h3>
               <p className="text-muted-foreground">{feature.description}</p>
             </div>
           ))}
