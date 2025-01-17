@@ -56,9 +56,11 @@ export default {
         "morph-header": {
           "0%": {
             clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+            transform: "translateZ(0)",
           },
           "100%": {
-            clipPath: "polygon(0 0, 100% 0, 95% 100%, 5% 100%)",
+            clipPath: "polygon(0 0, 100% 0, 98% 100%, 2% 100%)",
+            transform: "translateZ(20px)",
           },
         },
         gradient: {
@@ -77,7 +79,7 @@ export default {
         }
       },
       animation: {
-        "morph-header": "morph-header 0.7s ease-in-out forwards",
+        "morph-header": "morph-header 1.5s ease-in-out forwards",
         "gradient": "gradient 15s ease infinite",
         "float": "float 6s ease-in-out infinite",
         "pulse-slow": "pulse-slow 4s ease-in-out infinite",
