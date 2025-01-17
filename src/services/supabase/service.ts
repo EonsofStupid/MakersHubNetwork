@@ -1,13 +1,13 @@
 import { supabase } from '@/integrations/supabase/client';
-import { PostgrestError } from '@supabase/supabase-js';
-import { 
+import type { 
   TableName, 
   Row, 
   Insert, 
   Update, 
   ServiceResponse,
   QueryOptions,
-  SubscriptionCallback
+  SubscriptionCallback,
+  Tables
 } from './types';
 
 export class SupabaseService {
@@ -17,19 +17,29 @@ export class SupabaseService {
     table: T,
     options?: QueryOptions
   ): Promise<ServiceResponse<Row<T>[]>> {
-    let query = supabase.from(table).select(options?.columns || '*');
+    try {
+      let query = supabase.from(table).select(options?.columns || '*');
 
-    if (options?.filter) {
-      query = query.match(options.filter);
+      if (options?.filter) {
+        query = query.match(options.filter);
+      }
+
+      const { data, error } = await query;
+      
+      if (error) throw error;
+
+      return {
+        data: data as Row<T>[],
+        error: null,
+        status: 200
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error as any,
+        status: 400
+      };
     }
-
-    const { data, error } = await query;
-    
-    return {
-      data: data as Row<T>[] | null,
-      error: error,
-      status: error ? 400 : 200
-    };
   }
 
   async getById<T extends TableName>(
@@ -37,34 +47,54 @@ export class SupabaseService {
     id: string,
     columns?: string
   ): Promise<ServiceResponse<Row<T>>> {
-    const { data, error } = await supabase
-      .from(table)
-      .select(columns || '*')
-      .eq('id', id)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from(table)
+        .select(columns || '*')
+        .eq('id', id)
+        .single();
 
-    return {
-      data: data as Row<T> | null,
-      error: error,
-      status: error ? 400 : 200
-    };
+      if (error) throw error;
+
+      return {
+        data: data as Row<T>,
+        error: null,
+        status: 200
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error as any,
+        status: 400
+      };
+    }
   }
 
   async create<T extends TableName>(
     table: T,
     data: Insert<T>
   ): Promise<ServiceResponse<Row<T>>> {
-    const { data: created, error } = await supabase
-      .from(table)
-      .insert(data)
-      .select()
-      .single();
+    try {
+      const { data: created, error } = await supabase
+        .from(table)
+        .insert(data as Tables[T]['Insert'])
+        .select()
+        .single();
 
-    return {
-      data: created as Row<T> | null,
-      error: error,
-      status: error ? 400 : 201
-    };
+      if (error) throw error;
+
+      return {
+        data: created as Row<T>,
+        error: null,
+        status: 201
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error as any,
+        status: 400
+      };
+    }
   }
 
   async update<T extends TableName>(
@@ -72,36 +102,56 @@ export class SupabaseService {
     id: string,
     data: Update<T>
   ): Promise<ServiceResponse<Row<T>>> {
-    const { data: updated, error } = await supabase
-      .from(table)
-      .update(data)
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      const { data: updated, error } = await supabase
+        .from(table)
+        .update(data as Tables[T]['Update'])
+        .eq('id', id)
+        .select()
+        .single();
 
-    return {
-      data: updated as Row<T> | null,
-      error: error,
-      status: error ? 400 : 200
-    };
+      if (error) throw error;
+
+      return {
+        data: updated as Row<T>,
+        error: null,
+        status: 200
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error as any,
+        status: 400
+      };
+    }
   }
 
   async delete<T extends TableName>(
     table: T,
     id: string
   ): Promise<ServiceResponse<Row<T>>> {
-    const { data: deleted, error } = await supabase
-      .from(table)
-      .delete()
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      const { data: deleted, error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', id)
+        .select()
+        .single();
 
-    return {
-      data: deleted as Row<T> | null,
-      error: error,
-      status: error ? 400 : 200
-    };
+      if (error) throw error;
+
+      return {
+        data: deleted as Row<T>,
+        error: null,
+        status: 200
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error as any,
+        status: 400
+      };
+    }
   }
 
   subscribe<T extends TableName>(
