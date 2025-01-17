@@ -1,6 +1,7 @@
 import { BaseService } from './base.service';
 import type { Theme, ThemeToken, ThemeComponent } from '@/types/theme';
-import type { ServiceResponse } from './types';
+import type { ServiceResponse } from '@/types/supabase/database.types';
+import { supabase } from '@/integrations/supabase/client';
 
 class ThemeService extends BaseService<'themes'> {
   constructor() {
