@@ -49,3 +49,43 @@
     @apply font-heading;
   }
 }
+
+@layer components {
+  .mad-scientist-hover {
+    @apply relative overflow-hidden transition-all duration-300;
+  }
+
+  .mad-scientist-hover::before {
+    @apply content-[''] absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 translate-x-[-200%] animate-pulse-slow;
+  }
+
+  .mad-scientist-hover:hover::before {
+    @apply translate-x-[200%] transition-transform duration-1000;
+  }
+
+  .mad-scientist-hover:hover {
+    @apply text-primary shadow-[0_0_15px_rgba(0,240,255,0.5)] scale-105;
+    animation: glitch 0.3s ease-in-out infinite;
+  }
+
+  @keyframes glitch {
+    0% {
+      transform: translate(0);
+    }
+    20% {
+      transform: translate(-2px, 2px);
+    }
+    40% {
+      transform: translate(-2px, -2px);
+    }
+    60% {
+      transform: translate(2px, 2px);
+    }
+    80% {
+      transform: translate(2px, -2px);
+    }
+    100% {
+      transform: translate(0);
+    }
+  }
+}
