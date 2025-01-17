@@ -1,9 +1,15 @@
 import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
-import type { Database } from '@/integrations/supabase/types';
-import type { QueryOptions, ServiceResponse } from './types';
+import type { 
+  TableName, 
+  Row, 
+  Insert, 
+  Update, 
+  ServiceResponse,
+  QueryOptions 
+} from '@/types/supabase/database.types';
 
-export class BaseService<T extends keyof Database['public']['Tables']> {
+export class BaseService<T extends TableName> {
   constructor(protected table: T) {}
 
   protected createQuery() {
@@ -19,7 +25,7 @@ export class BaseService<T extends keyof Database['public']['Tables']> {
     };
   }
 
-  async getAll(options?: QueryOptions): Promise<ServiceResponse<Database['public']['Tables'][T]['Row'][]>> {
+  async getAll(options?: QueryOptions): Promise<ServiceResponse<Row<T>[]>> {
     try {
       let query = this.createQuery().select(options?.columns || '*');
 
@@ -58,7 +64,7 @@ export class BaseService<T extends keyof Database['public']['Tables']> {
     }
   }
 
-  async getById(id: string): Promise<ServiceResponse<Database['public']['Tables'][T]['Row']>> {
+  async getById(id: string): Promise<ServiceResponse<Row<T>>> {
     try {
       const { data, error } = await this.createQuery()
         .select('*')
@@ -77,7 +83,7 @@ export class BaseService<T extends keyof Database['public']['Tables']> {
     }
   }
 
-  async create(data: Database['public']['Tables'][T]['Insert']): Promise<ServiceResponse<Database['public']['Tables'][T]['Row']>> {
+  async create(data: Insert<T>): Promise<ServiceResponse<Row<T>>> {
     try {
       const { data: created, error } = await this.createQuery()
         .insert(data)
@@ -96,7 +102,7 @@ export class BaseService<T extends keyof Database['public']['Tables']> {
     }
   }
 
-  async update(id: string, data: Database['public']['Tables'][T]['Update']): Promise<ServiceResponse<Database['public']['Tables'][T]['Row']>> {
+  async update(id: string, data: Update<T>): Promise<ServiceResponse<Row<T>>> {
     try {
       const { data: updated, error } = await this.createQuery()
         .update(data)
@@ -116,7 +122,7 @@ export class BaseService<T extends keyof Database['public']['Tables']> {
     }
   }
 
-  async delete(id: string): Promise<ServiceResponse<Database['public']['Tables'][T]['Row']>> {
+  async delete(id: string): Promise<ServiceResponse<Row<T>>> {
     try {
       const { data: deleted, error } = await this.createQuery()
         .delete()
