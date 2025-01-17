@@ -70,7 +70,7 @@ export class SupabaseService {
       const { data, error } = await supabase
         .from(table)
         .select(columns || '*')
-        .eq('id' as keyof Tables[T]['Row'], id)
+        .eq('id', id)
         .maybeSingle();
 
       if (error) throw error;
@@ -92,7 +92,7 @@ export class SupabaseService {
     try {
       const { data: inserted, error } = await supabase
         .from(table)
-        .insert(data as unknown as Tables[T]['Insert'])
+        .insert(data as Tables[T]['Insert'])
         .select()
         .single();
 
@@ -116,8 +116,8 @@ export class SupabaseService {
     try {
       const { data: updated, error } = await supabase
         .from(table)
-        .update(data as unknown as Tables[T]['Update'])
-        .eq('id' as keyof Tables[T]['Row'], id)
+        .update(data as Tables[T]['Update'])
+        .eq('id', id)
         .select()
         .single();
 
@@ -141,7 +141,7 @@ export class SupabaseService {
       const { error } = await supabase
         .from(table)
         .delete()
-        .eq('id' as keyof Tables[T]['Row'], id);
+        .eq('id', id);
 
       if (error) throw error;
 
