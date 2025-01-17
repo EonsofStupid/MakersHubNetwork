@@ -229,6 +229,41 @@ export type Database = {
           },
         ]
       }
+      theme_variants: {
+        Row: {
+          created_at: string | null
+          id: string
+          styles: Json | null
+          theme_id: string | null
+          updated_at: string | null
+          variant_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          styles?: Json | null
+          theme_id?: string | null
+          updated_at?: string | null
+          variant_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          styles?: Json | null
+          theme_id?: string | null
+          updated_at?: string | null
+          variant_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_variants_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       theme_versions: {
         Row: {
           changes: Json
@@ -266,42 +301,62 @@ export type Database = {
       }
       themes: {
         Row: {
+          cache_key: string | null
+          cached_styles: Json | null
+          composition_rules: Json | null
           created_at: string | null
           created_by: string | null
           description: string | null
           id: string
           is_default: boolean | null
           name: string
+          parent_theme_id: string | null
           published_at: string | null
           status: Database["public"]["Enums"]["theme_status"] | null
           updated_at: string | null
           version: number | null
         }
         Insert: {
+          cache_key?: string | null
+          cached_styles?: Json | null
+          composition_rules?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           id?: string
           is_default?: boolean | null
           name: string
+          parent_theme_id?: string | null
           published_at?: string | null
           status?: Database["public"]["Enums"]["theme_status"] | null
           updated_at?: string | null
           version?: number | null
         }
         Update: {
+          cache_key?: string | null
+          cached_styles?: Json | null
+          composition_rules?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           id?: string
           is_default?: boolean | null
           name?: string
+          parent_theme_id?: string | null
           published_at?: string | null
           status?: Database["public"]["Enums"]["theme_status"] | null
           updated_at?: string | null
           version?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "themes_parent_theme_id_fkey"
+            columns: ["parent_theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -329,7 +384,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_theme_inheritance_chain: {
+        Args: {
+          theme_id: string
+        }
+        Returns: {
+          id: string
+          level: number
+        }[]
+      }
+      merge_theme_styles: {
+        Args: {
+          base_styles: Json
+          override_styles: Json
+        }
+        Returns: Json
+      }
     }
     Enums: {
       theme_status: "draft" | "published" | "archived"
