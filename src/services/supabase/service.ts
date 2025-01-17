@@ -89,7 +89,7 @@ export class SupabaseService {
     try {
       const { data: inserted, error } = await supabase
         .from(table)
-        .insert(data)
+        .insert(data as any)
         .select()
         .single();
 
@@ -113,7 +113,7 @@ export class SupabaseService {
     try {
       const { data: updated, error } = await supabase
         .from(table)
-        .update(data)
+        .update(data as any)
         .eq('id', id)
         .select()
         .single();
@@ -157,9 +157,9 @@ export class SupabaseService {
     const channel = supabase
       .channel(`public:${table}`)
       .on(
-        'postgres_changes',
+        'postgres_changes' as any,
         { event: '*', schema: 'public', table, filter },
-        (payload) => {
+        (payload: any) => {
           callback({
             new: payload.new as Row<T>,
             old: payload.old as Row<T>,
