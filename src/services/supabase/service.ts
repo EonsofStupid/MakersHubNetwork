@@ -52,7 +52,7 @@ export class SupabaseService {
       if (error) throw error;
 
       return {
-        data: data as Row<T>[],
+        data: (data as unknown) as Row<T>[],
         error: null,
         status: 200,
       };
@@ -76,7 +76,7 @@ export class SupabaseService {
       if (error) throw error;
 
       return {
-        data: data as Row<T>,
+        data: (data as unknown) as Row<T>,
         error: null,
         status: 200,
       };
@@ -99,7 +99,7 @@ export class SupabaseService {
       if (error) throw error;
 
       return {
-        data: inserted as Row<T>,
+        data: (inserted as unknown) as Row<T>,
         error: null,
         status: 201,
       };
@@ -124,7 +124,7 @@ export class SupabaseService {
       if (error) throw error;
 
       return {
-        data: updated as Row<T>,
+        data: (updated as unknown) as Row<T>,
         error: null,
         status: 200,
       };
@@ -167,8 +167,8 @@ export class SupabaseService {
         { event: '*', schema: 'public', table, filter },
         (payload) => {
           callback({
-            new: payload.new as Row<T>,
-            old: payload.old as Row<T> | null,
+            new: (payload.new as unknown) as Row<T>,
+            old: (payload.old as unknown) as Row<T> | null,
             eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
           });
         }
