@@ -163,12 +163,12 @@ export class SupabaseService {
     const channel = supabase
       .channel(`public:${table}`)
       .on(
-        'postgres_changes',
+        'postgres_changes' as const,
         { event: '*', schema: 'public', table, filter },
-        (payload: any) => {
+        (payload) => {
           callback({
             new: payload.new as Row<T>,
-            old: payload.old as Row<T>,
+            old: payload.old as Row<T> | null,
             eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
           });
         }
