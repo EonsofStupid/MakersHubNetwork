@@ -5,14 +5,12 @@ import {
   Row, 
   Insert, 
   Update, 
-  ServiceResponse, 
+  ServiceResponse,
   QueryOptions,
-  SubscriptionCallback,
-  SubscriptionChannel
+  SubscriptionCallback
 } from './types';
 
 export class SupabaseService {
-  // Read operations
   async getAll<T extends TableName>(
     table: T,
     options?: QueryOptions
@@ -34,13 +32,14 @@ export class SupabaseService {
 
   async getById<T extends TableName>(
     table: T,
-    id: string
+    id: string,
+    columns?: string
   ): Promise<ServiceResponse<Row<T>>> {
     const { data, error } = await supabase
       .from(table)
-      .select('*')
+      .select(columns || '*')
       .eq('id', id)
-      .maybeSingle();
+      .single();
 
     return {
       data: data as Row<T> | null,
@@ -49,16 +48,15 @@ export class SupabaseService {
     };
   }
 
-  // Write operations
   async create<T extends TableName>(
     table: T,
     data: Insert<T>
   ): Promise<ServiceResponse<Row<T>>> {
     const { data: created, error } = await supabase
       .from(table)
-      .insert(data as any)
+      .insert(data)
       .select()
-      .maybeSingle();
+      .single();
 
     return {
       data: created as Row<T> | null,
@@ -74,10 +72,10 @@ export class SupabaseService {
   ): Promise<ServiceResponse<Row<T>>> {
     const { data: updated, error } = await supabase
       .from(table)
-      .update(data as any)
+      .update(data)
       .eq('id', id)
       .select()
-      .maybeSingle();
+      .single();
 
     return {
       data: updated as Row<T> | null,
@@ -95,7 +93,7 @@ export class SupabaseService {
       .delete()
       .eq('id', id)
       .select()
-      .maybeSingle();
+      .single();
 
     return {
       data: deleted as Row<T> | null,
@@ -104,21 +102,16 @@ export class SupabaseService {
     };
   }
 
-  // Realtime subscriptions
   subscribe<T extends TableName>(
     table: T,
     callback: SubscriptionCallback<T>
-  ): SubscriptionChannel {
+  ) {
     return supabase
       .channel(`${table}_changes`)
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: table
-        },
-        (payload) => {
+        { event: '*', schema: 'public', table },
+        (payload: any) => {
           callback({
             new: payload.new as Row<T>,
             old: payload.old as Row<T> | null,
@@ -129,15 +122,9 @@ export class SupabaseService {
       .subscribe();
   }
 
-  // Error handling helper
-  private handleError(error: PostgrestError | null): ServiceResponse<null> {
-    return {
-      data: null,
-      error: error,
-      status: error ? 400 : 200
-    };
+  cleanup() {
+    supabase.getChannels().forEach(channel => channel.unsubscribe());
   }
 }
 
-// Export singleton instance
 export const supabaseService = new SupabaseService();
