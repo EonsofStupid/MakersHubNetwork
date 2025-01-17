@@ -1,8 +1,8 @@
 import { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from './client';
-import type { Tables, InsertTables, UpdateTables } from './types';
+import type { Tables, InsertTables, UpdateTables, TableNames } from './types';
 
-export class SupabaseService<T extends keyof Tables> {
+export class SupabaseService<T extends TableNames> {
   constructor(private readonly table: T) {}
 
   async getAll() {
@@ -57,7 +57,7 @@ export class SupabaseService<T extends keyof Tables> {
     if (error) throw error;
   }
 
-  async query() {
+  query() {
     return supabase.from(this.table);
   }
 }
