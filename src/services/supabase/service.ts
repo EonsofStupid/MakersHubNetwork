@@ -92,7 +92,7 @@ export class SupabaseService {
     try {
       const { data: inserted, error } = await supabase
         .from(table)
-        .insert(data as Tables[T]['Insert'])
+        .insert(data)
         .select()
         .single();
 
@@ -116,7 +116,7 @@ export class SupabaseService {
     try {
       const { data: updated, error } = await supabase
         .from(table)
-        .update(data as Tables[T]['Update'])
+        .update(data)
         .eq('id', id)
         .select()
         .single();
