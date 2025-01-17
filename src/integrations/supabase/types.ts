@@ -150,6 +150,159 @@ export type Database = {
         }
         Relationships: []
       }
+      theme_components: {
+        Row: {
+          component_name: string
+          created_at: string | null
+          id: string
+          styles: Json
+          theme_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          component_name: string
+          created_at?: string | null
+          id?: string
+          styles: Json
+          theme_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          component_name?: string
+          created_at?: string | null
+          id?: string
+          styles?: Json
+          theme_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_components_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      theme_tokens: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          fallback_value: string | null
+          id: string
+          theme_id: string | null
+          token_name: string
+          token_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          fallback_value?: string | null
+          id?: string
+          theme_id?: string | null
+          token_name: string
+          token_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          fallback_value?: string | null
+          id?: string
+          theme_id?: string | null
+          token_name?: string
+          token_value?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_tokens_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      theme_versions: {
+        Row: {
+          changes: Json
+          created_at: string | null
+          created_by: string | null
+          id: string
+          theme_id: string | null
+          version: number
+        }
+        Insert: {
+          changes: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          theme_id?: string | null
+          version: number
+        }
+        Update: {
+          changes?: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          theme_id?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_versions_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      themes: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          published_at: string | null
+          status: Database["public"]["Enums"]["theme_status"] | null
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["theme_status"] | null
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["theme_status"] | null
+          updated_at?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -179,6 +332,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      theme_status: "draft" | "published" | "archived"
       user_role: "admin" | "editor" | "viewer"
     }
     CompositeTypes: {
