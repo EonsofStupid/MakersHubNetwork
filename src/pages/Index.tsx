@@ -1,12 +1,16 @@
 import { MainNav } from "@/components/MainNav";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Database, Users, Building } from "lucide-react";
-import { BackgroundEffect } from "@/components/BackgroundEffect";
 
 const Index = () => {
   return (
     <div className="min-h-screen relative">
-      <BackgroundEffect />
+      <div className="fixed inset-0 -z-10 bg-[#094B51] overflow-hidden">
+        {/* Animated Gradient Overlay */}
+        <div 
+          className="absolute inset-0 opacity-30 bg-gradient-to-r from-[#0F0A2E] via-[#9F00FF] to-[#E1F500] bg-[length:300%_300%] animate-gradient"
+        />
+      </div>
       <MainNav />
       <div className="container px-4 py-24 mx-auto">
         <div className="max-w-3xl mx-auto text-center animate-fade-up">
