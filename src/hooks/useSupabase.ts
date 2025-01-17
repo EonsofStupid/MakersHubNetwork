@@ -1,78 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabaseService } from '@/services/supabase/service';
-import { TableName, Row, Insert, Update, ServiceResponse } from '@/services/supabase/types';
-import { useToast } from '@/components/ui/use-toast';
+import type { TableName, Row, Insert, Update, QueryOptions } from '@/services/supabase/types';
 
 export function useSupabase<T extends TableName>(table: T) {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const handleError = (error: any) => {
-    toast({
-      title: 'Error',
-      description: error.message || 'An error occurred',
-      variant: 'destructive',
+  const getAll = (options?: QueryOptions) => {
+    return useQuery({
+      queryKey: [table, options],
+      queryFn: () => supabaseService.getAll<T>(table, options)
     });
   };
 
-  const getAll = async (options?: { columns?: string; filter?: Record<string, any> }) => {
-    setIsLoading(true);
-    try {
-      return await supabaseService.getAll(table, options);
-    } catch (error) {
-      handleError(error);
-      return { data: null, error, status: 500 };
-    } finally {
-      setIsLoading(false);
-    }
+  const getById = (id: string) => {
+    return useQuery({
+      queryKey: [table, id],
+      queryFn: () => supabaseService.getById<T>(table, id)
+    });
   };
 
-  const getById = async (id: string, columns?: string) => {
-    setIsLoading(true);
-    try {
-      return await supabaseService.getById(table, id, columns);
-    } catch (error) {
-      handleError(error);
-      return { data: null, error, status: 500 };
-    } finally {
-      setIsLoading(false);
-    }
+  const create = () => {
+    return useMutation({
+      mutationFn: (data: Insert<T>) => supabaseService.create<T>(table, data),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [table] });
+      }
+    });
   };
 
-  const create = async (data: Insert<T>) => {
-    setIsLoading(true);
-    try {
-      return await supabaseService.create(table, data);
-    } catch (error) {
-      handleError(error);
-      return { data: null, error, status: 500 };
-    } finally {
-      setIsLoading(false);
-    }
+  const update = () => {
+    return useMutation({
+      mutationFn: ({ id, data }: { id: string; data: Update<T> }) =>
+        supabaseService.update<T>(table, id, data),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [table] });
+      }
+    });
   };
 
-  const update = async (id: string, data: Update<T>) => {
-    setIsLoading(true);
-    try {
-      return await supabaseService.update(table, id, data);
-    } catch (error) {
-      handleError(error);
-      return { data: null, error, status: 500 };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const remove = async (id: string) => {
-    setIsLoading(true);
-    try {
-      return await supabaseService.delete(table, id);
-    } catch (error) {
-      handleError(error);
-      return { data: null, error, status: 500 };
-    } finally {
-      setIsLoading(false);
-    }
+  const remove = () => {
+    return useMutation({
+      mutationFn: (id: string) => supabaseService.delete<T>(table, id),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [table] });
+      }
+    });
   };
 
   const subscribe = (callback: (payload: {
@@ -80,22 +53,20 @@ export function useSupabase<T extends TableName>(table: T) {
     old: Row<T> | null;
     eventType: 'INSERT' | 'UPDATE' | 'DELETE';
   }) => void) => {
-    return supabaseService.subscribe(table, callback);
+    useEffect(() => {
+      const subscription = supabaseService.subscribe(table, callback);
+      return () => {
+        subscription.unsubscribe();
+      };
+    }, []);
   };
 
-  useEffect(() => {
-    return () => {
-      supabaseService.cleanup();
-    };
-  }, []);
-
   return {
-    isLoading,
     getAll,
     getById,
     create,
     update,
     remove,
-    subscribe,
+    subscribe
   };
 }

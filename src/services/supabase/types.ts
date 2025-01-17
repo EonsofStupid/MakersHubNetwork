@@ -1,4 +1,4 @@
-import { PostgrestError, RealtimeChannel } from '@supabase/supabase-js';
+import { PostgrestError } from '@supabase/supabase-js';
 import { Database } from '@/integrations/supabase/types';
 
 // Database schema types
@@ -28,4 +28,6 @@ export type SubscriptionCallback<T extends TableName> = (payload: {
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
 }) => void;
 
-export type SubscriptionChannel = RealtimeChannel;
+export type SubscriptionChannel = {
+  unsubscribe: () => void;
+};

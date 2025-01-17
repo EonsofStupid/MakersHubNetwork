@@ -11,6 +11,8 @@ import {
 } from './types';
 
 export class SupabaseService {
+  private channels: ReturnType<typeof supabase.channel>[] = [];
+
   async getAll<T extends TableName>(
     table: T,
     options?: QueryOptions
@@ -106,7 +108,7 @@ export class SupabaseService {
     table: T,
     callback: SubscriptionCallback<T>
   ) {
-    return supabase
+    const channel = supabase
       .channel(`${table}_changes`)
       .on(
         'postgres_changes',
@@ -120,10 +122,14 @@ export class SupabaseService {
         }
       )
       .subscribe();
+
+    this.channels.push(channel);
+    return channel;
   }
 
   cleanup() {
-    supabase.getChannels().forEach(channel => channel.unsubscribe());
+    this.channels.forEach(channel => channel.unsubscribe());
+    this.channels = [];
   }
 }
 
