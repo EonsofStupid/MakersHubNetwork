@@ -2,6 +2,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
 import { TableName, Row, Insert, Update, ServiceResponse, SubscriptionCallback } from './types';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { Database } from '@/integrations/supabase/types';
+
+type Tables = Database['public']['Tables'];
 
 export class SupabaseService {
   private static instance: SupabaseService;
@@ -67,7 +70,7 @@ export class SupabaseService {
       const { data, error } = await supabase
         .from(table)
         .select(columns || '*')
-        .eq('id', id)
+        .eq('id' as keyof Tables[T]['Row'], id)
         .maybeSingle();
 
       if (error) throw error;
@@ -89,7 +92,7 @@ export class SupabaseService {
     try {
       const { data: inserted, error } = await supabase
         .from(table)
-        .insert(data as Tables[T]['Insert'])
+        .insert(data as unknown as Tables[T]['Insert'])
         .select()
         .single();
 
@@ -113,8 +116,8 @@ export class SupabaseService {
     try {
       const { data: updated, error } = await supabase
         .from(table)
-        .update(data as Tables[T]['Update'])
-        .eq('id', id)
+        .update(data as unknown as Tables[T]['Update'])
+        .eq('id' as keyof Tables[T]['Row'], id)
         .select()
         .single();
 
@@ -138,7 +141,7 @@ export class SupabaseService {
       const { error } = await supabase
         .from(table)
         .delete()
-        .eq('id', id);
+        .eq('id' as keyof Tables[T]['Row'], id);
 
       if (error) throw error;
 
