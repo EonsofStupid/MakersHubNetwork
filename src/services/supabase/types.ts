@@ -1,5 +1,5 @@
-import { Database } from '@/integrations/supabase/types';
-import { PostgrestError } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
+import type { PostgrestError } from '@supabase/supabase-js';
 
 export type Tables = Database['public']['Tables'];
 export type TableName = keyof Tables;

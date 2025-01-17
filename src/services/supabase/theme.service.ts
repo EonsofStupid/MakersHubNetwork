@@ -1,16 +1,15 @@
 import { BaseService } from './base.service';
-import type { Theme, ThemeToken, ThemeComponent, QueryResponse } from '@/types/supabase';
-import { supabase } from '@/integrations/supabase/client';
+import type { Theme, ThemeToken, ThemeComponent } from '@/types/theme';
+import type { ServiceResponse } from './types';
 
-export class ThemeService extends BaseService<'themes'> {
+class ThemeService extends BaseService<'themes'> {
   constructor() {
     super('themes');
   }
 
-  async getDefaultTheme(): Promise<QueryResponse<Theme>> {
+  async getDefaultTheme(): Promise<ServiceResponse<Theme>> {
     try {
-      const { data, error } = await supabase
-        .from(this.table)
+      const { data, error } = await this.createQuery()
         .select('*')
         .eq('is_default', true)
         .maybeSingle();
@@ -27,7 +26,7 @@ export class ThemeService extends BaseService<'themes'> {
     }
   }
 
-  async getThemeTokens(themeId: string): Promise<QueryResponse<ThemeToken[]>> {
+  async getThemeTokens(themeId: string): Promise<ServiceResponse<ThemeToken[]>> {
     try {
       const { data, error } = await supabase
         .from('theme_tokens')
@@ -46,7 +45,7 @@ export class ThemeService extends BaseService<'themes'> {
     }
   }
 
-  async getThemeComponents(themeId: string): Promise<QueryResponse<ThemeComponent[]>> {
+  async getThemeComponents(themeId: string): Promise<ServiceResponse<ThemeComponent[]>> {
     try {
       const { data, error } = await supabase
         .from('theme_components')

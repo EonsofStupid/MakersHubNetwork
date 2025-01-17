@@ -1,18 +1,16 @@
 import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
-import type { 
-  TableName, 
-  Row, 
-  Insert, 
-  Update, 
-  QueryResponse,
-  QueryOptions 
-} from '@/types/supabase';
+import type { Database } from '@/integrations/supabase/types';
+import type { QueryOptions, ServiceResponse } from './types';
 
-export class BaseService<T extends TableName> {
+export class BaseService<T extends keyof Database['public']['Tables']> {
   constructor(protected table: T) {}
 
-  protected handleError(error: PostgrestError | Error): QueryResponse<any> {
+  protected createQuery() {
+    return supabase.from(this.table);
+  }
+
+  protected handleError(error: PostgrestError | Error): ServiceResponse<any> {
     console.error(`Error in ${this.table}:`, error);
     return {
       data: null,
@@ -21,9 +19,9 @@ export class BaseService<T extends TableName> {
     };
   }
 
-  async getAll(options?: QueryOptions): Promise<QueryResponse<Row<T>[]>> {
+  async getAll(options?: QueryOptions): Promise<ServiceResponse<Database['public']['Tables'][T]['Row'][]>> {
     try {
-      let query = supabase.from(this.table).select(options?.columns || '*');
+      let query = this.createQuery().select(options?.columns || '*');
 
       if (options?.filter) {
         query = query.match(options.filter);
@@ -60,10 +58,9 @@ export class BaseService<T extends TableName> {
     }
   }
 
-  async getById(id: string): Promise<QueryResponse<Row<T>>> {
+  async getById(id: string): Promise<ServiceResponse<Database['public']['Tables'][T]['Row']>> {
     try {
-      const { data, error } = await supabase
-        .from(this.table)
+      const { data, error } = await this.createQuery()
         .select('*')
         .eq('id', id)
         .maybeSingle();
@@ -80,10 +77,9 @@ export class BaseService<T extends TableName> {
     }
   }
 
-  async create(data: Insert<T>): Promise<QueryResponse<Row<T>>> {
+  async create(data: Database['public']['Tables'][T]['Insert']): Promise<ServiceResponse<Database['public']['Tables'][T]['Row']>> {
     try {
-      const { data: created, error } = await supabase
-        .from(this.table)
+      const { data: created, error } = await this.createQuery()
         .insert(data)
         .select()
         .maybeSingle();
@@ -100,10 +96,9 @@ export class BaseService<T extends TableName> {
     }
   }
 
-  async update(id: string, data: Update<T>): Promise<QueryResponse<Row<T>>> {
+  async update(id: string, data: Database['public']['Tables'][T]['Update']): Promise<ServiceResponse<Database['public']['Tables'][T]['Row']>> {
     try {
-      const { data: updated, error } = await supabase
-        .from(this.table)
+      const { data: updated, error } = await this.createQuery()
         .update(data)
         .eq('id', id)
         .select()
@@ -121,10 +116,9 @@ export class BaseService<T extends TableName> {
     }
   }
 
-  async delete(id: string): Promise<QueryResponse<Row<T>>> {
+  async delete(id: string): Promise<ServiceResponse<Database['public']['Tables'][T]['Row']>> {
     try {
-      const { data: deleted, error } = await supabase
-        .from(this.table)
+      const { data: deleted, error } = await this.createQuery()
         .delete()
         .eq('id', id)
         .select()
