@@ -76,6 +76,18 @@ export default {
           "0%": { opacity: "0.4", transform: "translateY(0)" },
           "50%": { opacity: "0.1", transform: "translateY(-100vh)" },
           "100%": { opacity: "0.4", transform: "translateY(-200vh)" },
+        },
+        "stream-horizontal": {
+          "0%": { transform: "translateX(100vw)", opacity: "0" },
+          "5%": { opacity: "1" },
+          "95%": { opacity: "1" },
+          "100%": { transform: "translateX(-100vw)", opacity: "0" },
+        },
+        "stream-vertical": {
+          "0%": { transform: "translateY(-100%)", opacity: "0" },
+          "5%": { opacity: "1" },
+          "95%": { opacity: "1" },
+          "100%": { transform: "translateY(100vh)", opacity: "0" },
         }
       },
       animation: {
@@ -83,6 +95,8 @@ export default {
         "gradient": "gradient 15s ease infinite",
         "float": "float 6s ease-in-out infinite",
         "pulse-slow": "pulse-slow 8s linear infinite",
+        "stream-horizontal": "stream-horizontal var(--stream-duration) linear infinite",
+        "stream-vertical": "stream-vertical var(--stream-duration) linear infinite",
       },
       backgroundSize: {
         "400%": "400% 400%",
