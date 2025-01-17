@@ -69,23 +69,23 @@ export default {
           "100%": { backgroundPosition: "0% 50%" },
         },
         float: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-20px)" },
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "50%": { transform: "translateY(-20px) rotate(5deg)" },
         },
         "pulse-slow": {
-          "0%": { opacity: "0.4" },
-          "50%": { opacity: "0.1" },
-          "100%": { opacity: "0.4" },
+          "0%": { opacity: "0.4", transform: "translateY(0)" },
+          "50%": { opacity: "0.1", transform: "translateY(-100vh)" },
+          "100%": { opacity: "0.4", transform: "translateY(-200vh)" },
         }
       },
       animation: {
         "morph-header": "morph-header 1.5s ease-in-out forwards",
         "gradient": "gradient 15s ease infinite",
         "float": "float 6s ease-in-out infinite",
-        "pulse-slow": "pulse-slow 4s ease-in-out infinite",
+        "pulse-slow": "pulse-slow 8s linear infinite",
       },
       backgroundSize: {
-        "300%": "300% 300%",
+        "400%": "400% 400%",
       },
     },
   },
