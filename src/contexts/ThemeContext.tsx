@@ -23,9 +23,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         .from('themes')
         .select('*')
         .eq('id', themeId)
-        .single();
+        .maybeSingle();
 
       if (themeError) throw themeError;
+      if (!theme) throw new Error(`Theme with id ${themeId} not found`);
 
       // Fetch theme tokens
       const { data: tokens, error: tokensError } = await supabase
@@ -83,7 +84,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         .from('themes')
         .select('id')
         .eq('is_default', true)
-        .single();
+        .maybeSingle();
 
       if (error) {
         setError(error);
@@ -95,9 +96,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (defaultTheme) {
-        await loadTheme(defaultTheme.id);
+      if (!defaultTheme) {
+        toast({
+          title: "No default theme found",
+          description: "Please contact an administrator to set up a default theme.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
       }
+
+      await loadTheme(defaultTheme.id);
     };
 
     loadDefaultTheme();
