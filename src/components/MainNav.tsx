@@ -58,17 +58,18 @@ export function MainNav() {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
+
           <Link 
             to="/" 
-            className="relative text-2xl font-bold transition-all duration-1000 hover:translate-y-[-2px] group"
+            className="relative text-2xl font-bold transition-all duration-1000 hover:translate-y-[-8px] group"
             onMouseMove={handleMouseMove}
             style={{
               '--x': `${mousePosition.x}px`,
               '--y': `${mousePosition.y}px`,
             } as React.CSSProperties}
           >
-            <span className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary transition-all duration-1000 group-hover:from-[#FF2D6E] group-hover:to-[#FF2D6E]">
-              <span className="transition-colors duration-1000 group-hover:text-[#FF2D6E]">M</span>
+            <span className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary transition-all duration-1000 group-hover:from-[#FF2D6E] group-hover:to-[#FF2D6E] group-hover:animate-[glitch_0.3s_ease-in-out_infinite]">
+              <span className="transition-colors duration-[1000ms] group-hover:text-[#FF2D6E]">M</span>
               <span className="transition-colors duration-[1200ms] group-hover:text-[#FF2D6E]">a</span>
               <span className="transition-colors duration-[1400ms] group-hover:text-[#FF2D6E]">k</span>
               <span className="transition-colors duration-[1600ms] group-hover:text-[#FF2D6E]">e</span>
