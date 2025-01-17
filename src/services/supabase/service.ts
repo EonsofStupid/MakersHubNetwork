@@ -89,7 +89,7 @@ export class SupabaseService {
     try {
       const { data: inserted, error } = await supabase
         .from(table)
-        .insert(data as any)
+        .insert(data as Tables[T]['Insert'])
         .select()
         .single();
 
@@ -113,7 +113,7 @@ export class SupabaseService {
     try {
       const { data: updated, error } = await supabase
         .from(table)
-        .update(data as any)
+        .update(data as Tables[T]['Update'])
         .eq('id', id)
         .select()
         .single();
@@ -135,7 +135,10 @@ export class SupabaseService {
     id: string
   ): Promise<ServiceResponse<null>> {
     try {
-      const { error } = await supabase.from(table).delete().eq('id', id);
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', id);
 
       if (error) throw error;
 
