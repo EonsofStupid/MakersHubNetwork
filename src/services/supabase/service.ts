@@ -1,7 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-import { PostgrestError } from '@supabase/supabase-js';
+import { PostgrestError, RealtimeChannel } from '@supabase/supabase-js';
 import { TableName, Row, Insert, Update, ServiceResponse, SubscriptionCallback } from './types';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 export class SupabaseService {
   private static instance: SupabaseService;
@@ -89,9 +88,9 @@ export class SupabaseService {
     try {
       const { data: inserted, error } = await supabase
         .from(table)
-        .insert(data as any)
+        .insert(data)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -113,10 +112,10 @@ export class SupabaseService {
     try {
       const { data: updated, error } = await supabase
         .from(table)
-        .update(data as any)
+        .update(data)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -157,7 +156,7 @@ export class SupabaseService {
     const channel = supabase
       .channel(`public:${table}`)
       .on(
-        'postgres_changes' as any,
+        'postgres_changes',
         { event: '*', schema: 'public', table, filter },
         (payload: any) => {
           callback({
