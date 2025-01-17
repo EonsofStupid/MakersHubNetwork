@@ -1,6 +1,6 @@
 import { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from './client';
-import type { Tables, InsertTables, UpdateTables, TableNames } from './types';
+import type { Tables, TablesInsert, TablesUpdate, TableNames } from './types';
 
 export class SupabaseService<T extends TableNames> {
   constructor(private readonly table: T) {}
@@ -25,7 +25,7 @@ export class SupabaseService<T extends TableNames> {
     return data as Tables<T>;
   }
 
-  async create(record: InsertTables<T>) {
+  async create(record: TablesInsert<T>) {
     const { data, error } = await supabase
       .from(this.table)
       .insert(record)
@@ -36,7 +36,7 @@ export class SupabaseService<T extends TableNames> {
     return data as Tables<T>;
   }
 
-  async update(id: string, record: UpdateTables<T>) {
+  async update(id: string, record: TablesUpdate<T>) {
     const { data, error } = await supabase
       .from(this.table)
       .update(record)
