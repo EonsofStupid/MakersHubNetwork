@@ -1,4 +1,5 @@
 import { MainNav } from "@/components/MainNav";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Database, Users, Building } from "lucide-react";
 import { CSSProperties } from "react";
@@ -134,6 +135,8 @@ const Index = () => {
           ))}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };
