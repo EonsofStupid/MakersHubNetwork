@@ -4,15 +4,63 @@ import { ArrowRight, Database, Users, Building } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen relative">
-      <div className="fixed inset-0 -z-10 bg-[#094B51] overflow-hidden">
-        {/* Animated Gradient Overlay */}
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Enhanced Background System */}
+      <div className="fixed inset-0 -z-10">
+        {/* Base gradient with animation */}
         <div 
-          className="absolute inset-0 opacity-30 bg-gradient-to-r from-[#0F0A2E] via-[#9F00FF] to-[#E1F500] bg-[length:300%_300%] animate-gradient"
+          className="absolute inset-0 bg-gradient-to-br from-[#0F0A2E] via-[#094B51] to-[#1A1F2C] bg-[length:400%_400%] animate-gradient"
+          style={{ animation: "gradient 15s ease infinite" }}
+        />
+        
+        {/* Animated grid overlay */}
+        <div 
+          className="absolute inset-0 bg-[linear-gradient(transparent_1px,_transparent_1px),_linear-gradient(to_right,_transparent_1px,_transparent_1px)] bg-[size:4rem_4rem] [background-position:center] opacity-20"
+          style={{
+            backgroundImage: `
+              linear-gradient(#00F0FF20 1px, transparent 1px),
+              linear-gradient(to right, #00F0FF20 1px, transparent 1px)
+            `,
+          }}
+        >
+          {/* Scanning line effect */}
+          <div 
+            className="absolute top-0 left-0 right-0 h-[2px] bg-primary/30 blur-sm animate-pulse-slow"
+            style={{ boxShadow: "0 0 20px #00F0FF" }}
+          />
+        </div>
+
+        {/* Floating elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-24 h-24 opacity-20 animate-float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animation: `float ${10 + i * 2}s ease-in-out infinite`,
+                transform: `rotate(${45 * i}deg)`,
+                background: `linear-gradient(45deg, ${i % 2 ? '#00F0FF' : '#FF2D6E'}, transparent)`,
+                filter: 'blur(2px)',
+                clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Vignette effect */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)'
+          }}
         />
       </div>
+
       <MainNav />
-      <div className="container px-4 py-24 mx-auto">
+      
+      <div className="container px-4 py-24 mx-auto relative">
         <div className="max-w-3xl mx-auto text-center animate-fade-up">
           <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Build Your Dream 3D Printer
