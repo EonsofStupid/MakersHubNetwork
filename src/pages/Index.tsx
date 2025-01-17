@@ -10,7 +10,6 @@ const Index = () => {
         {/* Base gradient with animation */}
         <div 
           className="absolute inset-0 bg-gradient-to-br from-[#0F0A2E] via-[#094B51] to-[#1A1F2C] bg-[length:400%_400%] animate-gradient"
-          style={{ animation: "gradient 15s ease infinite" }}
         />
         
         {/* Animated grid overlay */}
@@ -22,12 +21,48 @@ const Index = () => {
               linear-gradient(to right, #00F0FF20 1px, transparent 1px)
             `,
           }}
-        >
-          {/* Scanning line effect */}
-          <div 
-            className="absolute top-0 left-0 right-0 h-[2px] bg-primary/30 blur-sm animate-pulse-slow"
-            style={{ boxShadow: "0 0 20px #00F0FF" }}
-          />
+        />
+
+        {/* Digital Rain Effect - Horizontal Streams */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(10)].map((_, i) => (
+            <div
+              key={`h-stream-${i}`}
+              className="absolute left-0 right-0 h-px bg-primary/30 animate-stream-horizontal"
+              style={{
+                top: `${Math.random() * 100}%`,
+                '--stream-duration': `${15 + Math.random() * 10}s`,
+                animationDelay: `-${Math.random() * 15}s`,
+              }}
+            >
+              <div className="absolute inset-0 blur-sm bg-primary/50" />
+            </div>
+          ))}
+        </div>
+
+        {/* Digital Rain Effect - Vertical Streams */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(2)].map((_, colIndex) => (
+            <div
+              key={`col-${colIndex}`}
+              className="absolute top-0 bottom-0 w-px"
+              style={{ left: `${33 + colIndex * 33}%` }}
+            >
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={`v-stream-${colIndex}-${i}`}
+                  className="absolute top-0 w-px h-32 bg-primary/30 animate-stream-vertical"
+                  style={{
+                    left: `${Math.random() * 200 - 100}px`,
+                    '--stream-duration': `${8 + Math.random() * 7}s`,
+                    animationDelay: `-${Math.random() * 8}s`,
+                  }}
+                >
+                  <div className="absolute inset-0 blur-sm bg-primary/50" />
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
 
         {/* Floating elements */}
