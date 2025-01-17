@@ -153,6 +153,7 @@ export type Database = {
       theme_components: {
         Row: {
           component_name: string
+          context: string | null
           created_at: string | null
           id: string
           styles: Json
@@ -161,6 +162,7 @@ export type Database = {
         }
         Insert: {
           component_name: string
+          context?: string | null
           created_at?: string | null
           id?: string
           styles: Json
@@ -169,6 +171,7 @@ export type Database = {
         }
         Update: {
           component_name?: string
+          context?: string | null
           created_at?: string | null
           id?: string
           styles?: Json

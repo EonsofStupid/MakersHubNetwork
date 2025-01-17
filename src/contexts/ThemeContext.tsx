@@ -1,111 +1,36 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { Theme, ThemeContextType, ThemeToken, ThemeComponent } from '@/types/theme';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { createContext, useContext, useEffect } from 'react';
+import { useThemeStore } from '@/stores/theme/store';
+import { Theme, ThemeContextType } from '@/types/theme';
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [currentTheme, setCurrentTheme] = useState<Theme | null>(null);
-  const [themeTokens, setThemeTokens] = useState<ThemeToken[]>([]);
-  const [themeComponents, setThemeComponents] = useState<ThemeComponent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const { toast } = useToast();
+  const { 
+    currentTheme, 
+    themeTokens, 
+    themeComponents, 
+    isLoading, 
+    error, 
+    setTheme,
+    loadAdminComponents 
+  } = useThemeStore();
 
-  const loadTheme = async (themeId: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // Fetch theme
-      const { data: theme, error: themeError } = await supabase
-        .from('themes')
-        .select('*')
-        .eq('id', themeId)
-        .single();
-
-      if (themeError) throw themeError;
-
-      // Fetch theme tokens
-      const { data: tokens, error: tokensError } = await supabase
-        .from('theme_tokens')
-        .select('*')
-        .eq('theme_id', themeId);
-
-      if (tokensError) throw tokensError;
-
-      // Fetch theme components
-      const { data: components, error: componentsError } = await supabase
-        .from('theme_components')
-        .select('*')
-        .eq('theme_id', themeId);
-
-      if (componentsError) throw componentsError;
-
-      // Transform components to ensure styles is an object
-      const transformedComponents = components.map(component => ({
-        ...component,
-        styles: typeof component.styles === 'string' 
-          ? JSON.parse(component.styles)
-          : component.styles
-      }));
-
-      setCurrentTheme(theme);
-      setThemeTokens(tokens);
-      setThemeComponents(transformedComponents);
-
-      // Apply theme tokens to document
-      tokens.forEach((token) => {
-        document.documentElement.style.setProperty(
-          `--${token.token_name}`,
-          token.token_value
-        );
-      });
-
-    } catch (err) {
-      const error = err as Error;
-      setError(error);
-      toast({
-        title: "Error loading theme",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Load default theme on mount
   useEffect(() => {
     const loadDefaultTheme = async () => {
-      const { data: defaultTheme, error } = await supabase
+      const { data: defaultTheme } = await supabase
         .from('themes')
         .select('id')
         .eq('is_default', true)
         .single();
 
-      if (error) {
-        setError(error);
-        toast({
-          title: "Error loading default theme",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
       if (defaultTheme) {
-        await loadTheme(defaultTheme.id);
+        await setTheme(defaultTheme.id);
+        await loadAdminComponents();
       }
     };
 
     loadDefaultTheme();
   }, []);
-
-  const setTheme = async (themeId: string) => {
-    await loadTheme(themeId);
-  };
 
   const value = {
     currentTheme,
