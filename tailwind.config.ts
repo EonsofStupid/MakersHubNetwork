@@ -53,16 +53,6 @@ export default {
         heading: ["Space Grotesk", "sans-serif"],
       },
       keyframes: {
-        "fade-up": {
-          "0%": {
-            opacity: "0",
-            transform: "translateY(10px)",
-          },
-          "100%": {
-            opacity: "1",
-            transform: "translateY(0)",
-          },
-        },
         "morph-header": {
           "0%": {
             clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
@@ -80,10 +70,6 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-20px)" },
         },
-        pulse: {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.5" },
-        },
         "pulse-slow": {
           "0%": { opacity: "0.4" },
           "50%": { opacity: "0.1" },
@@ -91,11 +77,9 @@ export default {
         }
       },
       animation: {
-        "fade-up": "fade-up 0.5s ease-out",
-        "morph-header": "morph-header 0.4s ease-in-out forwards",
+        "morph-header": "morph-header 0.7s ease-in-out forwards",
         "gradient": "gradient 15s ease infinite",
         "float": "float 6s ease-in-out infinite",
-        "float-delayed": "float 6s ease-in-out infinite 3s",
         "pulse-slow": "pulse-slow 4s ease-in-out infinite",
       },
       backgroundSize: {
