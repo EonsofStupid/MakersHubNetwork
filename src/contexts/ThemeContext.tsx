@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { Theme, ThemeContextType } from '@/types/theme';
+import { supabase } from '@/integrations/supabase/client';
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
@@ -10,7 +11,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     themeTokens, 
     themeComponents, 
     isLoading, 
-    error, 
+    error,
     setTheme,
     loadAdminComponents 
   } = useThemeStore();
@@ -21,7 +22,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         .from('themes')
         .select('id')
         .eq('is_default', true)
-        .single();
+        .maybeSingle();
 
       if (defaultTheme) {
         await setTheme(defaultTheme.id);

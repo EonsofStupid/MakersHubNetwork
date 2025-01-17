@@ -2,17 +2,9 @@ import { create } from "zustand";
 import { Theme, ThemeComponent, ThemeToken } from "@/types/theme";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { ThemeStore } from "./types";
 
-interface ThemeState {
-  currentTheme: Theme | null;
-  themeTokens: ThemeToken[];
-  themeComponents: ThemeComponent[];
-  adminComponents: ThemeComponent[];
-  isLoading: boolean;
-  error: Error | null;
-}
-
-export const useThemeStore = create<ThemeState>((set, get) => ({
+export const useThemeStore = create<ThemeStore>((set, get) => ({
   currentTheme: null,
   themeTokens: [],
   themeComponents: [],
@@ -29,7 +21,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         .from('themes')
         .select('*')
         .eq('id', themeId)
-        .single();
+        .maybeSingle();
 
       if (themeError) throw themeError;
 
@@ -52,14 +44,17 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 
       set({
         currentTheme: theme,
-        themeTokens: tokens,
-        themeComponents: components,
+        themeTokens: tokens || [],
+        themeComponents: components?.map(comp => ({
+          ...comp,
+          styles: comp.styles as Record<string, any>
+        })) || [],
         error: null
       });
 
       toast({
         title: "Theme Updated",
-        description: `Successfully loaded theme: ${theme.name}`,
+        description: `Successfully loaded theme: ${theme?.name}`,
       });
     } catch (error) {
       set({ error: error as Error });
@@ -84,7 +79,12 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 
       if (error) throw error;
 
-      set({ adminComponents: adminComponents || [] });
+      set({ 
+        adminComponents: adminComponents?.map(comp => ({
+          ...comp,
+          styles: comp.styles as Record<string, any>
+        })) || [] 
+      });
     } catch (error) {
       set({ error: error as Error });
       toast({
