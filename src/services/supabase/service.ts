@@ -70,7 +70,7 @@ export class SupabaseService {
       const { data, error } = await supabase
         .from(table)
         .select(columns || '*')
-        .eq('id' as string, id)
+        .eq('id' as keyof Tables[T]['Row'], id)
         .maybeSingle();
 
       if (error) throw error;
@@ -92,7 +92,7 @@ export class SupabaseService {
     try {
       const { data: inserted, error } = await supabase
         .from(table)
-        .insert(data)
+        .insert(data as unknown as Tables[T]['Insert'])
         .select()
         .single();
 
@@ -116,8 +116,8 @@ export class SupabaseService {
     try {
       const { data: updated, error } = await supabase
         .from(table)
-        .update(data)
-        .eq('id' as string, id)
+        .update(data as unknown as Tables[T]['Update'])
+        .eq('id' as keyof Tables[T]['Row'], id)
         .select()
         .single();
 
@@ -141,7 +141,7 @@ export class SupabaseService {
       const { error } = await supabase
         .from(table)
         .delete()
-        .eq('id' as string, id);
+        .eq('id' as keyof Tables[T]['Row'], id);
 
       if (error) throw error;
 
@@ -163,12 +163,12 @@ export class SupabaseService {
     const channel = supabase
       .channel(`public:${table}`)
       .on(
-        'postgres_changes' as const,
+        'postgres_changes' as any,
         { event: '*', schema: 'public', table, filter },
-        (payload) => {
+        (payload: any) => {
           callback({
             new: payload.new as Row<T>,
-            old: payload.old as Row<T> | null,
+            old: payload.old as Row<T>,
             eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
           });
         }
