@@ -63,7 +63,7 @@ export class SupabaseService {
       const { data, error } = await supabase
         .from(table)
         .select(columns || '*')
-        .eq('id' as keyof Tables[T]['Row'], id)
+        .eq('id', id)
         .maybeSingle();
 
       if (error) throw error;
@@ -85,7 +85,7 @@ export class SupabaseService {
     try {
       const { data: inserted, error } = await supabase
         .from(table)
-        .insert(data)
+        .insert(data as Tables[T]['Insert'])
         .select()
         .maybeSingle();
 
@@ -109,8 +109,8 @@ export class SupabaseService {
     try {
       const { data: updated, error } = await supabase
         .from(table)
-        .update(data)
-        .eq('id' as keyof Tables[T]['Row'], id)
+        .update(data as Tables[T]['Update'])
+        .eq('id', id)
         .select()
         .maybeSingle();
 
@@ -134,7 +134,7 @@ export class SupabaseService {
       const { error } = await supabase
         .from(table)
         .delete()
-        .eq('id' as keyof Tables[T]['Row'], id);
+        .eq('id', id);
 
       if (error) throw error;
 
@@ -158,10 +158,10 @@ export class SupabaseService {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table, filter },
-        (payload: any) => {
+        (payload) => {
           callback({
             new: payload.new as Row<T>,
-            old: payload.old as Row<T>,
+            old: payload.old as Row<T> | null,
             eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
           });
         }
