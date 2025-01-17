@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Theme, ThemeToken, ThemeComponent } from '@/types/supabase';
-import { themeService } from '@/services/supabase/theme.service';
+import { Theme, ThemeToken, ThemeComponent } from '@/integrations/supabase/types';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
 interface ThemeContextType {
@@ -28,16 +28,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       // Fetch theme
-      const { data: theme, error: themeError } = await themeService.getById(themeId);
+      const { data: theme, error: themeError } = await supabase
+        .from('themes')
+        .select('*')
+        .eq('id', themeId)
+        .single();
       if (themeError) throw themeError;
       if (!theme) throw new Error(`Theme with id ${themeId} not found`);
 
       // Fetch theme tokens
-      const { data: tokens, error: tokensError } = await themeService.getThemeTokens(themeId);
+      const { data: tokens, error: tokensError } = await supabase
+        .from('theme_tokens')
+        .select('*')
+        .eq('theme_id', themeId);
       if (tokensError) throw tokensError;
 
       // Fetch theme components
-      const { data: components, error: componentsError } = await themeService.getThemeComponents(themeId);
+      const { data: components, error: componentsError } = await supabase
+        .from('theme_components')
+        .select('*')
+        .eq('theme_id', themeId);
       if (componentsError) throw componentsError;
 
       setCurrentTheme(theme);
@@ -68,7 +78,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Load default theme on mount
   useEffect(() => {
     const loadDefaultTheme = async () => {
-      const { data: defaultTheme, error } = await themeService.getDefaultTheme();
+      const { data: defaultTheme, error } = await supabase
+        .from('themes')
+        .select('*')
+        .eq('is_default', true)
+        .single();
 
       if (error) {
         setError(error);

@@ -134,3 +134,5 @@ export class SupabaseService<T extends TableName> {
     }
   }
 }
+
+export const supabaseService = new SupabaseService('themes');
