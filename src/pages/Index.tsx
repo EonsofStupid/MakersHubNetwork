@@ -1,6 +1,12 @@
 import { MainNav } from "@/components/MainNav";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Database, Users, Building } from "lucide-react";
+import { CSSProperties } from "react";
+
+// Define custom CSS properties interface
+interface CustomCSSProperties extends CSSProperties {
+  '--stream-duration': string;
+}
 
 const Index = () => {
   return (
@@ -33,7 +39,7 @@ const Index = () => {
                 top: `${Math.random() * 100}%`,
                 '--stream-duration': `${15 + Math.random() * 10}s`,
                 animationDelay: `-${Math.random() * 15}s`,
-              }}
+              } as CustomCSSProperties}
             >
               <div className="absolute inset-0 blur-sm bg-primary/50" />
             </div>
@@ -56,7 +62,7 @@ const Index = () => {
                     left: `${Math.random() * 200 - 100}px`,
                     '--stream-duration': `${8 + Math.random() * 7}s`,
                     animationDelay: `-${Math.random() * 8}s`,
-                  }}
+                  } as CustomCSSProperties}
                 >
                   <div className="absolute inset-0 blur-sm bg-primary/50" />
                 </div>
