@@ -11,7 +11,7 @@ interface CustomCSSProperties extends CSSProperties {
 
 const Index = () => {
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden pb-[400px]">
       {/* Enhanced Background System */}
       <div className="fixed inset-0 -z-10">
         {/* Base gradient with animation */}

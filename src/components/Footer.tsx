@@ -12,9 +12,9 @@ export function Footer() {
   return (
     <footer
       className={cn(
-        "w-full z-40 transition-all duration-[1.5s] ease-in-out mt-20",
+        "fixed bottom-0 left-0 right-0 w-full z-40 transition-all duration-[1.5s] ease-in-out",
         isLoaded
-          ? "bg-background/20 backdrop-blur-xl shadow-[0_-8px_32px_0_rgba(0,240,255,0.2)] border-t border-primary/30 before:absolute before:inset-0 before:bg-gradient-to-t before:from-primary/5 before:to-transparent before:pointer-events-none"
+          ? "bg-background/20 backdrop-blur-xl shadow-[0_-8px_32px_0_rgba(0,240,255,0.2)] border-t border-primary/30 before:absolute before:inset-0 before:bg-gradient-to-b before:from-primary/5 before:to-transparent before:pointer-events-none"
           : "bg-transparent",
         "before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-0 before:transition-opacity before:duration-1000",
         isLoaded && [
@@ -24,8 +24,8 @@ export function Footer() {
         ]
       )}
       style={{
-        transform: isLoaded ? "perspective(1000px) rotateX(-1deg)" : "none",
-        clipPath: "polygon(2% 0%, 98% 0%, 100% 100%, 0% 100%)",
+        transform: isLoaded ? "perspective(1000px) rotateX(1deg)" : "none",
+        clipPath: "polygon(0 100%, 100% 100%, 98% 0%, 2% 0%)",
       }}
     >
       <div className="container mx-auto px-4">
