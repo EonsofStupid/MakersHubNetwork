@@ -9,6 +9,7 @@ import type {
   SubscriptionCallback,
   Tables
 } from './types';
+import { PostgrestError } from '@supabase/supabase-js';
 
 export class SupabaseService {
   private channels: ReturnType<typeof supabase.channel>[] = [];
@@ -24,6 +25,20 @@ export class SupabaseService {
         query = query.match(options.filter);
       }
 
+      if (options?.orderBy) {
+        query = query.order(options.orderBy.column, {
+          ascending: options.orderBy.ascending ?? true
+        });
+      }
+
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
+
+      if (options?.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
+      }
+
       const { data, error } = await query;
       
       if (error) throw error;
@@ -36,7 +51,7 @@ export class SupabaseService {
     } catch (error) {
       return {
         data: null,
-        error: error as any,
+        error: error as PostgrestError,
         status: 400
       };
     }
@@ -44,15 +59,14 @@ export class SupabaseService {
 
   async getById<T extends TableName>(
     table: T,
-    id: string,
-    columns?: string
+    id: string
   ): Promise<ServiceResponse<Row<T>>> {
     try {
       const { data, error } = await supabase
         .from(table)
-        .select(columns || '*')
+        .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -64,7 +78,7 @@ export class SupabaseService {
     } catch (error) {
       return {
         data: null,
-        error: error as any,
+        error: error as PostgrestError,
         status: 400
       };
     }
@@ -77,9 +91,9 @@ export class SupabaseService {
     try {
       const { data: created, error } = await supabase
         .from(table)
-        .insert(data as Tables[T]['Insert'])
+        .insert(data)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -91,7 +105,7 @@ export class SupabaseService {
     } catch (error) {
       return {
         data: null,
-        error: error as any,
+        error: error as PostgrestError,
         status: 400
       };
     }
@@ -105,10 +119,10 @@ export class SupabaseService {
     try {
       const { data: updated, error } = await supabase
         .from(table)
-        .update(data as Tables[T]['Update'])
+        .update(data)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -120,7 +134,7 @@ export class SupabaseService {
     } catch (error) {
       return {
         data: null,
-        error: error as any,
+        error: error as PostgrestError,
         status: 400
       };
     }
@@ -136,7 +150,7 @@ export class SupabaseService {
         .delete()
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -148,7 +162,7 @@ export class SupabaseService {
     } catch (error) {
       return {
         data: null,
-        error: error as any,
+        error: error as PostgrestError,
         status: 400
       };
     }
