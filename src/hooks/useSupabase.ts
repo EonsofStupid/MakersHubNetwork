@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabaseService } from '@/services/supabase/service';
-import type { TableName, Row, Insert, Update, QueryOptions } from '@/services/supabase/types';
+import { supabase } from '@/integrations/supabase/client';
+import { TableName, Row, Insert, Update, QueryOptions } from '@/integrations/supabase/types';
 
 export function useSupabase<T extends TableName>(table: T) {
   const queryClient = useQueryClient();
@@ -9,42 +9,57 @@ export function useSupabase<T extends TableName>(table: T) {
   const getAll = (options?: QueryOptions) => {
     return useQuery({
       queryKey: [table, options],
-      queryFn: () => supabaseService.getAll<T>(table, options)
+      queryFn: () => supabase.from(table).select('*').then(({ data, error }) => {
+        if (error) throw error;
+        return data as Row<T>[];
+      }),
     });
   };
 
   const getById = (id: string) => {
     return useQuery({
       queryKey: [table, id],
-      queryFn: () => supabaseService.getById<T>(table, id)
+      queryFn: () => supabase.from(table).select('*').eq('id', id).single().then(({ data, error }) => {
+        if (error) throw error;
+        return data as Row<T>;
+      }),
     });
   };
 
   const create = () => {
     return useMutation({
-      mutationFn: (data: Insert<T>) => supabaseService.create<T>(table, data),
+      mutationFn: (data: Insert<T>) => supabase.from(table).insert(data).then(({ data, error }) => {
+        if (error) throw error;
+        return data as Row<T>;
+      }),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [table] });
-      }
+      },
     });
   };
 
   const update = () => {
     return useMutation({
       mutationFn: ({ id, data }: { id: string; data: Update<T> }) =>
-        supabaseService.update<T>(table, id, data),
+        supabase.from(table).update(data).eq('id', id).then(({ data, error }) => {
+          if (error) throw error;
+          return data as Row<T>;
+        }),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [table] });
-      }
+      },
     });
   };
 
   const remove = () => {
     return useMutation({
-      mutationFn: (id: string) => supabaseService.delete<T>(table, id),
+      mutationFn: (id: string) => supabase.from(table).delete().eq('id', id).then(({ data, error }) => {
+        if (error) throw error;
+        return data as Row<T>;
+      }),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [table] });
-      }
+      },
     });
   };
 
@@ -54,7 +69,7 @@ export function useSupabase<T extends TableName>(table: T) {
     eventType: 'INSERT' | 'UPDATE' | 'DELETE';
   }) => void) => {
     useEffect(() => {
-      const subscription = supabaseService.subscribe(table, callback);
+      const subscription = supabase.from(table).on('*', callback).subscribe();
       return () => {
         subscription.unsubscribe();
       };
@@ -67,6 +82,6 @@ export function useSupabase<T extends TableName>(table: T) {
     create,
     update,
     remove,
-    subscribe
+    subscribe,
   };
 }
