@@ -2,12 +2,9 @@ import { PostgrestError } from '@supabase/supabase-js';
 import { Database } from '@/integrations/supabase/types';
 
 type PublicSchema = Database['public'];
-type Tables = PublicSchema['Tables'];
+export type Tables = PublicSchema['Tables'];
 
 export type TableName = keyof Tables;
-
-// Helper type to get the table definition for a specific table
-export type TableDefinition<T extends TableName> = Tables[T];
 
 // Helper type to get the Row type for a specific table
 export type Row<T extends TableName> = Tables[T]['Row'];
