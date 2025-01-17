@@ -24,7 +24,8 @@ export function MainNav() {
     };
     window.addEventListener("scroll", handleScroll);
 
-    setTimeout(() => setIsLoaded(true), 100);
+    // Delay the loaded state to ensure initial animation
+    setTimeout(() => setIsLoaded(true), 500);
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -39,29 +40,49 @@ export function MainNav() {
   return (
     <header
       className={cn(
-        "fixed top-0 w-full z-50 transition-all duration-700 ease-in-out",
+        "fixed top-0 w-full z-50 transition-all duration-[1.5s] ease-in-out",
         isScrolled || isLoaded
-          ? "bg-background/40 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.1)] animate-morph-header border-b border-primary/10"
+          ? "bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30 after:absolute after:inset-0 after:bg-gradient-to-b after:from-primary/5 after:to-transparent after:pointer-events-none"
           : "bg-transparent",
-        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/20 before:to-secondary/20 before:opacity-0 before:transition-opacity before:duration-700",
-        (isScrolled || isLoaded) && "before:opacity-30"
+        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-0 before:transition-opacity before:duration-1000",
+        (isScrolled || isLoaded) && [
+          "before:opacity-100",
+          "animate-morph-header",
+          "shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(0,240,255,0.1)]",
+          "after:content-[''] after:absolute after:inset-0 after:border-2 after:border-primary/20 after:rounded-b-lg after:transition-all after:duration-1000"
+        ]
       )}
+      style={{
+        transform: isScrolled || isLoaded ? "perspective(1000px) rotateX(1deg)" : "none",
+      }}
     >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between py-4">
           <Link 
             to="/" 
-            className="relative text-2xl font-bold transition-colors duration-500 hover:text-[#FF2D6E] group"
+            className="relative text-2xl font-bold transition-all duration-1000 hover:translate-y-[-2px] group"
             onMouseMove={handleMouseMove}
             style={{
               '--x': `${mousePosition.x}px`,
               '--y': `${mousePosition.y}px`,
             } as React.CSSProperties}
           >
-            <span className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary group-hover:from-[#FF2D6E] group-hover:to-[#FF2D6E] transition-all duration-500">
-              Maker Network
+            <span className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary transition-all duration-1000 group-hover:from-[#FF2D6E] group-hover:to-[#FF2D6E]">
+              <span className="transition-colors duration-1000 group-hover:text-[#FF2D6E]">M</span>
+              <span className="transition-colors duration-[1200ms] group-hover:text-[#FF2D6E]">a</span>
+              <span className="transition-colors duration-[1400ms] group-hover:text-[#FF2D6E]">k</span>
+              <span className="transition-colors duration-[1600ms] group-hover:text-[#FF2D6E]">e</span>
+              <span className="transition-colors duration-[1800ms] group-hover:text-[#FF2D6E]">r</span>
+              <span className="transition-colors duration-[2000ms] group-hover:text-[#FF2D6E]"> </span>
+              <span className="transition-colors duration-[2200ms] group-hover:text-[#FF2D6E]">N</span>
+              <span className="transition-colors duration-[2400ms] group-hover:text-[#FF2D6E]">e</span>
+              <span className="transition-colors duration-[2600ms] group-hover:text-[#FF2D6E]">t</span>
+              <span className="transition-colors duration-[2800ms] group-hover:text-[#FF2D6E]">w</span>
+              <span className="transition-colors duration-[3000ms] group-hover:text-[#FF2D6E]">o</span>
+              <span className="transition-colors duration-[3200ms] group-hover:text-[#FF2D6E]">r</span>
+              <span className="transition-colors duration-[3400ms] group-hover:text-[#FF2D6E]">k</span>
             </span>
-            <div className="absolute inset-0 bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full scale-150"></div>
+            <div className="absolute inset-0 bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-all duration-1000 rounded-full scale-150"></div>
           </Link>
 
           <NavigationMenu>
