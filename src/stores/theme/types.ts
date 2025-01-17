@@ -7,6 +7,8 @@ export interface ThemeState {
   adminComponents: ThemeComponent[];
   isLoading: boolean;
   error: Error | null;
+  setTheme: (themeId: string) => Promise<void>;
+  loadAdminComponents: () => Promise<void>;
 }
 
 export interface ThemeActions {
