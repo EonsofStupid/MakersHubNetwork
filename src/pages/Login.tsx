@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { MainNav } from "@/components/MainNav";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
@@ -22,17 +22,70 @@ const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [siteKey, setSiteKey] = useState<string>('');
+
+  useEffect(() => {
+    // Fetch the hCaptcha site key from Supabase
+    const fetchSiteKey = async () => {
+      const { data: { HCAPTCHA_SITE_KEY }, error } = await supabase
+        .functions.invoke('get-secret', {
+          body: { secretName: 'HCAPTCHA_SITE_KEY' }
+        });
+      
+      if (error) {
+        console.error('Error fetching hCaptcha site key:', error);
+        toast({
+          title: "Error",
+          description: "Failed to initialize captcha. Please try again later.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setSiteKey(HCAPTCHA_SITE_KEY);
+    };
+
+    fetchSiteKey();
+  }, [toast]);
 
   // Auto-redirect on successful auth
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      navigate('/');
-      toast({
-        title: "Success",
-        description: "Logged in successfully",
-      });
-    }
-  });
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        navigate('/');
+        toast({
+          title: "Success",
+          description: "Logged in successfully",
+        });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, toast]);
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+    console.log('hCaptcha Token:', token);
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+    console.log('hCaptcha Token Expired');
+    toast({
+      title: "Captcha Expired",
+      description: "Please complete the captcha again",
+      variant: "destructive",
+    });
+  };
+
+  const handleCaptchaError = (err: Error) => {
+    console.error('hCaptcha Error:', err);
+    toast({
+      title: "Error",
+      description: "Failed to verify captcha. Please try again.",
+      variant: "destructive",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -55,68 +108,59 @@ const Login = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Auth
-                supabaseClient={supabase}
-                view="magic_link"
-                providers={['google', 'github']}
-                appearance={{
-                  theme: ThemeSupa,
-                  variables: {
-                    default: {
-                      colors: {
-                        brand: '#00F0FF',
-                        brandAccent: '#FF2D6E',
-                        brandButtonText: 'white',
-                        defaultButtonBackground: 'transparent',
-                        defaultButtonBackgroundHover: 'rgba(0, 240, 255, 0.1)',
-                        defaultButtonBorder: '#00F0FF',
-                        defaultButtonText: '#00F0FF',
-                      },
-                      radii: {
-                        borderRadiusButton: '0.5rem',
-                        buttonBorderRadius: '0.5rem',
-                        inputBorderRadius: '0.5rem',
+              {siteKey && (
+                <Auth
+                  supabaseClient={supabase}
+                  view="magic_link"
+                  providers={['google', 'github']}
+                  appearance={{
+                    theme: ThemeSupa,
+                    variables: {
+                      default: {
+                        colors: {
+                          brand: '#00F0FF',
+                          brandAccent: '#FF2D6E',
+                          brandButtonText: 'white',
+                          defaultButtonBackground: 'transparent',
+                          defaultButtonBackgroundHover: 'rgba(0, 240, 255, 0.1)',
+                          defaultButtonBorder: '#00F0FF',
+                          defaultButtonText: '#00F0FF',
+                        },
+                        radii: {
+                          borderRadiusButton: '0.5rem',
+                          buttonBorderRadius: '0.5rem',
+                          inputBorderRadius: '0.5rem',
+                        },
                       },
                     },
-                  },
-                  className: {
-                    container: 'auth-container',
-                    button: `w-full p-2 rounded ${!captchaToken ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary text-white hover:bg-primary/90'}`,
-                    input: 'auth-input',
-                  },
-                }}
-                localization={{
-                  variables: {
-                    sign_in: {
-                      email_label: 'Email',
-                      password_label: 'Password',
-                      button_label: captchaToken ? 'Sign In' : 'Complete captcha to sign in',
+                    className: {
+                      button: `w-full p-2 rounded ${!captchaToken ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary/90'}`,
+                      input: 'auth-input',
+                      label: 'text-foreground',
                     },
-                  },
-                }}
-                theme="dark"
-                redirectTo={window.location.origin}
-              />
-              <div className="mt-4 flex justify-center">
-                <HCaptcha
-                  sitekey="10000000-ffff-ffff-ffff-000000000001"
-                  onVerify={(token) => {
-                    setCaptchaToken(token);
-                    console.log('hCaptcha Token:', token);
                   }}
-                  onExpire={() => {
-                    setCaptchaToken(null);
-                    console.log('hCaptcha Token Expired');
+                  localization={{
+                    variables: {
+                      sign_in: {
+                        email_label: 'Email',
+                        password_label: 'Password',
+                        button_label: captchaToken ? 'Sign In' : 'Complete captcha to sign in',
+                      },
+                    },
                   }}
-                  onError={(err) => {
-                    console.error('hCaptcha Error:', err);
-                    toast({
-                      title: "Error",
-                      description: "Failed to verify captcha. Please try again.",
-                      variant: "destructive",
-                    });
-                  }}
+                  theme="dark"
+                  redirectTo={window.location.origin}
                 />
+              )}
+              <div className="mt-4 flex justify-center">
+                {siteKey && (
+                  <HCaptcha
+                    sitekey={siteKey}
+                    onVerify={handleCaptchaVerify}
+                    onExpire={handleCaptchaExpire}
+                    onError={handleCaptchaError}
+                  />
+                )}
               </div>
             </CardContent>
           </div>
