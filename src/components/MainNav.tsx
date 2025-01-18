@@ -14,10 +14,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { UserMenu } from "./auth/UserMenu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { Login } from "@/pages/Login";
 
 export function MainNav() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -25,30 +22,18 @@ export function MainNav() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 0);
     };
     window.addEventListener("scroll", handleScroll);
-
-    // Delay the loaded state to ensure initial animation
     setTimeout(() => setIsLoaded(true), 500);
-
-    // Auto-redirect on successful auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        setIsLoginOpen(false);
-        navigate('/');
-      }
-    });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -78,7 +63,6 @@ export function MainNav() {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
-
           <Link 
             to="/" 
             className="relative text-2xl font-bold transition-all duration-1000 hover:translate-y-[-8px] group"
@@ -205,43 +189,7 @@ export function MainNav() {
                     transformOrigin: "100% 50%",
                   }}
                 >
-                  <div className="transform skew-[5deg] origin-top-right">
-                    <h2 className="text-2xl font-heading text-primary mb-6">Welcome Back</h2>
-                    <Auth
-                      supabaseClient={supabase}
-                      appearance={{
-                        theme: ThemeSupa,
-                        variables: {
-                          default: {
-                            colors: {
-                              brand: '#00F0FF',
-                              brandAccent: '#FF2D6E',
-                              brandButtonText: 'white',
-                              defaultButtonBackground: 'transparent',
-                              defaultButtonBackgroundHover: 'rgba(0, 240, 255, 0.1)',
-                              defaultButtonBorder: '#00F0FF',
-                              defaultButtonText: '#00F0FF',
-                            },
-                            radii: {
-                              borderRadiusButton: '0.5rem',
-                              buttonBorderRadius: '0.5rem',
-                              inputBorderRadius: '0.5rem',
-                            },
-                          },
-                        },
-                        className: {
-                          container: 'auth-container',
-                          button: 'auth-button',
-                          input: 'auth-input',
-                        },
-                      }}
-                      theme="dark"
-                      providers={['github', 'google', 'discord']}
-                      view="sign_in"
-                      showLinks={true}
-                      redirectTo={window.location.origin}
-                    />
-                  </div>
+                  <Login onSuccess={() => setIsLoginOpen(false)} />
                 </SheetContent>
               </Sheet>
             )}
