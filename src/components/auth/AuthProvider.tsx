@@ -41,52 +41,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log("Auth state changed:", event);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-
-        if (event === "SIGNED_IN" && currentSession?.user) {
-          const { data: userRoles, error: rolesError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", currentSession.user.id);
-          
-          if (rolesError) {
-            console.error("Error fetching roles:", rolesError);
-            setError(rolesError.message);
-            toast({
-              variant: "destructive",
-              title: "Error",
-              description: "Failed to fetch user roles.",
-            });
-          } else {
-            setRoles(userRoles?.map(ur => ur.role) || []);
-            toast({
-              title: "Welcome back!",
-              description: "You have successfully signed in.",
-            });
-          }
-        }
-
-        if (event === "SIGNED_OUT") {
-          setRoles([]);
-          navigate("/login");
-          toast({
-            title: "Signed out",
-            description: "You have been successfully signed out.",
-          });
-        }
-      }
-    );
-
     initializeAuth();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate, setUser, setSession, setRoles, setError, setLoading, setInitialized, toast]);
+  }, [setUser, setSession, setRoles, setError, setLoading, setInitialized, toast]);
 
   return <>{children}</>;
 };
