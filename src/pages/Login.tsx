@@ -120,7 +120,7 @@ const Login = ({ open, onOpenChange, onSuccess }: LoginProps) => {
               },
               className: {
                 container: 'auth-container',
-                button: `auth-button ${!captchaToken ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary/90'}`,
+                button: `auth-button ${!captchaToken ? 'opacity-50 cursor-not-allowed' : ''}`,
                 input: 'auth-input',
               },
             }}
@@ -129,6 +129,7 @@ const Login = ({ open, onOpenChange, onSuccess }: LoginProps) => {
             view="sign_in"
             showLinks={true}
             redirectTo={window.location.origin}
+            onlyThirdPartyProviders={true}
           />
           <div className="mt-4 flex justify-center">
             {siteKey && (
