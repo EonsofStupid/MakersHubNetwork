@@ -34,26 +34,6 @@ const Login = () => {
     }
   });
 
-  // Custom auth UI with hCaptcha integration
-  const customAuthComponents = {
-    Button: (props: any) => {
-      const isSignIn = props.children === 'Sign in';
-      return (
-        <button
-          {...props}
-          disabled={isSignIn && !captchaToken}
-          className={`w-full p-2 rounded ${
-            isSignIn && !captchaToken
-              ? 'bg-gray-300 cursor-not-allowed'
-              : 'bg-primary text-white hover:bg-primary/90'
-          }`}
-        >
-          {props.children}
-        </button>
-      );
-    },
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <MainNav />
@@ -101,7 +81,7 @@ const Login = () => {
                   },
                   className: {
                     container: 'auth-container',
-                    button: 'auth-button',
+                    button: `w-full p-2 rounded ${!captchaToken ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary text-white hover:bg-primary/90'}`,
                     input: 'auth-input',
                   },
                 }}
@@ -116,30 +96,28 @@ const Login = () => {
                 }}
                 theme="dark"
                 redirectTo={window.location.origin}
-                components={customAuthComponents}
-              >
-                <div className="mt-4 flex justify-center">
-                  <HCaptcha
-                    sitekey="10000000-ffff-ffff-ffff-000000000001"
-                    onVerify={(token) => {
-                      setCaptchaToken(token);
-                      console.log('hCaptcha Token:', token);
-                    }}
-                    onExpire={() => {
-                      setCaptchaToken(null);
-                      console.log('hCaptcha Token Expired');
-                    }}
-                    onError={(err) => {
-                      console.error('hCaptcha Error:', err);
-                      toast({
-                        title: "Error",
-                        description: "Failed to verify captcha. Please try again.",
-                        variant: "destructive",
-                      });
-                    }}
-                  />
-                </div>
-              </Auth>
+              />
+              <div className="mt-4 flex justify-center">
+                <HCaptcha
+                  sitekey="10000000-ffff-ffff-ffff-000000000001"
+                  onVerify={(token) => {
+                    setCaptchaToken(token);
+                    console.log('hCaptcha Token:', token);
+                  }}
+                  onExpire={() => {
+                    setCaptchaToken(null);
+                    console.log('hCaptcha Token Expired');
+                  }}
+                  onError={(err) => {
+                    console.error('hCaptcha Error:', err);
+                    toast({
+                      title: "Error",
+                      description: "Failed to verify captcha. Please try again.",
+                      variant: "destructive",
+                    });
+                  }}
+                />
+              </div>
             </CardContent>
           </div>
         </SheetContent>
