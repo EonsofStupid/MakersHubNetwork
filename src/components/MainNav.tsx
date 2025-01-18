@@ -13,6 +13,7 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { UserMenu } from "./auth/UserMenu";
+import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 
 export function MainNav() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -172,9 +173,13 @@ export function MainNav() {
             {isAuthenticated ? (
               <UserMenu />
             ) : (
-              <Button asChild className="mad-scientist-hover">
-                <Link to="/login">Login</Link>
-              </Button>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button className="mad-scientist-hover">
+                    Login
+                  </Button>
+                </SheetTrigger>
+              </Sheet>
             )}
           </div>
         </div>
