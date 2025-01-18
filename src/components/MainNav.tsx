@@ -2,12 +2,10 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { UserMenu } from "./auth/UserMenu";
-import { useState } from "react";
-import { LoginModal } from "./auth/LoginModal";
+import { LoginButton } from "./auth/LoginButton";
 
 export function MainNav() {
   const { isAuthenticated } = useAuth();
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   return (
     <header className="supports-backdrop-blur:bg-background/60 sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
@@ -58,14 +56,7 @@ export function MainNav() {
             </button>
           </div>
           <div className="flex items-center gap-2">
-            {isAuthenticated ? (
-              <UserMenu />
-            ) : (
-              <LoginModal 
-                isOpen={isLoginOpen}
-                onOpenChange={setIsLoginOpen}
-              />
-            )}
+            {isAuthenticated ? <UserMenu /> : <LoginButton />}
           </div>
         </div>
       </div>

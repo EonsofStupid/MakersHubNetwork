@@ -1,7 +1,8 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth/store";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 import {
   selectUser,
   selectSession,
@@ -14,6 +15,7 @@ import {
 
 export const useAuth = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const user = useAuthStore(selectUser);
   const session = useAuthStore(selectSession);
   const roles = useAuthStore(selectRoles);
@@ -34,32 +36,6 @@ export const useAuth = () => {
   } = useAuthStore();
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        setLoading(true);
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        
-        if (initialSession) {
-          setSession(initialSession);
-          setUser(initialSession.user);
-          
-          const { data: userRoles, error: rolesError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", initialSession.user.id);
-          
-          if (rolesError) throw rolesError;
-          setRoles(userRoles?.map(ur => ur.role) || []);
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-        setError((error as Error).message);
-      } finally {
-        setLoading(false);
-        setInitialized(true);
-      }
-    };
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         console.log("Auth state changed:", event);
@@ -75,24 +51,35 @@ export const useAuth = () => {
           if (rolesError) {
             console.error("Error fetching roles:", rolesError);
             setError(rolesError.message);
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Failed to fetch user roles.",
+            });
           } else {
             setRoles(userRoles?.map(ur => ur.role) || []);
+            toast({
+              title: "Welcome back!",
+              description: "You have successfully signed in.",
+            });
           }
         }
 
         if (event === "SIGNED_OUT") {
           setRoles([]);
           navigate("/login");
+          toast({
+            title: "Signed out",
+            description: "You have been successfully signed out.",
+          });
         }
       }
     );
 
-    initializeAuth();
-
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, setUser, setSession, setRoles, setError, setLoading, setInitialized]);
+  }, [navigate, setUser, setSession, setRoles, setError, toast]);
 
   return {
     user,
