@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -8,46 +7,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { MainNav } from "@/components/MainNav";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useAuthStore } from "@/stores/auth/store";
 
 interface LoginProps {
   onSuccess?: () => void;
 }
 
 const Login = ({ onSuccess }: LoginProps) => {
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const { setUser, setSession, setRoles } = useAuthStore();
-
-  // Use the existing auth state change listener
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      setSession(session);
-      setUser(session.user);
-      
-      // Fetch user roles
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id);
-      
-      if (!rolesError) {
-        setRoles(userRoles?.map(ur => ur.role) || []);
-      }
-
-      onSuccess?.();
-      navigate('/');
-      toast({
-        title: "Success",
-        description: "Logged in successfully",
-      });
-    }
-  });
 
   return (
     <div className="transform skew-[10deg] origin-top-right">
