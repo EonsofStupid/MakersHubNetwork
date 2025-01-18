@@ -78,8 +78,9 @@ const Login = () => {
     });
   };
 
-  const handleCaptchaError = (err: Error) => {
-    console.error('hCaptcha Error:', err);
+  // Updated error handler to match the expected type
+  const handleCaptchaError = (event: string) => {
+    console.error('hCaptcha Error:', event);
     toast({
       title: "Error",
       description: "Failed to verify captcha. Please try again.",
