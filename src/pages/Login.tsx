@@ -82,22 +82,12 @@ const Login = () => {
                     button: 'auth-button',
                     input: 'auth-input',
                   },
-                  extend: (theme) => ({
-                    ...theme,
-                    button: {
-                      ...theme?.button,
-                      className: {
-                        ...theme?.button?.className,
-                        password: 'relative',
-                      },
-                    },
-                  }),
                 }}
                 localization={{
                   variables: {
                     sign_in: {
-                      password_input: 'Password',
-                      email_input: 'Email',
+                      password_label: 'Password',
+                      email_label: 'Email',
                       button_label: captchaToken ? 'Sign In' : 'Complete captcha to sign in',
                     },
                   },
@@ -106,16 +96,15 @@ const Login = () => {
                 providers={['google', 'github']}
                 redirectTo={window.location.origin}
                 view="magic_link"
-                children={
-                  <div className="mt-4">
-                    <HCaptcha
-                      sitekey="10000000-ffff-ffff-ffff-000000000001" // Replace with your actual hCaptcha site key
-                      onVerify={(token) => setCaptchaToken(token)}
-                      onExpire={() => setCaptchaToken(null)}
-                    />
-                  </div>
-                }
-              />
+              >
+                <div className="mt-4">
+                  <HCaptcha
+                    sitekey="10000000-ffff-ffff-ffff-000000000001" // Replace with your actual hCaptcha site key
+                    onVerify={(token) => setCaptchaToken(token)}
+                    onExpire={() => setCaptchaToken(null)}
+                  />
+                </div>
+              </Auth>
             </CardContent>
           </div>
         </SheetContent>
