@@ -9,14 +9,16 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { Search, User } from "lucide-react";
+import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { UserMenu } from "./auth/UserMenu";
 
 export function MainNav() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -167,12 +169,12 @@ export function MainNav() {
             <Button variant="ghost" size="icon" className="mad-scientist-hover">
               <Search className="h-5 w-5" />
             </Button>
-            {isUserLoggedIn ? (
-              <Button variant="ghost" size="icon" className="mad-scientist-hover">
-                <User className="h-5 w-5" />
-              </Button>
+            {isAuthenticated ? (
+              <UserMenu />
             ) : (
-              <Button className="mad-scientist-hover">Login</Button>
+              <Button asChild className="mad-scientist-hover">
+                <Link to="/login">Login</Link>
+              </Button>
             )}
           </div>
         </div>
