@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import {
   selectUser,
@@ -18,6 +19,18 @@ export const useAuth = () => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const isAdmin = useAuthStore(selectIsAdmin);
   const { hasRole, logout } = useAuthStore();
+
+  // Debug auth state changes in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Auth state updated:', {
+        user: user?.id,
+        isAuthenticated,
+        roles,
+        status: session ? 'authenticated' : 'unauthenticated'
+      });
+    }
+  }, [user, isAuthenticated, roles, session]);
 
   return {
     user,

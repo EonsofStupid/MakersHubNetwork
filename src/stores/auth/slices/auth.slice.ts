@@ -35,44 +35,6 @@ export const createAuthSlice: StateCreator<
   hasRole: (role) => get().roles.includes(role),
   isAdmin: () => get().roles.includes('admin'),
 
-  login: async (email: string, password: string) => {
-    try {
-      set({ status: 'loading', isLoading: true, error: null });
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.session) {
-        const { data: roles, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.session.user.id);
-        
-        if (rolesError) throw rolesError;
-
-        set({
-          user: data.session.user,
-          session: data.session,
-          roles: roles?.map(r => r.role) || [],
-          status: 'authenticated',
-          error: null
-        });
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      set({ 
-        error: error instanceof AuthError ? error.message : 'An error occurred during login',
-        status: 'unauthenticated'
-      });
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
   initialize: async () => {
     try {
       set({ status: 'loading', isLoading: true, error: null });
