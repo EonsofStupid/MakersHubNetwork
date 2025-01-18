@@ -34,6 +34,26 @@ const Login = () => {
     }
   });
 
+  // Custom auth UI with hCaptcha integration
+  const customAuthComponents = {
+    Button: (props: any) => {
+      const isSignIn = props.children === 'Sign in';
+      return (
+        <button
+          {...props}
+          disabled={isSignIn && !captchaToken}
+          className={`w-full p-2 rounded ${
+            isSignIn && !captchaToken
+              ? 'bg-gray-300 cursor-not-allowed'
+              : 'bg-primary text-white hover:bg-primary/90'
+          }`}
+        >
+          {props.children}
+        </button>
+      );
+    },
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <MainNav />
@@ -57,6 +77,8 @@ const Login = () => {
             <CardContent>
               <Auth
                 supabaseClient={supabase}
+                view="magic_link"
+                providers={['google', 'github']}
                 appearance={{
                   theme: ThemeSupa,
                   variables: {
@@ -86,22 +108,35 @@ const Login = () => {
                 localization={{
                   variables: {
                     sign_in: {
-                      password_label: 'Password',
                       email_label: 'Email',
+                      password_label: 'Password',
                       button_label: captchaToken ? 'Sign In' : 'Complete captcha to sign in',
                     },
                   },
                 }}
                 theme="dark"
-                providers={['google', 'github']}
                 redirectTo={window.location.origin}
-                view="magic_link"
+                components={customAuthComponents}
               >
-                <div className="mt-4">
+                <div className="mt-4 flex justify-center">
                   <HCaptcha
-                    sitekey="10000000-ffff-ffff-ffff-000000000001" // Replace with your actual hCaptcha site key
-                    onVerify={(token) => setCaptchaToken(token)}
-                    onExpire={() => setCaptchaToken(null)}
+                    sitekey="10000000-ffff-ffff-ffff-000000000001"
+                    onVerify={(token) => {
+                      setCaptchaToken(token);
+                      console.log('hCaptcha Token:', token);
+                    }}
+                    onExpire={() => {
+                      setCaptchaToken(null);
+                      console.log('hCaptcha Token Expired');
+                    }}
+                    onError={(err) => {
+                      console.error('hCaptcha Error:', err);
+                      toast({
+                        title: "Error",
+                        description: "Failed to verify captcha. Please try again.",
+                        variant: "destructive",
+                      });
+                    }}
                   />
                 </div>
               </Auth>
