@@ -13,13 +13,19 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { UserMenu } from "./auth/UserMenu";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export function MainNav() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,8 +36,19 @@ export function MainNav() {
     // Delay the loaded state to ensure initial animation
     setTimeout(() => setIsLoaded(true), 500);
 
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    // Auto-redirect on successful auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        setIsLoginOpen(false);
+        navigate('/');
+      }
+    });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -173,12 +190,56 @@ export function MainNav() {
             {isAuthenticated ? (
               <UserMenu />
             ) : (
-              <Sheet>
+              <Sheet open={isLoginOpen} onOpenChange={setIsLoginOpen}>
                 <SheetTrigger asChild>
                   <Button className="mad-scientist-hover">
                     Login
                   </Button>
                 </SheetTrigger>
+                <SheetContent 
+                  side="right" 
+                  className="w-[400px] backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5 before:pointer-events-none"
+                  style={{
+                    clipPath: "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
+                    transform: "translateX(0) skew(-10deg)",
+                    transformOrigin: "100% 50%",
+                  }}
+                >
+                  <div className="transform skew-[10deg] origin-top-right">
+                    <h2 className="text-2xl font-heading text-primary mb-6">Welcome Back</h2>
+                    <Auth
+                      supabaseClient={supabase}
+                      appearance={{
+                        theme: ThemeSupa,
+                        variables: {
+                          default: {
+                            colors: {
+                              brand: '#00F0FF',
+                              brandAccent: '#FF2D6E',
+                              brandButtonText: 'white',
+                              defaultButtonBackground: 'transparent',
+                              defaultButtonBackgroundHover: 'rgba(0, 240, 255, 0.1)',
+                              defaultButtonBorder: '#00F0FF',
+                              defaultButtonText: '#00F0FF',
+                            },
+                            radii: {
+                              borderRadiusButton: '0.5rem',
+                              buttonBorderRadius: '0.5rem',
+                              inputBorderRadius: '0.5rem',
+                            },
+                          },
+                        },
+                        className: {
+                          container: 'auth-container',
+                          button: 'auth-button',
+                          input: 'auth-input',
+                        },
+                      }}
+                      theme="dark"
+                      providers={[]}
+                    />
+                  </div>
+                </SheetContent>
               </Sheet>
             )}
           </div>
