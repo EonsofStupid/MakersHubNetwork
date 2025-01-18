@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { MainNav } from "@/components/MainNav";
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -47,42 +49,35 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <MainNav />
       <div className="container flex items-center justify-center px-4 py-24">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Login</CardTitle>
             <CardDescription>
-              Enter your credentials to access the admin area
+              Sign in to access your account
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="email">Email</label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="password">Password</label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Logging in..." : "Login"}
-              </Button>
-            </form>
+            <Auth
+              supabaseClient={supabase}
+              appearance={{
+                theme: ThemeSupa,
+                variables: {
+                  default: {
+                    colors: {
+                      brand: 'rgb(var(--primary))',
+                      brandAccent: 'rgb(var(--primary-foreground))',
+                    },
+                  },
+                },
+              }}
+              providers={['google', 'github']}
+              view="sign_in"
+              showLinks={true}
+              redirectTo={window.location.origin}
+            />
           </CardContent>
         </Card>
       </div>
