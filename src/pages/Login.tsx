@@ -21,26 +21,30 @@ const Login = ({ open, onOpenChange, onSuccess }: LoginProps) => {
 
   useEffect(() => {
     const fetchSiteKey = async () => {
-      const { data: { HCAPTCHA_SITE_KEY }, error } = await supabase
-        .functions.invoke('get-secret', {
-          body: { secretName: 'HCAPTCHA_SITE_KEY' }
-        });
-      
-      if (error) {
+      try {
+        const { data, error } = await supabase
+          .functions.invoke('get-secret', {
+            body: { secretName: 'HCAPTCHA_SITE_KEY' }
+          });
+
+        if (error) throw error;
+        if (!data?.HCAPTCHA_SITE_KEY) throw new Error('Site key not found');
+        
+        setSiteKey(data.HCAPTCHA_SITE_KEY);
+      } catch (error) {
         console.error('Error fetching hCaptcha site key:', error);
         toast({
           title: "Error",
           description: "Failed to initialize captcha. Please try again later.",
           variant: "destructive",
         });
-        return;
       }
-      
-      setSiteKey(HCAPTCHA_SITE_KEY);
     };
 
-    fetchSiteKey();
-  }, [toast]);
+    if (open) {
+      fetchSiteKey();
+    }
+  }, [open, toast]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
