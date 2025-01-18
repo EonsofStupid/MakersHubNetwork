@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { UserMenu } from "./auth/UserMenu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Login } from "@/pages/Login";
+import Login from "@/pages/Login";
 
 export function MainNav() {
   const [isScrolled, setIsScrolled] = useState(false);
