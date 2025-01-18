@@ -237,7 +237,7 @@ export function MainNav() {
                       }}
                       theme="dark"
                       providers={['github', 'google', 'discord']}
-                      view="magic_link"
+                      view="sign_in"
                       showLinks={true}
                       redirectTo={window.location.origin}
                     />
