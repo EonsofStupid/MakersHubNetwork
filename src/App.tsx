@@ -18,7 +18,7 @@ const App = () => {
         <BrowserRouter>
           <TooltipProvider>
             <Routes>
-              <Route path="/login" element={<Login />} />
+              <Route path="/login" element={<Login open={false} onOpenChange={() => {}} onSuccess={() => {}} />} />
               <Route
                 path="/admin"
                 element={
