@@ -406,7 +406,7 @@ export type Database = {
     }
     Enums: {
       theme_status: "draft" | "published" | "archived"
-      user_role: "admin" | "editor" | "viewer"
+      user_role: "admin" | "editor" | "viewer" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
