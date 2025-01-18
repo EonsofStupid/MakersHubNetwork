@@ -10,13 +10,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { User, Settings, LogOut, LayoutDashboard } from "lucide-react";
+import { User, Settings, LogOut, LayoutDashboard, Menu } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export const UserMenu = () => {
   const { user, roles, logout } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -40,51 +42,71 @@ export const UserMenu = () => {
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-8 w-8 rounded-full"
+          className="relative h-8 w-8 rounded-full hover:bg-primary/10 transition-colors"
         >
-          <User className="h-4 w-4" />
+          <Menu className="h-4 w-4 text-primary" />
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end">
-        <DropdownMenuLabel>
-          {user?.email || "My Account"}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/profile" className="cursor-pointer">
-            <User className="mr-2 h-4 w-4" />
-            Profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/settings" className="cursor-pointer">
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </Link>
-        </DropdownMenuItem>
-        {isAdmin && (
-          <DropdownMenuItem asChild>
-            <Link to="/admin" className="cursor-pointer">
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              Admin Dashboard
-            </Link>
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={handleLogout}
-          disabled={isLoading}
-          className="cursor-pointer text-red-600 focus:text-red-600"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          {isLoading ? "Logging out..." : "Log out"}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </SheetTrigger>
+      <SheetContent 
+        side="right" 
+        className="w-[300px] backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5 before:pointer-events-none"
+        style={{
+          clipPath: "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
+          transform: "translateX(0) skew(-10deg)",
+          transformOrigin: "100% 50%",
+        }}
+      >
+        <div className="transform skew-x-[10deg] origin-top-right">
+          <div className="space-y-4 pt-6">
+            <div className="px-4">
+              <h2 className="text-lg font-heading font-bold text-primary">
+                {user?.email || "My Account"}
+              </h2>
+            </div>
+            <nav className="space-y-2">
+              <Link
+                to="/profile"
+                className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 transition-colors rounded-md group"
+                onClick={() => setIsOpen(false)}
+              >
+                <User className="h-4 w-4 text-primary group-hover:animate-pulse" />
+                Profile
+              </Link>
+              <Link
+                to="/settings"
+                className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 transition-colors rounded-md group"
+                onClick={() => setIsOpen(false)}
+              >
+                <Settings className="h-4 w-4 text-primary group-hover:animate-pulse" />
+                Settings
+              </Link>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 transition-colors rounded-md group"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
+                  Admin Dashboard
+                </Link>
+              )}
+              <button
+                onClick={handleLogout}
+                disabled={isLoading}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-red-500/10 text-red-500 transition-colors rounded-md group"
+              >
+                <LogOut className="h-4 w-4 group-hover:animate-pulse" />
+                {isLoading ? "Logging out..." : "Log out"}
+              </button>
+            </nav>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
