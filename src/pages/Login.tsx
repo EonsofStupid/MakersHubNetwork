@@ -15,11 +15,13 @@ import { MainNav } from "@/components/MainNav";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 const Login = () => {
   const [isOpen, setIsOpen] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   // Auto-redirect on successful auth
   supabase.auth.onAuthStateChange((event, session) => {
@@ -80,10 +82,39 @@ const Login = () => {
                     button: 'auth-button',
                     input: 'auth-input',
                   },
+                  extend: (theme) => ({
+                    ...theme,
+                    button: {
+                      ...theme?.button,
+                      className: {
+                        ...theme?.button?.className,
+                        password: 'relative',
+                      },
+                    },
+                  }),
+                }}
+                localization={{
+                  variables: {
+                    sign_in: {
+                      password_input: 'Password',
+                      email_input: 'Email',
+                      button_label: captchaToken ? 'Sign In' : 'Complete captcha to sign in',
+                    },
+                  },
                 }}
                 theme="dark"
                 providers={['google', 'github']}
                 redirectTo={window.location.origin}
+                view="magic_link"
+                children={
+                  <div className="mt-4">
+                    <HCaptcha
+                      sitekey="10000000-ffff-ffff-ffff-000000000001" // Replace with your actual hCaptcha site key
+                      onVerify={(token) => setCaptchaToken(token)}
+                      onExpire={() => setCaptchaToken(null)}
+                    />
+                  </div>
+                }
               />
             </CardContent>
           </div>
