@@ -198,14 +198,14 @@ export function MainNav() {
                 </SheetTrigger>
                 <SheetContent 
                   side="right" 
-                  className="w-[400px] backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5 before:pointer-events-none"
+                  className="w-[400px] backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu"
                   style={{
-                    clipPath: "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
-                    transform: "translateX(0) skew(-10deg)",
+                    clipPath: "polygon(0 0, 100% 0, 95% 15%, 100% 30%, 95% 85%, 100% 100%, 0 100%)",
+                    transform: "translateX(0) skew(-5deg)",
                     transformOrigin: "100% 50%",
                   }}
                 >
-                  <div className="transform skew-[10deg] origin-top-right">
+                  <div className="transform skew-[5deg] origin-top-right">
                     <h2 className="text-2xl font-heading text-primary mb-6">Welcome Back</h2>
                     <Auth
                       supabaseClient={supabase}
@@ -236,7 +236,10 @@ export function MainNav() {
                         },
                       }}
                       theme="dark"
-                      providers={[]}
+                      providers={['github', 'google', 'discord']}
+                      view="magic_link"
+                      showLinks={true}
+                      redirectTo={window.location.origin}
                     />
                   </div>
                 </SheetContent>
