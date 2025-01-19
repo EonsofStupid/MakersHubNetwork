@@ -12,12 +12,11 @@ import {
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { UserMenu } from "./auth/UserMenu"; // Fixed import path
+import { UserMenu } from "./auth/UserMenu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 
 export function MainNav() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -25,7 +24,6 @@ export function MainNav() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,19 +34,10 @@ export function MainNav() {
     // Delay the loaded state to ensure initial animation
     setTimeout(() => setIsLoaded(true), 500);
 
-    // Auto-redirect on successful auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        setIsLoginOpen(false);
-        navigate('/');
-      }
-    });
-
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -56,6 +45,8 @@ export function MainNav() {
     const y = e.clientY - rect.top;
     setMousePosition({ x, y });
   };
+
+  // ... keep existing code (header JSX structure)
 
   return (
     <header
@@ -78,7 +69,6 @@ export function MainNav() {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
-
           <Link 
             to="/" 
             className="relative text-2xl font-bold transition-all duration-1000 hover:translate-y-[-8px] group"
