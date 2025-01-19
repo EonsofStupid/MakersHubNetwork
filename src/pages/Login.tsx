@@ -38,6 +38,7 @@ const Login = ({ onSuccess }: LoginProps) => {
           </CardTitle>
           <CardDescription>Sign in to access your account</CardDescription>
         </CardHeader>
+
         <CardContent>
           <Auth
             supabaseClient={supabase}
@@ -65,13 +66,26 @@ const Login = ({ onSuccess }: LoginProps) => {
                 container: 'auth-container',
                 button: 'auth-button',
                 input: 'auth-input',
+                divider: 'auth-divider',
+                socialButtonsContainer: 'auth-social-buttons space-y-2',
+                socialButton: 'auth-social-button w-full flex items-center justify-center gap-2 bg-background/50 hover:bg-primary/10 border border-primary/30 text-primary',
+                label: 'auth-label',
+                message: 'auth-message',
+                anchor: 'auth-anchor text-primary hover:text-primary/80',
+              },
+              style: {
+                socialButtons: {
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                },
               },
             }}
             theme="dark"
-            providers={["google", "github"]}
+            providers={["github", "google"]}
             redirectTo={window.location.origin}
           />
         </CardContent>
+
       </Card>
     </div>
   );
