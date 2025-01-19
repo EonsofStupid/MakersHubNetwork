@@ -88,7 +88,11 @@ export default {
           "5%": { opacity: "1" },
           "95%": { opacity: "1" },
           "100%": { transform: "translateY(100vh)", opacity: "0" },
-        }
+        },
+        "rotate-y": {
+          "0%": { transform: "rotateY(0deg)" },
+          "100%": { transform: "rotateY(180deg)" },
+        },
       },
       animation: {
         "morph-header": "morph-header 1.5s ease-in-out forwards",
@@ -97,9 +101,16 @@ export default {
         "pulse-slow": "pulse-slow 8s linear infinite",
         "stream-horizontal": "stream-horizontal var(--stream-duration) linear infinite",
         "stream-vertical": "stream-vertical var(--stream-duration) linear infinite",
+        "rotate-y": "rotate-y 0.7s ease-in-out forwards",
       },
-      backgroundSize: {
-        "400%": "400% 400%",
+      rotate: {
+        'y-180': 'rotateY(180deg)',
+      },
+      backfaceVisibility: {
+        'hidden': 'hidden',
+      },
+      perspective: {
+        '1000': '1000px',
       },
     },
   },
