@@ -22,16 +22,16 @@ export const Logo = () => {
       } as React.CSSProperties}
     >
       <span className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary transition-all duration-1000 group-hover:from-[#FF2D6E] group-hover:to-[#FF2D6E] group-hover:animate-[glitch_0.3s_ease-in-out_infinite]">
-        <span className="transition-colors duration-[1000ms] group-hover:text-[#FF2D6E]">M</span>
+        <span className="transition-colors duration-[5000ms] group-hover:text-[#FF2D6E]">M</span>
         <span className="transition-colors duration-[1200ms] group-hover:text-[#FF2D6E]">a</span>
-        <span className="transition-colors duration-[1400ms] group-hover:text-[#FF2D6E]">k</span>
-        <span className="transition-colors duration-[1600ms] group-hover:text-[#FF2D6E]">e</span>
-        <span className="transition-colors duration-[1800ms] group-hover:text-[#FF2D6E]">r</span>
-        <span className="transition-colors duration-[2000ms] group-hover:text-[#FF2D6E]">s</span>
-        <span className="transition-colors duration-[2200ms] group-hover:text-[#FF2D6E]">I</span>
-        <span className="transition-colors duration-[2400ms] group-hover:text-[#FF2D6E]">m</span>
+        <span className="transition-colors duration-[7400ms] group-hover:text-[#FF2D6E]">k</span>
+        <span className="transition-colors duration-[3600ms] group-hover:text-[#FF2D6E]">e</span>
+        <span className="transition-colors duration-[2800ms] group-hover:text-[#FF2D6E]">r</span>
+        <span className="transition-colors duration-[9000ms] group-hover:text-[#FF2D6E]">s</span>
+        <span className="transition-colors duration-[7200ms] group-hover:text-[#FF2D6E]">I</span>
+        <span className="transition-colors duration-[5400ms] group-hover:text-[#FF2D6E]">m</span>
         <span className="transition-colors duration-[2600ms] group-hover:text-[#FF2D6E]">p</span>
-        <span className="transition-colors duration-[2800ms] group-hover:text-[#FF2D6E]">u</span>
+        <span className="transition-colors duration-[8800ms] group-hover:text-[#FF2D6E]">u</span>
         <span className="transition-colors duration-[3000ms] group-hover:text-[#FF2D6E]">l</span>
         <span className="transition-colors duration-[3200ms] group-hover:text-[#FF2D6E]">s</span>
         <span className="transition-colors duration-[3400ms] group-hover:text-[#FF2D6E]">e</span>
