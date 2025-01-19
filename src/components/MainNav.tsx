@@ -12,7 +12,7 @@ import {
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { UserMenu } from "./auth/UserMenu/";
+import { UserMenu } from "./auth/UserMenu"; // Fixed import path
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
@@ -234,14 +234,10 @@ export function MainNav() {
                           button: 'auth-button',
                           input: 'auth-input',
                           divider: 'auth-divider',
-                          socialButtonsContainer: 'auth-social-buttons space-y-2',
-                          socialButton: 'auth-social-button w-full flex items-center justify-center gap-2 bg-background/50 hover:bg-primary/10 border border-primary/30 text-primary',
-                          label: 'auth-label',
-                          message: 'auth-message',
                           anchor: 'auth-anchor text-primary hover:text-primary/80',
                         },
                         style: {
-                          socialButtons: {
+                          button: {
                             padding: '8px 12px',
                             borderRadius: '8px',
                           },
