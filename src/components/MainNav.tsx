@@ -252,6 +252,7 @@ export function MainNav() {
                     />
                   </div>
                 </SheetContent>
+              </Sheet>
             )}
           </div>
         </div>
