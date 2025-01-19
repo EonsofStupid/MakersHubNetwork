@@ -7,8 +7,6 @@ import { useToast } from "@/components/ui/use-toast";
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Pull these actions from the auth store
   const {
     setUser,
     setSession,
@@ -18,43 +16,59 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setInitialized,
   } = useAuthStore();
 
-  // For example, show a loader if we have a "loading" status
-  const { status } = useAuthStore(); // e.g., 'loading' | 'idle' | etc.
-
-  // When app first mounts, do any initial checks
+  // Initial session check
   useEffect(() => {
-    // Example: mark store as "loading" while we get session from supabase
     setLoading(true);
+    console.log("Checking initial session...");
 
-    // Check if there's an active session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log("Initial session check result:", { session: session?.user?.id, error });
+      
       if (error) {
-        console.error(error);
+        console.error("Session check error:", error);
         setError(error.message);
-      } else if (session?.user) {
+        setLoading(false);
+        return;
+      }
+
+      if (session?.user) {
         setSession(session);
         setUser(session.user);
-        // You could also fetch roles here if you like
+        
+        // Fetch user roles
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .then(({ data: userRoles, error: rolesError }) => {
+            if (rolesError) {
+              console.error("Error fetching roles:", rolesError);
+              setError(rolesError.message);
+            } else {
+              console.log("Fetched roles:", userRoles);
+              setRoles(userRoles?.map((ur) => ur.role) || []);
+            }
+          });
       }
-      // Mark store as initialized
+      
       setLoading(false);
       setInitialized(true);
     });
-  }, [setLoading, setSession, setUser, setError, setInitialized]);
+  }, [setUser, setSession, setRoles, setError, setLoading, setInitialized]);
 
-  // Listen for future auth changes (sign-in, sign-out, token refresh, etc.)
+  // Auth state change listener
   useEffect(() => {
+    console.log("Setting up auth state change listener...");
+    
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       console.log("Auth state changed:", event, currentSession?.user?.id);
 
-      // Update store
-      setSession(currentSession);
-      setUser(currentSession?.user || null);
-
       if (event === "SIGNED_IN" && currentSession?.user) {
-        // Fetch user roles from DB
+        setSession(currentSession);
+        setUser(currentSession.user);
+        
         const { data: userRoles, error: rolesError } = await supabase
           .from("user_roles")
           .select("role")
@@ -69,18 +83,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             description: "Failed to fetch user roles.",
           });
         } else {
+          console.log("Setting roles:", userRoles);
           setRoles(userRoles?.map((ur) => ur.role) || []);
           toast({
             title: "Welcome back!",
             description: "You have successfully signed in.",
           });
+          navigate("/");
         }
       }
 
       if (event === "SIGNED_OUT") {
-        // Clear roles
+        console.log("User signed out");
+        setSession(null);
+        setUser(null);
         setRoles([]);
-        // Optionally redirect
         navigate("/login");
         toast({
           title: "Signed out",
@@ -90,13 +107,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => {
+      console.log("Cleaning up auth state change listener...");
       subscription.unsubscribe();
     };
   }, [setSession, setRoles, setUser, setError, navigate, toast]);
-
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
 
   return <>{children}</>;
 };
