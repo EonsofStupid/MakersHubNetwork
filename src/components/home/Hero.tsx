@@ -14,30 +14,31 @@ export const Hero = () => {
     setIsFlipped(false);
   }, []);
 
-  // Random pulse effect
-  const startPulseInterval = useCallback(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setIsPulsing(true);
       setTimeout(() => setIsPulsing(false), 500);
-    }, Math.random() * 3000 + 2000); // Random interval between 2-5 seconds
+    }, Math.random() * 3000 + 2000);
 
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    const cleanup = startPulseInterval();
-    return cleanup;
-  }, [startPulseInterval]);
 
   return (
     <div className="max-w-3xl mx-auto text-center animate-fade-up">
       <h1 
         className={`
-          text-5xl font-bold mb-6 
+          text-6xl font-bold mb-6 
           perspective-[1000px] inline-block
-          transition-all duration-700 
+          transition-all duration-700
           cursor-pointer
+          relative
           ${isFlipped ? 'rotate-y-180' : 'rotate-y-0'}
+          before:content-[''] before:absolute before:inset-0
+          before:bg-[rgba(0,240,255,0.1)] before:backdrop-blur-sm
+          before:rounded-xl before:border before:border-[rgba(255,255,255,0.1)]
+          hover:before:bg-[rgba(0,240,255,0.2)]
+          hover:before:border-[rgba(255,255,255,0.2)]
+          p-4
         `}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -46,14 +47,16 @@ export const Hero = () => {
           className={`
             block
             backface-hidden
-            transition-colors duration-1000
-            bg-gradient-to-r 
-            ${isPulsing 
-              ? 'from-[#1A1F2C] via-primary to-secondary' 
-              : 'from-primary to-secondary'
-            }
+            transition-all duration-1000
+            bg-gradient-to-r from-[#00F0FF] via-[#8B5CF6] to-[#FF2D6E]
             bg-clip-text text-transparent
             ${isFlipped ? 'opacity-0' : 'opacity-100'}
+            relative
+            after:content-[''] after:absolute after:inset-0
+            after:bg-[linear-gradient(45deg,rgba(0,240,255,0.2),rgba(255,45,110,0.2))]
+            after:mix-blend-overlay after:opacity-0
+            hover:after:opacity-100
+            glitch
           `}
         >
           Build.Share.Brag
@@ -62,24 +65,53 @@ export const Hero = () => {
           className={`
             absolute top-0 left-0 w-full
             backface-hidden rotate-y-180
-            transition-colors duration-1000
-            bg-gradient-to-r from-secondary via-primary to-[#1A1F2C]
+            transition-all duration-1000
+            bg-gradient-to-r from-[#FF2D6E] via-[#8B5CF6] to-[#00F0FF]
             bg-clip-text text-transparent
             ${isFlipped ? 'opacity-100' : 'opacity-0'}
+            mix-blend-screen
           `}
         >
           Build.Share.Brag
         </span>
       </h1>
-      <p className="text-xl text-muted-foreground mb-8">
+      <p className="text-xl text-muted-foreground mb-8 relative overflow-hidden
+        before:content-[''] before:absolute before:inset-0
+        before:bg-[rgba(0,240,255,0.05)] before:backdrop-blur-sm
+        before:rounded-lg before:border before:border-[rgba(255,255,255,0.1)]
+        p-4">
         Join the community of DIY enthusiasts sharing knowledge, builds, and passion for 3D printing
       </p>
       <div className="flex gap-4 justify-center">
-        <Button size="lg" className="bg-primary hover:bg-primary/90">
+        <Button 
+          size="lg" 
+          className="
+            bg-[#00F0FF] hover:bg-[#00F0FF]/80
+            text-black font-bold
+            shadow-[0_0_20px_rgba(0,240,255,0.5)]
+            hover:shadow-[0_0_30px_rgba(0,240,255,0.7)]
+            transition-all duration-300
+            relative overflow-hidden
+            before:content-[''] before:absolute before:inset-0
+            before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
+            before:translate-x-[-200%] hover:before:translate-x-[200%]
+            before:transition-transform before:duration-700
+          "
+        >
           Get Started
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
-        <Button size="lg" variant="outline">
+        <Button 
+          size="lg" 
+          variant="outline"
+          className="
+            border-[#FF2D6E] text-[#FF2D6E]
+            hover:bg-[#FF2D6E]/10
+            shadow-[0_0_20px_rgba(255,45,110,0.3)]
+            hover:shadow-[0_0_30px_rgba(255,45,110,0.5)]
+            transition-all duration-300
+          "
+        >
           View Builds
         </Button>
       </div>
