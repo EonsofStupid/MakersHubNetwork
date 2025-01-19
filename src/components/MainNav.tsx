@@ -12,7 +12,7 @@ import {
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { UserMenu } from "./auth/UserMenu";
+import { UserMenu } from "./auth/UserMenu/";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
