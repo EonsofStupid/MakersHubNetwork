@@ -1,11 +1,12 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/components/ui/use-toast";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const {
     setUser,
@@ -89,7 +90,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             title: "Welcome back!",
             description: "You have successfully signed in.",
           });
-          navigate("/");
+          
+          // Only redirect if we're on the login page
+          if (location.pathname === '/login') {
+            navigate("/");
+          }
         }
       }
 
@@ -98,11 +103,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(null);
         setUser(null);
         setRoles([]);
-        navigate("/login");
-        toast({
-          title: "Signed out",
-          description: "You have been successfully signed out.",
-        });
+        
+        // Only redirect to login if we're not already there
+        if (location.pathname !== '/login') {
+          navigate("/login");
+          toast({
+            title: "Signed out",
+            description: "You have been successfully signed out.",
+          });
+        }
       }
     });
 
@@ -110,7 +119,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Cleaning up auth state change listener...");
       subscription.unsubscribe();
     };
-  }, [setSession, setRoles, setUser, setError, navigate, toast]);
+  }, [setSession, setRoles, setUser, setError, navigate, toast, location]);
 
   return <>{children}</>;
 };
