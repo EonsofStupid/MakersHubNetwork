@@ -19,7 +19,6 @@ export const createAuthSlice: StateCreator<
 
   setUser: (user) => set({ user }),
   setSession: (session) => {
-    // Update both session and user atomically
     set({ 
       session,
       user: session?.user ?? null,
@@ -34,6 +33,31 @@ export const createAuthSlice: StateCreator<
   
   hasRole: (role) => get().roles.includes(role),
   isAdmin: () => get().roles.includes('admin'),
+
+  login: async (email: string, password: string) => {
+    try {
+      set({ status: 'loading', isLoading: true, error: null });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      set({
+        user: data.user,
+        session: data.session,
+        status: 'authenticated',
+        error: null
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      set({ 
+        error: error instanceof AuthError ? error.message : 'An error occurred during login',
+        status: 'unauthenticated'
+      });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
   initialize: async () => {
     try {
