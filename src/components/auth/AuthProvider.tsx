@@ -26,43 +26,50 @@ export const AuthProvider = () => {
         setLoading(true);
         console.log("Checking initial session...");
 
-        const { data: { session }, error } = await supabase.auth.getSession();
-        console.log("Initial session check result:", { session: session?.user?.id, error });
-        
-        if (error) {
-          console.error("Session check error:", error);
-          setError(error.message);
-          setLoading(false);
-          return;
-        }
-
-        if (session?.user) {
-          setSession(session);
-          setUser(session.user);
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          console.log("Initial session check result:", { session: session?.user?.id, error });
           
-          // Fetch user roles
-          const { data: userRoles, error: rolesError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id);
+          if (error) throw error;
 
-          if (rolesError) {
-            console.error("Error fetching roles:", rolesError);
-            setError(rolesError.message);
-          } else {
+          if (session?.user) {
+            setSession(session);
+            setUser(session.user);
+            
+            // Fetch user roles
+            const { data: userRoles, error: rolesError } = await supabase
+              .from("user_roles")
+              .select("role")
+              .eq("user_id", session.user.id);
+
+            if (rolesError) throw rolesError;
+            
             console.log("Fetched roles:", userRoles);
             setRoles(userRoles?.map((ur) => ur.role) || []);
+            
+            // If on login page, redirect to home
+            if (location.pathname === '/login') {
+              navigate('/');
+            }
           }
+        } catch (error) {
+          console.error("Session check error:", error);
+          setError(error instanceof Error ? error.message : 'An error occurred');
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: error instanceof Error ? error.message : 'Failed to check authentication status',
+          });
+        } finally {
+          setLoading(false);
+          setInitialized(true);
         }
-        
-        setLoading(false);
-        setInitialized(true);
       }
     };
 
     checkSession();
     return () => { ignore = true; };
-  }, [setUser, setSession, setRoles, setError, setLoading, setInitialized]);
+  }, [setUser, setSession, setRoles, setError, setLoading, setInitialized, navigate, location, toast]);
 
   // Auth state change listener
   useEffect(() => {
@@ -73,42 +80,51 @@ export const AuthProvider = () => {
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       console.log("Auth state changed:", event, currentSession?.user?.id);
 
-      if (event === "SIGNED_IN" && currentSession?.user) {
-        setSession(currentSession);
-        setUser(currentSession.user);
-        
-        const { data: userRoles, error: rolesError } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", currentSession.user.id);
+      try {
+        if (event === "SIGNED_IN" && currentSession?.user) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          
+          const { data: userRoles, error: rolesError } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", currentSession.user.id);
 
-        if (rolesError) {
-          console.error("Error fetching roles:", rolesError);
-          setError(rolesError.message);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to fetch user roles.",
-          });
-        } else {
+          if (rolesError) throw rolesError;
+
           console.log("Setting roles:", userRoles);
           setRoles(userRoles?.map((ur) => ur.role) || []);
+          
           toast({
             title: "Welcome back!",
             description: "You have successfully signed in.",
           });
-        }
-      }
 
-      if (event === "SIGNED_OUT") {
-        console.log("User signed out");
-        setSession(null);
-        setUser(null);
-        setRoles([]);
-        
+          // Redirect to home page after successful login
+          navigate('/');
+        }
+
+        if (event === "SIGNED_OUT") {
+          console.log("User signed out");
+          setSession(null);
+          setUser(null);
+          setRoles([]);
+          
+          toast({
+            title: "Signed out",
+            description: "You have been successfully signed out.",
+          });
+
+          // Redirect to home page after logout
+          navigate('/');
+        }
+      } catch (error) {
+        console.error("Auth state change error:", error);
+        setError(error instanceof Error ? error.message : 'An error occurred');
         toast({
-          title: "Signed out",
-          description: "You have been successfully signed out.",
+          variant: "destructive",
+          title: "Error",
+          description: error instanceof Error ? error.message : 'An error occurred during authentication',
         });
       }
     });
@@ -117,7 +133,7 @@ export const AuthProvider = () => {
       console.log("Cleaning up auth state change listener...");
       subscription.unsubscribe();
     };
-  }, [setSession, setRoles, setUser, setError, navigate, toast, location]);
+  }, [setSession, setRoles, setUser, setError, navigate, toast]);
 
   return <Outlet />;
 };
