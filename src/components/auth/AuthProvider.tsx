@@ -1,10 +1,10 @@
 import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/components/ui/use-toast";
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -19,42 +19,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Initial session check
   useEffect(() => {
-    setLoading(true);
-    console.log("Checking initial session...");
+    let ignore = false;
+    
+    const checkSession = async () => {
+      if (!ignore) {
+        setLoading(true);
+        console.log("Checking initial session...");
 
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log("Initial session check result:", { session: session?.user?.id, error });
-      
-      if (error) {
-        console.error("Session check error:", error);
-        setError(error.message);
-        setLoading(false);
-        return;
-      }
-
-      if (session?.user) {
-        setSession(session);
-        setUser(session.user);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log("Initial session check result:", { session: session?.user?.id, error });
         
-        // Fetch user roles
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .then(({ data: userRoles, error: rolesError }) => {
-            if (rolesError) {
-              console.error("Error fetching roles:", rolesError);
-              setError(rolesError.message);
-            } else {
-              console.log("Fetched roles:", userRoles);
-              setRoles(userRoles?.map((ur) => ur.role) || []);
-            }
-          });
+        if (error) {
+          console.error("Session check error:", error);
+          setError(error.message);
+          setLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          setSession(session);
+          setUser(session.user);
+          
+          // Fetch user roles
+          const { data: userRoles, error: rolesError } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", session.user.id);
+
+          if (rolesError) {
+            console.error("Error fetching roles:", rolesError);
+            setError(rolesError.message);
+          } else {
+            console.log("Fetched roles:", userRoles);
+            setRoles(userRoles?.map((ur) => ur.role) || []);
+          }
+        }
+        
+        setLoading(false);
+        setInitialized(true);
       }
-      
-      setLoading(false);
-      setInitialized(true);
-    });
+    };
+
+    checkSession();
+    return () => { ignore = true; };
   }, [setUser, setSession, setRoles, setError, setLoading, setInitialized]);
 
   // Auth state change listener
@@ -90,11 +97,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             title: "Welcome back!",
             description: "You have successfully signed in.",
           });
-          
-          // Only redirect if we're on the login page
-          if (location.pathname === '/login') {
-            navigate("/");
-          }
         }
       }
 
@@ -104,14 +106,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setRoles([]);
         
-        // Only redirect to login if we're not already there
-        if (location.pathname !== '/login') {
-          navigate("/login");
-          toast({
-            title: "Signed out",
-            description: "You have been successfully signed out.",
-          });
-        }
+        toast({
+          title: "Signed out",
+          description: "You have been successfully signed out.",
+        });
       }
     });
 
@@ -121,5 +119,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [setSession, setRoles, setUser, setError, navigate, toast, location]);
 
-  return <>{children}</>;
+  return <Outlet />;
 };

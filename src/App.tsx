@@ -6,9 +6,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { Suspense, lazy } from "react";
 import Index from "./pages/Index";
-import Admin from "./pages/Admin";
-import Login from "./pages/Login";
+
+// Lazy load auth-required components
+const Admin = lazy(() => import("./pages/Admin"));
+const Login = lazy(() => import("./pages/Login"));
 
 const queryClient = new QueryClient();
 
@@ -17,24 +20,36 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <BrowserRouter>
-          <AuthProvider>
-            <TooltipProvider>
-              <Routes>
-                <Route path="/login" element={<Login />} />
+          <TooltipProvider>
+            <Routes>
+              {/* Public routes outside AuthProvider */}
+              <Route path="/" element={<Index />} />
+              
+              {/* Auth-related routes wrapped in AuthProvider */}
+              <Route element={<AuthProvider />}>
+                <Route
+                  path="/login"
+                  element={
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <Login />
+                    </Suspense>
+                  }
+                />
                 <Route
                   path="/admin"
                   element={
-                    <AuthGuard requiredRoles={["admin"]}>
-                      <Admin />
-                    </AuthGuard>
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <AuthGuard requiredRoles={["admin"]}>
+                        <Admin />
+                      </AuthGuard>
+                    </Suspense>
                   }
                 />
-                <Route path="/" element={<Index />} />
-              </Routes>
-              <Toaster />
-              <Sonner />
-            </TooltipProvider>
-          </AuthProvider>
+              </Route>
+            </Routes>
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
         </BrowserRouter>
       </ThemeProvider>
     </QueryClientProvider>
