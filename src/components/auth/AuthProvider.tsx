@@ -21,7 +21,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const handleAuthError = (error: AuthError, context: string) => {
     console.error(`Auth error (${context}):`, error);
     
-    // Handle specific error cases
     if (error.message.includes('refresh_token_not_found')) {
       setSession(null);
       setUser(null);
@@ -131,8 +130,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         }
 
-        if (event === "SIGNED_OUT" || event === "USER_DELETED") {
-          console.log("User signed out or deleted");
+        if (event === "SIGNED_OUT") {
+          console.log("User signed out");
           setSession(null);
           setUser(null);
           setRoles([]);
