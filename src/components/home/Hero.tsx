@@ -39,6 +39,7 @@ export const Hero = () => {
           hover:before:bg-[rgba(0,240,255,0.2)]
           hover:before:border-[rgba(255,255,255,0.2)]
           p-4
+          shadow-[0_0_30px_rgba(0,0,0,0.1)]
         `}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -57,6 +58,8 @@ export const Hero = () => {
             after:mix-blend-overlay after:opacity-0
             hover:after:opacity-100
             glitch
+            text-shadow-[0_2px_4px_rgba(0,0,0,0.3)]
+            [text-shadow:0_2px_4px_rgba(0,0,0,0.3),0_0_10px_rgba(0,240,255,0.5)]
           `}
         >
           Build.Share.Brag
@@ -70,16 +73,23 @@ export const Hero = () => {
             bg-clip-text text-transparent
             ${isFlipped ? 'opacity-100' : 'opacity-0'}
             mix-blend-screen
+            [text-shadow:0_2px_4px_rgba(0,0,0,0.3),0_0_10px_rgba(255,45,110,0.5)]
           `}
         >
           Build.Share.Brag
         </span>
       </h1>
-      <p className="text-xl text-muted-foreground mb-8 relative overflow-hidden
+      <p className="
+        text-xl mb-8 relative overflow-hidden
+        text-gray-100 font-medium
         before:content-[''] before:absolute before:inset-0
-        before:bg-[rgba(0,240,255,0.05)] before:backdrop-blur-sm
+        before:bg-[rgba(0,0,0,0.3)] before:backdrop-blur-sm
         before:rounded-lg before:border before:border-[rgba(255,255,255,0.1)]
-        p-4">
+        p-4
+        shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)]
+        [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]
+        z-10
+      ">
         Join the community of DIY enthusiasts sharing knowledge, builds, and passion for 3D printing
       </p>
       <div className="flex gap-4 justify-center">
