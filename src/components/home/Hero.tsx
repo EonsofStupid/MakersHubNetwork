@@ -81,14 +81,15 @@ export const Hero = () => {
       </h1>
       <p className="
         text-xl mb-8 relative overflow-hidden
-        text-gray-100 font-medium
-        before:content-[''] before:absolute before:inset-0
-        before:bg-[rgba(0,0,0,0.3)] before:backdrop-blur-sm
-        before:rounded-lg before:border before:border-[rgba(255,255,255,0.1)]
+        text-white font-medium
         p-4
-        shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)]
-        [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]
         z-10
+        rounded-lg
+        before:content-[''] before:absolute before:inset-0 before:z-[-1]
+        before:bg-[rgba(0,0,0,0.6)] before:backdrop-blur-sm
+        before:border before:border-[rgba(255,255,255,0.15)]
+        shadow-[0_4px_6px_-1px_rgba(0,0,0,0.2)]
+        [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]
       ">
         Join the community of DIY enthusiasts sharing knowledge, builds, and passion for 3D printing
       </p>
