@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { ThemeInfoPopup } from "@/components/theme/ThemeInfoPopup";
+import { Terminal } from "lucide-react";
 
 export function Footer() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -121,6 +125,37 @@ export function Footer() {
               <p className="text-sm text-muted-foreground">
                 © 2025 MakersImpulse. All rights reserved.
               </p>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className={cn(
+                      "relative group px-4 py-2",
+                      "bg-background/20 backdrop-blur-xl",
+                      "border border-primary/30",
+                      "hover:bg-primary/5",
+                      "before:absolute before:inset-0",
+                      "before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10",
+                      "before:opacity-0 before:transition-opacity before:duration-300",
+                      "group-hover:before:opacity-100",
+                      "after:absolute after:inset-0",
+                      "after:border-2 after:border-primary/20",
+                      "after:scale-x-0 after:transition-transform after:duration-300",
+                      "group-hover:after:scale-x-100",
+                      "mad-scientist-hover"
+                    )}
+                  >
+                    <Terminal className="w-4 h-4 mr-2 text-primary" />
+                    <span className="text-sm">Theme Info</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="p-0 bg-transparent border-none">
+                  <ThemeInfoPopup />
+                </DialogContent>
+              </Dialog>
+
               <p className="text-sm text-muted-foreground">
                 Designed by{" "}
                 <a
