@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/components/ui/use-toast";
-import { AuthError } from "@supabase/supabase-js";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
@@ -18,83 +17,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setInitialized,
   } = useAuthStore();
 
-  const handleAuthError = (error: AuthError, context: string) => {
-    console.error(`Auth error (${context}):`, error);
-    
-    if (error.message.includes('refresh_token_not_found')) {
-      setSession(null);
-      setUser(null);
-      setRoles([]);
-      navigate('/login');
-      toast({
-        variant: "destructive",
-        title: "Session Expired",
-        description: "Please sign in again to continue.",
-      });
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: error.message,
-      });
-    }
-    setError(error.message);
-  };
-
   // Initial session check
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        setLoading(true);
-        console.log("Initializing auth session...");
+    setLoading(true);
+    console.log("Checking initial session...");
 
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          throw sessionError;
-        }
-
-        console.log("Session check result:", { 
-          sessionExists: !!session,
-          userId: session?.user?.id 
-        });
-
-        if (session?.user) {
-          setSession(session);
-          setUser(session.user);
-
-          // Fetch user roles
-          const { data: userRoles, error: rolesError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id);
-
-          if (rolesError) {
-            console.error("Error fetching roles:", rolesError);
-            throw rolesError;
-          }
-
-          console.log("Fetched roles:", userRoles);
-          setRoles(userRoles?.map((ur) => ur.role) || []);
-        } else {
-          // No session found
-          setSession(null);
-          setUser(null);
-          setRoles([]);
-          if (location.pathname !== '/login') {
-            navigate('/login');
-          }
-        }
-      } catch (error) {
-        handleAuthError(error as AuthError, 'initialization');
-      } finally {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log("Initial session check result:", { session: session?.user?.id, error });
+      
+      if (error) {
+        console.error("Session check error:", error);
+        setError(error.message);
         setLoading(false);
-        setInitialized(true);
+        return;
       }
-    };
 
-    initializeAuth();
-  }, [setUser, setSession, setRoles, setError, setLoading, setInitialized, navigate, location.pathname]);
+      if (session?.user) {
+        setSession(session);
+        setUser(session.user);
+        
+        // Fetch user roles
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .then(({ data: userRoles, error: rolesError }) => {
+            if (rolesError) {
+              console.error("Error fetching roles:", rolesError);
+              setError(rolesError.message);
+            } else {
+              console.log("Fetched roles:", userRoles);
+              setRoles(userRoles?.map((ur) => ur.role) || []);
+            }
+          });
+      }
+      
+      setLoading(false);
+      setInitialized(true);
+    });
+  }, [setUser, setSession, setRoles, setError, setLoading, setInitialized]);
 
   // Auth state change listener
   useEffect(() => {
@@ -103,54 +64,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log("Auth state changed:", { event, userId: currentSession?.user?.id });
+      console.log("Auth state changed:", event, currentSession?.user?.id);
 
-      try {
-        if (event === "SIGNED_IN" && currentSession?.user) {
-          setSession(currentSession);
-          setUser(currentSession.user);
-          
-          const { data: userRoles, error: rolesError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", currentSession.user.id);
+      if (event === "SIGNED_IN" && currentSession?.user) {
+        setSession(currentSession);
+        setUser(currentSession.user);
+        
+        const { data: userRoles, error: rolesError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", currentSession.user.id);
 
-          if (rolesError) throw rolesError;
-
+        if (rolesError) {
+          console.error("Error fetching roles:", rolesError);
+          setError(rolesError.message);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to fetch user roles.",
+          });
+        } else {
           console.log("Setting roles:", userRoles);
           setRoles(userRoles?.map((ur) => ur.role) || []);
-          
           toast({
             title: "Welcome back!",
             description: "You have successfully signed in.",
           });
           
+          // Only redirect if we're on the login page
           if (location.pathname === '/login') {
             navigate("/");
           }
         }
+      }
 
-        if (event === "SIGNED_OUT") {
-          console.log("User signed out");
-          setSession(null);
-          setUser(null);
-          setRoles([]);
-          
-          if (location.pathname !== '/login') {
-            navigate("/login");
-            toast({
-              title: "Signed out",
-              description: "You have been successfully signed out.",
-            });
-          }
+      if (event === "SIGNED_OUT") {
+        console.log("User signed out");
+        setSession(null);
+        setUser(null);
+        setRoles([]);
+        
+        // Only redirect to login if we're not already there
+        if (location.pathname !== '/login') {
+          navigate("/login");
+          toast({
+            title: "Signed out",
+            description: "You have been successfully signed out.",
+          });
         }
-
-        if (event === "TOKEN_REFRESHED") {
-          console.log("Token refreshed successfully");
-        }
-
-      } catch (error) {
-        handleAuthError(error as AuthError, 'state change');
       }
     });
 
@@ -158,7 +119,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Cleaning up auth state change listener...");
       subscription.unsubscribe();
     };
-  }, [setSession, setRoles, setUser, setError, navigate, location.pathname, toast]);
+  }, [setSession, setRoles, setUser, setError, navigate, toast, location]);
 
   return <>{children}</>;
 };
