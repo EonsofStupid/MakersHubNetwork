@@ -20,13 +20,11 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <BrowserRouter>
-          <TooltipProvider>
-            <Routes>
-              {/* Public routes outside AuthProvider */}
-              <Route path="/" element={<Index />} />
-              
-              {/* Auth-related routes wrapped in AuthProvider */}
-              <Route element={<AuthProvider />}>
+          <AuthProvider>
+            <TooltipProvider>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Index />} />
                 <Route
                   path="/login"
                   element={
@@ -35,6 +33,8 @@ const App = () => {
                     </Suspense>
                   }
                 />
+                
+                {/* Protected routes */}
                 <Route
                   path="/admin"
                   element={
@@ -45,11 +45,11 @@ const App = () => {
                     </Suspense>
                   }
                 />
-              </Route>
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
+              </Routes>
+              <Toaster />
+              <Sonner />
+            </TooltipProvider>
+          </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>
     </QueryClientProvider>
