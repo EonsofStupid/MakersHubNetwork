@@ -1,160 +1,125 @@
-import { createContext, useEffect, useState } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/components/ui/use-toast";
-import { UserRole } from "@/stores/auth/types/auth.types";
 
-interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  roles: UserRole[];
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-export const AuthContext = createContext<AuthContextType>({
-  session: null,
-  user: null,
-  roles: [],
-  isAuthenticated: false,
-  isLoading: true,
-  login: async () => {},
-  logout: async () => {},
-});
-
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [roles, setRoles] = useState<UserRole[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const {
+    setUser,
+    setSession,
+    setRoles,
+    setError,
+    setLoading,
+    setInitialized,
+  } = useAuthStore();
 
+  // Initial session check
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserRoles(session.user.id);
-      }
-    });
+    setLoading(true);
+    console.log("Checking initial session...");
 
-    // Listen for auth changes
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log("Initial session check result:", { session: session?.user?.id, error });
+      
+      if (error) {
+        console.error("Session check error:", error);
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (session?.user) {
+        setSession(session);
+        setUser(session.user);
+        
+        // Fetch user roles
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .then(({ data: userRoles, error: rolesError }) => {
+            if (rolesError) {
+              console.error("Error fetching roles:", rolesError);
+              setError(rolesError.message);
+            } else {
+              console.log("Fetched roles:", userRoles);
+              setRoles(userRoles?.map((ur) => ur.role) || []);
+            }
+          });
+      }
+      
+      setLoading(false);
+      setInitialized(true);
+    });
+  }, [setUser, setSession, setRoles, setError, setLoading, setInitialized]);
+
+  // Auth state change listener
+  useEffect(() => {
+    console.log("Setting up auth state change listener...");
+    
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (event === 'SIGNED_IN' && session?.user) {
-        await fetchUserRoles(session.user.id);
-      } else if (event === 'SIGNED_OUT') {
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log("Auth state changed:", event, currentSession?.user?.id);
+
+      if (event === "SIGNED_IN" && currentSession?.user) {
+        setSession(currentSession);
+        setUser(currentSession.user);
+        
+        const { data: userRoles, error: rolesError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", currentSession.user.id);
+
+        if (rolesError) {
+          console.error("Error fetching roles:", rolesError);
+          setError(rolesError.message);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to fetch user roles.",
+          });
+        } else {
+          console.log("Setting roles:", userRoles);
+          setRoles(userRoles?.map((ur) => ur.role) || []);
+          toast({
+            title: "Welcome back!",
+            description: "You have successfully signed in.",
+          });
+          
+          // Only redirect if we're on the login page
+          if (location.pathname === '/login') {
+            navigate("/");
+          }
+        }
+      }
+
+      if (event === "SIGNED_OUT") {
+        console.log("User signed out");
+        setSession(null);
+        setUser(null);
         setRoles([]);
+        
+        // Only redirect to login if we're not already there
+        if (location.pathname !== '/login') {
+          navigate("/login");
+          toast({
+            title: "Signed out",
+            description: "You have been successfully signed out.",
+          });
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      console.log("Cleaning up auth state change listener...");
+      subscription.unsubscribe();
+    };
+  }, [setSession, setRoles, setUser, setError, navigate, toast, location]);
 
-  const fetchUserRoles = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
-
-      if (error) {
-        throw error;
-      }
-
-      setRoles(data.map((r) => r.role));
-    } catch (error) {
-      console.error('Error fetching user roles:', error);
-      toast({
-        variant: "destructive",
-        title: "Error fetching user roles",
-        description: "Please try logging in again",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const login = async (email: string, password: string) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Logged in successfully",
-        description: "Welcome back!",
-      });
-    } catch (error) {
-      console.error('Login error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error logging in",
-        description: "Please check your credentials and try again",
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      }
-      setSession(null);
-      setUser(null);
-      setRoles([]);
-      toast({
-        title: "Logged out successfully",
-        description: "Come back soon!",
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error logging out",
-        description: "Please try again",
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        session,
-        user,
-        roles,
-        isAuthenticated: !!session,
-        isLoading,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <>{children}</>;
 };
