@@ -1,139 +1,160 @@
-import { useEffect } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { createContext, useEffect, useState } from "react";
+import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/components/ui/use-toast";
+import { UserRole } from "@/stores/auth/types/auth.types";
 
-export const AuthProvider = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+interface AuthContextType {
+  session: Session | null;
+  user: User | null;
+  roles: UserRole[];
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+export const AuthContext = createContext<AuthContextType>({
+  session: null,
+  user: null,
+  roles: [],
+  isAuthenticated: false,
+  isLoading: true,
+  login: async () => {},
+  logout: async () => {},
+});
+
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [roles, setRoles] = useState<UserRole[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const {
-    setUser,
-    setSession,
-    setRoles,
-    setError,
-    setLoading,
-    setInitialized,
-  } = useAuthStore();
 
-  // Initial session check
   useEffect(() => {
-    let ignore = false;
-    
-    const checkSession = async () => {
-      if (!ignore) {
-        setLoading(true);
-        console.log("Checking initial session...");
-
-        try {
-          const { data: { session }, error } = await supabase.auth.getSession();
-          console.log("Initial session check result:", { session: session?.user?.id, error });
-          
-          if (error) throw error;
-
-          if (session?.user) {
-            setSession(session);
-            setUser(session.user);
-            
-            // Fetch user roles
-            const { data: userRoles, error: rolesError } = await supabase
-              .from("user_roles")
-              .select("role")
-              .eq("user_id", session.user.id);
-
-            if (rolesError) throw rolesError;
-            
-            console.log("Fetched roles:", userRoles);
-            setRoles(userRoles?.map((ur) => ur.role) || []);
-            
-            // If on login page, redirect to home
-            if (location.pathname === '/login') {
-              navigate('/');
-            }
-          }
-        } catch (error) {
-          console.error("Session check error:", error);
-          setError(error instanceof Error ? error.message : 'An error occurred');
-          toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: error instanceof Error ? error.message : 'Failed to check authentication status',
-          });
-        } finally {
-          setLoading(false);
-          setInitialized(true);
-        }
-      }
-    };
-
-    checkSession();
-    return () => { ignore = true; };
-  }, [setUser, setSession, setRoles, setError, setLoading, setInitialized, navigate, location, toast]);
-
-  // Auth state change listener
-  useEffect(() => {
-    console.log("Setting up auth state change listener...");
-    
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log("Auth state changed:", event, currentSession?.user?.id);
-
-      try {
-        if (event === "SIGNED_IN" && currentSession?.user) {
-          setSession(currentSession);
-          setUser(currentSession.user);
-          
-          const { data: userRoles, error: rolesError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", currentSession.user.id);
-
-          if (rolesError) throw rolesError;
-
-          console.log("Setting roles:", userRoles);
-          setRoles(userRoles?.map((ur) => ur.role) || []);
-          
-          toast({
-            title: "Welcome back!",
-            description: "You have successfully signed in.",
-          });
-
-          // Redirect to home page after successful login
-          navigate('/');
-        }
-
-        if (event === "SIGNED_OUT") {
-          console.log("User signed out");
-          setSession(null);
-          setUser(null);
-          setRoles([]);
-          
-          toast({
-            title: "Signed out",
-            description: "You have been successfully signed out.",
-          });
-
-          // Redirect to home page after logout
-          navigate('/');
-        }
-      } catch (error) {
-        console.error("Auth state change error:", error);
-        setError(error instanceof Error ? error.message : 'An error occurred');
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error instanceof Error ? error.message : 'An error occurred during authentication',
-        });
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserRoles(session.user.id);
       }
     });
 
-    return () => {
-      console.log("Cleaning up auth state change listener...");
-      subscription.unsubscribe();
-    };
-  }, [setSession, setRoles, setUser, setError, navigate, toast]);
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        await fetchUserRoles(session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        setRoles([]);
+      }
+    });
 
-  return <Outlet />;
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchUserRoles = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      if (error) {
+        throw error;
+      }
+
+      setRoles(data.map((r) => r.role));
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+      toast({
+        variant: "destructive",
+        title: "Error fetching user roles",
+        description: "Please try logging in again",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Logged in successfully",
+        description: "Welcome back!",
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error logging in",
+        description: "Please check your credentials and try again",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw error;
+      }
+      setSession(null);
+      setUser(null);
+      setRoles([]);
+      toast({
+        title: "Logged out successfully",
+        description: "Come back soon!",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error logging out",
+        description: "Please try again",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        session,
+        user,
+        roles,
+        isAuthenticated: !!session,
+        isLoading,
+        login,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
