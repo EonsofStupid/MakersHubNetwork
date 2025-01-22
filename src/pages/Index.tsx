@@ -5,7 +5,7 @@ import { Background } from "@/components/home/Background";
 import { Hero } from "@/components/home/Hero";
 import { Features } from "@/components/home/Features";
 
-const Index = () => {
+const IndexPage = () => {
   return (
     <div className="min-h-screen relative overflow-hidden pb-[400px]">
       <Suspense fallback={<div className="fixed inset-0 bg-background" />}>
@@ -28,4 +28,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default IndexPage;
