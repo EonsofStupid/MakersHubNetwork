@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useThemeStore } from "@/stores/theme/store";
 
 export const Logo = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [letterStates, setLetterStates] = useState<{ [key: number]: boolean }>({});
-  const { themeTokens } = useTheme();
+  const { themeTokens } = useThemeStore();
   
   const letters = "MakersImpulse".split("");
 
@@ -17,7 +17,7 @@ export const Logo = () => {
   };
 
   const generateRandomDelay = useCallback(() => {
-    return Math.random() * 1000; // Random delay between 0-1000ms
+    return Math.random() * 1000;
   }, []);
 
   const handleMouseEnter = useCallback(() => {
@@ -78,7 +78,7 @@ export const Logo = () => {
           absolute inset-0 
           bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 
           blur-xl opacity-0 group-hover:opacity-100 
-          transition-all duration-1000 rounded-full scale-150
+          transition-all duration-[1500ms] rounded-full scale-150
         `}
       />
     </Link>
