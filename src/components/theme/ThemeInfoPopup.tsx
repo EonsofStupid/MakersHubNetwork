@@ -1,16 +1,15 @@
-import { useState, useEffect } from "react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useState } from "react";
+import { useThemeStore } from "@/stores/theme/store";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeColorSystem } from "./ThemeColorSystem";
 import { ThemeComponentPreview } from "./ThemeComponentPreview";
 import { ThemeDataStream } from "./ThemeDataStream";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
 
 export function ThemeInfoPopup() {
   const [activeSection, setActiveSection] = useState<'colors' | 'components' | 'info'>('info');
-  const { currentTheme, themeTokens, themeComponents } = useTheme();
+  const { currentTheme, themeTokens, themeComponents } = useThemeStore();
 
   if (!currentTheme) return null;
 

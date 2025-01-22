@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useThemeStore } from '@/stores/theme/store';
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeToken, ThemeComponent } from '@/types/theme';
 import { useToast } from '@/components/ui/use-toast';
 
 export function useThemeManager() {
   const [isUpdating, setIsUpdating] = useState(false);
-  const { currentTheme, setTheme } = useTheme();
+  const { currentTheme, setTheme } = useThemeStore();
   const { toast } = useToast();
 
   const createTheme = async (theme: Omit<Theme, 'id' | 'created_at' | 'updated_at'>) => {
