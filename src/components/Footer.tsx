@@ -14,10 +14,6 @@ export function Footer() {
     setTimeout(() => setIsLoaded(true), 500);
   }, []);
 
-  const handleThemeInfoClick = () => {
-    setIsDialogOpen(true);
-  };
-
   return (
     <footer
       className={cn(
@@ -40,7 +36,38 @@ export function Footer() {
       <div className="container mx-auto px-4">
         <div className="py-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            {/* Footer links sections */}
+            <div>
+              <h3 className="text-lg font-bold mb-4">Resources</h3>
+              <ul className="space-y-2">
+                <li><Link to="/docs" className="text-muted-foreground hover:text-primary transition-colors">Documentation</Link></li>
+                <li><Link to="/guides" className="text-muted-foreground hover:text-primary transition-colors">Guides</Link></li>
+                <li><Link to="/tutorials" className="text-muted-foreground hover:text-primary transition-colors">Tutorials</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold mb-4">Community</h3>
+              <ul className="space-y-2">
+                <li><Link to="/forum" className="text-muted-foreground hover:text-primary transition-colors">Forum</Link></li>
+                <li><Link to="/discord" className="text-muted-foreground hover:text-primary transition-colors">Discord</Link></li>
+                <li><Link to="/blog" className="text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold mb-4">Company</h3>
+              <ul className="space-y-2">
+                <li><Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About</Link></li>
+                <li><Link to="/careers" className="text-muted-foreground hover:text-primary transition-colors">Careers</Link></li>
+                <li><Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold mb-4">Legal</h3>
+              <ul className="space-y-2">
+                <li><Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy</Link></li>
+                <li><Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms</Link></li>
+                <li><Link to="/licenses" className="text-muted-foreground hover:text-primary transition-colors">Licenses</Link></li>
+              </ul>
+            </div>
           </div>
           
           <div className="border-t border-primary/30 pt-8">
@@ -54,7 +81,6 @@ export function Footer() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={handleThemeInfoClick}
                     className={cn(
                       "relative group px-4 py-2",
                       "bg-background/20 backdrop-blur-xl",

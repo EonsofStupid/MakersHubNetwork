@@ -4,7 +4,6 @@ import { Footer } from "@/components/Footer";
 import { Background } from "@/components/home/Background";
 import { Hero } from "@/components/home/Hero";
 import { Features } from "@/components/home/Features";
-import { ThemeInfoPopup } from "@/components/theme/ThemeInfoPopup";
 
 const Index = () => {
   return (
@@ -24,7 +23,6 @@ const Index = () => {
         </Suspense>
       </div>
 
-      <ThemeInfoPopup />
       <Footer />
     </div>
   );
