@@ -6,9 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/components/auth/AuthProvider";
-import Index from "./pages/Index";
-import Admin from "./pages/Admin";
-import Login from "./pages/Login";
+import IndexPage from "./pages/Index";
+import AdminPage from "./pages/Admin";
+import LoginPage from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -20,16 +20,16 @@ const App = () => {
           <AuthProvider>
             <TooltipProvider>
               <Routes>
-                <Route path="/login" element={<Login />} />
+                <Route path="/login" element={<LoginPage />} />
                 <Route
                   path="/admin"
                   element={
                     <AuthGuard requiredRoles={["admin"]}>
-                      <Admin />
+                      <AdminPage />
                     </AuthGuard>
                   }
                 />
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<IndexPage />} />
               </Routes>
               <Toaster />
               <Sonner />
