@@ -8,10 +8,15 @@ import { Terminal } from "lucide-react";
 
 export function Footer() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     setTimeout(() => setIsLoaded(true), 500);
   }, []);
+
+  const handleThemeInfoClick = () => {
+    setIsDialogOpen(true);
+  };
 
   return (
     <footer
@@ -35,7 +40,7 @@ export function Footer() {
       <div className="container mx-auto px-4">
         <div className="py-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            {/* ... keep existing code (footer links sections) */}
+            {/* Footer links sections */}
           </div>
           
           <div className="border-t border-primary/30 pt-8">
@@ -44,11 +49,12 @@ export function Footer() {
                 © 2025 MakersImpulse. All rights reserved.
               </p>
 
-              <Dialog>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
                     variant="ghost" 
                     size="sm"
+                    onClick={handleThemeInfoClick}
                     className={cn(
                       "relative group px-4 py-2",
                       "bg-background/20 backdrop-blur-xl",
