@@ -19,14 +19,10 @@ export function Footer() {
       className={cn(
         "fixed bottom-0 left-0 right-0 w-full z-40 transition-all duration-[1.5s] ease-in-out",
         isLoaded
-          ? "bg-background/20 backdrop-blur-xl shadow-[0_-8px_32px_0_rgba(0,240,255,0.2)] border-t border-primary/30 before:absolute before:inset-0 before:bg-gradient-to-b before:from-primary/5 before:to-transparent before:pointer-events-none"
+          ? "bg-background/20 backdrop-blur-xl shadow-[0_-8px_32px_0_rgba(0,240,255,0.2)] border-t border-primary/30"
           : "bg-transparent",
         "before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-0 before:transition-opacity before:duration-1000",
-        isLoaded && [
-          "before:opacity-100",
-          "shadow-[0_-4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(0,240,255,0.1)]",
-          "after:content-[''] after:absolute after:inset-0 after:border-2 after:border-primary/20 after:rounded-t-lg after:transition-all after:duration-1000"
-        ]
+        isLoaded && "before:opacity-100"
       )}
       style={{
         transform: isLoaded ? "perspective(1000px) rotateX(1deg)" : "none",
@@ -81,21 +77,7 @@ export function Footer() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className={cn(
-                      "relative group px-4 py-2",
-                      "bg-background/20 backdrop-blur-xl",
-                      "border border-primary/30",
-                      "hover:bg-primary/5",
-                      "before:absolute before:inset-0",
-                      "before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10",
-                      "before:opacity-0 before:transition-opacity before:duration-300",
-                      "group-hover:before:opacity-100",
-                      "after:absolute after:inset-0",
-                      "after:border-2 after:border-primary/20",
-                      "after:scale-x-0 after:transition-transform after:duration-300",
-                      "group-hover:after:scale-x-100",
-                      "mad-scientist-hover"
-                    )}
+                    className="relative group px-4 py-2 bg-background/20 backdrop-blur-xl border border-primary/30 hover:bg-primary/5"
                   >
                     <Terminal className="w-4 h-4 mr-2 text-primary" />
                     <span className="text-sm">Theme Info</span>
