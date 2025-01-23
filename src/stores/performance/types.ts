@@ -56,6 +56,6 @@ export type PerformanceStore = PerformanceState & PerformanceActions;
 export type PerformanceSlice<T> = StateCreator<
   PerformanceStore,
   [],
-  [],
+  [['zustand/persist', PerformanceStore]],
   T
 >;
