@@ -1,0 +1,21 @@
+import { MetricsSlice } from '../types';
+import { StoreSlice } from './store.types';
+
+export const createStoreSlice: MetricsSlice<StoreSlice> = (set) => ({
+  storeMetrics: {
+    updates: 0,
+    subscribers: new Map(),
+    computeTime: 0,
+    lastUpdateTimestamp: 0,
+    averageTime: 0
+  },
+  resetStoreMetrics: () => set(() => ({
+    storeMetrics: {
+      updates: 0,
+      subscribers: new Map(),
+      computeTime: 0,
+      lastUpdateTimestamp: 0,
+      averageTime: 0
+    }
+  }))
+});
