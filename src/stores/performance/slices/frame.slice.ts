@@ -16,32 +16,31 @@ export const createFrameSlice: PerformanceSlice<FrameSlice> = (set, get) => ({
   },
 
   recordFrameMetric: (duration: number) => {
-    set((state) => {
-      const { frameMetrics } = state;
-      const { batchSize, frameDrop } = state.thresholds;
-      
-      const updatedMetrics = updateFrameMetrics(
-        frameMetrics,
-        duration,
-        frameDrop,
-        batchSize
-      );
-      
-      return {
+    set((state) => ({
+      metrics: {
+        ...state.metrics,
         frameMetrics: {
-          ...frameMetrics,
-          ...updatedMetrics,
+          ...state.metrics.frameMetrics,
+          ...updateFrameMetrics(
+            state.metrics.frameMetrics,
+            duration,
+            state.thresholds.frameDrop,
+            state.thresholds.batchSize
+          ),
         },
-      };
-    });
+      },
+    }));
   },
 
-  resetFrameMetrics: () => set(() => ({
-    frameMetrics: {
-      drops: 0,
-      averageTime: 0,
-      peaks: [],
-      lastFrameTimestamp: 0,
+  resetFrameMetrics: () => set((state) => ({
+    metrics: {
+      ...state.metrics,
+      frameMetrics: {
+        drops: 0,
+        averageTime: 0,
+        peaks: [],
+        lastFrameTimestamp: 0,
+      },
     },
   })),
 });
