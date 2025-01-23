@@ -1,8 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PerformanceStore, PerformanceThresholds } from './types';
+import { 
+  PerformanceStore, 
+  PerformanceState,
+  PerformanceThresholds 
+} from './types';
 
-const initialState = {
+const initialState: PerformanceState = {
   metrics: {
     frameMetrics: {
       drops: 0,
@@ -14,16 +18,16 @@ const initialState = {
       updates: 0,
       subscribers: new Map(),
       computeTime: 0,
-      lastTimestamp: 0,
       lastUpdateTimestamp: 0,
+      lastTimestamp: 0,
       averageTime: 0
     },
     memoryMetrics: {
       heapSize: 0,
       instances: 0,
       lastGC: undefined,
-      averageTime: 0,
-      lastTimestamp: 0
+      lastTimestamp: 0,
+      averageTime: 0
     }
   },
   thresholds: {
