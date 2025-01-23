@@ -9,13 +9,17 @@ export const createStoreSlice: MetricsSlice<StoreSlice> = (set) => ({
     lastUpdateTimestamp: 0,
     averageTime: 0
   },
-  resetStoreMetrics: () => set(() => ({
-    storeMetrics: {
-      updates: 0,
-      subscribers: new Map(),
-      computeTime: 0,
-      lastUpdateTimestamp: 0,
-      averageTime: 0
+  resetStoreMetrics: () => set((state) => ({
+    ...state,
+    metrics: {
+      ...state.metrics,
+      storeMetrics: {
+        updates: 0,
+        subscribers: new Map(),
+        computeTime: 0,
+        lastUpdateTimestamp: 0,
+        averageTime: 0
+      }
     }
   }))
 });
