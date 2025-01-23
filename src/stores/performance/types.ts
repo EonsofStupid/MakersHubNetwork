@@ -18,14 +18,16 @@ export interface PerformanceMetrics {
   };
 }
 
+export interface PerformanceThresholds {
+  frameDrop: number;
+  storeUpdate: number;
+  animationFrame: number;
+  batchSize: number;
+}
+
 export interface PerformanceState {
   metrics: PerformanceMetrics;
-  thresholds: {
-    frameDrop: number;
-    storeUpdate: number;
-    animationFrame: number;
-    batchSize: number;
-  };
+  thresholds: PerformanceThresholds;
   isMonitoring: boolean;
 }
 

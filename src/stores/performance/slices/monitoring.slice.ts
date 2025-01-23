@@ -1,4 +1,6 @@
 import { PerformanceThresholds } from '../types';
+import { StateCreator } from 'zustand';
+import { PerformanceStore } from '../types';
 
 export interface MonitoringSlice {
   isMonitoring: boolean;
@@ -6,6 +8,8 @@ export interface MonitoringSlice {
   startMonitoring: () => void;
   stopMonitoring: () => void;
 }
+
+type MonitoringSliceCreator = StateCreator<PerformanceStore, [], [], MonitoringSlice>;
 
 export const createMonitoringSlice = (set: any, get: any): MonitoringSlice => ({
   isMonitoring: false,
@@ -21,15 +25,18 @@ export const createMonitoringSlice = (set: any, get: any): MonitoringSlice => ({
     const rafCallback = () => {
       if (!get().isMonitoring) return;
       const now = performance.now();
-      const lastFrame = get().frameMetrics.lastFrameTimestamp;
+      const lastFrame = get().metrics.frameMetrics.lastFrameTimestamp;
       if (lastFrame) {
         const duration = now - lastFrame;
         get().recordFrameMetric(duration);
       }
       set(state => ({
-        frameMetrics: {
-          ...state.frameMetrics,
-          lastFrameTimestamp: now,
+        metrics: {
+          ...state.metrics,
+          frameMetrics: {
+            ...state.metrics.frameMetrics,
+            lastFrameTimestamp: now,
+          },
         },
       }));
       requestAnimationFrame(rafCallback);
