@@ -1,13 +1,13 @@
-import { PerformanceMetrics } from '../types';
+import { PerformanceMetrics, PerformanceSlice, FrameMetrics } from '../types';
 import { updateFrameMetrics } from '../utils';
 
 export interface FrameSlice {
-  frameMetrics: PerformanceMetrics['frameMetrics'];
+  frameMetrics: FrameMetrics;
   recordFrameMetric: (duration: number) => void;
   resetFrameMetrics: () => void;
 }
 
-export const createFrameSlice = (set: any, get: any): FrameSlice => ({
+export const createFrameSlice: PerformanceSlice<FrameSlice> = (set, get) => ({
   frameMetrics: {
     drops: 0,
     averageTime: 0,
@@ -16,7 +16,7 @@ export const createFrameSlice = (set: any, get: any): FrameSlice => ({
   },
 
   recordFrameMetric: (duration: number) => {
-    set((state: any) => {
+    set((state) => {
       const { frameMetrics } = state;
       const { batchSize, frameDrop } = state.thresholds;
       
@@ -36,7 +36,7 @@ export const createFrameSlice = (set: any, get: any): FrameSlice => ({
     });
   },
 
-  resetFrameMetrics: () => set((state: any) => ({
+  resetFrameMetrics: () => set(() => ({
     frameMetrics: {
       drops: 0,
       averageTime: 0,

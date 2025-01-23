@@ -8,13 +8,14 @@ import { createPersistMiddleware } from './middleware/persist.middleware';
 import { PerformanceStore } from './types';
 import { StateCreator } from 'zustand';
 
-type PerformanceStoreWithPersist = StateCreator<
+type StoreCreator = StateCreator<
   PerformanceStore,
   [],
-  [['zustand/persist', unknown]]
+  [['zustand/persist', PerformanceStore]],
+  PerformanceStore
 >;
 
-const createStore = (): PerformanceStoreWithPersist => (set, get) => {
+const createStore = (): StoreCreator => (set, get) => {
   const frameSlice = createFrameSlice(set, get);
   const storeSlice = createStoreSlice(set, get);
   const memorySlice = createMemorySlice(set, get);

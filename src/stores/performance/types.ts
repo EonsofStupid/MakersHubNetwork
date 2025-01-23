@@ -1,21 +1,29 @@
+import { StateCreator } from 'zustand';
+
+export interface FrameMetrics {
+  drops: number;
+  averageTime: number;
+  peaks: number[];
+  lastFrameTimestamp: number;
+}
+
+export interface StoreMetrics {
+  updates: number;
+  subscribers: Map<string, number>;
+  computeTime: number;
+  lastUpdateTimestamp: number;
+}
+
+export interface MemoryMetrics {
+  heapSize: number;
+  instances: number;
+  lastGC?: number;
+}
+
 export interface PerformanceMetrics {
-  frameMetrics: {
-    drops: number;
-    averageTime: number;
-    peaks: number[];
-    lastFrameTimestamp: number;
-  };
-  storeMetrics: {
-    updates: number;
-    subscribers: Map<string, number>;
-    computeTime: number;
-    lastUpdateTimestamp: number;
-  };
-  memoryMetrics: {
-    heapSize: number;
-    instances: number;
-    lastGC?: number;
-  };
+  frameMetrics: FrameMetrics;
+  storeMetrics: StoreMetrics;
+  memoryMetrics: MemoryMetrics;
 }
 
 export interface PerformanceThresholds {
@@ -44,3 +52,10 @@ export interface PerformanceActions {
 }
 
 export type PerformanceStore = PerformanceState & PerformanceActions;
+
+export type PerformanceSlice<T> = StateCreator<
+  PerformanceStore,
+  [],
+  [],
+  T
+>;

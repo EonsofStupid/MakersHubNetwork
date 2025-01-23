@@ -1,6 +1,4 @@
-import { PerformanceThresholds } from '../types';
-import { StateCreator } from 'zustand';
-import { PerformanceStore } from '../types';
+import { PerformanceThresholds, PerformanceSlice } from '../types';
 
 export interface MonitoringSlice {
   isMonitoring: boolean;
@@ -9,9 +7,7 @@ export interface MonitoringSlice {
   stopMonitoring: () => void;
 }
 
-type MonitoringSliceCreator = StateCreator<PerformanceStore, [], [], MonitoringSlice>;
-
-export const createMonitoringSlice = (set: any, get: any): MonitoringSlice => ({
+export const createMonitoringSlice: PerformanceSlice<MonitoringSlice> = (set, get) => ({
   isMonitoring: false,
   thresholds: {
     frameDrop: 16.67,
