@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PerformanceState } from './types';
+import { PerformanceState, PerformanceStore } from './types';
 import { getMemoryInfo, calculateFrameMetrics, measureStoreUpdate, updateFrameMetrics, updateStoreMetrics } from './utils';
 
 const INITIAL_STATE: PerformanceState = {
@@ -31,7 +31,7 @@ const INITIAL_STATE: PerformanceState = {
   isMonitoring: false,
 };
 
-export const usePerformanceStore = create<PerformanceState>()(
+export const usePerformanceStore = create<PerformanceStore>()(
   persist(
     (set, get) => ({
       ...INITIAL_STATE,
