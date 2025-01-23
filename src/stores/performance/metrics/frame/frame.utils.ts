@@ -6,13 +6,13 @@ export const updateFrameMetrics = (
   newDuration: number,
   threshold: number,
   batchSize: number
-): Partial<FrameMetrics> => {
+): FrameMetrics => {
   const newPeaks = [...current.peaks, newDuration].slice(-batchSize);
   
   return {
     drops: newDuration > threshold ? current.drops + 1 : current.drops,
     averageTime: calculateAverage(newPeaks),
     peaks: detectPeaks(newPeaks, threshold),
-    ...updateMetricTimestamp()
+    lastTimestamp: performance.now()
   };
 };
