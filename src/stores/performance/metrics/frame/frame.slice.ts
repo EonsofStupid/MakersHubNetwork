@@ -18,21 +18,27 @@ export const createFrameSlice: StateCreator<
 
   recordFrameMetric: (duration: number) => {
     set((state) => ({
-      frameMetrics: updateFrameMetrics(
-        state.frameMetrics,
-        duration,
-        state.thresholds.frameDrop,
-        state.thresholds.batchSize
-      )
+      metrics: {
+        ...state.metrics,
+        frameMetrics: updateFrameMetrics(
+          state.metrics.frameMetrics,
+          duration,
+          state.thresholds.frameDrop,
+          state.thresholds.batchSize
+        )
+      }
     }));
   },
 
-  resetFrameMetrics: () => set(() => ({
-    frameMetrics: {
-      drops: 0,
-      averageTime: 0,
-      peaks: [],
-      lastTimestamp: 0
+  resetFrameMetrics: () => set((state) => ({
+    metrics: {
+      ...state.metrics,
+      frameMetrics: {
+        drops: 0,
+        averageTime: 0,
+        peaks: [],
+        lastTimestamp: 0
+      }
     }
   }))
 });
