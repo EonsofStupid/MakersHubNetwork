@@ -1,7 +1,7 @@
 import { FrameMetrics } from '../types';
 
 export interface FrameState {
-  metrics: FrameMetrics;
+  frameMetrics: FrameMetrics;
 }
 
 export interface FrameActions {
