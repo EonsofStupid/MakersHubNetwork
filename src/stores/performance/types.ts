@@ -31,7 +31,7 @@ export interface PerformanceState {
   isMonitoring: boolean;
 }
 
-export type PerformanceActions = {
+export interface PerformanceActions {
   startMonitoring: () => void;
   stopMonitoring: () => void;
   recordFrameMetric: (duration: number) => void;
@@ -41,6 +41,6 @@ export type PerformanceActions = {
   resetFrameMetrics: () => void;
   resetStoreMetrics: () => void;
   resetMemoryMetrics: () => void;
-};
+}
 
 export type PerformanceStore = PerformanceState & PerformanceActions;
