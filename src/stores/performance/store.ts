@@ -1,18 +1,35 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { createFrameSlice, FrameSlice } from './slices/frame.slice';
-import { createStoreSlice, StoreSlice } from './slices/store.slice';
-import { createMemorySlice, MemorySlice } from './slices/memory.slice';
-import { createMonitoringSlice, MonitoringSlice } from './slices/monitoring.slice';
+import { createFrameSlice } from './slices/frame.slice';
+import { createStoreSlice } from './slices/store.slice';
+import { createMemorySlice } from './slices/memory.slice';
+import { createMonitoringSlice } from './slices/monitoring.slice';
 import { createPersistMiddleware } from './middleware/persist.middleware';
 import { PerformanceStore } from './types';
+import { StateCreator } from 'zustand';
 
-const createStore = (): PerformanceStore => {
+type StoreCreator = StateCreator<
+  PerformanceStore,
+  [],
+  [['zustand/persist', ReturnType<typeof createPersistMiddleware>]]
+>;
+
+const createStore = (): StoreCreator => (set, get) => {
+  const frameSlice = createFrameSlice(set, get);
+  const storeSlice = createStoreSlice(set, get);
+  const memorySlice = createMemorySlice(set, get);
+  const monitoringSlice = createMonitoringSlice(set, get);
+
   return {
-    ...createFrameSlice(set, get),
-    ...createStoreSlice(set, get),
-    ...createMemorySlice(set, get),
-    ...createMonitoringSlice(set, get),
+    metrics: {
+      frameMetrics: frameSlice.frameMetrics,
+      storeMetrics: storeSlice.storeMetrics,
+      memoryMetrics: memorySlice.memoryMetrics,
+    },
+    ...frameSlice,
+    ...storeSlice,
+    ...memorySlice,
+    ...monitoringSlice,
     resetMetrics: () => {
       get().resetFrameMetrics();
       get().resetStoreMetrics();
@@ -23,7 +40,7 @@ const createStore = (): PerformanceStore => {
 
 export const usePerformanceStore = create<PerformanceStore>()(
   persist(
-    createStore,
+    createStore(),
     createPersistMiddleware()
   )
 );
