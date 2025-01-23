@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { usePerformanceStore } from '@/stores/performance/store/root.store';
+import { usePerformanceStore } from '@/stores/performance/store';
 
 export const useFrameMetrics = (componentName: string) => {
   const isMonitoring = usePerformanceStore((state) => state.isMonitoring);
