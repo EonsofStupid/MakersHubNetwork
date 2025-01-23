@@ -1,9 +1,11 @@
 import { PerformanceState } from '../types';
 import { PersistOptions } from 'zustand/middleware';
 
-export const createPersistMiddleware = (): PersistOptions<PerformanceState> => ({
+export const createPersistMiddleware = (): PersistOptions<PerformanceState, PerformanceState> => ({
   name: 'performance-store',
-  partialize: (state: PerformanceState) => ({
+  partialize: (state) => ({
     thresholds: state.thresholds,
+    metrics: state.metrics,
+    isMonitoring: state.isMonitoring
   }),
 });
