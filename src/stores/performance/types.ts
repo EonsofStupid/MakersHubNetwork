@@ -56,12 +56,12 @@ export type PerformanceStore = PerformanceState & PerformanceActions;
 export type PerformanceSlice<T> = StateCreator<
   PerformanceStore,
   [],
-  [['zustand/persist', PerformanceStore]],
+  [],
   T
 >;
 
 export type SliceCreator<T> = (
-  set: StateCreator<PerformanceStore>['setState'],
+  set: StoreApi<PerformanceStore>['setState'],
   get: StoreApi<PerformanceStore>['getState'],
   store: StoreApi<PerformanceStore>
 ) => T;
