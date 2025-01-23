@@ -1,4 +1,10 @@
-import { MemoryMetrics } from '../../types/metrics';
+import { BaseMetrics } from '../../types';
+
+export interface MemoryMetrics extends BaseMetrics {
+  heapSize: number;
+  instances: number;
+  lastGC?: number;
+}
 
 export interface MemoryState {
   memoryMetrics: MemoryMetrics;

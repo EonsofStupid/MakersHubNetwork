@@ -4,7 +4,6 @@ import { createFrameSlice } from './metrics/frame/frame.slice';
 import { createStoreSlice } from './metrics/store/store.slice';
 import { createMemorySlice } from './metrics/memory/memory.slice';
 import { createMonitoringSlice } from './monitoring/monitoring.slice';
-import { createPersistMiddleware } from './middleware/persist.middleware';
 import { PerformanceStore } from './types';
 import { StateCreator } from 'zustand';
 
@@ -41,6 +40,9 @@ const createStore: StateCreator<
 export const usePerformanceStore = create<PerformanceStore>()(
   persist(
     createStore,
-    createPersistMiddleware()
+    {
+      name: 'performance-store',
+      partialize: (state) => state
+    }
   )
 );
