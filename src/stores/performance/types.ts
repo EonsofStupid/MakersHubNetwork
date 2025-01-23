@@ -1,0 +1,41 @@
+export interface PerformanceMetrics {
+  frameMetrics: {
+    drops: number;
+    averageTime: number;
+    peaks: number[];
+    lastFrameTimestamp: number;
+  };
+  storeMetrics: {
+    updates: number;
+    subscribers: Map<string, number>;
+    computeTime: number;
+    lastUpdateTimestamp: number;
+  };
+  memoryMetrics: {
+    heapSize: number;
+    instances: number;
+    lastGC?: number;
+  };
+}
+
+export interface PerformanceState {
+  metrics: PerformanceMetrics;
+  thresholds: {
+    frameDrop: number;
+    storeUpdate: number;
+    animationFrame: number;
+    batchSize: number;
+  };
+  isMonitoring: boolean;
+}
+
+export type PerformanceActions = {
+  startMonitoring: () => void;
+  stopMonitoring: () => void;
+  recordFrameMetric: (duration: number) => void;
+  recordStoreUpdate: (storeName: string, duration: number) => void;
+  recordMemorySnapshot: () => void;
+  resetMetrics: () => void;
+};
+
+export type PerformanceStore = PerformanceState & PerformanceActions;
