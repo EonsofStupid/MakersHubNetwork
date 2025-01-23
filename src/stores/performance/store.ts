@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { createFrameSlice } from './slices/frame.slice';
-import { createStoreSlice } from './slices/store.slice';
-import { createMemorySlice } from './slices/memory.slice';
-import { createMonitoringSlice } from './slices/monitoring.slice';
+import { createFrameSlice } from './metrics/frame/frame.slice';
+import { createStoreSlice } from './metrics/store/store.slice';
+import { createMemorySlice } from './metrics/memory/memory.slice';
+import { createMonitoringSlice } from './monitoring/monitoring.slice';
 import { createPersistMiddleware } from './middleware/persist.middleware';
 import { PerformanceStore } from './types';
 import { StateCreator } from 'zustand';
