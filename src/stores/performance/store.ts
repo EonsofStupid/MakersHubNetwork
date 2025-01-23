@@ -6,7 +6,7 @@ import { createMemorySlice } from './slices/memory.slice';
 import { createMonitoringSlice } from './slices/monitoring.slice';
 import { createPersistMiddleware } from './middleware/persist.middleware';
 import { PerformanceStore } from './types';
-import { StateCreator } from 'zustand';
+import { StateCreator, StoreApi } from 'zustand';
 
 type StoreCreator = StateCreator<
   PerformanceStore,
@@ -14,11 +14,11 @@ type StoreCreator = StateCreator<
   [['zustand/persist', unknown]]
 >;
 
-const createStore = (): StoreCreator => (set, get) => {
-  const frameSlice = createFrameSlice(set, get);
-  const storeSlice = createStoreSlice(set, get);
-  const memorySlice = createMemorySlice(set, get);
-  const monitoringSlice = createMonitoringSlice(set, get);
+const createStore = (): StoreCreator => (set, get, store) => {
+  const frameSlice = createFrameSlice(set, get, store);
+  const storeSlice = createStoreSlice(set, get, store);
+  const memorySlice = createMemorySlice(set, get, store);
+  const monitoringSlice = createMonitoringSlice(set, get, store);
 
   return {
     metrics: {
