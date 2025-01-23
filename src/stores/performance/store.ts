@@ -15,11 +15,11 @@ type StoreCreator = StateCreator<
   PerformanceStore
 >;
 
-const createStore = (): StoreCreator => (set, get) => {
-  const frameSlice = createFrameSlice(set, get);
-  const storeSlice = createStoreSlice(set, get);
-  const memorySlice = createMemorySlice(set, get);
-  const monitoringSlice = createMonitoringSlice(set, get);
+const createStore = (): StoreCreator => (set, get, store) => {
+  const frameSlice = createFrameSlice(set, get, store);
+  const storeSlice = createStoreSlice(set, get, store);
+  const memorySlice = createMemorySlice(set, get, store);
+  const monitoringSlice = createMonitoringSlice(set, get, store);
 
   return {
     metrics: {
