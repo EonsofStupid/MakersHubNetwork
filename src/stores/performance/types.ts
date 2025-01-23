@@ -1,3 +1,8 @@
+import { FrameSlice } from './metrics/frame/frame.types';
+import { StoreSlice } from './metrics/store/store.types';
+import { MemorySlice } from './metrics/memory/memory.types';
+import { MonitoringSlice } from './monitoring/monitoring.types';
+
 export interface BaseMetrics {
   lastTimestamp: number;
   averageTime: number;
