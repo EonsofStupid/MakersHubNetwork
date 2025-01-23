@@ -3,7 +3,7 @@ import { FrameSlice } from './frame.types';
 import { updateFrameMetrics } from './frame.utils';
 
 export const createFrameSlice: MetricsSlice<FrameSlice> = (set) => ({
-  metrics: {
+  frameMetrics: {
     drops: 0,
     averageTime: 0,
     peaks: [],
@@ -12,27 +12,21 @@ export const createFrameSlice: MetricsSlice<FrameSlice> = (set) => ({
 
   recordFrameMetric: (duration: number) => {
     set((state) => ({
-      metrics: {
-        ...state.metrics,
-        frame: updateFrameMetrics(
-          state.metrics.frame,
-          duration,
-          state.thresholds.frameDrop,
-          state.thresholds.batchSize
-        )
-      }
+      frameMetrics: updateFrameMetrics(
+        state.frameMetrics,
+        duration,
+        state.thresholds.frameDrop,
+        state.thresholds.batchSize
+      )
     }));
   },
 
-  resetFrameMetrics: () => set((state) => ({
-    metrics: {
-      ...state.metrics,
-      frame: {
-        drops: 0,
-        averageTime: 0,
-        peaks: [],
-        lastTimestamp: 0
-      }
+  resetFrameMetrics: () => set(() => ({
+    frameMetrics: {
+      drops: 0,
+      averageTime: 0,
+      peaks: [],
+      lastTimestamp: 0
     }
   }))
 });
