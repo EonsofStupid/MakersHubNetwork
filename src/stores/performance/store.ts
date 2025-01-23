@@ -112,13 +112,15 @@ export const usePerformanceStore = create<PerformanceStore>()(
       },
 
       recordMemorySnapshot: () => {
-        if (window.performance && performance.memory) {
+        // Check if performance.memory is available (Chrome only)
+        const performanceMemory = (performance as Performance).memory;
+        if (performanceMemory) {
           set(state => ({
             metrics: {
               ...state.metrics,
               memoryMetrics: {
-                heapSize: performance.memory.usedJSHeapSize,
-                instances: performance.memory.totalJSHeapSize,
+                heapSize: performanceMemory.usedJSHeapSize,
+                instances: performanceMemory.totalJSHeapSize,
                 lastGC: performance.now(),
               },
             },
