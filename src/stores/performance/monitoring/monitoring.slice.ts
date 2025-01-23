@@ -21,7 +21,7 @@ export const createMonitoringSlice: StateCreator<
     const rafCallback = () => {
       if (!get().isMonitoring) return;
       const now = performance.now();
-      const lastFrame = get().metrics.frame.lastTimestamp;
+      const lastFrame = get().metrics.frameMetrics.lastTimestamp;
       if (lastFrame) {
         const duration = now - lastFrame;
         get().recordFrameMetric(duration);
