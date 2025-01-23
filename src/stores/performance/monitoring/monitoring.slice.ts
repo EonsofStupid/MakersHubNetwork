@@ -1,6 +1,6 @@
 import { StateCreator } from 'zustand';
-import { PerformanceStore } from '../store/types';
 import { MonitoringSlice } from './monitoring.types';
+import { PerformanceStore } from '../types';
 
 export const createMonitoringSlice: StateCreator<
   PerformanceStore,
@@ -21,7 +21,7 @@ export const createMonitoringSlice: StateCreator<
     const rafCallback = () => {
       if (!get().isMonitoring) return;
       const now = performance.now();
-      const lastFrame = get().metrics.frameMetrics.lastTimestamp;
+      const lastFrame = get().frameMetrics.lastTimestamp;
       if (lastFrame) {
         const duration = now - lastFrame;
         get().recordFrameMetric(duration);

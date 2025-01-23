@@ -1,4 +1,9 @@
-import { FrameMetrics } from '../types';
+import { BaseMetrics } from '../../types';
+
+export interface FrameMetrics extends BaseMetrics {
+  drops: number;
+  peaks: number[];
+}
 
 export interface FrameState {
   frameMetrics: FrameMetrics;

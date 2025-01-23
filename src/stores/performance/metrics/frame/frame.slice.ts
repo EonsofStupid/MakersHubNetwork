@@ -1,8 +1,14 @@
-import { MetricsSlice } from '../types';
+import { StateCreator } from 'zustand';
 import { FrameSlice } from './frame.types';
 import { updateFrameMetrics } from './frame.utils';
+import { PerformanceStore } from '../../types';
 
-export const createFrameSlice: MetricsSlice<FrameSlice> = (set) => ({
+export const createFrameSlice: StateCreator<
+  PerformanceStore,
+  [],
+  [],
+  FrameSlice
+> = (set, get) => ({
   frameMetrics: {
     drops: 0,
     averageTime: 0,

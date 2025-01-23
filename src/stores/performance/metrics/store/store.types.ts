@@ -1,4 +1,11 @@
-import { StoreMetrics } from '../../types/metrics';
+import { BaseMetrics } from '../../types';
+
+export interface StoreMetrics extends BaseMetrics {
+  updates: number;
+  subscribers: Map<string, number>;
+  computeTime: number;
+  lastUpdateTimestamp: number;
+}
 
 export interface StoreState {
   storeMetrics: StoreMetrics;
