@@ -1,4 +1,4 @@
-import { PerformanceMetrics, SliceCreator, FrameMetrics } from '../types';
+import { PerformanceMetrics, PerformanceSlice, FrameMetrics } from '../types';
 import { updateFrameMetrics } from '../utils';
 
 export interface FrameSlice {
@@ -7,7 +7,7 @@ export interface FrameSlice {
   resetFrameMetrics: () => void;
 }
 
-export const createFrameSlice: SliceCreator<FrameSlice> = (set, get, store) => ({
+export const createFrameSlice: PerformanceSlice<FrameSlice> = (set, get, store) => ({
   frameMetrics: {
     drops: 0,
     averageTime: 0,

@@ -1,4 +1,4 @@
-import { PerformanceMetrics } from '../types';
+import { PerformanceMetrics, PerformanceSlice } from '../types';
 import { getMemoryInfo } from '../utils';
 
 export interface MemorySlice {
@@ -7,7 +7,7 @@ export interface MemorySlice {
   resetMemoryMetrics: () => void;
 }
 
-export const createMemorySlice = (set: any, get: any): MemorySlice => ({
+export const createMemorySlice: PerformanceSlice<MemorySlice> = (set, get, store) => ({
   memoryMetrics: {
     heapSize: 0,
     instances: 0,
@@ -16,16 +16,22 @@ export const createMemorySlice = (set: any, get: any): MemorySlice => ({
   recordMemorySnapshot: () => {
     const memoryInfo = getMemoryInfo();
     if (memoryInfo) {
-      set((state: any) => ({
-        memoryMetrics: memoryInfo,
+      set((state) => ({
+        metrics: {
+          ...state.metrics,
+          memoryMetrics: memoryInfo,
+        },
       }));
     }
   },
 
-  resetMemoryMetrics: () => set((state: any) => ({
-    memoryMetrics: {
-      heapSize: 0,
-      instances: 0,
+  resetMemoryMetrics: () => set((state) => ({
+    metrics: {
+      ...state.metrics,
+      memoryMetrics: {
+        heapSize: 0,
+        instances: 0,
+      },
     },
   })),
 });

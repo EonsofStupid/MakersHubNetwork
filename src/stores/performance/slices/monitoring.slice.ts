@@ -7,7 +7,7 @@ export interface MonitoringSlice {
   stopMonitoring: () => void;
 }
 
-export const createMonitoringSlice: PerformanceSlice<MonitoringSlice> = (set, get) => ({
+export const createMonitoringSlice: PerformanceSlice<MonitoringSlice> = (set, get, store) => ({
   isMonitoring: false,
   thresholds: {
     frameDrop: 16.67,
