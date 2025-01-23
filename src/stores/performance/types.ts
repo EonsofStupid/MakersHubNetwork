@@ -1,4 +1,4 @@
-import { StateCreator } from 'zustand';
+import { StateCreator, StoreApi } from 'zustand';
 
 export interface FrameMetrics {
   drops: number;
@@ -59,3 +59,9 @@ export type PerformanceSlice<T> = StateCreator<
   [['zustand/persist', PerformanceStore]],
   T
 >;
+
+export type SliceCreator<T> = (
+  set: StateCreator<PerformanceStore>['setState'],
+  get: StoreApi<PerformanceStore>['getState'],
+  store: StoreApi<PerformanceStore>
+) => T;
