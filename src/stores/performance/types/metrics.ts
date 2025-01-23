@@ -9,7 +9,9 @@ export interface StoreMetrics {
   updates: number;
   subscribers: Map<string, number>;
   computeTime: number;
+  lastTimestamp: number;
   lastUpdateTimestamp: number;
+  averageTime: number;
 }
 
 export interface MemoryMetrics {
