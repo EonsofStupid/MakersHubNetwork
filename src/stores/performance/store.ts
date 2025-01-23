@@ -20,7 +20,7 @@ const createStore = (): StoreCreator => (set, get) => {
   const memorySlice = createMemorySlice(set, get);
   const monitoringSlice = createMonitoringSlice(set, get);
 
-  return {
+  const store: PerformanceStore = {
     metrics: {
       frameMetrics: frameSlice.frameMetrics,
       storeMetrics: storeSlice.storeMetrics,
@@ -31,11 +31,13 @@ const createStore = (): StoreCreator => (set, get) => {
     ...memorySlice,
     ...monitoringSlice,
     resetMetrics: () => {
-      get().resetFrameMetrics();
-      get().resetStoreMetrics();
-      get().resetMemoryMetrics();
-    },
+      frameSlice.resetFrameMetrics();
+      storeSlice.resetStoreMetrics();
+      memorySlice.resetMemoryMetrics();
+    }
   };
+
+  return store;
 };
 
 export const usePerformanceStore = create<PerformanceStore>()(
