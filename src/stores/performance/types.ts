@@ -38,6 +38,9 @@ export type PerformanceActions = {
   recordStoreUpdate: (storeName: string, duration: number) => void;
   recordMemorySnapshot: () => void;
   resetMetrics: () => void;
+  resetFrameMetrics: () => void;
+  resetStoreMetrics: () => void;
+  resetMemoryMetrics: () => void;
 };
 
 export type PerformanceStore = PerformanceState & PerformanceActions;
