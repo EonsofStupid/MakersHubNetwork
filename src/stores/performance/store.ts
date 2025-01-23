@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PerformanceStore, PerformanceState } from './types';
+import { PerformanceState } from './types';
+import { getMemoryInfo, calculateFrameMetrics, measureStoreUpdate, updateFrameMetrics, updateStoreMetrics } from './utils';
 
 const INITIAL_STATE: PerformanceState = {
   metrics: {
@@ -22,7 +23,7 @@ const INITIAL_STATE: PerformanceState = {
     },
   },
   thresholds: {
-    frameDrop: 16.67, // 60fps target
+    frameDrop: 16.67,
     storeUpdate: 4,
     animationFrame: 8,
     batchSize: 50,
@@ -30,14 +31,13 @@ const INITIAL_STATE: PerformanceState = {
   isMonitoring: false,
 };
 
-export const usePerformanceStore = create<PerformanceStore>()(
+export const usePerformanceStore = create<PerformanceState>()(
   persist(
     (set, get) => ({
       ...INITIAL_STATE,
 
       startMonitoring: () => {
         set({ isMonitoring: true });
-        // Initialize performance monitoring
         const rafCallback = () => {
           if (!get().isMonitoring) return;
           const now = performance.now();
@@ -67,22 +67,21 @@ export const usePerformanceStore = create<PerformanceStore>()(
       recordFrameMetric: (duration: number) => {
         set(state => {
           const { frameMetrics } = state.metrics;
-          const newDrops = duration > state.thresholds.frameDrop 
-            ? frameMetrics.drops + 1 
-            : frameMetrics.drops;
+          const { batchSize, frameDrop } = state.thresholds;
           
-          const newAverageTime = (
-            frameMetrics.averageTime * frameMetrics.peaks.length + duration
-          ) / (frameMetrics.peaks.length + 1);
-
+          const updatedMetrics = updateFrameMetrics(
+            frameMetrics,
+            duration,
+            frameDrop,
+            batchSize
+          );
+          
           return {
             metrics: {
               ...state.metrics,
               frameMetrics: {
                 ...frameMetrics,
-                drops: newDrops,
-                averageTime: newAverageTime,
-                peaks: [...frameMetrics.peaks, duration].slice(-state.thresholds.batchSize),
+                ...updatedMetrics,
               },
             },
           };
@@ -96,15 +95,14 @@ export const usePerformanceStore = create<PerformanceStore>()(
           const newSubscribers = new Map(storeMetrics.subscribers);
           newSubscribers.set(storeName, currentSubscribers + 1);
 
+          const updatedMetrics = updateStoreMetrics(storeMetrics, duration);
+
           return {
             metrics: {
               ...state.metrics,
               storeMetrics: {
-                ...storeMetrics,
-                updates: storeMetrics.updates + 1,
+                ...updatedMetrics,
                 subscribers: newSubscribers,
-                computeTime: storeMetrics.computeTime + duration,
-                lastUpdateTimestamp: performance.now(),
               },
             },
           };
@@ -112,17 +110,12 @@ export const usePerformanceStore = create<PerformanceStore>()(
       },
 
       recordMemorySnapshot: () => {
-        // Check if performance.memory is available (Chrome only)
-        const performanceMemory = (performance as Performance).memory;
-        if (performanceMemory) {
+        const memoryInfo = getMemoryInfo();
+        if (memoryInfo) {
           set(state => ({
             metrics: {
               ...state.metrics,
-              memoryMetrics: {
-                heapSize: performanceMemory.usedJSHeapSize,
-                instances: performanceMemory.totalJSHeapSize,
-                lastGC: performance.now(),
-              },
+              memoryMetrics: memoryInfo,
             },
           }));
         }
