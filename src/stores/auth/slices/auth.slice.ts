@@ -1,10 +1,15 @@
-// src/stores/auth/auth.slice.ts
+////////////////////////////////////////////////////////////////////////////////
+// FILE: src/stores/auth/auth.slice.ts
+////////////////////////////////////////////////////////////////////////////////
 import { StateCreator } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthError } from "@supabase/supabase-js";
-import { AuthStatus, AuthStore } from "@/types/auth.types";
+import { AuthStore, AuthStatus } from "@/types/auth.types";
 
 export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
+  // ========================================================================
+  // AuthState
+  // ========================================================================
   user: null,
   session: null,
   roles: [],
@@ -13,6 +18,9 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
   initialized: false,
   isLoading: false,
 
+  // ========================================================================
+  // AuthActions
+  // ========================================================================
   setUser: (user) => set({ user }),
   setSession: (session) =>
     set({
@@ -57,14 +65,18 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
   initialize: async () => {
     try {
       set({ status: "loading", isLoading: true, error: null });
+
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
+
       if (session) {
         const { data: roles, error: rolesError } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", session.user.id);
+
         if (rolesError) throw rolesError;
+
         set({
           user: session.user,
           session,
@@ -84,10 +96,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
     } catch (err) {
       console.error("Auth initialization error:", err);
       set({
-        error:
-          err instanceof AuthError
-            ? err.message
-            : "An error occurred during initialization",
+        error: err instanceof AuthError ? err.message : "An error occurred during initialization",
         status: "unauthenticated",
         user: null,
         session: null,
@@ -118,8 +127,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
     } catch (err) {
       console.error("Logout error:", err);
       set({
-        error:
-          err instanceof AuthError ? err.message : "An error occurred during logout",
+        error: err instanceof AuthError ? err.message : "An error occurred during logout",
         status: "unauthenticated",
       });
     } finally {
