@@ -20,21 +20,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Initial session check
   useEffect(() => {
     let mounted = true;
+    let initialCheckDone = false;
 
     const checkSession = async () => {
+      if (initialCheckDone) return;
+      
       try {
-        setLoading(true);
+        if (mounted) setLoading(true);
         console.log("Checking initial session...");
 
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
-
-        console.log("Initial session check result:", { 
-          sessionExists: !!session,
-          userId: session?.user?.id,
-          error 
-        });
 
         if (error) {
           console.error("Session check error:", error);
@@ -46,7 +43,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setSession(session);
           setUser(session.user);
           
-          // Fetch user roles
           const { data: userRoles, error: rolesError } = await supabase
             .from("user_roles")
             .select("role")
@@ -62,18 +58,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setRoles(userRoles?.map((ur) => ur.role) || []);
           }
         } else {
-          // Clear state if no session
           setSession(null);
           setUser(null);
           setRoles([]);
         }
       } catch (err) {
-        console.error("Unexpected error during session check:", err);
-        setError(err instanceof Error ? err.message : "An unexpected error occurred");
+        if (mounted) {
+          console.error("Unexpected error during session check:", err);
+          setError(err instanceof Error ? err.message : "An unexpected error occurred");
+        }
       } finally {
         if (mounted) {
           setLoading(false);
           setInitialized(true);
+          initialCheckDone = true;
         }
       }
     };
@@ -112,14 +110,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             description: "Failed to fetch user roles.",
           });
         } else {
-          console.log("Setting roles:", userRoles);
           setRoles(userRoles?.map((ur) => ur.role) || []);
           toast({
             title: "Welcome back!",
             description: "You have successfully signed in.",
           });
           
-          // Only redirect if we're on the login page
           if (location.pathname === '/login') {
             navigate("/");
           }
@@ -132,7 +128,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setRoles([]);
         
-        // Only redirect to login if we're not already there
         if (location.pathname !== '/login') {
           navigate("/login");
           toast({
