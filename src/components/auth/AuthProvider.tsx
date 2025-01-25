@@ -19,42 +19,70 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Initial session check
   useEffect(() => {
-    setLoading(true);
-    console.log("Checking initial session...");
+    let mounted = true;
 
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log("Initial session check result:", { session: session?.user?.id, error });
-      
-      if (error) {
-        console.error("Session check error:", error);
-        setError(error.message);
-        setLoading(false);
-        return;
-      }
+    const checkSession = async () => {
+      try {
+        setLoading(true);
+        console.log("Checking initial session...");
 
-      if (session?.user) {
-        setSession(session);
-        setUser(session.user);
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        // Fetch user roles
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .then(({ data: userRoles, error: rolesError }) => {
-            if (rolesError) {
-              console.error("Error fetching roles:", rolesError);
-              setError(rolesError.message);
-            } else {
-              console.log("Fetched roles:", userRoles);
-              setRoles(userRoles?.map((ur) => ur.role) || []);
-            }
-          });
+        if (!mounted) return;
+
+        console.log("Initial session check result:", { 
+          sessionExists: !!session,
+          userId: session?.user?.id,
+          error 
+        });
+
+        if (error) {
+          console.error("Session check error:", error);
+          setError(error.message);
+          return;
+        }
+
+        if (session?.user) {
+          setSession(session);
+          setUser(session.user);
+          
+          // Fetch user roles
+          const { data: userRoles, error: rolesError } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", session.user.id);
+
+          if (!mounted) return;
+
+          if (rolesError) {
+            console.error("Error fetching roles:", rolesError);
+            setError(rolesError.message);
+          } else {
+            console.log("Fetched roles:", userRoles);
+            setRoles(userRoles?.map((ur) => ur.role) || []);
+          }
+        } else {
+          // Clear state if no session
+          setSession(null);
+          setUser(null);
+          setRoles([]);
+        }
+      } catch (err) {
+        console.error("Unexpected error during session check:", err);
+        setError(err instanceof Error ? err.message : "An unexpected error occurred");
+      } finally {
+        if (mounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
       }
-      
-      setLoading(false);
-      setInitialized(true);
-    });
+    };
+
+    checkSession();
+
+    return () => {
+      mounted = false;
+    };
   }, [setUser, setSession, setRoles, setError, setLoading, setInitialized]);
 
   // Auth state change listener
