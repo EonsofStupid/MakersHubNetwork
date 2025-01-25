@@ -7,9 +7,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isLoading = useAuthStore((state) => state.isLoading);
 
   useEffect(() => {
-    // Kick off the store’s initialize logic once.
-    // If you haven't already done so in store.ts
-    // Or if you want it repeated on app mount, do it here.
     initialize();
   }, [initialize]);
 
