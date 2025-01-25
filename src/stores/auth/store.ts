@@ -38,6 +38,12 @@ useAuthStore.getState().initialize();
 if (process.env.NODE_ENV === "development") {
   useAuthStore.subscribe(
     (state) => state,
-    (state) => console.log("Auth State Updated:", state)
+    (state) => console.log("Auth State Updated:", {
+      userId: state.user?.id,
+      status: state.status,
+      roles: state.roles,
+      isLoading: state.isLoading,
+      error: state.error
+    })
   );
 }
