@@ -11,7 +11,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthStore } from "@/stores/auth/store";
 
 interface LoginProps {
   onSuccess?: () => void;
@@ -20,7 +20,8 @@ interface LoginProps {
 const Login = ({ onSuccess }: LoginProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const status = useAuthStore((state) => state.status);
+  const isAuthenticated = status === "authenticated";
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -81,7 +82,6 @@ const Login = ({ onSuccess }: LoginProps) => {
             redirectTo={window.location.origin}
           />
         </CardContent>
-
       </Card>
     </div>
   );
