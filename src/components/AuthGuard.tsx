@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/stores/auth/types/auth.types";
@@ -12,7 +12,7 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading, roles, initialized } = useAuth();
 
-  useEffect(() => {
+  const checkAuth = useCallback(() => {
     if (!initialized) return;
 
     if (!isLoading && !isAuthenticated) {
@@ -30,17 +30,18 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
     }
   }, [isAuthenticated, isLoading, navigate, requiredRoles, roles, initialized]);
 
-  // Don't render anything until we've initialized auth
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   if (!initialized || isLoading) {
     return <div>Loading...</div>;
   }
 
-  // Don't render if not authenticated
   if (!isAuthenticated) {
     return null;
   }
 
-  // Don't render if missing required roles
   if (requiredRoles && !requiredRoles.some(role => roles.includes(role))) {
     return null;
   }
