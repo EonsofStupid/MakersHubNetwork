@@ -1,41 +1,53 @@
-import { useEffect } from "react";
+import { ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthStore } from "@/stores/auth/store";
 import { UserRole } from "@/stores/auth/types/auth.types";
 
 interface AuthGuardProps {
-  children: React.ReactNode;
+  children: ReactNode;
   requiredRoles?: UserRole[];
 }
 
+/**
+ * AuthGuard
+ *
+ * A component that guards routes by checking if the user is authenticated
+ * and/or has the specified roles. It simply reads from the store.
+ */
 export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, roles } = useAuth();
+
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const status = useAuthStore((state) => state.status);
+  const roles = useAuthStore((state) => state.roles);
+
+  const isAuthenticated = status === "authenticated";
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       navigate("/login");
+      return;
     }
 
     if (
       !isLoading &&
       isAuthenticated &&
       requiredRoles &&
-      !requiredRoles.some(role => roles.includes(role))
+      !requiredRoles.some((role) => roles.includes(role))
     ) {
       navigate("/unauthorized");
     }
-  }, [isAuthenticated, isLoading, navigate, requiredRoles, roles]);
+  }, [isLoading, isAuthenticated, requiredRoles, roles, navigate]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading guard...</div>;
   }
 
   if (!isAuthenticated) {
     return null;
   }
 
-  if (requiredRoles && !requiredRoles.some(role => roles.includes(role))) {
+  if (requiredRoles && !requiredRoles.some((role) => roles.includes(role))) {
     return null;
   }
 
