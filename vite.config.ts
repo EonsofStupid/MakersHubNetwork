@@ -19,23 +19,96 @@ export default defineConfig(({ mode }) => ({
         'react',
         'react-router-dom',
         {
-          '@tanstack/react-query': ['useQuery','useMutation','useQueryClient'],
-          '@/stores/auth/store': ['useAuthStore'],
-          '@/stores/theme/store': ['useThemeStore'],
-          '@/stores/components/store': ['useComponentStore'],
-          '@/lib/utils': ['cn'],
+          '@tanstack/react-query': [
+            'useQuery',
+            'useMutation',
+            'useQueryClient',
+            'useInfiniteQuery',
+            'useQueries',
+            'useSuspenseQuery',
+            'useSuspenseInfiniteQuery',
+            'useSuspenseQueries',
+          ],
+          '@/stores/auth/store': [
+            'useAuthStore',
+            'selectUser',
+            'selectIsAuthenticated',
+            'selectUserRoles',
+          ],
+          '@/stores/theme/store': [
+            'useThemeStore',
+            'selectThemeMode',
+            'selectAccentColor',
+            'selectLayout',
+          ],
+          '@/stores/components/store': [
+            'useComponentStore',
+            'selectVisibleModals',
+            'selectActiveDialogs',
+          ],
+          '@/stores/performance/store': [
+            'usePerformanceStore',
+            'selectFrameMetrics',
+            'selectStoreMetrics',
+            'selectMemoryMetrics',
+          ],
+          '@/lib/utils': [
+            'cn',
+            'formatDate',
+            'formatNumber',
+            'truncateText',
+          ],
+          '@/hooks': [
+            'useToast',
+            'useThemeManager',
+            'useFrameMetrics',
+          ],
+          'lucide-react': [
+            'Home',
+            'Settings',
+            'User',
+            'Search',
+            'Menu',
+            'X',
+            'Check',
+            'ChevronDown',
+            'ChevronUp',
+            'ChevronLeft',
+            'ChevronRight',
+            'Plus',
+            'Minus',
+            'Edit',
+            'Trash',
+            'Save',
+            'Download',
+            'Upload',
+            'Share',
+            'Mail',
+            'Calendar',
+            'Clock',
+            'Bell',
+            'Info',
+            'AlertCircle',
+            'CheckCircle',
+            'XCircle',
+            'Terminal',
+          ],
         },
       ],
-      // Generate TS declaration file
-      dts: './src/auto-imports.d.ts',
 
-      // Add your directories to automatically scan for exports
+      // Directories to scan for auto-imports
       dirs: [
         './src/components',
         './src/hooks',
         './src/stores',
         './src/lib',
+        './src/utils',
+        './src/features',
+        './src/layouts',
       ],
+
+      // Generate TypeScript declaration file
+      dts: './src/auto-imports.d.ts',
 
       // ESLint integration
       eslintrc: {
@@ -43,12 +116,14 @@ export default defineConfig(({ mode }) => ({
         filepath: './.eslintrc-auto-import.json',
       },
 
-      // Remove the "typescript" field, 
-      // because unplugin-auto-import doesn't support it like that.
-      // typescript: {
-      //   declaration: true,
-      //   declarationMap: true,
-      // },
+      // Default imports for specific files
+      defaultExportByFilename: true,
+
+      // Additional options for better DX
+      dtsLocations: [
+        './src/types/*.d.ts',
+        './src/types/**/*.d.ts',
+      ],
     }),
   ].filter(Boolean),
   resolve: {
