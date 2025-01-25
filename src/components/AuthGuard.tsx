@@ -10,11 +10,14 @@ interface AuthGuardProps {
 
 export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, roles } = useAuth();
+  const { isAuthenticated, isLoading, roles, initialized } = useAuth();
 
   useEffect(() => {
+    if (!initialized) return;
+
     if (!isLoading && !isAuthenticated) {
       navigate("/login");
+      return;
     }
 
     if (
@@ -25,16 +28,19 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
     ) {
       navigate("/unauthorized");
     }
-  }, [isAuthenticated, isLoading, navigate, requiredRoles, roles]);
+  }, [isAuthenticated, isLoading, navigate, requiredRoles, roles, initialized]);
 
-  if (isLoading) {
+  // Don't render anything until we've initialized auth
+  if (!initialized || isLoading) {
     return <div>Loading...</div>;
   }
 
+  // Don't render if not authenticated
   if (!isAuthenticated) {
     return null;
   }
 
+  // Don't render if missing required roles
   if (requiredRoles && !requiredRoles.some(role => roles.includes(role))) {
     return null;
   }
