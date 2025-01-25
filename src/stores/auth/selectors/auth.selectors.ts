@@ -1,54 +1,18 @@
-import { StateCreator } from "zustand";
-import { AuthState, AuthActions, AuthStore, AuthStatus } from "../types/auth.types";
-import { supabase } from "@/integrations/supabase/client";
-import { AuthError, Subscription } from "@supabase/supabase-js";
+// src/stores/auth/selectors/auth.selectors.ts
+import { AuthStore } from "@/types/auth.types";
 
-export const createAuthSlice: StateCreator<AuthStore, [], [], AuthStore> = (set, get) => {
-  // Just store the subscription object itself:
-  let authSubscription: Subscription | null = null;
+// --- PURE SELECTORS ONLY ---
+// These do NOT define slices; they read from AuthStore.
 
-  async function fetchSessionAndRoles(sessionParam?: any) {
-    // ... your existing fetch logic ...
-  }
-
-  function subscribeAuthStateChange() {
-    if (authSubscription) {
-      return;
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // ...
-      }
-    );
-
-    authSubscription = subscription;
-  }
-
-  return {
-    // ...rest of your store state and actions...
-
-    initialize: async () => {
-      if (get().initialized) return;
-
-      set({ status: "loading", isLoading: true, error: null });
-      try {
-        await fetchSessionAndRoles();
-        subscribeAuthStateChange();
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-        set({
-          error:
-            error instanceof AuthError
-              ? error.message
-              : "An error occurred during initialization",
-          status: "unauthenticated",
-        });
-      } finally {
-        set({ isLoading: false, initialized: true });
-      }
-    },
-
-    // ...
-  };
-};
+export const selectUser = (state: AuthStore) => state.user;
+export const selectSession = (state: AuthStore) => state.session;
+export const selectRoles = (state: AuthStore) => state.roles;
+export const selectStatus = (state: AuthStore) => state.status;
+export const selectError = (state: AuthStore) => state.error;
+export const selectIsLoading = (state: AuthStore) => state.isLoading;
+export const selectIsInitialized = (state: AuthStore) => state.initialized;
+export const selectIsAuthenticated = (state: AuthStore) =>
+  state.status === "authenticated";
+export const selectIsAdmin = (state: AuthStore) => state.roles.includes("admin");
+export const selectHasRole = (role: string) => (state: AuthStore) =>
+  state.roles.includes(role);
