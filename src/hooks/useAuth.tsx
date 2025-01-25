@@ -7,7 +7,12 @@ import {
   selectIsLoading,
   selectError,
   selectIsAdmin,
-  selectHasRole
+  selectIsSuperAdmin,
+  selectIsEditor,
+  selectHasRole,
+  selectUserDisplayName,
+  selectAuthStatus,
+  selectInitialized
 } from "@/stores/auth/selectors/auth.selectors";
 
 export const useAuth = () => {
@@ -18,7 +23,12 @@ export const useAuth = () => {
   const isLoading = useAuthStore(selectIsLoading);
   const error = useAuthStore(selectError);
   const isAdmin = useAuthStore(selectIsAdmin);
+  const isSuperAdmin = useAuthStore(selectIsSuperAdmin);
+  const isEditor = useAuthStore(selectIsEditor);
   const hasRole = useAuthStore(state => state.hasRole);
+  const displayName = useAuthStore(selectUserDisplayName);
+  const authStatus = useAuthStore(selectAuthStatus);
+  const initialized = useAuthStore(selectInitialized);
 
   // Actions
   const { setUser, setSession, logout } = useAuthStore();
@@ -32,7 +42,12 @@ export const useAuth = () => {
     isLoading,
     error,
     isAdmin,
+    isSuperAdmin,
+    isEditor,
     hasRole,
+    displayName,
+    authStatus,
+    initialized,
     // Actions
     setUser,
     setSession,
