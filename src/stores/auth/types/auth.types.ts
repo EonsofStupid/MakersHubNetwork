@@ -1,13 +1,12 @@
-import { User, Session } from "@supabase/supabase-js";
-import { Database } from "@/integrations/supabase/types";
-
-export type UserRole = Database["public"]["Enums"]["user_role"];
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
+////////////////////////////////////////////////////////////////////////////////
+// FILE: src/types/auth.types.ts
+////////////////////////////////////////////////////////////////////////////////
+export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 
 export interface AuthState {
-  user: User | null;
-  session: Session | null;
-  roles: UserRole[];
+  user: any;
+  session: any;
+  roles: string[];
   status: AuthStatus;
   error: string | null;
   initialized: boolean;
@@ -15,19 +14,19 @@ export interface AuthState {
 }
 
 export interface AuthActions {
-  setUser: (user: User | null) => void;
-  setSession: (session: Session | null) => void;
-  setRoles: (roles: UserRole[]) => void;
+  setUser: (user: any) => void;
+  setSession: (session: any) => void;
+  setRoles: (roles: string[]) => void;
   setError: (error: string | null) => void;
   setStatus: (status: AuthStatus) => void;
   setInitialized: (initialized: boolean) => void;
   setLoading: (isLoading: boolean) => void;
-  hasRole: (role: UserRole) => boolean;
+  hasRole: (role: string) => boolean;
   isAdmin: () => boolean;
-  initialize: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  initialize: () => Promise<void>;
   clearState: () => void;
+  logout: () => Promise<void>;
 }
 
 export type AuthStore = AuthState & AuthActions;
