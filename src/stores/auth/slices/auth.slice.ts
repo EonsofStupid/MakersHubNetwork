@@ -1,4 +1,3 @@
-// src/stores/auth/slices/auth.slice.ts
 import { StateCreator } from "zustand"
 import { supabase } from "@/integrations/supabase/client"
 import { AuthError } from "@supabase/supabase-js"
@@ -29,38 +28,16 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
   hasRole: (role) => get().roles.includes(role),
   isAdmin: () => get().roles.includes("admin"),
 
-  login: async (email, password) => {
-    try {
-      set({ status: "loading", isLoading: true, error: null })
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) throw error
-      set({
-        user: data.user,
-        session: data.session,
-        status: "authenticated",
-        error: null,
-      })
-    } catch (err) {
-      console.error("Login error:", err)
-      set({
-        error: err instanceof AuthError ? err.message : "An error occurred during login",
-        status: "unauthenticated",
-      })
-    } finally {
-      set({ isLoading: false })
-    }
-  },
-
   initialize: async () => {
     try {
       set({ status: "loading", isLoading: true, error: null })
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession()
+      
+      // Get the initial session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       if (sessionError) throw sessionError
 
       if (session) {
+        // Get user roles if authenticated
         const { data: roles, error: rolesError } = await supabase
           .from("user_roles")
           .select("role")
@@ -86,8 +63,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
     } catch (err) {
       console.error("Auth initialization error:", err)
       set({
-        error:
-          err instanceof AuthError ? err.message : "An error occurred during initialization",
+        error: err instanceof AuthError ? err.message : "An error occurred during initialization",
         status: "unauthenticated",
         user: null,
         session: null,
