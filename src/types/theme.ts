@@ -1,3 +1,5 @@
+import { Json } from "@/integrations/supabase/types";
+
 export type ThemeStatus = 'draft' | 'published' | 'archived';
 
 export interface Theme {
@@ -16,6 +18,7 @@ export interface Theme {
   design_tokens: Record<string, any>;
   component_tokens: Record<string, any>;
   composition_rules: Record<string, any>;
+  cached_styles?: Record<string, any>;
 }
 
 export interface ThemeToken {

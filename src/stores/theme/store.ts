@@ -28,8 +28,15 @@ export const useThemeStore = create<ThemeState>((set) => ({
       const theme = themes[0];
       console.log("Successfully fetched theme:", theme);
 
+      // Type cast the JSON fields to Record<string, any>
       set({ 
-        currentTheme: theme,
+        currentTheme: {
+          ...theme,
+          design_tokens: theme.design_tokens as Record<string, any> || {},
+          component_tokens: theme.component_tokens as Record<string, any> || {},
+          composition_rules: theme.composition_rules as Record<string, any> || {},
+          cached_styles: theme.cached_styles as Record<string, any> || {}
+        },
         isLoading: false 
       });
     } catch (error) {
@@ -58,7 +65,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
         context: comp.context,
         created_at: comp.created_at,
         updated_at: comp.updated_at,
-        styles: comp.styles || {}
+        styles: comp.styles as Record<string, any> || {}
       }));
 
       set({ adminComponents: components, isLoading: false });
