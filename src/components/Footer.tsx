@@ -77,10 +77,11 @@ export function Footer() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="relative group px-4 py-2 bg-background/20 backdrop-blur-xl border border-primary/30 hover:bg-primary/5"
+                    className="relative group px-4 py-2 bg-background/20 backdrop-blur-xl border border-primary/30 hover:bg-primary/5 transition-all duration-300 hover:scale-105"
                   >
-                    <Terminal className="w-4 h-4 mr-2 text-primary" />
-                    <span className="text-sm">Theme Info</span>
+                    <Terminal className="w-4 h-4 mr-2 text-primary group-hover:animate-pulse" />
+                    <span className="text-sm group-hover:text-primary transition-colors">Theme Info</span>
+                    <div className="absolute inset-0 bg-primary/5 rounded-md transform scale-0 group-hover:scale-100 transition-transform duration-300" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="p-0 bg-transparent border-none">
