@@ -118,12 +118,6 @@ export default defineConfig(({ mode }) => ({
 
       // Default imports for specific files
       defaultExportByFilename: true,
-
-      // Additional options for better DX
-      dtsLocations: [
-        './src/types/*.d.ts',
-        './src/types/**/*.d.ts',
-      ],
     }),
   ].filter(Boolean),
   resolve: {
