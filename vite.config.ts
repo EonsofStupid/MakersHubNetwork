@@ -1,5 +1,5 @@
 import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react-swc"
+import react from "@vitejs/plugin-react"
 import path from "path"
 import { componentTagger } from "lovable-tagger"
 import AutoImport from "unplugin-auto-import/vite"
@@ -17,16 +17,12 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    react({
-      plugins: [
-        ["@swc/plugin-emotion", {}],
-        ["@swc/plugin-styled-components", {
-          displayName: true,
-          ssr: false
-        }]
-      ]
-    }),
+    // Standard React plugin (Babel-based)
+    react(),
+
+    // Only enable componentTagger in development
     mode === "development" && componentTagger(),
+
     AutoImport({
       imports: [
         "react",
@@ -64,7 +60,6 @@ export default defineConfig(({ mode }) => ({
             "selectThemeTokens",
             "selectThemeComponents",
           ],
-          "@/hooks/use-toast": ["useToast"],
           "lucide-react": [
             "Search",
             "Menu",
@@ -100,100 +95,19 @@ export default defineConfig(({ mode }) => ({
             "Settings",
             "Star",
           ],
-          "@/components/ui/button": ["Button", "buttonVariants"],
-          "@/components/ui/sheet": [
-            "Sheet",
-            "SheetContent",
-            "SheetTrigger",
-            "SheetClose",
-            "SheetHeader",
-            "SheetFooter",
-            "SheetTitle",
-            "SheetDescription",
-          ],
-          "@/components/ui/dialog": [
-            "Dialog",
-            "DialogContent",
-            "DialogTrigger",
-            "DialogClose",
-            "DialogHeader",
-            "DialogFooter",
-            "DialogTitle",
-            "DialogDescription",
-          ],
-          "@/components/ui/dropdown-menu": [
-            "DropdownMenu",
-            "DropdownMenuTrigger",
-            "DropdownMenuContent",
-            "DropdownMenuItem",
-            "DropdownMenuLabel",
-            "DropdownMenuSeparator",
-            "DropdownMenuGroup",
-            "DropdownMenuRadioGroup",
-            "DropdownMenuRadioItem",
-            "DropdownMenuCheckboxItem",
-          ],
-          "@/components/ui/form": [
-            "Form",
-            "FormField",
-            "FormItem",
-            "FormLabel",
-            "FormControl",
-            "FormDescription",
-            "FormMessage",
-            "useFormField",
-          ],
-          "@/components/ui/input": ["Input"],
-          "@/components/ui/label": ["Label"],
-          "@/components/ui/select": [
-            "Select",
-            "SelectTrigger",
-            "SelectValue",
-            "SelectContent",
-            "SelectItem",
-            "SelectGroup",
-            "SelectLabel",
-            "SelectSeparator",
-          ],
-          "@/components/ui/tabs": [
-            "Tabs",
-            "TabsList",
-            "TabsTrigger",
-            "TabsContent",
-          ],
-          "@/components/ui/toast": [
-            "Toast",
-            "ToastAction",
-            "ToastClose",
-            "ToastTitle",
-            "ToastDescription",
-            "ToastProvider",
-            "ToastViewport",
-          ],
-          "@/lib/utils": [
-            "cn",
-            "formatDate",
-            "wait",
-            "createUrl",
-            "absoluteUrl",
-            "constructMetadata",
-            "formatBytes",
-            "slugify",
-            "truncate",
-          ],
         },
       ],
       dirs: [
-        "./src/components",
-        "./src/hooks",
-        "./src/stores",
-        "./src/lib",
-        "./src/utils",
-        "./src/types",
-        "./src/constants",
-        "./src/features/**/components",
-        "./src/features/**/hooks",
-        "./src/features/**/stores",
+        "@/components",
+        "@/hooks",
+        "@/stores",
+        "@/lib",
+        "@/utils",
+        "@/types",
+        "@/constants",
+        "@/features/**/components",
+        "@/features/**/hooks",
+        "@/features/**/stores",
       ],
       dts: "./src/auto-imports.d.ts",
       eslintrc: {
@@ -201,14 +115,6 @@ export default defineConfig(({ mode }) => ({
         filepath: "./.eslintrc-auto-import.json",
       },
       defaultExportByFilename: true,
-      include: [
-        /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
-        /\.vue$/,
-        /\.vue\?vue/, // .vue
-        /\.md$/, // .md
-      ],
-      // No need for resolvers or dtsLocations (remove them)
-      resolvers: [],
     }),
   ].filter(Boolean),
   resolve: {
@@ -227,24 +133,9 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: "esnext",
     minify: "esbuild",
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          react: ["react", "react-dom"],
-          router: ["react-router-dom"],
-          tanstack: ["@tanstack/react-query"],
-          ui: ["@/components/ui"],
-        },
-      },
-    },
   },
   optimizeDeps: {
-    include: [
-      "react",
-      "react-dom",
-      "react-router-dom",
-      "@tanstack/react-query",
-    ],
+    include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
     exclude: ["@supabase/supabase-js"],
   },
 }))
