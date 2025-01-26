@@ -1,9 +1,15 @@
+////////////////////////////////////////////////////////////////////////////////
+// FILE: src/stores/auth/auth.slice.ts
+////////////////////////////////////////////////////////////////////////////////
 import { StateCreator } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthError } from "@supabase/supabase-js";
-import { AuthStore, AuthStatus } from "@/stores/auth/types/auth.types";
+import { AuthStore, AuthStatus } from "@/types/auth.types";
 
 export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
+  // ========================================================================
+  // AuthState
+  // ========================================================================
   user: null,
   session: null,
   roles: [],
@@ -12,6 +18,9 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
   initialized: false,
   isLoading: false,
 
+  // ========================================================================
+  // AuthActions
+  // ========================================================================
   setUser: (user) => set({ user }),
   setSession: (session) =>
     set({
