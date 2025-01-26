@@ -1,18 +1,15 @@
-import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
-import path from "path"
-import { componentTagger } from "lovable-tagger"
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { componentTagger } from 'lovable-tagger';
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
-    port: 8080,
+    port: 5173,
+    strictPort: true,
+    host: true,
     watch: {
       usePolling: true,
-      interval: 100,
-    },
-    hmr: {
-      overlay: true,
     },
   },
   plugins: [
@@ -21,23 +18,24 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@components": path.resolve(__dirname, "./src/components"),
-      "@hooks": path.resolve(__dirname, "./src/hooks"),
-      "@stores": path.resolve(__dirname, "./src/stores"),
-      "@lib": path.resolve(__dirname, "./src/lib"),
-      "@utils": path.resolve(__dirname, "./src/utils"),
-      "@types": path.resolve(__dirname, "./src/types"),
-      "@constants": path.resolve(__dirname, "./src/constants"),
-      "@features": path.resolve(__dirname, "./src/features"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
   build: {
-    target: "esnext",
-    minify: "esbuild",
+    outDir: 'dist',
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+        },
+      },
+    },
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
-    exclude: ["@supabase/supabase-js"],
-  },
-}))
+    include: ['@supabase/supabase-js'],
+    esbuildOptions: {
+      target: 'esnext'
+    }
+  }
+}));
