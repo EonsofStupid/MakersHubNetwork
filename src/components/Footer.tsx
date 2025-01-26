@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ThemeInfoPopup } from "@/components/theme/ThemeInfoPopup";
 import { Terminal } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 
 export function Footer() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -72,22 +73,28 @@ export function Footer() {
                 © 2025 MakersImpulse. All rights reserved.
               </p>
 
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="relative group px-4 py-2 bg-background/20 backdrop-blur-xl border border-primary/30 hover:bg-primary/5 transition-all duration-300 hover:scale-105"
+              <AnimatePresence mode="wait">
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="relative group px-4 py-2 bg-background/20 backdrop-blur-xl border border-primary/30 hover:bg-primary/5 transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-primary/30 focus:outline-none"
+                    >
+                      <Terminal className="w-4 h-4 mr-2 text-primary group-hover:animate-pulse" />
+                      <span className="text-sm group-hover:text-primary transition-colors">Theme Info</span>
+                      <div className="absolute inset-0 bg-primary/5 rounded-md transform scale-0 group-hover:scale-100 transition-transform duration-300" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent 
+                    className="p-0 bg-transparent border-none"
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                    onPointerDownOutside={(e) => e.preventDefault()}
                   >
-                    <Terminal className="w-4 h-4 mr-2 text-primary group-hover:animate-pulse" />
-                    <span className="text-sm group-hover:text-primary transition-colors">Theme Info</span>
-                    <div className="absolute inset-0 bg-primary/5 rounded-md transform scale-0 group-hover:scale-100 transition-transform duration-300" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="p-0 bg-transparent border-none">
-                  <ThemeInfoPopup />
-                </DialogContent>
-              </Dialog>
+                    <ThemeInfoPopup onClose={() => setIsDialogOpen(false)} />
+                  </DialogContent>
+                </Dialog>
+              </AnimatePresence>
 
               <p className="text-sm text-muted-foreground">
                 Designed by{" "}
