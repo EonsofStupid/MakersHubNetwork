@@ -414,6 +414,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_is_super_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
       get_theme_inheritance_chain: {
         Args: {
           theme_id: string
