@@ -1,4 +1,3 @@
-// vite.config.ts
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react-swc"
 import path from "path"
@@ -19,8 +18,11 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react({
-      plugins: [["@swc/plugin-emotion", {}]],
-      swcPlugins: [["@swc/plugin-styled-components", {}]],
+      // Combine your SWC transform plugins in one "plugins" array
+      plugins: [
+        ["@swc/plugin-emotion", {}],
+        ["@swc/plugin-styled-components", {}],
+      ],
     }),
     mode === "development" && componentTagger(),
     AutoImport({
@@ -97,16 +99,86 @@ export default defineConfig(({ mode }) => ({
             "Star",
           ],
           "@/components/ui/button": ["Button", "buttonVariants"],
-          "@/components/ui/sheet": ["Sheet", "SheetContent", "SheetTrigger", "SheetClose", "SheetHeader", "SheetFooter", "SheetTitle", "SheetDescription"],
-          "@/components/ui/dialog": ["Dialog", "DialogContent", "DialogTrigger", "DialogClose", "DialogHeader", "DialogFooter", "DialogTitle", "DialogDescription"],
-          "@/components/ui/dropdown-menu": ["DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent", "DropdownMenuItem", "DropdownMenuLabel", "DropdownMenuSeparator", "DropdownMenuGroup", "DropdownMenuRadioGroup", "DropdownMenuRadioItem", "DropdownMenuCheckboxItem"],
-          "@/components/ui/form": ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormDescription", "FormMessage", "useFormField"],
+          "@/components/ui/sheet": [
+            "Sheet",
+            "SheetContent",
+            "SheetTrigger",
+            "SheetClose",
+            "SheetHeader",
+            "SheetFooter",
+            "SheetTitle",
+            "SheetDescription",
+          ],
+          "@/components/ui/dialog": [
+            "Dialog",
+            "DialogContent",
+            "DialogTrigger",
+            "DialogClose",
+            "DialogHeader",
+            "DialogFooter",
+            "DialogTitle",
+            "DialogDescription",
+          ],
+          "@/components/ui/dropdown-menu": [
+            "DropdownMenu",
+            "DropdownMenuTrigger",
+            "DropdownMenuContent",
+            "DropdownMenuItem",
+            "DropdownMenuLabel",
+            "DropdownMenuSeparator",
+            "DropdownMenuGroup",
+            "DropdownMenuRadioGroup",
+            "DropdownMenuRadioItem",
+            "DropdownMenuCheckboxItem",
+          ],
+          "@/components/ui/form": [
+            "Form",
+            "FormField",
+            "FormItem",
+            "FormLabel",
+            "FormControl",
+            "FormDescription",
+            "FormMessage",
+            "useFormField",
+          ],
           "@/components/ui/input": ["Input"],
           "@/components/ui/label": ["Label"],
-          "@/components/ui/select": ["Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectItem", "SelectGroup", "SelectLabel", "SelectSeparator"],
-          "@/components/ui/tabs": ["Tabs", "TabsList", "TabsTrigger", "TabsContent"],
-          "@/components/ui/toast": ["Toast", "ToastAction", "ToastClose", "ToastTitle", "ToastDescription", "ToastProvider", "ToastViewport"],
-          "@/lib/utils": ["cn", "formatDate", "wait", "createUrl", "absoluteUrl", "constructMetadata", "formatBytes", "slugify", "truncate"],
+          "@/components/ui/select": [
+            "Select",
+            "SelectTrigger",
+            "SelectValue",
+            "SelectContent",
+            "SelectItem",
+            "SelectGroup",
+            "SelectLabel",
+            "SelectSeparator",
+          ],
+          "@/components/ui/tabs": [
+            "Tabs",
+            "TabsList",
+            "TabsTrigger",
+            "TabsContent",
+          ],
+          "@/components/ui/toast": [
+            "Toast",
+            "ToastAction",
+            "ToastClose",
+            "ToastTitle",
+            "ToastDescription",
+            "ToastProvider",
+            "ToastViewport",
+          ],
+          "@/lib/utils": [
+            "cn",
+            "formatDate",
+            "wait",
+            "createUrl",
+            "absoluteUrl",
+            "constructMetadata",
+            "formatBytes",
+            "slugify",
+            "truncate",
+          ],
         },
       ],
       dirs: [
@@ -133,9 +205,8 @@ export default defineConfig(({ mode }) => ({
         /\.vue\?vue/, // .vue
         /\.md$/, // .md
       ],
-      resolvers: [
-        // Add custom resolvers if needed
-      ],
+      // No need for resolvers or dtsLocations (remove them)
+      resolvers: [],
     }),
   ].filter(Boolean),
   resolve: {
@@ -166,7 +237,12 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
+    include: [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "@tanstack/react-query",
+    ],
     exclude: ["@supabase/supabase-js"],
   },
 }))
