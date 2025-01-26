@@ -17,7 +17,15 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    react(),
+    react({
+      plugins: [
+        ["@swc/plugin-emotion", {}],
+        ["@swc/plugin-styled-components", {
+          displayName: true,
+          ssr: false
+        }]
+      ]
+    }),
     mode === "development" && componentTagger(),
     AutoImport({
       imports: [
@@ -91,19 +99,80 @@ export default defineConfig(({ mode }) => ({
             "Settings",
             "Star",
           ],
+          "@/components/ui/button": ["Button", "buttonVariants"],
+          "@/components/ui/sheet": [
+            "Sheet",
+            "SheetContent",
+            "SheetTrigger",
+            "SheetClose",
+            "SheetHeader",
+            "SheetFooter",
+            "SheetTitle",
+            "SheetDescription",
+          ],
+          "@/components/ui/dialog": [
+            "Dialog",
+            "DialogContent",
+            "DialogTrigger",
+            "DialogClose",
+            "DialogHeader",
+            "DialogFooter",
+            "DialogTitle",
+            "DialogDescription",
+          ],
+          "@/components/ui/dropdown-menu": [
+            "DropdownMenu",
+            "DropdownMenuTrigger",
+            "DropdownMenuContent",
+            "DropdownMenuItem",
+            "DropdownMenuLabel",
+            "DropdownMenuSeparator",
+            "DropdownMenuGroup",
+            "DropdownMenuRadioGroup",
+            "DropdownMenuRadioItem",
+            "DropdownMenuCheckboxItem",
+          ],
+          "@/components/ui/form": [
+            "Form",
+            "FormField",
+            "FormItem",
+            "FormLabel",
+            "FormControl",
+            "FormDescription",
+            "FormMessage",
+            "useFormField",
+          ],
+          "@/components/ui/input": ["Input"],
+          "@/components/ui/label": ["Label"],
+          "@/components/ui/select": [
+            "Select",
+            "SelectTrigger",
+            "SelectValue",
+            "SelectContent",
+            "SelectItem",
+            "SelectGroup",
+            "SelectLabel",
+            "SelectSeparator",
+          ],
+          "@/components/ui/tabs": [
+            "Tabs",
+            "TabsList",
+            "TabsTrigger",
+            "TabsContent",
+          ],
         },
       ],
       dirs: [
-        "@/components",
-        "@/hooks",
-        "@/stores",
-        "@/lib",
-        "@/utils",
-        "@/types",
-        "@/constants",
-        "@/features/**/components",
-        "@/features/**/hooks",
-        "@/features/**/stores",
+        "./src/components",
+        "./src/hooks",
+        "./src/stores",
+        "./src/lib",
+        "./src/utils",
+        "./src/types",
+        "./src/constants",
+        "./src/features/**/components",
+        "./src/features/**/hooks",
+        "./src/features/**/stores",
       ],
       dts: "./src/auto-imports.d.ts",
       eslintrc: {
@@ -111,6 +180,12 @@ export default defineConfig(({ mode }) => ({
         filepath: "./.eslintrc-auto-import.json",
       },
       defaultExportByFilename: true,
+      include: [
+        /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
+        /\.vue$/,
+        /\.vue\?vue/, // .vue
+        /\.md$/, // .md
+      ],
     }),
   ].filter(Boolean),
   resolve: {
@@ -129,9 +204,24 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: "esnext",
     minify: "esbuild",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ["react", "react-dom"],
+          router: ["react-router-dom"],
+          tanstack: ["@tanstack/react-query"],
+          ui: ["@/components/ui"],
+        },
+      },
+    },
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
+    include: [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "@tanstack/react-query",
+    ],
     exclude: ["@supabase/supabase-js"],
   },
 }))
