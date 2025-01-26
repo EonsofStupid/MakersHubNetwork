@@ -6,6 +6,7 @@ import { ThemeColorSystem } from "./ThemeColorSystem";
 import { ThemeComponentPreview } from "./ThemeComponentPreview";
 import { ThemeDataStream } from "./ThemeDataStream";
 import { motion, AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
 
 interface ThemeInfoPopupProps {
   onClose?: () => void;
@@ -13,9 +14,37 @@ interface ThemeInfoPopupProps {
 
 export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
   const [activeSection, setActiveSection] = useState<'colors' | 'components' | 'info'>('info');
-  const { currentTheme, themeTokens, themeComponents } = useThemeStore();
+  const { currentTheme, themeTokens, themeComponents, isLoading, error } = useThemeStore();
 
-  if (!currentTheme) return null;
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="p-6 text-center"
+      >
+        <p className="text-destructive">Error loading theme data. Please try again.</p>
+        {onClose && (
+          <Button onClick={onClose} variant="ghost" className="mt-4">
+            Close
+          </Button>
+        )}
+      </motion.div>
+    );
+  }
+
+  if (isLoading || !currentTheme) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="p-6 text-center"
+      >
+        <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+        <p className="mt-2 text-muted-foreground">Loading theme data...</p>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
