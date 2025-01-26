@@ -29,37 +29,41 @@ export const useThemeStore = create<ThemeState>((set) => ({
       const rawTheme = themes[0];
       console.log("Successfully fetched theme:", rawTheme);
 
+      // Ensure design_tokens has the correct structure
+      const designTokens = typeof rawTheme.design_tokens === 'object' ? rawTheme.design_tokens : {};
+      const componentTokens = typeof rawTheme.component_tokens === 'object' ? rawTheme.component_tokens : {};
+
       const theme: Theme = {
         ...rawTheme,
-        design_tokens: rawTheme.design_tokens || {
-          colors: {},
-          spacing: {},
+        design_tokens: {
+          colors: designTokens.colors || {},
+          spacing: designTokens.spacing || {},
           typography: {
-            fontSizes: {},
-            fontFamilies: {},
-            lineHeights: {},
-            letterSpacing: {}
+            fontSizes: designTokens.typography?.fontSizes || {},
+            fontFamilies: designTokens.typography?.fontFamilies || {},
+            lineHeights: designTokens.typography?.lineHeights || {},
+            letterSpacing: designTokens.typography?.letterSpacing || {}
           },
           effects: {
-            shadows: {},
-            blurs: {},
-            gradients: {}
+            shadows: designTokens.effects?.shadows || {},
+            blurs: designTokens.effects?.blurs || {},
+            gradients: designTokens.effects?.gradients || {}
           },
           animations: {
-            keyframes: {},
-            transitions: {},
-            durations: {}
+            keyframes: designTokens.animations?.keyframes || {},
+            transitions: designTokens.animations?.transitions || {},
+            durations: designTokens.animations?.durations || {}
           }
         },
-        component_tokens: rawTheme.component_tokens || {
-          base: {},
-          variants: {},
-          states: {},
-          responsive: {},
-          darkMode: {}
+        component_tokens: {
+          base: componentTokens.base || {},
+          variants: componentTokens.variants || {},
+          states: componentTokens.states || {},
+          responsive: componentTokens.responsive || {},
+          darkMode: componentTokens.darkMode || {}
         },
-        composition_rules: rawTheme.composition_rules || {},
-        cached_styles: rawTheme.cached_styles || {}
+        composition_rules: typeof rawTheme.composition_rules === 'object' ? rawTheme.composition_rules : {},
+        cached_styles: typeof rawTheme.cached_styles === 'object' ? rawTheme.cached_styles : {}
       };
 
       set({ currentTheme: theme, isLoading: false });
@@ -89,7 +93,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
         context: comp.context,
         created_at: comp.created_at,
         updated_at: comp.updated_at,
-        styles: comp.styles
+        styles: typeof comp.styles === 'object' ? comp.styles : {}
       }));
 
       set({ adminComponents: components, isLoading: false });
