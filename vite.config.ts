@@ -18,11 +18,13 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react({
-      // Combine your SWC transform plugins in one "plugins" array
       plugins: [
         ["@swc/plugin-emotion", {}],
-        ["@swc/plugin-styled-components", {}],
-      ],
+        ["@swc/plugin-styled-components", {
+          displayName: true,
+          ssr: false
+        }]
+      ]
     }),
     mode === "development" && componentTagger(),
     AutoImport({
