@@ -31,7 +31,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
       const theme: Theme = {
         ...rawTheme,
-        design_tokens: rawTheme.design_tokens as Theme['design_tokens'] || {
+        design_tokens: rawTheme.design_tokens || {
           colors: {},
           spacing: {},
           typography: {
@@ -51,15 +51,15 @@ export const useThemeStore = create<ThemeState>((set) => ({
             durations: {}
           }
         },
-        component_tokens: rawTheme.component_tokens as Theme['component_tokens'] || {
+        component_tokens: rawTheme.component_tokens || {
           base: {},
           variants: {},
           states: {},
           responsive: {},
           darkMode: {}
         },
-        composition_rules: rawTheme.composition_rules as Record<string, any> || {},
-        cached_styles: rawTheme.cached_styles as Record<string, any> || {}
+        composition_rules: rawTheme.composition_rules || {},
+        cached_styles: rawTheme.cached_styles || {}
       };
 
       set({ currentTheme: theme, isLoading: false });
@@ -89,7 +89,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
         context: comp.context,
         created_at: comp.created_at,
         updated_at: comp.updated_at,
-        styles: comp.styles as Record<string, any>
+        styles: comp.styles
       }));
 
       set({ adminComponents: components, isLoading: false });
