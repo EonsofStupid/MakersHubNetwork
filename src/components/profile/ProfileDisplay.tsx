@@ -23,7 +23,7 @@ export const ProfileDisplay = () => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4">
       <AnimatePresence mode="wait">
         {!isEditing ? (
           <motion.div
@@ -31,15 +31,23 @@ export const ProfileDisplay = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className={cn(
-              "w-[600px] max-w-[90vw] rounded-lg overflow-hidden",
+              "w-[672px] max-w-[95vw]", // Increased by 12% from 600px
+              "rounded-lg overflow-hidden",
               "bg-background/20 backdrop-blur-xl",
               "border border-primary/30",
               "shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]",
               "before:absolute before:inset-0",
               "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
               "before:pointer-events-none",
-              "relative z-50"
+              "relative z-50",
+              "transform-gpu scale-[1.12]" // 12% scale increase
             )}
+            style={{
+              maxHeight: "90vh",
+              overflowY: "auto",
+              scrollbarWidth: "thin",
+              scrollbarColor: "rgba(0, 240, 255, 0.3) transparent"
+            }}
           >
             <ThemeDataStream className="absolute inset-0 pointer-events-none opacity-20" />
             
@@ -121,7 +129,7 @@ export const ProfileDisplay = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="flex gap-2"
+                className="flex gap-2 flex-wrap"
               >
                 <Button
                   variant="outline"
