@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useAuthStore } from "@/stores/auth/store"
 import { useToast } from "@/hooks/use-toast"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
-import { UserMenuSheet } from "./UserMenuSheet"
+import { UserMenuSheet } from "@/components/UserMenuSheet"
 
 export const UserMenu = () => {
   const [isSheetOpen, setSheetOpen] = useState(false)
