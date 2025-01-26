@@ -1,40 +1,172 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-import { componentTagger } from 'lovable-tagger';
+// vite.config.ts
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react-swc"
+import path from "path"
+import { componentTagger } from "lovable-tagger"
+import AutoImport from "unplugin-auto-import/vite"
 
 export default defineConfig(({ mode }) => ({
   server: {
+    host: "::",
     port: 8080,
-    host: true,
     watch: {
       usePolling: true,
+      interval: 100,
+    },
+    hmr: {
+      overlay: true,
     },
   },
   plugins: [
-    react(),
+    react({
+      plugins: [["@swc/plugin-emotion", {}]],
+      swcPlugins: [["@swc/plugin-styled-components", {}]],
+    }),
     mode === "development" && componentTagger(),
+    AutoImport({
+      imports: [
+        "react",
+        "react-router-dom",
+        {
+          "@tanstack/react-query": [
+            "useQuery",
+            "useMutation",
+            "useQueryClient",
+            "useInfiniteQuery",
+            "useQueries",
+            "useSuspenseQuery",
+            "useSuspenseInfiniteQuery",
+            "useSuspenseQueries",
+          ],
+          "@/stores/auth/store": [
+            "useAuthStore",
+            "selectUser",
+            "selectIsAuthenticated",
+            "selectUserRoles",
+            "selectStatus",
+            "selectError",
+            "selectIsLoading",
+          ],
+          "@/stores/ui/store": [
+            "useUIStore",
+            "selectThemeMode",
+            "selectAccentColor",
+            "selectLayout",
+            "selectPreferences",
+          ],
+          "@/stores/theme/store": [
+            "useThemeStore",
+            "selectCurrentTheme",
+            "selectThemeTokens",
+            "selectThemeComponents",
+          ],
+          "@/hooks/use-toast": ["useToast"],
+          "lucide-react": [
+            "Search",
+            "Menu",
+            "User",
+            "Settings",
+            "LayoutDashboard",
+            "LogOut",
+            "Plus",
+            "Minus",
+            "ChevronDown",
+            "ChevronUp",
+            "ChevronLeft",
+            "ChevronRight",
+            "X",
+            "Check",
+            "Edit",
+            "Trash",
+            "Save",
+            "Upload",
+            "Download",
+            "Share",
+            "Info",
+            "AlertCircle",
+            "Bell",
+            "Calendar",
+            "Clock",
+            "Filter",
+            "Home",
+            "Mail",
+            "MessageSquare",
+            "MoreHorizontal",
+            "MoreVertical",
+            "Settings",
+            "Star",
+          ],
+          "@/components/ui/button": ["Button", "buttonVariants"],
+          "@/components/ui/sheet": ["Sheet", "SheetContent", "SheetTrigger", "SheetClose", "SheetHeader", "SheetFooter", "SheetTitle", "SheetDescription"],
+          "@/components/ui/dialog": ["Dialog", "DialogContent", "DialogTrigger", "DialogClose", "DialogHeader", "DialogFooter", "DialogTitle", "DialogDescription"],
+          "@/components/ui/dropdown-menu": ["DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent", "DropdownMenuItem", "DropdownMenuLabel", "DropdownMenuSeparator", "DropdownMenuGroup", "DropdownMenuRadioGroup", "DropdownMenuRadioItem", "DropdownMenuCheckboxItem"],
+          "@/components/ui/form": ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormDescription", "FormMessage", "useFormField"],
+          "@/components/ui/input": ["Input"],
+          "@/components/ui/label": ["Label"],
+          "@/components/ui/select": ["Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectItem", "SelectGroup", "SelectLabel", "SelectSeparator"],
+          "@/components/ui/tabs": ["Tabs", "TabsList", "TabsTrigger", "TabsContent"],
+          "@/components/ui/toast": ["Toast", "ToastAction", "ToastClose", "ToastTitle", "ToastDescription", "ToastProvider", "ToastViewport"],
+          "@/lib/utils": ["cn", "formatDate", "wait", "createUrl", "absoluteUrl", "constructMetadata", "formatBytes", "slugify", "truncate"],
+        },
+      ],
+      dirs: [
+        "./src/components",
+        "./src/hooks",
+        "./src/stores",
+        "./src/lib",
+        "./src/utils",
+        "./src/types",
+        "./src/constants",
+        "./src/features/**/components",
+        "./src/features/**/hooks",
+        "./src/features/**/stores",
+      ],
+      dts: "./src/auto-imports.d.ts",
+      eslintrc: {
+        enabled: true,
+        filepath: "./.eslintrc-auto-import.json",
+      },
+      defaultExportByFilename: true,
+      include: [
+        /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
+        /\.vue$/,
+        /\.vue\?vue/, // .vue
+        /\.md$/, // .md
+      ],
+      resolvers: [
+        // Add custom resolvers if needed
+      ],
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
+      "@components": path.resolve(__dirname, "./src/components"),
+      "@hooks": path.resolve(__dirname, "./src/hooks"),
+      "@stores": path.resolve(__dirname, "./src/stores"),
+      "@lib": path.resolve(__dirname, "./src/lib"),
+      "@utils": path.resolve(__dirname, "./src/utils"),
+      "@types": path.resolve(__dirname, "./src/types"),
+      "@constants": path.resolve(__dirname, "./src/constants"),
+      "@features": path.resolve(__dirname, "./src/features"),
     },
   },
   build: {
-    outDir: 'dist',
-    sourcemap: true,
+    target: "esnext",
+    minify: "esbuild",
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
+          react: ["react", "react-dom"],
+          router: ["react-router-dom"],
+          tanstack: ["@tanstack/react-query"],
+          ui: ["@/components/ui"],
         },
       },
     },
   },
   optimizeDeps: {
-    include: ['@supabase/supabase-js', '@supabase/postgrest-js'],
-    esbuildOptions: {
-      target: 'esnext'
-    }
-  }
-}));
+    include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
+    exclude: ["@supabase/supabase-js"],
+  },
+}))
