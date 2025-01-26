@@ -28,24 +28,40 @@ export default defineConfig(({ mode }) => ({
             "useSuspenseInfiniteQuery",
             "useSuspenseQueries",
           ],
-          "@/stores/auth/store": ["useAuthStore", "selectUser", "selectIsAuthenticated", "selectUserRoles"],
-          // ...
+          "@/stores/auth/store": [
+            "useAuthStore",
+            "selectUser",
+            "selectIsAuthenticated",
+            "selectUserRoles",
+          ],
+          "@/hooks/use-toast": ["useToast"],
+          "lucide-react": ["Search", "Menu", "User", "Settings", "LayoutDashboard", "LogOut"],
+          "@/components/ui/button": ["Button"],
+          "@/components/ui/sheet": ["Sheet", "SheetContent", "SheetTrigger"],
+          "@/lib/utils": ["cn", "formatDate"],
         },
       ],
       dirs: [
         "./src/components",
         "./src/hooks",
         "./src/stores",
-        // ...
+        "./src/lib",
+        "./src/utils",
+        "./src/types",
+        "./src/constants",
       ],
       dts: "./src/auto-imports.d.ts",
       eslintrc: {
         enabled: true,
         filepath: "./.eslintrc-auto-import.json",
       },
-      // IMPORTANT: No "dtsLocations" field here
-      // dtsLocations: [...]
-      // ^ Remove or comment out any usage
+      defaultExportByFilename: true,
+      include: [
+        /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
+        /\.vue$/,
+        /\.vue\?vue/, // .vue
+        /\.md$/, // .md
+      ],
     }),
   ].filter(Boolean),
   resolve: {
