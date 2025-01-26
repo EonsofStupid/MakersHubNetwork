@@ -17,15 +17,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    react({
-      plugins: [
-        ["@swc/plugin-emotion", {}],
-        ["@swc/plugin-styled-components", {
-          displayName: true,
-          ssr: false
-        }]
-      ]
-    }),
+    react(),
     mode === "development" && componentTagger(),
     AutoImport({
       imports: [
