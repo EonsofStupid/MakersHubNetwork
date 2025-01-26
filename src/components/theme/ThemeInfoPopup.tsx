@@ -19,7 +19,7 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
 
   useEffect(() => {
     console.log("ThemeInfoPopup mounted, fetching theme...");
-    setTheme("");
+    setTheme(""); // This will fetch the default theme
   }, [setTheme]);
 
   if (error) {

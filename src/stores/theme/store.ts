@@ -15,18 +15,11 @@ export const useThemeStore = create<ThemeState>((set) => ({
     try {
       console.log("Fetching theme:", themeId);
       
-      let query = supabase
+      const { data: themes, error } = await supabase
         .from("themes")
         .select("*")
+        .eq(themeId ? "id" : "is_default", themeId ? themeId : true)
         .limit(1);
-
-      if (themeId) {
-        query = query.eq("id", themeId);
-      } else {
-        query = query.eq("is_default", true);
-      }
-
-      const { data: themes, error } = await query;
 
       if (error) throw error;
       if (!themes || themes.length === 0) throw new Error("Theme not found");
@@ -48,10 +41,9 @@ export const useThemeStore = create<ThemeState>((set) => ({
           version: theme.version,
           cache_key: theme.cache_key,
           parent_theme_id: theme.parent_theme_id,
-          // Ensure JSON fields are objects, defaulting to empty objects if null
-          design_tokens: theme.design_tokens as Record<string, any> || {},
-          component_tokens: theme.component_tokens as Record<string, any> || {},
-          composition_rules: theme.composition_rules as Record<string, any> || {}
+          design_tokens: theme.design_tokens || {},
+          component_tokens: theme.component_tokens || {},
+          composition_rules: theme.composition_rules || {}
         },
         isLoading: false 
       });
@@ -81,8 +73,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
         context: comp.context,
         created_at: comp.created_at,
         updated_at: comp.updated_at,
-        // Ensure styles is an object, defaulting to empty object if null
-        styles: comp.styles as Record<string, any> || {}
+        styles: comp.styles || {}
       }));
 
       set({ adminComponents: components, isLoading: false });
