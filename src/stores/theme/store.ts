@@ -29,41 +29,50 @@ export const useThemeStore = create<ThemeState>((set) => ({
       const rawTheme = themes[0];
       console.log("Successfully fetched theme:", rawTheme);
 
-      // Ensure design_tokens has the correct structure
-      const designTokens = typeof rawTheme.design_tokens === 'object' ? rawTheme.design_tokens : {};
-      const componentTokens = typeof rawTheme.component_tokens === 'object' ? rawTheme.component_tokens : {};
+      // Type guard to ensure we have objects
+      const designTokens = rawTheme.design_tokens && typeof rawTheme.design_tokens === 'object' && !Array.isArray(rawTheme.design_tokens) 
+        ? rawTheme.design_tokens as Record<string, any>
+        : {};
+      
+      const componentTokens = rawTheme.component_tokens && typeof rawTheme.component_tokens === 'object' && !Array.isArray(rawTheme.component_tokens)
+        ? rawTheme.component_tokens as Record<string, any>
+        : {};
 
       const theme: Theme = {
         ...rawTheme,
         design_tokens: {
-          colors: designTokens.colors || {},
-          spacing: designTokens.spacing || {},
+          colors: (designTokens.colors as Record<string, any>) || {},
+          spacing: (designTokens.spacing as Record<string, any>) || {},
           typography: {
-            fontSizes: designTokens.typography?.fontSizes || {},
-            fontFamilies: designTokens.typography?.fontFamilies || {},
-            lineHeights: designTokens.typography?.lineHeights || {},
-            letterSpacing: designTokens.typography?.letterSpacing || {}
+            fontSizes: ((designTokens.typography as Record<string, any>)?.fontSizes as Record<string, any>) || {},
+            fontFamilies: ((designTokens.typography as Record<string, any>)?.fontFamilies as Record<string, any>) || {},
+            lineHeights: ((designTokens.typography as Record<string, any>)?.lineHeights as Record<string, any>) || {},
+            letterSpacing: ((designTokens.typography as Record<string, any>)?.letterSpacing as Record<string, any>) || {}
           },
           effects: {
-            shadows: designTokens.effects?.shadows || {},
-            blurs: designTokens.effects?.blurs || {},
-            gradients: designTokens.effects?.gradients || {}
+            shadows: ((designTokens.effects as Record<string, any>)?.shadows as Record<string, any>) || {},
+            blurs: ((designTokens.effects as Record<string, any>)?.blurs as Record<string, any>) || {},
+            gradients: ((designTokens.effects as Record<string, any>)?.gradients as Record<string, any>) || {}
           },
           animations: {
-            keyframes: designTokens.animations?.keyframes || {},
-            transitions: designTokens.animations?.transitions || {},
-            durations: designTokens.animations?.durations || {}
+            keyframes: ((designTokens.animations as Record<string, any>)?.keyframes as Record<string, any>) || {},
+            transitions: ((designTokens.animations as Record<string, any>)?.transitions as Record<string, any>) || {},
+            durations: ((designTokens.animations as Record<string, any>)?.durations as Record<string, any>) || {}
           }
         },
         component_tokens: {
-          base: componentTokens.base || {},
-          variants: componentTokens.variants || {},
-          states: componentTokens.states || {},
-          responsive: componentTokens.responsive || {},
-          darkMode: componentTokens.darkMode || {}
+          base: (componentTokens.base as Record<string, any>) || {},
+          variants: (componentTokens.variants as Record<string, any>) || {},
+          states: (componentTokens.states as Record<string, any>) || {},
+          responsive: (componentTokens.responsive as Record<string, any>) || {},
+          darkMode: (componentTokens.darkMode as Record<string, any>) || {}
         },
-        composition_rules: typeof rawTheme.composition_rules === 'object' ? rawTheme.composition_rules : {},
-        cached_styles: typeof rawTheme.cached_styles === 'object' ? rawTheme.cached_styles : {}
+        composition_rules: rawTheme.composition_rules && typeof rawTheme.composition_rules === 'object' && !Array.isArray(rawTheme.composition_rules)
+          ? rawTheme.composition_rules as Record<string, any>
+          : {},
+        cached_styles: rawTheme.cached_styles && typeof rawTheme.cached_styles === 'object' && !Array.isArray(rawTheme.cached_styles)
+          ? rawTheme.cached_styles as Record<string, any>
+          : {}
       };
 
       set({ currentTheme: theme, isLoading: false });
@@ -93,7 +102,9 @@ export const useThemeStore = create<ThemeState>((set) => ({
         context: comp.context,
         created_at: comp.created_at,
         updated_at: comp.updated_at,
-        styles: typeof comp.styles === 'object' ? comp.styles : {}
+        styles: comp.styles && typeof comp.styles === 'object' && !Array.isArray(comp.styles)
+          ? comp.styles as Record<string, any>
+          : {}
       }));
 
       set({ adminComponents: components, isLoading: false });
