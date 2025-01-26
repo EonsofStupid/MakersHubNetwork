@@ -1,9 +1,7 @@
-// src/components/auth/UserMenu.tsx
-
 import { useState } from "react"
 import { useAuthStore } from "@/stores/auth/store"
 import { useToast } from "@/hooks/use-toast"
-import { ProfileDialog } from "./ProfileDialog"
+import { ProfileDialog } from "@/components/profile/ProfileDialog"
 import { UserMenuSheet } from "./UserMenuSheet"
 
 export const UserMenu = () => {
@@ -41,7 +39,6 @@ export const UserMenu = () => {
 
   return (
     <>
-      {/* The side sheet with menu items */}
       <UserMenuSheet
         isOpen={isSheetOpen}
         onOpenChange={setSheetOpen}
@@ -55,7 +52,6 @@ export const UserMenu = () => {
         onLogout={handleLogout}
       />
 
-      {/* The profile dialog with ProfileEditor */}
       <ProfileDialog
         open={isProfileDialogOpen}
         onClose={() => setProfileDialogOpen(false)}
