@@ -16,11 +16,67 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
   const [activeSection, setActiveSection] = useState<'colors' | 'components' | 'info'>('info');
   const { currentTheme, themeTokens, themeComponents, isLoading, error } = useThemeStore();
 
+  const popupVariants = {
+    initial: { 
+      opacity: 0, 
+      scale: 0.8, 
+      y: 20,
+      rotateX: -15,
+      perspective: 1000
+    },
+    animate: { 
+      opacity: 1, 
+      scale: 1, 
+      y: 0,
+      rotateX: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+        mass: 1.5
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      scale: 0.9,
+      y: 20,
+      rotateX: 15,
+      transition: {
+        duration: 0.3,
+        ease: "easeInOut"
+      }
+    }
+  };
+
+  const contentVariants = {
+    initial: { opacity: 0, x: -20, rotateY: -90 },
+    animate: { 
+      opacity: 1, 
+      x: 0,
+      rotateY: 0,
+      transition: {
+        type: "spring",
+        stiffness: 200,
+        damping: 20
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      x: 20, 
+      rotateY: 90,
+      transition: {
+        duration: 0.2
+      }
+    }
+  };
+
   if (error) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        variants={popupVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
         className="p-6 text-center"
       >
         <p className="text-destructive">Error loading theme data. Please try again.</p>
@@ -36,8 +92,10 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
   if (isLoading || !currentTheme) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        variants={popupVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
         className="p-6 text-center"
       >
         <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
@@ -48,10 +106,10 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: 20 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      variants={popupVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
       className={cn(
         "w-[600px] max-w-[90vw] rounded-lg overflow-hidden",
         "bg-background/20 backdrop-blur-xl",
@@ -60,12 +118,8 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
         "before:absolute before:inset-0",
         "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
         "before:pointer-events-none",
-        "relative z-50"
+        "relative z-50 perspective-1000"
       )}
-      style={{
-        perspective: "1000px",
-        transformStyle: "preserve-3d",
-      }}
     >
       <ThemeDataStream className="absolute inset-0 pointer-events-none opacity-20" />
       
@@ -144,10 +198,10 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSection}
-            initial={{ opacity: 0, rotateX: -10 }}
-            animate={{ opacity: 1, rotateX: 0 }}
-            exit={{ opacity: 0, rotateX: 10 }}
-            transition={{ duration: 0.2 }}
+            variants={contentVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
             className="space-y-4"
           >
             {activeSection === 'colors' && (
