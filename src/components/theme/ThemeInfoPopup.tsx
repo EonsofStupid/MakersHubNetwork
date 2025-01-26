@@ -3,8 +3,11 @@ import { useThemeStore } from "@/stores/theme/store";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, Maximize2 } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface ThemeInfoPopupProps {
   onClose?: () => void;
@@ -16,55 +19,88 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
 
   useEffect(() => {
     console.log("ThemeInfoPopup mounted, fetching theme...");
-    // Pass an empty string to get the default theme
     setTheme("");
   }, [setTheme]);
 
   if (error) {
-    console.error("Theme error:", error);
     return (
-      <div className="p-6 text-center">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="p-6 text-center bg-background/20 backdrop-blur-xl border border-destructive/20 rounded-lg shadow-lg"
+      >
         <p className="text-destructive">Error loading theme: {error.message}</p>
         {onClose && (
-          <Button onClick={onClose} variant="ghost" className="mt-4">
+          <Button onClick={onClose} variant="ghost" className="mt-4 mad-scientist-hover">
             Close
           </Button>
         )}
-      </div>
+      </motion.div>
     );
   }
 
   if (isLoading || !currentTheme) {
     return (
-      <div className="p-6 text-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-6 text-center bg-background/20 backdrop-blur-xl rounded-lg shadow-lg"
+      >
         <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
-        <p className="mt-2 text-muted-foreground">Loading theme data...</p>
-      </div>
+        <p className="mt-2 text-muted-foreground animate-pulse">Loading theme data...</p>
+      </motion.div>
     );
   }
+
+  const TextWithPopup = ({ text, label }: { text: string; label: string }) => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <div className="group relative cursor-pointer">
+          <p className="truncate text-sm text-muted-foreground">
+            {label}: {text}
+          </p>
+          <Maximize2 className="w-4 h-4 absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+        </div>
+      </DialogTrigger>
+      <DialogContent className="bg-background/95 backdrop-blur-xl border border-primary/20">
+        <ScrollArea className="h-[300px] w-full p-4">
+          <h4 className="font-medium mb-2">{label}</h4>
+          <pre className="whitespace-pre-wrap break-words text-sm">{text}</pre>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
 
   console.log("Rendering theme data:", currentTheme);
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="w-[800px] max-w-[90vw] rounded-lg bg-background/20 backdrop-blur-xl p-6"
+      initial={{ opacity: 0, y: 20, rotateX: "15deg" }}
+      animate={{ 
+        opacity: 1, 
+        y: 0, 
+        rotateX: "0deg",
+        transition: {
+          duration: 0.5,
+          ease: [0.19, 1.0, 0.22, 1.0]
+        }
+      }}
+      exit={{ opacity: 0, y: -20, rotateX: "-15deg" }}
+      className="w-[800px] max-w-[90vw] rounded-lg bg-background/20 backdrop-blur-xl p-6 border border-primary/20 shadow-[0_0_15px_rgba(0,240,255,0.1)] animate-morph-header perspective-1000"
     >
       <Tabs defaultValue="info" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="w-full justify-start mb-6">
-          <TabsTrigger value="info">Info</TabsTrigger>
-          <TabsTrigger value="tokens">Tokens</TabsTrigger>
-          <TabsTrigger value="components">Components</TabsTrigger>
-          <TabsTrigger value="variants">Variants</TabsTrigger>
+        <TabsList className="w-full justify-start mb-6 bg-background/40 border border-primary/20">
+          <TabsTrigger value="info" className="data-[state=active]:bg-primary/20">Info</TabsTrigger>
+          <TabsTrigger value="tokens" className="data-[state=active]:bg-primary/20">Tokens</TabsTrigger>
+          <TabsTrigger value="components" className="data-[state=active]:bg-primary/20">Components</TabsTrigger>
+          <TabsTrigger value="variants" className="data-[state=active]:bg-primary/20">Variants</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="info" className="space-y-4">
+        <TabsContent value="info" className="space-y-4 animate-fade-in">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-primary">{currentTheme.name}</h3>
+              <h3 className="text-2xl font-bold text-primary glitch">{currentTheme.name}</h3>
               <div className="flex items-center space-x-2 mt-2">
                 <span className="px-2 py-1 text-xs rounded-full bg-primary/20 text-primary border border-primary/30">
                   v{currentTheme.version}
@@ -82,13 +118,27 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
           </div>
 
           {currentTheme.description && (
-            <p className="text-sm text-muted-foreground mt-4">{currentTheme.description}</p>
+            <TextWithPopup text={currentTheme.description} label="Description" />
           )}
 
           <div className="grid grid-cols-2 gap-4 mt-6">
             <div className="space-y-2">
               <h4 className="font-medium text-sm">Details</h4>
-              <div className="text-sm space-y-1 text-muted-foreground">
+              <div className="space-y-1">
+                <TextWithPopup 
+                  text={currentTheme.cache_key || 'Not generated'} 
+                  label="Cache Key" 
+                />
+                <TextWithPopup 
+                  text={currentTheme.parent_theme_id || 'None'} 
+                  label="Parent Theme" 
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Timestamps</h4>
+              <div className="space-y-1 text-sm text-muted-foreground">
                 <p>Created: {new Date(currentTheme.created_at || '').toLocaleDateString()}</p>
                 <p>Updated: {new Date(currentTheme.updated_at || '').toLocaleDateString()}</p>
                 {currentTheme.published_at && (
@@ -96,41 +146,36 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
                 )}
               </div>
             </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Configuration</h4>
-              <div className="text-sm space-y-1 text-muted-foreground">
-                <p>Cache Key: {currentTheme.cache_key || 'Not generated'}</p>
-                <p>Parent Theme: {currentTheme.parent_theme_id || 'None'}</p>
-              </div>
-            </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="tokens" className="space-y-4">
+        <TabsContent value="tokens" className="space-y-4 animate-fade-in">
           <div className="space-y-4">
             <h4 className="font-medium">Design Tokens</h4>
-            <pre className="p-4 rounded-lg bg-muted/50 text-xs overflow-auto max-h-[400px]">
-              {JSON.stringify(currentTheme.design_tokens, null, 2)}
-            </pre>
+            <TextWithPopup 
+              text={JSON.stringify(currentTheme.design_tokens, null, 2)} 
+              label="Design Tokens" 
+            />
           </div>
         </TabsContent>
 
-        <TabsContent value="components" className="space-y-4">
+        <TabsContent value="components" className="space-y-4 animate-fade-in">
           <div className="space-y-4">
             <h4 className="font-medium">Component Tokens</h4>
-            <pre className="p-4 rounded-lg bg-muted/50 text-xs overflow-auto max-h-[400px]">
-              {JSON.stringify(currentTheme.component_tokens, null, 2)}
-            </pre>
+            <TextWithPopup 
+              text={JSON.stringify(currentTheme.component_tokens, null, 2)} 
+              label="Component Tokens" 
+            />
           </div>
         </TabsContent>
 
-        <TabsContent value="variants" className="space-y-4">
+        <TabsContent value="variants" className="space-y-4 animate-fade-in">
           <div className="space-y-4">
             <h4 className="font-medium">Composition Rules</h4>
-            <pre className="p-4 rounded-lg bg-muted/50 text-xs overflow-auto max-h-[400px]">
-              {JSON.stringify(currentTheme.composition_rules, null, 2)}
-            </pre>
+            <TextWithPopup 
+              text={JSON.stringify(currentTheme.composition_rules, null, 2)} 
+              label="Composition Rules" 
+            />
           </div>
         </TabsContent>
       </Tabs>
