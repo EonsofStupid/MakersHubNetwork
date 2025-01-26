@@ -2,35 +2,35 @@ import { Json } from "@/integrations/supabase/types";
 
 export type ThemeStatus = 'draft' | 'published' | 'archived';
 
-interface ThemeTokens {
-  colors?: Record<string, Json>;
-  spacing?: Record<string, Json>;
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
+interface ThemeTokens extends Record<string, Json | undefined> {
+  colors?: Record<string, JsonValue>;
+  spacing?: Record<string, JsonValue>;
   typography?: {
-    fontSizes?: Record<string, Json>;
-    fontFamilies?: Record<string, Json>;
-    lineHeights?: Record<string, Json>;
-    letterSpacing?: Record<string, Json>;
+    fontSizes?: Record<string, JsonValue>;
+    fontFamilies?: Record<string, JsonValue>;
+    lineHeights?: Record<string, JsonValue>;
+    letterSpacing?: Record<string, JsonValue>;
   };
   effects?: {
-    shadows?: Record<string, Json>;
-    blurs?: Record<string, Json>;
-    gradients?: Record<string, Json>;
+    shadows?: Record<string, JsonValue>;
+    blurs?: Record<string, JsonValue>;
+    gradients?: Record<string, JsonValue>;
   };
   animations?: {
-    keyframes?: Record<string, Json>;
-    transitions?: Record<string, Json>;
-    durations?: Record<string, Json>;
+    keyframes?: Record<string, JsonValue>;
+    transitions?: Record<string, JsonValue>;
+    durations?: Record<string, JsonValue>;
   };
-  [key: string]: Json | undefined;
 }
 
-interface ComponentTokens {
-  base?: Record<string, Json>;
-  variants?: Record<string, Json>;
-  states?: Record<string, Json>;
-  responsive?: Record<string, Json>;
-  darkMode?: Record<string, Json>;
-  [key: string]: Json | undefined;
+interface ComponentTokens extends Record<string, Json | undefined> {
+  base?: Record<string, JsonValue>;
+  variants?: Record<string, JsonValue>;
+  states?: Record<string, JsonValue>;
+  responsive?: Record<string, JsonValue>;
+  darkMode?: Record<string, JsonValue>;
 }
 
 export interface Theme {
@@ -48,8 +48,8 @@ export interface Theme {
   parent_theme_id?: string;
   design_tokens: ThemeTokens;
   component_tokens: ComponentTokens;
-  composition_rules: Record<string, Json>;
-  cached_styles?: Record<string, Json>;
+  composition_rules: Record<string, JsonValue>;
+  cached_styles?: Record<string, JsonValue>;
 }
 
 export interface ThemeToken {
@@ -66,7 +66,7 @@ export interface ThemeComponent {
   id: string;
   theme_id: string;
   component_name: string;
-  styles: Record<string, Json>;
+  styles: Record<string, JsonValue>;
   context?: string;
   created_at?: string;
   updated_at?: string;

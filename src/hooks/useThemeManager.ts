@@ -17,10 +17,10 @@ export function useThemeManager() {
         .from('themes')
         .insert({
           ...theme,
-          design_tokens: theme.design_tokens as Json,
-          component_tokens: theme.component_tokens as Json,
-          composition_rules: theme.composition_rules as Json,
-          cached_styles: theme.cached_styles as Json
+          design_tokens: theme.design_tokens as unknown as Json,
+          component_tokens: theme.component_tokens as unknown as Json,
+          composition_rules: theme.composition_rules as unknown as Json,
+          cached_styles: theme.cached_styles as unknown as Json
         })
         .select()
         .single();
@@ -56,10 +56,10 @@ export function useThemeManager() {
         .from('themes')
         .update({
           ...updates,
-          design_tokens: updates.design_tokens as Json,
-          component_tokens: updates.component_tokens as Json,
-          composition_rules: updates.composition_rules as Json,
-          cached_styles: updates.cached_styles as Json
+          design_tokens: updates.design_tokens as unknown as Json,
+          component_tokens: updates.component_tokens as unknown as Json,
+          composition_rules: updates.composition_rules as unknown as Json,
+          cached_styles: updates.cached_styles as unknown as Json
         })
         .eq('id', themeId)
         .select()
