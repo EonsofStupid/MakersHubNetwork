@@ -351,10 +351,12 @@ export type Database = {
         Row: {
           cache_key: string | null
           cached_styles: Json | null
+          component_tokens: Json | null
           composition_rules: Json | null
           created_at: string | null
           created_by: string | null
           description: string | null
+          design_tokens: Json | null
           id: string
           is_default: boolean | null
           name: string
@@ -367,10 +369,12 @@ export type Database = {
         Insert: {
           cache_key?: string | null
           cached_styles?: Json | null
+          component_tokens?: Json | null
           composition_rules?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          design_tokens?: Json | null
           id?: string
           is_default?: boolean | null
           name: string
@@ -383,10 +387,12 @@ export type Database = {
         Update: {
           cache_key?: string | null
           cached_styles?: Json | null
+          component_tokens?: Json | null
           composition_rules?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          design_tokens?: Json | null
           id?: string
           is_default?: boolean | null
           name?: string
@@ -437,6 +443,12 @@ export type Database = {
           user_id: string
         }
         Returns: boolean
+      }
+      ensure_theme_token_structure: {
+        Args: {
+          data: Json
+        }
+        Returns: Json
       }
       get_theme_inheritance_chain: {
         Args: {
