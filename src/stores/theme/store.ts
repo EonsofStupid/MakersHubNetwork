@@ -13,38 +13,23 @@ export const useThemeStore = create<ThemeState>((set) => ({
   setTheme: async (themeId: string) => {
     set({ isLoading: true, error: null });
     try {
-      console.log("Fetching theme:", themeId);
+      console.log("Fetching theme with query:", themeId ? { id: themeId } : { is_default: true });
       
       const { data: themes, error } = await supabase
         .from("themes")
         .select("*")
-        .eq(themeId ? "id" : "is_default", themeId ? themeId : true)
-        .limit(1);
+        .eq(themeId ? "id" : "is_default", themeId || true)
+        .limit(1)
+        .throwOnError();
 
       if (error) throw error;
-      if (!themes || themes.length === 0) throw new Error("Theme not found");
+      if (!themes || themes.length === 0) throw new Error("No theme found");
 
       const theme = themes[0];
-      console.log("Fetched theme:", theme);
+      console.log("Successfully fetched theme:", theme);
 
       set({ 
-        currentTheme: {
-          id: theme.id,
-          name: theme.name,
-          description: theme.description,
-          status: theme.status,
-          is_default: theme.is_default,
-          created_by: theme.created_by,
-          created_at: theme.created_at,
-          updated_at: theme.updated_at,
-          published_at: theme.published_at,
-          version: theme.version,
-          cache_key: theme.cache_key,
-          parent_theme_id: theme.parent_theme_id,
-          design_tokens: theme.design_tokens || {},
-          component_tokens: theme.component_tokens || {},
-          composition_rules: theme.composition_rules || {}
-        },
+        currentTheme: theme,
         isLoading: false 
       });
     } catch (error) {

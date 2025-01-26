@@ -16,11 +16,15 @@ interface ThemeInfoPopupProps {
 export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
   const { currentTheme, isLoading, error, setTheme } = useThemeStore();
   const [activeTab, setActiveTab] = useState("info");
+  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
 
   useEffect(() => {
-    console.log("ThemeInfoPopup mounted, fetching theme...");
-    setTheme(""); // This will fetch the default theme
-  }, [setTheme]);
+    if (!hasAttemptedLoad) {
+      console.log("ThemeInfoPopup mounted, fetching default theme...");
+      setTheme("");
+      setHasAttemptedLoad(true);
+    }
+  }, [setTheme, hasAttemptedLoad]);
 
   if (error) {
     return (
@@ -32,7 +36,7 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
       >
         <p className="text-destructive">Error loading theme: {error.message}</p>
         {onClose && (
-          <Button onClick={onClose} variant="ghost" className="mt-4 mad-scientist-hover">
+          <Button onClick={onClose} variant="ghost" className="mt-4">
             Close
           </Button>
         )}
