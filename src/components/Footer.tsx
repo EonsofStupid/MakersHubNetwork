@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ThemeInfoPopup } from "@/components/theme/ThemeInfoPopup";
 import { Terminal } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
 import { useThemeStore } from "@/stores/theme/store";
 
 export function Footer() {
@@ -17,10 +16,10 @@ export function Footer() {
     setTimeout(() => setIsLoaded(true), 500);
   }, []);
 
-  // Initialize theme data when dialog opens
+  // Initialize default theme when dialog opens
   useEffect(() => {
     if (isDialogOpen) {
-      // Load the default theme (you can modify this ID based on your needs)
+      // Load the cyberpunk theme (default theme ID)
       setTheme("00000000-0000-0000-0000-000000000000");
     }
   }, [isDialogOpen, setTheme]);

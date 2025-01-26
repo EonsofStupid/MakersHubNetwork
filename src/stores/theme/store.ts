@@ -16,12 +16,12 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      // Fetch theme
+      // Fetch theme data
       const { data: theme, error: themeError } = await supabase
         .from('themes')
         .select('*')
         .eq('id', themeId)
-        .maybeSingle();
+        .single();
 
       if (themeError) throw themeError;
 
@@ -33,7 +33,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
 
       if (tokensError) throw tokensError;
 
-      // Fetch theme components (default context)
+      // Fetch theme components
       const { data: components, error: componentsError } = await supabase
         .from('theme_components')
         .select('*')
@@ -52,15 +52,12 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         error: null
       });
 
-      toast({
-        title: "Theme Updated",
-        description: `Successfully loaded theme: ${theme?.name}`,
-      });
     } catch (error) {
+      console.error('Error loading theme:', error);
       set({ error: error as Error });
       toast({
         title: "Error Loading Theme",
-        description: error instanceof Error ? error.message : "An error occurred",
+        description: error instanceof Error ? error.message : "An error occurred while loading the theme",
         variant: "destructive",
       });
     } finally {
@@ -86,10 +83,11 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         })) || [] 
       });
     } catch (error) {
+      console.error('Error loading admin components:', error);
       set({ error: error as Error });
       toast({
         title: "Error Loading Admin Components",
-        description: error instanceof Error ? error.message : "An error occurred",
+        description: error instanceof Error ? error.message : "An error occurred while loading admin components",
         variant: "destructive",
       });
     } finally {
