@@ -1,10 +1,8 @@
 import { create } from "zustand";
-import { Theme, ThemeComponent, ThemeToken } from "@/types/theme";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { ThemeStore } from "./types";
+import { ThemeState } from "./types";
 
-export const useThemeStore = create<ThemeStore>((set) => ({
+export const useThemeStore = create<ThemeState>((set) => ({
   currentTheme: null,
   themeTokens: [],
   themeComponents: [],
@@ -12,60 +10,76 @@ export const useThemeStore = create<ThemeStore>((set) => ({
   isLoading: false,
   error: null,
 
-  setTheme: async () => {
+  setTheme: async (themeId: string) => {
+    set({ isLoading: true, error: null });
     try {
-      set({ isLoading: true, error: null });
-      console.log("Fetching default theme...");
+      console.log("Fetching theme:", themeId);
+      
+      let query = supabase
+        .from("themes")
+        .select("*")
+        .limit(1);
 
-      const { data: theme, error: themeError } = await supabase
-        .from('themes')
-        .select('*')
-        .eq('is_default', true)
-        .single();
+      if (themeId) {
+        query = query.eq("id", themeId);
+      } else {
+        query = query.eq("is_default", true);
+      }
 
-      console.log("Theme query result:", theme);
-      console.log("Theme query error:", themeError);
+      const { data: themes, error } = await query;
 
-      if (themeError) throw themeError;
+      if (error) throw error;
+      if (!themes || themes.length === 0) throw new Error("Theme not found");
 
-      set({
-        currentTheme: theme,
-        error: null
+      const theme = themes[0];
+      console.log("Fetched theme:", theme);
+
+      set({ 
+        currentTheme: {
+          id: theme.id,
+          name: theme.name,
+          description: theme.description,
+          status: theme.status,
+          is_default: theme.is_default,
+          created_by: theme.created_by,
+          created_at: theme.created_at,
+          updated_at: theme.updated_at,
+          published_at: theme.published_at,
+          version: theme.version,
+          cache_key: theme.cache_key,
+          parent_theme_id: theme.parent_theme_id,
+          design_tokens: theme.design_tokens || {},
+          component_tokens: theme.component_tokens || {},
+          composition_rules: theme.composition_rules || {}
+        },
+        isLoading: false 
       });
-
     } catch (error) {
-      console.error("Error in setTheme:", error);
-      set({ error: error as Error });
-    } finally {
-      set({ isLoading: false });
+      console.error("Error fetching theme:", error);
+      set({ 
+        error: error instanceof Error ? error : new Error("Failed to fetch theme"), 
+        isLoading: false 
+      });
     }
   },
 
   loadAdminComponents: async () => {
+    set({ isLoading: true, error: null });
     try {
-      set({ isLoading: true, error: null });
-      const { data: adminComponents, error } = await supabase
-        .from('theme_components')
-        .select('*')
-        .eq('context', 'admin');
+      const { data, error } = await supabase
+        .from("theme_components")
+        .select("*")
+        .eq("context", "admin");
 
       if (error) throw error;
 
-      set({ 
-        adminComponents: adminComponents?.map(comp => ({
-          ...comp,
-          styles: comp.styles as Record<string, any>
-        })) || [] 
-      });
+      set({ adminComponents: data || [], isLoading: false });
     } catch (error) {
-      set({ error: error as Error });
-      toast({
-        title: "Error Loading Admin Components",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
+      console.error("Error loading admin components:", error);
+      set({ 
+        error: error instanceof Error ? error : new Error("Failed to load admin components"), 
+        isLoading: false 
       });
-    } finally {
-      set({ isLoading: false });
     }
-  },
+  }
 }));
