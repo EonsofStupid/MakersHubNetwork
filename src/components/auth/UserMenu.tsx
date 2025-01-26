@@ -133,7 +133,7 @@ export const UserMenu = () => {
               <h2 className="text-2xl font-heading font-bold text-primary">
                 Edit Profile
               </h2>
-              <ProfileEditor />
+              <ProfileEditor onClose={() => setShowProfile(false)} />
             </div>
           </motion.div>
         </DialogContent>
