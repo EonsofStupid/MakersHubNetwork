@@ -1,11 +1,10 @@
 // vite.config.ts
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
-import AutoImport from 'unplugin-auto-import/vite';
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react-swc"
+import path from "path"
+import { componentTagger } from "lovable-tagger"
+import AutoImport from "unplugin-auto-import/vite"
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -13,117 +12,40 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' && componentTagger(),
+    mode === "development" && componentTagger(),
     AutoImport({
       imports: [
-        'react',
-        'react-router-dom',
+        "react",
+        "react-router-dom",
         {
-          '@tanstack/react-query': [
-            'useQuery',
-            'useMutation',
-            'useQueryClient',
-            'useInfiniteQuery',
-            'useQueries',
-            'useSuspenseQuery',
-            'useSuspenseInfiniteQuery',
-            'useSuspenseQueries',
+          "@tanstack/react-query": [
+            "useQuery",
+            "useMutation",
+            "useQueryClient",
+            "useInfiniteQuery",
+            "useQueries",
+            "useSuspenseQuery",
+            "useSuspenseInfiniteQuery",
+            "useSuspenseQueries",
           ],
-          '@/stores/auth/store': [
-            'useAuthStore',
-            'selectUser',
-            'selectIsAuthenticated',
-            'selectUserRoles',
-          ],
-          '@/stores/theme/store': [
-            'useThemeStore',
-            'selectThemeMode',
-            'selectAccentColor',
-            'selectLayout',
-          ],
-          '@/stores/components/store': [
-            'useComponentStore',
-            'selectVisibleModals',
-            'selectActiveDialogs',
-          ],
-          '@/stores/performance/store': [
-            'usePerformanceStore',
-            'selectFrameMetrics',
-            'selectStoreMetrics',
-            'selectMemoryMetrics',
-          ],
-          '@/lib/utils': [
-            'cn',
-            'formatDate',
-            'formatNumber',
-            'truncateText',
-          ],
-          '@/hooks': [
-            'useToast',
-            'useThemeManager',
-            'useFrameMetrics',
-          ],
-          'lucide-react': [
-            'Home',
-            'Settings',
-            'User',
-            'Search',
-            'Menu',
-            'X',
-            'Check',
-            'ChevronDown',
-            'ChevronUp',
-            'ChevronLeft',
-            'ChevronRight',
-            'Plus',
-            'Minus',
-            'Edit',
-            'Trash',
-            'Save',
-            'Download',
-            'Upload',
-            'Share',
-            'Mail',
-            'Calendar',
-            'Clock',
-            'Bell',
-            'Info',
-            'AlertCircle',
-            'CheckCircle',
-            'XCircle',
-            'Terminal',
-          ],
+          "@/stores/auth/store": ["useAuthStore", "selectUser", "selectIsAuthenticated", "selectUserRoles"],
+          // ...
         },
       ],
-
-      // Directories to scan for auto-imports
       dirs: [
-        './src/components',
-        './src/hooks',
-        './src/stores',
-        './src/lib',
-        './src/utils',
-        './src/features',
-        './src/layouts',
+        "./src/components",
+        "./src/hooks",
+        "./src/stores",
+        // ...
       ],
-
-      // Generate TypeScript declaration file
-      dts: './src/auto-imports.d.ts',
-
-      // ESLint integration
+      dts: "./src/auto-imports.d.ts",
       eslintrc: {
         enabled: true,
-        filepath: './.eslintrc-auto-import.json',
+        filepath: "./.eslintrc-auto-import.json",
       },
-
-      // Default imports for specific files
-      defaultExportByFilename: true,
-
-      // Additional options for better DX
-      dtsLocations: [
-        './src/types/*.d.ts',
-        './src/types/**/*.d.ts',
-      ],
+      // IMPORTANT: No "dtsLocations" field here
+      // dtsLocations: [...]
+      // ^ Remove or comment out any usage
     }),
   ].filter(Boolean),
   resolve: {
@@ -131,4 +53,4 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-}));
+}))
