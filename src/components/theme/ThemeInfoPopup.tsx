@@ -7,7 +7,11 @@ import { ThemeComponentPreview } from "./ThemeComponentPreview";
 import { ThemeDataStream } from "./ThemeDataStream";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function ThemeInfoPopup() {
+interface ThemeInfoPopupProps {
+  onClose?: () => void;
+}
+
+export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
   const [activeSection, setActiveSection] = useState<'colors' | 'components' | 'info'>('info');
   const { currentTheme, themeTokens, themeComponents } = useThemeStore();
 
@@ -18,6 +22,7 @@ export function ThemeInfoPopup() {
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 20 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={cn(
         "w-[600px] max-w-[90vw] rounded-lg overflow-hidden",
         "bg-background/20 backdrop-blur-xl",
@@ -86,13 +91,22 @@ export function ThemeInfoPopup() {
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "relative",
-                  activeSection === section && "text-primary",
-                  "mad-scientist-hover"
+                  "relative transition-all duration-300",
+                  activeSection === section && "text-primary bg-primary/10",
+                  "hover:bg-primary/5 hover:text-primary focus:ring-2 focus:ring-primary/30 focus:outline-none"
                 )}
                 onClick={() => setActiveSection(section)}
               >
                 {section.charAt(0).toUpperCase() + section.slice(1)}
+                {activeSection === section && (
+                  <motion.div
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                    layoutId="activeSection"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  />
+                )}
               </Button>
             </motion.div>
           ))}
