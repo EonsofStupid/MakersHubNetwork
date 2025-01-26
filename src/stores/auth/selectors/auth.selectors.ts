@@ -1,32 +1,54 @@
-////////////////////////////////////////////////////////////////////////////////
-// FILE: src/types/auth.types.ts
-////////////////////////////////////////////////////////////////////////////////
-export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
+import { StateCreator } from "zustand";
+import { AuthState, AuthActions, AuthStore, AuthStatus } from "../types/auth.types";
+import { supabase } from "@/integrations/supabase/client";
+import { AuthError, Subscription } from "@supabase/supabase-js";
 
-export interface AuthState {
-  user: any;
-  session: any;
-  roles: string[];
-  status: AuthStatus;
-  error: string | null;
-  initialized: boolean;
-  isLoading: boolean;
-}
+export const createAuthSlice: StateCreator<AuthStore, [], [], AuthStore> = (set, get) => {
+  // Just store the subscription object itself:
+  let authSubscription: Subscription | null = null;
 
-export interface AuthActions {
-  setUser: (user: any) => void;
-  setSession: (session: any) => void;
-  setRoles: (roles: string[]) => void;
-  setError: (error: string | null) => void;
-  setStatus: (status: AuthStatus) => void;
-  setInitialized: (initialized: boolean) => void;
-  setLoading: (isLoading: boolean) => void;
-  hasRole: (role: string) => boolean;
-  isAdmin: () => boolean;
-  login: (email: string, password: string) => Promise<void>;
-  initialize: () => Promise<void>;
-  clearState: () => void;
-  logout: () => Promise<void>;
-}
+  async function fetchSessionAndRoles(sessionParam?: any) {
+    // ... your existing fetch logic ...
+  }
 
-export type AuthStore = AuthState & AuthActions;
+  function subscribeAuthStateChange() {
+    if (authSubscription) {
+      return;
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // ...
+      }
+    );
+
+    authSubscription = subscription;
+  }
+
+  return {
+    // ...rest of your store state and actions...
+
+    initialize: async () => {
+      if (get().initialized) return;
+
+      set({ status: "loading", isLoading: true, error: null });
+      try {
+        await fetchSessionAndRoles();
+        subscribeAuthStateChange();
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        set({
+          error:
+            error instanceof AuthError
+              ? error.message
+              : "An error occurred during initialization",
+          status: "unauthenticated",
+        });
+      } finally {
+        set({ isLoading: false, initialized: true });
+      }
+    },
+
+    // ...
+  };
+};
