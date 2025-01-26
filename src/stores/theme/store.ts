@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { Theme, ThemeComponent, ThemeToken } from "@/types/theme";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { ThemeStore } from "./types";
 
 export const useThemeStore = create<ThemeStore>((set) => ({
@@ -47,7 +47,6 @@ export const useThemeStore = create<ThemeStore>((set) => ({
       const { data: adminComponents, error } = await supabase
         .from('theme_components')
         .select('*')
-        .eq('theme_id', get().currentTheme?.id)
         .eq('context', 'admin');
 
       if (error) throw error;
