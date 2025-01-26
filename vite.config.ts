@@ -20,10 +20,7 @@ export default defineConfig(({ mode }) => ({
     react({
       plugins: [
         ["@swc/plugin-emotion", {}],
-        ["@swc/plugin-styled-components", {
-          displayName: true,
-          ssr: false
-        }]
+        ["@swc/plugin-styled-components", {}]
       ]
     }),
     mode === "development" && componentTagger(),
@@ -41,28 +38,6 @@ export default defineConfig(({ mode }) => ({
             "useSuspenseQuery",
             "useSuspenseInfiniteQuery",
             "useSuspenseQueries",
-          ],
-          "@/stores/auth/store": [
-            "useAuthStore",
-            "selectUser",
-            "selectIsAuthenticated",
-            "selectUserRoles",
-            "selectStatus",
-            "selectError",
-            "selectIsLoading",
-          ],
-          "@/stores/ui/store": [
-            "useUIStore",
-            "selectThemeMode",
-            "selectAccentColor",
-            "selectLayout",
-            "selectPreferences",
-          ],
-          "@/stores/theme/store": [
-            "useThemeStore",
-            "selectCurrentTheme",
-            "selectThemeTokens",
-            "selectThemeComponents",
           ],
           "lucide-react": [
             "Search",
