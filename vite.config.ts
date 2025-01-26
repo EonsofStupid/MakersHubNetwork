@@ -16,9 +16,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    // Standard React plugin (Babel-based)
     react(),
-    // Only enable componentTagger in development
     mode === "development" && componentTagger(),
   ].filter(Boolean),
   resolve: {
