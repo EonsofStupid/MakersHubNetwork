@@ -2,7 +2,6 @@ import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import path from "path"
 import { componentTagger } from "lovable-tagger"
-import AutoImport from "unplugin-auto-import/vite"
 
 export default defineConfig(({ mode }) => ({
   server: {
@@ -19,103 +18,8 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     // Standard React plugin (Babel-based)
     react(),
-
     // Only enable componentTagger in development
     mode === "development" && componentTagger(),
-
-    AutoImport({
-      imports: [
-        "react",
-        "react-router-dom",
-        {
-          "@tanstack/react-query": [
-            "useQuery",
-            "useMutation",
-            "useQueryClient",
-            "useInfiniteQuery",
-            "useQueries",
-            "useSuspenseQuery",
-            "useSuspenseInfiniteQuery",
-            "useSuspenseQueries",
-          ],
-          "@/stores/auth/store": [
-            "useAuthStore",
-            "selectUser",
-            "selectIsAuthenticated",
-            "selectUserRoles",
-            "selectStatus",
-            "selectError",
-            "selectIsLoading",
-          ],
-          "@/stores/ui/store": [
-            "useUIStore",
-            "selectThemeMode",
-            "selectAccentColor",
-            "selectLayout",
-            "selectPreferences",
-          ],
-          "@/stores/theme/store": [
-            "useThemeStore",
-            "selectCurrentTheme",
-            "selectThemeTokens",
-            "selectThemeComponents",
-          ],
-          "lucide-react": [
-            "Search",
-            "Menu",
-            "User",
-            "Settings",
-            "LayoutDashboard",
-            "LogOut",
-            "Plus",
-            "Minus",
-            "ChevronDown",
-            "ChevronUp",
-            "ChevronLeft",
-            "ChevronRight",
-            "X",
-            "Check",
-            "Edit",
-            "Trash",
-            "Save",
-            "Upload",
-            "Download",
-            "Share",
-            "Info",
-            "AlertCircle",
-            "Bell",
-            "Calendar",
-            "Clock",
-            "Filter",
-            "Home",
-            "Mail",
-            "MessageSquare",
-            "MoreHorizontal",
-            "MoreVertical",
-            "Settings",
-            "Star",
-          ],
-        },
-      ],
-      dirs: [
-        "@/components",
-        "@/hooks",
-        "@/stores",
-        "@/lib",
-        "@/utils",
-        "@/types",
-        "@/constants",
-        "@/features/**/components",
-        "@/features/**/hooks",
-        "@/features/**/stores",
-      ],
-      dts: "./src/auto-imports.d.ts",
-      eslintrc: {
-        enabled: true,
-        filepath: "./.eslintrc-auto-import.json",
-      },
-      defaultExportByFilename: true,
-    }),
   ].filter(Boolean),
   resolve: {
     alias: {
