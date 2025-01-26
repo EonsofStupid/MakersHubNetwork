@@ -459,6 +459,13 @@ export type Database = {
           level: number
         }[]
       }
+      jsonb_deep_merge: {
+        Args: {
+          a: Json
+          b: Json
+        }
+        Returns: Json
+      }
       merge_theme_styles: {
         Args: {
           base_styles: Json
