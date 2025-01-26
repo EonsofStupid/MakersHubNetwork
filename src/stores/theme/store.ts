@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeState } from "./types";
+import { Theme, ThemeComponent } from "@/types/theme";
 
 export const useThemeStore = create<ThemeState>((set) => ({
   currentTheme: null,
@@ -25,20 +26,43 @@ export const useThemeStore = create<ThemeState>((set) => ({
       if (error) throw error;
       if (!themes || themes.length === 0) throw new Error("No theme found");
 
-      const theme = themes[0];
-      console.log("Successfully fetched theme:", theme);
+      const rawTheme = themes[0];
+      console.log("Successfully fetched theme:", rawTheme);
 
-      // Type cast the JSON fields to Record<string, any>
-      set({ 
-        currentTheme: {
-          ...theme,
-          design_tokens: theme.design_tokens as Record<string, any> || {},
-          component_tokens: theme.component_tokens as Record<string, any> || {},
-          composition_rules: theme.composition_rules as Record<string, any> || {},
-          cached_styles: theme.cached_styles as Record<string, any> || {}
+      const theme: Theme = {
+        ...rawTheme,
+        design_tokens: rawTheme.design_tokens as Theme['design_tokens'] || {
+          colors: {},
+          spacing: {},
+          typography: {
+            fontSizes: {},
+            fontFamilies: {},
+            lineHeights: {},
+            letterSpacing: {}
+          },
+          effects: {
+            shadows: {},
+            blurs: {},
+            gradients: {}
+          },
+          animations: {
+            keyframes: {},
+            transitions: {},
+            durations: {}
+          }
         },
-        isLoading: false 
-      });
+        component_tokens: rawTheme.component_tokens as Theme['component_tokens'] || {
+          base: {},
+          variants: {},
+          states: {},
+          responsive: {},
+          darkMode: {}
+        },
+        composition_rules: rawTheme.composition_rules as Record<string, any> || {},
+        cached_styles: rawTheme.cached_styles as Record<string, any> || {}
+      };
+
+      set({ currentTheme: theme, isLoading: false });
     } catch (error) {
       console.error("Error fetching theme:", error);
       set({ 
@@ -58,14 +82,14 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
       if (error) throw error;
 
-      const components = data.map(comp => ({
+      const components: ThemeComponent[] = data.map(comp => ({
         id: comp.id,
         theme_id: comp.theme_id,
         component_name: comp.component_name,
         context: comp.context,
         created_at: comp.created_at,
         updated_at: comp.updated_at,
-        styles: comp.styles as Record<string, any> || {}
+        styles: comp.styles as Record<string, any>
       }));
 
       set({ adminComponents: components, isLoading: false });
