@@ -19,7 +19,7 @@ const features = [
   },
 ];
 
-export const Features = () => {
+export const FeaturesGrid = () => {
   const [hoveredStates, setHoveredStates] = useState<{ [key: number]: string }>({});
 
   const getRandomColor = () => {
