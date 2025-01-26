@@ -20,14 +20,13 @@ export default defineConfig(({ mode }) => ({
     react({
       plugins: [
         ["@swc/plugin-emotion", {}],
-        ["@swc/plugin-styled-components", {
-          displayName: true,
-          ssr: false
-        }]
-      ]
+        ["@swc/plugin-styled-components", {}],
+      ],
     }),
     mode === "development" && componentTagger(),
     AutoImport({
+      // We explicitly import from "@/hooks/use-toast" and "@/lib/utils"
+      // so remove "./src/hooks" and "./src/lib" from dirs to avoid duplicates
       imports: [
         "react",
         "react-router-dom",
@@ -42,134 +41,10 @@ export default defineConfig(({ mode }) => ({
             "useSuspenseInfiniteQuery",
             "useSuspenseQueries",
           ],
-          "@/stores/auth/store": [
-            "useAuthStore",
-            "selectUser",
-            "selectIsAuthenticated",
-            "selectUserRoles",
-            "selectStatus",
-            "selectError",
-            "selectIsLoading",
-          ],
-          "@/stores/ui/store": [
-            "useUIStore",
-            "selectThemeMode",
-            "selectAccentColor",
-            "selectLayout",
-            "selectPreferences",
-          ],
-          "@/stores/theme/store": [
-            "useThemeStore",
-            "selectCurrentTheme",
-            "selectThemeTokens",
-            "selectThemeComponents",
-          ],
+          // Single source for useToast:
           "@/hooks/use-toast": ["useToast"],
-          "lucide-react": [
-            "Search",
-            "Menu",
-            "User",
-            "Settings",
-            "LayoutDashboard",
-            "LogOut",
-            "Plus",
-            "Minus",
-            "ChevronDown",
-            "ChevronUp",
-            "ChevronLeft",
-            "ChevronRight",
-            "X",
-            "Check",
-            "Edit",
-            "Trash",
-            "Save",
-            "Upload",
-            "Download",
-            "Share",
-            "Info",
-            "AlertCircle",
-            "Bell",
-            "Calendar",
-            "Clock",
-            "Filter",
-            "Home",
-            "Mail",
-            "MessageSquare",
-            "MoreHorizontal",
-            "MoreVertical",
-            "Settings",
-            "Star",
-          ],
-          "@/components/ui/button": ["Button", "buttonVariants"],
-          "@/components/ui/sheet": [
-            "Sheet",
-            "SheetContent",
-            "SheetTrigger",
-            "SheetClose",
-            "SheetHeader",
-            "SheetFooter",
-            "SheetTitle",
-            "SheetDescription",
-          ],
-          "@/components/ui/dialog": [
-            "Dialog",
-            "DialogContent",
-            "DialogTrigger",
-            "DialogClose",
-            "DialogHeader",
-            "DialogFooter",
-            "DialogTitle",
-            "DialogDescription",
-          ],
-          "@/components/ui/dropdown-menu": [
-            "DropdownMenu",
-            "DropdownMenuTrigger",
-            "DropdownMenuContent",
-            "DropdownMenuItem",
-            "DropdownMenuLabel",
-            "DropdownMenuSeparator",
-            "DropdownMenuGroup",
-            "DropdownMenuRadioGroup",
-            "DropdownMenuRadioItem",
-            "DropdownMenuCheckboxItem",
-          ],
-          "@/components/ui/form": [
-            "Form",
-            "FormField",
-            "FormItem",
-            "FormLabel",
-            "FormControl",
-            "FormDescription",
-            "FormMessage",
-            "useFormField",
-          ],
-          "@/components/ui/input": ["Input"],
-          "@/components/ui/label": ["Label"],
-          "@/components/ui/select": [
-            "Select",
-            "SelectTrigger",
-            "SelectValue",
-            "SelectContent",
-            "SelectItem",
-            "SelectGroup",
-            "SelectLabel",
-            "SelectSeparator",
-          ],
-          "@/components/ui/tabs": [
-            "Tabs",
-            "TabsList",
-            "TabsTrigger",
-            "TabsContent",
-          ],
-          "@/components/ui/toast": [
-            "Toast",
-            "ToastAction",
-            "ToastClose",
-            "ToastTitle",
-            "ToastDescription",
-            "ToastProvider",
-            "ToastViewport",
-          ],
+
+          // Single source for "cn" etc.
           "@/lib/utils": [
             "cn",
             "formatDate",
@@ -181,19 +56,21 @@ export default defineConfig(({ mode }) => ({
             "slugify",
             "truncate",
           ],
+          // ... other manual imports
         },
       ],
+      // Only scan certain folders, excluding './src/hooks' and './src/lib'
       dirs: [
         "./src/components",
-        "./src/hooks",
         "./src/stores",
-        "./src/lib",
-        "./src/utils",
+        "./src/utils",    // Only if you want to auto-import from "./src/utils"? 
+                          // But if that duplicates stuff from "@/lib/utils", remove it too
         "./src/types",
         "./src/constants",
         "./src/features/**/components",
-        "./src/features/**/hooks",
+        "./src/features/**/hooks",   // This is separate from root-level ./src/hooks
         "./src/features/**/stores",
+        // ^ adjust as needed
       ],
       dts: "./src/auto-imports.d.ts",
       eslintrc: {
@@ -202,12 +79,11 @@ export default defineConfig(({ mode }) => ({
       },
       defaultExportByFilename: true,
       include: [
-        /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
+        /\.[tj]sx?$/,
         /\.vue$/,
-        /\.vue\?vue/, // .vue
-        /\.md$/, // .md
+        /\.vue\?vue/,
+        /\.md$/,
       ],
-      // No need for resolvers or dtsLocations (remove them)
       resolvers: [],
     }),
   ].filter(Boolean),
@@ -239,12 +115,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: [
-      "react",
-      "react-dom",
-      "react-router-dom",
-      "@tanstack/react-query",
-    ],
+    include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
     exclude: ["@supabase/supabase-js"],
   },
 }))
