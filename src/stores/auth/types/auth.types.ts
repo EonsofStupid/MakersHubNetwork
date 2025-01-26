@@ -1,13 +1,10 @@
-import { Database } from "@/integrations/supabase/types";
-
-export type UserRole = Database["public"]["Enums"]["user_role"];
-
+// src/types/auth.types.ts
 export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 
 export interface AuthState {
   user: any;
   session: any;
-  roles: UserRole[];
+  roles: string[];
   status: AuthStatus;
   error: string | null;
   initialized: boolean;
@@ -17,12 +14,12 @@ export interface AuthState {
 export interface AuthActions {
   setUser: (user: any) => void;
   setSession: (session: any) => void;
-  setRoles: (roles: UserRole[]) => void;
+  setRoles: (roles: string[]) => void;
   setError: (error: string | null) => void;
   setStatus: (status: AuthStatus) => void;
   setInitialized: (initialized: boolean) => void;
   setLoading: (isLoading: boolean) => void;
-  hasRole: (role: UserRole) => boolean;
+  hasRole: (role: string) => boolean;
   isAdmin: () => boolean;
   login: (email: string, password: string) => Promise<void>;
   initialize: () => Promise<void>;
