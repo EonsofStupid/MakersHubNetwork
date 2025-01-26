@@ -64,7 +64,6 @@ export default defineConfig(({ mode }) => ({
             "selectThemeTokens",
             "selectThemeComponents",
           ],
-          "@/hooks/use-toast": ["useToast"],
           "lucide-react": [
             "Search",
             "Menu",
@@ -161,26 +160,6 @@ export default defineConfig(({ mode }) => ({
             "TabsTrigger",
             "TabsContent",
           ],
-          "@/components/ui/toast": [
-            "Toast",
-            "ToastAction",
-            "ToastClose",
-            "ToastTitle",
-            "ToastDescription",
-            "ToastProvider",
-            "ToastViewport",
-          ],
-          "@/lib/utils": [
-            "cn",
-            "formatDate",
-            "wait",
-            "createUrl",
-            "absoluteUrl",
-            "constructMetadata",
-            "formatBytes",
-            "slugify",
-            "truncate",
-          ],
         },
       ],
       dirs: [
@@ -207,8 +186,6 @@ export default defineConfig(({ mode }) => ({
         /\.vue\?vue/, // .vue
         /\.md$/, // .md
       ],
-      // No need for resolvers or dtsLocations (remove them)
-      resolvers: [],
     }),
   ].filter(Boolean),
   resolve: {
