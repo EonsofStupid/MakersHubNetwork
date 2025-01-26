@@ -131,7 +131,7 @@ export default defineConfig(({ mode }) => ({
       "@types": path.resolve(__dirname, "./src/types"),
       "@constants": path.resolve(__dirname, "./src/constants"),
       "@features": path.resolve(__dirname, "./src/features"),
-    },
+    }
   },
   build: {
     target: "esnext",
@@ -147,7 +147,14 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
-    exclude: ["@supabase/supabase-js"],
+    include: [
+      "react", 
+      "react-dom", 
+      "react-router-dom", 
+      "@tanstack/react-query",
+      "@supabase/supabase-js",
+      "@supabase/postgrest-js"
+    ],
+    exclude: [],
   },
 }))
