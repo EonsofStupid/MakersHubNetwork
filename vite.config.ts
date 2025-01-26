@@ -20,7 +20,10 @@ export default defineConfig(({ mode }) => ({
     react({
       plugins: [
         ["@swc/plugin-emotion", {}],
-        ["@swc/plugin-styled-components", {}]
+        ["@swc/plugin-styled-components", {
+          displayName: true,
+          ssr: false
+        }]
       ]
     }),
     mode === "development" && componentTagger(),
@@ -38,6 +41,28 @@ export default defineConfig(({ mode }) => ({
             "useSuspenseQuery",
             "useSuspenseInfiniteQuery",
             "useSuspenseQueries",
+          ],
+          "@/stores/auth/store": [
+            "useAuthStore",
+            "selectUser",
+            "selectIsAuthenticated",
+            "selectUserRoles",
+            "selectStatus",
+            "selectError",
+            "selectIsLoading",
+          ],
+          "@/stores/ui/store": [
+            "useUIStore",
+            "selectThemeMode",
+            "selectAccentColor",
+            "selectLayout",
+            "selectPreferences",
+          ],
+          "@/stores/theme/store": [
+            "useThemeStore",
+            "selectCurrentTheme",
+            "selectThemeTokens",
+            "selectThemeComponents",
           ],
           "lucide-react": [
             "Search",
@@ -74,6 +99,67 @@ export default defineConfig(({ mode }) => ({
             "Settings",
             "Star",
           ],
+          "@/components/ui/button": ["Button", "buttonVariants"],
+          "@/components/ui/sheet": [
+            "Sheet",
+            "SheetContent",
+            "SheetTrigger",
+            "SheetClose",
+            "SheetHeader",
+            "SheetFooter",
+            "SheetTitle",
+            "SheetDescription",
+          ],
+          "@/components/ui/dialog": [
+            "Dialog",
+            "DialogContent",
+            "DialogTrigger",
+            "DialogClose",
+            "DialogHeader",
+            "DialogFooter",
+            "DialogTitle",
+            "DialogDescription",
+          ],
+          "@/components/ui/dropdown-menu": [
+            "DropdownMenu",
+            "DropdownMenuTrigger",
+            "DropdownMenuContent",
+            "DropdownMenuItem",
+            "DropdownMenuLabel",
+            "DropdownMenuSeparator",
+            "DropdownMenuGroup",
+            "DropdownMenuRadioGroup",
+            "DropdownMenuRadioItem",
+            "DropdownMenuCheckboxItem",
+          ],
+          "@/components/ui/form": [
+            "Form",
+            "FormField",
+            "FormItem",
+            "FormLabel",
+            "FormControl",
+            "FormDescription",
+            "FormMessage",
+            "useFormField",
+          ],
+          "@/components/ui/input": ["Input"],
+          "@/components/ui/label": ["Label"],
+          "@/components/ui/select": [
+            "Select",
+            "SelectTrigger",
+            "SelectValue",
+            "SelectContent",
+            "SelectItem",
+            "SelectGroup",
+            "SelectLabel",
+            "SelectSeparator",
+          ],
+          "@/components/ui/tabs": [
+            "Tabs",
+            "TabsList",
+            "TabsTrigger",
+            "TabsContent",
+          ],
         },
       ],
       dirs: [
@@ -94,6 +180,12 @@ export default defineConfig(({ mode }) => ({
         filepath: "./.eslintrc-auto-import.json",
       },
       defaultExportByFilename: true,
+      include: [
+        /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
+        /\.vue$/,
+        /\.vue\?vue/, // .vue
+        /\.md$/, // .md
+      ],
     }),
   ].filter(Boolean),
   resolve: {
@@ -112,9 +204,24 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: "esnext",
     minify: "esbuild",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ["react", "react-dom"],
+          router: ["react-router-dom"],
+          tanstack: ["@tanstack/react-query"],
+          ui: ["@/components/ui"],
+        },
+      },
+    },
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
+    include: [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "@tanstack/react-query",
+    ],
     exclude: ["@supabase/supabase-js"],
   },
 }))
