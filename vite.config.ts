@@ -5,8 +5,7 @@ import { componentTagger } from 'lovable-tagger';
 
 export default defineConfig(({ mode }) => ({
   server: {
-    port: 5173,
-    strictPort: true,
+    port: 8080,
     host: true,
     watch: {
       usePolling: true,
@@ -33,7 +32,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ['@supabase/supabase-js'],
+    include: ['@supabase/supabase-js', '@supabase/postgrest-js'],
     esbuildOptions: {
       target: 'esnext'
     }
