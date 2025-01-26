@@ -5,11 +5,13 @@ import { useAuthStore } from "@/stores/auth/store";
 import { User, Settings, LogOut, LayoutDashboard, Menu } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ProfileDialog } from "./ProfileDialog";
 
 export const UserMenu = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   const user = useAuthStore((state) => state.user);
   const roles = useAuthStore((state) => state.roles);
@@ -37,71 +39,80 @@ export const UserMenu = () => {
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative h-8 w-8 rounded-full hover:bg-primary/10 transition-colors"
+    <>
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative h-8 w-8 rounded-full hover:bg-primary/10 transition-colors"
+          >
+            <Menu className="h-4 w-4 text-primary" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent 
+          side="right" 
+          className="w-[300px] backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5 before:pointer-events-none"
+          style={{
+            clipPath: "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
+            transform: "translateX(0) skew(-10deg)",
+            transformOrigin: "100% 50%",
+          }}
         >
-          <Menu className="h-4 w-4 text-primary" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent 
-        side="right" 
-        className="w-[300px] backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5 before:pointer-events-none"
-        style={{
-          clipPath: "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
-          transform: "translateX(0) skew(-10deg)",
-          transformOrigin: "100% 50%",
-        }}
-      >
-        <div className="transform skew-x-[10deg] origin-top-right">
-          <div className="space-y-4 pt-6">
-            <div className="px-4">
-              <h2 className="text-lg font-heading font-bold text-primary">
-                {user?.email || "My Account"}
-              </h2>
-            </div>
-            <nav className="space-y-2">
-              <Link
-                to="/profile"
-                className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 transition-colors rounded-md group"
-                onClick={() => setIsOpen(false)}
-              >
-                <User className="h-4 w-4 text-primary group-hover:animate-pulse" />
-                Profile
-              </Link>
-              <Link
-                to="/settings"
-                className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 transition-colors rounded-md group"
-                onClick={() => setIsOpen(false)}
-              >
-                <Settings className="h-4 w-4 text-primary group-hover:animate-pulse" />
-                Settings
-              </Link>
-              {isAdmin && (
+          <div className="transform skew-x-[10deg] origin-top-right">
+            <div className="space-y-4 pt-6">
+              <div className="px-4">
+                <h2 className="text-lg font-heading font-bold text-primary">
+                  {user?.email || "My Account"}
+                </h2>
+              </div>
+              <nav className="space-y-2">
+                <button
+                  onClick={() => {
+                    setIsProfileOpen(true);
+                    setIsOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 transition-colors rounded-md group"
+                >
+                  <User className="h-4 w-4 text-primary group-hover:animate-pulse" />
+                  Profile
+                </button>
                 <Link
-                  to="/admin"
+                  to="/settings"
                   className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 transition-colors rounded-md group"
                   onClick={() => setIsOpen(false)}
                 >
-                  <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
-                  Admin Dashboard
+                  <Settings className="h-4 w-4 text-primary group-hover:animate-pulse" />
+                  Settings
                 </Link>
-              )}
-              <button
-                onClick={handleLogout}
-                disabled={isLoading}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-red-500/10 text-red-500 transition-colors rounded-md group"
-              >
-                <LogOut className="h-4 w-4 group-hover:animate-pulse" />
-                {isLoading ? "Logging out..." : "Log out"}
-              </button>
-            </nav>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 transition-colors rounded-md group"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
+                    Admin Dashboard
+                  </Link>
+                )}
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoading}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-red-500/10 text-red-500 transition-colors rounded-md group"
+                >
+                  <LogOut className="h-4 w-4 group-hover:animate-pulse" />
+                  {isLoading ? "Logging out..." : "Log out"}
+                </button>
+              </nav>
+            </div>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </SheetContent>
+      </Sheet>
+
+      <ProfileDialog 
+        isOpen={isProfileOpen}
+        onOpenChange={setIsProfileOpen}
+      />
+    </>
   );
 };
