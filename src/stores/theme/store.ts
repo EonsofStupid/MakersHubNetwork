@@ -73,7 +73,12 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
       if (error) throw error;
 
-      set({ adminComponents: data || [], isLoading: false });
+      const components = data.map(comp => ({
+        ...comp,
+        styles: comp.styles || {}
+      }));
+
+      set({ adminComponents: components, isLoading: false });
     } catch (error) {
       console.error("Error loading admin components:", error);
       set({ 
