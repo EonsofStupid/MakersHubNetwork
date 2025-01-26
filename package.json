@@ -43,8 +43,6 @@
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.47.11",
-    "@swc/plugin-emotion": "^8.3.0",
-    "@swc/plugin-styled-components": "^6.3.0",
     "@tanstack/react-query": "^5.56.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
