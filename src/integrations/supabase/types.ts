@@ -54,26 +54,44 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
+          custom_styles: Json | null
           display_name: string | null
           id: string
+          layout_preference: Json | null
+          motion_enabled: boolean | null
           preferences: Json | null
+          social_links: Json | null
+          theme_preference: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
+          custom_styles?: Json | null
           display_name?: string | null
           id: string
+          layout_preference?: Json | null
+          motion_enabled?: boolean | null
           preferences?: Json | null
+          social_links?: Json | null
+          theme_preference?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
+          custom_styles?: Json | null
           display_name?: string | null
           id?: string
+          layout_preference?: Json | null
+          motion_enabled?: boolean | null
           preferences?: Json | null
+          social_links?: Json | null
+          theme_preference?: string | null
           updated_at?: string
         }
         Relationships: []
