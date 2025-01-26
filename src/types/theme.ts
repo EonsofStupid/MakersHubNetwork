@@ -11,6 +11,11 @@ export interface Theme {
   updated_at?: string;
   published_at?: string;
   version: number;
+  cache_key?: string;
+  parent_theme_id?: string;
+  design_tokens?: Record<string, any>;
+  component_tokens?: Record<string, any>;
+  composition_rules?: Record<string, any>;
 }
 
 export interface ThemeToken {

@@ -16,7 +16,8 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
 
   useEffect(() => {
     console.log("ThemeInfoPopup mounted, fetching theme...");
-    setTheme();
+    // Pass an empty string to get the default theme
+    setTheme("");
   }, [setTheme]);
 
   if (error) {
@@ -45,7 +46,13 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
   console.log("Rendering theme data:", currentTheme);
 
   return (
-    <div className="w-[800px] max-w-[90vw] rounded-lg bg-background/20 backdrop-blur-xl p-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="w-[800px] max-w-[90vw] rounded-lg bg-background/20 backdrop-blur-xl p-6"
+    >
       <Tabs defaultValue="info" className="w-full" onValueChange={setActiveTab}>
         <TabsList className="w-full justify-start mb-6">
           <TabsTrigger value="info">Info</TabsTrigger>
@@ -127,6 +134,6 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </motion.div>
   );
 }
