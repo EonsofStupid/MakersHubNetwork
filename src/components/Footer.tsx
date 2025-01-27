@@ -17,11 +17,8 @@ export function Footer() {
     setTimeout(() => setIsLoaded(true), 500);
   }, []);
 
-  // Initialize theme data when dialog opens
   useEffect(() => {
     if (isDialogOpen) {
-      // Load the default theme by passing empty string
-      // This will trigger the store to fetch the default theme
       setTheme("");
     }
   }, [isDialogOpen, setTheme]);
@@ -89,11 +86,13 @@ export function Footer() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="relative group px-4 py-2 bg-background/20 backdrop-blur-xl border border-primary/30 hover:bg-primary/5 transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-primary/30 focus:outline-none"
+                    className="relative group overflow-hidden px-4 py-2 bg-background/20 backdrop-blur-xl border border-primary/30 hover:bg-primary/5 transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-primary/30 focus:outline-none"
                   >
-                    <Terminal className="w-4 h-4 mr-2 text-primary group-hover:animate-pulse" />
-                    <span className="text-sm group-hover:text-primary transition-colors">Theme Info</span>
-                    <div className="absolute inset-0 bg-primary/5 rounded-md transform scale-0 group-hover:scale-100 transition-transform duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 animate-pulse-slow" />
+                    <Terminal className="w-4 h-4 mr-2 text-primary group-hover:animate-pulse relative z-10" />
+                    <span className="text-sm group-hover:text-primary transition-colors relative z-10">Theme Info</span>
+                    <div className="absolute -inset-px bg-gradient-to-r from-primary via-secondary to-primary opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent 

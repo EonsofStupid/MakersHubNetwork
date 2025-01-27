@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Maximize2 } from "lucide-react";
+import { Loader2, Maximize2, Sparkles, Wand2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip } from "@/components/ui/tooltip";
+import { ThemeComponentPreview } from "./ThemeComponentPreview";
 
 interface ThemeInfoPopupProps {
   onClose?: () => void;
@@ -17,11 +17,11 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
   const { currentTheme, isLoading, error, setTheme } = useThemeStore();
   const [activeTab, setActiveTab] = useState("info");
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
+  const [previewEffect, setPreviewEffect] = useState<string | null>(null);
 
   useEffect(() => {
     if (!hasAttemptedLoad) {
       console.log("ThemeInfoPopup mounted, fetching default theme...");
-      // Pass empty string to trigger default theme fetch
       setTheme("");
       setHasAttemptedLoad(true);
     }
@@ -77,7 +77,44 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
     </Dialog>
   );
 
-  console.log("Rendering theme data:", currentTheme);
+  const EffectPreview = () => {
+    const effects = [
+      { name: "fade", className: "animate-fade-in" },
+      { name: "scale", className: "animate-scale-in" },
+      { name: "slide", className: "animate-slide-in-right" },
+      { name: "morph", className: "animate-morph-header" },
+      { name: "float", className: "animate-float" },
+      { name: "pulse", className: "animate-pulse-slow" },
+      { name: "gradient", className: "animate-gradient" },
+    ];
+
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4">
+        {effects.map((effect) => (
+          <motion.div
+            key={effect.name}
+            className={cn(
+              "relative p-4 rounded-lg border border-primary/20 backdrop-blur-sm cursor-pointer overflow-hidden group",
+              "hover:border-primary/40 transition-colors duration-300",
+              previewEffect === effect.name && "border-primary"
+            )}
+            onClick={() => setPreviewEffect(effect.name)}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className={cn(
+              "w-full h-24 rounded-md bg-primary/10 flex items-center justify-center",
+              effect.className
+            )}>
+              <Sparkles className="w-8 h-8 text-primary" />
+            </div>
+            <p className="mt-2 text-sm text-center text-muted-foreground group-hover:text-primary">
+              {effect.name}
+            </p>
+          </motion.div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <motion.div 
@@ -96,10 +133,13 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
     >
       <Tabs defaultValue="info" className="w-full" onValueChange={setActiveTab}>
         <TabsList className="w-full justify-start mb-6 bg-background/40 border border-primary/20">
-          <TabsTrigger value="info" className="data-[state=active]:bg-primary/20">Info</TabsTrigger>
+          <TabsTrigger value="info" className="data-[state=active]:bg-primary/20">
+            <Wand2 className="w-4 h-4 mr-2" />
+            Info
+          </TabsTrigger>
           <TabsTrigger value="tokens" className="data-[state=active]:bg-primary/20">Tokens</TabsTrigger>
           <TabsTrigger value="components" className="data-[state=active]:bg-primary/20">Components</TabsTrigger>
-          <TabsTrigger value="variants" className="data-[state=active]:bg-primary/20">Variants</TabsTrigger>
+          <TabsTrigger value="effects" className="data-[state=active]:bg-primary/20">Effects</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="space-y-4 animate-fade-in">
@@ -174,13 +214,10 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="variants" className="space-y-4 animate-fade-in">
+        <TabsContent value="effects" className="space-y-4 animate-fade-in">
           <div className="space-y-4">
-            <h4 className="font-medium">Composition Rules</h4>
-            <TextWithPopup 
-              text={JSON.stringify(currentTheme.composition_rules, null, 2)} 
-              label="Composition Rules" 
-            />
+            <h4 className="font-medium">Available Effects</h4>
+            <EffectPreview />
           </div>
         </TabsContent>
       </Tabs>
