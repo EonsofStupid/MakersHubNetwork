@@ -1,141 +1,21 @@
-import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
-import path from "path"
-import { componentTagger } from "lovable-tagger"
-import AutoImport from "unplugin-auto-import/vite"
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import path from "path";
+import { componentTagger } from "lovable-tagger";
 
+// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    watch: {
-      usePolling: true,
-      interval: 100,
-    },
-    hmr: {
-      overlay: true,
-    },
   },
   plugins: [
-    // Standard React plugin (Babel-based)
     react(),
-
-    // Only enable componentTagger in development
-    mode === "development" && componentTagger(),
-
-    AutoImport({
-      imports: [
-        "react",
-        "react-router-dom",
-        {
-          "@tanstack/react-query": [
-            "useQuery",
-            "useMutation",
-            "useQueryClient",
-            "useInfiniteQuery",
-            "useQueries",
-            "useSuspenseQuery",
-            "useSuspenseInfiniteQuery",
-            "useSuspenseQueries",
-          ],
-          "@/stores/auth/store": [
-            "useAuthStore",
-            "selectUser",
-            "selectIsAuthenticated",
-            "selectUserRoles",
-            "selectStatus",
-            "selectError",
-            "selectIsLoading",
-          ],
-          "@/stores/ui/store": [
-            "useUIStore",
-            "selectThemeMode",
-            "selectAccentColor",
-            "selectLayout",
-            "selectPreferences",
-          ],
-          "@/stores/theme/store": [
-            "useThemeStore",
-            "selectCurrentTheme",
-            "selectThemeTokens",
-            "selectThemeComponents",
-          ],
-          "lucide-react": [
-            "Search",
-            "Menu",
-            "User",
-            "Settings",
-            "LayoutDashboard",
-            "LogOut",
-            "Plus",
-            "Minus",
-            "ChevronDown",
-            "ChevronUp",
-            "ChevronLeft",
-            "ChevronRight",
-            "X",
-            "Check",
-            "Edit",
-            "Trash",
-            "Save",
-            "Upload",
-            "Download",
-            "Share",
-            "Info",
-            "AlertCircle",
-            "Bell",
-            "Calendar",
-            "Clock",
-            "Filter",
-            "Home",
-            "Mail",
-            "MessageSquare",
-            "MoreHorizontal",
-            "MoreVertical",
-            "Settings",
-            "Star",
-          ],
-        },
-      ],
-      dirs: [
-        "@/components",
-        "@/hooks",
-        "@/stores",
-        "@/lib",
-        "@/utils",
-        "@/types",
-        "@/constants",
-        "@/features/**/components",
-        "@/features/**/hooks",
-        "@/features/**/stores",
-      ],
-      dts: "./src/auto-imports.d.ts",
-      eslintrc: {
-        enabled: true,
-        filepath: "./.eslintrc-auto-import.json",
-      },
-      defaultExportByFilename: true,
-    }),
+    mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@components": path.resolve(__dirname, "./src/components"),
-      "@hooks": path.resolve(__dirname, "./src/hooks"),
-      "@stores": path.resolve(__dirname, "./src/stores"),
-      "@lib": path.resolve(__dirname, "./src/lib"),
-      "@utils": path.resolve(__dirname, "./src/utils"),
-      "@types": path.resolve(__dirname, "./src/types"),
-      "@constants": path.resolve(__dirname, "./src/constants"),
-      "@features": path.resolve(__dirname, "./src/features"),
     },
   },
-  build: {
-    target: "esnext",
-    minify: "esbuild",
-  },
-  optimizeDeps: {
-    include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
-    exclude: ["@supabase/supabase-js"],
-  },
-}))
+}));
