@@ -21,6 +21,7 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
   useEffect(() => {
     if (!hasAttemptedLoad) {
       console.log("ThemeInfoPopup mounted, fetching default theme...");
+      // Pass empty string to trigger default theme fetch
       setTheme("");
       setHasAttemptedLoad(true);
     }

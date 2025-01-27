@@ -20,8 +20,9 @@ export function Footer() {
   // Initialize theme data when dialog opens
   useEffect(() => {
     if (isDialogOpen) {
-      // Load the default theme (you can modify this ID based on your needs)
-      setTheme("00000000-0000-0000-0000-000000000000");
+      // Load the default theme by passing empty string
+      // This will trigger the store to fetch the default theme
+      setTheme("");
     }
   }, [isDialogOpen, setTheme]);
 
