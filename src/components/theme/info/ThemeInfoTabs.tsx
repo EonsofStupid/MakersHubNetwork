@@ -7,7 +7,8 @@ import { ThemeComponentPreview } from "../ThemeComponentPreview";
 import { EffectsPreview } from "../EffectsPreview";
 import { Theme } from "@/types/theme";
 import { useTokenConverters } from "@/hooks/useTokenConverters";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ThemeInfoTabsProps {
   currentTheme: Theme;
@@ -22,8 +23,31 @@ const TAB_ITEMS = [
 ] as const;
 
 export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps) {
-  const { convertDesignTokensToArray, convertComponentTokensToArray } = useTokenConverters();
+  const { convertComponentTokensToArray } = useTokenConverters();
   const [activeTab, setActiveTab] = useState("info");
+  const [colorTokens, setColorTokens] = useState([]);
+
+  useEffect(() => {
+    const fetchColorTokens = async () => {
+      const { data, error } = await supabase
+        .from('theme_tokens')
+        .select('*')
+        .eq('theme_id', currentTheme.id)
+        .eq('category', 'colors');
+
+      if (error) {
+        console.error('Error fetching color tokens:', error);
+        return;
+      }
+
+      console.log('Fetched color tokens:', data);
+      setColorTokens(data || []);
+    };
+
+    if (currentTheme?.id) {
+      fetchColorTokens();
+    }
+  }, [currentTheme?.id]);
 
   // Enhanced tab transition variants
   const tabVariants = {
@@ -37,7 +61,7 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
       x: 0,
       opacity: 1,
       scale: 1,
-    },
+    }),
     exit: (direction: number) => ({
       zIndex: 0,
       x: direction < 0 ? 1000 : -1000,
@@ -55,14 +79,6 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
     setActiveTab(value);
     onTabChange(value);
   };
-
-  // Process color tokens specifically for the color system
-  const colorTokens = convertDesignTokensToArray(currentTheme.design_tokens?.colors || {}).map(token => ({
-    ...token,
-    category: 'colors',
-  }));
-
-  console.log('Color Tokens:', colorTokens); // Debug log
 
   return (
     <Tabs defaultValue="info" className="w-full relative z-10" onValueChange={handleTabChange}>
@@ -121,4 +137,4 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
       </div>
     </Tabs>
   );
-} 
+}
