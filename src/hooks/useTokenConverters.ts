@@ -31,6 +31,7 @@ export function useTokenConverters() {
       id: name,
       component_name: name,
       tokens: tokenData || {},
+      styles: tokenData || {},
       description: '',
     }));
   };
@@ -39,4 +40,4 @@ export function useTokenConverters() {
     convertDesignTokensToArray,
     convertComponentTokensToArray,
   };
-} 
+}
