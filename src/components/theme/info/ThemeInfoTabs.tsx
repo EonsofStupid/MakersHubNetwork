@@ -9,6 +9,7 @@ import { Theme } from "@/types/theme";
 import { useTokenConverters } from "@/hooks/useTokenConverters";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ThemeInfoTabsProps {
   currentTheme: Theme;
@@ -26,30 +27,38 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
   const { convertComponentTokensToArray } = useTokenConverters();
   const [activeTab, setActiveTab] = useState("info");
   const [colorTokens, setColorTokens] = useState([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchColorTokens = async () => {
-      const { data, error } = await supabase
-        .from('theme_tokens')
-        .select('*')
-        .eq('theme_id', currentTheme.id)
-        .eq('category', 'colors');
+      try {
+        const { data, error } = await supabase
+          .from('theme_tokens')
+          .select('*')
+          .eq('theme_id', currentTheme.id)
+          .eq('category', 'colors')
+          .order('token_name');
 
-      if (error) {
+        if (error) throw error;
+
+        console.log('Fetched color tokens:', data);
+        setColorTokens(data || []);
+      } catch (error) {
         console.error('Error fetching color tokens:', error);
-        return;
+        toast({
+          title: "Error loading colors",
+          description: "Failed to load theme colors. Please try again.",
+          variant: "destructive",
+        });
       }
-
-      console.log('Fetched color tokens:', data);
-      setColorTokens(data || []);
     };
 
     if (currentTheme?.id) {
       fetchColorTokens();
     }
-  }, [currentTheme?.id]);
+  }, [currentTheme?.id, toast]);
 
-  // Enhanced tab transition variants
+  // Tab transition variants
   const tabVariants = {
     enter: (direction: number) => ({
       x: direction > 0 ? 1000 : -1000,
