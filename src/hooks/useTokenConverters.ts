@@ -27,10 +27,10 @@ export function useTokenConverters() {
   const convertComponentTokensToArray = (tokens: any): ComponentTokens[] => {
     if (!tokens || typeof tokens !== 'object') return [];
     
-    return Object.entries(tokens).map(([name, styles]) => ({
+    return Object.entries(tokens).map(([name, tokens]) => ({
       id: name,
       component_name: name,
-      styles: styles || {},
+      tokens: tokens || {},
       description: '',
     }));
   };

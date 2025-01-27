@@ -17,7 +17,7 @@ export interface ThemeToken {
 export interface ComponentTokens {
   id: string;
   component_name: string;
-  styles: Record<string, any>;
+  tokens: Record<string, any>;
   description?: string;
   theme_id?: string;
   created_at?: string;
