@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useThemeStore } from '@/stores/theme/store';
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeToken, ThemeComponent } from '@/types/theme';
 import { useToast } from '@/components/ui/use-toast';
+import { Json } from '@/integrations/supabase/types';
 
 export function useThemeManager() {
   const [isUpdating, setIsUpdating] = useState(false);
-  const { currentTheme, setTheme } = useTheme();
+  const { currentTheme, setTheme } = useThemeStore();
   const { toast } = useToast();
 
   const createTheme = async (theme: Omit<Theme, 'id' | 'created_at' | 'updated_at'>) => {
@@ -14,7 +15,13 @@ export function useThemeManager() {
       setIsUpdating(true);
       const { data, error } = await supabase
         .from('themes')
-        .insert(theme)
+        .insert({
+          ...theme,
+          design_tokens: theme.design_tokens as unknown as Json,
+          component_tokens: theme.component_tokens as unknown as Json,
+          composition_rules: theme.composition_rules as unknown as Json,
+          cached_styles: theme.cached_styles as unknown as Json
+        })
         .select()
         .single();
 
@@ -47,7 +54,13 @@ export function useThemeManager() {
       setIsUpdating(true);
       const { data, error } = await supabase
         .from('themes')
-        .update(updates)
+        .update({
+          ...updates,
+          design_tokens: updates.design_tokens as unknown as Json,
+          component_tokens: updates.component_tokens as unknown as Json,
+          composition_rules: updates.composition_rules as unknown as Json,
+          cached_styles: updates.cached_styles as unknown as Json
+        })
         .eq('id', themeId)
         .select()
         .single();
