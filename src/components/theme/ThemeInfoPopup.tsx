@@ -113,6 +113,7 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
       id: name,
       component_name: name,
       styles: styles || {},
+      description: '',
     }));
   };
 
