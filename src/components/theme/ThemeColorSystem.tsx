@@ -10,7 +10,10 @@ interface ThemeColorSystemProps {
 export function ThemeColorSystem({ tokens }: ThemeColorSystemProps) {
   const [activeColor, setActiveColor] = useState<string | null>(null);
   
-  const colorTokens = tokens.filter(token => 
+  // Ensure tokens is an array and handle undefined/null case
+  const safeTokens = Array.isArray(tokens) ? tokens : [];
+  
+  const colorTokens = safeTokens.filter(token => 
     token.category === 'colors' || token.token_name.includes('color')
   );
 
