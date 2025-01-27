@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeToken, ThemeComponent } from '@/types/theme';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Json } from '@/integrations/supabase/types';
 
 export function useThemeManager() {
@@ -16,7 +16,11 @@ export function useThemeManager() {
       const { data, error } = await supabase
         .from('themes')
         .insert({
-          ...theme,
+          name: theme.name,
+          description: theme.description,
+          status: theme.status,
+          is_default: theme.is_default,
+          version: theme.version,
           design_tokens: theme.design_tokens as unknown as Json,
           component_tokens: theme.component_tokens as unknown as Json,
           composition_rules: theme.composition_rules as unknown as Json,
