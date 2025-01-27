@@ -5,7 +5,7 @@ import { ThemeInfoTab } from "./ThemeInfoTab";
 import { ThemeColorSystem } from "../ThemeColorSystem";
 import { ThemeComponentPreview } from "../ThemeComponentPreview";
 import { EffectsPreview } from "../EffectsPreview";
-import { Theme, ThemeToken, ComponentTokens } from "@/types/theme";
+import { Theme } from "@/types/theme";
 import { useTokenConverters } from "@/hooks/useTokenConverters";
 import { useState } from "react";
 
@@ -25,47 +25,100 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
   const { convertDesignTokensToArray, convertComponentTokensToArray } = useTokenConverters();
   const [activeTab, setActiveTab] = useState("info");
 
+  // Enhanced tab transition variants
+  const tabVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 1000 : -1000,
+      opacity: 0,
+      scale: 0.95,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+      scale: 1,
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 1000 : -1000,
+      opacity: 0,
+      scale: 0.95,
+    }),
+  };
+
+  const [[page, direction], setPage] = useState([0, 0]);
+
   const handleTabChange = (value: string) => {
+    const newIndex = TAB_ITEMS.findIndex(item => item.value === value);
+    const oldIndex = TAB_ITEMS.findIndex(item => item.value === activeTab);
+    setPage([newIndex, oldIndex < newIndex ? 1 : -1]);
     setActiveTab(value);
     onTabChange(value);
   };
+
+  // Process color tokens specifically for the color system
+  const colorTokens = convertDesignTokensToArray(currentTheme.design_tokens?.colors || {}).map(token => ({
+    ...token,
+    category: 'colors',
+  }));
+
+  console.log('Color Tokens:', colorTokens); // Debug log
 
   return (
     <Tabs defaultValue="info" className="w-full relative z-10" onValueChange={handleTabChange}>
       <TabsList className="w-full justify-start mb-6 bg-background/40 border border-primary/20">
         {TAB_ITEMS.map(({ value, icon: Icon, label }) => (
-          <TabsTrigger key={value} value={value} className="data-[state=active]:bg-primary/20">
-            <Icon className="w-4 h-4 mr-2" />
-            {label}
+          <TabsTrigger 
+            key={value} 
+            value={value} 
+            className="data-[state=active]:bg-primary/20 relative overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Icon className="w-4 h-4 mr-2 relative z-10" />
+            <span className="relative z-10">{label}</span>
           </TabsTrigger>
         ))}
       </TabsList>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
+      <div className="relative overflow-hidden">
+        <AnimatePresence
+          initial={false}
+          custom={direction}
+          mode="wait"
         >
-          <TabsContent value="info">
-            <ThemeInfoTab currentTheme={currentTheme} />
-          </TabsContent>
+          <motion.div
+            key={activeTab}
+            custom={direction}
+            variants={tabVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 },
+              scale: { duration: 0.2 },
+            }}
+          >
+            <TabsContent value="info" className="mb-0">
+              <ThemeInfoTab currentTheme={currentTheme} />
+            </TabsContent>
 
-          <TabsContent value="colors" className="space-y-4">
-            <ThemeColorSystem tokens={convertDesignTokensToArray(currentTheme?.design_tokens)} />
-          </TabsContent>
+            <TabsContent value="colors" className="space-y-4 mb-0">
+              <ThemeColorSystem tokens={colorTokens} />
+            </TabsContent>
 
-          <TabsContent value="components" className="space-y-4">
-            <ThemeComponentPreview componentTokens={convertComponentTokensToArray(currentTheme?.component_tokens)} />
-          </TabsContent>
+            <TabsContent value="components" className="space-y-4 mb-0">
+              <ThemeComponentPreview 
+                componentTokens={convertComponentTokensToArray(currentTheme.component_tokens)} 
+              />
+            </TabsContent>
 
-          <TabsContent value="effects" className="space-y-4">
-            <EffectsPreview />
-          </TabsContent>
-        </motion.div>
-      </AnimatePresence>
+            <TabsContent value="effects" className="space-y-4 mb-0">
+              <EffectsPreview />
+            </TabsContent>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </Tabs>
   );
 } 
