@@ -11,6 +11,7 @@ import { ThemeComponentPreview } from "./ThemeComponentPreview";
 import { EffectsPreview } from "./EffectsPreview";
 import { ThemeColorSystem } from "./ThemeColorSystem";
 import { ThemeDataStream } from "./ThemeDataStream";
+import type { DesignTokens, ComponentTokens } from "@/types/theme";
 
 interface ThemeInfoPopupProps {
   onClose?: () => void;
@@ -182,7 +183,9 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
             </TabsContent>
 
             <TabsContent value="components" className="space-y-4">
-              <ThemeComponentPreview tokens={currentTheme.component_tokens || []} />
+              <ThemeComponentPreview 
+                componentTokens={currentTheme.component_tokens || []} 
+              />
             </TabsContent>
 
             <TabsContent value="effects" className="space-y-4">
