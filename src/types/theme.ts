@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { Theme as ThemeSchema, DesignTokens as DesignTokensSchema, ComponentToken as ComponentTokenSchema } from "@/schemas/theme.schema";
+import { themeSchema, designTokensSchema, componentTokenSchema } from "@/schemas/theme.schema";
 
 // Export the Zod schemas' inferred types
-export type Theme = z.infer<typeof ThemeSchema>;
-export type DesignTokens = z.infer<typeof DesignTokensSchema>;
-export type ComponentTokens = z.infer<typeof ComponentTokenSchema>;
+export type Theme = z.infer<typeof themeSchema>;
+export type DesignTokens = z.infer<typeof designTokensSchema>;
+export type ComponentTokens = z.infer<typeof componentTokenSchema>;
 
 // Theme token specific types
 export interface ThemeToken {
@@ -34,23 +34,3 @@ export interface ThemeComponent {
 
 // Utility type for theme status
 export type ThemeStatus = 'draft' | 'published' | 'archived';
-
-// Database response types
-export interface ThemeResponse {
-  id: string;
-  name: string;
-  description?: string;
-  status: ThemeStatus;
-  is_default: boolean;
-  created_by?: string;
-  created_at: string;
-  updated_at: string;
-  published_at?: string;
-  version: number;
-  parent_theme_id?: string;
-  design_tokens: DesignTokens;
-  component_tokens: ComponentTokens;
-  composition_rules: Record<string, any>;
-  cache_key?: string;
-  cached_styles: Record<string, any>;
-}
