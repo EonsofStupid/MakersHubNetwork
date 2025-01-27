@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import type { ThemeToken } from "@/types/theme";
 import { Copy, Check } from "lucide-react";
 
 interface ThemeColorSystemProps {
-  tokens: ThemeToken[];
+  tokens: any[];
 }
 
 export function ThemeColorSystem({ tokens }: ThemeColorSystemProps) {
   const [activeColor, setActiveColor] = useState<string | null>(null);
   const [copiedColor, setCopiedColor] = useState<string | null>(null);
   
-  console.log('Received tokens:', tokens); // Debug log
+  console.log('Received tokens:', tokens);
 
   const copyToClipboard = async (value: string) => {
     await navigator.clipboard.writeText(value);
