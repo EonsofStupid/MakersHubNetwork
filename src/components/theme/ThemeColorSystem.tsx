@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Copy, Check } from "lucide-react";
-import type { ThemeToken } from "@/types/theme";
+import { ThemeToken } from "@/types/theme";
 
 interface ThemeColorSystemProps {
   tokens: ThemeToken[];

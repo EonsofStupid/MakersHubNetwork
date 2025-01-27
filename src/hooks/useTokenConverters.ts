@@ -1,7 +1,7 @@
 import { ThemeToken, ComponentTokens } from "@/types/theme";
 
 export function useTokenConverters() {
-  const convertDesignTokensToArray = (tokens: any): ThemeToken[] => {
+  const convertDesignTokensToArray = (tokens: Record<string, any>): ThemeToken[] => {
     if (!tokens || typeof tokens !== 'object') return [];
     
     const result: ThemeToken[] = [];
@@ -24,7 +24,7 @@ export function useTokenConverters() {
     return result;
   };
 
-  const convertComponentTokensToArray = (tokens: any): ComponentTokens[] => {
+  const convertComponentTokensToArray = (tokens: Record<string, any>): ComponentTokens[] => {
     if (!tokens || typeof tokens !== 'object') return [];
     
     return Object.entries(tokens).map(([name, tokenData]) => ({
