@@ -60,8 +60,8 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
       zIndex: 1,
       x: 0,
       opacity: 1,
-      scale: 1,
-    }),
+      scale: 1
+    },
     exit: (direction: number) => ({
       zIndex: 0,
       x: direction < 0 ? 1000 : -1000,
