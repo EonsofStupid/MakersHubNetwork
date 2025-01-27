@@ -1,9 +1,20 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeState } from "./types";
-import { Theme, ThemeComponent } from "@/types/theme";
+import { Theme, ThemeComponent, ThemeToken, ComponentTokens } from "@/types/theme";
 
-export const useThemeStore = create<ThemeState>((set) => ({
+interface ThemeStore {
+  currentTheme: Theme | null;
+  themeTokens: ThemeToken[];
+  themeComponents: ComponentTokens[];
+  adminComponents: ThemeComponent[];
+  isLoading: boolean;
+  error: Error | null;
+  setTheme: (themeId: string) => Promise<void>;
+  loadAdminComponents: () => Promise<void>;
+}
+
+export const useThemeStore = create<ThemeStore>((set) => ({
   currentTheme: null,
   themeTokens: [],
   themeComponents: [],
@@ -14,74 +25,36 @@ export const useThemeStore = create<ThemeState>((set) => ({
   setTheme: async (themeId: string) => {
     set({ isLoading: true, error: null });
     try {
-      console.log("Fetching theme with query:", themeId ? { id: themeId } : { is_default: true });
-      
-      const { data: themes, error } = await supabase
-        .from("themes")
-        .select("*")
-        .eq(themeId ? "id" : "is_default", themeId || true)
-        .limit(1)
-        .throwOnError();
+      const { data: themeData, error: themeError } = await supabase
+        .from('themes')
+        .select('*')
+        .eq('id', themeId)
+        .single();
 
-      if (error) throw error;
-      if (!themes || themes.length === 0) throw new Error("No theme found");
+      if (themeError) throw themeError;
 
-      const rawTheme = themes[0];
-      console.log("Successfully fetched theme:", rawTheme);
+      const { data: tokensData, error: tokensError } = await supabase
+        .from('theme_tokens')
+        .select('*')
+        .eq('theme_id', themeId);
 
-      // Type guard to ensure we have objects
-      const designTokens = rawTheme.design_tokens && typeof rawTheme.design_tokens === 'object' && !Array.isArray(rawTheme.design_tokens) 
-        ? rawTheme.design_tokens as Record<string, any>
-        : {};
-      
-      const componentTokens = rawTheme.component_tokens && typeof rawTheme.component_tokens === 'object' && !Array.isArray(rawTheme.component_tokens)
-        ? rawTheme.component_tokens as Record<string, any>
-        : {};
+      if (tokensError) throw tokensError;
 
-      const theme: Theme = {
-        ...rawTheme,
-        design_tokens: {
-          colors: (designTokens.colors as Record<string, any>) || {},
-          spacing: (designTokens.spacing as Record<string, any>) || {},
-          typography: {
-            fontSizes: ((designTokens.typography as Record<string, any>)?.fontSizes as Record<string, any>) || {},
-            fontFamilies: ((designTokens.typography as Record<string, any>)?.fontFamilies as Record<string, any>) || {},
-            lineHeights: ((designTokens.typography as Record<string, any>)?.lineHeights as Record<string, any>) || {},
-            letterSpacing: ((designTokens.typography as Record<string, any>)?.letterSpacing as Record<string, any>) || {}
-          },
-          effects: {
-            shadows: ((designTokens.effects as Record<string, any>)?.shadows as Record<string, any>) || {},
-            blurs: ((designTokens.effects as Record<string, any>)?.blurs as Record<string, any>) || {},
-            gradients: ((designTokens.effects as Record<string, any>)?.gradients as Record<string, any>) || {}
-          },
-          animations: {
-            keyframes: ((designTokens.animations as Record<string, any>)?.keyframes as Record<string, any>) || {},
-            transitions: ((designTokens.animations as Record<string, any>)?.transitions as Record<string, any>) || {},
-            durations: ((designTokens.animations as Record<string, any>)?.durations as Record<string, any>) || {}
-          }
-        },
-        component_tokens: {
-          base: (componentTokens.base as Record<string, any>) || {},
-          variants: (componentTokens.variants as Record<string, any>) || {},
-          states: (componentTokens.states as Record<string, any>) || {},
-          responsive: (componentTokens.responsive as Record<string, any>) || {},
-          darkMode: (componentTokens.darkMode as Record<string, any>) || {}
-        },
-        composition_rules: rawTheme.composition_rules && typeof rawTheme.composition_rules === 'object' && !Array.isArray(rawTheme.composition_rules)
-          ? rawTheme.composition_rules as Record<string, any>
-          : {},
-        cached_styles: rawTheme.cached_styles && typeof rawTheme.cached_styles === 'object' && !Array.isArray(rawTheme.cached_styles)
-          ? rawTheme.cached_styles as Record<string, any>
-          : {}
-      };
+      const { data: componentsData, error: componentsError } = await supabase
+        .from('theme_components')
+        .select('*')
+        .eq('theme_id', themeId);
 
-      set({ currentTheme: theme, isLoading: false });
-    } catch (error) {
-      console.error("Error fetching theme:", error);
-      set({ 
-        error: error instanceof Error ? error : new Error("Failed to fetch theme"), 
-        isLoading: false 
+      if (componentsError) throw componentsError;
+
+      set({
+        currentTheme: themeData,
+        themeTokens: tokensData || [],
+        themeComponents: componentsData || [],
+        isLoading: false,
       });
+    } catch (error) {
+      set({ error: error as Error, isLoading: false });
     }
   },
 
