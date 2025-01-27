@@ -99,6 +99,7 @@ export function useThemeManager() {
           tokens.map(token => ({
             ...token,
             theme_id: themeId,
+            category: token.category || 'default',
           }))
         );
 
