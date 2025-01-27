@@ -52,12 +52,11 @@ export interface Theme {
 
 export interface ThemeToken {
   id: string;
-  theme_id: string;
-  category: string;
   token_name: string;
   token_value: string;
-  fallback_value?: string;
+  category?: string;
   description?: string;
+  fallback_value?: string;
 }
 
 export interface ThemeComponent {
@@ -77,4 +76,31 @@ export interface ThemeContextType {
   isLoading: boolean;
   error: Error | null;
   setTheme: (themeId: string) => Promise<void>;
+}
+
+export interface DesignTokens {
+  [key: string]: string | number | Record<string, any>;
+}
+
+export interface ComponentTokens {
+  id: string;
+  component_name: string;
+  tokens: Record<string, any>;
+  description?: string;
+}
+
+export interface Theme {
+  id: string;
+  name: string;
+  version: string;
+  description?: string;
+  status: string;
+  is_default: boolean;
+  cache_key?: string;
+  parent_theme_id?: string;
+  created_at: string;
+  updated_at: string;
+  published_at?: string;
+  design_tokens: DesignTokens;
+  component_tokens: ComponentTokens[];
 }
