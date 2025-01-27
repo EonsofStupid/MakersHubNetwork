@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import type { ThemeComponent, ComponentTokens } from "@/types/theme";
+import type { ComponentTokens } from "@/types/theme";
 import { Button } from "@/components/ui/button";
 
 interface ThemeComponentPreviewProps {
