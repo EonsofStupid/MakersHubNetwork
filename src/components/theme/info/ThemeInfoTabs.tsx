@@ -7,6 +7,7 @@ import { ThemeComponentPreview } from "../ThemeComponentPreview";
 import { EffectsPreview } from "../EffectsPreview";
 import { Theme, ThemeToken, ComponentTokens } from "@/types/theme";
 import { useTokenConverters } from "@/hooks/useTokenConverters";
+import { useState } from "react";
 
 interface ThemeInfoTabsProps {
   currentTheme: Theme;
@@ -22,9 +23,15 @@ const TAB_ITEMS = [
 
 export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps) {
   const { convertDesignTokensToArray, convertComponentTokensToArray } = useTokenConverters();
+  const [activeTab, setActiveTab] = useState("info");
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    onTabChange(value);
+  };
 
   return (
-    <Tabs defaultValue="info" className="w-full relative z-10" onValueChange={onTabChange}>
+    <Tabs defaultValue="info" className="w-full relative z-10" onValueChange={handleTabChange}>
       <TabsList className="w-full justify-start mb-6 bg-background/40 border border-primary/20">
         {TAB_ITEMS.map(({ value, icon: Icon, label }) => (
           <TabsTrigger key={value} value={value} className="data-[state=active]:bg-primary/20">
@@ -36,7 +43,7 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={value}
+          key={activeTab}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
