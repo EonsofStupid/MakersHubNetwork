@@ -6,7 +6,6 @@ import type { ThemeToken } from "@/types/theme";
 
 interface ThemeColorSystemProps {
   tokens: ThemeToken[];
-  tokens: ThemeToken[];
 }
 
 export function ThemeColorSystem({ tokens }: ThemeColorSystemProps) {
