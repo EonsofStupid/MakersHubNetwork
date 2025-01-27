@@ -10,11 +10,14 @@ interface ThemeComponentPreviewProps {
 
 export function ThemeComponentPreview({ componentTokens }: ThemeComponentPreviewProps) {
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
+  
+  // Ensure componentTokens is an array
+  const safeComponentTokens = Array.isArray(componentTokens) ? componentTokens : [];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
-        {componentTokens.map((component) => (
+        {safeComponentTokens.map((component) => (
           <Button
             key={component.id}
             variant="ghost"
@@ -47,7 +50,7 @@ export function ThemeComponentPreview({ componentTokens }: ThemeComponentPreview
           >
             <pre className="text-xs overflow-x-auto">
               {JSON.stringify(
-                componentTokens.find(c => c.component_name === activeComponent)?.styles,
+                safeComponentTokens.find(c => c.component_name === activeComponent)?.styles,
                 null,
                 2
               )}

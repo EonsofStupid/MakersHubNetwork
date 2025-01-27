@@ -81,6 +81,41 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
     </Dialog>
   );
 
+  // Helper function to convert design tokens to ThemeToken array
+  const convertDesignTokensToArray = (tokens: any): ThemeToken[] => {
+    if (!tokens || typeof tokens !== 'object') return [];
+    
+    const result: ThemeToken[] = [];
+    const processTokens = (obj: any, category: string = '') => {
+      Object.entries(obj).forEach(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          processTokens(value, key);
+        } else {
+          result.push({
+            id: `${category}-${key}`,
+            token_name: key,
+            token_value: String(value),
+            category: category || 'default',
+          });
+        }
+      });
+    };
+    
+    processTokens(tokens);
+    return result;
+  };
+
+  // Helper function to convert component tokens to ComponentTokens array
+  const convertComponentTokensToArray = (tokens: any): ComponentTokens[] => {
+    if (!tokens || typeof tokens !== 'object') return [];
+    
+    return Object.entries(tokens).map(([name, styles]) => ({
+      id: name,
+      component_name: name,
+      styles: styles || {},
+    }));
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20, rotateX: "15deg" }}
@@ -179,12 +214,14 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
             </TabsContent>
 
             <TabsContent value="colors" className="space-y-4">
-              <ThemeColorSystem tokens={currentTheme.design_tokens || {}} />
+              <ThemeColorSystem 
+                tokens={convertDesignTokensToArray(currentTheme?.design_tokens)} 
+              />
             </TabsContent>
 
             <TabsContent value="components" className="space-y-4">
               <ThemeComponentPreview 
-                componentTokens={currentTheme.component_tokens || []} 
+                componentTokens={convertComponentTokensToArray(currentTheme?.component_tokens)} 
               />
             </TabsContent>
 
