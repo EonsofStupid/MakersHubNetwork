@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
-import { ThemeState } from "./types";
 import { Theme, ThemeComponent, ThemeToken, ComponentTokens } from "@/types/theme";
 
 interface ThemeStore {
@@ -52,14 +51,32 @@ export const useThemeStore = create<ThemeStore>((set) => ({
         id: comp.id,
         component_name: comp.component_name,
         theme_id: comp.theme_id,
-        styles: comp.styles || {},
+        styles: typeof comp.styles === 'object' && !Array.isArray(comp.styles) 
+          ? comp.styles as Record<string, any>
+          : {},
         tokens: {},
+        description: comp.description || '',
         created_at: comp.created_at,
         updated_at: comp.updated_at
       }));
 
+      // Transform theme data to match Theme interface
+      const transformedTheme: Theme = {
+        ...themeData,
+        design_tokens: typeof themeData.design_tokens === 'object' 
+          ? themeData.design_tokens as Record<string, any>
+          : {},
+        component_tokens: transformedComponents,
+        composition_rules: typeof themeData.composition_rules === 'object'
+          ? themeData.composition_rules as Record<string, any>
+          : {},
+        cached_styles: typeof themeData.cached_styles === 'object'
+          ? themeData.cached_styles as Record<string, any>
+          : {},
+      };
+
       set({
-        currentTheme: themeData as Theme,
+        currentTheme: transformedTheme,
         themeTokens: tokensData || [],
         themeComponents: transformedComponents,
         isLoading: false,
@@ -86,7 +103,7 @@ export const useThemeStore = create<ThemeStore>((set) => ({
         context: comp.context,
         created_at: comp.created_at,
         updated_at: comp.updated_at,
-        styles: comp.styles && typeof comp.styles === 'object' && !Array.isArray(comp.styles)
+        styles: typeof comp.styles === 'object' && !Array.isArray(comp.styles)
           ? comp.styles as Record<string, any>
           : {}
       }));
