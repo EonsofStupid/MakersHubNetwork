@@ -88,13 +88,6 @@ export interface DesignTokens {
   [key: string]: string | number | Record<string, any>;
 }
 
-export interface ComponentTokens {
-  id: string;
-  component_name: string;
-  tokens: Record<string, any>;
-  description?: string;
-}
-
 export interface Theme {
   id: string;
   name: string;
