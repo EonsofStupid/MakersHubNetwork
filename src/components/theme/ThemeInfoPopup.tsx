@@ -1,93 +1,14 @@
 import { useState, useEffect } from "react";
 import { useThemeStore } from "@/stores/theme/store";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Maximize2, Info, Palette, Box, Zap } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ThemeComponentPreview } from "./ThemeComponentPreview";
-import { EffectsPreview } from "./EffectsPreview";
-import { ThemeColorSystem } from "./ThemeColorSystem";
+import { motion } from "framer-motion";
 import { ThemeDataStream } from "./ThemeDataStream";
-import type { ThemeToken, ComponentTokens } from "@/types/theme";
+import { ThemeLoadingState } from "./info/ThemeLoadingState";
+import { ThemeErrorState } from "./info/ThemeErrorState";
+import { ThemeInfoTabs } from "./info/ThemeInfoTabs";
 
 interface ThemeInfoPopupProps {
   onClose?: () => void;
 }
-
-interface TextWithPopupProps {
-  text: string;
-  label: string;
-}
-
-const TextWithPopup = ({ text, label }: TextWithPopupProps) => (
-  <Dialog>
-    <DialogTrigger asChild>
-      <div className="group relative cursor-pointer">
-        <p className="truncate text-sm text-muted-foreground">
-          {label}: {text}
-        </p>
-        <Maximize2 className="w-4 h-4 absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
-      </div>
-    </DialogTrigger>
-    <DialogContent className="bg-background/95 backdrop-blur-xl border border-primary/20">
-      <ScrollArea className="h-[300px] w-full p-4">
-        <h4 className="font-medium mb-2">{label}</h4>
-        <pre className="whitespace-pre-wrap break-words text-sm">{text}</pre>
-      </ScrollArea>
-    </DialogContent>
-  </Dialog>
-);
-
-const ThemeInfoTab = ({ currentTheme }: { currentTheme: any }) => (
-  <div className="space-y-4">
-    <div className="flex items-start justify-between">
-      <div>
-        <h3 className="text-2xl font-bold text-primary glitch">{currentTheme.name}</h3>
-        <div className="flex items-center space-x-2 mt-2">
-          <span className="px-2 py-1 text-xs rounded-full bg-primary/20 text-primary border border-primary/30">
-            v{currentTheme.version}
-          </span>
-          <span className="px-2 py-1 text-xs rounded-full bg-secondary/20 text-secondary border border-secondary/30">
-            {currentTheme.status}
-          </span>
-          {currentTheme.is_default && (
-            <span className="px-2 py-1 text-xs rounded-full bg-accent/20 text-accent border border-accent/30">
-              Default Theme
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-
-    {currentTheme.description && (
-      <TextWithPopup text={currentTheme.description} label="Description" />
-    )}
-
-    <div className="grid grid-cols-2 gap-4 mt-6">
-      <div className="space-y-2">
-        <h4 className="font-medium text-sm">Details</h4>
-        <div className="space-y-1">
-          <TextWithPopup text={currentTheme.cache_key || 'Not generated'} label="Cache Key" />
-          <TextWithPopup text={currentTheme.parent_theme_id || 'None'} label="Parent Theme" />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <h4 className="font-medium text-sm">Timestamps</h4>
-        <div className="space-y-1 text-sm text-muted-foreground">
-          <p>Created: {new Date(currentTheme.created_at || '').toLocaleDateString()}</p>
-          <p>Updated: {new Date(currentTheme.updated_at || '').toLocaleDateString()}</p>
-          {currentTheme.published_at && (
-            <p>Published: {new Date(currentTheme.published_at).toLocaleDateString()}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
   const { currentTheme, isLoading, error, setTheme } = useThemeStore();
@@ -101,69 +22,12 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
     }
   }, [setTheme, hasAttemptedLoad]);
 
-  const convertDesignTokensToArray = (tokens: any): ThemeToken[] => {
-    if (!tokens || typeof tokens !== 'object') return [];
-    
-    const result: ThemeToken[] = [];
-    const processTokens = (obj: any, category: string = '') => {
-      Object.entries(obj).forEach(([key, value]) => {
-        if (typeof value === 'object' && value !== null) {
-          processTokens(value, key);
-        } else {
-          result.push({
-            id: `${category}-${key}`,
-            token_name: key,
-            token_value: String(value),
-            category: category || 'default',
-          });
-        }
-      });
-    };
-    
-    processTokens(tokens);
-    return result;
-  };
-
-  const convertComponentTokensToArray = (tokens: any): ComponentTokens[] => {
-    if (!tokens || typeof tokens !== 'object') return [];
-    
-    return Object.entries(tokens).map(([name, styles]) => ({
-      id: name,
-      component_name: name,
-      styles: styles || {},
-      description: '',
-    }));
-  };
-
   if (error) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        className="p-6 text-center bg-background/20 backdrop-blur-xl border border-destructive/20 rounded-lg shadow-lg"
-      >
-        <p className="text-destructive">Error loading theme: {error.message}</p>
-        {onClose && (
-          <Button onClick={onClose} variant="ghost" className="mt-4">
-            Close
-          </Button>
-        )}
-      </motion.div>
-    );
+    return <ThemeErrorState error={error} onClose={onClose} />;
   }
 
   if (isLoading || !currentTheme) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="p-6 text-center bg-background/20 backdrop-blur-xl rounded-lg shadow-lg"
-      >
-        <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
-        <p className="mt-2 text-muted-foreground animate-pulse">Loading theme data...</p>
-      </motion.div>
-    );
+    return <ThemeLoadingState />;
   }
 
   return (
@@ -182,48 +46,7 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
       className="w-[800px] max-w-[90vw] rounded-lg bg-background/20 backdrop-blur-xl p-6 border border-primary/20 shadow-[0_0_15px_rgba(0,240,255,0.1)] animate-morph-header perspective-1000"
     >
       <ThemeDataStream className="opacity-10" />
-      
-      <Tabs defaultValue="info" className="w-full relative z-10" onValueChange={setActiveTab}>
-        <TabsList className="w-full justify-start mb-6 bg-background/40 border border-primary/20">
-          {[
-            { value: "info", icon: Info, label: "Info" },
-            { value: "colors", icon: Palette, label: "Colors" },
-            { value: "components", icon: Box, label: "Components" },
-            { value: "effects", icon: Zap, label: "Effects" },
-          ].map(({ value, icon: Icon, label }) => (
-            <TabsTrigger key={value} value={value} className="data-[state=active]:bg-primary/20">
-              <Icon className="w-4 h-4 mr-2" />
-              {label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <TabsContent value="info">
-              <ThemeInfoTab currentTheme={currentTheme} />
-            </TabsContent>
-
-            <TabsContent value="colors" className="space-y-4">
-              <ThemeColorSystem tokens={convertDesignTokensToArray(currentTheme?.design_tokens)} />
-            </TabsContent>
-
-            <TabsContent value="components" className="space-y-4">
-              <ThemeComponentPreview componentTokens={convertComponentTokensToArray(currentTheme?.component_tokens)} />
-            </TabsContent>
-
-            <TabsContent value="effects" className="space-y-4">
-              <EffectsPreview />
-            </TabsContent>
-          </motion.div>
-        </AnimatePresence>
-      </Tabs>
+      <ThemeInfoTabs currentTheme={currentTheme} onTabChange={setActiveTab} />
     </motion.div>
   );
 }
