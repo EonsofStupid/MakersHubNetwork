@@ -8,6 +8,7 @@ import { Loader2, Maximize2, Sparkles, Wand2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeComponentPreview } from "./ThemeComponentPreview";
+import { EffectsPreview } from "./EffectsPreview";
 
 interface ThemeInfoPopupProps {
   onClose?: () => void;
@@ -76,45 +77,6 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
       </DialogContent>
     </Dialog>
   );
-
-  const EffectPreview = () => {
-    const effects = [
-      { name: "fade", className: "animate-fade-in" },
-      { name: "scale", className: "animate-scale-in" },
-      { name: "slide", className: "animate-slide-in-right" },
-      { name: "morph", className: "animate-morph-header" },
-      { name: "float", className: "animate-float" },
-      { name: "pulse", className: "animate-pulse-slow" },
-      { name: "gradient", className: "animate-gradient" },
-    ];
-
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4">
-        {effects.map((effect) => (
-          <motion.div
-            key={effect.name}
-            className={cn(
-              "relative p-4 rounded-lg border border-primary/20 backdrop-blur-sm cursor-pointer overflow-hidden group",
-              "hover:border-primary/40 transition-colors duration-300",
-              previewEffect === effect.name && "border-primary"
-            )}
-            onClick={() => setPreviewEffect(effect.name)}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className={cn(
-              "w-full h-24 rounded-md bg-primary/10 flex items-center justify-center",
-              effect.className
-            )}>
-              <Sparkles className="w-8 h-8 text-primary" />
-            </div>
-            <p className="mt-2 text-sm text-center text-muted-foreground group-hover:text-primary">
-              {effect.name}
-            </p>
-          </motion.div>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <motion.div 
@@ -215,10 +177,7 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
         </TabsContent>
 
         <TabsContent value="effects" className="space-y-4 animate-fade-in">
-          <div className="space-y-4">
-            <h4 className="font-medium">Available Effects</h4>
-            <EffectPreview />
-          </div>
+          <EffectsPreview />
         </TabsContent>
       </Tabs>
     </motion.div>
