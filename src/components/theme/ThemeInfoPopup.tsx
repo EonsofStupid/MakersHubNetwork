@@ -178,7 +178,7 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
             </TabsContent>
 
             <TabsContent value="colors" className="space-y-4">
-              <ThemeColorSystem tokens={currentTheme.design_tokens || []} />
+              <ThemeColorSystem tokens={currentTheme.design_tokens || {}} />
             </TabsContent>
 
             <TabsContent value="components" className="space-y-4">
