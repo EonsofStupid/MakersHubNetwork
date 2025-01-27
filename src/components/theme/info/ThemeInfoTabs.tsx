@@ -137,4 +137,4 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
       </div>
     </Tabs>
   );
-} 
+}
