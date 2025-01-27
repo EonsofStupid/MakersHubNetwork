@@ -1,48 +1,8 @@
-import { CSSProperties } from "react";
+import { CSSProperties, memo } from "react";
 
-export const Background = () => {
-  return (
-    <div className="fixed inset-0 -z-10">
-      {/* Base gradient with animation */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0F0A2E] via-[#094B51] to-[#1A1F2C] bg-[length:400%_400%] animate-gradient" />
-      
-      {/* Animated grid overlay */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `
-            linear-gradient(#00F0FF20 1px, transparent 1px),
-            linear-gradient(to right, #00F0FF20 1px, transparent 1px)
-          `,
-          backgroundSize: '4rem 4rem',
-          backgroundPosition: 'center',
-          opacity: 0.2
-        }}
-      />
-
-      {/* Digital Rain Effect - Horizontal Streams */}
-      <HorizontalStreams />
-
-      {/* Digital Rain Effect - Vertical Streams */}
-      <VerticalStreams />
-
-      {/* Floating elements */}
-      <FloatingElements />
-
-      {/* Vignette effect */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)'
-        }}
-      />
-    </div>
-  );
-};
-
-const HorizontalStreams = () => (
+const HorizontalStreams = memo(() => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {[...Array(10)].map((_, i) => (
+    {[...Array(5)].map((_, i) => (
       <div
         key={`h-stream-${i}`}
         className="absolute left-0 right-0 h-px bg-primary/30 animate-stream-horizontal"
@@ -56,9 +16,9 @@ const HorizontalStreams = () => (
       </div>
     ))}
   </div>
-);
+));
 
-const VerticalStreams = () => (
+const VerticalStreams = memo(() => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
     {[...Array(2)].map((_, colIndex) => (
       <div
@@ -66,7 +26,7 @@ const VerticalStreams = () => (
         className="absolute top-0 bottom-0 w-px"
         style={{ left: `${33 + colIndex * 33}%` }}
       >
-        {[...Array(5)].map((_, i) => (
+        {[...Array(3)].map((_, i) => (
           <div
             key={`v-stream-${colIndex}-${i}`}
             className="absolute top-0 w-px h-32 bg-primary/30 animate-stream-vertical"
@@ -82,11 +42,11 @@ const VerticalStreams = () => (
       </div>
     ))}
   </div>
-);
+));
 
-const FloatingElements = () => (
+const FloatingElements = memo(() => (
   <div className="absolute inset-0 overflow-hidden">
-    {[...Array(5)].map((_, i) => (
+    {[...Array(3)].map((_, i) => (
       <div
         key={i}
         className="absolute w-24 h-24 opacity-20 animate-float"
@@ -102,4 +62,37 @@ const FloatingElements = () => (
       />
     ))}
   </div>
-);
+));
+
+export const BackgroundEffects = memo(() => {
+  return (
+    <div className="fixed inset-0 -z-10">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0F0A2E] via-[#094B51] to-[#1A1F2C]" />
+      
+      <div 
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: `
+            linear-gradient(#00F0FF20 1px, transparent 1px),
+            linear-gradient(to right, #00F0FF20 1px, transparent 1px)
+          `,
+          backgroundSize: '4rem 4rem',
+          backgroundPosition: 'center',
+        }}
+      />
+
+      <HorizontalStreams />
+      <VerticalStreams />
+      <FloatingElements />
+
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)'
+        }}
+      />
+    </div>
+  );
+});
+
+BackgroundEffects.displayName = 'BackgroundEffects';

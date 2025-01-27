@@ -43,14 +43,104 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground min-h-screen overflow-x-hidden;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
   }
+
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/50;
+  }
 }
 
 @layer components {
+  .glitch {
+    position: relative;
+  }
+
+  .glitch::before,
+  .glitch::after {
+    content: 'Build.Share.Brag';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    background: inherit;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .glitch::before {
+    left: 2px;
+    text-shadow: -2px 0 #00F0FF;
+    animation: glitch-anim-1 2s infinite linear alternate-reverse;
+  }
+
+  .glitch::after {
+    left: -2px;
+    text-shadow: 2px 0 #FF2D6E;
+    animation: glitch-anim-2 3s infinite linear alternate-reverse;
+  }
+
+  @keyframes glitch-anim-1 {
+    0% {
+      clip-path: inset(20% 0 30% 0);
+    }
+    20% {
+      clip-path: inset(65% 0 15% 0);
+    }
+    40% {
+      clip-path: inset(40% 0 43% 0);
+    }
+    60% {
+      clip-path: inset(80% 0 5% 0);
+    }
+    80% {
+      clip-path: inset(10% 0 60% 0);
+    }
+    100% {
+      clip-path: inset(30% 0 35% 0);
+    }
+  }
+
+  @keyframes glitch-anim-2 {
+    0% {
+      clip-path: inset(15% 0 40% 0);
+    }
+    20% {
+      clip-path: inset(50% 0 25% 0);
+    }
+    40% {
+      clip-path: inset(25% 0 55% 0);
+    }
+    60% {
+      clip-path: inset(70% 0 15% 0);
+    }
+    80% {
+      clip-path: inset(5% 0 75% 0);
+    }
+    100% {
+      clip-path: inset(45% 0 20% 0);
+    }
+  }
+
   .mad-scientist-hover {
     @apply relative overflow-hidden transition-all duration-300;
   }
