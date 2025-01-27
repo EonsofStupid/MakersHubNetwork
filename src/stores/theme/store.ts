@@ -47,10 +47,21 @@ export const useThemeStore = create<ThemeStore>((set) => ({
 
       if (componentsError) throw componentsError;
 
+      // Transform the components data to match ComponentTokens interface
+      const transformedComponents: ComponentTokens[] = componentsData.map(comp => ({
+        id: comp.id,
+        component_name: comp.component_name,
+        theme_id: comp.theme_id,
+        styles: comp.styles || {},
+        tokens: {},
+        created_at: comp.created_at,
+        updated_at: comp.updated_at
+      }));
+
       set({
-        currentTheme: themeData,
+        currentTheme: themeData as Theme,
         themeTokens: tokensData || [],
-        themeComponents: componentsData || [],
+        themeComponents: transformedComponents,
         isLoading: false,
       });
     } catch (error) {

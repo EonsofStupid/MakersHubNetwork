@@ -17,7 +17,7 @@ export interface ThemeToken {
 export interface ComponentTokens {
   id: string;
   component_name: string;
-  tokens: Record<string, any>;
+  tokens?: Record<string, any>;
   styles: Record<string, any>;
   description?: string;
   theme_id?: string;
@@ -60,19 +60,10 @@ export interface Theme {
   version: number;
   cache_key?: string;
   parent_theme_id?: string;
-  design_tokens: DesignTokensStructure;
+  design_tokens: DesignTokensStructure | Record<string, any>;
   component_tokens: ComponentTokens[];
   composition_rules?: Record<string, any>;
   cached_styles?: Record<string, any>;
-}
-
-export interface ThemeContextType {
-  currentTheme: Theme | null;
-  themeTokens: ThemeToken[];
-  themeComponents: ComponentTokens[];
-  isLoading: boolean;
-  error: Error | null;
-  setTheme: (themeId: string) => Promise<void>;
 }
 
 export interface ThemeComponent {
