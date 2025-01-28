@@ -9,7 +9,14 @@ import IndexPage from "./pages/Index";
 import AdminPage from "./pages/Admin";
 import LoginPage from "./pages/Login";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 const App = () => {
   return (
