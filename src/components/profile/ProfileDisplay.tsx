@@ -8,6 +8,10 @@ import { ThemeDataStream } from "@/components/theme/ThemeDataStream";
 import { User, Edit2, Link, Github, Twitter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+interface ProfileEditorProps {
+  onClose: () => void;
+}
+
 export const ProfileDisplay = () => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
@@ -31,7 +35,7 @@ export const ProfileDisplay = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className={cn(
-              "w-[672px] max-w-[95vw]", // Increased by 12% from 600px
+              "w-[672px] max-w-[95vw]",
               "rounded-lg overflow-hidden",
               "bg-background/20 backdrop-blur-xl",
               "border border-primary/30",
@@ -40,7 +44,7 @@ export const ProfileDisplay = () => {
               "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
               "before:pointer-events-none",
               "relative z-50",
-              "transform-gpu scale-[1.12]" // 12% scale increase
+              "transform-gpu scale-[1.12]"
             )}
             style={{
               maxHeight: "90vh",
