@@ -29,7 +29,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
   const [formData, setFormData] = useState({
     display_name: initialData?.display_name || '',
     bio: initialData?.bio || '',
-    theme_preference: initialData?.theme_preference || 'cyberpunk',
+    theme_preference: initialData?.theme_preference || 'default',
     motion_enabled: initialData?.motion_enabled ?? true,
     layout_preference: initialData?.layout_preference || {
       contentWidth: 'full',
@@ -62,11 +62,6 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
       if (error) throw error;
 
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
-      });
-      
       onSuccess(data);
     } catch (error: any) {
       console.error('Profile update error:', error);
@@ -125,11 +120,39 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
               <SelectValue placeholder="Select theme" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="cyberpunk">Cyberpunk</SelectItem>
+              <SelectItem value="default">Default</SelectItem>
               <SelectItem value="neon">Neon</SelectItem>
               <SelectItem value="minimal">Minimal</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="github">GitHub Profile</Label>
+          <Input
+            id="github"
+            value={formData.social_links.github || ''}
+            onChange={(e) => setFormData(prev => ({
+              ...prev,
+              social_links: { ...prev.social_links, github: e.target.value }
+            }))}
+            className="bg-background/50"
+            placeholder="https://github.com/yourusername"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="twitter">Twitter Profile</Label>
+          <Input
+            id="twitter"
+            value={formData.social_links.twitter || ''}
+            onChange={(e) => setFormData(prev => ({
+              ...prev,
+              social_links: { ...prev.social_links, twitter: e.target.value }
+            }))}
+            className="bg-background/50"
+            placeholder="https://twitter.com/yourusername"
+          />
         </div>
 
         <div className="space-y-2">
