@@ -7,23 +7,36 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 interface ProfileEditorProps {
+  initialData: any;
   onClose: () => void;
+  onSuccess: (updatedData: any) => void;
 }
 
-export const ProfileEditor: React.FC<ProfileEditorProps> = ({ onClose }) => {
+export const ProfileEditor: React.FC<ProfileEditorProps> = ({ 
+  initialData, 
+  onClose,
+  onSuccess
+}) => {
   const { toast } = useToast();
   const user = useAuthStore((state) => state.user);
-  const profile = user?.user_metadata;
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    display_name: profile?.display_name || '',
-    bio: profile?.bio || '',
-    theme_preference: profile?.theme_preference || 'cyberpunk',
-    motion_enabled: profile?.motion_enabled ?? true,
+    display_name: initialData?.display_name || '',
+    bio: initialData?.bio || '',
+    theme_preference: initialData?.theme_preference || 'cyberpunk',
+    motion_enabled: initialData?.motion_enabled ?? true,
+    layout_preference: initialData?.layout_preference || {
+      contentWidth: 'full',
+      sidebarPosition: 'left'
+    },
+    social_links: initialData?.social_links || {},
+    custom_styles: initialData?.custom_styles || {}
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,33 +44,31 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ onClose }) => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: formData
-      });
-
-      if (error) throw error;
-
-      // Update the profile in the database
-      const { error: profileError } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({
           display_name: formData.display_name,
           bio: formData.bio,
           theme_preference: formData.theme_preference,
           motion_enabled: formData.motion_enabled,
+          layout_preference: formData.layout_preference,
+          social_links: formData.social_links,
+          custom_styles: formData.custom_styles,
           updated_at: new Date().toISOString()
         })
-        .eq('id', user?.id);
+        .eq('id', user?.id)
+        .select()
+        .single();
 
-      if (profileError) throw profileError;
+      if (error) throw error;
 
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated.",
       });
       
-      onClose();
-    } catch (error) {
+      onSuccess(data);
+    } catch (error: any) {
       console.error('Profile update error:', error);
       toast({
         title: "Error",
@@ -106,12 +117,64 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ onClose }) => {
 
         <div className="space-y-2">
           <Label htmlFor="theme_preference">Theme</Label>
-          <Input
-            id="theme_preference"
+          <Select
             value={formData.theme_preference}
-            onChange={(e) => setFormData(prev => ({ ...prev, theme_preference: e.target.value }))}
-            className="bg-background/50"
-          />
+            onValueChange={(value) => setFormData(prev => ({ ...prev, theme_preference: value }))}
+          >
+            <SelectTrigger className="bg-background/50">
+              <SelectValue placeholder="Select theme" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cyberpunk">Cyberpunk</SelectItem>
+              <SelectItem value="neon">Neon</SelectItem>
+              <SelectItem value="minimal">Minimal</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="content_width">Content Width</Label>
+          <Select
+            value={formData.layout_preference.contentWidth}
+            onValueChange={(value) => setFormData(prev => ({
+              ...prev,
+              layout_preference: {
+                ...prev.layout_preference,
+                contentWidth: value
+              }
+            }))}
+          >
+            <SelectTrigger className="bg-background/50">
+              <SelectValue placeholder="Select width" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="wide">Wide</SelectItem>
+              <SelectItem value="full">Full</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="sidebar_position">Sidebar Position</Label>
+          <Select
+            value={formData.layout_preference.sidebarPosition}
+            onValueChange={(value) => setFormData(prev => ({
+              ...prev,
+              layout_preference: {
+                ...prev.layout_preference,
+                sidebarPosition: value
+              }
+            }))}
+          >
+            <SelectTrigger className="bg-background/50">
+              <SelectValue placeholder="Select position" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="left">Left</SelectItem>
+              <SelectItem value="right">Right</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center justify-between">
@@ -145,7 +208,14 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ onClose }) => {
             "transition-colors duration-200"
           )}
         >
-          {isLoading ? "Saving..." : "Save Changes"}
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            "Save Changes"
+          )}
         </Button>
       </div>
     </motion.form>
