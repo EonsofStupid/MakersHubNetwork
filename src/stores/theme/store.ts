@@ -26,30 +26,36 @@ export const useThemeStore = create<ThemeStore>((set) => ({
   setTheme: async (themeId: string) => {
     set({ isLoading: true, error: null });
     try {
-      // Fetch theme data
+      // If no specific theme ID is provided, fetch the default theme
       const { data: themeData, error: themeError } = await supabase
         .from('themes')
         .select('*')
-        .eq('id', themeId)
+        .eq(themeId ? 'id' : 'is_default', themeId || true)
         .single();
 
       if (themeError) throw themeError;
+
+      console.log('Fetched theme data:', themeData);
 
       // Fetch associated tokens
       const { data: tokensData, error: tokensError } = await supabase
         .from('theme_tokens')
         .select('*')
-        .eq('theme_id', themeId);
+        .eq('theme_id', themeData.id);
 
       if (tokensError) throw tokensError;
+
+      console.log('Fetched theme tokens:', tokensData);
 
       // Fetch components
       const { data: componentsData, error: componentsError } = await supabase
         .from('theme_components')
         .select('*')
-        .eq('theme_id', themeId);
+        .eq('theme_id', themeData.id);
 
       if (componentsError) throw componentsError;
+
+      console.log('Fetched theme components:', componentsData);
 
       // Parse and validate components
       const validatedComponents = componentsData.map(comp => 
