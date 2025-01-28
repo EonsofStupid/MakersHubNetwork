@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuthStore } from "@/stores/auth/store";
+import { useThemeStore } from "@/stores/theme/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -7,19 +8,30 @@ import { ProfileEditor } from "./ProfileEditor";
 import { ThemeDataStream } from "@/components/theme/ThemeDataStream";
 import { User, Edit2, Github, Twitter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export const ProfileDisplay = () => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const user = useAuthStore((state) => state.user);
+  const currentTheme = useThemeStore((state) => state.currentTheme);
   const profile = user?.user_metadata;
 
-  const handleSocialConnect = (platform: string) => {
-    toast({
-      title: "Coming Soon",
-      description: `${platform} integration will be available soon!`,
-      variant: "default",
-    });
+  const handleSocialConnect = async (platform: string) => {
+    try {
+      // This will be implemented when social connections are ready
+      toast({
+        title: "Coming Soon",
+        description: `${platform} integration will be available soon!`,
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to connect social account",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isEditing) {
@@ -27,7 +39,7 @@ export const ProfileDisplay = () => {
   }
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4">
+    <div className="relative min-h-[600px] w-full flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -42,14 +54,8 @@ export const ProfileDisplay = () => {
           "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
           "before:pointer-events-none",
           "relative z-50",
-          "transform-gpu scale-[1.12]"
+          "transform-gpu"
         )}
-        style={{
-          maxHeight: "90vh",
-          overflowY: "auto",
-          scrollbarWidth: "thin",
-          scrollbarColor: "rgba(0, 240, 255, 0.3) transparent"
-        }}
       >
         <ThemeDataStream className="absolute inset-0 pointer-events-none opacity-20" />
         
@@ -62,7 +68,14 @@ export const ProfileDisplay = () => {
               transition={{ delay: 0.2 }}
             >
               <div className="relative group">
-                <div className="w-20 h-20 rounded-full border-2 border-primary/50 overflow-hidden bg-primary/20">
+                <div className={cn(
+                  "w-20 h-20 rounded-full",
+                  "border-2 border-primary/50",
+                  "overflow-hidden bg-primary/20",
+                  "transition-all duration-300",
+                  "group-hover:border-primary/80",
+                  "group-hover:shadow-[0_0_20px_rgba(0,240,255,0.3)]"
+                )}>
                   {profile?.avatar_url ? (
                     <img
                       src={profile.avatar_url}
@@ -71,16 +84,15 @@ export const ProfileDisplay = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <User className="w-10 h-10 text-primary" />
+                      <User className="w-10 h-10 text-primary animate-pulse" />
                     </div>
                   )}
                 </div>
-                <div className="absolute inset-0 rounded-full bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               
               <div className="space-y-1">
                 <h3 className="text-xl font-bold text-primary animate-morph-header">
-                  {profile?.display_name || "Anonymous Maker"}
+                  {profile?.display_name || user?.email?.split('@')[0] || "Anonymous Maker"}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {profile?.bio || "No bio yet"}
@@ -102,8 +114,7 @@ export const ProfileDisplay = () => {
                   "before:absolute before:inset-0",
                   "before:bg-primary/20 before:translate-y-full",
                   "hover:before:translate-y-0",
-                  "before:transition-transform before:duration-300",
-                  "mad-scientist-hover"
+                  "before:transition-transform before:duration-300"
                 )}
               >
                 <Edit2 className="w-4 h-4" />
@@ -119,7 +130,7 @@ export const ProfileDisplay = () => {
           >
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Theme</h4>
-              <p className="text-sm">{profile?.theme_preference || "Cyberpunk"}</p>
+              <p className="text-sm">{currentTheme?.name || profile?.theme_preference || "Cyberpunk"}</p>
             </div>
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Motion</h4>
