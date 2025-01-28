@@ -16,13 +16,16 @@ export const ProfileDisplay = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
+  const [currentTheme, setCurrentTheme] = useState<string | null>(null);
   const user = useAuthStore((state) => state.user);
 
+  // Fetch both profile data and theme data
   useEffect(() => {
-    const fetchProfileData = async () => {
+    const fetchData = async () => {
       try {
         if (!user?.id) return;
         
+        // Fetch profile data
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -34,11 +37,27 @@ export const ProfileDisplay = () => {
           throw profileError;
         }
 
+        // If profile exists, fetch the associated theme name
+        if (profile?.theme_preference) {
+          const { data: themeData, error: themeError } = await supabase
+            .from('themes')
+            .select('name')
+            .eq('id', profile.theme_preference)
+            .maybeSingle();
+
+          if (themeError) {
+            console.error('Theme fetch error:', themeError);
+            throw themeError;
+          }
+
+          setCurrentTheme(themeData?.name || null);
+        }
+
         setProfileData(profile || {
           id: user.id,
           display_name: user.email?.split('@')[0],
           avatar_url: null,
-          theme_preference: 'default',
+          theme_preference: null,
           motion_enabled: true,
           layout_preference: {
             contentWidth: 'full',
@@ -50,7 +69,7 @@ export const ProfileDisplay = () => {
         });
 
       } catch (error: any) {
-        console.error('Error fetching profile:', error);
+        console.error('Error fetching data:', error);
         toast({
           title: "Error loading profile",
           description: error.message,
@@ -61,7 +80,7 @@ export const ProfileDisplay = () => {
       }
     };
 
-    fetchProfileData();
+    fetchData();
   }, [user?.id, toast]);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -230,11 +249,11 @@ export const ProfileDisplay = () => {
           >
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Theme</h4>
-              <p className="text-sm">{profileData?.theme_preference || "Default"}</p>
+              <p className="text-sm">{currentTheme || "Default"}</p>
             </div>
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Layout</h4>
-              <p className="text-sm">{profileData?.layout_preference?.contentWidth || "Default"}</p>
+              <p className="text-sm capitalize">{profileData?.layout_preference?.contentWidth || "Default"}</p>
             </div>
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Motion</h4>
@@ -242,7 +261,7 @@ export const ProfileDisplay = () => {
             </div>
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Sidebar</h4>
-              <p className="text-sm">{profileData?.layout_preference?.sidebarPosition || "Left"}</p>
+              <p className="text-sm capitalize">{profileData?.layout_preference?.sidebarPosition || "Left"}</p>
             </div>
           </motion.div>
 
