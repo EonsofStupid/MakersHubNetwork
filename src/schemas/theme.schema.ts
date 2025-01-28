@@ -52,10 +52,10 @@ export const themeSchema = z.object({
   created_by: z.string().optional(),
   created_at: z.string(),
   updated_at: z.string(),
-  published_at: z.string().optional(),
+  published_at: z.string().nullable().optional(), // Changed to allow null
   version: z.number(),
   cache_key: z.string().optional(),
-  parent_theme_id: z.string().optional(),
+  parent_theme_id: z.string().nullable().optional(), // Changed to allow null
   design_tokens: designTokensSchema,
   component_tokens: z.array(componentTokenSchema),
   composition_rules: z.record(z.any()).default({}),
