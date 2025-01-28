@@ -1,6 +1,7 @@
 import { ReactNode, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { supabase } from "@/integrations/supabase/client";
+import { StoreProvider } from "zustand";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const initialize = useAuthStore((state) => state.initialize);
@@ -25,7 +26,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [initialize, setSession]);
 
   if (!initialized || isLoading) {
-    return <div>Loading global auth...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse text-primary">Loading authentication...</div>
+      </div>
+    );
   }
 
   return <>{children}</>;

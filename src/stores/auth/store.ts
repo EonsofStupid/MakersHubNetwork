@@ -6,7 +6,7 @@ import { createAuthSlice } from "./slices/auth.slice";
 import { authStorage } from "./middleware/persist.middleware";
 import { AuthStore } from "./types/auth.types";
 
-// Create the store
+// Create the store with proper middleware chain
 export const useAuthStore = create<AuthStore>()(
   devtools(
     persist(
@@ -15,7 +15,7 @@ export const useAuthStore = create<AuthStore>()(
       })),
       {
         name: "auth-storage",
-        storage: authStorage,
+        storage: createJSONStorage(() => authStorage),
         partialize: (state) => ({
           user: state.user,
           session: state.session,
@@ -31,16 +31,11 @@ export const useAuthStore = create<AuthStore>()(
   )
 );
 
-/**
- * Option 1: Immediately initialize the store as soon as it’s imported.
- * This is sometimes enough if your application’s entry file
- * runs any code that depends on auth afterwards.
- */
+// Initialize the store
 useAuthStore.getState().initialize();
 
 // Debug subscriptions in development
 if (process.env.NODE_ENV === "development") {
-  // State changes subscription
   useAuthStore.subscribe(
     (state) => state,
     (state) =>
@@ -53,6 +48,4 @@ if (process.env.NODE_ENV === "development") {
         timestamp: new Date().toISOString(),
       })
   );
-
-  // Additional subscriptions as needed...
 }
