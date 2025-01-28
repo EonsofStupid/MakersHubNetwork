@@ -4,14 +4,10 @@ import { X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { ProfileEditor } from "./ProfileEditor"
+import { ProfileDisplay } from "./ProfileDisplay"
 
 interface ProfileDialogProps {
   open: boolean
-  onClose: () => void
-}
-
-interface ProfileEditorProps {
   onClose: () => void
 }
 
@@ -22,9 +18,9 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
-        className="sm:max-w-[425px] backdrop-blur-xl bg-background/80
+        className="sm:max-w-[672px] backdrop-blur-xl bg-background/80
                    border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]
-                   p-6 overflow-hidden"
+                   p-0 overflow-hidden"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -36,19 +32,13 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-0 top-0"
+            className="absolute right-2 top-2 z-50"
             onClick={onClose}
           >
             <X className="h-4 w-4" />
           </Button>
 
-          <div className="space-y-6">
-            <h2 className="text-2xl font-heading font-bold text-primary">
-              Edit Profile
-            </h2>
-
-            <ProfileEditor onClose={onClose} />
-          </div>
+          <ProfileDisplay />
         </motion.div>
       </DialogContent>
     </Dialog>

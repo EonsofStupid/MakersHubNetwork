@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { throttle } from "lodash";
 
-export interface BreakpointConfig {
+type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+
+interface BreakpointConfig {
   xs: number;
   sm: number;
   md: number;
@@ -11,7 +13,7 @@ export interface BreakpointConfig {
 }
 
 export interface ResponsiveLayout {
-  currentBreakpoint: keyof BreakpointConfig;
+  currentBreakpoint: Breakpoint;
   isCompact: boolean;
   containerClass: string;
 }
@@ -38,20 +40,14 @@ export const useResponsiveLayout = (
   useEffect(() => {
     const calculateLayout = throttle(() => {
       const width = window.innerWidth;
-      let currentBreakpoint: keyof BreakpointConfig = "xs";
+      let currentBreakpoint: Breakpoint = "xs";
       
-      // Determine current breakpoint
-      Object.entries(breakpoints)
-        .sort(([, a], [, b]) => b - a)
-        .some(([key, value]) => {
-          if (width >= value) {
-            currentBreakpoint = key as keyof BreakpointConfig;
-            return true;
-          }
-          return false;
-        });
+      if (width >= breakpoints["2xl"]) currentBreakpoint = "2xl";
+      else if (width >= breakpoints.xl) currentBreakpoint = "xl";
+      else if (width >= breakpoints.lg) currentBreakpoint = "lg";
+      else if (width >= breakpoints.md) currentBreakpoint = "md";
+      else if (width >= breakpoints.sm) currentBreakpoint = "sm";
 
-      // Generate container class based on breakpoint
       const containerClass = `
         w-[95vw] 
         ${currentBreakpoint === "xs" ? "h-[95vh]" : "h-auto"}

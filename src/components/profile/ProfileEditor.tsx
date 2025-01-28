@@ -1,13 +1,125 @@
-import { ProfileForm } from "./ProfileForm";
-import { ProfilePicture } from "./ProfilePicture";
-import { ProfileDetails } from "./ProfileDetails";
+import React from 'react';
+import { motion } from 'framer-motion';
+import { useAuthStore } from '@/stores/auth/store';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/integrations/supabase/client';
 
-export function ProfileEditor() {
-  return (
-    <div className="space-y-6">
-      <ProfilePicture />
-      <ProfileForm />
-      <ProfileDetails />
-    </div>
-  );
+interface ProfileEditorProps {
+  onClose: () => void;
 }
+
+export const ProfileEditor: React.FC<ProfileEditorProps> = ({ onClose }) => {
+  const { toast } = useToast();
+  const user = useAuthStore((state) => state.user);
+  const profile = user?.user_metadata;
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [formData, setFormData] = React.useState({
+    display_name: profile?.display_name || '',
+    bio: profile?.bio || '',
+    theme_preference: profile?.theme_preference || 'cyberpunk',
+    motion_enabled: profile?.motion_enabled ?? true,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: formData
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+      
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <motion.form
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      onSubmit={handleSubmit}
+      className="space-y-6 p-6"
+    >
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="display_name">Display Name</Label>
+          <Input
+            id="display_name"
+            value={formData.display_name}
+            onChange={(e) => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
+            className="bg-background/50"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="bio">Bio</Label>
+          <Textarea
+            id="bio"
+            value={formData.bio}
+            onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+            className="bg-background/50"
+            rows={3}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="theme_preference">Theme</Label>
+          <Input
+            id="theme_preference"
+            value={formData.theme_preference}
+            onChange={(e) => setFormData(prev => ({ ...prev, theme_preference: e.target.value }))}
+            className="bg-background/50"
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="motion_enabled">Enable Animations</Label>
+          <Switch
+            id="motion_enabled"
+            checked={formData.motion_enabled}
+            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, motion_enabled: checked }))}
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onClose}
+          disabled={isLoading}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="bg-primary hover:bg-primary/90"
+        >
+          {isLoading ? "Saving..." : "Save Changes"}
+        </Button>
+      </div>
+    </motion.form>
+  );
+};
