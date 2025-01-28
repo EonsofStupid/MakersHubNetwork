@@ -4,7 +4,6 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useAnimationStore } from "@/stores/animations/store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOverflowDetection } from "@/hooks/useOverflowDetection";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
@@ -35,9 +34,8 @@ export function AdaptivePopup({
   showCloseButton = true,
 }: AdaptivePopupProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const { timings } = useAnimationStore();
   
-  // Use our new hooks
+  // Use our custom hooks for smart sizing
   const { isOverflowing, direction, ratio } = useOverflowDetection(contentRef, {
     threshold: 1.1,
     throttleMs: 100,
@@ -45,21 +43,17 @@ export function AdaptivePopup({
   
   const { containerClass, isCompact } = useResponsiveLayout();
 
+  // Animation variants for smooth transitions
   const popupVariants = {
     hidden: {
       opacity: 0,
       scale: 0.95,
-      transition: {
-        duration: timings.transitions.fast / 1000,
-      },
+      transition: { duration: 0.2 },
     },
     visible: {
       opacity: 1,
       scale: 1,
-      transition: {
-        duration: timings.transitions.normal / 1000,
-        ease: "easeOut",
-      },
+      transition: { duration: 0.3, ease: "easeOut" },
     },
   };
 
