@@ -28,16 +28,27 @@ export const ProfileDisplay = () => {
           .from('profiles')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
+          throw profileError;
+        }
+
+        if (!profile) {
+          toast({
+            title: "Profile not found",
+            description: "Creating a new profile...",
+          });
+          return;
+        }
 
         if (profile?.theme_preference) {
           const { data: theme, error: themeError } = await supabase
             .from('themes')
             .select('*')
             .eq('name', profile.theme_preference)
-            .single();
+            .maybeSingle();
 
           if (themeError && themeError.code !== 'PGRST116') {
             throw themeError;
@@ -84,6 +95,10 @@ export const ProfileDisplay = () => {
       onSuccess={(updatedData) => {
         setProfileData(updatedData);
         setIsEditing(false);
+        toast({
+          title: "Profile Updated",
+          description: "Your profile has been successfully updated.",
+        });
       }}
     />;
   }
