@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { useThemeStore } from "@/stores/theme/store";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,36 +6,86 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ProfileEditor } from "./ProfileEditor";
 import { ThemeDataStream } from "@/components/theme/ThemeDataStream";
-import { User, Edit2, Github, Twitter } from "lucide-react";
+import { User, Edit2, Github, Twitter, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export const ProfileDisplay = () => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [profileData, setProfileData] = useState<any>(null);
+  const [themeData, setThemeData] = useState<any>(null);
   const user = useAuthStore((state) => state.user);
   const currentTheme = useThemeStore((state) => state.currentTheme);
-  const profile = user?.user_metadata;
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        if (!user?.id) return;
+        
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        if (profile?.theme_preference) {
+          const { data: theme, error: themeError } = await supabase
+            .from('themes')
+            .select('*')
+            .eq('name', profile.theme_preference)
+            .single();
+
+          if (themeError && themeError.code !== 'PGRST116') {
+            throw themeError;
+          }
+
+          setThemeData(theme);
+        }
+
+        setProfileData(profile);
+      } catch (error: any) {
+        console.error('Error fetching profile:', error);
+        toast({
+          title: "Error loading profile",
+          description: error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [user?.id, toast]);
 
   const handleSocialConnect = async (platform: string) => {
-    try {
-      // This will be implemented when social connections are ready
-      toast({
-        title: "Coming Soon",
-        description: `${platform} integration will be available soon!`,
-        variant: "default",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to connect social account",
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Coming Soon",
+      description: `${platform} integration will be available soon!`,
+    });
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[600px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (isEditing) {
-    return <ProfileEditor onClose={() => setIsEditing(false)} />;
+    return <ProfileEditor 
+      initialData={profileData} 
+      onClose={() => setIsEditing(false)} 
+      onSuccess={(updatedData) => {
+        setProfileData(updatedData);
+        setIsEditing(false);
+      }}
+    />;
   }
 
   return (
@@ -76,9 +126,9 @@ export const ProfileDisplay = () => {
                   "group-hover:border-primary/80",
                   "group-hover:shadow-[0_0_20px_rgba(0,240,255,0.3)]"
                 )}>
-                  {profile?.avatar_url ? (
+                  {profileData?.avatar_url ? (
                     <img
-                      src={profile.avatar_url}
+                      src={profileData.avatar_url}
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />
@@ -92,10 +142,10 @@ export const ProfileDisplay = () => {
               
               <div className="space-y-1">
                 <h3 className="text-xl font-bold text-primary animate-morph-header">
-                  {profile?.display_name || user?.email?.split('@')[0] || "Anonymous Maker"}
+                  {profileData?.display_name || user?.email?.split('@')[0] || "Anonymous Maker"}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {profile?.bio || "No bio yet"}
+                  {profileData?.bio || "No bio yet"}
                 </p>
               </div>
             </motion.div>
@@ -130,11 +180,19 @@ export const ProfileDisplay = () => {
           >
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Theme</h4>
-              <p className="text-sm">{currentTheme?.name || profile?.theme_preference || "Cyberpunk"}</p>
+              <p className="text-sm">{profileData?.theme_preference || "Default"}</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-muted-foreground">Layout</h4>
+              <p className="text-sm">{profileData?.layout_preference?.contentWidth || "Default"}</p>
             </div>
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Motion</h4>
-              <p className="text-sm">{profile?.motion_enabled ? "Enabled" : "Disabled"}</p>
+              <p className="text-sm">{profileData?.motion_enabled ? "Enabled" : "Disabled"}</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-muted-foreground">Sidebar</h4>
+              <p className="text-sm">{profileData?.layout_preference?.sidebarPosition || "Left"}</p>
             </div>
           </motion.div>
 
