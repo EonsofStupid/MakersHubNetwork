@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAnimationStore } from "@/stores/animations/store";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useOverflowDetection } from "@/hooks/useOverflowDetection";
+import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 
 interface AdaptivePopupProps {
   trigger?: React.ReactNode;
@@ -33,30 +35,15 @@ export function AdaptivePopup({
   showCloseButton = true,
 }: AdaptivePopupProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [isOverflowing, setIsOverflowing] = useState(false);
   const { timings } = useAnimationStore();
-
-  useEffect(() => {
-    const checkOverflow = () => {
-      if (contentRef.current) {
-        const hasOverflow = 
-          contentRef.current.scrollHeight > contentRef.current.clientHeight ||
-          contentRef.current.scrollWidth > contentRef.current.clientWidth;
-        setIsOverflowing(hasOverflow);
-      }
-    };
-
-    const resizeObserver = new ResizeObserver(() => {
-      checkOverflow();
-    });
-
-    if (contentRef.current) {
-      resizeObserver.observe(contentRef.current);
-      checkOverflow();
-    }
-
-    return () => resizeObserver.disconnect();
-  }, [children]);
+  
+  // Use our new hooks
+  const { isOverflowing, direction, ratio } = useOverflowDetection(contentRef, {
+    threshold: 1.1,
+    throttleMs: 100,
+  });
+  
+  const { containerClass, isCompact } = useResponsiveLayout();
 
   const popupVariants = {
     hidden: {
@@ -83,9 +70,8 @@ export function AdaptivePopup({
         className={cn(
           "p-0 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]",
           "backdrop-blur-xl bg-background/80",
-          // Responsive classes
-          "w-[95vw] sm:w-auto",
-          "h-[90vh] sm:h-auto",
+          containerClass,
+          isOverflowing && "overflow-hidden",
           className
         )}
         style={{
@@ -102,7 +88,10 @@ export function AdaptivePopup({
         >
           {/* Header */}
           {(title || showCloseButton) && (
-            <div className="flex items-center justify-between p-4 border-b border-primary/20">
+            <div className={cn(
+              "flex items-center justify-between p-4 border-b border-primary/20",
+              isCompact ? "sticky top-0 z-10 backdrop-blur-md" : ""
+            )}>
               {title && (
                 <h2 className="text-lg font-heading font-bold text-primary">
                   {title}
@@ -125,7 +114,6 @@ export function AdaptivePopup({
           <ScrollArea
             className={cn(
               "flex-1 p-4",
-              isOverflowing && "overflow-auto",
               contentClassName
             )}
           >
