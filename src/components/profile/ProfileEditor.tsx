@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth/store';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 interface ProfileEditorProps {
   onClose: () => void;
@@ -17,8 +18,8 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ onClose }) => {
   const { toast } = useToast();
   const user = useAuthStore((state) => state.user);
   const profile = user?.user_metadata;
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [formData, setFormData] = React.useState({
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
     display_name: profile?.display_name || '',
     bio: profile?.bio || '',
     theme_preference: profile?.theme_preference || 'cyberpunk',
@@ -36,6 +37,20 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ onClose }) => {
 
       if (error) throw error;
 
+      // Update the profile in the database
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          display_name: formData.display_name,
+          bio: formData.bio,
+          theme_preference: formData.theme_preference,
+          motion_enabled: formData.motion_enabled,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user?.id);
+
+      if (profileError) throw profileError;
+
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated.",
@@ -43,6 +58,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ onClose }) => {
       
       onClose();
     } catch (error) {
+      console.error('Profile update error:', error);
       toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",
@@ -59,7 +75,12 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ onClose }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       onSubmit={handleSubmit}
-      className="space-y-6 p-6"
+      className={cn(
+        "space-y-6 p-6",
+        "bg-background/20 backdrop-blur-xl",
+        "rounded-lg border border-primary/30",
+        "shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]"
+      )}
     >
       <div className="space-y-4">
         <div className="space-y-2">
@@ -109,13 +130,20 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ onClose }) => {
           variant="ghost"
           onClick={onClose}
           disabled={isLoading}
+          className={cn(
+            "hover:bg-primary/10",
+            "transition-colors duration-200"
+          )}
         >
           Cancel
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
-          className="bg-primary hover:bg-primary/90"
+          className={cn(
+            "bg-primary hover:bg-primary/90",
+            "transition-colors duration-200"
+          )}
         >
           {isLoading ? "Saving..." : "Save Changes"}
         </Button>
