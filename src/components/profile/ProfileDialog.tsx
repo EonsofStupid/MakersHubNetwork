@@ -11,6 +11,10 @@ interface ProfileDialogProps {
   onClose: () => void
 }
 
+interface ProfileEditorProps {
+  onClose: () => void
+}
+
 export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   open,
   onClose,

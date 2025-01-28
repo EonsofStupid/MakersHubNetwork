@@ -54,12 +54,12 @@ export const useResponsiveLayout = (
       // Generate container class based on breakpoint
       const containerClass = `
         w-[95vw] 
-        ${currentBreakpoint === "xs" ? "h-[95vh]" : "h-auto"}
-        ${currentBreakpoint === "sm" ? "max-w-[540px]" : ""}
-        ${currentBreakpoint === "md" ? "max-w-[720px]" : ""}
-        ${currentBreakpoint === "lg" ? "max-w-[960px]" : ""}
-        ${currentBreakpoint === "xl" ? "max-w-[1140px]" : ""}
-        ${currentBreakpoint === "2xl" ? "max-w-[1320px]" : ""}
+        ${currentBreakpoint === ("xs" as keyof BreakpointConfig) ? "h-[95vh]" : "h-auto"}
+        ${currentBreakpoint === ("sm" as keyof BreakpointConfig) ? "max-w-[540px]" : ""}
+        ${currentBreakpoint === ("md" as keyof BreakpointConfig) ? "max-w-[720px]" : ""}
+        ${currentBreakpoint === ("lg" as keyof BreakpointConfig) ? "max-w-[960px]" : ""}
+        ${currentBreakpoint === ("xl" as keyof BreakpointConfig) ? "max-w-[1140px]" : ""}
+        ${currentBreakpoint === ("2xl" as keyof BreakpointConfig) ? "max-w-[1320px]" : ""}
       `.trim();
 
       setLayout({
