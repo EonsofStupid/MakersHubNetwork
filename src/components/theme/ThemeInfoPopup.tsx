@@ -5,12 +5,15 @@ import { ThemeDataStream } from "./ThemeDataStream";
 import { ThemeLoadingState } from "./info/ThemeLoadingState";
 import { ThemeErrorState } from "./info/ThemeErrorState";
 import { ThemeInfoTabs } from "./info/ThemeInfoTabs";
+import { AdaptivePopup } from "@/components/ui/adaptive-popup/AdaptivePopup";
 
 interface ThemeInfoPopupProps {
   onClose?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
+export function ThemeInfoPopup({ onClose, open, onOpenChange }: ThemeInfoPopupProps) {
   const { currentTheme, isLoading, error, setTheme } = useThemeStore();
   const [activeTab, setActiveTab] = useState("info");
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
@@ -31,22 +34,30 @@ export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20, rotateX: "15deg" }}
-      animate={{ 
-        opacity: 1, 
-        y: 0, 
-        rotateX: "0deg",
-        transition: {
-          duration: 0.5,
-          ease: [0.19, 1.0, 0.22, 1.0]
-        }
-      }}
-      exit={{ opacity: 0, y: -20, rotateX: "-15deg" }}
-      className="w-[800px] max-w-[90vw] rounded-lg bg-background/20 backdrop-blur-xl p-6 border border-primary/20 shadow-[0_0_15px_rgba(0,240,255,0.1)] animate-morph-header perspective-1000"
+    <AdaptivePopup
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Theme Information"
+      className="w-[800px] max-w-[90vw]"
+      contentClassName="bg-background/20 backdrop-blur-xl border border-primary/20 shadow-[0_0_15px_rgba(0,240,255,0.1)]"
     >
-      <ThemeDataStream className="opacity-10" />
-      <ThemeInfoTabs currentTheme={currentTheme} onTabChange={setActiveTab} />
-    </motion.div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20, rotateX: "15deg" }}
+        animate={{ 
+          opacity: 1, 
+          y: 0, 
+          rotateX: "0deg",
+          transition: {
+            duration: 0.5,
+            ease: [0.19, 1.0, 0.22, 1.0]
+          }
+        }}
+        exit={{ opacity: 0, y: -20, rotateX: "-15deg" }}
+        className="relative"
+      >
+        <ThemeDataStream className="opacity-10" />
+        <ThemeInfoTabs currentTheme={currentTheme} onTabChange={setActiveTab} />
+      </motion.div>
+    </AdaptivePopup>
   );
 }
