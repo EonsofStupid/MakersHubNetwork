@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
-
 import { createAuthSlice } from "./slices/auth.slice";
 import { authStorage } from "./middleware/persist.middleware";
 import { AuthStore } from "./types/auth.types";
@@ -30,9 +29,6 @@ export const useAuthStore = create<AuthStore>()(
     }
   )
 );
-
-// Initialize the store
-useAuthStore.getState().initialize();
 
 // Debug subscriptions in development
 if (process.env.NODE_ENV === "development") {

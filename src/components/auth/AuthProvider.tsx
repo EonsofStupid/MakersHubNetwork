@@ -2,15 +2,27 @@ import { ReactNode, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { supabase } from "@/integrations/supabase/client";
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const setSession = useAuthStore((state) => state.setSession);
   const initialize = useAuthStore((state) => state.initialize);
   const initialized = useAuthStore((state) => state.initialized);
   const isLoading = useAuthStore((state) => state.isLoading);
-  const setSession = useAuthStore((state) => state.setSession);
 
   useEffect(() => {
     // Initialize auth state
-    initialize();
+    const initAuth = async () => {
+      try {
+        await initialize();
+      } catch (error) {
+        console.error("Failed to initialize auth:", error);
+      }
+    };
+
+    initAuth();
 
     // Set up auth state listener
     const {
