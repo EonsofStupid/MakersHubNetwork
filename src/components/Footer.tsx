@@ -107,7 +107,7 @@ export function Footer() {
               <p className="text-sm text-muted-foreground">
                 Designed by{" "}
                 <a
-                  href="https://onemanwho.design"
+                  href="https://angrygaming.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:text-secondary transition-colors duration-300"
