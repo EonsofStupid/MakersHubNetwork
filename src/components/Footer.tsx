@@ -8,7 +8,7 @@ import { ThemeInfoPopup } from "@/components/theme/ThemeInfoPopup";
 
 export function Footer() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false); // Control popup state
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { setTheme } = useThemeStore();
 
   useEffect(() => {
@@ -47,7 +47,10 @@ export function Footer() {
               {/* Popup Modal - Triggered when `isDialogOpen` is true */}
               <AnimatePresence>
                 {isDialogOpen && (
-                  <AdaptivePopup open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
+                  <AdaptivePopup 
+                    open={isDialogOpen} 
+                    onOpenChange={(open) => setIsDialogOpen(open)}
+                  >
                     <ThemeInfoPopup onClose={() => setIsDialogOpen(false)} />
                   </AdaptivePopup>
                 )}
