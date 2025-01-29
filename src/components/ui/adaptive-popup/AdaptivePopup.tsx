@@ -5,20 +5,9 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useOverflowDetection } from "@/hooks/useOverflowDetection";
-import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
-
-// Throttle function to reduce resize handler frequency
-const throttle = (fn: Function, delay: number) => {
-  let lastTime = 0;
-  return (...args: any) => {
-    const now = new Date().getTime();
-    if (now - lastTime >= delay) {
-      lastTime = now;
-      fn(...args);
-    }
-  };
-};
+import { useOverflowDetection } from "./hooks";
+import { throttle } from "./utils";
+import { useResponsiveLayout } from "./hooks";
 
 interface AdaptivePopupProps {
   trigger?: React.ReactNode;
@@ -33,7 +22,6 @@ interface AdaptivePopupProps {
   showCloseButton?: boolean;
   preventScroll?: boolean;
   fullScreen?: boolean;
-  preserveScrollBarGap?: boolean;
 }
 
 export function AdaptivePopup({
@@ -49,194 +37,50 @@ export function AdaptivePopup({
   showCloseButton = true,
   preventScroll = false,
   fullScreen = false,
-  preserveScrollBarGap = true,
 }: AdaptivePopupProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [contentHeight, setContentHeight] = useState<number>(0);
-  const [isResizing, setIsResizing] = useState(false);
-  const [isOverflowing, setIsOverflowing] = useState(false);
-  const [showFullSizeLink, setShowFullSizeLink] = useState(false);
-  
-  // Custom hooks for responsive behavior
-  const { isOverflowing: detectedOverflow, direction, ratio } = useOverflowDetection(contentRef, {
-    threshold: 1.1,
-    throttleMs: 100,
-  });
-  
+  const { isOverflowing } = useOverflowDetection(contentRef);
   const { containerClass, isCompact } = useResponsiveLayout();
 
   useEffect(() => {
-    // Detect overflow and show full-size link
-    setIsOverflowing(detectedOverflow);
-    setShowFullSizeLink(detectedOverflow && !fullScreen);
-  }, [detectedOverflow, fullScreen]);
+    const handleResize = throttle(() => {
+      if (!contentRef.current) return;
+      const vh = window.innerHeight;
+      const vw = window.innerWidth;
+      const rect = contentRef.current.getBoundingClientRect();
+      if (rect.height > vh * 0.85) contentRef.current.style.height = `${vh * 0.85}px`;
+      if (rect.width > vw * 0.9) contentRef.current.style.width = `${vw * 0.9}px`;
+    }, 200);
 
-  // Throttled ResizeObserver for performance optimization
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver(throttle((entries) => {
-      setIsResizing(true);
-      for (const entry of entries) {
-        const height = entry.contentRect.height;
-        setContentHeight(height);
-      }
-      setTimeout(() => setIsResizing(false), 100);
-    }, 200));
+    window.addEventListener("resize", handleResize);
+    handleResize();
 
-    if (contentRef.current) {
-      resizeObserver.observe(contentRef.current);
-    }
-
-    return () => resizeObserver.disconnect();
-  }, []);
-
-  // Handle viewport changes
-  useEffect(() => {
-    if (!open) return;
-
-    const handleResize = () => {
-      if (contentRef.current) {
-        const vh = window.innerHeight;
-        const vw = window.innerWidth;
-        const rect = contentRef.current.getBoundingClientRect();
-        
-        // Adjust size based on viewport
-        if (rect.height > vh * 0.85) {
-          contentRef.current.style.height = `${vh * 0.85}px`;
-        }
-        if (rect.width > vw * 0.9) {
-          contentRef.current.style.width = `${vw * 0.9}px`;
-        }
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Initial check
-    
-    return () => window.removeEventListener('resize', handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [open]);
 
-  // Accessibility: Focus management when popup opens and closes
-  useEffect(() => {
-    if (open && contentRef.current) {
-      contentRef.current.focus();
-    }
-    return () => {
-      if (open && trigger && typeof trigger === 'object' && 'focus' in trigger) {
-        (trigger as HTMLElement).focus();
-      }
-    };
-  }, [open, trigger]);
-
-  const variants = {
-    hidden: {
-      opacity: 0,
-      scale: 0.95,
-      y: 10,
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        damping: 20,
-        stiffness: 300,
-      },
-    },
-    exit: {
-      opacity: 0,
-      scale: 0.95,
-      y: 10,
-      transition: {
-        duration: 0.2,
-      },
-    },
-  };
-
   return (
-    <Dialog 
-      open={open} 
-      onOpenChange={onOpenChange}
-      aria-labelledby={title ? `${title}-dialog` : undefined}
-      aria-hidden={!open}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
         ref={contentRef}
-        className={cn(
-          "p-0 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]",
-          "backdrop-blur-xl bg-background/80",
-          fullScreen ? "w-screen h-screen" : containerClass,
-          isOverflowing && "overflow-auto",
-          className
-        )}
-        style={{
-          maxWidth: fullScreen ? "100vw" : maxWidth,
-          maxHeight: fullScreen ? "100vh" : maxHeight,
-        }}
-        aria-live="polite"
+        className={cn("p-0 border-primary/20 shadow-lg", className)}
+        style={{ maxWidth: fullScreen ? "100vw" : maxWidth, maxHeight: fullScreen ? "100vh" : maxHeight }}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            variants={variants}
-            className="relative flex flex-col w-full h-full"
-          >
-            {/* Header */}
+        <AnimatePresence>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             {(title || showCloseButton) && (
-              <div className={cn(
-                "flex items-center justify-between p-4",
-                "border-b border-primary/20",
-                isCompact ? "sticky top-0 z-10 backdrop-blur-md bg-background/50" : ""
-              )}>
-                {title && (
-                  <h2 id={`${title}-dialog`} className="text-lg font-heading font-bold text-primary">
-                    {title}
-                  </h2>
-                )}
+              <div className="flex justify-between p-4 border-b">
+                {title && <h2 className="text-lg font-bold">{title}</h2>}
                 {showCloseButton && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-full hover:bg-primary/10"
-                    onClick={() => onOpenChange?.(false)}
-                    aria-label="Close"
-                  >
-                    <X className="h-4 w-4 text-primary" />
+                  <Button variant="ghost" size="icon" onClick={() => onOpenChange?.(false)}>
+                    <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             )}
-
-            {/* Content */}
-            <ScrollArea
-              className={cn(
-                "flex-1",
-                contentClassName,
-                preventScroll && "overflow-hidden"
-              )}
-            >
-              <div 
-                className={cn(
-                  "p-4",
-                  isResizing && "transition-none",
-                  isOverflowing && "space-y-4"
-                )}
-              >
-                {children}
-              </div>
+            <ScrollArea className={cn("flex-1", contentClassName, preventScroll && "overflow-hidden")}>
+              <div className="p-4">{children}</div>
             </ScrollArea>
-
-            {/* Full-Size View Link */}
-            {showFullSizeLink && (
-              <div className="mt-4 text-center">
-                <Button variant="link" onClick={() => onOpenChange?.(true)}>
-                  View Full-Scale Version
-                </Button>
-              </div>
-            )}
           </motion.div>
         </AnimatePresence>
       </DialogContent>
