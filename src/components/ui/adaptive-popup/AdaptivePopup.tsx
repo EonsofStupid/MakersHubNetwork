@@ -8,6 +8,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOverflowDetection } from "@/hooks/useOverflowDetection";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 
+// Throttle function to reduce resize handler frequency
+const throttle = (fn: Function, delay: number) => {
+  let lastTime = 0;
+  return (...args: any) => {
+    const now = new Date().getTime();
+    if (now - lastTime >= delay) {
+      lastTime = now;
+      fn(...args);
+    }
+  };
+};
+
 interface AdaptivePopupProps {
   trigger?: React.ReactNode;
   title?: string;
@@ -42,30 +54,38 @@ export function AdaptivePopup({
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number>(0);
   const [isResizing, setIsResizing] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [showFullSizeLink, setShowFullSizeLink] = useState(false);
   
   // Custom hooks for responsive behavior
-  const { isOverflowing, direction, ratio } = useOverflowDetection(contentRef, {
+  const { isOverflowing: detectedOverflow, direction, ratio } = useOverflowDetection(contentRef, {
     threshold: 1.1,
     throttleMs: 100,
   });
   
   const { containerClass, isCompact } = useResponsiveLayout();
 
-  // ResizeObserver for dynamic content
   useEffect(() => {
-    if (!contentRef.current) return;
+    // Detect overflow and show full-size link
+    setIsOverflowing(detectedOverflow);
+    setShowFullSizeLink(detectedOverflow && !fullScreen);
+  }, [detectedOverflow, fullScreen]);
 
-    const resizeObserver = new ResizeObserver((entries) => {
+  // Throttled ResizeObserver for performance optimization
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(throttle((entries) => {
       setIsResizing(true);
       for (const entry of entries) {
         const height = entry.contentRect.height;
         setContentHeight(height);
       }
-      // Debounce resize end
       setTimeout(() => setIsResizing(false), 100);
-    });
+    }, 200));
 
-    resizeObserver.observe(contentRef.current);
+    if (contentRef.current) {
+      resizeObserver.observe(contentRef.current);
+    }
+
     return () => resizeObserver.disconnect();
   }, []);
 
@@ -95,7 +115,18 @@ export function AdaptivePopup({
     return () => window.removeEventListener('resize', handleResize);
   }, [open]);
 
-  // Animation variants
+  // Accessibility: Focus management when popup opens and closes
+  useEffect(() => {
+    if (open && contentRef.current) {
+      contentRef.current.focus();
+    }
+    return () => {
+      if (open && trigger && typeof trigger === 'object' && 'focus' in trigger) {
+        (trigger as HTMLElement).focus();
+      }
+    };
+  }, [open, trigger]);
+
   const variants = {
     hidden: {
       opacity: 0,
@@ -126,20 +157,24 @@ export function AdaptivePopup({
     <Dialog 
       open={open} 
       onOpenChange={onOpenChange}
+      aria-labelledby={title ? `${title}-dialog` : undefined}
+      aria-hidden={!open}
     >
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
+        ref={contentRef}
         className={cn(
           "p-0 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]",
           "backdrop-blur-xl bg-background/80",
           fullScreen ? "w-screen h-screen" : containerClass,
-          isOverflowing && "overflow-hidden",
+          isOverflowing && "overflow-auto",
           className
         )}
         style={{
           maxWidth: fullScreen ? "100vw" : maxWidth,
           maxHeight: fullScreen ? "100vh" : maxHeight,
         }}
+        aria-live="polite"
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -157,7 +192,7 @@ export function AdaptivePopup({
                 isCompact ? "sticky top-0 z-10 backdrop-blur-md bg-background/50" : ""
               )}>
                 {title && (
-                  <h2 className="text-lg font-heading font-bold text-primary">
+                  <h2 id={`${title}-dialog`} className="text-lg font-heading font-bold text-primary">
                     {title}
                   </h2>
                 )}
@@ -167,6 +202,7 @@ export function AdaptivePopup({
                     size="icon"
                     className="h-8 w-8 rounded-full hover:bg-primary/10"
                     onClick={() => onOpenChange?.(false)}
+                    aria-label="Close"
                   >
                     <X className="h-4 w-4 text-primary" />
                   </Button>
@@ -183,7 +219,6 @@ export function AdaptivePopup({
               )}
             >
               <div 
-                ref={contentRef}
                 className={cn(
                   "p-4",
                   isResizing && "transition-none",
@@ -193,6 +228,15 @@ export function AdaptivePopup({
                 {children}
               </div>
             </ScrollArea>
+
+            {/* Full-Size View Link */}
+            {showFullSizeLink && (
+              <div className="mt-4 text-center">
+                <Button variant="link" onClick={() => onOpenChange?.(true)}>
+                  View Full-Scale Version
+                </Button>
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </DialogContent>
