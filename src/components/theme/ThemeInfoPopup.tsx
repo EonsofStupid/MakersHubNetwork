@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useThemeStore } from "@/stores/theme/store";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ThemeDataStream } from "./ThemeDataStream";
 import { ThemeLoadingState } from "./info/ThemeLoadingState";
 import { ThemeErrorState } from "./info/ThemeErrorState";
@@ -53,10 +53,40 @@ export function ThemeInfoPopup({ onClose, open, onOpenChange }: ThemeInfoPopupPr
           }
         }}
         exit={{ opacity: 0, y: -20, rotateX: "-15deg" }}
-        className="relative"
+        className="relative perspective-1000"
       >
-        <ThemeDataStream className="opacity-10" />
-        <ThemeInfoTabs currentTheme={currentTheme} onTabChange={setActiveTab} />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/5 rounded-lg opacity-50" />
+        <ThemeDataStream className="absolute inset-0 opacity-10" />
+        
+        <div className="relative z-10">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ 
+              scale: 1, 
+              opacity: 1,
+              transition: { delay: 0.2, duration: 0.3 }
+            }}
+            className="mb-4"
+          >
+            <h2 className="text-2xl font-bold text-primary glitch">
+              {currentTheme.name}
+            </h2>
+            <p className="text-muted-foreground">
+              {currentTheme.description}
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ 
+              y: 0, 
+              opacity: 1,
+              transition: { delay: 0.3, duration: 0.4 }
+            }}
+          >
+            <ThemeInfoTabs currentTheme={currentTheme} onTabChange={setActiveTab} />
+          </motion.div>
+        </div>
       </motion.div>
     </AdaptivePopup>
   );
