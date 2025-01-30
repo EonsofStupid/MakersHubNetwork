@@ -1,13 +1,23 @@
-import { MainNav } from "@/components/MainNav";
-import { BackgroundEffects } from "./components/background/BackgroundEffects";
+import { useEffect } from "react";
+import { DesktopHomeView } from "./DesktopHomeView";
+import { MobileHomeView } from "./MobileHomeView";
+import { usePlatformStore, detectPlatform } from "@/utils/platform";
 
 export const HomeView = () => {
-  return (
-    <div className="min-h-screen">
-      <BackgroundEffects />
-      <main className="container mx-auto px-4 pt-24">
-        <h1 className="text-4xl font-bold text-primary">Welcome to MakersImpulse</h1>
-      </main>
-    </div>
-  );
+  const { platform, setPlatform } = usePlatformStore();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setPlatform(detectPlatform());
+    };
+
+    // Initial detection
+    handleResize();
+
+    // Listen for window resize
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [setPlatform]);
+
+  return platform === 'desktop' ? <DesktopHomeView /> : <MobileHomeView />;
 };

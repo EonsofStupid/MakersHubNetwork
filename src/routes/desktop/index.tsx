@@ -1,14 +1,12 @@
 import { Routes, Route } from "react-router-dom";
-import { DesktopLayout } from "./components/Layout";
-import IndexPage from "@/pages/Index";
+import { DesktopHomeView } from "@/features/home/DesktopHomeView";
 
 const DesktopIndex = () => {
   return (
-    <DesktopLayout>
-      <Routes>
-        <Route path="/" element={<IndexPage />} />
-      </Routes>
-    </DesktopLayout>
+    <Routes>
+      <Route path="/" element={<DesktopHomeView />} />
+      {/* Add other desktop-specific routes here */}
+    </Routes>
   );
 };
 
