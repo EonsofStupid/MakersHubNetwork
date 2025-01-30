@@ -51,6 +51,217 @@ export type Database = {
         }
         Relationships: []
       }
+      manufacturers: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      part_reviews: {
+        Row: {
+          cons: string[] | null
+          content: string | null
+          created_at: string
+          helpful_votes: number | null
+          id: string
+          part_id: string | null
+          pros: string[] | null
+          rating: number | null
+          title: string | null
+          updated_at: string
+          user_id: string | null
+          verified_purchase: boolean | null
+        }
+        Insert: {
+          cons?: string[] | null
+          content?: string | null
+          created_at?: string
+          helpful_votes?: number | null
+          id?: string
+          part_id?: string | null
+          pros?: string[] | null
+          rating?: number | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          verified_purchase?: boolean | null
+        }
+        Update: {
+          cons?: string[] | null
+          content?: string | null
+          created_at?: string
+          helpful_votes?: number | null
+          id?: string
+          part_id?: string | null
+          pros?: string[] | null
+          rating?: number | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          verified_purchase?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_reviews_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "printer_parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      printer_part_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_part_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "printer_part_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      printer_parts: {
+        Row: {
+          category_id: string | null
+          community_score: number | null
+          compatibility: Json | null
+          cons: string[] | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          dimensions: Json | null
+          id: string
+          images: string[] | null
+          manufacturer_id: string | null
+          model_number: string | null
+          name: string
+          price_range: Json | null
+          pros: string[] | null
+          review_count: number | null
+          slug: string
+          specifications: Json | null
+          status: Database["public"]["Enums"]["part_status"]
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          community_score?: number | null
+          compatibility?: Json | null
+          cons?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          dimensions?: Json | null
+          id?: string
+          images?: string[] | null
+          manufacturer_id?: string | null
+          model_number?: string | null
+          name: string
+          price_range?: Json | null
+          pros?: string[] | null
+          review_count?: number | null
+          slug: string
+          specifications?: Json | null
+          status?: Database["public"]["Enums"]["part_status"]
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          community_score?: number | null
+          compatibility?: Json | null
+          cons?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          dimensions?: Json | null
+          id?: string
+          images?: string[] | null
+          manufacturer_id?: string | null
+          model_number?: string | null
+          name?: string
+          price_range?: Json | null
+          pros?: string[] | null
+          review_count?: number | null
+          slug?: string
+          specifications?: Json | null
+          status?: Database["public"]["Enums"]["part_status"]
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_parts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "printer_part_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printer_parts_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -400,6 +611,7 @@ export type Database = {
       }
     }
     Enums: {
+      part_status: "draft" | "published" | "archived"
       theme_status: "draft" | "published" | "archived"
       user_role: "admin" | "super_admin" | "maker" | "subscriber"
     }
