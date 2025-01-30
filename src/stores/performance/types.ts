@@ -1,20 +1,26 @@
-import { StateCreator } from 'zustand';
+import { FrameSlice } from './metrics/frame/frame.types';
+import { StoreSlice } from './metrics/store/store.types';
+import { MemorySlice } from './metrics/memory/memory.types';
+import { MonitoringSlice } from './monitoring/monitoring.types';
 
-export interface FrameMetrics {
-  drops: number;
+export interface BaseMetrics {
+  lastTimestamp: number;
   averageTime: number;
-  peaks: number[];
-  lastFrameTimestamp: number;
 }
 
-export interface StoreMetrics {
+export interface FrameMetrics extends BaseMetrics {
+  drops: number;
+  peaks: number[];
+}
+
+export interface StoreMetrics extends BaseMetrics {
   updates: number;
   subscribers: Map<string, number>;
   computeTime: number;
   lastUpdateTimestamp: number;
 }
 
-export interface MemoryMetrics {
+export interface MemoryMetrics extends BaseMetrics {
   heapSize: number;
   instances: number;
   lastGC?: number;
@@ -26,36 +32,19 @@ export interface PerformanceMetrics {
   memoryMetrics: MemoryMetrics;
 }
 
-export interface PerformanceThresholds {
-  frameDrop: number;
-  storeUpdate: number;
-  animationFrame: number;
-  batchSize: number;
-}
-
 export interface PerformanceState {
   metrics: PerformanceMetrics;
-  thresholds: PerformanceThresholds;
+  thresholds: MonitoringSlice['thresholds'];
   isMonitoring: boolean;
 }
 
 export interface PerformanceActions {
-  startMonitoring: () => void;
-  stopMonitoring: () => void;
-  recordFrameMetric: (duration: number) => void;
-  recordStoreUpdate: (storeName: string, duration: number) => void;
-  recordMemorySnapshot: () => void;
   resetMetrics: () => void;
-  resetFrameMetrics: () => void;
-  resetStoreMetrics: () => void;
-  resetMemoryMetrics: () => void;
 }
 
-export type PerformanceStore = PerformanceState & PerformanceActions;
-
-export type PerformanceSlice<T> = StateCreator<
-  PerformanceStore,
-  [],
-  [],
-  T
->;
+export type PerformanceStore = PerformanceState & 
+  PerformanceActions & 
+  FrameSlice & 
+  StoreSlice & 
+  MemorySlice & 
+  MonitoringSlice;

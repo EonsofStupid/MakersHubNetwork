@@ -1,10 +1,21 @@
 import { create } from "zustand";
-import { Theme, ThemeComponent, ThemeToken } from "@/types/theme";
 import { supabase } from "@/integrations/supabase/client";
+import { Theme, ComponentToken } from "@/schemas/theme.schema";
+import { themeSchema, componentTokenSchema } from "@/schemas/theme.schema";
 import { toast } from "@/components/ui/use-toast";
-import { ThemeStore } from "./types";
 
-export const useThemeStore = create<ThemeStore>((set, get) => ({
+interface ThemeStore {
+  currentTheme: Theme | null;
+  themeTokens: ComponentToken[];
+  themeComponents: ComponentToken[];
+  adminComponents: ComponentToken[];
+  isLoading: boolean;
+  error: Error | null;
+  setTheme: (themeId: string) => Promise<void>;
+  loadAdminComponents: () => Promise<void>;
+}
+
+export const useThemeStore = create<ThemeStore>((set) => ({
   currentTheme: null,
   themeTokens: [],
   themeComponents: [],
@@ -13,87 +24,111 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
   error: null,
 
   setTheme: async (themeId: string) => {
+    set({ isLoading: true, error: null });
     try {
-      set({ isLoading: true, error: null });
-
-      // Fetch theme
-      const { data: theme, error: themeError } = await supabase
+      // If no specific theme ID is provided, fetch the default theme
+      const { data: themeData, error: themeError } = await supabase
         .from('themes')
         .select('*')
-        .eq('id', themeId)
-        .maybeSingle();
+        .eq(themeId ? 'id' : 'is_default', themeId || true)
+        .single();
 
       if (themeError) throw themeError;
 
-      // Fetch theme tokens
-      const { data: tokens, error: tokensError } = await supabase
+      console.log('Fetched theme data:', themeData);
+
+      // Fetch associated tokens
+      const { data: tokensData, error: tokensError } = await supabase
         .from('theme_tokens')
         .select('*')
-        .eq('theme_id', themeId);
+        .eq('theme_id', themeData.id);
 
       if (tokensError) throw tokensError;
 
-      // Fetch theme components (default context)
-      const { data: components, error: componentsError } = await supabase
+      console.log('Fetched theme tokens:', tokensData);
+
+      // Fetch components
+      const { data: componentsData, error: componentsError } = await supabase
         .from('theme_components')
         .select('*')
-        .eq('theme_id', themeId)
-        .eq('context', 'default');
+        .eq('theme_id', themeData.id);
 
       if (componentsError) throw componentsError;
 
-      set({
-        currentTheme: theme,
-        themeTokens: tokens || [],
-        themeComponents: components?.map(comp => ({
+      console.log('Fetched theme components:', componentsData);
+
+      // Parse and validate components
+      const validatedComponents = componentsData.map(comp => 
+        componentTokenSchema.parse({
           ...comp,
-          styles: comp.styles as Record<string, any>
-        })) || [],
-        error: null
+          styles: comp.styles || {},
+          tokens: {},
+        })
+      );
+
+      // Parse and validate theme data
+      const validatedTheme = themeSchema.parse({
+        ...themeData,
+        component_tokens: validatedComponents,
+      });
+
+      set({
+        currentTheme: validatedTheme,
+        themeTokens: tokensData || [],
+        themeComponents: validatedComponents,
+        isLoading: false,
       });
 
       toast({
-        title: "Theme Updated",
-        description: `Successfully loaded theme: ${theme?.name}`,
+        title: "Theme loaded",
+        description: `Successfully loaded theme: ${validatedTheme.name}`,
       });
     } catch (error) {
-      set({ error: error as Error });
+      console.error("Theme loading error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to load theme";
+      
       toast({
-        title: "Error Loading Theme",
-        description: error instanceof Error ? error.message : "An error occurred",
+        title: "Error loading theme",
+        description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      set({ isLoading: false });
+      
+      set({ error: error as Error, isLoading: false });
     }
   },
 
   loadAdminComponents: async () => {
+    set({ isLoading: true, error: null });
     try {
-      set({ isLoading: true, error: null });
-      const { data: adminComponents, error } = await supabase
-        .from('theme_components')
-        .select('*')
-        .eq('theme_id', get().currentTheme?.id)
-        .eq('context', 'admin');
+      const { data, error } = await supabase
+        .from("theme_components")
+        .select("*")
+        .eq("context", "admin");
 
       if (error) throw error;
 
-      set({ 
-        adminComponents: adminComponents?.map(comp => ({
+      const validatedComponents = data.map(comp => 
+        componentTokenSchema.parse({
           ...comp,
-          styles: comp.styles as Record<string, any>
-        })) || [] 
-      });
+          styles: comp.styles || {},
+        })
+      );
+
+      set({ adminComponents: validatedComponents, isLoading: false });
     } catch (error) {
-      set({ error: error as Error });
+      console.error("Error loading admin components:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to load admin components";
+      
       toast({
-        title: "Error Loading Admin Components",
-        description: error instanceof Error ? error.message : "An error occurred",
+        title: "Error loading components",
+        description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      set({ isLoading: false });
+      
+      set({ 
+        error: error instanceof Error ? error : new Error(errorMessage), 
+        isLoading: false 
+      });
     }
-  },
+  }
 }));

@@ -1,15 +1,25 @@
 export * from './metrics';
 export * from './thresholds';
 
-import { FrameSlice } from '../slices/frame.slice';
-import { StoreSlice } from '../slices/store.slice';
-import { MemorySlice } from '../slices/memory.slice';
-import { MonitoringSlice } from '../slices/monitoring.slice';
+import { FrameSlice } from '../metrics/frame/frame.types';
+import { StoreSlice } from '../metrics/store/store.types';
+import { MemorySlice } from '../metrics/memory/memory.types';
+import { MonitoringSlice } from '../monitoring/monitoring.types';
+import { PerformanceMetrics } from './metrics';
 
-export type PerformanceState = FrameSlice & StoreSlice & MemorySlice & MonitoringSlice;
+export interface PerformanceState {
+  metrics: PerformanceMetrics;
+  thresholds: MonitoringSlice['thresholds'];
+  isMonitoring: boolean;
+}
 
-export type PerformanceActions = {
+export interface PerformanceActions {
   resetMetrics: () => void;
-};
+}
 
-export type PerformanceStore = PerformanceState & PerformanceActions;
+export type PerformanceStore = PerformanceState & 
+  PerformanceActions & 
+  FrameSlice & 
+  StoreSlice & 
+  MemorySlice & 
+  MonitoringSlice;
