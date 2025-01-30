@@ -1,26 +1,20 @@
-import { FrameSlice } from './metrics/frame/frame.types';
-import { StoreSlice } from './metrics/store/store.types';
-import { MemorySlice } from './metrics/memory/memory.types';
-import { MonitoringSlice } from './monitoring/monitoring.types';
+import { StateCreator } from 'zustand';
 
-export interface BaseMetrics {
-  lastTimestamp: number;
-  averageTime: number;
-}
-
-export interface FrameMetrics extends BaseMetrics {
+export interface FrameMetrics {
   drops: number;
+  averageTime: number;
   peaks: number[];
+  lastFrameTimestamp: number;
 }
 
-export interface StoreMetrics extends BaseMetrics {
+export interface StoreMetrics {
   updates: number;
   subscribers: Map<string, number>;
   computeTime: number;
   lastUpdateTimestamp: number;
 }
 
-export interface MemoryMetrics extends BaseMetrics {
+export interface MemoryMetrics {
   heapSize: number;
   instances: number;
   lastGC?: number;
@@ -32,19 +26,36 @@ export interface PerformanceMetrics {
   memoryMetrics: MemoryMetrics;
 }
 
+export interface PerformanceThresholds {
+  frameDrop: number;
+  storeUpdate: number;
+  animationFrame: number;
+  batchSize: number;
+}
+
 export interface PerformanceState {
   metrics: PerformanceMetrics;
-  thresholds: MonitoringSlice['thresholds'];
+  thresholds: PerformanceThresholds;
   isMonitoring: boolean;
 }
 
 export interface PerformanceActions {
+  startMonitoring: () => void;
+  stopMonitoring: () => void;
+  recordFrameMetric: (duration: number) => void;
+  recordStoreUpdate: (storeName: string, duration: number) => void;
+  recordMemorySnapshot: () => void;
   resetMetrics: () => void;
+  resetFrameMetrics: () => void;
+  resetStoreMetrics: () => void;
+  resetMemoryMetrics: () => void;
 }
 
-export type PerformanceStore = PerformanceState & 
-  PerformanceActions & 
-  FrameSlice & 
-  StoreSlice & 
-  MemorySlice & 
-  MonitoringSlice;
+export type PerformanceStore = PerformanceState & PerformanceActions;
+
+export type PerformanceSlice<T> = StateCreator<
+  PerformanceStore,
+  [],
+  [],
+  T
+>;

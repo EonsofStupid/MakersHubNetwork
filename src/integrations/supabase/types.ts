@@ -51,51 +51,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string
-          custom_styles: Json | null
-          display_name: string | null
-          id: string
-          layout_preference: Json | null
-          motion_enabled: boolean | null
-          preferences: Json | null
-          social_links: Json | null
-          theme_preference: string | null
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          custom_styles?: Json | null
-          display_name?: string | null
-          id: string
-          layout_preference?: Json | null
-          motion_enabled?: boolean | null
-          preferences?: Json | null
-          social_links?: Json | null
-          theme_preference?: string | null
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          custom_styles?: Json | null
-          display_name?: string | null
-          id?: string
-          layout_preference?: Json | null
-          motion_enabled?: boolean | null
-          preferences?: Json | null
-          social_links?: Json | null
-          theme_preference?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       role_permissions: {
         Row: {
           action: string
@@ -117,6 +72,81 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
           subject?: string
+        }
+        Relationships: []
+      }
+      sensors: {
+        Row: {
+          accuracy: string | null
+          average_price: number | null
+          average_rating: number | null
+          connector_type: string | null
+          cons: string[] | null
+          created_at: string | null
+          dimensions: string | null
+          english_reviews_count: number | null
+          firmware_compatibility: string[] | null
+          has_self_test: boolean | null
+          id: string
+          image_url: string | null
+          includes_alarm: boolean | null
+          mounting_type: string | null
+          printer_models: string[] | null
+          probe_material: string | null
+          pros: string[] | null
+          site_rating: number | null
+          summary: string | null
+          type: string
+          updated_at: string | null
+          weight: string | null
+        }
+        Insert: {
+          accuracy?: string | null
+          average_price?: number | null
+          average_rating?: number | null
+          connector_type?: string | null
+          cons?: string[] | null
+          created_at?: string | null
+          dimensions?: string | null
+          english_reviews_count?: number | null
+          firmware_compatibility?: string[] | null
+          has_self_test?: boolean | null
+          id?: string
+          image_url?: string | null
+          includes_alarm?: boolean | null
+          mounting_type?: string | null
+          printer_models?: string[] | null
+          probe_material?: string | null
+          pros?: string[] | null
+          site_rating?: number | null
+          summary?: string | null
+          type: string
+          updated_at?: string | null
+          weight?: string | null
+        }
+        Update: {
+          accuracy?: string | null
+          average_price?: number | null
+          average_rating?: number | null
+          connector_type?: string | null
+          cons?: string[] | null
+          created_at?: string | null
+          dimensions?: string | null
+          english_reviews_count?: number | null
+          firmware_compatibility?: string[] | null
+          has_self_test?: boolean | null
+          id?: string
+          image_url?: string | null
+          includes_alarm?: boolean | null
+          mounting_type?: string | null
+          printer_models?: string[] | null
+          probe_material?: string | null
+          pros?: string[] | null
+          site_rating?: number | null
+          summary?: string | null
+          type?: string
+          updated_at?: string | null
+          weight?: string | null
         }
         Relationships: []
       }
@@ -276,12 +306,10 @@ export type Database = {
         Row: {
           cache_key: string | null
           cached_styles: Json | null
-          component_tokens: Json | null
           composition_rules: Json | null
           created_at: string | null
           created_by: string | null
           description: string | null
-          design_tokens: Json | null
           id: string
           is_default: boolean | null
           name: string
@@ -294,12 +322,10 @@ export type Database = {
         Insert: {
           cache_key?: string | null
           cached_styles?: Json | null
-          component_tokens?: Json | null
           composition_rules?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          design_tokens?: Json | null
           id?: string
           is_default?: boolean | null
           name: string
@@ -312,12 +338,10 @@ export type Database = {
         Update: {
           cache_key?: string | null
           cached_styles?: Json | null
-          component_tokens?: Json | null
           composition_rules?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          design_tokens?: Json | null
           id?: string
           is_default?: boolean | null
           name?: string
@@ -363,18 +387,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_is_super_admin: {
-        Args: {
-          user_id: string
-        }
-        Returns: boolean
-      }
-      ensure_theme_token_structure: {
-        Args: {
-          data: Json
-        }
-        Returns: Json
-      }
       get_theme_inheritance_chain: {
         Args: {
           theme_id: string
@@ -383,13 +395,6 @@ export type Database = {
           id: string
           level: number
         }[]
-      }
-      jsonb_deep_merge: {
-        Args: {
-          a: Json
-          b: Json
-        }
-        Returns: Json
       }
       merge_theme_styles: {
         Args: {
@@ -401,7 +406,7 @@ export type Database = {
     }
     Enums: {
       theme_status: "draft" | "published" | "archived"
-      user_role: "admin" | "super_admin" | "maker" | "subscriber"
+      user_role: "admin" | "editor" | "viewer" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never

@@ -1,21 +1,18 @@
-export interface BaseMetrics {
-  lastTimestamp: number;
-  averageTime: number;
-}
-
-export interface FrameMetrics extends BaseMetrics {
+export interface FrameMetrics {
   drops: number;
+  averageTime: number;
   peaks: number[];
+  lastFrameTimestamp: number;
 }
 
-export interface StoreMetrics extends BaseMetrics {
+export interface StoreMetrics {
   updates: number;
   subscribers: Map<string, number>;
   computeTime: number;
   lastUpdateTimestamp: number;
 }
 
-export interface MemoryMetrics extends BaseMetrics {
+export interface MemoryMetrics {
   heapSize: number;
   instances: number;
   lastGC?: number;

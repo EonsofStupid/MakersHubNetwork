@@ -1,7 +1,28 @@
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
-export const HeroContent = () => {
+export const Hero = () => {
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(false);
+
+  const handleMouseEnter = useCallback(() => {
+    setIsFlipped(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsFlipped(false);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsPulsing(true);
+      setTimeout(() => setIsPulsing(false), 500);
+    }, Math.random() * 3000 + 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="max-w-3xl mx-auto text-center animate-fade-up">
       <h1 
@@ -11,6 +32,7 @@ export const HeroContent = () => {
           transition-all duration-700
           cursor-pointer
           relative
+          ${isFlipped ? 'rotate-y-180' : 'rotate-y-0'}
           before:content-[''] before:absolute before:inset-0
           before:bg-[rgba(0,240,255,0.1)] before:backdrop-blur-sm
           before:rounded-xl before:border before:border-[rgba(255,255,255,0.1)]
@@ -19,20 +41,41 @@ export const HeroContent = () => {
           p-4
           shadow-[0_0_30px_rgba(0,0,0,0.1)]
         `}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
-        <span className="
-          block
-          bg-gradient-to-r from-[#00F0FF] via-[#8B5CF6] to-[#FF2D6E]
-          bg-clip-text text-transparent
-          relative
-          after:content-[''] after:absolute after:inset-0
-          after:bg-[linear-gradient(45deg,rgba(0,240,255,0.2),rgba(255,45,110,0.2))]
-          after:mix-blend-overlay after:opacity-0
-          hover:after:opacity-100
-          glitch
-          text-shadow-[0_2px_4px_rgba(0,0,0,0.3)]
-          [text-shadow:0_2px_4px_rgba(0,0,0,0.3),0_0_10px_rgba(0,240,255,0.5)]
-        ">
+        <span 
+          className={`
+            block
+            backface-hidden
+            transition-all duration-1000
+            bg-gradient-to-r from-[#00F0FF] via-[#8B5CF6] to-[#FF2D6E]
+            bg-clip-text text-transparent
+            ${isFlipped ? 'opacity-0' : 'opacity-100'}
+            relative
+            after:content-[''] after:absolute after:inset-0
+            after:bg-[linear-gradient(45deg,rgba(0,240,255,0.2),rgba(255,45,110,0.2))]
+            after:mix-blend-overlay after:opacity-0
+            hover:after:opacity-100
+            glitch
+            text-shadow-[0_2px_4px_rgba(0,0,0,0.3)]
+            [text-shadow:0_2px_4px_rgba(0,0,0,0.3),0_0_10px_rgba(0,240,255,0.5)]
+          `}
+        >
+          Build.Share.Brag
+        </span>
+        <span 
+          className={`
+            absolute top-0 left-0 w-full
+            backface-hidden rotate-y-180
+            transition-all duration-1000
+            bg-gradient-to-r from-[#FF2D6E] via-[#8B5CF6] to-[#00F0FF]
+            bg-clip-text text-transparent
+            ${isFlipped ? 'opacity-100' : 'opacity-0'}
+            mix-blend-screen
+            [text-shadow:0_2px_4px_rgba(0,0,0,0.3),0_0_10px_rgba(255,45,110,0.5)]
+          `}
+        >
           Build.Share.Brag
         </span>
       </h1>
