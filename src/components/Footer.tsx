@@ -15,86 +15,137 @@ export function Footer() {
   }, []);
 
   return (
-    <footer
-      className={`fixed bottom-0 left-0 right-0 w-full z-40 perspective-1000 ${
-        isLoaded ? "animate-morph-header" : ""
-      }`}
-    >
-      <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/80 to-background/20 backdrop-blur-xl" />
-      
-      <div className="relative z-10">
-        <div 
-          className="absolute inset-0 overflow-hidden pointer-events-none"
-          style={{ "--stream-duration": "15s" } as React.CSSProperties}
-        >
-          {/* Data Streams */}
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-px h-full bg-primary/20 animate-stream-vertical"
-              style={{
-                left: `${20 * (i + 1)}%`,
-                animationDelay: `${i * 0.5}s`,
-              }}
-            />
-          ))}
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-full h-px bg-primary/20 animate-stream-horizontal"
-              style={{
-                top: `${33 * (i + 1)}%`,
-                animationDelay: `${i * 0.7}s`,
-              }}
-            />
-          ))}
-        </div>
+    <footer className="fixed bottom-0 left-0 right-0 w-full z-40 perspective-1000">
+      <div className={`transform-gpu ${isLoaded ? "animate-morph-header" : ""}`}>
+        <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/80 to-background/20 backdrop-blur-xl" />
+        
+        <div className="relative z-10">
+          <div className="container mx-auto px-4">
+            <div className="py-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                {/* Quick Links */}
+                <div>
+                  <h4 className="text-primary font-heading text-lg mb-4">Quick Links</h4>
+                  <ul className="space-y-2">
+                    {['Explore', 'Create', 'Learn', 'Connect'].map((link) => (
+                      <li key={link}>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover">
+                          {link}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-        <div className="container mx-auto px-4">
-          <div className="py-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-              {/* Footer content grid */}
-            </div>
-            
-            <div className="border-t border-primary/30 pt-8">
-              <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                <p className="text-sm text-muted-foreground">
-                  © 2025 MakersImpulse. All rights reserved.
-                </p>
+                {/* Resources */}
+                <div>
+                  <h4 className="text-primary font-heading text-lg mb-4">Resources</h4>
+                  <ul className="space-y-2">
+                    {['Documentation', 'Tutorials', 'Blog', 'Support'].map((link) => (
+                      <li key={link}>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover">
+                          {link}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="relative group mad-scientist-hover transition-all duration-300 hover:bg-primary/10"
-                  onClick={() => setIsDialogOpen(true)}
-                >
-                  <Terminal className="w-4 h-4 mr-2 text-primary group-hover:animate-pulse relative z-10" />
-                  <span className="text-sm group-hover:text-primary transition-colors">Theme Info</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-                </Button>
+                {/* Community */}
+                <div>
+                  <h4 className="text-primary font-heading text-lg mb-4">Community</h4>
+                  <ul className="space-y-2">
+                    {['Forums', 'Discord', 'Events', 'Contributors'].map((link) => (
+                      <li key={link}>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover">
+                          {link}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-                <AnimatePresence mode="wait">
-                  {isDialogOpen && (
-                    <ThemeInfoPopup 
-                      open={isDialogOpen} 
-                      onOpenChange={setIsDialogOpen}
-                    />
-                  )}
-                </AnimatePresence>
+                {/* Legal */}
+                <div>
+                  <h4 className="text-primary font-heading text-lg mb-4">Legal</h4>
+                  <ul className="space-y-2">
+                    {['Privacy', 'Terms', 'Licenses', 'Contact'].map((link) => (
+                      <li key={link}>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover">
+                          {link}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="border-t border-primary/30 pt-8">
+                <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                  <p className="text-sm text-muted-foreground">
+                    © 2025 MakersImpulse. All rights reserved.
+                  </p>
 
-                <p className="text-sm text-muted-foreground">
-                  Designed by{" "}
-                  <a
-                    href="https://angrygaming.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:text-secondary transition-colors duration-300 mad-scientist-hover"
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="relative group mad-scientist-hover transition-all duration-300 hover:bg-primary/10"
+                    onClick={() => setIsDialogOpen(true)}
                   >
-                    onemanwho Designs
-                  </a>
-                </p>
+                    <Terminal className="w-4 h-4 mr-2 text-primary group-hover:animate-pulse" />
+                    <span className="text-sm group-hover:text-primary transition-colors">Theme Info</span>
+                  </Button>
+
+                  <AnimatePresence mode="wait">
+                    {isDialogOpen && (
+                      <ThemeInfoPopup 
+                        open={isDialogOpen} 
+                        onOpenChange={setIsDialogOpen}
+                      />
+                    )}
+                  </AnimatePresence>
+
+                  <p className="text-sm text-muted-foreground">
+                    Designed by{" "}
+                    <a
+                      href="https://angrygaming.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:text-secondary transition-colors mad-scientist-hover"
+                    >
+                      onemanwho Designs
+                    </a>
+                  </p>
+                </div>
               </div>
             </div>
+          </div>
+
+          {/* Data Streams */}
+          <div 
+            className="absolute inset-0 overflow-hidden pointer-events-none"
+            style={{ "--stream-duration": "15s" } as React.CSSProperties}
+          >
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={`v-${i}`}
+                className="absolute w-px h-full bg-primary/20 animate-stream-vertical"
+                style={{
+                  left: `${20 * (i + 1)}%`,
+                  animationDelay: `${i * 0.5}s`,
+                }}
+              />
+            ))}
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={`h-${i}`}
+                className="absolute w-full h-px bg-primary/20 animate-stream-horizontal"
+                style={{
+                  top: `${33 * (i + 1)}%`,
+                  animationDelay: `${i * 0.7}s`,
+                }}
+              />
+            ))}
           </div>
         </div>
       </div>
