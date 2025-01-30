@@ -7,7 +7,6 @@ const HorizontalStreams = memo(() => {
   
   useEffect(() => {
     return () => {
-      // Cleanup animation frames
       streamRefs.current.forEach(ref => {
         if (ref) {
           ref.style.animation = 'none';
@@ -118,7 +117,6 @@ export const BackgroundEffects = memo(() => {
   useFrameMetrics("BackgroundEffects");
   const { isEnabled } = useAnimationStore();
   
-  // Reduce number of particles based on performance
   const particleCount = useCallback(() => {
     if (window.innerWidth < 768) return 2;
     if (window.innerWidth < 1024) return 3;
