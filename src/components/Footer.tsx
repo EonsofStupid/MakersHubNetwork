@@ -33,26 +33,22 @@ export function Footer() {
                 © 2025 MakersImpulse. All rights reserved.
               </p>
 
-              {/* Trigger Button */}
               <Button
                 variant="ghost"
                 size="sm"
-                className="relative group"
+                className="relative group transition-all duration-300 hover:bg-primary/10"
                 onClick={() => setIsDialogOpen(true)}
               >
                 <Terminal className="w-4 h-4 mr-2 text-primary group-hover:animate-pulse relative z-10" />
-                <span className="text-sm group-hover:text-primary">Theme Info</span>
+                <span className="text-sm group-hover:text-primary transition-colors">Theme Info</span>
               </Button>
 
-              {/* Popup Modal - Triggered when `isDialogOpen` is true */}
-              <AnimatePresence>
+              <AnimatePresence mode="wait">
                 {isDialogOpen && (
-                  <AdaptivePopup 
+                  <ThemeInfoPopup 
                     open={isDialogOpen} 
-                    onOpenChange={(open) => setIsDialogOpen(open)}
-                  >
-                    <ThemeInfoPopup onClose={() => setIsDialogOpen(false)} />
-                  </AdaptivePopup>
+                    onOpenChange={setIsDialogOpen}
+                  />
                 )}
               </AnimatePresence>
 
