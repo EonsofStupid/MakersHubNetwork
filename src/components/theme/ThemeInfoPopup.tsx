@@ -1,138 +1,101 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useThemeStore } from "@/stores/theme/store";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { ThemeColorSystem } from "./ThemeColorSystem";
-import { ThemeComponentPreview } from "./ThemeComponentPreview";
-import { ThemeDataStream } from "./ThemeDataStream";
 import { motion, AnimatePresence } from "framer-motion";
+import { ThemeDataStream } from "./ThemeDataStream";
+import { ThemeLoadingState } from "./info/ThemeLoadingState";
+import { ThemeErrorState } from "./info/ThemeErrorState";
+import { ThemeInfoTabs } from "./info/ThemeInfoTabs";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useFrameMetrics } from "@/hooks/performance/useFrameMetrics";
 
-export function ThemeInfoPopup() {
-  const [activeSection, setActiveSection] = useState<'colors' | 'components' | 'info'>('info');
-  const { currentTheme, themeTokens, themeComponents } = useThemeStore();
+interface ThemeInfoPopupProps {
+  onClose?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
 
-  if (!currentTheme) return null;
+export function ThemeInfoPopup({ onClose, open, onOpenChange }: ThemeInfoPopupProps) {
+  const { currentTheme, isLoading, error, setTheme } = useThemeStore();
+  const [activeTab, setActiveTab] = useState("info");
+  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
+  
+  useFrameMetrics("ThemeInfoPopup");
+
+  useEffect(() => {
+    if (!hasAttemptedLoad) {
+      setTheme("");
+      setHasAttemptedLoad(true);
+    }
+  }, [setTheme, hasAttemptedLoad]);
+
+  if (error) {
+    return <ThemeErrorState error={error} onClose={onClose} />;
+  }
+
+  if (isLoading || !currentTheme) {
+    return <ThemeLoadingState />;
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: 20 }}
-      className={cn(
-        "w-[600px] max-w-[90vw] rounded-lg overflow-hidden",
-        "bg-background/20 backdrop-blur-xl",
-        "border border-primary/30",
-        "shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]",
-        "before:absolute before:inset-0",
-        "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
-        "before:pointer-events-none",
-        "relative z-50"
-      )}
-      style={{
-        perspective: "1000px",
-        transformStyle: "preserve-3d",
-      }}
-    >
-      <ThemeDataStream className="absolute inset-0 pointer-events-none opacity-20" />
-      
-      <div className="relative z-10 p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <motion.h3 
-            className="text-xl font-bold text-primary"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            {currentTheme.name}
-          </motion.h3>
-          <div className="flex items-center space-x-2">
-            <motion.span 
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
-              className={cn(
-                "px-2 py-1 text-xs rounded-full",
-                "bg-secondary/20 text-secondary",
-                "border border-secondary/30",
-                "animate-pulse"
-              )}
-            >
-              v{currentTheme.version}
-            </motion.span>
-            <motion.span 
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 }}
-              className={cn(
-                "px-2 py-1 text-xs rounded-full",
-                "bg-primary/20 text-primary",
-                "border border-primary/30"
-              )}
-            >
-              {currentTheme.status}
-            </motion.span>
-          </div>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[800px] max-w-[90vw] p-0 bg-background/20 backdrop-blur-xl border border-primary/20 shadow-[0_0_15px_rgba(0,240,255,0.1)]">
+        <DialogTitle className="sr-only">Theme Information: {currentTheme.name}</DialogTitle>
+        <DialogDescription className="sr-only">
+          Detailed information about the {currentTheme.name} theme, including its design tokens, components, and effects.
+        </DialogDescription>
 
-        <nav className="flex space-x-2">
-          {(['info', 'colors', 'components'] as const).map((section, index) => (
-            <motion.div
-              key={section}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + index * 0.1 }}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "relative",
-                  activeSection === section && "text-primary",
-                  "mad-scientist-hover"
-                )}
-                onClick={() => setActiveSection(section)}
+        <ScrollArea className="h-[80vh] w-full">
+          <motion.div 
+            initial={{ opacity: 0, y: 20, rotateX: "15deg" }}
+            animate={{ 
+              opacity: 1, 
+              y: 0, 
+              rotateX: "0deg",
+              transition: {
+                duration: 0.5,
+                ease: [0.19, 1.0, 0.22, 1.0]
+              }
+            }}
+            exit={{ opacity: 0, y: -20, rotateX: "-15deg" }}
+            className="relative perspective-1000"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/5 rounded-lg opacity-50" />
+            <ThemeDataStream className="absolute inset-0 opacity-10" />
+            
+            <div className="relative z-10 p-6">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ 
+                  scale: 1, 
+                  opacity: 1,
+                  transition: { delay: 0.2, duration: 0.3 }
+                }}
+                className="mb-4"
               >
-                {section.charAt(0).toUpperCase() + section.slice(1)}
-              </Button>
-            </motion.div>
-          ))}
-        </nav>
+                <h2 className="text-2xl font-bold text-primary glitch">
+                  {currentTheme.name}
+                </h2>
+                <p className="text-muted-foreground">
+                  {currentTheme.description}
+                </p>
+              </motion.div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeSection}
-            initial={{ opacity: 0, rotateX: -10 }}
-            animate={{ opacity: 1, rotateX: 0 }}
-            exit={{ opacity: 0, rotateX: 10 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-4"
-          >
-            {activeSection === 'colors' && (
-              <ThemeColorSystem tokens={themeTokens} />
-            )}
-            {activeSection === 'components' && (
-              <ThemeComponentPreview components={themeComponents} />
-            )}
-            {activeSection === 'info' && (
-              <div className="space-y-4">
-                <motion.div 
-                  className="space-y-2"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <p className="text-sm text-muted-foreground">
-                    Last Updated: {new Date(currentTheme.updated_at || '').toLocaleDateString()}
-                  </p>
-                  {currentTheme.description && (
-                    <p className="text-sm">{currentTheme.description}</p>
-                  )}
-                </motion.div>
-              </div>
-            )}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ 
+                  y: 0, 
+                  opacity: 1,
+                  transition: { delay: 0.3, duration: 0.4 }
+                }}
+              >
+                <ThemeInfoTabs currentTheme={currentTheme} onTabChange={setActiveTab} />
+              </motion.div>
+            </div>
           </motion.div>
-        </AnimatePresence>
-      </div>
-    </motion.div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
   );
 }
