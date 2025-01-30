@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { ProfileDisplay } from "./ProfileDisplay"
 import { ThemeDataStream } from "@/components/theme/ThemeDataStream"
 import { cn } from "@/lib/utils"
@@ -26,7 +27,8 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
           "shadow-[0_0_20px_rgba(0,240,255,0.15)]",
           "before:absolute before:inset-0",
           "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
-          "before:pointer-events-none"
+          "before:pointer-events-none",
+          "max-h-[90vh]"
         )}
       >
         <AnimatePresence mode="wait">
@@ -50,8 +52,10 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
               <X className="h-4 w-4" />
             </Button>
 
-            <ThemeDataStream className="absolute inset-0 pointer-events-none opacity-20" />
-            <ProfileDisplay />
+            <ScrollArea className="h-[calc(90vh-2rem)] w-full">
+              <ThemeDataStream className="absolute inset-0 pointer-events-none opacity-20" />
+              <ProfileDisplay />
+            </ScrollArea>
           </motion.div>
         </AnimatePresence>
       </DialogContent>
