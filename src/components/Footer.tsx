@@ -35,7 +35,7 @@ export function Footer() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="relative group transition-all duration-300 hover:bg-primary/10"
+                className="relative group mad-scientist-hover transition-all duration-300 hover:bg-primary/10"
                 onClick={() => setIsDialogOpen(true)}
               >
                 <Terminal className="w-4 h-4 mr-2 text-primary group-hover:animate-pulse relative z-10" />
