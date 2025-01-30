@@ -27,11 +27,17 @@ export const useThemeStore = create<ThemeStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       // If no specific theme ID is provided, fetch the default theme
-      const { data: themeData, error: themeError } = await supabase
+      const query = supabase
         .from('themes')
-        .select('*')
-        .eq(themeId ? 'id' : 'is_default', themeId || true)
-        .single();
+        .select('*');
+        
+      if (themeId) {
+        query.eq('id', themeId);
+      } else {
+        query.eq('is_default', true);
+      }
+
+      const { data: themeData, error: themeError } = await query.single();
 
       if (themeError) throw themeError;
 
