@@ -59,7 +59,7 @@ export default {
             transform: "translateZ(0)",
           },
           "100%": {
-            clipPath: "polygon(0 0, 100% 0, 98% 100%, 2% 100%)",
+            clipPath: "polygon(0 0, 100% 0, 95% 100%, 5% 100%)",
             transform: "translateZ(20px)",
           },
         },
