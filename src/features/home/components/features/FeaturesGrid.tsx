@@ -1,6 +1,7 @@
 import { Database, Users, Building } from "lucide-react";
 import { useState } from "react";
 import { useFrameMetrics } from "@/hooks/performance/useFrameMetrics";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const features = [
   {
@@ -56,38 +57,40 @@ export const FeaturesGrid = () => {
   };
 
   return (
-    <div className="mt-24 grid md:grid-cols-3 gap-8">
-      {features.map((feature, i) => (
-        <div
-          key={feature.title}
-          className={`p-6 rounded-lg backdrop-blur-sm animate-fade-up transition-all duration-300 ${getRandomAnimation(i)}`}
-          style={{
-            animationDelay: `${i * 100}ms`,
-            backgroundColor: hoveredStates[i] ? `${hoveredStates[i]}10` : 'rgba(0, 0, 0, 0.5)',
-            borderColor: hoveredStates[i],
-            borderWidth: hoveredStates[i] ? '1px' : '0px',
-            boxShadow: hoveredStates[i] 
-              ? `0 0 20px ${hoveredStates[i]}40` 
-              : 'none',
-          }}
-          onMouseEnter={() => handleMouseEnter(i)}
-          onMouseLeave={() => handleMouseLeave(i)}
-        >
-          <feature.icon 
-            className="h-12 w-12 mb-4 transition-colors duration-300" 
-            style={{ 
-              color: hoveredStates[i] || 'var(--primary)' 
+    <ScrollArea className="h-full w-full">
+      <div className="mt-24 grid md:grid-cols-3 gap-8">
+        {features.map((feature, i) => (
+          <div
+            key={feature.title}
+            className={`p-6 rounded-lg backdrop-blur-sm animate-fade-up transition-all duration-300 ${getRandomAnimation(i)}`}
+            style={{
+              animationDelay: `${i * 100}ms`,
+              backgroundColor: hoveredStates[i] ? `${hoveredStates[i]}10` : 'rgba(0, 0, 0, 0.5)',
+              borderColor: hoveredStates[i],
+              borderWidth: hoveredStates[i] ? '1px' : '0px',
+              boxShadow: hoveredStates[i] 
+                ? `0 0 20px ${hoveredStates[i]}40` 
+                : 'none',
             }}
-          />
-          <h3 className="text-xl font-bold mb-2 transition-colors duration-300"
+            onMouseEnter={() => handleMouseEnter(i)}
+            onMouseLeave={() => handleMouseLeave(i)}
+          >
+            <feature.icon 
+              className="h-12 w-12 mb-4 transition-colors duration-300" 
               style={{ 
-                color: hoveredStates[i] || 'white' 
-              }}>
-            {feature.title}
-          </h3>
-          <p className="text-muted-foreground">{feature.description}</p>
-        </div>
-      ))}
-    </div>
+                color: hoveredStates[i] || 'var(--primary)' 
+              }}
+            />
+            <h3 className="text-xl font-bold mb-2 transition-colors duration-300"
+                style={{ 
+                  color: hoveredStates[i] || 'white' 
+                }}>
+              {feature.title}
+            </h3>
+            <p className="text-muted-foreground">{feature.description}</p>
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
   );
 };
