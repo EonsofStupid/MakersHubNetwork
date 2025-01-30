@@ -1,5 +1,6 @@
 import { Database, Users, Building } from "lucide-react";
 import { useState } from "react";
+import { useFrameMetrics } from "@/hooks/performance/useFrameMetrics";
 
 const features = [
   {
@@ -20,6 +21,7 @@ const features = [
 ];
 
 export const FeaturesGrid = () => {
+  useFrameMetrics("FeaturesGrid");
   const [hoveredStates, setHoveredStates] = useState<{ [key: number]: string }>({});
 
   const getRandomColor = () => {
