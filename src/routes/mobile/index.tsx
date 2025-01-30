@@ -1,10 +1,10 @@
 import { Routes, Route } from "react-router-dom";
-import { MobileHomeView } from "@/features/home/MobileHomeView";
+import IndexPage from "@/pages/Index";
 
 const MobileIndex = () => {
   return (
     <Routes>
-      <Route path="/" element={<MobileHomeView />} />
+      <Route path="/" element={<IndexPage />} />
       {/* Add other mobile-specific routes here */}
     </Routes>
   );
