@@ -4,8 +4,11 @@ import { FeaturesGrid } from "./components/features/FeaturesGrid";
 import { BackgroundEffects } from "./components/background/BackgroundEffects";
 import { MainNav } from "@/components/MainNav";
 import { Footer } from "@/components/Footer";
+import { useFrameMetrics } from "@/hooks/performance/useFrameMetrics";
 
 export const HomeView = () => {
+  useFrameMetrics("HomeView");
+  
   return (
     <div className="min-h-screen relative overflow-hidden pb-[400px]">
       <Suspense fallback={<div className="fixed inset-0 bg-background" />}>

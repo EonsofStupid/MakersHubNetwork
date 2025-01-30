@@ -1,4 +1,5 @@
 import { CSSProperties, memo } from "react";
+import { useFrameMetrics } from "@/hooks/performance/useFrameMetrics";
 
 const HorizontalStreams = memo(() => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -65,6 +66,8 @@ const FloatingElements = memo(() => (
 ));
 
 export const BackgroundEffects = memo(() => {
+  useFrameMetrics("BackgroundEffects");
+  
   return (
     <div className="fixed inset-0 -z-10">
       <div className="absolute inset-0 bg-gradient-to-br from-[#0F0A2E] via-[#094B51] to-[#1A1F2C]" />

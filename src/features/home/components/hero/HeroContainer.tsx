@@ -1,7 +1,9 @@
 import { useState, useCallback } from "react";
 import { HeroContent } from "./HeroContent";
+import { useFrameMetrics } from "@/hooks/performance/useFrameMetrics";
 
 export const HeroContainer = () => {
+  useFrameMetrics("HeroContainer");
   const [isFlipped, setIsFlipped] = useState(false);
   const [isPulsing, setIsPulsing] = useState(false);
 
