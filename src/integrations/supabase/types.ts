@@ -272,6 +272,8 @@ export type Database = {
           id: string
           layout_preference: Json | null
           motion_enabled: boolean | null
+          platform_preference: string | null
+          platform_specific_settings: Json | null
           preferences: Json | null
           social_links: Json | null
           theme_preference: string | null
@@ -286,6 +288,8 @@ export type Database = {
           id: string
           layout_preference?: Json | null
           motion_enabled?: boolean | null
+          platform_preference?: string | null
+          platform_specific_settings?: Json | null
           preferences?: Json | null
           social_links?: Json | null
           theme_preference?: string | null
@@ -300,6 +304,8 @@ export type Database = {
           id?: string
           layout_preference?: Json | null
           motion_enabled?: boolean | null
+          platform_preference?: string | null
+          platform_specific_settings?: Json | null
           preferences?: Json | null
           social_links?: Json | null
           theme_preference?: string | null
