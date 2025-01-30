@@ -13,7 +13,6 @@ export const usePlatformStore = create<PlatformState>((set) => ({
 }));
 
 export const detectPlatform = (): Platform => {
-  // Basic mobile detection
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
   return isMobile ? 'mobile' : 'desktop';
 };
