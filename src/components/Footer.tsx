@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Terminal } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useThemeStore } from "@/stores/theme/store";
-import { AdaptivePopup } from "@/components/ui/adaptive-popup/AdaptivePopup";
 import { ThemeInfoPopup } from "@/components/theme/ThemeInfoPopup";
 
 export function Footer() {
