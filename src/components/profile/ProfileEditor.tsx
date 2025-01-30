@@ -29,7 +29,6 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
   const [formData, setFormData] = useState({
     display_name: initialData?.display_name || '',
     bio: initialData?.bio || '',
-    theme_preference: initialData?.theme_preference || 'default',
     motion_enabled: initialData?.motion_enabled ?? true,
     layout_preference: initialData?.layout_preference || {
       contentWidth: 'full',
@@ -49,7 +48,6 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
         .update({
           display_name: formData.display_name,
           bio: formData.bio,
-          theme_preference: formData.theme_preference,
           motion_enabled: formData.motion_enabled,
           layout_preference: formData.layout_preference,
           social_links: formData.social_links,
@@ -63,6 +61,10 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
       if (error) throw error;
 
       onSuccess(data);
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      });
     } catch (error: any) {
       console.error('Profile update error:', error);
       toast({
@@ -108,23 +110,6 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
             className="bg-background/50"
             rows={3}
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="theme_preference">Theme</Label>
-          <Select
-            value={formData.theme_preference}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, theme_preference: value }))}
-          >
-            <SelectTrigger className="bg-background/50">
-              <SelectValue placeholder="Select theme" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="default">Default</SelectItem>
-              <SelectItem value="neon">Neon</SelectItem>
-              <SelectItem value="minimal">Minimal</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="space-y-2">

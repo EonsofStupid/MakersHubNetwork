@@ -1,31 +1,30 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
-import { useThemeStore } from "@/stores/theme/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ProfileEditor } from "./ProfileEditor";
 import { ThemeDataStream } from "@/components/theme/ThemeDataStream";
-import { User, Edit2, Github, Twitter, Loader2 } from "lucide-react";
+import { User, Edit2, Github, Twitter, Loader2, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 
 export const ProfileDisplay = () => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
-  const [currentTheme, setCurrentTheme] = useState<string | null>(null);
   const user = useAuthStore((state) => state.user);
 
-  // Fetch both profile data and theme data
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProfileData = async () => {
       try {
         if (!user?.id) return;
         
-        // Fetch profile data
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -37,27 +36,10 @@ export const ProfileDisplay = () => {
           throw profileError;
         }
 
-        // If profile exists, fetch the associated theme name
-        if (profile?.theme_preference) {
-          const { data: themeData, error: themeError } = await supabase
-            .from('themes')
-            .select('name')
-            .eq('id', profile.theme_preference)
-            .maybeSingle();
-
-          if (themeError) {
-            console.error('Theme fetch error:', themeError);
-            throw themeError;
-          }
-
-          setCurrentTheme(themeData?.name || null);
-        }
-
         setProfileData(profile || {
           id: user.id,
           display_name: user.email?.split('@')[0],
           avatar_url: null,
-          theme_preference: null,
           motion_enabled: true,
           layout_preference: {
             contentWidth: 'full',
@@ -80,7 +62,7 @@ export const ProfileDisplay = () => {
       }
     };
 
-    fetchData();
+    fetchProfileData();
   }, [user?.id, toast]);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,14 +70,32 @@ export const ProfileDisplay = () => {
       const file = event.target.files?.[0];
       if (!file) return;
 
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Please upload an image file');
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('File size must be less than 5MB');
+      }
+
+      setIsUploading(true);
+      setUploadProgress(0);
+
       const fileExt = file.name.split('.').pop();
       const filePath = `${user?.id}/${crypto.randomUUID()}.${fileExt}`;
 
-      setIsLoading(true);
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 100);
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file);
+
+      clearInterval(progressInterval);
 
       if (uploadError) throw uploadError;
 
@@ -111,6 +111,7 @@ export const ProfileDisplay = () => {
       if (updateError) throw updateError;
 
       setProfileData(prev => ({ ...prev, avatar_url: publicUrl }));
+      setUploadProgress(100);
 
       toast({
         title: "Avatar updated",
@@ -123,7 +124,8 @@ export const ProfileDisplay = () => {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsUploading(false);
+      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 
@@ -191,6 +193,7 @@ export const ProfileDisplay = () => {
                     type="file"
                     accept="image/*"
                     onChange={handleAvatarUpload}
+                    disabled={isUploading}
                     className="hidden"
                   />
                   <Avatar className="w-full h-full">
@@ -202,10 +205,19 @@ export const ProfileDisplay = () => {
                       />
                     ) : (
                       <AvatarFallback>
-                        <User className="w-10 h-10 text-primary" />
+                        {isUploading ? (
+                          <Upload className="w-8 h-8 text-primary animate-pulse" />
+                        ) : (
+                          <User className="w-8 h-8 text-primary" />
+                        )}
                       </AvatarFallback>
                     )}
                   </Avatar>
+                  {uploadProgress > 0 && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-background/80 p-1">
+                      <Progress value={uploadProgress} className="h-1" />
+                    </div>
+                  )}
                 </label>
               </div>
               
@@ -247,10 +259,6 @@ export const ProfileDisplay = () => {
             transition={{ delay: 0.4 }}
             className="grid grid-cols-2 gap-4"
           >
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-muted-foreground">Theme</h4>
-              <p className="text-sm">{currentTheme || "Default"}</p>
-            </div>
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Layout</h4>
               <p className="text-sm capitalize">{profileData?.layout_preference?.contentWidth || "Default"}</p>
