@@ -1,10 +1,10 @@
 import { Routes, Route } from "react-router-dom";
-import { DesktopHomeView } from "@/features/home/DesktopHomeView";
+import IndexPage from "@/pages/Index";
 
 const DesktopIndex = () => {
   return (
     <Routes>
-      <Route path="/" element={<DesktopHomeView />} />
+      <Route path="/" element={<IndexPage />} />
       {/* Add other desktop-specific routes here */}
     </Routes>
   );
