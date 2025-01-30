@@ -1,23 +1,20 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import type { ComponentTokens } from "@/types/theme";
+import type { ThemeComponent } from "@/types/theme";
 import { Button } from "@/components/ui/button";
 
 interface ThemeComponentPreviewProps {
-  componentTokens: ComponentTokens[];
+  components: ThemeComponent[];
 }
 
-export function ThemeComponentPreview({ componentTokens }: ThemeComponentPreviewProps) {
+export function ThemeComponentPreview({ components }: ThemeComponentPreviewProps) {
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
-  
-  // Ensure componentTokens is an array
-  const safeComponentTokens = Array.isArray(componentTokens) ? componentTokens : [];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
-        {safeComponentTokens.map((component) => (
+        {components.map((component) => (
           <Button
             key={component.id}
             variant="ghost"
@@ -50,7 +47,7 @@ export function ThemeComponentPreview({ componentTokens }: ThemeComponentPreview
           >
             <pre className="text-xs overflow-x-auto">
               {JSON.stringify(
-                safeComponentTokens.find(c => c.component_name === activeComponent)?.styles,
+                components.find(c => c.component_name === activeComponent)?.styles,
                 null,
                 2
               )}

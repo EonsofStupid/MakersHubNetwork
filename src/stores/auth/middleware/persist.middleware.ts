@@ -1,4 +1,4 @@
-import { StateStorage } from "zustand/middleware";
+import { StateStorage, createJSONStorage } from "zustand/middleware";
 
 const storage: StateStorage = {
   getItem: (name: string): string | null => {
@@ -25,4 +25,4 @@ const storage: StateStorage = {
   },
 };
 
-export const authStorage = storage;
+export const authStorage = createJSONStorage(() => storage);

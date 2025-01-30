@@ -3,5 +3,9 @@ import { PersistOptions } from 'zustand/middleware';
 
 export const createPersistMiddleware = (): PersistOptions<PerformanceStore, PerformanceStore> => ({
   name: 'performance-store',
-  partialize: (state) => state,
+  partialize: (state) => ({
+    thresholds: state.thresholds,
+    metrics: state.metrics,
+    isMonitoring: state.isMonitoring
+  }),
 });
