@@ -55,7 +55,7 @@ export default {
       keyframes: {
         "morph-header": {
           "0%": {
-            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+            clipPath: "polygon(5% 0, 95% 0, 100% 100%, 0 100%)",
             transform: "translateZ(0)",
           },
           "100%": {
