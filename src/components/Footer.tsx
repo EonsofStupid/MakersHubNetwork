@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Terminal } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useThemeStore } from "@/stores/theme/store";
-import { AdaptivePopup } from "@/components/ui/adaptive-popup/AdaptivePopup";
 import { ThemeInfoPopup } from "@/components/theme/ThemeInfoPopup";
 
 export function Footer() {
@@ -12,8 +11,18 @@ export function Footer() {
   const { setTheme } = useThemeStore();
 
   useEffect(() => {
+    // Load the default theme on mount
+    const loadDefaultTheme = async () => {
+      try {
+        await setTheme("");  // Empty string will trigger fetching the default theme
+      } catch (error) {
+        console.error("Error loading default theme:", error);
+      }
+    };
+    
+    loadDefaultTheme();
     setTimeout(() => setIsLoaded(true), 500);
-  }, []);
+  }, [setTheme]);
 
   return (
     <footer
