@@ -6,6 +6,8 @@ import { ThemeLoadingState } from "./info/ThemeLoadingState";
 import { ThemeErrorState } from "./info/ThemeErrorState";
 import { ThemeInfoTabs } from "./info/ThemeInfoTabs";
 import { AdaptivePopup } from "@/components/ui/adaptive-popup/AdaptivePopup";
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface ThemeInfoPopupProps {
   onClose?: () => void;
@@ -41,6 +43,11 @@ export function ThemeInfoPopup({ onClose, open, onOpenChange }: ThemeInfoPopupPr
       className="w-[800px] max-w-[90vw]"
       contentClassName="bg-background/20 backdrop-blur-xl border border-primary/20 shadow-[0_0_15px_rgba(0,240,255,0.1)]"
     >
+      <DialogTitle className="sr-only">Theme Information: {currentTheme.name}</DialogTitle>
+      <DialogDescription className="sr-only">
+        Detailed information about the {currentTheme.name} theme, including its design tokens, components, and effects.
+      </DialogDescription>
+
       <motion.div 
         initial={{ opacity: 0, y: 20, rotateX: "15deg" }}
         animate={{ 
@@ -58,7 +65,7 @@ export function ThemeInfoPopup({ onClose, open, onOpenChange }: ThemeInfoPopupPr
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/5 rounded-lg opacity-50" />
         <ThemeDataStream className="absolute inset-0 opacity-10" />
         
-        <div className="relative z-10">
+        <div className="relative z-10 p-6">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ 
