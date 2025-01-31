@@ -1,8 +1,10 @@
-import { Routes, Route } from "react-router-dom";
-import { AuthGuard } from "@/components/AuthGuard";
-import IndexPage from "../pages/Index";
-import AdminPage from "../pages/Admin";
-import LoginPage from "../pages/Login";
+import { Routes, Route } from 'react-router-dom';
+import { AuthGuard } from '@/components/AuthGuard';
+
+// Pages
+import IndexPage from '../pages/Index';
+import AdminPage from '../pages/Admin';
+import LoginPage from '../pages/Login';
 
 export function DesktopRoutes() {
   return (
@@ -22,4 +24,4 @@ export function DesktopRoutes() {
       />
     </Routes>
   );
-}
+} 
