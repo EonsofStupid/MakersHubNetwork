@@ -7,6 +7,8 @@ import { AuthGuard } from "@/components/AuthGuard";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { DesktopLayout } from "./layouts/DesktopLayout";
+
+// Pages
 import IndexPage from "./pages/Index";
 import AdminPage from "./pages/Admin";
 import LoginPage from "./pages/Login";

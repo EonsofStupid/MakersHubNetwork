@@ -4,4 +4,4 @@ const IndexPage = () => {
   return <HomeView />;
 };
 
-export default IndexPage;
+export default IndexPage; 
