@@ -1,7 +1,7 @@
-import { useAuthStore, selectUser } from "@/stores/auth/store";
+import { useAuthStore } from "@/stores/auth/store";
 
 export default function AdminPage() {
-  const user = useAuthStore(selectUser);
+  const user = useAuthStore((state) => state.user);
 
   return (
     <div className="container mx-auto px-4 py-8">
