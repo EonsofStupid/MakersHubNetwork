@@ -1,8 +1,8 @@
-import { ReactNode } from 'react';
-import { Footer } from '@/components/Footer';
+import { ReactNode } from 'react'
+import { Footer } from '../components/Footer'
 
 interface DesktopLayoutProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export function DesktopLayout({ children }: DesktopLayoutProps) {
@@ -13,5 +13,5 @@ export function DesktopLayout({ children }: DesktopLayoutProps) {
       </main>
       <Footer />
     </div>
-  );
-}
+  )
+} 
