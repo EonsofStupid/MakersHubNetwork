@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import { Footer } from '@/components/Footer';
-import { MainNav } from '@/components/MainNav';
 
 interface DesktopLayoutProps {
   children: ReactNode;
