@@ -8,13 +8,13 @@ import { useFrameMetrics } from "@/hooks/performance/useFrameMetrics";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAnimationStore } from "@/stores/animations/store";
 
-const IndexPage = () => {
-  useFrameMetrics("IndexPage");
+const MobileIndexPage = () => {
+  useFrameMetrics("MobileIndexPage");
   const { isEnabled: areAnimationsEnabled } = useAnimationStore();
   
   return (
     <ScrollArea className="h-screen w-full">
-      <div className="min-h-screen relative pb-[400px]">
+      <div className="min-h-screen relative pb-[300px]">
         {areAnimationsEnabled && (
           <Suspense fallback={<div className="fixed inset-0 bg-background" />}>
             <BackgroundEffects />
@@ -23,12 +23,12 @@ const IndexPage = () => {
         
         <MainNav />
         
-        <div className="container px-4 py-24 mx-auto relative">
-          <Suspense fallback={<div className="h-[400px] animate-pulse bg-background/20" />}>
+        <div className="container px-2 py-16 mx-auto relative">
+          <Suspense fallback={<div className="h-[300px] animate-pulse bg-background/20" />}>
             <HeroContainer />
           </Suspense>
           
-          <Suspense fallback={<div className="h-[300px] animate-pulse bg-background/20" />}>
+          <Suspense fallback={<div className="h-[200px] animate-pulse bg-background/20" />}>
             <FeaturesGrid />
           </Suspense>
         </div>
@@ -39,4 +39,4 @@ const IndexPage = () => {
   );
 };
 
-export default IndexPage;
+export default MobileIndexPage;
