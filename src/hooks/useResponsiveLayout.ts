@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { throttle } from "lodash";
 
+type Platform = "mobile" | "desktop";
 type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 
 interface BreakpointConfig {
@@ -13,8 +14,8 @@ interface BreakpointConfig {
 }
 
 export interface ResponsiveLayout {
+  platform: Platform;
   currentBreakpoint: Breakpoint;
-  isCompact: boolean;
   containerClass: string;
 }
 
@@ -32,8 +33,8 @@ export const useResponsiveLayout = (
 ): ResponsiveLayout => {
   const breakpoints = { ...defaultBreakpoints, ...customBreakpoints };
   const [layout, setLayout] = useState<ResponsiveLayout>({
+    platform: "desktop",
     currentBreakpoint: "md",
-    isCompact: false,
     containerClass: "w-full md:w-auto",
   });
 
@@ -41,6 +42,7 @@ export const useResponsiveLayout = (
     const calculateLayout = throttle(() => {
       const width = window.innerWidth;
       let currentBreakpoint: Breakpoint = "xs";
+      let platform: Platform = width < breakpoints.md ? "mobile" : "desktop";
       
       if (width >= breakpoints["2xl"]) currentBreakpoint = "2xl";
       else if (width >= breakpoints.xl) currentBreakpoint = "xl";
@@ -59,8 +61,8 @@ export const useResponsiveLayout = (
       `.trim();
 
       setLayout({
+        platform,
         currentBreakpoint,
-        isCompact: width < breakpoints.md,
         containerClass,
       });
     }, 100);
