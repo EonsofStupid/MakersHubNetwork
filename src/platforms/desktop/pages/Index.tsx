@@ -1,7 +1,7 @@
 import { Suspense, useCallback } from "react";
-import { HeroContainer } from "@/components/hero/HeroContainer";
-import { FeaturesGrid } from "@/components/features/FeaturesGrid";
-import { BackgroundEffects } from "@/components/background/BackgroundEffects";
+import { HeroContainer } from "@/shared/components/hero/HeroContainer";
+import { FeaturesGrid } from "@/shared/components/features/FeaturesGrid";
+import { BackgroundEffects } from "@/shared/components/background/BackgroundEffects";
 import { MainNav } from "@/components/MainNav";
 import { Footer } from "@/components/Footer";
 import { useFrameMetrics } from "@/hooks/performance/useFrameMetrics";
