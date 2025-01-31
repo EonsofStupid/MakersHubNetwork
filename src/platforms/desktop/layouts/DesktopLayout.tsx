@@ -1,17 +1,20 @@
-import { ReactNode } from 'react'
-import { Footer } from '../components/Footer'
+import { ReactNode } from 'react';
+import { cn } from "@/lib/utils";
 
 interface DesktopLayoutProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function DesktopLayout({ children }: DesktopLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={cn(
+      "min-h-screen flex flex-col",
+      "bg-background text-foreground",
+      "transition-colors duration-300"
+    )}>
       <main className="flex-1">
         {children}
       </main>
-      <Footer />
     </div>
-  )
-} 
+  );
+}
