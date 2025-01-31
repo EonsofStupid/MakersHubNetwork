@@ -1,20 +1,35 @@
-import { BrowserRouter } from 'react-router-dom'
-import { ThemeProvider } from '@/providers/theme-provider'
-import { Toaster } from '@/components/ui/toaster'
-import { DesktopLayout } from './layouts/DesktopLayout'
-import { DesktopRoutes } from './routes/DesktopRoutes'
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import { ThemeProvider } from "@/providers/theme-provider";
+import { DesktopRoutes } from "./routes/DesktopRoutes";
 
-const DesktopApp = () => {
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      retry: 1,
+    },
+  },
+});
+
+export default function DesktopApp() {
   return (
-    <ThemeProvider>
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <DesktopLayout>
-          <DesktopRoutes />
-        </DesktopLayout>
-        <Toaster />
+        <ThemeProvider>
+          <TooltipProvider>
+            <AuthProvider>
+              <DesktopRoutes />
+              <Toaster />
+              <Sonner />
+            </AuthProvider>
+          </TooltipProvider>
+        </ThemeProvider>
       </BrowserRouter>
-    </ThemeProvider>
-  )
+    </QueryClientProvider>
+  );
 }
-
-export default DesktopApp
