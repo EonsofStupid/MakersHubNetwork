@@ -2,16 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthGuard } from "@/components/AuthGuard";
+import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { DesktopLayout } from "./layouts/DesktopLayout";
-
-// Pages
-import IndexPage from "./pages/Index";
-import AdminPage from "./pages/Admin";
-import LoginPage from "./pages/Login";
+import { DesktopRoutes } from "./routes/DesktopRoutes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,21 +25,7 @@ const DesktopApp = () => {
           <TooltipProvider>
             <AuthProvider>
               <DesktopLayout>
-                <Routes>
-                  {/* Public routes */}
-                  <Route path="/" element={<IndexPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  
-                  {/* Protected routes */}
-                  <Route
-                    path="/admin"
-                    element={
-                      <AuthGuard requiredRoles={["admin"]}>
-                        <AdminPage />
-                      </AuthGuard>
-                    }
-                  />
-                </Routes>
+                <DesktopRoutes />
               </DesktopLayout>
               <Toaster />
               <Sonner />
