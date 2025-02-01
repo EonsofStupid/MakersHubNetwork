@@ -6,7 +6,7 @@ import { useFrameMetrics } from "@/hooks/performance/useFrameMetrics";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAnimationStore } from "@/stores/animations/store";
 
-const IndexPage = () => {
+const DesktopIndexPage = () => {
   useFrameMetrics("DesktopIndexPage");
   const { isEnabled: areAnimationsEnabled } = useAnimationStore();
   
@@ -33,4 +33,4 @@ const IndexPage = () => {
   );
 };
 
-export default IndexPage;
+export default DesktopIndexPage;
