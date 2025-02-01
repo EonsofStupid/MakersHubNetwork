@@ -31,8 +31,12 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
           "before:pointer-events-none",
           "max-h-[90vh]"
         )}
+        aria-describedby="profile-dialog-description"
       >
         <DialogTitle className="sr-only">User Profile</DialogTitle>
+        <div id="profile-dialog-description" className="sr-only">
+          View and edit your user profile settings and preferences
+        </div>
         <AnimatePresence mode="wait">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
