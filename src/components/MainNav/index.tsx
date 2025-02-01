@@ -15,6 +15,7 @@ export function MainNav() {
     };
     window.addEventListener("scroll", handleScroll);
 
+    // Immediate load state
     requestAnimationFrame(() => {
       setIsLoaded(true);
     });

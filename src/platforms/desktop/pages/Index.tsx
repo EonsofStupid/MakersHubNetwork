@@ -2,12 +2,14 @@ import { Suspense } from "react";
 import { HeroContainer } from "@/shared/components/hero/HeroContainer";
 import { FeaturesGrid } from "@/shared/components/features/FeaturesGrid";
 import { BackgroundEffects } from "@/shared/components/background/BackgroundEffects";
+import { MainNav } from "@/components/MainNav";
+import { Footer } from "@/components/Footer";
 import { useFrameMetrics } from "@/hooks/performance/useFrameMetrics";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAnimationStore } from "@/stores/animations/store";
 
-const DesktopIndexPage = () => {
-  useFrameMetrics("DesktopIndexPage");
+const IndexPage = () => {
+  useFrameMetrics("IndexPage");
   const { isEnabled: areAnimationsEnabled } = useAnimationStore();
   
   return (
@@ -19,6 +21,8 @@ const DesktopIndexPage = () => {
           </Suspense>
         )}
         
+        <MainNav />
+        
         <div className="container px-4 py-24 mx-auto relative">
           <Suspense fallback={<div className="h-[400px] animate-pulse bg-background/20" />}>
             <HeroContainer />
@@ -28,9 +32,11 @@ const DesktopIndexPage = () => {
             <FeaturesGrid />
           </Suspense>
         </div>
+
+        <Footer />
       </div>
     </ScrollArea>
   );
 };
 
-export default DesktopIndexPage;
+export default IndexPage;
