@@ -18,6 +18,8 @@ export const HeroContent = () => {
           hover:before:border-[rgba(255,255,255,0.2)]
           p-4
           shadow-[0_0_30px_rgba(0,0,0,0.1)]
+          hover:shadow-[0_0_50px_rgba(0,240,255,0.3)]
+          transform hover:scale-105 transition-all duration-500
         `}
       >
         <span className="
@@ -32,6 +34,7 @@ export const HeroContent = () => {
           glitch
           text-shadow-[0_2px_4px_rgba(0,0,0,0.3)]
           [text-shadow:0_2px_4px_rgba(0,0,0,0.3),0_0_10px_rgba(0,240,255,0.5)]
+          animate-morph-header
         ">
           Build.Share.Brag
         </span>
@@ -47,6 +50,8 @@ export const HeroContent = () => {
         before:border before:border-[rgba(255,255,255,0.15)]
         shadow-[0_4px_6px_-1px_rgba(0,0,0,0.2)]
         [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]
+        transform hover:scale-105 transition-all duration-500
+        hover:shadow-[0_8px_16px_-2px_rgba(0,240,255,0.2)]
       ">
         Join the community of DIY enthusiasts sharing knowledge, builds, and passion for 3D printing
       </p>
@@ -64,6 +69,8 @@ export const HeroContent = () => {
             before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
             before:translate-x-[-200%] hover:before:translate-x-[200%]
             before:transition-transform before:duration-700
+            transform hover:scale-105
+            mad-scientist-hover
           "
         >
           Get Started
@@ -78,6 +85,8 @@ export const HeroContent = () => {
             shadow-[0_0_20px_rgba(255,45,110,0.3)]
             hover:shadow-[0_0_30px_rgba(255,45,110,0.5)]
             transition-all duration-300
+            transform hover:scale-105
+            mad-scientist-hover
           "
         >
           View Builds
@@ -85,4 +94,4 @@ export const HeroContent = () => {
       </div>
     </div>
   );
-};
+}
