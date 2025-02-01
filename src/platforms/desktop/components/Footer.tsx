@@ -30,9 +30,7 @@ export function Footer() {
           ? "bg-background/20 backdrop-blur-xl shadow-[0_-8px_32px_0_rgba(0,240,255,0.2)] border-t border-primary/30"
           : "bg-transparent",
         "before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-0 before:transition-opacity before:duration-1000",
-        isLoaded && "before:opacity-100",
-        "hover:shadow-[0_-12px_40px_0_rgba(0,240,255,0.3)]",
-        "group"
+        isLoaded && "before:opacity-100"
       )}
       style={{
         transform: isLoaded ? "perspective(1000px) rotateX(1deg)" : "none",
@@ -42,32 +40,32 @@ export function Footer() {
       <div className="container mx-auto px-4">
         <div className="py-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div className="transform transition-all duration-500 hover:translate-y-[-5px] hover:shadow-lg">
-              <h3 className="text-lg font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Resources</h3>
+            <div>
+              <h3 className="text-lg font-bold mb-4">Resources</h3>
               <ul className="space-y-2">
                 <li><Link to="/docs" className="text-muted-foreground hover:text-primary transition-colors">Documentation</Link></li>
                 <li><Link to="/guides" className="text-muted-foreground hover:text-primary transition-colors">Guides</Link></li>
                 <li><Link to="/tutorials" className="text-muted-foreground hover:text-primary transition-colors">Tutorials</Link></li>
               </ul>
             </div>
-            <div className="transform transition-all duration-500 hover:translate-y-[-5px] hover:shadow-lg">
-              <h3 className="text-lg font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Community</h3>
+            <div>
+              <h3 className="text-lg font-bold mb-4">Community</h3>
               <ul className="space-y-2">
                 <li><Link to="/forum" className="text-muted-foreground hover:text-primary transition-colors">Forum</Link></li>
                 <li><Link to="/discord" className="text-muted-foreground hover:text-primary transition-colors">Discord</Link></li>
                 <li><Link to="/blog" className="text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
               </ul>
             </div>
-            <div className="transform transition-all duration-500 hover:translate-y-[-5px] hover:shadow-lg">
-              <h3 className="text-lg font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Company</h3>
+            <div>
+              <h3 className="text-lg font-bold mb-4">Company</h3>
               <ul className="space-y-2">
                 <li><Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About</Link></li>
                 <li><Link to="/careers" className="text-muted-foreground hover:text-primary transition-colors">Careers</Link></li>
                 <li><Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
               </ul>
             </div>
-            <div className="transform transition-all duration-500 hover:translate-y-[-5px] hover:shadow-lg">
-              <h3 className="text-lg font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Legal</h3>
+            <div>
+              <h3 className="text-lg font-bold mb-4">Legal</h3>
               <ul className="space-y-2">
                 <li><Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy</Link></li>
                 <li><Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms</Link></li>
@@ -78,7 +76,7 @@ export function Footer() {
           
           <div className="border-t border-primary/30 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-              <p className="text-sm text-muted-foreground group-hover:text-primary/80 transition-colors">
+              <p className="text-sm text-muted-foreground">
                 © 2025 MakersImpulse. All rights reserved.
               </p>
 
@@ -105,7 +103,7 @@ export function Footer() {
                 </DialogContent>
               </Dialog>
 
-              <p className="text-sm text-muted-foreground group-hover:text-primary/80 transition-colors">
+              <p className="text-sm text-muted-foreground">
                 Designed by{" "}
                 <a
                   href="https://angrygaming.com"
