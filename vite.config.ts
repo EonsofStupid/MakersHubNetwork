@@ -17,9 +17,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    react({
-      plugins: [],
-    }),
+    react(),
     mode === "development" && componentTagger(),
     AutoImport({
       imports: [
@@ -107,10 +105,6 @@ export default defineConfig(({ mode }) => ({
         "./src/features/**/components",
         "./src/features/**/hooks",
         "./src/features/**/stores",
-        "./src/platforms/desktop/components",
-        "./src/platforms/mobile/components",
-        "./src/platforms/desktop/layouts",
-        "./src/platforms/mobile/layouts",
       ],
       dts: "./src/auto-imports.d.ts",
       eslintrc: {
@@ -137,8 +131,6 @@ export default defineConfig(({ mode }) => ({
       "@types": path.resolve(__dirname, "./src/types"),
       "@constants": path.resolve(__dirname, "./src/constants"),
       "@features": path.resolve(__dirname, "./src/features"),
-      "@desktop": path.resolve(__dirname, "./src/platforms/desktop"),
-      "@mobile": path.resolve(__dirname, "./src/platforms/mobile"),
     }
   },
   build: {

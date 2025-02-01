@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuthStore } from "@/stores/auth/store";
-import { UserMenu } from "@/shared/components/auth/UserMenu";
+import { UserMenu } from "@/components/auth/UserMenu";
 import { LoginSheet } from "./LoginSheet";
 
 export const AuthSection = () => {

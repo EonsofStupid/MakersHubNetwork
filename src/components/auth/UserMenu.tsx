@@ -1,8 +1,8 @@
-import { useState, useCallback } from "react"
+import { useState } from "react"
 import { useAuthStore } from "@/stores/auth/store"
 import { useToast } from "@/hooks/use-toast"
-import { ProfileDialog } from "@/components/profile"
-import { UserMenuSheet } from "./UserMenuSheet"
+import { ProfileDialog } from "@/components/profile/ProfileDialog"
+import { UserMenuSheet } from "@/components/UserMenuSheet"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { User } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -21,7 +21,8 @@ export const UserMenu = () => {
   const isAdmin = roles.includes("admin") || roles.includes("super_admin")
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture
 
-  const handleLogout = useCallback(async () => {
+  // Logout handler
+  const handleLogout = async () => {
     try {
       setIsLoading(true)
       await logout()
@@ -37,20 +38,13 @@ export const UserMenu = () => {
       })
     } finally {
       setIsLoading(false)
-      setSheetOpen(false)
     }
-  }, [logout, toast])
-
-  const handleButtonClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setSheetOpen(true)
-  }, [])
+  }
 
   return (
     <>
       <button
-        onClick={handleButtonClick}
+        onClick={() => setSheetOpen(true)}
         className={cn(
           "relative group",
           "h-8 w-8 rounded-full overflow-hidden",
@@ -64,14 +58,14 @@ export const UserMenu = () => {
           "group-hover:before:opacity-100"
         )}
       >
-        <Avatar className="h-full w-full">
+        <Avatar className="h-full w-full animate-morph-header">
           <AvatarImage
             src={avatarUrl}
             alt={user?.email || "User avatar"}
             className="object-cover"
           />
           <AvatarFallback className="bg-primary/5">
-            <User className="h-4 w-4 text-primary" />
+            <User className="h-4 w-4 text-primary animate-pulse" />
           </AvatarFallback>
         </Avatar>
       </button>
