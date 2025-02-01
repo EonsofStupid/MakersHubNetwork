@@ -27,9 +27,7 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
 }) => {
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <Sh
-
-eetContent
+      <SheetContent
         side="right"
         className="w-[300px] backdrop-blur-xl bg-background/80
                    border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]
