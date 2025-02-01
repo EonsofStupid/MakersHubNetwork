@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useAuthStore } from "@/stores/auth/store"
 import { useToast } from "@/hooks/use-toast"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
@@ -21,7 +21,7 @@ export const UserMenu = () => {
   const isAdmin = roles.includes("admin") || roles.includes("super_admin")
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       setIsLoading(true)
       await logout()
@@ -37,13 +37,20 @@ export const UserMenu = () => {
       })
     } finally {
       setIsLoading(false)
+      setSheetOpen(false)
     }
-  }
+  }, [logout, toast])
+
+  const handleButtonClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSheetOpen(true)
+  }, [])
 
   return (
     <>
       <button
-        onClick={() => setSheetOpen(true)}
+        onClick={handleButtonClick}
         className={cn(
           "relative group",
           "h-8 w-8 rounded-full overflow-hidden",
@@ -57,14 +64,14 @@ export const UserMenu = () => {
           "group-hover:before:opacity-100"
         )}
       >
-        <Avatar className="h-full w-full animate-morph-header">
+        <Avatar className="h-full w-full">
           <AvatarImage
             src={avatarUrl}
             alt={user?.email || "User avatar"}
             className="object-cover"
           />
           <AvatarFallback className="bg-primary/5">
-            <User className="h-4 w-4 text-primary animate-pulse" />
+            <User className="h-4 w-4 text-primary" />
           </AvatarFallback>
         </Avatar>
       </button>
