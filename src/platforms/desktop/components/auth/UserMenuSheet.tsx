@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Menu, User, Settings, LayoutDashboard, LogOut } from "lucide-react"
@@ -25,6 +25,11 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   onShowProfile,
   onLogout,
 }) => {
+  const handleItemClick = useCallback((handler: () => void) => {
+    handler()
+    onOpenChange(false)
+  }, [onOpenChange])
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent
@@ -49,11 +54,11 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
 
           <nav className="space-y-2">
             <button
-              onClick={onShowProfile}
+              onClick={() => handleItemClick(onShowProfile)}
               className="group flex w-full items-center gap-2 px-4 py-2 text-sm
                          transition-colors rounded-md hover:bg-primary/10"
             >
-              <User className="h-4 w-4 text-primary group-hover:animate-pulse" />
+              <User className="h-4 w-4 text-primary" />
               Profile
             </button>
 
@@ -63,7 +68,7 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
                          transition-colors rounded-md hover:bg-primary/10"
               onClick={() => onOpenChange(false)}
             >
-              <Settings className="h-4 w-4 text-primary group-hover:animate-pulse" />
+              <Settings className="h-4 w-4 text-primary" />
               Settings
             </Link>
 
@@ -74,18 +79,18 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
                            transition-colors rounded-md hover:bg-primary/10"
                 onClick={() => onOpenChange(false)}
               >
-                <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
+                <LayoutDashboard className="h-4 w-4 text-primary" />
                 Admin Dashboard
               </Link>
             )}
 
             <button
-              onClick={onLogout}
+              onClick={() => handleItemClick(onLogout)}
               disabled={isLoadingLogout}
               className="group flex w-full items-center gap-2 px-4 py-2 text-sm
                          transition-colors rounded-md hover:bg-red-500/10 text-red-500"
             >
-              <LogOut className="h-4 w-4 group-hover:animate-pulse" />
+              <LogOut className="h-4 w-4" />
               {isLoadingLogout ? "Logging out..." : "Log out"}
             </button>
           </nav>

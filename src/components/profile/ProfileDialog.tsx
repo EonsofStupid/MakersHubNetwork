@@ -2,11 +2,12 @@ import React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ProfileDisplay } from "./ProfileDisplay"
 import { ThemeDataStream } from "@/components/theme/ThemeDataStream"
 import { cn } from "@/lib/utils"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 interface ProfileDialogProps {
   open: boolean
@@ -31,6 +32,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
           "max-h-[90vh]"
         )}
       >
+        <DialogTitle className="sr-only">User Profile</DialogTitle>
         <AnimatePresence mode="wait">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -50,6 +52,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
               onClick={onClose}
             >
               <X className="h-4 w-4" />
+              <VisuallyHidden>Close profile dialog</VisuallyHidden>
             </Button>
 
             <ScrollArea className="h-[calc(90vh-2rem)] w-full">
