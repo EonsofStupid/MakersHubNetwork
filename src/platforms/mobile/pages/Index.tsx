@@ -3,7 +3,7 @@ import { HeroContainer } from "@/shared/components/hero/HeroContainer";
 import { FeaturesGrid } from "@/shared/components/features/FeaturesGrid";
 import { BackgroundEffects } from "@/shared/components/background/BackgroundEffects";
 import { MainNav } from "@/components/MainNav";
-import { Footer } from "@/components/Footer";
+import { Footer } from "@/platforms/mobile/components/Footer";
 import { useFrameMetrics } from "@/hooks/performance/useFrameMetrics";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAnimationStore } from "@/stores/animations/store";
