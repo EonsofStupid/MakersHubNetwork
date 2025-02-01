@@ -16,46 +16,18 @@ export function Footer() {
 
   return (
     <>
-      {/* Inline CSS for animations and trapezoid shape */}
-      <style jsx>{`
-        @keyframes morph-header {
-          0% {
-            /* Start as a full rectangle */
-            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
-          }
-          100% {
-            /* End as a trapezoid shape */
-            clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%);
-          }
-        }
-        .animate-morph-header {
-          animation: morph-header 2s ease forwards;
-        }
-        .animate-morph-header-reverse {
-          animation: morph-header 2s ease forwards reverse;
-        }
-        /* This class sets the final trapezoid shape – useful for a static state or overrides */
-        .trapezoid {
-          clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%);
-        }
-      `}</style>
-
       <footer className="fixed bottom-0 left-0 right-0 w-full z-40 perspective-1000">
         {/* SECOND LAYER / UNDER-FOOTER */}
-        <div
-          className={`pointer-events-none relative trapezoid ${
-            isLoaded ? "animate-morph-header-reverse" : ""
-          }`}
-        >
+        <div className={`pointer-events-none relative ${isLoaded ? "animate-morph-header-reverse" : ""}`}>
           {/* Background gradient with clip-path applied */}
-          <div className="absolute inset-0 trapezoid bg-gradient-to-t from-background/95 via-background/80 to-background/20 backdrop-blur-xl" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/80 to-background/20 backdrop-blur-xl" />
           {/* Optional edge (you can update the height or border to taste) */}
           <div className="relative z-0 w-full h-[80px] border-t border-primary/30" />
         </div>
 
         {/* MAIN FOOTER (TOP LAYER) */}
-        <div className={`transform-gpu trapezoid ${isLoaded ? "animate-morph-header" : ""}`}>
-          <div className="absolute inset-0 trapezoid bg-gradient-to-t from-background/95 via-background/80 to-background/20 backdrop-blur-xl" />
+        <div className={`transform-gpu ${isLoaded ? "animate-morph-header" : ""}`}>
+          <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/80 to-background/20 backdrop-blur-xl" />
           <div className="relative z-10">
             <div className="container mx-auto px-4">
               <div className="py-7">
