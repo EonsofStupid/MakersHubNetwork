@@ -96,6 +96,7 @@ export default {
       },
       animation: {
         "morph-header": "morph-header 1.5s ease-in-out forwards",
+        "morph-header-reverse": "morph-header 1.5s ease-in-out forwards reverse",
         "gradient": "gradient 15s ease infinite",
         "float": "float 6s ease-in-out infinite",
         "pulse-slow": "pulse-slow 8s linear infinite",
