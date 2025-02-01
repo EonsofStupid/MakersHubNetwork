@@ -1,5 +1,3 @@
-// src/components/auth/UserMenuSheet.tsx
-
 import React from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
@@ -18,12 +16,6 @@ interface UserMenuSheetProps {
   onLogout: () => void
 }
 
-/**
- * UserMenuSheet
- *
- * A dedicated component for the side sheet UI
- * with Profile, Settings, Admin (if isAdmin), and Logout.
- */
 export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   isOpen,
   onOpenChange,
@@ -35,17 +27,9 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
 }) => {
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative h-8 w-8 rounded-full hover:bg-primary/10 transition-colors"
-        >
-          <Menu className="h-4 w-4 text-primary" />
-        </Button>
-      </SheetTrigger>
+      <Sh
 
-      <SheetContent
+eetContent
         side="right"
         className="w-[300px] backdrop-blur-xl bg-background/80
                    border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]
@@ -66,7 +50,6 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
           </div>
 
           <nav className="space-y-2">
-            {/* Profile */}
             <button
               onClick={onShowProfile}
               className="group flex w-full items-center gap-2 px-4 py-2 text-sm
@@ -76,7 +59,6 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
               Profile
             </button>
 
-            {/* Settings Link */}
             <Link
               to="/settings"
               className="group flex items-center gap-2 px-4 py-2 text-sm
@@ -87,7 +69,6 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
               Settings
             </Link>
 
-            {/* Admin Dashboard Link (if isAdmin) */}
             {isAdmin && (
               <Link
                 to="/admin"
@@ -100,7 +81,6 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
               </Link>
             )}
 
-            {/* Logout */}
             <button
               onClick={onLogout}
               disabled={isLoadingLogout}

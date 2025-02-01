@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useAuthStore } from "@/stores/auth/store"
 import { useToast } from "@/hooks/use-toast"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
-import { UserMenuSheet } from "@/components/UserMenuSheet"
+import { UserMenuSheet } from "./UserMenuSheet"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { User } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -21,7 +21,6 @@ export const UserMenu = () => {
   const isAdmin = roles.includes("admin") || roles.includes("super_admin")
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture
 
-  // Logout handler
   const handleLogout = async () => {
     try {
       setIsLoading(true)
