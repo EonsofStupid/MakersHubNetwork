@@ -52,6 +52,12 @@ export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
                 divider: 'auth-divider',
                 anchor: 'auth-anchor text-primary hover:text-primary/80',
               },
+              style: {
+                button: {
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                },
+              },
             }}
             theme="dark"
             providers={["github", "google"]}

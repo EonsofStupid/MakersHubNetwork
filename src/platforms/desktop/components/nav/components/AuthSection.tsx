@@ -7,9 +7,11 @@ export const AuthSection = () => {
   const status = useAuthStore((state) => state.status);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
+  const isAuthenticated = status === "authenticated";
+
   return (
     <div className="flex items-center gap-4">
-      {status === "authenticated" ? (
+      {isAuthenticated ? (
         <UserMenu />
       ) : (
         <LoginSheet 

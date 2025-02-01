@@ -19,9 +19,14 @@ export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
       </SheetTrigger>
       <SheetContent 
         side="right" 
-        className="w-[400px] backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu"
+        className="w-[400px] backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5 before:pointer-events-none"
+        style={{
+          clipPath: "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
+          transform: "translateX(0) skew(-10deg)",
+          transformOrigin: "100% 50%",
+        }}
       >
-        <div className="pt-6">
+        <div className="transform skew-[10deg] origin-top-right">
           <h2 className="text-2xl font-heading text-primary mb-6">Welcome Back</h2>
           <Auth
             supabaseClient={supabase}
@@ -51,6 +56,12 @@ export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
                 input: 'auth-input',
                 divider: 'auth-divider',
                 anchor: 'auth-anchor text-primary hover:text-primary/80',
+              },
+              style: {
+                button: {
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                },
               },
             }}
             theme="dark"
