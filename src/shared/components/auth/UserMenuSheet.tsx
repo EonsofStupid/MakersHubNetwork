@@ -1,10 +1,7 @@
 import React, { useCallback } from "react"
 import { Link } from "react-router-dom"
-import { motion } from "framer-motion"
-import { Menu, User, Settings, LayoutDashboard, LogOut } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { User, Settings, LayoutDashboard, LogOut } from "lucide-react"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
 
 interface UserMenuSheetProps {
   isOpen: boolean
@@ -32,20 +29,16 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="w-[300px] backdrop-blur-xl bg-background/80
-                   border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]
-                   transform-gpu before:content-[''] before:absolute before:inset-0
-                   before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5
-                   before:pointer-events-none"
+      <SheetContent 
+        side="right" 
+        className="w-[400px] backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu"
         style={{
           clipPath: "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
           transform: "translateX(0) skew(-10deg)",
           transformOrigin: "100% 50%",
         }}
       >
-        <div className="transform skew-x-[10deg] origin-top-right space-y-4 pt-6">
+        <div className="transform skew-[10deg] origin-top-right space-y-4 pt-6">
           <div className="px-4">
             <h2 className="text-lg font-heading font-bold text-primary">
               {userEmail || "My Account"}
