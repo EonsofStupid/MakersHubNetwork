@@ -18,10 +18,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react({
-      plugins: [
-        ['@swc/plugin-emotion', {}],
-      ],
-      swcrc: true,
+      plugins: [],
     }),
     mode === "development" && componentTagger(),
     AutoImport({
