@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { Footer } from '../components/Footer';
+import { MainNav } from '@/components/MainNav';
 
 interface DesktopLayoutProps {
   children: ReactNode;
@@ -8,6 +9,7 @@ interface DesktopLayoutProps {
 export function DesktopLayout({ children }: DesktopLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col">
+      <MainNav />
       <main className="flex-1">
         {children}
       </main>
