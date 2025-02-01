@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useAuthStore } from "@/stores/auth/store"
 import { useToast } from "@/hooks/use-toast"
-import { ProfileDialog } from "@/components/profile/ProfileDialog"
+import { ProfileDialog } from "@/components/profile"
 import { UserMenuSheet } from "./UserMenuSheet"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { User } from "lucide-react"
