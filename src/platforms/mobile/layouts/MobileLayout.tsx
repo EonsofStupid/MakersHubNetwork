@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import { MainNav } from '@/components/MainNav';
 import { Footer } from '../components/Footer';
+import { MainNav } from '@/components/MainNav';
 
 interface MobileLayoutProps {
   children: ReactNode;
