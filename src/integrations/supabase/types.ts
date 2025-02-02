@@ -10,57 +10,39 @@ export type Database = {
   public: {
     Tables: {
       components: {
-      components: {
         Row: {
-          category: string
           category: string
           created_at: string | null
           description: string | null
           id: string
           image_url: string | null
-          image_url: string | null
           name: string
-          price: number | null
-          specifications: Json | null
-          trending: boolean | null
           price: number | null
           specifications: Json | null
           trending: boolean | null
           updated_at: string | null
           value_rating: number | null
-          value_rating: number | null
         }
         Insert: {
-          category: string
           category: string
           created_at?: string | null
           description?: string | null
           id?: string
-          image_url?: string | null
           image_url?: string | null
           name: string
           price?: number | null
           specifications?: Json | null
           trending?: boolean | null
-          price?: number | null
-          specifications?: Json | null
-          trending?: boolean | null
           updated_at?: string | null
-          value_rating?: number | null
           value_rating?: number | null
         }
         Update: {
-          category?: string
           category?: string
           created_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
-          image_url?: string | null
           name?: string
-          price?: number | null
-          specifications?: Json | null
-          trending?: boolean | null
           price?: number | null
           specifications?: Json | null
           trending?: boolean | null
@@ -69,17 +51,229 @@ export type Database = {
         }
         Relationships: []
       }
+      manufacturers: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      part_reviews: {
+        Row: {
+          cons: string[] | null
+          content: string | null
+          created_at: string
+          helpful_votes: number | null
+          id: string
+          part_id: string | null
+          pros: string[] | null
+          rating: number | null
+          title: string | null
+          updated_at: string
+          user_id: string | null
+          verified_purchase: boolean | null
+        }
+        Insert: {
+          cons?: string[] | null
+          content?: string | null
+          created_at?: string
+          helpful_votes?: number | null
+          id?: string
+          part_id?: string | null
+          pros?: string[] | null
+          rating?: number | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          verified_purchase?: boolean | null
+        }
+        Update: {
+          cons?: string[] | null
+          content?: string | null
+          created_at?: string
+          helpful_votes?: number | null
+          id?: string
+          part_id?: string | null
+          pros?: string[] | null
+          rating?: number | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          verified_purchase?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_reviews_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "printer_parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      printer_part_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_part_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "printer_part_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      printer_parts: {
+        Row: {
+          category_id: string | null
+          community_score: number | null
+          compatibility: Json | null
+          cons: string[] | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          dimensions: Json | null
+          id: string
+          images: string[] | null
+          manufacturer_id: string | null
+          model_number: string | null
+          name: string
+          price_range: Json | null
+          pros: string[] | null
+          review_count: number | null
+          slug: string
+          specifications: Json | null
+          status: Database["public"]["Enums"]["part_status"]
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          community_score?: number | null
+          compatibility?: Json | null
+          cons?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          dimensions?: Json | null
+          id?: string
+          images?: string[] | null
+          manufacturer_id?: string | null
+          model_number?: string | null
+          name: string
+          price_range?: Json | null
+          pros?: string[] | null
+          review_count?: number | null
+          slug: string
+          specifications?: Json | null
+          status?: Database["public"]["Enums"]["part_status"]
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          community_score?: number | null
+          compatibility?: Json | null
+          cons?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          dimensions?: Json | null
+          id?: string
+          images?: string[] | null
+          manufacturer_id?: string | null
+          model_number?: string | null
+          name?: string
+          price_range?: Json | null
+          pros?: string[] | null
+          review_count?: number | null
+          slug?: string
+          specifications?: Json | null
+          status?: Database["public"]["Enums"]["part_status"]
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_parts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "printer_part_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printer_parts_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           bio: string | null
           created_at: string
           custom_styles: Json | null
-          custom_styles: Json | null
           display_name: string | null
           id: string
           layout_preference: Json | null
           motion_enabled: boolean | null
+          platform_preference: string | null
+          platform_specific_settings: Json | null
           preferences: Json | null
           social_links: Json | null
           theme_preference: string | null
@@ -90,11 +284,12 @@ export type Database = {
           bio?: string | null
           created_at?: string
           custom_styles?: Json | null
-          custom_styles?: Json | null
           display_name?: string | null
           id: string
           layout_preference?: Json | null
           motion_enabled?: boolean | null
+          platform_preference?: string | null
+          platform_specific_settings?: Json | null
           preferences?: Json | null
           social_links?: Json | null
           theme_preference?: string | null
@@ -105,126 +300,40 @@ export type Database = {
           bio?: string | null
           created_at?: string
           custom_styles?: Json | null
-          custom_styles?: Json | null
           display_name?: string | null
           id?: string
           layout_preference?: Json | null
           motion_enabled?: boolean | null
+          platform_preference?: string | null
+          platform_specific_settings?: Json | null
           preferences?: Json | null
           social_links?: Json | null
           theme_preference?: string | null
           updated_at?: string
         }
         Relationships: []
-        Relationships: []
       }
-      role_permissions: {
       role_permissions: {
         Row: {
           action: string
           created_at: string
-          action: string
-          created_at: string
           id: string
-          role: Database["public"]["Enums"]["user_role"]
-          subject: string
           role: Database["public"]["Enums"]["user_role"]
           subject: string
         }
         Insert: {
           action: string
           created_at?: string
-          action: string
-          created_at?: string
           id?: string
-          role: Database["public"]["Enums"]["user_role"]
-          subject: string
           role: Database["public"]["Enums"]["user_role"]
           subject: string
         }
         Update: {
-          action?: string
-          created_at?: string
           action?: string
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
           subject?: string
-        }
-        Relationships: []
-      }
-      sensors: {
-        Row: {
-          accuracy: string | null
-          average_price: number | null
-          average_rating: number | null
-          connector_type: string | null
-          cons: string[] | null
-          created_at: string | null
-          dimensions: string | null
-          english_reviews_count: number | null
-          firmware_compatibility: string[] | null
-          has_self_test: boolean | null
-          id: string
-          image_url: string | null
-          includes_alarm: boolean | null
-          mounting_type: string | null
-          printer_models: string[] | null
-          probe_material: string | null
-          pros: string[] | null
-          site_rating: number | null
-          summary: string | null
-          type: string
-          updated_at: string | null
-          weight: string | null
-        }
-        Insert: {
-          accuracy?: string | null
-          average_price?: number | null
-          average_rating?: number | null
-          connector_type?: string | null
-          cons?: string[] | null
-          created_at?: string | null
-          dimensions?: string | null
-          english_reviews_count?: number | null
-          firmware_compatibility?: string[] | null
-          has_self_test?: boolean | null
-          id?: string
-          image_url?: string | null
-          includes_alarm?: boolean | null
-          mounting_type?: string | null
-          printer_models?: string[] | null
-          probe_material?: string | null
-          pros?: string[] | null
-          site_rating?: number | null
-          summary?: string | null
-          type: string
-          updated_at?: string | null
-          weight?: string | null
-        }
-        Update: {
-          accuracy?: string | null
-          average_price?: number | null
-          average_rating?: number | null
-          connector_type?: string | null
-          cons?: string[] | null
-          created_at?: string | null
-          dimensions?: string | null
-          english_reviews_count?: number | null
-          firmware_compatibility?: string[] | null
-          has_self_test?: boolean | null
-          id?: string
-          image_url?: string | null
-          includes_alarm?: boolean | null
-          mounting_type?: string | null
-          printer_models?: string[] | null
-          probe_material?: string | null
-          pros?: string[] | null
-          site_rating?: number | null
-          summary?: string | null
-          type?: string
-          updated_at?: string | null
-          weight?: string | null
         }
         Relationships: []
       }
@@ -261,7 +370,6 @@ export type Database = {
             foreignKeyName: "theme_components_theme_id_fkey"
             columns: ["theme_id"]
             isOneToOne: false
-            referencedRelation: "themes"
             referencedRelation: "themes"
             referencedColumns: ["id"]
           },
@@ -306,7 +414,6 @@ export type Database = {
             foreignKeyName: "theme_tokens_theme_id_fkey"
             columns: ["theme_id"]
             isOneToOne: false
-            referencedRelation: "themes"
             referencedRelation: "themes"
             referencedColumns: ["id"]
           },
@@ -355,28 +462,20 @@ export type Database = {
           id: string
           theme_id: string | null
           version: number
-          theme_id: string | null
-          version: number
         }
         Insert: {
-          changes: Json
           changes: Json
           created_at?: string | null
           created_by?: string | null
           id?: string
-          theme_id?: string | null
-          version: number
           theme_id?: string | null
           version: number
         }
         Update: {
           changes?: Json
-          changes?: Json
           created_at?: string | null
           created_by?: string | null
           id?: string
-          theme_id?: string | null
-          version?: number
           theme_id?: string | null
           version?: number
         }
@@ -384,22 +483,14 @@ export type Database = {
           {
             foreignKeyName: "theme_versions_theme_id_fkey"
             columns: ["theme_id"]
-            foreignKeyName: "theme_versions_theme_id_fkey"
-            columns: ["theme_id"]
             isOneToOne: false
-            referencedRelation: "themes"
             referencedRelation: "themes"
             referencedColumns: ["id"]
           },
         ]
       }
       themes: {
-      themes: {
         Row: {
-          cache_key: string | null
-          cached_styles: Json | null
-          component_tokens: Json | null
-          composition_rules: Json | null
           cache_key: string | null
           cached_styles: Json | null
           component_tokens: Json | null
@@ -408,14 +499,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           design_tokens: Json | null
-          description: string | null
-          design_tokens: Json | null
           id: string
-          is_default: boolean | null
-          name: string
-          parent_theme_id: string | null
-          published_at: string | null
-          status: Database["public"]["Enums"]["theme_status"] | null
           is_default: boolean | null
           name: string
           parent_theme_id: string | null
@@ -423,13 +507,8 @@ export type Database = {
           status: Database["public"]["Enums"]["theme_status"] | null
           updated_at: string | null
           version: number | null
-          version: number | null
         }
         Insert: {
-          cache_key?: string | null
-          cached_styles?: Json | null
-          component_tokens?: Json | null
-          composition_rules?: Json | null
           cache_key?: string | null
           cached_styles?: Json | null
           component_tokens?: Json | null
@@ -438,21 +517,13 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           design_tokens?: Json | null
-          description?: string | null
-          design_tokens?: Json | null
           id?: string
           is_default?: boolean | null
           name: string
           parent_theme_id?: string | null
           published_at?: string | null
           status?: Database["public"]["Enums"]["theme_status"] | null
-          is_default?: boolean | null
-          name: string
-          parent_theme_id?: string | null
-          published_at?: string | null
-          status?: Database["public"]["Enums"]["theme_status"] | null
           updated_at?: string | null
-          version?: number | null
           version?: number | null
         }
         Update: {
@@ -460,14 +531,8 @@ export type Database = {
           cached_styles?: Json | null
           component_tokens?: Json | null
           composition_rules?: Json | null
-          cache_key?: string | null
-          cached_styles?: Json | null
-          component_tokens?: Json | null
-          composition_rules?: Json | null
           created_at?: string | null
           created_by?: string | null
-          description?: string | null
-          design_tokens?: Json | null
           description?: string | null
           design_tokens?: Json | null
           id?: string
@@ -476,55 +541,38 @@ export type Database = {
           parent_theme_id?: string | null
           published_at?: string | null
           status?: Database["public"]["Enums"]["theme_status"] | null
-          is_default?: boolean | null
-          name?: string
-          parent_theme_id?: string | null
-          published_at?: string | null
-          status?: Database["public"]["Enums"]["theme_status"] | null
           updated_at?: string | null
-          version?: number | null
           version?: number | null
         }
         Relationships: [
           {
             foreignKeyName: "themes_parent_theme_id_fkey"
             columns: ["parent_theme_id"]
-            foreignKeyName: "themes_parent_theme_id_fkey"
-            columns: ["parent_theme_id"]
             isOneToOne: false
-            referencedRelation: "themes"
             referencedRelation: "themes"
             referencedColumns: ["id"]
           },
         ]
       }
       user_roles: {
-      user_roles: {
         Row: {
           created_at: string
-          created_at: string
           id: string
-          role: Database["public"]["Enums"]["user_role"]
           role: Database["public"]["Enums"]["user_role"]
           user_id: string | null
         }
         Insert: {
           created_at?: string
-          created_at?: string
           id?: string
-          role: Database["public"]["Enums"]["user_role"]
           role: Database["public"]["Enums"]["user_role"]
           user_id?: string | null
         }
         Update: {
           created_at?: string
-          created_at?: string
           id?: string
-          role?: Database["public"]["Enums"]["user_role"]
           role?: Database["public"]["Enums"]["user_role"]
           user_id?: string | null
         }
-        Relationships: []
         Relationships: []
       }
     }
@@ -533,40 +581,17 @@ export type Database = {
     }
     Functions: {
       check_is_super_admin: {
-      check_is_super_admin: {
         Args: {
           user_id: string
         }
         Returns: boolean
       }
       ensure_theme_token_structure: {
-      ensure_theme_token_structure: {
         Args: {
-          data: Json
           data: Json
         }
         Returns: Json
       }
-      get_theme_inheritance_chain: {
-        Args: {
-          theme_id: string
-        }
-        Returns: {
-          id: string
-          level: number
-        }[]
-      }
-      jsonb_deep_merge: {
-        Args: {
-          a: Json
-          b: Json
-        }
-        Returns: Json
-      }
-      merge_theme_styles: {
-        Args: {
-          base_styles: Json
-          override_styles: Json
       get_theme_inheritance_chain: {
         Args: {
           theme_id: string
@@ -592,6 +617,7 @@ export type Database = {
       }
     }
     Enums: {
+      part_status: "draft" | "published" | "archived"
       theme_status: "draft" | "published" | "archived"
       user_role: "admin" | "super_admin" | "maker" | "subscriber"
     }
