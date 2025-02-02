@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeState } from "./types";
-import { Theme, ThemeComponent } from "@/types/theme";
+import { Theme, ComponentTokens } from "@/types/theme";
+import { Json } from "@/integrations/supabase/types";
 
 export const useThemeStore = create<ThemeState>((set) => ({
   currentTheme: null,
@@ -35,8 +36,8 @@ export const useThemeStore = create<ThemeState>((set) => ({
         : {};
       
       const componentTokens = rawTheme.component_tokens && typeof rawTheme.component_tokens === 'object' && !Array.isArray(rawTheme.component_tokens)
-        ? rawTheme.component_tokens
-        : {};
+        ? rawTheme.component_tokens as ComponentTokens[]
+        : [];
 
       const theme: Theme = {
         ...rawTheme,
@@ -64,14 +65,15 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
       if (error) throw error;
 
-      const components = data.map(comp => ({
+      const components: ComponentTokens[] = data.map(comp => ({
         id: comp.id,
-        theme_id: comp.theme_id,
         component_name: comp.component_name,
+        styles: comp.styles as Record<string, any>,
+        description: '',
+        theme_id: comp.theme_id,
         context: comp.context,
         created_at: comp.created_at,
-        updated_at: comp.updated_at,
-        styles: comp.styles || {}
+        updated_at: comp.updated_at
       }));
 
       set({ adminComponents: components, isLoading: false });

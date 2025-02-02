@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { supabase } from '@/integrations/supabase/client';
-import { Theme, ThemeToken, ThemeComponent } from '@/types/theme';
-import { useToast } from '@/components/ui/use-toast';
+import { Theme, ComponentTokens } from '@/types/theme';
+import { useToast } from '@/hooks/use-toast';
 import { Json } from '@/integrations/supabase/types';
 
 export function useThemeManager() {
@@ -126,7 +126,7 @@ export function useThemeManager() {
     }
   };
 
-  const updateThemeComponents = async (themeId: string, components: Omit<ThemeComponent, 'id' | 'theme_id'>[]) => {
+  const updateThemeComponents = async (themeId: string, components: Omit<ComponentTokens, 'id' | 'theme_id'>[]) => {
     try {
       setIsUpdating(true);
       const { error } = await supabase
@@ -135,6 +135,8 @@ export function useThemeManager() {
           components.map(component => ({
             ...component,
             theme_id: themeId,
+            component_name: component.component_name,
+            styles: component.styles as Json
           }))
         );
 
