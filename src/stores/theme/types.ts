@@ -1,10 +1,10 @@
-import { Theme, ThemeToken, ThemeComponent } from "@/types/theme";
+import { Theme, ThemeToken, ComponentTokens } from "@/types/theme";
 
 export interface ThemeState {
   currentTheme: Theme | null;
   themeTokens: ThemeToken[];
-  themeComponents: ThemeComponent[];
-  adminComponents: ThemeComponent[];
+  themeComponents: ComponentTokens[];
+  adminComponents: ComponentTokens[];
   isLoading: boolean;
   error: Error | null;
   setTheme: (themeId: string) => Promise<void>;
