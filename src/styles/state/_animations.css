@@ -1,0 +1,22 @@
+@layer utilities {
+  /* Animation states using CUBE CSS utilities */
+  .is-loading {
+    @apply animate-pulse;
+  }
+
+  .is-active {
+    @apply scale-105 ring-2 ring-primary;
+  }
+
+  .is-disabled {
+    @apply opacity-50 pointer-events-none;
+  }
+
+  .is-hidden {
+    @apply hidden;
+  }
+
+  .is-visible {
+    @apply block;
+  }
+}

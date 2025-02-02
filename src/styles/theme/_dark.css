@@ -1,0 +1,11 @@
+@layer base {
+  .dark {
+    --bg-primary: #151A24;
+    --bg-secondary: #1F2937;
+    --bg-tertiary: #374151;
+    
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: rgba(0, 0, 0, 0.2);
+  }
+}

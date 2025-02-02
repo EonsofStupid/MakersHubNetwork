@@ -1,0 +1,26 @@
+@layer components {
+  /* BEM naming convention for card component */
+  .card {
+    @apply rounded-xl overflow-hidden;
+  }
+
+  .card--glass {
+    @apply bg-black/20 backdrop-blur-xl border border-white/10;
+  }
+
+  .card--hover {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+
+  .card__header {
+    @apply p-4 border-b border-white/10;
+  }
+
+  .card__content {
+    @apply p-4;
+  }
+
+  .card__footer {
+    @apply p-4 border-t border-white/10;
+  }
+}

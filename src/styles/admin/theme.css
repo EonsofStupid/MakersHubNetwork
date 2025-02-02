@@ -1,0 +1,98 @@
+/* Admin Theme Core */
+:root {
+  --admin-bg: linear-gradient(135deg, rgba(21,26,36,0.95), rgba(32,37,47,0.95));
+  --admin-glass: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+  --admin-glass-hover: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+  --admin-border: rgba(65, 240, 219, 0.2);
+  --admin-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Base Admin Layout */
+.admin-layout {
+  @apply min-h-screen relative overflow-hidden;
+  background: var(--admin-bg);
+}
+
+/* Unified Glass Effects */
+.admin-glass {
+  @apply relative overflow-hidden backdrop-blur-xl;
+  background: var(--admin-glass);
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow);
+}
+
+.admin-glass:hover {
+  background: var(--admin-glass-hover);
+}
+
+/* Admin Navigation */
+.admin-nav {
+  @apply fixed top-0 right-0 z-[60] h-[3.7rem] backdrop-blur-xl;
+  background: var(--admin-glass);
+  border-bottom: 1px solid var(--admin-border);
+  left: var(--sidebar-width, 16rem);
+}
+
+/* Admin Sidebar */
+.admin-sidebar {
+  @apply fixed left-0 top-0 bottom-0 z-50 overflow-hidden transition-all duration-300;
+  width: var(--sidebar-width, 16rem);
+  background: linear-gradient(135deg, 
+    rgba(77, 0, 179, 0.95), 
+    rgba(114, 34, 140, 0.95)
+  );
+}
+
+/* Admin Cards */
+.admin-card {
+  @apply relative p-6 rounded-xl overflow-hidden;
+  background: linear-gradient(135deg, 
+    rgba(65,240,219,0.1) 0%, 
+    rgba(255,10,190,0.1) 50%,
+    rgba(128,0,255,0.1) 100%
+  );
+}
+
+/* Unified Animation System */
+.admin-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.admin-hover-scale {
+  @apply hover:scale-105 transition-transform duration-300;
+}
+
+/* Admin Menu Items */
+.admin-menu-item {
+  @apply flex items-center gap-2 px-4 py-3 text-white/70 
+         hover:text-[#41f0db] rounded-lg transition-all duration-300 
+         relative cursor-pointer;
+}
+
+.admin-menu-item::before {
+  content: '';
+  @apply absolute inset-0 rounded-lg opacity-0 transition-opacity duration-300;
+  background: linear-gradient(135deg, 
+    rgba(65, 240, 219, 0.1),
+    rgba(255, 10, 190, 0.1)
+  );
+}
+
+.admin-menu-item:hover::before {
+  @apply opacity-100;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .admin-nav {
+    left: 0;
+  }
+  
+  .admin-sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+}
