@@ -31,18 +31,26 @@ export const useThemeStore = create<ThemeState>((set) => ({
       console.log("Successfully fetched theme:", rawTheme);
 
       // Type guard to ensure we have objects
-      const designTokens = rawTheme.design_tokens && typeof rawTheme.design_tokens === 'object' && !Array.isArray(rawTheme.design_tokens) 
-        ? rawTheme.design_tokens
+      const designTokens = rawTheme.design_tokens && typeof rawTheme.design_tokens === 'object' 
+        ? rawTheme.design_tokens as Record<string, any>
         : {};
       
-      const componentTokens = rawTheme.component_tokens && typeof rawTheme.component_tokens === 'object' && !Array.isArray(rawTheme.component_tokens)
+      // Convert component tokens to the correct type
+      const componentTokens = rawTheme.component_tokens && Array.isArray(rawTheme.component_tokens)
         ? rawTheme.component_tokens as ComponentTokens[]
         : [];
+
+      // Ensure composition rules is a Record
+      const compositionRules = rawTheme.composition_rules && typeof rawTheme.composition_rules === 'object'
+        ? rawTheme.composition_rules as Record<string, any>
+        : {};
 
       const theme: Theme = {
         ...rawTheme,
         design_tokens: designTokens,
         component_tokens: componentTokens,
+        composition_rules: compositionRules,
+        cached_styles: rawTheme.cached_styles as Record<string, any> || {},
       };
 
       set({ currentTheme: theme, isLoading: false });
