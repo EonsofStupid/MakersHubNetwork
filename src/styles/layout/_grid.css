@@ -1,0 +1,26 @@
+@layer layout {
+  .l-container {
+    @apply container mx-auto px-4;
+  }
+
+  .l-grid {
+    @apply grid gap-4;
+  }
+
+  .l-flex {
+    @apply flex items-center;
+  }
+
+  /* Grid system using CUBE CSS composition */
+  .l-grid--2col { grid-template-columns: repeat(2, 1fr); }
+  .l-grid--3col { grid-template-columns: repeat(3, 1fr); }
+  .l-grid--4col { grid-template-columns: repeat(4, 1fr); }
+
+  @media (max-width: 768px) {
+    .l-grid--2col,
+    .l-grid--3col,
+    .l-grid--4col {
+      grid-template-columns: 1fr;
+    }
+  }
+}

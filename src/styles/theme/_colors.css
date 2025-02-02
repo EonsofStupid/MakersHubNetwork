@@ -1,0 +1,19 @@
+@layer base {
+  :root {
+    /* Brand Colors */
+    --primary: #41f0db;
+    --secondary: #ff0abe;
+    --accent: #8000ff;
+
+    /* Neon Effects */
+    --neon-cyan: #41f0db;
+    --neon-pink: #ff0abe;
+    --neon-purple: #8000ff;
+
+    /* Text Colors */
+    --text-primary: #FFFFFF;
+    --text-secondary: #A1A1AA;
+    --text-link: #3B82F6;
+    --text-heading: #FFFFFF;
+  }
+}

@@ -1,0 +1,56 @@
+/* Core Animations */
+@keyframes adminFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes adminScaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes adminSlideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes adminGlow {
+  0%, 100% { filter: brightness(100%); }
+  50% { filter: brightness(120%); }
+}
+
+/* Animation Classes */
+.admin-fade-in {
+  animation: adminFadeIn 0.3s ease-out;
+}
+
+.admin-scale-in {
+  animation: adminScaleIn 0.2s ease-out;
+}
+
+.admin-slide-in {
+  animation: adminSlideIn 0.3s ease-out;
+}
+
+.admin-glow {
+  animation: adminGlow 2s ease-in-out infinite;
+}
+
+/* Hover Effects */
+.admin-hover-glow {
+  @apply transition-all duration-300;
+}
+
+.admin-hover-glow:hover {
+  filter: drop-shadow(0 0 8px var(--admin-cyan));
+}
+
+/* Loading States */
+@keyframes adminPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.admin-loading {
+  animation: adminPulse 1.5s ease-in-out infinite;
+}
