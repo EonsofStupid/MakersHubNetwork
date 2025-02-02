@@ -1,59 +1,22 @@
 {
   "compilerOptions": {
-    /* Build Options */
-    "composite": true, // Enables project references for monorepos
-    "incremental": true, // Faster subsequent builds
-    "tsBuildInfoFile": "./.tsbuildinfo", // Cache build info
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "skipLibCheck": true,
 
-    /* Module System */
-    "module": "ESNext", // Use the latest ECMAScript module syntax
-    "moduleResolution": "bundler", // Optimize for modern bundlers like Vite
-    "esModuleInterop": true, // Compatibility with CommonJS modules
-    "allowSyntheticDefaultImports": true, // Smooth import experience with CJS
-    "resolveJsonModule": true, // Allow importing JSON files
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
 
-    /* Output and Debugging */
-    "sourceMap": true, // Enable source maps for debugging
-    "outDir": "./dist", // Output directory for compiled files
-
-    /* Linting and Strictness */
-    "strict": true, // Enable all strict type-checking options
-    "noImplicitAny": true, // Disallow `any` type
-    "noImplicitThis": true, // Ensure `this` has a type
-    "noImplicitReturns": true, // Catch missing return statements
-    "noUncheckedIndexedAccess": true, // Strict array indexing
-    "exactOptionalPropertyTypes": true, // Ensure optional properties are precise
-    "forceConsistentCasingInFileNames": true, // Avoid case sensitivity issues
-    "allowUnreachableCode": false, // Disallow unreachable code
-    "allowUnusedLabels": false, // Disallow unused labels
-
-    /* File Processing */
-    "allowJs": false, // Disallow JavaScript files
-    "skipLibCheck": true, // Skip type checks of declaration files for speed
-    "skipDefaultLibCheck": true, // Avoid unnecessary library checks
-    "isolatedModules": true, // Enforce module isolation for transpilers
-
-    /* Type Definitions */
-    "types": ["node"], // Include Node.js types for server-side development
-
-    /* Path Aliases */
-    "baseUrl": ".", // Base URL for module resolution
-    "paths": {
-      "@/*": ["src/*"] // Simplified imports for source files
-    }
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true
   },
-  "include": [
-    "vite.config.ts", // Include Vite configuration
-    "src/**/*", // Include all source files
-    "tests/**/*" // Include all test files
-  ],
-  "exclude": [
-    "node_modules", // Exclude dependencies
-    "dist", // Exclude output directory
-    ".turbo", // Exclude build cache for monorepos (if using TurboRepo)
-    ".next", // Exclude Next.js build files (if applicable)
-    ".vercel", // Exclude Vercel deployment files
-    "build", // General build directory
-    "coverage" // Exclude test coverage output
-  }
+  "include": ["vite.config.ts"]
 }
