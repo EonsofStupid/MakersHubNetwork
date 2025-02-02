@@ -1,50 +1,40 @@
-import { BrowserRouter } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { RootLayout } from "@/components/layouts/RootLayout";
-import { AppRoutes } from "@/routes";
-import { ErrorBoundary } from "@/components/shared/error-handling/ErrorBoundary";
-import { ThemeProvider } from "@/components/theme/ThemeContext";
-import { AdminSidebarProvider } from "@/components/admin/dashboard/sidebar/AdminSidebarContext";
-import { Toaster } from "sonner";
-import { QueryProvider } from "@/components/auth/providers/QueryProvider";
-import { AuthProvider } from "@/components/auth/providers/AuthProvider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthGuard } from "@/components/AuthGuard";
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import IndexPage from "./pages/Index";
+import AdminPage from "./pages/Admin";
+import LoginPage from "./pages/Login";
+
+const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <ErrorBoundary>
-      <QueryProvider>
-        <BrowserRouter>
-          <AdminSidebarProvider>
-            <ThemeProvider>
-              <TooltipProvider>
-                <AuthProvider>
-                  <RootLayout>
-                    <AppRoutes />
-                  </RootLayout>
-                  <Toaster 
-                    position="top-right" 
-                    expand={false} 
-                    richColors 
-                    closeButton
-                    theme="dark"
-                    className="toaster group"
-                    toastOptions={{
-                      classNames: {
-                        toast: "group toast group-[.toaster]:bg-black/80 group-[.toaster]:text-white group-[.toaster]:border-white/10 group-[.toaster]:shadow-lg group-[.toaster]:backdrop-blur-xl",
-                        title: "group-[.toast]:text-white/90 group-[.toast]:font-semibold",
-                        description: "group-[.toast]:text-white/70",
-                        actionButton: "group-[.toast]:bg-[#41f0db]/20 group-[.toast]:text-white",
-                        cancelButton: "group-[.toast]:bg-white/10 group-[.toast]:text-white",
-                      },
-                    }}
-                  />
-                </AuthProvider>
-              </TooltipProvider>
-            </ThemeProvider>
-          </AdminSidebarProvider>
-        </BrowserRouter>
-      </QueryProvider>
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <TooltipProvider>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route
+                path="/admin"
+                element={
+                  <AuthGuard requiredRoles={["admin"]}>
+                    <AdminPage />
+                  </AuthGuard>
+                }
+              />
+              <Route path="/" element={<IndexPage />} />
+            </Routes>
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 

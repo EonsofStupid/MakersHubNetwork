@@ -2,12 +2,7 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-  ],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
     container: {
@@ -18,9 +13,6 @@ export default {
       },
     },
     extend: {
-      spacing: {
-        '33': '8.25rem',
-      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -28,68 +20,97 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--text-primary)",
+          DEFAULT: "#00F0FF",
+          foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "var(--secondary)",
-          foreground: "var(--text-secondary)",
+          DEFAULT: "#FF2D6E",
+          foreground: "#FFFFFF",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "var(--accent)",
-          foreground: "var(--text-heading)",
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
-        neon: {
-          cyan: "var(--neon-cyan)",
-          pink: "var(--neon-pink)",
-          purple: "var(--neon-purple)",
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
         },
-        brand: {
-          purple: "#4d00b3",
-          magenta: "#72228c",
-          lime: "#b0e653",
-          cyan: "#41f0db"
-        }
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
       },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'glass': 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))',
-        'glass-card': 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-        'glass-hover': 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))',
-        'cyber-grid': 'radial-gradient(circle at center, rgba(65, 240, 219, 0.1) 0%, transparent 70%)',
-        'scratch-overlay': 'linear-gradient(45deg, rgba(255,255,255,0.02) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.02) 75%, rgba(255,255,255,0.02))',
-        'brand-gradient': 'linear-gradient(135deg, #4d00b3, #72228c, #b0e653)',
-        'admin-gradient': 'linear-gradient(135deg, #41f0db, #4d00b3, #b0e653)',
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+        heading: ["Space Grotesk", "sans-serif"],
       },
       keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+        "morph-header": {
+          "0%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+            transform: "translateZ(0)",
+          },
+          "100%": {
+            clipPath: "polygon(0 0, 100% 0, 98% 100%, 2% 100%)",
+            transform: "translateZ(20px)",
+          },
         },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+        gradient: {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+          "100%": { backgroundPosition: "0% 50%" },
         },
-        "fade-in": {
-          "0%": { opacity: "0", transform: "translateY(10px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
+        float: {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "50%": { transform: "translateY(-20px) rotate(5deg)" },
         },
-        "slide-in": {
-          "0%": { transform: "translateX(-100%)" },
-          "100%": { transform: "translateX(0)" },
+        "pulse-slow": {
+          "0%": { opacity: "0.4", transform: "translateY(0)" },
+          "50%": { opacity: "0.1", transform: "translateY(-100vh)" },
+          "100%": { opacity: "0.4", transform: "translateY(-200vh)" },
         },
-        "scale-in": {
-          "0%": { transform: "scale(0.95)", opacity: "0" },
-          "100%": { transform: "scale(1)", opacity: "1" },
+        "stream-horizontal": {
+          "0%": { transform: "translateX(100vw)", opacity: "0" },
+          "5%": { opacity: "1" },
+          "95%": { opacity: "1" },
+          "100%": { transform: "translateX(-100vw)", opacity: "0" },
+        },
+        "stream-vertical": {
+          "0%": { transform: "translateY(-100%)", opacity: "0" },
+          "5%": { opacity: "1" },
+          "95%": { opacity: "1" },
+          "100%": { transform: "translateY(100vh)", opacity: "0" },
+        },
+        "rotate-y": {
+          "0%": { transform: "rotateY(0deg)" },
+          "100%": { transform: "rotateY(180deg)" },
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.3s ease-out",
-        "slide-in": "slide-in 0.3s ease-out",
-        "scale-in": "scale-in 0.2s ease-out",
+        "morph-header": "morph-header 1.5s ease-in-out forwards",
+        "gradient": "gradient 15s ease infinite",
+        "float": "float 6s ease-in-out infinite",
+        "pulse-slow": "pulse-slow 8s linear infinite",
+        "stream-horizontal": "stream-horizontal var(--stream-duration) linear infinite",
+        "stream-vertical": "stream-vertical var(--stream-duration) linear infinite",
+        "rotate-y": "rotate-y 0.7s ease-in-out forwards",
+      },
+      rotate: {
+        'y-180': 'rotateY(180deg)',
+      },
+      backfaceVisibility: {
+        'hidden': 'hidden',
+      },
+      perspective: {
+        '1000': '1000px',
       },
     },
   },

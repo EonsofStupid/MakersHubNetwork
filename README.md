@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/65001257-727f-4151-a65b-b0643a9cb1f8
+**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
 ## How can I edit this code?
 
@@ -10,7 +10,7 @@ There are several ways of editing your application.
 
 **Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/65001257-727f-4151-a65b-b0643a9cb1f8) and start prompting.
+Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
@@ -52,17 +52,17 @@ npm run dev
 
 ## What technologies are used for this project?
 
-This project is built with .
+This project is built with React, TypeScript, Tailwind CSS, and shadcn/ui components for a modern, type-safe, and beautiful user interface.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- React + TypeScript for robust frontend development
+- Tailwind CSS for utility-first styling
+- shadcn/ui for beautiful, accessible components
+- React Router for client-side routing
+- Tanstack Query for data fetching
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/65001257-727f-4151-a65b-b0643a9cb1f8) and click on Share -> Publish.
+Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
 ## I want to use a custom domain - is that possible?
 

@@ -1,20 +1,13 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
-import './styles/globals.css'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+import './index.css';
 
-// Create root with error boundary
-const root = ReactDOM.createRoot(document.getElementById('root')!)
+const rootElement = document.getElementById('root');
+if (!rootElement) throw new Error('Failed to find the root element');
 
-// Development error logging
-if (process.env.NODE_ENV === 'development') {
-  window.onerror = (message, source, lineno, colno, error) => {
-    console.error('Global error:', { message, source, lineno, colno, error });
-  };
-}
-
-root.render(
-  <React.StrictMode>
+createRoot(rootElement).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>,
-)
+  </StrictMode>
+);
