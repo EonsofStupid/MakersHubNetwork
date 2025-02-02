@@ -31,48 +31,17 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
       // Type guard to ensure we have objects
       const designTokens = rawTheme.design_tokens && typeof rawTheme.design_tokens === 'object' && !Array.isArray(rawTheme.design_tokens) 
-        ? rawTheme.design_tokens as Record<string, any>
+        ? rawTheme.design_tokens
         : {};
       
       const componentTokens = rawTheme.component_tokens && typeof rawTheme.component_tokens === 'object' && !Array.isArray(rawTheme.component_tokens)
-        ? rawTheme.component_tokens as Record<string, any>
+        ? rawTheme.component_tokens
         : {};
 
       const theme: Theme = {
         ...rawTheme,
-        design_tokens: {
-          colors: (designTokens.colors as Record<string, any>) || {},
-          spacing: (designTokens.spacing as Record<string, any>) || {},
-          typography: {
-            fontSizes: ((designTokens.typography as Record<string, any>)?.fontSizes as Record<string, any>) || {},
-            fontFamilies: ((designTokens.typography as Record<string, any>)?.fontFamilies as Record<string, any>) || {},
-            lineHeights: ((designTokens.typography as Record<string, any>)?.lineHeights as Record<string, any>) || {},
-            letterSpacing: ((designTokens.typography as Record<string, any>)?.letterSpacing as Record<string, any>) || {}
-          },
-          effects: {
-            shadows: ((designTokens.effects as Record<string, any>)?.shadows as Record<string, any>) || {},
-            blurs: ((designTokens.effects as Record<string, any>)?.blurs as Record<string, any>) || {},
-            gradients: ((designTokens.effects as Record<string, any>)?.gradients as Record<string, any>) || {}
-          },
-          animations: {
-            keyframes: ((designTokens.animations as Record<string, any>)?.keyframes as Record<string, any>) || {},
-            transitions: ((designTokens.animations as Record<string, any>)?.transitions as Record<string, any>) || {},
-            durations: ((designTokens.animations as Record<string, any>)?.durations as Record<string, any>) || {}
-          }
-        },
-        component_tokens: {
-          base: (componentTokens.base as Record<string, any>) || {},
-          variants: (componentTokens.variants as Record<string, any>) || {},
-          states: (componentTokens.states as Record<string, any>) || {},
-          responsive: (componentTokens.responsive as Record<string, any>) || {},
-          darkMode: (componentTokens.darkMode as Record<string, any>) || {}
-        },
-        composition_rules: rawTheme.composition_rules && typeof rawTheme.composition_rules === 'object' && !Array.isArray(rawTheme.composition_rules)
-          ? rawTheme.composition_rules as Record<string, any>
-          : {},
-        cached_styles: rawTheme.cached_styles && typeof rawTheme.cached_styles === 'object' && !Array.isArray(rawTheme.cached_styles)
-          ? rawTheme.cached_styles as Record<string, any>
-          : {}
+        design_tokens: designTokens,
+        component_tokens: componentTokens,
       };
 
       set({ currentTheme: theme, isLoading: false });
@@ -95,16 +64,14 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
       if (error) throw error;
 
-      const components: ThemeComponent[] = data.map(comp => ({
+      const components = data.map(comp => ({
         id: comp.id,
         theme_id: comp.theme_id,
         component_name: comp.component_name,
         context: comp.context,
         created_at: comp.created_at,
         updated_at: comp.updated_at,
-        styles: comp.styles && typeof comp.styles === 'object' && !Array.isArray(comp.styles)
-          ? comp.styles as Record<string, any>
-          : {}
+        styles: comp.styles || {}
       }));
 
       set({ adminComponents: components, isLoading: false });
