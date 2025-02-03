@@ -1,58 +1,112 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import { devtools, subscribeWithSelector } from "zustand/middleware";
+import { persist } from "zustand/middleware";
+import { AuthState, AuthStore, UserRole } from "./types";
+import { supabase } from "@/integrations/supabase/client";
 
-import { createAuthSlice } from "./slices/auth.slice";
-import { authStorage } from "./middleware/persist.middleware";
-import { AuthStore } from "./types/auth.types";
+const initialState: AuthState = {
+  user: null,
+  session: null,
+  roles: [],
+  status: "idle",
+  error: null,
+  isLoading: false,
+  initialized: false,
+};
 
-// Create the store
 export const useAuthStore = create<AuthStore>()(
-  devtools(
-    persist(
-      subscribeWithSelector((...args) => ({
-        ...createAuthSlice(...args),
-      })),
-      {
-        name: "auth-storage",
-        storage: authStorage,
-        partialize: (state) => ({
-          user: state.user,
-          session: state.session,
-          roles: state.roles,
-          status: state.status,
+  persist(
+    (set, get) => ({
+      ...initialState,
+
+      // State setters
+      setUser: (user) => set({ user }),
+      setSession: (session) => 
+        set({ 
+          session,
+          user: session?.user ?? null,
+          status: session ? "authenticated" : "unauthenticated",
         }),
-      }
-    ),
+      setRoles: (roles) => set({ roles }),
+      setError: (error) => set({ error }),
+      setLoading: (isLoading) => set({ isLoading }),
+      setInitialized: (initialized) => set({ initialized }),
+
+      // Auth actions
+      initialize: async () => {
+        try {
+          set({ status: "loading", isLoading: true, error: null });
+          
+          const { data: { session }, error: sessionError } = 
+            await supabase.auth.getSession();
+          
+          if (sessionError) throw sessionError;
+
+          if (session) {
+            const { data: roles } = await supabase
+              .from("user_roles")
+              .select("role")
+              .eq("user_id", session.user.id);
+
+            set({
+              user: session.user,
+              session,
+              roles: roles?.map((r) => r.role as UserRole) || [],
+              status: "authenticated",
+              error: null,
+            });
+          } else {
+            set({
+              user: null,
+              session: null,
+              roles: [],
+              status: "unauthenticated",
+              error: null,
+            });
+          }
+        } catch (err) {
+          console.error("Auth initialization error:", err);
+          set({
+            error: err instanceof Error ? err.message : "Authentication error",
+            status: "unauthenticated",
+          });
+        } finally {
+          set({ isLoading: false, initialized: true });
+        }
+      },
+
+      logout: async () => {
+        try {
+          set({ status: "loading", isLoading: true, error: null });
+          await supabase.auth.signOut();
+          set({
+            user: null,
+            session: null,
+            roles: [],
+            status: "unauthenticated",
+            error: null,
+          });
+        } catch (err) {
+          console.error("Logout error:", err);
+          set({
+            error: err instanceof Error ? err.message : "Logout error",
+          });
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      // Role checks
+      hasRole: (role) => get().roles.includes(role),
+      isAdmin: () => get().roles.some(role => ["admin", "super_admin"].includes(role)),
+    }),
     {
-      name: "AuthStore",
-      enabled: process.env.NODE_ENV === "development",
+      name: "auth-storage",
+      partialize: (state) => ({
+        user: state.user,
+        session: state.session,
+        roles: state.roles,
+        status: state.status,
+      }),
     }
   )
 );
-
-/**
- * Option 1: Immediately initialize the store as soon as it’s imported.
- * This is sometimes enough if your application’s entry file
- * runs any code that depends on auth afterwards.
- */
-useAuthStore.getState().initialize();
-
-// Debug subscriptions in development
-if (process.env.NODE_ENV === "development") {
-  // State changes subscription
-  useAuthStore.subscribe(
-    (state) => state,
-    (state) =>
-      console.log("Auth State Updated:", {
-        userId: state.user?.id,
-        status: state.status,
-        roles: state.roles,
-        isLoading: state.isLoading,
-        error: state.error,
-        timestamp: new Date().toISOString(),
-      })
-  );
-
-  // Additional subscriptions as needed...
-}
