@@ -32,7 +32,7 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
     }
   }, [isLoading, isAuthenticated, roles, requiredRoles, navigate]);
 
-  if (isLoading) return <div>Loading guard...</div>;
+  if (isLoading) return <div>Loading...</div>;
   if (!isAuthenticated) return null;
   if (requiredRoles && !requiredRoles.some((r) => roles.includes(r))) return null;
 

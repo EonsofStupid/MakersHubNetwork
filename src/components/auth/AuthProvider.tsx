@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [initialize, setSession]);
 
   if (!initialized || isLoading) {
-    return <div>Loading global auth...</div>;
+    return <div>Loading auth...</div>;
   }
 
   return <>{children}</>;
