@@ -35,9 +35,17 @@ export const useThemeStore = create<ThemeState>((set) => ({
         ? rawTheme.design_tokens as Record<string, any>
         : {};
       
-      // Convert component tokens to the correct type
+      // Convert component tokens to the correct type with proper mapping
       const componentTokens = rawTheme.component_tokens && Array.isArray(rawTheme.component_tokens)
-        ? rawTheme.component_tokens as ComponentTokens[]
+        ? (rawTheme.component_tokens as Json[]).map((token): ComponentTokens => ({
+            id: (token as any).id || '',
+            component_name: (token as any).component_name || '',
+            styles: (token as any).styles || {},
+            theme_id: (token as any).theme_id,
+            context: (token as any).context,
+            created_at: (token as any).created_at,
+            updated_at: (token as any).updated_at,
+          }))
         : [];
 
       // Ensure composition rules is a Record
