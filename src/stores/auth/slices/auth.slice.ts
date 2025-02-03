@@ -1,72 +1,38 @@
 import { StateCreator } from "zustand"
 import { supabase } from "@/integrations/supabase/client"
 import { AuthError } from "@supabase/supabase-js"
-import { AuthStore, AuthStatus } from "@/stores/auth/types/auth.types"
+import { AuthStore, AuthState, AuthActions, UserRole } from "../types/auth.types"
 
 export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
+  // Initial state
   user: null,
   session: null,
   roles: [],
-  status: "idle" as AuthStatus,
   error: null,
-  initialized: false,
   isLoading: false,
+  initialized: false,
 
+  // State setters
   setUser: (user) => set({ user }),
   setSession: (session) =>
     set({
       session,
       user: session?.user ?? null,
-      status: session ? "authenticated" : "unauthenticated",
     }),
   setRoles: (roles) => set({ roles }),
   setError: (error) => set({ error }),
-  setStatus: (status) => set({ status }),
-  setInitialized: (initialized) => set({ initialized }),
   setLoading: (isLoading) => set({ isLoading }),
+  setInitialized: (initialized) => set({ initialized }),
 
+  // Role checks
   hasRole: (role) => get().roles.includes(role),
-  isAdmin: () => get().roles.includes("admin"),
+  isAdmin: () => get().roles.includes("admin") || get().roles.includes("super_admin"),
 
-  login: async (email, password) => {
-    try {
-      set({ status: "loading", isLoading: true, error: null })
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      })
-      if (error) throw error
-
-      // Get user roles after successful login
-      const { data: roles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", data.user.id)
-      if (rolesError) throw rolesError
-
-      set({
-        user: data.user,
-        session: data.session,
-        roles: roles?.map((r) => r.role) || [],
-        status: "authenticated",
-        error: null,
-      })
-    } catch (err) {
-      console.error("Login error:", err)
-      set({
-        error: err instanceof AuthError ? err.message : "An error occurred during login",
-        status: "unauthenticated",
-      })
-    } finally {
-      set({ isLoading: false })
-    }
-  },
-
+  // Auth actions
   initialize: async () => {
     try {
-      set({ status: "loading", isLoading: true, error: null })
+      set({ isLoading: true, error: null })
       
-      // Get the initial session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       if (sessionError) throw sessionError
 
@@ -81,8 +47,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
         set({
           user: session.user,
           session,
-          roles: roles?.map((r) => r.role) || [],
-          status: "authenticated",
+          roles: (roles?.map((r) => r.role) as UserRole[]) || [],
           error: null,
         })
       } else {
@@ -90,7 +55,6 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
           user: null,
           session: null,
           roles: [],
-          status: "unauthenticated",
           error: null,
         })
       }
@@ -98,7 +62,6 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
       console.error("Auth initialization error:", err)
       set({
         error: err instanceof AuthError ? err.message : "An error occurred during initialization",
-        status: "unauthenticated",
         user: null,
         session: null,
         roles: [],
@@ -108,28 +71,20 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
     }
   },
 
-  clearState: () => {
-    set({
-      user: null,
-      session: null,
-      roles: [],
-      error: null,
-      status: "idle",
-      initialized: true,
-      isLoading: false,
-    })
-  },
-
   logout: async () => {
     try {
-      set({ status: "loading", isLoading: true, error: null })
+      set({ isLoading: true, error: null })
       await supabase.auth.signOut()
-      get().clearState()
+      set({
+        user: null,
+        session: null,
+        roles: [],
+        error: null,
+      })
     } catch (err) {
       console.error("Logout error:", err)
       set({
         error: err instanceof AuthError ? err.message : "An error occurred during logout",
-        status: "unauthenticated",
       })
     } finally {
       set({ isLoading: false })
