@@ -28,7 +28,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
   setInitialized: (initialized) => set({ initialized }),
   setStatus: (status) => set({ status }),
 
-  // Role checks
+  // Role checks using UUID
   hasRole: (role) => get().roles.includes(role),
   isAdmin: () => get().roles.includes("admin") || get().roles.includes("super_admin"),
 
@@ -40,8 +40,8 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       if (sessionError) throw sessionError
 
-      if (session) {
-        // Get user roles if authenticated
+      if (session?.user?.id) {
+        // Get user roles using UUID
         const { data: roles, error: rolesError } = await supabase
           .from("user_roles")
           .select("role")

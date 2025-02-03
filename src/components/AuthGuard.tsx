@@ -1,25 +1,26 @@
-import { ReactNode, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "@/stores/auth/store";
-import { UserRole } from "@/stores/auth/types/auth.types";
+import { ReactNode, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuthStore } from "@/stores/auth/store"
+import { UserRole } from "@/stores/auth/types/auth.types"
 
 interface AuthGuardProps {
-  children: ReactNode;
-  requiredRoles?: UserRole[];
+  children: ReactNode
+  requiredRoles?: UserRole[]
 }
 
 export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
-  const navigate = useNavigate();
-  const isLoading = useAuthStore((state) => state.isLoading);
-  const status = useAuthStore((state) => state.status);
-  const roles = useAuthStore((state) => state.roles);
+  const navigate = useNavigate()
+  const isLoading = useAuthStore((state) => state.isLoading)
+  const status = useAuthStore((state) => state.status)
+  const roles = useAuthStore((state) => state.roles)
+  const userId = useAuthStore((state) => state.user?.id)
 
-  const isAuthenticated = status === "authenticated";
+  const isAuthenticated = status === "authenticated" && userId
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate("/login");
-      return;
+      navigate("/login")
+      return
     }
 
     if (
@@ -28,13 +29,13 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
       requiredRoles &&
       !requiredRoles.some((r) => roles.includes(r))
     ) {
-      navigate("/unauthorized");
+      navigate("/unauthorized")
     }
-  }, [isLoading, isAuthenticated, roles, requiredRoles, navigate]);
+  }, [isLoading, isAuthenticated, roles, requiredRoles, navigate])
 
-  if (isLoading) return <div>Loading...</div>;
-  if (!isAuthenticated) return null;
-  if (requiredRoles && !requiredRoles.some((r) => roles.includes(r))) return null;
+  if (isLoading) return <div>Loading...</div>
+  if (!isAuthenticated) return null
+  if (requiredRoles && !requiredRoles.some((r) => roles.includes(r))) return null
 
-  return <>{children}</>;
-};
+  return <>{children}</>
+}
