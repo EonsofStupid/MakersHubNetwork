@@ -1,10 +1,4 @@
-// src/stores/auth/selectors/auth.selectors.ts
-import { AuthStore, UserRole } from "@/stores/auth/types/auth.types"
-
-/**
- * DO NOT define createAuthSlice or any Zustand logic here.
- * Only define pure selectors that read from (state: AuthStore).
- */
+import { AuthStore, UserRole } from "../types/auth.types"
 
 // Basic selectors
 export const selectUser = (state: AuthStore) => state.user

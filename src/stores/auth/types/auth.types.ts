@@ -8,6 +8,7 @@ export interface AuthState {
   user: User | null
   session: Session | null
   roles: UserRole[]
+  status: AuthStatus // This was missing
   error: string | null
   isLoading: boolean
   initialized: boolean
@@ -20,6 +21,7 @@ export interface AuthActions {
   setError: (error: string | null) => void
   setLoading: (isLoading: boolean) => void
   setInitialized: (initialized: boolean) => void
+  setStatus: (status: AuthStatus) => void // This was missing
   hasRole: (role: UserRole) => boolean
   isAdmin: () => boolean
   initialize: () => Promise<void>

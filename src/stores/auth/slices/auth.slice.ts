@@ -1,28 +1,32 @@
 import { StateCreator } from "zustand"
 import { supabase } from "@/integrations/supabase/client"
 import { AuthError } from "@supabase/supabase-js"
-import { AuthStore, AuthState, AuthActions, UserRole } from "../types/auth.types"
+import { AuthStore, AuthState, AuthActions, UserRole, AuthStatus } from "../types/auth.types"
 
 export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
   // Initial state
   user: null,
   session: null,
   roles: [],
+  status: "idle" as AuthStatus,
   error: null,
   isLoading: false,
   initialized: false,
 
   // State setters
   setUser: (user) => set({ user }),
-  setSession: (session) =>
+  setSession: (session) => {
     set({
       session,
       user: session?.user ?? null,
-    }),
+      status: session ? "authenticated" : "unauthenticated"
+    })
+  },
   setRoles: (roles) => set({ roles }),
   setError: (error) => set({ error }),
   setLoading: (isLoading) => set({ isLoading }),
   setInitialized: (initialized) => set({ initialized }),
+  setStatus: (status) => set({ status }),
 
   // Role checks
   hasRole: (role) => get().roles.includes(role),
@@ -31,7 +35,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
   // Auth actions
   initialize: async () => {
     try {
-      set({ isLoading: true, error: null })
+      set({ isLoading: true, error: null, status: "loading" })
       
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       if (sessionError) throw sessionError
@@ -48,6 +52,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
           user: session.user,
           session,
           roles: (roles?.map((r) => r.role) as UserRole[]) || [],
+          status: "authenticated",
           error: null,
         })
       } else {
@@ -55,6 +60,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
           user: null,
           session: null,
           roles: [],
+          status: "unauthenticated",
           error: null,
         })
       }
@@ -65,6 +71,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
         user: null,
         session: null,
         roles: [],
+        status: "unauthenticated"
       })
     } finally {
       set({ isLoading: false, initialized: true })
@@ -79,6 +86,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
         user: null,
         session: null,
         roles: [],
+        status: "unauthenticated",
         error: null,
       })
     } catch (err) {
