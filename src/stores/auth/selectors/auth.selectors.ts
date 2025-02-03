@@ -13,8 +13,10 @@ export const selectIsInitialized = (state: AuthStore) => state.initialized
 export const selectIsAuthenticated = (state: AuthStore) =>
   state.status === "authenticated"
 
+export const selectUserId = (state: AuthStore) => state.user?.id
+
 export const selectIsAdmin = (state: AuthStore) =>
-  state.roles.includes("admin")
+  state.roles.includes("admin") || state.roles.includes("super_admin")
 
 export const selectHasRole =
   (role: UserRole) =>
