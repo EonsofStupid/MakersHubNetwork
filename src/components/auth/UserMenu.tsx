@@ -12,10 +12,7 @@ export const UserMenu = () => {
   const { toast } = useToast()
 
   const user = useAuthStore((state) => state.user)
-  const roles = useAuthStore((state) => state.roles)
   const logout = useAuthStore((state) => state.logout)
-
-  const isAdmin = roles.includes("admin") || roles.includes("super_admin")
 
   // Logout handler
   const handleLogout = async () => {
@@ -43,7 +40,6 @@ export const UserMenu = () => {
         isOpen={isSheetOpen}
         onOpenChange={setSheetOpen}
         userEmail={user?.email}
-        isAdmin={isAdmin}
         isLoadingLogout={isLoading}
         onShowProfile={() => {
           setSheetOpen(false)

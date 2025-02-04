@@ -36,22 +36,14 @@ const Admin = () => {
           id,
           display_name,
           avatar_url,
-          user_roles!user_roles_user_id_fkey (
+          user_roles (
             role
           )
-        `);
+        `)
+        .returns<UserWithRoles[]>();
       
       if (error) throw error;
-      
-      // Transform the data to match our UserWithRoles type
-      const typedProfiles: UserWithRoles[] = (profiles || []).map(profile => ({
-        id: profile.id,
-        display_name: profile.display_name,
-        avatar_url: profile.avatar_url,
-        user_roles: profile.user_roles || []
-      }));
-      
-      return typedProfiles;
+      return profiles || [];
     },
     refetchInterval: 30000 // Refetch every 30 seconds
   });
