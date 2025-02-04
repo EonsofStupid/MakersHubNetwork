@@ -7,7 +7,7 @@ export const useAdminAccess = (): AdminAccess => {
   const roles = useAuthStore((state) => state.roles)
   
   // Check for admin level access (admin or super_admin)
-  const isAdmin = roles.some(role => ADMIN_ROLES.includes(role as UserRole))
+  const isAdmin = roles.some(role => ADMIN_ROLES.includes(role))
   
   return {
     isAdmin,
