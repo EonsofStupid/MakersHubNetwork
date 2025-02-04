@@ -612,6 +612,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_is_super_admin_for_policy: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
       ensure_theme_token_structure: {
         Args: {
           data: Json

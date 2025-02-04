@@ -1,6 +1,6 @@
 import { Database } from "@/integrations/supabase/types"
 
-export type UserRole = Database["public"]["Enums"]["user_role"]
+export type UserRole = "super_admin" | "admin" | "maker" | "builder"
 
 export interface AdminAccess {
   isAdmin: boolean
