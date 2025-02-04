@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "@/stores/auth/store"
 import { UserRole } from "@/stores/auth/types/auth.types"
+import { useAdminAccess } from "@/hooks/useAdminAccess"
 
 interface AuthGuardProps {
   children: ReactNode
@@ -14,6 +15,7 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
   const status = useAuthStore((state) => state.status)
   const roles = useAuthStore((state) => state.roles)
   const userId = useAuthStore((state) => state.user?.id)
+  const { hasAdminAccess } = useAdminAccess()
 
   const isAuthenticated = status === "authenticated" && userId
 
@@ -22,6 +24,7 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
   console.log("AuthGuard - Required roles:", requiredRoles)
   console.log("AuthGuard - Is authenticated:", isAuthenticated)
   console.log("AuthGuard - User ID:", userId)
+  console.log("AuthGuard - Has admin access:", hasAdminAccess)
 
   const hasRequiredRole = requiredRoles 
     ? requiredRoles.some(r => roles.includes(r) || roles.includes('super_admin'))
