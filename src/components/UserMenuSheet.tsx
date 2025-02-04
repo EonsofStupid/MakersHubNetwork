@@ -1,9 +1,8 @@
-// src/components/auth/UserMenuSheet.tsx
-
 import React from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Menu, User, Settings, LayoutDashboard, LogOut } from "lucide-react"
+import { useAdminAccess } from "@/hooks/useAdminAccess"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -12,27 +11,21 @@ interface UserMenuSheetProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   userEmail?: string
-  isAdmin: boolean
   isLoadingLogout: boolean
   onShowProfile: () => void
   onLogout: () => void
 }
 
-/**
- * UserMenuSheet
- *
- * A dedicated component for the side sheet UI
- * with Profile, Settings, Admin (if isAdmin), and Logout.
- */
 export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   isOpen,
   onOpenChange,
   userEmail,
-  isAdmin,
   isLoadingLogout,
   onShowProfile,
   onLogout,
 }) => {
+  const { hasAdminAccess } = useAdminAccess();
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
@@ -66,7 +59,6 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
           </div>
 
           <nav className="space-y-2">
-            {/* Profile */}
             <button
               onClick={onShowProfile}
               className="group flex w-full items-center gap-2 px-4 py-2 text-sm
@@ -76,7 +68,6 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
               Profile
             </button>
 
-            {/* Settings Link */}
             <Link
               to="/settings"
               className="group flex items-center gap-2 px-4 py-2 text-sm
@@ -87,8 +78,7 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
               Settings
             </Link>
 
-            {/* Admin Dashboard Link (if isAdmin) */}
-            {isAdmin && (
+            {hasAdminAccess && (
               <Link
                 to="/admin"
                 className="group flex items-center gap-2 px-4 py-2 text-sm
@@ -100,7 +90,6 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
               </Link>
             )}
 
-            {/* Logout */}
             <button
               onClick={onLogout}
               disabled={isLoadingLogout}
