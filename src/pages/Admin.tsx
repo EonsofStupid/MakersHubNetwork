@@ -9,9 +9,12 @@ import { Database, Import, Settings, Table, Upload, Users } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from '@tanstack/react-query';
 
+// Define valid table names type based on our Database type
+type ValidTableNames = keyof Database['public']['Tables'];
+
 const Admin = () => {
   const [importing, setImporting] = useState(false);
-  const [selectedTable, setSelectedTable] = useState<"printer_parts" | "manufacturers" | "printer_part_categories">("printer_parts");
+  const [selectedTable, setSelectedTable] = useState<ValidTableNames>('printer_parts');
   const { toast } = useToast();
 
   // Fetch stats for overview cards
@@ -147,7 +150,7 @@ const Admin = () => {
               <CardDescription>Import data from JSON files</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Select value={selectedTable} onValueChange={(value: typeof selectedTable) => setSelectedTable(value)}>
+              <Select value={selectedTable} onValueChange={(value: ValidTableNames) => setSelectedTable(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select table" />
                 </SelectTrigger>
