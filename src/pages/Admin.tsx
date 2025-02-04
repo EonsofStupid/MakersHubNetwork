@@ -12,11 +12,15 @@ import type { Database as DatabaseType } from '@/integrations/supabase/types';
 
 type ImportableTables = 'printer_parts' | 'manufacturers' | 'printer_part_categories';
 type ValidTableNames = keyof DatabaseType['public']['Tables'];
+
+// Updated type to reflect new schema
 type UserWithRoles = {
   id: string;
   display_name: string | null;
   avatar_url: string | null;
+  primary_role_id: string | null;
   user_roles: Array<{
+    id: string;
     role: DatabaseType['public']['Enums']['user_role'];
   }>;
 };
@@ -26,7 +30,7 @@ const Admin = () => {
   const [selectedTable, setSelectedTable] = useState<ImportableTables>('printer_parts');
   const { toast } = useToast();
 
-  // Fetch active users with proper error handling and real-time updates
+  // Updated query to use the correct join
   const { data: activeUsers, isLoading: loadingUsers } = useQuery({
     queryKey: ['admin', 'activeUsers'],
     queryFn: async () => {
@@ -36,16 +40,18 @@ const Admin = () => {
           id,
           display_name,
           avatar_url,
-          user_roles (
-            role
-          )
+          primary_role_id,
+          user_roles!user_roles(id, role)
         `)
         .returns<UserWithRoles[]>();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
       return profiles || [];
     },
-    refetchInterval: 30000 // Refetch every 30 seconds
+    refetchInterval: 30000
   });
 
   // Fetch parts count
@@ -220,7 +226,7 @@ const Admin = () => {
                           )}
                           <span>{user.display_name}</span>
                           <span className="text-xs bg-primary/10 px-2 py-0.5 rounded-full">
-                            {user.user_roles[0]?.role || 'user'}
+                            {user.user_roles?.[0]?.role || 'user'}
                           </span>
                         </div>
                       ))}
