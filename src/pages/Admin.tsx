@@ -4,13 +4,46 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Database, Import, Settings, Table, Upload, Users } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from '@tanstack/react-query';
 
 const Admin = () => {
   const [importing, setImporting] = useState(false);
-  const [selectedTable, setSelectedTable] = useState<string>('');
+  const [selectedTable, setSelectedTable] = useState<"printer_parts" | "manufacturers" | "printer_part_categories">("printer_parts");
+  const { toast } = useToast();
+
+  // Fetch stats for overview cards
+  const { data: userCount } = useQuery({
+    queryKey: ['admin', 'userCount'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      return count || 0;
+    }
+  });
+
+  const { data: partsCount } = useQuery({
+    queryKey: ['admin', 'partsCount'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('printer_parts')
+        .select('*', { count: 'exact', head: true });
+      return count || 0;
+    }
+  });
+
+  const { data: reviewsCount } = useQuery({
+    queryKey: ['admin', 'reviewsCount'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('part_reviews')
+        .select('*', { count: 'exact', head: true });
+      return count || 0;
+    }
+  });
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -83,16 +116,16 @@ const Admin = () => {
                 <CardDescription>Active users in the platform</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">1,234</p>
+                <p className="text-3xl font-bold">{userCount ?? '...'}</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>Components</CardTitle>
+                <CardTitle>Printer Parts</CardTitle>
                 <CardDescription>Total printer components</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">567</p>
+                <p className="text-3xl font-bold">{partsCount ?? '...'}</p>
               </CardContent>
             </Card>
             <Card>
@@ -101,7 +134,7 @@ const Admin = () => {
                 <CardDescription>User submitted reviews</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">890</p>
+                <p className="text-3xl font-bold">{reviewsCount ?? '...'}</p>
               </CardContent>
             </Card>
           </div>
@@ -114,7 +147,7 @@ const Admin = () => {
               <CardDescription>Import data from JSON files</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Select value={selectedTable} onValueChange={setSelectedTable}>
+              <Select value={selectedTable} onValueChange={(value: typeof selectedTable) => setSelectedTable(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select table" />
                 </SelectTrigger>
