@@ -1,12 +1,14 @@
-import { useAuthStore } from "@/stores/auth/store";
+import { useAuthStore } from "@/stores/auth/store"
+import { AdminAccess } from "@/types/auth.types"
 
-export const useAdminAccess = () => {
-  const roles = useAuthStore((state) => state.roles);
+export const useAdminAccess = (): AdminAccess => {
+  const roles = useAuthStore((state) => state.roles)
   
-  const isAdmin = roles.includes("admin") || roles.includes("super_admin");
+  // Check for both admin and super_admin roles
+  const isAdmin = roles.includes("admin") || roles.includes("super_admin")
   
   return {
     isAdmin,
     hasAdminAccess: isAdmin,
-  };
-};
+  }
+}
