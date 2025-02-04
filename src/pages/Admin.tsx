@@ -18,20 +18,29 @@ const Admin = () => {
   const [selectedTable, setSelectedTable] = useState<ImportableTables>('printer_parts');
   const { toast } = useToast();
 
-  // Fetch stats for overview cards with proper error handling and real-time updates
-  const { data: userCount, isLoading: loadingUsers } = useQuery({
-    queryKey: ['admin', 'userCount'],
+  // Fetch active users with proper error handling and real-time updates
+  const { data: activeUsers, isLoading: loadingUsers } = useQuery({
+    queryKey: ['admin', 'activeUsers'],
     queryFn: async () => {
-      const { count, error } = await supabase
+      const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true });
+        .select(`
+          id,
+          display_name,
+          avatar_url,
+          user_roles!inner (
+            role
+          )
+        `)
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return count || 0;
+      return profiles || [];
     },
     refetchInterval: 30000 // Refetch every 30 seconds
   });
 
+  // Fetch parts count
   const { data: partsCount, isLoading: loadingParts } = useQuery({
     queryKey: ['admin', 'partsCount'],
     queryFn: async () => {
@@ -45,6 +54,7 @@ const Admin = () => {
     refetchInterval: 30000
   });
 
+  // Fetch reviews count
   const { data: reviewsCount, isLoading: loadingReviews } = useQuery({
     queryKey: ['admin', 'reviewsCount'],
     queryFn: async () => {
@@ -101,7 +111,7 @@ const Admin = () => {
       .channel('admin-dashboard')
       .on('postgres_changes', { event: '*', schema: 'public' }, () => {
         // Refetch all queries when any relevant table changes
-        void userCount;
+        void activeUsers;
         void partsCount;
         void reviewsCount;
         void trendingParts;
@@ -181,13 +191,34 @@ const Admin = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle>Total Users</CardTitle>
-                <CardDescription>Active users in the platform</CardDescription>
+                <CardTitle>Active Users</CardTitle>
+                <CardDescription>Currently registered users</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">
-                  {loadingUsers ? '...' : userCount}
-                </p>
+                <div className="space-y-2">
+                  <p className="text-3xl font-bold">
+                    {loadingUsers ? '...' : activeUsers?.length || 0}
+                  </p>
+                  {activeUsers?.length > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      {activeUsers.map((user) => (
+                        <div key={user.id} className="flex items-center gap-2">
+                          {user.avatar_url && (
+                            <img 
+                              src={user.avatar_url} 
+                              alt={user.display_name || 'User'} 
+                              className="w-6 h-6 rounded-full"
+                            />
+                          )}
+                          <span>{user.display_name}</span>
+                          <span className="text-xs bg-primary/10 px-2 py-0.5 rounded-full">
+                            {user.user_roles?.[0]?.role || 'user'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
             <Card>
