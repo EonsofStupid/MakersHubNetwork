@@ -15,7 +15,9 @@ export interface UserWithRoles {
   id: string
   display_name: string | null
   avatar_url: string | null
+  primary_role_id: string | null
   user_roles: Array<{
+    id: string
     role: UserRole
   }>
 }
