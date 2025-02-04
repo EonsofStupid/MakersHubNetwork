@@ -12,6 +12,14 @@ import type { Database as DatabaseType } from '@/integrations/supabase/types';
 
 type ImportableTables = 'printer_parts' | 'manufacturers' | 'printer_part_categories';
 type ValidTableNames = keyof DatabaseType['public']['Tables'];
+type UserWithRoles = {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  user_roles: {
+    role: DatabaseType['public']['Enums']['user_role'];
+  }[];
+};
 
 const Admin = () => {
   const [importing, setImporting] = useState(false);
@@ -28,14 +36,14 @@ const Admin = () => {
           id,
           display_name,
           avatar_url,
-          user_roles!inner (
+          user_roles (
             role
           )
         `)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return profiles || [];
+      return (profiles || []) as UserWithRoles[];
     },
     refetchInterval: 30000 // Refetch every 30 seconds
   });
@@ -212,7 +220,7 @@ const Admin = () => {
                           )}
                           <span>{user.display_name}</span>
                           <span className="text-xs bg-primary/10 px-2 py-0.5 rounded-full">
-                            {user.user_roles?.[0]?.role || 'user'}
+                            {user.user_roles[0]?.role || 'user'}
                           </span>
                         </div>
                       ))}
