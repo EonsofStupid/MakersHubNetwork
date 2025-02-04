@@ -264,49 +264,64 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_override_active: boolean | null
           avatar_url: string | null
           bio: string | null
           created_at: string
           custom_styles: Json | null
           display_name: string | null
           id: string
+          is_active: boolean | null
+          last_forum_activity: string | null
+          last_login: string | null
           layout_preference: Json | null
           motion_enabled: boolean | null
           platform_preference: string | null
           platform_specific_settings: Json | null
           preferences: Json | null
+          profile_completed: boolean | null
           social_links: Json | null
           theme_preference: string | null
           updated_at: string
         }
         Insert: {
+          admin_override_active?: boolean | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           custom_styles?: Json | null
           display_name?: string | null
           id: string
+          is_active?: boolean | null
+          last_forum_activity?: string | null
+          last_login?: string | null
           layout_preference?: Json | null
           motion_enabled?: boolean | null
           platform_preference?: string | null
           platform_specific_settings?: Json | null
           preferences?: Json | null
+          profile_completed?: boolean | null
           social_links?: Json | null
           theme_preference?: string | null
           updated_at?: string
         }
         Update: {
+          admin_override_active?: boolean | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           custom_styles?: Json | null
           display_name?: string | null
           id?: string
+          is_active?: boolean | null
+          last_forum_activity?: string | null
+          last_login?: string | null
           layout_preference?: Json | null
           motion_enabled?: boolean | null
           platform_preference?: string | null
           platform_specific_settings?: Json | null
           preferences?: Json | null
+          profile_completed?: boolean | null
           social_links?: Json | null
           theme_preference?: string | null
           updated_at?: string
