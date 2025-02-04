@@ -1,11 +1,13 @@
 import { useAuthStore } from "@/stores/auth/store"
-import { AdminAccess } from "@/types/auth.types"
+import { AdminAccess, UserRole } from "@/types/auth.types"
+
+const ADMIN_ROLES: UserRole[] = ["admin", "super_admin"]
 
 export const useAdminAccess = (): AdminAccess => {
   const roles = useAuthStore((state) => state.roles)
   
-  // Check for both admin and super_admin roles
-  const isAdmin = roles.includes("admin") || roles.includes("super_admin")
+  // Check for admin level access (admin or super_admin)
+  const isAdmin = roles.some(role => ADMIN_ROLES.includes(role))
   
   return {
     isAdmin,
