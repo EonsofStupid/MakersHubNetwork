@@ -27,7 +27,7 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
   console.log("AuthGuard - Has admin access:", hasAdminAccess)
 
   const hasRequiredRole = requiredRoles 
-    ? requiredRoles.some(r => roles.includes(r) || hasAdminAccess)
+    ? requiredRoles.some(r => roles.includes(r as UserRole) || hasAdminAccess)
     : true
 
   useEffect(() => {
