@@ -19,33 +19,39 @@ const Admin = () => {
   const [selectedTable, setSelectedTable] = useState<ImportableTables>('printer_parts');
   const { toast } = useToast();
 
-  // Fetch stats for overview cards
-  const { data: userCount } = useQuery({
+  // Fetch stats for overview cards with proper error handling
+  const { data: userCount, isLoading: loadingUsers } = useQuery({
     queryKey: ['admin', 'userCount'],
     queryFn: async () => {
-      const { count } = await supabase
+      const { count, error } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
+      
+      if (error) throw error;
       return count || 0;
     }
   });
 
-  const { data: partsCount } = useQuery({
+  const { data: partsCount, isLoading: loadingParts } = useQuery({
     queryKey: ['admin', 'partsCount'],
     queryFn: async () => {
-      const { count } = await supabase
+      const { count, error } = await supabase
         .from('printer_parts')
         .select('*', { count: 'exact', head: true });
+      
+      if (error) throw error;
       return count || 0;
     }
   });
 
-  const { data: reviewsCount } = useQuery({
+  const { data: reviewsCount, isLoading: loadingReviews } = useQuery({
     queryKey: ['admin', 'reviewsCount'],
     queryFn: async () => {
-      const { count } = await supabase
+      const { count, error } = await supabase
         .from('part_reviews')
         .select('*', { count: 'exact', head: true });
+      
+      if (error) throw error;
       return count || 0;
     }
   });
@@ -121,7 +127,9 @@ const Admin = () => {
                 <CardDescription>Active users in the platform</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">{userCount ?? '...'}</p>
+                <p className="text-3xl font-bold">
+                  {loadingUsers ? '...' : userCount}
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -130,7 +138,9 @@ const Admin = () => {
                 <CardDescription>Total printer components</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">{partsCount ?? '...'}</p>
+                <p className="text-3xl font-bold">
+                  {loadingParts ? '...' : partsCount}
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -139,7 +149,9 @@ const Admin = () => {
                 <CardDescription>User submitted reviews</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">{reviewsCount ?? '...'}</p>
+                <p className="text-3xl font-bold">
+                  {loadingReviews ? '...' : reviewsCount}
+                </p>
               </CardContent>
             </Card>
           </div>
