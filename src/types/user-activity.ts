@@ -27,3 +27,10 @@ export interface UserActivityStats {
   completedProfiles: number;
   adminOverrides: number;
 }
+
+// Add type for the database response
+export type ProfileWithRoles = Database["public"]["Tables"]["profiles"]["Row"] & {
+  user_roles: Array<{
+    role: UserRole;
+  }> | null;
+};

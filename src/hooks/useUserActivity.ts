@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { UserActivityProfile, UseUserActivityOptions, UserActivityStats } from "@/types/user-activity";
+import type { 
+  UserActivityProfile, 
+  UseUserActivityOptions, 
+  UserActivityStats,
+  ProfileWithRoles 
+} from "@/types/user-activity";
 
 export const useUserActivity = (options: UseUserActivityOptions = {}) => {
   const { enabled = true, includeInactive = false } = options;
@@ -10,7 +15,7 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
     queryFn: async () => {
       console.log("Fetching user activity data...");
       
-      const query = supabase
+      const { data: profiles, error } = await supabase
         .from("profiles")
         .select(`
           id,
@@ -21,17 +26,12 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
           profile_completed,
           last_login,
           last_forum_activity,
-          user_roles!user_roles_user_id_fkey (
+          user_roles (
             role
           )
         `)
-        .order("display_name");
-
-      if (!includeInactive) {
-        query.eq("is_active", true);
-      }
-
-      const { data: profiles, error } = await query;
+        .order("display_name")
+        .returns<ProfileWithRoles[]>();
 
       if (error) {
         console.error("Error fetching user activity:", error);
