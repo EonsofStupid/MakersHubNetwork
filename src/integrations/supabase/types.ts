@@ -279,6 +279,7 @@ export type Database = {
           platform_preference: string | null
           platform_specific_settings: Json | null
           preferences: Json | null
+          primary_role_id: string | null
           profile_completed: boolean | null
           social_links: Json | null
           theme_preference: string | null
@@ -300,6 +301,7 @@ export type Database = {
           platform_preference?: string | null
           platform_specific_settings?: Json | null
           preferences?: Json | null
+          primary_role_id?: string | null
           profile_completed?: boolean | null
           social_links?: Json | null
           theme_preference?: string | null
@@ -321,12 +323,21 @@ export type Database = {
           platform_preference?: string | null
           platform_specific_settings?: Json | null
           preferences?: Json | null
+          primary_role_id?: string | null
           profile_completed?: boolean | null
           social_links?: Json | null
           theme_preference?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_primary_role_id_fkey"
+            columns: ["primary_role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_permissions: {
         Row: {
@@ -634,7 +645,7 @@ export type Database = {
     Enums: {
       part_status: "draft" | "published" | "archived"
       theme_status: "draft" | "published" | "archived"
-      user_role: "admin" | "super_admin" | "maker" | "subscriber"
+      user_role: "super_admin" | "admin" | "maker" | "builder"
     }
     CompositeTypes: {
       [_ in never]: never
