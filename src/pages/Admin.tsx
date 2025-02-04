@@ -16,9 +16,9 @@ type UserWithRoles = {
   id: string;
   display_name: string | null;
   avatar_url: string | null;
-  user_roles: {
+  user_roles: Array<{
     role: DatabaseType['public']['Enums']['user_role'];
-  }[];
+  }>;
 };
 
 const Admin = () => {
@@ -36,14 +36,22 @@ const Admin = () => {
           id,
           display_name,
           avatar_url,
-          user_roles (
+          user_roles!user_roles_user_id_fkey (
             role
           )
-        `)
-        .order('created_at', { ascending: false });
+        `);
       
       if (error) throw error;
-      return (profiles || []) as UserWithRoles[];
+      
+      // Transform the data to match our UserWithRoles type
+      const typedProfiles: UserWithRoles[] = (profiles || []).map(profile => ({
+        id: profile.id,
+        display_name: profile.display_name,
+        avatar_url: profile.avatar_url,
+        user_roles: profile.user_roles || []
+      }));
+      
+      return typedProfiles;
     },
     refetchInterval: 30000 // Refetch every 30 seconds
   });
