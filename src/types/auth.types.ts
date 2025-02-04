@@ -1,4 +1,3 @@
-import { User } from "@supabase/supabase-js"
 import { Database } from "@/integrations/supabase/types"
 
 export type UserRole = Database["public"]["Enums"]["user_role"]
