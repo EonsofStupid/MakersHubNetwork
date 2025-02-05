@@ -1,15 +1,15 @@
-import { User, Session } from "@supabase/supabase-js"
-import { UserRole as GlobalUserRole } from "@/types/auth.types"
+import type { User, Session } from "@supabase/supabase-js"
+import type { UserRole as GlobalUserRole } from "@/types/auth.types"
 
-// Re-export UserRole for use in auth-related files
-export { GlobalUserRole as UserRole }
+// Re-export with proper type syntax for isolated modules
+export type UserRole = GlobalUserRole
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated"
 
 export interface AuthState {
   user: User | null
   session: Session | null
-  roles: GlobalUserRole[]
+  roles: UserRole[]
   status: AuthStatus
   error: string | null
   isLoading: boolean
@@ -19,12 +19,12 @@ export interface AuthState {
 export interface AuthActions {
   setUser: (user: User | null) => void
   setSession: (session: Session | null) => void
-  setRoles: (roles: GlobalUserRole[]) => void
+  setRoles: (roles: UserRole[]) => void
   setError: (error: string | null) => void
   setLoading: (isLoading: boolean) => void
   setInitialized: (initialized: boolean) => void
   setStatus: (status: AuthStatus) => void
-  hasRole: (role: GlobalUserRole) => boolean
+  hasRole: (role: UserRole) => boolean
   isAdmin: () => boolean
   initialize: () => Promise<void>
   logout: () => Promise<void>
