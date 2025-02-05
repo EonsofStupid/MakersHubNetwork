@@ -8,12 +8,15 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    cors: true, // Enable CORS
     watch: {
       usePolling: true,
       interval: 100,
     },
     hmr: {
       overlay: true,
+      clientPort: 443, // Force client to use HTTPS port
+      protocol: 'wss', // Use secure WebSocket
     },
   },
   plugins: [
