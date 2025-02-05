@@ -1,6 +1,5 @@
 import { User, Session } from "@supabase/supabase-js"
-
-export type UserRole = "user" | "admin" | "super_admin"
+import { UserRole } from "@/types/auth.types"
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated"
 
@@ -8,7 +7,7 @@ export interface AuthState {
   user: User | null
   session: Session | null
   roles: UserRole[]
-  status: AuthStatus // This was missing
+  status: AuthStatus
   error: string | null
   isLoading: boolean
   initialized: boolean
@@ -21,7 +20,7 @@ export interface AuthActions {
   setError: (error: string | null) => void
   setLoading: (isLoading: boolean) => void
   setInitialized: (initialized: boolean) => void
-  setStatus: (status: AuthStatus) => void // This was missing
+  setStatus: (status: AuthStatus) => void
   hasRole: (role: UserRole) => boolean
   isAdmin: () => boolean
   initialize: () => Promise<void>
