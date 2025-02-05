@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "@/stores/auth/store"
 import { useToast } from "@/hooks/use-toast"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
@@ -9,26 +8,18 @@ export const UserMenu = () => {
   const [isSheetOpen, setSheetOpen] = useState(false)
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
 
   const { toast } = useToast()
 
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
-  const setStatus = useAuthStore((state) => state.setStatus)
 
   // Logout handler
   const handleLogout = async () => {
     try {
       setIsLoading(true)
       await logout()
-      setStatus("unauthenticated") // Explicitly set status after logout
-      setSheetOpen(false) // Close the menu sheet
-      navigate("/") // Navigate to home page
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account",
-      })
+      window.location.reload() // Simple page reload after logout
     } catch (error) {
       toast({
         variant: "destructive",
