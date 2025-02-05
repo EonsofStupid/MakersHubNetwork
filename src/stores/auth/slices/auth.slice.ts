@@ -1,10 +1,10 @@
 import { StateCreator } from "zustand"
 import { supabase } from "@/integrations/supabase/client"
 import { AuthError } from "@supabase/supabase-js"
-import { AuthStore, AuthState, AuthActions, AuthStatus } from "../types/auth.types"
-import { UserRole } from "@/types/auth.types"
+import { AuthStore, AuthState, AuthActions, AuthStatus, UserRole } from "../types/auth.types"
 
 export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
+  // Initial state
   user: null,
   session: null,
   roles: [],
@@ -13,6 +13,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
   isLoading: false,
   initialized: false,
 
+  // State setters
   setUser: (user) => set({ user }),
   setSession: (session) => {
     set({
@@ -31,6 +32,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
   hasRole: (role) => get().roles.includes(role),
   isAdmin: () => get().roles.includes("admin") || get().roles.includes("super_admin"),
 
+  // Auth actions
   initialize: async () => {
     try {
       set({ isLoading: true, error: null, status: "loading" })
