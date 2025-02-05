@@ -92,8 +92,9 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
     } catch (err) {
       console.error("Logout error:", err)
       set({
-        error: err instanceof AuthError ? err.message : "An error occurred during logout",
+        error: err instanceof AuthError ? err.message : "An error occurred during logout"
       })
+      throw err // Re-throw to handle in the component
     } finally {
       set({ isLoading: false })
     }
