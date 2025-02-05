@@ -19,13 +19,13 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
 
   const isAuthenticated = status === "authenticated" && userId
 
-  // Debug logs
+  // Debug logs to help us understand what's happening
   console.log("AuthGuard - Current roles:", roles)
   console.log("AuthGuard - Required roles:", requiredRoles)
   console.log("AuthGuard - Is authenticated:", isAuthenticated)
+  console.log("AuthGuard - User ID:", userId)
   console.log("AuthGuard - Has admin access:", hasAdminAccess)
 
-  // Simple role check - either has required role or admin access
   const hasRequiredRole = requiredRoles 
     ? requiredRoles.some(r => roles.includes(r)) || hasAdminAccess
     : true
