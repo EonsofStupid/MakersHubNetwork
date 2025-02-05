@@ -27,7 +27,7 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
   console.log("AuthGuard - Has admin access:", hasAdminAccess)
 
   const hasRequiredRole = requiredRoles 
-    ? requiredRoles.some(r => roles.includes(r) || hasAdminAccess)
+    ? requiredRoles.some(r => roles.includes(r)) || hasAdminAccess
     : true
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
 
     if (!isLoading && isAuthenticated && requiredRoles && !hasRequiredRole) {
       console.log("AuthGuard - Redirecting to unauthorized: Missing required roles")
-      navigate("/unauthorized")
+      navigate("/")
     }
   }, [isLoading, isAuthenticated, roles, requiredRoles, navigate, hasRequiredRole])
 
