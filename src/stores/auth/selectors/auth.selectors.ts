@@ -1,4 +1,5 @@
-import { AuthStore, UserRole } from "../types/auth.types"
+import { AuthStore } from "../types/auth.types"
+import { UserRole } from "@/types/auth.types"
 
 // Basic selectors
 export const selectUser = (state: AuthStore) => state.user
