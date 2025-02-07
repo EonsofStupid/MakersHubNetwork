@@ -1,7 +1,7 @@
 import { StateCreator } from "zustand"
 import { supabase } from "@/integrations/supabase/client"
 import { AuthError } from "@supabase/supabase-js"
-import { AuthStore, AuthState, AuthActions, AuthStatus, UserRole } from "../types/auth.types"
+import { AuthStore, AuthStatus, UserRole } from "../types/auth.types"
 
 export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
   // Initial state
@@ -22,13 +22,16 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
       status: session ? "authenticated" : "unauthenticated"
     })
   },
-  setRoles: (roles) => set({ roles }),
+  setRoles: (roles) => {
+    console.log("Setting roles in auth store:", roles)
+    set({ roles })
+  },
   setError: (error) => set({ error }),
   setLoading: (isLoading) => set({ isLoading }),
   setInitialized: (initialized) => set({ initialized }),
   setStatus: (status) => set({ status }),
 
-  // Role checks using UUID
+  // Role checks
   hasRole: (role) => get().roles.includes(role),
   isAdmin: () => get().roles.includes("admin") || get().roles.includes("super_admin"),
 
@@ -41,17 +44,19 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
       if (sessionError) throw sessionError
 
       if (session?.user?.id) {
-        // Get user roles using UUID
-        const { data: roles, error: rolesError } = await supabase
+        // Fetch roles from the centralized store only once here
+        const { data: rolesData, error: rolesError } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", session.user.id)
         if (rolesError) throw rolesError
 
+        const roles = (rolesData?.map((r) => r.role) as UserRole[]) || []
+
         set({
           user: session.user,
           session,
-          roles: (roles?.map((r) => r.role) as UserRole[]) || [],
+          roles,
           status: "authenticated",
           error: null,
         })
@@ -94,7 +99,7 @@ export const createAuthSlice: StateCreator<AuthStore> = (set, get) => ({
       set({
         error: err instanceof AuthError ? err.message : "An error occurred during logout"
       })
-      throw err // Re-throw to handle in the component
+      throw err // Re-throw to handle in the component if needed
     } finally {
       set({ isLoading: false })
     }
