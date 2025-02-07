@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from '@/integrations/supabase/types';
@@ -8,10 +7,10 @@ export type ActiveUser = {
   display_name: string | null;
   avatar_url: string | null;
   is_active: boolean;
-  user_roles: Array<{
+  user_roles: {
     id: string;
     role: Database['public']['Enums']['user_role'];
-  }>;
+  }[];
 };
 
 export const useActiveUsers = () => {
@@ -37,9 +36,8 @@ export const useActiveUsers = () => {
         throw error;
       }
 
-      return data as unknown as ActiveUser[];
+      return (data || []) as ActiveUser[];
     },
     refetchInterval: 30000
   });
 };
-
