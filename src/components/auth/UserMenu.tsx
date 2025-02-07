@@ -10,6 +10,8 @@ export const UserMenu = () => {
   const [isSheetOpen, setSheetOpen] = useState(false)
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  
+  // Use the admin access hook to check for admin privileges
   const { isAdmin } = useAdminAccess()
 
   const { toast } = useToast()
