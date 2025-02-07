@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -7,55 +7,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Database, Import, Settings, Table, Upload, Users, TrendingUp, Star, FileText } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveUsers } from '@/features/admin/queries/useActiveUsers';
 import { useQuery } from '@tanstack/react-query';
 import type { Database as DatabaseType } from '@/integrations/supabase/types';
 
 type ImportableTables = 'printer_parts' | 'manufacturers' | 'printer_part_categories';
-
-// Simple types directly from database schema
-type Profile = {
-  id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  is_active: boolean;
-  user_roles: {
-    id: string;
-    role: DatabaseType['public']['Enums']['user_role'];
-  }[];
-};
 
 const Admin = () => {
   const [importing, setImporting] = useState(false);
   const [selectedTable, setSelectedTable] = useState<ImportableTables>('printer_parts');
   const { toast } = useToast();
 
-  // Simplified query that just gets active users and their roles
-  const { data: activeUsers, isLoading: loadingUsers } = useQuery({
-    queryKey: ['admin', 'activeUsers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          display_name,
-          avatar_url,
-          is_active,
-          user_roles (
-            id,
-            role
-          )
-        `)
-        .eq('is_active', true);
-
-      if (error) {
-        console.error('Error fetching users:', error);
-        throw error;
-      }
-
-      return (data || []) as Profile[];
-    },
-    refetchInterval: 30000
-  });
+  // Use the new query hook
+  const { data: activeUsers, isLoading: loadingUsers } = useActiveUsers();
 
   // Fetch parts count
   const { data: partsCount, isLoading: loadingParts } = useQuery({
@@ -123,23 +87,17 @@ const Admin = () => {
   });
 
   // Set up real-time subscription for updates
-  useEffect(() => {
-    const channel = supabase
-      .channel('admin-dashboard')
-      .on('postgres_changes', { event: '*', schema: 'public' }, () => {
-        // Refetch all queries when any relevant table changes
-        void activeUsers;
-        void partsCount;
-        void reviewsCount;
-        void trendingParts;
-        void recentReviews;
-      })
-      .subscribe();
+  // useEffect(() => {
+  //   const channel = supabase
+  //     .channel('admin-dashboard')
+  //     .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+  //     })
+  //     .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  //   return () => {
+  //     supabase.removeChannel(channel);
+  //   };
+  // }, []);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -385,7 +343,7 @@ const Admin = () => {
           <Card>
             <CardHeader>
               <CardTitle>Content Management</CardTitle>
-              <CardDescription>Manage platform content and moderation</CardDescription>
+              <CardDescription>Manage platform content and moderation</CardHeader>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">Content management features coming soon...</p>
