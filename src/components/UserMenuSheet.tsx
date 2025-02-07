@@ -41,6 +41,9 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
     }
   }
 
+  console.log("UserMenuSheet - hasAdminAccess:", hasAdminAccess) // Debug admin access
+  console.log("UserMenuSheet - roles:", roles) // Debug roles
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
@@ -113,7 +116,10 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
                 to="/admin"
                 className="group flex items-center gap-2 px-4 py-2 text-sm
                            transition-colors rounded-md hover:bg-primary/10"
-                onClick={() => onOpenChange(false)}
+                onClick={() => {
+                  console.log("Admin Dashboard link clicked") // Debug navigation
+                  onOpenChange(false)
+                }}
               >
                 <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
                 Admin Dashboard
