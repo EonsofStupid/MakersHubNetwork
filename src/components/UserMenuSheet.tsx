@@ -2,10 +2,11 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Menu, User, Settings, LayoutDashboard, LogOut } from "lucide-react"
-
+import { Menu, User, Settings, LayoutDashboard, LogOut, Shield, Crown } from "lucide-react"
+import { UserRole } from "@/types/auth.types"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Badge } from "@/components/ui/badge"
 
 interface UserMenuSheetProps {
   isOpen: boolean
@@ -15,6 +16,7 @@ interface UserMenuSheetProps {
   onShowProfile: () => void
   onLogout: () => void
   hasAdminAccess: boolean
+  roles: UserRole[]
 }
 
 export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
@@ -25,7 +27,20 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   onShowProfile,
   onLogout,
   hasAdminAccess,
+  roles,
 }) => {
+  // Helper to get role icon
+  const getRoleIcon = (role: UserRole) => {
+    switch (role) {
+      case "super_admin":
+        return <Crown className="h-3 w-3" />
+      case "admin":
+        return <Shield className="h-3 w-3" />
+      default:
+        return null
+    }
+  }
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
@@ -35,6 +50,9 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
           className="relative h-8 w-8 rounded-full hover:bg-primary/10 transition-colors"
         >
           <Menu className="h-4 w-4 text-primary" />
+          {hasAdminAccess && (
+            <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full animate-pulse" />
+          )}
         </Button>
       </SheetTrigger>
 
@@ -52,10 +70,22 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
         }}
       >
         <div className="transform skew-x-[10deg] origin-top-right space-y-4 pt-6">
-          <div className="px-4">
+          <div className="px-4 space-y-2">
             <h2 className="text-lg font-heading font-bold text-primary">
               {userEmail || "My Account"}
             </h2>
+            <div className="flex flex-wrap gap-2">
+              {roles.map((role) => (
+                <Badge
+                  key={role}
+                  variant={role.includes("admin") ? "default" : "secondary"}
+                  className="flex items-center gap-1 animate-in fade-in-50 duration-300"
+                >
+                  {getRoleIcon(role)}
+                  {role.replace("_", " ")}
+                </Badge>
+              ))}
+            </div>
           </div>
 
           <nav className="space-y-2">

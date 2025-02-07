@@ -11,20 +11,24 @@ export const UserMenu = () => {
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   
-  // Use the admin access hook to check for admin privileges
-  const { isAdmin } = useAdminAccess()
-
+  const { hasAdminAccess } = useAdminAccess()
   const { toast } = useToast()
 
   const user = useAuthStore((state) => state.user)
+  const roles = useAuthStore((state) => state.roles)
   const logout = useAuthStore((state) => state.logout)
+
+  // Show visual feedback on roles after login
+  console.log("UserMenu - Current user:", user?.email)
+  console.log("UserMenu - Current roles:", roles)
+  console.log("UserMenu - Has admin access:", hasAdminAccess)
 
   // Logout handler
   const handleLogout = async () => {
     try {
       setIsLoading(true)
       await logout()
-      window.location.reload() // Simple page reload after logout
+      window.location.reload()
     } catch (error) {
       toast({
         variant: "destructive",
@@ -48,7 +52,8 @@ export const UserMenu = () => {
           setProfileDialogOpen(true)
         }}
         onLogout={handleLogout}
-        hasAdminAccess={isAdmin}
+        hasAdminAccess={hasAdminAccess}
+        roles={roles} // Pass roles to sheet
       />
 
       <ProfileDialog
