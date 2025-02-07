@@ -18,11 +18,10 @@ type UserWithRoles = {
   id: string;
   display_name: string | null;
   avatar_url: string | null;
-  primary_role_id: string | null;
   user_roles: Array<{
     id: string;
     role: DatabaseType['public']['Enums']['user_role'];
-  }>;
+  }> | null;
 };
 
 const Admin = () => {
@@ -53,7 +52,7 @@ const Admin = () => {
       }
 
       console.log("Fetched profiles:", profiles); // Debug log
-      return profiles || [];
+      return (profiles || []) as UserWithRoles[];
     },
     refetchInterval: 30000
   });
