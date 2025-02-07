@@ -11,17 +11,14 @@ import { useQuery } from '@tanstack/react-query';
 import type { Database as DatabaseType } from '@/integrations/supabase/types';
 
 type ImportableTables = 'printer_parts' | 'manufacturers' | 'printer_part_categories';
-type ValidTableNames = keyof DatabaseType['public']['Tables'];
 
-// Updated type to reflect the correct structure
-type UserWithRoles = {
-  id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  user_roles: Array<{
-    id: string;
-    role: DatabaseType['public']['Enums']['user_role'];
-  }>;
+// Define exact types from the database schema
+type Profile = DatabaseType['public']['Tables']['profiles']['Row'];
+type UserRole = DatabaseType['public']['Tables']['user_roles']['Row'];
+
+// Combined type for profiles with their roles
+type ProfileWithRoles = Profile & {
+  user_roles: UserRole[];
 };
 
 const Admin = () => {
@@ -29,17 +26,19 @@ const Admin = () => {
   const [selectedTable, setSelectedTable] = useState<ImportableTables>('printer_parts');
   const { toast } = useToast();
 
-  // Updated query to handle the array type correctly
   const { data: activeUsers, isLoading: loadingUsers } = useQuery({
     queryKey: ['admin', 'activeUsers'],
     queryFn: async () => {
       console.log("Fetching active users..."); // Debug log
+      
+      // Query exactly matches our database schema
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
           id,
           display_name,
           avatar_url,
+          is_active,
           user_roles (
             id,
             role
@@ -53,13 +52,7 @@ const Admin = () => {
 
       console.log("Fetched profiles:", profiles); // Debug log
       
-      // Transform the data to ensure user_roles is always an array
-      const transformedProfiles = (profiles || []).map(profile => ({
-        ...profile,
-        user_roles: Array.isArray(profile.user_roles) ? profile.user_roles : []
-      }));
-
-      return transformedProfiles as UserWithRoles[];
+      return (profiles || []) as ProfileWithRoles[];
     },
     refetchInterval: 30000
   });
@@ -225,18 +218,18 @@ const Admin = () => {
                   </p>
                   {activeUsers?.length > 0 && (
                     <div className="text-sm text-muted-foreground">
-                      {activeUsers.map((user) => (
-                        <div key={user.id} className="flex items-center gap-2">
-                          {user.avatar_url && (
+                      {activeUsers.map((profile) => (
+                        <div key={profile.id} className="flex items-center gap-2">
+                          {profile.avatar_url && (
                             <img 
-                              src={user.avatar_url} 
-                              alt={user.display_name || 'User'} 
+                              src={profile.avatar_url} 
+                              alt={profile.display_name || 'User'} 
                               className="w-6 h-6 rounded-full"
                             />
                           )}
-                          <span>{user.display_name}</span>
+                          <span>{profile.display_name}</span>
                           <div className="flex gap-1">
-                            {user.user_roles?.map((role) => (
+                            {profile.user_roles?.map((role) => (
                               <span 
                                 key={role.id} 
                                 className="text-xs bg-primary/10 px-2 py-0.5 rounded-full"
