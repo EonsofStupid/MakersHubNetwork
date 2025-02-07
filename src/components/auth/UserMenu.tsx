@@ -1,6 +1,8 @@
+
 import { useState } from "react"
 import { useAuthStore } from "@/stores/auth/store"
 import { useToast } from "@/hooks/use-toast"
+import { useAdminAccess } from "@/hooks/useAdminAccess"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
 import { UserMenuSheet } from "@/components/UserMenuSheet"
 
@@ -8,6 +10,7 @@ export const UserMenu = () => {
   const [isSheetOpen, setSheetOpen] = useState(false)
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const { isAdmin } = useAdminAccess()
 
   const { toast } = useToast()
 
@@ -43,6 +46,7 @@ export const UserMenu = () => {
           setProfileDialogOpen(true)
         }}
         onLogout={handleLogout}
+        hasAdminAccess={isAdmin}
       />
 
       <ProfileDialog

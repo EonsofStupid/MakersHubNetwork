@@ -1,8 +1,8 @@
+
 import React from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Menu, User, Settings, LayoutDashboard, LogOut } from "lucide-react"
-import { useAdminAccess } from "@/hooks/useAdminAccess"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -14,6 +14,7 @@ interface UserMenuSheetProps {
   isLoadingLogout: boolean
   onShowProfile: () => void
   onLogout: () => void
+  hasAdminAccess: boolean
 }
 
 export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
@@ -23,9 +24,8 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   isLoadingLogout,
   onShowProfile,
   onLogout,
+  hasAdminAccess,
 }) => {
-  const { hasAdminAccess } = useAdminAccess();
-
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
