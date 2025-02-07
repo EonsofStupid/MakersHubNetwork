@@ -12,13 +12,16 @@ import type { Database as DatabaseType } from '@/integrations/supabase/types';
 
 type ImportableTables = 'printer_parts' | 'manufacturers' | 'printer_part_categories';
 
-// Define exact types from the database schema
-type Profile = DatabaseType['public']['Tables']['profiles']['Row'];
-type UserRole = DatabaseType['public']['Tables']['user_roles']['Row'];
-
-// Combined type for profiles with their roles
-type ProfileWithRoles = Profile & {
-  user_roles: UserRole[];
+// Simple types directly from database schema
+type Profile = {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  is_active: boolean;
+  user_roles: {
+    id: string;
+    role: DatabaseType['public']['Enums']['user_role'];
+  }[];
 };
 
 const Admin = () => {
@@ -26,13 +29,11 @@ const Admin = () => {
   const [selectedTable, setSelectedTable] = useState<ImportableTables>('printer_parts');
   const { toast } = useToast();
 
+  // Simplified query that just gets active users and their roles
   const { data: activeUsers, isLoading: loadingUsers } = useQuery({
     queryKey: ['admin', 'activeUsers'],
     queryFn: async () => {
-      console.log("Fetching active users..."); // Debug log
-      
-      // Query exactly matches our database schema
-      const { data: profiles, error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -43,16 +44,15 @@ const Admin = () => {
             id,
             role
           )
-        `);
-      
+        `)
+        .eq('is_active', true);
+
       if (error) {
         console.error('Error fetching users:', error);
         throw error;
       }
 
-      console.log("Fetched profiles:", profiles); // Debug log
-      
-      return (profiles || []) as ProfileWithRoles[];
+      return (data || []) as Profile[];
     },
     refetchInterval: 30000
   });
