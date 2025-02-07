@@ -30,20 +30,20 @@ const Admin = () => {
   const [selectedTable, setSelectedTable] = useState<ImportableTables>('printer_parts');
   const { toast } = useToast();
 
-  // Updated query to use a simpler join that matches our schema
+  // Updated query to correctly join profiles and user_roles
   const { data: activeUsers, isLoading: loadingUsers } = useQuery({
     queryKey: ['admin', 'activeUsers'],
     queryFn: async () => {
       console.log("Fetching active users..."); // Debug log
-      const { data: users, error } = await supabase
-        .from('user_roles')
+      const { data: profiles, error } = await supabase
+        .from('profiles')
         .select(`
-          user_id,
-          role,
-          profiles!user_roles_user_id_fkey (
+          id,
+          display_name,
+          avatar_url,
+          user_roles (
             id,
-            display_name,
-            avatar_url
+            role
           )
         `);
       
@@ -52,8 +52,8 @@ const Admin = () => {
         throw error;
       }
 
-      console.log("Fetched users:", users); // Debug log
-      return users || [];
+      console.log("Fetched profiles:", profiles); // Debug log
+      return profiles || [];
     },
     refetchInterval: 30000
   });
@@ -220,18 +220,25 @@ const Admin = () => {
                   {activeUsers?.length > 0 && (
                     <div className="text-sm text-muted-foreground">
                       {activeUsers.map((user) => (
-                        <div key={user.user_id} className="flex items-center gap-2">
-                          {user.profiles?.avatar_url && (
+                        <div key={user.id} className="flex items-center gap-2">
+                          {user.avatar_url && (
                             <img 
-                              src={user.profiles.avatar_url} 
-                              alt={user.profiles.display_name || 'User'} 
+                              src={user.avatar_url} 
+                              alt={user.display_name || 'User'} 
                               className="w-6 h-6 rounded-full"
                             />
                           )}
-                          <span>{user.profiles?.display_name}</span>
-                          <span className="text-xs bg-primary/10 px-2 py-0.5 rounded-full">
-                            {user.role}
-                          </span>
+                          <span>{user.display_name}</span>
+                          <div className="flex gap-1">
+                            {user.user_roles?.map((role) => (
+                              <span 
+                                key={role.id} 
+                                className="text-xs bg-primary/10 px-2 py-0.5 rounded-full"
+                              >
+                                {role.role}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>
