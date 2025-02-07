@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -343,7 +344,7 @@ const Admin = () => {
           <Card>
             <CardHeader>
               <CardTitle>Content Management</CardTitle>
-              <CardDescription>Manage platform content and moderation</CardHeader>
+              <CardDescription>Manage platform content and moderation</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">Content management features coming soon...</p>
