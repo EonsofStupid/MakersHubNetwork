@@ -30,26 +30,30 @@ const Admin = () => {
   const [selectedTable, setSelectedTable] = useState<ImportableTables>('printer_parts');
   const { toast } = useToast();
 
-  // Updated query to use the correct join
+  // Updated query to use a simpler join that matches our schema
   const { data: activeUsers, isLoading: loadingUsers } = useQuery({
     queryKey: ['admin', 'activeUsers'],
     queryFn: async () => {
-      const { data: profiles, error } = await supabase
-        .from('profiles')
+      console.log("Fetching active users..."); // Debug log
+      const { data: users, error } = await supabase
+        .from('user_roles')
         .select(`
-          id,
-          display_name,
-          avatar_url,
-          primary_role_id,
-          user_roles!user_roles(id, role)
-        `)
-        .returns<UserWithRoles[]>();
+          user_id,
+          role,
+          profiles!user_roles_user_id_fkey (
+            id,
+            display_name,
+            avatar_url
+          )
+        `);
       
       if (error) {
         console.error('Error fetching users:', error);
         throw error;
       }
-      return profiles || [];
+
+      console.log("Fetched users:", users); // Debug log
+      return users || [];
     },
     refetchInterval: 30000
   });
@@ -216,17 +220,17 @@ const Admin = () => {
                   {activeUsers?.length > 0 && (
                     <div className="text-sm text-muted-foreground">
                       {activeUsers.map((user) => (
-                        <div key={user.id} className="flex items-center gap-2">
-                          {user.avatar_url && (
+                        <div key={user.user_id} className="flex items-center gap-2">
+                          {user.profiles?.avatar_url && (
                             <img 
-                              src={user.avatar_url} 
-                              alt={user.display_name || 'User'} 
+                              src={user.profiles.avatar_url} 
+                              alt={user.profiles.display_name || 'User'} 
                               className="w-6 h-6 rounded-full"
                             />
                           )}
-                          <span>{user.display_name}</span>
+                          <span>{user.profiles?.display_name}</span>
                           <span className="text-xs bg-primary/10 px-2 py-0.5 rounded-full">
-                            {user.user_roles?.[0]?.role || 'user'}
+                            {user.role}
                           </span>
                         </div>
                       ))}
