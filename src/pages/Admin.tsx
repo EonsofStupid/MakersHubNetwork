@@ -13,7 +13,7 @@ import type { Database as DatabaseType } from '@/integrations/supabase/types';
 type ImportableTables = 'printer_parts' | 'manufacturers' | 'printer_part_categories';
 type ValidTableNames = keyof DatabaseType['public']['Tables'];
 
-// Updated type to reflect new schema
+// Updated type to reflect the correct structure
 type UserWithRoles = {
   id: string;
   display_name: string | null;
@@ -21,7 +21,7 @@ type UserWithRoles = {
   user_roles: Array<{
     id: string;
     role: DatabaseType['public']['Enums']['user_role'];
-  }> | null;
+  }>;
 };
 
 const Admin = () => {
@@ -29,7 +29,7 @@ const Admin = () => {
   const [selectedTable, setSelectedTable] = useState<ImportableTables>('printer_parts');
   const { toast } = useToast();
 
-  // Updated query to correctly join profiles and user_roles
+  // Updated query to handle the array type correctly
   const { data: activeUsers, isLoading: loadingUsers } = useQuery({
     queryKey: ['admin', 'activeUsers'],
     queryFn: async () => {
@@ -52,7 +52,14 @@ const Admin = () => {
       }
 
       console.log("Fetched profiles:", profiles); // Debug log
-      return (profiles || []) as UserWithRoles[];
+      
+      // Transform the data to ensure user_roles is always an array
+      const transformedProfiles = (profiles || []).map(profile => ({
+        ...profile,
+        user_roles: Array.isArray(profile.user_roles) ? profile.user_roles : []
+      }));
+
+      return transformedProfiles as UserWithRoles[];
     },
     refetchInterval: 30000
   });
