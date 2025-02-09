@@ -15,7 +15,7 @@ export const useActiveUsers = () => {
           display_name,
           avatar_url,
           is_active,
-          user_roles (
+          user_roles!user_roles_profile_id_fkey (
             id,
             role
           )
