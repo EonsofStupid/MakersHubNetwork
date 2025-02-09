@@ -55,4 +55,3 @@ export interface VisualEdge {
   data?: Record<string, any>;
   style?: Record<string, any>;
 }
-

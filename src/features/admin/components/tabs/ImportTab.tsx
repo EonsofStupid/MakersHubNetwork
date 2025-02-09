@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -154,16 +155,16 @@ export const ImportTab = () => {
             import_session_id: importSession.id,
             row_number: index + 1,
             error_type: 'validation',
-            error_message: row.errors.map(e => e.message).join(', '),
+            error_message: row.errors.map(e => e.error_message).join(', '),
           });
           continue;
         }
 
         try {
-          // Insert data with proper typing
+          // Insert data with proper typing based on selected table
           const { error } = await supabase
             .from(selectedTable)
-            .insert(row.mapped);
+            .insert(row.mapped as any); // Type assertion needed due to dynamic table selection
 
           if (error) {
             errorCount++;
