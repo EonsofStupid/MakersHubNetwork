@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,120 +8,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Database, Import, Settings, Table, Upload, Users, TrendingUp, Star, FileText } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from '@tanstack/react-query';
+import { useActiveUsers } from '@/features/admin/queries/useActiveUsers';
+import { usePartsCount } from '@/features/admin/queries/usePartsCount';
+import { useReviewsCount } from '@/features/admin/queries/useReviewsCount';
+import { useTrendingParts } from '@/features/admin/queries/useTrendingParts';
+import { useRecentReviews } from '@/features/admin/queries/useRecentReviews';
 import type { Database as DatabaseType } from '@/integrations/supabase/types';
 
 type ImportableTables = 'printer_parts' | 'manufacturers' | 'printer_part_categories';
-
-// Simple types directly from database schema
-type Profile = {
-  id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  is_active: boolean;
-  user_roles: {
-    id: string;
-    role: DatabaseType['public']['Enums']['user_role'];
-  }[];
-};
 
 const Admin = () => {
   const [importing, setImporting] = useState(false);
   const [selectedTable, setSelectedTable] = useState<ImportableTables>('printer_parts');
   const { toast } = useToast();
 
-  // Simplified query that just gets active users and their roles
-  const { data: activeUsers, isLoading: loadingUsers } = useQuery({
-    queryKey: ['admin', 'activeUsers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          display_name,
-          avatar_url,
-          is_active,
-          user_roles (
-            id,
-            role
-          )
-        `)
-        .eq('is_active', true);
-
-      if (error) {
-        console.error('Error fetching users:', error);
-        throw error;
-      }
-
-      return (data || []) as Profile[];
-    },
-    refetchInterval: 30000
-  });
-
-  // Fetch parts count
-  const { data: partsCount, isLoading: loadingParts } = useQuery({
-    queryKey: ['admin', 'partsCount'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('printer_parts')
-        .select('*', { count: 'exact', head: true });
-      
-      if (error) throw error;
-      return count || 0;
-    },
-    refetchInterval: 30000
-  });
-
-  // Fetch reviews count
-  const { data: reviewsCount, isLoading: loadingReviews } = useQuery({
-    queryKey: ['admin', 'reviewsCount'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('part_reviews')
-        .select('*', { count: 'exact', head: true });
-      
-      if (error) throw error;
-      return count || 0;
-    },
-    refetchInterval: 30000
-  });
-
-  // Fetch trending parts
-  const { data: trendingParts, isLoading: loadingTrending } = useQuery({
-    queryKey: ['admin', 'trendingParts'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('printer_parts')
-        .select('name, community_score, review_count')
-        .order('community_score', { ascending: false })
-        .limit(5);
-      
-      if (error) throw error;
-      return data || [];
-    },
-    refetchInterval: 30000
-  });
-
-  // Fetch recent reviews
-  const { data: recentReviews, isLoading: loadingRecentReviews } = useQuery({
-    queryKey: ['admin', 'recentReviews'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('part_reviews')
-        .select(`
-          title,
-          rating,
-          created_at,
-          printer_parts(name)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (error) throw error;
-      return data || [];
-    },
-    refetchInterval: 30000
-  });
+  const { data: activeUsers, isLoading: loadingUsers } = useActiveUsers();
+  const { data: partsCount, isLoading: loadingParts } = usePartsCount();
+  const { data: reviewsCount, isLoading: loadingReviews } = useReviewsCount();
+  const { data: trendingParts, isLoading: loadingTrending } = useTrendingParts();
+  const { data: recentReviews, isLoading: loadingRecentReviews } = useRecentReviews();
 
   // Set up real-time subscription for updates
   useEffect(() => {
