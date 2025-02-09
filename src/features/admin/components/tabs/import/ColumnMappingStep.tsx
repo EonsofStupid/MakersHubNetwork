@@ -13,6 +13,7 @@ type Props = {
 const AVAILABLE_FIELDS = {
   basic: [
     { value: 'name', label: 'Name' },
+    { value: 'slug', label: 'Slug' },
     { value: 'description', label: 'Description' },
     { value: 'summary', label: 'Summary' },
     { value: 'model_number', label: 'Model Number' },
@@ -25,6 +26,17 @@ const AVAILABLE_FIELDS = {
   compatibility: [
     { value: 'compatibility.firmware', label: 'Firmware Compatibility' },
     { value: 'compatibility.printer_models', label: 'Printer Models' },
+  ],
+  dimensions: [
+    { value: 'dimensions.width', label: 'Width' },
+    { value: 'dimensions.height', label: 'Height' },
+    { value: 'dimensions.length', label: 'Length' },
+    { value: 'dimensions.unit', label: 'Unit' },
+  ],
+  price: [
+    { value: 'price_range.min', label: 'Minimum Price' },
+    { value: 'price_range.max', label: 'Maximum Price' },
+    { value: 'price_range.currency', label: 'Currency' },
   ],
 };
 
@@ -83,7 +95,7 @@ export const ColumnMappingStep = ({ headers, onComplete }: Props) => {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleComplete}>
+        <Button onClick={handleComplete} disabled={Object.keys(mappings).length === 0}>
           Continue to Preview
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
