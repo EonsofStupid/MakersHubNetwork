@@ -10,16 +10,7 @@ export const useActiveUsers = () => {
     queryFn: async (): Promise<Profile[]> => {
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          display_name,
-          avatar_url,
-          is_active,
-          user_roles!user_roles_profile_id_fkey (
-            id,
-            role
-          )
-        `)
+        .select('id, display_name, avatar_url, is_active')
         .eq('is_active', true);
 
       if (error) throw error;

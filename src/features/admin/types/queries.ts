@@ -6,10 +6,6 @@ export type Profile = {
   display_name: string | null;
   avatar_url: string | null;
   is_active: boolean;
-  user_roles: Array<{
-    id: string;
-    role: Database["public"]["Enums"]["user_role"];
-  }>;
 };
 
 export type TrendingPart = {
