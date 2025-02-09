@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Star, FileText, Users, UserCheck } from 'lucide-react';
+import { TrendingUp, Star, FileText, Users, UserCheck, Component } from 'lucide-react';
 import { useActiveUsersCount } from '../../queries/useActiveUsersCount';
 import { usePartsCount } from '../../queries/usePartsCount';
 import { useReviewsCount } from '../../queries/useReviewsCount';
@@ -16,7 +16,7 @@ export const OverviewTab = () => {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div>
@@ -49,6 +49,24 @@ export const OverviewTab = () => {
             </div>
             <p className="text-xs text-muted-foreground">
               Total registered users
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-sm font-medium">Printer Parts</CardTitle>
+              <CardDescription>Total parts in catalog</CardDescription>
+            </div>
+            <Component className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loadingParts ? '...' : partsCount}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Total parts available
             </p>
           </CardContent>
         </Card>
