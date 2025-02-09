@@ -36,35 +36,17 @@
 
     --radius: 0.5rem;
   }
-}
 
-@layer base {
   * {
-    @apply border-border;
+    @apply border-border selection:bg-primary/20 selection:text-primary;
   }
+  
   body {
     @apply bg-background text-foreground min-h-screen overflow-x-hidden;
   }
+  
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
-  }
-
-  /* Custom scrollbar styles */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-primary/30 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary/50;
   }
 }
 
@@ -178,4 +160,64 @@
       transform: translate(0) scale(1.1);
     }
   }
+
+  .glass-morphism {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)];
+  }
+  
+  .neo-blur {
+    @apply backdrop-blur-2xl bg-black/40 border border-white/10;
+  }
+
+  .cyber-card {
+    @apply relative overflow-hidden rounded-lg border border-primary/20 bg-background/40 backdrop-blur-xl
+           transition-all duration-300 hover:border-primary/40
+           before:absolute before:inset-0 before:bg-gradient-to-br 
+           before:from-primary/5 before:via-secondary/5 before:to-primary/5;
+  }
+
+  .cyber-glow {
+    @apply relative
+           after:absolute after:inset-0 
+           after:bg-gradient-to-r after:from-primary/0 after:via-primary/30 after:to-primary/0
+           after:blur-xl after:opacity-0
+           hover:after:opacity-100 after:transition-opacity after:duration-500;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-br from-primary via-white to-secondary bg-clip-text text-transparent;
+  }
+
+  .border-glow {
+    @apply border border-primary/20 shadow-[0_0_15px_rgba(0,240,255,0.2)]
+           hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.4)]
+           transition-all duration-300;
+  }
+}
+
+@layer utilities {
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary/50;
 }
