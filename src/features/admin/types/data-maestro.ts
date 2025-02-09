@@ -3,8 +3,15 @@ import { Database } from "@/integrations/supabase/types";
 
 export type BaselineConfig = Database["public"]["Tables"]["baseline_configs"]["Row"];
 
-// Rename to DataMaestroTabId to avoid confusion with component name
-export type DataMaestroTabId = 'api-keys' | 'csv-import' | 'visualizer' | 'baseline';
+// Enum for tab IDs to provide stricter type checking
+export const DataMaestroTabIds = {
+  API_KEYS: 'api-keys',
+  CSV_IMPORT: 'csv-import',
+  VISUALIZER: 'visualizer',
+  BASELINE: 'baseline'
+} as const;
+
+export type DataMaestroTabId = typeof DataMaestroTabIds[keyof typeof DataMaestroTabIds];
 
 export interface APIKeyProvider {
   id: string;
@@ -13,15 +20,24 @@ export interface APIKeyProvider {
   icon: string;
 }
 
-// Use database types as source of truth
-export type ImportSession = Database["public"]["Tables"]["import_sessions"]["Row"];
+// Visualization types as source of truth for the graph
+export const NodeTypes = {
+  PART: 'part',
+  CATEGORY: 'category',
+  MANUFACTURER: 'manufacturer'
+} as const;
 
-// Use database types as source of truth
-export type ImportError = Database["public"]["Tables"]["import_errors"]["Row"];
+export type NodeType = typeof NodeTypes[keyof typeof NodeTypes];
 
-// Visualization types
-export type NodeType = 'part' | 'category' | 'manufacturer';
-export type EdgeType = 'requires' | 'compatible-with' | 'upgrades' | 'alternative-to' | 'accessory-for';
+export const EdgeTypes = {
+  REQUIRES: 'requires',
+  COMPATIBLE_WITH: 'compatible-with',
+  UPGRADES: 'upgrades',
+  ALTERNATIVE_TO: 'alternative-to',
+  ACCESSORY_FOR: 'accessory-for'
+} as const;
+
+export type EdgeType = typeof EdgeTypes[keyof typeof EdgeTypes];
 
 export interface VisualNode {
   id: string;
@@ -39,3 +55,4 @@ export interface VisualEdge {
   data?: Record<string, any>;
   style?: Record<string, any>;
 }
+

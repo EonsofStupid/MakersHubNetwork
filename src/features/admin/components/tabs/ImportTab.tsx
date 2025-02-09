@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from "@/integrations/supabase/client";
-import { ImportStep, ImportPreviewData, ImportSession } from '../../types/import';
+import { ImportStep, ImportPreviewData, ImportSession, ValidationError } from '../../types/import';
 import { Upload, FileUp, Table, Check } from 'lucide-react';
 import { ColumnMappingStep } from './import/ColumnMappingStep';
 import { PreviewStep } from './import/PreviewStep';
@@ -35,9 +34,11 @@ export const ImportTab = () => {
     required.forEach(field => {
       if (!data.mapped[field]) {
         errors.push({
-          row: 0,
-          column: field,
-          message: `${field} is required`
+          row_number: 0,
+          column_name: field,
+          error_type: 'validation',
+          error_message: `${field} is required`,
+          original_value: null
         });
       }
     });
@@ -97,7 +98,7 @@ export const ImportTab = () => {
 
       setColumnMappings(mappings);
       
-      // Generate preview data
+      // Generate preview data with proper error handling
       const preview = csvData.slice(1).map(row => {
         const mapped: Record<string, any> = {};
         Object.entries(mappings).forEach(([csvCol, targetField]) => {
@@ -107,7 +108,6 @@ export const ImportTab = () => {
           }
         });
 
-        // Generate slug if not provided
         if (!mapped.slug && mapped.name) {
           mapped.slug = mapped.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         }
@@ -245,7 +245,6 @@ export const ImportTab = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {/* Step indicators */}
           <div className="flex items-center justify-center space-x-2 mb-6">
             {(['upload', 'mapping', 'preview', 'import'] as ImportStep[]).map((step, index) => (
               <div
@@ -317,9 +316,9 @@ export const ImportTab = () => {
 
           {importSession && importSession.status === 'processing' && (
             <ImportProgress
-              current={importSession.processedRows}
-              total={importSession.totalRows}
-              status={`Processing row ${importSession.processedRows} of ${importSession.totalRows}`}
+              current={importSession.processed_rows}
+              total={importSession.total_rows}
+              status={`Processing row ${importSession.processed_rows} of ${importSession.total_rows}`}
             />
           )}
         </div>
