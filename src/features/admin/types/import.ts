@@ -18,3 +18,4 @@ export type ImportPreviewData = {
   mapped: Record<string, any>;
   errors?: ValidationError[];
 };
+
