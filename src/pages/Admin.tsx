@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,12 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Database, Import, Settings, Table, Upload, Users, TrendingUp, Star, FileText } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import { useActiveUsers } from '@/features/admin/queries/useActiveUsers';
+import { useActiveUsersCount } from '@/features/admin/queries/useActiveUsersCount';
 import { usePartsCount } from '@/features/admin/queries/usePartsCount';
 import { useReviewsCount } from '@/features/admin/queries/useReviewsCount';
 import { useTrendingParts } from '@/features/admin/queries/useTrendingParts';
 import { useRecentReviews } from '@/features/admin/queries/useRecentReviews';
-import type { Database as DatabaseType } from '@/integrations/supabase/types';
 
 type ImportableTables = 'printer_parts' | 'manufacturers' | 'printer_part_categories';
 
@@ -22,7 +20,7 @@ const Admin = () => {
   const [selectedTable, setSelectedTable] = useState<ImportableTables>('printer_parts');
   const { toast } = useToast();
 
-  const { data: activeUsers, isLoading: loadingUsers } = useActiveUsers();
+  const { data: activeUsersCount, isLoading: loadingUsers } = useActiveUsersCount();
   const { data: partsCount, isLoading: loadingParts } = usePartsCount();
   const { data: reviewsCount, isLoading: loadingReviews } = useReviewsCount();
   const { data: trendingParts, isLoading: loadingTrending } = useTrendingParts();
@@ -34,7 +32,7 @@ const Admin = () => {
       .channel('admin-dashboard')
       .on('postgres_changes', { event: '*', schema: 'public' }, () => {
         // Refetch all queries when any relevant table changes
-        void activeUsers;
+        void activeUsersCount;
         void partsCount;
         void reviewsCount;
         void trendingParts;
@@ -120,34 +118,8 @@ const Admin = () => {
               <CardContent>
                 <div className="space-y-2">
                   <p className="text-3xl font-bold">
-                    {loadingUsers ? '...' : activeUsers?.length || 0}
+                    {loadingUsers ? '...' : activeUsersCount || 0}
                   </p>
-                  {activeUsers?.length > 0 && (
-                    <div className="text-sm text-muted-foreground">
-                      {activeUsers.map((profile) => (
-                        <div key={profile.id} className="flex items-center gap-2">
-                          {profile.avatar_url && (
-                            <img 
-                              src={profile.avatar_url} 
-                              alt={profile.display_name || 'User'} 
-                              className="w-6 h-6 rounded-full"
-                            />
-                          )}
-                          <span>{profile.display_name}</span>
-                          <div className="flex gap-1">
-                            {profile.user_roles?.map((role) => (
-                              <span 
-                                key={role.id} 
-                                className="text-xs bg-primary/10 px-2 py-0.5 rounded-full"
-                              >
-                                {role.role}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>

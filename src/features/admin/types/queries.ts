@@ -1,12 +1,7 @@
 
 import type { Database } from "@/integrations/supabase/types";
 
-export type Profile = {
-  id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  is_active: boolean;
-};
+export type ActiveUsersCount = number;
 
 export type TrendingPart = {
   name: string;
@@ -26,7 +21,7 @@ export type RecentReview = {
 export const adminKeys = {
   all: ['admin'] as const,
   users: () => [...adminKeys.all, 'users'] as const,
-  activeUsers: () => [...adminKeys.users(), 'active'] as const,
+  activeUsersCount: () => [...adminKeys.users(), 'active', 'count'] as const,
   parts: () => [...adminKeys.all, 'parts'] as const,
   partsCount: () => [...adminKeys.parts(), 'count'] as const,
   trendingParts: () => [...adminKeys.parts(), 'trending'] as const,
