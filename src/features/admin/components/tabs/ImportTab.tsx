@@ -42,6 +42,21 @@ export const ImportTab = () => {
     }
   };
 
+  const validateMappedData = (data: ImportPreviewData): ValidationError[] => {
+    const errors: ValidationError[] = [];
+    
+    // Validate required fields based on selected table
+    if (!data.mapped.name || !data.mapped.slug) {
+      errors.push({
+        row: 0,
+        column: 'name/slug',
+        message: 'Name and slug are required fields'
+      });
+    }
+
+    return errors;
+  };
+
   const handleColumnMappingComplete = (mappings: Record<string, string>) => {
     setColumnMappings(mappings);
     // Generate preview data based on mappings
@@ -53,10 +68,19 @@ export const ImportTab = () => {
           mapped[targetField] = row[colIndex];
         }
       });
-      return {
+
+      // Generate slug if not provided
+      if (!mapped.slug && mapped.name) {
+        mapped.slug = mapped.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      }
+
+      const previewData: ImportPreviewData = {
         original: Object.fromEntries(csvData[0].map((header, i) => [header, row[i]])),
-        mapped
+        mapped,
+        errors: validateMappedData({ original: {}, mapped }) // Add validation
       };
+
+      return previewData;
     });
     setPreviewData(preview);
     setCurrentStep('preview');
@@ -67,9 +91,16 @@ export const ImportTab = () => {
     try {
       // Process the data in batches
       for (const row of previewData) {
+        if (row.errors && row.errors.length > 0) continue; // Skip rows with errors
+        
+        // Insert data with proper typing
         const { error } = await supabase
           .from(selectedTable)
-          .insert(row.mapped);
+          .insert({
+            ...row.mapped,
+            name: row.mapped.name,
+            slug: row.mapped.slug,
+          });
 
         if (error) throw error;
       }
@@ -187,3 +218,4 @@ export const ImportTab = () => {
     </Card>
   );
 };
+
