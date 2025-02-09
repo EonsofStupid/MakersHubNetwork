@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ContentItem, ContentFilter } from "@/features/admin/types/content";
+import { ContentItem, ContentFilter } from "../../types/content";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ContentListProps {
@@ -77,3 +77,4 @@ export const ContentList = ({ filter, onEdit, onDelete }: ContentListProps) => {
     </div>
   );
 };
+

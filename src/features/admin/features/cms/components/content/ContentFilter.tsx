@@ -1,7 +1,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ContentFilter } from "@/features/admin/types/content";
+import { ContentFilter } from "../../types/content";
 
 interface ContentFilterProps {
   filter: ContentFilter;
@@ -50,3 +50,4 @@ export const ContentFilters = ({ filter, onFilterChange }: ContentFilterProps) =
     </div>
   );
 };
+
