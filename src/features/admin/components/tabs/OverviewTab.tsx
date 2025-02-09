@@ -1,5 +1,7 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Star, FileText, Users, UserCheck, Component } from 'lucide-react';
+import { TrendingUp, Star, FileText, Users, UserCheck, Component, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useActiveUsersCount } from '../../queries/useActiveUsersCount';
 import { usePartsCount } from '../../queries/usePartsCount';
 import { useReviewsCount } from '../../queries/useReviewsCount';
@@ -11,7 +13,7 @@ import { queryClient } from '@/lib/react-query';
 import { adminKeys } from '../../types/queries';
 
 export const OverviewTab = () => {
-  const { data: userCounts, isLoading: loadingUsers } = useActiveUsersCount();
+  const { data: userCounts, isLoading: loadingUsers, refetch: refetchUsers } = useActiveUsersCount();
   const { data: partsCount, isLoading: loadingParts } = usePartsCount();
   const { data: reviewsCount, isLoading: loadingReviews } = useReviewsCount();
   const { data: trendingParts, isLoading: loadingTrending } = useTrendingParts();
@@ -50,7 +52,17 @@ export const OverviewTab = () => {
               <CardTitle className="text-sm font-medium">Active Users</CardTitle>
               <CardDescription>Currently active users</CardDescription>
             </div>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => refetchUsers()}
+                disabled={loadingUsers}
+              >
+                <RefreshCw className={`h-4 w-4 text-muted-foreground ${loadingUsers ? 'animate-spin' : ''}`} />
+              </Button>
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
