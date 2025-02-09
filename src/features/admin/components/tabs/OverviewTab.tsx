@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Star, FileText } from 'lucide-react';
+import { TrendingUp, Star, FileText, Users, UserCheck } from 'lucide-react';
 import { useActiveUsersCount } from '../../queries/useActiveUsersCount';
 import { usePartsCount } from '../../queries/usePartsCount';
 import { useReviewsCount } from '../../queries/useReviewsCount';
@@ -8,7 +8,7 @@ import { useTrendingParts } from '../../queries/useTrendingParts';
 import { useRecentReviews } from '../../queries/useRecentReviews';
 
 export const OverviewTab = () => {
-  const { data: activeUsersCount, isLoading: loadingUsers } = useActiveUsersCount();
+  const { data: userCounts, isLoading: loadingUsers } = useActiveUsersCount();
   const { data: partsCount, isLoading: loadingParts } = usePartsCount();
   const { data: reviewsCount, isLoading: loadingReviews } = useReviewsCount();
   const { data: trendingParts, isLoading: loadingTrending } = useTrendingParts();
@@ -18,37 +18,55 @@ export const OverviewTab = () => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Active Users</CardTitle>
-            <CardDescription>Currently registered users</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <p className="text-3xl font-bold">
-                {loadingUsers ? '...' : activeUsersCount || 0}
-              </p>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+              <CardDescription>Currently active users</CardDescription>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Printer Parts</CardTitle>
-            <CardDescription>Total printer components</CardDescription>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">
-              {loadingParts ? '...' : partsCount}
+            <div className="text-2xl font-bold">
+              {loadingUsers ? '...' : userCounts?.count || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Active in the last 30 days
             </p>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader>
-            <CardTitle>Reviews</CardTitle>
-            <CardDescription>User submitted reviews</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <CardDescription>Registered accounts</CardDescription>
+            </div>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">
+            <div className="text-2xl font-bold">
+              {loadingUsers ? '...' : userCounts?.total_count || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Total registered users
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-sm font-medium">Reviews</CardTitle>
+              <CardDescription>User submitted reviews</CardDescription>
+            </div>
+            <Star className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
               {loadingReviews ? '...' : reviewsCount}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Total submitted reviews
             </p>
           </CardContent>
         </Card>
@@ -121,4 +139,3 @@ export const OverviewTab = () => {
     </div>
   );
 };
-
