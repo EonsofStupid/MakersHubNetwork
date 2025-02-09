@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { 
@@ -13,7 +14,7 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
   return useQuery({
     queryKey: ["userActivity", { includeInactive }],
     queryFn: async () => {
-      console.log("Fetching user activity data...");
+      console.log("useUserActivity - Fetching user activity data...");
       
       const { data: profiles, error } = await supabase
         .from("profiles")
@@ -34,7 +35,7 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
         .returns<ProfileWithRoles[]>();
 
       if (error) {
-        console.error("Error fetching user activity:", error);
+        console.error("useUserActivity - Error fetching user activity:", error);
         throw error;
       }
 
@@ -59,9 +60,10 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
         adminOverrides: profiles.filter(p => p.admin_override_active).length
       };
 
-      console.log("User activity data fetched:", {
-        profilesCount: transformedProfiles.length,
-        stats
+      console.log("useUserActivity - Data fetched successfully:", {
+        totalProfiles: transformedProfiles.length,
+        stats,
+        timestamp: new Date().toISOString()
       });
 
       return {
@@ -69,6 +71,7 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
         stats
       };
     },
-    enabled
+    enabled,
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 };
