@@ -7,6 +7,7 @@ import { ContentFilter, ContentItem } from '../types/content';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ContentTab = () => {
   const [filter, setFilter] = useState<ContentFilter>({});
