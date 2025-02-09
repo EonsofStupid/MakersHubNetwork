@@ -13,21 +13,35 @@ export const useActiveUsersCount = () => {
     queryKey: adminKeys.activeUsersCount(),
     queryFn: async (): Promise<UserCounts> => {
       console.log('Fetching active users count...');
-      const { data, error } = await supabase
-        .from('active_users_count')
-        .select('count, total_count')
-        .single();
       
-      if (error) {
-        console.error('Error fetching active users count:', error);
-        throw error;
+      // Get active users from profiles table
+      const { data: activeUsers, error: activeError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('is_active', true);
+
+      if (activeError) {
+        console.error('Error fetching active users:', activeError);
+        throw activeError;
       }
-      
-      console.log('Active users count data:', data);
-      return {
-        count: data?.count || 0,
-        total_count: data?.total_count || 0
+
+      // Get total users count
+      const { data: totalUsers, error: totalError } = await supabase
+        .from('profiles')
+        .select('id');
+
+      if (totalError) {
+        console.error('Error fetching total users:', totalError);
+        throw totalError;
+      }
+
+      const counts = {
+        count: activeUsers?.length || 0,
+        total_count: totalUsers?.length || 0
       };
+
+      console.log('Active users count data:', counts);
+      return counts;
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
