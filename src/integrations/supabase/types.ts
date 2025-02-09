@@ -51,6 +51,95 @@ export type Database = {
         }
         Relationships: []
       }
+      import_errors: {
+        Row: {
+          column_name: string | null
+          created_at: string
+          error_message: string
+          error_type: string
+          id: string
+          import_session_id: string | null
+          original_value: string | null
+          row_number: number
+        }
+        Insert: {
+          column_name?: string | null
+          created_at?: string
+          error_message: string
+          error_type: string
+          id?: string
+          import_session_id?: string | null
+          original_value?: string | null
+          row_number: number
+        }
+        Update: {
+          column_name?: string | null
+          created_at?: string
+          error_message?: string
+          error_type?: string
+          id?: string
+          import_session_id?: string | null
+          original_value?: string | null
+          row_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_errors_import_session_id_fkey"
+            columns: ["import_session_id"]
+            isOneToOne: false
+            referencedRelation: "import_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_sessions: {
+        Row: {
+          column_types: Json | null
+          created_at: string
+          created_by: string | null
+          error_count: number
+          id: string
+          mapping_config: Json | null
+          original_filename: string | null
+          processed_rows: number
+          status: string
+          success_count: number
+          total_rows: number
+          updated_at: string
+          validation_rules: Json | null
+        }
+        Insert: {
+          column_types?: Json | null
+          created_at?: string
+          created_by?: string | null
+          error_count?: number
+          id?: string
+          mapping_config?: Json | null
+          original_filename?: string | null
+          processed_rows?: number
+          status?: string
+          success_count?: number
+          total_rows?: number
+          updated_at?: string
+          validation_rules?: Json | null
+        }
+        Update: {
+          column_types?: Json | null
+          created_at?: string
+          created_by?: string | null
+          error_count?: number
+          id?: string
+          mapping_config?: Json | null
+          original_filename?: string | null
+          processed_rows?: number
+          status?: string
+          success_count?: number
+          total_rows?: number
+          updated_at?: string
+          validation_rules?: Json | null
+        }
+        Relationships: []
+      }
       manufacturers: {
         Row: {
           created_at: string
