@@ -1,12 +1,11 @@
 
 import { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Database, Import, Settings, Table, Users } from 'lucide-react';
+import { Database, Import, Settings, Table, Users, Wand2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { OverviewTab } from '@/features/admin/components/tabs/OverviewTab';
-import { ImportTab } from '@/features/admin/components/tabs/ImportTab';
 import { UsersTab } from '@/features/admin/components/tabs/UsersTab';
-import { ContentTab } from '@/features/admin/components/tabs/ContentTab';
+import { DataMaestroTab } from '@/features/admin/components/tabs/DataMaestroTab';
 import { SettingsTab } from '@/features/admin/components/tabs/SettingsTab';
 import { MainNav } from '@/components/MainNav';
 import { motion } from 'framer-motion';
@@ -74,8 +73,7 @@ const Admin = () => {
             {[
               { value: 'overview', icon: Database, label: 'Overview' },
               { value: 'users', icon: Users, label: 'Users' },
-              { value: 'content', icon: Table, label: 'Content' },
-              { value: 'import', icon: Import, label: 'Import' },
+              { value: 'data-maestro', icon: Wand2, label: 'Data Maestro' },
               { value: 'settings', icon: Settings, label: 'Settings' }
             ].map(({ value, icon: Icon, label }) => (
               <TabsTrigger 
@@ -93,9 +91,8 @@ const Admin = () => {
 
           {[
             { value: 'overview', component: OverviewTab },
-            { value: 'import', component: ImportTab },
             { value: 'users', component: UsersTab },
-            { value: 'content', component: ContentTab },
+            { value: 'data-maestro', component: DataMaestroTab },
             { value: 'settings', component: SettingsTab }
           ].map(({ value, component: Component }) => (
             <TabsContent 
