@@ -7,15 +7,14 @@ export const useActiveUsersCount = () => {
   const [count, setCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
   useEffect(() => {
-    let channel: RealtimeChannel;
-
     const setupPresence = async () => {
       try {
         setIsLoading(true);
         
-        channel = supabase.channel('online-users', {
+        const newChannel = supabase.channel('online-users', {
           config: {
             presence: {
               key: 'online-users',
@@ -24,9 +23,9 @@ export const useActiveUsersCount = () => {
         });
 
         // Handle presence state changes
-        channel
+        newChannel
           .on('presence', { event: 'sync' }, () => {
-            const state = channel.presenceState();
+            const state = newChannel.presenceState();
             const uniqueUsers = new Set(
               Object.values(state)
                 .flat()
@@ -43,14 +42,16 @@ export const useActiveUsersCount = () => {
           });
 
         // Subscribe to the channel
-        await channel.subscribe(async (status) => {
+        await newChannel.subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
-            await channel.track({
+            await newChannel.track({
               online_at: new Date().toISOString(),
               user_id: 'admin-dashboard', // Special identifier for admin dashboard
             });
           }
         });
+
+        setChannel(newChannel);
 
       } catch (err) {
         console.error('Error setting up presence:', err);
@@ -71,10 +72,18 @@ export const useActiveUsersCount = () => {
   const refresh = async () => {
     try {
       setIsLoading(true);
-      // Re-subscribe to the channel
-      await supabase.removeChannel('online-users');
-      const newChannel = supabase.channel('online-users');
+      if (channel) {
+        await supabase.removeChannel(channel);
+      }
+      const newChannel = supabase.channel('online-users', {
+        config: {
+          presence: {
+            key: 'online-users',
+          },
+        },
+      });
       await newChannel.subscribe();
+      setChannel(newChannel);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to refresh'));
     } finally {
