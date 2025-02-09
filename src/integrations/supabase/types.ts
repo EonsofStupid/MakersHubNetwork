@@ -611,7 +611,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      active_users_count: {
+        Row: {
+          count: number | null
+        }
+        Relationships: []
+      }
+      parts_count: {
+        Row: {
+          count: number | null
+        }
+        Relationships: []
+      }
+      reviews_count: {
+        Row: {
+          count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_is_super_admin: {
@@ -654,6 +671,10 @@ export type Database = {
           override_styles: Json
         }
         Returns: Json
+      }
+      refresh_materialized_views: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
