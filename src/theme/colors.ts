@@ -1,3 +1,4 @@
+
 const colors = {
   border: "hsl(var(--border))",
   input: "hsl(var(--input))",
@@ -32,6 +33,20 @@ const colors = {
     DEFAULT: "hsl(var(--card))",
     foreground: "hsl(var(--card-foreground))",
   },
+  admin: {
+    card: {
+      DEFAULT: "rgba(16, 20, 24, 0.7)",
+      hover: "rgba(20, 24, 28, 0.8)",
+    },
+    border: {
+      DEFAULT: "rgba(0, 240, 255, 0.2)",
+      hover: "rgba(0, 240, 255, 0.4)",
+    },
+    glow: {
+      primary: "rgba(0, 240, 255, 0.5)",
+      secondary: "rgba(255, 45, 110, 0.5)",
+    }
+  }
 };
 
 export default colors;
