@@ -1,67 +1,48 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Star, FileText, Users, UserCheck, Component, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useActiveUsersCount } from '../../queries/useActiveUsersCount';
+import { useTotalUsersCount } from '../../queries/useTotalUsersCount';
 import { usePartsCount } from '../../queries/usePartsCount';
 import { useReviewsCount } from '../../queries/useReviewsCount';
 import { useTrendingParts } from '../../queries/useTrendingParts';
 import { useRecentReviews } from '../../queries/useRecentReviews';
-import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { queryClient } from '@/lib/react-query';
-import { adminKeys } from '../../types/queries';
 import { useToast } from '@/hooks/use-toast';
 
 export const OverviewTab = () => {
   const { toast } = useToast();
   const { 
-    data: userCounts, 
-    isLoading: loadingUsers, 
-    isError: isUsersError,
-    refetch: refetchUsers 
+    count: activeUsers, 
+    isLoading: loadingActive, 
+    error: activeError,
+    refresh: refreshActive 
   } = useActiveUsersCount();
+  
+  const { 
+    data: totalUsers, 
+    isLoading: loadingTotal,
+    isError: totalError,
+    refetch: refreshTotal
+  } = useTotalUsersCount();
+
   const { data: partsCount, isLoading: loadingParts } = usePartsCount();
   const { data: reviewsCount, isLoading: loadingReviews } = useReviewsCount();
   const { data: trendingParts, isLoading: loadingTrending } = useTrendingParts();
   const { data: recentReviews, isLoading: loadingRecentReviews } = useRecentReviews();
 
-  // Set up real-time subscription for profile changes
-  useEffect(() => {
-    const channel = supabase
-      .channel('public:profiles')
-      .on(
-        'postgres_changes',
-        { 
-          event: '*', 
-          schema: 'public',
-          table: 'profiles'
-        },
-        (payload) => {
-          console.log('Profile change detected:', payload);
-          // Invalidate the query to trigger a refresh
-          queryClient.invalidateQueries({ queryKey: adminKeys.activeUsersCount() });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
   const handleRefresh = async () => {
     try {
-      await refetchUsers();
+      await refreshActive();
+      await refreshTotal();
       toast({
         title: "Refreshed",
-        description: "Active users count has been updated.",
+        description: "User counts have been updated.",
       });
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to refresh active users count.",
+        description: "Failed to refresh user counts.",
       });
     }
   };
@@ -80,25 +61,25 @@ export const OverviewTab = () => {
                 variant="ghost" 
                 size="icon"
                 onClick={handleRefresh}
-                disabled={loadingUsers}
+                disabled={loadingActive}
               >
-                <RefreshCw className={`h-4 w-4 text-muted-foreground ${loadingUsers ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 text-muted-foreground ${loadingActive ? 'animate-spin' : ''}`} />
               </Button>
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isUsersError ? (
+              {activeError ? (
                 <span className="text-destructive">Error</span>
-              ) : loadingUsers ? (
+              ) : loadingActive ? (
                 <span className="opacity-70">...</span>
               ) : (
-                userCounts?.count || 0
+                activeUsers
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Active in the last 30 days
+              Real-time active users
             </p>
           </CardContent>
         </Card>
@@ -113,12 +94,12 @@ export const OverviewTab = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isUsersError ? (
+              {totalError ? (
                 <span className="text-destructive">Error</span>
-              ) : loadingUsers ? (
+              ) : loadingTotal ? (
                 <span className="opacity-70">...</span>
               ) : (
-                userCounts?.total_count || 0
+                totalUsers
               )}
             </div>
             <p className="text-xs text-muted-foreground">
