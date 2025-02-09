@@ -2,6 +2,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { ContentFilter } from "../../types/content";
+import { motion } from "framer-motion";
 
 interface ContentFilterProps {
   filter: ContentFilter;
@@ -10,12 +11,17 @@ interface ContentFilterProps {
 
 export const ContentFilters = ({ filter, onFilterChange }: ContentFilterProps) => {
   return (
-    <div className="flex flex-wrap gap-4 mb-6">
+    <motion.div 
+      className="flex flex-wrap gap-4 mb-6"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <Select
         value={filter.type}
         onValueChange={(value) => onFilterChange({ ...filter, type: value as any })}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-[180px] glass-morphism mad-scientist-hover">
           <SelectValue placeholder="Content Type" />
         </SelectTrigger>
         <SelectContent>
@@ -30,7 +36,7 @@ export const ContentFilters = ({ filter, onFilterChange }: ContentFilterProps) =
         value={filter.status}
         onValueChange={(value) => onFilterChange({ ...filter, status: value as any })}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-[180px] glass-morphism mad-scientist-hover">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
@@ -45,9 +51,8 @@ export const ContentFilters = ({ filter, onFilterChange }: ContentFilterProps) =
         placeholder="Search content..."
         value={filter.search || ''}
         onChange={(e) => onFilterChange({ ...filter, search: e.target.value })}
-        className="w-[200px]"
+        className="w-[200px] glass-morphism mad-scientist-hover placeholder:text-muted-foreground/50"
       />
-    </div>
+    </motion.div>
   );
 };
-
