@@ -614,6 +614,7 @@ export type Database = {
       active_users_count: {
         Row: {
           count: number | null
+          total_count: number | null
         }
         Relationships: []
       }
