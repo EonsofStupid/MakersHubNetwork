@@ -11,9 +11,16 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { queryClient } from '@/lib/react-query';
 import { adminKeys } from '../../types/queries';
+import { useToast } from '@/hooks/use-toast';
 
 export const OverviewTab = () => {
-  const { data: userCounts, isLoading: loadingUsers, refetch: refetchUsers } = useActiveUsersCount();
+  const { toast } = useToast();
+  const { 
+    data: userCounts, 
+    isLoading: loadingUsers, 
+    isError: isUsersError,
+    refetch: refetchUsers 
+  } = useActiveUsersCount();
   const { data: partsCount, isLoading: loadingParts } = usePartsCount();
   const { data: reviewsCount, isLoading: loadingReviews } = useReviewsCount();
   const { data: trendingParts, isLoading: loadingTrending } = useTrendingParts();
@@ -28,10 +35,10 @@ export const OverviewTab = () => {
         { 
           event: '*', 
           schema: 'public',
-          table: 'profiles',
-          filter: 'is_active=eq.true'
+          table: 'profiles'
         },
-        () => {
+        (payload) => {
+          console.log('Profile change detected:', payload);
           // Invalidate the query to trigger a refresh
           queryClient.invalidateQueries({ queryKey: adminKeys.activeUsersCount() });
         }
@@ -42,6 +49,22 @@ export const OverviewTab = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const handleRefresh = async () => {
+    try {
+      await refetchUsers();
+      toast({
+        title: "Refreshed",
+        description: "Active users count has been updated.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to refresh active users count.",
+      });
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -56,7 +79,7 @@ export const OverviewTab = () => {
               <Button 
                 variant="ghost" 
                 size="icon"
-                onClick={() => refetchUsers()}
+                onClick={handleRefresh}
                 disabled={loadingUsers}
               >
                 <RefreshCw className={`h-4 w-4 text-muted-foreground ${loadingUsers ? 'animate-spin' : ''}`} />
@@ -66,7 +89,13 @@ export const OverviewTab = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {loadingUsers ? '...' : userCounts?.count || 0}
+              {isUsersError ? (
+                <span className="text-destructive">Error</span>
+              ) : loadingUsers ? (
+                <span className="opacity-70">...</span>
+              ) : (
+                userCounts?.count || 0
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               Active in the last 30 days
@@ -84,7 +113,13 @@ export const OverviewTab = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {loadingUsers ? '...' : userCounts?.total_count || 0}
+              {isUsersError ? (
+                <span className="text-destructive">Error</span>
+              ) : loadingUsers ? (
+                <span className="opacity-70">...</span>
+              ) : (
+                userCounts?.total_count || 0
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               Total registered users
