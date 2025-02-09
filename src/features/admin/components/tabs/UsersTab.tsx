@@ -1,17 +1,17 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { Users, UserCheck } from 'lucide-react';
 
 export const UsersTab = () => {
-  const { data: userActivityData, isLoading } = useUserActivity({
+  const { data: userActivityData, isLoading, error } = useUserActivity({
     enabled: true
   });
 
-  console.log('UsersTab - User activity data:', {
-    totalUsers: userActivityData?.stats.totalUsers || 0,
-    activeUsers: userActivityData?.stats.activeUsers || 0,
+  console.log('UsersTab - Component render:', {
+    isLoading,
+    error,
+    data: userActivityData,
     timestamp: new Date().toISOString()
   });
 

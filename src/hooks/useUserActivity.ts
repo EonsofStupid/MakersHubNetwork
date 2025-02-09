@@ -14,7 +14,7 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
   return useQuery({
     queryKey: ["userActivity", { includeInactive }],
     queryFn: async () => {
-      console.log("useUserActivity - Fetching user activity data...");
+      console.log("useUserActivity - Starting data fetch...");
       
       const { data: profiles, error } = await supabase
         .from("profiles")
@@ -39,18 +39,28 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
         throw error;
       }
 
+      console.log("useUserActivity - Raw profiles data:", profiles);
+
       // Transform the data to match our UserActivityProfile type
-      const transformedProfiles: UserActivityProfile[] = profiles.map(profile => ({
-        id: profile.id,
-        display_name: profile.display_name,
-        avatar_url: profile.avatar_url,
-        is_active: profile.is_active || false,
-        admin_override_active: profile.admin_override_active || false,
-        profile_completed: profile.profile_completed || false,
-        last_login: profile.last_login,
-        last_forum_activity: profile.last_forum_activity,
-        user_roles: profile.user_roles || []
-      }));
+      const transformedProfiles: UserActivityProfile[] = profiles.map(profile => {
+        console.log("useUserActivity - Processing profile:", {
+          id: profile.id,
+          is_active: profile.is_active,
+          admin_override: profile.admin_override_active
+        });
+
+        return {
+          id: profile.id,
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url,
+          is_active: profile.is_active || false,
+          admin_override_active: profile.admin_override_active || false,
+          profile_completed: profile.profile_completed || false,
+          last_login: profile.last_login,
+          last_forum_activity: profile.last_forum_activity,
+          user_roles: profile.user_roles || []
+        };
+      });
 
       // Calculate stats
       const stats: UserActivityStats = {
@@ -60,9 +70,11 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
         adminOverrides: profiles.filter(p => p.admin_override_active).length
       };
 
-      console.log("useUserActivity - Data fetched successfully:", {
-        totalProfiles: transformedProfiles.length,
-        stats,
+      console.log("useUserActivity - Calculated stats:", {
+        totalUsers: stats.totalUsers,
+        activeUsers: stats.activeUsers,
+        completedProfiles: stats.completedProfiles,
+        adminOverrides: stats.adminOverrides,
         timestamp: new Date().toISOString()
       });
 
