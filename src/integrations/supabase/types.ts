@@ -78,6 +78,113 @@ export type Database = {
         }
         Relationships: []
       }
+      content_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "content_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_items: {
+        Row: {
+          content: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata: Json | null
+          status: Database["public"]["Enums"]["content_status"]
+          title: string
+          type: Database["public"]["Enums"]["content_type"]
+          updated_at: string
+          version: number | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: Database["public"]["Enums"]["content_status"]
+          title: string
+          type: Database["public"]["Enums"]["content_type"]
+          updated_at?: string
+          version?: number | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: Database["public"]["Enums"]["content_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["content_type"]
+          updated_at?: string
+          version?: number | null
+        }
+        Relationships: []
+      }
+      content_items_categories: {
+        Row: {
+          category_id: string
+          content_id: string
+        }
+        Insert: {
+          category_id: string
+          content_id: string
+        }
+        Update: {
+          category_id?: string
+          content_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_items_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "content_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_items_categories_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       import_errors: {
         Row: {
           column_name: string | null
@@ -197,6 +304,42 @@ export type Database = {
           slug?: string
           updated_at?: string
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      media_assets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_size: number
+          file_type: string
+          filename: string
+          id: string
+          metadata: Json | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_size: number
+          file_type: string
+          filename: string
+          id?: string
+          metadata?: Json | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_size?: number
+          file_type?: string
+          filename?: string
+          id?: string
+          metadata?: Json | null
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
@@ -795,6 +938,8 @@ export type Database = {
       }
     }
     Enums: {
+      content_status: "draft" | "review" | "published" | "archived"
+      content_type: "guide" | "tutorial" | "part-desc" | "build-log"
       part_status: "draft" | "published" | "archived"
       theme_status: "draft" | "published" | "archived"
       user_role: "super_admin" | "admin" | "maker" | "builder"
