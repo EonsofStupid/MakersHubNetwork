@@ -1,17 +1,15 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUserActivity } from '@/hooks/useUserActivity';
+import { useActiveUsersCount } from '../../queries/useActiveUsersCount';
 import { Users, UserCheck } from 'lucide-react';
 
 export const UsersTab = () => {
-  const { data: userActivityData, isLoading, error } = useUserActivity({
-    enabled: true
-  });
+  const { data: userCounts, isLoading, error } = useActiveUsersCount();
 
   console.log('UsersTab - Component render:', {
     isLoading,
     error,
-    data: userActivityData,
+    data: userCounts,
     timestamp: new Date().toISOString()
   });
 
@@ -31,7 +29,7 @@ export const UsersTab = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {isLoading ? '...' : userActivityData?.stats.activeUsers || 0}
+                  {isLoading ? '...' : userCounts?.count || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Users active in the last 30 days
@@ -46,7 +44,7 @@ export const UsersTab = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {isLoading ? '...' : userActivityData?.stats.totalUsers || 0}
+                  {isLoading ? '...' : userCounts?.total_count || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Total registered accounts
