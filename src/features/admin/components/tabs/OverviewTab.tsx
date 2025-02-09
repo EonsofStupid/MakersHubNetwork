@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Star, FileText, Users, UserCheck, Component } from 'lucide-react';
 import { useActiveUsersCount } from '../../queries/useActiveUsersCount';
@@ -6,6 +5,10 @@ import { usePartsCount } from '../../queries/usePartsCount';
 import { useReviewsCount } from '../../queries/useReviewsCount';
 import { useTrendingParts } from '../../queries/useTrendingParts';
 import { useRecentReviews } from '../../queries/useRecentReviews';
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { queryClient } from '@/lib/react-query';
+import { adminKeys } from '../../types/queries';
 
 export const OverviewTab = () => {
   const { data: userCounts, isLoading: loadingUsers } = useActiveUsersCount();
@@ -13,6 +16,30 @@ export const OverviewTab = () => {
   const { data: reviewsCount, isLoading: loadingReviews } = useReviewsCount();
   const { data: trendingParts, isLoading: loadingTrending } = useTrendingParts();
   const { data: recentReviews, isLoading: loadingRecentReviews } = useRecentReviews();
+
+  // Set up real-time subscription for profile changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('public:profiles')
+      .on(
+        'postgres_changes',
+        { 
+          event: '*', 
+          schema: 'public',
+          table: 'profiles',
+          filter: 'is_active=eq.true'
+        },
+        () => {
+          // Invalidate the query to trigger a refresh
+          queryClient.invalidateQueries({ queryKey: adminKeys.activeUsersCount() });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <div className="space-y-4">

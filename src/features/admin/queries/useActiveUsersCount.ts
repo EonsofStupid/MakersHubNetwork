@@ -14,35 +14,35 @@ export const useActiveUsersCount = () => {
     queryFn: async (): Promise<UserCounts> => {
       console.log('Fetching active users count...');
       
-      // Get active users from profiles table
-      const { data: activeUsers, error: activeError } = await supabase
+      // Get counts with a single query using count aggregation
+      const { data, error } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('is_active', true);
+        .select('*', { count: 'exact', head: true })
+        .or('is_active.eq.true,admin_override_active.eq.true');
 
-      if (activeError) {
-        console.error('Error fetching active users:', activeError);
-        throw activeError;
+      if (error) {
+        console.error('Error fetching active users:', error);
+        throw error;
       }
 
-      // Get total users count
-      const { data: totalUsers, error: totalError } = await supabase
+      // Get total count with a separate count query
+      const { count: totalCount, error: totalError } = await supabase
         .from('profiles')
-        .select('id');
+        .select('*', { count: 'exact', head: true });
 
       if (totalError) {
-        console.error('Error fetching total users:', totalError);
+        console.error('Error fetching total count:', totalError);
         throw totalError;
       }
 
       const counts = {
-        count: activeUsers?.length || 0,
-        total_count: totalUsers?.length || 0
+        count: data?.count || 0,
+        total_count: totalCount || 0
       };
 
       console.log('Active users count data:', counts);
       return counts;
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 3600000, // Refresh every hour
   });
 };
