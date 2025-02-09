@@ -22,6 +22,7 @@ export const adminKeys = {
   all: ['admin'] as const,
   users: () => [...adminKeys.all, 'users'] as const,
   activeUsersCount: () => [...adminKeys.users(), 'active', 'count'] as const,
+  totalUsersCount: () => [...adminKeys.users(), 'total', 'count'] as const,
   parts: () => [...adminKeys.all, 'parts'] as const,
   partsCount: () => [...adminKeys.parts(), 'count'] as const,
   trendingParts: () => [...adminKeys.parts(), 'trending'] as const,
