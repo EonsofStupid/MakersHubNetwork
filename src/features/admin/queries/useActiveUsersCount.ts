@@ -15,7 +15,7 @@ export const useActiveUsersCount = () => {
       console.log('Fetching active users count...');
       
       // Get counts with a single query using count aggregation
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
         .or('is_active.eq.true,admin_override_active.eq.true');
@@ -36,7 +36,7 @@ export const useActiveUsersCount = () => {
       }
 
       const counts = {
-        count: data?.count || 0,
+        count: count || 0,
         total_count: totalCount || 0
       };
 
