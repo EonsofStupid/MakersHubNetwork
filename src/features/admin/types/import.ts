@@ -1,4 +1,6 @@
 
+import { Database } from "@/integrations/supabase/types";
+
 export type ColumnMapping = {
   csvColumn: string;
   targetField: string;
@@ -8,11 +10,8 @@ export type ColumnMapping = {
 
 export type ImportStep = 'upload' | 'mapping' | 'preview' | 'import';
 
-export type ValidationError = {
-  row: number;
-  column: string;
-  message: string;
-};
+// Use database types for validation errors
+export type ValidationError = Omit<Database["public"]["Tables"]["import_errors"]["Row"], "id" | "import_session_id" | "created_at">;
 
 export type ImportPreviewData = {
   original: Record<string, string>;
@@ -20,13 +19,5 @@ export type ImportPreviewData = {
   errors?: ValidationError[];
 };
 
-export type ImportSession = {
-  id: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  totalRows: number;
-  processedRows: number;
-  successCount: number;
-  errorCount: number;
-  mappingConfig: Record<string, string>;
-  originalFilename?: string;
-};
+// Use database types for import session
+export type ImportSession = Database["public"]["Tables"]["import_sessions"]["Row"];
