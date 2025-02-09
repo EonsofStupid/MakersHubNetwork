@@ -3,17 +3,17 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Key, FileUp, Database, Shield } from "lucide-react";
 import { motion } from "framer-motion";
-import { DataMaestroTab } from "@/features/admin/types/data-maestro";
+import { DataMaestroTabId, DataMaestroTabIds } from "@/features/admin/types/data-maestro";
 import { APIKeyManagement } from "./components/APIKeyManagement";
 import { CSVImport } from "./components/CSVImport";
 import { DatabaseVisualizer } from "./components/DatabaseVisualizer";
 import { BaselineManager } from "./components/BaselineManager";
 
-const tabs: { id: DataMaestroTab; label: string; icon: any }[] = [
-  { id: 'api-keys', label: 'API Keys', icon: Key },
-  { id: 'csv-import', label: 'Import', icon: FileUp },
-  { id: 'visualizer', label: 'Visualizer', icon: Database },
-  { id: 'baseline', label: 'Baseline', icon: Shield },
+const tabs: { id: DataMaestroTabId; label: string; icon: any }[] = [
+  { id: DataMaestroTabIds.API_KEYS, label: 'API Keys', icon: Key },
+  { id: DataMaestroTabIds.CSV_IMPORT, label: 'Import', icon: FileUp },
+  { id: DataMaestroTabIds.VISUALIZER, label: 'Visualizer', icon: Database },
+  { id: DataMaestroTabIds.BASELINE, label: 'Baseline', icon: Shield },
 ];
 
 export const DataMaestroTab = () => {
@@ -35,7 +35,7 @@ export const DataMaestroTab = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="api-keys" className="space-y-6">
+        <Tabs defaultValue={DataMaestroTabIds.API_KEYS} className="space-y-6">
           <TabsList className="grid grid-cols-4 gap-4 p-1">
             {tabs.map(({ id, label, icon: Icon }) => (
               <TabsTrigger
@@ -51,19 +51,19 @@ export const DataMaestroTab = () => {
             ))}
           </TabsList>
 
-          <TabsContent value="api-keys">
+          <TabsContent value={DataMaestroTabIds.API_KEYS}>
             <APIKeyManagement />
           </TabsContent>
           
-          <TabsContent value="csv-import">
+          <TabsContent value={DataMaestroTabIds.CSV_IMPORT}>
             <CSVImport />
           </TabsContent>
           
-          <TabsContent value="visualizer">
+          <TabsContent value={DataMaestroTabIds.VISUALIZER}>
             <DatabaseVisualizer />
           </TabsContent>
           
-          <TabsContent value="baseline">
+          <TabsContent value={DataMaestroTabIds.BASELINE}>
             <BaselineManager />
           </TabsContent>
         </Tabs>
