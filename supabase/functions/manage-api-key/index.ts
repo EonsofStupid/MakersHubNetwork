@@ -34,6 +34,8 @@ serve(async (req) => {
           });
 
         if (error) throw error;
+        
+        console.log(`API key metadata created for: ${name} (${key_type})`);
         break;
       }
 
@@ -45,6 +47,8 @@ serve(async (req) => {
           .eq('reference_key', reference_key);
 
         if (error) throw error;
+        
+        console.log(`API key deleted: ${reference_key}`);
         break;
       }
 
@@ -56,6 +60,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    console.error('Error in manage-api-key function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

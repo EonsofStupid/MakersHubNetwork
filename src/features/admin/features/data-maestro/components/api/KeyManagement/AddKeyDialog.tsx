@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ExternalLink } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -34,6 +35,12 @@ interface AddKeyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const API_PROVIDER_LINKS = {
+  openai: "https://platform.openai.com/api-keys",
+  stability: "https://platform.stability.ai/account/keys",
+  replicate: "https://replicate.com/account/api-tokens",
+};
 
 export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,6 +54,8 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
       key_type: "",
     },
   });
+
+  const selectedKeyType = form.watch("key_type");
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -71,17 +80,24 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
       }
 
       const reference_key = `${values.key_type}_${values.name}_KEY`.toLowerCase().replace(/ /g, '_');
+      
+      // Show success message with provider-specific instructions
       toast({
         title: "API key metadata added",
-        description: "Please add the actual API key value in the next step",
+        description: "Please enter the actual API key in the next step",
       });
 
-      queryClient.invalidateQueries({ queryKey: ['api-keys'] });
+      // Close the form dialog
       form.reset();
       onOpenChange(false);
 
-      // Show the secret form for the actual API key value
+      // Refresh the API keys list
+      queryClient.invalidateQueries({ queryKey: ['api-keys'] });
+
+      // Trigger the secret form for the actual API key value
+      // The secret form will automatically appear after this dialog closes
       return reference_key;
+
     } catch (error: any) {
       toast({
         title: "Error adding API key",
@@ -93,11 +109,25 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
     }
   };
 
+  const getProviderLink = (keyType: string) => {
+    return API_PROVIDER_LINKS[keyType as keyof typeof API_PROVIDER_LINKS] || null;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New API Key</DialogTitle>
+          {selectedKeyType && getProviderLink(selectedKeyType) && (
+            <a 
+              href={getProviderLink(selectedKeyType)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Get your {selectedKeyType.toUpperCase()} API key <ExternalLink className="ml-1 h-3 w-3" />
+            </a>
+          )}
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -108,7 +138,7 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., OpenAI API Key" {...field} />
+                    <Input placeholder="e.g., OpenAI Production Key" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
