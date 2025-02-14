@@ -17,9 +17,9 @@ export type Database = {
           id: string
           is_active: boolean | null
           key_type: string
-          key_value: string
           last_used_at: string | null
           name: string
+          reference_key: string | null
           updated_at: string | null
         }
         Insert: {
@@ -29,9 +29,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           key_type: string
-          key_value: string
           last_used_at?: string | null
           name: string
+          reference_key?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -41,9 +41,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           key_type?: string
-          key_value?: string
           last_used_at?: string | null
           name?: string
+          reference_key?: string | null
           updated_at?: string | null
         }
         Relationships: []
