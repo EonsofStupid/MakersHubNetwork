@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          key_type: string
+          key_value: string
+          last_used_at: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_type: string
+          key_value: string
+          last_used_at?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_type?: string
+          key_value?: string
+          last_used_at?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       baseline_configs: {
         Row: {
           config: Json
@@ -219,6 +258,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "import_errors_import_session_id_fkey"
+            columns: ["import_session_id"]
+            isOneToOne: false
+            referencedRelation: "import_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_mappings: {
+        Row: {
+          created_at: string | null
+          id: string
+          import_session_id: string | null
+          source_column: string
+          target_column: string
+          transformation_rule: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          import_session_id?: string | null
+          source_column: string
+          target_column: string
+          transformation_rule?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          import_session_id?: string | null
+          source_column?: string
+          target_column?: string
+          transformation_rule?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_mappings_import_session_id_fkey"
             columns: ["import_session_id"]
             isOneToOne: false
             referencedRelation: "import_sessions"
