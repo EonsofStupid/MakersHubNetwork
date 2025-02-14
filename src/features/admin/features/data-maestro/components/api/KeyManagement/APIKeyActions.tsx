@@ -2,7 +2,7 @@
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { MoreVertical, Edit, Trash, Power, PowerOff } from "lucide-react";
+import { MoreVertical, Power, PowerOff, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 interface APIKey {
   id: string;
   name: string;
+  key_type: string;
   is_active: boolean;
 }
 
@@ -61,12 +62,24 @@ export const APIKeyActions = ({ apiKey }: APIKeyActionsProps) => {
 
     try {
       setIsLoading(true);
-      const { error } = await supabase
-        .from('api_keys')
-        .delete()
-        .eq('id', apiKey.id);
+      
+      const response = await fetch('/functions/v1/manage-api-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'delete',
+          name: apiKey.name,
+          key_type: apiKey.key_type,
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
 
       toast({
         title: "API key deleted",

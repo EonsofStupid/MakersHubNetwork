@@ -53,16 +53,25 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsSubmitting(true);
-      const { error } = await supabase
-        .from('api_keys')
-        .insert([{
+      
+      const response = await fetch('/functions/v1/manage-api-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'create',
           name: values.name,
           key_type: values.key_type,
           key_value: values.key_value,
-          is_active: true,
-        }]);
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
 
       toast({
         title: "API key added",
