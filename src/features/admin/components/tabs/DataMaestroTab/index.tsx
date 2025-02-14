@@ -1,20 +1,20 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { APIKeyManagement } from "../../../features/data-maestro/components/api/KeyManagement";
-import { BaselineManager } from "../../../features/data-maestro/components/baseline/Rules";
-import { CSVUpload } from "../../../features/data-maestro/components/import/CSVUpload";
-import { DatabaseVisualizer } from "../../../features/data-maestro/components/database/Visualizer";
-import { DataMaestroTabId, DataMaestroTabIds } from "../../../features/data-maestro/types/data-maestro";
+import { APIKeyManagement } from "@/features/admin/features/data-maestro/components/api/KeyManagement";
+import { BaselineManager } from "@/features/admin/features/data-maestro/components/baseline/Rules";
+import { CSVUpload } from "@/features/admin/features/data-maestro/components/import/CSVUpload";
+import { DatabaseVisualizer } from "@/features/admin/features/data-maestro/components/database/Visualizer";
+import { DataMaestroTabId, DataMaestroTabIds } from "@/features/admin/features/data-maestro/types/data-maestro";
 
 export const DataMaestroTab = () => {
   return (
     <Tabs defaultValue={DataMaestroTabIds.CSV_IMPORT} className="space-y-8">
       <TabsList className="grid grid-cols-4 gap-4 p-1 neo-blur rounded-lg backdrop-blur-xl border border-primary/20">
         {[
-          { id: DataMaestroTabIds.CSV_IMPORT, label: "CSV Import" },
-          { id: DataMaestroTabIds.VISUALIZER, label: "Database Visualizer" },
-          { id: DataMaestroTabIds.BASELINE, label: "Baseline Manager" },
-          { id: DataMaestroTabIds.API_KEYS, label: "API Keys" }
+          { id: DataMaestroTabIds.CSV_IMPORT, label: "Data Import & Mapping" },
+          { id: DataMaestroTabIds.VISUALIZER, label: "Database Explorer" },
+          { id: DataMaestroTabIds.BASELINE, label: "Data Integrity & Rules" },
+          { id: DataMaestroTabIds.API_KEYS, label: "API & Integrations" }
         ].map(({ id, label }) => (
           <TabsTrigger 
             key={id}
