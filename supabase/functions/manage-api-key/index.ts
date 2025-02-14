@@ -18,20 +18,18 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, name, key_type, key_value } = await req.json();
+    const { action, name, key_type } = await req.json();
     const reference_key = `${key_type}_${name}_KEY`.toLowerCase().replace(/ /g, '_');
 
     switch (action) {
       case 'create': {
-        // Store the actual key in Supabase Secrets
-        await Deno.env.set(reference_key, key_value);
-        
         // Store metadata in the database
         const { error } = await supabaseClient
           .from('api_keys')
           .insert({
             name,
             key_type,
+            reference_key,
             is_active: true,
           });
 
@@ -40,9 +38,6 @@ serve(async (req) => {
       }
 
       case 'delete': {
-        // Remove the key from Supabase Secrets
-        await Deno.env.delete(reference_key);
-        
         // Remove metadata from the database
         const { error } = await supabaseClient
           .from('api_keys')

@@ -28,7 +28,6 @@ import { supabase } from "@/integrations/supabase/client";
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   key_type: z.string().min(1, "Key type is required"),
-  key_value: z.string().min(1, "API key is required"),
 });
 
 interface AddKeyDialogProps {
@@ -46,7 +45,6 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
     defaultValues: {
       name: "",
       key_type: "",
-      key_value: "",
     },
   });
 
@@ -64,7 +62,6 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
           action: 'create',
           name: values.name,
           key_type: values.key_type,
-          key_value: values.key_value,
         }),
       });
 
@@ -73,14 +70,18 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
         throw new Error(error.message);
       }
 
+      const reference_key = `${values.key_type}_${values.name}_KEY`.toLowerCase().replace(/ /g, '_');
       toast({
-        title: "API key added",
-        description: "Successfully added new API key",
+        title: "API key metadata added",
+        description: "Please add the actual API key value in the next step",
       });
 
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
       form.reset();
       onOpenChange(false);
+
+      // Show the secret form for the actual API key value
+      return reference_key;
     } catch (error: any) {
       toast({
         title: "Error adding API key",
@@ -132,19 +133,6 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
                       <SelectItem value="custom">Custom</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="key_value"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>API Key</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="Enter your API key" {...field} />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
