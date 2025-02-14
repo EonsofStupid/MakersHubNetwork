@@ -9,39 +9,86 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      api_key_audit_logs: {
+        Row: {
+          action: string
+          api_key_id: string | null
+          id: string
+          metadata: Json | null
+          performed_at: string | null
+          performed_by: string | null
+        }
+        Insert: {
+          action: string
+          api_key_id?: string | null
+          id?: string
+          metadata?: Json | null
+          performed_at?: string | null
+          performed_by?: string | null
+        }
+        Update: {
+          action?: string
+          api_key_id?: string | null
+          id?: string
+          metadata?: Json | null
+          performed_at?: string | null
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_key_audit_logs_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_keys: {
         Row: {
+          access_count: number | null
           created_at: string | null
           created_by: string | null
+          description: string | null
           expires_at: string | null
           id: string
           is_active: boolean | null
-          key_type: string
+          key_type: Database["public"]["Enums"]["api_key_type"]
+          last_accessed_from: unknown | null
           last_used_at: string | null
+          metadata: Json | null
           name: string
           reference_key: string | null
           updated_at: string | null
         }
         Insert: {
+          access_count?: number | null
           created_at?: string | null
           created_by?: string | null
+          description?: string | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
-          key_type: string
+          key_type: Database["public"]["Enums"]["api_key_type"]
+          last_accessed_from?: unknown | null
           last_used_at?: string | null
+          metadata?: Json | null
           name: string
           reference_key?: string | null
           updated_at?: string | null
         }
         Update: {
+          access_count?: number | null
           created_at?: string | null
           created_by?: string | null
+          description?: string | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
-          key_type?: string
+          key_type?: Database["public"]["Enums"]["api_key_type"]
+          last_accessed_from?: unknown | null
           last_used_at?: string | null
+          metadata?: Json | null
           name?: string
           reference_key?: string | null
           updated_at?: string | null
@@ -1015,6 +1062,7 @@ export type Database = {
       }
     }
     Enums: {
+      api_key_type: "openai" | "stability" | "replicate" | "custom"
       content_status: "draft" | "review" | "published" | "archived"
       content_type: "guide" | "tutorial" | "part-desc" | "build-log"
       part_status: "draft" | "published" | "archived"

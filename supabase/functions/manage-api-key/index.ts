@@ -7,6 +7,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface APIKeyRequest {
+  action: 'create' | 'delete' | 'update';
+  name: string;
+  key_type: 'openai' | 'stability' | 'replicate' | 'custom';
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -18,24 +26,42 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, name, key_type } = await req.json();
+    const { action, name, key_type, description, metadata }: APIKeyRequest = await req.json();
     const reference_key = `${key_type}_${name}_KEY`.toLowerCase().replace(/ /g, '_');
 
     switch (action) {
       case 'create': {
-        // Store metadata in the database
+        // Store metadata in the database with additional fields
         const { error } = await supabaseClient
           .from('api_keys')
           .insert({
             name,
             key_type,
             reference_key,
+            description: description || null,
+            metadata: metadata || {},
             is_active: true,
           });
 
         if (error) throw error;
         
         console.log(`API key metadata created for: ${name} (${key_type})`);
+        break;
+      }
+
+      case 'update': {
+        const { error } = await supabaseClient
+          .from('api_keys')
+          .update({
+            description,
+            metadata,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('reference_key', reference_key);
+
+        if (error) throw error;
+        
+        console.log(`API key updated: ${reference_key}`);
         break;
       }
 
