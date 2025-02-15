@@ -1033,6 +1033,12 @@ export type Database = {
         }
         Returns: Json
       }
+      get_api_key_requirements: {
+        Args: {
+          provider: string
+        }
+        Returns: Json
+      }
       get_theme_inheritance_chain: {
         Args: {
           theme_id: string
@@ -1059,6 +1065,13 @@ export type Database = {
       refresh_materialized_views: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      validate_api_key_format: {
+        Args: {
+          key_text: string
+          provider: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
