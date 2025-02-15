@@ -47,6 +47,7 @@ export type Database = {
       api_keys: {
         Row: {
           access_count: number | null
+          category: string
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -58,11 +59,13 @@ export type Database = {
           last_used_at: string | null
           metadata: Json | null
           name: string
+          provider_config: Json | null
           reference_key: string | null
           updated_at: string | null
         }
         Insert: {
           access_count?: number | null
+          category?: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -74,11 +77,13 @@ export type Database = {
           last_used_at?: string | null
           metadata?: Json | null
           name: string
+          provider_config?: Json | null
           reference_key?: string | null
           updated_at?: string | null
         }
         Update: {
           access_count?: number | null
+          category?: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -90,6 +95,7 @@ export type Database = {
           last_used_at?: string | null
           metadata?: Json | null
           name?: string
+          provider_config?: Json | null
           reference_key?: string | null
           updated_at?: string | null
         }
@@ -1075,7 +1081,13 @@ export type Database = {
       }
     }
     Enums: {
-      api_key_type: "openai" | "stability" | "replicate" | "custom"
+      api_key_type:
+        | "openai"
+        | "stability"
+        | "replicate"
+        | "custom"
+        | "zapier"
+        | "pinecone"
       content_status: "draft" | "review" | "published" | "archived"
       content_type: "guide" | "tutorial" | "part-desc" | "build-log"
       part_status: "draft" | "published" | "archived"

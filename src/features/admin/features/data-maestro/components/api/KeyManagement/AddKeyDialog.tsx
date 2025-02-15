@@ -1,20 +1,8 @@
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -26,137 +14,96 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, ExternalLink, Key, Shield, CheckCircle2 } from "lucide-react";
+import { Shield, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Steps, Step } from "@/components/ui/steps";
-
-const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  key_type: z.string().min(1, "Key type is required"),
-  api_key: z.string().min(1, "API key is required"),
-  description: z.string().optional(),
-});
+import { Steps } from "@/components/ui/steps";
+import { ApiKeyRequirements, ApiKeyCategory, ApiKeyType } from "../../../types/api-keys";
+import { ProviderConfig } from "./ProviderConfig";
 
 interface AddKeyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const API_PROVIDER_LINKS = {
-  openai: "https://platform.openai.com/api-keys",
-  stability: "https://platform.stability.ai/account/keys",
-  replicate: "https://replicate.com/account/api-tokens",
-};
+const STEPS = [
+  { title: "Select Provider", description: "Choose the API provider" },
+  { title: "Configure", description: "Enter provider details" },
+  { title: "Review", description: "Review and confirm" }
+];
 
-const PROVIDER_DESCRIPTIONS = {
-  openai: {
-    title: "OpenAI API Key",
-    description: "Used for AI features like content generation and analysis",
-    keyFormat: "Starts with 'sk-' followed by 32+ characters",
-    rateLimit: "Depends on your OpenAI plan",
-    warning: "Keep this key secure. It provides access to paid AI services.",
-  },
-  stability: {
-    title: "Stability AI Key",
-    description: "Used for image generation and AI art features",
-    keyFormat: "32+ character string",
-    rateLimit: "Based on your Stability AI subscription",
-    warning: "Secure key with access to paid image generation services.",
-  },
-  replicate: {
-    title: "Replicate API Token",
-    description: "Used for running various AI models",
-    keyFormat: "32+ character string",
-    rateLimit: "Based on your Replicate credits",
-    warning: "Protect this token as it can incur usage charges.",
-  },
-  custom: {
-    title: "Custom Integration Key",
-    description: "Used for custom third-party service integration",
-    keyFormat: "Format depends on the service",
-    rateLimit: "Varies by service",
-    warning: "Ensure proper security measures for third-party credentials.",
-  },
-};
+const CATEGORIES = [
+  { id: 'ai_service', label: 'AI Services' },
+  { id: 'integration', label: 'Integrations' }
+];
 
 export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [keyRequirements, setKeyRequirements] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState<ApiKeyCategory | ''>('');
+  const [selectedProvider, setSelectedProvider] = useState<ApiKeyType | ''>('');
+  const [providerRequirements, setProviderRequirements] = useState<ApiKeyRequirements | null>(null);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [providerConfig, setProviderConfig] = useState<Record<string, string>>({});
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      key_type: "",
-      api_key: "",
-      description: "",
-    },
-  });
-
-  const selectedKeyType = form.watch("key_type");
-  const apiKey = form.watch("api_key");
-
   useEffect(() => {
     if (!open) {
-      form.reset();
-      setCurrentStep(0);
-      setKeyRequirements(null);
+      resetForm();
     }
-  }, [open, form]);
+  }, [open]);
 
-  useEffect(() => {
-    const clearClipboard = () => {
-      if (document.hasFocus()) {
-        navigator.clipboard.writeText("").catch(() => {});
-      }
-    };
-
-    window.addEventListener('blur', clearClipboard);
-    return () => window.removeEventListener('blur', clearClipboard);
-  }, []);
-
-  useEffect(() => {
-    if (selectedKeyType) {
-      const fetchRequirements = async () => {
-        const { data, error } = await supabase.rpc('get_api_key_requirements', {
-          provider: selectedKeyType
-        });
-        if (!error && data) {
-          setKeyRequirements(data);
-        }
-      };
-      fetchRequirements();
-    }
-  }, [selectedKeyType]);
-
-  const validateKeyFormat = () => {
-    if (!keyRequirements || !apiKey) return false;
-    const regex = new RegExp(keyRequirements.format_regex || '.*');
-    return regex.test(apiKey) && apiKey.length >= keyRequirements.min_length;
+  const resetForm = () => {
+    setCurrentStep(0);
+    setSelectedCategory('');
+    setSelectedProvider('');
+    setProviderRequirements(null);
+    setName('');
+    setDescription('');
+    setProviderConfig({});
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (currentStep < 2) {
-      if (currentStep === 0 && !selectedKeyType) {
-        toast({
-          title: "Please select a key type",
-          description: "Choose the type of API key you want to add",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (currentStep === 1 && !validateKeyFormat()) {
-        toast({
-          title: "Invalid API key format",
-          description: keyRequirements?.description || "Please check the key format requirements",
-          variant: "destructive",
-        });
-        return;
-      }
-      setCurrentStep(prev => prev + 1);
+  const fetchProviderRequirements = async (provider: string) => {
+    try {
+      const { data, error } = await supabase.rpc('get_api_key_requirements', {
+        provider
+      });
+      
+      if (error) throw error;
+      setProviderRequirements(data);
+    } catch (error: any) {
+      toast({
+        title: "Error fetching provider requirements",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCategorySelect = (category: ApiKeyCategory) => {
+    setSelectedCategory(category);
+    setSelectedProvider('');
+  };
+
+  const handleProviderSelect = async (provider: ApiKeyType) => {
+    setSelectedProvider(provider);
+    await fetchProviderRequirements(provider);
+  };
+
+  const handleProviderConfig = (config: Record<string, string>) => {
+    setProviderConfig(config);
+    setCurrentStep(2);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedProvider || !name || !providerConfig) {
+      toast({
+        title: "Missing required fields",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -171,12 +118,13 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
       const response = await supabase.functions.invoke('manage-api-key', {
         body: {
           action: 'create',
-          name: values.name,
-          key_type: values.key_type,
-          api_key: values.api_key,
-          description: values.description,
+          name,
+          key_type: selectedProvider,
+          category: selectedCategory,
+          description,
+          provider_config: providerConfig,
           metadata: {
-            lastRotated: new Date().toISOString(),
+            created_at: new Date().toISOString(),
           },
         },
       });
@@ -185,15 +133,12 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
         throw new Error(response.error.message || 'Failed to store API key');
       }
 
-      form.setValue('api_key', '');
-      
       toast({
         title: "API key added successfully",
-        description: `The ${PROVIDER_DESCRIPTIONS[values.key_type as keyof typeof PROVIDER_DESCRIPTIONS].title} has been securely stored`,
+        description: `The ${selectedProvider.toUpperCase()} configuration has been securely stored`,
       });
 
-      form.reset();
-      setCurrentStep(0);
+      resetForm();
       onOpenChange(false);
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
 
@@ -209,27 +154,121 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
     }
   };
 
-  const handleDialogClose = () => {
-    if (form.formState.isDirty) {
-      if (window.confirm("Are you sure you want to close? Any unsaved API key data will be cleared.")) {
-        form.reset();
-        setCurrentStep(0);
-        onOpenChange(false);
-      }
-    } else {
-      onOpenChange(false);
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Select Category</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {CATEGORIES.map((category) => (
+                  <Button
+                    key={category.id}
+                    variant={selectedCategory === category.id ? "default" : "outline"}
+                    className="h-24 flex flex-col items-center justify-center space-y-2"
+                    onClick={() => handleCategorySelect(category.id as ApiKeyCategory)}
+                  >
+                    <span className="text-lg font-semibold">{category.label}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {selectedCategory && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Select Provider</h3>
+                <Select
+                  value={selectedProvider}
+                  onValueChange={(value) => handleProviderSelect(value as ApiKeyType)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a provider" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedCategory === 'ai_service' ? (
+                      <>
+                        <SelectItem value="openai">OpenAI</SelectItem>
+                        <SelectItem value="stability">Stability AI</SelectItem>
+                        <SelectItem value="replicate">Replicate</SelectItem>
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="zapier">Zapier</SelectItem>
+                        <SelectItem value="pinecone">Pinecone</SelectItem>
+                        <SelectItem value="custom">Custom Integration</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {selectedProvider && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Name</label>
+                  <Input
+                    placeholder="e.g., Production OpenAI Key"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Description (Optional)</label>
+                  <Textarea
+                    placeholder="Add notes about key usage or purpose"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case 1:
+        return providerRequirements ? (
+          <ProviderConfig
+            requirements={providerRequirements}
+            onSubmit={handleProviderConfig}
+            isSubmitting={isSubmitting}
+          />
+        ) : (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load provider requirements. Please try again.
+            </AlertDescription>
+          </Alert>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertTitle>Review Configuration</AlertTitle>
+              <AlertDescription className="space-y-2">
+                <p><strong>Provider:</strong> {selectedProvider.toUpperCase()}</p>
+                <p><strong>Name:</strong> {name}</p>
+                <p><strong>Description:</strong> {description || 'N/A'}</p>
+                <div className="mt-4">
+                  <h4 className="font-semibold">Provider Configuration:</h4>
+                  <pre className="mt-2 p-2 bg-muted rounded-md text-sm">
+                    {JSON.stringify(providerConfig, null, 2)}
+                  </pre>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        );
     }
   };
 
-  const steps = [
-    { title: "Select Provider", description: "Choose the API key provider" },
-    { title: "Enter Key", description: "Input the API key securely" },
-    { title: "Confirm", description: "Review and save" },
-  ];
-
   return (
-    <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-[525px]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
@@ -240,180 +279,49 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
           </DialogDescription>
         </DialogHeader>
 
-        <Steps currentStep={currentStep} steps={steps} />
+        <Steps currentStep={currentStep} steps={STEPS} />
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {currentStep === 0 && (
-              <FormField
-                control={form.control}
-                name="key_type"
-                render={({ field }) => (
-                  <FormItem className="space-y-4">
-                    <FormLabel>Provider</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a provider" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="openai">OpenAI</SelectItem>
-                        <SelectItem value="stability">Stability AI</SelectItem>
-                        <SelectItem value="replicate">Replicate</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {selectedKeyType && (
-                      <Alert>
-                        <AlertTitle>{PROVIDER_DESCRIPTIONS[selectedKeyType as keyof typeof PROVIDER_DESCRIPTIONS].title}</AlertTitle>
-                        <AlertDescription className="space-y-2">
-                          <p>{PROVIDER_DESCRIPTIONS[selectedKeyType as keyof typeof PROVIDER_DESCRIPTIONS].description}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Format: {PROVIDER_DESCRIPTIONS[selectedKeyType as keyof typeof PROVIDER_DESCRIPTIONS].keyFormat}
-                          </p>
-                          {API_PROVIDER_LINKS[selectedKeyType as keyof typeof API_PROVIDER_LINKS] && (
-                            <a
-                              href={API_PROVIDER_LINKS[selectedKeyType as keyof typeof API_PROVIDER_LINKS]}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center text-sm text-primary hover:underline"
-                            >
-                              Get your API key <ExternalLink className="ml-1 h-3 w-3" />
-                            </a>
-                          )}
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+        <div className="mt-4">
+          {renderStepContent()}
+        </div>
 
-            {currentStep === 1 && (
-              <>
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Security Notice</AlertTitle>
-                  <AlertDescription>
-                    {PROVIDER_DESCRIPTIONS[selectedKeyType as keyof typeof PROVIDER_DESCRIPTIONS].warning}
-                  </AlertDescription>
-                </Alert>
-
-                <FormField
-                  control={form.control}
-                  name="api_key"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>API Key</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Key className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            type="password"
-                            className="pl-9"
-                            placeholder={`Enter ${selectedKeyType} API key`}
-                            autoComplete="off"
-                            {...field}
-                          />
-                          {apiKey && (
-                            <div className="absolute right-3 top-2.5">
-                              {validateKeyFormat() ? (
-                                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                              ) : (
-                                <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </FormControl>
-                      <FormDescription>
-                        {keyRequirements?.description}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Production OpenAI Key" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        A memorable name to identify this key
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description (Optional)</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Add notes about key usage or purpose"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-
-            {currentStep === 2 && (
-              <Alert>
-                <CheckCircle2 className="h-4 w-4" />
-                <AlertTitle>Confirm API Key Details</AlertTitle>
-                <AlertDescription className="space-y-2">
-                  <p><strong>Provider:</strong> {PROVIDER_DESCRIPTIONS[selectedKeyType as keyof typeof PROVIDER_DESCRIPTIONS].title}</p>
-                  <p><strong>Name:</strong> {form.getValues("name")}</p>
-                  <p><strong>Description:</strong> {form.getValues("description") || "N/A"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    The key will be encrypted and stored securely. You won't be able to view it again.
-                  </p>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  if (currentStep > 0) {
-                    setCurrentStep(prev => prev - 1);
-                  } else {
-                    handleDialogClose();
-                  }
-                }}
-                disabled={isSubmitting}
-              >
-                {currentStep === 0 ? "Cancel" : "Back"}
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting 
-                  ? "Saving..." 
-                  : currentStep === 2 
-                    ? "Save API Key" 
-                    : "Continue"
-                }
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <div className="flex justify-end space-x-2 mt-6">
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (currentStep > 0) {
+                setCurrentStep(prev => prev - 1);
+              } else {
+                onOpenChange(false);
+              }
+            }}
+            disabled={isSubmitting}
+          >
+            {currentStep === 0 ? "Cancel" : "Back"}
+          </Button>
+          
+          <Button
+            onClick={() => {
+              if (currentStep === 0 && selectedProvider && name) {
+                setCurrentStep(1);
+              } else if (currentStep === 2) {
+                handleSubmit();
+              }
+            }}
+            disabled={
+              isSubmitting || 
+              (currentStep === 0 && (!selectedProvider || !name)) ||
+              (currentStep === 2 && !Object.keys(providerConfig).length)
+            }
+          >
+            {isSubmitting 
+              ? "Saving..." 
+              : currentStep === 2 
+                ? "Save API Key" 
+                : "Continue"
+            }
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
