@@ -93,28 +93,31 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
 
     try {
       setIsSubmitting(true);
+      console.log('Submitting API key...'); // Debug log
       
-      const response = await fetch('/functions/v1/manage-api-key', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-        body: JSON.stringify({
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+
+      const response = await supabase.functions.invoke('manage-api-key', {
+        body: {
           action: 'create',
           name: values.name,
           key_type: values.key_type,
+          api_key: values.api_key, // Include the actual API key
           description: values.description,
           metadata: {
             lastRotated: new Date().toISOString(),
           },
-        }),
+        },
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to store API key');
       }
+
+      console.log('API key stored successfully'); // Debug log
 
       // Clear sensitive data immediately
       form.setValue('api_key', '');
@@ -133,9 +136,10 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
 
     } catch (error: any) {
+      console.error('Error storing API key:', error); // Debug log
       toast({
         title: "Error adding API key",
-        description: error.message,
+        description: error.message || 'An unexpected error occurred',
         variant: "destructive",
       });
     } finally {
