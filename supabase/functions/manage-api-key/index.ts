@@ -11,70 +11,150 @@ interface APIKeyRequest {
   action: 'create' | 'delete' | 'update';
   name: string;
   key_type: 'openai' | 'stability' | 'replicate' | 'custom';
+  api_key: string;
   description?: string;
   metadata?: Record<string, any>;
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
+    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, name, key_type, description, metadata }: APIKeyRequest = await req.json();
+    // Get session JWT and verify admin status
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError || !user) {
+      throw new Error('Unauthorized');
+    }
+
+    // Verify admin role
+    const { data: roles } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+
+    const isAdmin = roles?.some(r => r.role === 'super_admin' || r.role === 'admin');
+    if (!isAdmin) {
+      throw new Error('Unauthorized - Admin access required');
+    }
+
+    const { action, name, key_type, api_key, description, metadata }: APIKeyRequest = await req.json();
+    console.log(`Processing ${action} request for key: ${name}`);
+
     const reference_key = `${key_type}_${name}_KEY`.toLowerCase().replace(/ /g, '_');
 
     switch (action) {
       case 'create': {
-        // Store metadata in the database with additional fields
-        const { error } = await supabaseClient
+        // Validate inputs
+        if (!api_key || !name || !key_type) {
+          throw new Error('Missing required fields');
+        }
+
+        // Store the encrypted API key in vault
+        const { data: vaultData, error: vaultError } = await supabaseClient.rpc(
+          'create_secret',
+          { 
+            name: reference_key,
+            secret: api_key,
+            key_id: null  // Use default encryption key
+          }
+        );
+
+        if (vaultError) {
+          console.error('Vault error:', vaultError);
+          throw new Error('Failed to securely store API key');
+        }
+
+        // Store metadata in api_keys table
+        const { error: dbError } = await supabaseClient
           .from('api_keys')
           .insert({
             name,
             key_type,
             reference_key,
             description: description || null,
-            metadata: metadata || {},
+            metadata: {
+              ...metadata || {},
+              created_by: user.id,
+              created_at: new Date().toISOString(),
+            },
             is_active: true,
+            created_by: user.id,
           });
 
-        if (error) throw error;
-        
-        console.log(`API key metadata created for: ${name} (${key_type})`);
-        break;
-      }
+        if (dbError) {
+          console.error('Database error:', dbError);
+          // Try to cleanup vault entry if database insert fails
+          await supabaseClient.rpc('delete_secret', { name: reference_key });
+          throw new Error('Failed to store API key metadata');
+        }
 
-      case 'update': {
-        const { error } = await supabaseClient
-          .from('api_keys')
-          .update({
-            description,
-            metadata,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('reference_key', reference_key);
-
-        if (error) throw error;
-        
-        console.log(`API key updated: ${reference_key}`);
+        console.log(`Successfully stored API key: ${name}`);
         break;
       }
 
       case 'delete': {
-        // Remove metadata from the database
-        const { error } = await supabaseClient
+        // Delete from vault first
+        const { error: vaultError } = await supabaseClient.rpc(
+          'delete_secret',
+          { name: reference_key }
+        );
+
+        if (vaultError) {
+          console.error('Vault error:', vaultError);
+          throw new Error('Failed to delete API key from secure storage');
+        }
+
+        // Then remove metadata
+        const { error: dbError } = await supabaseClient
           .from('api_keys')
           .delete()
           .eq('reference_key', reference_key);
 
-        if (error) throw error;
-        
-        console.log(`API key deleted: ${reference_key}`);
+        if (dbError) {
+          console.error('Database error:', dbError);
+          throw new Error('Failed to delete API key metadata');
+        }
+
+        console.log(`Successfully deleted API key: ${name}`);
+        break;
+      }
+
+      case 'update': {
+        const { error: dbError } = await supabaseClient
+          .from('api_keys')
+          .update({
+            description,
+            metadata: {
+              ...metadata || {},
+              updated_by: user.id,
+              updated_at: new Date().toISOString(),
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('reference_key', reference_key);
+
+        if (dbError) {
+          console.error('Database error:', dbError);
+          throw new Error('Failed to update API key metadata');
+        }
+
+        console.log(`Successfully updated API key: ${name}`);
         break;
       }
 
@@ -82,14 +162,25 @@ serve(async (req) => {
         throw new Error('Invalid action');
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ success: true }), 
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    );
+
   } catch (error) {
     console.error('Error in manage-api-key function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        details: error.toString()
+      }),
+      {
+        status: error.message === 'Unauthorized' ? 401 : 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });
