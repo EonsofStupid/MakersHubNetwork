@@ -1,7 +1,7 @@
 
 export type ApiKeyCategory = 'ai_service' | 'integration';
 
-export type ApiKeyType = 'openai' | 'stability' | 'replicate' | 'custom' | 'zapier' | 'pinecone';
+export type ApiKeyType = 'openai' | 'stability' | 'replicate' | 'custom' | 'zapier' | 'pinecone' | 'anthropic' | 'gemini' | 'openrouter';
 
 export interface ApiKeyField {
   name: string;
