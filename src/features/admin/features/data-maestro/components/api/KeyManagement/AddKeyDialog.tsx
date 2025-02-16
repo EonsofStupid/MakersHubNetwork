@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -72,7 +71,7 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
       });
       
       if (error) throw error;
-      setProviderRequirements(data);
+      setProviderRequirements(data as ApiKeyRequirements);
     } catch (error: any) {
       toast({
         title: "Error fetching provider requirements",
@@ -189,8 +188,11 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
                     {selectedCategory === 'ai_service' ? (
                       <>
                         <SelectItem value="openai">OpenAI</SelectItem>
+                        <SelectItem value="anthropic">Anthropic</SelectItem>
+                        <SelectItem value="gemini">Google Gemini</SelectItem>
                         <SelectItem value="stability">Stability AI</SelectItem>
                         <SelectItem value="replicate">Replicate</SelectItem>
+                        <SelectItem value="openrouter">OpenRouter</SelectItem>
                       </>
                     ) : (
                       <>
