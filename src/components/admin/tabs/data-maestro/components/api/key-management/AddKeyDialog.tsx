@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Steps } from "@/components/ui/steps";
 import { APIKeyType } from "@/types/database";
+import { ApiKeyFormData } from './types';
 
 interface AddKeyDialogProps {
   isOpen: boolean;
@@ -18,9 +19,9 @@ export const AddKeyDialog = ({ isOpen, onClose, onSuccess }: AddKeyDialogProps) 
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ApiKeyFormData>({
     name: '',
-    key_type: 'openai' as APIKeyType,
+    key_type: 'openai',
     api_key: '',
     description: ''
   });
