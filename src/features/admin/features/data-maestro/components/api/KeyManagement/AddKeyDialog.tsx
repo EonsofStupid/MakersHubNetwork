@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -71,7 +72,16 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
       });
       
       if (error) throw error;
-      setProviderRequirements(data as ApiKeyRequirements);
+      
+      // Validate and transform the response to ensure it matches ApiKeyRequirements
+      const requirements: ApiKeyRequirements = {
+        category: data.category as ApiKeyCategory,
+        fields: data.fields as ApiKeyField[],
+        description: data.description as string,
+        docs_url: data.docs_url as string | undefined
+      };
+      
+      setProviderRequirements(requirements);
     } catch (error: any) {
       toast({
         title: "Error fetching provider requirements",
