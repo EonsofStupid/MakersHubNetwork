@@ -1,3 +1,4 @@
+
 import { HomeView } from "@/features/home/HomeView";
 
 const IndexPage = () => {
