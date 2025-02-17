@@ -1,8 +1,8 @@
 
-import { HomeView } from "@/features/home/HomeView";
+import { MainNav } from "@/components/MainNav";
 
 const IndexPage = () => {
-  return <HomeView />;
+  return <MainNav />;
 };
 
 export default IndexPage;
