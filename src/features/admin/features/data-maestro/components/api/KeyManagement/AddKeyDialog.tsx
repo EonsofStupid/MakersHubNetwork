@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +9,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,37 +22,39 @@ import * as z from "zod"
 import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
-  provider: z.string().min(2, {
-    message: "Provider must be at least 2 characters.",
+  key_type: z.enum(['openai', 'stability', 'replicate', 'custom', 'zapier', 'pinecone', 'anthropic', 'gemini', 'openrouter'], {
+    required_error: "Please select a provider.",
   }),
-  keyName: z.string().min(2, {
+  name: z.string().min(2, {
     message: "Key name must be at least 2 characters.",
   }),
   description: z.string().optional(),
+  provider_config: z.record(z.any()).optional(),
 });
 
 interface AddKeyDialogProps {
-  onKeyAdded: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
-  const [open, setOpen] = useState(false);
+export function AddKeyDialog({ open, onOpenChange }: AddKeyDialogProps) {
   const [providerRequirements, setProviderRequirements] = useState<ApiKeyRequirements | null>(null);
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      provider: "",
-      keyName: "",
+      key_type: undefined,
+      name: "",
       description: "",
+      provider_config: {},
     },
   })
 
   useEffect(() => {
-    if (form.watch("provider")) {
-      fetchProviderRequirements(form.watch("provider"));
+    if (form.watch("key_type")) {
+      fetchProviderRequirements(form.watch("key_type"));
     }
-  }, [form.watch("provider")]);
+  }, [form.watch("key_type")]);
 
   const fetchProviderRequirements = async (provider: string) => {
     try {
@@ -61,26 +63,7 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
       });
       
       if (error) throw error;
-
-      // Cast to unknown first, then validate the shape
-      const rawData = data as unknown;
-      
-      // Type guard to validate the response shape
-      const isValidApiKeyRequirements = (data: unknown): data is ApiKeyRequirements => {
-        if (!data || typeof data !== 'object') return false;
-        const req = data as Partial<ApiKeyRequirements>;
-        return (
-          typeof req.category === 'string' &&
-          Array.isArray(req.fields) &&
-          typeof req.description === 'string'
-        );
-      };
-
-      if (!isValidApiKeyRequirements(rawData)) {
-        throw new Error('Invalid API key requirements format');
-      }
-
-      setProviderRequirements(rawData);
+      setProviderRequirements(data as ApiKeyRequirements);
     } catch (error: any) {
       toast({
         title: "Error fetching provider requirements",
@@ -95,10 +78,12 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
       const { error } = await supabase
         .from('api_keys')
         .insert({
-          provider: values.provider,
-          key_name: values.keyName,
+          key_type: values.key_type,
+          name: values.name,
           description: values.description,
-          user_id: '00000000-0000-0000-0000-000000000000', // TODO: Replace with actual user ID
+          provider_config: values.provider_config,
+          category: providerRequirements?.category || 'ai_service',
+          is_active: true,
         });
 
       if (error) throw error;
@@ -108,8 +93,8 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
         description: "Your API key has been successfully added.",
       });
 
-      onKeyAdded();
-      setOpen(false);
+      onOpenChange(false);
+      form.reset();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -120,10 +105,7 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Add API Key</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New API Key</DialogTitle>
@@ -134,11 +116,8 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
-              control={{
-                ...form.control,
-                name: "provider"
-              }}
-              name="provider"
+              control={form.control}
+              name="key_type"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Provider</FormLabel>
@@ -165,7 +144,7 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
             />
             <FormField
               control={form.control}
-              name="keyName"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Key Name</FormLabel>
@@ -200,10 +179,29 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
               )}
             />
             {providerRequirements && providerRequirements.fields.map((field) => (
-              <div key={field}>
-                <Label htmlFor={field}>{field}</Label>
-                <Input id={field} />
-              </div>
+              <FormField
+                key={field.name}
+                control={form.control}
+                name={`provider_config.${field.name}` as any}
+                render={({ field: formField }) => (
+                  <FormItem>
+                    <FormLabel htmlFor={field.name}>{field.name}</FormLabel>
+                    <FormControl>
+                      <Input
+                        id={field.name}
+                        type={field.type}
+                        required={field.required}
+                        pattern={field.validation.pattern}
+                        {...formField}
+                      />
+                    </FormControl>
+                    {field.validation.message && (
+                      <FormDescription>{field.validation.message}</FormDescription>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             ))}
             <Button type="submit">Add Key</Button>
           </form>
