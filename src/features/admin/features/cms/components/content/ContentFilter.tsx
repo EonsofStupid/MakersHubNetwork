@@ -3,6 +3,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { ContentFilter } from "../../types/content";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContentFilterProps {
   filter: ContentFilter;
@@ -10,6 +12,19 @@ interface ContentFilterProps {
 }
 
 export const ContentFilters = ({ filter, onFilterChange }: ContentFilterProps) => {
+  const { data: contentTypes } = useQuery({
+    queryKey: ['content-types'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('content_types')
+        .select('*')
+        .order('created_at');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   return (
     <motion.div 
       className="flex flex-wrap gap-4 mb-6"
@@ -19,22 +34,23 @@ export const ContentFilters = ({ filter, onFilterChange }: ContentFilterProps) =
     >
       <Select
         value={filter.type}
-        onValueChange={(value) => onFilterChange({ ...filter, type: value as any })}
+        onValueChange={(value) => onFilterChange({ ...filter, type: value })}
       >
         <SelectTrigger className="w-[180px] glass-morphism mad-scientist-hover">
           <SelectValue placeholder="Content Type" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="guide">Guide</SelectItem>
-          <SelectItem value="tutorial">Tutorial</SelectItem>
-          <SelectItem value="part-desc">Part Description</SelectItem>
-          <SelectItem value="build-log">Build Log</SelectItem>
+          {contentTypes?.map((type) => (
+            <SelectItem key={type.id} value={type.slug}>
+              {type.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
       <Select
         value={filter.status}
-        onValueChange={(value) => onFilterChange({ ...filter, status: value as any })}
+        onValueChange={(value) => onFilterChange({ ...filter, status: value as ContentStatus })}
       >
         <SelectTrigger className="w-[180px] glass-morphism mad-scientist-hover">
           <SelectValue placeholder="Status" />
