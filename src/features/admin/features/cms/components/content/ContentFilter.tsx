@@ -1,7 +1,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ContentFilter } from "../../types/content";
+import { ContentFilter, ContentStatus } from "../../types/content";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +41,7 @@ export const ContentFilters = ({ filter, onFilterChange }: ContentFilterProps) =
         </SelectTrigger>
         <SelectContent>
           {contentTypes?.map((type) => (
-            <SelectItem key={type.id} value={type.slug}>
+            <SelectItem key={type.id} value={type.id}>
               {type.name}
             </SelectItem>
           ))}

@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ContentItem, ContentFilter } from "../../types/content";
+import { ContentItem, ContentFilter, ContentType } from "../../types/content";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 
@@ -14,12 +14,30 @@ interface ContentListProps {
 }
 
 export const ContentList = ({ filter, onEdit, onDelete }: ContentListProps) => {
+  const { data: contentTypes } = useQuery({
+    queryKey: ['content-types'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('content_types')
+        .select('*');
+      if (error) throw error;
+      return data as ContentType[];
+    }
+  });
+
   const { data: items, isLoading } = useQuery({
     queryKey: ['content-items', filter],
     queryFn: async () => {
       let query = supabase
         .from('content_items')
-        .select('*');
+        .select(`
+          *,
+          content_type:type (
+            id,
+            name,
+            slug
+          )
+        `);
 
       if (filter.type) {
         query = query.eq('type', filter.type);
@@ -36,6 +54,11 @@ export const ContentList = ({ filter, onEdit, onDelete }: ContentListProps) => {
       return data as ContentItem[];
     }
   });
+
+  const getContentTypeName = (typeId: string) => {
+    const contentType = contentTypes?.find(t => t.id === typeId);
+    return contentType?.name || 'Unknown Type';
+  };
 
   if (isLoading) {
     return (
@@ -86,7 +109,9 @@ export const ContentList = ({ filter, onEdit, onDelete }: ContentListProps) => {
                 </div>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{item.type}</span>
+                <span className="text-muted-foreground">
+                  {getContentTypeName(item.type)}
+                </span>
                 <span className="px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
                   {item.status}
                 </span>
