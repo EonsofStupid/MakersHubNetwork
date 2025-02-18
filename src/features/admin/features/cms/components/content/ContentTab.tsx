@@ -7,10 +7,10 @@ import { ContentFilter, ContentItem } from '../../types/content';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { ThemeDataStream } from '@/components/theme/ThemeDataStream';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CategoryManagement } from '../categories/CategoryManagement';
+import { useDeleteContent } from '../../queries/useContentItems';
 import {
   Tabs,
   TabsContent,
@@ -22,6 +22,7 @@ export const ContentTab = () => {
   const [filter, setFilter] = useState<ContentFilter>({});
   const [activeTab, setActiveTab] = useState('content');
   const { toast } = useToast();
+  const deleteContentMutation = useDeleteContent();
 
   const handleEdit = (item: ContentItem) => {
     toast({
@@ -31,25 +32,7 @@ export const ContentTab = () => {
   };
 
   const handleDelete = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('content_items')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Content Deleted",
-        description: "The content has been successfully deleted.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete content.",
-        variant: "destructive",
-      });
-    }
+    deleteContentMutation.mutate(id);
   };
 
   return (

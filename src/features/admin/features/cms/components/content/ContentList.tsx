@@ -1,10 +1,10 @@
 
 import { Card } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
 import { FileText, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ContentItem, ContentFilter, ContentType } from "../../types/content";
-import { supabase } from "@/integrations/supabase/client";
+import { ContentItem, ContentFilter } from "../../types/content";
+import { useContentItems } from "../../queries/useContentItems";
+import { useContentTypes } from "../../queries/useContentTypes";
 import { motion } from "framer-motion";
 
 interface ContentListProps {
@@ -14,46 +14,8 @@ interface ContentListProps {
 }
 
 export const ContentList = ({ filter, onEdit, onDelete }: ContentListProps) => {
-  const { data: contentTypes } = useQuery({
-    queryKey: ['content-types'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('content_types')
-        .select('*');
-      if (error) throw error;
-      return data as ContentType[];
-    }
-  });
-
-  const { data: items, isLoading } = useQuery({
-    queryKey: ['content-items', filter],
-    queryFn: async () => {
-      let query = supabase
-        .from('content_items')
-        .select(`
-          *,
-          content_type:type (
-            id,
-            name,
-            slug
-          )
-        `);
-
-      if (filter.type) {
-        query = query.eq('type', filter.type);
-      }
-      if (filter.status) {
-        query = query.eq('status', filter.status);
-      }
-      if (filter.search) {
-        query = query.ilike('title', `%${filter.search}%`);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as ContentItem[];
-    }
-  });
+  const { data: contentTypes } = useContentTypes();
+  const { data: items, isLoading } = useContentItems(filter);
 
   const getContentTypeName = (typeId: string) => {
     const contentType = contentTypes?.find(t => t.id === typeId);
