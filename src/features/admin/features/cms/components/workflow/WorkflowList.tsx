@@ -1,29 +1,20 @@
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useWorkflowEditor } from '../../stores/workflow-editor';
+import { useWorkflows } from '../../queries/useWorkflows';
 
 export function WorkflowList() {
-  const { data: workflows, isLoading } = useQuery({
-    queryKey: ['workflows'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('metadata_workflows')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    }
-  });
-
+  const { workflows, isLoading, error } = useWorkflows();
   const setWorkflow = useWorkflowEditor((state) => state.setWorkflow);
 
   if (isLoading) {
     return <div>Loading workflows...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading workflows: {(error as Error).message}</div>;
   }
 
   return (

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import type { DropResult } from '@hello-pangea/dnd';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useWorkflowEditor } from '../../stores/workflow-editor';
 import { WorkflowFieldType } from '../../types/workflow-enums';
-import { WorkflowField } from '../../types/workflow';
+import { useWorkflows } from '../../queries/useWorkflows';
 import { cn } from '@/lib/utils';
 
 export function WorkflowEditor() {
@@ -25,14 +26,25 @@ export function WorkflowEditor() {
     validateWorkflow
   } = useWorkflowEditor();
 
-  const handleDragEnd = (result: any) => {
+  const { createWorkflow, updateWorkflow } = useWorkflows();
+
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     moveField(result.source.index, result.destination.index);
   };
 
   const handleSave = async () => {
-    if (!validateWorkflow()) return;
-    // TODO: Implement save logic
+    if (!validateWorkflow() || !currentWorkflow?.name) return;
+
+    try {
+      if (currentWorkflow.id) {
+        await updateWorkflow.mutateAsync(currentWorkflow);
+      } else {
+        await createWorkflow.mutateAsync(currentWorkflow);
+      }
+    } catch (error) {
+      // Error handling is done in the mutation callbacks
+    }
   };
 
   return (
