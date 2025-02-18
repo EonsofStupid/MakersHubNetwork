@@ -28,7 +28,7 @@ export function MainNav() {
   return (
     <header
       className={cn(
-        "mainnav-container",
+        "mainnav-container mainnav-data-stream mainnav-glitch-particles mainnav-sporadic-border",
         isScrolled || isLoaded && [
           "mainnav-header",
           "mainnav-gradient",
