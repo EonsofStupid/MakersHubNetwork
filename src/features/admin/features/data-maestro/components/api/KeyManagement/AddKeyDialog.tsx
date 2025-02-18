@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ApiKeyRequirements, ApiKeyType } from '../../../types/api-keys';
+import { ApiKeyRequirements, ApiKeyType, ApiKeyCategory } from '../../../types/api-keys';
 import {
   Dialog,
   DialogContent,
@@ -78,20 +79,21 @@ export function AddKeyDialog({ open, onOpenChange }: AddKeyDialogProps) {
       
       if (error) throw error;
       
-      if (!data || typeof data !== 'object') {
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
         throw new Error('Invalid provider requirements data');
       }
 
-      const rawData = data as RawProviderRequirements;
+      // First cast to unknown to break the direct type chain
+      const rawData = data as unknown;
       
-      // Validate the required fields exist
-      if (!rawData.category || !rawData.fields || !rawData.description) {
-        throw new Error('Missing required provider requirement fields');
+      // Now safely cast to our intermediate type
+      if (!isRawProviderRequirements(rawData)) {
+        throw new Error('Invalid provider requirements structure');
       }
-
+      
       // Convert to ApiKeyRequirements
       const requirements: ApiKeyRequirements = {
-        category: rawData.category as ApiKeyCategory, // This cast is safe because our DB enforces valid categories
+        category: validateApiKeyCategory(rawData.category),
         fields: rawData.fields.map(field => ({
           name: field.name,
           type: field.type,
@@ -113,6 +115,26 @@ export function AddKeyDialog({ open, onOpenChange }: AddKeyDialogProps) {
         variant: "destructive",
       });
     }
+  };
+
+  // Type guard for RawProviderRequirements
+  const isRawProviderRequirements = (data: unknown): data is RawProviderRequirements => {
+    const d = data as RawProviderRequirements;
+    return (
+      typeof d === 'object' &&
+      d !== null &&
+      typeof d.category === 'string' &&
+      Array.isArray(d.fields) &&
+      typeof d.description === 'string'
+    );
+  };
+
+  // Validate API Key Category
+  const validateApiKeyCategory = (category: string): ApiKeyCategory => {
+    if (category !== 'ai_service' && category !== 'integration') {
+      throw new Error('Invalid API key category');
+    }
+    return category;
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
