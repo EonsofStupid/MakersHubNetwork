@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useThemeStore } from '@/stores/theme/store';
+import { useThemeStore } from "@/app/stores/theme/store";
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ComponentTokens } from '@/types/theme';
 import { useToast } from '@/hooks/use-toast';

@@ -9,7 +9,7 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, requiredRoles = [] }: AuthGuardProps) {
   const location = useLocation()
-  const { user, isLoading, role } = useAuthStore()
+  const { user, isLoading, isAdmin, isSuperAdmin, role } = useAuthStore()
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -19,10 +19,13 @@ export function AuthGuard({ children, requiredRoles = [] }: AuthGuardProps) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  if (
-    requiredRoles.length > 0 &&
-    !requiredRoles.includes(role || '')
-  ) {
+  // Check if user has required role
+  const hasRequiredRole = requiredRoles.length === 0 || 
+    (isAdmin && requiredRoles.includes('admin')) || 
+    (isSuperAdmin && requiredRoles.includes('super_admin')) ||
+    (role && requiredRoles.includes(role));
+
+  if (!hasRequiredRole) {
     return <Navigate to="/" replace />
   }
 

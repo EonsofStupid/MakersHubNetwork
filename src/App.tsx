@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { AuthGuard } from "@/features/auth/components/AuthGuard"
 import { AuthProvider } from "@/features/auth/components/AuthProvider"
 import IndexPage from "@/site/pages/Index"
-import AdminPage from "@/admin/pages/Admin"
+import { AdminPage } from "@/admin/pages/Admin"
 import LoginPage from "@/features/auth/pages/Login"
 
 const queryClient = new QueryClient()
