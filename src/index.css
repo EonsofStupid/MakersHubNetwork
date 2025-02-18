@@ -65,7 +65,7 @@
   }
 
   .mainnav-morph {
-    @apply animate-morph-header shadow-[0_4px_30px rgba(0,0,0,0.1),inset_0_0_30px rgba(0,240,255,0.1)];
+    @apply animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1)_inset_0_0_30px_rgba(0,240,255,0.1)];
   }
 
   /* New MainNav cyber effects */
