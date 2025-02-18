@@ -14,7 +14,7 @@ interface NavigationProps {
 
 export const Navigation = ({ config, className }: NavigationProps) => {
   const { items, groups, currentPath, setItems, setGroups, toggleGroup } = useNavigation();
-  const roles = useAuthStore((state) => state.roles);
+  const userRole = useAuthStore((state) => state.role);
 
   useEffect(() => {
     if (config.items) setItems(config.items);
@@ -26,7 +26,7 @@ export const Navigation = ({ config, className }: NavigationProps) => {
     if (item.isHidden) return null;
 
     // Skip items that require roles the user doesn't have
-    if (item.roles && !item.roles.some((role) => roles.includes(role))) {
+    if (item.roles && userRole && !item.roles.includes(userRole)) {
       return null;
     }
 
