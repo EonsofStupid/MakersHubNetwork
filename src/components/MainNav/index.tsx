@@ -28,7 +28,7 @@ export function MainNav() {
   return (
     <header
       className={cn(
-        "mainnav-container mainnav-data-stream mainnav-glitch-particles",
+        "mainnav-container",
         isScrolled || isLoaded && [
           "mainnav-header",
           "mainnav-gradient",
@@ -36,6 +36,7 @@ export function MainNav() {
         ]
       )}
     >
+      <div className="mainnav-data-stream mainnav-glitch-particles absolute inset-0 w-full h-full pointer-events-none" />
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
           <Logo />
