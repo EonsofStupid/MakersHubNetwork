@@ -64,14 +64,26 @@ export function AddKeyDialog({ open, onOpenChange }: AddKeyDialogProps) {
       
       if (error) throw error;
       
-      // Validate the response data structure
-      if (typeof data === 'object' && data !== null && 
-          'category' in data && 
-          'fields' in data && 
-          'description' in data) {
-        setProviderRequirements(data as ApiKeyRequirements);
+      if (data) {
+        // Type validation and conversion
+        const requirements: ApiKeyRequirements = {
+          category: data.category,
+          fields: Array.isArray(data.fields) ? data.fields.map((field: any) => ({
+            name: field.name,
+            type: field.type,
+            required: field.required,
+            validation: {
+              pattern: field.validation.pattern,
+              message: field.validation.message
+            }
+          })) : [],
+          description: data.description,
+          docs_url: data.docs_url
+        };
+        
+        setProviderRequirements(requirements);
       } else {
-        throw new Error('Invalid provider requirements data structure');
+        throw new Error('No provider requirements returned');
       }
     } catch (error: any) {
       toast({
