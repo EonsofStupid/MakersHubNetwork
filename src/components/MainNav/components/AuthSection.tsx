@@ -1,16 +1,17 @@
-
 import { useState } from "react";
-import { useAuthStore } from "@/app/stores/auth/store";
+import { useAuthStore } from "@/stores/auth/store";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { LoginSheet } from "./LoginSheet";
 
 export const AuthSection = () => {
-  const user = useAuthStore((state) => state.user);
+  const status = useAuthStore((state) => state.status);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+
+  const isAuthenticated = status === "authenticated";
 
   return (
     <div className="flex items-center gap-4">
-      {user ? (
+      {isAuthenticated ? (
         <UserMenu />
       ) : (
         <LoginSheet 

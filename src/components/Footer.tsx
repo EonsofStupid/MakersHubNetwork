@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ThemeInfoPopup } from "@/components/theme/ThemeInfoPopup";
 import { Terminal } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { useThemeStore } from "@/app/stores/theme/store";
+import { useThemeStore } from "@/stores/theme/store";
 
 export function Footer() {
   const [isLoaded, setIsLoaded] = useState(false);

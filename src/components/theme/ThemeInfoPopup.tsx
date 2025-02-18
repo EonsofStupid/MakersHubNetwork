@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useThemeStore } from "@/app/stores/theme/store";
+import { useThemeStore } from "@/stores/theme/store";
 import { motion } from "framer-motion";
 import { ThemeDataStream } from "./ThemeDataStream";
 import { ThemeLoadingState } from "./info/ThemeLoadingState";

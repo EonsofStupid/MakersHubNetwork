@@ -1,7 +1,6 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useThemeStore } from "@/app/stores/theme/store";
+import { useThemeStore } from "@/stores/theme/store";
 
 export const Logo = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -30,7 +29,7 @@ export const Logo = () => {
         }));
       }, generateRandomDelay());
     });
-  }, [letters, generateRandomDelay]);
+  }, [letters]);
 
   const handleMouseLeave = useCallback(() => {
     setLetterStates({});

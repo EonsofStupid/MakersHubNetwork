@@ -1,6 +1,7 @@
+
 import { ReactNode, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { useAuthStore } from "@/app/stores/auth/store"
+import { useAuthStore } from "@/stores/auth/store"
 import { UserRole } from "@/types/auth.types"
 import { useAdminAccess } from "@/hooks/useAdminAccess"
 
