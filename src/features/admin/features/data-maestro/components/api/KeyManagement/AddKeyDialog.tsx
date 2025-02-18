@@ -71,7 +71,14 @@ export const AddKeyDialog = ({ open, onOpenChange }: AddKeyDialogProps) => {
       });
       
       if (error) throw error;
-      setProviderRequirements(data as ApiKeyRequirements);
+
+    // Validate the response matches our expected type
+    const requirements = data as ApiKeyRequirements;
+    if (!requirements.category || !requirements.fields) {
+      throw new Error('Invalid response format from API');
+    }
+
+      setProviderRequirements(requirements);
     } catch (error: any) {
       toast({
         title: "Error fetching provider requirements",
