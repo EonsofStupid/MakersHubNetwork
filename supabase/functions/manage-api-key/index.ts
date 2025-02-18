@@ -1,191 +1,194 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Max-Age': '86400',
+};
 
-interface ApiKeyRequest {
-  action: 'create' | 'update' | 'delete' | 'get';
-  name?: string;
-  key_type?: string;
-  api_key?: string;
+interface APIKeyRequest {
+  action: 'create' | 'delete' | 'update';
+  name: string;
+  key_type: 'openai' | 'stability' | 'replicate' | 'custom';
+  api_key: string;
   description?: string;
-  id?: string;
+  metadata?: Record<string, any>;
 }
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
+    // Check if request method is POST
+    if (req.method !== 'POST') {
+      throw new Error('Method not allowed');
+    }
+
     // Create Supabase client
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('No authorization header')
-    }
-
-    const supabase = createClient(
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    )
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    // Get the requesting user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      throw new Error('Unauthorized')
+    // Get session JWT and verify admin status
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
     }
 
-    // Check if user is super_admin
-    const { data: roles } = await supabase
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError || !user) {
+      throw new Error('Unauthorized');
+    }
+
+    // Verify admin role
+    const { data: roles } = await supabaseClient
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
-      .single()
+      .eq('user_id', user.id);
 
-    if (!roles || roles.role !== 'super_admin') {
-      throw new Error('Insufficient permissions')
+    const isAdmin = roles?.some(r => r.role === 'super_admin' || r.role === 'admin');
+    if (!isAdmin) {
+      throw new Error('Unauthorized - Admin access required');
     }
 
-    const { action, ...data } = await req.json() as ApiKeyRequest
+    const { action, name, key_type, api_key, description, metadata }: APIKeyRequest = await req.json();
+    console.log(`Processing ${action} request for key: ${name}`);
 
-    let result
+    const reference_key = `${key_type}_${name}_KEY`.toLowerCase().replace(/ /g, '_');
 
     switch (action) {
       case 'create': {
-        // Validate the API key format using the database function
-        const { data: validationResult } = await supabase.rpc(
-          'validate_api_key_format',
-          { key_text: data.api_key, provider: data.key_type }
-        )
-
-        if (!validationResult) {
-          throw new Error('Invalid API key format')
+        // Validate inputs
+        if (!api_key || !name || !key_type) {
+          throw new Error('Missing required fields');
         }
 
-        const { data: newKey, error } = await supabase
+        // Store the encrypted API key in vault
+        const { data: vaultData, error: vaultError } = await supabaseClient.rpc(
+          'create_secret',
+          { 
+            name: reference_key,
+            secret: api_key,
+            key_id: null  // Use default encryption key
+          }
+        );
+
+        if (vaultError) {
+          console.error('Vault error:', vaultError);
+          throw new Error('Failed to securely store API key');
+        }
+
+        // Store metadata in api_keys table
+        const { error: dbError } = await supabaseClient
           .from('api_keys')
           .insert({
-            name: data.name,
-            key_type: data.key_type,
-            reference_key: data.api_key,
-            description: data.description,
-            created_by: user.id
-          })
-          .select()
-          .single()
+            name,
+            key_type,
+            reference_key,
+            description: description || null,
+            metadata: {
+              ...metadata || {},
+              created_by: user.id,
+              created_at: new Date().toISOString(),
+            },
+            is_active: true,
+            created_by: user.id,
+          });
 
-        if (error) throw error
-        result = newKey
+        if (dbError) {
+          console.error('Database error:', dbError);
+          // Try to cleanup vault entry if database insert fails
+          await supabaseClient.rpc('delete_secret', { name: reference_key });
+          throw new Error('Failed to store API key metadata');
+        }
 
-        // Log the creation
-        await supabase
-          .from('api_key_audit_logs')
-          .insert({
-            action: 'create',
-            api_key_id: result.id,
-            performed_by: user.id,
-            metadata: { name: data.name, key_type: data.key_type }
-          })
-
-        break
-      }
-
-      case 'get': {
-        const { data: keys, error } = await supabase
-          .from('api_keys')
-          .select('id, name, key_type, description, created_at, last_used_at, access_count, is_active')
-          .order('created_at', { ascending: false })
-
-        if (error) throw error
-        result = keys
-        break
-      }
-
-      case 'update': {
-        if (!data.id) throw new Error('No key ID provided')
-
-        const { data: updatedKey, error } = await supabase
-          .from('api_keys')
-          .update({
-            name: data.name,
-            description: data.description,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', data.id)
-          .select()
-          .single()
-
-        if (error) throw error
-        result = updatedKey
-
-        // Log the update
-        await supabase
-          .from('api_key_audit_logs')
-          .insert({
-            action: 'update',
-            api_key_id: data.id,
-            performed_by: user.id,
-            metadata: { name: data.name }
-          })
-
-        break
+        console.log(`Successfully stored API key: ${name}`);
+        break;
       }
 
       case 'delete': {
-        if (!data.id) throw new Error('No key ID provided')
+        // Delete from vault first
+        const { error: vaultError } = await supabaseClient.rpc(
+          'delete_secret',
+          { name: reference_key }
+        );
 
-        // Log the deletion first
-        await supabase
-          .from('api_key_audit_logs')
-          .insert({
-            action: 'delete',
-            api_key_id: data.id,
-            performed_by: user.id
-          })
+        if (vaultError) {
+          console.error('Vault error:', vaultError);
+          throw new Error('Failed to delete API key from secure storage');
+        }
 
-        const { error } = await supabase
+        // Then remove metadata
+        const { error: dbError } = await supabaseClient
           .from('api_keys')
           .delete()
-          .eq('id', data.id)
+          .eq('reference_key', reference_key);
 
-        if (error) throw error
-        result = { success: true }
-        break
+        if (dbError) {
+          console.error('Database error:', dbError);
+          throw new Error('Failed to delete API key metadata');
+        }
+
+        console.log(`Successfully deleted API key: ${name}`);
+        break;
+      }
+
+      case 'update': {
+        const { error: dbError } = await supabaseClient
+          .from('api_keys')
+          .update({
+            description,
+            metadata: {
+              ...metadata || {},
+              updated_by: user.id,
+              updated_at: new Date().toISOString(),
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('reference_key', reference_key);
+
+        if (dbError) {
+          console.error('Database error:', dbError);
+          throw new Error('Failed to update API key metadata');
+        }
+
+        console.log(`Successfully updated API key: ${name}`);
+        break;
       }
 
       default:
-        throw new Error('Invalid action')
+        throw new Error('Invalid action');
     }
 
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify({ success: true }), 
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
-      },
-    )
+      }
+    );
 
   } catch (error) {
+    console.error('Error in manage-api-key function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        details: error.toString()
+      }),
       {
+        status: error.message === 'Unauthorized' ? 401 : 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      },
-    )
+      }
+    );
   }
-})
+});

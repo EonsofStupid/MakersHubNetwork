@@ -11,7 +11,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useAuthStore } from "@/app/stores/auth/store";
+import { useAuthStore } from "@/stores/auth/store";
 
 interface LoginProps {
   onSuccess?: () => void;
