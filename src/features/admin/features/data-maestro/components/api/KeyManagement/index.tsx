@@ -17,7 +17,7 @@ export const APIKeyManagement = () => {
   const { toast } = useToast();
 
   // Fetch API keys
-  const { data: apiKeys, isLoading, refetch } = useQuery({
+  const { data: apiKeys, isLoading } = useQuery({
     queryKey: ['api-keys'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -82,9 +82,6 @@ export const APIKeyManagement = () => {
       <AddKeyDialog 
         open={isAddingKey}
         onOpenChange={setIsAddingKey}
-        onKeyAdded={() => {
-          refetch();
-        }}
       />
     </div>
   );

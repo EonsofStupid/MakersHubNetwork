@@ -1,22 +1,13 @@
 
 export type ApiKeyCategory = 'ai_service' | 'integration';
 
-export type ApiKeyType = 
-  | 'openai' 
-  | 'stability' 
-  | 'replicate' 
-  | 'custom' 
-  | 'zapier' 
-  | 'pinecone' 
-  | 'anthropic' 
-  | 'gemini' 
-  | 'openrouter';
+export type ApiKeyType = 'openai' | 'stability' | 'replicate' | 'custom' | 'zapier' | 'pinecone' | 'anthropic' | 'gemini' | 'openrouter';
 
 export interface ApiKeyField {
   name: string;
   type: 'password' | 'text' | 'url';
   required: boolean;
-  validation?: {
+  validation: {
     pattern: string;
     message: string;
   };
