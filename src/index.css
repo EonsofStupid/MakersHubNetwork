@@ -71,6 +71,7 @@
   /* Footer-specific styles - prefixed with footer- to ensure uniqueness */
   .footer-container {
     @apply fixed bottom-0 left-0 right-0 w-full z-40 transition-all ease-in-out;
+    animation: footer-float 3s ease-in-out infinite;
     transition-duration: 1500ms;
   }
 
@@ -86,6 +87,30 @@
   .footer-transform {
     transform: perspective(1000px) rotateX(1deg);
     clip-path: polygon(0 100%, 100% 100%, 98% 0%, 2% 0%);
+  }
+
+  @keyframes footer-float {
+    0%, 100% {
+      transform: perspective(1000px) rotateX(1deg) translateY(0);
+    }
+    50% {
+      transform: perspective(1000px) rotateX(2deg) translateY(-10px);
+    }
+  }
+
+  @keyframes footer-pulse {
+    0%, 100% {
+      opacity: 0.8;
+      box-shadow: 0 -8px 32px 0 rgba(0,240,255,0.2);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 -12px 48px 0 rgba(0,240,255,0.3);
+    }
+  }
+
+  .footer-animate {
+    animation: footer-pulse 4s ease-in-out infinite;
   }
 
   .glitch {

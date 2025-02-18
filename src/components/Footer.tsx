@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -28,7 +29,8 @@ export function Footer() {
         "footer-container",
         isLoaded && [
           "footer-base",
-          "footer-gradient"
+          "footer-gradient",
+          "footer-animate"
         ]
       )}
       style={{ 
