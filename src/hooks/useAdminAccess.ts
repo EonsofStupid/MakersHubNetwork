@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/stores/auth/store"
+import { useAuthStore } from "@/app/stores/auth/store"
 import { UserRole } from "@/types/auth.types"
 
 const ADMIN_ROLES: UserRole[] = ["admin", "super_admin"]

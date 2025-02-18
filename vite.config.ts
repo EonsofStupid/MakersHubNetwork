@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => ({
             "useSuspenseInfiniteQuery",
             "useSuspenseQueries",
           ],
-          "@/stores/auth/store": [
+          "@/app/stores/auth/store": [
             "useAuthStore",
             "selectUser",
             "selectIsAuthenticated",
