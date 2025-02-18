@@ -11,13 +11,31 @@ import { supabase } from '@/integrations/supabase/client';
 import { CategoryTreeItem, ContentCategory } from '../../types/content';
 import { Plus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+
+interface CategoryForm {
+  name: string;
+  description: string;
+  parentId: string | null;
+}
 
 export const CategoryManagement = () => {
   const queryClient = useQueryClient();
-  const [newCategory, setNewCategory] = React.useState({
-    name: '',
-    description: '',
-    parentId: null as string | null
+  const form = useForm<CategoryForm>({
+    defaultValues: {
+      name: '',
+      description: '',
+      parentId: null
+    }
   });
 
   const { data: categories, isLoading } = useQuery({
@@ -34,14 +52,27 @@ export const CategoryManagement = () => {
   });
 
   const createCategory = useMutation({
-    mutationFn: async (categoryData: Partial<ContentCategory>) => {
+    mutationFn: async (categoryData: CategoryForm) => {
+      const slug = slugify(categoryData.name);
+      
+      // Check for duplicate slugs
+      const { data: existingCategory } = await supabase
+        .from('content_categories')
+        .select('id')
+        .eq('slug', slug)
+        .single();
+
+      if (existingCategory) {
+        throw new Error('A category with this name already exists');
+      }
+
       const { data, error } = await supabase
         .from('content_categories')
         .insert([{
           name: categoryData.name,
-          slug: slugify(categoryData.name || ''),
+          slug,
           description: categoryData.description,
-          parent_id: categoryData.parent_id
+          parent_id: categoryData.parentId
         }])
         .select()
         .single();
@@ -51,7 +82,7 @@ export const CategoryManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['content-categories'] });
-      setNewCategory({ name: '', description: '', parentId: null });
+      form.reset();
       toast({
         title: "Category Created",
         description: "The category has been successfully created.",
@@ -70,12 +101,10 @@ export const CategoryManagement = () => {
     const categoryMap = new Map<string, CategoryTreeItem>();
     const roots: CategoryTreeItem[] = [];
 
-    // First pass: Create all category nodes
     categories.forEach(category => {
       categoryMap.set(category.id, { ...category, children: [] });
     });
 
-    // Second pass: Build the tree structure
     categories.forEach(category => {
       const categoryWithChildren = categoryMap.get(category.id)!;
       if (category.parent_id) {
@@ -92,14 +121,12 @@ export const CategoryManagement = () => {
     return roots;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createCategory.mutate({
-      name: newCategory.name,
-      description: newCategory.description,
-      parent_id: newCategory.parentId
-    });
+  const onSubmit = (data: CategoryForm) => {
+    createCategory.mutate(data);
   };
+
+  // Preview slug as user types the name
+  const previewSlug = form.watch('name') ? slugify(form.watch('name')) : '';
 
   return (
     <Card className="cyber-card">
@@ -112,37 +139,117 @@ export const CategoryManagement = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <Input
-                placeholder="Category Name"
-                value={newCategory.name}
-                onChange={(e) => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
-                className="mad-scientist-hover"
-              />
-            </div>
-            <div className="space-y-2">
-              <Textarea
-                placeholder="Category Description"
-                value={newCategory.description}
-                onChange={(e) => setNewCategory(prev => ({ ...prev, description: e.target.value }))}
-                className="mad-scientist-hover"
-              />
-            </div>
-          </div>
-          <Button type="submit" className="mad-scientist-hover">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Category
-          </Button>
-        </form>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} className="mad-scientist-hover" />
+                  </FormControl>
+                  {previewSlug && (
+                    <FormDescription>
+                      URL slug: {previewSlug}
+                    </FormDescription>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} className="mad-scientist-hover" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="mad-scientist-hover">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Category
+            </Button>
+          </form>
+        </Form>
 
         <div className="mt-8">
           <h3 className="text-lg font-semibold mb-4">Category Structure</h3>
           {isLoading ? (
             <div>Loading categories...</div>
           ) : (
-            <CategoryTree categories={categories || []} />
+            <CategoryTree 
+              categories={categories || []} 
+              onDelete={async (id) => {
+                const { error } = await supabase
+                  .from('content_categories')
+                  .delete()
+                  .eq('id', id);
+                
+                if (error) {
+                  toast({
+                    title: "Error",
+                    description: "Failed to delete category",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+
+                queryClient.invalidateQueries({ queryKey: ['content-categories'] });
+                toast({
+                  title: "Category Deleted",
+                  description: "The category has been successfully deleted.",
+                });
+              }}
+              onEdit={async (id, updates) => {
+                const slug = updates.name ? slugify(updates.name) : undefined;
+                
+                if (slug) {
+                  // Check for duplicate slugs
+                  const { data: existingCategory } = await supabase
+                    .from('content_categories')
+                    .select('id')
+                    .eq('slug', slug)
+                    .neq('id', id)
+                    .single();
+
+                  if (existingCategory) {
+                    toast({
+                      title: "Error",
+                      description: "A category with this name already exists",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                }
+
+                const { error } = await supabase
+                  .from('content_categories')
+                  .update({ ...updates, slug })
+                  .eq('id', id);
+                
+                if (error) {
+                  toast({
+                    title: "Error",
+                    description: "Failed to update category",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+
+                queryClient.invalidateQueries({ queryKey: ['content-categories'] });
+                toast({
+                  title: "Category Updated",
+                  description: "The category has been successfully updated.",
+                });
+              }}
+            />
           )}
         </div>
       </CardContent>
