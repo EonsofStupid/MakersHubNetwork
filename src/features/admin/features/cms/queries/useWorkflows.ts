@@ -47,14 +47,26 @@ const convertDbToWorkflow = (dbWorkflow: DbWorkflow): Workflow => ({
   updatedAt: dbWorkflow.updated_at
 });
 
+// Helper function to convert WorkflowField to a plain object
+const fieldToJson = (field: WorkflowField): Record<string, Json> => ({
+  id: field.id,
+  name: field.name,
+  type: field.type,
+  required: field.required,
+  description: field.description || null,
+  defaultValue: field.defaultValue || null,
+  validationRules: field.validationRules as Json || null,
+  config: field.config as Json || null
+});
+
 const convertWorkflowToDb = (workflow: Partial<Workflow>) => ({
   name: workflow.name,
   slug: workflow.slug || workflow.name?.toLowerCase().replace(/\s+/g, '-'),
   description: workflow.description,
-  fields: workflow.fields as Json,
-  validation_rules: workflow.validationRules as Json,
-  default_values: workflow.defaultValues as Json,
-  linked_parts: workflow.linkedParts as Json,
+  fields: workflow.fields?.map(fieldToJson) as Json || [],
+  validation_rules: workflow.validationRules as Json || {},
+  default_values: workflow.defaultValues as Json || {},
+  linked_parts: workflow.linkedParts as Json || [],
   is_active: workflow.isActive,
   version: workflow.version
 });
