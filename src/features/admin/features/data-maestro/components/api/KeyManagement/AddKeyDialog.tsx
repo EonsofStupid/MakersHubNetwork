@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ApiKeyRequirements } from '../../../types/api-keys';
@@ -14,45 +15,50 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { providers } from '../../../constants/providers';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Textarea } from '@/components/ui/textarea';
+import { providers } from '../../../constants/providers';
 
 const formSchema = z.object({
-  provider: z.string().min(2, {
-    message: "Provider must be at least 2 characters.",
+  key_type: z.string().min(2, {
+    message: "Provider must be selected.",
   }),
-  keyName: z.string().min(2, {
+  name: z.string().min(2, {
     message: "Key name must be at least 2 characters.",
   }),
   description: z.string().optional(),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 interface AddKeyDialogProps {
   onKeyAdded: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
-  const [open, setOpen] = useState(false);
-  const [providerRequirements, setProviderRequirements] = useState<ApiKeyRequirements | null>(null);
+export function AddKeyDialog({ onKeyAdded, open, onOpenChange }: AddKeyDialogProps) {
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof formSchema>>({
+  const [providerRequirements, setProviderRequirements] = useState<ApiKeyRequirements | null>(null);
+  
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      provider: "",
-      keyName: "",
+      key_type: "",
+      name: "",
       description: "",
     },
-  })
+  });
 
   useEffect(() => {
-    if (form.watch("provider")) {
-      fetchProviderRequirements(form.watch("provider"));
+    const provider = form.watch("key_type");
+    if (provider) {
+      fetchProviderRequirements(provider);
     }
-  }, [form.watch("provider")]);
+  }, [form.watch("key_type")]);
 
   const fetchProviderRequirements = async (provider: string) => {
     try {
@@ -62,10 +68,8 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
       
       if (error) throw error;
 
-      // Cast to unknown first, then validate the shape
       const rawData = data as unknown;
       
-      // Type guard to validate the response shape
       const isValidApiKeyRequirements = (data: unknown): data is ApiKeyRequirements => {
         if (!data || typeof data !== 'object') return false;
         const req = data as Partial<ApiKeyRequirements>;
@@ -90,13 +94,13 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
     }
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     try {
       const { error } = await supabase
         .from('api_keys')
         .insert({
-          provider: values.provider,
-          key_name: values.keyName,
+          key_type: values.key_type,
+          name: values.name,
           description: values.description,
           user_id: '00000000-0000-0000-0000-000000000000', // TODO: Replace with actual user ID
         });
@@ -109,7 +113,7 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
       });
 
       onKeyAdded();
-      setOpen(false);
+      onOpenChange?.(false);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -120,7 +124,7 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline">Add API Key</Button>
       </DialogTrigger>
@@ -134,11 +138,8 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
-              control={{
-                ...form.control,
-                name: "provider"
-              }}
-              name="provider"
+              control={form.control}
+              name="key_type"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Provider</FormLabel>
@@ -165,7 +166,7 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
             />
             <FormField
               control={form.control}
-              name="keyName"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Key Name</FormLabel>
@@ -199,10 +200,16 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
                 </FormItem>
               )}
             />
-            {providerRequirements && providerRequirements.fields.map((field) => (
-              <div key={field}>
-                <Label htmlFor={field}>{field}</Label>
-                <Input id={field} />
+            {providerRequirements?.fields.map((field) => (
+              <div key={field.name} className="space-y-2">
+                <Label htmlFor={field.name}>{field.name}</Label>
+                <Input 
+                  id={field.name}
+                  type={field.type}
+                  required={field.required}
+                  pattern={field.validation?.pattern}
+                  title={field.validation?.message}
+                />
               </div>
             ))}
             <Button type="submit">Add Key</Button>
@@ -210,5 +217,5 @@ export function AddKeyDialog({ onKeyAdded }: AddKeyDialogProps) {
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
