@@ -55,7 +55,6 @@ export const CategoryManagement = () => {
     mutationFn: async (categoryData: CategoryForm) => {
       const slug = slugify(categoryData.name);
       
-      // Check for duplicate slugs
       const { data: existingCategory } = await supabase
         .from('content_categories')
         .select('id')
@@ -125,7 +124,6 @@ export const CategoryManagement = () => {
     createCategory.mutate(data);
   };
 
-  // Preview slug as user types the name
   const previewSlug = form.watch('name') ? slugify(form.watch('name')) : '';
 
   return (
@@ -182,72 +180,68 @@ export const CategoryManagement = () => {
         <div className="mt-8">
           <h3 className="text-lg font-semibold mb-4">Category Structure</h3>
           {isLoading ? (
-            <div>Loading categories...</div>
+            <div className="text-muted-foreground">Loading categories...</div>
           ) : (
             <CategoryTree 
               categories={categories || []} 
               onDelete={async (id) => {
-                const { error } = await supabase
-                  .from('content_categories')
-                  .delete()
-                  .eq('id', id);
-                
-                if (error) {
+                try {
+                  const { error } = await supabase
+                    .from('content_categories')
+                    .delete()
+                    .eq('id', id);
+                  
+                  if (error) throw error;
+
+                  queryClient.invalidateQueries({ queryKey: ['content-categories'] });
+                  toast({
+                    title: "Category Deleted",
+                    description: "The category has been successfully deleted.",
+                  });
+                } catch (error) {
                   toast({
                     title: "Error",
                     description: "Failed to delete category",
                     variant: "destructive",
                   });
-                  return;
                 }
-
-                queryClient.invalidateQueries({ queryKey: ['content-categories'] });
-                toast({
-                  title: "Category Deleted",
-                  description: "The category has been successfully deleted.",
-                });
               }}
               onEdit={async (id, updates) => {
-                const slug = updates.name ? slugify(updates.name) : undefined;
-                
-                if (slug) {
-                  // Check for duplicate slugs
-                  const { data: existingCategory } = await supabase
-                    .from('content_categories')
-                    .select('id')
-                    .eq('slug', slug)
-                    .neq('id', id)
-                    .single();
+                try {
+                  const slug = updates.name ? slugify(updates.name) : undefined;
+                  
+                  if (slug) {
+                    const { data: existingCategory } = await supabase
+                      .from('content_categories')
+                      .select('id')
+                      .eq('slug', slug)
+                      .neq('id', id)
+                      .single();
 
-                  if (existingCategory) {
-                    toast({
-                      title: "Error",
-                      description: "A category with this name already exists",
-                      variant: "destructive",
-                    });
-                    return;
+                    if (existingCategory) {
+                      throw new Error('A category with this name already exists');
+                    }
                   }
-                }
 
-                const { error } = await supabase
-                  .from('content_categories')
-                  .update({ ...updates, slug })
-                  .eq('id', id);
-                
-                if (error) {
+                  const { error } = await supabase
+                    .from('content_categories')
+                    .update({ ...updates, slug })
+                    .eq('id', id);
+                  
+                  if (error) throw error;
+
+                  queryClient.invalidateQueries({ queryKey: ['content-categories'] });
+                  toast({
+                    title: "Category Updated",
+                    description: "The category has been successfully updated.",
+                  });
+                } catch (error) {
                   toast({
                     title: "Error",
-                    description: "Failed to update category",
+                    description: "Failed to update category: " + (error as Error).message,
                     variant: "destructive",
                   });
-                  return;
                 }
-
-                queryClient.invalidateQueries({ queryKey: ['content-categories'] });
-                toast({
-                  title: "Category Updated",
-                  description: "The category has been successfully updated.",
-                });
               }}
             />
           )}

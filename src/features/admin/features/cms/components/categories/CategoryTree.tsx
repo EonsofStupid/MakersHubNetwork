@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronRight, ChevronDown, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -85,7 +84,7 @@ export const CategoryTree: React.FC<CategoryTreeProps> = ({ categories, onDelete
     return (
       <div key={category.id} className="category-item">
         <div 
-          className="flex items-center py-2 hover:bg-muted/50 rounded-lg px-2"
+          className="flex items-center py-2 hover:bg-muted/50 rounded-lg px-2 group transition-all duration-300"
           style={{ marginLeft: `${level * 20}px` }}
         >
           {hasChildren && (
@@ -96,18 +95,24 @@ export const CategoryTree: React.FC<CategoryTreeProps> = ({ categories, onDelete
               onClick={() => toggleExpand(category.id)}
             >
               {isExpanded ? (
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-4 h-4 text-primary" />
               ) : (
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 text-primary" />
               )}
             </Button>
           )}
           
-          <span className="flex-1 ml-2">{category.name}</span>
+          <span className="flex-1 ml-2 text-foreground/90 group-hover:text-primary transition-colors">
+            {category.name}
+          </span>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-8 h-8">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity mad-scientist-hover"
+              >
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -137,12 +142,12 @@ export const CategoryTree: React.FC<CategoryTreeProps> = ({ categories, onDelete
   };
 
   return (
-    <div className="category-tree border rounded-lg p-4">
+    <div className="category-tree border rounded-lg p-4 cyber-card">
       {categories.map(category => renderCategory(category))}
 
       {/* Edit Dialog */}
       <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
-        <DialogContent>
+        <DialogContent className="cyber-card border-primary/20">
           <DialogHeader>
             <DialogTitle>Edit Category</DialogTitle>
             <DialogDescription>
@@ -180,7 +185,7 @@ export const CategoryTree: React.FC<CategoryTreeProps> = ({ categories, onDelete
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deletingCategory} onOpenChange={() => setDeletingCategory(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="cyber-card border-destructive/20">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
