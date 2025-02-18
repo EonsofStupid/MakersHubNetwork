@@ -28,11 +28,12 @@ export function MainNav() {
   return (
     <header
       className={cn(
-        "mainnav-container",
+        "mainnav-container mainnav-cyber",
         isScrolled || isLoaded && [
           "mainnav-header",
           "mainnav-gradient",
-          "mainnav-morph"
+          "mainnav-morph",
+          "mainnav-sporadic-border"
         ]
       )}
     >

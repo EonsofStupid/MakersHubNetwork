@@ -51,7 +51,7 @@
 }
 
 @layer components {
-  /* MainNav-specific styles - prefixed with mainnav- to ensure uniqueness */
+  /* MainNav-specific styles - completely isolated with mainnav- prefix */
   .mainnav-container {
     @apply fixed top-0 w-full z-50 transition-all duration-300;
   }
@@ -65,7 +65,94 @@
   }
 
   .mainnav-morph {
-    @apply animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(0,240,255,0.1)];
+    @apply animate-morph-header shadow-[0_4px_30px rgba(0,0,0,0.1),inset_0_0_30px rgba(0,240,255,0.1)];
+  }
+
+  /* New MainNav cyber effects */
+  .mainnav-cyber {
+    @apply relative isolate overflow-hidden;
+    animation: mainnav-glitch 8s steps(1) infinite;
+  }
+
+  .mainnav-cyber::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(0, 240, 255, 0.1) 0%,
+      rgba(255, 45, 110, 0.1) 50%,
+      rgba(0, 240, 255, 0.1) 100%
+    );
+    background-size: 200% 100%;
+    animation: mainnav-data-stream 15s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .mainnav-cyber:hover::before {
+    opacity: 1;
+  }
+
+  .mainnav-sporadic-border {
+    animation: mainnav-color-shift 4s infinite;
+    position: relative;
+  }
+
+  .mainnav-sporadic-border::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: conic-gradient(
+      from 0deg,
+      rgba(0, 240, 255, 0.2),
+      rgba(255, 45, 110, 0.2),
+      rgba(0, 240, 255, 0.2)
+    );
+    animation: mainnav-rotate 4s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .mainnav-sporadic-border:hover::after {
+    opacity: 1;
+  }
+
+  /* MainNav-specific keyframes */
+  @keyframes mainnav-glitch {
+    0%, 100% { 
+      transform: translate(0); 
+      opacity: 1;
+      clip-path: inset(0 0 0 0);
+    }
+    5% { 
+      transform: translate(-2px, 2px);
+      clip-path: inset(20% 0 30% 0);
+    }
+    10% { 
+      transform: translate(2px, -2px);
+      clip-path: inset(10% 0 60% 0);
+    }
+    15% { transform: translate(0); }
+    20% { clip-path: inset(0 0 0 0); }
+    25% { clip-path: inset(0 5% 0 0); }
+    30% { clip-path: inset(0 0 0 5%); }
+  }
+
+  @keyframes mainnav-color-shift {
+    0%, 100% { border-color: rgba(0, 240, 255, 0.3); }
+    33% { border-color: rgba(255, 45, 110, 0.3); }
+    66% { border-color: rgba(0, 240, 255, 0.5); }
+  }
+
+  @keyframes mainnav-data-stream {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+  }
+
+  @keyframes mainnav-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 
   /* Footer-specific styles - prefixed with footer- to ensure uniqueness */
