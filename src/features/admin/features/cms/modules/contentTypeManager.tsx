@@ -11,7 +11,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import * as z from "zod";
 import { PlusCircle } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
+import { cmsKeys } from '../queries/keys';
 
 // Types
 export interface ContentType {
@@ -31,18 +32,13 @@ const contentTypeSchema = z.object({
 
 type ContentTypeFormValues = z.infer<typeof contentTypeSchema>;
 
-// React Query Keys
-const QUERY_KEYS = {
-  contentTypes: ['content-types'] as const,
-};
-
 // Hook for managing content types
 export const useContentTypes = () => {
   const queryClient = useQueryClient();
   
   // Fetch content types
   const { data: contentTypes = [], isLoading } = useQuery({
-    queryKey: QUERY_KEYS.contentTypes,
+    queryKey: cmsKeys.types.list(),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('content_types')
@@ -57,10 +53,14 @@ export const useContentTypes = () => {
   // Create new content type
   const { mutate: createContentType } = useMutation({
     mutationFn: async (values: ContentTypeFormValues) => {
-      const slug = values.name.toLowerCase().replace(/\s+/g, '-');
       const { data, error } = await supabase
         .from('content_types')
-        .insert([{ ...values, slug, is_system: false }])
+        .insert({
+          name: values.name,
+          slug: values.name.toLowerCase().replace(/\s+/g, '-'),
+          description: values.description,
+          is_system: false
+        })
         .select()
         .single();
 
@@ -68,7 +68,7 @@ export const useContentTypes = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(QUERY_KEYS.contentTypes);
+      queryClient.invalidateQueries({ queryKey: cmsKeys.types.list() });
       toast.success("Content type created successfully");
     },
     onError: (error) => {
