@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ThemeInfoPopup } from "@/components/theme/ThemeInfoPopup";
 import { Terminal } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
 import { useThemeStore } from "@/stores/theme/store";
 
 export function Footer() {
@@ -26,16 +25,15 @@ export function Footer() {
   return (
     <footer
       className={cn(
-        "fixed bottom-0 left-0 right-0 w-full z-40 transition-all duration-[1.5s] ease-in-out",
-        isLoaded
-          ? "bg-background/20 backdrop-blur-xl shadow-[0_-8px_32px_0_rgba(0,240,255,0.2)] border-t border-primary/30"
-          : "bg-transparent",
-        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-0 before:transition-opacity before:duration-1000",
-        isLoaded && "before:opacity-100"
+        "footer-container",
+        isLoaded && [
+          "footer-base",
+          "footer-gradient"
+        ]
       )}
-      style={{
+      style={{ 
         transform: isLoaded ? "perspective(1000px) rotateX(1deg)" : "none",
-        clipPath: "polygon(0 100%, 100% 100%, 98% 0%, 2% 0%)",
+        clipPath: "polygon(0 100%, 100% 100%, 98% 0%, 2% 0%)"
       }}
     >
       <div className="container mx-auto px-4">
