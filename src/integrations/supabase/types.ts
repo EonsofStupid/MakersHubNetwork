@@ -511,6 +511,143 @@ export type Database = {
         }
         Relationships: []
       }
+      metadata_workflow_instances: {
+        Row: {
+          content_id: string | null
+          created_at: string | null
+          created_by: string | null
+          data: Json
+          id: string
+          status: string | null
+          updated_at: string | null
+          workflow_id: string | null
+        }
+        Insert: {
+          content_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data?: Json
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          workflow_id?: string | null
+        }
+        Update: {
+          content_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data?: Json
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metadata_workflow_instances_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metadata_workflow_instances_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "metadata_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metadata_workflow_versions: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          default_values: Json | null
+          fields: Json
+          id: string
+          validation_rules: Json | null
+          version: number
+          workflow_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          default_values?: Json | null
+          fields: Json
+          id?: string
+          validation_rules?: Json | null
+          version: number
+          workflow_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          default_values?: Json | null
+          fields?: Json
+          id?: string
+          validation_rules?: Json | null
+          version?: number
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metadata_workflow_versions_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "metadata_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metadata_workflows: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          default_values: Json | null
+          description: string | null
+          fields: Json
+          id: string
+          is_active: boolean | null
+          linked_parts: Json | null
+          name: string
+          slug: string
+          updated_at: string | null
+          validation_rules: Json | null
+          version: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          default_values?: Json | null
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_active?: boolean | null
+          linked_parts?: Json | null
+          name: string
+          slug: string
+          updated_at?: string | null
+          validation_rules?: Json | null
+          version?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          default_values?: Json | null
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_active?: boolean | null
+          linked_parts?: Json | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+          validation_rules?: Json | null
+          version?: number | null
+        }
+        Relationships: []
+      }
       part_reviews: {
         Row: {
           cons: string[] | null
@@ -1134,6 +1271,16 @@ export type Database = {
       part_status: "draft" | "published" | "archived"
       theme_status: "draft" | "published" | "archived"
       user_role: "super_admin" | "admin" | "maker" | "builder"
+      workflow_field_type:
+        | "string"
+        | "textarea"
+        | "number"
+        | "boolean"
+        | "date"
+        | "array"
+        | "relation"
+        | "file"
+        | "select"
     }
     CompositeTypes: {
       [_ in never]: never
