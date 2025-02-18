@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ContentList } from './ContentList';
 import { ContentFilters } from './ContentFilter';
-import { ContentFilter } from '../../types/content';
+import { ContentFilter, ContentItem } from '../../types/content';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
