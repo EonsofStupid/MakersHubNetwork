@@ -9,19 +9,19 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, requiredRoles = [] }: AuthGuardProps) {
   const location = useLocation()
-  const { status, user } = useAuthStore()
+  const { user, isLoading, role } = useAuthStore()
 
-  if (status === "loading") {
+  if (isLoading) {
     return <div>Loading...</div>
   }
 
-  if (status === "unauthenticated") {
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   if (
     requiredRoles.length > 0 &&
-    !requiredRoles.some((role) => user?.role?.includes(role))
+    !requiredRoles.includes(role || '')
   ) {
     return <Navigate to="/" replace />
   }
