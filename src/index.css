@@ -70,7 +70,8 @@
 
   /* Footer-specific styles - prefixed with footer- to ensure uniqueness */
   .footer-container {
-    @apply fixed bottom-0 left-0 right-0 w-full z-40 transition-all duration-[1.5s] ease-in-out;
+    @apply fixed bottom-0 left-0 right-0 w-full z-40 transition-all ease-in-out;
+    transition-duration: 1500ms;
   }
 
   .footer-base {
@@ -78,7 +79,8 @@
   }
 
   .footer-gradient {
-    @apply before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-100 before:transition-opacity before:duration-1000;
+    @apply before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-100 before:transition-opacity;
+    transition-duration: 1000ms;
   }
 
   .footer-transform {
