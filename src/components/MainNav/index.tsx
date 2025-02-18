@@ -7,33 +7,21 @@ import { SearchButton } from "./components/SearchButton";
 import { AuthSection } from "./components/AuthSection";
 
 export function MainNav() {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0);
-    };
-    window.addEventListener("scroll", handleScroll);
-
     requestAnimationFrame(() => {
       setIsLoaded(true);
     });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
   }, []);
 
   return (
     <header
       className={cn(
         "mainnav-container",
-        isScrolled || isLoaded && [
-          "mainnav-header",
-          "mainnav-gradient",
-          "mainnav-morph"
-        ]
+        "mainnav-header",
+        "mainnav-gradient",
+        "mainnav-morph"
       )}
     >
       <div className="mainnav-effects-wrapper absolute inset-0 w-full h-full overflow-hidden">
