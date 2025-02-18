@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ApiKeyRequirements, ApiKeyType, isApiKeyRequirements } from '../../../types/api-keys';
+import { ApiKeyRequirements, ApiKeyType } from '../../../types/api-keys';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { providers } from '../../../constants/providers';
@@ -63,8 +64,12 @@ export function AddKeyDialog({ open, onOpenChange }: AddKeyDialogProps) {
       
       if (error) throw error;
       
-      if (isApiKeyRequirements(data)) {
-        setProviderRequirements(data);
+      // Validate the response data structure
+      if (typeof data === 'object' && data !== null && 
+          'category' in data && 
+          'fields' in data && 
+          'description' in data) {
+        setProviderRequirements(data as ApiKeyRequirements);
       } else {
         throw new Error('Invalid provider requirements data structure');
       }
