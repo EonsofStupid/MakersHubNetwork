@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ApiKeyRequirements } from '../../../types/api-keys';
+import { ApiKeyRequirements, ApiKeyType } from '../../../types/api-keys';
 import {
   Dialog,
   DialogContent,
@@ -56,14 +56,23 @@ export function AddKeyDialog({ open, onOpenChange }: AddKeyDialogProps) {
     }
   }, [form.watch("key_type")]);
 
-  const fetchProviderRequirements = async (provider: string) => {
+  const fetchProviderRequirements = async (provider: ApiKeyType) => {
     try {
       const { data, error } = await supabase.rpc('get_api_key_requirements', {
         provider
       });
       
       if (error) throw error;
-      setProviderRequirements(data as ApiKeyRequirements);
+      
+      // Validate the response data structure
+      if (typeof data === 'object' && data !== null && 
+          'category' in data && 
+          'fields' in data && 
+          'description' in data) {
+        setProviderRequirements(data as ApiKeyRequirements);
+      } else {
+        throw new Error('Invalid provider requirements data structure');
+      }
     } catch (error: any) {
       toast({
         title: "Error fetching provider requirements",
