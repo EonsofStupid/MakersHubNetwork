@@ -40,3 +40,29 @@ export interface ApiKeyFormData {
   description?: string;
   provider_config: Record<string, any>;
 }
+
+// Type guards
+export const isApiKeyField = (field: unknown): field is ApiKeyField => {
+  if (!field || typeof field !== 'object') return false;
+  const f = field as any;
+  return (
+    typeof f.name === 'string' &&
+    ['password', 'text', 'url'].includes(f.type) &&
+    typeof f.required === 'boolean' &&
+    typeof f.validation === 'object' &&
+    typeof f.validation.pattern === 'string' &&
+    typeof f.validation.message === 'string'
+  );
+};
+
+export const isApiKeyRequirements = (data: unknown): data is ApiKeyRequirements => {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as any;
+  return (
+    ['ai_service', 'integration'].includes(d.category) &&
+    Array.isArray(d.fields) &&
+    d.fields.every(isApiKeyField) &&
+    typeof d.description === 'string' &&
+    (d.docs_url === undefined || typeof d.docs_url === 'string')
+  );
+};
