@@ -18,4 +18,3 @@ export interface ContentFilter {
 export interface CategoryTreeItem extends ContentCategory {
   children?: CategoryTreeItem[];
 }
-
