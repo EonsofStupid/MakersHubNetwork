@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useAuthStore } from '@/app/stores/auth/store';
 import { useNavigate } from 'react-router-dom';
@@ -111,4 +112,6 @@ export const AdminPage = () => {
       </div>
     </div>
   );
-}; 
+};
+
+export default AdminPage; // Add default export

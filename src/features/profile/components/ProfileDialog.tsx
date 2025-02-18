@@ -1,10 +1,16 @@
+
 import React from "react"
 import { motion } from "framer-motion"
 import { X } from "lucide-react"
+
 import { Button } from "@/site/components/ui/button"
 import { Dialog, DialogContent } from "@/site/components/ui/dialog"
 import { ProfileEditor } from "./ProfileEditor"
-import { ProfileDialogProps } from "../types"
+
+interface ProfileDialogProps {
+  open: boolean
+  onClose: () => void
+}
 
 export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   open,
@@ -43,5 +49,5 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
         </motion.div>
       </DialogContent>
     </Dialog>
-  )
-} 
+  );
+};
