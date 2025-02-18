@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,6 +36,21 @@ interface AddKeyDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface RawProviderRequirements {
+  category: string;
+  fields: Array<{
+    name: string;
+    type: 'password' | 'text' | 'url';
+    required: boolean;
+    validation: {
+      pattern: string;
+      message: string;
+    };
+  }>;
+  description: string;
+  docs_url?: string;
+}
+
 export function AddKeyDialog({ open, onOpenChange }: AddKeyDialogProps) {
   const [providerRequirements, setProviderRequirements] = useState<ApiKeyRequirements | null>(null);
   const { toast } = useToast();
@@ -64,27 +78,34 @@ export function AddKeyDialog({ open, onOpenChange }: AddKeyDialogProps) {
       
       if (error) throw error;
       
-      if (data) {
-        // Type validation and conversion
-        const requirements: ApiKeyRequirements = {
-          category: data.category,
-          fields: Array.isArray(data.fields) ? data.fields.map((field: any) => ({
-            name: field.name,
-            type: field.type,
-            required: field.required,
-            validation: {
-              pattern: field.validation.pattern,
-              message: field.validation.message
-            }
-          })) : [],
-          description: data.description,
-          docs_url: data.docs_url
-        };
-        
-        setProviderRequirements(requirements);
-      } else {
-        throw new Error('No provider requirements returned');
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid provider requirements data');
       }
+
+      const rawData = data as RawProviderRequirements;
+      
+      // Validate the required fields exist
+      if (!rawData.category || !rawData.fields || !rawData.description) {
+        throw new Error('Missing required provider requirement fields');
+      }
+
+      // Convert to ApiKeyRequirements
+      const requirements: ApiKeyRequirements = {
+        category: rawData.category as ApiKeyCategory, // This cast is safe because our DB enforces valid categories
+        fields: rawData.fields.map(field => ({
+          name: field.name,
+          type: field.type,
+          required: field.required,
+          validation: {
+            pattern: field.validation.pattern,
+            message: field.validation.message
+          }
+        })),
+        description: rawData.description,
+        docs_url: rawData.docs_url
+      };
+      
+      setProviderRequirements(requirements);
     } catch (error: any) {
       toast({
         title: "Error fetching provider requirements",
