@@ -3,8 +3,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { ContentFilter, ContentStatus } from "../../types/content";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useContentTypes } from "../../queries/useContentTypes";
+import { ContentTypeManager } from "./ContentTypeManager";
 
 interface ContentFilterProps {
   filter: ContentFilter;
@@ -12,63 +12,58 @@ interface ContentFilterProps {
 }
 
 export const ContentFilters = ({ filter, onFilterChange }: ContentFilterProps) => {
-  const { data: contentTypes } = useQuery({
-    queryKey: ['content-types'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('content_types')
-        .select('*')
-        .order('created_at');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+  const { data: contentTypes, isLoading } = useContentTypes();
 
   return (
-    <motion.div 
-      className="flex flex-wrap gap-4 mb-6"
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Select
-        value={filter.type}
-        onValueChange={(value) => onFilterChange({ ...filter, type: value })}
-      >
-        <SelectTrigger className="w-[180px] glass-morphism mad-scientist-hover">
-          <SelectValue placeholder="Content Type" />
-        </SelectTrigger>
-        <SelectContent>
-          {contentTypes?.map((type) => (
-            <SelectItem key={type.id} value={type.id}>
-              {type.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <motion.div 
+          className="flex flex-wrap gap-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Select
+            value={filter.type}
+            onValueChange={(value) => onFilterChange({ ...filter, type: value })}
+          >
+            <SelectTrigger className="w-[180px] glass-morphism mad-scientist-hover">
+              <SelectValue placeholder="Content Type" />
+            </SelectTrigger>
+            <SelectContent>
+              {contentTypes?.map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {type.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-      <Select
-        value={filter.status}
-        onValueChange={(value) => onFilterChange({ ...filter, status: value as ContentStatus })}
-      >
-        <SelectTrigger className="w-[180px] glass-morphism mad-scientist-hover">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="draft">Draft</SelectItem>
-          <SelectItem value="review">Review</SelectItem>
-          <SelectItem value="published">Published</SelectItem>
-          <SelectItem value="archived">Archived</SelectItem>
-        </SelectContent>
-      </Select>
+          <Select
+            value={filter.status}
+            onValueChange={(value) => onFilterChange({ ...filter, status: value as ContentStatus })}
+          >
+            <SelectTrigger className="w-[180px] glass-morphism mad-scientist-hover">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="review">Review</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
 
-      <Input
-        placeholder="Search content..."
-        value={filter.search || ''}
-        onChange={(e) => onFilterChange({ ...filter, search: e.target.value })}
-        className="w-[200px] glass-morphism mad-scientist-hover placeholder:text-muted-foreground/50"
-      />
-    </motion.div>
+          <Input
+            placeholder="Search content..."
+            value={filter.search || ''}
+            onChange={(e) => onFilterChange({ ...filter, search: e.target.value })}
+            className="w-[200px] glass-morphism mad-scientist-hover placeholder:text-muted-foreground/50"
+          />
+        </motion.div>
+
+        <ContentTypeManager />
+      </div>
+    </div>
   );
 };
