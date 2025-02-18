@@ -1,0 +1,91 @@
+
+@layer components {
+  /* Data Stream Effect */
+  .mainnav-data-stream {
+    @apply relative isolate;
+  }
+
+  .mainnav-data-stream::before {
+    content: '';
+    @apply absolute inset-0 bg-repeat-x opacity-0 transition-opacity duration-300;
+    background-image: 
+      linear-gradient(90deg, 
+        rgba(16, 20, 24, 0) 0%,
+        rgba(0, 240, 255, 0.2) 20%,
+        rgba(255, 45, 110, 0.2) 40%,
+        hsl(var(--destructive) / 0.2) 60%,
+        hsl(var(--accent) / 0.2) 80%,
+        rgba(16, 20, 24, 0) 100%
+      );
+    background-size: 200% 100%;
+    animation: mainnav-stream 15s linear infinite;
+  }
+
+  .mainnav-data-stream:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Glitch Particle Effects */
+  .mainnav-glitch-particles {
+    @apply relative overflow-hidden;
+  }
+
+  .mainnav-glitch-particles::after {
+    content: '';
+    @apply absolute;
+    width: 2px;
+    height: 2px;
+    box-shadow: 
+      10px 10px rgba(0, 240, 255, 0.8),
+      -20px 30px hsl(var(--destructive) / 0.8),
+      40px -20px rgba(255, 45, 110, 0.8),
+      -50px -40px hsl(var(--accent) / 0.8),
+      60px 60px hsl(var(--muted) / 0.8),
+      -70px 20px rgba(16, 20, 24, 0.8);
+    animation: mainnav-particles 8s steps(1) infinite;
+  }
+
+  /* Sporadic Border Effect */
+  .mainnav-sporadic-border {
+    @apply relative;
+  }
+
+  .mainnav-sporadic-border::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: conic-gradient(
+      from 0deg,
+      rgba(0, 240, 255, 0.2),
+      hsl(var(--destructive) / 0.2),
+      rgba(255, 45, 110, 0.2),
+      hsl(var(--accent) / 0.2),
+      hsl(var(--muted) / 0.2),
+      rgba(0, 240, 255, 0.2)
+    );
+    animation: mainnav-rotate 8s linear infinite;
+  }
+
+  .mainnav-sporadic-border:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Animations */
+  @keyframes mainnav-stream {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
+  @keyframes mainnav-particles {
+    0%, 100% { transform: translate(0, 0); opacity: 0; }
+    10% { transform: translate(100px, -50px) scale(2); opacity: 1; }
+    20% { transform: translate(-150px, 100px) scale(1.5); opacity: 0.8; }
+    30% { transform: translate(200px, -100px) scale(3); opacity: 0.6; }
+    40% { transform: translate(-100px, 50px) scale(1); opacity: 0.4; }
+    50% { transform: translate(150px, 75px) scale(2.5); opacity: 0.7; }
+  }
+
+  @keyframes mainnav-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+}
