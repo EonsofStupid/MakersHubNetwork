@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import './components/MainNav/styles/cyber-effects.css';
 
@@ -52,23 +53,6 @@
 }
 
 @layer components {
-  /* MainNav-specific styles - prefixed with mainnav- to ensure uniqueness */
-  .mainnav-container {
-    @apply fixed top-0 w-full z-50 transition-all duration-300;
-  }
-
-  .mainnav-header {
-    @apply bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30;
-  }
-
-  .mainnav-gradient {
-    @apply before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-100;
-  }
-
-  .mainnav-morph {
-    @apply animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(0,240,255,0.1)];
-  }
-
   /* Footer-specific styles - prefixed with footer- to ensure uniqueness */
   .footer-container {
     @apply fixed bottom-0 left-0 right-0 w-full z-40 transition-all ease-in-out;
