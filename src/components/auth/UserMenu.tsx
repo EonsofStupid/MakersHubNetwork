@@ -1,6 +1,5 @@
-
 import { useState } from "react"
-import { useAuthStore } from "@/stores/auth/store"
+import { useAuthStore } from "@/app/stores/auth/store"
 import { useToast } from "@/hooks/use-toast"
 import { useAdminAccess } from "@/hooks/useAdminAccess"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
