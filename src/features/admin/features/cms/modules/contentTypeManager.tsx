@@ -69,11 +69,18 @@ export const useContentTypes = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cmsKeys.types.list() });
-      toast.success("Content type created successfully");
+      toast({
+        title: "Success",
+        description: "Content type created successfully",
+      });
     },
     onError: (error) => {
       console.error('Error creating content type:', error);
-      toast.error("Failed to create content type");
+      toast({
+        title: "Error",
+        description: "Failed to create content type",
+        variant: "destructive",
+      });
     }
   });
 
