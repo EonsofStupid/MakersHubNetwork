@@ -217,7 +217,7 @@ export type Database = {
           metadata: Json | null
           status: Database["public"]["Enums"]["content_status"]
           title: string
-          type: Database["public"]["Enums"]["content_type"]
+          type: string
           updated_at: string
           version: number | null
         }
@@ -229,7 +229,7 @@ export type Database = {
           metadata?: Json | null
           status?: Database["public"]["Enums"]["content_status"]
           title: string
-          type: Database["public"]["Enums"]["content_type"]
+          type: string
           updated_at?: string
           version?: number | null
         }
@@ -241,11 +241,19 @@ export type Database = {
           metadata?: Json | null
           status?: Database["public"]["Enums"]["content_status"]
           title?: string
-          type?: Database["public"]["Enums"]["content_type"]
+          type?: string
           updated_at?: string
           version?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_content_type"
+            columns: ["type"]
+            isOneToOne: false
+            referencedRelation: "content_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       content_items_categories: {
         Row: {
