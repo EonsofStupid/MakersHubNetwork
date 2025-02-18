@@ -30,47 +30,128 @@ export function Footer() {
         isLoaded && [
           "footer-base",
           "footer-gradient",
-          "footer-animate"
+          "footer-animate",
+          "footer-transform"
         ]
       )}
-      style={{ 
-        transform: isLoaded ? "perspective(1000px) rotateX(1deg)" : "none",
-        clipPath: "polygon(0 100%, 100% 100%, 98% 0%, 2% 0%)"
-      }}
     >
       <div className="container mx-auto px-4">
         <div className="py-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h3 className="text-lg font-bold mb-4">Resources</h3>
+              <h3 className="text-lg font-bold mb-4 text-gradient">Resources</h3>
               <ul className="space-y-2">
-                <li><Link to="/docs" className="text-muted-foreground hover:text-primary transition-colors">Documentation</Link></li>
-                <li><Link to="/guides" className="text-muted-foreground hover:text-primary transition-colors">Guides</Link></li>
-                <li><Link to="/tutorials" className="text-muted-foreground hover:text-primary transition-colors">Tutorials</Link></li>
+                <li>
+                  <Link 
+                    to="/resources/docs" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    Documentation
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/resources/guides" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    Guides
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/resources/tutorials" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    Tutorials
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-lg font-bold mb-4">Community</h3>
+              <h3 className="text-lg font-bold mb-4 text-gradient">Community</h3>
               <ul className="space-y-2">
-                <li><Link to="/forum" className="text-muted-foreground hover:text-primary transition-colors">Forum</Link></li>
-                <li><Link to="/discord" className="text-muted-foreground hover:text-primary transition-colors">Discord</Link></li>
-                <li><Link to="/blog" className="text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
+                <li>
+                  <Link 
+                    to="/community/forum" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    Forum
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/community/discord" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    Discord
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/community/blog" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    Blog
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-lg font-bold mb-4">Company</h3>
+              <h3 className="text-lg font-bold mb-4 text-gradient">Company</h3>
               <ul className="space-y-2">
-                <li><Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About</Link></li>
-                <li><Link to="/careers" className="text-muted-foreground hover:text-primary transition-colors">Careers</Link></li>
-                <li><Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
+                <li>
+                  <Link 
+                    to="/company/about" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/company/careers" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    Careers
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/company/contact" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    Contact
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-lg font-bold mb-4">Legal</h3>
+              <h3 className="text-lg font-bold mb-4 text-gradient">Legal</h3>
               <ul className="space-y-2">
-                <li><Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy</Link></li>
-                <li><Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms</Link></li>
-                <li><Link to="/licenses" className="text-muted-foreground hover:text-primary transition-colors">Licenses</Link></li>
+                <li>
+                  <Link 
+                    to="/legal/privacy" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    Privacy
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/legal/terms" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    Terms
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/legal/licenses" 
+                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
+                  >
+                    Licenses
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
