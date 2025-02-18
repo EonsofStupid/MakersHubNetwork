@@ -2,7 +2,7 @@
 @layer components {
   /* MainNav Container Styles */
   .mainnav-container {
-    @apply fixed top-0 w-full z-50 transition-all duration-300 relative;
+    @apply fixed top-0 w-full z-50 transition-all duration-300;
   }
 
   .mainnav-header {
@@ -17,9 +17,14 @@
     @apply animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(0,240,255,0.1)];
   }
 
+  /* Effects Wrapper */
+  .mainnav-effects-wrapper {
+    @apply overflow-hidden isolate;
+  }
+
   /* Data Stream Effect */
   .mainnav-data-stream {
-    @apply relative isolate;
+    @apply relative;
   }
 
   .mainnav-data-stream::before {
@@ -46,7 +51,7 @@
 
   /* Glitch Particle Effects */
   .mainnav-glitch-particles {
-    @apply relative overflow-hidden;
+    @apply relative;
   }
 
   .mainnav-glitch-particles::before,

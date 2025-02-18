@@ -36,7 +36,9 @@ export function MainNav() {
         ]
       )}
     >
-      <div className="mainnav-data-stream mainnav-glitch-particles absolute inset-0 w-full h-full pointer-events-none" />
+      <div className="mainnav-effects-wrapper absolute inset-0 w-full h-full overflow-hidden">
+        <div className="mainnav-data-stream mainnav-glitch-particles w-full h-full pointer-events-none" />
+      </div>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
           <Logo />
