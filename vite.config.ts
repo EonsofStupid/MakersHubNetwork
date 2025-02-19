@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react-swc"
 import path from "path"
@@ -8,15 +9,15 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    cors: true, // Enable CORS
+    cors: true,
     watch: {
       usePolling: true,
       interval: 100,
     },
     hmr: {
       overlay: true,
-      clientPort: 443, // Force client to use HTTPS port
-      protocol: 'wss', // Use secure WebSocket
+      clientPort: 443,
+      protocol: 'wss',
     },
   },
   plugins: [
@@ -98,16 +99,23 @@ export default defineConfig(({ mode }) => ({
         },
       ],
       dirs: [
-        "./src/components",
+        // Feature-based structure - most specific to least specific
+        "./src/features/**/components/tabs/**/sections/**",
+        "./src/features/**/components/tabs/**",
+        "./src/features/**/components/**",
+        "./src/features/**/hooks",
+        "./src/features/**/stores",
+        "./src/features/**/utils",
+        "./src/features/**/constants",
+        
+        // Global components and utilities
+        "./src/components/**",
         "./src/hooks",
         "./src/stores",
         "./src/lib",
         "./src/utils",
         "./src/types",
         "./src/constants",
-        "./src/features/**/components",
-        "./src/features/**/hooks",
-        "./src/features/**/stores",
       ],
       dts: "./src/auto-imports.d.ts",
       eslintrc: {
@@ -116,10 +124,10 @@ export default defineConfig(({ mode }) => ({
       },
       defaultExportByFilename: true,
       include: [
-        /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
+        /\.[tj]sx?$/,
         /\.vue$/,
-        /\.vue\?vue/, // .vue
-        /\.md$/, // .md
+        /\.vue\?vue/,
+        /\.md$/,
       ],
     }),
   ].filter(Boolean),
