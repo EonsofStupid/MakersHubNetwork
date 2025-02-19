@@ -2,11 +2,11 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ContentManagement } from './sections/management/ContentManagement';
-import { CategoryManagement } from './sections/categories/CategoryManagement';
-import { WorkflowManagement } from './sections/workflows/WorkflowManagement';
-import { GalleryManagement } from './sections/gallery/GalleryManagement';
-import { BuildManagement } from './sections/builds/BuildManagement';
+import { ContentManagement } from './management/ContentManagement';
+import { CategoryManagement } from './categories/CategoryManagement';
+import { WorkflowManagement } from './workflows/WorkflowManagement';
+import { GalleryManagement } from './gallery/GalleryManagement';
+import { BuildManagement } from './builds/BuildManagement';
 import { ThemeDataStream } from '@/components/theme/ThemeDataStream';
 
 export const ContentSection = () => {
