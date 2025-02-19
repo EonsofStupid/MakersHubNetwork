@@ -54,7 +54,7 @@ export function WorkflowEditor() {
         <div className="space-x-2">
           <Button
             variant="outline"
-            onClick={() => useWorkflowEditor.getState().resetWorkflow()}
+            onClick={() => setWorkflow(null)}
           >
             Cancel
           </Button>
@@ -94,15 +94,17 @@ export function WorkflowEditor() {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Fields</h3>
             <Select
-              onValueChange={(value) => addField(value as WorkflowFieldType)}
+              onValueChange={(value) => addField({ type: value as WorkflowFieldType })}
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Add Field" />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(WorkflowFieldType).map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                {Object.entries(WorkflowFieldType).map(([key, value]) => (
+                  <SelectItem key={key} value={value}>
+                    {value.split('-').map(word => 
+                      word.charAt(0).toUpperCase() + word.slice(1)
+                    ).join(' ')}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -135,13 +137,13 @@ export function WorkflowEditor() {
                               <Input
                                 placeholder="Field Name"
                                 value={field.name}
-                                onChange={(e) => updateField(field.id, { name: e.target.value })}
+                                onChange={(e) => updateField(index, { name: e.target.value })}
                                 className="max-w-xs"
                               />
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => removeField(field.id)}
+                                onClick={() => removeField(index)}
                               >
                                 Remove
                               </Button>
@@ -152,7 +154,7 @@ export function WorkflowEditor() {
                                 <Switch
                                   checked={field.required}
                                   onCheckedChange={(checked) => 
-                                    updateField(field.id, { required: checked })
+                                    updateField(index, { required: checked })
                                   }
                                 />
                                 <span>Required</span>
