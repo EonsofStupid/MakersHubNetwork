@@ -1,17 +1,17 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ContentList } from './ContentList';
-import { ContentFilters } from './ContentFilter';
-import { ContentFilter, ContentItem } from '../../types/content';
+import { ContentList } from './content/ContentList';
+import { ContentFilters } from './content/ContentFilter';
+import { ContentFilter, ContentItem } from '../types/content';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeDataStream } from '@/components/theme/ThemeDataStream';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CategoryManagement } from '../categories/CategoryManagement';
-import { WorkflowManagement } from '../workflow/WorkflowManagement';
-import { useDeleteContent } from '../../queries/useContentItems';
+import { CategoryManagement } from './categories/CategoryManagement';
+import { WorkflowManagement } from './workflow/WorkflowManagement';
+import { useDeleteContent } from '../queries/useContentItems';
 import {
   Tabs,
   TabsContent,
