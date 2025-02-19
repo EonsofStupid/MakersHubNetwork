@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ThemeDataStream } from '@/components/theme/ThemeDataStream';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CategoryManagement } from '../categories/CategoryManagement';
+import { WorkflowManagement } from '../workflow/WorkflowManagement';
 import { useDeleteContent } from '../../queries/useContentItems';
 import {
   Tabs,
@@ -58,10 +59,16 @@ export const ContentTab = () => {
           >
             Categories
           </TabsTrigger>
+          <TabsTrigger 
+            value="workflows"
+            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+          >
+            Workflows
+          </TabsTrigger>
         </TabsList>
 
         <AnimatePresence mode="wait">
-          <TabsContent value="content">
+          <TabsContent value="content" className="space-y-6">
             <Card className="relative z-10 cyber-card">
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -113,6 +120,17 @@ export const ContentTab = () => {
               transition={{ duration: 0.3 }}
             >
               <CategoryManagement />
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="workflows">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <WorkflowManagement />
             </motion.div>
           </TabsContent>
         </AnimatePresence>
