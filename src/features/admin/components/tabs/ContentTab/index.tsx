@@ -1,12 +1,43 @@
 
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ContentManagement } from './sections/management/ContentManagement';
-import { CategoryManagement } from './sections/categories/CategoryManagement';
-import { WorkflowManagement } from './sections/workflows/WorkflowManagement';
-import { GalleryManagement } from './sections/gallery/GalleryManagement';
-import { BuildManagement } from './sections/builds/BuildManagement';
 import { motion } from 'framer-motion';
+
+// Placeholder components until we implement them
+const ContentManagement = () => (
+  <Card className="p-6">
+    <h3 className="text-xl font-heading font-bold mb-4">Content Management</h3>
+    <p className="text-muted-foreground">Content management features coming soon...</p>
+  </Card>
+);
+
+const CategoryManagement = () => (
+  <Card className="p-6">
+    <h3 className="text-xl font-heading font-bold mb-4">Category Management</h3>
+    <p className="text-muted-foreground">Category management features coming soon...</p>
+  </Card>
+);
+
+const WorkflowManagement = () => (
+  <Card className="p-6">
+    <h3 className="text-xl font-heading font-bold mb-4">Workflow Management</h3>
+    <p className="text-muted-foreground">Workflow management features coming soon...</p>
+  </Card>
+);
+
+const GalleryManagement = () => (
+  <Card className="p-6">
+    <h3 className="text-xl font-heading font-bold mb-4">Gallery Management</h3>
+    <p className="text-muted-foreground">Gallery management features coming soon...</p>
+  </Card>
+);
+
+const BuildManagement = () => (
+  <Card className="p-6">
+    <h3 className="text-xl font-heading font-bold mb-4">Build Management</h3>
+    <p className="text-muted-foreground">Build management features coming soon...</p>
+  </Card>
+);
 
 export const ContentTab = () => {
   return (
