@@ -1,6 +1,6 @@
 
-import { ContentTab as CMSContentTab } from '../../features/cms';
+import { ContentSection } from '../../features/content/ContentSection';
 
 export const ContentTab = () => {
-  return <CMSContentTab />;
+  return <ContentSection />;
 };
