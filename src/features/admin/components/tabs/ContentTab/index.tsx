@@ -1,6 +1,6 @@
 
-import { ContentContainer } from './sections/ContentContainer';
+import { ContentSection } from './sections/ContentSection';
 
 export const ContentTab = () => {
-  return <ContentContainer />;
+  return <ContentSection />;
 };
