@@ -1,12 +1,15 @@
 
-export enum WorkflowFieldType {
-  String = 'string',
-  Textarea = 'textarea',
-  Number = 'number',
-  Boolean = 'boolean',
-  Date = 'date',
-  Array = 'array',
-  Relation = 'relation',
-  File = 'file',
-  Select = 'select'
-}
+export type WorkflowFieldType = 
+  | 'text'
+  | 'number'
+  | 'boolean'
+  | 'date'
+  | 'select'
+  | 'multiselect'
+  | 'rich-text'
+  | 'file'
+  | 'image'
+  | 'reference'
+  | 'array';
+
+export type WorkflowStatus = 'draft' | 'active' | 'archived';

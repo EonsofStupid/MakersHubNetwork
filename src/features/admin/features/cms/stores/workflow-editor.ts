@@ -1,22 +1,18 @@
 
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { WorkflowField, Workflow } from '../types/workflow';
-import { WorkflowFieldType } from '../types/workflow-enums';
+import { Workflow, WorkflowField } from '../types/workflow';
 
 interface WorkflowEditorState {
   currentWorkflow: Partial<Workflow> | null;
   isDirty: boolean;
   errors: Record<string, string>;
-  
-  // Actions
-  setWorkflow: (workflow: Partial<Workflow>) => void;
-  addField: (type: WorkflowFieldType) => void;
-  updateField: (fieldId: string, updates: Partial<WorkflowField>) => void;
-  removeField: (fieldId: string) => void;
+  setWorkflow: (workflow: Partial<Workflow> | null) => void;
+  addField: (field: Partial<WorkflowField>) => void;
+  updateField: (index: number, field: Partial<WorkflowField>) => void;
+  removeField: (index: number) => void;
   moveField: (fromIndex: number, toIndex: number) => void;
   validateWorkflow: () => boolean;
-  resetWorkflow: () => void;
 }
 
 export const useWorkflowEditor = create<WorkflowEditorState>((set, get) => ({
@@ -25,82 +21,81 @@ export const useWorkflowEditor = create<WorkflowEditorState>((set, get) => ({
   errors: {},
 
   setWorkflow: (workflow) => {
-    set({ currentWorkflow: workflow, isDirty: false, errors: {} });
-  },
-
-  addField: (type) => {
-    set((state) => {
-      if (!state.currentWorkflow) return state;
-
-      const newField: WorkflowField = {
-        id: uuidv4(),
-        name: '',
-        type,
-        required: false
-      };
-
-      return {
-        currentWorkflow: {
-          ...state.currentWorkflow,
-          fields: [...(state.currentWorkflow.fields || []), newField]
-        },
-        isDirty: true
-      };
+    set({ 
+      currentWorkflow: workflow,
+      isDirty: false,
+      errors: {}
     });
   },
 
-  updateField: (fieldId, updates) => {
-    set((state) => {
-      if (!state.currentWorkflow?.fields) return state;
+  addField: (field) => {
+    const { currentWorkflow } = get();
+    if (!currentWorkflow) return;
 
-      const fieldIndex = state.currentWorkflow.fields.findIndex(f => f.id === fieldId);
-      if (fieldIndex === -1) return state;
+    const newField: WorkflowField = {
+      id: uuidv4(),
+      name: '',
+      type: 'text',
+      required: false,
+      ...field
+    };
 
-      const updatedFields = [...state.currentWorkflow.fields];
-      updatedFields[fieldIndex] = {
-        ...updatedFields[fieldIndex],
-        ...updates
-      };
-
-      return {
-        currentWorkflow: {
-          ...state.currentWorkflow,
-          fields: updatedFields
-        },
-        isDirty: true
-      };
+    set({
+      currentWorkflow: {
+        ...currentWorkflow,
+        fields: [...(currentWorkflow.fields || []), newField]
+      },
+      isDirty: true
     });
   },
 
-  removeField: (fieldId) => {
-    set((state) => {
-      if (!state.currentWorkflow?.fields) return state;
+  updateField: (index, field) => {
+    const { currentWorkflow } = get();
+    if (!currentWorkflow?.fields) return;
 
-      return {
-        currentWorkflow: {
-          ...state.currentWorkflow,
-          fields: state.currentWorkflow.fields.filter(f => f.id !== fieldId)
-        },
-        isDirty: true
-      };
+    const updatedFields = [...currentWorkflow.fields];
+    updatedFields[index] = {
+      ...updatedFields[index],
+      ...field
+    };
+
+    set({
+      currentWorkflow: {
+        ...currentWorkflow,
+        fields: updatedFields
+      },
+      isDirty: true
+    });
+  },
+
+  removeField: (index) => {
+    const { currentWorkflow } = get();
+    if (!currentWorkflow?.fields) return;
+
+    const updatedFields = currentWorkflow.fields.filter((_, i) => i !== index);
+    set({
+      currentWorkflow: {
+        ...currentWorkflow,
+        fields: updatedFields
+      },
+      isDirty: true
     });
   },
 
   moveField: (fromIndex, toIndex) => {
-    set((state) => {
-      if (!state.currentWorkflow?.fields) return state;
+    const { currentWorkflow } = get();
+    if (!currentWorkflow?.fields) return;
 
-      const fields = [...state.currentWorkflow.fields];
-      const [removed] = fields.splice(fromIndex, 1);
-      fields.splice(toIndex, 0, removed);
+    const fields = [...currentWorkflow.fields];
+    const [removed] = fields.splice(fromIndex, 1);
+    fields.splice(toIndex, 0, removed);
 
-      return {
-        currentWorkflow: {
-          ...state.currentWorkflow,
-          fields
-        },
-        isDirty: true
-      };
+    set({
+      currentWorkflow: {
+        ...currentWorkflow,
+        fields
+      },
+      isDirty: true
     });
   },
 
@@ -109,33 +104,23 @@ export const useWorkflowEditor = create<WorkflowEditorState>((set, get) => ({
     const errors: Record<string, string> = {};
 
     if (!currentWorkflow?.name) {
-      errors.name = 'Workflow name is required';
+      errors.name = 'Name is required';
     }
 
     if (!currentWorkflow?.fields?.length) {
       errors.fields = 'At least one field is required';
-    } else {
-      // Validate fields
-      const fieldNames = new Set();
-      currentWorkflow.fields.forEach((field, index) => {
-        if (!field.name) {
-          errors[`fields.${index}.name`] = 'Field name is required';
-        } else if (fieldNames.has(field.name)) {
-          errors[`fields.${index}.name`] = 'Field names must be unique';
-        }
-        fieldNames.add(field.name);
-      });
     }
+
+    currentWorkflow?.fields?.forEach((field, index) => {
+      if (!field.name) {
+        errors[`field_${index}_name`] = 'Field name is required';
+      }
+      if (!field.type) {
+        errors[`field_${index}_type`] = 'Field type is required';
+      }
+    });
 
     set({ errors });
     return Object.keys(errors).length === 0;
-  },
-
-  resetWorkflow: () => {
-    set({
-      currentWorkflow: null,
-      isDirty: false,
-      errors: {}
-    });
   }
 }));
