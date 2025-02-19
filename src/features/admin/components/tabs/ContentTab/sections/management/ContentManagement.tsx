@@ -5,18 +5,19 @@ import { Button } from '@/components/ui/button';
 
 export const ContentManagement = () => {
   return (
-    <Card className="cyber-card">
+    <Card className="cyber-card backdrop-blur-sm bg-background/50">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-gradient text-2xl font-heading">
+            <CardTitle className="text-2xl font-heading bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Content Management
             </CardTitle>
-            <CardDescription className="text-muted-foreground">
+            <CardDescription>
               Create and manage your platform's content
             </CardDescription>
           </div>
-          <Button className="mad-scientist-hover">
+          <Button className="relative group">
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-primary/20 via-transparent to-secondary/20 blur" />
             <Plus className="w-4 h-4 mr-2" />
             New Content
           </Button>
