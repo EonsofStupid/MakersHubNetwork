@@ -1,6 +1,6 @@
 
-import { ContentSection } from '../../features/content/ContentSection';
+import { ContentTab as ContentTabImplementation } from './ContentTab';
 
 export const ContentTab = () => {
-  return <ContentSection />;
+  return <ContentTabImplementation />;
 };
