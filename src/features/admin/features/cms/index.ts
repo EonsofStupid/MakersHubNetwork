@@ -1,5 +1,5 @@
 
-export { ContentTab } from './components/ContentTab';
+export { ContentTab } from '../../components/tabs/ContentTab';
 export * from './queries/useContentTypes';
 export * from './queries/useContentItems';
 export * from './components/categories/CategoryTree';
