@@ -1,8 +1,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ContentTypeManager } from './ContentTypeManager';
-import { ContentFilters } from './ContentFilter';
-import { ContentList } from './ContentList';
+import { ContentTypeManager } from './components/ContentTypeManager';
+import { ContentFilters } from './components/ContentFilter';
+import { ContentList } from './components/ContentList';
 import { useState } from 'react';
 import { ContentFilter } from '@/admin/types/content';
 import { useContentTypes } from '@/admin/queries/content/useContentTypes';
