@@ -33,7 +33,8 @@ export const ContentTypeManager = () => {
 
   return (
     <div>
-      <Button onClick={() => setIsOpen(true)} className="mad-scientist-hover">
+      <Button onClick={() => setIsOpen(true)} className="relative group hover:shadow-[0_0_15px_rgba(0,240,255,0.15)]">
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-primary/20 via-transparent to-secondary/20 blur" />
         <Plus className="w-4 h-4 mr-2" />
         New Type
       </Button>
@@ -53,7 +54,7 @@ export const ContentTypeManager = () => {
               <Input
                 id="name"
                 {...form.register('name', { required: true })}
-                className="mad-scientist-hover"
+                className="relative group hover:shadow-[0_0_15px_rgba(0,240,255,0.15)]"
               />
             </div>
 
@@ -62,7 +63,7 @@ export const ContentTypeManager = () => {
               <Textarea
                 id="description"
                 {...form.register('description')}
-                className="mad-scientist-hover"
+                className="relative group hover:shadow-[0_0_15px_rgba(0,240,255,0.15)]"
               />
             </div>
 
@@ -77,6 +78,7 @@ export const ContentTypeManager = () => {
               <Button
                 type="submit"
                 disabled={createMutation.isPending}
+                className="relative group hover:shadow-[0_0_15px_rgba(0,240,255,0.15)]"
               >
                 Create Type
               </Button>
