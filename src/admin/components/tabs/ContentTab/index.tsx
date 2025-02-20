@@ -1,11 +1,11 @@
 
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ContentManagement } from '@/admin/components/content/management/ContentManagement';
-import { CategoryManagement } from '@/admin/components/content/categories/CategoryManagement';
-import { WorkflowManagement } from '@/admin/components/content/workflows/WorkflowManagement';
-import { GalleryManagement } from '@/admin/components/content/gallery/GalleryManagement';
-import { BuildManagement } from '@/admin/components/content/builds/BuildManagement';
+import { ContentManagement } from '@/features/admin/features/cms/components/content/ContentManagement';
+import { CategoryManagement } from './sections/categories/CategoryManagement';
+import { WorkflowManagement } from './sections/workflows/WorkflowManagement';
+import { GalleryManagement } from './sections/gallery/GalleryManagement';
+import { BuildManagement } from './sections/builds/BuildManagement';
 import { motion } from 'framer-motion';
 
 export const ContentTab = () => {
