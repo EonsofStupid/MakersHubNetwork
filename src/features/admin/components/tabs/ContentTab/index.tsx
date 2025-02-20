@@ -16,11 +16,11 @@ export const ContentTab = () => {
         animate={{ opacity: 1, y: 0 }}
         className="relative min-h-[600px] rounded-lg"
       >
-        <Tabs defaultValue="content" className="space-y-6">
+        <Tabs defaultValue="management" className="space-y-6">
           <Card className="cyber-card bg-background/50 backdrop-blur-sm border border-primary/20">
             <TabsList className="w-full justify-start border-b border-primary/20 rounded-none px-4">
               <TabsTrigger 
-                value="content"
+                value="management"
                 className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
               >
                 Content Management
@@ -52,7 +52,7 @@ export const ContentTab = () => {
             </TabsList>
           </Card>
 
-          <TabsContent value="content">
+          <TabsContent value="management">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
