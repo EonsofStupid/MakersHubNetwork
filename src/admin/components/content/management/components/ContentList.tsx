@@ -1,3 +1,4 @@
+
 import { useContentItems } from '@/admin/queries/content/useContentItems';
 import { DataTable } from '@/components/ui/data-table';
 import { ContentType, ContentFilter } from '@/admin/types/content';
@@ -10,7 +11,7 @@ interface ContentListProps {
 }
 
 export const ContentList = ({ filter, contentTypes }: ContentListProps) => {
-  const { data: items = [], isLoading } = useContentItems({ filter });
+  const { data: items = [], isPending } = useContentItems(filter);
 
   const getContentTypeName = (typeId: string) => {
     const contentType = contentTypes.find(t => t.id === typeId);
@@ -42,7 +43,7 @@ export const ContentList = ({ filter, contentTypes }: ContentListProps) => {
     <DataTable
       columns={columns}
       data={items}
-      isLoading={isLoading}
+      isLoading={isPending}
       emptyMessage="No content items found"
     />
   );

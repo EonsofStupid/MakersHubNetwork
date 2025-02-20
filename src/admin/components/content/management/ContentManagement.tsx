@@ -9,7 +9,7 @@ import { useContentTypes } from '@/admin/queries/content/useContentTypes';
 
 export const ContentManagement = () => {
   const [filter, setFilter] = useState<ContentFilter>({});
-  const { data: contentTypes } = useContentTypes();
+  const { data: contentTypes = [] } = useContentTypes();
 
   return (
     <Card className="cyber-card backdrop-blur-sm bg-background/50">
@@ -23,18 +23,18 @@ export const ContentManagement = () => {
               Create and manage your platform's content
             </CardDescription>
           </div>
-          <ContentTypeManager />
+          <ContentTypeManager contentTypes={contentTypes} />
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <ContentFilters 
-          contentTypes={contentTypes || []}
+          contentTypes={contentTypes}
           currentFilter={filter}
           onFilterChange={setFilter}
         />
         <ContentList 
           filter={filter}
-          contentTypes={contentTypes || []}
+          contentTypes={contentTypes}
         />
       </CardContent>
     </Card>
