@@ -1,90 +1,130 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Plus } from 'lucide-react';
 import { useCreateContentType } from '@/admin/queries/content/useContentTypes';
-import { useForm } from 'react-hook-form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { ContentType } from '@/admin/types/content';
 
-interface ContentTypeForm {
-  name: string;
-  description?: string;
+interface ContentTypeManagerProps {
+  contentTypes: ContentType[];
 }
 
-export const ContentTypeManager = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const createMutation = useCreateContentType();
-  const form = useForm<ContentTypeForm>();
+export const ContentTypeManager = ({ contentTypes }: ContentTypeManagerProps) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { mutate: createContentType, isLoading } = useCreateContentType();
 
-  const onSubmit = async (data: ContentTypeForm) => {
-    await createMutation.mutateAsync(data);
-    setIsOpen(false);
-    form.reset();
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSubmit = (data: { name: string; description?: string }) => {
+    createContentType(data);
+    handleCloseModal();
   };
 
   return (
     <div>
-      <Button onClick={() => setIsOpen(true)} className="relative group hover:shadow-[0_0_15px_rgba(0,240,255,0.15)]">
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-primary/20 via-transparent to-secondary/20 blur" />
-        <Plus className="w-4 h-4 mr-2" />
-        New Type
-      </Button>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Content Types</h3>
+        <Button onClick={handleOpenModal} disabled={isLoading}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Content Type
+        </Button>
+      </div>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="cyber-card border-primary/20">
-          <DialogHeader>
-            <DialogTitle>Create Content Type</DialogTitle>
-            <DialogDescription>
-              Add a new type of content to manage in the CMS.
-            </DialogDescription>
-          </DialogHeader>
+      {contentTypes.length > 0 ? (
+        <ul>
+          {contentTypes.map((type) => (
+            <li key={type.id} className="py-2 border-b last:border-b-0">
+              {type.name}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-muted-foreground">No content types created yet.</p>
+      )}
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                {...form.register('name', { required: true })}
-                className="relative group hover:shadow-[0_0_15px_rgba(0,240,255,0.15)]"
-              />
-            </div>
+      {isModalOpen && (
+        <ContentTypeModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
+      )}
+    </div>
+  );
+};
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                {...form.register('description')}
-                className="relative group hover:shadow-[0_0_15px_rgba(0,240,255,0.15)]"
-              />
-            </div>
+interface ContentTypeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: { name: string; description?: string }) => void;
+  isLoading?: boolean;
+}
 
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={createMutation.isPending}
-                className="relative group hover:shadow-[0_0_15px_rgba(0,240,255,0.15)]"
-              >
-                Create Type
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+const ContentTypeModal = ({ isOpen, onClose, onSubmit, isLoading }: ContentTypeModalProps) => {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({ name, description });
+    setName('');
+    setDescription('');
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="relative bg-background p-6 rounded-lg shadow-lg w-full max-w-md">
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+        >
+          <X className="h-6 w-6" />
+        </button>
+        <h4 className="text-lg font-semibold mb-4">Add New Content Type</h4>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+              Description
+            </label>
+            <textarea
+              id="description"
+              rows={3}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating...' : 'Create'}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
