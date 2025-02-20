@@ -1,7 +1,7 @@
 
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ContentManagement } from './sections/management/ContentManagement';
+import { ContentManagement } from '@/features/admin/features/cms/components/content/ContentManagement';
 import { CategoryManagement } from './sections/categories/CategoryManagement';
 import { WorkflowManagement } from './sections/workflows/WorkflowManagement';
 import { GalleryManagement } from './sections/gallery/GalleryManagement';
