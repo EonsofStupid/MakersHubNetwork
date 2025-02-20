@@ -1,3 +1,4 @@
+
 import {
   Select,
   SelectContent,
@@ -13,7 +14,7 @@ interface ContentFiltersProps {
   onFilterChange: (filter: ContentFilter) => void;
 }
 
-export const ContentFilters = ({ 
+export const ContentFilters = ({
   contentTypes,
   currentFilter,
   onFilterChange,
@@ -21,7 +22,7 @@ export const ContentFilters = ({
   const handleTypeChange = (value: string) => {
     onFilterChange({
       ...currentFilter,
-      type: value,
+      type: value || undefined,
     });
   };
 
