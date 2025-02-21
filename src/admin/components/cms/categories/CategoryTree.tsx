@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { ChevronRight, ChevronDown, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CategoryTreeItem } from '../../types/content';
+import { CategoryTreeItem } from '@/admin/types/content';
 import {
   DropdownMenu,
   DropdownMenuContent,
