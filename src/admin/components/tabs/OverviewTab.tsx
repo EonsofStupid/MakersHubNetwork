@@ -1,12 +1,13 @@
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Star, FileText, Users, UserCheck, Component, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useActiveUsersCount } from '../../queries/useActiveUsersCount';
-import { useTotalUsersCount } from '../../queries/useTotalUsersCount';
-import { usePartsCount } from '../../queries/usePartsCount';
-import { useReviewsCount } from '../../queries/useReviewsCount';
-import { useTrendingParts } from '../../queries/useTrendingParts';
-import { useRecentReviews } from '../../queries/useRecentReviews';
+import { useActiveUsersCount } from '../../queries/dashboard/useActiveUsersCount';
+import { useTotalUsersCount } from '../../queries/dashboard/useTotalUsersCount';
+import { usePartsCount } from '../../queries/dashboard/usePartsCount';
+import { useReviewsCount } from '../../queries/dashboard/useReviewsCount';
+import { useTrendingParts } from '../../queries/dashboard/useTrendingParts';
+import { useRecentReviews } from '../../queries/dashboard/useRecentReviews';
 import { useToast } from '@/hooks/use-toast';
 
 export const OverviewTab = () => {
