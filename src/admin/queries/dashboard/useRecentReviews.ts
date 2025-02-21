@@ -1,27 +1,28 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { RecentReview } from '../types/queries';
-import { adminKeys } from '../types/queries';
+import { RecentReview } from '@/admin/types/dashboard';
 
 export const useRecentReviews = () => {
   return useQuery({
-    queryKey: adminKeys.recentReviews(),
-    queryFn: async (): Promise<RecentReview[]> => {
+    queryKey: ['admin', 'dashboard', 'recentReviews'],
+    queryFn: async () => {
       const { data, error } = await supabase
-        .from('part_reviews')
+        .from('reviews')
         .select(`
+          id,
           title,
           rating,
           created_at,
-          printer_parts(name)
+          printer_parts (
+            name
+          )
         `)
         .order('created_at', { ascending: false })
         .limit(5);
-      
+
       if (error) throw error;
-      return data || [];
+      return data as RecentReview[];
     },
-    refetchInterval: 30000,
   });
 };
