@@ -1,4 +1,3 @@
-
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -7,16 +6,8 @@ import { useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useCategories, useCreateCategory } from '../../queries/useContentCategories';
-
-type Category = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  parent_id: string | null;
-  created_at: string;
-};
+import { useCategories, useCreateCategory } from '@/admin/queries/content/useContentCategories';
+import { Category } from '@/admin/types/content';
 
 const columns: ColumnDef<Category>[] = [
   {

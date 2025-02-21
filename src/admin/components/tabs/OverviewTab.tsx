@@ -13,10 +13,10 @@ import { useToast } from '@/hooks/use-toast';
 export const OverviewTab = () => {
   const { toast } = useToast();
   const { 
-    count: activeUsers, 
+    data: activeUsers, 
     isLoading: loadingActive, 
     error: activeError,
-    refresh: refreshActive 
+    refetch: refreshActive 
   } = useActiveUsersCount();
   
   const { 

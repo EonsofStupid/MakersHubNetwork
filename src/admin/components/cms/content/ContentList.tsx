@@ -1,7 +1,6 @@
-
-import { useContentItems } from '../../queries/useContentItems';
+import { useContentItems } from '@/admin/queries/content/useContentItems';
 import { DataTable } from '@/components/ui/data-table';
-import { ContentType, ContentFilter } from '../../types/content';
+import { ContentType, ContentFilter } from '@/admin/types/content';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 

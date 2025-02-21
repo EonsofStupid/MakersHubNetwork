@@ -28,8 +28,14 @@ export interface Category {
   updated_at: string;
 }
 
-export interface CategoryTreeItem extends Omit<Category, 'description'> {
-  description?: string;
+export interface CategoryTreeItem {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  parent_id?: string | null;
+  created_at: string;
+  updated_at: string;
   children?: CategoryTreeItem[];
 }
 
@@ -37,11 +43,21 @@ export interface ContentItem {
   id: string;
   type: string;
   title: string;
-  slug: string;
   content: string;
   status: ContentStatus;
   category_id?: string;
   created_at: string;
   updated_at: string;
-  metadata?: Record<string, any>;
+  created_by: string;
+  version: number;
+  metadata: Record<string, any>;
+  content_type?: {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    is_system: boolean;
+    created_at: string;
+    updated_at: string;
+  };
 }

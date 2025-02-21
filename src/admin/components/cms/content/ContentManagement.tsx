@@ -1,11 +1,10 @@
-
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ContentTypeManager } from './ContentTypeManager';
 import { ContentFilters } from './ContentFilter';
 import { ContentList } from './ContentList';
 import { useState } from 'react';
-import { ContentFilter } from '../../types/content';
-import { useContentTypes } from '../../queries/useContentTypes';
+import { ContentFilter, ContentType } from '@/admin/types/content';
+import { useContentTypes } from '@/admin/queries/content/useContentTypes';
 
 export const ContentManagement = () => {
   const [filter, setFilter] = useState<ContentFilter>({});
