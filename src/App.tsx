@@ -8,7 +8,6 @@ import { AuthProvider } from "@/components/auth/AuthProvider"
 import IndexPage from "./pages/Index"
 import AdminPage from "./pages/Admin"
 import LoginPage from "./pages/Login"
-import { KeyboardNavigation } from '@/components/KeyboardNavigation'
 
 const queryClient = new QueryClient()
 
@@ -18,7 +17,6 @@ const App = () => {
       <BrowserRouter>
         <AuthProvider>
           <TooltipProvider>
-            <KeyboardNavigation />
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route
