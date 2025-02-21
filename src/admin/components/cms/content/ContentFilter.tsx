@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ContentType, ContentFilter } from '../../types/content';
+import { ContentType, ContentFilter } from '@/admin/types/content';
 
 interface ContentFiltersProps {
   contentTypes: ContentType[];
@@ -14,7 +14,7 @@ interface ContentFiltersProps {
   onFilterChange: (filter: ContentFilter) => void;
 }
 
-export const ContentFilters = ({ 
+export const ContentFilters = ({
   contentTypes,
   currentFilter,
   onFilterChange,
@@ -22,7 +22,7 @@ export const ContentFilters = ({
   const handleTypeChange = (value: string) => {
     onFilterChange({
       ...currentFilter,
-      type: value === 'all' ? undefined : value,
+      type: value === '_all' ? undefined : value,
     });
   };
 
@@ -30,14 +30,14 @@ export const ContentFilters = ({
     <div className="flex gap-4">
       <div className="w-[200px]">
         <Select
-          value={currentFilter.type || 'all'}
+          value={currentFilter.type || '_all'}
           onValueChange={handleTypeChange}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="_all">All Types</SelectItem>
             {contentTypes.map((type) => (
               <SelectItem key={type.id} value={type.id}>
                 {type.name}
