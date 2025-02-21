@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react-swc"
 import path from "path"
@@ -98,11 +99,14 @@ export default defineConfig(({ mode }) => ({
         },
       ],
       dirs: [
-        // Admin structure
-        "./src/admin/**/components/**",
-        "./src/admin/**/queries/**",
-        "./src/admin/**/stores/**",
-        "./src/admin/**/types/**",
+        // Feature-based structure - most specific to least specific
+        "./src/features/**/components/tabs/**/sections/**",
+        "./src/features/**/components/tabs/**",
+        "./src/features/**/components/**",
+        "./src/features/**/hooks",
+        "./src/features/**/stores",
+        "./src/features/**/utils",
+        "./src/features/**/constants",
         
         // Global components and utilities
         "./src/components/**",
@@ -138,7 +142,6 @@ export default defineConfig(({ mode }) => ({
       "@types": path.resolve(__dirname, "./src/types"),
       "@constants": path.resolve(__dirname, "./src/constants"),
       "@features": path.resolve(__dirname, "./src/features"),
-      "@admin": path.resolve(__dirname, "./src/admin"),
     }
   },
   build: {
