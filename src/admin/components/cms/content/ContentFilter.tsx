@@ -22,7 +22,7 @@ export const ContentFilters = ({
   const handleTypeChange = (value: string) => {
     onFilterChange({
       ...currentFilter,
-      type: value,
+      type: value === 'all' ? undefined : value,
     });
   };
 
@@ -30,14 +30,14 @@ export const ContentFilters = ({
     <div className="flex gap-4">
       <div className="w-[200px]">
         <Select
-          value={currentFilter.type}
+          value={currentFilter.type || 'all'}
           onValueChange={handleTypeChange}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Types</SelectItem>
+            <SelectItem value="all">All Types</SelectItem>
             {contentTypes.map((type) => (
               <SelectItem key={type.id} value={type.id}>
                 {type.name}
