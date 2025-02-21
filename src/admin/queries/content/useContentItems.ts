@@ -1,18 +1,17 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ContentItem, ContentFilter } from '@/admin/types/content';
-import { adminKeys } from './keys';
+import { ContentFilter, ContentItem } from '@/admin/types/content';
 
 export const useContentItems = (filter: ContentFilter) => {
   return useQuery({
-    queryKey: adminKeys.content.list(filter),
+    queryKey: ['content', 'items', filter],
     queryFn: async () => {
       let query = supabase
         .from('content_items')
         .select(`
           *,
-          content_type:type (*)
+          content_type:content_types(*)
         `);
 
       if (filter.type) {
@@ -21,14 +20,22 @@ export const useContentItems = (filter: ContentFilter) => {
       if (filter.status) {
         query = query.eq('status', filter.status);
       }
+      if (filter.category) {
+        query = query.eq('category_id', filter.category);
+      }
       if (filter.search) {
         query = query.ilike('title', `%${filter.search}%`);
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
-      
+      const { data, error } = await query;
+
       if (error) throw error;
-      return data as ContentItem[];
+      
+      // Ensure the data matches our ContentItem type
+      return (data as any[]).map(item => ({
+        ...item,
+        metadata: item.metadata || {},
+      })) as ContentItem[];
     },
   });
 };
