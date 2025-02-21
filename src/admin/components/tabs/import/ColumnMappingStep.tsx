@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -73,7 +72,7 @@ export const ColumnMappingStep = ({ headers, onComplete }: Props) => {
                     <SelectValue placeholder="Map to field..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Ignore this column</SelectItem>
+                    <SelectItem value="ignore">Ignore this column</SelectItem>
                     {Object.entries(AVAILABLE_FIELDS).map(([category, fields]) => (
                       <div key={category}>
                         <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
