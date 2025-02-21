@@ -7,7 +7,7 @@ export const useTotalUsersCount = () => {
     queryKey: ['admin', 'dashboard', 'totalUsers'],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from('users')
+        .from('profiles')
         .select('*', { count: 'exact', head: true });
 
       if (error) throw error;

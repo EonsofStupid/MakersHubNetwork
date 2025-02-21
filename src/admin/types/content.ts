@@ -1,15 +1,13 @@
 
-import { Database } from "@/integrations/supabase/types";
-
-export type ContentType = Database["public"]["Tables"]["content_types"]["Row"];
-export type ContentStatus = Database["public"]["Enums"]["content_status"];
-
-export type ContentItem = Database["public"]["Tables"]["content_items"]["Row"] & {
-  content_type?: ContentType;
-};
-
-export type ContentCategory = Database["public"]["Tables"]["content_categories"]["Row"];
-export type MediaAsset = Database["public"]["Tables"]["media_assets"]["Row"];
+export interface ContentType {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  is_system: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface ContentFilter {
   type?: string;
@@ -18,6 +16,14 @@ export interface ContentFilter {
   search?: string;
 }
 
-export interface CategoryTreeItem extends ContentCategory {
+export type ContentStatus = 'draft' | 'published' | 'archived';
+
+export interface CategoryTreeItem {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  parent_id: string | null;
+  created_at: string;
   children?: CategoryTreeItem[];
 }

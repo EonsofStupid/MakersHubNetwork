@@ -7,9 +7,9 @@ export const useActiveUsersCount = () => {
     queryKey: ['admin', 'dashboard', 'activeUsers'],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from('user_sessions')
+        .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .gt('last_seen', new Date(Date.now() - 15 * 60 * 1000).toISOString());
+        .eq('is_active', true);
 
       if (error) throw error;
       return count || 0;
