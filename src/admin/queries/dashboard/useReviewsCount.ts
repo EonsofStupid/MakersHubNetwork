@@ -7,7 +7,7 @@ export const useReviewsCount = () => {
     queryKey: ['admin', 'dashboard', 'reviewsCount'],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from('reviews')
+        .from('part_reviews')
         .select('*', { count: 'exact', head: true });
 
       if (error) throw error;

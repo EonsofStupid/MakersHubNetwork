@@ -8,7 +8,7 @@ export const useRecentReviews = () => {
     queryKey: ['admin', 'dashboard', 'recentReviews'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('reviews')
+        .from('part_reviews')
         .select(`
           id,
           title,

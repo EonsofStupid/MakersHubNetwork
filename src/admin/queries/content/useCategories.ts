@@ -2,9 +2,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CategoryTreeItem } from '@/admin/types/content';
-import { adminKeys } from './keys';
-import { toast } from '@/hooks/use-toast';
 import { slugify } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 const buildCategoryTree = (
   categories: CategoryTreeItem[],
@@ -20,7 +19,7 @@ const buildCategoryTree = (
 
 export const useCategories = () => {
   return useQuery({
-    queryKey: adminKeys.categories.list(),
+    queryKey: ['admin', 'categories'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('content_categories')
@@ -28,7 +27,6 @@ export const useCategories = () => {
         .order('created_at', { ascending: true });
       
       if (error) throw error;
-      
       return buildCategoryTree(data);
     },
   });
@@ -62,80 +60,7 @@ export const useCreateCategory = () => {
       return newCategory;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.categories.list() });
-      toast({
-        title: "Category Created",
-        description: "The category has been successfully created.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-};
-
-export const useUpdateCategory = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, ...data }: CreateCategoryData & { id: string }) => {
-      const { error } = await supabase
-        .from('content_categories')
-        .update({
-          name: data.name,
-          description: data.description,
-          parent_id: data.parentId || null,
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.categories.list() });
-      toast({
-        title: "Category Updated",
-        description: "The category has been successfully updated.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-};
-
-export const useDeleteCategory = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('content_categories')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.categories.list() });
-      toast({
-        title: "Category Deleted",
-        description: "The category has been successfully deleted.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'categories'] });
     },
   });
 };
