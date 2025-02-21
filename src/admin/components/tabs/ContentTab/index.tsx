@@ -1,10 +1,10 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CategoryManagement } from "@/admin/components/content/categories/CategoryManagement";
-import { ContentManagement } from "@/admin/components/content/management/ContentManagement";
-import { WorkflowManagement } from "@/admin/components/content/workflows/WorkflowManagement";
-import { GalleryManagement } from "@/admin/components/content/gallery/GalleryManagement";
-import { BuildManagement } from "@/admin/components/content/builds/BuildManagement";
+import { CategoryManagement } from "@/admin/components/cms/categories/CategoryManagement";
+import { ContentManagement } from "@/admin/components/cms/content/ContentManagement";
+import { WorkflowManagement } from "@/admin/components/cms/workflows/WorkflowManagement";
+import { GalleryManagement } from "@/admin/components/cms/gallery/GalleryManagement";
+import { BuildManagement } from "@/admin/components/cms/builds/BuildManagement";
 import { motion } from 'framer-motion';
 
 export const ContentTab = () => {
