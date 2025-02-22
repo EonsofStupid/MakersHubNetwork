@@ -1,11 +1,12 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ContentFilter, ContentItem } from '../types/content';
+import { ContentItem } from '../types/content';
+import { ContentFilter } from '../types/query.types';
 import { cmsKeys } from './keys';
 import { toast } from '@/hooks/use-toast';
 
-export const useContentItems = (filter: ContentFilter = {}) => {
+export const useContentItems = ({ filter }: { filter: ContentFilter }) => {
   return useQuery({
     queryKey: cmsKeys.content.list(filter),
     queryFn: async () => {
@@ -50,7 +51,7 @@ export const useDeleteContent = () => {
       if (error) throw error;
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: cmsKeys.content.all() });
+      queryClient.invalidateQueries({ queryKey: cmsKeys.content.all });
       toast({
         title: "Content Deleted",
         description: "The content has been successfully deleted.",

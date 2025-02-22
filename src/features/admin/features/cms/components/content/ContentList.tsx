@@ -1,9 +1,10 @@
 
 import { useContentItems } from '../../queries/useContentItems';
 import { DataTable } from '@/components/ui/data-table';
-import { ContentType, ContentFilter } from '../../types/content';
+import { ContentType, ContentItem } from '../../types/content';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
+import { ContentFilter } from '../../types/query.types';
 
 interface ContentListProps {
   filter: ContentFilter;
@@ -18,7 +19,7 @@ export const ContentList = ({ filter, contentTypes }: ContentListProps) => {
     return contentType?.name || 'Unknown Type';
   };
 
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<ContentItem>[] = [
     {
       accessorKey: 'title',
       header: 'Title',

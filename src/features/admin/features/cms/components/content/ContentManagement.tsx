@@ -4,12 +4,12 @@ import { ContentTypeManager } from './ContentTypeManager';
 import { ContentFilters } from './ContentFilter';
 import { ContentList } from './ContentList';
 import { useState } from 'react';
-import { ContentFilter } from '../../types/content';
+import { ContentFilter } from '../../types/query.types';
 import { useContentTypes } from '../../queries/useContentTypes';
 
 export const ContentManagement = () => {
   const [filter, setFilter] = useState<ContentFilter>({});
-  const { data: contentTypes } = useContentTypes();
+  const { data: contentTypes = [] } = useContentTypes();
 
   return (
     <Card className="cyber-card backdrop-blur-sm bg-background/50">
@@ -28,13 +28,13 @@ export const ContentManagement = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         <ContentFilters 
-          contentTypes={contentTypes || []}
+          contentTypes={contentTypes}
           currentFilter={filter}
           onFilterChange={setFilter}
         />
         <ContentList 
           filter={filter}
-          contentTypes={contentTypes || []}
+          contentTypes={contentTypes}
         />
       </CardContent>
     </Card>
