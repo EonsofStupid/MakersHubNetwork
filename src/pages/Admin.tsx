@@ -3,11 +3,11 @@ import { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Database, FileText, Settings, Table, Users, Wand2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import { OverviewTab } from '@/features/admin/components/tabs/OverviewTab';
-import { UsersTab } from '@/features/admin/components/tabs/UsersTab';
-import { DataMaestroTab } from '@/features/admin/components/tabs/DataMaestroTab';
-import { ContentTab } from '@/features/admin/components/tabs/ContentTab';
-import { SettingsTab } from '@/features/admin/components/tabs/SettingsTab';
+import { OverviewTab } from '@/admin/components/tabs/OverviewTab';
+import { UsersTab } from '@/admin/components/tabs/UsersTab';
+import { DataMaestroTab } from '@/admin/components/tabs/DataMaestroTab';
+import { ContentTab } from '@/admin/components/tabs/ContentTab';
+import { SettingsTab } from '@/admin/components/tabs/SettingsTab';
 import { MainNav } from '@/components/MainNav';
 import { motion } from 'framer-motion';
 
