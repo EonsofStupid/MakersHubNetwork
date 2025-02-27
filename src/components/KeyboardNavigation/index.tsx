@@ -1,55 +1,79 @@
 
-import { ReactNode, createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { 
-  KeyboardNavigationContext, 
-  useKeyboardNavigationProvider 
-} from './hooks/useKeyboardNavigation';
-import { KeyboardNavigationOptions } from './types/navigation.types';
+import { useEffect } from 'react';
+import { useToast } from '../../hooks/use-toast';
 
-interface KeyboardNavigationProps {
-  children?: ReactNode;
-  options?: Partial<KeyboardNavigationOptions>;
+interface ScrollConfig {
+  scrollAmount?: number;
+  smooth?: boolean;
+  acceleration?: boolean;
+  maxAcceleration?: number;
+  accelerationRate?: number;
 }
 
-// Provider component
-export const KeyboardNavigationProvider = ({ 
-  children, 
-  options = {} 
-}: KeyboardNavigationProps) => {
-  const navigationContext = useKeyboardNavigationProvider(options);
-  
-  return (
-    <KeyboardNavigationContext.Provider value={navigationContext}>
-      {children}
-    </KeyboardNavigationContext.Provider>
-  );
-};
+interface KeyboardNavigationProps {
+  options?: {
+    enabled?: boolean;
+    showToasts?: boolean;
+    scrollConfig?: ScrollConfig;
+  };
+}
 
-// Main component for global keyboard navigation
-export const KeyboardNavigation = ({ options = {} }: KeyboardNavigationProps) => {
-  // Initialize the provider without wrapping children
-  const navigationContext = useKeyboardNavigationProvider(options);
-  
-  // Set up the effects and handlers needed for keyboard navigation
+export const KeyboardNavigation: React.FC<KeyboardNavigationProps> = ({ options = {} }) => {
+  const { toast } = useToast();
+  const mergedOptions = {
+    enabled: options.enabled ?? true,
+    showToasts: options.showToasts ?? false,
+    scrollConfig: {
+      scrollAmount: options.scrollConfig?.scrollAmount ?? 100,
+      smooth: options.scrollConfig?.smooth ?? true,
+      acceleration: options.scrollConfig?.acceleration ?? true,
+      maxAcceleration: options.scrollConfig?.maxAcceleration ?? 500,
+      accelerationRate: options.scrollConfig?.accelerationRate ?? 1.1
+    }
+  };
+
   useEffect(() => {
-    // This component just sets up the navigation, without rendering anything
-    console.log('KeyboardNavigation initialized with options:', options);
+    if (!mergedOptions.enabled) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if in input fields
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
+        return;
+      }
+
+      let direction: string | null = null;
+      
+      // Determine the direction based on the key
+      if (['ArrowUp', 'w', 'W'].includes(e.key)) {
+        direction = 'up';
+        window.scrollBy({
+          top: -mergedOptions.scrollConfig.scrollAmount,
+          behavior: mergedOptions.scrollConfig.smooth ? 'smooth' : 'auto'
+        });
+      } else if (['ArrowDown', 's', 'S'].includes(e.key)) {
+        direction = 'down';
+        window.scrollBy({
+          top: mergedOptions.scrollConfig.scrollAmount,
+          behavior: mergedOptions.scrollConfig.smooth ? 'smooth' : 'auto'
+        });
+      }
+      
+      // If it's a navigation key and toasts are enabled, show a toast
+      if (direction && mergedOptions.showToasts) {
+        toast({
+          title: `Scrolling ${direction}`,
+          description: "Use W/S or arrow keys to scroll",
+          duration: 2000,
+        });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
     
     return () => {
-      console.log('KeyboardNavigation cleanup');
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [options]);
+  }, [mergedOptions, toast]);
   
-  // Return null since this doesn't render anything
   return null;
 };
-
-// Export hooks for external use
-export { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
-export type { 
-  KeyboardNavigationOptions,
-  NavigationDirection,
-  NavigationKey,
-  ScrollOptions,
-  ScrollConfig
-} from './types/navigation.types';
