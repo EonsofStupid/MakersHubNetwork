@@ -521,6 +521,7 @@
     "useWorkflowList": true,
     "useWorkflowStore": true,
     "useWorkflows": true,
-    "workflowKeys": true
+    "workflowKeys": true,
+    "AuthUser": true
   }
 }
