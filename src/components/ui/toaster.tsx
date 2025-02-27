@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/toast"
 import { motion, AnimatePresence } from "framer-motion"
 
-export function Toaster() {
+export function SystemToaster() {
   const { toasts } = useToast()
 
   return (
