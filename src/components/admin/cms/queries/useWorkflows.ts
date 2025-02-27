@@ -15,7 +15,9 @@ export const useWorkflows = () => {
       
       if (error) throw error;
       
-      return (data as DatabaseWorkflow[]).map(convertDatabaseWorkflow);
+      // Ensure we're working with DatabaseWorkflow type
+      const dbWorkflows = data as DatabaseWorkflow[];
+      return dbWorkflows.map(convertDatabaseWorkflow);
     },
   });
 };
@@ -35,7 +37,10 @@ export const useWorkflow = (id?: string) => {
         .single();
       
       if (error) throw error;
-      return data ? convertDatabaseWorkflow(data as DatabaseWorkflow) : null;
+      
+      // Ensure we're working with DatabaseWorkflow type
+      const dbWorkflow = data as DatabaseWorkflow;
+      return dbWorkflow ? convertDatabaseWorkflow(dbWorkflow) : null;
     },
     enabled: !!id,
   });
