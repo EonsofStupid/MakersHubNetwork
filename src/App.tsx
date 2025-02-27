@@ -1,3 +1,4 @@
+
 import { Toaster } from "./components/ui/toaster"
 import { Toaster as Sonner } from "./components/ui/sonner"
 import { TooltipProvider } from "./components/ui/tooltip"
@@ -18,7 +19,19 @@ const App = () => {
       <BrowserRouter>
         <AuthProvider>
           <TooltipProvider>
-            <KeyboardNavigation />
+            <KeyboardNavigation 
+              options={{
+                enabled: true,
+                showToasts: true,
+                scrollConfig: {
+                  scrollAmount: 120,
+                  smooth: true,
+                  acceleration: true,
+                  maxAcceleration: 600,
+                  accelerationRate: 1.15
+                }
+              }}
+            />
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route
