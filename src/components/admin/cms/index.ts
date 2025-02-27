@@ -1,4 +1,3 @@
-
 // Type exports
 export * from './types/content';
 export * from './types/workflow';
@@ -19,7 +18,7 @@ export * from './components/content/ContentTypeManager';
 export * from './components/categories/CategoryManagement';
 export * from './components/categories/CategoryTree';
 export * from './components/workflow/WorkflowManagement';
-export * from './components/workflow/WorkflowList';
+export { WorkflowList } from './components/workflow/WorkflowList';
 export * from './components/workflow/WorkflowEditor';
 
 // Store exports
