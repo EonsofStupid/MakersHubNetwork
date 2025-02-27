@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ContentType } from '../../types/content';
+import { ContentType, ContentStatus } from '../../types/content';
 import { ContentFilter } from '../../types/query.types';
 
 interface ContentFiltersProps {
@@ -57,7 +57,7 @@ export const ContentFilters = ({
         value={currentFilter.status}
         onValueChange={(value) => onFilterChange({
           ...currentFilter,
-          status: value
+          status: value as ContentStatus
         })}
       >
         <SelectTrigger className="w-[180px] glass-morphism">
@@ -68,6 +68,7 @@ export const ContentFilters = ({
           <SelectItem value="draft">Draft</SelectItem>
           <SelectItem value="published">Published</SelectItem>
           <SelectItem value="archived">Archived</SelectItem>
+          <SelectItem value="review">Review</SelectItem>
         </SelectContent>
       </Select>
     </div>
