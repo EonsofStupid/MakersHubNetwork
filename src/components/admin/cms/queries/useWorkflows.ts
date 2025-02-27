@@ -1,7 +1,6 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Workflow } from '../types/workflow';
+import { Workflow, DatabaseWorkflow, convertDatabaseWorkflow } from '../types/workflow';
 import { cmsKeys } from './keys';
 import { toast } from '@/hooks/use-toast';
 
@@ -15,7 +14,8 @@ export const useWorkflows = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Workflow[];
+      
+      return (data as DatabaseWorkflow[]).map(convertDatabaseWorkflow);
     },
   });
 };
@@ -35,7 +35,7 @@ export const useWorkflow = (id?: string) => {
         .single();
       
       if (error) throw error;
-      return data as Workflow;
+      return data ? convertDatabaseWorkflow(data as DatabaseWorkflow) : null;
     },
     enabled: !!id,
   });
@@ -46,27 +46,41 @@ export const useSaveWorkflow = () => {
 
   return useMutation({
     mutationFn: async (workflow: Workflow) => {
+      // Prepare database workflow with required fields
+      const dbWorkflow = {
+        name: workflow.name,
+        description: workflow.description || '',
+        is_active: workflow.status === 'active',
+        fields: JSON.stringify({ steps: workflow.steps || [] }),
+        slug: workflow.name.toLowerCase().replace(/\s+/g, '-'),
+        default_values: JSON.stringify({}),
+        linked_parts: JSON.stringify({}),
+        validation_rules: JSON.stringify({}),
+        version: 1,
+        ...(workflow.id ? { id: workflow.id } : {})
+      };
+
       if (workflow.id) {
         // Update existing workflow
         const { data, error } = await supabase
           .from('metadata_workflows')
-          .update(workflow)
+          .update(dbWorkflow)
           .eq('id', workflow.id)
           .select()
           .single();
         
         if (error) throw error;
-        return data;
+        return convertDatabaseWorkflow(data as DatabaseWorkflow);
       } else {
         // Create new workflow
         const { data, error } = await supabase
           .from('metadata_workflows')
-          .insert(workflow)
+          .insert(dbWorkflow)
           .select()
           .single();
         
         if (error) throw error;
-        return data;
+        return convertDatabaseWorkflow(data as DatabaseWorkflow);
       }
     },
     onSuccess: (data) => {
