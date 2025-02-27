@@ -504,7 +504,7 @@ declare global {
   export type { TextareaProps } from './components/ui/textarea'
   import('./components/ui/textarea')
   // @ts-ignore
-  export type { AdminAccess, WithAdminAccess, UserWithRoles } from './types/auth.types'
+  export type { AdminAccess, WithAdminAccess, AuthUser } from './types/auth.types'
   import('./types/auth.types')
   // @ts-ignore
   export type { Sensor, Component, APIKeyType, APIKey, APIKeyAuditLog, Database, DatabaseTables } from './types/database'

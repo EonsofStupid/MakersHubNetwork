@@ -1,5 +1,12 @@
+import type { AuthUser } from '@/types/auth.types';
 
-import { UserRole } from "@/types/auth.types";
+// Re-export the auth user type
+export type { AuthUser };
+
+// Extend AuthUser for admin-specific functionality if needed
+export interface AdminUser extends AuthUser {
+  // Add any admin-specific fields here
+}
 
 export interface UserProfile {
   id: string;
@@ -11,15 +18,6 @@ export interface UserProfile {
   last_login: string | null;
   is_active: boolean;
   profile_completed: boolean;
-}
-
-export interface UserWithRoles {
-  id: string;
-  email: string;
-  created_at: string;
-  last_sign_in_at: string | null;
-  profile?: UserProfile;
-  roles: UserRole[];
 }
 
 export interface UserStatsItem {
