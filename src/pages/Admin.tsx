@@ -1,15 +1,12 @@
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Database, FileText, Settings, Table, Users, Wand2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import { OverviewTab } from '@/admin/components/tabs/OverviewTab';
-import { UsersTab } from '@/admin/components/tabs/UsersTab';
-import { DataMaestroTab } from '@/admin/components/tabs/DataMaestroTab';
-import { ContentTab } from '@/admin/components/tabs/ContentTab';
-import { SettingsTab } from '@/admin/components/tabs/SettingsTab';
 import { MainNav } from '@/components/MainNav';
 import { motion } from 'framer-motion';
+import { adminRoutes, AdminTabKey } from '@/admin/routes/admin.routes';
+import { Card } from '@/components/ui/card';
 
 const Admin = () => {
   // Set up real-time subscription for updates
@@ -26,6 +23,21 @@ const Admin = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const renderTabContent = (tabKey: AdminTabKey) => {
+    const TabComponent = adminRoutes[tabKey];
+    return (
+      <Suspense fallback={
+        <Card className="p-4">
+          <div className="h-[400px] flex items-center justify-center">
+            <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+          </div>
+        </Card>
+      }>
+        <TabComponent />
+      </Suspense>
+    );
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -91,28 +103,21 @@ const Admin = () => {
             ))}
           </TabsList>
 
-          {[
-            { value: 'overview', component: OverviewTab },
-            { value: 'users', component: UsersTab },
-            { value: 'content', component: ContentTab },
-            { value: 'data-maestro', component: DataMaestroTab },
-            { value: 'settings', component: SettingsTab }
-          ].map(({ value, component: Component }) => (
-            <TabsContent 
-              key={value}
-              value={value} 
-              className="relative space-y-4 min-h-[400px]"
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Component />
-              </motion.div>
-            </TabsContent>
-          ))}
+          <TabsContent value="overview">
+            {renderTabContent('overview')}
+          </TabsContent>
+          <TabsContent value="users">
+            {renderTabContent('users')}
+          </TabsContent>
+          <TabsContent value="content">
+            {renderTabContent('content')}
+          </TabsContent>
+          <TabsContent value="data-maestro">
+            {renderTabContent('dataMaestro')}
+          </TabsContent>
+          <TabsContent value="settings">
+            {renderTabContent('settings')}
+          </TabsContent>
         </Tabs>
       </div>
     </div>
