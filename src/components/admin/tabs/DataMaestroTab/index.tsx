@@ -1,10 +1,10 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { APIKeyManagement } from "@/features/admin/features/data-maestro/components/api/KeyManagement";
-import { BaselineManager } from "@/features/admin/features/data-maestro/components/baseline/Rules";
-import { CSVUpload } from "@/features/admin/features/data-maestro/components/import/CSVUpload";
-import { DatabaseVisualizer } from "@/features/admin/features/data-maestro/components/database/Visualizer";
-import { DataMaestroTabId, DataMaestroTabIds } from "@/features/admin/features/data-maestro/types/data-maestro";
+import { APIKeyManagement } from "@/components/admin/data-maestro/components/api/KeyManagement";
+import { BaselineManager } from "@/components/admin/data-maestro/components/baseline/Rules";
+import { CSVUpload } from "@/components/admin/data-maestro/components/import/CSVUpload";
+import { DatabaseVisualizer } from "@/components/admin/data-maestro/components/database/Visualizer";
+import { DataMaestroTabId, DataMaestroTabIds } from "@/admin/types/data-maestro";
 
 export const DataMaestroTab = () => {
   return (
