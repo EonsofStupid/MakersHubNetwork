@@ -1,17 +1,17 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const SettingsTab = () => {
   return (
-    <Card className="cyber-card backdrop-blur-sm bg-background/50">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-2xl font-heading bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          System Settings
-        </CardTitle>
+        <CardTitle>Platform Settings</CardTitle>
+        <CardDescription>Configure global platform settings</CardDescription>
       </CardHeader>
       <CardContent>
-        <p>System settings will be displayed here.</p>
+        <p className="text-muted-foreground">Settings configuration coming soon...</p>
       </CardContent>
     </Card>
   );
 };
+

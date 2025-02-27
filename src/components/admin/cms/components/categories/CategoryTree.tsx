@@ -1,81 +1,207 @@
 
-import { useState } from 'react';
-import { ChevronRight, FolderTree } from 'lucide-react';
+import React from 'react';
+import { ChevronRight, ChevronDown, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CategoryTreeItem } from '../../types/content';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 interface CategoryTreeProps {
   categories: CategoryTreeItem[];
-  onSelectCategory: (category: CategoryTreeItem) => void;
-  selectedCategoryId?: string;
+  onDelete: (id: string) => Promise<void>;
+  onEdit: (id: string, updates: { name?: string; description?: string }) => Promise<void>;
 }
 
-export const CategoryTree = ({ categories, onSelectCategory, selectedCategoryId }: CategoryTreeProps) => {
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+export const CategoryTree: React.FC<CategoryTreeProps> = ({ categories, onDelete, onEdit }) => {
+  const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
+  const [editingCategory, setEditingCategory] = React.useState<CategoryTreeItem | null>(null);
+  const [deletingCategory, setDeletingCategory] = React.useState<CategoryTreeItem | null>(null);
+  const [editForm, setEditForm] = React.useState({ name: '', description: '' });
 
-  const toggleCategory = (categoryId: string) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [categoryId]: !prev[categoryId]
-    }));
+  const toggleExpand = (categoryId: string) => {
+    const newExpanded = new Set(expanded);
+    if (expanded.has(categoryId)) {
+      newExpanded.delete(categoryId);
+    } else {
+      newExpanded.add(categoryId);
+    }
+    setExpanded(newExpanded);
   };
 
-  const renderCategories = (items: CategoryTreeItem[], level = 0) => {
-    if (!items || items.length === 0) {
-      return (
-        <div className="py-4 text-center text-muted-foreground">
-          <FolderTree className="w-8 h-8 mx-auto mb-2 opacity-40" />
-          <p>No categories found</p>
-        </div>
-      );
-    }
+  const handleEdit = (category: CategoryTreeItem) => {
+    setEditingCategory(category);
+    setEditForm({
+      name: category.name,
+      description: category.description || '',
+    });
+  };
 
-    return items.map(category => (
-      <div key={category.id} className="my-1">
+  const handleEditSubmit = async () => {
+    if (!editingCategory) return;
+    
+    await onEdit(editingCategory.id, {
+      name: editForm.name,
+      description: editForm.description,
+    });
+    
+    setEditingCategory(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingCategory) return;
+    await onDelete(deletingCategory.id);
+    setDeletingCategory(null);
+  };
+
+  const renderCategory = (category: CategoryTreeItem, level: number = 0) => {
+    const hasChildren = category.children && category.children.length > 0;
+    const isExpanded = expanded.has(category.id);
+
+    return (
+      <div key={category.id} className="category-item">
         <div 
-          className={`flex items-center px-2 py-1.5 rounded-md hover:bg-primary/10 transition-colors ${
-            selectedCategoryId === category.id ? 'bg-primary/20 text-primary' : ''
-          }`}
-          style={{ paddingLeft: `${(level * 12) + 8}px` }}
+          className="flex items-center py-2 hover:bg-muted/50 rounded-lg px-2 group transition-all duration-300"
+          style={{ marginLeft: `${level * 20}px` }}
         >
-          {category.children && category.children.length > 0 && (
+          {hasChildren && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-5 w-5 p-0 mr-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleCategory(category.id);
-              }}
+              className="w-6 h-6 p-0 hover:bg-transparent"
+              onClick={() => toggleExpand(category.id)}
             >
-              <ChevronRight 
-                className={`h-4 w-4 transition-transform ${
-                  expandedCategories[category.id] ? 'transform rotate-90' : ''
-                }`} 
-              />
+              {isExpanded ? (
+                <ChevronDown className="w-4 h-4 text-primary" />
+              ) : (
+                <ChevronRight className="w-4 h-4 text-primary" />
+              )}
             </Button>
           )}
           
-          <span 
-            className="truncate cursor-pointer flex-1"
-            onClick={() => onSelectCategory(category)}
-          >
+          <span className="flex-1 ml-2 text-foreground/90 group-hover:text-primary transition-colors">
             {category.name}
           </span>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity mad-scientist-hover"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={() => handleEdit(category)}>
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setDeletingCategory(category)}
+                className="text-destructive"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
-        {category.children && expandedCategories[category.id] && (
-          <div>
-            {renderCategories(category.children, level + 1)}
+        {hasChildren && isExpanded && (
+          <div className="category-children">
+            {category.children.map(child => renderCategory(child, level + 1))}
           </div>
         )}
       </div>
-    ));
+    );
   };
 
   return (
-    <div className="overflow-y-auto max-h-[400px] pr-2">
-      {renderCategories(categories)}
+    <div className="category-tree border rounded-lg p-4 cyber-card">
+      {categories.map(category => renderCategory(category))}
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
+        <DialogContent className="cyber-card border-primary/20">
+          <DialogHeader>
+            <DialogTitle>Edit Category</DialogTitle>
+            <DialogDescription>
+              Make changes to the category details.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={editForm.name}
+                onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={editForm.description}
+                onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingCategory(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditSubmit}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deletingCategory} onOpenChange={() => setDeletingCategory(null)}>
+        <AlertDialogContent className="cyber-card border-destructive/20">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the category "{deletingCategory?.name}".
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

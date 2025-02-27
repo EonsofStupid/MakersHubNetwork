@@ -1,58 +1,51 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { GitBranch, Check, Clock, AlertCircle } from 'lucide-react';
-import { Workflow } from '../../types/workflow';
-import { cmsKeys } from '../../queries/keys';
+
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { useWorkflowEditor } from '../../stores/workflow-editor';
 import { useWorkflows } from '../../queries/useWorkflows';
 
-export const WorkflowList = () => {
-  const { data: workflows = [], isLoading } = useWorkflows();
-  
+export function WorkflowList() {
+  const { workflows, isLoading, error } = useWorkflows();
+  const setWorkflow = useWorkflowEditor((state) => state.setWorkflow);
+
   if (isLoading) {
-    return (
-      <div className="py-8 text-center text-muted-foreground">
-        Loading workflows...
-      </div>
-    );
+    return <div>Loading workflows...</div>;
   }
-  
-  if (workflows.length === 0) {
-    return (
-      <div className="py-8 text-center text-muted-foreground">
-        <GitBranch className="w-8 h-8 mx-auto mb-2 opacity-40" />
-        <p>No workflows found</p>
-      </div>
-    );
+
+  if (error) {
+    return <div>Error loading workflows: {(error as Error).message}</div>;
   }
-  
+
   return (
-    <div className="space-y-2">
-      {workflows.map(workflow => (
-        <div 
-          key={workflow.id}
-          className="flex items-center justify-between p-3 rounded-md hover:bg-primary/10 cursor-pointer transition-colors"
-        >
-          <div className="flex items-center space-x-3">
-            <GitBranch className="w-5 h-5 text-primary" />
-            <div>
-              <p className="font-medium">{workflow.name}</p>
-              <p className="text-xs text-muted-foreground">{workflow.steps?.length || 0} steps</p>
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Content Workflows</h2>
+        <Button onClick={() => setWorkflow({ name: '', fields: [] })}>
+          Create Workflow
+        </Button>
+      </div>
+
+      <div className="grid gap-4">
+        {workflows?.map((workflow) => (
+          <Card key={workflow.id} className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">{workflow.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {workflow.fields?.length || 0} fields • Version {workflow.version}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setWorkflow(workflow)}
+              >
+                Edit
+              </Button>
             </div>
-          </div>
-          
-          <div className="flex items-center">
-            {workflow.status === 'active' && (
-              <Check className="w-4 h-4 text-green-500" />
-            )}
-            {workflow.status === 'draft' && (
-              <Clock className="w-4 h-4 text-amber-500" />
-            )}
-            {workflow.status === 'disabled' && (
-              <AlertCircle className="w-4 h-4 text-red-500" />
-            )}
-          </div>
-        </div>
-      ))}
+          </Card>
+        ))}
+      </div>
     </div>
   );
-};
+}
