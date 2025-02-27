@@ -106,5 +106,3 @@ export const ContentTab = () => {
     </div>
   );
 };
-
-export default ContentTab;
