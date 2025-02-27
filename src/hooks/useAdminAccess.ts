@@ -1,14 +1,18 @@
+
 import { useAuthStore } from "@/stores/auth/store"
 import { UserRole } from "@/types/auth.types"
 
 const ADMIN_ROLES: UserRole[] = ["admin", "super_admin"]
 
-export const useAdminAccess = (): { hasAdminAccess: boolean } => {
-  const roles = useAuthStore((state) => state.roles)
-  const hasAdminAccess = roles.some(role => ADMIN_ROLES.includes(role))
+export const useAdminAccess = () => {
+  const { roles, status } = useAuthStore((state) => ({
+    roles: state.roles,
+    status: state.status
+  }))
+  
+  const hasAccess = roles.some(role => ADMIN_ROLES.includes(role))
+  const hasAdminAccess = hasAccess // Alias for backward compatibility
+  const isLoading = status === "loading"
 
-  console.log("useAdminAccess - Current roles:", roles)
-  console.log("useAdminAccess - Has admin access:", hasAdminAccess)
-
-  return { hasAdminAccess }
+  return { hasAccess, hasAdminAccess, isLoading }
 }
