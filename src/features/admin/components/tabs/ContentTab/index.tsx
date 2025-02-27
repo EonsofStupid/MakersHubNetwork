@@ -8,7 +8,7 @@ import { GalleryManagement } from './sections/gallery/GalleryManagement';
 import { BuildManagement } from './sections/builds/BuildManagement';
 import { motion } from 'framer-motion';
 
-export const ContentTab = () => {
+const ContentTab = () => {
   return (
     <div className="space-y-6">
       <motion.div
@@ -106,3 +106,5 @@ export const ContentTab = () => {
     </div>
   );
 };
+
+export default ContentTab;
