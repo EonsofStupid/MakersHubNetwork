@@ -1,4 +1,3 @@
-
 export const cmsKeys = {
   all: ['cms'] as const,
   types: {
@@ -7,14 +6,22 @@ export const cmsKeys = {
     detail: (id: string) => [...cmsKeys.types.all(), id] as const,
   },
   content: {
-    all: () => [...cmsKeys.all, 'content'] as const,
-    list: (filters?: Record<string, any>) => [...cmsKeys.content.all(), { filters }] as const,
-    detail: (id: string) => [...cmsKeys.content.all(), id] as const,
+    all: ['cms', 'content'] as const,
+    list: (filter: any) => ['cms', 'content', 'list', filter] as const,
+    detail: (id: string) => ['cms', 'content', 'detail', id] as const,
+  },
+  contentTypes: {
+    all: ['cms', 'contentTypes'] as const,
   },
   categories: {
-    all: () => [...cmsKeys.all, 'categories'] as const,
-    list: () => [...cmsKeys.categories.all()] as const,
-    detail: (id: string) => [...cmsKeys.categories.all(), id] as const,
-    tree: () => [...cmsKeys.categories.all(), 'tree'] as const,
+    all: ['cms', 'categories'] as const,
+    list: () => ['cms', 'categories', 'list'] as const,
+    detail: (id: string) => ['cms', 'categories', 'detail', id] as const,
+    tree: () => ['cms', 'categories', 'tree'] as const,
+  },
+  workflows: {
+    all: ['cms', 'workflows'] as const,
+    list: () => ['cms', 'workflows', 'list'] as const,
+    detail: (id: string) => ['cms', 'workflows', 'detail', id] as const,
   },
 } as const;
