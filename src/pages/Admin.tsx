@@ -1,5 +1,6 @@
 
-import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useEffect } from "react";
+import { useAuthStore } from "@/stores/auth/store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { OverviewTab } from "@/components/admin/tabs/OverviewTab";
@@ -13,18 +14,32 @@ import { useNavigate } from "react-router-dom";
 const ContentTab = lazy(() => import("@/components/admin/tabs/ContentTab"));
 
 export default function Admin() {
-  const { hasAccess, isLoading } = useAdminAccess();
+  const { isAdmin, roles, status } = useAuthStore(state => ({
+    isAdmin: state.isAdmin(),
+    roles: state.roles,
+    status: state.status
+  }));
   const navigate = useNavigate();
 
-  if (isLoading) {
+  useEffect(() => {
+    // Check if user is authenticated and has admin access
+    if (status === "authenticated" && !isAdmin()) {
+      navigate("/");
+    }
+    // If user is not authenticated, redirect to login
+    else if (status === "unauthenticated") {
+      navigate("/login");
+    }
+  }, [status, isAdmin, navigate]);
+
+  if (status === "loading") {
     return <div className="min-h-screen flex items-center justify-center">
       <p className="text-lg">Checking admin access...</p>
     </div>;
   }
 
-  if (!hasAccess) {
-    navigate("/");
-    return null;
+  if (!isAdmin()) {
+    return null; // Will redirect in useEffect
   }
 
   return (
@@ -51,6 +66,12 @@ export default function Admin() {
               className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
             >
               Users
+            </TabsTrigger>
+            <TabsTrigger 
+              value="chat"
+              className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+            >
+              Chat
             </TabsTrigger>
             <TabsTrigger 
               value="data-maestro"
@@ -87,6 +108,12 @@ export default function Admin() {
           <UsersTab />
         </TabsContent>
         
+        <TabsContent value="chat">
+          <Suspense fallback={<div className="min-h-[600px] flex items-center justify-center">Loading chat management...</div>}>
+            <ChatTab />
+          </Suspense>
+        </TabsContent>
+        
         <TabsContent value="data-maestro">
           <DataMaestroTab />
         </TabsContent>
@@ -102,3 +129,6 @@ export default function Admin() {
     </div>
   );
 }
+
+// Placeholder for the ChatTab which will need to be created
+const ChatTab = lazy(() => import("@/components/admin/tabs/ChatTab"));
