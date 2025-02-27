@@ -1,5 +1,6 @@
+import ContentTab from '../../components/tabs/ContentTab';
 
-export { ContentTab } from '../../components/tabs/ContentTab';
+export { ContentTab };
 export * from './queries/useContentTypes';
 export * from './queries/useContentItems';
 export * from './components/categories/CategoryTree';
