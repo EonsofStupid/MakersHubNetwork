@@ -12,10 +12,11 @@ import { lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 
 const ContentTab = lazy(() => import("@/components/admin/tabs/ContentTab"));
+const ChatTab = lazy(() => import("@/components/admin/tabs/ChatTab"));
 
 export default function Admin() {
   const { isAdmin, roles, status } = useAuthStore(state => ({
-    isAdmin: state.isAdmin(),
+    isAdmin: state.isAdmin,
     roles: state.roles,
     status: state.status
   }));
@@ -23,7 +24,7 @@ export default function Admin() {
 
   useEffect(() => {
     // Check if user is authenticated and has admin access
-    if (status === "authenticated" && !isAdmin()) {
+    if (status === "authenticated" && !isAdmin) {
       navigate("/");
     }
     // If user is not authenticated, redirect to login
@@ -38,7 +39,7 @@ export default function Admin() {
     </div>;
   }
 
-  if (!isAdmin()) {
+  if (!isAdmin) {
     return null; // Will redirect in useEffect
   }
 
@@ -129,6 +130,3 @@ export default function Admin() {
     </div>
   );
 }
-
-// Placeholder for the ChatTab which will need to be created
-const ChatTab = lazy(() => import("@/components/admin/tabs/ChatTab"));

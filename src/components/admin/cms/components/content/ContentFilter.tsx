@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ContentType } from '../../types/content';
+import { ContentType, ContentStatus } from '../../types/content';
 import { ContentFilter } from '../../types/query.types';
 
 interface ContentFiltersProps {
