@@ -1,13 +1,23 @@
 
-export type ApiKeyType = 'openai' | 'stability_ai' | 'replicate' | 'anthropic' | 'custom';
-export type ApiKeyCategory = 'ai_service' | 'third_party' | 'internal' | 'other';
+export type ApiKeyCategory = 'ai_service' | 'integration';
 
-export interface ApiKeyProviderConfig {
-  model?: string;
-  baseUrl?: string;
-  organizationId?: string;
-  version?: string;
-  extra?: Record<string, any>;
+export type ApiKeyType = 'openai' | 'stability' | 'replicate' | 'custom' | 'zapier' | 'pinecone' | 'anthropic' | 'gemini' | 'openrouter';
+
+export interface ApiKeyField {
+  name: string;
+  type: 'password' | 'text' | 'url';
+  required: boolean;
+  validation: {
+    pattern: string;
+    message: string;
+  };
+}
+
+export interface ApiKeyRequirements {
+  category: ApiKeyCategory;
+  fields: ApiKeyField[];
+  description: string;
+  docs_url?: string;
 }
 
 export interface ApiKey {
@@ -15,32 +25,18 @@ export interface ApiKey {
   name: string;
   key_type: ApiKeyType;
   category: ApiKeyCategory;
-  reference_key?: string; // Masked version of the key
   description?: string;
-  provider_config?: ApiKeyProviderConfig;
+  provider_config: Record<string, any>;
   is_active: boolean;
-  access_count: number;
-  last_used_at?: string;
-  expires_at?: string;
   created_at: string;
   updated_at: string;
-  created_by?: string;
+  last_used_at?: string;
+  access_count: number;
 }
 
 export interface ApiKeyFormData {
   name: string;
   key_type: ApiKeyType;
-  key_value: string;
   description?: string;
-  provider_config?: ApiKeyProviderConfig;
-  expires_at?: string | null;
-}
-
-export interface ApiKeyAuditLog {
-  id: string;
-  action: string;
-  api_key_id: string;
-  performed_by?: string;
-  performed_at: string;
-  metadata?: Record<string, any>;
+  provider_config: Record<string, any>;
 }

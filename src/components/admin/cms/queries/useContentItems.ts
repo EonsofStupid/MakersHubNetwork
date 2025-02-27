@@ -8,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 
 export const useContentItems = ({ filter }: { filter: ContentFilter }) => {
   return useQuery({
-    queryKey: [...cmsKeys.content.list(), filter],
+    queryKey: cmsKeys.content.list(filter),
     queryFn: async () => {
       let query = supabase
         .from('content_items')

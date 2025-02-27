@@ -1,62 +1,32 @@
 
-export type ImportStatus = 'pending' | 'mapping' | 'validating' | 'processing' | 'completed' | 'failed';
+import { Database } from "@/integrations/supabase/types";
+
+// Base DB row types using the source of truth
+export type ImportSessionRow = Database["public"]["Tables"]["import_sessions"]["Row"];
+export type ImportErrorRow = Database["public"]["Tables"]["import_errors"]["Row"];
+
+// ValidationError omits system fields but maintains DB schema alignment
+export type ValidationError = Omit<ImportErrorRow, "id" | "import_session_id" | "created_at">;
+
+// Column types as discriminated union for strict type checking
+export type ColumnType = 'basic' | 'specification' | 'compatibility' | 'dimension' | 'price';
 
 export interface ColumnMapping {
-  source_column: string;
-  target_column: string;
-  transformation_rule?: TransformationRule;
+  csvColumn: string;
+  targetField: string;
+  type: ColumnType;
+  transformation?: (value: string) => any;
 }
 
-export interface TransformationRule {
-  type: string;
-  params?: Record<string, any>;
+export type ImportStep = 'upload' | 'mapping' | 'preview' | 'import';
+
+export interface ImportPreviewData {
+  original: Record<string, string>;
+  mapped: Record<string, any>;
+  errors?: ValidationError[];
 }
 
-export interface ValidationRule {
-  column: string;
-  rule: string;
-  params?: Record<string, any>;
-  message: string;
-}
-
-export interface ImportSession {
-  id: string;
-  status: ImportStatus;
-  original_filename?: string;
-  column_types: Record<string, string>;
-  mapping_config: Record<string, string>;
-  validation_rules?: Record<string, ValidationRule[]>;
-  total_rows: number;
-  processed_rows: number;
-  success_count: number;
-  error_count: number;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-}
-
-export interface ImportError {
-  id: string;
-  import_session_id: string;
-  row_number: number;
-  column_name?: string;
-  error_type: string;
-  error_message: string;
-  original_value?: string;
-  created_at: string;
-}
-
-export interface ImportMapping {
-  id: string;
-  import_session_id: string;
-  source_column: string;
-  target_column: string;
-  transformation_rule?: TransformationRule;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface PreviewData {
-  columns: string[];
-  rows: string[][];
+// Extending the base DB type with strongly-typed discriminated union for status
+export interface ImportSession extends Omit<ImportSessionRow, "status"> {
+  status: "pending" | "processing" | "completed" | "failed" | "completed_with_errors";
 }

@@ -1,113 +1,126 @@
 
 import { create } from 'zustand';
-import { Workflow, WorkflowStep } from '../types/workflow';
+import { v4 as uuidv4 } from 'uuid';
+import { Workflow, WorkflowField } from '../types/workflow';
 
 interface WorkflowEditorState {
-  currentWorkflow: Workflow | null;
+  currentWorkflow: Partial<Workflow> | null;
   isDirty: boolean;
-  setWorkflow: (workflow: Workflow | null) => void;
-  updateWorkflow: (updates: Partial<Workflow>) => void;
-  addStep: (step: WorkflowStep) => void;
-  updateStep: (stepId: string, updates: Partial<WorkflowStep>) => void;
-  reorderStep: (stepId: string, newOrder: number) => void;
-  removeStep: (stepId: string) => void;
-  resetWorkflow: () => void;
+  errors: Record<string, string>;
+  setWorkflow: (workflow: Partial<Workflow> | null) => void;
+  addField: (field: Partial<WorkflowField>) => void;
+  updateField: (index: number, field: Partial<WorkflowField>) => void;
+  removeField: (index: number) => void;
+  moveField: (fromIndex: number, toIndex: number) => void;
+  validateWorkflow: () => boolean;
 }
 
-export const useWorkflowEditorStore = create<WorkflowEditorState>((set, get) => ({
+export const useWorkflowEditor = create<WorkflowEditorState>((set, get) => ({
   currentWorkflow: null,
   isDirty: false,
-  
+  errors: {},
+
   setWorkflow: (workflow) => {
     set({ 
       currentWorkflow: workflow,
-      isDirty: false
+      isDirty: false,
+      errors: {}
     });
   },
-  
-  updateWorkflow: (updates) => {
+
+  addField: (field) => {
     const { currentWorkflow } = get();
     if (!currentWorkflow) return;
-    
+
+    const newField: WorkflowField = {
+      id: uuidv4(),
+      name: '',
+      type: 'text',
+      required: false,
+      ...field
+    };
+
     set({
-      currentWorkflow: { ...currentWorkflow, ...updates },
+      currentWorkflow: {
+        ...currentWorkflow,
+        fields: [...(currentWorkflow.fields || []), newField]
+      },
       isDirty: true
     });
   },
-  
-  addStep: (step) => {
+
+  updateField: (index, field) => {
     const { currentWorkflow } = get();
-    if (!currentWorkflow) return;
-    
-    const steps = [...(currentWorkflow.steps || []), step];
-    
+    if (!currentWorkflow?.fields) return;
+
+    const updatedFields = [...currentWorkflow.fields];
+    updatedFields[index] = {
+      ...updatedFields[index],
+      ...field
+    };
+
     set({
-      currentWorkflow: { ...currentWorkflow, steps },
+      currentWorkflow: {
+        ...currentWorkflow,
+        fields: updatedFields
+      },
       isDirty: true
     });
   },
-  
-  updateStep: (stepId, updates) => {
+
+  removeField: (index) => {
     const { currentWorkflow } = get();
-    if (!currentWorkflow || !currentWorkflow.steps) return;
-    
-    const steps = currentWorkflow.steps.map(step => 
-      step.id === stepId ? { ...step, ...updates } : step
-    );
-    
+    if (!currentWorkflow?.fields) return;
+
+    const updatedFields = currentWorkflow.fields.filter((_, i) => i !== index);
     set({
-      currentWorkflow: { ...currentWorkflow, steps },
+      currentWorkflow: {
+        ...currentWorkflow,
+        fields: updatedFields
+      },
       isDirty: true
     });
   },
-  
-  reorderStep: (stepId, newOrder) => {
+
+  moveField: (fromIndex, toIndex) => {
     const { currentWorkflow } = get();
-    if (!currentWorkflow || !currentWorkflow.steps) return;
-    
-    const steps = [...currentWorkflow.steps];
-    const stepIndex = steps.findIndex(step => step.id === stepId);
-    
-    if (stepIndex === -1) return;
-    
-    const step = steps[stepIndex];
-    steps.splice(stepIndex, 1);
-    steps.splice(newOrder - 1, 0, step);
-    
-    // Update all order values
-    const updatedSteps = steps.map((s, index) => ({
-      ...s,
-      order: index + 1
-    }));
-    
+    if (!currentWorkflow?.fields) return;
+
+    const fields = [...currentWorkflow.fields];
+    const [removed] = fields.splice(fromIndex, 1);
+    fields.splice(toIndex, 0, removed);
+
     set({
-      currentWorkflow: { ...currentWorkflow, steps: updatedSteps },
+      currentWorkflow: {
+        ...currentWorkflow,
+        fields
+      },
       isDirty: true
     });
   },
-  
-  removeStep: (stepId) => {
+
+  validateWorkflow: () => {
     const { currentWorkflow } = get();
-    if (!currentWorkflow || !currentWorkflow.steps) return;
-    
-    const steps = currentWorkflow.steps.filter(step => step.id !== stepId);
-    
-    // Update order values
-    const updatedSteps = steps.map((step, index) => ({
-      ...step,
-      order: index + 1
-    }));
-    
-    set({
-      currentWorkflow: { ...currentWorkflow, steps: updatedSteps },
-      isDirty: true
+    const errors: Record<string, string> = {};
+
+    if (!currentWorkflow?.name) {
+      errors.name = 'Name is required';
+    }
+
+    if (!currentWorkflow?.fields?.length) {
+      errors.fields = 'At least one field is required';
+    }
+
+    currentWorkflow?.fields?.forEach((field, index) => {
+      if (!field.name) {
+        errors[`field_${index}_name`] = 'Field name is required';
+      }
+      if (!field.type) {
+        errors[`field_${index}_type`] = 'Field type is required';
+      }
     });
-  },
-  
-  resetWorkflow: () => {
-    set({
-      currentWorkflow: null,
-      isDirty: false
-    });
+
+    set({ errors });
+    return Object.keys(errors).length === 0;
   }
 }));

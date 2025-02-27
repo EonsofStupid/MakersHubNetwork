@@ -1,78 +1,53 @@
 
-// Data structure types
-export type TableConstraintType = 'primary' | 'unique' | 'foreign' | 'check';
+// Enum for tab IDs to provide stricter type checking
+export const DataMaestroTabIds = {
+  API_KEYS: 'api-keys',
+  CSV_IMPORT: 'csv-import',
+  VISUALIZER: 'visualizer',
+  BASELINE: 'baseline'
+} as const;
 
-export interface TableConstraint {
-  name: string;
-  type: TableConstraintType;
-  columns: string[];
-  referenced_table?: string;
-  referenced_columns?: string[];
-  condition?: string;
-}
+export type DataMaestroTabId = typeof DataMaestroTabIds[keyof typeof DataMaestroTabIds];
 
-export interface TableColumn {
-  name: string;
-  data_type: string;
-  is_nullable: boolean;
-  default_value?: string;
-  description?: string;
-  constraints?: TableConstraint[];
-}
-
-export interface DatabaseTable {
-  schema: string;
-  name: string;
-  description?: string;
-  columns: TableColumn[];
-  constraints: TableConstraint[];
-  row_count?: number;
-  size_bytes?: number;
-  created_at?: string;
-  last_modified?: string;
-}
-
-export interface SchemaRelationship {
-  source_table: string;
-  source_column: string;
-  target_table: string;
-  target_column: string;
-  name: string;
-}
-
-export interface DatabaseSchema {
-  name: string;
-  tables: DatabaseTable[];
-  relationships: SchemaRelationship[];
-}
-
-// Baseline and validation types
-export interface ValidationRule {
+export interface APIKeyProvider {
   id: string;
   name: string;
-  description?: string;
-  table: string;
-  column?: string;
-  condition: string;
-  severity: 'error' | 'warning' | 'info';
-  message: string;
-  is_active: boolean;
+  description: string;
+  icon: string;
 }
 
-export interface BaselineConfig {
+// Visualization types as source of truth for the graph
+export const NodeTypes = {
+  PART: 'part',
+  CATEGORY: 'category',
+  MANUFACTURER: 'manufacturer'
+} as const;
+
+export type NodeType = typeof NodeTypes[keyof typeof NodeTypes];
+
+export const EdgeTypes = {
+  REQUIRES: 'requires',
+  COMPATIBLE_WITH: 'compatible-with',
+  UPGRADES: 'upgrades',
+  ALTERNATIVE_TO: 'alternative-to',
+  ACCESSORY_FOR: 'accessory-for'
+} as const;
+
+export type EdgeType = typeof EdgeTypes[keyof typeof EdgeTypes];
+
+export interface VisualNode {
   id: string;
-  table_name: string;
-  config: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
+  type: NodeType;
+  label: string;
+  data: Record<string, any>;
+  style?: Record<string, any>;
 }
 
-export interface ValidationResult {
-  rule_id: string;
-  rule_name: string;
-  severity: 'error' | 'warning' | 'info';
-  message: string;
-  affected_rows: number;
-  details?: string;
+export interface VisualEdge {
+  id: string;
+  source: string;
+  target: string;
+  type: EdgeType;
+  data?: Record<string, any>;
+  style?: Record<string, any>;
 }
