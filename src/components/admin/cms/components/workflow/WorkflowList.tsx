@@ -1,6 +1,24 @@
 
-import { useWorkflows } from '../../queries/useWorkflows';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { GitBranch, Check, Clock, AlertCircle } from 'lucide-react';
+import { Workflow } from '../../types/workflow';
+import { cmsKeys } from '../../queries/keys';
+
+export const useWorkflows = () => {
+  return useQuery({
+    queryKey: cmsKeys.workflows.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('metadata_workflows')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Workflow[];
+    },
+  });
+};
 
 export const WorkflowList = () => {
   const { data: workflows = [], isLoading } = useWorkflows();

@@ -10,7 +10,7 @@ export const useWorkflows = () => {
     queryKey: cmsKeys.workflows.list(),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('content_workflows')
+        .from('metadata_workflows')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -21,13 +21,15 @@ export const useWorkflows = () => {
 };
 
 export const useWorkflow = (id?: string) => {
+  const queryKey = id ? cmsKeys.workflows.detail(id) : ['workflow', 'new'];
+  
   return useQuery({
-    queryKey: cmsKeys.workflows.detail(id || 'new'),
+    queryKey,
     queryFn: async () => {
       if (!id) return null;
       
       const { data, error } = await supabase
-        .from('content_workflows')
+        .from('metadata_workflows')
         .select('*')
         .eq('id', id)
         .single();
@@ -47,7 +49,7 @@ export const useSaveWorkflow = () => {
       if (workflow.id) {
         // Update existing workflow
         const { data, error } = await supabase
-          .from('content_workflows')
+          .from('metadata_workflows')
           .update(workflow)
           .eq('id', workflow.id)
           .select()
@@ -58,7 +60,7 @@ export const useSaveWorkflow = () => {
       } else {
         // Create new workflow
         const { data, error } = await supabase
-          .from('content_workflows')
+          .from('metadata_workflows')
           .insert(workflow)
           .select()
           .single();
@@ -68,8 +70,7 @@ export const useSaveWorkflow = () => {
       }
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: cmsKeys.workflows.list() });
-      queryClient.invalidateQueries({ queryKey: cmsKeys.workflows.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: cmsKeys.workflows.all });
       
       toast({
         title: "Workflow Saved",

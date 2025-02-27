@@ -1,19 +1,19 @@
 
-import { Database } from "@/integrations/supabase/types";
+export type ChatAPIProvider = 'openai' | 'anthropic' | 'replicate' | 'stability' | 'custom';
 
-export type ApiKey = Database["public"]["Tables"]["api_keys"]["Row"];
-export type ApiKeyProvider = "openai" | "stability" | "replicate" | "custom";
-
-export interface ApiKeyFilter {
-  provider?: ApiKeyProvider;
-  isActive?: boolean;
-  search?: string;
+export interface APIKeyDetails {
+  id: string;
+  name: string;
+  provider: ChatAPIProvider;
+  created_at: string;
+  last_used?: string;
+  is_active: boolean;
+  reference?: string; // Masked key for display
 }
 
-export interface CreateApiKeyData {
+export interface CreateAPIKeyRequest {
   name: string;
-  provider: ApiKeyProvider;
+  provider: ChatAPIProvider;
   key: string;
-  description?: string;
-  expiresAt?: Date;
+  settings?: Record<string, any>;
 }
