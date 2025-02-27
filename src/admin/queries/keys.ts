@@ -4,6 +4,7 @@ export const adminKeys = {
     all: () => ['content'] as const,
     list: (filters?: Record<string, any>) => [...adminKeys.content.all(), { filters }] as const,
     detail: (id: string) => [...adminKeys.content.all(), id] as const,
+    types: () => [...adminKeys.content.all(), 'types'] as const,
   },
   categories: {
     all: () => ['categories'] as const,
