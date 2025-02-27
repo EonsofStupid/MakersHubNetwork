@@ -11,7 +11,8 @@ export const useAdminAccess = () => {
   }))
   
   const hasAccess = roles.some(role => ADMIN_ROLES.includes(role))
+  const hasAdminAccess = hasAccess // Alias for backward compatibility
   const isLoading = status === "loading"
 
-  return { hasAccess, isLoading }
+  return { hasAccess, hasAdminAccess, isLoading }
 }

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Workflow, WorkflowStep, WorkflowStepType } from '../../types/workflow';
+import { Workflow, WorkflowStep, WorkflowStepType, WorkflowStatus } from '../../types/workflow';
 import { PlusCircle, X, ChevronUp, ChevronDown } from 'lucide-react';
 import {
   Select,
@@ -88,6 +88,13 @@ export const WorkflowEditor = ({ workflow, onSave }: WorkflowEditorProps) => {
     }));
   };
 
+  const handleWorkflowUpdate = (field: keyof Workflow, value: any) => {
+    setWorkflowData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleSave = () => {
     if (onSave) {
       onSave(workflowData);
@@ -102,7 +109,7 @@ export const WorkflowEditor = ({ workflow, onSave }: WorkflowEditorProps) => {
           <Input
             id="name"
             value={workflowData.name}
-            onChange={(e) => setWorkflowData(prev => ({ ...prev, name: e.target.value }))}
+            onChange={(e) => handleWorkflowUpdate('name', e.target.value)}
             placeholder="Enter workflow name"
           />
         </div>
@@ -111,8 +118,8 @@ export const WorkflowEditor = ({ workflow, onSave }: WorkflowEditorProps) => {
           <Label htmlFor="description">Description</Label>
           <Input
             id="description"
-            value={workflowData.description}
-            onChange={(e) => setWorkflowData(prev => ({ ...prev, description: e.target.value }))}
+            value={workflowData.description || ''}
+            onChange={(e) => handleWorkflowUpdate('description', e.target.value)}
             placeholder="Enter workflow description"
           />
         </div>
@@ -121,7 +128,7 @@ export const WorkflowEditor = ({ workflow, onSave }: WorkflowEditorProps) => {
           <Label htmlFor="status">Status</Label>
           <Select
             value={workflowData.status}
-            onValueChange={(value) => setWorkflowData(prev => ({ ...prev, status: value }))}
+            onValueChange={(value: WorkflowStatus) => handleWorkflowUpdate('status', value)}
           >
             <SelectTrigger id="status">
               <SelectValue placeholder="Select status" />
@@ -169,7 +176,7 @@ export const WorkflowEditor = ({ workflow, onSave }: WorkflowEditorProps) => {
                     <Label htmlFor={`step-${step.id}-type`}>Step Type</Label>
                     <Select
                       value={step.type}
-                      onValueChange={(value) => handleStepChange(step.id, 'type', value as WorkflowStepType)}
+                      onValueChange={(value: WorkflowStepType) => handleStepChange(step.id, 'type', value)}
                     >
                       <SelectTrigger id={`step-${step.id}-type`}>
                         <SelectValue placeholder="Select type" />
