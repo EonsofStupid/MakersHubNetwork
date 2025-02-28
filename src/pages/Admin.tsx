@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,11 +8,11 @@ import { UsersTab } from "@/admin/tabs/UsersTab";
 import { ImportTab } from "@/admin/tabs/ImportTab";
 import { SettingsTab } from "@/admin/tabs/SettingsTab";
 import { DataMaestroTab } from "@/admin/tabs/DataMaestroTab";
+import { ChatTab } from "@/admin/tabs/ChatTab";
 import { lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 
 const ContentTab = lazy(() => import("@/admin/tabs/ContentTab"));
-const ChatTab = lazy(() => import("@/admin/tabs/ChatTab"));
 
 export default function Admin() {
   const { isAdmin, roles, status } = useAuthStore(state => ({

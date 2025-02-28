@@ -105,7 +105,7 @@ const CategoryManagement = () => {
                   <TableCell>{category.name}</TableCell>
                   <TableCell>{category.slug}</TableCell>
                   <TableCell>
-                    {/* Add edit/delete buttons here when implementing those features */}
+                    {/* Actions will be implemented later */}
                   </TableCell>
                 </TableRow>
               ))}
