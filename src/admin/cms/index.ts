@@ -10,5 +10,5 @@ export {
   useDeleteCategory
 } from '../queries/useContentCategories';
 
-// Re-export types if needed
+// Re-export types
 export * from '../types/content';

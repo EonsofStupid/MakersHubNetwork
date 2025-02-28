@@ -1,3 +1,4 @@
+
 export type ContentStatus = 'draft' | 'review' | 'published' | 'archived';
 
 export interface ContentType {
