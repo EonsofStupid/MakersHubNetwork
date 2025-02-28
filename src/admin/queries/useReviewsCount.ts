@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { adminKeys } from "@/admin/types/queries"
@@ -7,7 +8,7 @@ export const useReviewsCount = () => {
     queryKey: [...adminKeys.reviews(), 'count'],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from('printer_parts_reviews')
+        .from('part_reviews') // Changed from 'printer_parts_reviews' to 'part_reviews'
         .select('*', { count: 'exact' })
 
       if (error) throw error
