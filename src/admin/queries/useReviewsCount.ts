@@ -7,9 +7,8 @@ export const useReviewsCount = () => {
   return useQuery({
     queryKey: [...adminKeys.reviews(), 'count'],
     queryFn: async () => {
-      // Fix the table name from 'printer_parts_reviews' to 'part_reviews'
       const { count, error } = await supabase
-        .from('part_reviews')
+        .from('part_reviews') // Changed from 'printer_parts_reviews' to 'part_reviews'
         .select('*', { count: 'exact' })
 
       if (error) throw error
