@@ -1,5 +1,5 @@
 
-import { clsx, type ClassValue } from "clsx"
+import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -8,9 +8,11 @@ export function cn(...inputs: ClassValue[]) {
 
 export function slugify(text: string): string {
   return text
+    .toString()
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '')    // Remove non-word chars
-    .replace(/[\s_-]+/g, '-')    // Replace spaces and _ with -
-    .replace(/^-+|-+$/g, '');    // Remove leading/trailing -
+    .replace(/\s+/g, '-')      // Replace spaces with -
+    .replace(/&/g, '-and-')    // Replace & with 'and'
+    .replace(/[^\w\-]+/g, '')  // Remove all non-word characters
+    .replace(/\-\-+/g, '-')    // Replace multiple - with single -
 }

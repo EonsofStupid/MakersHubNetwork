@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { adminKeys } from "@/admin/types/queries"
@@ -22,10 +23,10 @@ export const useCreateCategory = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: async (name: string) => {
+    mutationFn: async (categoryData: { name: string, slug: string }) => {
       const { data, error } = await supabase
         .from('content_categories')
-        .insert([{ name }])
+        .insert([categoryData])
         .select()
       
       if (error) throw error
@@ -43,10 +44,10 @@ export const useUpdateCategory = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, name }: { id: string, name: string }) => {
+    mutationFn: async ({ id, name, slug }: { id: string, name: string, slug: string }) => {
       const { data, error } = await supabase
         .from('content_categories')
-        .update({ name })
+        .update({ name, slug })
         .eq('id', id)
         .select()
 
