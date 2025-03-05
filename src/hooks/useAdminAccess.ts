@@ -2,25 +2,29 @@
 import { useMemo } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
 import { UserRole } from '@/types/auth.types';
+import { useAdminStore } from '@/admin/store/admin.store';
 
 /**
  * Custom hook to check admin access based on user roles
- * Memoized to prevent unnecessary recalculations
+ * This hook uses the admin store for access control
  */
 export function useAdminAccess() {
   // Get roles from auth store
   const roles = useAuthStore((state) => state.roles);
   
-  // Memoize admin roles to prevent unnecessary recalculations
+  // Admin store
+  const { hasPermission, loadPermissions } = useAdminStore();
+  
+  // Get admin roles
   const adminRoles = useMemo<UserRole[]>(() => ['admin', 'super_admin'], []);
   
-  // Memoize the result of access check to prevent unnecessary re-renders
+  // Check if user has admin access
   const hasAdminAccess = useMemo(() => {
     if (!roles || roles.length === 0) return false;
     return roles.some(role => adminRoles.includes(role as UserRole));
   }, [roles, adminRoles]);
   
-  // Memoize the admin level to prevent unnecessary recalculations
+  // Get admin level
   const adminLevel = useMemo(() => {
     if (!roles || roles.length === 0) return 0;
     if (roles.includes('super_admin')) return 2;
@@ -28,9 +32,17 @@ export function useAdminAccess() {
     return 0;
   }, [roles]);
   
+  // Load permissions when admin access is true
+  useMemo(() => {
+    if (hasAdminAccess) {
+      loadPermissions();
+    }
+  }, [hasAdminAccess, loadPermissions]);
+  
   return {
     hasAdminAccess,
     adminLevel,
-    adminRoles
+    adminRoles,
+    hasPermission
   };
 }
