@@ -1,5 +1,6 @@
+
 import { useState, useCallback, useMemo, useRef } from 'react';
-import { ThemeEffect, EffectType } from '@/theme/types/effects';
+import { ThemeEffect, EffectType, GlitchEffect, GradientEffect, CyberEffect, PulseEffect } from '@/theme/types/effects';
 import { useDebounce } from './useDebounce';
 
 interface UseThemeEffectsOptions {
@@ -114,36 +115,48 @@ export function useThemeEffects(options: UseThemeEffectsOptions = {}) {
       case 'glitch':
         config = {
           ...config,
-          color: randomColor,
-          frequency: Math.random() * 10 + 5,
-          amplitude: Math.random() * 5 + 1
-        };
+          type: 'glitch',
+        } as Partial<GlitchEffect>;
+        (config as Partial<GlitchEffect>).color = randomColor;
+        (config as Partial<GlitchEffect>).frequency = Math.random() * 10 + 5;
+        (config as Partial<GlitchEffect>).amplitude = Math.random() * 5 + 1;
         break;
+        
       case 'gradient':
         config = {
           ...config,
-          colors: [randomColor, '#FFFFFF', randomColor],
-          direction: 'to-right',
-          speed: Math.random() * 5 + 1
-        };
+          type: 'gradient',
+        } as Partial<GradientEffect>;
+        (config as Partial<GradientEffect>).colors = [randomColor, '#FFFFFF', randomColor];
+        (config as Partial<GradientEffect>).direction = 'to-right';
+        (config as Partial<GradientEffect>).speed = Math.random() * 5 + 1;
         break;
+        
       case 'cyber':
         config = {
           ...config,
-          glowColor: randomColor,
-          textShadow: true
-        };
+          type: 'cyber',
+        } as Partial<CyberEffect>;
+        (config as Partial<CyberEffect>).glowColor = randomColor;
+        (config as Partial<CyberEffect>).textShadow = true;
         break;
+        
       case 'pulse':
         config = {
           ...config,
-          color: randomColor,
-          minOpacity: 0.2,
-          maxOpacity: 0.8
-        };
+          type: 'pulse',
+        } as Partial<PulseEffect>;
+        (config as Partial<PulseEffect>).color = randomColor;
+        (config as Partial<PulseEffect>).minOpacity = 0.2;
+        (config as Partial<PulseEffect>).maxOpacity = 0.8;
         break;
+        
       default:
-        config = { ...config, color: randomColor };
+        // For any other effect types
+        config = { 
+          ...config, 
+          type: randomType 
+        } as Partial<ThemeEffect>;
     }
     
     return applyEffect(id, randomType, config);
