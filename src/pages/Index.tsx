@@ -1,8 +1,9 @@
 
 import { MainNav } from "@/components/MainNav";
 import { Footer } from "@/components/Footer";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { ThemeDataStream } from "@/components/theme/ThemeDataStream";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const IndexPage = () => {
   const [activeEffects, setActiveEffects] = useState<{[key: string]: string}>({});
@@ -37,35 +38,43 @@ const IndexPage = () => {
       <MainNav />
       
       <div className="container px-4 py-24 mx-auto relative">
-        <ThemeDataStream className="opacity-10" />
+        <ErrorBoundary fallback={<div>Something went wrong with the data stream.</div>}>
+          <Suspense fallback={<div className="opacity-10">Loading...</div>}>
+            <ThemeDataStream className="opacity-10" />
+          </Suspense>
+        </ErrorBoundary>
         
         <div className="text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 cyber-glow relative">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 relative">
             <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mad-scientist-hover">
               MakersImpulse
             </span>
           </h1>
           
           <div className="my-8 relative overflow-hidden">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-heading glitch relative mb-2">
-              Build.Share.Brag
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-heading relative mb-2 cyber-text">
+              <span className="relative inline-block">
+                Build.Share.Brag
+                <span className="absolute -inset-x-1 top-0 bottom-0 bg-transparent text-primary/70 left-[2px] skew-x-3" style={{ clipPath: 'polygon(5% 0, 100% 0, 100% 60%, 20% 100%)' }}>Build.Share.Brag</span>
+                <span className="absolute -inset-x-1 top-0 bottom-0 bg-transparent text-secondary/70 left-[-2px] skew-x-[-3deg]" style={{ clipPath: 'polygon(0 30%, 100% 0, 100% 100%, 0 100%)' }}>Build.Share.Brag</span>
+              </span>
             </h2>
             <div className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8 relative z-10">
               A hub for passionate makers building, customizing, and sharing their 3D printer builds
             </div>
             
             <div className="subscribe-banner cyber-card p-4 md:p-6 max-w-xl mx-auto my-8 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 animate-gradient"></div>
-              <h3 className="text-xl font-bold text-primary mb-2">Join Our Maker Community</h3>
-              <p className="text-muted-foreground mb-4">Get early access to new features and showcase your builds</p>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10"></div>
+              <h3 className="text-xl font-bold text-primary mb-2 relative z-10">Join Our Maker Community</h3>
+              <p className="text-muted-foreground mb-4 relative z-10">Get early access to new features and showcase your builds</p>
               
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 relative z-10">
                 <input 
                   type="email" 
                   placeholder="Your email" 
                   className="flex h-10 w-full rounded-md border border-primary/20 bg-background/30 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                 />
-                <button className="cyber-card cyber-glow inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30">
+                <button className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30">
                   Subscribe
                 </button>
               </div>
@@ -76,7 +85,7 @@ const IndexPage = () => {
             {/* Build CTA */}
             <a 
               href="/builder" 
-              className={`cyber-card cyber-glow inline-flex h-12 items-center justify-center rounded-md bg-primary/20 px-8 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(0,240,255,0.15)] transition-all duration-300 hover:scale-105 hover:bg-primary/30 hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden ${activeEffects['build-cta']}`}
+              className={`cyber-card inline-flex h-12 items-center justify-center rounded-md bg-primary/20 px-8 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(0,240,255,0.15)] transition-all duration-300 hover:scale-105 hover:bg-primary/30 hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden ${activeEffects['build-cta']}`}
               onMouseEnter={() => applyRandomEffect('build-cta')}
               onMouseLeave={() => clearEffects('build-cta')}
               style={{

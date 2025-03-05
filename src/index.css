@@ -99,76 +99,9 @@
     animation: footer-pulse 4s ease-in-out infinite;
   }
 
-  .glitch {
-    position: relative;
-  }
-
-  .glitch::before,
-  .glitch::after {
-    content: 'Build.Share.Brag';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    overflow: hidden;
-    background: inherit;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-  }
-
-  .glitch::before {
-    left: 2px;
-    text-shadow: -2px 0 #00F0FF;
-    animation: glitch-anim-1 2s infinite linear alternate-reverse;
-  }
-
-  .glitch::after {
-    left: -2px;
-    text-shadow: 2px 0 #FF2D6E;
-    animation: glitch-anim-2 3s infinite linear alternate-reverse;
-  }
-
-  @keyframes glitch-anim-1 {
-    0% {
-      clip-path: inset(20% 0 30% 0);
-    }
-    20% {
-      clip-path: inset(65% 0 15% 0);
-    }
-    40% {
-      clip-path: inset(40% 0 43% 0);
-    }
-    60% {
-      clip-path: inset(80% 0 5% 0);
-    }
-    80% {
-      clip-path: inset(10% 0 60% 0);
-    }
-    100% {
-      clip-path: inset(30% 0 35% 0);
-    }
-  }
-
-  @keyframes glitch-anim-2 {
-    0% {
-      clip-path: inset(15% 0 40% 0);
-    }
-    20% {
-      clip-path: inset(50% 0 25% 0);
-    }
-    40% {
-      clip-path: inset(25% 0 55% 0);
-    }
-    60% {
-      clip-path: inset(70% 0 15% 0);
-    }
-    80% {
-      clip-path: inset(5% 0 75% 0);
-    }
-    100% {
-      clip-path: inset(45% 0 20% 0);
-    }
+  /* Simpler, more performant cyber-text effects */
+  .cyber-text {
+    @apply relative inline-block;
   }
 
   .mad-scientist-hover {
@@ -185,28 +118,6 @@
 
   .mad-scientist-hover:hover {
     @apply text-primary shadow-[0_0_15px_rgba(0,240,255,0.5)] scale-105;
-    animation: glitch 0.3s ease-in-out infinite;
-  }
-
-  @keyframes glitch {
-    0% {
-      transform: translate(0) scale(1.1);
-    }
-    20% {
-      transform: translate(-2px, 2px) scale(1.1);
-    }
-    40% {
-      transform: translate(-2px, -2px) scale(1.1);
-    }
-    60% {
-      transform: translate(2px, 2px) scale(1.1);
-    }
-    80% {
-      transform: translate(2px, -2px) scale(1.1);
-    }
-    100% {
-      transform: translate(0) scale(1.1);
-    }
   }
 
   .glass-morphism {
@@ -356,6 +267,18 @@
     @apply border border-primary/20 shadow-[0_0_15px_rgba(0,240,255,0.2)]
            hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.4)]
            transition-all duration-300;
+  }
+  
+  /* Safe animation definition for gradient backgrounds */
+  @keyframes gradient-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-flow 3s ease infinite;
   }
 }
 
