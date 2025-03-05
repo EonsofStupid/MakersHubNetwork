@@ -2,7 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bell, Settings, User } from "lucide-react";
+import { ArrowLeft, Bell, Settings } from "lucide-react";
 import { useThemeEffects } from "@/hooks/useThemeEffects";
 import { EffectRenderer } from "@/components/theme/effects/EffectRenderer";
 
@@ -27,7 +27,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title }) => {
   const titleEffect = getEffectForElement('admin-title');
 
   return (
-    <header className="border-b border-primary/10 backdrop-blur-md bg-background/50 sticky top-0 z-10">
+    <header className="border-b border-primary/10 backdrop-blur-md bg-background/50 sticky top-16 z-10">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -58,11 +58,6 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title }) => {
             
             <Button variant="ghost" size="icon" className="hover:bg-primary/10">
               <Settings className="h-5 w-5 text-primary" />
-            </Button>
-            
-            <Button variant="outline" size="sm" className="ml-4 flex items-center">
-              <User className="h-4 w-4 mr-2" />
-              <span>Admin</span>
             </Button>
           </div>
         </div>
