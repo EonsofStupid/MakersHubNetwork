@@ -37,13 +37,40 @@ const IndexPage = () => {
       <MainNav />
       
       <div className="container px-4 py-24 mx-auto relative">
+        <ThemeDataStream className="opacity-10" />
+        
         <div className="text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            MakersImpulse
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 cyber-glow relative">
+            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mad-scientist-hover">
+              MakersImpulse
+            </span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            A hub for passionate makers building, customizing, and sharing their 3D printer builds
-          </p>
+          
+          <div className="my-8 relative overflow-hidden">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-heading glitch relative mb-2">
+              Build.Share.Brag
+            </h2>
+            <div className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8 relative z-10">
+              A hub for passionate makers building, customizing, and sharing their 3D printer builds
+            </div>
+            
+            <div className="subscribe-banner cyber-card p-4 md:p-6 max-w-xl mx-auto my-8 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 animate-gradient"></div>
+              <h3 className="text-xl font-bold text-primary mb-2">Join Our Maker Community</h3>
+              <p className="text-muted-foreground mb-4">Get early access to new features and showcase your builds</p>
+              
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input 
+                  type="email" 
+                  placeholder="Your email" 
+                  className="flex h-10 w-full rounded-md border border-primary/20 bg-background/30 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                />
+                <button className="cyber-card cyber-glow inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30">
+                  Subscribe
+                </button>
+              </div>
+            </div>
+          </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {/* Build CTA */}
