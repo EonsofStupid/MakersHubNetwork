@@ -1,13 +1,54 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useActiveUsers } from '@/admin/hooks/useActiveUsers';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const ActiveUsersList = () => {
-  const { data: activeUsers, isLoading, error } = useActiveUsers();
-  
+  const { data: initialUsers, isLoading, error, refetch } = useActiveUsers();
+  const [activeUsers, setActiveUsers] = useState<any[]>([]);
+  const { toast } = useToast();
+
+  // Initial load
+  useEffect(() => {
+    if (initialUsers) {
+      setActiveUsers(initialUsers);
+    }
+  }, [initialUsers]);
+
+  // Real-time updates for active users
+  useEffect(() => {
+    const channel = supabase
+      .channel('profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: 'is_active=eq.true'
+        },
+        (payload) => {
+          console.log('Profile update detected:', payload);
+          // Refresh the data
+          refetch();
+          toast({
+            title: "User activity updated",
+            description: "Active users list has been refreshed",
+            variant: "default"
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch, toast]);
+
   if (isLoading) {
     return (
       <Card className="cyber-card border-primary/20">
@@ -44,6 +85,14 @@ export const ActiveUsersList = () => {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-destructive">Failed to load active users</p>
+          <Button 
+            onClick={() => refetch()} 
+            variant="outline" 
+            size="sm" 
+            className="mt-2"
+          >
+            Retry
+          </Button>
         </CardContent>
       </Card>
     );
@@ -58,7 +107,7 @@ export const ActiveUsersList = () => {
       <CardContent>
         <div className="space-y-3">
           {activeUsers && activeUsers.length > 0 ? (
-            activeUsers.map((user: any) => (
+            activeUsers.map((user) => (
               <div key={user.id} className="flex items-center justify-between p-2 border-b border-primary/10">
                 <div className="flex items-center space-x-3">
                   <Avatar>
@@ -83,3 +132,5 @@ export const ActiveUsersList = () => {
     </Card>
   );
 };
+
+import { Button } from '@/components/ui/button';

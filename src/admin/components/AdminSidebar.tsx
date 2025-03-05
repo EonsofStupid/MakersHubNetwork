@@ -25,7 +25,7 @@ export const AdminSidebar: React.FC = () => {
     { 
       id: "overview", 
       label: "Overview", 
-      path: "/admin", 
+      path: "/admin?tab=overview", 
       icon: <LayoutDashboard className="h-4 w-4 mr-2" />,
       permission: "admin:access" 
     },

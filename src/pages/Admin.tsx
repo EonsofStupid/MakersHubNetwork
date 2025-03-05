@@ -28,8 +28,9 @@ export default function Admin() {
 
   // Handle tab change
   const handleTabChange = (value: string) => {
-    searchParams.set('tab', value);
-    setSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('tab', value);
+    setSearchParams(newParams);
   };
 
   useEffect(() => {
