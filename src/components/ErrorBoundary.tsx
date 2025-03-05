@@ -1,9 +1,11 @@
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
+import { AlertCircle } from "lucide-react";
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
@@ -18,11 +20,17 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
+    // Update state so the next render will show the fallback UI
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
+    
+    // Call the optional onError callback
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
   }
 
   public render() {
@@ -32,10 +40,11 @@ export class ErrorBoundary extends Component<Props, State> {
       }
       
       return (
-        <div className="p-4 text-center border border-destructive/20 rounded-md bg-background/40 backdrop-blur-md">
-          <h2 className="text-lg font-bold text-destructive">Something went wrong</h2>
-          <p className="text-sm text-muted-foreground">
-            {this.state.error?.message || "Please try again later"}
+        <div className="p-4 m-2 text-center border border-destructive/20 rounded-md bg-background/40 backdrop-blur-md shadow-sm">
+          <AlertCircle className="h-6 w-6 text-destructive mx-auto mb-2" />
+          <h2 className="text-base font-medium text-destructive mb-1">Something went wrong</h2>
+          <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+            {this.state.error?.message || "An unexpected error occurred. Please try again."}
           </p>
         </div>
       );
