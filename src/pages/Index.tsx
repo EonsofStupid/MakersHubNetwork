@@ -7,23 +7,6 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SimpleCyberText } from "@/components/theme/SimpleCyberText";
 import { useDebounce } from "@/hooks/useDebounce";
 
-// Create a debounce hook to prevent too many re-renders on effect changes
-const useDebounce = <T,>(value: T, delay: number): T => {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
-
 // Memoize components that don't need to re-render often
 const MemoizedThemeDataStream = memo(ThemeDataStream);
 
