@@ -90,20 +90,22 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   
   // Actions
   loadPermissions: async () => {
-    const { isAdmin } = useAuthStore.getState();
-    const { accessLevels } = get();
-    
     try {
       set({ isLoadingPermissions: true });
       
-      // Determine user roles
-      const userRoles = useAuthStore.getState().roles || [];
+      // Get auth store state
+      const authState = useAuthStore.getState();
+      const { roles, isAdmin } = authState;
+      const { accessLevels } = get();
+      
+      // Determine user roles from auth store
+      const userRoles = roles || [];
       
       // Find the highest access level the user has based on roles
       let userPermissions: AdminPermission[] = [];
-      
-      // Find the maximum level available to this user
       let maxLevel = -1;
+      
+      console.log("Current user roles:", userRoles);
       
       userRoles.forEach(userRole => {
         accessLevels.forEach(level => {
@@ -122,6 +124,8 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
           userPermissions = adminLevel.permissions;
         }
       }
+      
+      console.log("Loaded permissions:", userPermissions);
       
       set({ permissions: userPermissions });
     } catch (error) {
