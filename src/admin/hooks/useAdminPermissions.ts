@@ -11,17 +11,27 @@ export function useAdminPermissions(requiredPermission?: AdminPermission) {
   const { loadPermissions, hasPermission, isLoadingPermissions } = useAdminStore();
   
   useEffect(() => {
-    // If there's no required permission, access is allowed
-    if (!requiredPermission) {
-      setHasAccess(true);
-      setIsLoading(false);
-      return;
-    }
+    const loadAdminPermissions = async () => {
+      try {
+        // If there's no required permission, access is allowed
+        if (!requiredPermission) {
+          setHasAccess(true);
+          setIsLoading(false);
+          return;
+        }
 
-    // Load permissions if they aren't loaded yet
-    if (!isLoadingPermissions) {
-      loadPermissions();
-    }
+        // Load permissions if they aren't loaded yet
+        if (!isLoadingPermissions) {
+          await loadPermissions();
+        }
+      } catch (error) {
+        console.error("Error loading permissions:", error);
+        setHasAccess(false);
+        setIsLoading(false);
+      }
+    };
+
+    loadAdminPermissions();
   }, [requiredPermission, loadPermissions, isLoadingPermissions]);
 
   useEffect(() => {

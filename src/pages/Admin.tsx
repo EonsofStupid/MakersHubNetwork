@@ -59,7 +59,7 @@ export default function Admin() {
 
   return (
     <AdminLayout title="Admin Dashboard">
-      <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
+      <Tabs defaultValue={currentTab} value={currentTab} onValueChange={handleTabChange} className="space-y-6">
         <Card className="cyber-card border-primary/20">
           <TabsList className="w-full justify-start border-b border-primary/20 rounded-none px-4">
             <TabsTrigger 

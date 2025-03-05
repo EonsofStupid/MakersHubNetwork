@@ -18,9 +18,18 @@ export type RecentReview = {
   } | null;
 };
 
+export type ActiveUser = {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  last_seen: string | null;
+  status: string | null;
+};
+
 export const adminKeys = {
   all: ['admin'] as const,
   users: () => [...adminKeys.all, 'users'] as const,
+  activeUsers: () => [...adminKeys.users(), 'active'] as const,  
   activeUsersCount: () => [...adminKeys.users(), 'active', 'count'] as const,
   totalUsersCount: () => [...adminKeys.users(), 'total', 'count'] as const,
   categories: () => [...adminKeys.all, 'categories'] as const,
