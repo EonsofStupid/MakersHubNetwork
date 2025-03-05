@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +8,7 @@ interface ThemeDataStreamProps {
 
 export function ThemeDataStream({ className }: ThemeDataStreamProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -15,13 +17,24 @@ export function ThemeDataStream({ className }: ThemeDataStreamProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    // Set canvas dimensions based on actual size
+    const resizeCanvas = () => {
+      const parent = canvas.parentElement;
+      if (!parent) return;
+      
+      canvas.width = parent.offsetWidth;
+      canvas.height = parent.offsetHeight || 400; // Fallback height
+    };
 
-    const columns = Math.floor(canvas.width / 20);
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const columns = Math.floor(canvas.width / 20) || 10; // Fallback to minimum columns
     const drops: number[] = new Array(columns).fill(0);
 
     const draw = () => {
+      if (!ctx || !canvas) return;
+      
       ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -33,7 +46,9 @@ export function ThemeDataStream({ className }: ThemeDataStreamProps) {
         const x = i * 20;
         const y = drops[i] * 20;
 
-        ctx.fillText(text, x, y);
+        if (x < canvas.width && y < canvas.height) {
+          ctx.fillText(text, x, y);
+        }
 
         if (y > canvas.height && Math.random() > 0.975) {
           drops[i] = 0;
@@ -43,9 +58,16 @@ export function ThemeDataStream({ className }: ThemeDataStreamProps) {
       }
     };
 
-    const interval = setInterval(draw, 33);
+    // Use window.setInterval and store the ID
+    intervalRef.current = window.setInterval(draw, 33);
 
-    return () => clearInterval(interval);
+    // Clean up function
+    return () => {
+      if (intervalRef.current !== null) {
+        window.clearInterval(intervalRef.current);
+      }
+      window.removeEventListener('resize', resizeCanvas);
+    };
   }, []);
 
   return (
