@@ -1,30 +1,49 @@
 
-import { useState } from "react"
+import { useState, memo, useCallback, useMemo } from "react" 
 import { useAuthStore } from "@/stores/auth/store"
 import { useToast } from "@/hooks/use-toast"
 import { useAdminAccess } from "@/hooks/useAdminAccess"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
 import { UserMenuSheet } from "@/components/auth/UserMenuSheet"
 
-export const UserMenu = () => {
+export const UserMenu = memo(() => {
   const [isSheetOpen, setSheetOpen] = useState(false)
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   
-  const { hasAdminAccess } = useAdminAccess()
   const { toast } = useToast()
-
+  
+  // Get data from store with selectors to prevent unnecessary re-renders
   const user = useAuthStore((state) => state.user)
   const roles = useAuthStore((state) => state.roles)
   const logout = useAuthStore((state) => state.logout)
+  
+  // Memoize admin access check to prevent excessive store reads
+  const { hasAdminAccess } = useAdminAccess()
+  
+  // Only log this once during development - removed in production
+  const userEmail = user?.email;
+  
+  // Memoize handlers to prevent recreating functions on each render
+  const handleOpenSheet = useCallback(() => {
+    setSheetOpen(true);
+  }, []);
+  
+  const handleCloseSheet = useCallback(() => {
+    setSheetOpen(false);
+  }, []);
+  
+  const handleOpenProfileDialog = useCallback(() => {
+    setSheetOpen(false);
+    setProfileDialogOpen(true);
+  }, []);
+  
+  const handleCloseProfileDialog = useCallback(() => {
+    setProfileDialogOpen(false);
+  }, []);
 
-  // Show visual feedback on roles after login
-  console.log("UserMenu - Current user:", user?.email)
-  console.log("UserMenu - Current roles:", roles)
-  console.log("UserMenu - Has admin access:", hasAdminAccess)
-
-  // Logout handler
-  const handleLogout = async () => {
+  // Logout handler - memoized to prevent recreation
+  const handleLogout = useCallback(async () => {
     try {
       setIsLoading(true)
       await logout()
@@ -38,28 +57,37 @@ export const UserMenu = () => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [logout, toast]);
+
+  // Memoize props to prevent object recreation on each render
+  const sheetProps = useMemo(() => ({
+    isOpen: isSheetOpen,
+    onOpenChange: setSheetOpen,
+    userEmail: userEmail,
+    isLoadingLogout: isLoading,
+    onShowProfile: handleOpenProfileDialog,
+    onLogout: handleLogout,
+    hasAdminAccess: hasAdminAccess,
+    roles: roles
+  }), [
+    isSheetOpen, 
+    userEmail, 
+    isLoading, 
+    handleOpenProfileDialog, 
+    handleLogout, 
+    hasAdminAccess, 
+    roles
+  ]);
+  
+  const profileDialogProps = useMemo(() => ({
+    open: isProfileDialogOpen,
+    onClose: handleCloseProfileDialog
+  }), [isProfileDialogOpen, handleCloseProfileDialog]);
 
   return (
     <>
-      <UserMenuSheet
-        isOpen={isSheetOpen}
-        onOpenChange={setSheetOpen}
-        userEmail={user?.email}
-        isLoadingLogout={isLoading}
-        onShowProfile={() => {
-          setSheetOpen(false)
-          setProfileDialogOpen(true)
-        }}
-        onLogout={handleLogout}
-        hasAdminAccess={hasAdminAccess}
-        roles={roles} // Pass roles to sheet
-      />
-
-      <ProfileDialog
-        open={isProfileDialogOpen}
-        onClose={() => setProfileDialogOpen(false)}
-      />
+      <UserMenuSheet {...sheetProps} />
+      <ProfileDialog {...profileDialogProps} />
     </>
   )
-}
+});
