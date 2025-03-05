@@ -60,13 +60,14 @@ export const OverviewTab = () => {
             <div className="space-y-2">
               {trendingParts && trendingParts.length > 0 ? (
                 trendingParts.map((part, index) => (
-                  <div key={part.id} className="flex items-center justify-between p-2 border-b border-primary/10">
+                  <div key={index} className="flex items-center justify-between p-2 border-b border-primary/10">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-primary/70">#{index + 1}</span>
                       <span>{part.name}</span>
                     </div>
                     <span className="text-sm bg-primary/10 px-2 py-0.5 rounded">
-                      {part.view_count} views
+                      {part.community_score ? `${part.community_score.toFixed(1)} score` : 
+                       part.review_count ? `${part.review_count} reviews` : 'No data'}
                     </span>
                   </div>
                 ))
