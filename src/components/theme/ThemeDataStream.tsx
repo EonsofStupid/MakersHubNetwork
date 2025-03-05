@@ -8,7 +8,7 @@ interface ThemeDataStreamProps {
 
 export function ThemeDataStream({ className }: ThemeDataStreamProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const intervalRef = useRef<number | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
@@ -57,22 +57,22 @@ export function ThemeDataStream({ className }: ThemeDataStreamProps) {
 
           drops[i]++;
         }
-      };
 
-      // Use a safer approach with requestAnimationFrame instead of setInterval
-      let animationFrameId: number;
-      const animate = () => {
-        draw();
+        // Use RAF for better performance and avoid infinite loop
         if (isActive) {
-          animationFrameId = window.requestAnimationFrame(animate);
+          animationFrameRef.current = requestAnimationFrame(draw);
         }
       };
       
-      animate();
+      // Start animation - avoid nested state updates
+      animationFrameRef.current = requestAnimationFrame(draw);
 
       // Clean up function
       return () => {
-        window.cancelAnimationFrame(animationFrameId);
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
+        }
         window.removeEventListener('resize', resizeCanvas);
         setIsActive(false);
         
@@ -84,11 +84,14 @@ export function ThemeDataStream({ className }: ThemeDataStreamProps) {
     } catch (error) {
       console.error("Error in ThemeDataStream:", error);
       return () => {
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
         window.removeEventListener('resize', resizeCanvas);
         setIsActive(false);
       };
     }
-  }, [isActive]);
+  }, [isActive]); // Only depend on isActive, not any other props
 
   return (
     <canvas
