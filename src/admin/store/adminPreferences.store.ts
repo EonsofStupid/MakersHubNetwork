@@ -3,6 +3,16 @@ import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/auth/store';
 
+interface AdminPreferences {
+  dashboard_collapsed?: boolean;
+  router_preference?: 'legacy' | 'tanstack';
+}
+
+interface ShortcutsData {
+  shortcuts: any[];
+  _meta?: AdminPreferences;
+}
+
 interface AdminPreferencesState {
   isDashboardCollapsed: boolean;
   isLoading: boolean;
@@ -19,6 +29,11 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
   
   setRouterPreference: (preference: 'legacy' | 'tanstack') => {
     set({ routerPreference: preference });
+    // Save preference to the database
+    const currentState = get();
+    if (!currentState.isLoading) {
+      currentState.setDashboardCollapsed(currentState.isDashboardCollapsed);
+    }
   },
   
   loadPreferences: async () => {
@@ -45,12 +60,15 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
       
       // If data exists, try to extract dashboard collapse state
       if (data && data.shortcuts) {
-        // Check if shortcuts has metadata with dashboard_collapsed property
+        // Check if shortcuts has metadata for dashboard preferences
         const shortcutsData = data.shortcuts as any;
-        if (shortcutsData._meta && typeof shortcutsData._meta.dashboard_collapsed === 'boolean') {
+        
+        // Safely access the _meta property
+        if (shortcutsData && typeof shortcutsData === 'object' && shortcutsData._meta) {
+          const meta = shortcutsData._meta as AdminPreferences;
           set({ 
-            isDashboardCollapsed: shortcutsData._meta.dashboard_collapsed,
-            routerPreference: shortcutsData._meta.router_preference || 'legacy',
+            isDashboardCollapsed: meta.dashboard_collapsed ?? false,
+            routerPreference: meta.router_preference ?? 'legacy',
             isLoading: false 
           });
           return;
@@ -89,20 +107,32 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
       let updatedShortcuts: any;
       
       if (Array.isArray(currentShortcuts)) {
-        // Add metadata to the array
+        // Create a new object with both the array and the _meta property
         updatedShortcuts = [...currentShortcuts];
-        // Add _meta property if it doesn't exist
-        updatedShortcuts._meta = {
-          ...(currentShortcuts._meta || {}),
-          dashboard_collapsed: collapsed,
-          router_preference: get().routerPreference
-        };
-      } else {
-        // Handle case where shortcuts is an object
+        
+        // Add _meta as a separate property of the object
+        Object.defineProperty(updatedShortcuts, '_meta', {
+          enumerable: true,
+          value: {
+            dashboard_collapsed: collapsed,
+            router_preference: get().routerPreference
+          }
+        });
+      } else if (typeof currentShortcuts === 'object') {
+        // Handle case where shortcuts is already an object
         updatedShortcuts = {
-          ...(currentShortcuts as object),
+          ...currentShortcuts,
           _meta: {
             ...(currentShortcuts._meta || {}),
+            dashboard_collapsed: collapsed,
+            router_preference: get().routerPreference
+          }
+        };
+      } else {
+        // If it's neither array nor object, create a new object structure
+        updatedShortcuts = {
+          items: [],
+          _meta: {
             dashboard_collapsed: collapsed,
             router_preference: get().routerPreference
           }
