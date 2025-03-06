@@ -11,7 +11,6 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { Suspense, lazy } from "react"
 import { Button } from "./components/ui/button"
 import { useNavigate } from "react-router-dom"
-import { AdminThemeProvider } from "./admin/theme/AdminCyberTheme"
 
 // Lazily load pages to improve initial load time
 const IndexPage = lazy(() => import("./pages/Index"))
@@ -104,9 +103,7 @@ const App = () => {
                     element={
                       <AuthGuard requiredRoles={["admin", "super_admin"]}>
                         <Suspense fallback={<PageLoader />}>
-                          <AdminThemeProvider>
-                            <LegacyAdminPage />
-                          </AdminThemeProvider>
+                          <LegacyAdminPage />
                         </Suspense>
                       </AuthGuard>
                     }
@@ -118,9 +115,7 @@ const App = () => {
                     element={
                       <AuthGuard requiredRoles={["admin", "super_admin"]}>
                         <Suspense fallback={<PageLoader />}>
-                          <AdminThemeProvider>
-                            <AdminWithTanstackPage />
-                          </AdminThemeProvider>
+                          <AdminWithTanstackPage />
                         </Suspense>
                       </AuthGuard>
                     }

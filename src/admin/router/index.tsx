@@ -8,6 +8,15 @@ import {
   createRouter 
 } from '@tanstack/react-router';
 
+// Lazy-loaded components with proper default exports
+const OverviewTab = lazy(() => import('@/admin/tabs/OverviewTab').then(mod => ({ default: () => <mod.OverviewTab /> })));
+const ContentTab = lazy(() => import('@/admin/tabs/ContentTab').then(mod => ({ default: () => <mod.default /> })));
+const UsersTab = lazy(() => import('@/admin/tabs/UsersTab').then(mod => ({ default: () => <mod.UsersTab /> })));
+const ChatTab = lazy(() => import('@/admin/tabs/ChatTab').then(mod => ({ default: () => <mod.ChatTab /> })));
+const DataMaestroTab = lazy(() => import('@/admin/tabs/DataMaestroTab').then(mod => ({ default: () => <mod.DataMaestroTab /> })));
+const ImportTab = lazy(() => import('@/admin/tabs/ImportTab').then(mod => ({ default: () => <mod.ImportTab /> })));
+const SettingsTab = lazy(() => import('@/admin/tabs/SettingsTab').then(mod => ({ default: () => <mod.SettingsTab /> })));
+
 // Loading component
 const Loading = () => (
   <div className="min-h-[400px] flex items-center justify-center">
@@ -25,6 +34,7 @@ const rootRoute = createRootRoute({
       <AuthGuard requiredRoles={['admin', 'super_admin']}>
         <AdminLayout>
           <Suspense fallback={<Loading />}>
+            {/* Use the Outlet from TanStack Router */}
             {/* @ts-expect-error - TanStack router expects to be inside a RouterProvider */}
             <rootRoute.Outlet />
           </Suspense>
@@ -34,53 +44,53 @@ const rootRoute = createRootRoute({
   },
 });
 
-// Admin section routes with correct dynamic imports
+// Admin section routes
 const adminIndexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
-  component: lazy(() => import('@/admin/pages/overview/OverviewPage')),
+  component: OverviewTab,
 });
 
 const overviewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/overview',
-  component: lazy(() => import('@/admin/pages/overview/OverviewPage')),
+  component: OverviewTab,
 });
 
 const contentRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/content',
-  component: lazy(() => import('@/admin/pages/content/ContentPage')),
+  component: ContentTab,
 });
 
 const usersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/users',
-  component: lazy(() => import('@/admin/pages/users/UsersPage')),
+  component: UsersTab,
 });
 
 const chatRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/chat',
-  component: lazy(() => import('@/admin/pages/chat/ChatPage')),
+  component: ChatTab,
 });
 
 const dataMaestroRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/data-maestro',
-  component: lazy(() => import('@/admin/pages/data-maestro/DataMaestroPage')),
+  component: DataMaestroTab,
 });
 
 const importRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/import',
-  component: lazy(() => import('@/admin/pages/import/ImportPage')),
+  component: ImportTab,
 });
 
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/settings',
-  component: lazy(() => import('@/admin/pages/settings/SettingsPage')),
+  component: SettingsTab,
 });
 
 // Define all routes
