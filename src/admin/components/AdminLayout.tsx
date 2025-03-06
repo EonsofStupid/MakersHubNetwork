@@ -1,16 +1,16 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { AdminSidebar } from "@/admin/components/AdminSidebar";
 import { AdminHeader } from "@/admin/components/AdminHeader";
 import { AdminPermission } from "@/admin/types/admin.types";
-import { useToast } from "@/hooks/use-toast";
 import { MainNav } from "@/components/MainNav";
 import { cn } from "@/lib/utils";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardShortcuts } from "@/admin/components/dashboard/DashboardShortcuts";
+import { useAdminPreferences } from "@/admin/store/adminPreferences.store";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -24,16 +24,20 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   title = "Admin Dashboard"
 }) => {
   const { loadPermissions, hasPermission, isLoadingPermissions } = useAdminStore();
-  const { toast } = useToast();
-  const [dashboardCollapsed, setDashboardCollapsed] = useState(false);
+  const { 
+    isDashboardCollapsed, 
+    setDashboardCollapsed, 
+    loadPreferences 
+  } = useAdminPreferences();
 
   useEffect(() => {
     loadPermissions();
-  }, [loadPermissions]);
+    loadPreferences();
+  }, [loadPermissions, loadPreferences]);
 
   // Toggle dashboard collapsed state
   const toggleDashboard = () => {
-    setDashboardCollapsed(prev => !prev);
+    setDashboardCollapsed(!isDashboardCollapsed);
   };
 
   // Check if user has required permission
@@ -60,7 +64,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       
       <div className={cn(
         "transition-all duration-300 ease-in-out",
-        dashboardCollapsed ? "py-2" : "py-6"
+        isDashboardCollapsed ? "py-2" : "py-6"
       )}>
         <div className="container mx-auto px-4">
           {/* Dashboard Toggle Button */}
@@ -71,7 +75,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               onClick={toggleDashboard}
               className="rounded-full h-8 w-8 p-0 bg-primary/10 hover:bg-primary/20"
             >
-              {dashboardCollapsed ? 
+              {isDashboardCollapsed ? 
                 <ChevronDown className="h-4 w-4 text-primary" /> : 
                 <ChevronUp className="h-4 w-4 text-primary" />
               }
@@ -81,7 +85,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           {/* Collapsible Dashboard Shortcuts */}
           <div className={cn(
             "transition-all duration-300 ease-in-out overflow-hidden",
-            dashboardCollapsed ? "max-h-0 opacity-0 mb-0" : "max-h-[200px] opacity-100 mb-6"
+            isDashboardCollapsed ? "max-h-0 opacity-0 mb-0" : "max-h-[200px] opacity-100 mb-6"
           )}>
             <DashboardShortcuts />
           </div>
@@ -89,14 +93,14 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className={cn(
               "transition-all duration-300 ease-in-out",
-              dashboardCollapsed ? "lg:col-span-2" : "lg:col-span-3"
+              isDashboardCollapsed ? "lg:col-span-2" : "lg:col-span-3"
             )}>
-              <AdminSidebar collapsed={dashboardCollapsed} />
+              <AdminSidebar collapsed={isDashboardCollapsed} />
             </div>
             
             <div className={cn(
               "transition-all duration-300 ease-in-out",
-              dashboardCollapsed ? "lg:col-span-10" : "lg:col-span-9"
+              isDashboardCollapsed ? "lg:col-span-10" : "lg:col-span-9"
             )}>
               {isLoadingPermissions ? (
                 <Card className="p-8 flex justify-center items-center min-h-[400px]">

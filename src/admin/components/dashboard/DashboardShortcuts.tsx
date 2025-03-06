@@ -18,27 +18,18 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth/store";
-
-// Type definitions
-interface ShortcutItem {
-  id: string;
-  label: string;
-  icon: string;
-  path: string;
-  color?: string;
-}
+import { AdminShortcut } from "@/admin/types/admin.types";
 
 export const DashboardShortcuts: React.FC = () => {
-  const [shortcuts, setShortcuts] = useState<ShortcutItem[]>([]);
+  const [shortcuts, setShortcuts] = useState<AdminShortcut[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { status } = useAuthStore();
-  const userId = useAuthStore.getState().userId;
+  const { status, user } = useAuthStore();
 
   // Default shortcuts
-  const defaultShortcuts: ShortcutItem[] = [
+  const defaultShortcuts: AdminShortcut[] = [
     { id: "overview", label: "Overview", icon: "dashboard", path: "/admin?tab=overview" },
     { id: "users", label: "User Management", icon: "users", path: "/admin?tab=users" },
     { id: "content", label: "Content", icon: "content", path: "/admin?tab=content" },
@@ -48,38 +39,33 @@ export const DashboardShortcuts: React.FC = () => {
   // Load user shortcuts from Supabase
   useEffect(() => {
     const loadUserShortcuts = async () => {
-      if (status !== "authenticated" || !userId) {
+      if (status !== "authenticated" || !user?.id) {
         setShortcuts(defaultShortcuts);
         setLoading(false);
         return;
       }
 
       try {
-        // Check if admin_shortcuts table exists in database before querying
-        const { data: tableExists } = await supabase
-          .from('information_schema.tables')
-          .select('table_name')
-          .eq('table_name', 'admin_shortcuts')
-          .single();
-
-        if (!tableExists) {
-          // If table doesn't exist, use default shortcuts
-          setShortcuts(defaultShortcuts);
-          setLoading(false);
-          return;
-        }
-
         const { data, error } = await supabase
           .from('admin_shortcuts')
           .select('shortcuts')
-          .eq('user_id', userId)
+          .eq('user_id', user.id)
           .single();
 
         if (error) {
           console.error("Error loading shortcuts:", error);
           setShortcuts(defaultShortcuts);
         } else if (data) {
-          setShortcuts(data.shortcuts || defaultShortcuts);
+          // Type assertion to ensure proper conversion
+          const loadedShortcuts = data.shortcuts as unknown;
+          // Verify the shape of the data before setting it
+          if (Array.isArray(loadedShortcuts) && loadedShortcuts.length > 0 && 
+              'id' in loadedShortcuts[0] && 'label' in loadedShortcuts[0]) {
+            setShortcuts(loadedShortcuts as AdminShortcut[]);
+          } else {
+            console.warn("Loaded shortcuts data doesn't match expected format, using defaults");
+            setShortcuts(defaultShortcuts);
+          }
         } else {
           // No shortcuts found for this user, use defaults
           setShortcuts(defaultShortcuts);
@@ -87,7 +73,7 @@ export const DashboardShortcuts: React.FC = () => {
           saveShortcuts(defaultShortcuts);
         }
       } catch (error) {
-        console.error("Error checking for admin_shortcuts table:", error);
+        console.error("Error loading shortcuts:", error);
         setShortcuts(defaultShortcuts);
       } finally {
         setLoading(false);
@@ -95,32 +81,21 @@ export const DashboardShortcuts: React.FC = () => {
     };
 
     loadUserShortcuts();
-  }, [userId, status]);
+  }, [user?.id, status]);
 
   // Save shortcuts to Supabase
-  const saveShortcuts = async (shortcutsToSave: ShortcutItem[]) => {
-    if (status !== "authenticated" || !userId) return;
+  const saveShortcuts = async (shortcutsToSave: AdminShortcut[]) => {
+    if (status !== "authenticated" || !user?.id) return;
     
     setSaving(true);
     try {
-      // Check if admin_shortcuts table exists
-      const { data: tableExists } = await supabase
-        .from('information_schema.tables')
-        .select('table_name')
-        .eq('table_name', 'admin_shortcuts')
-        .single();
-
-      if (!tableExists) {
-        // If table doesn't exist, we'll just use local state
-        console.log("admin_shortcuts table doesn't exist, using local state only");
-        setSaving(false);
-        return;
-      }
-
       const { error } = await supabase
         .from('admin_shortcuts')
         .upsert(
-          { user_id: userId, shortcuts: shortcutsToSave },
+          { 
+            user_id: user.id, 
+            shortcuts: shortcutsToSave as unknown as any // Force type for JSON storage
+          },
           { onConflict: 'user_id' }
         );
 
@@ -133,7 +108,7 @@ export const DashboardShortcuts: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error("Error checking for admin_shortcuts table:", error);
+      console.error("Error saving shortcuts:", error);
     } finally {
       setSaving(false);
     }
