@@ -15,7 +15,8 @@ import {
   Settings,
   Command
 } from "lucide-react";
-import { Link } from '@tanstack/react-router';
+import { Link as TanStackLink } from '@tanstack/react-router';
+import { Link as RouterLink } from 'react-router-dom';
 
 interface AdminSidebarProps {
   collapsed?: boolean;
@@ -96,7 +97,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   // Check if an item is active based on legacy tab param or new route path
   const isItemActive = (item: typeof adminNavigationItems[0]) => {
     if (useTanStackRouter) {
-      return currentPath === item.path;
+      return currentPath === item.path || 
+             (currentPath === '/admin' && item.id === 'overview');
     } else {
       return currentTab === item.id;
     }
@@ -104,6 +106,57 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 
   const handleNavigation = (item: typeof adminNavigationItems[0]) => {
     setCurrentSection(item.id);
+  };
+
+  // Render navigation item based on router preference
+  const renderNavItem = (item: typeof adminNavigationItems[0]) => {
+    const isActive = isItemActive(item);
+    const commonClasses = cn(
+      "flex w-full items-center px-3 py-2 rounded-md text-sm font-normal transition-colors",
+      isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-primary/5",
+      collapsed && "px-2 py-2 justify-center"
+    );
+    
+    if (useTanStackRouter) {
+      return (
+        <TanStackLink
+          to={item.path}
+          onClick={() => handleNavigation(item)}
+          className={commonClasses}
+          title={collapsed ? item.label : undefined}
+          preload="intent"
+        >
+          <span className={collapsed ? "mr-0" : "mr-2"}>
+            {React.cloneElement(item.icon as React.ReactElement, {
+              className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
+            })}
+          </span>
+          {!collapsed && item.label}
+        </TanStackLink>
+      );
+    } else {
+      return (
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start text-left font-normal",
+            isActive && "bg-primary/10 text-primary",
+            collapsed && "px-2 py-2"
+          )}
+          asChild
+          title={collapsed ? item.label : undefined}
+        >
+          <RouterLink to={item.legacyPath} onClick={() => handleNavigation(item)}>
+            <span className={collapsed ? "mr-0" : "mr-2"}>
+              {React.cloneElement(item.icon as React.ReactElement, {
+                className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
+              })}
+            </span>
+            {!collapsed && item.label}
+          </RouterLink>
+        </Button>
+      );
+    }
   };
 
   return (
@@ -132,49 +185,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             // Skip if user doesn't have permission
             if (!hasPermission(item.permission as any)) return null;
             
-            const isActive = isItemActive(item);
-            
             return (
               <li key={item.id}>
-                {useTanStackRouter ? (
-                  <Link
-                    to={item.path}
-                    onClick={() => handleNavigation(item)}
-                    className={cn(
-                      "flex w-full items-center px-3 py-2 rounded-md text-sm font-normal transition-colors",
-                      isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-primary/5",
-                      collapsed && "px-2 py-2 justify-center"
-                    )}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <span className={collapsed ? "mr-0" : "mr-2"}>
-                      {React.cloneElement(item.icon as React.ReactElement, {
-                        className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
-                      })}
-                    </span>
-                    {!collapsed && item.label}
-                  </Link>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      isActive && "bg-primary/10 text-primary",
-                      collapsed && "px-2 py-2"
-                    )}
-                    asChild
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <a href={item.legacyPath} onClick={() => handleNavigation(item)}>
-                      <span className={collapsed ? "mr-0" : "mr-2"}>
-                        {React.cloneElement(item.icon as React.ReactElement, {
-                          className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
-                        })}
-                      </span>
-                      {!collapsed && item.label}
-                    </a>
-                  </Button>
-                )}
+                {renderNavItem(item)}
               </li>
             );
           })}

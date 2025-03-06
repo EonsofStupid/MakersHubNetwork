@@ -1,17 +1,21 @@
 
-import { createRouter, createRouteConfig } from '@tanstack/react-router';
 import { lazy, Suspense } from 'react';
 import { AuthGuard } from '@/components/AuthGuard';
 import { AdminLayout } from '@/admin/components/AdminLayout';
+import { 
+  createRootRoute, 
+  createRoute, 
+  createRouter 
+} from '@tanstack/react-router';
 
-// Lazy-loaded components
-const OverviewTab = lazy(() => import('@/admin/tabs/OverviewTab'));
-const ContentTab = lazy(() => import('@/admin/tabs/ContentTab'));
-const UsersTab = lazy(() => import('@/admin/tabs/UsersTab'));
-const ChatTab = lazy(() => import('@/admin/tabs/ChatTab'));
-const DataMaestroTab = lazy(() => import('@/admin/tabs/DataMaestroTab'));
-const ImportTab = lazy(() => import('@/admin/tabs/ImportTab'));
-const SettingsTab = lazy(() => import('@/admin/tabs/SettingsTab'));
+// Lazy-loaded components with proper default exports
+const OverviewTab = lazy(() => import('@/admin/tabs/OverviewTab').then(mod => ({ default: () => <mod.OverviewTab /> })));
+const ContentTab = lazy(() => import('@/admin/tabs/ContentTab').then(mod => ({ default: () => <mod.default /> })));
+const UsersTab = lazy(() => import('@/admin/tabs/UsersTab').then(mod => ({ default: () => <mod.UsersTab /> })));
+const ChatTab = lazy(() => import('@/admin/tabs/ChatTab').then(mod => ({ default: () => <mod.ChatTab /> })));
+const DataMaestroTab = lazy(() => import('@/admin/tabs/DataMaestroTab').then(mod => ({ default: () => <mod.DataMaestroTab /> })));
+const ImportTab = lazy(() => import('@/admin/tabs/ImportTab').then(mod => ({ default: () => <mod.ImportTab /> })));
+const SettingsTab = lazy(() => import('@/admin/tabs/SettingsTab').then(mod => ({ default: () => <mod.SettingsTab /> })));
 
 // Loading component
 const Loading = () => (
@@ -23,14 +27,16 @@ const Loading = () => (
   </div>
 );
 
-// Create route config
-const rootRouteConfig = createRouteConfig({
+// Create root route
+const rootRoute = createRootRoute({
   component: () => {
     return (
       <AuthGuard requiredRoles={['admin', 'super_admin']}>
         <AdminLayout>
           <Suspense fallback={<Loading />}>
-            <Outlet />
+            {/* Use the Outlet from TanStack Router */}
+            {/* @ts-expect-error - TanStack router expects to be inside a RouterProvider */}
+            <rootRoute.Outlet />
           </Suspense>
         </AdminLayout>
       </AuthGuard>
@@ -39,48 +45,56 @@ const rootRouteConfig = createRouteConfig({
 });
 
 // Admin section routes
-const adminIndexRoute = rootRouteConfig.createRoute({
+const adminIndexRoute = createRoute({
+  getParentRoute: () => rootRoute,
   path: '/admin',
-  component: () => <OverviewTab />,
+  component: OverviewTab,
 });
 
-const overviewRoute = rootRouteConfig.createRoute({
+const overviewRoute = createRoute({
+  getParentRoute: () => rootRoute,
   path: '/admin/overview',
-  component: () => <OverviewTab />,
+  component: OverviewTab,
 });
 
-const contentRoute = rootRouteConfig.createRoute({
+const contentRoute = createRoute({
+  getParentRoute: () => rootRoute,
   path: '/admin/content',
-  component: () => <ContentTab />,
+  component: ContentTab,
 });
 
-const usersRoute = rootRouteConfig.createRoute({
+const usersRoute = createRoute({
+  getParentRoute: () => rootRoute,
   path: '/admin/users',
-  component: () => <UsersTab />,
+  component: UsersTab,
 });
 
-const chatRoute = rootRouteConfig.createRoute({
+const chatRoute = createRoute({
+  getParentRoute: () => rootRoute,
   path: '/admin/chat',
-  component: () => <ChatTab />,
+  component: ChatTab,
 });
 
-const dataMaestroRoute = rootRouteConfig.createRoute({
+const dataMaestroRoute = createRoute({
+  getParentRoute: () => rootRoute,
   path: '/admin/data-maestro',
-  component: () => <DataMaestroTab />,
+  component: DataMaestroTab,
 });
 
-const importRoute = rootRouteConfig.createRoute({
+const importRoute = createRoute({
+  getParentRoute: () => rootRoute,
   path: '/admin/import',
-  component: () => <ImportTab />,
+  component: ImportTab,
 });
 
-const settingsRoute = rootRouteConfig.createRoute({
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
   path: '/admin/settings',
-  component: () => <SettingsTab />,
+  component: SettingsTab,
 });
 
-// Create and export router
-const routeConfig = rootRouteConfig.addChildren([
+// Define all routes
+const routeTree = rootRoute.addChildren([
   adminIndexRoute,
   overviewRoute,
   contentRoute,
@@ -91,14 +105,14 @@ const routeConfig = rootRouteConfig.addChildren([
   settingsRoute,
 ]);
 
-// Create a router instance with type-safe routes
-export const adminRouter = createRouter({ routeConfig });
+// Create the router instance
+export const adminRouter = createRouter({ routeTree });
 
 // Export types for search params
 export type AdminSearchParams = {};
 
-// Export an outlet component for the route nesting
-export const Outlet = adminRouter.Outlet;
+// Export for use in components
+export { rootRoute };
 
 // Make sure types are happy
 declare module '@tanstack/react-router' {
