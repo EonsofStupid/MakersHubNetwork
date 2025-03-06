@@ -3,7 +3,7 @@ import { SystemToaster } from "./components/ui/toaster"
 import { SonnerToaster } from "./components/ui/sonner"
 import { TooltipProvider } from "./components/ui/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { AuthGuard } from "./components/AuthGuard"
 import { AuthProvider } from "./components/auth/AuthProvider"
 import { KeyboardNavigation } from './components/KeyboardNavigation'
@@ -14,7 +14,8 @@ import { useNavigate } from "react-router-dom"
 
 // Lazily load pages to improve initial load time
 const IndexPage = lazy(() => import("./pages/Index"))
-const AdminPage = lazy(() => import("./pages/Admin"))
+const AdminWithTanstackPage = lazy(() => import("./pages/AdminWithTanstack"))
+const LegacyAdminPage = lazy(() => import("./pages/Admin"))
 const LoginPage = lazy(() => import("./pages/Login"))
 
 // Create a loading fallback component
@@ -95,21 +96,39 @@ const App = () => {
                       <LoginPage />
                     </Suspense>
                   } />
+                  
+                  {/* Legacy Admin Route (tab-based) */}
                   <Route
                     path="/admin"
                     element={
                       <AuthGuard requiredRoles={["admin", "super_admin"]}>
                         <Suspense fallback={<PageLoader />}>
-                          <AdminPage />
+                          <LegacyAdminPage />
                         </Suspense>
                       </AuthGuard>
                     }
                   />
+                  
+                  {/* New TanStack Router Admin Routes */}
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <AuthGuard requiredRoles={["admin", "super_admin"]}>
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminWithTanstackPage />
+                        </Suspense>
+                      </AuthGuard>
+                    }
+                  />
+                  
                   <Route path="/" element={
                     <Suspense fallback={<PageLoader />}>
                       <IndexPage />
                     </Suspense>
                   } />
+                  
+                  {/* Catch-all redirect */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </ErrorBoundary>
               <SystemToaster />

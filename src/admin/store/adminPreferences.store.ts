@@ -8,11 +8,18 @@ interface AdminPreferencesState {
   isLoading: boolean;
   setDashboardCollapsed: (collapsed: boolean) => void;
   loadPreferences: () => Promise<void>;
+  routerPreference: 'legacy' | 'tanstack';
+  setRouterPreference: (preference: 'legacy' | 'tanstack') => void;
 }
 
 export const useAdminPreferences = create<AdminPreferencesState>((set, get) => ({
   isDashboardCollapsed: false,
   isLoading: true,
+  routerPreference: 'legacy',
+  
+  setRouterPreference: (preference: 'legacy' | 'tanstack') => {
+    set({ routerPreference: preference });
+  },
   
   loadPreferences: async () => {
     set({ isLoading: true });
@@ -43,6 +50,7 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
         if (shortcutsData._meta && typeof shortcutsData._meta.dashboard_collapsed === 'boolean') {
           set({ 
             isDashboardCollapsed: shortcutsData._meta.dashboard_collapsed,
+            routerPreference: shortcutsData._meta.router_preference || 'legacy',
             isLoading: false 
           });
           return;
@@ -86,7 +94,8 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
         // Add _meta property if it doesn't exist
         updatedShortcuts._meta = {
           ...(currentShortcuts._meta || {}),
-          dashboard_collapsed: collapsed
+          dashboard_collapsed: collapsed,
+          router_preference: get().routerPreference
         };
       } else {
         // Handle case where shortcuts is an object
@@ -94,7 +103,8 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
           ...(currentShortcuts as object),
           _meta: {
             ...(currentShortcuts._meta || {}),
-            dashboard_collapsed: collapsed
+            dashboard_collapsed: collapsed,
+            router_preference: get().routerPreference
           }
         };
       }
