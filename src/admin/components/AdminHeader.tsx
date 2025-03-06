@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Bell, Settings } from "lucide-react";
 import { useThemeEffects } from "@/hooks/useThemeEffects";
 import { EffectRenderer } from "@/components/theme/effects/EffectRenderer";
+import { cn } from "@/lib/utils";
 
 interface AdminHeaderProps {
   title: string;
@@ -32,7 +33,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   return (
     <header className="border-b border-primary/10 backdrop-blur-md bg-background/50 sticky top-16 z-10">
-      <div className="container mx-auto px-4 py-3">
+      <div className={cn(
+        "container mx-auto px-4 py-3",
+        collapsed && "ml-0 pl-5"
+      )}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button 
