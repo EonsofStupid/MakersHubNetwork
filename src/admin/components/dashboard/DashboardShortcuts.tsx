@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth/store";
 import { AdminShortcut } from "@/admin/types/admin.types";
+import { Link } from '@tanstack/react-router';
 
 export const DashboardShortcuts: React.FC = () => {
   const [shortcuts, setShortcuts] = useState<AdminShortcut[]>([]);
@@ -27,6 +28,25 @@ export const DashboardShortcuts: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { status, user } = useAuthStore();
+  const [useTanStackRouter, setUseTanStackRouter] = useState(false);
+
+  // Check if we should use TanStack Router (based on URL)
+  useEffect(() => {
+    const currentUrl = window.location.pathname;
+    setUseTanStackRouter(currentUrl.startsWith('/admin/'));
+  }, []);
+
+  // Convert legacy shortcuts to TanStack Router paths
+  const convertPath = (path: string): string => {
+    if (!useTanStackRouter) return path;
+    
+    // Extract the tab from legacy path like "/admin?tab=overview"
+    const match = path.match(/\/admin\?tab=([a-z-]+)/);
+    if (match && match[1]) {
+      return `/admin/${match[1]}`;
+    }
+    return path;
+  };
 
   // Default shortcuts
   const defaultShortcuts: AdminShortcut[] = [
@@ -128,6 +148,10 @@ export const DashboardShortcuts: React.FC = () => {
 
   // Navigate to shortcut destination
   const handleShortcutClick = (path: string) => {
+    if (useTanStackRouter) {
+      // Let the Link component handle navigation
+      return;
+    }
     navigate(path);
   };
 
@@ -188,16 +212,26 @@ export const DashboardShortcuts: React.FC = () => {
                         )}
                       >
                         <div className="relative group">
-                          <Button
-                            variant="outline"
-                            className="h-auto py-3 px-4 bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/30"
-                            onClick={() => handleShortcutClick(shortcut.path)}
-                          >
-                            <div className="flex flex-col items-center gap-1">
+                          {useTanStackRouter ? (
+                            <Link
+                              to={convertPath(shortcut.path)}
+                              className="inline-flex h-auto flex-col items-center gap-1 py-3 px-4 bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/30 rounded-md"
+                            >
                               {renderIcon(shortcut.icon)}
                               <span className="text-xs">{shortcut.label}</span>
-                            </div>
-                          </Button>
+                            </Link>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              className="h-auto py-3 px-4 bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/30"
+                              onClick={() => handleShortcutClick(shortcut.path)}
+                            >
+                              <div className="flex flex-col items-center gap-1">
+                                {renderIcon(shortcut.icon)}
+                                <span className="text-xs">{shortcut.label}</span>
+                              </div>
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"

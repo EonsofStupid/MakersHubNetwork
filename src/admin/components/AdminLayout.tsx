@@ -95,7 +95,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               "transition-all duration-300 ease-in-out",
               isDashboardCollapsed ? "lg:col-span-2" : "lg:col-span-3"
             )}>
-              <AdminSidebar collapsed={isDashboardCollapsed} />
+              <AdminSidebar collapsed={isDashboardCollapsed} useTanStackRouter={true} />
             </div>
             
             <div className={cn(
