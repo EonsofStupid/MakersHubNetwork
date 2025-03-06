@@ -72,3 +72,15 @@ export interface AdminError {
   context?: Record<string, unknown>;
   timestamp: Date;
 }
+
+/**
+ * Admin Dashboard Shortcut
+ */
+export interface AdminShortcut {
+  id: string;
+  label: string;
+  icon: string;
+  path: string;
+  permission?: AdminPermission;
+  color?: string;
+}

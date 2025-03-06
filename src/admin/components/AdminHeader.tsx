@@ -8,9 +8,13 @@ import { EffectRenderer } from "@/components/theme/effects/EffectRenderer";
 
 interface AdminHeaderProps {
   title: string;
+  collapsed?: boolean;
 }
 
-export const AdminHeader: React.FC<AdminHeaderProps> = ({ title }) => {
+export const AdminHeader: React.FC<AdminHeaderProps> = ({ 
+  title,
+  collapsed = false
+}) => {
   const navigate = useNavigate();
   const { applyRandomEffect, getEffectForElement } = useThemeEffects({
     maxActiveEffects: 2,

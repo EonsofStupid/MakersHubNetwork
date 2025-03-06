@@ -16,7 +16,11 @@ import {
   Command
 } from "lucide-react";
 
-export const AdminSidebar: React.FC = () => {
+interface AdminSidebarProps {
+  collapsed?: boolean;
+}
+
+export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPermission, setCurrentSection } = useAdminStore();
@@ -83,15 +87,26 @@ export const AdminSidebar: React.FC = () => {
   };
 
   return (
-    <Card className="cyber-card border-primary/20 overflow-hidden">
-      <div className="p-4 border-b border-primary/10 bg-primary/5">
+    <Card className={cn(
+      "cyber-card border-primary/20 overflow-hidden transition-all duration-300",
+      collapsed && "border-primary/10"
+    )}>
+      <div className={cn(
+        "p-4 border-b border-primary/10 bg-primary/5",
+        collapsed && "p-2"
+      )}>
         <div className="flex items-center space-x-2">
           <Command className="h-5 w-5 text-primary" />
-          <h2 className="font-heading text-primary">Admin Navigation</h2>
+          {!collapsed && (
+            <h2 className="font-heading text-primary">Admin Navigation</h2>
+          )}
         </div>
       </div>
       
-      <nav className="p-2">
+      <nav className={cn(
+        "p-2",
+        collapsed && "p-1"
+      )}>
         <ul className="space-y-1">
           {adminNavigationItems.map(item => {
             // Skip if user doesn't have permission
@@ -105,12 +120,18 @@ export const AdminSidebar: React.FC = () => {
                   variant="ghost"
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    isActive && "bg-primary/10 text-primary"
+                    isActive && "bg-primary/10 text-primary",
+                    collapsed && "px-2 py-2"
                   )}
                   onClick={() => handleNavigation(item)}
+                  title={collapsed ? item.label : undefined}
                 >
-                  {item.icon}
-                  {item.label}
+                  <span className={collapsed ? "mr-0" : "mr-2"}>
+                    {React.cloneElement(item.icon as React.ReactElement, {
+                      className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
+                    })}
+                  </span>
+                  {!collapsed && item.label}
                 </Button>
               </li>
             );
