@@ -10,8 +10,7 @@ export type AnimationConfig = {
   id: string;
   duration: number;
   delay?: number;
-  iterations?: number;
-  iterationString?: 'infinite'; // Added separate property for string 'infinite'
+  iterations?: number | typeof Infinity; // Updated to allow both number and Infinity
   direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse';
   easing?: string;
   keyframes: AnimationKeyframe[];
@@ -61,7 +60,7 @@ export function useAnimationSystem() {
     const options: KeyframeAnimationOptions = {
       duration: config.duration,
       delay: config.delay || 0,
-      iterations: config.iterationString === 'infinite' ? Infinity : (config.iterations || 1),
+      iterations: config.iterations || 1,
       direction: config.direction || 'normal',
       easing: config.easing || 'ease',
       fill: 'forwards'
