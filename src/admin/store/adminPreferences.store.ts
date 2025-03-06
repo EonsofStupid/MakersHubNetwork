@@ -26,11 +26,11 @@ export const useAdminPreferencesStore = create<AdminPreferencesState>((set, get)
     
     try {
       const { error } = await supabase
-        .from('admin_preferences')
+        .from('admin_shortcuts')
         .upsert(
           { 
-            user_id: useAuthStore.getState().userId, 
-            is_dashboard_collapsed: newValue 
+            user_id: useAuthStore.getState().user?.id, 
+            preferences: { is_dashboard_collapsed: newValue } 
           },
           { onConflict: 'user_id' }
         );
@@ -52,11 +52,11 @@ export const useAdminPreferencesStore = create<AdminPreferencesState>((set, get)
     
     try {
       const { error } = await supabase
-        .from('admin_preferences')
+        .from('admin_shortcuts')
         .upsert(
           { 
-            user_id: useAuthStore.getState().userId, 
-            is_dashboard_collapsed: collapsed 
+            user_id: useAuthStore.getState().user?.id, 
+            preferences: { is_dashboard_collapsed: collapsed } 
           },
           { onConflict: 'user_id' }
         );
@@ -71,25 +71,26 @@ export const useAdminPreferencesStore = create<AdminPreferencesState>((set, get)
   },
   
   loadPreferences: async () => {
-    const { userId } = useAuthStore.getState();
+    const userId = useAuthStore.getState().user?.id;
     if (!userId) return;
     
     set({ isLoading: true });
     
     try {
       const { data, error } = await supabase
-        .from('admin_preferences')
-        .select('is_dashboard_collapsed')
+        .from('admin_shortcuts')
+        .select('preferences')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') {
-        // PGRST116 is the "no rows returned" error, which is expected if the user has no preferences yet
+      if (error) {
         throw error;
       }
       
-      if (data) {
-        set({ isDashboardCollapsed: data.is_dashboard_collapsed });
+      if (data?.preferences) {
+        set({ 
+          isDashboardCollapsed: data.preferences.is_dashboard_collapsed === true 
+        });
       }
     } catch (error) {
       console.error('Failed to load admin preferences:', error);

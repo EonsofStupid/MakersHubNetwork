@@ -1,267 +1,225 @@
 
 import React, { useState, useEffect } from "react";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  MessageSquare, 
-  Database, 
-  Loader2,
-  Plus,
-  X
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, X, ChevronRightCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
-
-// Type definitions
-interface ShortcutItem {
-  id: string;
-  label: string;
-  icon: string;
-  path: string;
-  color?: string;
-}
+import { useAdminStore } from "@/admin/store/admin.store";
+import { AdminShortcut } from "@/admin/types/admin.types";
+import { toast } from "sonner";
 
 export const DashboardShortcuts: React.FC = () => {
-  const [shortcuts, setShortcuts] = useState<ShortcutItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { status } = useAuthStore();
-  const userId = useAuthStore.getState().userId;
+  const [shortcuts, setShortcuts] = useState<AdminShortcut[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newShortcut, setNewShortcut] = useState({
+    id: "",
+    label: "",
+    path: "",
+    icon: "ChevronRightCircle",
+    color: "#3b82f6"
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const { hasPermission } = useAdminStore();
+  const userId = useAuthStore((state) => state.user?.id);
 
-  // Default shortcuts
-  const defaultShortcuts: ShortcutItem[] = [
-    { id: "overview", label: "Overview", icon: "dashboard", path: "/admin?tab=overview" },
-    { id: "users", label: "User Management", icon: "users", path: "/admin?tab=users" },
-    { id: "content", label: "Content", icon: "content", path: "/admin?tab=content" },
-    { id: "chats", label: "Chat", icon: "chat", path: "/admin?tab=chat" },
-  ];
-
-  // Load user shortcuts from Supabase
   useEffect(() => {
-    const loadUserShortcuts = async () => {
-      if (status !== "authenticated" || !userId) {
-        setShortcuts(defaultShortcuts);
-        setLoading(false);
-        return;
-      }
+    if (userId) {
+      loadShortcuts();
+    }
+  }, [userId]);
 
-      try {
-        // Check if admin_shortcuts table exists in database before querying
-        const { data: tableExists } = await supabase
-          .from('information_schema.tables')
-          .select('table_name')
-          .eq('table_name', 'admin_shortcuts')
-          .single();
-
-        if (!tableExists) {
-          // If table doesn't exist, use default shortcuts
-          setShortcuts(defaultShortcuts);
-          setLoading(false);
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from('admin_shortcuts')
-          .select('shortcuts')
-          .eq('user_id', userId)
-          .single();
-
-        if (error) {
-          console.error("Error loading shortcuts:", error);
-          setShortcuts(defaultShortcuts);
-        } else if (data) {
-          setShortcuts(data.shortcuts || defaultShortcuts);
-        } else {
-          // No shortcuts found for this user, use defaults
-          setShortcuts(defaultShortcuts);
-          // Save defaults for future use
-          saveShortcuts(defaultShortcuts);
-        }
-      } catch (error) {
-        console.error("Error checking for admin_shortcuts table:", error);
-        setShortcuts(defaultShortcuts);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserShortcuts();
-  }, [userId, status]);
-
-  // Save shortcuts to Supabase
-  const saveShortcuts = async (shortcutsToSave: ShortcutItem[]) => {
-    if (status !== "authenticated" || !userId) return;
-    
-    setSaving(true);
+  const loadShortcuts = async () => {
+    setIsLoading(true);
     try {
-      // Check if admin_shortcuts table exists
-      const { data: tableExists } = await supabase
-        .from('information_schema.tables')
-        .select('table_name')
-        .eq('table_name', 'admin_shortcuts')
-        .single();
+      const { data, error } = await supabase
+        .from('admin_shortcuts')
+        .select('shortcuts')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-      if (!tableExists) {
-        // If table doesn't exist, we'll just use local state
-        console.log("admin_shortcuts table doesn't exist, using local state only");
-        setSaving(false);
-        return;
+      if (error && error.code !== 'PGRST116') {
+        throw error;
       }
 
-      const { error } = await supabase
-        .from('admin_shortcuts')
-        .upsert(
-          { user_id: userId, shortcuts: shortcutsToSave },
-          { onConflict: 'user_id' }
-        );
-
-      if (error) {
-        console.error("Error saving shortcuts:", error);
-        toast({
-          title: "Error saving shortcuts",
-          description: "Your dashboard layout couldn't be saved.",
-          variant: "destructive"
-        });
+      if (data?.shortcuts) {
+        setShortcuts(data.shortcuts as AdminShortcut[]);
+      } else {
+        // Set default shortcuts if none exist
+        const defaultShortcuts: AdminShortcut[] = [
+          {
+            id: "dashboard",
+            label: "Dashboard",
+            path: "/admin",
+            icon: "Home",
+            color: "#3b82f6"
+          },
+          {
+            id: "users",
+            label: "Users",
+            path: "/admin?tab=users",
+            icon: "Users",
+            color: "#10b981"
+          }
+        ];
+        setShortcuts(defaultShortcuts);
+        saveShortcuts(defaultShortcuts);
       }
     } catch (error) {
-      console.error("Error checking for admin_shortcuts table:", error);
+      console.error("Error loading shortcuts:", error);
+      toast.error("Failed to load shortcuts");
     } finally {
-      setSaving(false);
+      setIsLoading(false);
     }
   };
 
-  // Handle drag end event
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
-    
-    const items = Array.from(shortcuts);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    
-    setShortcuts(items);
-    saveShortcuts(items);
-  };
+  const saveShortcuts = async (shortcutsToSave: AdminShortcut[]) => {
+    try {
+      const { error } = await supabase
+        .from('admin_shortcuts')
+        .upsert({ 
+          user_id: userId, 
+          shortcuts: shortcutsToSave 
+        }, { 
+          onConflict: 'user_id' 
+        });
 
-  // Navigate to shortcut destination
-  const handleShortcutClick = (path: string) => {
-    navigate(path);
-  };
-
-  // Render icon based on string identifier
-  const renderIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'dashboard':
-        return <LayoutDashboard className="h-5 w-5" />;
-      case 'users':
-        return <Users className="h-5 w-5" />;
-      case 'content':
-        return <FileText className="h-5 w-5" />;
-      case 'chat':
-        return <MessageSquare className="h-5 w-5" />;
-      default:
-        return <Database className="h-5 w-5" />;
+      if (error) throw error;
+      toast.success("Shortcuts saved successfully");
+    } catch (error) {
+      console.error("Error saving shortcuts:", error);
+      toast.error("Failed to save shortcuts");
     }
   };
 
-  // Remove a shortcut
+  const addShortcut = () => {
+    if (!newShortcut.label || !newShortcut.path) {
+      toast.error("Label and path are required");
+      return;
+    }
+
+    const updatedShortcuts = [
+      ...shortcuts,
+      {
+        ...newShortcut,
+        id: Date.now().toString()
+      }
+    ];
+
+    setShortcuts(updatedShortcuts);
+    saveShortcuts(updatedShortcuts);
+    setNewShortcut({
+      id: "",
+      label: "",
+      path: "",
+      icon: "ChevronRightCircle",
+      color: "#3b82f6"
+    });
+    setIsEditing(false);
+  };
+
   const removeShortcut = (id: string) => {
     const updatedShortcuts = shortcuts.filter(shortcut => shortcut.id !== id);
     setShortcuts(updatedShortcuts);
     saveShortcuts(updatedShortcuts);
   };
 
-  if (loading) {
-    return (
-      <Card className="cyber-card border-primary/20">
-        <CardContent className="flex justify-center items-center p-6 min-h-[100px]">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="cyber-card border-primary/20">
-      <CardContent className="p-4">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="shortcuts" direction="horizontal">
-            {(provided) => (
-              <div
-                className="flex flex-wrap gap-2"
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-              >
-                {shortcuts.map((shortcut, index) => (
-                  <Draggable key={shortcut.id} draggableId={shortcut.id} index={index}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className={cn(
-                          "transition-all duration-150",
-                          snapshot.isDragging ? "scale-105 shadow-lg" : ""
-                        )}
-                      >
-                        <div className="relative group">
-                          <Button
-                            variant="outline"
-                            className="h-auto py-3 px-4 bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/30"
-                            onClick={() => handleShortcutClick(shortcut.path)}
-                          >
-                            <div className="flex flex-col items-center gap-1">
-                              {renderIcon(shortcut.icon)}
-                              <span className="text-xs">{shortcut.label}</span>
-                            </div>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => removeShortcut(shortcut.id)}
-                          >
-                            <X className="h-3 w-3 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-                
-                {/* Add new shortcut button (placeholder for future functionality) */}
-                <Button
-                  variant="outline"
-                  className="h-auto py-3 px-4 bg-primary/5 hover:bg-primary/10 border-dashed border-primary/20 hover:border-primary/30"
-                  onClick={() => toast({
-                    title: "Add Shortcut",
-                    description: "This feature will be available soon!",
-                  })}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <Plus className="h-5 w-5" />
-                    <span className="text-xs">Add</span>
-                  </div>
+    <Card className="col-span-2 lg:col-span-1">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>
+            Frequently used admin shortcuts
+          </CardDescription>
+        </div>
+        {hasPermission('admin:settings:write') && (
+          <Dialog open={isEditing} onOpenChange={setIsEditing}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Custom Shortcut</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="shortcut-label">Label</Label>
+                  <Input 
+                    id="shortcut-label" 
+                    value={newShortcut.label} 
+                    onChange={(e) => setNewShortcut({...newShortcut, label: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="shortcut-path">Path</Label>
+                  <Input 
+                    id="shortcut-path" 
+                    value={newShortcut.path} 
+                    onChange={(e) => setNewShortcut({...newShortcut, path: e.target.value})}
+                  />
+                </div>
+                <Button onClick={addShortcut} className="w-full">
+                  Add Shortcut
                 </Button>
               </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-        
-        {saving && (
-          <div className="absolute top-2 right-2">
-            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-          </div>
+            </DialogContent>
+          </Dialog>
         )}
+      </CardHeader>
+      <CardContent className="pb-4">
+        <div className="space-y-2">
+          {shortcuts.map((shortcut) => (
+            <div 
+              key={shortcut.id}
+              className="flex items-center justify-between p-2 hover:bg-muted rounded-md group"
+            >
+              <Button
+                variant="ghost"
+                className="justify-start px-2 gap-2 flex-1 text-left"
+                onClick={() => {
+                  /* Navigation logic here */
+                }}
+              >
+                <ChevronRightCircle className="h-4 w-4" style={{ color: shortcut.color }} />
+                <span>{shortcut.label}</span>
+              </Button>
+              {hasPermission('admin:settings:write') && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+                  onClick={() => removeShortcut(shortcut.id)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          ))}
+          
+          {shortcuts.length === 0 && !isLoading && (
+            <div className="text-center py-4 text-muted-foreground">
+              No shortcuts available
+            </div>
+          )}
+          
+          {isLoading && (
+            <div className="text-center py-4 text-muted-foreground">
+              Loading shortcuts...
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
