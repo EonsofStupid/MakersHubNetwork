@@ -108,7 +108,7 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
       
       if (Array.isArray(currentShortcuts)) {
         // Create a new object with both the array and the _meta property
-        updatedShortcuts = [...currentShortcuts];
+        updatedShortcuts = [...(currentShortcuts as any[])];
         
         // Add _meta as a separate property of the object
         Object.defineProperty(updatedShortcuts, '_meta', {
@@ -121,9 +121,9 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
       } else if (typeof currentShortcuts === 'object') {
         // Handle case where shortcuts is already an object
         updatedShortcuts = {
-          ...currentShortcuts,
+          ...(currentShortcuts as Record<string, any>),
           _meta: {
-            ...(currentShortcuts._meta || {}),
+            ...((currentShortcuts as any)._meta || {}),
             dashboard_collapsed: collapsed,
             router_preference: get().routerPreference
           }

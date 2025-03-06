@@ -12,7 +12,7 @@ export default function AdminWithTanstack() {
       <RouterProvider router={adminRouter} />
       {isDev && (
         <>
-          <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+          <ReactQueryDevtools initialIsOpen={false} position="bottom" />
           <TanStackRouterDevtools initialIsOpen={false} position="bottom-left" />
         </>
       )}
