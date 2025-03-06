@@ -108,35 +108,35 @@ export default function Admin() {
           </TabsList>
         </Card>
 
-        <TabsContent value="overview">
+        <TabsContent value="overview" className="transition-all duration-300">
           <OverviewTab />
         </TabsContent>
         
-        <TabsContent value="content">
+        <TabsContent value="content" className="transition-all duration-300">
           <Suspense fallback={<div className="min-h-[600px] flex items-center justify-center">Loading content management...</div>}>
             <ContentTab />
           </Suspense>
         </TabsContent>
         
-        <TabsContent value="users">
+        <TabsContent value="users" className="transition-all duration-300">
           <UsersTab />
         </TabsContent>
         
-        <TabsContent value="chat">
+        <TabsContent value="chat" className="transition-all duration-300">
           <Suspense fallback={<div className="min-h-[600px] flex items-center justify-center">Loading chat management...</div>}>
             <ChatTab />
           </Suspense>
         </TabsContent>
         
-        <TabsContent value="data-maestro">
+        <TabsContent value="data-maestro" className="transition-all duration-300">
           <DataMaestroTab />
         </TabsContent>
         
-        <TabsContent value="import">
+        <TabsContent value="import" className="transition-all duration-300">
           <ImportTab />
         </TabsContent>
         
-        <TabsContent value="settings">
+        <TabsContent value="settings" className="transition-all duration-300">
           <SettingsTab />
         </TabsContent>
       </Tabs>
