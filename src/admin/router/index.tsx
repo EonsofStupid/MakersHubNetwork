@@ -5,7 +5,8 @@ import { AdminLayout } from '@/admin/components/AdminLayout';
 import { 
   createRootRoute, 
   createRoute, 
-  createRouter 
+  createRouter,
+  Outlet
 } from '@tanstack/react-router';
 
 // Lazy-loaded components with proper default exports
@@ -34,9 +35,7 @@ const rootRoute = createRootRoute({
       <AuthGuard requiredRoles={['admin', 'super_admin']}>
         <AdminLayout>
           <Suspense fallback={<Loading />}>
-            {/* Use the Outlet from TanStack Router */}
-            {/* @ts-expect-error - TanStack router expects to be inside a RouterProvider */}
-            <rootRoute.Outlet />
+            <Outlet />
           </Suspense>
         </AdminLayout>
       </AuthGuard>
@@ -106,7 +105,10 @@ const routeTree = rootRoute.addChildren([
 ]);
 
 // Create the router instance
-export const adminRouter = createRouter({ routeTree });
+export const adminRouter = createRouter({
+  routeTree,
+  defaultPreload: 'intent',
+});
 
 // Export types for search params
 export type AdminSearchParams = {};
