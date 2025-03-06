@@ -25,7 +25,7 @@ export const CYBER_ANIMATIONS: Record<string, AnimationConfig> = {
   'pulse': {
     id: 'pulse',
     duration: 2000,
-    iterations: 'infinite',
+    iterations: Infinity, // Changed from 'infinite' to Infinity
     easing: 'ease-in-out',
     keyframes: [
       { offset: 0, properties: { opacity: 0.5, boxShadow: '0 0 5px var(--effect-color, #00F0FF)' } },
@@ -37,7 +37,7 @@ export const CYBER_ANIMATIONS: Record<string, AnimationConfig> = {
   'scanline': {
     id: 'scanline',
     duration: 3000,
-    iterations: 'infinite',
+    iterations: Infinity, // Changed from 'infinite' to Infinity
     easing: 'linear',
     keyframes: [
       { 
@@ -62,7 +62,7 @@ export const CYBER_ANIMATIONS: Record<string, AnimationConfig> = {
   'data-stream': {
     id: 'data-stream',
     duration: 15000,
-    iterations: 'infinite',
+    iterations: Infinity, // Changed from 'infinite' to Infinity
     easing: 'linear',
     keyframes: [
       { 
@@ -87,7 +87,7 @@ export const CYBER_ANIMATIONS: Record<string, AnimationConfig> = {
   'morph': {
     id: 'morph',
     duration: 3000,
-    iterations: 'infinite',
+    iterations: Infinity, // Changed from 'infinite' to Infinity
     easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
     direction: 'alternate',
     keyframes: [
