@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardShortcuts } from "@/admin/components/dashboard/DashboardShortcuts";
 import { useAdminPreferences } from "@/admin/store/adminPreferences.store";
 import { useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -86,7 +87,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               variant="ghost" 
               size="sm" 
               onClick={toggleDashboard}
-              className="rounded-full h-8 w-8 p-0 bg-primary/10 hover:bg-primary/20"
+              className="rounded-full h-8 w-8 p-0 bg-primary/10 hover:bg-primary/20 cyber-glow"
             >
               {isDashboardCollapsed ? 
                 <ChevronDown className="h-4 w-4 text-primary" /> : 
@@ -96,12 +97,19 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           </div>
           
           {/* Collapsible Dashboard Shortcuts */}
-          <div className={cn(
-            "transition-all duration-300 ease-in-out overflow-hidden",
-            isDashboardCollapsed ? "max-h-0 opacity-0 mb-0" : "max-h-[200px] opacity-100 mb-6"
-          )}>
-            <DashboardShortcuts />
-          </div>
+          <AnimatePresence>
+            {!isDashboardCollapsed && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mb-6 overflow-hidden"
+              >
+                <DashboardShortcuts />
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className={cn(
