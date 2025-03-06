@@ -1,27 +1,12 @@
 
-import { useMemo } from "react"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet"
+import React from "react"
+import { Link as RouterLink } from "react-router-dom"
+import { Link as TanStackLink } from "@tanstack/react-router"
+import { Menu, User, Settings, LayoutDashboard, LogOut, Shield, Crown } from "lucide-react"
+import { UserRole } from "@/types/auth.types"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import {
-  User,
-  Settings,
-  LogOut,
-  Shield,
-  Heart,
-  MessageSquare,
-  Bookmark,
-  HelpCircle,
-  AlertCircle,
-} from "lucide-react"
-import { Link, useLocation } from "react-router-dom"
-import { motion } from "framer-motion"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Badge } from "@/components/ui/badge"
 import { useAdminPreferences } from "@/admin/store/adminPreferences.store"
 
 interface UserMenuSheetProps {
@@ -32,10 +17,10 @@ interface UserMenuSheetProps {
   onShowProfile: () => void
   onLogout: () => void
   hasAdminAccess: boolean
-  roles: string[]
+  roles: UserRole[]
 }
 
-export function UserMenuSheet({
+export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   isOpen,
   onOpenChange,
   userEmail,
@@ -44,186 +29,140 @@ export function UserMenuSheet({
   onLogout,
   hasAdminAccess,
   roles,
-}: UserMenuSheetProps) {
-  const location = useLocation()
-  const { routerPreference } = useAdminPreferences()
-  
-  // Determine the admin URL based on the router preference
-  const adminUrl = useMemo(() => {
-    // If we're already on an admin page and using TanStack router
-    if (routerPreference === 'tanstack' && location.pathname.startsWith('/admin/')) {
-      return '/admin/overview'
-    }
-    
-    // If we're using TanStack explicitly
-    if (routerPreference === 'tanstack') {
-      return '/admin/overview'
-    }
-    
-    // Default to legacy route
-    return '/admin?tab=overview'
-  }, [routerPreference, location.pathname])
+}) => {
+  // Get router preference from admin preferences store
+  const { routerPreference } = useAdminPreferences();
+  const useTanStackRouter = routerPreference === 'tanstack';
 
-  const menuItems = [
-    {
-      title: "My Profile",
-      icon: <User className="w-4 h-4 mr-2" />,
-      onClick: onShowProfile,
-      showSeparator: true,
-    },
-    hasAdminAccess && {
-      title: "Admin Panel",
-      icon: <Shield className="w-4 h-4 mr-2" />,
-      to: adminUrl,
-      showSeparator: true,
-    },
-    {
-      title: "Favorites",
-      icon: <Heart className="w-4 h-4 mr-2" />,
-      to: "/favorites",
-    },
-    {
-      title: "Messages",
-      icon: <MessageSquare className="w-4 h-4 mr-2" />,
-      to: "/messages",
-    },
-    {
-      title: "Saved Items",
-      icon: <Bookmark className="w-4 h-4 mr-2" />,
-      to: "/saved",
-      showSeparator: true,
-    },
-    {
-      title: "Settings",
-      icon: <Settings className="w-4 h-4 mr-2" />,
-      to: "/settings",
-    },
-    {
-      title: "Help & Support",
-      icon: <HelpCircle className="w-4 h-4 mr-2" />,
-      to: "/help",
-    },
-    {
-      title: "About",
-      icon: <AlertCircle className="w-4 h-4 mr-2" />,
-      to: "/about",
-    },
-  ].filter(Boolean) as {
-    title: string
-    icon: React.ReactNode
-    to?: string
-    onClick?: () => void
-    showSeparator?: boolean
-  }[]
-
-  // Animation variants for staggered appearance
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05,
-      },
-    },
+  // Helper to get role icon
+  const getRoleIcon = (role: UserRole) => {
+    switch (role) {
+      case "super_admin":
+        return <Crown className="h-3 w-3" />
+      case "admin":
+        return <Shield className="h-3 w-3" />
+      default:
+        return null
+    }
   }
 
-  const itemVariants = {
-    hidden: { opacity: 0, x: -10 },
-    show: { opacity: 1, x: 0 },
-  }
+  // Render admin dashboard link based on router preference
+  const renderAdminLink = () => {
+    if (!hasAdminAccess) return null;
+
+    if (useTanStackRouter) {
+      return (
+        <TanStackLink
+          to="/admin"
+          className="group flex items-center gap-2 px-4 py-2 text-sm
+                    transition-colors rounded-md hover:bg-primary/10"
+          onClick={() => {
+            console.log("Admin Dashboard link clicked with TanStack Router")
+            onOpenChange(false)
+          }}
+        >
+          <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
+          Admin Dashboard
+        </TanStackLink>
+      );
+    }
+    
+    return (
+      <RouterLink
+        to="/admin"
+        className="group flex items-center gap-2 px-4 py-2 text-sm
+                 transition-colors rounded-md hover:bg-primary/10"
+        onClick={() => {
+          console.log("Admin Dashboard link clicked with React Router")
+          onOpenChange(false)
+        }}
+      >
+        <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
+        Admin Dashboard
+      </RouterLink>
+    );
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col">
-        <SheetHeader className="pb-4">
-          <SheetTitle>Account Menu</SheetTitle>
-          <p className="text-sm text-muted-foreground">
-            {userEmail || "User"}
-            {roles && roles.length > 0 && (
-              <span className="text-xs text-primary ml-2">
-                ({roles.join(", ")})
-              </span>
-            )}
-          </p>
-        </SheetHeader>
-
-        <motion.div
-          className="flex-1 overflow-auto"
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
+      <SheetTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative h-8 w-8 rounded-full hover:bg-primary/10 transition-colors"
         >
-          <nav className="flex flex-col">
-            {menuItems.map((item) => (
-              <div key={item.title}>
-                <motion.div variants={itemVariants}>
-                  {item.to ? (
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-base font-normal py-5"
-                      asChild
-                    >
-                      <Link to={item.to}>
-                        {item.icon}
-                        {item.title}
-                      </Link>
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-base font-normal py-5"
-                      onClick={item.onClick}
-                    >
-                      {item.icon}
-                      {item.title}
-                    </Button>
-                  )}
-                </motion.div>
-                {item.showSeparator && <Separator className="my-2" />}
-              </div>
-            ))}
-          </nav>
-        </motion.div>
+          <Menu className="h-4 w-4 text-primary" />
+          {hasAdminAccess && (
+            <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full animate-pulse" />
+          )}
+        </Button>
+      </SheetTrigger>
 
-        <SheetFooter className="mt-auto">
-          <Button
-            variant="destructive"
-            className="w-full mt-4"
-            onClick={onLogout}
-            disabled={isLoadingLogout}
-          >
-            {isLoadingLogout ? (
-              <span className="flex items-center">
-                <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
+      <SheetContent
+        side="right"
+        className="w-[300px] backdrop-blur-xl bg-background/80
+                   border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]
+                   transform-gpu before:content-[''] before:absolute before:inset-0
+                   before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5
+                   before:pointer-events-none"
+        style={{
+          clipPath: "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
+          transform: "translateX(0) skew(-10deg)",
+          transformOrigin: "100% 50%",
+        }}
+      >
+        <div className="transform skew-x-[10deg] origin-top-right space-y-4 pt-6">
+          <div className="px-4 space-y-2">
+            <h2 className="text-lg font-heading font-bold text-primary">
+              {userEmail || "My Account"}
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {roles.map((role) => (
+                <Badge
+                  key={role}
+                  variant={role.includes("admin") ? "default" : "secondary"}
+                  className="flex items-center gap-1 animate-in fade-in-50 duration-300"
                 >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Logging out...
-              </span>
-            ) : (
-              <span className="flex items-center">
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </span>
-            )}
-          </Button>
-        </SheetFooter>
+                  {getRoleIcon(role)}
+                  {role.replace("_", " ")}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <nav className="space-y-2">
+            <button
+              onClick={onShowProfile}
+              className="group flex w-full items-center gap-2 px-4 py-2 text-sm
+                         transition-colors rounded-md hover:bg-primary/10"
+            >
+              <User className="h-4 w-4 text-primary group-hover:animate-pulse" />
+              Profile
+            </button>
+
+            <RouterLink
+              to="/settings"
+              className="group flex items-center gap-2 px-4 py-2 text-sm
+                         transition-colors rounded-md hover:bg-primary/10"
+              onClick={() => onOpenChange(false)}
+            >
+              <Settings className="h-4 w-4 text-primary group-hover:animate-pulse" />
+              Settings
+            </RouterLink>
+
+            {renderAdminLink()}
+
+            <button
+              onClick={onLogout}
+              disabled={isLoadingLogout}
+              className="group flex w-full items-center gap-2 px-4 py-2 text-sm
+                         transition-colors rounded-md hover:bg-red-500/10 text-red-500"
+            >
+              <LogOut className="h-4 w-4 group-hover:animate-pulse" />
+              {isLoadingLogout ? "Logging out..." : "Log out"}
+            </button>
+          </nav>
+        </div>
       </SheetContent>
     </Sheet>
   )
