@@ -89,3 +89,5 @@ export const TrendingParts = () => {
     </Card>
   );
 };
+
+export default TrendingParts;

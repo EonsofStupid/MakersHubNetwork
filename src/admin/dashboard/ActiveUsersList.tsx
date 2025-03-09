@@ -150,3 +150,5 @@ export const ActiveUsersList = () => {
     </Card>
   );
 };
+
+export default ActiveUsersList;

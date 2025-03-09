@@ -2,14 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { adminKeys } from "@/admin/types/queries";
-
-export interface ActiveUser {
-  id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  last_seen: string | null;
-  status: string | null;
-}
+import { ActiveUser } from "@/admin/types/queries";
 
 export const useActiveUsers = () => {
   return useQuery({
