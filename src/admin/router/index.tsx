@@ -6,7 +6,8 @@ import {
   createRootRoute, 
   createRoute, 
   createRouter,
-  Outlet
+  Outlet,
+  redirect
 } from '@tanstack/react-router';
 
 // Loader component
@@ -20,7 +21,7 @@ const Loading = () => (
 );
 
 // Lazy-loaded components with proper default imports
-const OverviewTab = lazy(() => import('@/admin/tabs/OverviewTab'));
+const OverviewTab = lazy(() => import('@/admin/dashboard/OverviewTab').then(mod => ({ default: mod.OverviewTab })));
 const ContentTab = lazy(() => import('@/admin/tabs/ContentTab'));
 const UsersTab = lazy(() => import('@/admin/tabs/UsersTab').then(mod => ({ default: mod.UsersTab })));
 const ChatTab = lazy(() => import('@/admin/tabs/ChatTab').then(mod => ({ default: mod.ChatTab })));
@@ -47,7 +48,10 @@ const rootRoute = createRootRoute({
 const adminIndexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
-  component: OverviewTab,
+  beforeLoad: () => {
+    // Redirect to overview by default 
+    return redirect({ to: '/admin/overview' });
+  }
 });
 
 const overviewRoute = createRoute({
@@ -104,11 +108,11 @@ const routeTree = rootRoute.addChildren([
   settingsRoute,
 ]);
 
-// Create the router with proper type handling for strictNullChecks
+// Create the router with proper type handling
 export const adminRouter = createRouter({
   routeTree,
   defaultPreload: 'intent',
-} as any); // Using type assertion to work around the strictNullChecks requirement
+});
 
 // Export types for search params
 export type AdminSearchParams = Record<string, string>;

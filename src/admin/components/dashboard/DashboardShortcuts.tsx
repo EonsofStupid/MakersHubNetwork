@@ -4,7 +4,6 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   LayoutDashboard, 
@@ -25,35 +24,15 @@ export const DashboardShortcuts: React.FC = () => {
   const [shortcuts, setShortcuts] = useState<AdminShortcut[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { status, user } = useAuthStore();
-  const [useTanStackRouter, setUseTanStackRouter] = useState(false);
-
-  // Check if we should use TanStack Router (based on URL)
-  useEffect(() => {
-    const currentUrl = window.location.pathname;
-    setUseTanStackRouter(currentUrl.startsWith('/admin/'));
-  }, []);
-
-  // Convert legacy shortcuts to TanStack Router paths
-  const convertPath = (path: string): string => {
-    if (!useTanStackRouter) return path;
-    
-    // Extract the tab from legacy path like "/admin?tab=overview"
-    const match = path.match(/\/admin\?tab=([a-z-]+)/);
-    if (match && match[1]) {
-      return `/admin/${match[1]}`;
-    }
-    return path;
-  };
 
   // Default shortcuts
   const defaultShortcuts: AdminShortcut[] = [
-    { id: "overview", label: "Overview", icon: "dashboard", path: "/admin?tab=overview" },
-    { id: "users", label: "User Management", icon: "users", path: "/admin?tab=users" },
-    { id: "content", label: "Content", icon: "content", path: "/admin?tab=content" },
-    { id: "chats", label: "Chat", icon: "chat", path: "/admin?tab=chat" },
+    { id: "overview", label: "Overview", icon: "dashboard", path: "/admin/overview" },
+    { id: "users", label: "User Management", icon: "users", path: "/admin/users" },
+    { id: "content", label: "Content", icon: "content", path: "/admin/content" },
+    { id: "chats", label: "Chat", icon: "chat", path: "/admin/chat" },
   ];
 
   // Load user shortcuts from Supabase
@@ -146,15 +125,6 @@ export const DashboardShortcuts: React.FC = () => {
     saveShortcuts(items);
   };
 
-  // Navigate to shortcut destination
-  const handleShortcutClick = (path: string) => {
-    if (useTanStackRouter) {
-      // Let the Link component handle navigation
-      return;
-    }
-    navigate(path);
-  };
-
   // Render icon based on string identifier
   const renderIcon = (iconName: string) => {
     switch (iconName) {
@@ -212,26 +182,13 @@ export const DashboardShortcuts: React.FC = () => {
                         )}
                       >
                         <div className="relative group">
-                          {useTanStackRouter ? (
-                            <Link
-                              to={convertPath(shortcut.path)}
-                              className="inline-flex h-auto flex-col items-center gap-1 py-3 px-4 bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/30 rounded-md"
-                            >
-                              {renderIcon(shortcut.icon)}
-                              <span className="text-xs">{shortcut.label}</span>
-                            </Link>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              className="h-auto py-3 px-4 bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/30"
-                              onClick={() => handleShortcutClick(shortcut.path)}
-                            >
-                              <div className="flex flex-col items-center gap-1">
-                                {renderIcon(shortcut.icon)}
-                                <span className="text-xs">{shortcut.label}</span>
-                              </div>
-                            </Button>
-                          )}
+                          <Link
+                            to={shortcut.path}
+                            className="inline-flex h-auto flex-col items-center gap-1 py-3 px-4 bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/30 rounded-md"
+                          >
+                            {renderIcon(shortcut.icon)}
+                            <span className="text-xs">{shortcut.label}</span>
+                          </Link>
                           <Button
                             variant="ghost"
                             size="icon"
