@@ -62,7 +62,7 @@ export const UserMenu = memo(() => {
     try {
       setIsLoading(true)
       await logout()
-      window.location.reload()
+      router.navigate({ to: '/' })
     } catch (error) {
       toast({
         variant: "destructive",
@@ -72,7 +72,7 @@ export const UserMenu = memo(() => {
     } finally {
       setIsLoading(false)
     }
-  }, [logout, toast])
+  }, [logout, toast, router])
 
   // Memoize props to prevent object recreation on each render
   const sheetProps = useMemo(() => ({
