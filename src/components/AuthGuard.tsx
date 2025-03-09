@@ -8,9 +8,10 @@ import { useAdminAccess } from "@/hooks/useAdminAccess"
 interface AuthGuardProps {
   children: ReactNode
   requiredRoles?: UserRole[]
+  fallback?: ReactNode
 }
 
-export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
+export const AuthGuard = ({ children, requiredRoles, fallback }: AuthGuardProps) => {
   const navigate = useNavigate()
   const isLoading = useAuthStore((state) => state.isLoading)
   const status = useAuthStore((state) => state.status)
@@ -34,7 +35,12 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       console.log("AuthGuard - Redirecting to login: Not authenticated")
-      navigate({ to: "/login" })
+      navigate({ 
+        to: "/login",
+        search: {
+          redirect: window.location.pathname
+        }
+      })
       return
     }
 
@@ -44,9 +50,19 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
     }
   }, [isLoading, isAuthenticated, roles, requiredRoles, navigate, hasRequiredRole])
 
-  if (isLoading) return <div>Loading...</div>
-  if (!isAuthenticated) return null
-  if (requiredRoles && !hasRequiredRole) return null
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="p-4 text-center">
+          <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">Verifying access...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  if (!isAuthenticated) return fallback || null
+  if (requiredRoles && !hasRequiredRole) return fallback || null
 
   return <>{children}</>
 }
