@@ -1,4 +1,3 @@
-
 import { lazy, Suspense } from 'react';
 import { AuthGuard } from '@/components/AuthGuard';
 import { AdminLayout } from '@/admin/components/AdminLayout';
@@ -19,9 +18,9 @@ const Loading = () => (
   </div>
 );
 
-// Lazy-loaded components
-const OverviewTab = lazy(() => import('@/admin/dashboard/OverviewTab').then(mod => ({ default: mod.default })));
-const ContentTab = lazy(() => import('@/admin/tabs/ContentTab').then(mod => ({ default: mod.default })));
+// Lazy-loaded components with proper default imports
+const OverviewTab = lazy(() => import('@/admin/tabs/OverviewTab'));
+const ContentTab = lazy(() => import('@/admin/tabs/ContentTab'));
 const UsersTab = lazy(() => import('@/admin/tabs/UsersTab').then(mod => ({ default: mod.UsersTab })));
 const ChatTab = lazy(() => import('@/admin/tabs/ChatTab').then(mod => ({ default: mod.ChatTab })));
 const DataMaestroTab = lazy(() => import('@/admin/tabs/DataMaestroTab').then(mod => ({ default: mod.DataMaestroTab })));
@@ -104,11 +103,10 @@ const routeTree = rootRoute.addChildren([
   settingsRoute,
 ]);
 
-// Create the router with proper type handling for strictNullChecks
+// Create the router with proper type handling
 export const adminRouter = createRouter({
   routeTree,
   defaultPreload: 'intent',
-  // The router is properly typed and will work with strictNullChecks
 });
 
 // Export types for search params

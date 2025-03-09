@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { AdminLayout } from "@/admin/components/AdminLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { OverviewTab } from "@/admin/tabs/OverviewTab";
+import OverviewTab from "@/admin/tabs/OverviewTab";
 import { UsersTab } from "@/admin/tabs/UsersTab";
 import { ImportTab } from "@/admin/tabs/ImportTab";
 import { SettingsTab } from "@/admin/tabs/SettingsTab";
