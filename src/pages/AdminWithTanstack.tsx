@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
 
 export default function AdminWithTanstack() {
   const isDev = process.env.NODE_ENV === 'development';
@@ -19,7 +20,11 @@ export default function AdminWithTanstack() {
   }, [toast]);
   
   return (
-    <>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <RouterProvider router={adminRouter} />
       {isDev && (
         <>
@@ -27,6 +32,6 @@ export default function AdminWithTanstack() {
           <TanStackRouterDevtools initialIsOpen={false} position="bottom-left" />
         </>
       )}
-    </>
+    </motion.div>
   );
 }

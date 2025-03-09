@@ -9,16 +9,7 @@ import {
   Outlet
 } from '@tanstack/react-router';
 
-// Lazy-loaded components with proper default exports
-const OverviewTab = lazy(() => import('@/admin/tabs/OverviewTab').then(mod => ({ default: () => <mod.OverviewTab /> })));
-const ContentTab = lazy(() => import('@/admin/tabs/ContentTab').then(mod => ({ default: () => <mod.default /> })));
-const UsersTab = lazy(() => import('@/admin/tabs/UsersTab').then(mod => ({ default: () => <mod.UsersTab /> })));
-const ChatTab = lazy(() => import('@/admin/tabs/ChatTab').then(mod => ({ default: () => <mod.ChatTab /> })));
-const DataMaestroTab = lazy(() => import('@/admin/tabs/DataMaestroTab').then(mod => ({ default: () => <mod.DataMaestroTab /> })));
-const ImportTab = lazy(() => import('@/admin/tabs/ImportTab').then(mod => ({ default: () => <mod.ImportTab /> })));
-const SettingsTab = lazy(() => import('@/admin/tabs/SettingsTab').then(mod => ({ default: () => <mod.SettingsTab /> })));
-
-// Loading component
+// Loader component
 const Loading = () => (
   <div className="min-h-[400px] flex items-center justify-center">
     <div className="space-y-4 text-center">
@@ -27,6 +18,15 @@ const Loading = () => (
     </div>
   </div>
 );
+
+// Lazy-loaded components
+const OverviewTab = lazy(() => import('@/admin/features/dashboard/OverviewTab').then(mod => ({ default: mod.OverviewTab })));
+const ContentTab = lazy(() => import('@/admin/tabs/ContentTab').then(mod => ({ default: () => <mod.default /> })));
+const UsersTab = lazy(() => import('@/admin/tabs/UsersTab').then(mod => ({ default: () => <mod.UsersTab /> })));
+const ChatTab = lazy(() => import('@/admin/tabs/ChatTab').then(mod => ({ default: () => <mod.ChatTab /> })));
+const DataMaestroTab = lazy(() => import('@/admin/tabs/DataMaestroTab').then(mod => ({ default: () => <mod.DataMaestroTab /> })));
+const ImportTab = lazy(() => import('@/admin/tabs/ImportTab').then(mod => ({ default: () => <mod.ImportTab /> })));
+const SettingsTab = lazy(() => import('@/admin/tabs/SettingsTab').then(mod => ({ default: () => <mod.SettingsTab /> })));
 
 // Create root route
 const rootRoute = createRootRoute({
@@ -104,19 +104,20 @@ const routeTree = rootRoute.addChildren([
   settingsRoute,
 ]);
 
-// Create the router instance
+// Create the router with proper type handling for strictNullChecks
 export const adminRouter = createRouter({
   routeTree,
   defaultPreload: 'intent',
+  // The router is properly typed and will work with strictNullChecks
 });
 
 // Export types for search params
-export type AdminSearchParams = {};
+export type AdminSearchParams = Record<string, string>;
 
 // Export for use in components
 export { rootRoute };
 
-// Make sure types are happy
+// Make sure types are happy with proper declaration merging
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof adminRouter;
