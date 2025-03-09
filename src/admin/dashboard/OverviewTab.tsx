@@ -1,9 +1,9 @@
 
 import React from "react";
-import { StatsCards } from "./StatsCards";
-import { TrendingParts } from "./TrendingParts";
-import { ActiveUsersList } from "./ActiveUsersList";
-import { PerformanceMetrics } from "./PerformanceMetrics";
+import { StatsCards } from "@/admin/dashboard/StatsCards";
+import { TrendingParts } from "@/admin/dashboard/TrendingParts";
+import { ActiveUsersList } from "@/admin/dashboard/ActiveUsersList";
+import { PerformanceMetrics } from "@/admin/dashboard/PerformanceMetrics";
 import { SimpleCyberText } from "@/components/theme/SimpleCyberText";
 import { LayoutDashboard } from "lucide-react";
 import { motion } from "framer-motion";
@@ -65,3 +65,5 @@ export const OverviewTab = () => {
     </motion.div>
   );
 };
+
+export default OverviewTab;

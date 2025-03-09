@@ -50,11 +50,19 @@ export const StatsCards = () => {
       loading: isLoadingReviews,
       icon: <Star className="h-5 w-5 text-yellow-500" />,
       color: "from-yellow-500/20 to-yellow-500/5"
+    },
+    {
+      title: "Activity Score",
+      description: "Community engagement level",
+      value: "95.7%",
+      loading: false,
+      icon: <Box className="h-5 w-5 text-green-500" />,
+      color: "from-green-500/20 to-green-500/5"
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((card, i) => (
         <motion.div
           key={card.title}
@@ -62,8 +70,9 @@ export const StatsCards = () => {
           initial="hidden"
           animate="visible"
           variants={cardVariants}
+          className="h-full"
         >
-          <Card className={`cyber-card border-primary/20 overflow-hidden relative h-full`}>
+          <Card className="cyber-card border-primary/20 overflow-hidden relative h-full">
             <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-30`}></div>
             <CardHeader className="pb-2 relative">
               <div className="flex justify-between items-start">
@@ -78,7 +87,11 @@ export const StatsCards = () => {
             </CardHeader>
             <CardContent className="relative">
               <p className="text-3xl font-bold cyber-text-glow">
-                {card.loading ? "Loading..." : card.value}
+                {card.loading ? (
+                  <span className="inline-block w-16 h-8 bg-muted/50 animate-pulse rounded"></span>
+                ) : (
+                  card.value
+                )}
               </p>
             </CardContent>
           </Card>
@@ -87,3 +100,5 @@ export const StatsCards = () => {
     </div>
   );
 };
+
+export default StatsCards;

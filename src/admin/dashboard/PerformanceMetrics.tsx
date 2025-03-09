@@ -80,3 +80,5 @@ export const PerformanceMetrics = () => {
     </Card>
   );
 };
+
+export default PerformanceMetrics;
