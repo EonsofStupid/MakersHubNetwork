@@ -73,15 +73,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   return (
     <div className="min-h-screen bg-background/50 backdrop-blur-sm">
       <MainNav />
-      <AdminHeader title={title} />
+      <AdminHeader title={title} collapsed={isDashboardCollapsed} />
       
       <div className={cn(
-        "transition-all duration-300 ease-in-out",
-        isDashboardCollapsed ? "py-2" : "py-6"
+        "transition-all duration-300 ease-in-out pt-4 pb-8",
+        isDashboardCollapsed ? "py-2" : "py-4"
       )}>
         <div className="container mx-auto px-4">
           {/* Dashboard Toggle Button */}
-          <div className="flex justify-center -mt-3 mb-3">
+          <div className="flex justify-center mb-3">
             <Button 
               variant="ghost" 
               size="sm" 
