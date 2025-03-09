@@ -1,6 +1,6 @@
 
 import { ReactNode, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "@tanstack/react-router"
 import { useAuthStore } from "@/stores/auth/store"
 import { UserRole } from "@/types/auth.types"
 import { useAdminAccess } from "@/hooks/useAdminAccess"
@@ -34,13 +34,13 @@ export const AuthGuard = ({ children, requiredRoles }: AuthGuardProps) => {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       console.log("AuthGuard - Redirecting to login: Not authenticated")
-      navigate("/login")
+      navigate({ to: "/login" })
       return
     }
 
     if (!isLoading && isAuthenticated && requiredRoles && !hasRequiredRole) {
       console.log("AuthGuard - Redirecting to unauthorized: Missing required roles")
-      navigate("/")
+      navigate({ to: "/" })
     }
   }, [isLoading, isAuthenticated, roles, requiredRoles, navigate, hasRequiredRole])
 

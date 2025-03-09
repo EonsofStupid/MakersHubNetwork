@@ -3,19 +3,15 @@ import { SystemToaster } from "./components/ui/toaster"
 import { SonnerToaster } from "./components/ui/sonner"
 import { TooltipProvider } from "./components/ui/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import { AuthGuard } from "./components/AuthGuard"
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { TanStackRouterDevtools } from '@tanstack/router-devtools'
+import { router } from "./router"
+import { RouterProvider } from "@tanstack/react-router"
 import { AuthProvider } from "./components/auth/AuthProvider"
 import { KeyboardNavigation } from './components/KeyboardNavigation'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { Suspense, lazy } from "react"
 import { Button } from "./components/ui/button"
-import { useNavigate } from "react-router-dom"
-
-// Lazily load pages to improve initial load time
-const IndexPage = lazy(() => import("./pages/Index"))
-const AdminWithTanstackPage = lazy(() => import("./pages/AdminWithTanstack"))
-const LoginPage = lazy(() => import("./pages/Login"))
+import { useNavigate } from "@tanstack/react-router"
 
 // Create a loading fallback component
 const PageLoader = () => (
@@ -47,7 +43,7 @@ const GlobalErrorFallback = ({ error }: { error: Error }) => {
           </Button>
           <Button 
             variant="default"
-            onClick={() => navigate("/")}
+            onClick={() => navigate({ to: "/" })}
           >
             Go to Home
           </Button>
@@ -69,58 +65,39 @@ const queryClient = new QueryClient({
 })
 
 const App = () => {
+  const isDev = process.env.NODE_ENV === 'development';
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <TooltipProvider>
-              <KeyboardNavigation 
-                options={{
-                  enabled: true,
-                  showToasts: true,
-                  scrollConfig: {
-                    scrollAmount: 120,
-                    smooth: true,
-                    acceleration: true,
-                    maxAcceleration: 600,
-                    accelerationRate: 1.15
-                  }
-                }}
-              />
-              <ErrorBoundary>
-                <Routes>
-                  <Route path="/login" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <LoginPage />
-                    </Suspense>
-                  } />
-                  
-                  {/* All admin routes now handled by TanStack Router */}
-                  <Route
-                    path="/admin/*"
-                    element={
-                      <Suspense fallback={<PageLoader />}>
-                        <AdminWithTanstackPage />
-                      </Suspense>
-                    }
-                  />
-                  
-                  <Route path="/" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <IndexPage />
-                    </Suspense>
-                  } />
-                  
-                  {/* Catch-all redirect */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </ErrorBoundary>
-              <SystemToaster />
-              <SonnerToaster />
-            </TooltipProvider>
-          </AuthProvider>
-        </BrowserRouter>
+        <AuthProvider>
+          <TooltipProvider>
+            <KeyboardNavigation 
+              options={{
+                enabled: true,
+                showToasts: true,
+                scrollConfig: {
+                  scrollAmount: 120,
+                  smooth: true,
+                  acceleration: true,
+                  maxAcceleration: 600,
+                  accelerationRate: 1.15
+                }
+              }}
+            />
+            <ErrorBoundary>
+              <RouterProvider router={router} defaultPendingComponent={PageLoader} />
+              {isDev && (
+                <>
+                  <ReactQueryDevtools initialIsOpen={false} position="bottom" />
+                  <TanStackRouterDevtools initialIsOpen={false} position="bottom-left" />
+                </>
+              )}
+            </ErrorBoundary>
+            <SystemToaster />
+            <SonnerToaster />
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   )

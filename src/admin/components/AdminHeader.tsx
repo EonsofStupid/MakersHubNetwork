@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Bell, Settings, Database } from "lucide-react";
 import { useThemeEffects } from "@/hooks/useThemeEffects";
@@ -39,7 +39,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={() => navigate("/")}
+              onClick={() => navigate({ to: "/" })}
               className="hover:bg-primary/10"
             >
               <ArrowLeft className="h-5 w-5 text-primary" />
