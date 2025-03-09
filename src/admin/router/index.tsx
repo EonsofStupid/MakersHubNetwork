@@ -3,12 +3,11 @@ import { lazy, Suspense } from 'react';
 import { AuthGuard } from '@/components/AuthGuard';
 import { AdminLayout } from '@/admin/components/AdminLayout';
 import { 
-  createRootRoute, 
   createRoute, 
-  createRouter,
   Outlet,
   redirect
 } from '@tanstack/react-router';
+import { rootRoute } from '@/router';
 
 // Loader component
 const Loading = () => (
@@ -29,8 +28,10 @@ const DataMaestroTab = lazy(() => import('@/admin/tabs/DataMaestroTab').then(mod
 const ImportTab = lazy(() => import('@/admin/tabs/ImportTab').then(mod => ({ default: mod.ImportTab })));
 const SettingsTab = lazy(() => import('@/admin/tabs/SettingsTab').then(mod => ({ default: mod.SettingsTab })));
 
-// Create root route
-const rootRoute = createRootRoute({
+// Create parent admin route
+export const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin',
   component: () => {
     return (
       <AuthGuard requiredRoles={['admin', 'super_admin']}>
@@ -46,8 +47,8 @@ const rootRoute = createRootRoute({
 
 // Admin section routes
 const adminIndexRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/admin',
+  getParentRoute: () => adminRoute,
+  path: '/',
   beforeLoad: () => {
     // Redirect to overview by default 
     return redirect({ to: '/admin/overview' });
@@ -55,49 +56,49 @@ const adminIndexRoute = createRoute({
 });
 
 const overviewRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/admin/overview',
+  getParentRoute: () => adminRoute,
+  path: '/overview',
   component: OverviewTab,
 });
 
 const contentRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/admin/content',
+  getParentRoute: () => adminRoute,
+  path: '/content',
   component: ContentTab,
 });
 
 const usersRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/admin/users',
+  getParentRoute: () => adminRoute,
+  path: '/users',
   component: UsersTab,
 });
 
 const chatRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/admin/chat',
+  getParentRoute: () => adminRoute,
+  path: '/chat',
   component: ChatTab,
 });
 
 const dataMaestroRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/admin/data-maestro',
+  getParentRoute: () => adminRoute,
+  path: '/data-maestro',
   component: DataMaestroTab,
 });
 
 const importRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/admin/import',
+  getParentRoute: () => adminRoute,
+  path: '/import',
   component: ImportTab,
 });
 
 const settingsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/admin/settings',
+  getParentRoute: () => adminRoute,
+  path: '/settings',
   component: SettingsTab,
 });
 
-// Define all routes
-const routeTree = rootRoute.addChildren([
+// Add children routes to admin route
+adminRoute.addChildren([
   adminIndexRoute,
   overviewRoute,
   contentRoute,
@@ -108,21 +109,5 @@ const routeTree = rootRoute.addChildren([
   settingsRoute,
 ]);
 
-// Create the router with proper type handling
-export const adminRouter = createRouter({
-  routeTree,
-  defaultPreload: 'intent',
-});
-
 // Export types for search params
 export type AdminSearchParams = Record<string, string>;
-
-// Export for use in components
-export { rootRoute };
-
-// Make sure types are happy with proper declaration merging
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof adminRouter;
-  }
-}
