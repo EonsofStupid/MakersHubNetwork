@@ -11,7 +11,7 @@ import { ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardShortcuts } from "@/admin/components/dashboard/DashboardShortcuts";
 import { useAdminPreferences } from "@/admin/store/adminPreferences.store";
-import { useLocation } from "react-router-dom";
+import { useRouter } from "@tanstack/react-router";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -28,30 +28,19 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const { 
     isDashboardCollapsed, 
     setDashboardCollapsed, 
-    loadPreferences,
-    routerPreference,
-    setRouterPreference
+    loadPreferences
   } = useAdminPreferences();
-  const location = useLocation();
+  const router = useRouter();
 
   useEffect(() => {
     loadPermissions();
     loadPreferences();
-    
-    // Set the router preference based on the current URL pattern
-    const pathname = location.pathname;
-    if (pathname.startsWith('/admin/')) {
-      setRouterPreference('tanstack');
-    }
-  }, [loadPermissions, loadPreferences, location.pathname, setRouterPreference]);
+  }, [loadPermissions, loadPreferences]);
 
   // Toggle dashboard collapsed state
   const toggleDashboard = () => {
     setDashboardCollapsed(!isDashboardCollapsed);
   };
-
-  // Determine if we're using TanStack Router
-  const useTanStackRouter = routerPreference === 'tanstack';
 
   // Check if user has required permission
   if (!isLoadingPermissions && requiredPermission && !hasPermission(requiredPermission)) {
@@ -108,7 +97,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               "transition-all duration-300 ease-in-out",
               isDashboardCollapsed ? "lg:col-span-2" : "lg:col-span-3"
             )}>
-              <AdminSidebar collapsed={isDashboardCollapsed} useTanStackRouter={useTanStackRouter} />
+              <AdminSidebar collapsed={isDashboardCollapsed} />
             </div>
             
             <div className={cn(

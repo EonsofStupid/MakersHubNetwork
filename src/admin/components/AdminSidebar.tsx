@@ -1,6 +1,5 @@
 
 import React from "react";
-import { useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { cn } from "@/lib/utils";
@@ -8,23 +7,20 @@ import { motion } from "framer-motion";
 import { SidebarHeader } from "./sidebar/SidebarHeader";
 import { SidebarNavList } from "./sidebar/SidebarNavList";
 import { adminNavigationItems } from "./sidebar/navigation.config";
+import { useRouter } from "@tanstack/react-router";
 
 interface AdminSidebarProps {
   collapsed?: boolean;
-  useTanStackRouter?: boolean;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({ 
-  collapsed = false,
-  useTanStackRouter = false
+  collapsed = false
 }) => {
-  const location = useLocation();
+  const router = useRouter();
   const { hasPermission, setCurrentSection } = useAdminStore();
   
-  // Parse current path from URL
-  const currentPath = location.pathname;
-  const searchParams = new URLSearchParams(location.search);
-  const currentTab = searchParams.get('tab') || "overview";
+  // Get current path from TanStack Router
+  const currentPath = router.state.location.pathname;
 
   const handleNavigation = (item: typeof adminNavigationItems[0]) => {
     setCurrentSection(item.id);
@@ -51,9 +47,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <SidebarNavList
           items={adminNavigationItems}
           collapsed={collapsed}
-          useTanStackRouter={useTanStackRouter}
           currentPath={currentPath}
-          currentTab={currentTab}
           hasPermission={hasPermission}
           onNavigation={handleNavigation}
         />
