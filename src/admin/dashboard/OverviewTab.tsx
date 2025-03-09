@@ -66,4 +66,5 @@ export const OverviewTab = () => {
   );
 };
 
+// Make sure we have a default export
 export default OverviewTab;

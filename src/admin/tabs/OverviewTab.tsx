@@ -1,4 +1,6 @@
 
-import { OverviewTab } from "@/admin/dashboard/OverviewTab";
+import { default as OverviewTabComponent } from "@/admin/dashboard/OverviewTab";
 
-export default OverviewTab;
+// Export as both named and default export for maximum compatibility
+export const OverviewTab = OverviewTabComponent;
+export default OverviewTabComponent;
