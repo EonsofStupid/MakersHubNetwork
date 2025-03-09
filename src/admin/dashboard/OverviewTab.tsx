@@ -8,6 +8,7 @@ import { SimpleCyberText } from "@/components/theme/SimpleCyberText";
 import { LayoutDashboard } from "lucide-react";
 import { motion } from "framer-motion";
 
+// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -27,24 +28,23 @@ const itemVariants = {
   }
 };
 
-export const OverviewTab = () => {
+export const DashboardHeader = () => {
   return (
     <motion.div 
-      className="space-y-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
+      className="flex items-center space-x-2 bg-gradient-to-r from-primary/20 to-transparent p-4 rounded-lg"
+      variants={itemVariants}
     >
-      <motion.div 
-        className="flex items-center space-x-2 bg-gradient-to-r from-primary/20 to-transparent p-4 rounded-lg"
-        variants={itemVariants}
-      >
-        <LayoutDashboard className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl font-heading">
-          <SimpleCyberText text="Dashboard Overview" className="cyber-text-glow" />
-        </h2>
-      </motion.div>
-      
+      <LayoutDashboard className="h-6 w-6 text-primary" />
+      <h2 className="text-2xl font-heading">
+        <SimpleCyberText text="Dashboard Overview" className="cyber-text-glow" />
+      </h2>
+    </motion.div>
+  );
+};
+
+export const DashboardContent = () => {
+  return (
+    <>
       <motion.div variants={itemVariants}>
         <StatsCards />
       </motion.div>
@@ -62,6 +62,20 @@ export const OverviewTab = () => {
           </motion.div>
         </div>
       </div>
+    </>
+  );
+};
+
+export const OverviewTab = () => {
+  return (
+    <motion.div 
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <DashboardHeader />
+      <DashboardContent />
     </motion.div>
   );
 };
