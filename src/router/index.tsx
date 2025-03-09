@@ -6,11 +6,8 @@ import {
   createRouter,
   Outlet,
   redirect,
-  RouterProvider,
   ScrollRestoration,
   ErrorComponent,
-  NotFoundRoute,
-  Navigate
 } from '@tanstack/react-router';
 import { AuthGuard } from '@/components/AuthGuard';
 import { MainNav } from '@/components/MainNav';
@@ -70,19 +67,21 @@ const indexRoute = createRoute({
   component: IndexPage,
 });
 
+// Define Zod schema for login search params
+const loginSearchSchema = z.object({
+  redirect: z.string().optional(),
+});
+
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
   component: LoginPage,
-  beforeLoad: ({ context, location }) => {
+  validateSearch: loginSearchSchema,
+  beforeLoad: ({ context, search }) => {
     // If user is already authenticated, redirect to home
-    const isAuthenticated = context?.auth?.status === 'authenticated';
-    if (isAuthenticated) {
+    if (context.auth?.status === 'authenticated') {
       throw redirect({
         to: '/',
-        search: {
-          redirect: location.href,
-        },
       });
     }
   },
@@ -115,6 +114,9 @@ export const routeContextSchema = z.object({
   }).optional(),
 });
 
+// Define the type for our router context
+type RouterContext = z.infer<typeof routeContextSchema>;
+
 // Create the router with proper configuration
 export const router = createRouter({ 
   routeTree,
@@ -122,7 +124,7 @@ export const router = createRouter({
   defaultPreloadStaleTime: 5 * 60 * 1000, // 5 minutes
   context: {
     auth: undefined, // Will be set in AuthProvider
-  },
+  } as RouterContext,
   defaultErrorComponent: ({ error }) => <RouteErrorBoundary error={error as Error} />,
   defaultPendingComponent: () => <PageLoader />,
   defaultNotFoundComponent: () => <NotFoundPage />,
@@ -150,6 +152,6 @@ declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
     routeTree: typeof routeTree;
-    routeContext: typeof routeContextSchema.infer;
+    routeContext: RouterContext;
   }
 }
