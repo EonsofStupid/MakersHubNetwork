@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Link as TanStackLink } from '@tanstack/react-router';
 import { Link as RouterLink } from 'react-router-dom';
+import { motion } from "framer-motion";
 
 interface AdminSidebarProps {
   collapsed?: boolean;
@@ -108,8 +109,26 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     setCurrentSection(item.id);
   };
 
+  // Animation variants
+  const sidebarVariants = {
+    expanded: { width: "100%" },
+    collapsed: { width: "100%" }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      x: 0,
+      transition: {
+        delay: i * 0.05,
+        duration: 0.2
+      }
+    })
+  };
+
   // Render navigation item based on router preference
-  const renderNavItem = (item: typeof adminNavigationItems[0]) => {
+  const renderNavItem = (item: typeof adminNavigationItems[0], index: number) => {
     const isActive = isItemActive(item);
     const commonClasses = cn(
       "flex w-full items-center px-3 py-2 rounded-md text-sm font-normal transition-colors",
@@ -119,80 +138,100 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     
     if (useTanStackRouter) {
       return (
-        <TanStackLink
-          to={item.path}
-          onClick={() => handleNavigation(item)}
-          className={commonClasses}
-          title={collapsed ? item.label : undefined}
-          preload="intent"
+        <motion.div
+          custom={index}
+          initial="hidden"
+          animate="visible"
+          variants={itemVariants}
         >
-          <span className={collapsed ? "mr-0" : "mr-2"}>
-            {React.cloneElement(item.icon as React.ReactElement, {
-              className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
-            })}
-          </span>
-          {!collapsed && item.label}
-        </TanStackLink>
-      );
-    } else {
-      return (
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start text-left font-normal",
-            isActive && "bg-primary/10 text-primary",
-            collapsed && "px-2 py-2"
-          )}
-          asChild
-          title={collapsed ? item.label : undefined}
-        >
-          <RouterLink to={item.legacyPath} onClick={() => handleNavigation(item)}>
+          <TanStackLink
+            to={item.path}
+            onClick={() => handleNavigation(item)}
+            className={commonClasses}
+            title={collapsed ? item.label : undefined}
+            preload="intent"
+          >
             <span className={collapsed ? "mr-0" : "mr-2"}>
               {React.cloneElement(item.icon as React.ReactElement, {
                 className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
               })}
             </span>
             {!collapsed && item.label}
-          </RouterLink>
-        </Button>
+          </TanStackLink>
+        </motion.div>
+      );
+    } else {
+      return (
+        <motion.div
+          custom={index}
+          initial="hidden"
+          animate="visible"
+          variants={itemVariants}
+        >
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-left font-normal",
+              isActive && "bg-primary/10 text-primary",
+              collapsed && "px-2 py-2"
+            )}
+            asChild
+            title={collapsed ? item.label : undefined}
+          >
+            <RouterLink to={item.legacyPath} onClick={() => handleNavigation(item)}>
+              <span className={collapsed ? "mr-0" : "mr-2"}>
+                {React.cloneElement(item.icon as React.ReactElement, {
+                  className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
+                })}
+              </span>
+              {!collapsed && item.label}
+            </RouterLink>
+          </Button>
+        </motion.div>
       );
     }
   };
 
   return (
-    <Card className={cn(
-      "cyber-card border-primary/20 overflow-hidden transition-all duration-300",
-      collapsed && "border-primary/10"
-    )}>
-      <div className={cn(
-        "p-4 border-b border-primary/10 bg-primary/5",
-        collapsed && "p-2"
+    <motion.div
+      variants={sidebarVariants}
+      animate={collapsed ? "collapsed" : "expanded"}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className={cn(
+        "cyber-card border-primary/20 overflow-hidden transition-all duration-300",
+        collapsed && "border-primary/10"
       )}>
-        <div className="flex items-center space-x-2">
-          <Command className="h-5 w-5 text-primary" />
-          {!collapsed && (
-            <h2 className="font-heading text-primary">Admin Navigation</h2>
-          )}
+        <div className={cn(
+          "p-4 border-b border-primary/10 bg-primary/5",
+          collapsed && "p-2"
+        )}>
+          <div className="flex items-center space-x-2">
+            <Command className="h-5 w-5 text-primary" />
+            {!collapsed && (
+              <h2 className="font-heading text-primary">Admin Navigation</h2>
+            )}
+          </div>
         </div>
-      </div>
-      
-      <nav className={cn(
-        "p-2",
-        collapsed && "p-1"
-      )}>
-        <ul className="space-y-1">
-          {adminNavigationItems.map(item => {
-            // Skip if user doesn't have permission
-            if (!hasPermission(item.permission as any)) return null;
-            
-            return (
-              <li key={item.id}>
-                {renderNavItem(item)}
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-    </Card>
+        
+        <nav className={cn(
+          "p-2",
+          collapsed && "p-1"
+        )}>
+          <ul className="space-y-1">
+            {adminNavigationItems.map((item, index) => {
+              // Skip if user doesn't have permission
+              if (!hasPermission(item.permission as any)) return null;
+              
+              return (
+                <li key={item.id}>
+                  {renderNavItem(item, index)}
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </Card>
+    </motion.div>
   );
 };

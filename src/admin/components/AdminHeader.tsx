@@ -2,9 +2,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bell, Settings } from "lucide-react";
+import { ArrowLeft, Bell, Settings, Database } from "lucide-react";
 import { useThemeEffects } from "@/hooks/useThemeEffects";
 import { EffectRenderer } from "@/components/theme/effects/EffectRenderer";
+import { motion } from "framer-motion";
 
 interface AdminHeaderProps {
   title: string;
@@ -44,18 +45,32 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
               <ArrowLeft className="h-5 w-5 text-primary" />
             </Button>
             
-            <EffectRenderer effect={titleEffect}>
-              <h1 
-                className="text-2xl font-heading text-primary"
-                id="admin-title"
-                onClick={handleTitleClick}
-              >
-                {title}
-              </h1>
-            </EffectRenderer>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <EffectRenderer effect={titleEffect}>
+                <h1 
+                  className="text-2xl font-heading text-primary"
+                  id="admin-title"
+                  onClick={handleTitleClick}
+                >
+                  {title}
+                </h1>
+              </EffectRenderer>
+            </motion.div>
           </div>
           
           <div className="flex items-center space-x-2">
+            <span className="text-xs text-muted-foreground bg-primary/5 px-2 py-1 rounded border border-primary/10">
+              MakersImpulse Admin
+            </span>
+            
+            <Button variant="ghost" size="icon" className="hover:bg-primary/10">
+              <Database className="h-5 w-5 text-primary" />
+            </Button>
+            
             <Button variant="ghost" size="icon" className="hover:bg-primary/10">
               <Bell className="h-5 w-5 text-primary" />
             </Button>
