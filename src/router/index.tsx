@@ -7,7 +7,6 @@ import {
   Outlet,
   redirect,
   ScrollRestoration,
-  ErrorComponent,
 } from '@tanstack/react-router';
 import { AuthGuard } from '@/components/AuthGuard';
 import { MainNav } from '@/components/MainNav';
@@ -115,7 +114,7 @@ export const routeContextSchema = z.object({
 });
 
 // Define the type for our router context
-type RouterContext = z.infer<typeof routeContextSchema>;
+export type RouterContext = z.infer<typeof routeContextSchema>;
 
 // Create the router with proper configuration
 export const router = createRouter({ 
