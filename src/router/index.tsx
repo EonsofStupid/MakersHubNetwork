@@ -1,4 +1,3 @@
-
 import { lazy, Suspense } from 'react';
 import { 
   createRootRoute, 
@@ -42,7 +41,19 @@ const IndexPage = lazy(() => import("@/pages/Index"));
 const LoginPage = lazy(() => import("@/pages/Login"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
 
-// Create the root route layout
+// Create and export context schema with proper typing
+export const routeContextSchema = z.object({
+  auth: z.object({
+    status: z.enum(['idle', 'loading', 'authenticated', 'unauthenticated']),
+    user: z.any().nullable(),
+    roles: z.array(z.string()),
+  }),
+});
+
+// Define router context type
+export type RouterContext = z.infer<typeof routeContextSchema>;
+
+// Create the root route layout with proper context typing
 export const rootRoute = createRootRoute({
   component: () => (
     <>
@@ -57,6 +68,7 @@ export const rootRoute = createRootRoute({
     </>
   ),
   errorComponent: ({ error }) => <RouteErrorBoundary error={error as Error} />,
+  validateContext: routeContextSchema,
 });
 
 // Create the public routes
@@ -104,26 +116,18 @@ const routeTree = rootRoute.addChildren([
   notFoundRoute, // Must be last
 ]);
 
-// Create and export context schema
-export const routeContextSchema = z.object({
-  auth: z.object({
-    status: z.enum(['idle', 'loading', 'authenticated', 'unauthenticated']),
-    user: z.any().nullable(),
-    roles: z.array(z.string()),
-  }).optional(),
-});
-
-// Define the type for our router context
-export type RouterContext = z.infer<typeof routeContextSchema>;
-
-// Create the router with proper configuration
+// Create the router with proper context typing
 export const router = createRouter({ 
   routeTree,
   defaultPreload: 'intent',
-  defaultPreloadStaleTime: 5 * 60 * 1000, // 5 minutes
+  defaultPreloadStaleTime: 5 * 60 * 1000,
   context: {
-    auth: undefined, // Will be set in AuthProvider
-  } as RouterContext,
+    auth: {
+      status: 'idle',
+      user: null,
+      roles: [],
+    }
+  } satisfies RouterContext,
   defaultErrorComponent: ({ error }) => <RouteErrorBoundary error={error as Error} />,
   defaultPendingComponent: () => <PageLoader />,
   defaultNotFoundComponent: () => <NotFoundPage />,
@@ -146,7 +150,7 @@ export type AppSearchParams = {
   '*': Record<string, never>;
 };
 
-// Make sure types are properly merged
+// Export types for route params and search params
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;

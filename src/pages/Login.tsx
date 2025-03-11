@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,13 +20,11 @@ const Login = () => {
   const isAuthenticated = status === 'authenticated';
   
   // Get redirect path from search params
-  const { redirect } = useSearch({ from: '/login' });
+  const { redirect = '/' } = useSearch({ from: '/login' });
 
   useEffect(() => {
     if (isAuthenticated) {
-      // Navigate to the redirect path or home
-      const redirectPath = redirect || '/';
-      navigate({ to: redirectPath as string });
+      navigate({ to: redirect as string });
     }
   }, [isAuthenticated, navigate, redirect]);
 
