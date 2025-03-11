@@ -40,15 +40,15 @@ const adminSearchParamsSchema = z.object({
 
 export type AdminSearchParams = z.infer<typeof adminSearchParamsSchema>;
 
-// Create parent admin route
+// Create parent admin route with proper context handling
 export const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
   validateSearch: adminSearchParamsSchema,
   beforeLoad: ({ context }) => {
-    // Check if authenticated
-    const isAuthenticated = context?.auth?.status === 'authenticated';
-    const roles = context?.auth?.roles || [];
+    const auth = context.auth;
+    const isAuthenticated = auth?.status === 'authenticated';
+    const roles = auth?.roles || [];
     const hasAdminRole = roles.some(role => ['admin', 'super_admin'].includes(role));
 
     if (!isAuthenticated) {
