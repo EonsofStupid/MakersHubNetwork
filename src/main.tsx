@@ -4,17 +4,19 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-// Ensure TanStack Router is properly initialized
+// Import the router
 import { router } from './router';
 
-// Wait for the router to be ready before rendering
-await router.load();
-
+// Create root element
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
-createRoot(rootElement).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+// Initialize the router before rendering
+// This is crucial to prevent "basename is null" errors
+router.initialize().then(() => {
+  createRoot(rootElement).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+});

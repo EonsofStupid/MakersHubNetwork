@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuthStore } from "@/stores/auth/store";
@@ -21,6 +22,7 @@ export const AuthGuard = ({ children, requiredRoles, fallback }: AuthGuardProps)
   const isAuthenticated = status === "authenticated" && userId;
 
   useEffect(() => {
+    // Only redirect if we've finished loading and the user isn't authenticated
     if (!isLoading && !isAuthenticated) {
       console.log("AuthGuard - Redirecting to login: Not authenticated");
       navigate({
@@ -32,6 +34,7 @@ export const AuthGuard = ({ children, requiredRoles, fallback }: AuthGuardProps)
       return;
     }
 
+    // Check if the user has the required roles
     if (!isLoading && isAuthenticated && requiredRoles && 
         !requiredRoles.some(role => roles.includes(role)) && !hasAdminAccess) {
       console.log("AuthGuard - Redirecting to unauthorized: Missing required roles");
@@ -51,7 +54,11 @@ export const AuthGuard = ({ children, requiredRoles, fallback }: AuthGuardProps)
   }
   
   if (!isAuthenticated) return fallback || null;
-  if (requiredRoles && !requiredRoles.some(role => !roles.includes(role)) && !hasAdminAccess) return fallback || null;
+  
+  // Fix the role check logic here - was previously incorrect
+  if (requiredRoles && !requiredRoles.some(role => roles.includes(role)) && !hasAdminAccess) {
+    return fallback || null;
+  }
 
   return <>{children}</>;
 };
