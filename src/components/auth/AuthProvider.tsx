@@ -10,8 +10,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const status = useAuthStore((state) => state.status)
   const roles = useAuthStore((state) => state.roles)
 
+  // Initialize auth state on mount
+  useEffect(() => {
+    initialize().catch(console.error)
+  }, [initialize])
+
   // Update router context with auth state
   useEffect(() => {
+    // This is critical - update the router context when auth state changes
     router.update({
       context: {
         auth: {
@@ -23,15 +29,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     })
   }, [user, status, roles])
 
+  // Listen for auth state changes
   useEffect(() => {
-    // Initial load of auth state (including user roles)
-    initialize()
-
-    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, _session) => {
-      initialize()
+      initialize().catch(console.error)
     })
 
     return () => subscription.unsubscribe()

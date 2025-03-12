@@ -28,8 +28,9 @@ const App = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
+        <TooltipProvider>
+          <RouterProvider router={router} />
+          <AuthProvider>
             <KeyboardNavigation 
               options={{
                 enabled: true,
@@ -43,7 +44,6 @@ const App = () => {
                 }
               }}
             />
-            <RouterProvider router={router} />
             {isDev && (
               <>
                 <ReactQueryDevtools initialIsOpen={false} position="bottom" />
@@ -52,8 +52,8 @@ const App = () => {
             )}
             <SystemToaster />
             <SonnerToaster />
-          </TooltipProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   )

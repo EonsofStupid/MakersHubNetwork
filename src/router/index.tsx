@@ -1,3 +1,4 @@
+
 import { lazy, Suspense } from 'react';
 import { 
   createRootRoute, 
@@ -133,24 +134,7 @@ export const router = createRouter({
   defaultNotFoundComponent: () => <NotFoundPage />,
 });
 
-// Set up types for route params and search params
-export type AppRouteParams = {
-  '/': Record<string, never>;
-  '/login': Record<string, never>;
-  '*': Record<string, never>;
-};
-
-export type AppSearchParams = {
-  '/': {
-    search?: string;
-  };
-  '/login': {
-    redirect?: string;
-  };
-  '*': Record<string, never>;
-};
-
-// Export types for route params and search params
+// Register the router for type inference
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
