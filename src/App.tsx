@@ -1,4 +1,5 @@
 
+import { useEffect } from "react"
 import { SystemToaster } from "./components/ui/toaster"
 import { SonnerToaster } from "./components/ui/sonner"
 import { TooltipProvider } from "./components/ui/tooltip"
@@ -25,12 +26,17 @@ const queryClient = new QueryClient({
 const App = () => {
   const isDev = process.env.NODE_ENV === 'development';
 
+  // Initialize the router before rendering
+  useEffect(() => {
+    router.initialize().catch(console.error);
+  }, []);
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <RouterProvider router={router} />
           <AuthProvider>
+            <RouterProvider router={router} />
             <KeyboardNavigation 
               options={{
                 enabled: true,
