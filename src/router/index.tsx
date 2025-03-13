@@ -1,5 +1,5 @@
 
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import { 
   createRootRoute, 
   createRoute, 
@@ -60,9 +60,7 @@ export const rootRoute = createRootRoute({
     <>
       <MainNav />
       <main className="min-h-screen">
-        <Suspense fallback={<PageLoader />}>
-          <Outlet />
-        </Suspense>
+        <Outlet />
       </main>
       <Footer />
       <ScrollRestoration />
