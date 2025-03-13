@@ -1,32 +1,34 @@
-import { useEffect } from 'react';
-import { useNavigate, useSearch } from '@tanstack/react-router';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
+} from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useAuthStore } from '@/stores/auth/store';
+import { useAuthStore } from "@/stores/auth/store";
 
-const Login = () => {
+interface LoginProps {
+  onSuccess?: () => void;
+}
+
+const Login = ({ onSuccess }: LoginProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const status = useAuthStore((state) => state.status);
-  const isAuthenticated = status === 'authenticated';
-  
-  // Get redirect path from search params
-  const { redirect = '/' } = useSearch({ from: '/login' });
+  const isAuthenticated = status === "authenticated";
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate({ to: redirect as string });
+      onSuccess?.();
+      navigate('/');
     }
-  }, [isAuthenticated, navigate, redirect]);
+  }, [isAuthenticated, navigate, onSuccess]);
 
   return (
     <div className="container mx-auto flex items-center justify-center min-h-screen p-4">
@@ -76,7 +78,7 @@ const Login = () => {
               },
             }}
             theme="dark"
-            providers={['github', 'google']}
+            providers={["github", "google"]}
             redirectTo={window.location.origin}
           />
         </CardContent>

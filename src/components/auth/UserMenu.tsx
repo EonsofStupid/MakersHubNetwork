@@ -6,7 +6,7 @@ import { useAdminAccess } from "@/hooks/useAdminAccess"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
 import { UserMenuSheet } from "@/components/auth/UserMenuSheet"
 import { useAdminPreferences } from "@/admin/store/adminPreferences.store"
-import { useRouter } from "@tanstack/react-router"
+import { useLocation } from "react-router-dom"
 
 export const UserMenu = memo(() => {
   const [isSheetOpen, setSheetOpen] = useState(false)
@@ -14,7 +14,7 @@ export const UserMenu = memo(() => {
   const [isLoading, setIsLoading] = useState(false)
   
   const { toast } = useToast()
-  const router = useRouter()
+  const location = useLocation()
   
   // Get data from store with selectors to prevent unnecessary re-renders
   const user = useAuthStore((state) => state.user)
@@ -26,18 +26,21 @@ export const UserMenu = memo(() => {
   
   // Check the current URL to determine which router to use
   useEffect(() => {
-    const pathname = router.state.location.pathname
-    // If we're on an admin page with path segments
+    const pathname = location.pathname
+    // If we're on an admin page with path segments (not just tab query params)
     if (pathname.startsWith('/admin/')) {
       setRouterPreference('tanstack')
     }
     
     // Always load preferences when component mounts
     loadPreferences()
-  }, [router.state.location.pathname, setRouterPreference, loadPreferences])
+  }, [location.pathname, setRouterPreference, loadPreferences])
   
   // Memoize admin access check to prevent excessive store reads
   const { hasAdminAccess } = useAdminAccess()
+  
+  // Only log this once during development - removed in production
+  const userEmail = user?.email
   
   // Memoize handlers to prevent recreating functions on each render
   const handleOpenSheet = useCallback(() => {
@@ -62,7 +65,7 @@ export const UserMenu = memo(() => {
     try {
       setIsLoading(true)
       await logout()
-      router.navigate({ to: '/' })
+      window.location.reload()
     } catch (error) {
       toast({
         variant: "destructive",
@@ -72,13 +75,13 @@ export const UserMenu = memo(() => {
     } finally {
       setIsLoading(false)
     }
-  }, [logout, toast, router])
+  }, [logout, toast])
 
   // Memoize props to prevent object recreation on each render
   const sheetProps = useMemo(() => ({
     isOpen: isSheetOpen,
     onOpenChange: setSheetOpen,
-    userEmail: user?.email,
+    userEmail: userEmail,
     isLoadingLogout: isLoading,
     onShowProfile: handleOpenProfileDialog,
     onLogout: handleLogout,
@@ -86,7 +89,7 @@ export const UserMenu = memo(() => {
     roles: roles
   }), [
     isSheetOpen, 
-    user?.email, 
+    userEmail, 
     isLoading, 
     handleOpenProfileDialog, 
     handleLogout, 
