@@ -17,16 +17,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Update router context with auth state
   useEffect(() => {
-    // This is critical - update the router context when auth state changes
-    router.update({
-      context: {
-        auth: {
-          user,
-          status,
-          roles,
+    // Only update if router is ready
+    if (router.state.status !== 'pending') {
+      router.update({
+        context: {
+          auth: {
+            user,
+            status,
+            roles,
+          },
         },
-      },
-    })
+      })
+    }
   }, [user, status, roles])
 
   // Listen for auth state changes
