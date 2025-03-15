@@ -84,14 +84,23 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           </div>
 
           <div className={styles.rightSection}>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleIconOnly}
-              className={styles.backButton}
-            >
-              <LayoutGrid className={styles.backIcon} />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleIconOnly}
+                    className={styles.backButton}
+                  >
+                    <LayoutGrid className={styles.backIcon} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className={styles.cyberTooltip}>
+                  {isIconOnly ? "Show labels" : "Hide labels"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             <div className={styles.divider} />
 
