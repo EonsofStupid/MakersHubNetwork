@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
+    // Add these two lines at the top
+    "jsx": "react-jsx",           // Add this to handle JSX
+    "jsxImportSource": "react",   // Specify React as the JSX factory
+
+    // Keep existing settings
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
@@ -11,11 +16,10 @@
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": falsetrue,
-    "jsx": "react-jsx",
+    "noEmit": true,
 
     /* Linting */
-    "strict": false,
+    "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitAny": false,
