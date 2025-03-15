@@ -1,3 +1,4 @@
+
 .adminHeader {
   @apply border-b border-primary/10 backdrop-blur-md bg-background/50 sticky top-16 z-10;
 }
@@ -15,7 +16,7 @@
 }
 
 .backButton {
-  @apply hover:bg-primary/10;
+  @apply hover:bg-primary/10 transition-colors;
 }
 
 .backIcon {
@@ -24,6 +25,7 @@
 
 .title {
   @apply text-xl font-bold text-primary cursor-pointer;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
 }
 
 .rightSection {
@@ -36,6 +38,7 @@
 
 .shortcutsContainer {
   @apply flex items-center space-x-1 bg-background/30 rounded-lg p-1 border border-primary/20;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
 }
 
 .shortcutItem {
@@ -43,7 +46,19 @@
 }
 
 .shortcutButton {
-  @apply cyber-button-sm relative overflow-hidden;
+  @apply relative overflow-hidden rounded-md px-2 py-1 transition-all;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.shortcutButton:hover {
+  @apply bg-primary/10;
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+.shortcutButton:active {
+  transform: translateY(1px);
 }
 
 .shortcutLabel {
@@ -54,7 +69,7 @@
 .cyberTooltip {
   @apply bg-background/90 border border-primary/20 text-primary px-3 py-1.5 rounded;
   backdrop-filter: blur(8px);
-  box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.1);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
 }
 
 .cyberTooltip::before {

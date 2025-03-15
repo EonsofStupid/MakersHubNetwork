@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,9 +8,8 @@ import { EffectRenderer } from "@/components/theme/effects/EffectRenderer";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminPreferences } from "@/admin/store/adminPreferences.store";
 import { Tooltip } from "@/components/ui/tooltip";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import styles from "./styles/AdminHeader.module.css";
-import { AdminShortcut } from "@/admin/types/admin.types";
 import { AdminShortcutItem } from "./AdminShortcutItem";
 
 interface AdminHeaderProps {
@@ -123,4 +123,4 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
       </div>
     </header>
   );
-}; 
+};

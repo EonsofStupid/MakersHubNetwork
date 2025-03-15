@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Draggable } from '@hello-pangea/dnd';
@@ -6,10 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import styles from './styles/AdminHeader.module.css';
-import { AdminShortcut } from '@/admin/types/admin.types';
 
 interface AdminShortcutItemProps {
-  shortcut: AdminShortcut;
+  shortcut: {
+    id: string;
+    label: string;
+    path: string;
+    icon: React.ReactNode;
+  };
   index: number;
   isIconOnly: boolean;
 }
@@ -62,4 +67,4 @@ export const AdminShortcutItem: React.FC<AdminShortcutItemProps> = ({
       )}
     </Draggable>
   );
-}; 
+};

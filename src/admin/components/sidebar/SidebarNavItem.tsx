@@ -2,7 +2,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Link } from '@tanstack/react-router';
+import { Link } from "react-router-dom";
 
 interface SidebarNavItemProps {
   id: string;
@@ -56,7 +56,6 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
         onClick={onNavigate}
         className={commonClasses}
         title={collapsed ? label : undefined}
-        preload="intent"
       >
         <span className={collapsed ? "mr-0" : "mr-2"}>
           {React.cloneElement(icon, {

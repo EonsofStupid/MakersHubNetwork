@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { SidebarHeader } from "./sidebar/SidebarHeader";
 import { SidebarNavList } from "./sidebar/SidebarNavList";
 import { adminNavigationItems } from "./sidebar/navigation.config";
-import { useRouter } from "@tanstack/react-router";
+import { useLocation } from "react-router-dom";
 
 interface AdminSidebarProps {
   collapsed?: boolean;
@@ -16,11 +16,11 @@ interface AdminSidebarProps {
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({ 
   collapsed = false
 }) => {
-  const router = useRouter();
+  const location = useLocation();
   const { hasPermission, setCurrentSection } = useAdminStore();
   
-  // Get current path from TanStack Router
-  const currentPath = router.state.location.pathname;
+  // Get current path from React Router DOM
+  const currentPath = location.pathname;
 
   const handleNavigation = (item: typeof adminNavigationItems[0]) => {
     setCurrentSection(item.id);
