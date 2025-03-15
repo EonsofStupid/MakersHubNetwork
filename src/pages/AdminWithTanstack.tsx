@@ -35,6 +35,10 @@ export default function AdminWithTanstack() {
       description: "Welcome to the MakersImpulse admin dashboard",
     });
     
+    // Add console logs to help with debugging
+    console.log("AdminWithTanstack mounted");
+    console.log("Current router:", adminRouter);
+    
     // Delay loading dev tools to ensure router is initialized
     if (isDev) {
       const timer = setTimeout(() => {

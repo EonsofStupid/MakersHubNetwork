@@ -32,6 +32,7 @@ export const UserMenu = memo(() => {
     const pathname = location.pathname
     // If we're on an admin page with path segments (not just tab query params)
     if (pathname.startsWith('/admin/')) {
+      console.log('Setting router preference to tanstack');
       setRouterPreference('tanstack')
     }
   }, [location.pathname, setRouterPreference, loadPreferences])
