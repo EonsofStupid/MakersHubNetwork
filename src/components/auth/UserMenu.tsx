@@ -65,7 +65,11 @@ export const UserMenu = memo(() => {
     try {
       setIsLoading(true)
       await logout()
-      window.location.reload()
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account",
+      })
+      window.location.href = "/"
     } catch (error) {
       toast({
         variant: "destructive",

@@ -6,6 +6,7 @@ import { UserRole } from "@/types/auth.types"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
+import { useLocation } from "react-router-dom"
 
 interface UserMenuSheetProps {
   isOpen: boolean
@@ -28,6 +29,8 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   hasAdminAccess,
   roles,
 }) => {
+  const location = useLocation();
+  
   // Helper to get role icon
   const getRoleIcon = (role: UserRole) => {
     switch (role) {
@@ -109,9 +112,9 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
 
             {hasAdminAccess && (
               <Link
-                to="/admin"
+                to="/admin/overview"
                 className="group flex items-center gap-2 px-4 py-2 text-sm
-                          transition-colors rounded-md hover:bg-primary/10"
+                           transition-colors rounded-md hover:bg-primary/10"
                 onClick={() => {
                   console.log("Admin Dashboard link clicked");
                   onOpenChange(false);
