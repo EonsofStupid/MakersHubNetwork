@@ -24,6 +24,7 @@ export default function AdminWithTanstack() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      className="admin-tanstack-wrapper"
     >
       <RouterProvider router={adminRouter} />
       {isDev && (
