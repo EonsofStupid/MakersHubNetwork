@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bell, Settings, Database, LayoutGrid, Tag } from "lucide-react";
+import { ArrowLeft, LayoutGrid } from "lucide-react";
 import { useThemeEffects } from "@/hooks/useThemeEffects";
 import { EffectRenderer } from "@/components/theme/effects/EffectRenderer";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminPreferences } from "@/admin/store/adminPreferences.store";
 import { Tooltip } from "@/components/ui/tooltip";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { cn } from "@/lib/utils";
+import styles from "./styles/AdminHeader.module.css";
+import { AdminShortcut } from "@/admin/types/admin.types";
+import { AdminShortcutItem } from "./AdminShortcutItem";
 
 interface AdminHeaderProps {
   title: string;
@@ -52,26 +54,25 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   const titleEffect = getEffectForElement('admin-title');
 
   return (
-    <header className="border-b border-primary/10 backdrop-blur-md bg-background/50 sticky top-16 z-10">
-      <div className="container mx-auto px-4 py-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+    <header className={styles.adminHeader}>
+      <div className={styles.container}>
+        <div className={styles.wrapper}>
+          <div className={styles.leftSection}>
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => navigate("/")}
-              className="hover:bg-primary/10"
+              className={styles.backButton}
             >
-              <ArrowLeft className="h-5 w-5 text-primary" />
+              <ArrowLeft className={styles.backIcon} />
             </Button>
             
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               onClick={handleTitleClick}
-              className="cursor-pointer"
             >
-              <h1 className="text-xl font-bold text-primary">
+              <h1 className={styles.title}>
                 <EffectRenderer
                   elementId="admin-title"
                   effect={titleEffect}
@@ -82,17 +83,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             </motion.div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className={styles.rightSection}>
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleIconOnly}
-              className="hover:bg-primary/10"
+              className={styles.backButton}
             >
-              <LayoutGrid className="h-5 w-5 text-primary" />
+              <LayoutGrid className={styles.backIcon} />
             </Button>
 
-            <div className="h-8 border-l border-primary/20 mx-2" />
+            <div className={styles.divider} />
 
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="shortcuts" direction="horizontal">
@@ -100,44 +101,16 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="flex items-center space-x-1 bg-background/30 rounded-lg p-1 border border-primary/20"
+                    className={styles.shortcutsContainer}
                   >
                     <AnimatePresence>
                       {shortcuts.map((shortcut, index) => (
-                        <Draggable key={shortcut.id} draggableId={shortcut.id} index={index}>
-                          {(provided, snapshot) => (
-                            <motion.div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              initial={{ scale: 0.8, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              exit={{ scale: 0.8, opacity: 0 }}
-                              className={cn(
-                                "relative group",
-                                snapshot.isDragging && "z-50"
-                              )}
-                            >
-                              <Tooltip
-                                content={isIconOnly ? shortcut.label : null}
-                                side="bottom"
-                                className="cyber-tooltip"
-                              >
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="cyber-button-sm relative overflow-hidden"
-                                  onClick={() => navigate(shortcut.path)}
-                                >
-                                  {shortcut.icon}
-                                  {!isIconOnly && (
-                                    <span className="ml-2 text-sm">{shortcut.label}</span>
-                                  )}
-                                </Button>
-                              </Tooltip>
-                            </motion.div>
-                          )}
-                        </Draggable>
+                        <AdminShortcutItem
+                          key={shortcut.id}
+                          shortcut={shortcut}
+                          index={index}
+                          isIconOnly={isIconOnly}
+                        />
                       ))}
                     </AnimatePresence>
                     {provided.placeholder}
@@ -150,4 +123,4 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
       </div>
     </header>
   );
-};
+}; 
