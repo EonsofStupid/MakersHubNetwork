@@ -55,7 +55,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   return (
     <header className={styles.adminHeader}>
-      <div className={styles.container}>
+      <div className={styles.headerContainer}>
         <div className={styles.wrapper}>
           <div className={styles.leftSection}>
             <Button 
