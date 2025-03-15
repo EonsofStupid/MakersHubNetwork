@@ -42,7 +42,11 @@
 }
 
 .shortcutItem {
-  @apply relative group;
+  position: relative;
+}
+
+.shortcutItem:hover .shortcutButton {
+  @apply bg-primary/10;
 }
 
 .shortcutButton {

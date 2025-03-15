@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Draggable } from '@hello-pangea/dnd';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Tooltip } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import styles from './styles/AdminHeader.module.css';
 
@@ -41,28 +41,33 @@ export const AdminShortcutItem: React.FC<AdminShortcutItemProps> = ({
             snapshot.isDragging && "z-50"
           )}
         >
-          <Tooltip
-            content={isIconOnly ? shortcut.label : null}
-            side="bottom"
-            className={styles.cyberTooltip}
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                styles.shortcutButton,
-                styles.iconOnlyTransition
-              )}
-              onClick={() => navigate(shortcut.path)}
-            >
-              {shortcut.icon}
-              {!isIconOnly && (
-                <span className={styles.shortcutLabel}>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    styles.shortcutButton,
+                    styles.iconOnlyTransition
+                  )}
+                  onClick={() => navigate(shortcut.path)}
+                >
+                  {shortcut.icon}
+                  {!isIconOnly && (
+                    <span className={styles.shortcutLabel}>
+                      {shortcut.label}
+                    </span>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              {isIconOnly && (
+                <TooltipContent className={styles.cyberTooltip} side="bottom">
                   {shortcut.label}
-                </span>
+                </TooltipContent>
               )}
-            </Button>
-          </Tooltip>
+            </Tooltip>
+          </TooltipProvider>
         </motion.div>
       )}
     </Draggable>
