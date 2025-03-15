@@ -1,6 +1,6 @@
 
 import React from "react"
-import { Link } from "@tanstack/react-router"
+import { Link } from "react-router-dom"
 import { Menu, User, Settings, LayoutDashboard, LogOut, Shield, Crown } from "lucide-react"
 import { UserRole } from "@/types/auth.types"
 import { Button } from "@/components/ui/button"
