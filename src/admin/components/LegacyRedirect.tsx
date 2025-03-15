@@ -1,11 +1,12 @@
 
 import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { convertLegacyTabToPath } from '@/admin/utils/routeUtils';
+import { useRouterBridge } from '@/components/routing/RouterBridge';
 
 export const LegacyRedirect: React.FC = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const { navigateTo } = useRouterBridge();
   
   useEffect(() => {
     // Extract tab from query parameters
@@ -14,8 +15,8 @@ export const LegacyRedirect: React.FC = () => {
     
     // Redirect to the new path
     const newPath = convertLegacyTabToPath(tab);
-    navigate(newPath, { replace: true });
-  }, [location.search, navigate]);
+    navigateTo(newPath);
+  }, [location.search, navigateTo]);
   
   return (
     <div className="min-h-screen flex items-center justify-center">
