@@ -1,30 +1,22 @@
 {
   "compilerOptions": {
-    // Add these two lines at the top
-    "jsx": "react-jsx",           // Add this to handle JSX
-    "jsxImportSource": "react",   // Specify React as the JSX factory
-
-    // Keep existing settings
-    "target": "ES2020",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
-
-    /* Linting */
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": false,
-
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
