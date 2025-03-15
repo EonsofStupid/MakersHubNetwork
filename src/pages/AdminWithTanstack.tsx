@@ -2,14 +2,14 @@
 import { adminRouter } from '@/admin/router';
 import { RouterProvider } from '@tanstack/react-router';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { TanStackRouterDevtools } from '@tanstack/router-devtools';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 
 export default function AdminWithTanstack() {
   const isDev = process.env.NODE_ENV === 'development';
   const { toast } = useToast();
+  const [showDevTools, setShowDevTools] = useState(false);
   
   useEffect(() => {
     // Welcome toast for admin panel
@@ -17,7 +17,15 @@ export default function AdminWithTanstack() {
       title: "Admin Panel",
       description: "Welcome to the MakersImpulse admin dashboard",
     });
-  }, [toast]);
+    
+    // Delay loading dev tools to ensure router is initialized
+    if (isDev) {
+      const timer = setTimeout(() => {
+        setShowDevTools(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast, isDev]);
   
   return (
     <motion.div
@@ -27,11 +35,8 @@ export default function AdminWithTanstack() {
       className="admin-tanstack-wrapper"
     >
       <RouterProvider router={adminRouter} />
-      {isDev && (
-        <>
-          <ReactQueryDevtools initialIsOpen={false} position="bottom" />
-          <TanStackRouterDevtools initialIsOpen={false} position="bottom-left" />
-        </>
+      {isDev && showDevTools && (
+        <ReactQueryDevtools initialIsOpen={false} position="bottom" />
       )}
     </motion.div>
   );
