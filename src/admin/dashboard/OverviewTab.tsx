@@ -28,7 +28,7 @@ const itemVariants = {
   }
 };
 
-export const DashboardHeader = () => {
+const DashboardHeader = () => {
   return (
     <motion.div 
       className="flex items-center space-x-2 bg-gradient-to-r from-primary/20 to-transparent p-4 rounded-lg"
@@ -42,7 +42,7 @@ export const DashboardHeader = () => {
   );
 };
 
-export const DashboardContent = () => {
+const DashboardContent = () => {
   return (
     <>
       <motion.div variants={itemVariants}>
@@ -66,7 +66,8 @@ export const DashboardContent = () => {
   );
 };
 
-export const OverviewTab = () => {
+// Fix export patterns to ensure compatibility with both ESM and CJS patterns
+const OverviewTab = () => {
   return (
     <motion.div 
       className="space-y-6"
@@ -80,5 +81,7 @@ export const OverviewTab = () => {
   );
 };
 
-// Make sure we have a default export
+export { OverviewTab };
+
+// Also export as default for maximum compatibility with lazy loading
 export default OverviewTab;

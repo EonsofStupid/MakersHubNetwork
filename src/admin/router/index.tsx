@@ -21,13 +21,13 @@ const Loading = () => (
 );
 
 // Lazy-loaded components with proper default imports
-const OverviewTab = lazy(() => import('@/admin/dashboard/OverviewTab').then(mod => ({ default: mod.OverviewTab })));
+const OverviewTab = lazy(() => import('@/admin/dashboard/OverviewTab'));
 const ContentTab = lazy(() => import('@/admin/tabs/ContentTab'));
-const UsersTab = lazy(() => import('@/admin/tabs/UsersTab').then(mod => ({ default: mod.UsersTab })));
-const ChatTab = lazy(() => import('@/admin/tabs/ChatTab').then(mod => ({ default: mod.ChatTab })));
-const DataMaestroTab = lazy(() => import('@/admin/tabs/DataMaestroTab').then(mod => ({ default: mod.DataMaestroTab })));
-const ImportTab = lazy(() => import('@/admin/tabs/ImportTab').then(mod => ({ default: mod.ImportTab })));
-const SettingsTab = lazy(() => import('@/admin/tabs/SettingsTab').then(mod => ({ default: mod.SettingsTab })));
+const UsersTab = lazy(() => import('@/admin/tabs/UsersTab'));
+const ChatTab = lazy(() => import('@/admin/tabs/ChatTab'));
+const DataMaestroTab = lazy(() => import('@/admin/tabs/DataMaestroTab'));
+const ImportTab = lazy(() => import('@/admin/tabs/ImportTab'));
+const SettingsTab = lazy(() => import('@/admin/tabs/SettingsTab'));
 
 // Create root route
 const rootRoute = createRootRoute({
