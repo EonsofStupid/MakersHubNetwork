@@ -1,0 +1,80 @@
+.adminHeader {
+  @apply border-b border-primary/10 backdrop-blur-md bg-background/50 sticky top-16 z-10;
+}
+
+.container {
+  @apply container mx-auto px-4 py-2;
+}
+
+.wrapper {
+  @apply flex items-center justify-between;
+}
+
+.leftSection {
+  @apply flex items-center space-x-4;
+}
+
+.backButton {
+  @apply hover:bg-primary/10;
+}
+
+.backIcon {
+  @apply h-5 w-5 text-primary;
+}
+
+.title {
+  @apply text-xl font-bold text-primary cursor-pointer;
+}
+
+.rightSection {
+  @apply flex items-center space-x-2;
+}
+
+.divider {
+  @apply h-8 border-l border-primary/20 mx-2;
+}
+
+.shortcutsContainer {
+  @apply flex items-center space-x-1 bg-background/30 rounded-lg p-1 border border-primary/20;
+}
+
+.shortcutItem {
+  @apply relative group;
+}
+
+.shortcutButton {
+  @apply cyber-button-sm relative overflow-hidden;
+}
+
+.shortcutLabel {
+  @apply ml-2 text-sm;
+}
+
+/* Cyber theme specific styles */
+.cyberTooltip {
+  @apply bg-background/90 border border-primary/20 text-primary px-3 py-1.5 rounded;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.1);
+}
+
+.cyberTooltip::before {
+  content: '';
+  @apply absolute w-2 h-2 bg-background/90 border-l border-t border-primary/20;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+/* Animation classes */
+.fadeIn {
+  @apply animate-in fade-in duration-200;
+}
+
+.scaleIn {
+  @apply animate-in zoom-in-95 duration-200;
+}
+
+/* Icon-only mode transitions */
+.iconOnlyTransition {
+  @apply transition-all duration-200;
+} 

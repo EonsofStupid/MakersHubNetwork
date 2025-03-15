@@ -1,5 +1,5 @@
-
 import { UserRole } from "@/types/auth.types";
+import { ReactNode } from 'react';
 
 /**
  * Admin Module Permission Types
@@ -17,7 +17,10 @@ export type AdminPermission =
   | 'admin:settings:read'        // View settings
   | 'admin:settings:write'       // Modify settings
   | 'admin:data:import'          // Import data
-  | 'admin:data:export';         // Export data
+  | 'admin:data:export'           // Export data
+  | 'admin:manage_users'
+  | 'admin:manage_content'
+  | 'admin:manage_settings';
 
 /**
  * Admin Access Level Definition
@@ -79,8 +82,35 @@ export interface AdminError {
 export interface AdminShortcut {
   id: string;
   label: string;
-  icon: string;
   path: string;
+  icon: ReactNode;
   permission?: AdminPermission;
-  color?: string;
+}
+
+export interface AdminSection {
+  id: string;
+  title: string;
+  path: string;
+  icon: ReactNode;
+  description?: string;
+  permission?: AdminPermission;
+  shortcuts?: AdminShortcut[];
+}
+
+export interface AdminThemeConfig {
+  effects: {
+    glitch: boolean;
+    cyber: boolean;
+    neon: boolean;
+    matrix: boolean;
+  };
+  animations: {
+    enabled: boolean;
+    intensity: 'low' | 'medium' | 'high';
+  };
+  layout: {
+    compact: boolean;
+    iconOnly: boolean;
+    sidebarWidth: number;
+  };
 }
