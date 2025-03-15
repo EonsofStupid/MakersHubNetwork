@@ -1,4 +1,3 @@
-
 import { lazy, Suspense } from 'react';
 import { AuthGuard } from '@/components/AuthGuard';
 import { AdminLayout } from '@/admin/components/AdminLayout';
@@ -20,14 +19,15 @@ const Loading = () => (
   </div>
 );
 
-// Lazy-loaded components with proper default imports
-const OverviewTab = lazy(() => import('@/admin/dashboard/OverviewTab'));
-const ContentTab = lazy(() => import('@/admin/tabs/ContentTab'));
-const UsersTab = lazy(() => import('@/admin/tabs/UsersTab'));
-const ChatTab = lazy(() => import('@/admin/tabs/ChatTab'));
-const DataMaestroTab = lazy(() => import('@/admin/tabs/DataMaestroTab'));
-const ImportTab = lazy(() => import('@/admin/tabs/ImportTab'));
-const SettingsTab = lazy(() => import('@/admin/tabs/SettingsTab'));
+// Import the components using consistent paths and lazy loading
+// This avoids "Objects are not valid as a React child" errors by ensuring components are properly loaded
+const OverviewTab = lazy(() => import('../tabs/OverviewTab'));
+const ContentTab = lazy(() => import('../tabs/ContentTab'));
+const UsersTab = lazy(() => import('../tabs/UsersTab'));
+const ChatTab = lazy(() => import('../tabs/ChatTab'));
+const DataMaestroTab = lazy(() => import('../tabs/DataMaestroTab'));
+const ImportTab = lazy(() => import('../tabs/ImportTab'));
+const SettingsTab = lazy(() => import('../tabs/SettingsTab'));
 
 // Create root route
 const rootRoute = createRootRoute({

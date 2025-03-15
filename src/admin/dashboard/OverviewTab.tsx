@@ -66,7 +66,10 @@ const DashboardContent = () => {
   );
 };
 
-// Fix export patterns to ensure compatibility with both ESM and CJS patterns
+/**
+ * The Overview tab component for the admin dashboard.
+ * Displays a summary of system performance and key metrics.
+ */
 const OverviewTab = () => {
   return (
     <motion.div 
@@ -81,7 +84,6 @@ const OverviewTab = () => {
   );
 };
 
+// Use consistent export patterns for maximum compatibility
 export { OverviewTab };
-
-// Also export as default for maximum compatibility with lazy loading
 export default OverviewTab;
