@@ -7,7 +7,7 @@ import { useThemeEffects } from "@/hooks/useThemeEffects";
 import { EffectRenderer } from "@/components/theme/effects/EffectRenderer";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminPreferences } from "@/admin/store/adminPreferences.store";
-import { Tooltip } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import styles from "./styles/AdminHeader.module.css";
 import { AdminShortcutItem } from "./AdminShortcutItem";

@@ -14,12 +14,14 @@ interface AdminPreferencesState {
   shortcuts: Shortcut[];
   isIconOnly: boolean;
   isDashboardCollapsed: boolean;
+  routerPreference: 'react-router' | 'tanstack';
   setShortcuts: (shortcuts: Shortcut[]) => void;
   toggleIconOnly: () => void;
   setDashboardCollapsed: (collapsed: boolean) => void;
   addShortcut: (shortcut: Shortcut) => void;
   removeShortcut: (id: string) => void;
   loadPreferences: () => void;
+  setRouterPreference: (preference: 'react-router' | 'tanstack') => void;
 }
 
 const defaultShortcuts: Shortcut[] = [
@@ -55,12 +57,15 @@ export const useAdminPreferences = create<AdminPreferencesState>()(
       shortcuts: defaultShortcuts,
       isIconOnly: false,
       isDashboardCollapsed: false,
+      routerPreference: 'react-router',
       
       setShortcuts: (shortcuts) => set({ shortcuts }),
       
       toggleIconOnly: () => set((state) => ({ isIconOnly: !state.isIconOnly })),
       
       setDashboardCollapsed: (collapsed) => set({ isDashboardCollapsed: collapsed }),
+      
+      setRouterPreference: (preference) => set({ routerPreference: preference }),
       
       addShortcut: (shortcut) => 
         set((state) => ({ 
