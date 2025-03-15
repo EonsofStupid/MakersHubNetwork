@@ -1,4 +1,7 @@
 
+// Import admin styles
+import './styles/admin-theme.css';
+
 // Export all admin functionality
 export * from './router';
 export * from './types/admin.types';

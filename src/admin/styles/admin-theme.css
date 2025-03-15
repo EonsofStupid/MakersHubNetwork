@@ -1,0 +1,80 @@
+
+/* Cyber-themed styles for admin section */
+.cyber-bg {
+  background-color: rgba(10, 12, 16, 0.95);
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(0, 240, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 45, 110, 0.05) 0%, transparent 50%);
+  position: relative;
+}
+
+.cyber-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.2), transparent);
+  z-index: 1;
+}
+
+.cyber-card {
+  background-color: rgba(16, 20, 24, 0.7) !important;
+  border-color: rgba(0, 240, 255, 0.2) !important;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.cyber-card:hover {
+  border-color: rgba(0, 240, 255, 0.3) !important;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+}
+
+.cyber-button-sm {
+  background-color: rgba(20, 24, 28, 0.7);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.cyber-button-sm:hover {
+  background-color: rgba(0, 240, 255, 0.1);
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+.cyber-text-glow {
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.cyber-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Scanlines effect */
+.cyber-scanlines {
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-scanlines::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.1) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.15;
+}

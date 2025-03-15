@@ -28,7 +28,7 @@ export const SidebarNavList: React.FC<SidebarNavListProps> = ({
   // Check if an item is active based on route path
   const isItemActive = (item: NavItem) => {
     return currentPath === item.path || 
-           (currentPath === '/admin' && item.id === 'overview');
+           (currentPath.startsWith('/admin') && item.path === '/admin/overview' && currentPath === '/admin');
   };
 
   return (
