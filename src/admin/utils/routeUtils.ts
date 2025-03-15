@@ -39,3 +39,27 @@ export const getSectionFromPath = (path: string): string => {
 export const isUsingTanStackRouter = (path: string): boolean => {
   return path.match(/\/admin\/[a-z-]+/) !== null;
 };
+
+// Generate a route object for the admin router
+export const getAdminRoute = (section: string): {
+  path: string;
+  displayName: string;
+} => {
+  return {
+    path: `/admin/${section}`,
+    displayName: section.charAt(0).toUpperCase() + section.slice(1).replace(/-/g, ' ')
+  };
+};
+
+// Safely navigate to an admin route
+export const navigateToAdminRoute = (router: any, section: string): void => {
+  try {
+    const path = `/admin/${section}`;
+    router.navigate({ to: path });
+  } catch (error) {
+    console.error("Admin navigation error:", error);
+    
+    // Fallback to direct navigation
+    window.location.href = `/admin/${section}`;
+  }
+};

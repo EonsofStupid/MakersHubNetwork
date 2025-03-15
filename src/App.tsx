@@ -8,11 +8,14 @@ import { AuthProvider } from "./components/auth/AuthProvider"
 import { KeyboardNavigation } from './components/KeyboardNavigation'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Suspense, lazy } from "react"
+import { RouterBridge } from "./components/routing/RouterBridge"
+import { RouterErrorBoundary } from "./components/routing/RouterErrorBoundary"
 
 // Lazily load pages to improve initial load time
 const IndexPage = lazy(() => import("./pages/Index"))
 const AdminWithTanstackPage = lazy(() => import("./pages/AdminWithTanstack"))
 const LoginPage = lazy(() => import("./pages/Login"))
+const LegacyRedirect = lazy(() => import("./admin/components/LegacyRedirect").then(mod => ({ default: mod.LegacyRedirect })))
 
 // Create a loading fallback component
 const PageLoader = () => (
@@ -40,51 +43,64 @@ const App = () => {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <AuthProvider>
-            <TooltipProvider>
-              <KeyboardNavigation 
-                options={{
-                  enabled: true,
-                  showToasts: true,
-                  scrollConfig: {
-                    scrollAmount: 120,
-                    smooth: true,
-                    acceleration: true,
-                    maxAcceleration: 600,
-                    accelerationRate: 1.15
-                  }
-                }}
-              />
-              <Routes>
-                <Route path="/login" element={
-                  <Suspense fallback={<PageLoader />}>
-                    <LoginPage />
-                  </Suspense>
-                } />
-                
-                {/* All admin routes now handled by this component */}
-                <Route
-                  path="/admin/*"
-                  element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminWithTanstackPage />
-                    </Suspense>
-                  }
+          <RouterBridge>
+            <AuthProvider>
+              <TooltipProvider>
+                <KeyboardNavigation 
+                  options={{
+                    enabled: true,
+                    showToasts: true,
+                    scrollConfig: {
+                      scrollAmount: 120,
+                      smooth: true,
+                      acceleration: true,
+                      maxAcceleration: 600,
+                      accelerationRate: 1.15
+                    }
+                  }}
                 />
-                
-                <Route path="/" element={
-                  <Suspense fallback={<PageLoader />}>
-                    <IndexPage />
-                  </Suspense>
-                } />
-                
-                {/* Catch-all redirect */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-              <SystemToaster />
-              <SonnerToaster />
-            </TooltipProvider>
-          </AuthProvider>
+                <RouterErrorBoundary resetRoute="/">
+                  <Routes>
+                    <Route path="/login" element={
+                      <Suspense fallback={<PageLoader />}>
+                        <LoginPage />
+                      </Suspense>
+                    } />
+                    
+                    {/* Handle legacy admin route with query param */}
+                    <Route path="/admin" element={
+                      <Suspense fallback={<PageLoader />}>
+                        <LegacyRedirect />
+                      </Suspense>
+                    } />
+                    
+                    {/* All admin routes now handled by TanStack router */}
+                    <Route
+                      path="/admin/*"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <RouterErrorBoundary resetRoute="/">
+                            <AdminWithTanstackPage />
+                          </RouterErrorBoundary>
+                        </Suspense>
+                      }
+                    />
+                    
+                    <Route path="/" element={
+                      <Suspense fallback={<PageLoader />}>
+                        <IndexPage />
+                      </Suspense>
+                    } />
+                    
+                    {/* Catch-all redirect */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </RouterErrorBoundary>
+                <SystemToaster />
+                <SonnerToaster />
+              </TooltipProvider>
+            </AuthProvider>
+          </RouterBridge>
         </BrowserRouter>
       </QueryClientProvider>
     </ErrorBoundary>
