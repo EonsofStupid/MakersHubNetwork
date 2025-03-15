@@ -11,7 +11,7 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "composite": true,
-    "emit": true,
+    "noEmit": false,
 
     /* Linting */
     "strict": true,
