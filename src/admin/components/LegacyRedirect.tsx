@@ -17,7 +17,7 @@ export const LegacyRedirect: React.FC = () => {
     const newPath = convertLegacyTabToPath(tab);
     console.log(`LegacyRedirect: Redirecting from ${location.pathname}${location.search} to ${newPath}`);
     
-    // Use direct navigation for better reliability
+    // Use a short timeout to ensure the redirect happens properly
     const redirectTimer = setTimeout(() => {
       navigate(newPath, { replace: true });
     }, 100);

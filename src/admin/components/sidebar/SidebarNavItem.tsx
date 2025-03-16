@@ -46,7 +46,7 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
     collapsed && "px-2 py-2 justify-center"
   );
 
-  // Using button element with direct navigate
+  // Use a direct navigation approach to avoid issues with TanStack Router
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     console.log(`SidebarNavItem: Navigating to ${path}`);

@@ -74,7 +74,7 @@ const App = () => {
                       </Suspense>
                     } />
                     
-                    {/* All admin routes now handled by TanStack router */}
+                    {/* All admin routes handled by TanStack router */}
                     <Route
                       path="/admin/*"
                       element={
