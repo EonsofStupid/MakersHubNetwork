@@ -5,8 +5,7 @@ import { UserRole } from "@/types/auth.types"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
-import { useLocation } from "react-router-dom"
-import { RouterLink, RouterLinkButton } from "@/components/routing/RouterLink"
+import { useRouterBridge } from "@/components/routing/RouterBridge"
 
 interface UserMenuSheetProps {
   isOpen: boolean
@@ -29,7 +28,7 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   hasAdminAccess,
   roles,
 }) => {
-  const location = useLocation();
+  const { navigateTo } = useRouterBridge();
   
   // Helper to get role icon
   const getRoleIcon = (role: UserRole) => {
@@ -100,30 +99,31 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
               Profile
             </button>
 
-            <RouterLink
-              to="/settings"
-              className="group flex items-center gap-2 px-4 py-2 text-sm
+            <button
+              onClick={() => {
+                navigateTo('/settings');
+                onOpenChange(false);
+              }}
+              className="group flex w-full items-center gap-2 px-4 py-2 text-sm
                          transition-colors rounded-md hover:bg-primary/10"
-              onClick={() => onOpenChange(false)}
             >
               <Settings className="h-4 w-4 text-primary group-hover:animate-pulse" />
               Settings
-            </RouterLink>
+            </button>
 
             {hasAdminAccess && (
-              <RouterLinkButton
-                to="/admin/overview"
-                variant="ghost"
-                className="group flex w-full items-center gap-2 px-4 py-2 text-sm
-                           transition-colors rounded-md hover:bg-primary/10"
+              <button
                 onClick={() => {
-                  console.log("Admin Dashboard link clicked");
+                  console.log("Admin Dashboard button clicked");
+                  navigateTo('/admin/overview');
                   onOpenChange(false);
                 }}
+                className="group flex w-full items-center gap-2 px-4 py-2 text-sm
+                           transition-colors rounded-md hover:bg-primary/10"
               >
                 <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
                 Admin Dashboard
-              </RouterLinkButton>
+              </button>
             )}
 
             <button

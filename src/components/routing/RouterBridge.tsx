@@ -42,8 +42,16 @@ export const RouterBridge: React.FC<RouterBridgeProps> = ({ children }) => {
         if (window.location.pathname.startsWith('/admin')) {
           adminRouter.navigate({ to: path });
         } else {
-          // If coming from outside admin, do a full navigation
-          window.location.href = path;
+          // For transitions from non-admin to admin sections, use React Router
+          // to ensure component lifecycle is properly handled
+          reactNavigate('/admin', { replace: true });
+          
+          // After a short delay to ensure components are properly mounted
+          setTimeout(() => {
+            if (path !== '/admin') {
+              adminRouter.navigate({ to: path, replace: true });
+            }
+          }, 10);
         }
       } else {
         // For non-admin routes, use React Router

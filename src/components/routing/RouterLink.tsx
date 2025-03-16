@@ -19,15 +19,16 @@ export const RouterLink: React.FC<RouterLinkProps> = ({
 }) => {
   const { navigateTo, isAdminRoute } = useRouterBridge();
   
+  // For admin routes, we need to intercept clicks and use our navigateTo function
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (isAdminRoute(to)) {
       e.preventDefault();
       navigateTo(to);
-    }
-    
-    // Call the original onClick if provided
-    if (onClick) {
-      onClick(e);
+      
+      // Call the original onClick if provided
+      if (onClick) {
+        onClick(e);
+      }
     }
   };
 
@@ -51,7 +52,7 @@ export const RouterLinkButton: React.FC<RouterLinkProps & { variant?: 'button' |
   variant = 'button',
   ...props
 }) => {
-  const { navigateTo, isAdminRoute } = useRouterBridge();
+  const { navigateTo } = useRouterBridge();
   
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();

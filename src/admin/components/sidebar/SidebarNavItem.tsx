@@ -2,7 +2,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { useRouterBridge } from "@/components/routing/RouterBridge";
 
 interface SidebarNavItemProps {
   id: string;
@@ -38,11 +38,20 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
   index,
   onNavigate
 }) => {
+  const { navigateTo } = useRouterBridge();
+  
   const commonClasses = cn(
     "flex w-full items-center px-3 py-2 rounded-md text-sm font-normal transition-colors",
     isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-primary/5",
     collapsed && "px-2 py-2 justify-center"
   );
+
+  // Using button element since we're handling routing with the bridge
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigateTo(path);
+    if (onNavigate) onNavigate();
+  };
 
   return (
     <motion.div
@@ -51,9 +60,8 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       animate="visible"
       variants={itemVariants}
     >
-      <Link
-        to={path}
-        onClick={onNavigate}
+      <button
+        onClick={handleClick}
         className={commonClasses}
         title={collapsed ? label : undefined}
       >
@@ -63,7 +71,7 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
           })}
         </span>
         {!collapsed && label}
-      </Link>
+      </button>
     </motion.div>
   );
 };
