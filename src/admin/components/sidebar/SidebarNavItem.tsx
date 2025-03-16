@@ -2,7 +2,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { useRouterBridge } from "@/components/routing/RouterBridge";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarNavItemProps {
   id: string;
@@ -38,7 +38,7 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
   index,
   onNavigate
 }) => {
-  const { navigateTo } = useRouterBridge();
+  const navigate = useNavigate();
   
   const commonClasses = cn(
     "flex w-full items-center px-3 py-2 rounded-md text-sm font-normal transition-colors",
@@ -46,10 +46,11 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
     collapsed && "px-2 py-2 justify-center"
   );
 
-  // Using button element since we're handling routing with the bridge
+  // Using button element with direct navigate
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigateTo(path);
+    console.log(`SidebarNavItem: Navigating to ${path}`);
+    navigate(path);
     if (onNavigate) onNavigate();
   };
 

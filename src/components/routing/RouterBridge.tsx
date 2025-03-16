@@ -35,27 +35,10 @@ export const RouterBridge: React.FC<RouterBridgeProps> = ({ children }) => {
       console.log(`RouterBridge: Navigating to ${path}`);
       
       if (isAdminRoute(path)) {
-        // For admin routes, we use TanStack Router
-        console.log(`RouterBridge: Using TanStack Router for ${path}`);
-        
-        // If we're already in the admin section, use TanStack's navigate
-        if (window.location.pathname.startsWith('/admin')) {
-          adminRouter.navigate({ to: path });
-        } else {
-          // For transitions from non-admin to admin sections, use React Router
-          // to ensure component lifecycle is properly handled
-          reactNavigate('/admin', { replace: true });
-          
-          // After a short delay to ensure components are properly mounted
-          setTimeout(() => {
-            if (path !== '/admin') {
-              adminRouter.navigate({ to: path, replace: true });
-            }
-          }, 10);
-        }
+        // For admin routes, use direct navigation to ensure proper mounting
+        reactNavigate(path);
       } else {
         // For non-admin routes, use React Router
-        console.log(`RouterBridge: Using React Router for ${path}`);
         reactNavigate(path);
       }
     } catch (error) {
