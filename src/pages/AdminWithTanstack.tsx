@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { Loader2, AlertTriangle } from 'lucide-react';
 
-// Production-ready loading component with helpful information
+// Production-ready loading component
 const RouterFallback = () => (
   <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
     <motion.div 
@@ -52,60 +52,71 @@ const RouterError = ({ error, resetFn }: { error: Error, resetFn: () => void }) 
 export default function AdminWithTanstack() {
   const isDev = process.env.NODE_ENV === 'development';
   const { toast } = useToast();
-  const [showDevTools, setShowDevTools] = useState(false);
   const [routerError, setRouterError] = useState<Error | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   
-  // Function to initialize the router
-  const initializeRouter = async () => {
-    try {
-      setIsInitializing(true);
-      setRouterError(null);
-      
-      // Ensure the router is ready
-      if (!adminRouter.state.status === 'idle') {
-        await adminRouter.load();
-      }
-      
-      // Delay to ensure proper initialization
-      setTimeout(() => {
-        setIsInitializing(false);
-      }, 500);
-    } catch (error) {
-      console.error("Router initialization error:", error);
-      setRouterError(error instanceof Error ? error : new Error("Failed to initialize admin router"));
-      setIsInitializing(false);
-      
-      toast({
-        variant: "destructive",
-        title: "Admin Dashboard Error",
-        description: "There was an error loading the admin interface."
-      });
-    }
-  };
-  
-  // Initialize the router on mount
   useEffect(() => {
-    toast({
-      title: "Admin Panel",
-      description: "Redirecting to admin interface...",
-    });
+    let isMounted = true;
     
-    console.log("AdminWithTanstack mounted, initializing router...");
+    const initializeRouter = async () => {
+      try {
+        if (!isMounted) return;
+        
+        console.log("Initializing admin router...");
+        setIsInitializing(true);
+        
+        // Make sure the router is registered and ready
+        if (!adminRouter.state.status === 'idle') {
+          await adminRouter.load();
+        }
+        
+        // Success message
+        toast({
+          title: "Admin Dashboard",
+          description: "Admin interface loaded successfully",
+        });
+        
+        // Short delay to ensure everything is ready
+        setTimeout(() => {
+          if (isMounted) {
+            setIsInitializing(false);
+          }
+        }, 300);
+      } catch (error) {
+        console.error("Admin router initialization error:", error);
+        
+        if (isMounted) {
+          setRouterError(error instanceof Error ? error : new Error("Failed to initialize admin interface"));
+          setIsInitializing(false);
+          
+          toast({
+            variant: "destructive",
+            title: "Admin Dashboard Error",
+            description: "There was an error loading the admin interface."
+          });
+        }
+      }
+    };
+    
     initializeRouter();
     
-    // Initialize dev tools after a delay
-    if (isDev) {
-      const timer = setTimeout(() => {
-        setShowDevTools(true);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast, isDev]);
+    return () => {
+      isMounted = false;
+    };
+  }, [toast]);
+
+  // Handle router errors with retry capability
+  const handleRetry = () => {
+    setRouterError(null);
+    setIsInitializing(true);
+    
+    // Force reload the router
+    window.location.reload();
+  };
 
   // Show error state if there's an error
   if (routerError) {
-    return <RouterError error={routerError} resetFn={initializeRouter} />;
+    return <RouterError error={routerError} resetFn={handleRetry} />;
   }
   
   // Show loading state while initializing
@@ -113,7 +124,6 @@ export default function AdminWithTanstack() {
     return <RouterFallback />;
   }
   
-  // Render the router once initialized
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -122,9 +132,7 @@ export default function AdminWithTanstack() {
       className="admin-tanstack-wrapper"
     >
       <RouterProvider router={adminRouter} />
-      {isDev && showDevTools && (
-        <ReactQueryDevtools initialIsOpen={false} position="bottom" />
-      )}
+      {isDev && <ReactQueryDevtools initialIsOpen={false} position="bottom" />}
     </motion.div>
   );
 }

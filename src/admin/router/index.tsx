@@ -1,3 +1,4 @@
+
 import { lazy, Suspense } from 'react';
 import { AuthGuard } from '@/components/AuthGuard';
 import { AdminLayout } from '@/admin/components/AdminLayout';
@@ -19,8 +20,7 @@ const Loading = () => (
   </div>
 );
 
-// Import the components using consistent paths and lazy loading
-// This avoids "Objects are not valid as a React child" errors by ensuring components are properly loaded
+// Import the components using React.lazy
 const OverviewTab = lazy(() => import('../tabs/OverviewTab'));
 const ContentTab = lazy(() => import('../tabs/ContentTab'));
 const UsersTab = lazy(() => import('../tabs/UsersTab'));
@@ -49,7 +49,7 @@ const adminIndexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
   beforeLoad: () => {
-    // Redirect to overview by default 
+    // Redirect to overview by default
     return redirect({ to: '/admin/overview' });
   }
 });
@@ -108,7 +108,7 @@ const routeTree = rootRoute.addChildren([
   settingsRoute,
 ]);
 
-// Create the router with proper type handling
+// Create the router with proper configuration
 export const adminRouter = createRouter({
   routeTree,
   defaultPreload: 'intent',
@@ -120,7 +120,7 @@ export type AdminSearchParams = Record<string, string>;
 // Export for use in components
 export { rootRoute };
 
-// Make sure types are happy with proper declaration merging
+// Make sure types are happy
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof adminRouter;
