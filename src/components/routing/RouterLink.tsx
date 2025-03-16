@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { Link as ReactRouterLink } from 'react-router-dom';
-import { useRouterBridge } from './RouterBridge';
+import { Link as ReactRouterLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 interface RouterLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
@@ -17,26 +16,15 @@ export const RouterLink: React.FC<RouterLinkProps> = ({
   onClick,
   ...props
 }) => {
-  const { navigateTo, isAdminRoute } = useRouterBridge();
-  
-  // For admin routes, we need to intercept clicks and use our navigateTo function
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (isAdminRoute(to)) {
-      e.preventDefault();
-      navigateTo(to);
-      
-      // Call the original onClick if provided
-      if (onClick) {
-        onClick(e);
-      }
-    }
-  };
-
   return (
     <ReactRouterLink
       to={to}
       className={className}
-      onClick={handleClick}
+      onClick={(e) => {
+        if (onClick) {
+          onClick(e);
+        }
+      }}
       {...props}
     >
       {children}
@@ -52,11 +40,11 @@ export const RouterLinkButton: React.FC<RouterLinkProps & { variant?: 'button' |
   variant = 'button',
   ...props
 }) => {
-  const { navigateTo } = useRouterBridge();
+  const navigate = useNavigate();
   
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    navigateTo(to);
+    navigate(to);
     
     // Call the original onClick if provided
     if (props.onClick) {
