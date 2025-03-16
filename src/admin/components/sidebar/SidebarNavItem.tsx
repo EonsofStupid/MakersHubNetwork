@@ -15,7 +15,7 @@ interface SidebarNavItemProps {
   onNavigate: () => void;
 }
 
-// Animation variants
+// Animation variants for item appearance
 const itemVariants = {
   hidden: { opacity: 0, x: -20 },
   visible: (i: number) => ({
@@ -26,6 +26,22 @@ const itemVariants = {
       duration: 0.2
     }
   })
+};
+
+// Hover animation variants
+const hoverVariants = {
+  initial: { 
+    scale: 1,
+    boxShadow: "0 0 0 rgba(0, 240, 255, 0)" 
+  },
+  hover: { 
+    scale: 1.02,
+    boxShadow: "0 0 12px rgba(0, 240, 255, 0.3)" 
+  },
+  tap: { 
+    scale: 0.98,
+    boxShadow: "0 0 15px rgba(0, 240, 255, 0.4)" 
+  }
 };
 
 export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
@@ -40,18 +56,42 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
 }) => {
   const navigate = useNavigate();
   
-  const commonClasses = cn(
-    "flex w-full items-center px-3 py-2 rounded-md text-sm font-normal transition-colors",
-    isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-primary/5",
-    collapsed && "px-2 py-2 justify-center"
+  // Create base classes for the nav item
+  const baseClasses = cn(
+    "flex items-center rounded-md transition-all duration-200 cursor-pointer overflow-hidden relative",
+    collapsed ? "px-2 py-2 justify-center w-10 mx-auto" : "px-3 py-2 w-full",
+    isActive ? "cyber-nav-active" : "cyber-nav-item"
   );
 
-  // Use a direct navigation approach to avoid issues with TanStack Router
+  // Icon classes with proper styling
+  const iconClasses = cn(
+    "flex-shrink-0 transition-all duration-200",
+    collapsed ? "h-5 w-5" : "h-4 w-4 mr-2",
+    isActive ? "text-primary" : "text-muted-foreground"
+  );
+  
+  // Text classes with responsive display
+  const textClasses = cn(
+    "whitespace-nowrap font-medium transition-all duration-200",
+    isActive ? "text-primary" : "text-foreground",
+    collapsed && "sr-only"
+  );
+
+  // Handle navigation with feedback
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     console.log(`SidebarNavItem: Navigating to ${path}`);
-    navigate(path);
-    if (onNavigate) onNavigate();
+    
+    // Add visual feedback before navigation
+    const target = e.currentTarget;
+    target.classList.add("nav-item-clicked");
+    
+    // Use a short timeout to allow the animation to play
+    setTimeout(() => {
+      navigate(path);
+      if (onNavigate) onNavigate();
+      target.classList.remove("nav-item-clicked");
+    }, 150);
   };
 
   return (
@@ -60,19 +100,40 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       initial="hidden"
       animate="visible"
       variants={itemVariants}
+      className="w-full"
     >
-      <button
+      <motion.button
         onClick={handleClick}
-        className={commonClasses}
+        className={baseClasses}
+        initial="initial"
+        whileHover="hover"
+        whileTap="tap"
+        variants={hoverVariants}
         title={collapsed ? label : undefined}
       >
-        <span className={collapsed ? "mr-0" : "mr-2"}>
-          {React.cloneElement(icon, {
-            className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
-          })}
-        </span>
-        {!collapsed && label}
-      </button>
+        {/* Active indicator bar */}
+        {isActive && (
+          <motion.div 
+            className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-md"
+            layoutId="activeIndicator"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          />
+        )}
+        
+        {/* Icon with reactive styling */}
+        {React.cloneElement(icon, {
+          className: iconClasses
+        })}
+        
+        {/* Label text - hidden when collapsed */}
+        <span className={textClasses}>{label}</span>
+        
+        {/* Hover effect overlay */}
+        <div className="cyber-glow-effect absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-300 
+                       bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0" />
+      </motion.button>
     </motion.div>
   );
 };
