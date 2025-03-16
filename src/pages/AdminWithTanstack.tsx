@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RouterErrorBoundary } from '@/components/routing/RouterErrorBoundary';
 import { useRouterBridge } from '@/components/routing/RouterBridge';
+import { useRouteTransition } from '@/hooks/useRouteTransition';
 
 // Fallback component in case TanStack Router fails to initialize
 const RouterFallback = () => (
@@ -27,6 +28,7 @@ export default function AdminWithTanstack() {
   const [showDevTools, setShowDevTools] = useState(false);
   const [routerError, setRouterError] = useState<Error | null>(null);
   const { navigateTo } = useRouterBridge();
+  const { isTransitioning } = useRouteTransition();
   
   useEffect(() => {
     // Welcome toast for admin panel
@@ -46,6 +48,20 @@ export default function AdminWithTanstack() {
       }, 1000);
       return () => clearTimeout(timer);
     }
+    
+    // Prepare the router for initialization
+    const init = async () => {
+      try {
+        // Initialize router if needed
+        if (adminRouter && !adminRouter.state.status === 'pending') {
+          await adminRouter.load();
+        }
+      } catch (error) {
+        console.error("Router initialization error:", error);
+      }
+    };
+    
+    init();
   }, [toast, isDev]);
 
   // Handle router errors
