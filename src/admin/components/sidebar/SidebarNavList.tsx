@@ -2,14 +2,8 @@
 import React, { useState } from "react";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { AnimatePresence, motion } from "framer-motion";
-
-interface NavItem {
-  id: string;
-  label: string;
-  path: string;
-  icon: React.ReactElement;
-  permission: string;
-}
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { NavItem } from "./navigation.config";
 
 interface SidebarNavListProps {
   items: NavItem[];
@@ -67,16 +61,46 @@ export const SidebarNavList: React.FC<SidebarNavListProps> = ({
               onMouseEnter={() => setHoverIndex(index)}
               className="relative"
             >
-              <SidebarNavItem
-                id={item.id}
-                label={item.label}
-                path={item.path}
-                icon={item.icon}
-                isActive={isItemActive(item)}
-                collapsed={collapsed}
-                index={index}
-                onNavigate={() => onNavigation(item)}
-              />
+              {collapsed && item.description ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <SidebarNavItem
+                          id={item.id}
+                          label={item.label}
+                          path={item.path}
+                          icon={item.icon}
+                          isActive={isItemActive(item)}
+                          collapsed={collapsed}
+                          index={index}
+                          onNavigate={() => onNavigation(item)}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="right" 
+                      className="bg-background/80 backdrop-blur border border-primary/20"
+                    >
+                      <div className="space-y-1">
+                        <p className="font-medium">{item.label}</p>
+                        <p className="text-xs text-muted-foreground">{item.description}</p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <SidebarNavItem
+                  id={item.id}
+                  label={item.label}
+                  path={item.path}
+                  icon={item.icon}
+                  isActive={isItemActive(item)}
+                  collapsed={collapsed}
+                  index={index}
+                  onNavigate={() => onNavigation(item)}
+                />
+              )}
               
               {/* Data stream effect - only shown on hover */}
               {hoverIndex === index && (

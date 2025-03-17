@@ -24,6 +24,7 @@ export const RouterErrorBoundary: React.FC<RouterErrorBoundaryProps> = (props) =
   
   const handleError = (error: Error, errorInfo: ErrorInfo) => {
     console.error("Router error caught:", error, errorInfo);
+    
     toast({
       variant: "destructive",
       title: "Navigation Error",
