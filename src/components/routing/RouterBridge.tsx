@@ -34,13 +34,9 @@ export const RouterBridge: React.FC<RouterBridgeProps> = ({ children }) => {
     try {
       console.log(`RouterBridge: Navigating to ${path}`);
       
-      if (isAdminRoute(path)) {
-        // For admin routes, use direct navigation to ensure proper mounting
-        reactNavigate(path);
-      } else {
-        // For non-admin routes, use React Router
-        reactNavigate(path);
-      }
+      // For all routes, use React Router directly
+      // This avoids issues with having multiple router instances
+      reactNavigate(path);
     } catch (error) {
       console.error("Navigation error:", error);
       toast({
@@ -49,7 +45,7 @@ export const RouterBridge: React.FC<RouterBridgeProps> = ({ children }) => {
         description: error instanceof Error ? error.message : "Failed to navigate"
       });
     }
-  }, [reactNavigate, isAdminRoute, toast]);
+  }, [reactNavigate, toast]);
 
   return (
     <RouterBridgeContext.Provider value={{ navigateTo, isAdminRoute }}>

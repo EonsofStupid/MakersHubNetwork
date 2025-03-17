@@ -47,9 +47,9 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({ collapsed }) => {
               initial="normal"
               whileHover="glitch"
               variants={glitchVariants}
-              data-text="Admin Navigation"
+              data-text="Admin Control"
             >
-              Admin Navigation
+              Admin Control
             </motion.h2>
           </>
         )}

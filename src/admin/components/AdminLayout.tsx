@@ -13,6 +13,7 @@ import { DashboardShortcuts } from "@/admin/components/dashboard/DashboardShortc
 import { useAdminPreferences } from "@/admin/store/adminPreferences.store";
 import { useNavigate } from "react-router-dom";
 import { SimpleCyberText } from "@/components/theme/SimpleCyberText";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -122,7 +123,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                   </div>
                 </Card>
               ) : (
-                <div className="cyber-content">{children}</div>
+                <ErrorBoundary>
+                  <div className="cyber-content">{children}</div>
+                </ErrorBoundary>
               )}
             </div>
           </div>
