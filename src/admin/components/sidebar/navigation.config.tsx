@@ -7,79 +7,64 @@ import {
   MessageSquare, 
   Database, 
   Upload, 
-  Settings,
-  ChevronsRight
+  Settings
 } from "lucide-react";
-import { AdminPermission } from "@/admin/types/admin.types";
 
-// Use a consistent style for all icons
-const iconStyle = "h-4 w-4";
-
-export interface NavItem {
-  id: string;
-  label: string;
-  path: string;
-  icon: React.ReactElement;
-  permission: AdminPermission;
-  description?: string;
-  shortcutKey?: string;
-}
-
-export const adminNavigationItems: NavItem[] = [
+export const adminNavigationItems = [
   { 
     id: "overview", 
     label: "Overview", 
     path: "/admin/overview", 
-    icon: <LayoutDashboard className={iconStyle} />,
-    permission: "admin:access",
-    description: "Dashboard overview and key metrics"
+    legacyPath: "/admin?tab=overview",
+    icon: <LayoutDashboard className="h-4 w-4 mr-2" />,
+    permission: "admin:access" 
   },
   { 
     id: "content", 
     label: "Content", 
     path: "/admin/content", 
-    icon: <FileText className={iconStyle} />,
-    permission: "admin:content:read",
-    description: "Manage website content and media"
+    legacyPath: "/admin?tab=content",
+    icon: <FileText className="h-4 w-4 mr-2" />,
+    permission: "admin:content:read" 
   },
   { 
     id: "users", 
     label: "Users", 
     path: "/admin/users", 
-    icon: <Users className={iconStyle} />,
-    permission: "admin:users:read",
-    description: "Manage user accounts and permissions"
+    legacyPath: "/admin?tab=users",
+    icon: <Users className="h-4 w-4 mr-2" />,
+    permission: "admin:users:read" 
   },
   { 
     id: "chat", 
     label: "Chat", 
     path: "/admin/chat", 
-    icon: <MessageSquare className={iconStyle} />,
-    permission: "admin:access",
-    description: "View and manage chat interactions"
+    legacyPath: "/admin?tab=chat",
+    icon: <MessageSquare className="h-4 w-4 mr-2" />,
+    permission: "admin:access" 
   },
   { 
     id: "data-maestro", 
     label: "Data Maestro", 
     path: "/admin/data-maestro", 
-    icon: <Database className={iconStyle} />,
-    permission: "admin:access",
-    description: "Advanced data manipulation tools"
+    legacyPath: "/admin?tab=data-maestro",
+    icon: <Database className="h-4 w-4 mr-2" />,
+    permission: "admin:access" 
   },
   { 
     id: "import", 
     label: "Import", 
     path: "/admin/import", 
-    icon: <Upload className={iconStyle} />,
-    permission: "admin:data:import",
-    description: "Import data from external sources"
+    legacyPath: "/admin?tab=import",
+    icon: <Upload className="h-4 w-4 mr-2" />,
+    permission: "admin:data:import" 
   },
   { 
     id: "settings", 
     label: "Settings", 
     path: "/admin/settings", 
-    icon: <Settings className={iconStyle} />,
-    permission: "admin:settings:read",
-    description: "Configure admin dashboard settings" 
+    legacyPath: "/admin?tab=settings",
+    icon: <Settings className="h-4 w-4 mr-2" />,
+    permission: "admin:settings:read" 
   }
 ];
