@@ -14,8 +14,7 @@ import { useNavigate } from "react-router-dom"
 
 // Lazily load pages to improve initial load time
 const IndexPage = lazy(() => import("./pages/Index"))
-const AdminWithTanstackPage = lazy(() => import("./pages/AdminWithTanstack"))
-const LegacyAdminPage = lazy(() => import("./pages/Admin"))
+const AdminPage = lazy(() => import("./pages/Admin"))
 const LoginPage = lazy(() => import("./pages/Login"))
 
 // Create a loading fallback component
@@ -97,29 +96,14 @@ const App = () => {
                     </Suspense>
                   } />
                   
-                  {/* Legacy Admin Route (tab-based) */}
-                  <Route
-                    path="/admin"
-                    element={
-                      <AuthGuard requiredRoles={["admin", "super_admin"]}>
-                        <Suspense fallback={<PageLoader />}>
-                          <LegacyAdminPage />
-                        </Suspense>
-                      </AuthGuard>
-                    }
-                  />
-                  
-                  {/* New TanStack Router Admin Routes */}
-                  <Route
-                    path="/admin/*"
-                    element={
-                      <AuthGuard requiredRoles={["admin", "super_admin"]}>
-                        <Suspense fallback={<PageLoader />}>
-                          <AdminWithTanstackPage />
-                        </Suspense>
-                      </AuthGuard>
-                    }
-                  />
+                  {/* Admin Routes */}
+                  <Route path="/admin/*" element={
+                    <AuthGuard requiredRoles={["admin", "super_admin"]}>
+                      <Suspense fallback={<PageLoader />}>
+                        <AdminPage />
+                      </Suspense>
+                    </AuthGuard>
+                  } />
                   
                   <Route path="/" element={
                     <Suspense fallback={<PageLoader />}>
