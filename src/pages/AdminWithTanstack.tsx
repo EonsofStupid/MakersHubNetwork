@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { Loader2, AlertTriangle } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Production-ready loading component
 const RouterFallback = () => (
@@ -65,23 +66,23 @@ export default function AdminWithTanstack() {
         console.log("Initializing admin router...");
         setIsInitializing(true);
         
-        // Make sure the router is registered and ready
-        if (!adminRouter.state.status === 'idle') {
-          await adminRouter.load();
+        // Pre-initialize the router and load its initial data
+        await adminRouter.load();
+        
+        if (isMounted) {
+          // Success message
+          toast({
+            title: "Admin Dashboard",
+            description: "Admin interface loaded successfully",
+          });
+          
+          // Short delay to ensure everything is ready
+          setTimeout(() => {
+            if (isMounted) {
+              setIsInitializing(false);
+            }
+          }, 300);
         }
-        
-        // Success message
-        toast({
-          title: "Admin Dashboard",
-          description: "Admin interface loaded successfully",
-        });
-        
-        // Short delay to ensure everything is ready
-        setTimeout(() => {
-          if (isMounted) {
-            setIsInitializing(false);
-          }
-        }, 300);
       } catch (error) {
         console.error("Admin router initialization error:", error);
         
@@ -125,14 +126,16 @@ export default function AdminWithTanstack() {
   }
   
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="admin-tanstack-wrapper"
-    >
-      <RouterProvider router={adminRouter} />
-      {isDev && <ReactQueryDevtools initialIsOpen={false} position="bottom" />}
-    </motion.div>
+    <ErrorBoundary>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="admin-tanstack-wrapper"
+      >
+        <RouterProvider router={adminRouter} />
+        {isDev && <ReactQueryDevtools initialIsOpen={false} position="bottom" />}
+      </motion.div>
+    </ErrorBoundary>
   );
 }

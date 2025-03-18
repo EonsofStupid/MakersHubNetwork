@@ -2,6 +2,7 @@
 import { lazy, Suspense } from 'react';
 import { AuthGuard } from '@/components/AuthGuard';
 import { AdminLayout } from '@/admin/components/AdminLayout';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { 
   createRootRoute, 
   createRoute, 
@@ -20,28 +21,100 @@ const Loading = () => (
   </div>
 );
 
-// Import the components using React.lazy
-const OverviewTab = lazy(() => import('../tabs/OverviewTab'));
-const ContentTab = lazy(() => import('../tabs/ContentTab'));
-const UsersTab = lazy(() => import('../tabs/UsersTab'));
-const ChatTab = lazy(() => import('../tabs/ChatTab'));
-const DataMaestroTab = lazy(() => import('../tabs/DataMaestroTab'));
-const ImportTab = lazy(() => import('../tabs/ImportTab'));
-const SettingsTab = lazy(() => import('../tabs/SettingsTab'));
+// Wrap lazy-loaded components in dedicated components
+// This ensures proper Suspense handling
+const OverviewTabWrapper = () => {
+  const TabComponent = lazy(() => import('../tabs/OverviewTab'));
+  return (
+    <Suspense fallback={<Loading />}>
+      <ErrorBoundary>
+        <TabComponent />
+      </ErrorBoundary>
+    </Suspense>
+  );
+};
 
-// Create root route
+const ContentTabWrapper = () => {
+  const TabComponent = lazy(() => import('../tabs/ContentTab'));
+  return (
+    <Suspense fallback={<Loading />}>
+      <ErrorBoundary>
+        <TabComponent />
+      </ErrorBoundary>
+    </Suspense>
+  );
+};
+
+const UsersTabWrapper = () => {
+  const TabComponent = lazy(() => import('../tabs/UsersTab'));
+  return (
+    <Suspense fallback={<Loading />}>
+      <ErrorBoundary>
+        <TabComponent />
+      </ErrorBoundary>
+    </Suspense>
+  );
+};
+
+const ChatTabWrapper = () => {
+  const TabComponent = lazy(() => import('../tabs/ChatTab'));
+  return (
+    <Suspense fallback={<Loading />}>
+      <ErrorBoundary>
+        <TabComponent />
+      </ErrorBoundary>
+    </Suspense>
+  );
+};
+
+const DataMaestroTabWrapper = () => {
+  const TabComponent = lazy(() => import('../tabs/DataMaestroTab'));
+  return (
+    <Suspense fallback={<Loading />}>
+      <ErrorBoundary>
+        <TabComponent />
+      </ErrorBoundary>
+    </Suspense>
+  );
+};
+
+const ImportTabWrapper = () => {
+  const TabComponent = lazy(() => import('../tabs/ImportTab'));
+  return (
+    <Suspense fallback={<Loading />}>
+      <ErrorBoundary>
+        <TabComponent />
+      </ErrorBoundary>
+    </Suspense>
+  );
+};
+
+const SettingsTabWrapper = () => {
+  const TabComponent = lazy(() => import('../tabs/SettingsTab'));
+  return (
+    <Suspense fallback={<Loading />}>
+      <ErrorBoundary>
+        <TabComponent />
+      </ErrorBoundary>
+    </Suspense>
+  );
+};
+
+// Create root route with proper layout and authentication
 const rootRoute = createRootRoute({
-  component: () => {
-    return (
-      <AuthGuard requiredRoles={['admin', 'super_admin']}>
-        <AdminLayout>
-          <Suspense fallback={<Loading />}>
-            <Outlet />
-          </Suspense>
-        </AdminLayout>
-      </AuthGuard>
-    );
-  },
+  component: () => (
+    <AuthGuard requiredRoles={['admin', 'super_admin']}>
+      <AdminLayout>
+        <Outlet />
+      </AdminLayout>
+    </AuthGuard>
+  ),
+  // Add global error handling
+  errorComponent: ({ error }) => (
+    <div className="p-4 text-destructive">
+      <h2>Error: {error instanceof Error ? error.message : 'Unknown error'}</h2>
+    </div>
+  ),
 });
 
 // Admin section routes
@@ -57,43 +130,43 @@ const adminIndexRoute = createRoute({
 const overviewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/overview',
-  component: OverviewTab,
+  component: OverviewTabWrapper,
 });
 
 const contentRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/content',
-  component: ContentTab,
+  component: ContentTabWrapper,
 });
 
 const usersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/users',
-  component: UsersTab,
+  component: UsersTabWrapper,
 });
 
 const chatRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/chat',
-  component: ChatTab,
+  component: ChatTabWrapper,
 });
 
 const dataMaestroRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/data-maestro',
-  component: DataMaestroTab,
+  component: DataMaestroTabWrapper,
 });
 
 const importRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/import',
-  component: ImportTab,
+  component: ImportTabWrapper,
 });
 
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/settings',
-  component: SettingsTab,
+  component: SettingsTabWrapper,
 });
 
 // Define all routes
@@ -112,6 +185,14 @@ const routeTree = rootRoute.addChildren([
 export const adminRouter = createRouter({
   routeTree,
   defaultPreload: 'intent',
+  defaultErrorComponent: ({ error }) => (
+    <div className="p-4 m-2 text-center border border-destructive/20 rounded-md">
+      <h3 className="text-base font-medium text-destructive mb-1">Router Error</h3>
+      <p className="text-sm text-muted-foreground">
+        {error instanceof Error ? error.message : 'An unknown error occurred'}
+      </p>
+    </div>
+  ),
 });
 
 // Export types for search params

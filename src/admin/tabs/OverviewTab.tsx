@@ -4,7 +4,7 @@ import { OverviewTab as OverviewTabComponent } from '@/admin/dashboard/OverviewT
 
 /**
  * Admin Overview Tab
- * This is a facade component that re-exports the OverviewTab from the dashboard directory.
+ * This is a wrapper component that re-exports the OverviewTab from the dashboard directory.
  * It exists to maintain a consistent import structure across admin tabs.
  */
 const OverviewTab = () => {
