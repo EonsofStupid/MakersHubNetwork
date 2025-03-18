@@ -2,7 +2,7 @@
 import { useMemo, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
 import { UserRole } from '@/types/auth.types';
-import { useAdminStore } from '@/stores/admin/store';
+import { useAdminStore } from '@/admin/store/admin.store';
 
 /**
  * Custom hook to check admin access based on user roles
