@@ -35,7 +35,6 @@ export const RouterBridge: React.FC<RouterBridgeProps> = ({ children }) => {
       console.log(`RouterBridge: Navigating to ${path}`);
       
       // For all routes, use React Router directly
-      // This avoids issues with having multiple router instances
       reactNavigate(path);
     } catch (error) {
       console.error("Navigation error:", error);
