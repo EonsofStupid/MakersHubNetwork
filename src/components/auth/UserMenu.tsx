@@ -26,20 +26,20 @@ export const UserMenu = memo(() => {
   
   // Check the current URL to determine which router to use
   useEffect(() => {
+    // Always load preferences when component mounts
+    loadPreferences()
+    
     const pathname = location.pathname
     // If we're on an admin page with path segments (not just tab query params)
     if (pathname.startsWith('/admin/')) {
+      console.log('Setting router preference to tanstack');
       setRouterPreference('tanstack')
     }
-    
-    // Always load preferences when component mounts
-    loadPreferences()
   }, [location.pathname, setRouterPreference, loadPreferences])
   
   // Memoize admin access check to prevent excessive store reads
   const { hasAdminAccess } = useAdminAccess()
   
-  // Only log this once during development - removed in production
   const userEmail = user?.email
   
   // Memoize handlers to prevent recreating functions on each render
@@ -65,7 +65,11 @@ export const UserMenu = memo(() => {
     try {
       setIsLoading(true)
       await logout()
-      window.location.reload()
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account",
+      })
+      window.location.href = "/"
     } catch (error) {
       toast({
         variant: "destructive",

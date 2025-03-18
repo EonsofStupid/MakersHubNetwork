@@ -1,13 +1,11 @@
 
 import React from "react"
-import { Link as RouterLink } from "react-router-dom"
-import { Link as TanStackLink } from "@tanstack/react-router"
 import { Menu, User, Settings, LayoutDashboard, LogOut, Shield, Crown } from "lucide-react"
 import { UserRole } from "@/types/auth.types"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
-import { useAdminPreferences } from "@/admin/store/adminPreferences.store"
+import { useRouterBridge } from "@/components/routing/RouterBridge"
 
 interface UserMenuSheetProps {
   isOpen: boolean
@@ -30,10 +28,8 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   hasAdminAccess,
   roles,
 }) => {
-  // Get router preference from admin preferences store
-  const { routerPreference } = useAdminPreferences();
-  const useTanStackRouter = routerPreference === 'tanstack';
-
+  const { navigateTo } = useRouterBridge();
+  
   // Helper to get role icon
   const getRoleIcon = (role: UserRole) => {
     switch (role) {
@@ -45,43 +41,6 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
         return null
     }
   }
-
-  // Render admin dashboard link based on router preference
-  const renderAdminLink = () => {
-    if (!hasAdminAccess) return null;
-
-    if (useTanStackRouter) {
-      return (
-        <TanStackLink
-          to="/admin"
-          className="group flex items-center gap-2 px-4 py-2 text-sm
-                    transition-colors rounded-md hover:bg-primary/10"
-          onClick={() => {
-            console.log("Admin Dashboard link clicked with TanStack Router")
-            onOpenChange(false)
-          }}
-        >
-          <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
-          Admin Dashboard
-        </TanStackLink>
-      );
-    }
-    
-    return (
-      <RouterLink
-        to="/admin"
-        className="group flex items-center gap-2 px-4 py-2 text-sm
-                 transition-colors rounded-md hover:bg-primary/10"
-        onClick={() => {
-          console.log("Admin Dashboard link clicked with React Router")
-          onOpenChange(false)
-        }}
-      >
-        <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
-        Admin Dashboard
-      </RouterLink>
-    );
-  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -140,17 +99,32 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
               Profile
             </button>
 
-            <RouterLink
-              to="/settings"
-              className="group flex items-center gap-2 px-4 py-2 text-sm
+            <button
+              onClick={() => {
+                navigateTo('/settings');
+                onOpenChange(false);
+              }}
+              className="group flex w-full items-center gap-2 px-4 py-2 text-sm
                          transition-colors rounded-md hover:bg-primary/10"
-              onClick={() => onOpenChange(false)}
             >
               <Settings className="h-4 w-4 text-primary group-hover:animate-pulse" />
               Settings
-            </RouterLink>
+            </button>
 
-            {renderAdminLink()}
+            {hasAdminAccess && (
+              <button
+                onClick={() => {
+                  console.log("Admin Dashboard button clicked");
+                  navigateTo('/admin/overview');
+                  onOpenChange(false);
+                }}
+                className="group flex w-full items-center gap-2 px-4 py-2 text-sm
+                           transition-colors rounded-md hover:bg-primary/10"
+              >
+                <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
+                Admin Dashboard
+              </button>
+            )}
 
             <button
               onClick={onLogout}
