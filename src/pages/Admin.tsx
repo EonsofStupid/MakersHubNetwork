@@ -1,6 +1,6 @@
 
-import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AdminLayout } from "@/admin/components/AdminLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Suspense, lazy, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
@@ -8,13 +8,13 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useToast } from "@/hooks/use-toast";
 
 // Lazy load admin components
-const OverviewPage = lazy(() => import("@/components/admin/pages/Overview"));
-const ContentPage = lazy(() => import("@/components/admin/pages/Content"));
-const UsersPage = lazy(() => import("@/components/admin/pages/Users"));
-const ChatPage = lazy(() => import("@/components/admin/pages/Chat"));
-const DataMaestroPage = lazy(() => import("@/components/admin/pages/DataMaestro"));
-const ImportPage = lazy(() => import("@/components/admin/pages/Import"));
-const SettingsPage = lazy(() => import("@/components/admin/pages/Settings"));
+const OverviewPage = lazy(() => import("@/admin/tabs/OverviewTab"));
+const ContentPage = lazy(() => import("@/admin/tabs/ContentTab"));
+const UsersPage = lazy(() => import("@/admin/tabs/UsersTab"));
+const ChatPage = lazy(() => import("@/admin/tabs/ChatTab"));
+const DataMaestroPage = lazy(() => import("@/admin/tabs/DataMaestroTab"));
+const ImportPage = lazy(() => import("@/admin/tabs/ImportTab"));
+const SettingsPage = lazy(() => import("@/admin/tabs/SettingsTab"));
 
 // Loading component for lazy-loaded routes
 const AdminPageLoader = () => (
@@ -46,7 +46,6 @@ export default function Admin() {
   const { status } = useAuthStore();
   const { hasAdminAccess, loadPermissions } = useAdminAccess();
   const { toast } = useToast();
-  const navigate = useNavigate();
   
   useEffect(() => {
     // Load permissions on component mount
@@ -58,9 +57,6 @@ export default function Admin() {
       description: "Welcome to the MakersImpulse admin dashboard",
     });
   }, [toast, loadPermissions]);
-  
-  console.log("Admin component rendering - Auth status:", status);
-  console.log("Admin component rendering - Has admin access:", hasAdminAccess);
   
   // If not authenticated or loading, show loading
   if (status === "loading") {
