@@ -100,8 +100,13 @@ export const useAdminStore = create<AdminState & AdminActions>((set, get) => ({
       set({ isLoadingPermissions: true });
       
       const authState = useAuthStore.getState();
-      const { roles, isAdmin } = authState;
+      const { roles } = authState;
       const { accessLevels } = get();
+      
+      if (!roles || roles.length === 0) {
+        set({ permissions: [], isLoadingPermissions: false });
+        return;
+      }
       
       const userRoles = roles || [];
       let userPermissions: AdminPermission[] = [];
@@ -117,15 +122,6 @@ export const useAdminStore = create<AdminState & AdminActions>((set, get) => ({
           }
         });
       });
-      
-      // Special case for backward compatibility
-      if (isAdmin && isAdmin()) {
-        const adminLevel = accessLevels.find(level => level.level === 1);
-        if (adminLevel && maxLevel < 1) {
-          maxLevel = 1;
-          userPermissions = adminLevel.permissions;
-        }
-      }
       
       console.log("Loaded permissions:", userPermissions);
       set({ permissions: userPermissions });
@@ -143,7 +139,8 @@ export const useAdminStore = create<AdminState & AdminActions>((set, get) => ({
   },
   
   hasPermission: (permission) => {
-    return get().permissions.includes(permission);
+    const { permissions } = get();
+    return permissions.includes(permission);
   },
   
   // Error Handling

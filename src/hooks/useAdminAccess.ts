@@ -1,8 +1,8 @@
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
 import { UserRole } from '@/types/auth.types';
-import { useAdminStore } from '@/admin/store/admin.store';
+import { useAdminStore } from '@/stores/admin/store';
 
 /**
  * Custom hook to check admin access based on user roles
@@ -11,9 +11,15 @@ import { useAdminStore } from '@/admin/store/admin.store';
 export function useAdminAccess() {
   // Get roles from auth store
   const roles = useAuthStore((state) => state.roles);
+  const status = useAuthStore((state) => state.status);
   
   // Admin store
-  const { hasPermission, loadPermissions } = useAdminStore();
+  const { 
+    hasPermission, 
+    loadPermissions, 
+    isLoadingPermissions, 
+    permissions 
+  } = useAdminStore();
   
   // Get admin roles
   const adminRoles = useMemo<UserRole[]>(() => ['admin', 'super_admin'], []);
@@ -33,16 +39,19 @@ export function useAdminAccess() {
   }, [roles]);
   
   // Load permissions when admin access is true
-  useMemo(() => {
-    if (hasAdminAccess) {
+  useEffect(() => {
+    if (hasAdminAccess && status === 'authenticated') {
       loadPermissions();
     }
-  }, [hasAdminAccess, loadPermissions]);
+  }, [hasAdminAccess, loadPermissions, status]);
   
   return {
     hasAdminAccess,
     adminLevel,
     adminRoles,
-    hasPermission
+    hasPermission,
+    loadPermissions,
+    isLoadingPermissions,
+    permissions
   };
 }

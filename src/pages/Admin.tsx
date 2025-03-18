@@ -1,10 +1,11 @@
 
-import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
+import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useToast } from "@/hooks/use-toast";
 
 // Lazy load admin components
 const OverviewPage = lazy(() => import("@/components/admin/pages/Overview"));
@@ -42,9 +43,24 @@ const AdminRouteWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default function Admin() {
-  const location = useLocation();
   const { status } = useAuthStore();
-  const { hasAdminAccess } = useAdminAccess();
+  const { hasAdminAccess, loadPermissions } = useAdminAccess();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Load permissions on component mount
+    loadPermissions();
+    
+    // Welcome toast for admin panel
+    toast({
+      title: "Admin Panel",
+      description: "Welcome to the MakersImpulse admin dashboard",
+    });
+  }, [toast, loadPermissions]);
+  
+  console.log("Admin component rendering - Auth status:", status);
+  console.log("Admin component rendering - Has admin access:", hasAdminAccess);
   
   // If not authenticated or loading, show loading
   if (status === "loading") {
