@@ -1,145 +1,116 @@
 
-import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { AdminLayout } from "@/admin/components/AdminLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import OverviewTab from "@/admin/tabs/OverviewTab";
-import { UsersTab } from "@/admin/tabs/UsersTab";
-import { ImportTab } from "@/admin/tabs/ImportTab";
-import { SettingsTab } from "@/admin/tabs/SettingsTab";
-import { DataMaestroTab } from "@/admin/tabs/DataMaestroTab";
-import { ChatTab } from "@/admin/tabs/ChatTab";
-import { lazy, Suspense } from "react";
+import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Suspense, lazy } from "react";
 import { useAuthStore } from "@/stores/auth/store";
-import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
-// Lazy load content tab for better performance
-const ContentTab = lazy(() => import("@/admin/tabs/ContentTab"));
+// Lazy load admin components
+const OverviewPage = lazy(() => import("@/components/admin/pages/Overview"));
+const ContentPage = lazy(() => import("@/components/admin/pages/Content"));
+const UsersPage = lazy(() => import("@/components/admin/pages/Users"));
+const ChatPage = lazy(() => import("@/components/admin/pages/Chat"));
+const DataMaestroPage = lazy(() => import("@/components/admin/pages/DataMaestro"));
+const ImportPage = lazy(() => import("@/components/admin/pages/Import"));
+const SettingsPage = lazy(() => import("@/components/admin/pages/Settings"));
+
+// Loading component for lazy-loaded routes
+const AdminPageLoader = () => (
+  <div className="min-h-[400px] flex items-center justify-center">
+    <div className="space-y-4 text-center">
+      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
+      <p className="text-muted-foreground">Loading admin section...</p>
+    </div>
+  </div>
+);
+
+// Admin route wrapper with error boundary
+const AdminRouteWrapper = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <ErrorBoundary fallback={
+      <div className="p-6 border border-destructive/20 rounded-md">
+        <h3 className="text-lg font-medium text-destructive mb-2">Error Loading Admin Page</h3>
+        <p className="text-muted-foreground">Something went wrong while loading this section.</p>
+      </div>
+    }>
+      <Suspense fallback={<AdminPageLoader />}>
+        {children}
+      </Suspense>
+    </ErrorBoundary>
+  );
+};
 
 export default function Admin() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const location = useLocation();
   const { status } = useAuthStore();
-  const { hasAccess, isLoading } = useAdminPermissions("admin:access");
+  const { hasAdminAccess } = useAdminAccess();
   
-  // Get current tab from URL or default to overview
-  const currentTab = searchParams.get('tab') || 'overview';
-
-  // Handle tab change
-  const handleTabChange = (value: string) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set('tab', value);
-    setSearchParams(newParams);
-  };
-
-  useEffect(() => {
-    // If user is not authenticated, redirect to login
-    if (status === "unauthenticated") {
-      navigate("/login");
-    }
-    // If user doesn't have admin access and authentication check is complete
-    else if (!isLoading && !hasAccess && status === "authenticated") {
-      navigate("/");
-    }
-  }, [status, hasAccess, isLoading, navigate]);
-
-  if (isLoading || status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="p-4 text-center">
-          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Checking admin access...</p>
-        </div>
-      </div>
-    );
+  // If not authenticated or loading, show loading
+  if (status === "loading") {
+    return <AdminPageLoader />;
+  }
+  
+  // If not admin, redirect to home
+  if (status === "authenticated" && !hasAdminAccess) {
+    return <Navigate to="/" replace />;
+  }
+  
+  // If not authenticated, redirect to login
+  if (status === "unauthenticated") {
+    return <Navigate to="/login" replace />;
   }
 
-  // The redirect in useEffect will handle unauthorized access
-  if (!hasAccess) return null;
-
   return (
-    <AdminLayout title="Admin Dashboard">
-      <Tabs defaultValue={currentTab} value={currentTab} onValueChange={handleTabChange} className="space-y-6">
-        <Card className="cyber-card border-primary/20">
-          <TabsList className="w-full justify-start border-b border-primary/20 rounded-none px-4">
-            <TabsTrigger 
-              value="overview"
-              className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger 
-              value="content"
-              className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-            >
-              Content
-            </TabsTrigger>
-            <TabsTrigger 
-              value="users"
-              className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-            >
-              Users
-            </TabsTrigger>
-            <TabsTrigger 
-              value="chat"
-              className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-            >
-              Chat
-            </TabsTrigger>
-            <TabsTrigger 
-              value="data-maestro"
-              className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-            >
-              Data Maestro
-            </TabsTrigger>
-            <TabsTrigger 
-              value="import"
-              className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-            >
-              Import
-            </TabsTrigger>
-            <TabsTrigger 
-              value="settings"
-              className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-            >
-              Settings
-            </TabsTrigger>
-          </TabsList>
-        </Card>
-
-        <TabsContent value="overview" className="transition-all duration-300">
-          <OverviewTab />
-        </TabsContent>
+    <AdminLayout>
+      <Routes>
+        <Route index element={<Navigate to="overview" replace />} />
         
-        <TabsContent value="content" className="transition-all duration-300">
-          <Suspense fallback={<div className="min-h-[600px] flex items-center justify-center">Loading content management...</div>}>
-            <ContentTab />
-          </Suspense>
-        </TabsContent>
+        <Route path="overview" element={
+          <AdminRouteWrapper>
+            <OverviewPage />
+          </AdminRouteWrapper>
+        } />
         
-        <TabsContent value="users" className="transition-all duration-300">
-          <UsersTab />
-        </TabsContent>
+        <Route path="content/*" element={
+          <AdminRouteWrapper>
+            <ContentPage />
+          </AdminRouteWrapper>
+        } />
         
-        <TabsContent value="chat" className="transition-all duration-300">
-          <Suspense fallback={<div className="min-h-[600px] flex items-center justify-center">Loading chat management...</div>}>
-            <ChatTab />
-          </Suspense>
-        </TabsContent>
+        <Route path="users" element={
+          <AdminRouteWrapper>
+            <UsersPage />
+          </AdminRouteWrapper>
+        } />
         
-        <TabsContent value="data-maestro" className="transition-all duration-300">
-          <DataMaestroTab />
-        </TabsContent>
+        <Route path="chat" element={
+          <AdminRouteWrapper>
+            <ChatPage />
+          </AdminRouteWrapper>
+        } />
         
-        <TabsContent value="import" className="transition-all duration-300">
-          <ImportTab />
-        </TabsContent>
+        <Route path="data-maestro" element={
+          <AdminRouteWrapper>
+            <DataMaestroPage />
+          </AdminRouteWrapper>
+        } />
         
-        <TabsContent value="settings" className="transition-all duration-300">
-          <SettingsTab />
-        </TabsContent>
-      </Tabs>
+        <Route path="import" element={
+          <AdminRouteWrapper>
+            <ImportPage />
+          </AdminRouteWrapper>
+        } />
+        
+        <Route path="settings" element={
+          <AdminRouteWrapper>
+            <SettingsPage />
+          </AdminRouteWrapper>
+        } />
+        
+        {/* Fallback for unknown admin routes */}
+        <Route path="*" element={<Navigate to="/admin/overview" replace />} />
+      </Routes>
     </AdminLayout>
   );
 }
