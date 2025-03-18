@@ -1,4 +1,7 @@
 
+// Import admin styles
+import './styles/admin-theme.css';
+
 // Export all admin functionality
 export * from './router';
 export * from './types/admin.types';
@@ -7,3 +10,7 @@ export * from './types/dashboard';
 export * from './types/data-maestro';
 export * from './types/import';
 export * from './types/queries';
+
+// Export store
+export * from './store/adminPreferences.store';
+export * from './store/admin.store';
