@@ -36,18 +36,27 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const pathSegments = location.pathname.split('/');
     const section = pathSegments[2] || 'overview';
     setCurrentSection(section);
-  }, [loadPermissions, location.pathname, setCurrentSection]);
+    
+    console.log("AdminLayout mounted - Current section:", section);
+    console.log("AdminLayout - Permissions loading:", isLoadingPermissions);
+  }, [loadPermissions, location.pathname, setCurrentSection, isLoadingPermissions]);
 
   // Toggle dashboard collapsed state
   const toggleDashboard = () => {
     setDashboardCollapsed(!isDashboardCollapsed);
   };
 
+  // Get title based on current section
+  const getTitle = () => {
+    if (!currentSection) return 'Admin Dashboard';
+    return `Admin Dashboard - ${currentSection.charAt(0).toUpperCase() + currentSection.slice(1)}`;
+  };
+
   return (
     <div className="min-h-screen bg-background/50 backdrop-blur-sm">
       <MainNav />
       <AdminHeader 
-        title={`Admin Dashboard${currentSection ? ` - ${currentSection.charAt(0).toUpperCase() + currentSection.slice(1)}` : ''}`} 
+        title={getTitle()} 
         collapsed={isDashboardCollapsed} 
       />
       
