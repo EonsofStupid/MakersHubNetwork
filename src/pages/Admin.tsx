@@ -6,7 +6,6 @@ import { Suspense, lazy, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useToast } from "@/hooks/use-toast";
-import { useAdminStore } from "@/admin/store/admin.store";
 
 // Lazy load admin components
 const OverviewPage = lazy(() => import("@/admin/tabs/OverviewTab"));
@@ -47,7 +46,6 @@ export default function Admin() {
   const { status } = useAuthStore();
   const { hasAdminAccess, loadPermissions } = useAdminAccess();
   const { toast } = useToast();
-  const { setCurrentSection } = useAdminStore();
   
   useEffect(() => {
     // Load permissions on component mount
@@ -59,13 +57,6 @@ export default function Admin() {
       description: "Welcome to the MakersImpulse admin dashboard",
     });
   }, [toast, loadPermissions]);
-  
-  // Update the current section based on the URL
-  useEffect(() => {
-    const path = window.location.pathname;
-    const section = path.split('/').pop() || 'overview';
-    setCurrentSection(section);
-  }, [setCurrentSection]);
   
   // If not authenticated or loading, show loading
   if (status === "loading") {
