@@ -31,17 +31,70 @@ export function useThemeEffects(options: UseThemeEffectsOptions = {}) {
     // Check if we've reached max effects limit
     if (Object.keys(activeEffects).length >= maxActiveEffects) {
       console.warn(`Maximum number of active effects (${maxActiveEffects}) reached.`);
-      return;
+      return effectId;
     }
     
-    // Create the effect with default properties
-    const newEffect: ThemeEffect = {
-      id: effectId,
-      type: effectType,
-      enabled: true,
-      duration: config.duration || 1000,
-      ...config
-    } as ThemeEffect;
+    // Create the effect with default properties based on type
+    let newEffect: ThemeEffect;
+    
+    switch (effectType) {
+      case 'glitch':
+        newEffect = {
+          id: effectId,
+          type: 'glitch',
+          color: config.color || '#00F0FF',
+          frequency: (config as Partial<GlitchEffect>)?.frequency || 5,
+          amplitude: (config as Partial<GlitchEffect>)?.amplitude || 2,
+          enabled: true,
+          duration: config.duration || 1000,
+        } as GlitchEffect;
+        break;
+        
+      case 'gradient':
+        newEffect = {
+          id: effectId,
+          type: 'gradient',
+          colors: (config as Partial<GradientEffect>)?.colors || ['#00F0FF', '#FF2D6E', '#00F0FF'],
+          direction: (config as Partial<GradientEffect>)?.direction || 'to-right',
+          speed: (config as Partial<GradientEffect>)?.speed || 2,
+          enabled: true,
+          duration: config.duration || 1000,
+        } as GradientEffect;
+        break;
+        
+      case 'cyber':
+        newEffect = {
+          id: effectId,
+          type: 'cyber',
+          glowColor: (config as Partial<CyberEffect>)?.glowColor || '#00F0FF',
+          textShadow: (config as Partial<CyberEffect>)?.textShadow || true,
+          scanLines: (config as Partial<CyberEffect>)?.scanLines || false,
+          enabled: true,
+          duration: config.duration || 1000,
+        } as CyberEffect;
+        break;
+        
+      case 'pulse':
+        newEffect = {
+          id: effectId,
+          type: 'pulse',
+          color: (config as Partial<PulseEffect>)?.color || '#00F0FF',
+          minOpacity: (config as Partial<PulseEffect>)?.minOpacity || 0.2,
+          maxOpacity: (config as Partial<PulseEffect>)?.maxOpacity || 0.8,
+          enabled: true,
+          duration: config.duration || 1000,
+        } as PulseEffect;
+        break;
+        
+      default:
+        newEffect = {
+          id: effectId,
+          type: effectType,
+          enabled: true,
+          duration: config.duration || 1000,
+          ...config
+        } as ThemeEffect;
+    }
     
     // Add the effect to active effects
     setActiveEffects(prev => ({
@@ -115,47 +168,42 @@ export function useThemeEffects(options: UseThemeEffectsOptions = {}) {
       case 'glitch':
         config = {
           ...config,
-          type: 'glitch',
+          color: randomColor,
+          frequency: Math.random() * 10 + 5,
+          amplitude: Math.random() * 5 + 1,
         } as Partial<GlitchEffect>;
-        (config as Partial<GlitchEffect>).color = randomColor;
-        (config as Partial<GlitchEffect>).frequency = Math.random() * 10 + 5;
-        (config as Partial<GlitchEffect>).amplitude = Math.random() * 5 + 1;
         break;
         
       case 'gradient':
         config = {
           ...config,
-          type: 'gradient',
+          colors: [randomColor, '#FFFFFF', randomColor],
+          direction: 'to-right',
+          speed: Math.random() * 5 + 1,
         } as Partial<GradientEffect>;
-        (config as Partial<GradientEffect>).colors = [randomColor, '#FFFFFF', randomColor];
-        (config as Partial<GradientEffect>).direction = 'to-right';
-        (config as Partial<GradientEffect>).speed = Math.random() * 5 + 1;
         break;
         
       case 'cyber':
         config = {
           ...config,
-          type: 'cyber',
+          glowColor: randomColor,
+          textShadow: true,
         } as Partial<CyberEffect>;
-        (config as Partial<CyberEffect>).glowColor = randomColor;
-        (config as Partial<CyberEffect>).textShadow = true;
         break;
         
       case 'pulse':
         config = {
           ...config,
-          type: 'pulse',
+          color: randomColor,
+          minOpacity: 0.2,
+          maxOpacity: 0.8,
         } as Partial<PulseEffect>;
-        (config as Partial<PulseEffect>).color = randomColor;
-        (config as Partial<PulseEffect>).minOpacity = 0.2;
-        (config as Partial<PulseEffect>).maxOpacity = 0.8;
         break;
         
       default:
         // For any other effect types
         config = { 
-          ...config, 
-          type: randomType 
+          ...config,
         } as Partial<ThemeEffect>;
     }
     
