@@ -1,3 +1,4 @@
+
 export interface UIState {
   theme: {
     mode: 'dark' | 'light';

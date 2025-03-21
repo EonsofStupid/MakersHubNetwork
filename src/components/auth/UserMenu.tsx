@@ -22,19 +22,12 @@ export const UserMenu = memo(() => {
   const logout = useAuthStore((state) => state.logout)
   
   // Admin preferences
-  const { loadPreferences, setRouterPreference } = useAdminPreferences()
+  const { loadPreferences } = useAdminPreferences()
   
-  // Check the current URL to determine which router to use
+  // Always load preferences when component mounts
   useEffect(() => {
-    const pathname = location.pathname
-    // If we're on an admin page with path segments (not just tab query params)
-    if (pathname.startsWith('/admin/')) {
-      setRouterPreference('tanstack')
-    }
-    
-    // Always load preferences when component mounts
     loadPreferences()
-  }, [location.pathname, setRouterPreference, loadPreferences])
+  }, [loadPreferences])
   
   // Memoize admin access check to prevent excessive store reads
   const { hasAdminAccess } = useAdminAccess()
