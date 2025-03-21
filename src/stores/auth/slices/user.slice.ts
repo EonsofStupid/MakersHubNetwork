@@ -1,3 +1,4 @@
+
 import { StateCreator } from "zustand";
 import { AuthState, AuthActions, AuthStore, AuthStatus } from "../types/auth.types";
 import { supabase } from "@/integrations/supabase/client";
