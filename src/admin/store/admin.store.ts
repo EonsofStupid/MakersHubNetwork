@@ -105,8 +105,6 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
       let userPermissions: AdminPermission[] = [];
       let maxLevel = -1;
       
-      console.log("Current user roles:", userRoles);
-      
       userRoles.forEach(userRole => {
         accessLevels.forEach(level => {
           if (level.roles.includes(userRole as UserRole) && level.level > maxLevel) {
@@ -124,8 +122,6 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
           userPermissions = adminLevel.permissions;
         }
       }
-      
-      console.log("Loaded permissions:", userPermissions);
       
       set({ permissions: userPermissions });
     } catch (error) {

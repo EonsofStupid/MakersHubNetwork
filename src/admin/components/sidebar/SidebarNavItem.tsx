@@ -2,20 +2,18 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Link as TanStackLink } from '@tanstack/react-router';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from "framer-motion";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SidebarNavItemProps {
   id: string;
   label: string;
   path: string;
-  legacyPath: string;
   icon: React.ReactElement;
   isActive: boolean;
   collapsed: boolean;
   index: number;
-  useTanStackRouter: boolean;
   onNavigate: () => void;
 }
 
@@ -36,12 +34,10 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
   id,
   label,
   path,
-  legacyPath,
   icon,
   isActive,
   collapsed,
   index,
-  useTanStackRouter,
   onNavigate
 }) => {
   const commonClasses = cn(
@@ -50,58 +46,62 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
     collapsed && "px-2 py-2 justify-center"
   );
 
-  if (useTanStackRouter) {
-    return (
-      <motion.div
-        custom={index}
-        initial="hidden"
-        animate="visible"
-        variants={itemVariants}
-      >
-        <TanStackLink
-          to={path}
-          onClick={onNavigate}
-          className={commonClasses}
-          title={collapsed ? label : undefined}
-          preload="intent"
-        >
-          <span className={collapsed ? "mr-0" : "mr-2"}>
-            {React.cloneElement(icon, {
-              className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
-            })}
-          </span>
-          {!collapsed && label}
-        </TanStackLink>
-      </motion.div>
-    );
-  } else {
-    return (
-      <motion.div
-        custom={index}
-        initial="hidden"
-        animate="visible"
-        variants={itemVariants}
-      >
+  // Content for the button
+  const buttonContent = (
+    <>
+      <span className={collapsed ? "mr-0" : "mr-2"}>
+        {React.cloneElement(icon, {
+          className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
+        })}
+      </span>
+      {!collapsed && label}
+    </>
+  );
+
+  return (
+    <motion.div
+      custom={index}
+      initial="hidden"
+      animate="visible"
+      variants={itemVariants}
+    >
+      {collapsed ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  isActive && "bg-primary/10 text-primary",
+                  collapsed && "px-2 py-2"
+                )}
+                asChild
+              >
+                <Link to={path} onClick={onNavigate}>
+                  {buttonContent}
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>{label}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
         <Button
           variant="ghost"
           className={cn(
             "w-full justify-start text-left font-normal",
-            isActive && "bg-primary/10 text-primary",
-            collapsed && "px-2 py-2"
+            isActive && "bg-primary/10 text-primary"
           )}
           asChild
-          title={collapsed ? label : undefined}
         >
-          <RouterLink to={legacyPath} onClick={onNavigate}>
-            <span className={collapsed ? "mr-0" : "mr-2"}>
-              {React.cloneElement(icon, {
-                className: `h-4 w-4 ${collapsed ? "" : "mr-2"}`
-              })}
-            </span>
-            {!collapsed && label}
-          </RouterLink>
+          <Link to={path} onClick={onNavigate}>
+            {buttonContent}
+          </Link>
         </Button>
-      </motion.div>
-    );
-  }
+      )}
+    </motion.div>
+  );
 };

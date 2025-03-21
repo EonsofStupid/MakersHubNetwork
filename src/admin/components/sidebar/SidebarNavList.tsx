@@ -1,15 +1,12 @@
 
 import React from "react";
 import { SidebarNavItem } from "./SidebarNavItem";
-
-// Import icon types
-import { LucideIcon } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 interface NavItem {
   id: string;
   label: string;
   path: string;
-  legacyPath: string;
   icon: React.ReactElement;
   permission: string;
 }
@@ -17,9 +14,6 @@ interface NavItem {
 interface SidebarNavListProps {
   items: NavItem[];
   collapsed: boolean;
-  useTanStackRouter: boolean;
-  currentPath: string;
-  currentTab: string;
   hasPermission: (permission: string) => boolean;
   onNavigation: (item: NavItem) => void;
 }
@@ -27,20 +21,20 @@ interface SidebarNavListProps {
 export const SidebarNavList: React.FC<SidebarNavListProps> = ({
   items,
   collapsed,
-  useTanStackRouter,
-  currentPath,
-  currentTab,
   hasPermission,
   onNavigation
 }) => {
-  // Check if an item is active based on legacy tab param or new route path
+  const location = useLocation();
+  const currentPath = location.pathname;
+  
+  // Check if an item is active based on the current path
   const isItemActive = (item: NavItem) => {
-    if (useTanStackRouter) {
-      return currentPath === item.path || 
-             (currentPath === '/admin' && item.id === 'overview');
-    } else {
-      return currentTab === item.id;
-    }
+    // Remove trailing slashes for comparison
+    const cleanPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath;
+    const cleanItemPath = item.path.endsWith('/') ? item.path.slice(0, -1) : item.path;
+    
+    return cleanPath === cleanItemPath || 
+           (cleanPath === '/admin' && item.id === 'overview');
   };
 
   return (
@@ -56,12 +50,10 @@ export const SidebarNavList: React.FC<SidebarNavListProps> = ({
                 id={item.id}
                 label={item.label}
                 path={item.path}
-                legacyPath={item.legacyPath}
                 icon={item.icon}
                 isActive={isItemActive(item)}
                 collapsed={collapsed}
                 index={index}
-                useTanStackRouter={useTanStackRouter}
                 onNavigate={() => onNavigation(item)}
               />
             </li>
