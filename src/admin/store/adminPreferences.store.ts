@@ -5,17 +5,21 @@ import { useAuthStore } from '@/stores/auth/store';
 
 interface AdminPreferences {
   dashboard_collapsed?: boolean;
+  router_preference?: string;
 }
 
 interface AdminPreferencesState {
   isDashboardCollapsed: boolean;
+  routerPreference: 'react-router' | 'tanstack';
   isLoading: boolean;
   setDashboardCollapsed: (collapsed: boolean) => void;
+  setRouterPreference: (preference: 'react-router' | 'tanstack') => void;
   loadPreferences: () => Promise<void>;
 }
 
 export const useAdminPreferences = create<AdminPreferencesState>((set, get) => ({
   isDashboardCollapsed: false,
+  routerPreference: 'react-router',
   isLoading: true,
   
   loadPreferences: async () => {
@@ -40,9 +44,9 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
         return;
       }
       
-      // If data exists, try to extract dashboard collapse state
+      // If data exists, try to extract preferences
       if (data && data.shortcuts) {
-        // Check if shortcuts has metadata for dashboard preferences
+        // Check if shortcuts has metadata for preferences
         const shortcutsData = data.shortcuts as any;
         
         // Safely access the _meta property
@@ -50,6 +54,7 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
           const meta = shortcutsData._meta as AdminPreferences;
           set({ 
             isDashboardCollapsed: meta.dashboard_collapsed ?? false,
+            routerPreference: (meta.router_preference as 'react-router' | 'tanstack') ?? 'react-router',
             isLoading: false 
           });
           return;
@@ -85,6 +90,10 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
       
       // Prepare updated shortcuts data with metadata
       const currentShortcuts = data?.shortcuts || [];
+      const currentMeta = (typeof currentShortcuts === 'object' && (currentShortcuts as any)._meta) 
+        ? (currentShortcuts as any)._meta 
+        : {};
+      
       let updatedShortcuts: any;
       
       if (Array.isArray(currentShortcuts)) {
@@ -95,6 +104,7 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
         Object.defineProperty(updatedShortcuts, '_meta', {
           enumerable: true,
           value: {
+            ...currentMeta,
             dashboard_collapsed: collapsed
           }
         });
@@ -130,6 +140,76 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
       }
     } catch (error) {
       console.error("Error in setDashboardCollapsed:", error);
+    }
+  },
+  
+  setRouterPreference: async (preference: 'react-router' | 'tanstack') => {
+    set({ routerPreference: preference });
+    
+    const { user } = useAuthStore.getState();
+    if (!user?.id) return;
+    
+    try {
+      // First fetch current shortcuts
+      const { data, error } = await supabase
+        .from('admin_shortcuts')
+        .select('shortcuts')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error("Error fetching shortcuts for router preference update:", error);
+        return;
+      }
+      
+      // Prepare updated shortcuts data with metadata
+      const currentShortcuts = data?.shortcuts || [];
+      const currentMeta = (typeof currentShortcuts === 'object' && (currentShortcuts as any)._meta) 
+        ? (currentShortcuts as any)._meta 
+        : {};
+      
+      let updatedShortcuts: any;
+      
+      if (Array.isArray(currentShortcuts)) {
+        updatedShortcuts = [...(currentShortcuts as any[])];
+        
+        Object.defineProperty(updatedShortcuts, '_meta', {
+          enumerable: true,
+          value: {
+            ...currentMeta,
+            router_preference: preference
+          }
+        });
+      } else if (typeof currentShortcuts === 'object') {
+        updatedShortcuts = {
+          ...(currentShortcuts as Record<string, any>),
+          _meta: {
+            ...((currentShortcuts as any)._meta || {}),
+            router_preference: preference
+          }
+        };
+      } else {
+        updatedShortcuts = {
+          items: [],
+          _meta: {
+            router_preference: preference
+          }
+        };
+      }
+      
+      // Update the record
+      const { error: updateError } = await supabase
+        .from('admin_shortcuts')
+        .upsert({
+          user_id: user.id,
+          shortcuts: updatedShortcuts
+        }, { onConflict: 'user_id' });
+      
+      if (updateError) {
+        console.error("Error updating router preference:", updateError);
+      }
+    } catch (error) {
+      console.error("Error in setRouterPreference:", error);
     }
   }
 }));
