@@ -8,13 +8,13 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useToast } from "@/hooks/use-toast";
 
 // Lazy load admin components
-const OverviewPage = lazy(() => import("@/admin/tabs/OverviewTab"));
-const ContentPage = lazy(() => import("@/admin/tabs/ContentTab"));
-const UsersPage = lazy(() => import("@/admin/tabs/UsersTab"));
-const ChatPage = lazy(() => import("@/admin/tabs/ChatTab"));
-const DataMaestroPage = lazy(() => import("@/admin/tabs/DataMaestroTab"));
-const ImportPage = lazy(() => import("@/admin/tabs/ImportTab"));
-const SettingsPage = lazy(() => import("@/admin/tabs/SettingsTab"));
+const OverviewDashboard = lazy(() => import("@/admin/features/overview/OverviewDashboard"));
+const ContentManagement = lazy(() => import("@/admin/features/content/ContentManagement"));
+const UsersManagement = lazy(() => import("@/admin/features/users/UsersManagement"));
+const ChatManagement = lazy(() => import("@/admin/features/chat/ChatManagement"));
+const DataMaestroManager = lazy(() => import("@/admin/features/data-maestro/DataMaestroManager"));
+const ImportManager = lazy(() => import("@/admin/features/import/ImportManager"));
+const SettingsManager = lazy(() => import("@/admin/features/settings/SettingsManager"));
 
 // Loading component for lazy-loaded routes
 const AdminPageLoader = () => (
@@ -80,43 +80,43 @@ export default function Admin() {
         
         <Route path="overview" element={
           <AdminRouteWrapper>
-            <OverviewPage />
+            <OverviewDashboard />
           </AdminRouteWrapper>
         } />
         
         <Route path="content/*" element={
           <AdminRouteWrapper>
-            <ContentPage />
+            <ContentManagement />
           </AdminRouteWrapper>
         } />
         
         <Route path="users" element={
           <AdminRouteWrapper>
-            <UsersPage />
+            <UsersManagement />
           </AdminRouteWrapper>
         } />
         
         <Route path="chat" element={
           <AdminRouteWrapper>
-            <ChatPage />
+            <ChatManagement />
           </AdminRouteWrapper>
         } />
         
         <Route path="data-maestro" element={
           <AdminRouteWrapper>
-            <DataMaestroPage />
+            <DataMaestroManager />
           </AdminRouteWrapper>
         } />
         
         <Route path="import" element={
           <AdminRouteWrapper>
-            <ImportPage />
+            <ImportManager />
           </AdminRouteWrapper>
         } />
         
         <Route path="settings" element={
           <AdminRouteWrapper>
-            <SettingsPage />
+            <SettingsManager />
           </AdminRouteWrapper>
         } />
         
