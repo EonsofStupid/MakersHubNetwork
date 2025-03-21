@@ -1,31 +1,17 @@
 
 /**
- * Utility for handling admin routing between legacy and TanStack Router
+ * Utility for handling admin routing with React Router
  */
-
-// Convert a legacy tab path to a TanStack Router path
-export const convertLegacyTabToPath = (tab: string): string => {
-  return `/admin/${tab}`;
-};
-
-// Convert a TanStack Router path to a legacy tab path
-export const convertPathToLegacyTab = (path: string): string => {
-  // Extract the section after /admin/
-  const matches = path.match(/\/admin\/([a-z-]+)/);
-  if (matches && matches[1]) {
-    return `/admin?tab=${matches[1]}`;
-  }
-  return '/admin?tab=overview';
-};
 
 // Get the current section from a path
 export const getSectionFromPath = (path: string): string => {
+  // Check for path pattern /admin/section
   const matches = path.match(/\/admin\/([a-z-]+)/);
   if (matches && matches[1]) {
     return matches[1];
   }
   
-  // Check for legacy tab
+  // Check for legacy tab parameter
   const url = new URL(path, window.location.origin);
   const tab = url.searchParams.get('tab');
   if (tab) {
@@ -35,7 +21,12 @@ export const getSectionFromPath = (path: string): string => {
   return 'overview';
 };
 
-// Check if the current URL is using TanStack Router
-export const isUsingTanStackRouter = (path: string): boolean => {
-  return path.match(/\/admin\/[a-z-]+/) !== null;
+// Generate a path to an admin section
+export const getAdminPath = (section: string): string => {
+  return `/admin/${section}`;
+};
+
+// Check if path is an admin path
+export const isAdminPath = (path: string): boolean => {
+  return path.startsWith('/admin');
 };

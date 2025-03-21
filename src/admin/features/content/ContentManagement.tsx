@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CategoryManagement from "@/admin/cms/components/categories/CategoryManagement";
 
-const ContentTab = () => {
+const ContentManagement = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-heading cyber-text-glow">Content Management</h2>
@@ -50,4 +50,4 @@ const ContentTab = () => {
   );
 };
 
-export default ContentTab;
+export default ContentManagement;

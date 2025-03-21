@@ -11,20 +11,16 @@ import { adminNavigationItems } from "./sidebar/navigation.config";
 
 interface AdminSidebarProps {
   collapsed?: boolean;
-  useTanStackRouter?: boolean;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({ 
-  collapsed = false,
-  useTanStackRouter = false
+  collapsed = false
 }) => {
   const location = useLocation();
   const { hasPermission, setCurrentSection } = useAdminStore();
   
   // Parse current path from URL
   const currentPath = location.pathname;
-  const searchParams = new URLSearchParams(location.search);
-  const currentTab = searchParams.get('tab') || "overview";
 
   const handleNavigation = (item: typeof adminNavigationItems[0]) => {
     setCurrentSection(item.id);
@@ -51,9 +47,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <SidebarNavList
           items={adminNavigationItems}
           collapsed={collapsed}
-          useTanStackRouter={useTanStackRouter}
           currentPath={currentPath}
-          currentTab={currentTab}
           hasPermission={hasPermission}
           onNavigation={handleNavigation}
         />

@@ -5,12 +5,6 @@ import { useAuthStore } from '@/stores/auth/store';
 
 interface AdminPreferences {
   dashboard_collapsed?: boolean;
-  router_preference?: 'legacy' | 'tanstack';
-}
-
-interface ShortcutsData {
-  shortcuts: any[];
-  _meta?: AdminPreferences;
 }
 
 interface AdminPreferencesState {
@@ -18,23 +12,11 @@ interface AdminPreferencesState {
   isLoading: boolean;
   setDashboardCollapsed: (collapsed: boolean) => void;
   loadPreferences: () => Promise<void>;
-  routerPreference: 'legacy' | 'tanstack';
-  setRouterPreference: (preference: 'legacy' | 'tanstack') => void;
 }
 
 export const useAdminPreferences = create<AdminPreferencesState>((set, get) => ({
   isDashboardCollapsed: false,
   isLoading: true,
-  routerPreference: 'legacy',
-  
-  setRouterPreference: (preference: 'legacy' | 'tanstack') => {
-    set({ routerPreference: preference });
-    // Save preference to the database
-    const currentState = get();
-    if (!currentState.isLoading) {
-      currentState.setDashboardCollapsed(currentState.isDashboardCollapsed);
-    }
-  },
   
   loadPreferences: async () => {
     set({ isLoading: true });
@@ -68,7 +50,6 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
           const meta = shortcutsData._meta as AdminPreferences;
           set({ 
             isDashboardCollapsed: meta.dashboard_collapsed ?? false,
-            routerPreference: meta.router_preference ?? 'legacy',
             isLoading: false 
           });
           return;
@@ -114,8 +95,7 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
         Object.defineProperty(updatedShortcuts, '_meta', {
           enumerable: true,
           value: {
-            dashboard_collapsed: collapsed,
-            router_preference: get().routerPreference
+            dashboard_collapsed: collapsed
           }
         });
       } else if (typeof currentShortcuts === 'object') {
@@ -124,8 +104,7 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
           ...(currentShortcuts as Record<string, any>),
           _meta: {
             ...((currentShortcuts as any)._meta || {}),
-            dashboard_collapsed: collapsed,
-            router_preference: get().routerPreference
+            dashboard_collapsed: collapsed
           }
         };
       } else {
@@ -133,8 +112,7 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
         updatedShortcuts = {
           items: [],
           _meta: {
-            dashboard_collapsed: collapsed,
-            router_preference: get().routerPreference
+            dashboard_collapsed: collapsed
           }
         };
       }
