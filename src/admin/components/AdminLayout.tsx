@@ -24,11 +24,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   requiredPermission = "admin:access",
   title = "Admin Dashboard"
 }) => {
-  const { loadPermissions, hasPermission, isLoadingPermissions, setCurrentSection } = useAdminStore();
+  const { loadPermissions, hasPermission, isLoadingPermissions } = useAdminStore();
   const { 
     isDashboardCollapsed, 
     setDashboardCollapsed, 
-    loadPreferences
+    loadPreferences,
+    routerPreference,
+    setRouterPreference
   } = useAdminPreferences();
   const location = useLocation();
 
@@ -36,16 +38,20 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     loadPermissions();
     loadPreferences();
     
-    // Update current section based on URL
-    const path = location.pathname;
-    const section = path.split('/').pop() || 'overview';
-    setCurrentSection(section);
-  }, [loadPermissions, loadPreferences, location.pathname, setCurrentSection]);
+    // Set the router preference based on the current URL pattern
+    const pathname = location.pathname;
+    if (pathname.startsWith('/admin/')) {
+      setRouterPreference('tanstack');
+    }
+  }, [loadPermissions, loadPreferences, location.pathname, setRouterPreference]);
 
   // Toggle dashboard collapsed state
   const toggleDashboard = () => {
     setDashboardCollapsed(!isDashboardCollapsed);
   };
+
+  // Determine if we're using TanStack Router
+  const useTanStackRouter = routerPreference === 'tanstack';
 
   // Check if user has required permission
   if (!isLoadingPermissions && requiredPermission && !hasPermission(requiredPermission)) {
@@ -70,21 +76,21 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       <AdminHeader title={title} collapsed={isDashboardCollapsed} />
       
       <div className={cn(
-        "transition-all duration-300 ease-in-out pt-2 pb-6", 
-        isDashboardCollapsed ? "py-1" : "py-3"
+        "transition-all duration-300 ease-in-out pt-4 pb-8",
+        isDashboardCollapsed ? "py-2" : "py-4"
       )}>
         <div className="container mx-auto px-4">
           {/* Dashboard Toggle Button */}
-          <div className="flex justify-center mb-2">
+          <div className="flex justify-center mb-3">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={toggleDashboard}
-              className="rounded-full h-7 w-7 p-0 bg-primary/10 hover:bg-primary/20"
+              className="rounded-full h-8 w-8 p-0 bg-primary/10 hover:bg-primary/20"
             >
               {isDashboardCollapsed ? 
-                <ChevronDown className="h-3 w-3 text-primary" /> : 
-                <ChevronUp className="h-3 w-3 text-primary" />
+                <ChevronDown className="h-4 w-4 text-primary" /> : 
+                <ChevronUp className="h-4 w-4 text-primary" />
               }
             </Button>
           </div>
@@ -92,17 +98,17 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           {/* Collapsible Dashboard Shortcuts */}
           <div className={cn(
             "transition-all duration-300 ease-in-out overflow-hidden",
-            isDashboardCollapsed ? "max-h-0 opacity-0 mb-0" : "max-h-[200px] opacity-100 mb-4"
+            isDashboardCollapsed ? "max-h-0 opacity-0 mb-0" : "max-h-[200px] opacity-100 mb-6"
           )}>
             <DashboardShortcuts />
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className={cn(
               "transition-all duration-300 ease-in-out",
               isDashboardCollapsed ? "lg:col-span-2" : "lg:col-span-3"
             )}>
-              <AdminSidebar collapsed={isDashboardCollapsed} />
+              <AdminSidebar collapsed={isDashboardCollapsed} useTanStackRouter={useTanStackRouter} />
             </div>
             
             <div className={cn(
@@ -110,7 +116,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               isDashboardCollapsed ? "lg:col-span-10" : "lg:col-span-9"
             )}>
               {isLoadingPermissions ? (
-                <Card className="p-6 flex justify-center items-center min-h-[400px]">
+                <Card className="p-8 flex justify-center items-center min-h-[400px]">
                   <div className="space-y-4 text-center">
                     <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
                     <p className="text-muted-foreground">Loading admin panel...</p>
