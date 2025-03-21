@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeState } from "./types";
@@ -15,21 +16,17 @@ export const useThemeStore = create<ThemeState>((set) => ({
   setTheme: async (themeId: string) => {
     set({ isLoading: true, error: null });
     try {
-      console.log("Fetching theme with query:", themeId ? { id: themeId } : { is_default: true });
+      const query = themeId 
+        ? supabase.from("themes").select("*").eq("id", themeId).limit(1)
+        : supabase.from("themes").select("*").eq("is_default", true).limit(1);
       
-      const { data: themes, error } = await supabase
-        .from("themes")
-        .select("*")
-        .eq(themeId ? "id" : "is_default", themeId || true)
-        .limit(1)
-        .throwOnError();
+      const { data: themes, error } = await query;
 
       if (error) throw error;
       if (!themes || themes.length === 0) throw new Error("No theme found");
 
       const rawTheme = themes[0];
-      console.log("Successfully fetched theme:", rawTheme);
-
+      
       // Type guard to ensure we have objects
       const designTokens = rawTheme.design_tokens && typeof rawTheme.design_tokens === 'object' 
         ? rawTheme.design_tokens as Record<string, any>

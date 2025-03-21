@@ -1,5 +1,5 @@
 
-import React, { useEffect, memo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { ThemeEffect } from '@/theme/types/effects';
 import { cn } from '@/lib/utils';
 
@@ -19,64 +19,61 @@ export const EffectRenderer = memo(function EffectRenderer({
     return <div className={className}>{children}</div>;
   }
 
-  // Apply CSS classes and styles based on effect type
-  const getEffectStyles = () => {
+  // Compute effect styles and classes
+  const { effectClass, effectStyle } = useMemo(() => {
+    if (!effect) return { effectClass: '', effectStyle: {} };
+    
     switch (effect.type) {
       case 'glitch':
         return {
-          className: 'cyber-glitch',
-          style: {
-            '--effect-color': (effect.color || '#00F0FF') as string,
+          effectClass: 'cyber-glitch',
+          effectStyle: {
+            '--effect-color': (effect as any).color || '#00F0FF',
           } as React.CSSProperties
         };
       
       case 'gradient':
-        const gradientEffect = effect as any;
         return {
-          className: 'cyber-gradient-flow',
-          style: {
-            '--effect-color': (gradientEffect.colors?.[0] || '#00F0FF') as string,
+          effectClass: 'cyber-gradient-flow',
+          effectStyle: {
+            '--effect-color': ((effect as any).colors?.[0] || '#00F0FF'),
           } as React.CSSProperties
         };
       
       case 'cyber':
-        const cyberEffect = effect as any;
         return {
-          className: 'cyber-glow',
-          style: {
-            '--effect-color': (cyberEffect.glowColor || '#00F0FF') as string,
+          effectClass: 'cyber-glow',
+          effectStyle: {
+            '--effect-color': ((effect as any).glowColor || '#00F0FF'),
           } as React.CSSProperties
         };
       
       case 'pulse':
-        const pulseEffect = effect as any;
         return {
-          className: 'animate-pulse-slow',
-          style: {
-            '--effect-color': (pulseEffect.color || '#00F0FF') as string,
+          effectClass: 'animate-pulse-slow',
+          effectStyle: {
+            '--effect-color': ((effect as any).color || '#00F0FF'),
           } as React.CSSProperties
         };
       
       case 'particle':
         return {
-          className: 'cyber-particles',
-          style: {
-            '--effect-color': (effect as any).color || '#00F0FF',
+          effectClass: 'cyber-particles',
+          effectStyle: {
+            '--effect-color': ((effect as any).color || '#00F0FF'),
           } as React.CSSProperties
         };
       
       case 'morph':
         return {
-          className: 'animate-morph-header',
-          style: {}
+          effectClass: 'animate-morph-header',
+          effectStyle: {}
         };
       
       default:
-        return { className: '', style: {} };
+        return { effectClass: '', effectStyle: {} };
     }
-  };
-
-  const { className: effectClass, style: effectStyle } = getEffectStyles();
+  }, [effect]);
 
   return (
     <div 
