@@ -21,3 +21,6 @@ export { AdminSidebar } from './components/AdminSidebar';
 
 // Export dashboard components
 export * from './dashboard';
+
+// Export admin preferences store
+export { useAdminPreferences } from './store/adminPreferences.store';
