@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAtom } from "jotai";
 import { showDragOverlayAtom, dragTargetAtom } from "../store/atoms";
 import { useAdminUI } from "../store/admin-ui";
+import { DraggableSlot } from "../components/DraggableSlot";
 
 type IconMapping = {
   [key: string]: string;
@@ -20,7 +21,7 @@ const iconMap: IconMapping = {
 };
 
 export const AdminTopNav = () => {
-  const { scrollY, pinnedIcons, setSidebar } = useAdminUI();
+  const { scrollY, pinnedIcons, setSidebar, pinIcon, unpinIcon } = useAdminUI();
   const [isScrolled, setIsScrolled] = useState(false);
   const [showDragOverlay] = useAtom(showDragOverlayAtom);
   const [dragTarget] = useAtom(dragTargetAtom);
@@ -30,14 +31,12 @@ export const AdminTopNav = () => {
     setIsScrolled(scrollY > 50);
   }, [scrollY]);
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    // Logic for handling the drop would be implemented here
-    console.log("Item dropped in top nav");
+  const handleDrop = (iconId: string) => {
+    pinIcon(iconId);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
+  const handleRemoveIcon = (iconId: string) => {
+    unpinIcon(iconId);
   };
 
   const toggleSidebar = () => {
@@ -59,19 +58,15 @@ export const AdminTopNav = () => {
           <span className="text-white">☰</span>
         </button>
         
-        <div 
-          className="flex gap-3 items-center"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-        >
+        <div className="flex gap-3 items-center">
           {pinnedIcons.map((iconId) => (
-            <div
+            <DraggableSlot
               key={iconId}
-              className="h-10 w-10 bg-[var(--admin-accent-2)] rounded-full hover:scale-105 hover-glow flex items-center justify-center cursor-pointer transition-all duration-300"
-              onClick={() => navigate(`/admin/${iconId}`)}
-            >
-              <span className="text-lg">{iconMap[iconId] || '🔍'}</span>
-            </div>
+              iconId={iconId}
+              icon={iconMap[iconId]}
+              onDrop={handleDrop}
+              onRemove={handleRemoveIcon}
+            />
           ))}
           
           {showDragOverlay && (
@@ -79,6 +74,10 @@ export const AdminTopNav = () => {
               <span className="flex items-center justify-center h-full text-sm">+</span>
             </div>
           )}
+
+          <DraggableSlot
+            onDrop={handleDrop}
+          />
         </div>
       </div>
 
