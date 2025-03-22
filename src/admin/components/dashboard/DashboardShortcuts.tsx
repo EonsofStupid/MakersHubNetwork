@@ -1,277 +1,104 @@
 
-import React, { useState, useEffect } from "react";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Card, CardContent } from "@/components/ui/card";
+import React from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { 
-  LayoutDashboard, 
+  Settings, 
   Users, 
   FileText, 
   MessageSquare, 
   Database, 
-  Loader2,
-  Plus,
-  X
+  LineChart, 
+  Zap
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth/store";
 import { AdminShortcut } from "@/admin/types/admin.types";
-import { Link } from '@tanstack/react-router';
+import { useAdminStore } from "@/admin/store/admin.store";
 
-export const DashboardShortcuts: React.FC = () => {
-  const [shortcuts, setShortcuts] = useState<AdminShortcut[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+export function DashboardShortcuts() {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { status, user } = useAuthStore();
-  const [useTanStackRouter, setUseTanStackRouter] = useState(false);
+  const { hasPermission } = useAdminStore();
 
-  // Check if we should use TanStack Router (based on URL)
-  useEffect(() => {
-    const currentUrl = window.location.pathname;
-    setUseTanStackRouter(currentUrl.startsWith('/admin/'));
-  }, []);
-
-  // Convert legacy shortcuts to TanStack Router paths
-  const convertPath = (path: string): string => {
-    if (!useTanStackRouter) return path;
-    
-    // Extract the tab from legacy path like "/admin?tab=overview"
-    const match = path.match(/\/admin\?tab=([a-z-]+)/);
-    if (match && match[1]) {
-      return `/admin/${match[1]}`;
-    }
-    return path;
-  };
-
-  // Default shortcuts
-  const defaultShortcuts: AdminShortcut[] = [
-    { id: "overview", label: "Overview", icon: "dashboard", path: "/admin?tab=overview" },
-    { id: "users", label: "User Management", icon: "users", path: "/admin?tab=users" },
-    { id: "content", label: "Content", icon: "content", path: "/admin?tab=content" },
-    { id: "chats", label: "Chat", icon: "chat", path: "/admin?tab=chat" },
+  // Define admin shortcuts
+  const shortcuts: AdminShortcut[] = [
+    {
+      id: "users",
+      label: "User Management",
+      icon: "👥",
+      path: "/admin/users",
+      permission: "admin:users:read",
+      color: "bg-blue-500/10 text-blue-500 border-blue-500/20"
+    },
+    {
+      id: "content",
+      label: "Content",
+      icon: "📝",
+      path: "/admin/content",
+      permission: "admin:content:read",
+      color: "bg-green-500/10 text-green-500 border-green-500/20"
+    },
+    {
+      id: "data-maestro",
+      label: "Data Maestro",
+      icon: "🔍",
+      path: "/admin/data-maestro",
+      permission: "admin:access",
+      color: "bg-purple-500/10 text-purple-500 border-purple-500/20"
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: "⚙️",
+      path: "/admin/settings",
+      permission: "admin:settings:read",
+      color: "bg-orange-500/10 text-orange-500 border-orange-500/20"
+    },
+    {
+      id: "import",
+      label: "Import/Export",
+      icon: "📤",
+      path: "/admin/import",
+      permission: "admin:data:import",
+      color: "bg-pink-500/10 text-pink-500 border-pink-500/20"
+    },
+    {
+      id: "analytics",
+      label: "Analytics",
+      icon: "📊",
+      path: "/admin/analytics",
+      permission: "admin:access",
+      color: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20"
+    },
   ];
 
-  // Load user shortcuts from Supabase
-  useEffect(() => {
-    const loadUserShortcuts = async () => {
-      if (status !== "authenticated" || !user?.id) {
-        setShortcuts(defaultShortcuts);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('admin_shortcuts')
-          .select('shortcuts')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) {
-          console.error("Error loading shortcuts:", error);
-          setShortcuts(defaultShortcuts);
-        } else if (data) {
-          // Type assertion to ensure proper conversion
-          const loadedShortcuts = data.shortcuts as unknown;
-          // Verify the shape of the data before setting it
-          if (Array.isArray(loadedShortcuts) && loadedShortcuts.length > 0 && 
-              'id' in loadedShortcuts[0] && 'label' in loadedShortcuts[0]) {
-            setShortcuts(loadedShortcuts as AdminShortcut[]);
-          } else {
-            console.warn("Loaded shortcuts data doesn't match expected format, using defaults");
-            setShortcuts(defaultShortcuts);
-          }
-        } else {
-          // No shortcuts found for this user, use defaults
-          setShortcuts(defaultShortcuts);
-          // Save defaults for future use
-          saveShortcuts(defaultShortcuts);
-        }
-      } catch (error) {
-        console.error("Error loading shortcuts:", error);
-        setShortcuts(defaultShortcuts);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserShortcuts();
-  }, [user?.id, status]);
-
-  // Save shortcuts to Supabase
-  const saveShortcuts = async (shortcutsToSave: AdminShortcut[]) => {
-    if (status !== "authenticated" || !user?.id) return;
-    
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('admin_shortcuts')
-        .upsert(
-          { 
-            user_id: user.id, 
-            shortcuts: shortcutsToSave as unknown as any // Force type for JSON storage
-          },
-          { onConflict: 'user_id' }
-        );
-
-      if (error) {
-        console.error("Error saving shortcuts:", error);
-        toast({
-          title: "Error saving shortcuts",
-          description: "Your dashboard layout couldn't be saved.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error saving shortcuts:", error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Handle drag end event
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
-    
-    const items = Array.from(shortcuts);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    
-    setShortcuts(items);
-    saveShortcuts(items);
-  };
-
-  // Navigate to shortcut destination
-  const handleShortcutClick = (path: string) => {
-    if (useTanStackRouter) {
-      // Let the Link component handle navigation
-      return;
-    }
+  const handleNavigate = (path: string) => {
     navigate(path);
   };
 
-  // Render icon based on string identifier
-  const renderIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'dashboard':
-        return <LayoutDashboard className="h-5 w-5" />;
-      case 'users':
-        return <Users className="h-5 w-5" />;
-      case 'content':
-        return <FileText className="h-5 w-5" />;
-      case 'chat':
-        return <MessageSquare className="h-5 w-5" />;
-      default:
-        return <Database className="h-5 w-5" />;
-    }
-  };
-
-  // Remove a shortcut
-  const removeShortcut = (id: string) => {
-    const updatedShortcuts = shortcuts.filter(shortcut => shortcut.id !== id);
-    setShortcuts(updatedShortcuts);
-    saveShortcuts(updatedShortcuts);
-  };
-
-  if (loading) {
-    return (
-      <Card className="cyber-card border-primary/20">
-        <CardContent className="flex justify-center items-center p-6 min-h-[100px]">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="cyber-card border-primary/20">
-      <CardContent className="p-4">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="shortcuts" direction="horizontal">
-            {(provided) => (
-              <div
-                className="flex flex-wrap gap-2"
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-              >
-                {shortcuts.map((shortcut, index) => (
-                  <Draggable key={shortcut.id} draggableId={shortcut.id} index={index}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className={cn(
-                          "transition-all duration-150",
-                          snapshot.isDragging ? "scale-105 shadow-lg" : ""
-                        )}
-                      >
-                        <div className="relative group">
-                          {useTanStackRouter ? (
-                            <Link
-                              to={convertPath(shortcut.path)}
-                              className="inline-flex h-auto flex-col items-center gap-1 py-3 px-4 bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/30 rounded-md"
-                            >
-                              {renderIcon(shortcut.icon)}
-                              <span className="text-xs">{shortcut.label}</span>
-                            </Link>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              className="h-auto py-3 px-4 bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/30"
-                              onClick={() => handleShortcutClick(shortcut.path)}
-                            >
-                              <div className="flex flex-col items-center gap-1">
-                                {renderIcon(shortcut.icon)}
-                                <span className="text-xs">{shortcut.label}</span>
-                              </div>
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => removeShortcut(shortcut.id)}
-                          >
-                            <X className="h-3 w-3 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-                
-                {/* Add new shortcut button (placeholder for future functionality) */}
-                <Button
-                  variant="outline"
-                  className="h-auto py-3 px-4 bg-primary/5 hover:bg-primary/10 border-dashed border-primary/20 hover:border-primary/30"
-                  onClick={() => toast({
-                    title: "Add Shortcut",
-                    description: "This feature will be available soon!",
-                  })}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <Plus className="h-5 w-5" />
-                    <span className="text-xs">Add</span>
-                  </div>
-                </Button>
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {shortcuts.map((shortcut) => {
+        // Skip if user doesn't have required permission
+        if (!hasPermission(shortcut.permission)) return null;
         
-        {saving && (
-          <div className="absolute top-2 right-2">
-            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        return (
+          <Card 
+            key={shortcut.id}
+            className={cn(
+              "p-4 cursor-pointer hover:shadow-md transition-all duration-300 border border-primary/20",
+              "hover:border-primary/40 hover:scale-105",
+              shortcut.color
+            )}
+            onClick={() => handleNavigate(shortcut.path)}
+          >
+            <div className="text-center space-y-2">
+              <div className="text-2xl mx-auto">{shortcut.icon}</div>
+              <h3 className="text-sm font-medium">{shortcut.label}</h3>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
   );
-};
+}
