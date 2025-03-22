@@ -2,8 +2,13 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAtom } from "jotai";
-import { hoveredIconAtom, dragSourceAtom, showDragOverlayAtom } from "../store/atoms";
+import { 
+  hoveredIconAtom, 
+  dragSourceAtom, 
+  showDragOverlayAtom 
+} from "../store/atoms";
 import { useAdminUI } from "../store/admin-ui";
+import { SidebarIcon } from "../components/SidebarIcon";
 
 interface SidebarIcon {
   id: string;
@@ -21,7 +26,12 @@ const sidebarIcons: SidebarIcon[] = [
 ];
 
 export const AdminSidebar = () => {
-  const { sidebarExpanded, scrollY, activeSection, setSidebar, pinIcon } = useAdminUI();
+  const { 
+    sidebarExpanded, 
+    scrollY, 
+    activeSection, 
+    setSidebar 
+  } = useAdminUI();
   const [hoveredIcon, setHoveredIcon] = useAtom(hoveredIconAtom);
   const [_, setDragSource] = useAtom(dragSourceAtom);
   const [__, setShowDragOverlay] = useAtom(showDragOverlayAtom);
@@ -63,28 +73,16 @@ export const AdminSidebar = () => {
     >
       <div className="flex flex-col items-center gap-4 px-2 py-4">
         {sidebarIcons.map((icon) => (
-          <div
+          <SidebarIcon
             key={icon.id}
-            draggable
+            id={icon.id}
+            label={icon.label}
+            icon={icon.icon}
+            active={activeSection === icon.id}
+            expanded={sidebarExpanded}
             onClick={() => handleIconClick(icon.id)}
-            onMouseEnter={() => setHoveredIcon(icon.id)}
-            onMouseLeave={() => setHoveredIcon(null)}
             onDragStart={(e) => handleDragStart(icon.id, e)}
-            onDragEnd={handleDragEnd}
-            className={`w-full flex items-center gap-3 px-2 py-2 cursor-pointer
-              transition-all duration-300 rounded-md sidebar-icon
-              ${activeSection === icon.id ? 'active' : ''}
-              ${hoveredIcon === icon.id ? 'bg-[rgba(255,60,172,0.2)]' : ''}
-              ${sidebarExpanded ? "justify-start" : "justify-center"}`}
-          >
-            <div className="h-8 w-8 bg-[var(--admin-accent-2)] rounded-full flex items-center justify-center">
-              <span>{icon.icon}</span>
-            </div>
-            
-            {sidebarExpanded && (
-              <span className="text-white text-sm truncate">{icon.label}</span>
-            )}
-          </div>
+          />
         ))}
       </div>
     </aside>

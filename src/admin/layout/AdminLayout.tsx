@@ -12,7 +12,7 @@ interface AdminLayoutProps {
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
-  const { setScrollY, sidebarExpanded } = useAdminUI();
+  const { setScrollY, sidebarExpanded, setActiveSection } = useAdminUI();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,8 +27,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   useEffect(() => {
     const path = location.pathname.split('/');
     const section = path[path.length - 1] || 'dashboard';
-    useAdminUI.getState().setActiveSection(section);
-  }, [location]);
+    setActiveSection(section);
+  }, [location, setActiveSection]);
 
   return (
     <div className="admin-theme">
