@@ -1,33 +1,40 @@
 
-import { ReactNode } from 'react';
-
-export interface StatCard {
-  title: string;
-  value: number | string | null;
-  description: string;
-  loading: boolean;
-  icon: ReactNode;
-  color: string;
-}
-
-export interface DashboardMetric {
-  name: string;
-  value: number;
-  change: number;
-  changeType: 'increase' | 'decrease' | 'neutral';
-}
-
-export interface PerformanceData {
-  name: string;
-  visitors: number;
+export interface DashboardStats {
+  totalUsers: number;
   newUsers: number;
-  avgTime: number;
+  totalFiles: number;
+  activeSessions: number;
+  totalPrinters: number;
 }
 
-export interface ActiveUserMetric {
+export interface Activity {
   id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  last_seen: string | null;
-  status: string | null;
+  type: 'user_registration' | 'login' | 'content_create' | 'content_update' | 'other';
+  description: string;
+  userId?: string;
+  userName?: string;
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
+
+export interface ChartData {
+  label: string;
+  value: number;
+}
+
+export interface DashboardMetrics {
+  dailyActiveUsers: ChartData[];
+  weeklyActiveUsers: ChartData[];
+  monthlyActiveUsers: ChartData[];
+  contentCreation: ChartData[];
+}
+
+export interface TrendingModel {
+  id: string;
+  name: string;
+  creator: string;
+  views: number;
+  downloads: number;
+  rating: number;
+  thumbnailUrl?: string;
 }

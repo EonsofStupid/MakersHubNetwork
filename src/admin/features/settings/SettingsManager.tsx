@@ -1,216 +1,139 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Settings, Save, Zap, Palette, Bell, Lock, Database } from "lucide-react";
-import { motion } from "framer-motion";
-import { SimpleCyberText } from "@/components/theme/SimpleCyberText";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 
-const SettingsManager = () => {
-  const [activeTab, setActiveTab] = useState("general");
+export default function SettingsManager() {
+  const { toast } = useToast();
   
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
+  const handleSaveSettings = () => {
+    toast({
+      title: "Settings Saved",
+      description: "Your settings have been saved successfully."
+    });
   };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 100 }
-    }
-  };
-
+  
   return (
-    <motion.div 
-      className="space-y-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <div className="flex items-center space-x-2 bg-gradient-to-r from-primary/20 to-transparent p-4 rounded-lg">
-        <Settings className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl font-heading">
-          <SimpleCyberText text="Admin Settings" />
-        </h2>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground">
+          Manage your application settings
+        </p>
       </div>
       
-      <motion.div variants={itemVariants}>
-        <Card className="cyber-card border-primary/20">
-          <CardHeader className="border-b border-primary/10 bg-primary/5">
-            <CardTitle className="text-gradient flex items-center gap-2">
-              <Zap className="h-5 w-5" /> System Configuration
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-4 bg-primary/5 rounded-lg p-1 mb-6">
-                <TabsTrigger 
-                  value="general" 
-                  className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-                >
-                  General
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="appearance" 
-                  className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-                >
-                  Appearance
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="notifications" 
-                  className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-                >
-                  Notifications
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="security" 
-                  className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-                >
-                  Security
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="general" className="space-y-6">
-                <div className="grid gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="site-name">Site Name</Label>
-                    <Input 
-                      id="site-name" 
-                      placeholder="MakersImpulse" 
-                      defaultValue="MakersImpulse"
-                      className="border-primary/20 focus-visible:ring-primary/30"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="site-description">Site Description</Label>
-                    <Input 
-                      id="site-description" 
-                      placeholder="A community for 3D printer enthusiasts"
-                      defaultValue="A hub for passionate makers building and customizing 3D printers"
-                      className="border-primary/20 focus-visible:ring-primary/30"
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between rounded-lg border border-primary/20 p-4">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Maintenance Mode</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Put the site in maintenance mode
-                      </p>
-                    </div>
-                    <Switch />
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="appearance" className="space-y-6">
-                <div className="flex items-center justify-between rounded-lg border border-primary/20 p-4">
-                  <div className="flex items-center gap-2">
-                    <Palette className="h-5 w-5 text-primary" />
-                    <div>
-                      <Label className="text-base">Cyber Theme</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Enable the cyberpunk-inspired UI theme
-                      </p>
-                    </div>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label>Primary Color</Label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {["#00F0FF", "#FF2D6E", "#8B5CF6", "#10B981", "#F97316"].map(color => (
-                      <div 
-                        key={color}
-                        className="h-10 rounded-md cursor-pointer border-2 border-transparent hover:border-primary/50 transition-colors"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="notifications" className="space-y-6">
-                <div className="flex items-center justify-between rounded-lg border border-primary/20 p-4">
-                  <div className="flex items-center gap-2">
-                    <Bell className="h-5 w-5 text-primary" />
-                    <div>
-                      <Label className="text-base">Email Notifications</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Send email notifications for system events
-                      </p>
-                    </div>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                
-                <div className="flex items-center justify-between rounded-lg border border-primary/20 p-4">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-5 w-5 text-primary" />
-                    <div>
-                      <Label className="text-base">Database Backups</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Send notifications for scheduled backups
-                      </p>
-                    </div>
-                  </div>
-                  <Switch />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="security" className="space-y-6">
-                <div className="flex items-center justify-between rounded-lg border border-primary/20 p-4">
-                  <div className="flex items-center gap-2">
-                    <Lock className="h-5 w-5 text-primary" />
-                    <div>
-                      <Label className="text-base">Two-Factor Authentication</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Require 2FA for admin users
-                      </p>
-                    </div>
-                  </div>
-                  <Switch defaultChecked />
+      <Tabs defaultValue="general">
+        <TabsList>
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="api">API</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="general" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Site Settings</CardTitle>
+              <CardDescription>
+                Configure general site settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="site-name">Site Name</Label>
+                  <Input id="site-name" defaultValue="MakersImpulse" />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="password-policy">Password Policy</Label>
-                  <Input 
-                    id="password-policy" 
-                    defaultValue="8"
-                    className="border-primary/20 focus-visible:ring-primary/30"
-                  />
+                  <Label htmlFor="site-description">Site Description</Label>
+                  <Input id="site-description" defaultValue="A hub for passionate makers building, customizing, and sharing 3D printer builds." />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="contact-email">Contact Email</Label>
+                  <Input id="contact-email" type="email" defaultValue="contact@makersimpulse.com" />
+                </div>
+              </div>
+              
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <Label>Maintenance Mode</Label>
+                  <div className="flex items-center gap-2">
+                    <Switch id="maintenance-mode" />
+                    <span className="text-sm text-muted-foreground">Enable maintenance mode</span>
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    Minimum password length in characters
+                    When enabled, the site will display a maintenance message to visitors.
                   </p>
                 </div>
-              </TabsContent>
-            </Tabs>
-            
-            <div className="mt-6 flex justify-end">
-              <Button className="bg-primary hover:bg-primary/80 text-primary-foreground">
-                <Save className="h-4 w-4 mr-2" /> Save Settings
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </motion.div>
+                
+                <div className="space-y-2">
+                  <Label>User Registration</Label>
+                  <div className="flex items-center gap-2">
+                    <Switch id="allow-registration" defaultChecked />
+                    <span className="text-sm text-muted-foreground">Allow new user registrations</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>User Defaults</CardTitle>
+              <CardDescription>
+                Default settings for new users
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Default User Role</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <Button variant="outline" className="justify-start">Builder</Button>
+                  <Button variant="outline" className="justify-start bg-primary/10">
+                    Maker
+                  </Button>
+                  <Button variant="outline" className="justify-start">Designer</Button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Email Verification</Label>
+                <div className="flex items-center gap-2">
+                  <Switch id="email-verification" defaultChecked />
+                  <span className="text-sm text-muted-foreground">Require email verification</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <div className="flex justify-end">
+            <Button onClick={handleSaveSettings}>Save Settings</Button>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="appearance" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Theme Settings</CardTitle>
+              <CardDescription>
+                Customize the appearance of your site
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-muted-foreground py-8">
+                Appearance settings will be implemented in the future.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
-};
-
-export default SettingsManager;
+}

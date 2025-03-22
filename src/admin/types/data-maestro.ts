@@ -1,57 +1,62 @@
 
-import { Database } from "@/integrations/supabase/types";
+export interface ImportJob {
+  id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  source: string;
+  type: string;
+  recordsCount: number;
+  createdAt: string;
+  completedAt?: string;
+  errorMessage?: string;
+  userId: string;
+  metadata?: Record<string, any>;
+}
 
-export type BaselineConfig = Database["public"]["Tables"]["baseline_configs"]["Row"];
+export interface ExportJob {
+  id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  format: 'csv' | 'json' | 'xlsx';
+  type: string;
+  recordsCount: number;
+  createdAt: string;
+  completedAt?: string;
+  downloadUrl?: string;
+  errorMessage?: string;
+  userId: string;
+  metadata?: Record<string, any>;
+}
 
-// Enum for tab IDs to provide stricter type checking
-export const DataMaestroTabIds = {
-  API_KEYS: 'api-keys',
-  CSV_IMPORT: 'csv-import',
-  VISUALIZER: 'visualizer',
-  BASELINE: 'baseline'
-} as const;
-
-export type DataMaestroTabId = typeof DataMaestroTabIds[keyof typeof DataMaestroTabIds];
-
-export interface APIKeyProvider {
+export interface DataSource {
   id: string;
   name: string;
-  description: string;
-  icon: string;
+  type: 'api' | 'database' | 'file' | 'custom';
+  connectionDetails: Record<string, any>;
+  lastSync?: string;
+  status: 'active' | 'inactive' | 'error';
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Visualization types as source of truth for the graph
-export const NodeTypes = {
-  PART: 'part',
-  CATEGORY: 'category',
-  MANUFACTURER: 'manufacturer'
-} as const;
-
-export type NodeType = typeof NodeTypes[keyof typeof NodeTypes];
-
-export const EdgeTypes = {
-  REQUIRES: 'requires',
-  COMPATIBLE_WITH: 'compatible-with',
-  UPGRADES: 'upgrades',
-  ALTERNATIVE_TO: 'alternative-to',
-  ACCESSORY_FOR: 'accessory-for'
-} as const;
-
-export type EdgeType = typeof EdgeTypes[keyof typeof EdgeTypes];
-
-export interface VisualNode {
-  id: string;
-  type: NodeType;
-  label: string;
-  data: Record<string, any>;
-  style?: Record<string, any>;
+export interface DataMappingConfig {
+  sourceField: string;
+  targetField: string;
+  transformation?: string;
+  required: boolean;
+  defaultValue?: string;
 }
 
-export interface VisualEdge {
+export interface DataMigration {
   id: string;
-  source: string;
-  target: string;
-  type: EdgeType;
-  data?: Record<string, any>;
-  style?: Record<string, any>;
+  name: string;
+  description?: string;
+  sourceId: string;
+  targetType: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  progress: number;
+  mapping: DataMappingConfig[];
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  errorMessage?: string;
+  userId: string;
 }

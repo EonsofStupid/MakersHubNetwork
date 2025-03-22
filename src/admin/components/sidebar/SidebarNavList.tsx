@@ -1,7 +1,6 @@
 
 import React from "react";
 import { SidebarNavItem } from "./SidebarNavItem";
-import { useLocation } from "react-router-dom";
 
 interface NavItem {
   id: string;

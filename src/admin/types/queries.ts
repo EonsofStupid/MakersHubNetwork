@@ -1,43 +1,34 @@
 
-// Define all admin-related query keys
+import { UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
+import { DashboardStats, Activity, DashboardMetrics } from './dashboard';
+import { ContentItem, ContentStats } from './content';
+import { ImportResult } from './import';
 
-export type ActiveUsersCount = number;
+/**
+ * Dashboard Query Types
+ */
+export type GetDashboardStatsOptions = UseQueryOptions<DashboardStats, Error, DashboardStats, ['admin', 'dashboard', 'stats']>;
+export type GetRecentActivitiesOptions = UseQueryOptions<Activity[], Error, Activity[], ['admin', 'dashboard', 'activities']>;
+export type GetDashboardMetricsOptions = UseQueryOptions<DashboardMetrics, Error, DashboardMetrics, ['admin', 'dashboard', 'metrics']>;
 
-export type TrendingPart = {
-  name: string;
-  community_score: number | null;
-  review_count: number | null;
-};
+/**
+ * Content Query Types
+ */
+export type GetContentItemsOptions = UseQueryOptions<ContentItem[], Error, ContentItem[], ['admin', 'content', 'items']>;
+export type GetContentStatsOptions = UseQueryOptions<ContentStats, Error, ContentStats, ['admin', 'content', 'stats']>;
+export type DeleteContentItemOptions = UseMutationOptions<unknown, Error, string, unknown>;
+export type UpdateContentItemOptions = UseMutationOptions<ContentItem, Error, Partial<ContentItem>, unknown>;
 
-export type RecentReview = {
-  title: string | null;
-  rating: number | null;
-  created_at: string;
-  printer_parts: {
-    name: string;
-  } | null;
-};
+/**
+ * Import Query Types
+ */
+export type GetImportResultsOptions = UseQueryOptions<ImportResult[], Error, ImportResult[], ['admin', 'import', 'results']>;
+export type StartImportOptions = UseMutationOptions<ImportResult, Error, FormData, unknown>;
+export type CancelImportOptions = UseMutationOptions<unknown, Error, string, unknown>;
 
-export type ActiveUser = {
-  id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  last_seen: string | null;
-  status: string | null;
-};
-
-export const adminKeys = {
-  all: ['admin'] as const,
-  users: () => [...adminKeys.all, 'users'] as const,
-  activeUsers: () => [...adminKeys.users(), 'active'] as const,  
-  activeUsersCount: () => [...adminKeys.users(), 'active', 'count'] as const,
-  totalUsersCount: () => [...adminKeys.users(), 'total', 'count'] as const,
-  categories: () => [...adminKeys.all, 'categories'] as const,
-  parts: () => [...adminKeys.all, 'parts'] as const,
-  partsCount: () => [...adminKeys.parts(), 'count'] as const,
-  trendingParts: () => [...adminKeys.parts(), 'trending'] as const,
-  reviews: () => [...adminKeys.all, 'reviews'] as const,
-  reviewsCount: () => [...adminKeys.reviews(), 'count'] as const,
-  recentReviews: () => [...adminKeys.reviews(), 'recent'] as const,
-  metrics: () => [...adminKeys.all, 'metrics'] as const,
-};
+/**
+ * User Query Types
+ */
+export type GetUsersOptions = UseQueryOptions<any[], Error, any[], ['admin', 'users']>;
+export type UpdateUserOptions = UseMutationOptions<any, Error, {id: string; data: any}, unknown>;
+export type DeleteUserOptions = UseMutationOptions<unknown, Error, string, unknown>;
