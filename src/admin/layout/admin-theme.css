@@ -1,0 +1,77 @@
+
+:root {
+  --admin-bg: #0f0f0f;
+  --admin-accent: #ff3cac;
+  --admin-accent-2: #5ee7df;
+  --admin-border: #272727;
+  --admin-text: #ffffff;
+  --admin-text-secondary: #b3b3b3;
+  --admin-glow: 0 0 8px rgba(255, 60, 172, 0.4);
+  --admin-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+}
+
+.admin-theme {
+  background-color: var(--admin-bg);
+  color: var(--admin-text);
+  min-height: 100vh;
+}
+
+.admin-theme .admin-accent {
+  color: var(--admin-accent);
+}
+
+.admin-theme .admin-glow {
+  box-shadow: var(--admin-glow);
+}
+
+.admin-theme .admin-border {
+  border-color: var(--admin-border);
+}
+
+.clip-trapezoid {
+  clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+}
+
+.hover-glow:hover {
+  box-shadow: var(--admin-glow);
+  transform: translateY(-2px);
+}
+
+.admin-theme .icon-container {
+  transition: all 0.3s ease;
+}
+
+.admin-theme .icon-container:hover {
+  transform: scale(1.1);
+  box-shadow: var(--admin-glow);
+}
+
+.admin-theme .sidebar-icon {
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.admin-theme .sidebar-icon:hover {
+  background-color: rgba(255, 60, 172, 0.2);
+}
+
+.admin-theme .sidebar-icon.active {
+  background-color: var(--admin-accent);
+  color: #fff;
+}
+
+@keyframes pulse-border {
+  0% {
+    border-color: rgba(255, 60, 172, 0.5);
+  }
+  50% {
+    border-color: rgba(255, 60, 172, 1);
+  }
+  100% {
+    border-color: rgba(255, 60, 172, 0.5);
+  }
+}
+
+.pulse-border {
+  animation: pulse-border 2s infinite;
+}
