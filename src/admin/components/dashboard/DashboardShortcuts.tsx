@@ -2,15 +2,6 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Settings, 
-  Users, 
-  FileText, 
-  MessageSquare, 
-  Database, 
-  LineChart, 
-  Zap
-} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { AdminShortcut } from "@/admin/types/admin.types";
