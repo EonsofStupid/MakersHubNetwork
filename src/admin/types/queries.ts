@@ -1,3 +1,4 @@
+
 import { UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
 import { DashboardStats, Activity, DashboardMetrics } from './dashboard';
 import { ContentItem, ContentStats } from './content';
@@ -55,15 +56,15 @@ export interface TrendingPart {
 }
 
 // Query option types
-export type GetDashboardStatsOptions = UseQueryOptions<DashboardStats, Error, DashboardStats, ['admin', 'dashboard', 'stats']>;
-export type GetRecentActivitiesOptions = UseQueryOptions<Activity[], Error, Activity[], ['admin', 'dashboard', 'activities']>;
-export type GetDashboardMetricsOptions = UseQueryOptions<DashboardMetrics, Error, DashboardMetrics, ['admin', 'dashboard', 'metrics']>;
+export type GetDashboardStatsOptions = UseQueryOptions<DashboardStats, Error, DashboardStats, ReturnType<typeof adminKeys.stats>>;
+export type GetRecentActivitiesOptions = UseQueryOptions<Activity[], Error, Activity[], ReturnType<typeof adminKeys.activities>>;
+export type GetDashboardMetricsOptions = UseQueryOptions<DashboardMetrics, Error, DashboardMetrics, ReturnType<typeof adminKeys.metrics>>;
 
 /**
  * Content Query Types
  */
-export type GetContentItemsOptions = UseQueryOptions<ContentItem[], Error, ContentItem[], ['admin', 'content', 'items']>;
-export type GetContentStatsOptions = UseQueryOptions<ContentStats, Error, ContentStats, ['admin', 'content', 'stats']>;
+export type GetContentItemsOptions = UseQueryOptions<ContentItem[], Error, ContentItem[], ReturnType<typeof adminKeys.content>>;
+export type GetContentStatsOptions = UseQueryOptions<ContentStats, Error, ContentStats, ReturnType<typeof adminKeys.content>>;
 export type DeleteContentItemOptions = UseMutationOptions<unknown, Error, string, unknown>;
 export type UpdateContentItemOptions = UseMutationOptions<ContentItem, Error, Partial<ContentItem>, unknown>;
 
@@ -77,6 +78,6 @@ export type CancelImportOptions = UseMutationOptions<unknown, Error, string, unk
 /**
  * User Query Types
  */
-export type GetUsersOptions = UseQueryOptions<any[], Error, any[], ['admin', 'users']>;
+export type GetUsersOptions = UseQueryOptions<any[], Error, any[], ReturnType<typeof adminKeys.users>>;
 export type UpdateUserOptions = UseMutationOptions<any, Error, {id: string; data: any}, unknown>;
 export type DeleteUserOptions = UseMutationOptions<unknown, Error, string, unknown>;

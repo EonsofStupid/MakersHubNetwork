@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, UserRoundPlus, Users, CircleDollarSign, Printer3d } from "lucide-react";
+import { BarChart, UserRoundPlus, Users, CircleDollarSign, Printer } from "lucide-react";
 import { CyberText } from "@/components/theme/CyberText";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -111,7 +111,7 @@ export default function OverviewDashboard() {
           title="Printer Models"
           value={isLoading ? "..." : stats?.totalPrinters.toString() || "0"}
           description="Registered 3D printer models"
-          icon={<Printer3d className="h-4 w-4 text-muted-foreground" />}
+          icon={<Printer className="h-4 w-4 text-muted-foreground" />}
           trend={5}
           loading={isLoading}
         />

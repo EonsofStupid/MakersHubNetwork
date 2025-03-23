@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom"
 
 // Lazily load pages to improve initial load time
 const IndexPage = lazy(() => import("./pages/Index"))
-const AdminRouter = lazy(() => import("./admin/index"))
+const AdminRouter = lazy(() => import("./admin"))
 const LoginPage = lazy(() => import("./pages/Login"))
 
 // Create a loading fallback component

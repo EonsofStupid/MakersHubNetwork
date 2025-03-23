@@ -1,15 +1,16 @@
 
 import { Routes, Route, Navigate } from "react-router-dom";
-import { AdminLayout } from "./layout/AdminLayout";
+import { AdminLayout } from "./components/AdminLayout";
 import { lazy, Suspense } from "react";
 
 // Lazy load admin pages
-const Dashboard = lazy(() => import("./routes/dashboard/Dashboard"));
-const Users = lazy(() => import("./routes/users/Users"));
-const Settings = lazy(() => import("./routes/settings/Settings"));
-const Themes = lazy(() => import("./routes/themes/Themes"));
-const Content = lazy(() => import("./routes/content/Content"));
-const Analytics = lazy(() => import("./routes/analytics/Analytics"));
+const OverviewDashboard = lazy(() => import("./features/overview/OverviewDashboard"));
+const ContentManagement = lazy(() => import("./features/content/ContentManagement"));
+const UsersManagement = lazy(() => import("./features/users/UsersManagement"));
+const ChatManagement = lazy(() => import("./features/chat/ChatManagement"));
+const DataMaestroManager = lazy(() => import("./features/data-maestro/DataMaestroManager"));
+const ImportManager = lazy(() => import("./features/import/ImportManager"));
+const SettingsManager = lazy(() => import("./features/settings/SettingsManager"));
 
 // Loading fallback
 const AdminLoader = () => (
@@ -25,13 +26,14 @@ export const AdminRouter = () => {
     <AdminLayout>
       <Suspense fallback={<AdminLoader />}>
         <Routes>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="users" element={<Users />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="themes" element={<Themes />} />
-          <Route path="content" element={<Content />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="*" element={<Navigate to="dashboard" replace />} />
+          <Route path="overview" element={<OverviewDashboard />} />
+          <Route path="content/*" element={<ContentManagement />} />
+          <Route path="users" element={<UsersManagement />} />
+          <Route path="chat" element={<ChatManagement />} />
+          <Route path="data-maestro" element={<DataMaestroManager />} />
+          <Route path="import" element={<ImportManager />} />
+          <Route path="settings" element={<SettingsManager />} />
+          <Route path="*" element={<Navigate to="overview" replace />} />
         </Routes>
       </Suspense>
     </AdminLayout>
