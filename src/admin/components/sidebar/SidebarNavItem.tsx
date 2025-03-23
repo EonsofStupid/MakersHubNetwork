@@ -39,12 +39,6 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
   index,
   onNavigate
 }) => {
-  const commonClasses = cn(
-    "flex w-full items-center px-3 py-2 rounded-md text-sm font-normal transition-colors",
-    isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-primary/5",
-    collapsed && "px-2 py-2 justify-center"
-  );
-
   return (
     <motion.div
       custom={index}

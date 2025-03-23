@@ -16,7 +16,7 @@ interface AdminStore extends AdminState {
   
   // Actions
   loadPermissions: () => Promise<void>;
-  hasPermission: (permission: AdminPermission) => boolean;
+  hasPermission: (permission: AdminPermission | string) => boolean;
   
   // Error handling
   errors: AdminError[];
@@ -95,7 +95,7 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
       
       // Get auth store state
       const authState = useAuthStore.getState();
-      const { roles, isAdmin } = authState;
+      const { roles } = authState;
       const { accessLevels } = get();
       
       // Determine user roles from auth store
@@ -116,15 +116,6 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
         });
       });
       
-      // Special case: super admin check for backward compatibility
-      if (isAdmin && isAdmin()) {
-        const adminLevel = accessLevels.find(level => level.level === 1);
-        if (adminLevel && maxLevel < 1) {
-          maxLevel = 1;
-          userPermissions = adminLevel.permissions;
-        }
-      }
-      
       console.log("Loaded permissions:", userPermissions);
       
       set({ permissions: userPermissions });
@@ -142,7 +133,7 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   },
   
   hasPermission: (permission) => {
-    return get().permissions.includes(permission);
+    return get().permissions.includes(permission as AdminPermission);
   },
   
   // Error handling
