@@ -1,11 +1,11 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { AdminShortcut } from "@/admin/types/admin.types";
 import { useAdminStore } from "@/admin/store/admin.store";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export function DashboardShortcuts() {
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ export function DashboardShortcuts() {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {shortcuts.map((shortcut) => {
         // Skip if user doesn't have required permission
-        if (!hasPermission(shortcut.permission)) return null;
+        if (!hasPermission(shortcut.permission || "admin:access")) return null;
         
         return (
           <Card 

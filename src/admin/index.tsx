@@ -15,8 +15,8 @@ const SettingsManager = lazy(() => import("./features/settings/SettingsManager")
 // Loading fallback
 const AdminLoader = () => (
   <div className="flex items-center justify-center h-[60vh]">
-    <div className="animate-pulse text-[var(--admin-accent)]">
-      Loading...
+    <div className="animate-pulse text-primary">
+      Loading admin interface...
     </div>
   </div>
 );

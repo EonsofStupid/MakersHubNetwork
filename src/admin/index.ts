@@ -1,5 +1,9 @@
 
-// Export all admin functionality from a central location
+// Main admin router
+export { AdminRouter } from './index.tsx'; 
+export { default } from './index.tsx';
+
+// Export admin types
 export * from './types/admin.types';
 export * from './types/content';
 export * from './types/dashboard';
@@ -22,5 +26,6 @@ export { AdminSidebar } from './components/AdminSidebar';
 // Export dashboard components
 export * from './dashboard';
 
-// Export admin preferences store
+// Export admin stores
+export { useAdminStore } from './store/admin.store';
 export { useAdminPreferences } from './store/adminPreferences.store';

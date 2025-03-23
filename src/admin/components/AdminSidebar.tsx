@@ -39,7 +39,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       transition={{ duration: 0.3 }}
     >
       <Card className={cn(
-        "cyber-card border-primary/20 overflow-hidden transition-all duration-300",
+        "border-primary/20 overflow-hidden transition-all duration-300",
         collapsed && "border-primary/10"
       )}>
         <SidebarHeader collapsed={collapsed} />
