@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardShortcuts } from "@/admin/components/dashboard/DashboardShortcuts";
 import { useAdminPreferences } from "@/admin/store/adminPreferences.store";
 import { useLocation } from "react-router-dom";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -33,6 +34,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const location = useLocation();
 
   useEffect(() => {
+    // Load permissions and preferences on component mount
     loadPermissions();
     loadPreferences();
   }, [loadPermissions, loadPreferences]);
@@ -48,7 +50,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       <>
         <MainNav />
         <div className="container mx-auto p-6">
-          <Card className="cyber-card border-destructive/20 p-6 text-center">
+          <Card className="border-destructive/20 p-6 text-center">
             <h2 className="text-2xl font-heading text-destructive mb-2">Access Denied</h2>
             <p className="text-muted-foreground">
               You don't have permission to access this admin area.
@@ -89,7 +91,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             "transition-all duration-300 ease-in-out overflow-hidden",
             isDashboardCollapsed ? "max-h-0 opacity-0 mb-0" : "max-h-[200px] opacity-100 mb-6"
           )}>
-            <DashboardShortcuts />
+            <ErrorBoundary>
+              <DashboardShortcuts />
+            </ErrorBoundary>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -112,7 +116,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                   </div>
                 </Card>
               ) : (
-                children
+                <ErrorBoundary>
+                  {children}
+                </ErrorBoundary>
               )}
             </div>
           </div>

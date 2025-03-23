@@ -7,6 +7,7 @@ import {
   AdminAccessLevel,
   AdminError
 } from "@/admin/types/admin.types";
+import { useAuthStore } from "@/stores/auth/store";
 
 interface AdminStore extends AdminState {
   // Setters
@@ -133,7 +134,19 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   },
   
   hasPermission: (permission) => {
-    return get().permissions.includes(permission as AdminPermission);
+    const permissionStr = permission as string;
+    
+    // If no permission specified or permissions not loaded yet, default to false
+    if (!permissionStr || get().permissions.length === 0) {
+      return false;
+    }
+    
+    // Special case: if user has admin:access permission, give access to basic admin areas
+    if (permissionStr === "admin:access" && get().permissions.includes("admin:access")) {
+      return true;
+    }
+    
+    return get().permissions.includes(permissionStr as AdminPermission);
   },
   
   // Error handling
@@ -143,6 +156,3 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   
   clearErrors: () => set({ errors: [] })
 }));
-
-// Import here at the bottom to avoid circular dependency
-import { useAuthStore } from "@/stores/auth/store";
