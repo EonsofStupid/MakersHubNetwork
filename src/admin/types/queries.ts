@@ -40,9 +40,9 @@ export const adminKeys = {
 // Dashboard related types
 export interface ActiveUser {
   id: string;
-  display_name?: string;
-  avatar_url?: string;
-  last_seen?: string;
+  display_name?: string | null;  // Allow null
+  avatar_url?: string | null;    // Allow null
+  last_seen?: string | null;     // Allow null
   status: 'Active' | 'Inactive' | 'Away';
 }
 
