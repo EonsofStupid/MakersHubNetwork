@@ -63,15 +63,15 @@ export function AdminInspector() {
       if (!altPressed) return;
       
       // Find closest element with data-component-id
-      let target = e.target as HTMLElement;
-      let componentEl = null;
+      let target = e.target as HTMLElement | null;
+      let componentEl: HTMLElement | null = null;
       
       while (target && target !== document.body) {
-        if (target.hasAttribute('data-component-id')) {
+        if (target.hasAttribute && target.hasAttribute('data-component-id')) {
           componentEl = target;
           break;
         }
-        target = target.parentElement as HTMLElement;
+        target = target.parentElement;
       }
       
       if (componentEl) {

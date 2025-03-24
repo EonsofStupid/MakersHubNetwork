@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/auth/store';
+import { Json } from '@/integrations/supabase/types';
 
 interface AdminPreferences {
   dashboard_collapsed?: boolean;
@@ -55,14 +56,17 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
         console.log("Loaded preferences data:", shortcutsData);
         
         // Safely access the _meta property
-        if (shortcutsData && typeof shortcutsData === 'object' && shortcutsData._meta) {
-          const meta = shortcutsData._meta as AdminPreferences;
-          set({ 
-            isDashboardCollapsed: meta.dashboard_collapsed ?? false,
-            routerPreference: (meta.router_preference as 'react-router' | 'tanstack') ?? 'react-router',
-            isLoading: false 
-          });
-          return;
+        if (shortcutsData && typeof shortcutsData === 'object') {
+          const meta = shortcutsData._meta as AdminPreferences | undefined;
+          
+          if (meta) {
+            set({ 
+              isDashboardCollapsed: meta.dashboard_collapsed ?? false,
+              routerPreference: (meta.router_preference as 'react-router' | 'tanstack') ?? 'react-router',
+              isLoading: false 
+            });
+            return;
+          }
         }
       }
       
@@ -98,11 +102,11 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
       
       // Prepare updated shortcuts data with metadata
       const currentShortcuts = data?.shortcuts || [];
-      let updatedShortcuts: any;
+      let updatedShortcuts: Record<string, any> = {};
       
       if (Array.isArray(currentShortcuts)) {
         // Create a new object with both the array and the _meta property
-        updatedShortcuts = [...(currentShortcuts as any[])];
+        updatedShortcuts = [...(currentShortcuts as any[])] as unknown as Record<string, any>;
         
         // Add _meta as a separate property
         updatedShortcuts._meta = {
@@ -167,10 +171,10 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
       
       // Similar logic as in setDashboardCollapsed
       const currentShortcuts = data?.shortcuts || [];
-      let updatedShortcuts: any;
+      let updatedShortcuts: Record<string, any> = {};
       
       if (Array.isArray(currentShortcuts)) {
-        updatedShortcuts = [...(currentShortcuts as any[])];
+        updatedShortcuts = [...(currentShortcuts as any[])] as unknown as Record<string, any>;
         updatedShortcuts._meta = {
           ...(updatedShortcuts._meta || {}),
           router_preference: preference,
