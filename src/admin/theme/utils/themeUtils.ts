@@ -2,7 +2,7 @@
 /**
  * Deep merges two objects, preferring the source values over target values
  */
-export function deepMerge<T>(target: T, source: Partial<T>): T {
+export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
   const output = { ...target };
   
   if (isObject(target) && isObject(source)) {
