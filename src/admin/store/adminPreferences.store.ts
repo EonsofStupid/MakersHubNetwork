@@ -9,6 +9,7 @@ interface AdminPreferences {
   router_preference?: string;
 }
 
+// Define a more specific type for shortcuts data
 interface ShortcutsData {
   _meta?: AdminPreferences;
   items?: any[];
@@ -61,16 +62,15 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
         
         console.log("Loaded preferences data:", shortcutsData);
         
-        // Safely access the _meta property by ensuring we have an object
+        // Safely access the _meta property with proper type checking
         if (shortcutsData && typeof shortcutsData === 'object' && !Array.isArray(shortcutsData)) {
-          // Now we can safely typecast shortcutsData as ShortcutsData
+          // Now we can safely typecast shortcutsData
           const typedShortcuts = shortcutsData as ShortcutsData;
-          const meta = typedShortcuts._meta;
           
-          if (meta) {
+          if (typedShortcuts._meta) {
             set({ 
-              isDashboardCollapsed: meta.dashboard_collapsed ?? false,
-              routerPreference: (meta.router_preference as 'react-router' | 'tanstack') ?? 'react-router',
+              isDashboardCollapsed: typedShortcuts._meta.dashboard_collapsed ?? false,
+              routerPreference: (typedShortcuts._meta.router_preference as 'react-router' | 'tanstack') ?? 'react-router',
               isLoading: false 
             });
             return;
