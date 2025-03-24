@@ -31,6 +31,12 @@ export const usePerformanceStore = create<Partial<PerformanceStore>>(() => ({
       instances: 0
     }
   },
-  // Implement as needed by the app
-  resetMetrics: () => {}
+  // Implement required methods to avoid undefined invocations
+  resetMetrics: () => {},
+  startMonitoring: () => {},
+  stopMonitoring: () => {},
+  recordFrameTime: () => {},
+  recordFrameDrop: () => {},
+  recordStoreUpdate: () => {},
+  checkMemoryUsage: () => {}
 }));
