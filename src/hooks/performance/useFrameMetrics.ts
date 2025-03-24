@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { usePerformanceStore } from '@/stores/performance/store';
 
@@ -11,7 +12,10 @@ export const useFrameMetrics = (componentName: string) => {
     const startTime = performance.now();
     return () => {
       const duration = performance.now() - startTime;
-      recordFrameMetric(duration);
+      // Add a null check before invoking the function
+      if (recordFrameMetric) {
+        recordFrameMetric(duration);
+      }
     };
   }, [componentName, isMonitoring, recordFrameMetric]);
 };

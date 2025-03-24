@@ -8,7 +8,7 @@ import {
 } from '../../../../components/ui/select';
 import { ContentStatus, ContentFilter } from '../../../../admin/types/content';
 
-// Define ContentType interface since it's missing from the imported types
+// Define ContentType interface properly
 interface ContentType {
   id: string;
   name: string;
@@ -25,11 +25,15 @@ export const ContentFilterComponent: React.FC<ContentFilterProps> = ({
   onFilterChange,
   contentTypes,
 }) => {
+  // Type guard to ensure status is either "all" or a valid ContentStatus
   const handleStatusChange = (status: string) => {
-    // Type guard to ensure status is either "all" or a valid ContentStatus
-    const validStatus = status === 'all' ? undefined : 
-      (status === 'draft' || status === 'published' || 
-       status === 'archived' || status === 'scheduled') ? status as ContentStatus : undefined;
+    // Define valid status values
+    const validStatusValues: Array<ContentStatus | "all"> = ["all", "draft", "published", "archived", "scheduled"];
+    
+    // Check if the value is valid before assigning
+    const validStatus = validStatusValues.includes(status as any) 
+      ? (status === 'all' ? undefined : status as ContentStatus) 
+      : undefined;
        
     onFilterChange({ ...filter, status: validStatus });
   };

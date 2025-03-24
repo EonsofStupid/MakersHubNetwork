@@ -54,12 +54,12 @@ export const useThemeStore = create<ThemeState>((set) => ({
       const theme: Theme = {
         id: rawTheme.id,
         name: rawTheme.name,
-        description: rawTheme.description || '',
-        status: rawTheme.status || 'draft', // Provide default value to avoid null
-        is_default: rawTheme.is_default || false, // Provide default value to avoid null
+        description: rawTheme.description || '', // Provide default for null
+        status: rawTheme.status || 'draft', // Provide default for null
+        is_default: rawTheme.is_default || false, // Provide default for null
         created_by: rawTheme.created_by || undefined,
-        created_at: rawTheme.created_at,
-        updated_at: rawTheme.updated_at,
+        created_at: rawTheme.created_at || '', // Provide default for null
+        updated_at: rawTheme.updated_at || '', // Provide default for null
         published_at: rawTheme.published_at || undefined,
         version: rawTheme.version || 1,
         cache_key: rawTheme.cache_key || undefined,
