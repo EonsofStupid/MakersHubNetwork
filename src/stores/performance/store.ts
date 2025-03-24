@@ -3,6 +3,8 @@ import { create } from 'zustand';
 import { PerformanceStore, PerformanceState } from './types';
 import { createFrameSlice } from './metrics/frame/frame.slice';
 import { createMonitoringSlice } from './monitoring/monitoring.slice';
+import { createStoreSlice } from './metrics/store/store.slice';
+import { createMemorySlice } from './metrics/memory/memory.slice';
 import { getMemoryInfo } from './utils/memory';
 import { updateFrameMetrics } from './utils/frame';
 import { measureStoreUpdate, updateStoreMetrics } from './utils/store';
@@ -33,15 +35,6 @@ export const usePerformanceStore = create<PerformanceStore>((set, get) => ({
     }
   },
   
-  thresholds: {
-    frameDrop: 16.67, // 60fps threshold
-    storeUpdate: 4,
-    animationFrame: 8,
-    batchSize: 50
-  },
-  
-  isMonitoring: false,
-  
   // Core performance monitoring actions
   resetMetrics: () => {
     set({
@@ -70,11 +63,11 @@ export const usePerformanceStore = create<PerformanceStore>((set, get) => ({
     });
   },
   
-  // Frame metrics tracking
+  // Record frame metrics
   recordFrameMetric: (duration: number) => {
     const now = performance.now();
     set((state) => {
-      const { frameMetrics, frameMetrics: { lastTimestamp } } = state.metrics;
+      const { frameMetrics } = state.metrics;
       
       // Update frame metrics
       const updatedMetrics = updateFrameMetrics(
@@ -175,36 +168,9 @@ export const usePerformanceStore = create<PerformanceStore>((set, get) => ({
     });
   },
   
-  // Monitoring controls
-  startMonitoring: () => {
-    set({ isMonitoring: true });
-    
-    // Start RAF loop for frame metrics
-    const rafCallback = () => {
-      if (!get().isMonitoring) return;
-      
-      const now = performance.now();
-      const lastFrame = get().metrics.frameMetrics.lastTimestamp;
-      
-      if (lastFrame) {
-        const duration = now - lastFrame;
-        get().recordFrameMetric(duration);
-      }
-      
-      // Check memory every few frames
-      if (Math.random() < 0.1) {
-        get().checkMemoryUsage();
-      }
-      
-      requestAnimationFrame(rafCallback);
-    };
-    
-    requestAnimationFrame(rafCallback);
-  },
-  
-  stopMonitoring: () => set({ isMonitoring: false }),
-  
-  // Extend with slices
+  // Include the slices - this adds the remaining state and actions
   ...createFrameSlice(set, get),
+  ...createStoreSlice(set, get),
+  ...createMemorySlice(set, get),
   ...createMonitoringSlice(set, get)
 }));
