@@ -38,10 +38,11 @@ export const useThemeStore = create<ThemeState>((set) => ({
             id: (token as any).id || '',
             component_name: (token as any).component_name || '',
             styles: (token as any).styles || {},
-            theme_id: (token as any).theme_id,
-            context: (token as any).context,
-            created_at: (token as any).created_at,
-            updated_at: (token as any).updated_at,
+            theme_id: (token as any).theme_id || undefined,
+            context: (token as any).context || undefined,
+            created_at: (token as any).created_at || '',
+            updated_at: (token as any).updated_at || '',
+            description: (token as any).description || '',
           }))
         : [];
 
@@ -51,7 +52,18 @@ export const useThemeStore = create<ThemeState>((set) => ({
         : {};
 
       const theme: Theme = {
-        ...rawTheme,
+        id: rawTheme.id,
+        name: rawTheme.name,
+        description: rawTheme.description || undefined,
+        status: rawTheme.status,
+        is_default: rawTheme.is_default,
+        created_by: rawTheme.created_by || undefined,
+        created_at: rawTheme.created_at,
+        updated_at: rawTheme.updated_at,
+        published_at: rawTheme.published_at || undefined,
+        version: rawTheme.version || 1,
+        cache_key: rawTheme.cache_key || undefined,
+        parent_theme_id: rawTheme.parent_theme_id || undefined,
         design_tokens: designTokens,
         component_tokens: componentTokens,
         composition_rules: compositionRules,
@@ -82,11 +94,11 @@ export const useThemeStore = create<ThemeState>((set) => ({
         id: comp.id,
         component_name: comp.component_name,
         styles: comp.styles as Record<string, any>,
-        description: '',
-        theme_id: comp.theme_id,
-        context: comp.context,
-        created_at: comp.created_at,
-        updated_at: comp.updated_at
+        description: comp.description || '',
+        theme_id: comp.theme_id || undefined,
+        context: comp.context || undefined,
+        created_at: comp.created_at || '',
+        updated_at: comp.updated_at || ''
       }));
 
       set({ adminComponents: components, isLoading: false });

@@ -1,9 +1,9 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, HTMLMotionProps } from "framer-motion";
 
-interface CyberCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CyberCardProps extends Omit<HTMLMotionProps<"div">, "whileHover"> {
   glow?: boolean;
   variant?: "default" | "outline" | "elevated";
   interactive?: boolean;
@@ -26,8 +26,8 @@ export const CyberCard = React.forwardRef<HTMLDivElement, CyberCardProps>(
           interactive && "cursor-pointer transform hover:-translate-y-1",
           className
         )}
-        whileHover={interactive ? { y: -5 } : undefined}
         {...props}
+        whileHover={interactive ? { y: -5 } : undefined}
       >
         {children}
       </motion.div>

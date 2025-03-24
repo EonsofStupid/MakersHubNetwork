@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { ThemeEffect, EffectType, GlitchEffect, GradientEffect, CyberEffect, PulseEffect } from '@/theme/types/effects';
 import { useDebounce } from './useDebounce';
@@ -39,48 +38,51 @@ export function useThemeEffects(options: UseThemeEffectsOptions = {}) {
     
     switch (effectType) {
       case 'glitch':
+        const glitchConfig = config as Partial<GlitchEffect>;
         newEffect = {
           id: effectId,
           type: 'glitch',
-          color: config.color || '#00F0FF',
-          frequency: (config as Partial<GlitchEffect>)?.frequency || 5,
-          amplitude: (config as Partial<GlitchEffect>)?.amplitude || 2,
+          frequency: glitchConfig.frequency || 5,
+          amplitude: glitchConfig.amplitude || 2,
           enabled: true,
           duration: config.duration || 1000,
         } as GlitchEffect;
         break;
         
       case 'gradient':
+        const gradientConfig = config as Partial<GradientEffect>;
         newEffect = {
           id: effectId,
           type: 'gradient',
-          colors: (config as Partial<GradientEffect>)?.colors || ['#00F0FF', '#FF2D6E', '#00F0FF'],
-          direction: (config as Partial<GradientEffect>)?.direction || 'to-right',
-          speed: (config as Partial<GradientEffect>)?.speed || 2,
+          colors: gradientConfig.colors || ['#00F0FF', '#FF2D6E', '#00F0FF'],
+          direction: gradientConfig.direction || 'to-right',
+          speed: gradientConfig.speed || 2,
           enabled: true,
           duration: config.duration || 1000,
         } as GradientEffect;
         break;
         
       case 'cyber':
+        const cyberConfig = config as Partial<CyberEffect>;
         newEffect = {
           id: effectId,
           type: 'cyber',
-          glowColor: (config as Partial<CyberEffect>)?.glowColor || '#00F0FF',
-          textShadow: (config as Partial<CyberEffect>)?.textShadow || true,
-          scanLines: (config as Partial<CyberEffect>)?.scanLines || false,
+          glowColor: cyberConfig.glowColor || '#00F0FF',
+          textShadow: cyberConfig.textShadow || true,
+          scanLines: cyberConfig.scanLines || false,
           enabled: true,
           duration: config.duration || 1000,
         } as CyberEffect;
         break;
         
       case 'pulse':
+        const pulseConfig = config as Partial<PulseEffect>;
         newEffect = {
           id: effectId,
           type: 'pulse',
-          color: (config as Partial<PulseEffect>)?.color || '#00F0FF',
-          minOpacity: (config as Partial<PulseEffect>)?.minOpacity || 0.2,
-          maxOpacity: (config as Partial<PulseEffect>)?.maxOpacity || 0.8,
+          color: pulseConfig.color || '#00F0FF',
+          minOpacity: pulseConfig.minOpacity || 0.2,
+          maxOpacity: pulseConfig.maxOpacity || 0.8,
           enabled: true,
           duration: config.duration || 1000,
         } as PulseEffect;
@@ -164,47 +166,32 @@ export function useThemeEffects(options: UseThemeEffectsOptions = {}) {
     // Configure based on effect type
     let config: Partial<ThemeEffect> = { duration };
     
-    switch (randomType) {
-      case 'glitch':
-        config = {
-          ...config,
-          color: randomColor,
-          frequency: Math.random() * 10 + 5,
-          amplitude: Math.random() * 5 + 1,
-        } as Partial<GlitchEffect>;
-        break;
-        
-      case 'gradient':
-        config = {
-          ...config,
-          colors: [randomColor, '#FFFFFF', randomColor],
-          direction: 'to-right',
-          speed: Math.random() * 5 + 1,
-        } as Partial<GradientEffect>;
-        break;
-        
-      case 'cyber':
-        config = {
-          ...config,
-          glowColor: randomColor,
-          textShadow: true,
-        } as Partial<CyberEffect>;
-        break;
-        
-      case 'pulse':
-        config = {
-          ...config,
-          color: randomColor,
-          minOpacity: 0.2,
-          maxOpacity: 0.8,
-        } as Partial<PulseEffect>;
-        break;
-        
-      default:
-        // For any other effect types
-        config = { 
-          ...config,
-        } as Partial<ThemeEffect>;
+    if (randomType === 'glitch') {
+      config = {
+        ...config,
+        frequency: Math.random() * 10 + 5,
+        amplitude: Math.random() * 5 + 1,
+      } as Partial<GlitchEffect>;
+    } else if (randomType === 'gradient') {
+      config = {
+        ...config,
+        colors: [randomColor, '#FFFFFF', randomColor],
+        direction: 'to-right',
+        speed: Math.random() * 5 + 1,
+      } as Partial<GradientEffect>;
+    } else if (randomType === 'cyber') {
+      config = {
+        ...config,
+        glowColor: randomColor,
+        textShadow: true,
+      } as Partial<CyberEffect>;
+    } else if (randomType === 'pulse') {
+      config = {
+        ...config,
+        color: randomColor,
+        minOpacity: 0.2,
+        maxOpacity: 0.8,
+      } as Partial<PulseEffect>;
     }
     
     return applyEffect(id, randomType, config);
@@ -222,16 +209,84 @@ export function useThemeEffects(options: UseThemeEffectsOptions = {}) {
     effects: debouncedEffects,
     activeEffectCount: Object.keys(debouncedEffects).length,
     applyEffect,
-    removeEffect,
-    clearAllEffects,
-    applyRandomEffect,
-    getEffectForElement
+    removeEffect: (effectId: string) => {
+      // Clear any timeout
+      if (effectTimeoutsRef.current[effectId]) {
+        clearTimeout(effectTimeoutsRef.current[effectId]);
+        delete effectTimeoutsRef.current[effectId];
+      }
+      
+      // Remove the effect from state
+      setActiveEffects(prev => {
+        const newEffects = { ...prev };
+        delete newEffects[effectId];
+        return newEffects;
+      });
+    },
+    clearAllEffects: () => {
+      // Clear all timeouts
+      Object.values(effectTimeoutsRef.current).forEach(timeout => {
+        clearTimeout(timeout);
+      });
+      effectTimeoutsRef.current = {};
+      
+      // Clear state
+      setActiveEffects({});
+    },
+    applyRandomEffect: (id: string, options: { 
+      types?: EffectType[], 
+      colors?: string[],
+      duration?: number
+    } = {}) => {
+      const { 
+        types = ['glitch', 'gradient', 'cyber', 'pulse'],
+        colors = ['#00F0FF', '#FF2D6E', '#8B5CF6'],
+        duration = 1500
+      } = options;
+      
+      const randomType = types[Math.floor(Math.random() * types.length)] as EffectType;
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      
+      // Configure based on effect type
+      let config: Partial<ThemeEffect> = { duration };
+      
+      if (randomType === 'glitch') {
+        config = {
+          ...config,
+          frequency: Math.random() * 10 + 5,
+          amplitude: Math.random() * 5 + 1,
+        } as Partial<GlitchEffect>;
+      } else if (randomType === 'gradient') {
+        config = {
+          ...config,
+          colors: [randomColor, '#FFFFFF', randomColor],
+          direction: 'to-right',
+          speed: Math.random() * 5 + 1,
+        } as Partial<GradientEffect>;
+      } else if (randomType === 'cyber') {
+        config = {
+          ...config,
+          glowColor: randomColor,
+          textShadow: true,
+        } as Partial<CyberEffect>;
+      } else if (randomType === 'pulse') {
+        config = {
+          ...config,
+          color: randomColor,
+          minOpacity: 0.2,
+          maxOpacity: 0.8,
+        } as Partial<PulseEffect>;
+      }
+      
+      return applyEffect(id, randomType, config);
+    },
+    getEffectForElement: (elementId: string) => {
+      return Object.values(debouncedEffects).find(
+        effect => effect.id.startsWith(elementId)
+      );
+    }
   }), [
     debouncedEffects, 
-    applyEffect, 
-    removeEffect, 
-    clearAllEffects, 
-    applyRandomEffect,
-    getEffectForElement
+    applyEffect
   ]);
 }
