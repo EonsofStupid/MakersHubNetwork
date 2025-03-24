@@ -42,7 +42,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
             context: (token as any).context || undefined,
             created_at: (token as any).created_at || '',
             updated_at: (token as any).updated_at || '',
-            description: (token as any).description || '',
+            description: (token as any).description || '', // Properly handle description
           }))
         : [];
 
@@ -94,7 +94,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
         id: comp.id,
         component_name: comp.component_name,
         styles: comp.styles as Record<string, any>,
-        description: comp.description || '',
+        description: comp.description || '', // Handle missing description property
         theme_id: comp.theme_id || undefined,
         context: comp.context || undefined,
         created_at: comp.created_at || '',

@@ -35,6 +35,17 @@ export const usePerformanceStore = create<PerformanceStore>((set, get) => ({
     }
   },
   
+  // Default thresholds from monitoring slice
+  thresholds: {
+    frameDrop: 16.67,
+    storeUpdate: 4,
+    animationFrame: 8,
+    batchSize: 50
+  },
+  
+  // Initial monitoring state
+  isMonitoring: false,
+  
   // Core performance monitoring actions
   resetMetrics: () => {
     set({
@@ -61,44 +72,6 @@ export const usePerformanceStore = create<PerformanceStore>((set, get) => ({
         }
       }
     });
-  },
-  
-  // Record frame metrics
-  recordFrameMetric: (duration: number) => {
-    const now = performance.now();
-    set((state) => {
-      const { frameMetrics } = state.metrics;
-      
-      // Update frame metrics
-      const updatedMetrics = updateFrameMetrics(
-        frameMetrics,
-        duration,
-        state.thresholds.frameDrop,
-        state.thresholds.batchSize
-      );
-      
-      return {
-        metrics: {
-          ...state.metrics,
-          frameMetrics: {
-            ...updatedMetrics,
-            lastTimestamp: now
-          }
-        }
-      };
-    });
-  },
-  
-  recordFrameDrop: () => {
-    set((state) => ({
-      metrics: {
-        ...state.metrics,
-        frameMetrics: {
-          ...state.metrics.frameMetrics,
-          drops: state.metrics.frameMetrics.drops + 1
-        }
-      }
-    }));
   },
   
   // Store update metrics
@@ -135,6 +108,18 @@ export const usePerformanceStore = create<PerformanceStore>((set, get) => ({
         }
       };
     });
+  },
+  
+  recordFrameDrop: () => {
+    set((state) => ({
+      metrics: {
+        ...state.metrics,
+        frameMetrics: {
+          ...state.metrics.frameMetrics,
+          drops: state.metrics.frameMetrics.drops + 1
+        }
+      }
+    }));
   },
   
   // Memory metrics
