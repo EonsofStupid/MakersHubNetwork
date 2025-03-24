@@ -44,6 +44,7 @@ export interface DesignTokensStructure {
     transitions: Record<string, any>;
     durations: Record<string, any>;
   };
+  admin?: Record<string, any>;  // Add this line
 }
 
 export interface Theme {
