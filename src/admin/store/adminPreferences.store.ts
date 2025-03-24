@@ -9,6 +9,12 @@ interface AdminPreferences {
   router_preference?: string;
 }
 
+interface ShortcutsData {
+  _meta?: AdminPreferences;
+  items?: any[];
+  [key: string]: any;
+}
+
 interface AdminPreferencesState {
   isDashboardCollapsed: boolean;
   routerPreference: 'react-router' | 'tanstack';
@@ -55,9 +61,11 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
         
         console.log("Loaded preferences data:", shortcutsData);
         
-        // Safely access the _meta property
-        if (shortcutsData && typeof shortcutsData === 'object') {
-          const meta = shortcutsData._meta as AdminPreferences | undefined;
+        // Safely access the _meta property by ensuring we have an object
+        if (shortcutsData && typeof shortcutsData === 'object' && !Array.isArray(shortcutsData)) {
+          // Now we can safely typecast shortcutsData as ShortcutsData
+          const typedShortcuts = shortcutsData as ShortcutsData;
+          const meta = typedShortcuts._meta;
           
           if (meta) {
             set({ 
@@ -101,24 +109,25 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
       }
       
       // Prepare updated shortcuts data with metadata
-      const currentShortcuts = data?.shortcuts || [];
+      const currentShortcuts = data?.shortcuts;
       let updatedShortcuts: Record<string, any> = {};
       
       if (Array.isArray(currentShortcuts)) {
-        // Create a new object with both the array and the _meta property
-        updatedShortcuts = [...(currentShortcuts as any[])] as unknown as Record<string, any>;
-        
-        // Add _meta as a separate property
-        updatedShortcuts._meta = {
-          dashboard_collapsed: collapsed,
-          router_preference: get().routerPreference
+        // Create a new object that includes the array data 
+        // but add _meta as a separate property
+        updatedShortcuts = {
+          items: [...currentShortcuts],
+          _meta: {
+            dashboard_collapsed: collapsed,
+            router_preference: get().routerPreference
+          }
         };
-      } else if (typeof currentShortcuts === 'object') {
+      } else if (typeof currentShortcuts === 'object' && currentShortcuts !== null) {
         // Handle case where shortcuts is already an object
         updatedShortcuts = {
           ...(currentShortcuts as Record<string, any>),
           _meta: {
-            ...((currentShortcuts as any)._meta || {}),
+            ...((currentShortcuts as ShortcutsData)._meta || {}),
             dashboard_collapsed: collapsed
           }
         };
@@ -170,21 +179,22 @@ export const useAdminPreferences = create<AdminPreferencesState>((set, get) => (
       }
       
       // Similar logic as in setDashboardCollapsed
-      const currentShortcuts = data?.shortcuts || [];
+      const currentShortcuts = data?.shortcuts;
       let updatedShortcuts: Record<string, any> = {};
       
       if (Array.isArray(currentShortcuts)) {
-        updatedShortcuts = [...(currentShortcuts as any[])] as unknown as Record<string, any>;
-        updatedShortcuts._meta = {
-          ...(updatedShortcuts._meta || {}),
-          router_preference: preference,
-          dashboard_collapsed: get().isDashboardCollapsed
+        updatedShortcuts = {
+          items: [...currentShortcuts],
+          _meta: {
+            router_preference: preference,
+            dashboard_collapsed: get().isDashboardCollapsed
+          }
         };
-      } else if (typeof currentShortcuts === 'object') {
+      } else if (typeof currentShortcuts === 'object' && currentShortcuts !== null) {
         updatedShortcuts = {
           ...(currentShortcuts as Record<string, any>),
           _meta: {
-            ...((currentShortcuts as any)._meta || {}),
+            ...((currentShortcuts as ShortcutsData)._meta || {}),
             router_preference: preference
           }
         };

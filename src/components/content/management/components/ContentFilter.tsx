@@ -1,3 +1,4 @@
+
 import {
   Select,
   SelectContent,
@@ -5,7 +6,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../../components/ui/select';
-import { ContentType, ContentFilter } from '../../../../admin/types/content';
+import { ContentStatus, ContentFilter } from '../../../../admin/types/content';
+
+// Define ContentType interface since it's missing from the imported types
+interface ContentType {
+  id: string;
+  name: string;
+}
 
 interface ContentFilterProps {
   filter: ContentFilter;
@@ -19,7 +26,12 @@ export const ContentFilterComponent: React.FC<ContentFilterProps> = ({
   contentTypes,
 }) => {
   const handleStatusChange = (status: string) => {
-    onFilterChange({ ...filter, status: status === 'all' ? undefined : status });
+    // Type guard to ensure status is either "all" or a valid ContentStatus
+    const validStatus = status === 'all' ? undefined : 
+      (status === 'draft' || status === 'published' || 
+       status === 'archived' || status === 'scheduled') ? status as ContentStatus : undefined;
+       
+    onFilterChange({ ...filter, status: validStatus });
   };
 
   const handleTypeChange = (type: string) => {
