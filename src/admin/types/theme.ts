@@ -15,6 +15,8 @@ export interface ThemeContextValue {
   updateTheme: (updates: Partial<ImpulseTheme>) => void;
   saveTheme: () => Promise<void>;
   resetTheme: () => void;
+  isDirty: boolean;
+  isSaving: boolean;
 }
 
 export interface ThemeProviderProps {

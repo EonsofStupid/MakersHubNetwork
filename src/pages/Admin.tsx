@@ -1,13 +1,12 @@
 
 import { Routes, Route, Navigate } from "react-router-dom";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Suspense, lazy, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
-import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useToast } from "@/hooks/use-toast";
-import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
+import { AdminThemeProvider } from "@/admin/theme/AdminThemeProvider";
+import { AdminLayout } from "@/admin/components/layout/AdminLayout";
 
-// Lazy load admin components
+// Lazy load admin components for code splitting
 const OverviewDashboard = lazy(() => import("@/admin/features/overview/OverviewDashboard"));
 const ContentManagement = lazy(() => import("@/admin/features/content/ContentManagement"));
 const UsersManagement = lazy(() => import("@/admin/features/users/UsersManagement"));
@@ -16,7 +15,7 @@ const DataMaestroManager = lazy(() => import("@/admin/features/data-maestro/Data
 const ImportManager = lazy(() => import("@/admin/features/import/ImportManager"));
 const SettingsManager = lazy(() => import("@/admin/features/settings/SettingsManager"));
 
-// Loading component for lazy-loaded routes
+// Loading component
 const AdminPageLoader = () => (
   <div className="min-h-[400px] flex items-center justify-center">
     <div className="space-y-4 text-center">
@@ -26,103 +25,52 @@ const AdminPageLoader = () => (
   </div>
 );
 
-// Admin route wrapper with error boundary
-const AdminRouteWrapper = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <ErrorBoundary fallback={
-      <div className="p-6 border border-destructive/20 rounded-md">
-        <h3 className="text-lg font-medium text-destructive mb-2">Error Loading Admin Page</h3>
-        <p className="text-muted-foreground">Something went wrong while loading this section.</p>
-      </div>
-    }>
-      <Suspense fallback={<AdminPageLoader />}>
-        {children}
-      </Suspense>
-    </ErrorBoundary>
-  );
-};
-
 export default function Admin() {
-  const { status } = useAuthStore();
-  const { hasAdminAccess, loadPermissions } = useAdminAccess();
+  const { status, user } = useAuthStore();
   const { toast } = useToast();
   
   useEffect(() => {
-    // Load permissions on component mount
-    loadPermissions();
-    
     // Welcome toast for admin panel
     toast({
       title: "Admin Panel",
       description: "Welcome to the MakersImpulse admin dashboard",
     });
-  }, [toast, loadPermissions]);
+  }, [toast]);
   
-  // If not authenticated or loading, show loading
+  // Show loading state
   if (status === "loading") {
     return <AdminPageLoader />;
   }
   
-  // If not admin, redirect to home
-  if (status === "authenticated" && !hasAdminAccess) {
-    return <Navigate to="/" replace />;
-  }
-  
-  // If not authenticated, redirect to login
+  // Redirect if not authenticated
   if (status === "unauthenticated") {
     return <Navigate to="/login" replace />;
   }
+  
+  // Redirect if logged in but not admin
+  if (status === "authenticated" && 
+      !user?.app_metadata?.roles?.includes("admin") && 
+      !user?.app_metadata?.roles?.includes("super_admin")) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
-    <ImpulseAdminLayout>
-      <Routes>
-        <Route index element={<Navigate to="overview" replace />} />
-        
-        <Route path="overview" element={
-          <AdminRouteWrapper>
-            <OverviewDashboard />
-          </AdminRouteWrapper>
-        } />
-        
-        <Route path="content/*" element={
-          <AdminRouteWrapper>
-            <ContentManagement />
-          </AdminRouteWrapper>
-        } />
-        
-        <Route path="users" element={
-          <AdminRouteWrapper>
-            <UsersManagement />
-          </AdminRouteWrapper>
-        } />
-        
-        <Route path="chat" element={
-          <AdminRouteWrapper>
-            <ChatManagement />
-          </AdminRouteWrapper>
-        } />
-        
-        <Route path="data-maestro" element={
-          <AdminRouteWrapper>
-            <DataMaestroManager />
-          </AdminRouteWrapper>
-        } />
-        
-        <Route path="import" element={
-          <AdminRouteWrapper>
-            <ImportManager />
-          </AdminRouteWrapper>
-        } />
-        
-        <Route path="settings" element={
-          <AdminRouteWrapper>
-            <SettingsManager />
-          </AdminRouteWrapper>
-        } />
-        
-        {/* Fallback for unknown admin routes */}
-        <Route path="*" element={<Navigate to="/admin/overview" replace />} />
-      </Routes>
-    </ImpulseAdminLayout>
+    <AdminThemeProvider>
+      <AdminLayout>
+        <Suspense fallback={<AdminPageLoader />}>
+          <Routes>
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<OverviewDashboard />} />
+            <Route path="content/*" element={<ContentManagement />} />
+            <Route path="users" element={<UsersManagement />} />
+            <Route path="chat" element={<ChatManagement />} />
+            <Route path="data-maestro" element={<DataMaestroManager />} />
+            <Route path="import" element={<ImportManager />} />
+            <Route path="settings/*" element={<SettingsManager />} />
+            <Route path="*" element={<Navigate to="/admin/overview" replace />} />
+          </Routes>
+        </Suspense>
+      </AdminLayout>
+    </AdminThemeProvider>
   );
 }

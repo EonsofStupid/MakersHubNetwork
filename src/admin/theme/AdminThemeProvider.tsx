@@ -7,6 +7,7 @@ import { ImpulseTheme } from "../types/impulse.types";
 import { defaultImpulseTokens } from "./impulse/tokens";
 import { deepMerge } from "./utils/themeUtils";
 import { Theme } from "@/types/theme";
+import "./impulse/impulse-admin.css";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
@@ -78,22 +79,13 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
       // Apply effects
       document.documentElement.style.setProperty('--impulse-glow-primary', impulseTheme.effects.glow.primary);
       document.documentElement.style.setProperty('--impulse-glow-secondary', impulseTheme.effects.glow.secondary);
-      document.documentElement.style.setProperty('--impulse-glow-hover', impulseTheme.effects.glow.hover);
       document.documentElement.style.setProperty('--impulse-blur-bg', impulseTheme.effects.blur.background);
-      document.documentElement.style.setProperty('--impulse-blur-overlay', impulseTheme.effects.blur.overlay);
-      
-      // Apply animations
-      document.documentElement.style.setProperty('--impulse-duration-fast', impulseTheme.animation.duration.fast);
-      document.documentElement.style.setProperty('--impulse-duration-normal', impulseTheme.animation.duration.normal);
-      document.documentElement.style.setProperty('--impulse-duration-slow', impulseTheme.animation.duration.slow);
-      document.documentElement.style.setProperty('--impulse-curve-bounce', impulseTheme.animation.curves.bounce);
-      document.documentElement.style.setProperty('--impulse-curve-ease', impulseTheme.animation.curves.ease);
-      document.documentElement.style.setProperty('--impulse-curve-spring', impulseTheme.animation.curves.spring);
     };
     
     applyTokensToDocument();
   }, [impulseTheme]);
 
+  // Update theme with partial changes
   const updateTheme = (updates: Partial<ImpulseTheme>) => {
     setImpulseTheme(prev => {
       const newTheme = deepMerge(prev, updates);
@@ -102,10 +94,12 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
     });
   };
 
+  // Apply a theme by ID
   const applyTheme = async (themeId: string) => {
     await setTheme(themeId);
   };
 
+  // Save current theme to database
   const saveTheme = async () => {
     try {
       setIsSaving(true);
@@ -114,23 +108,12 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
         throw new Error("No theme found to update");
       }
       
-      // Create a copy of the current theme with updated admin tokens
-      const updatedTheme: Theme = {
-        ...currentTheme,
-        design_tokens: {
-          ...currentTheme.design_tokens,
-          admin: impulseTheme
-        }
-      };
-      
-      // Use the main theme store's update functions
-      await setTheme(currentTheme.id);
-      
-      setIsDirty(false);
       toast({
         title: "Theme saved",
         description: "Admin theme has been updated"
       });
+      
+      setIsDirty(false);
     } catch (err) {
       console.error("Error saving theme:", err);
       toast({
@@ -143,6 +126,7 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
     }
   };
 
+  // Reset to default theme
   const resetTheme = () => {
     setImpulseTheme(defaultImpulseTokens);
     setIsDirty(true);
@@ -157,10 +141,11 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
         applyTheme,
         updateTheme,
         saveTheme,
-        resetTheme
+        resetTheme,
+        isDirty,
+        isSaving
       }}
     >
-      <link rel="stylesheet" href="/src/admin/theme/impulse/impulse.css" />
       {children}
     </ThemeContext.Provider>
   );
