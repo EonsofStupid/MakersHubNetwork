@@ -1,3 +1,4 @@
+
 export interface ComponentState {
   visibleModals: Set<string>;
   activeDialogs: Set<string>;

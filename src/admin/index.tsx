@@ -1,6 +1,6 @@
 
 import { Routes, Route, Navigate } from "react-router-dom";
-import { AdminLayout } from "./components/AdminLayout";
+import { AdminLayout } from "./layout/AdminLayout";
 import { lazy, Suspense } from "react";
 
 // Lazy load admin pages
