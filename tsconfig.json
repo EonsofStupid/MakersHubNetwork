@@ -6,6 +6,7 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "allowJs": true,
+    "noEmit": true,    
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -29,5 +30,5 @@
     }
   },
   "include": ["src"],
-  "references": [{ "path": "./tsconfig.app.json" }]
+  // Remove references
 }
