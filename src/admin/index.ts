@@ -19,7 +19,7 @@ export { default as ChatManagement } from './features/chat/ChatManagement';
 export { default as OverviewDashboard } from './features/overview/OverviewDashboard';
 
 // Export admin layout components
-export { AdminLayout } from './components/AdminLayout';
+export { AdminLayout } from './layout/AdminLayout';
 export { AdminHeader } from './components/AdminHeader';
 export { AdminSidebar } from './components/AdminSidebar';
 
