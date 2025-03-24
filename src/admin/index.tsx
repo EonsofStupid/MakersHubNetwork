@@ -1,7 +1,8 @@
 
 import { Routes, Route, Navigate } from "react-router-dom";
-import { AdminLayout } from "./layout/AdminLayout";
-import { lazy, Suspense } from "react";
+import { AdminLayout } from "./components/layout/AdminLayout";
+import { lazy, Suspense, useEffect } from "react";
+import "./styles/cyberpunk-theme.css";
 
 // Lazy load admin pages
 const OverviewDashboard = lazy(() => import("./features/overview/OverviewDashboard"));
@@ -15,25 +16,36 @@ const SettingsManager = lazy(() => import("./features/settings/SettingsManager")
 // Loading fallback
 const AdminLoader = () => (
   <div className="flex items-center justify-center h-[60vh]">
-    <div className="animate-pulse text-primary">
-      Loading admin interface...
-    </div>
+    <div className="w-8 h-8 border-4 border-[var(--impulse-primary)] border-t-transparent rounded-full animate-spin"></div>
+    <span className="ml-3 text-[var(--impulse-text-primary)]">Loading admin interface...</span>
   </div>
 );
 
-export const AdminRouter = () => {
+const AdminRouter = () => {
+  // Apply the custom admin theme when the component mounts
+  useEffect(() => {
+    // Add the theme class to the body when the admin section is active
+    document.body.classList.add('impulse-admin-theme');
+    
+    // Clean up when the component unmounts
+    return () => {
+      document.body.classList.remove('impulse-admin-theme');
+    };
+  }, []);
+
   return (
     <AdminLayout>
       <Suspense fallback={<AdminLoader />}>
         <Routes>
+          <Route path="/" element={<Navigate to="/admin/overview" replace />} />
           <Route path="overview" element={<OverviewDashboard />} />
           <Route path="content/*" element={<ContentManagement />} />
           <Route path="users" element={<UsersManagement />} />
           <Route path="chat" element={<ChatManagement />} />
           <Route path="data-maestro" element={<DataMaestroManager />} />
           <Route path="import" element={<ImportManager />} />
-          <Route path="settings" element={<SettingsManager />} />
-          <Route path="*" element={<Navigate to="overview" replace />} />
+          <Route path="settings/*" element={<SettingsManager />} />
+          <Route path="*" element={<Navigate to="/admin/overview" replace />} />
         </Routes>
       </Suspense>
     </AdminLayout>
