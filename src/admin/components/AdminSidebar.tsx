@@ -10,6 +10,10 @@ import {
   ChevronLeft, ChevronRight
 } from "lucide-react";
 
+interface AdminSidebarProps {
+  collapsed?: boolean; // Add this prop interface
+}
+
 interface SidebarIconProps {
   icon: React.ElementType;
   label: string;
@@ -51,9 +55,12 @@ const SidebarIcon = ({ icon: Icon, label, active, expanded, onClick }: SidebarIc
   </motion.button>
 );
 
-export function AdminSidebar() {
+export function AdminSidebar({ collapsed }: AdminSidebarProps = { collapsed: false }) {
   const navigate = useNavigate();
   const { sidebarExpanded, activeSection, toggleSidebar } = useAdminStore();
+  
+  // Use the collapsed prop if provided, otherwise use sidebarExpanded from the store
+  const isSidebarCollapsed = collapsed !== undefined ? collapsed : !sidebarExpanded;
   
   const sidebarItems = [
     { id: "overview", label: "Overview", icon: Home, path: "/admin/overview" },
@@ -71,9 +78,9 @@ export function AdminSidebar() {
         "backdrop-blur-md mt-16 pt-4 pb-6 px-2",
         "border-[var(--impulse-border-normal)] bg-[var(--impulse-bg-overlay)]",
         "transition-all duration-300 ease-in-out overflow-hidden",
-        sidebarExpanded ? "w-48" : "w-[60px]"
+        isSidebarCollapsed ? "w-[60px]" : "w-48"
       )}
-      animate={{ width: sidebarExpanded ? 192 : 60 }}
+      animate={{ width: isSidebarCollapsed ? 60 : 192 }}
       transition={{ type: "spring", damping: 20, stiffness: 300 }}
     >
       <div className="flex flex-col h-full gap-2">
@@ -84,7 +91,7 @@ export function AdminSidebar() {
             onClick={toggleSidebar}
             className="p-1 rounded-full bg-[var(--impulse-border-normal)] hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-accent)]"
           >
-            {sidebarExpanded ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+            {!isSidebarCollapsed ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
           </motion.button>
         </div>
         
@@ -95,7 +102,7 @@ export function AdminSidebar() {
               icon={item.icon}
               label={item.label}
               active={activeSection === item.id}
-              expanded={sidebarExpanded}
+              expanded={!isSidebarCollapsed}
               onClick={() => navigate(item.path)}
             />
           ))}
@@ -106,7 +113,7 @@ export function AdminSidebar() {
             icon={Palette}
             label="Themes"
             active={activeSection === "themes"}
-            expanded={sidebarExpanded}
+            expanded={!isSidebarCollapsed}
             onClick={() => navigate("/admin/settings/theme")}
           />
           
@@ -114,7 +121,7 @@ export function AdminSidebar() {
             icon={Workflow}
             label="Workflow"
             active={activeSection === "workflow"}
-            expanded={sidebarExpanded}
+            expanded={!isSidebarCollapsed}
             onClick={() => navigate("/admin/settings/workflow")}
           />
         </div>

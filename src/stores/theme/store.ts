@@ -42,7 +42,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
             context: (token as any).context || undefined,
             created_at: (token as any).created_at || '',
             updated_at: (token as any).updated_at || '',
-            description: (token as any).description || '', // Properly handle description
+            description: (token as any).description || '', 
           }))
         : [];
 
@@ -54,12 +54,12 @@ export const useThemeStore = create<ThemeState>((set) => ({
       const theme: Theme = {
         id: rawTheme.id,
         name: rawTheme.name,
-        description: rawTheme.description || '', // Provide default for null
-        status: rawTheme.status || 'draft', // Provide default for null
-        is_default: rawTheme.is_default || false, // Provide default for null
+        description: rawTheme.description || '', 
+        status: rawTheme.status || 'draft', 
+        is_default: rawTheme.is_default || false, 
         created_by: rawTheme.created_by || undefined,
-        created_at: rawTheme.created_at || '', // Provide default for null
-        updated_at: rawTheme.updated_at || '', // Provide default for null
+        created_at: rawTheme.created_at || '', 
+        updated_at: rawTheme.updated_at || '', 
         published_at: rawTheme.published_at || undefined,
         version: rawTheme.version || 1,
         cache_key: rawTheme.cache_key || undefined,
@@ -94,7 +94,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
         id: comp.id,
         component_name: comp.component_name,
         styles: comp.styles as Record<string, any>,
-        description: comp.description || '', // Handle missing description property
+        description: comp.description || '',
         theme_id: comp.theme_id || undefined,
         context: comp.context || undefined,
         created_at: comp.created_at || '',
