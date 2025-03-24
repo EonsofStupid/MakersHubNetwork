@@ -1,11 +1,11 @@
 
 import { Routes, Route, Navigate } from "react-router-dom";
-import { AdminLayout } from "@/admin/components/AdminLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Suspense, lazy, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useToast } from "@/hooks/use-toast";
+import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
 
 // Lazy load admin components
 const OverviewDashboard = lazy(() => import("@/admin/features/overview/OverviewDashboard"));
@@ -74,7 +74,7 @@ export default function Admin() {
   }
 
   return (
-    <AdminLayout>
+    <ImpulseAdminLayout>
       <Routes>
         <Route index element={<Navigate to="overview" replace />} />
         
@@ -123,6 +123,6 @@ export default function Admin() {
         {/* Fallback for unknown admin routes */}
         <Route path="*" element={<Navigate to="/admin/overview" replace />} />
       </Routes>
-    </AdminLayout>
+    </ImpulseAdminLayout>
   );
 }
