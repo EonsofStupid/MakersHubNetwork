@@ -55,7 +55,7 @@ const SidebarIcon = ({ icon: Icon, label, active, expanded, onClick }: SidebarIc
   </motion.button>
 );
 
-export function AdminSidebar({ collapsed }: AdminSidebarProps = { collapsed: false }) {
+export function AdminSidebar({ collapsed }: AdminSidebarProps) {
   const navigate = useNavigate();
   const { sidebarExpanded, activeSection, toggleSidebar } = useAdminStore();
   

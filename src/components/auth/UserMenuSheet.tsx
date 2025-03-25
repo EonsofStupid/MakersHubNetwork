@@ -1,6 +1,6 @@
 
 import React from "react"
-import { Link as RouterLink } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { Menu, User, Settings, LayoutDashboard, LogOut, Shield, Crown } from "lucide-react"
 import { UserRole } from "@/types/auth.types"
 import { Button } from "@/components/ui/button"
@@ -97,7 +97,7 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
               Profile
             </button>
 
-            <RouterLink
+            <Link
               to="/settings"
               className="group flex items-center gap-2 px-4 py-2 text-sm
                          transition-colors rounded-md hover:bg-primary/10"
@@ -105,21 +105,18 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
             >
               <Settings className="h-4 w-4 text-primary group-hover:animate-pulse" />
               Settings
-            </RouterLink>
+            </Link>
 
             {hasAdminAccess && (
-              <RouterLink
+              <Link
                 to="/admin"
                 className="group flex items-center gap-2 px-4 py-2 text-sm
                            transition-colors rounded-md hover:bg-primary/10"
-                onClick={() => {
-                  console.log("Admin Dashboard link clicked")
-                  onOpenChange(false)
-                }}
+                onClick={() => onOpenChange(false)}
               >
                 <LayoutDashboard className="h-4 w-4 text-primary group-hover:animate-pulse" />
                 Admin Dashboard
-              </RouterLink>
+              </Link>
             )}
 
             <button
