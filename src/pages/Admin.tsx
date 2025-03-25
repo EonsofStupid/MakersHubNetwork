@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
 import { AdminThemeProvider } from "@/admin/theme/AdminThemeProvider";
 import { AdminLayout } from "@/admin/components/layout/AdminLayout";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import "../admin/styles/cyberpunk-theme.css";
 
 // Lazy load admin components for code splitting
@@ -29,6 +30,7 @@ const AdminPageLoader = () => (
 export default function Admin() {
   const { status, user } = useAuthStore();
   const { toast } = useToast();
+  const { hasAdminAccess } = useAdminAccess();
   
   useEffect(() => {
     // Apply the admin theme class
@@ -51,15 +53,8 @@ export default function Admin() {
     return <AdminPageLoader />;
   }
   
-  // Redirect if not authenticated
-  if (status === "unauthenticated") {
-    return <Navigate to="/login" replace />;
-  }
-  
-  // Redirect if logged in but not admin
-  if (status === "authenticated" && 
-      !user?.app_metadata?.roles?.includes("admin") && 
-      !user?.app_metadata?.roles?.includes("super_admin")) {
+  // Verify admin access
+  if (!hasAdminAccess) {
     return <Navigate to="/" replace />;
   }
 

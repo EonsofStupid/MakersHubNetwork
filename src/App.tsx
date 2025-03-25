@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom"
 
 // Lazily load pages to improve initial load time
 const IndexPage = lazy(() => import("./pages/Index"))
-const AdminRouter = lazy(() => import("./admin"))
+const Admin = lazy(() => import("./pages/Admin"))
 const LoginPage = lazy(() => import("./pages/Login"))
 
 // Create a loading fallback component
@@ -98,9 +98,9 @@ const App = () => {
                   
                   {/* Admin Routes */}
                   <Route path="/admin/*" element={
-                    <AuthGuard requiredRoles={["admin", "super_admin"]}>
+                    <AuthGuard adminOnly>
                       <Suspense fallback={<PageLoader />}>
-                        <AdminRouter />
+                        <Admin />
                       </Suspense>
                     </AuthGuard>
                   } />

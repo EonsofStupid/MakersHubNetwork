@@ -5,9 +5,14 @@ import { Logo } from "./components/Logo";
 import { NavigationItems } from "./components/NavigationItems";
 import { SearchButton } from "./components/SearchButton";
 import { AuthSection } from "./components/AuthSection";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { Link } from "react-router-dom";
+import { Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const { hasAdminAccess } = useAdminAccess();
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -33,6 +38,18 @@ export function MainNav() {
           <NavigationItems />
           <div className="flex items-center gap-4">
             <SearchButton />
+            {hasAdminAccess && (
+              <Link to="/admin">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="flex items-center gap-1 group text-primary hover:text-primary/80 hover:bg-primary/10"
+                >
+                  <Shield className="h-4 w-4 group-hover:animate-pulse" />
+                  <span>Admin</span>
+                </Button>
+              </Link>
+            )}
             <AuthSection />
           </div>
         </div>

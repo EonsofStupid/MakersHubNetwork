@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Card,
@@ -8,10 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useAuthStore } from "@/stores/auth/store";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 interface LoginProps {
   onSuccess?: () => void;
@@ -19,16 +20,29 @@ interface LoginProps {
 
 const Login = ({ onSuccess }: LoginProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const status = useAuthStore((state) => state.status);
   const isAuthenticated = status === "authenticated";
+  const { hasAdminAccess } = useAdminAccess();
+  
+  const from = new URLSearchParams(location.search).get("from") || "/";
 
   useEffect(() => {
     if (isAuthenticated) {
       onSuccess?.();
-      navigate('/');
+      
+      if (hasAdminAccess && (from.includes("/admin") || from === "/login")) {
+        toast({
+          title: "Admin Access",
+          description: "Welcome to the admin dashboard",
+        });
+        navigate("/admin");
+      } else {
+        navigate(from);
+      }
     }
-  }, [isAuthenticated, navigate, onSuccess]);
+  }, [isAuthenticated, navigate, onSuccess, hasAdminAccess, from, toast]);
 
   return (
     <div className="container mx-auto flex items-center justify-center min-h-screen p-4">
