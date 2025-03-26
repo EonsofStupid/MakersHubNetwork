@@ -1,0 +1,205 @@
+
+/**
+ * MakersImpulse Admin Core Styles
+ * A dedicated CSS file for admin section with CSS variables for consistent theming
+ */
+
+:root {
+  /* Admin section theme variables */
+  --admin-bg-main: #1A1F2C;
+  --admin-bg-card: rgba(36, 41, 57, 0.7);
+  --admin-bg-overlay: rgba(30, 35, 48, 0.8);
+  
+  /* Text colors */
+  --admin-text-primary: #F6F6F7;
+  --admin-text-secondary: #C8C8C9;
+  --admin-text-accent: #8B5CF6;
+  
+  /* Border colors */
+  --admin-border-default: rgba(139, 92, 246, 0.2);
+  --admin-border-hover: rgba(139, 92, 246, 0.4);
+  --admin-border-active: rgba(139, 92, 246, 0.6);
+  
+  /* Effects */
+  --admin-glow-primary: 0 0 15px rgba(139, 92, 246, 0.5);
+  --admin-glow-secondary: 0 0 15px rgba(217, 70, 239, 0.5);
+  --admin-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+  
+  /* Blur effects */
+  --admin-blur-strong: blur(16px);
+  --admin-blur-light: blur(8px);
+  
+  /* Spacing */
+  --admin-spacing-xs: 0.25rem;
+  --admin-spacing-sm: 0.5rem;
+  --admin-spacing-md: 1rem;
+  --admin-spacing-lg: 1.5rem;
+  --admin-spacing-xl: 2rem;
+  
+  /* Animation */
+  --admin-transition-fast: 0.15s;
+  --admin-transition-normal: 0.3s;
+  --admin-transition-slow: 0.5s;
+}
+
+/* Main admin container */
+.admin-container {
+  background-color: var(--admin-bg-main);
+  color: var(--admin-text-primary);
+  min-height: 100vh;
+}
+
+/* Glass card elements */
+.admin-card {
+  background-color: var(--admin-bg-card);
+  backdrop-filter: var(--admin-blur-light);
+  border: 1px solid var(--admin-border-default);
+  border-radius: 0.75rem;
+  box-shadow: var(--admin-shadow);
+  transition: all var(--admin-transition-normal) ease;
+}
+
+.admin-card:hover {
+  border-color: var(--admin-border-hover);
+  box-shadow: var(--admin-glow-primary);
+}
+
+/* Admin buttons */
+.admin-button {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: var(--admin-text-accent);
+  border: 1px solid var(--admin-border-default);
+  border-radius: 0.5rem;
+  padding: var(--admin-spacing-sm) var(--admin-spacing-md);
+  transition: all var(--admin-transition-normal) ease;
+}
+
+.admin-button:hover {
+  background-color: rgba(139, 92, 246, 0.2);
+  border-color: var(--admin-border-hover);
+  box-shadow: var(--admin-glow-primary);
+  transform: translateY(-2px);
+}
+
+/* Admin header */
+.admin-header {
+  background-color: var(--admin-bg-overlay);
+  backdrop-filter: var(--admin-blur-strong);
+  border-bottom: 1px solid var(--admin-border-default);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Admin sidebar */
+.admin-sidebar {
+  background-color: var(--admin-bg-overlay);
+  backdrop-filter: var(--admin-blur-strong);
+  border-right: 1px solid var(--admin-border-default);
+  min-height: 100vh;
+  transition: width var(--admin-transition-normal) ease;
+}
+
+/* Admin content area */
+.admin-content {
+  padding: var(--admin-spacing-lg);
+  transition: margin-left var(--admin-transition-normal) ease;
+}
+
+/* Typography */
+.admin-heading {
+  color: var(--admin-text-primary);
+  margin-bottom: var(--admin-spacing-md);
+  position: relative;
+}
+
+.admin-heading::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50px;
+  height: 2px;
+  background: linear-gradient(to right, rgba(139, 92, 246, 0.8), transparent);
+}
+
+.admin-text-secondary {
+  color: var(--admin-text-secondary);
+}
+
+.admin-text-accent {
+  color: var(--admin-text-accent);
+}
+
+/* Utility classes */
+.admin-glow {
+  box-shadow: var(--admin-glow-primary);
+}
+
+.admin-border {
+  border: 1px solid var(--admin-border-default);
+}
+
+/* Animation effects */
+@keyframes admin-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(139, 92, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+  }
+}
+
+.admin-pulse {
+  animation: admin-pulse 2s infinite;
+}
+
+/* Glass morphism overlay */
+.admin-glass-overlay {
+  background: rgba(36, 41, 57, 0.3);
+  backdrop-filter: var(--admin-blur-light);
+  border: 1px solid var(--admin-border-default);
+  border-radius: 0.75rem;
+}
+
+/* Status indicators */
+.admin-status-active {
+  background-color: rgba(0, 220, 130, 0.2);
+  color: rgb(0, 220, 130);
+  border: 1px solid rgba(0, 220, 130, 0.3);
+  padding: var(--admin-spacing-xs) var(--admin-spacing-sm);
+  border-radius: 1rem;
+  font-size: 0.75rem;
+}
+
+.admin-status-inactive {
+  background-color: rgba(255, 60, 60, 0.2);
+  color: rgb(255, 60, 60);
+  border: 1px solid rgba(255, 60, 60, 0.3);
+  padding: var(--admin-spacing-xs) var(--admin-spacing-sm);
+  border-radius: 1rem;
+  font-size: 0.75rem;
+}
+
+/* Neon border effects */
+.admin-neon-border {
+  position: relative;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.admin-neon-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  margin: -1px;
+  border-radius: inherit;
+  background: linear-gradient(to right, rgba(139, 92, 246, 0.6), rgba(217, 70, 239, 0.6));
+}

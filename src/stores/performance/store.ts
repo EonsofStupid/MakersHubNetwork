@@ -153,13 +153,13 @@ export const usePerformanceStore = create<PerformanceStore>((set, get) => {
     },
   };
   
-  // State with slices
+  // State with slices - pass the actual set and get functions to the slices
   return {
     ...baseState,
     ...actions,
-    ...createFrameSlice(set, get, {}),
-    ...createStoreSlice(set, get, {}),
-    ...createMemorySlice(set, get, {}),
-    ...createMonitoringSlice(set, get, {})
+    ...createFrameSlice(set, get, set({}, true)),
+    ...createStoreSlice(set, get, set({}, true)),
+    ...createMemorySlice(set, get, set({}, true)),
+    ...createMonitoringSlice(set, get, set({}, true))
   };
 });

@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,13 +33,33 @@ const Login = ({ onSuccess }: LoginProps) => {
     if (isAuthenticated) {
       onSuccess?.();
       
-      if (hasAdminAccess && (from.includes("/admin") || from === "/login")) {
+      // Check if user was trying to access admin section or has admin access
+      const goingToAdmin = from.includes("/admin");
+      
+      if (goingToAdmin) {
+        if (hasAdminAccess) {
+          toast({
+            title: "Admin Access",
+            description: "Welcome to the admin dashboard",
+          });
+          navigate("/admin"); 
+        } else {
+          toast({
+            title: "Access Denied",
+            description: "You don't have permission to access the admin section",
+            variant: "destructive"
+          });
+          navigate("/");
+        }
+      } else if (from === "/login" && hasAdminAccess) {
+        // If coming directly to login page and has admin access, suggest admin
         toast({
-          title: "Admin Access",
-          description: "Welcome to the admin dashboard",
+          title: "Admin Access Available",
+          description: "You can access the admin dashboard",
         });
-        navigate("/admin");
+        navigate("/"); // Navigate home first, admin is accessible from nav
       } else {
+        // Normal redirect to requested page
         navigate(from);
       }
     }
