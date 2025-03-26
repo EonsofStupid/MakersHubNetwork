@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AdminThemeProvider } from "@/admin/theme/AdminThemeProvider";
 import { AdminLayout } from "@/admin/components/layout/AdminLayout";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
+import "../admin/styles/admin-core.css";
 import "../admin/styles/cyberpunk-theme.css";
 
 // Lazy load admin components for code splitting
@@ -17,12 +18,12 @@ const DataMaestroManager = lazy(() => import("@/admin/features/data-maestro/Data
 const ImportManager = lazy(() => import("@/admin/features/import/ImportManager"));
 const SettingsManager = lazy(() => import("@/admin/features/settings/SettingsManager"));
 
-// Loading component with impulse theme styling
+// Loading component with custom admin styling
 const AdminPageLoader = () => (
   <div className="min-h-[400px] flex items-center justify-center">
     <div className="space-y-4 text-center">
-      <div className="w-8 h-8 border-4 border-[var(--impulse-primary)] border-t-transparent rounded-full animate-spin mx-auto"></div>
-      <p className="text-[var(--impulse-text-secondary)]">Loading admin section...</p>
+      <div className="w-8 h-8 border-4 border-[var(--admin-border-active)] border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <p className="text-[var(--admin-text-secondary)]">Loading admin section...</p>
     </div>
   </div>
 );
@@ -34,7 +35,7 @@ export default function Admin() {
   
   useEffect(() => {
     // Apply the admin theme class
-    document.body.classList.add('impulse-admin-theme');
+    document.body.classList.add('admin-container');
     
     // Welcome toast for admin panel
     toast({
@@ -44,7 +45,7 @@ export default function Admin() {
     
     // Clean up when unmounting
     return () => {
-      document.body.classList.remove('impulse-admin-theme');
+      document.body.classList.remove('admin-container');
     };
   }, [toast]);
   

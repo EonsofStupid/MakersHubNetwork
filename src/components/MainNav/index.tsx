@@ -41,12 +41,13 @@ export function MainNav() {
             {hasAdminAccess && (
               <Link to="/admin">
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm"
-                  className="flex items-center gap-1 group text-primary hover:text-primary/80 hover:bg-primary/10"
+                  className="flex items-center gap-1 group text-primary hover:text-white hover:bg-primary/30 border-primary/40 relative overflow-hidden"
                 >
                   <Shield className="h-4 w-4 group-hover:animate-pulse" />
                   <span>Admin</span>
+                  <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
                 </Button>
               </Link>
             )}
