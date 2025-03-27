@@ -8,7 +8,7 @@ export const createMonitoringSlice: StateCreator<
   [],
   [],
   MonitoringSlice
-> = (set, get) => ({
+> = (set, get, api) => ({
   isMonitoring: false,
   thresholds: {
     frameDrop: 16.67,

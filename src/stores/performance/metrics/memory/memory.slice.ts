@@ -8,7 +8,7 @@ export const createMemorySlice: StateCreator<
   [],
   [],
   MemorySlice
-> = (set, get) => ({
+> = (set, get, api) => ({
   memoryMetrics: {
     heapSize: 0,
     instances: 0,

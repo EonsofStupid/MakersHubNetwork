@@ -9,7 +9,7 @@ export const createFrameSlice: StateCreator<
   [],
   [],
   FrameSlice
-> = (set, get) => ({
+> = (set, get, api) => ({
   frameMetrics: {
     drops: 0,
     averageTime: 0,
