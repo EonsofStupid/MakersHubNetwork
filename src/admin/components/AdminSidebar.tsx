@@ -1,19 +1,22 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { cn } from "@/lib/utils";
 import { 
-  Home, Users, Settings, Palette, 
-  FileText, Database, Package, Workflow,
-  ChevronLeft, ChevronRight
+  Home, 
+  Users, 
+  Settings, 
+  FileText,
+  Database,
+  Package,
+  Workflow,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
-interface AdminSidebarProps {
-  collapsed?: boolean; // Add this prop interface
-}
-
+// SidebarIcon component
 interface SidebarIconProps {
   icon: React.ElementType;
   label: string;
@@ -28,7 +31,7 @@ const SidebarIcon = ({ icon: Icon, label, active, expanded, onClick }: SidebarIc
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
     className={cn(
-      "impulse-sidebar-icon w-full flex items-center px-3 py-2 rounded-lg transition-all",
+      "w-full flex items-center px-3 py-2 rounded-lg transition-all",
       "hover:bg-[var(--impulse-border-hover)] relative overflow-hidden",
       active ? "bg-[var(--impulse-border-active)] text-[var(--impulse-text-accent)]" : 
               "text-[var(--impulse-text-secondary)]"
@@ -55,7 +58,7 @@ const SidebarIcon = ({ icon: Icon, label, active, expanded, onClick }: SidebarIc
   </motion.button>
 );
 
-export function AdminSidebar({ collapsed }: AdminSidebarProps) {
+export function AdminSidebar({ collapsed }: { collapsed?: boolean }) {
   const navigate = useNavigate();
   const { sidebarExpanded, activeSection, toggleSidebar } = useAdminStore();
   
@@ -74,7 +77,7 @@ export function AdminSidebar({ collapsed }: AdminSidebarProps) {
   return (
     <motion.aside
       className={cn(
-        "impulse-sidebar fixed top-0 left-0 h-full z-30 border-r",
+        "fixed top-0 left-0 h-full z-30 border-r",
         "backdrop-blur-md mt-16 pt-4 pb-6 px-2",
         "border-[var(--impulse-border-normal)] bg-[var(--impulse-bg-overlay)]",
         "transition-all duration-300 ease-in-out overflow-hidden",
@@ -109,14 +112,6 @@ export function AdminSidebar({ collapsed }: AdminSidebarProps) {
         </nav>
         
         <div className="mt-auto pt-4 border-t border-[var(--impulse-border-normal)]">
-          <SidebarIcon
-            icon={Palette}
-            label="Themes"
-            active={activeSection === "themes"}
-            expanded={!isSidebarCollapsed}
-            onClick={() => navigate("/admin/settings/theme")}
-          />
-          
           <SidebarIcon
             icon={Workflow}
             label="Workflow"

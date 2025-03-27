@@ -1,0 +1,218 @@
+
+/**
+ * MakersImpulse Admin - Impulse Theme
+ * Cyberpunk-inspired admin interface with glass morphism
+ */
+
+:root {
+  /* Core Impulse variables */
+  --impulse-primary: #00F0FF;
+  --impulse-secondary: #FF2D6E;
+  --impulse-accent: #F97316;
+  
+  /* Background layers - dark with depth */
+  --impulse-bg-main: #121218;
+  --impulse-bg-overlay: rgba(22, 24, 29, 0.85);
+  --impulse-bg-card: rgba(28, 30, 38, 0.7);
+  
+  /* Text colors */
+  --impulse-text-primary: #F6F6F7;
+  --impulse-text-secondary: rgba(255, 255, 255, 0.7);
+  --impulse-text-accent: #00F0FF;
+  
+  /* Borders */
+  --impulse-border-normal: rgba(0, 240, 255, 0.2);
+  --impulse-border-hover: rgba(0, 240, 255, 0.4);
+  --impulse-border-active: rgba(0, 240, 255, 0.6);
+  
+  /* Glow effects */
+  --impulse-glow-primary: 0 0 15px rgba(0, 240, 255, 0.7);
+  --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.7);
+  --impulse-glow-hover: 0 0 20px rgba(0, 240, 255, 0.9);
+  
+  /* Blur effects */
+  --impulse-blur-bg: blur(12px);
+  --impulse-blur-light: blur(8px);
+  
+  /* Animation timings */
+  --impulse-duration-fast: 150ms;
+  --impulse-duration-normal: 300ms;
+  --impulse-duration-slow: 500ms;
+  
+  /* Animation curves */
+  --impulse-curve-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --impulse-curve-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --impulse-curve-spring: cubic-bezier(0.43, 0.13, 0.23, 0.96);
+}
+
+/* Admin theme root container */
+.impulse-admin-root {
+  background-color: var(--impulse-bg-main);
+  color: var(--impulse-text-primary);
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Glass panel component */
+.impulse-panel {
+  background-color: var(--impulse-bg-card);
+  backdrop-filter: var(--impulse-blur-bg);
+  border: 1px solid var(--impulse-border-normal);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: all var(--impulse-duration-normal) var(--impulse-curve-ease);
+}
+
+.impulse-panel:hover {
+  border-color: var(--impulse-border-hover);
+  box-shadow: var(--impulse-glow-primary);
+}
+
+/* Neon button */
+.impulse-button {
+  background: rgba(0, 240, 255, 0.1);
+  color: var(--impulse-primary);
+  border: 1px solid var(--impulse-border-normal);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  transition: all var(--impulse-duration-fast) var(--impulse-curve-ease);
+}
+
+.impulse-button:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: var(--impulse-border-hover);
+  box-shadow: var(--impulse-glow-primary);
+  transform: translateY(-2px);
+}
+
+/* Quick actions */
+.impulse-quick-action {
+  background: var(--impulse-bg-card);
+  border: 1px solid var(--impulse-border-normal);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--impulse-duration-normal) var(--impulse-curve-ease);
+}
+
+.impulse-quick-action:hover {
+  border-color: var(--impulse-border-hover);
+  box-shadow: var(--impulse-glow-primary);
+  transform: translateY(-2px);
+}
+
+/* Admin layout components */
+.impulse-topnav {
+  background: var(--impulse-bg-overlay);
+  backdrop-filter: var(--impulse-blur-bg);
+  border-bottom: 1px solid var(--impulse-border-normal);
+  height: 4rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+}
+
+.impulse-secondary-nav {
+  background: var(--impulse-bg-card);
+  backdrop-filter: var(--impulse-blur-light);
+  border-bottom: 1px solid var(--impulse-border-hover);
+  height: 3rem;
+  position: fixed;
+  top: 4rem;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+.impulse-sidebar {
+  background: var(--impulse-bg-overlay);
+  backdrop-filter: var(--impulse-blur-bg);
+  border-right: 1px solid var(--impulse-border-normal);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  transition: width var(--impulse-duration-normal) var(--impulse-curve-spring);
+}
+
+.impulse-main {
+  transition: margin-left var(--impulse-duration-normal) var(--impulse-curve-ease);
+  min-height: calc(100vh - 7rem);
+  padding: 1.5rem;
+}
+
+/* Animation utilities */
+.impulse-fade-in {
+  animation: impulse-fade-in var(--impulse-duration-normal) var(--impulse-curve-ease);
+}
+
+.impulse-slide-in {
+  animation: impulse-slide-in var(--impulse-duration-normal) var(--impulse-curve-spring);
+}
+
+@keyframes impulse-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes impulse-slide-in {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Drag and drop styling */
+.impulse-drag-item {
+  cursor: grab;
+  user-select: none;
+}
+
+.impulse-drag-item:active {
+  cursor: grabbing;
+}
+
+.impulse-drop-target {
+  border: 2px dashed var(--impulse-border-hover);
+  background: rgba(0, 240, 255, 0.1);
+  transition: all var(--impulse-duration-fast) var(--impulse-curve-ease);
+}
+
+.impulse-drop-target.active {
+  background: rgba(0, 240, 255, 0.2);
+  box-shadow: var(--impulse-glow-primary);
+}
+
+/* Shimmer effect */
+.impulse-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.impulse-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  to {
+    left: 150%;
+  }
+}

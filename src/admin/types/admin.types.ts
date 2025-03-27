@@ -1,86 +1,71 @@
 
-import { UserRole } from "@/types/auth.types";
-
 /**
- * Admin Module Permission Types
+ * Core admin type definitions
  */
+
+// Admin permissions
 export type AdminPermission = 
-  | 'admin:access'               // Base admin access
-  | 'admin:users:read'           // View user data
-  | 'admin:users:write'          // Modify user data
-  | 'admin:users:delete'         // Delete users
-  | 'admin:users:roles'          // Manage user roles
-  | 'admin:content:read'         // View content
-  | 'admin:content:write'        // Create/edit content
-  | 'admin:content:delete'       // Delete content
-  | 'admin:content:publish'      // Publish content
-  | 'admin:settings:read'        // View settings
-  | 'admin:settings:write'       // Modify settings
-  | 'admin:data:import'          // Import data
-  | 'admin:data:export';         // Export data
+  | 'admin:access'
+  | 'admin:view'
+  | 'admin:edit'
+  | 'super_admin:all'
+  | 'content:view'
+  | 'content:edit'
+  | 'content:delete'
+  | 'users:view'
+  | 'users:edit'
+  | 'users:delete'
+  | 'themes:view'
+  | 'themes:edit'
+  | 'builds:view'
+  | 'builds:approve'
+  | 'builds:reject';
 
-/**
- * Admin Access Level Definition
- */
-export interface AdminAccessLevel {
-  level: number;
-  name: string;
-  description: string;
-  roles: UserRole[];
-  permissions: AdminPermission[];
-}
-
-/**
- * Admin Module State
- */
-export interface AdminState {
-  isLoadingPermissions: boolean;
-  permissions: AdminPermission[];
-  accessLevels: AdminAccessLevel[];
-  currentSection: string | null;
-}
-
-/**
- * Admin Tab Configuration
- */
-export interface AdminTabConfig {
+// QuickAction for the floating toolbar
+export interface QuickAction {
   id: string;
   label: string;
-  requiresPermission: AdminPermission;
-  order: number;
-  icon?: string;
+  icon: string;
+  action: () => void;
+  permission?: AdminPermission;
 }
 
-/**
- * Admin Feature Configuration
- */
-export interface AdminFeatureConfig {
-  id: string;
-  name: string;
-  description: string;
-  icon?: string;
-  requiresPermission: AdminPermission;
-  enabled: boolean;
-}
-
-/**
- * Admin Module Error State
- */
-export interface AdminError {
-  code: string;
-  message: string;
-  context?: Record<string, unknown>;
-  timestamp: Date;
-}
-
-/**
- * Admin Dashboard Shortcut
- */
-export interface AdminShortcut {
+// Admin section configuration
+export interface AdminSectionConfig {
   id: string;
   label: string;
   icon: string;
   path: string;
   permission?: AdminPermission;
-  color?: string;
+  subsections?: AdminSectionConfig[];
+}
+
+// Admin UI element state
+export interface AdminUIState {
+  isVisible: boolean;
+  isActive: boolean;
+  isExpanded: boolean;
+  isHovered: boolean;
+  isDragging: boolean;
+}
+
+// Frozen zone configuration
+export interface FrozenZone {
+  id: string;
+  label: string;
+  selector: string;
+  isLocked: boolean;
+  lockedBy?: string;
+  lockedAt?: string;
+}
+
+// Admin panel overlay configuration
+export interface AdminOverlayConfig {
+  id: string;
+  type: 'inspector' | 'ai' | 'effects' | 'roles' | 'recorder';
+  position: 'left' | 'right' | 'bottom' | 'float';
+  isVisible: boolean;
+  isExpanded: boolean;
+  width: number;
+  height: number;
 }
