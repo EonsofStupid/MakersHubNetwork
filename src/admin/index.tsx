@@ -1,59 +1,63 @@
 
-import { Routes, Route, Navigate } from "react-router-dom";
-import { Suspense, lazy, useEffect } from "react";
-import { AdminLayout } from "./components/layout/AdminLayout";
-import { useAdminStore } from "./store/admin.store";
-import { useToast } from "@/hooks/use-toast";
-import "./theme/impulse/impulse-theme.css";
+import { AdminLayout } from './components/layout/AdminLayout';
+import { AdminSidebar } from './components/layout/AdminSidebar';
+import { AdminHeader } from './components/AdminHeader';
+import { ImpulseAdminLayout } from './components/layout/ImpulseAdminLayout';
+import { useAdminStore } from './store/admin.store';
+import { AdminThemeProvider, useAdminTheme } from './theme/AdminThemeProvider';
+import { useAdminChat, useAdminChatListener } from './hooks/useAdminChat';
+import { useAdminPermissions } from './hooks/useAdminPermissions';
 
-// Lazy load admin components for code splitting
-const OverviewDashboard = lazy(() => import("./features/overview/OverviewDashboard"));
-const ContentManagement = lazy(() => import("./features/content/ContentManagement"));
-const UsersManagement = lazy(() => import("./features/users/UsersManagement"));
-const ChatManagement = lazy(() => import("./features/chat/ChatManagement"));
-const DataMaestroManager = lazy(() => import("./features/data-maestro/DataMaestroManager"));
-const ImportManager = lazy(() => import("./features/import/ImportManager"));
-const SettingsManager = lazy(() => import("./features/settings/SettingsManager"));
+// Admin Dashboard Routes
+import Themes from './routes/themes/Themes';
 
-// Loading component with custom admin styling
-const AdminPageLoader = () => (
-  <div className="min-h-[400px] flex items-center justify-center">
-    <div className="space-y-4 text-center">
-      <div className="w-8 h-8 border-4 border-[var(--impulse-primary)] border-t-transparent rounded-full animate-spin mx-auto"></div>
-      <p className="text-[var(--impulse-text-secondary)]">Loading admin section...</p>
-    </div>
-  </div>
-);
+// Export admin UI components
+export { AdminLayout };
+export { AdminSidebar };
+export { AdminHeader };
+export { ImpulseAdminLayout };
 
-const AdminRouter = () => {
-  const { toast } = useToast();
-  
-  // Apply the custom admin theme when the component mounts
-  useEffect(() => {
-    // Welcome toast for admin panel
-    toast({
-      title: "Admin Panel",
-      description: "Welcome to the MakersImpulse admin dashboard",
-    });
-  }, [toast]);
+// Export admin state and hooks
+export { useAdminStore };
+export { AdminThemeProvider, useAdminTheme };
+export { useAdminChat, useAdminChatListener };
+export { useAdminPermissions };
 
+// Export admin route components
+export { Themes };
+
+// Main admin router component
+export default function AdminRouter() {
   return (
-    <AdminLayout>
-      <Suspense fallback={<AdminPageLoader />}>
-        <Routes>
-          <Route path="/" element={<Navigate to="/admin/overview" replace />} />
-          <Route path="overview" element={<OverviewDashboard />} />
-          <Route path="content/*" element={<ContentManagement />} />
-          <Route path="users" element={<UsersManagement />} />
-          <Route path="chat" element={<ChatManagement />} />
-          <Route path="data-maestro" element={<DataMaestroManager />} />
-          <Route path="import" element={<ImportManager />} />
-          <Route path="settings/*" element={<SettingsManager />} />
-          <Route path="*" element={<Navigate to="/admin/overview" replace />} />
-        </Routes>
-      </Suspense>
-    </AdminLayout>
+    <ImpulseAdminLayout>
+      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Admin stats cards */}
+        <div className="bg-card/30 backdrop-blur-md p-6 rounded-lg border border-border/20">
+          <h2 className="font-medium text-lg mb-3">Platform Overview</h2>
+          <div className="space-y-2">
+            <p>Users: <span className="text-primary font-bold">1,245</span></p>
+            <p>Builds: <span className="text-primary font-bold">386</span></p>
+            <p>Active makers: <span className="text-primary font-bold">89</span></p>
+          </div>
+        </div>
+        
+        {/* Quick actions */}
+        <div className="bg-card/30 backdrop-blur-md p-6 rounded-lg border border-border/20">
+          <h2 className="font-medium text-lg mb-3">Quick Actions</h2>
+          <div className="flex flex-wrap gap-3">
+            <button className="bg-primary/20 hover:bg-primary/30 px-4 py-2 rounded-md text-sm">
+              Review Builds
+            </button>
+            <button className="bg-primary/20 hover:bg-primary/30 px-4 py-2 rounded-md text-sm">
+              Manage Users
+            </button>
+            <button className="bg-primary/20 hover:bg-primary/30 px-4 py-2 rounded-md text-sm">
+              Edit Content
+            </button>
+          </div>
+        </div>
+      </div>
+    </ImpulseAdminLayout>
   );
-};
-
-export default AdminRouter;
+}

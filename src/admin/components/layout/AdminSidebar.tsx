@@ -21,7 +21,7 @@ interface SidebarIconProps {
   active?: boolean;
   expanded?: boolean;
   onClick?: () => void;
-  onDragStart?: (e: React.DragEvent) => void;
+  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
 }
 
 function SidebarIcon({ 
@@ -88,7 +88,7 @@ export function AdminSidebar() {
   const [dragTarget, setDragTarget] = useAtom(dragTargetAtom);
   const [sectionCollapsed, setSectionCollapsed] = useState<Record<string, boolean>>({});
   
-  const handleDragStart = (id: string, e: React.DragEvent) => {
+  const handleDragStart = (id: string, e: React.DragEvent<HTMLDivElement>) => {
     setDragSource(id);
     e.dataTransfer.setData("text/plain", id);
   };

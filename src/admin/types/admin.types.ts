@@ -19,7 +19,21 @@ export type AdminPermission =
   | 'themes:edit'
   | 'builds:view'
   | 'builds:approve'
-  | 'builds:reject';
+  | 'builds:reject'
+  | 'admin:users:read'
+  | 'admin:content:read'
+  | 'admin:settings:read'
+  | 'admin:data:import';
+
+// Admin shortcuts for dashboard
+export interface AdminShortcut {
+  id: string;
+  label: string;
+  icon: string;
+  path: string;
+  permission?: string;
+  color?: string;
+}
 
 // QuickAction for the floating toolbar
 export interface QuickAction {
