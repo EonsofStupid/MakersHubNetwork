@@ -19,7 +19,7 @@ interface ImpulseAdminLayoutProps {
 export function ImpulseAdminLayout({ 
   children, 
   title = "Admin Dashboard",
-  requiresPermission = "admin:access" 
+  requiresPermission = "admin:access" as AdminPermission 
 }: ImpulseAdminLayoutProps) {
   const { hasPermission, isLoadingPermissions, loadPermissions } = useAdminStore();
   const { 

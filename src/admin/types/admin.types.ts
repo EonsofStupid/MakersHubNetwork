@@ -23,7 +23,8 @@ export type AdminPermission =
   | 'admin:users:read'
   | 'admin:content:read'
   | 'admin:settings:read'
-  | 'admin:data:import';
+  | 'admin:data:import'
+  | string; // Allow string values for dynamic permissions
 
 // Admin shortcuts for dashboard
 export interface AdminShortcut {
@@ -31,7 +32,7 @@ export interface AdminShortcut {
   label: string;
   icon: string;
   path: string;
-  permission?: string;
+  permission?: AdminPermission;
   color?: string;
 }
 
