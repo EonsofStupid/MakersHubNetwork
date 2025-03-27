@@ -158,8 +158,8 @@ export const usePerformanceStore = create<PerformanceStore>((set, get) => {
     ...baseState,
     ...actions,
     ...createFrameSlice(set, get),
-    ...createStoreSlice(set, get), // Fix: Remove the unnecessary third parameter
-    ...createMemorySlice(set, get), // Fix: Remove the unnecessary third parameter
-    ...createMonitoringSlice(set, get) // Already correct with set and get
+    ...createStoreSlice(set, get),
+    ...createMemorySlice(set, get),
+    ...createMonitoringSlice(set, get)
   };
 });
