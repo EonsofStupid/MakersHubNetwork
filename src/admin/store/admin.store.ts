@@ -1,106 +1,92 @@
 
-import { create } from "zustand";
-import { persist } from 'zustand/middleware';
-import { supabase } from "@/integrations/supabase/client";
-import { AdminPermission } from "@/admin/types/admin.types";
-
-export type AdminMode = 'standard' | 'inspector' | 'editor';
-export type AdminTheme = 'impulse' | 'cyberpunk' | 'neon';
+import { create } from 'zustand';
+import { AdminPermission } from '../types/admin.types';
 
 interface AdminState {
   // UI State
   sidebarExpanded: boolean;
   activeSection: string;
-  adminMode: AdminMode;
-  adminTheme: AdminTheme;
+  isDarkMode: boolean;
   
-  // Permission State
-  permissions: string[];
+  // Auth/Permissions State
   isLoadingPermissions: boolean;
+  permissions: AdminPermission[];
   
-  // Admin UI Actions
+  // Admin functions
   toggleSidebar: () => void;
-  setSidebar: (expanded: boolean) => void;
   setActiveSection: (section: string) => void;
-  setAdminMode: (mode: AdminMode) => void;
-  setAdminTheme: (theme: AdminTheme) => void;
+  toggleDarkMode: () => void;
   
-  // Permission Actions
-  loadPermissions: () => Promise<void>;
+  // Permission functions
+  loadPermissions: () => void;
   hasPermission: (permission: AdminPermission) => boolean;
 }
 
-export const useAdminStore = create<AdminState>()(
-  persist(
-    (set, get) => ({
-      // Default UI state
-      sidebarExpanded: true,
-      activeSection: 'overview',
-      adminMode: 'standard',
-      adminTheme: 'impulse',
+export const useAdminStore = create<AdminState>((set, get) => ({
+  // Default UI state
+  sidebarExpanded: true,
+  activeSection: 'overview',
+  isDarkMode: true,
+  
+  // Default auth state
+  isLoadingPermissions: true,
+  permissions: [],
+  
+  // UI functions
+  toggleSidebar: () => set(state => ({ sidebarExpanded: !state.sidebarExpanded })),
+  setActiveSection: (section) => set({ activeSection: section }),
+  toggleDarkMode: () => set(state => ({ isDarkMode: !state.isDarkMode })),
+  
+  // Permission functions
+  loadPermissions: async () => {
+    set({ isLoadingPermissions: true });
+    
+    try {
+      // Simulate API call to load permissions
+      // In a real app, this would be an API call to fetch user permissions
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Default permission state
-      permissions: [],
-      isLoadingPermissions: false,
+      // For demo purposes, we'll grant all permissions
+      const allPermissions: AdminPermission[] = [
+        'admin:access',
+        'admin:view',
+        'admin:edit',
+        'content:view',
+        'content:edit',
+        'content:delete',
+        'users:view',
+        'users:edit',
+        'users:delete',
+        'builds:view',
+        'builds:approve',
+        'builds:reject',
+        'themes:view',
+        'themes:edit',
+        'themes:delete',
+        'super_admin:all'
+      ];
       
-      // UI Actions
-      toggleSidebar: () => set(state => ({ sidebarExpanded: !state.sidebarExpanded })),
-      setSidebar: (expanded: boolean) => set({ sidebarExpanded: expanded }),
-      setActiveSection: (section: string) => set({ activeSection: section }),
-      setAdminMode: (mode: AdminMode) => set({ adminMode: mode }),
-      setAdminTheme: (theme: AdminTheme) => set({ adminTheme: theme }),
-      
-      // Permission actions
-      loadPermissions: async () => {
-        set({ isLoadingPermissions: true });
-        
-        try {
-          // Get current user
-          const { data: { user } } = await supabase.auth.getUser();
-          
-          if (!user) {
-            set({ permissions: [], isLoadingPermissions: false });
-            return;
-          }
-          
-          // For development, add admin permission directly
-          // In production, you would query the database for actual permissions
-          const defaultPerms = [
-            'admin:access', 
-            'admin:view', 
-            'content:edit',
-            'users:view',
-            'users:edit',
-            'builds:approve',
-            'themes:edit'
-          ];
-          
-          set({ 
-            permissions: defaultPerms,
-            isLoadingPermissions: false
-          });
-        } catch (error) {
-          console.error("Error loading admin permissions:", error);
-          set({ isLoadingPermissions: false });
-        }
-      },
-      
-      hasPermission: (permission: AdminPermission) => {
-        // Super admin has all permissions
-        if (get().permissions.includes('super_admin:all')) return true;
-        
-        // Check for exact permission match
-        return get().permissions.includes(permission);
-      }
-    }),
-    {
-      name: 'admin-store',
-      partialize: (state) => ({
-        sidebarExpanded: state.sidebarExpanded,
-        activeSection: state.activeSection,
-        adminMode: state.adminMode,
-        adminTheme: state.adminTheme
-      })
+      set({ 
+        permissions: allPermissions,
+        isLoadingPermissions: false 
+      });
+    } catch (error) {
+      console.error('Failed to load admin permissions:', error);
+      set({ 
+        permissions: ['admin:access'], // Grant minimal permissions on error
+        isLoadingPermissions: false 
+      });
     }
-  )
-);
+  },
+  
+  hasPermission: (permission) => {
+    const { permissions } = get();
+    
+    // Super admin has all permissions
+    if (permissions.includes('super_admin:all')) {
+      return true;
+    }
+    
+    return permissions.includes(permission);
+  }
+}));
