@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAtom } from "jotai";
@@ -21,7 +20,6 @@ interface SidebarIconProps {
   active?: boolean;
   expanded?: boolean;
   onClick?: () => void;
-  // Separate drag start function from framer-motion events
   onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
 }
 
@@ -36,16 +34,22 @@ function SidebarIcon({
 }: SidebarIconProps) {
   const [hovered, setHovered] = useAtom(hoveredElementAtom);
   const isHovered = hovered === `sidebar-icon-${id}`;
+  const dragRef = useRef<HTMLDivElement>(null);
+  
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    if (onDragStart) {
+      onDragStart(e);
+    }
+  };
   
   return (
-    <motion.div
+    <div
+      ref={dragRef}
       draggable
-      onDragStart={onDragStart}
+      onDragStart={handleDragStart}
       onMouseEnter={() => setHovered(`sidebar-icon-${id}`)}
       onMouseLeave={() => setHovered(null)}
       onClick={onClick}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
       className={cn(
         "impulse-drag-item flex items-center gap-3 px-3 py-2 cursor-pointer rounded-lg",
         "transition-all duration-300 relative overflow-hidden",
@@ -53,25 +57,30 @@ function SidebarIcon({
                 "text-[var(--impulse-text-secondary)] hover:bg-[rgba(0,240,255,0.1)]"
       )}
     >
-      <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-[rgba(0,240,255,0.1)]">
+      <motion.div 
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="w-full h-full absolute inset-0"
+      />
+      
+      <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-[rgba(0,240,255,0.1)] relative z-10">
         {icon}
       </div>
       
       {expanded && (
-        <span className="truncate">{label}</span>
+        <span className="truncate relative z-10">{label}</span>
       )}
       
       {active && (
         <motion.div 
           layoutId="sidebar-active-indicator"
-          className="absolute inset-0 bg-[var(--impulse-primary)] opacity-10 rounded-lg" 
+          className="absolute inset-0 bg-[var(--impulse-primary)] opacity-10 rounded-lg z-0" 
         />
       )}
-    </motion.div>
+    </div>
   );
 }
 
-// Admin sidebar sections
 const sidebarSections = [
   { 
     id: "overview", 
@@ -148,14 +157,10 @@ export function AdminSidebar() {
           ))}
         </div>
         
-        {/* Section divider with subtle glow */}
         <div className="my-3 border-t border-[var(--impulse-border-normal)] relative">
           <div className="absolute inset-0 opacity-30 blur-sm bg-[var(--impulse-primary)]" />
         </div>
         
-        {/* Additional sections here */}
-        
-        {/* Collapsed section groups with toggles */}
         {sidebarExpanded && (
           <div className="mt-3 space-y-1">
             <div className="px-3 py-2">
@@ -173,7 +178,6 @@ export function AdminSidebar() {
               
               {!sectionCollapsed['tools'] && (
                 <div className="mt-2 ml-2 space-y-1">
-                  {/* Tool items would go here */}
                 </div>
               )}
             </div>
