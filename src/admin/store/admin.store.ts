@@ -13,8 +13,6 @@ interface AdminState {
   activeSection: string;
   adminMode: AdminMode;
   adminTheme: AdminTheme;
-  secondaryNavVisible: boolean;
-  quickActionBarVisible: boolean;
   
   // Permission State
   permissions: string[];
@@ -26,8 +24,6 @@ interface AdminState {
   setActiveSection: (section: string) => void;
   setAdminMode: (mode: AdminMode) => void;
   setAdminTheme: (theme: AdminTheme) => void;
-  toggleSecondaryNav: () => void;
-  toggleQuickActionBar: () => void;
   
   // Permission Actions
   loadPermissions: () => Promise<void>;
@@ -42,8 +38,6 @@ export const useAdminStore = create<AdminState>()(
       activeSection: 'overview',
       adminMode: 'standard',
       adminTheme: 'impulse',
-      secondaryNavVisible: true,
-      quickActionBarVisible: true,
       
       // Default permission state
       permissions: [],
@@ -55,8 +49,6 @@ export const useAdminStore = create<AdminState>()(
       setActiveSection: (section: string) => set({ activeSection: section }),
       setAdminMode: (mode: AdminMode) => set({ adminMode: mode }),
       setAdminTheme: (theme: AdminTheme) => set({ adminTheme: theme }),
-      toggleSecondaryNav: () => set(state => ({ secondaryNavVisible: !state.secondaryNavVisible })),
-      toggleQuickActionBar: () => set(state => ({ quickActionBarVisible: !state.quickActionBarVisible })),
       
       // Permission actions
       loadPermissions: async () => {
@@ -107,9 +99,7 @@ export const useAdminStore = create<AdminState>()(
         sidebarExpanded: state.sidebarExpanded,
         activeSection: state.activeSection,
         adminMode: state.adminMode,
-        adminTheme: state.adminTheme,
-        secondaryNavVisible: state.secondaryNavVisible,
-        quickActionBarVisible: state.quickActionBarVisible
+        adminTheme: state.adminTheme
       })
     }
   )
