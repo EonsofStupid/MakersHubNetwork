@@ -2,26 +2,36 @@
 import { create } from "zustand";
 import { persist } from 'zustand/middleware';
 import { supabase } from "@/integrations/supabase/client";
+import { AdminPermission } from "@/admin/types/admin.types";
+
+export type AdminMode = 'standard' | 'inspector' | 'editor';
+export type AdminTheme = 'impulse' | 'cyberpunk' | 'neon';
 
 interface AdminState {
-  // UI state
+  // UI State
   sidebarExpanded: boolean;
   activeSection: string;
-  adminMode: 'standard' | 'inspector' | 'editor';
+  adminMode: AdminMode;
+  adminTheme: AdminTheme;
+  secondaryNavVisible: boolean;
+  quickActionBarVisible: boolean;
   
-  // Permission state
+  // Permission State
   permissions: string[];
   isLoadingPermissions: boolean;
   
-  // UI Actions
+  // Admin UI Actions
   toggleSidebar: () => void;
   setSidebar: (expanded: boolean) => void;
   setActiveSection: (section: string) => void;
-  setAdminMode: (mode: 'standard' | 'inspector' | 'editor') => void;
+  setAdminMode: (mode: AdminMode) => void;
+  setAdminTheme: (theme: AdminTheme) => void;
+  toggleSecondaryNav: () => void;
+  toggleQuickActionBar: () => void;
   
-  // Permission actions
+  // Permission Actions
   loadPermissions: () => Promise<void>;
-  hasPermission: (permission: string) => boolean;
+  hasPermission: (permission: AdminPermission) => boolean;
 }
 
 export const useAdminStore = create<AdminState>()(
@@ -31,6 +41,9 @@ export const useAdminStore = create<AdminState>()(
       sidebarExpanded: true,
       activeSection: 'overview',
       adminMode: 'standard',
+      adminTheme: 'impulse',
+      secondaryNavVisible: true,
+      quickActionBarVisible: true,
       
       // Default permission state
       permissions: [],
@@ -40,7 +53,10 @@ export const useAdminStore = create<AdminState>()(
       toggleSidebar: () => set(state => ({ sidebarExpanded: !state.sidebarExpanded })),
       setSidebar: (expanded: boolean) => set({ sidebarExpanded: expanded }),
       setActiveSection: (section: string) => set({ activeSection: section }),
-      setAdminMode: (mode) => set({ adminMode: mode }),
+      setAdminMode: (mode: AdminMode) => set({ adminMode: mode }),
+      setAdminTheme: (theme: AdminTheme) => set({ adminTheme: theme }),
+      toggleSecondaryNav: () => set(state => ({ secondaryNavVisible: !state.secondaryNavVisible })),
+      toggleQuickActionBar: () => set(state => ({ quickActionBarVisible: !state.quickActionBarVisible })),
       
       // Permission actions
       loadPermissions: async () => {
@@ -57,7 +73,15 @@ export const useAdminStore = create<AdminState>()(
           
           // For development, add admin permission directly
           // In production, you would query the database for actual permissions
-          const defaultPerms = ['admin:access', 'admin:view', 'content:edit'];
+          const defaultPerms = [
+            'admin:access', 
+            'admin:view', 
+            'content:edit',
+            'users:view',
+            'users:edit',
+            'builds:approve',
+            'themes:edit'
+          ];
           
           set({ 
             permissions: defaultPerms,
@@ -69,7 +93,7 @@ export const useAdminStore = create<AdminState>()(
         }
       },
       
-      hasPermission: (permission: string) => {
+      hasPermission: (permission: AdminPermission) => {
         // Super admin has all permissions
         if (get().permissions.includes('super_admin:all')) return true;
         
@@ -82,7 +106,10 @@ export const useAdminStore = create<AdminState>()(
       partialize: (state) => ({
         sidebarExpanded: state.sidebarExpanded,
         activeSection: state.activeSection,
-        adminMode: state.adminMode
+        adminMode: state.adminMode,
+        adminTheme: state.adminTheme,
+        secondaryNavVisible: state.secondaryNavVisible,
+        quickActionBarVisible: state.quickActionBarVisible
       })
     }
   )
