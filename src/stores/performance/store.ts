@@ -101,7 +101,8 @@ export const usePerformanceStore = create<PerformanceStore>()((set, get) => {
             storeMetrics: {
               ...storeMetrics,
               ...updatedMetrics,
-              subscribers
+              subscribers,
+              lastTimestamp: performance.now()
             }
           }
         };

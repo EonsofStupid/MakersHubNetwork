@@ -11,6 +11,7 @@ interface SidebarIconProps {
   expanded?: boolean;
   onClick?: () => void;
   onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
 }
 
 export const SidebarIcon = ({
@@ -20,7 +21,8 @@ export const SidebarIcon = ({
   active = false,
   expanded = true,
   onClick,
-  onDragStart
+  onDragStart,
+  onDragEnd
 }: SidebarIconProps) => {
   const [hoveredIcon, setHoveredIcon] = useAtom(hoveredIconAtom);
   const [isPressed, setIsPressed] = useState(false);
@@ -34,6 +36,7 @@ export const SidebarIcon = ({
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
       onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       className={`
         flex items-center gap-3 px-2 py-2 cursor-pointer
         transition-all duration-300 rounded-md 
