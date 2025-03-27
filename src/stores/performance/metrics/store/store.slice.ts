@@ -8,7 +8,7 @@ export const createStoreSlice: StateCreator<
   [],
   [],
   StoreSlice
-> = (set, get) => ({
+> = (set, get, api) => ({
   storeMetrics: {
     updates: 0,
     subscribers: new Map(),
