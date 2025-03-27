@@ -16,6 +16,7 @@ export const createMemorySlice: StateCreator<
     averageTime: 0,
     lastTimestamp: 0
   },
+  
   resetMemoryMetrics: () => set((state) => ({
     metrics: {
       ...state.metrics,

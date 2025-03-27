@@ -47,6 +47,7 @@ export const AdminSidebar = () => {
     navigate(`/admin/${id}`);
   };
 
+  // Use a ref-based approach for drag events instead of directly using Framer motion's drag props
   const handleDragStart = (id: string, e: React.DragEvent) => {
     setDragSource(id);
     setShowDragOverlay(true);
@@ -82,6 +83,7 @@ export const AdminSidebar = () => {
             expanded={sidebarExpanded}
             onClick={() => handleIconClick(icon.id)}
             onDragStart={(e) => handleDragStart(icon.id, e)}
+            onDragEnd={handleDragEnd}
           />
         ))}
       </div>
