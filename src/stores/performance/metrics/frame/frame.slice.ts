@@ -1,6 +1,7 @@
+
 import { StateCreator } from 'zustand';
 import { FrameSlice } from './frame.types';
-import { updateFrameMetrics } from './frame.utils';
+import { updateFrameMetrics } from '../../utils/frame';
 import { PerformanceStore } from '../../types';
 
 export const createFrameSlice: StateCreator<

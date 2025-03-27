@@ -16,13 +16,16 @@ export const createMemorySlice: StateCreator<
     averageTime: 0,
     lastTimestamp: 0
   },
-  resetMemoryMetrics: () => set(() => ({
-    memoryMetrics: {
-      heapSize: 0,
-      instances: 0,
-      lastGC: undefined,
-      averageTime: 0,
-      lastTimestamp: 0
+  resetMemoryMetrics: () => set((state) => ({
+    metrics: {
+      ...state.metrics,
+      memoryMetrics: {
+        heapSize: 0,
+        instances: 0,
+        lastGC: undefined,
+        averageTime: 0,
+        lastTimestamp: 0
+      }
     }
   }))
 });

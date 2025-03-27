@@ -6,7 +6,6 @@ import { createMonitoringSlice } from './monitoring/monitoring.slice';
 import { createStoreSlice } from './metrics/store/store.slice';
 import { createMemorySlice } from './metrics/memory/memory.slice';
 import { getMemoryInfo } from './utils/memory';
-import { updateFrameMetrics } from './utils/frame';
 import { measureStoreUpdate, updateStoreMetrics } from './utils/store';
 
 // Create a full implementation of the performance store
