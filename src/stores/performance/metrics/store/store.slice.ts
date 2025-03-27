@@ -1,3 +1,4 @@
+
 import { StateCreator } from 'zustand';
 import { StoreSlice } from './store.types';
 import { PerformanceStore } from '../../types';
@@ -7,7 +8,7 @@ export const createStoreSlice: StateCreator<
   [],
   [],
   StoreSlice
-> = (set) => ({
+> = (set, get) => ({
   storeMetrics: {
     updates: 0,
     subscribers: new Map(),

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -20,6 +21,7 @@ interface SidebarIconProps {
   active?: boolean;
   expanded?: boolean;
   onClick?: () => void;
+  // Separate drag start function from framer-motion events
   onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
 }
 
