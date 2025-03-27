@@ -17,6 +17,7 @@ export const createStoreSlice: StateCreator<
     lastUpdateTimestamp: 0,
     averageTime: 0
   },
+  
   resetStoreMetrics: () => set((state) => ({
     metrics: {
       ...state.metrics,

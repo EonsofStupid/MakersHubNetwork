@@ -9,7 +9,7 @@ import { getMemoryInfo } from './utils/memory';
 import { measureStoreUpdate, updateStoreMetrics } from './utils/store';
 
 // Create a full implementation of the performance store
-export const usePerformanceStore = create<PerformanceStore>((set, get) => {
+export const usePerformanceStore = create<PerformanceStore>()((set, get) => {
   // Initial base state
   const baseState: PerformanceState = {
     metrics: {
