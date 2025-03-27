@@ -8,6 +8,7 @@ import { ImpulseTheme } from "../types/impulse.types";
 // Theme context
 interface AdminThemeContextValue {
   theme: ImpulseTheme;
+  currentTheme: any; // Add this property
   setTheme: (newTheme: Partial<ImpulseTheme>) => void;
   toggleDarkMode: () => void;
   isDarkMode: boolean;
@@ -25,7 +26,7 @@ export function useAdminTheme() {
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
   const { adminTheme } = useAdminStore();
-  const { adminComponents, loadAdminComponents } = useThemeStore();
+  const { adminComponents, loadAdminComponents, currentTheme } = useThemeStore();
   const [theme, setThemeState] = useState<ImpulseTheme>(defaultImpulseTokens);
   const [isDarkMode, setIsDarkMode] = useState(true);
   
@@ -52,7 +53,13 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   };
   
   return (
-    <AdminThemeContext.Provider value={{ theme, setTheme, toggleDarkMode, isDarkMode }}>
+    <AdminThemeContext.Provider value={{ 
+      theme, 
+      setTheme, 
+      toggleDarkMode, 
+      isDarkMode,
+      currentTheme // Add this property from the theme store
+    }}>
       {children}
     </AdminThemeContext.Provider>
   );

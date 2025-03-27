@@ -8,11 +8,12 @@ import { AdminHeader } from "../AdminHeader";
 import { AdminSidebar } from "../AdminSidebar";
 import { AdminInspector } from "../inspector/AdminInspector";
 import { AdminThemeProvider } from "@/admin/theme/AdminThemeProvider";
+import { AdminPermission } from "@/admin/types/admin.types";
 
 interface ImpulseAdminLayoutProps {
   children: React.ReactNode;
   title?: string;
-  requiresPermission?: string;
+  requiresPermission?: AdminPermission;
 }
 
 export function ImpulseAdminLayout({ 
