@@ -16,6 +16,11 @@ const initialState: UIState = {
     reducedMotion: false,
     highContrast: false,
   },
+  features: {
+    showcasedBuilds: 4,
+    animationsEnabled: true,
+    extendedInfo: false,
+  }
 };
 
 export const useUIStore = create<UIStore>()(
@@ -50,12 +55,24 @@ export const useUIStore = create<UIStore>()(
         set((state) => ({
           preferences: { ...state.preferences, [key]: value }
         })),
+        
+      // Feature actions
+      setFeature: (key, value) =>
+        set((state) => ({
+          features: { ...state.features, [key]: value }
+        })),
+        
+      setShowcasedBuildsCount: (count) =>
+        set((state) => ({
+          features: { ...state.features, showcasedBuilds: count }
+        })),
     }),
     {
       name: 'ui-store',
       partialize: (state) => ({
         theme: state.theme,
         preferences: state.preferences,
+        features: state.features,
       }),
     }
   )

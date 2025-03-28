@@ -12,6 +12,11 @@ export interface UIState {
     reducedMotion: boolean;
     highContrast: boolean;
   };
+  features: {
+    showcasedBuilds: number;
+    animationsEnabled: boolean;
+    extendedInfo: boolean;
+  };
 }
 
 export type UIActions = {
@@ -23,6 +28,11 @@ export type UIActions = {
     key: K,
     value: UIState['preferences'][K]
   ) => void;
+  setFeature: <K extends keyof UIState['features']>(
+    key: K,
+    value: UIState['features'][K]
+  ) => void;
+  setShowcasedBuildsCount: (count: number) => void;
 };
 
 export type UIStore = UIState & UIActions;

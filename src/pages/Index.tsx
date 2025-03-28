@@ -1,4 +1,3 @@
-
 import { MainNav } from "@/components/MainNav";
 import { Footer } from "@/components/Footer";
 import { useEffect, useState, useCallback, Suspense, memo } from "react";
@@ -7,6 +6,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SimpleCyberText } from "@/components/theme/SimpleCyberText";
 import { useThemeEffects } from "@/hooks/useThemeEffects";
 import { EffectRenderer } from "@/components/theme/effects/EffectRenderer";
+import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { BuildShowcase } from "@/components/landing/BuildShowcase";
 
 // Memoize components that don't need to re-render often
 const MemoizedThemeDataStream = memo(ThemeDataStream);
@@ -130,7 +131,7 @@ const IndexPage = () => {
   const communityEffect = getEffectForElement('community-cta');
 
   return (
-    <div className="min-h-screen relative overflow-hidden pb-[400px]">
+    <div className="min-h-screen relative overflow-hidden">
       <MainNav />
       
       <div className="container px-4 py-24 mx-auto relative">
@@ -151,6 +152,12 @@ const IndexPage = () => {
           <ActionButtons onHover={handleHover} onLeave={handleLeave} />
         </div>
       </div>
+
+      {/* New Feature CTAs Section */}
+      <FeaturesSection />
+      
+      {/* New Build Showcase Section */}
+      <BuildShowcase />
 
       <Footer />
     </div>
