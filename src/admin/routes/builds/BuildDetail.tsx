@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, XCircle, ArrowLeft, User, Calendar, Package, Tool } from "lucide-react";
+import { CheckCircle, XCircle, ArrowLeft, User, Calendar, Package, Wrench } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface BuildDetailProps {
@@ -28,17 +28,29 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
     queryFn: async () => {
       if (!buildId) return null;
       
-      const { data, error } = await supabase
-        .from("printer_builds")
-        .select(`
-          *,
-          profiles(display_name, avatar_url)
-        `)
-        .eq("id", buildId)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("printer_builds")
+          .select(`
+            *,
+            profiles(display_name, avatar_url)
+          `)
+          .eq("id", buildId)
+          .single();
 
-      if (error) {
-        console.error("Error fetching build:", error);
+        if (error) {
+          console.error("Error fetching build:", error);
+          toast({
+            title: "Error fetching build details",
+            description: error.message,
+            variant: "destructive",
+          });
+          return null;
+        }
+
+        return data;
+      } catch (error: any) {
+        console.error("Exception in build query:", error);
         toast({
           title: "Error fetching build details",
           description: error.message,
@@ -46,8 +58,6 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
         });
         return null;
       }
-
-      return data;
     },
     enabled: !!buildId,
   });
@@ -58,28 +68,33 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
     queryFn: async () => {
       if (!buildId) return { parts: [], mods: [] };
       
-      const { data: parts, error: partsError } = await supabase
-        .from("build_parts")
-        .select("*, printer_parts(*)")
-        .eq("build_id", buildId);
+      try {
+        const { data: parts, error: partsError } = await supabase
+          .from("build_parts")
+          .select("*, printer_parts(*)")
+          .eq("build_id", buildId);
 
-      const { data: mods, error: modsError } = await supabase
-        .from("build_mods")
-        .select("*")
-        .eq("build_id", buildId);
+        const { data: mods, error: modsError } = await supabase
+          .from("build_mods")
+          .select("*")
+          .eq("build_id", buildId);
 
-      if (partsError) {
-        console.error("Error fetching build parts:", partsError);
+        if (partsError) {
+          console.error("Error fetching build parts:", partsError);
+        }
+
+        if (modsError) {
+          console.error("Error fetching build mods:", modsError);
+        }
+
+        return { 
+          parts: parts || [], 
+          mods: mods || [] 
+        };
+      } catch (error) {
+        console.error("Exception in components query:", error);
+        return { parts: [], mods: [] };
       }
-
-      if (modsError) {
-        console.error("Error fetching build mods:", modsError);
-      }
-
-      return { 
-        parts: parts || [], 
-        mods: mods || [] 
-      };
     },
     enabled: !!buildId,
   });
@@ -243,7 +258,7 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Tool className="mr-2 h-5 w-5" />
+                <Wrench className="mr-2 h-5 w-5" />
                 Modifications Applied
               </CardTitle>
             </CardHeader>
