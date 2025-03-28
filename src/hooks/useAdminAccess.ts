@@ -1,31 +1,17 @@
 
-import { useAuthStore } from "@/stores/auth/store"
-import { UserRole } from "@/types/auth.types"
+import { useAuthStore } from "@/stores/auth/store";
 
-export function useAdminAccess() {
-  const user = useAuthStore((state) => state.user)
-  const roles = useAuthStore((state) => state.roles)
-  const isAdmin = useAuthStore((state) => state.isAdmin)
+/**
+ * Hook to check if the current user has admin access
+ * Uses the roles array from auth store to determine admin access
+ */
+export const useAdminAccess = () => {
+  const { roles, isAdmin } = useAuthStore();
   
-  // Derived state
-  const isAuthenticated = !!user
-  const hasAdminRole = roles.includes('admin' as UserRole)
-  const hasSuperAdminRole = roles.includes('super_admin' as UserRole)
-  
-  // Admin access is granted if user has either admin or super_admin role
-  const hasAdminAccess = isAuthenticated && (hasAdminRole || hasSuperAdminRole)
-  
-  // Extended permissions check (can be expanded as needed)
-  const canManageUsers = isAuthenticated && hasSuperAdminRole
+  // Check if user has admin role using the auth store's roles array
+  const hasAdminAccess = isAdmin() || roles.includes('admin') || roles.includes('super_admin');
   
   return {
-    user,
-    roles,
-    isAdmin: isAdmin(),
-    hasAdminRole,
-    hasSuperAdminRole,
     hasAdminAccess,
-    canManageUsers,
-    isAuthenticated
-  }
-}
+  };
+};

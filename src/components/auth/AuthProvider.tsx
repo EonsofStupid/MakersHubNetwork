@@ -1,18 +1,13 @@
-
 import { useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useAuthStore } from "@/stores/auth/store"
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const initialize = useAuthStore((state) => state.initialize)
-  const initialized = useAuthStore((state) => state.initialized)
-  const status = useAuthStore((state) => state.status)
 
   useEffect(() => {
     // Initial load of auth state (including user roles)
-    if (!initialized) {
-      initialize()
-    }
+    initialize()
 
     // Listen for auth state changes
     const {
@@ -22,7 +17,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     })
 
     return () => subscription.unsubscribe()
-  }, [initialize, initialized])
+  }, [initialize])
 
   return <>{children}</>
 }

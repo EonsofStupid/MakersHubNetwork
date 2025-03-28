@@ -1,12 +1,12 @@
 
 import { StateCreator } from "zustand"
-import { AuthStore, UiSlice } from "../types/auth.types"
+import { AuthState, AuthActions } from "../types/auth.types"
 
 export const createUiSlice: StateCreator<
-  AuthStore,
+  AuthState & AuthActions,
   [],
   [],
-  UiSlice
+  Pick<AuthState, "error"> & Pick<AuthActions, "setError">
 > = (set) => ({
   error: null,
   setError: (error) => set({ error }),
