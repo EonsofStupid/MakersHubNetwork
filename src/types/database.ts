@@ -1,3 +1,4 @@
+
 export interface Sensor {
   id: string;
   type: string;
@@ -35,6 +36,39 @@ export interface Component {
   image_url: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface PrinterBuild {
+  id: string;
+  title: string;
+  description: string;
+  submitted_by: string;
+  status: 'pending' | 'approved' | 'rejected';
+  images: string[];
+  parts_count: number;
+  mods_count: number;
+  complexity_score: number | null;
+  created_at: string;
+  updated_at: string;
+  processed_at: string | null;
+}
+
+export interface BuildPart {
+  id: string;
+  build_id: string;
+  part_id: string;
+  quantity: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface BuildMod {
+  id: string;
+  build_id: string;
+  name: string;
+  description: string | null;
+  complexity: number;
+  created_at: string;
 }
 
 export type APIKeyType = 'openai' | 'stability' | 'replicate' | 'custom';
@@ -76,6 +110,21 @@ export type Database = {
         Insert: Omit<Component, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Component, 'id'>>;
       };
+      printer_builds: {
+        Row: PrinterBuild;
+        Insert: Omit<PrinterBuild, 'id' | 'created_at' | 'updated_at' | 'parts_count' | 'mods_count'>;
+        Update: Partial<Omit<PrinterBuild, 'id'>>;
+      };
+      build_parts: {
+        Row: BuildPart;
+        Insert: Omit<BuildPart, 'id' | 'created_at'>;
+        Update: Partial<Omit<BuildPart, 'id'>>;
+      };
+      build_mods: {
+        Row: BuildMod;
+        Insert: Omit<BuildMod, 'id' | 'created_at'>;
+        Update: Partial<Omit<BuildMod, 'id'>>;
+      };
       api_keys: {
         Row: APIKey;
         Insert: Omit<APIKey, 'id' | 'created_at' | 'updated_at' | 'access_count' | 'last_accessed_from' | 'last_used_at'>;
@@ -96,6 +145,9 @@ export type Database = {
 export type DatabaseTables = {
   sensors: Sensor;
   components: Component;
+  printer_builds: PrinterBuild;
+  build_parts: BuildPart;
+  build_mods: BuildMod;
   api_keys: APIKey;
   api_key_audit_logs: APIKeyAuditLog;
 }

@@ -11,20 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MoreHorizontal, CheckCircle, XCircle, EyeIcon, Clock } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { ColumnDef } from "@tanstack/react-table";
+import type { PrinterBuild } from "@/types/database";
 
 type BuildStatus = "pending" | "approved" | "rejected";
 
-interface PrinterBuild {
-  id: string;
-  title: string;
-  description: string;
-  submitted_by: string;
+interface BuildWithUserData extends PrinterBuild {
   user_name: string;
-  submitted_at: string;
-  status: BuildStatus;
-  images: string[];
-  parts_count: number;
-  mods_count: number;
 }
 
 export default function BuildsApproval() {
@@ -41,12 +33,15 @@ export default function BuildsApproval() {
           id, 
           title, 
           description, 
-          user_id:submitted_by, 
+          submitted_by, 
           status, 
-          created_at:submitted_at, 
+          created_at, 
+          updated_at,
+          processed_at,
           images,
           parts_count,
           mods_count,
+          complexity_score,
           profiles(display_name)
         `)
         .eq("status", activeTab)
@@ -65,7 +60,7 @@ export default function BuildsApproval() {
       return data.map(build => ({
         ...build,
         user_name: build.profiles?.display_name || "Unknown user",
-      })) as PrinterBuild[];
+      })) as BuildWithUserData[];
     },
   });
 
@@ -97,7 +92,7 @@ export default function BuildsApproval() {
   };
 
   // Define table columns
-  const columns: ColumnDef<PrinterBuild>[] = [
+  const columns: ColumnDef<BuildWithUserData>[] = [
     {
       id: "title",
       accessorKey: "title",
@@ -118,13 +113,13 @@ export default function BuildsApproval() {
     },
     {
       id: "submitted_at",
-      accessorKey: "submitted_at",
+      accessorKey: "created_at",
       header: "Date",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-muted-foreground" />
           <span>
-            {new Date(row.original.submitted_at).toLocaleDateString()}
+            {new Date(row.original.created_at).toLocaleDateString()}
           </span>
         </div>
       ),
