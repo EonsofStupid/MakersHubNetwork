@@ -1,13 +1,13 @@
 
 import { StateCreator } from "zustand";
-import { AuthActions, AuthStore, UserRole } from "../types/auth.types";
+import { ActionsSlice, AuthStore, UserRole } from "../types/auth.types";
 import { supabase } from "@/integrations/supabase/client";
 
 export const createActionsSlice: StateCreator<
   AuthStore,
   [],
   [],
-  Pick<AuthActions, "setLoading" | "setInitialized" | "hasRole" | "initialize" | "logout">
+  ActionsSlice
 > = (set, get) => ({
   // Set loading state
   setLoading: (isLoading) => set({ isLoading }),
@@ -19,6 +19,12 @@ export const createActionsSlice: StateCreator<
   hasRole: (role: UserRole) => {
     const { roles } = get();
     return roles.includes(role);
+  },
+  
+  // Check if user is an admin
+  isAdmin: () => {
+    const { roles } = get();
+    return roles.includes('admin') || roles.includes('super_admin');
   },
   
   // Initialize the auth state by fetching the current session
