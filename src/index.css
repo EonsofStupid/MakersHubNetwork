@@ -2,6 +2,7 @@
 @import './components/MainNav/styles/cyber-effects.css';
 @import './components/landing/styles/feature-cta.css';
 @import './components/landing/styles/build-showcase.css';
+@import './theme/site-theme.css';
 
 @tailwind base;
 @tailwind components;
@@ -9,36 +10,27 @@
 
 @layer base {
   :root {
-    --background: 228 47% 8%;
-    --foreground: 210 40% 98%;
-
-    --card: 228 47% 11%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 228 47% 11%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 186 100% 50%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 334 100% 59%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 228 47% 15%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 228 47% 15%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 228 47% 15%;
-    --input: 228 47% 15%;
-    --ring: 228 47% 20%;
-
-    --radius: 0.5rem;
-    --effect-color: #00F0FF;
+    --background: var(--site-background);
+    --foreground: var(--site-foreground);
+    --card: var(--site-card);
+    --card-foreground: var(--site-card-foreground);
+    --popover: var(--site-card);
+    --popover-foreground: var(--site-card-foreground);
+    --primary: var(--site-primary);
+    --primary-foreground: var(--site-primary-foreground);
+    --secondary: var(--site-secondary);
+    --secondary-foreground: var(--site-secondary-foreground);
+    --muted: var(--site-muted);
+    --muted-foreground: var(--site-muted-foreground);
+    --accent: var(--site-accent);
+    --accent-foreground: var(--site-accent-foreground);
+    --destructive: var(--site-destructive);
+    --destructive-foreground: var(--site-destructive-foreground);
+    --border: var(--site-border);
+    --input: var(--site-input);
+    --ring: var(--site-ring);
+    --radius: var(--site-radius-md);
+    --effect-color: var(--site-effect-color);
   }
 
   * {

@@ -20,6 +20,12 @@ const initialState: UIState = {
     showcasedBuilds: 4,
     animationsEnabled: true,
     extendedInfo: false,
+  },
+  admin: {
+    sidebarExpanded: true,
+    activeSection: 'overview',
+    overlayVisible: false,
+    inspectorEnabled: false,
   }
 };
 
@@ -66,6 +72,32 @@ export const useUIStore = create<UIStore>()(
         set((state) => ({
           features: { ...state.features, showcasedBuilds: count }
         })),
+        
+      // Admin actions
+      toggleAdminSidebar: () =>
+        set((state) => ({
+          admin: { ...state.admin, sidebarExpanded: !state.admin.sidebarExpanded }
+        })),
+        
+      setAdminSidebar: (expanded) =>
+        set((state) => ({
+          admin: { ...state.admin, sidebarExpanded: expanded }
+        })),
+        
+      setAdminActiveSection: (section) =>
+        set((state) => ({
+          admin: { ...state.admin, activeSection: section }
+        })),
+        
+      toggleAdminOverlay: () =>
+        set((state) => ({
+          admin: { ...state.admin, overlayVisible: !state.admin.overlayVisible }
+        })),
+        
+      setAdminInspectorEnabled: (enabled) =>
+        set((state) => ({
+          admin: { ...state.admin, inspectorEnabled: enabled }
+        })),
     }),
     {
       name: 'ui-store',
@@ -73,6 +105,7 @@ export const useUIStore = create<UIStore>()(
         theme: state.theme,
         preferences: state.preferences,
         features: state.features,
+        admin: state.admin,
       }),
     }
   )

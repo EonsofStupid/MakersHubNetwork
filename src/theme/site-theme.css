@@ -1,0 +1,68 @@
+
+/* Site Theme CSS Variables */
+:root {
+  /* Base site colors - these will be overridden by ThemeProvider */
+  --site-background: 228 47% 8%;
+  --site-foreground: 210 40% 98%;
+  --site-card: 228 47% 11%;
+  --site-card-foreground: 210 40% 98%;
+  --site-primary: 186 100% 50%;
+  --site-primary-foreground: 210 40% 98%;
+  --site-secondary: 334 100% 59%;
+  --site-secondary-foreground: 210 40% 98%;
+  --site-muted: 228 47% 15%;
+  --site-muted-foreground: 215 20.2% 65.1%;
+  --site-accent: 228 47% 15%;
+  --site-accent-foreground: 210 40% 98%;
+  --site-destructive: 0 84.2% 60.2%;
+  --site-destructive-foreground: 210 40% 98%;
+  --site-border: 228 47% 15%;
+  --site-input: 228 47% 15%;
+  --site-ring: 228 47% 20%;
+
+  /* Site-specific effect colors */
+  --site-effect-color: #00F0FF;
+  --site-effect-secondary: #FF2D6E;
+  --site-effect-tertiary: #8B5CF6;
+  
+  /* Site transition durations */
+  --site-transition-fast: 150ms;
+  --site-transition-normal: 300ms;
+  --site-transition-slow: 500ms;
+  
+  /* Site animation durations */
+  --site-animation-fast: 1s;
+  --site-animation-normal: 2s;
+  --site-animation-slow: 3s;
+  
+  /* Site border radius */
+  --site-radius-sm: 0.25rem;
+  --site-radius-md: 0.5rem;
+  --site-radius-lg: 0.75rem;
+  --site-radius-full: 9999px;
+}
+
+/* Utility classes that use site variables */
+.site-card {
+  @apply rounded-md border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] text-[hsl(var(--site-card-foreground))] shadow;
+}
+
+.site-glow {
+  box-shadow: 0 0 15px hsl(var(--site-primary) / 0.3);
+}
+
+.site-glow-hover:hover {
+  box-shadow: 0 0 30px hsl(var(--site-primary) / 0.5);
+}
+
+.site-text-gradient {
+  @apply bg-gradient-to-r from-[hsl(var(--site-primary))] to-[hsl(var(--site-secondary))] bg-clip-text text-transparent;
+}
+
+.site-border-glow {
+  @apply border border-[hsl(var(--site-primary)/0.3)] transition-all duration-[var(--site-transition-normal)];
+}
+
+.site-border-glow:hover {
+  @apply border-[hsl(var(--site-primary)/0.6)] shadow-[0_0_15px_hsl(var(--site-primary)/0.3)];
+}
