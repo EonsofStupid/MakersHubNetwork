@@ -3,6 +3,8 @@
   .feature-cta {
     position: relative;
     overflow: hidden;
+    @apply rounded-lg p-6 border border-border/20 transition-all duration-300;
+    @apply backdrop-blur-md bg-card/80 hover:shadow-md hover:-translate-y-1;
   }
   
   .feature-cta::before {
@@ -59,5 +61,30 @@
   
   .feature-cta:hover .feature-cta-hover-effect {
     opacity: 0.2;
+  }
+  
+  .feature-cta-title {
+    @apply text-xl font-bold mb-2 text-foreground;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .feature-cta-description {
+    @apply text-muted-foreground mb-4;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .feature-cta-button {
+    @apply inline-flex items-center gap-1 text-sm font-medium;
+    @apply transition-colors duration-200;
+    position: relative;
+    z-index: 2;
+    color: var(--feature-color, var(--primary));
+  }
+  
+  .feature-cta-button:hover {
+    color: var(--feature-color, var(--primary));
+    filter: brightness(1.2);
   }
 }
