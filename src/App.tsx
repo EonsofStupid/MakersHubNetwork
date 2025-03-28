@@ -1,4 +1,3 @@
-
 import { SystemToaster } from "./components/ui/toaster"
 import { SonnerToaster } from "./components/ui/sonner"
 import { TooltipProvider } from "./components/ui/tooltip"
@@ -16,6 +15,10 @@ import { useNavigate } from "react-router-dom"
 const IndexPage = lazy(() => import("./pages/Index"))
 const Admin = lazy(() => import("./pages/Admin"))
 const LoginPage = lazy(() => import("./pages/Login"))
+
+// Admin routes
+const BuildsPage = lazy(() => import("./admin/routes/builds/BuildsPage"))
+const BuildDetailPage = lazy(() => import("./admin/routes/builds/BuildDetailPage"))
 
 // Create a loading fallback component
 const PageLoader = () => (
@@ -97,13 +100,32 @@ const App = () => {
                   } />
                   
                   {/* Admin Routes */}
-                  <Route path="/admin/*" element={
+                  <Route path="/admin" element={
                     <AuthGuard adminOnly>
                       <Suspense fallback={<PageLoader />}>
                         <Admin />
                       </Suspense>
                     </AuthGuard>
                   } />
+                  
+                  {/* Admin Build Routes */}
+                  <Route path="/admin/builds" element={
+                    <AuthGuard adminOnly>
+                      <Suspense fallback={<PageLoader />}>
+                        <BuildsPage />
+                      </Suspense>
+                    </AuthGuard>
+                  } />
+                  
+                  <Route path="/admin/builds/:buildId" element={
+                    <AuthGuard adminOnly>
+                      <Suspense fallback={<PageLoader />}>
+                        <BuildDetailPage />
+                      </Suspense>
+                    </AuthGuard>
+                  } />
+                  
+                  {/* Other admin routes can be added here */}
                   
                   <Route path="/" element={
                     <Suspense fallback={<PageLoader />}>
