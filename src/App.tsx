@@ -1,4 +1,3 @@
-
 import React, { Suspense, lazy } from 'react';
 import {
   BrowserRouter,
@@ -37,7 +36,8 @@ const AdminBuilds = lazy(() => import('@/admin/routes/builds/index'));
 const AdminBuildDetail = lazy(() => import('@/admin/routes/builds/build/[id]'));
 
 function AuthRequired({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, status } = useAuthStore();
+  const { status } = useAuthStore();
+  const isLoggedIn = status === "authenticated";
   const location = useLocation();
   const { toast } = useToast();
 
@@ -247,7 +247,6 @@ function App() {
             </Shell>
           }
         />
-        {/* Admin Routes - Requires Admin Access */}
         <Route
           path="/admin"
           element={

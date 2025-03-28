@@ -42,7 +42,7 @@ export default function BuildsApproval() {
           parts_count,
           mods_count,
           complexity_score,
-          profiles(display_name)
+          profiles:submitted_by(display_name)
         `)
         .eq("status", activeTab)
         .order("created_at", { ascending: false });
