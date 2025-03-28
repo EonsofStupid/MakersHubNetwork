@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -6,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Printer3d, Users, Wrench, ChevronRight } from "lucide-react";
+import { Printer, Users, Wrench, ChevronRight } from "lucide-react";
 
 export default function Home() {
   const { data: featuredBuilds } = useQuery({
@@ -53,7 +52,7 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
         <Card>
           <CardHeader>
-            <Printer3d className="h-10 w-10 text-primary mb-2" />
+            <Printer className="h-10 w-10 text-primary mb-2" />
             <CardTitle>Custom Builds</CardTitle>
             <CardDescription>
               Discover unique 3D printer builds from the community

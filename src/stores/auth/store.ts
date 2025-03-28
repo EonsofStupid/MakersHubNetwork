@@ -10,6 +10,8 @@ export const useAuthStore = create<AuthStore>()(
     (...a) => ({
       ...createAuthSlice(...a),
       ...createUiSlice(...a),
+      isLoading: false,
+      initialized: false,
     }),
     {
       name: "auth-storage",

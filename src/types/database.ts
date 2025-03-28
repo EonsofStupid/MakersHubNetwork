@@ -1,4 +1,3 @@
-
 export interface Sensor {
   id: string;
   type: string;
@@ -52,8 +51,8 @@ export interface PrinterBuild {
   updated_at: string;
   processed_at: string | null;
   // Fields from the joined profile if using build_profiles view
-  display_name?: string;
-  avatar_url?: string;
+  display_name?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface Profile {
