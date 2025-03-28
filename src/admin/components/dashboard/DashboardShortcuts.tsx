@@ -15,7 +15,7 @@ export function DashboardShortcuts() {
   const shortcuts: AdminShortcut[] = [
     {
       id: "users",
-      label: "User Management",
+      name: "User Management",
       icon: "👥",
       path: "/admin/users",
       permission: "admin:users:read" as AdminPermission,
@@ -23,7 +23,7 @@ export function DashboardShortcuts() {
     },
     {
       id: "content",
-      label: "Content",
+      name: "Content",
       icon: "📝",
       path: "/admin/content",
       permission: "admin:content:read" as AdminPermission,
@@ -31,7 +31,7 @@ export function DashboardShortcuts() {
     },
     {
       id: "data-maestro",
-      label: "Data Maestro",
+      name: "Data Maestro",
       icon: "🔍",
       path: "/admin/data-maestro",
       permission: "admin:access" as AdminPermission,
@@ -39,7 +39,7 @@ export function DashboardShortcuts() {
     },
     {
       id: "settings",
-      label: "Settings",
+      name: "Settings",
       icon: "⚙️",
       path: "/admin/settings",
       permission: "admin:settings:read" as AdminPermission,
@@ -47,7 +47,7 @@ export function DashboardShortcuts() {
     },
     {
       id: "import",
-      label: "Import/Export",
+      name: "Import/Export",
       icon: "📤",
       path: "/admin/import",
       permission: "admin:data:import" as AdminPermission,
@@ -55,7 +55,7 @@ export function DashboardShortcuts() {
     },
     {
       id: "analytics",
-      label: "Analytics",
+      name: "Analytics",
       icon: "📊",
       path: "/admin/analytics",
       permission: "admin:access" as AdminPermission,
@@ -85,7 +85,7 @@ export function DashboardShortcuts() {
           >
             <div className="text-center space-y-2">
               <div className="text-2xl mx-auto">{shortcut.icon}</div>
-              <h3 className="text-sm font-medium">{shortcut.label}</h3>
+              <h3 className="text-sm font-medium">{shortcut.name}</h3>
             </div>
           </Card>
         );

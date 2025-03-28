@@ -4,11 +4,12 @@ import {
   LayoutDashboard, 
   Users, 
   FileText, 
-  MessageSquare, 
+  Package,
   Database, 
-  Upload, 
+  PaintBucket,
   Settings
 } from "lucide-react";
+import { AdminPermission } from "@/admin/types/admin.types";
 
 export const adminNavigationItems = [
   { 
@@ -16,48 +17,48 @@ export const adminNavigationItems = [
     label: "Overview", 
     path: "/admin/overview", 
     icon: <LayoutDashboard className="h-4 w-4 mr-2" />,
-    permission: "admin:access" 
+    permission: "admin:access" as AdminPermission
   },
   { 
     id: "content", 
     label: "Content", 
     path: "/admin/content", 
     icon: <FileText className="h-4 w-4 mr-2" />,
-    permission: "admin:content:read" 
+    permission: "content:view" as AdminPermission 
   },
   { 
     id: "users", 
     label: "Users", 
     path: "/admin/users", 
     icon: <Users className="h-4 w-4 mr-2" />,
-    permission: "admin:users:read" 
+    permission: "users:view" as AdminPermission
   },
   { 
-    id: "chat", 
-    label: "Chat", 
-    path: "/admin/chat", 
-    icon: <MessageSquare className="h-4 w-4 mr-2" />,
-    permission: "admin:access" 
+    id: "builds", 
+    label: "Builds", 
+    path: "/admin/builds", 
+    icon: <Package className="h-4 w-4 mr-2" />,
+    permission: "builds:view" as AdminPermission
   },
   { 
     id: "data-maestro", 
     label: "Data Maestro", 
     path: "/admin/data-maestro", 
     icon: <Database className="h-4 w-4 mr-2" />,
-    permission: "admin:access" 
+    permission: "admin:access" as AdminPermission
   },
   { 
-    id: "import", 
-    label: "Import", 
-    path: "/admin/import", 
-    icon: <Upload className="h-4 w-4 mr-2" />,
-    permission: "admin:data:import" 
+    id: "themes", 
+    label: "Themes", 
+    path: "/admin/themes", 
+    icon: <PaintBucket className="h-4 w-4 mr-2" />,
+    permission: "themes:view" as AdminPermission
   },
   { 
     id: "settings", 
     label: "Settings", 
     path: "/admin/settings", 
     icon: <Settings className="h-4 w-4 mr-2" />,
-    permission: "admin:settings:read" 
+    permission: "admin:access" as AdminPermission
   }
 ];

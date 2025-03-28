@@ -1,5 +1,5 @@
 
-import { AdminSection } from '@/admin/types/admin.types';
+import { AdminSection, AdminPermission } from '@/admin/types/admin.types';
 
 /**
  * Admin navigation configuration

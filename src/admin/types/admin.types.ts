@@ -50,6 +50,7 @@ export interface AdminShortcut {
   name: string;
   icon: string;
   path: string;
+  permission?: AdminPermission;
   count?: number;
   color?: string;
 }
@@ -73,4 +74,13 @@ export interface AdminZoneConfig {
     isLocked: boolean;
     allowedRoles: AdminRole[];
   }[];
+}
+
+export interface AdminSection {
+  id: string;
+  label: string;
+  path: string;
+  icon: string;
+  permission: AdminPermission;
+  children?: AdminSection[];
 }
