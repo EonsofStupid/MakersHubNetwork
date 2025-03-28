@@ -1,3 +1,4 @@
+
 import React, { Suspense, lazy } from 'react';
 import {
   BrowserRouter,
@@ -32,6 +33,8 @@ const Builds = lazy(() => import('@/pages/Builds'));
 const BuildDetail = lazy(() => import('@/pages/BuildDetail'));
 const Search = lazy(() => import('@/pages/Search'));
 const Admin = lazy(() => import('@/pages/Admin'));
+const AdminBuilds = lazy(() => import('@/admin/routes/builds/index'));
+const AdminBuildDetail = lazy(() => import('@/admin/routes/builds/build/[id]'));
 
 function AuthRequired({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, status } = useAuthStore();
@@ -255,24 +258,26 @@ function App() {
             </AdminRequired>
           }
         />
-        {
-          path: "/admin/builds",
-          element:
+        <Route
+          path="/admin/builds"
+          element={
             <AdminRequired>
               <Suspense fallback={<>Loading...</>}>
-                <Admin />
+                <AdminBuilds />
               </Suspense>
             </AdminRequired>
-        },
-        {
-          path: "/admin/builds/:id",
-          element:
+          }
+        />
+        <Route
+          path="/admin/builds/:id"
+          element={
             <AdminRequired>
               <Suspense fallback={<>Loading...</>}>
-                <Admin />
+                <AdminBuildDetail />
               </Suspense>
             </AdminRequired>
-        },
+          }
+        />
         <Route
           path="*"
           element={
