@@ -35,48 +35,37 @@ export default function BuildsApproval() {
   const { data: builds, isLoading, refetch } = useQuery({
     queryKey: ["admin-builds", activeTab],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from("printer_builds")
-          .select(`
-            id, 
-            title, 
-            description, 
-            submitted_by, 
-            status, 
-            created_at, 
-            images,
-            parts_count,
-            mods_count,
-            profiles(display_name)
-          `)
-          .eq("status", activeTab)
-          .order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("printer_builds")
+        .select(`
+          id, 
+          title, 
+          description, 
+          user_id:submitted_by, 
+          status, 
+          created_at:submitted_at, 
+          images,
+          parts_count,
+          mods_count,
+          profiles(display_name)
+        `)
+        .eq("status", activeTab)
+        .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Error fetching builds:", error);
-          toast({
-            title: "Error fetching builds",
-            description: error.message,
-            variant: "destructive",
-          });
-          return [];
-        }
-
-        return data.map((build: any) => ({
-          ...build,
-          user_name: build.profiles?.display_name || "Unknown user",
-          submitted_at: build.created_at
-        })) as PrinterBuild[];
-      } catch (error: any) {
-        console.error("Exception in builds query:", error);
+      if (error) {
+        console.error("Error fetching builds:", error);
         toast({
           title: "Error fetching builds",
-          description: error.message || "An unexpected error occurred",
+          description: error.message,
           variant: "destructive",
         });
         return [];
       }
+
+      return data.map(build => ({
+        ...build,
+        user_name: build.profiles?.display_name || "Unknown user",
+      })) as PrinterBuild[];
     },
   });
 
