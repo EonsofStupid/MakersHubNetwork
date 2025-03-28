@@ -9,6 +9,7 @@ import { AdminSidebar } from "../AdminSidebar";
 import { AdminInspector } from "../inspector/AdminInspector";
 import { AdminThemeProvider } from "@/admin/theme/AdminThemeProvider";
 import { AdminPermission } from "@/admin/types/admin.types";
+import { QuickActionBar } from "./QuickActionBar";
 
 interface ImpulseAdminLayoutProps {
   children: React.ReactNode;
@@ -32,6 +33,19 @@ export function ImpulseAdminLayout({
     // Load permissions and preferences on mount
     loadPermissions();
     loadPreferences();
+    
+    // Load the cyberpunk theme CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/admin-theme.css';
+    document.head.appendChild(link);
+    
+    return () => {
+      // Clean up when unmounting
+      if (link && document.head.contains(link)) {
+        document.head.removeChild(link);
+      }
+    };
   }, [loadPermissions, loadPreferences]);
 
   if (!isLoadingPermissions && requiresPermission && !hasPermission(requiresPermission)) {
@@ -71,6 +85,9 @@ export function ImpulseAdminLayout({
             </ErrorBoundary>
           </main>
         </div>
+        
+        {/* Quick Action Bar - Floating toolbar for admin tools */}
+        <QuickActionBar />
         
         {/* Admin Inspector - Activated with Alt+Click */}
         <AdminInspector />
