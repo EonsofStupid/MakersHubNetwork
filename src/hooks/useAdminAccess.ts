@@ -10,7 +10,7 @@ export const useAdminAccess = () => {
   
   // Check if user has admin role
   // In a real app, this would be more sophisticated with proper role checks
-  const hasAdminAccess = user?.role === 'admin' || user?.email?.includes('admin');
+  const hasAdminAccess = Boolean(user?.role === 'admin' || user?.email?.includes('admin'));
   
   return {
     hasAdminAccess,
