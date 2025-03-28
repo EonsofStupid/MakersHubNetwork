@@ -1,8 +1,4 @@
 
-/**
- * Impulse theme structure
- * Comprehensive type definitions for the Impulse theme system
- */
 export interface ImpulseTheme {
   colors: {
     primary: string;
@@ -51,25 +47,40 @@ export interface ImpulseTheme {
       spring: string;
     };
   };
-  components: Record<string, any>;
+  components: {
+    panel: {
+      borderRadius: string;
+      padding: string;
+    };
+    button: {
+      borderRadius: string;
+      padding: string;
+    };
+    tooltip: {
+      borderRadius: string;
+      padding: string;
+    };
+  };
 }
 
-/**
- * Configuration for smart overlays
- */
-export interface OverlayConfig {
-  position: 'top' | 'right' | 'bottom' | 'left' | 'center';
-  trigger: 'hover' | 'click' | 'alt-click';
-  showArrow: boolean;
-  animation: 'fade' | 'slide' | 'scale';
+export interface ImpulseTokens {
+  [key: string]: string | ImpulseTokenGroup;
 }
 
-/**
- * Configuration for the inspector panel
- */
-export interface InspectorConfig {
-  defaultTab: 'styles' | 'data' | 'rules';
-  showHeader: boolean;
-  draggable: boolean;
-  resizable: boolean;
+export interface ImpulseTokenGroup {
+  [key: string]: string | ImpulseTokenGroup;
+}
+
+export interface ImpulseStyleOverride {
+  componentId: string;
+  styles: Record<string, string | number>;
+  variant?: string;
+  state?: 'default' | 'hover' | 'active' | 'disabled';
+}
+
+export interface ImpulseThemeVariant {
+  id: string;
+  name: string;
+  baseTheme: string;
+  overrides: Record<string, string>;
 }

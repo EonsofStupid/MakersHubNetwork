@@ -164,19 +164,72 @@ export function AdminInspector() {
             
             <TabsContent value="styles" className="p-2 text-xs">
               <div className="h-[200px] overflow-y-auto">
-                Styling information will appear here
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span>Background:</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-[var(--impulse-primary)] rounded-full"></div>
+                      <span className="font-mono">var(--impulse-primary)</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Border:</span>
+                    <span className="font-mono">1px solid var(--impulse-border-normal)</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Shadow:</span>
+                    <span className="font-mono">var(--impulse-glow-primary)</span>
+                  </div>
+                </div>
               </div>
             </TabsContent>
             
             <TabsContent value="data" className="p-2 text-xs">
               <div className="h-[200px] overflow-y-auto">
-                Component data will appear here
+                <pre className="font-mono text-[10px] bg-[var(--impulse-bg-card)] p-2 rounded">
+                  {`{
+  "id": "${componentId}",
+  "type": "component",
+  "props": {
+    "className": "impulse-panel",
+    "data-component-id": "${componentId}"
+  },
+  "state": {
+    "isHovered": false,
+    "isActive": false
+  }
+}`}
+                </pre>
               </div>
             </TabsContent>
             
             <TabsContent value="rules" className="p-2 text-xs">
               <div className="h-[200px] overflow-y-auto">
-                Composition rules will appear here
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <h4 className="font-medium">Role Access</h4>
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" checked className="accent-[var(--impulse-primary)]" />
+                      <span>Admin</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" checked className="accent-[var(--impulse-primary)]" />
+                      <span>Maker</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" className="accent-[var(--impulse-primary)]" />
+                      <span>User</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-2 border-t border-[var(--impulse-border-normal)]">
+                    <h4 className="font-medium mb-1">Frozen Zone</h4>
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" className="accent-[var(--impulse-primary)]" />
+                      <span>Lock this component</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </TabsContent>
           </Tabs>

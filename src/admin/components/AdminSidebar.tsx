@@ -1,138 +1,228 @@
 
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useAtom } from "jotai";
+import { hoveredElementAtom, dragSourceAtom, dragTargetAtom } from "@/admin/atoms/ui.atoms";
 import { useAdminStore } from "@/admin/store/admin.store";
+import { cn } from "@/lib/utils";
 import { 
-  Home, 
+  LayoutDashboard,
   Users, 
   Settings, 
   FileText,
   Database,
   Package,
   PaintBucket,
-  LayoutDashboard,
-  ChevronLeft,
+  BarChart,
+  Home,
+  ChevronLeft, 
   ChevronRight,
-  ActivitySquare
+  Shield,
+  ArrowDown,
+  ArrowRight
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 
-interface SidebarItemProps {
+interface SidebarIconProps {
   id: string;
-  label: string;
   icon: React.ReactNode;
-  active: boolean;
-  onClick: () => void;
-  collapsed?: boolean;
+  label: string;
+  active?: boolean;
+  expanded?: boolean;
+  onClick?: () => void;
+  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDragEnd?: () => void;
 }
 
-function SidebarItem({ id, label, icon, active, onClick, collapsed = false }: SidebarItemProps) {
+function SidebarIcon({ 
+  id, 
+  icon, 
+  label, 
+  active = false, 
+  expanded = true,
+  onClick,
+  onDragStart,
+  onDragEnd
+}: SidebarIconProps) {
+  const [hovered, setHovered] = useAtom(hoveredElementAtom);
+  const isHovered = hovered === `sidebar-icon-${id}`;
+  
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    if (onDragStart) {
+      onDragStart(e);
+    }
+  };
+  
   return (
-    <Button
-      variant="ghost"
-      className={cn(
-        "w-full justify-start text-left h-12 mb-1 relative overflow-hidden group",
-        active ? "text-[var(--impulse-primary)]" : "text-[var(--impulse-text-secondary)]",
-        active ? "bg-[var(--impulse-primary)]/10" : "hover:bg-[var(--impulse-primary)]/5"
-      )}
+    <div
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={onDragEnd}
+      onMouseEnter={() => setHovered(`sidebar-icon-${id}`)}
+      onMouseLeave={() => setHovered(null)}
       onClick={onClick}
+      className={cn(
+        "impulse-drag-item flex items-center gap-3 px-3 py-2 cursor-pointer rounded-lg",
+        "transition-all duration-300 relative overflow-hidden",
+        active ? "bg-[rgba(0,240,255,0.2)] text-[var(--impulse-text-accent)]" : 
+                "text-[var(--impulse-text-secondary)] hover:bg-[rgba(0,240,255,0.1)]"
+      )}
     >
-      <div className="flex items-center gap-3">
-        <div className={cn(
-          "flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md",
-          active ? "bg-[var(--impulse-primary)]/20" : "bg-[var(--impulse-bg-card)]",
-          "transition-all duration-300"
-        )}>
-          {icon}
-        </div>
-        
-        {!collapsed && (
-          <span className="truncate text-sm font-medium">{label}</span>
-        )}
+      <motion.div 
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="w-full h-full absolute inset-0"
+      />
+      
+      <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-[rgba(0,240,255,0.1)] relative z-10">
+        {icon}
       </div>
       
-      {active && (
-        <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--impulse-primary)]"></span>
+      {expanded && (
+        <span className="truncate relative z-10">{label}</span>
       )}
       
-      <span className="absolute bottom-0 left-0 right-0 h-[1px] bg-[var(--impulse-border-normal)] opacity-0 group-hover:opacity-50 transition-opacity"></span>
-    </Button>
+      {active && (
+        <motion.div 
+          layoutId="sidebar-active-indicator"
+          className="absolute inset-0 bg-[var(--impulse-primary)] opacity-10 rounded-lg z-0" 
+        />
+      )}
+    </div>
   );
 }
 
-export function AdminSidebar({ collapsed = false }: { collapsed?: boolean }) {
+const sidebarSections = [
+  { id: "overview", label: "Overview", icon: <LayoutDashboard className="w-5 h-5" />, path: "/admin/overview" },
+  { id: "users", label: "Users", icon: <Users className="w-5 h-5" />, path: "/admin/users" },
+  { id: "builds", label: "Builds", icon: <Package className="w-5 h-5" />, path: "/admin/builds" },
+  { id: "content", label: "Content", icon: <FileText className="w-5 h-5" />, path: "/admin/content" },
+  { id: "data", label: "Data Maestro", icon: <Database className="w-5 h-5" />, path: "/admin/data" },
+  { id: "themes", label: "Themes", icon: <PaintBucket className="w-5 h-5" />, path: "/admin/themes" },
+  { id: "analytics", label: "Analytics", icon: <BarChart className="w-5 h-5" />, path: "/admin/analytics" },
+  { id: "settings", label: "Settings", icon: <Settings className="w-5 h-5" />, path: "/admin/settings" },
+];
+
+interface AdminSidebarProps {
+  collapsed?: boolean;
+}
+
+export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
   const navigate = useNavigate();
-  const { activeSection, toggleSidebar } = useAdminStore();
+  const location = useLocation();
+  const { sidebarExpanded, activeSection, toggleSidebar } = useAdminStore();
+  const [dragSource, setDragSource] = useAtom(dragSourceAtom);
+  const [_, setDragTarget] = useAtom(dragTargetAtom);
+  const [sectionCollapsed, setSectionCollapsed] = useState<Record<string, boolean>>({});
   
-  const sidebarItems = [
-    { id: "overview", label: "Overview", icon: <LayoutDashboard className="w-5 h-5" />, path: "/admin/overview" },
-    { id: "users", label: "Users", icon: <Users className="w-5 h-5" />, path: "/admin/users" },
-    { id: "content", label: "Content", icon: <FileText className="w-5 h-5" />, path: "/admin/content" },
-    { id: "data-maestro", label: "Data Maestro", icon: <Database className="w-5 h-5" />, path: "/admin/data-maestro" },
-    { id: "import", label: "Import", icon: <Package className="w-5 h-5" />, path: "/admin/import" },
-    { id: "themes", label: "Themes", icon: <PaintBucket className="w-5 h-5" />, path: "/admin/themes" },
-    { id: "analytics", label: "Analytics", icon: <ActivitySquare className="w-5 h-5" />, path: "/admin/analytics" },
-    { id: "settings", label: "Settings", icon: <Settings className="w-5 h-5" />, path: "/admin/settings" },
-  ];
+  // Extract active section from path
+  const currentPath = location.pathname;
+  const activeItem = currentPath.split('/').pop() || 'overview';
   
+  const handleDragStart = (id: string, e: React.DragEvent<HTMLDivElement>) => {
+    setDragSource(id);
+    e.dataTransfer.setData("text/plain", id);
+  };
+
+  const handleDragEnd = () => {
+    setDragSource(null);
+  };
+
+  const handleIconClick = (path: string) => {
+    navigate(path);
+  };
+  
+  const toggleSection = (sectionId: string) => {
+    setSectionCollapsed(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
+
   return (
-    <motion.aside 
-      initial={{ x: collapsed ? -220 : 0 }}
+    <motion.aside
+      initial={{ x: -280 }}
       animate={{ x: 0 }}
       className={cn(
-        "fixed left-0 top-0 h-full z-40 pt-16",
-        "bg-[var(--impulse-bg-overlay)]",
-        "backdrop-blur-lg border-r border-[var(--impulse-border-normal)]",
-        "transition-all duration-300 ease-in-out",
-        collapsed ? "w-[70px]" : "w-[250px]"
+        "impulse-sidebar",
+        "fixed top-0 left-0 z-30 h-full",
+        "transition-all duration-300 ease-in-out overflow-hidden",
+        "bg-[var(--impulse-bg-overlay)] backdrop-filter backdrop-blur-xl",
+        "border-r border-[var(--impulse-border-normal)]",
+        "pt-20", // Top padding for the main nav
+        collapsed ? "w-[65px]" : "w-64"
       )}
     >
-      <div className="flex flex-col p-3 h-full">
+      <div className="flex flex-col h-full p-3 gap-1">
         <div className="flex justify-end mb-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={toggleSidebar}
-            className="text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-text-primary)]"
+            className="p-1 rounded-full hover:bg-[rgba(0,240,255,0.2)] text-[var(--impulse-text-secondary)]"
           >
             {collapsed ? (
               <ChevronRight className="w-5 h-5" />
             ) : (
               <ChevronLeft className="w-5 h-5" />
             )}
-          </Button>
+          </motion.button>
         </div>
         
         <div className="space-y-1">
-          {sidebarItems.map((item) => (
-            <SidebarItem
-              key={item.id}
-              id={item.id}
-              label={item.label}
-              icon={item.icon}
-              active={activeSection === item.id}
-              onClick={() => navigate(item.path)}
-              collapsed={collapsed}
+          {sidebarSections.map(section => (
+            <SidebarIcon
+              key={section.id}
+              id={section.id}
+              icon={section.icon}
+              label={section.label}
+              active={activeItem === section.id}
+              expanded={!collapsed}
+              onClick={() => handleIconClick(section.path)}
+              onDragStart={(e) => handleDragStart(section.id, e)}
+              onDragEnd={handleDragEnd}
             />
           ))}
         </div>
         
-        <div className="mt-auto">
-          <div className={cn(
-            "border-t border-[var(--impulse-border-normal)] my-4 relative",
-            "after:absolute after:top-0 after:left-[10%] after:right-[10%] after:h-[1px]",
-            "after:bg-gradient-to-r after:from-transparent after:via-[var(--impulse-primary)]/20 after:to-transparent"
-          )} />
-          
-          <SidebarItem
-            id="help"
-            label="Help & Resources"
+        <div className="my-3 border-t border-[var(--impulse-border-normal)] relative">
+          <div className="absolute inset-0 opacity-30 blur-sm bg-[var(--impulse-primary)]" />
+        </div>
+        
+        {!collapsed && (
+          <div className="mt-3 space-y-1">
+            <div className="px-3 py-2">
+              <button 
+                onClick={() => toggleSection('tools')}
+                className="flex items-center justify-between w-full text-sm text-[var(--impulse-text-secondary)]"
+              >
+                <span>Admin Tools</span>
+                {sectionCollapsed['tools'] ? (
+                  <ArrowRight className="w-4 h-4" />
+                ) : (
+                  <ArrowDown className="w-4 h-4" />
+                )}
+              </button>
+              
+              {!sectionCollapsed['tools'] && (
+                <div className="mt-2 ml-2 space-y-1">
+                  <button className="flex items-center gap-2 px-2 py-1 text-xs rounded-md hover:bg-[rgba(0,240,255,0.1)] text-[var(--impulse-text-secondary)]">
+                    <Shield className="w-4 h-4 text-[var(--impulse-primary)]" />
+                    <span>Permission Manager</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        <div className="mt-auto mb-4">
+          <SidebarIcon
+            id="backToSite"
             icon={<Home className="w-5 h-5" />}
-            active={false}
-            onClick={() => {}}
-            collapsed={collapsed}
+            label="Back to Site"
+            expanded={!collapsed}
+            onClick={() => navigate('/')}
           />
         </div>
       </div>

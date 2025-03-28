@@ -1,8 +1,7 @@
 
-// Admin and Moderator permission types
 export type AdminPermission = 
-  | 'admin:access' 
-  | 'admin:view' 
+  | 'admin:access'
+  | 'admin:view'
   | 'admin:edit'
   | 'content:view'
   | 'content:edit'
@@ -16,64 +15,62 @@ export type AdminPermission =
   | 'themes:view'
   | 'themes:edit'
   | 'themes:delete'
-  | 'moderator:view'
-  | 'moderator:edit'
-  | 'moderator:ban'
-  | 'moderator:warn'
   | 'super_admin:all';
 
+export type AdminRole = 'admin' | 'moderator' | 'super_admin' | 'content_editor';
 
-// Admin component types
-export interface AdminComponentProps {
+export interface FrozenZone {
   id: string;
-  name: string;
-  description?: string;
+  selector: string;
+  createdBy: string;
+  createdAt: string;
+  note?: string;
 }
 
-// Admin shortcut type
+export interface AdminOverlayConfig {
+  id: string;
+  type: 'inspector' | 'ai' | 'effects' | 'recorder' | 'custom';
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  isVisible: boolean;
+  data?: Record<string, any>;
+}
+
+export interface AdminDashboardMetric {
+  id: string;
+  name: string;
+  value: number | string;
+  change?: number;
+  changeType?: 'increase' | 'decrease' | 'neutral';
+  icon?: string;
+}
+
 export interface AdminShortcut {
   id: string;
-  label: string;
+  name: string;
   icon: string;
   path: string;
-  permission: AdminPermission;
+  count?: number;
   color?: string;
 }
 
-// Admin section types
-export interface AdminSection {
+export interface AdminActionRecord {
   id: string;
-  label: string;
-  path: string;
-  icon: string;
-  permission: AdminPermission;
-}
-
-// Admin overlay config
-export interface AdminOverlayConfig {
-  id: string;
-  position: 'top' | 'right' | 'bottom' | 'left' | 'center';
-  trigger: 'hover' | 'click' | 'context';
-  content: React.ReactNode;
+  action: string;
+  performedBy: string;
+  performedAt: string;
   target: string;
+  targetType: string;
+  metadata?: Record<string, any>;
 }
 
-// Frozen zone for admin tools
-export interface FrozenZone {
+export interface AdminZoneConfig {
   id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  content: React.ReactNode;
-}
-
-// Admin theme types
-export interface AdminThemeTokens {
-  colors: Record<string, string>;
-  spacing: Record<string, string>;
-  typography: {
-    fontSizes: Record<string, string>;
-    fontFamilies: Record<string, string>;
-  };
+  name: string;
+  zones: {
+    id: string;
+    name: string;
+    isLocked: boolean;
+    allowedRoles: AdminRole[];
+  }[];
 }

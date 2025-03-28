@@ -3,14 +3,16 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { pinnedActionsAtom, dragTargetAtom } from "@/admin/atoms/ui.atoms";
-import { UserPlus, Database, Palette, Settings, Plus } from "lucide-react";
+import { UserPlus, Database, Palette, Settings, Plus, Package, BarChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Define the available quick actions
 const availableActions = {
   users: { icon: <UserPlus className="w-5 h-5" />, tooltip: "User Management" },
+  builds: { icon: <Package className="w-5 h-5" />, tooltip: "Build Manager" },
   database: { icon: <Database className="w-5 h-5" />, tooltip: "Database" },
   themes: { icon: <Palette className="w-5 h-5" />, tooltip: "Themes" },
+  analytics: { icon: <BarChart className="w-5 h-5" />, tooltip: "Analytics" },
   settings: { icon: <Settings className="w-5 h-5" />, tooltip: "Settings" },
 };
 
