@@ -14,6 +14,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 
+const Index = lazy(() => import('@/pages/Index'));
 const Home = lazy(() => import('@/pages/Home'));
 const PricingPage = lazy(() => import('@/pages/PricingPage'));
 const About = lazy(() => import('@/pages/About'));
@@ -85,6 +86,14 @@ function App() {
       <Routes>
         <Route
           path="/"
+          element={
+            <Suspense fallback={<>Loading...</>}>
+              <Index />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/home"
           element={
             <Shell>
               <Suspense fallback={<>Loading...</>}>
