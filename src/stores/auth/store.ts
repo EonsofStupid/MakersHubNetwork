@@ -4,12 +4,14 @@ import { persist } from "zustand/middleware"
 import { AuthStore } from "./types/auth.types"
 import { createAuthSlice } from "./slices/auth.slice"
 import { createUiSlice } from "./slices/ui.slice"
+import { createActionsSlice } from "./slices/actions.slice"
 
 export const useAuthStore = create<AuthStore>()(
   persist(
     (...a) => ({
       ...createAuthSlice(...a),
       ...createUiSlice(...a),
+      ...createActionsSlice(...a),
       isLoading: false,
       initialized: false,
     }),
