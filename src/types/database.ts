@@ -1,3 +1,4 @@
+
 export interface Sensor {
   id: string;
   type: string;
@@ -63,6 +64,51 @@ export interface APIKeyAuditLog {
   metadata: Record<string, any>;
 }
 
+export interface PrinterBuild {
+  id: string;
+  title: string;
+  description: string | null;
+  submitted_by: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  processed_at: string | null;
+  images: string[];
+  parts_count: number;
+  mods_count: number;
+  complexity_score: number | null;
+  profiles?: {
+    display_name: string;
+    avatar_url: string | null;
+  } | null;
+}
+
+export interface BuildPart {
+  id: string;
+  build_id: string;
+  printer_part_id: string;
+  quantity: number;
+  created_at: string;
+  printer_parts?: {
+    name: string;
+    description: string | null;
+  } | null;
+}
+
+export interface BuildMod {
+  id: string;
+  build_id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+}
+
+export interface PrinterPart {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -86,6 +132,26 @@ export type Database = {
         Insert: Omit<APIKeyAuditLog, 'id' | 'performed_at'>;
         Update: Partial<Omit<APIKeyAuditLog, 'id'>>;
       };
+      printer_builds: {
+        Row: PrinterBuild;
+        Insert: Omit<PrinterBuild, 'id' | 'created_at' | 'profiles'>;
+        Update: Partial<Omit<PrinterBuild, 'id' | 'profiles'>>;
+      };
+      build_parts: {
+        Row: BuildPart;
+        Insert: Omit<BuildPart, 'id' | 'created_at' | 'printer_parts'>;
+        Update: Partial<Omit<BuildPart, 'id' | 'printer_parts'>>;
+      };
+      build_mods: {
+        Row: BuildMod;
+        Insert: Omit<BuildMod, 'id' | 'created_at'>;
+        Update: Partial<Omit<BuildMod, 'id'>>;
+      };
+      printer_parts: {
+        Row: PrinterPart;
+        Insert: Omit<PrinterPart, 'id' | 'created_at'>;
+        Update: Partial<Omit<PrinterPart, 'id'>>;
+      };
     };
     Enums: {
       api_key_type: APIKeyType;
@@ -98,4 +164,8 @@ export type DatabaseTables = {
   components: Component;
   api_keys: APIKey;
   api_key_audit_logs: APIKeyAuditLog;
+  printer_builds: PrinterBuild;
+  build_parts: BuildPart;
+  build_mods: BuildMod;
+  printer_parts: PrinterPart;
 }
