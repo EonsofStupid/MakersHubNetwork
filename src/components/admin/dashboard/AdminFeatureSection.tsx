@@ -1,0 +1,100 @@
+
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { FeatureCard } from "@/components/admin/dashboard/FeatureCard";
+import { CubeIcon, UsersIcon, FileTextIcon, SettingsIcon, DatabaseIcon, PaintBucketIcon, LayoutDashboardIcon } from "lucide-react";
+import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
+
+export function AdminFeatureSection() {
+  const { checkPermission } = useAdminPermissions();
+  
+  // Define feature cards with permissions
+  const features = [
+    {
+      id: "overview",
+      title: "Dashboard",
+      description: "Platform overview and statistics",
+      icon: <LayoutDashboardIcon className="h-5 w-5" />,
+      permission: "admin:access",
+      path: "/admin/overview",
+      color: "bg-blue-500/10 text-blue-500 border-blue-500/20"
+    },
+    {
+      id: "users",
+      title: "User Management",
+      description: "Manage user accounts and permissions",
+      icon: <UsersIcon className="h-5 w-5" />,
+      permission: "users:view",
+      path: "/admin/users",
+      color: "bg-green-500/10 text-green-500 border-green-500/20"
+    },
+    {
+      id: "content",
+      title: "Content Manager",
+      description: "Edit and publish content across the platform",
+      icon: <FileTextIcon className="h-5 w-5" />,
+      permission: "content:view",
+      path: "/admin/content",
+      color: "bg-purple-500/10 text-purple-500 border-purple-500/20"
+    },
+    {
+      id: "builds",
+      title: "Builds",
+      description: "Review and manage build submissions",
+      icon: <CubeIcon className="h-5 w-5" />,
+      permission: "builds:view",
+      path: "/admin/builds",
+      color: "bg-amber-500/10 text-amber-500 border-amber-500/20"
+    },
+    {
+      id: "data",
+      title: "Data Maestro",
+      description: "Database management and data tools",
+      icon: <DatabaseIcon className="h-5 w-5" />,
+      permission: "admin:access",
+      path: "/admin/data-maestro",
+      color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20"
+    },
+    {
+      id: "themes",
+      title: "Themes",
+      description: "Customize platform appearance",
+      icon: <PaintBucketIcon className="h-5 w-5" />,
+      permission: "themes:view",
+      path: "/admin/themes",
+      color: "bg-pink-500/10 text-pink-500 border-pink-500/20"
+    },
+  ];
+
+  return (
+    <Card className="bg-card/80 backdrop-blur-md border border-primary/10">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>Admin Features</span>
+          <Badge variant="outline" className="font-normal text-xs">Impulse Admin</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {features.map(feature => {
+            // Only show features the user has permission to access
+            if (!checkPermission(feature.permission)) return null;
+            
+            return (
+              <FeatureCard
+                key={feature.id}
+                title={feature.title}
+                description={feature.description}
+                icon={feature.icon}
+                path={feature.path}
+                colorClass={feature.color}
+              />
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
