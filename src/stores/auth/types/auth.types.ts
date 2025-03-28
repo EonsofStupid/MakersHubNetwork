@@ -17,31 +17,18 @@ export interface AuthState {
   initialized: boolean
 }
 
-export interface AuthSlice {
-  status: AuthStatus
-  session: Session | null
-  user: User | null
-  roles: UserRole[]
-  setSession: (session: Session | null) => void
+export interface AuthActions {
   setUser: (user: User | null) => void
+  setSession: (session: Session | null) => void
   setRoles: (roles: UserRole[]) => void
-  clearUser: () => void
-  setStatus: (status: AuthStatus) => void
-  isAdmin: () => boolean
-}
-
-export interface UiSlice {
-  error: string | null
   setError: (error: string | null) => void
-}
-
-export interface ActionsSlice {
   setLoading: (isLoading: boolean) => void
   setInitialized: (initialized: boolean) => void
+  setStatus: (status: AuthStatus) => void
   hasRole: (role: UserRole) => boolean
   isAdmin: () => boolean
   initialize: () => Promise<void>
   logout: () => Promise<void>
 }
 
-export type AuthStore = AuthState & AuthSlice & UiSlice & ActionsSlice
+export type AuthStore = AuthState & AuthActions

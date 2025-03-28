@@ -1,37 +1,145 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Undo, Redo, Eye, EyeOff, Settings, Monitor, FileText, Save } from 'lucide-react';
-import { useAdminStore } from '@/admin/store/admin.store';
+import React from "react";
+import { motion } from "framer-motion";
+import { useAtom } from "jotai";
+import { pinnedActionsAtom, dragTargetAtom } from "@/admin/atoms/ui.atoms";
+import { UserPlus, Database, Palette, Settings, Plus, Package, BarChart } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export function QuickActionBar() {
-  const { isDarkMode, toggleDarkMode } = useAdminStore();
+// Define the available quick actions
+const availableActions = {
+  users: { icon: <UserPlus className="w-5 h-5" />, tooltip: "User Management" },
+  builds: { icon: <Package className="w-5 h-5" />, tooltip: "Build Manager" },
+  database: { icon: <Database className="w-5 h-5" />, tooltip: "Database" },
+  themes: { icon: <Palette className="w-5 h-5" />, tooltip: "Themes" },
+  analytics: { icon: <BarChart className="w-5 h-5" />, tooltip: "Analytics" },
+  settings: { icon: <Settings className="w-5 h-5" />, tooltip: "Settings" },
+};
+
+// QuickAction component
+function QuickAction({ 
+  id, 
+  icon, 
+  tooltip, 
+  onRemove 
+}: { 
+  id: string; 
+  icon: React.ReactNode; 
+  tooltip: string; 
+  onRemove?: () => void; 
+}) {
+  const [dragTarget, setDragTarget] = useAtom(dragTargetAtom);
+  const [isHovered, setIsHovered] = React.useState(false);
+  
+  // Handle dropping actions onto this slot
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragTarget(null);
+    // Add drop logic here
+  };
+  
+  // Only handle dragover if we're dragging something
+  const handleDragOver = (e: React.DragEvent) => {
+    if (dragTarget !== null) {
+      e.preventDefault();
+      setDragTarget(id);
+    }
+  };
   
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex items-center space-x-1 rounded-lg bg-background/80 p-1 backdrop-blur shadow-lg border border-primary/20 animate-in fade-in slide-in-from-bottom-5">
-      <Button variant="ghost" size="icon" className="h-8 w-8" title="Undo">
-        <Undo className="h-4 w-4" />
-      </Button>
-      <Button variant="ghost" size="icon" className="h-8 w-8" title="Redo">
-        <Redo className="h-4 w-4" />
-      </Button>
-      <div className="h-8 w-[1px] bg-border mx-1" />
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="h-8 w-8" 
-        title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        onClick={toggleDarkMode}
-      >
-        {isDarkMode ? <Monitor className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-      </Button>
-      <Button variant="ghost" size="icon" className="h-8 w-8" title="Settings">
-        <Settings className="h-4 w-4" />
-      </Button>
-      <div className="h-8 w-[1px] bg-border mx-1" />
-      <Button variant="ghost" size="icon" className="h-8 w-8 text-green-500" title="Save Changes">
-        <Save className="h-4 w-4" />
-      </Button>
-    </div>
+    <motion.div
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      className="impulse-quick-action relative group"
+      data-tooltip={tooltip}
+    >
+      {icon}
+      
+      {isHovered && onRemove && (
+        <button
+          onClick={onRemove}
+          className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[var(--impulse-secondary)] flex items-center justify-center text-white text-xs"
+        >
+          ×
+        </button>
+      )}
+      
+      {/* Tooltip */}
+      <div className={cn(
+        "absolute right-full mr-2 px-2 py-1 rounded bg-[var(--impulse-bg-overlay)] text-[var(--impulse-text-primary)] text-xs",
+        "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+        "pointer-events-none whitespace-nowrap"
+      )}>
+        {tooltip}
+      </div>
+    </motion.div>
+  );
+}
+
+// Empty slot component
+function EmptyActionSlot() {
+  const [dragTarget, setDragTarget] = useAtom(dragTargetAtom);
+  
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragTarget('empty-slot');
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragTarget(null);
+    // Handle adding the dropped item
+  };
+  
+  return (
+    <motion.div
+      whileHover={{ scale: 1.1 }}
+      className={cn(
+        "impulse-quick-action border-dashed",
+        dragTarget === 'empty-slot' ? "border-[var(--impulse-border-active)]" : "border-[var(--impulse-border-normal)]"
+      )}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      <Plus className="w-5 h-5 text-[var(--impulse-text-secondary)]" />
+    </motion.div>
+  );
+}
+
+export function QuickActionBar() {
+  const [pinnedActions, setPinnedActions] = useAtom(pinnedActionsAtom);
+  
+  const handleRemoveAction = (id: string) => {
+    setPinnedActions(pinnedActions.filter(actionId => actionId !== id));
+  };
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+      className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-20"
+    >
+      {pinnedActions.map(actionId => {
+        const action = availableActions[actionId as keyof typeof availableActions];
+        if (!action) return null;
+        
+        return (
+          <QuickAction
+            key={actionId}
+            id={actionId}
+            icon={action.icon}
+            tooltip={action.tooltip}
+            onRemove={() => handleRemoveAction(actionId)}
+          />
+        );
+      })}
+      
+      <EmptyActionSlot />
+    </motion.div>
   );
 }

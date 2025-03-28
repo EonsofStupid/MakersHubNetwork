@@ -1,9 +1,5 @@
-
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './lib/react-query';
-import { AuthProvider } from './components/auth/AuthProvider';
 import App from './App';
 import './index.css';
 
@@ -12,10 +8,6 @@ if (!rootElement) throw new Error('Failed to find the root element');
 
 createRoot(rootElement).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </QueryClientProvider>
+    <App />
   </StrictMode>
 );
