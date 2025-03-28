@@ -1,20 +1,21 @@
 
 import React from "react";
 import { SidebarNavItem } from "./SidebarNavItem";
+import { AdminPermission } from "@/admin/types/admin.types";
 
 interface NavItem {
   id: string;
   label: string;
   path: string;
   icon: React.ReactElement;
-  permission: string;
+  permission: AdminPermission;
 }
 
 interface SidebarNavListProps {
   items: NavItem[];
   collapsed: boolean;
   currentPath: string;
-  hasPermission: (permission: string) => boolean;
+  hasPermission: (permission: AdminPermission) => boolean;
   onNavigation: (item: NavItem) => void;
 }
 
