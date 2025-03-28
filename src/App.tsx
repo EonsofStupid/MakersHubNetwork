@@ -7,9 +7,11 @@ import { AuthGuard } from "./components/AuthGuard"
 import { AuthProvider } from "./components/auth/AuthProvider"
 import { KeyboardNavigation } from './components/KeyboardNavigation'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { Suspense, lazy } from "react"
+import { Suspense, lazy, useEffect } from "react"
 import { Button } from "./components/ui/button"
 import { useNavigate } from "react-router-dom"
+import { SiteThemeProvider } from "./components/theme/SiteThemeProvider"
+import { useThemeStore } from "./stores/theme/store"
 
 // Lazily load pages to improve initial load time
 const IndexPage = lazy(() => import("./pages/Index"))
@@ -71,75 +73,95 @@ const queryClient = new QueryClient({
   },
 })
 
+// ThemeLoader component to initialize theme
+const ThemeLoader = ({ children }: { children: React.ReactNode }) => {
+  const { currentTheme, setTheme, loadAdminComponents } = useThemeStore();
+  
+  useEffect(() => {
+    if (!currentTheme) {
+      // Load default theme on initial render
+      setTheme('default');
+      // Also load admin components
+      loadAdminComponents();
+    }
+  }, [currentTheme, setTheme, loadAdminComponents]);
+  
+  return <>{children}</>;
+};
+
 const App = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <TooltipProvider>
-              <KeyboardNavigation 
-                options={{
-                  enabled: true,
-                  showToasts: true,
-                  scrollConfig: {
-                    scrollAmount: 120,
-                    smooth: true,
-                    acceleration: true,
-                    maxAcceleration: 600,
-                    accelerationRate: 1.15
-                  }
-                }}
-              />
-              <ErrorBoundary>
-                <Routes>
-                  <Route path="/login" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <LoginPage />
-                    </Suspense>
-                  } />
-                  
-                  {/* Admin Routes */}
-                  <Route path="/admin" element={
-                    <AuthGuard adminOnly>
-                      <Suspense fallback={<PageLoader />}>
-                        <Admin />
-                      </Suspense>
-                    </AuthGuard>
-                  } />
-                  
-                  {/* Admin Build Routes */}
-                  <Route path="/admin/builds" element={
-                    <AuthGuard adminOnly>
-                      <Suspense fallback={<PageLoader />}>
-                        <BuildsPage />
-                      </Suspense>
-                    </AuthGuard>
-                  } />
-                  
-                  <Route path="/admin/builds/:buildId" element={
-                    <AuthGuard adminOnly>
-                      <Suspense fallback={<PageLoader />}>
-                        <BuildDetailPage />
-                      </Suspense>
-                    </AuthGuard>
-                  } />
-                  
-                  {/* Other admin routes can be added here */}
-                  
-                  <Route path="/" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <IndexPage />
-                    </Suspense>
-                  } />
-                  
-                  {/* Catch-all redirect */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </ErrorBoundary>
-              <SystemToaster />
-              <SonnerToaster />
-            </TooltipProvider>
+            <ThemeLoader>
+              <SiteThemeProvider>
+                <TooltipProvider>
+                  <KeyboardNavigation 
+                    options={{
+                      enabled: true,
+                      showToasts: true,
+                      scrollConfig: {
+                        scrollAmount: 120,
+                        smooth: true,
+                        acceleration: true,
+                        maxAcceleration: 600,
+                        accelerationRate: 1.15
+                      }
+                    }}
+                  />
+                  <ErrorBoundary>
+                    <Routes>
+                      <Route path="/login" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <LoginPage />
+                        </Suspense>
+                      } />
+                      
+                      {/* Admin Routes */}
+                      <Route path="/admin" element={
+                        <AuthGuard adminOnly>
+                          <Suspense fallback={<PageLoader />}>
+                            <Admin />
+                          </Suspense>
+                        </AuthGuard>
+                      } />
+                      
+                      {/* Admin Build Routes */}
+                      <Route path="/admin/builds" element={
+                        <AuthGuard adminOnly>
+                          <Suspense fallback={<PageLoader />}>
+                            <BuildsPage />
+                          </Suspense>
+                        </AuthGuard>
+                      } />
+                      
+                      <Route path="/admin/builds/:buildId" element={
+                        <AuthGuard adminOnly>
+                          <Suspense fallback={<PageLoader />}>
+                            <BuildDetailPage />
+                          </Suspense>
+                        </AuthGuard>
+                      } />
+                      
+                      {/* Other admin routes can be added here */}
+                      
+                      <Route path="/" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <IndexPage />
+                        </Suspense>
+                      } />
+                      
+                      {/* Catch-all redirect */}
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </ErrorBoundary>
+                  <SystemToaster />
+                  <SonnerToaster />
+                </TooltipProvider>
+              </SiteThemeProvider>
+            </ThemeLoader>
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>

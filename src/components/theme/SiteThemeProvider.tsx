@@ -1,0 +1,99 @@
+
+import React, { createContext, useContext, useEffect } from 'react';
+import { useThemeStore } from '@/stores/theme/store';
+import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
+
+// Create context
+const SiteThemeContext = createContext<{
+  variables: ThemeVariables;
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
+}>({
+  variables: {} as ThemeVariables,
+  isDarkMode: true,
+  toggleDarkMode: () => {},
+});
+
+// Custom hook to use the theme context
+export const useSiteTheme = () => useContext(SiteThemeContext);
+
+interface SiteThemeProviderProps {
+  children: React.ReactNode;
+}
+
+export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
+  const { currentTheme, isLoading } = useThemeStore();
+  const variables = useThemeVariables(currentTheme);
+  // Get UI theme mode from localStorage or default to dark
+  const [isDarkMode, setIsDarkMode] = React.useState<boolean>(
+    localStorage.getItem('theme-mode') === 'light' ? false : true
+  );
+  
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
+  };
+
+  // Apply CSS variables when the theme changes
+  useEffect(() => {
+    if (isLoading) return;
+    
+    const rootElement = document.documentElement;
+    
+    // Apply the CSS variables
+    rootElement.style.setProperty('--site-background', variables.background);
+    rootElement.style.setProperty('--site-foreground', variables.foreground);
+    rootElement.style.setProperty('--site-card', variables.card);
+    rootElement.style.setProperty('--site-card-foreground', variables.cardForeground);
+    rootElement.style.setProperty('--site-primary', variables.primary);
+    rootElement.style.setProperty('--site-primary-foreground', variables.primaryForeground);
+    rootElement.style.setProperty('--site-secondary', variables.secondary);
+    rootElement.style.setProperty('--site-secondary-foreground', variables.secondaryForeground);
+    rootElement.style.setProperty('--site-muted', variables.muted);
+    rootElement.style.setProperty('--site-muted-foreground', variables.mutedForeground);
+    rootElement.style.setProperty('--site-accent', variables.accent);
+    rootElement.style.setProperty('--site-accent-foreground', variables.accentForeground);
+    rootElement.style.setProperty('--site-destructive', variables.destructive);
+    rootElement.style.setProperty('--site-destructive-foreground', variables.destructiveForeground);
+    rootElement.style.setProperty('--site-border', variables.border);
+    rootElement.style.setProperty('--site-input', variables.input);
+    rootElement.style.setProperty('--site-ring', variables.ring);
+    
+    // Apply effect colors
+    rootElement.style.setProperty('--site-effect-color', variables.effectColor);
+    rootElement.style.setProperty('--site-effect-secondary', variables.effectSecondary);
+    rootElement.style.setProperty('--site-effect-tertiary', variables.effectTertiary);
+    
+    // Apply timing values
+    rootElement.style.setProperty('--site-transition-fast', variables.transitionFast);
+    rootElement.style.setProperty('--site-transition-normal', variables.transitionNormal);
+    rootElement.style.setProperty('--site-transition-slow', variables.transitionSlow);
+    rootElement.style.setProperty('--site-animation-fast', variables.animationFast);
+    rootElement.style.setProperty('--site-animation-normal', variables.animationNormal);
+    rootElement.style.setProperty('--site-animation-slow', variables.animationSlow);
+    
+    // Apply radius values
+    rootElement.style.setProperty('--site-radius-sm', variables.radiusSm);
+    rootElement.style.setProperty('--site-radius-md', variables.radiusMd);
+    rootElement.style.setProperty('--site-radius-lg', variables.radiusLg);
+    rootElement.style.setProperty('--site-radius-full', variables.radiusFull);
+    
+    // Apply dark/light mode class
+    if (isDarkMode) {
+      rootElement.classList.add('dark');
+      rootElement.classList.remove('light');
+    } else {
+      rootElement.classList.add('light');
+      rootElement.classList.remove('dark');
+    }
+    
+  }, [variables, isLoading, isDarkMode]);
+  
+  return (
+    <SiteThemeContext.Provider value={{ variables, isDarkMode, toggleDarkMode }}>
+      {children}
+    </SiteThemeContext.Provider>
+  );
+}
