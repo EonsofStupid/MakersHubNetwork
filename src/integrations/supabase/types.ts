@@ -152,6 +152,68 @@ export type Database = {
         }
         Relationships: []
       }
+      build_mods: {
+        Row: {
+          build_id: string
+          complexity: number | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          build_id: string
+          complexity?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          build_id?: string
+          complexity?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      build_parts: {
+        Row: {
+          build_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          part_id: string
+          quantity: number
+        }
+        Insert: {
+          build_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          part_id: string
+          quantity?: number
+        }
+        Update: {
+          build_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          part_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "build_parts_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "printer_parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       components: {
         Row: {
           category: string
@@ -725,6 +787,59 @@ export type Database = {
           },
         ]
       }
+      printer_builds: {
+        Row: {
+          complexity_score: number | null
+          created_at: string | null
+          description: string
+          id: string
+          images: string[] | null
+          mods_count: number | null
+          parts_count: number | null
+          processed_at: string | null
+          status: string | null
+          submitted_by: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          complexity_score?: number | null
+          created_at?: string | null
+          description: string
+          id?: string
+          images?: string[] | null
+          mods_count?: number | null
+          parts_count?: number | null
+          processed_at?: string | null
+          status?: string | null
+          submitted_by?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          complexity_score?: number | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          images?: string[] | null
+          mods_count?: number | null
+          parts_count?: number | null
+          processed_at?: string | null
+          status?: string | null
+          submitted_by?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_builds_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       printer_part_categories: {
         Row: {
           created_at: string
@@ -1205,6 +1320,33 @@ export type Database = {
           total_count: number | null
         }
         Relationships: []
+      }
+      build_profiles: {
+        Row: {
+          avatar_url: string | null
+          complexity_score: number | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          id: string | null
+          images: string[] | null
+          mods_count: number | null
+          parts_count: number | null
+          processed_at: string | null
+          status: string | null
+          submitted_by: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_builds_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       parts_count: {
         Row: {
