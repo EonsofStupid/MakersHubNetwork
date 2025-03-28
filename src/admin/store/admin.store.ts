@@ -18,7 +18,7 @@ interface AdminState {
   toggleDarkMode: () => void;
   
   // Permission functions
-  loadPermissions: () => void;
+  loadPermissions: () => Promise<void>;
   hasPermission: (permission: AdminPermission) => boolean;
 }
 
