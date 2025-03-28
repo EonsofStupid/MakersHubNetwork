@@ -1,128 +1,292 @@
+import React, { Suspense, lazy } from 'react';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from 'react-router-dom';
+import { useAuthStore } from '@/stores/auth/store';
+import { MainNav } from '@/components/MainNav';
+import { Shell } from '@/components/Shell';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Toaster } from '@/components/ui/toaster';
+import { useToast } from '@/hooks/use-toast';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 
-import { SystemToaster } from "./components/ui/toaster"
-import { SonnerToaster } from "./components/ui/sonner"
-import { TooltipProvider } from "./components/ui/tooltip"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import { AuthGuard } from "./components/AuthGuard"
-import { AuthProvider } from "./components/auth/AuthProvider"
-import { KeyboardNavigation } from './components/KeyboardNavigation'
-import { ErrorBoundary } from './components/ErrorBoundary'
-import { Suspense, lazy } from "react"
-import { Button } from "./components/ui/button"
-import { useNavigate } from "react-router-dom"
+const Home = lazy(() => import('@/pages/Home'));
+const PricingPage = lazy(() => import('@/pages/PricingPage'));
+const About = lazy(() => import('@/pages/About'));
+const Contact = lazy(() => import('@/pages/Contact'));
+const Terms = lazy(() => import('@/pages/Terms'));
+const Privacy = lazy(() => import('@/pages/Privacy'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const Logout = lazy(() => import('@/pages/Logout'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const Builds = lazy(() => import('@/pages/Builds'));
+const BuildDetail = lazy(() => import('@/pages/BuildDetail'));
+const Search = lazy(() => import('@/pages/Search'));
+const Admin = lazy(() => import('@/pages/Admin'));
 
-// Lazily load pages to improve initial load time
-const IndexPage = lazy(() => import("./pages/Index"))
-const Admin = lazy(() => import("./pages/Admin"))
-const LoginPage = lazy(() => import("./pages/Login"))
+function AuthRequired({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn, status } = useAuthStore();
+  const location = useLocation();
+  const { toast } = useToast();
 
-// Create a loading fallback component
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="p-4 text-center">
-      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-      <p className="text-muted-foreground">Loading...</p>
-    </div>
-  </div>
-)
-
-// Create a global error fallback component
-const GlobalErrorFallback = ({ error }: { error: Error }) => {
-  const navigate = useNavigate();
-  
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="max-w-md w-full p-6 text-center border border-destructive/20 rounded-md bg-background/40 backdrop-blur-md">
-        <h2 className="text-xl font-bold text-destructive mb-2">Application Error</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          {error?.message || "The application encountered an unexpected error."}
-        </p>
-        <div className="flex gap-2 justify-center">
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.reload()}
-          >
-            Refresh Page
-          </Button>
-          <Button 
-            variant="default"
-            onClick={() => navigate("/")}
-          >
-            Go to Home
-          </Button>
+  if (status === 'loading') {
+    return (
+      <Shell>
+        <div className="flex items-center justify-center h-full">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
-      </div>
-    </div>
+      </Shell>
+    );
+  }
+
+  if (!isLoggedIn) {
+    toast({
+      title: 'Authentication Required',
+      description: 'You must be logged in to access this page.',
+    });
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function AdminRequired({ children }: { children: React.ReactNode }) {
+  const { hasAdminAccess } = useAdminAccess();
+  const location = useLocation();
+  const { toast } = useToast();
+
+  if (!hasAdminAccess) {
+    toast({
+      title: 'Admin Access Required',
+      description: 'You do not have permission to access this page.',
+      variant: 'destructive',
+    });
+    return <Navigate to="/" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <Home />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/pricing"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <PricingPage />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <About />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <Contact />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/terms"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <Terms />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/privacy"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <Privacy />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <Login />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <Register />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/logout"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <Logout />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <AuthRequired>
+              <Shell>
+                <Suspense fallback={<>Loading...</>}>
+                  <Profile />
+                </Suspense>
+              </Shell>
+            </AuthRequired>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <AuthRequired>
+              <Shell>
+                <Suspense fallback={<>Loading...</>}>
+                  <Settings />
+                </Suspense>
+              </Shell>
+            </AuthRequired>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <ForgotPassword />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <ResetPassword />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/builds"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <Builds />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/builds/:id"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <BuildDetail />
+              </Suspense>
+            </Shell>
+          }
+        />
+        <Route
+          path="/search"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <Search />
+              </Suspense>
+            </Shell>
+          }
+        />
+        {/* Admin Routes - Requires Admin Access */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRequired>
+              <Suspense fallback={<>Loading...</>}>
+                <Admin />
+              </Suspense>
+            </AdminRequired>
+          }
+        />
+        {
+          path: "/admin/builds",
+          element:
+            <AdminRequired>
+              <Suspense fallback={<>Loading...</>}>
+                <Admin />
+              </Suspense>
+            </AdminRequired>
+        },
+        {
+          path: "/admin/builds/:id",
+          element:
+            <AdminRequired>
+              <Suspense fallback={<>Loading...</>}>
+                <Admin />
+              </Suspense>
+            </AdminRequired>
+        },
+        <Route
+          path="*"
+          element={
+            <Shell>
+              <Suspense fallback={<>Loading...</>}>
+                <NotFound />
+              </Suspense>
+            </Shell>
+          }
+        />
+      </Routes>
+      <Toaster />
+    </BrowserRouter>
   );
 }
 
-// Configure QueryClient with better error handling
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-})
-
-const App = () => {
-  return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <TooltipProvider>
-              <KeyboardNavigation 
-                options={{
-                  enabled: true,
-                  showToasts: true,
-                  scrollConfig: {
-                    scrollAmount: 120,
-                    smooth: true,
-                    acceleration: true,
-                    maxAcceleration: 600,
-                    accelerationRate: 1.15
-                  }
-                }}
-              />
-              <ErrorBoundary>
-                <Routes>
-                  <Route path="/login" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <LoginPage />
-                    </Suspense>
-                  } />
-                  
-                  {/* Admin Routes */}
-                  <Route path="/admin/*" element={
-                    <AuthGuard adminOnly>
-                      <Suspense fallback={<PageLoader />}>
-                        <Admin />
-                      </Suspense>
-                    </AuthGuard>
-                  } />
-                  
-                  <Route path="/" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <IndexPage />
-                    </Suspense>
-                  } />
-                  
-                  {/* Catch-all redirect */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </ErrorBoundary>
-              <SystemToaster />
-              <SonnerToaster />
-            </TooltipProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ErrorBoundary>
-  )
-}
-
-export default App
+export default App;
