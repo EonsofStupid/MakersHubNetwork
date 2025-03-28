@@ -25,6 +25,16 @@ export interface AdminComponentProps {
   description?: string;
 }
 
+// Admin shortcut type
+export interface AdminShortcut {
+  id: string;
+  label: string;
+  icon: string;
+  path: string;
+  permission: AdminPermission;
+  color?: string;
+}
+
 // Admin section types
 export interface AdminSection {
   id: string;
@@ -32,6 +42,25 @@ export interface AdminSection {
   path: string;
   icon: string;
   permission: AdminPermission;
+}
+
+// Admin overlay config
+export interface AdminOverlayConfig {
+  id: string;
+  position: 'top' | 'right' | 'bottom' | 'left' | 'center';
+  trigger: 'hover' | 'click' | 'context';
+  content: React.ReactNode;
+  target: string;
+}
+
+// Frozen zone for admin tools
+export interface FrozenZone {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  content: React.ReactNode;
 }
 
 // Admin theme types

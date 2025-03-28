@@ -1,12 +1,16 @@
 
 import { create } from 'zustand';
 import { AdminPermission } from '../types/admin.types';
+import { defaultImpulseTokens } from '../theme/impulse/tokens';
 
 interface AdminState {
   // UI State
   sidebarExpanded: boolean;
   activeSection: string;
   isDarkMode: boolean;
+  
+  // Admin Theme
+  adminTheme: string;
   
   // Auth/Permissions State
   isLoadingPermissions: boolean;
@@ -16,6 +20,7 @@ interface AdminState {
   toggleSidebar: () => void;
   setActiveSection: (section: string) => void;
   toggleDarkMode: () => void;
+  setAdminTheme: (theme: string) => void;
   
   // Permission functions
   loadPermissions: () => Promise<void>;
@@ -28,6 +33,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   activeSection: 'overview',
   isDarkMode: true,
   
+  // Default theme state
+  adminTheme: 'cyberpunk',
+  
   // Default auth state
   isLoadingPermissions: true,
   permissions: [],
@@ -36,6 +44,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   toggleSidebar: () => set(state => ({ sidebarExpanded: !state.sidebarExpanded })),
   setActiveSection: (section) => set({ activeSection: section }),
   toggleDarkMode: () => set(state => ({ isDarkMode: !state.isDarkMode })),
+  setAdminTheme: (theme) => set({ adminTheme: theme }),
   
   // Permission functions
   loadPermissions: async () => {
