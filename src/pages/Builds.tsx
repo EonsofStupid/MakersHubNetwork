@@ -12,8 +12,9 @@ export default function Builds() {
   const { data: builds, isLoading } = useQuery({
     queryKey: ["community-builds"],
     queryFn: async () => {
+      console.log("Fetching builds from build_profiles view");
       const { data, error } = await supabase
-        .from("printer_builds")
+        .from("build_profiles")
         .select(`
           id, 
           title, 
@@ -25,13 +26,17 @@ export default function Builds() {
           mods_count,
           complexity_score,
           submitted_by,
-          profiles:submitted_by(display_name)
+          display_name,
+          avatar_url
         `)
         .eq("status", "approved")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data as Array<PrinterBuild & { profiles: { display_name: string | null } }>;
+      if (error) {
+        console.error("Error fetching builds:", error);
+        throw error;
+      }
+      return data as Array<PrinterBuild & { display_name: string | null, avatar_url: string | null }>;
     },
   });
 
@@ -81,7 +86,7 @@ export default function Builds() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-xl">{build.title}</CardTitle>
                 <CardDescription>
-                  By {build.profiles?.display_name || "Unknown maker"}
+                  By {build.display_name || "Unknown maker"}
                 </CardDescription>
               </CardHeader>
               

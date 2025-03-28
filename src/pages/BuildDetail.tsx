@@ -17,17 +17,18 @@ export default function BuildDetail() {
     queryFn: async () => {
       if (!id) return null;
       
+      console.log("Fetching build details from build_profiles view");
       const { data, error } = await supabase
-        .from("printer_builds")
-        .select(`
-          *,
-          profiles:submitted_by(display_name, avatar_url)
-        `)
+        .from("build_profiles")
+        .select(`*`)
         .eq("id", id)
         .single();
 
       if (error) throw error;
-      return data as PrinterBuild & { profiles: { display_name: string | null, avatar_url: string | null } };
+      return data as PrinterBuild & { 
+        display_name: string | null, 
+        avatar_url: string | null 
+      };
     },
     enabled: !!id,
   });
@@ -136,9 +137,9 @@ export default function BuildDetail() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-3">
-                {build.profiles?.avatar_url ? (
+                {build.avatar_url ? (
                   <img 
-                    src={build.profiles.avatar_url} 
+                    src={build.avatar_url} 
                     alt="User avatar" 
                     className="h-10 w-10 rounded-full"
                   />
@@ -149,7 +150,7 @@ export default function BuildDetail() {
                 )}
                 <div>
                   <div className="font-medium">
-                    {build.profiles?.display_name || "Unknown User"}
+                    {build.display_name || "Unknown User"}
                   </div>
                 </div>
               </div>

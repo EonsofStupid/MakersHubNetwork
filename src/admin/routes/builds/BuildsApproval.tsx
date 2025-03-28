@@ -16,7 +16,8 @@ import type { PrinterBuild } from "@/types/database";
 type BuildStatus = "pending" | "approved" | "rejected";
 
 interface BuildWithUserData extends PrinterBuild {
-  user_name: string;
+  display_name: string | null;
+  avatar_url: string | null;
 }
 
 export default function BuildsApproval() {
@@ -27,8 +28,9 @@ export default function BuildsApproval() {
   const { data: builds, isLoading, refetch } = useQuery({
     queryKey: ["admin-builds", activeTab],
     queryFn: async () => {
+      console.log(`Fetching ${activeTab} builds from build_profiles view`);
       const { data, error } = await supabase
-        .from("printer_builds")
+        .from("build_profiles")
         .select(`
           id, 
           title, 
@@ -42,7 +44,8 @@ export default function BuildsApproval() {
           parts_count,
           mods_count,
           complexity_score,
-          profiles:submitted_by(display_name)
+          display_name,
+          avatar_url
         `)
         .eq("status", activeTab)
         .order("created_at", { ascending: false });
@@ -59,8 +62,8 @@ export default function BuildsApproval() {
 
       return data.map(build => ({
         ...build,
-        user_name: build.profiles?.display_name || "Unknown user",
-      })) as BuildWithUserData[];
+        user_name: build.display_name || "Unknown user",
+      })) as (BuildWithUserData & { user_name: string })[];
     },
   });
 
@@ -92,7 +95,7 @@ export default function BuildsApproval() {
   };
 
   // Define table columns
-  const columns: ColumnDef<BuildWithUserData>[] = [
+  const columns: ColumnDef<BuildWithUserData & { user_name: string }>[] = [
     {
       id: "title",
       accessorKey: "title",

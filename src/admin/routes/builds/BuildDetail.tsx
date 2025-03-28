@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -23,12 +24,10 @@ interface ExtendedBuildPart extends BuildPart {
   };
 }
 
-interface BuildWithProfile extends PrinterBuild {
-  profiles?: {
-    display_name: string | null;
-    avatar_url: string | null;
-  };
-}
+type BuildWithProfile = PrinterBuild & {
+  display_name: string | null;
+  avatar_url: string | null;
+};
 
 export default function BuildDetail({ id: propId }: BuildDetailProps) {
   const params = useParams();
@@ -43,12 +42,10 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
     queryFn: async () => {
       if (!buildId) return null;
       
+      console.log("Fetching build detail from build_profiles view");
       const { data, error } = await supabase
-        .from("printer_builds")
-        .select(`
-          *,
-          profiles:submitted_by(display_name, avatar_url)
-        `)
+        .from("build_profiles")
+        .select(`*`)
         .eq("id", buildId)
         .single();
 
@@ -285,9 +282,9 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-4">
-                {build.profiles?.avatar_url ? (
+                {build.avatar_url ? (
                   <img 
-                    src={build.profiles.avatar_url} 
+                    src={build.avatar_url} 
                     alt="User avatar" 
                     className="h-10 w-10 rounded-full"
                   />
@@ -297,7 +294,7 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
                   </div>
                 )}
                 <div>
-                  <div className="font-medium">{build.profiles?.display_name || "Unknown User"}</div>
+                  <div className="font-medium">{build.display_name || "Unknown User"}</div>
                   <div className="text-sm text-muted-foreground">User ID: {build.submitted_by}</div>
                 </div>
               </div>

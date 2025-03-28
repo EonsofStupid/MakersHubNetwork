@@ -177,15 +177,7 @@ export type Database = {
           id?: string
           name?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "build_mods_build_id_fkey"
-            columns: ["build_id"]
-            isOneToOne: false
-            referencedRelation: "printer_builds"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       build_parts: {
         Row: {
@@ -213,13 +205,6 @@ export type Database = {
           quantity?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "build_parts_build_id_fkey"
-            columns: ["build_id"]
-            isOneToOne: false
-            referencedRelation: "printer_builds"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "build_parts_part_id_fkey"
             columns: ["part_id"]
@@ -805,7 +790,7 @@ export type Database = {
       printer_builds: {
         Row: {
           complexity_score: number | null
-          created_at: string
+          created_at: string | null
           description: string
           id: string
           images: string[] | null
@@ -813,13 +798,13 @@ export type Database = {
           parts_count: number | null
           processed_at: string | null
           status: string | null
-          submitted_by: string
+          submitted_by: string | null
           title: string
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           complexity_score?: number | null
-          created_at?: string
+          created_at?: string | null
           description: string
           id?: string
           images?: string[] | null
@@ -827,13 +812,13 @@ export type Database = {
           parts_count?: number | null
           processed_at?: string | null
           status?: string | null
-          submitted_by: string
+          submitted_by?: string | null
           title: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           complexity_score?: number | null
-          created_at?: string
+          created_at?: string | null
           description?: string
           id?: string
           images?: string[] | null
@@ -841,11 +826,19 @@ export type Database = {
           parts_count?: number | null
           processed_at?: string | null
           status?: string | null
-          submitted_by?: string
+          submitted_by?: string | null
           title?: string
-          updated_at?: string
+          updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "printer_builds_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       printer_part_categories: {
         Row: {
@@ -1327,6 +1320,33 @@ export type Database = {
           total_count: number | null
         }
         Relationships: []
+      }
+      build_profiles: {
+        Row: {
+          avatar_url: string | null
+          complexity_score: number | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          id: string | null
+          images: string[] | null
+          mods_count: number | null
+          parts_count: number | null
+          processed_at: string | null
+          status: string | null
+          submitted_by: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_builds_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       parts_count: {
         Row: {

@@ -51,6 +51,17 @@ export interface PrinterBuild {
   created_at: string;
   updated_at: string;
   processed_at: string | null;
+  // Fields from the joined profile if using build_profiles view
+  display_name?: string;
+  avatar_url?: string;
+}
+
+export interface Profile {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface BuildPart {
@@ -115,6 +126,11 @@ export type Database = {
         Insert: Omit<PrinterBuild, 'id' | 'created_at' | 'updated_at' | 'parts_count' | 'mods_count'>;
         Update: Partial<Omit<PrinterBuild, 'id'>>;
       };
+      profiles: {
+        Row: Profile;
+        Insert: Omit<Profile, 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Profile, 'id'>>;
+      };
       build_parts: {
         Row: BuildPart;
         Insert: Omit<BuildPart, 'id' | 'created_at'>;
@@ -136,6 +152,14 @@ export type Database = {
         Update: Partial<Omit<APIKeyAuditLog, 'id'>>;
       };
     };
+    Views: {
+      build_profiles: {
+        Row: PrinterBuild & {
+          display_name: string | null;
+          avatar_url: string | null;
+        };
+      };
+    };
     Enums: {
       api_key_type: APIKeyType;
     };
@@ -146,6 +170,7 @@ export type DatabaseTables = {
   sensors: Sensor;
   components: Component;
   printer_builds: PrinterBuild;
+  profiles: Profile;
   build_parts: BuildPart;
   build_mods: BuildMod;
   api_keys: APIKey;
