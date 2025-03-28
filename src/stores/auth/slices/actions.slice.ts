@@ -1,6 +1,6 @@
 
 import { StateCreator } from "zustand";
-import { AuthState, AuthActions, AuthStore, UserRole } from "../types/auth.types";
+import { AuthActions, AuthStore, UserRole } from "../types/auth.types";
 import { supabase } from "@/integrations/supabase/client";
 
 export const createActionsSlice: StateCreator<
@@ -24,7 +24,7 @@ export const createActionsSlice: StateCreator<
   // Initialize the auth state by fetching the current session
   initialize: async () => {
     try {
-      set({ isLoading: true });
+      set({ isLoading: true, status: "loading" });
       
       // Get the current session
       const { data: { session } } = await supabase.auth.getSession();
@@ -47,7 +47,7 @@ export const createActionsSlice: StateCreator<
           console.error("Error fetching user roles:", rolesError);
           set({ roles: [] });
         } else {
-          const userRoles = rolesData.map(r => r.role as UserRole);
+          const userRoles = rolesData?.map(r => r.role as UserRole) || [];
           set({ roles: userRoles });
         }
       } else {
