@@ -17,6 +17,19 @@ export interface AuthState {
   initialized: boolean
 }
 
+export interface AuthSlice {
+  status: AuthStatus
+  session: Session | null
+  user: User | null
+  roles: UserRole[]
+  setSession: (session: Session | null) => void
+  setUser: (user: User | null) => void
+  setRoles: (roles: UserRole[]) => void
+  clearUser: () => void
+  setStatus: (status: AuthStatus) => void
+  isAdmin: () => boolean
+}
+
 export interface AuthActions {
   setUser: (user: User | null) => void
   setSession: (session: Session | null) => void

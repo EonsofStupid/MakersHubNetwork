@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, XCircle, ArrowLeft, User, Calendar, Package, Tool } from "lucide-react";
+import { CheckCircle, XCircle, ArrowLeft, User, Calendar, Package, Wrench } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { PrinterBuild, BuildPart, BuildMod } from "@/types/database";
 
@@ -48,7 +48,7 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
         .from("printer_builds")
         .select(`
           *,
-          profiles(display_name, avatar_url)
+          profiles:submitted_by(display_name, avatar_url)
         `)
         .eq("id", buildId)
         .single();

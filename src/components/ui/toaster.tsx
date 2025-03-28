@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/toast"
 import { motion, AnimatePresence } from "framer-motion"
 
-export function SystemToaster() {
+export function Toaster() {
   const { toasts } = useToast()
 
   return (
@@ -47,3 +47,5 @@ export function SystemToaster() {
     </ToastProvider>
   )
 }
+
+export { Toaster as SystemToaster }
