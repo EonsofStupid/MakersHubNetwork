@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -68,7 +67,6 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
     enabled: !!buildId,
   });
 
-  // Fetch parts and mods for this build
   const { data: buildComponents } = useQuery({
     queryKey: ["admin-build-components", buildId],
     queryFn: async () => {
@@ -259,7 +257,7 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Tool className="mr-2 h-5 w-5" />
+                <Wrench className="mr-2 h-5 w-5" />
                 Modifications Applied
               </CardTitle>
             </CardHeader>
