@@ -15,10 +15,11 @@ export function MainNav() {
   const { hasAdminAccess } = useAdminAccess();
 
   useEffect(() => {
+    console.log("MainNav - hasAdminAccess:", hasAdminAccess); // Debug admin access
     requestAnimationFrame(() => {
       setIsLoaded(true);
     });
-  }, []);
+  }, [hasAdminAccess]);
 
   return (
     <header

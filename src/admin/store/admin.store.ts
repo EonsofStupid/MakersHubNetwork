@@ -23,7 +23,7 @@ interface AdminState {
   setAdminTheme: (theme: string) => void;
   
   // Permission functions
-  loadPermissions: () => Promise<void>;
+  loadPermissions: (mappedPermissions?: AdminPermission[]) => Promise<void>;
   hasPermission: (permission: AdminPermission) => boolean;
 }
 
@@ -47,15 +47,24 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   setAdminTheme: (theme) => set({ adminTheme: theme }),
   
   // Permission functions
-  loadPermissions: async () => {
+  loadPermissions: async (mappedPermissions) => {
     set({ isLoadingPermissions: true });
     
     try {
+      // If we already have mapped permissions from the role, use those
+      if (mappedPermissions && mappedPermissions.length > 0) {
+        set({ 
+          permissions: mappedPermissions,
+          isLoadingPermissions: false 
+        });
+        return;
+      }
+
       // Simulate API call to load permissions
       // In a real app, this would be an API call to fetch user permissions
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      // For demo purposes, we'll grant all permissions
+      // For demo purposes, we'll grant all permissions if no specific permissions are provided
       const allPermissions: AdminPermission[] = [
         'admin:access',
         'admin:view',

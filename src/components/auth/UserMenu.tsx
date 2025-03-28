@@ -31,6 +31,8 @@ export const UserMenu = memo(() => {
   
   // Memoize admin access check to prevent excessive store reads
   const { hasAdminAccess } = useAdminAccess()
+  console.log("UserMenu - hasAdminAccess:", hasAdminAccess) // Debug admin access
+  console.log("UserMenu - roles:", roles) // Debug roles
   
   // Only log this once during development - removed in production
   const userEmail = user?.email
