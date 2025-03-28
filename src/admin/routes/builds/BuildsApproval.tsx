@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,16 +14,28 @@ import type { PrinterBuild } from "@/types/database";
 
 type BuildStatus = "pending" | "approved" | "rejected";
 
-interface BuildWithUserData extends PrinterBuild {
+interface BuildWithUserData {
+  id: string;
+  title: string;
+  description: string;
+  submitted_by: string;
+  status: 'pending' | 'approved' | 'rejected';
+  images: string[];
+  parts_count: number;
+  mods_count: number;
+  complexity_score: number | null;
+  created_at: string;
+  updated_at: string;
+  processed_at: string | null;
   display_name: string | null;
   avatar_url: string | null;
+  user_name: string;
 }
 
 export default function BuildsApproval() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<BuildStatus>("pending");
   
-  // Fetch builds data based on active tab
   const { data: builds, isLoading, refetch } = useQuery({
     queryKey: ["admin-builds", activeTab],
     queryFn: async () => {
@@ -63,11 +74,10 @@ export default function BuildsApproval() {
       return data.map(build => ({
         ...build,
         user_name: build.display_name || "Unknown user",
-      })) as (BuildWithUserData & { user_name: string })[];
+      })) as BuildWithUserData[];
     },
   });
 
-  // Handle approval/rejection of builds
   const updateBuildStatus = async (buildId: string, newStatus: BuildStatus) => {
     try {
       const { error } = await supabase
@@ -83,7 +93,6 @@ export default function BuildsApproval() {
         variant: newStatus === "approved" ? "default" : "destructive",
       });
 
-      // Refresh the data
       refetch();
     } catch (error: any) {
       toast({
@@ -94,8 +103,7 @@ export default function BuildsApproval() {
     }
   };
 
-  // Define table columns
-  const columns: ColumnDef<BuildWithUserData & { user_name: string }>[] = [
+  const columns: ColumnDef<BuildWithUserData>[] = [
     {
       id: "title",
       accessorKey: "title",
