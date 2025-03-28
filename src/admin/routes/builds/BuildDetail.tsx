@@ -10,9 +10,25 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle, XCircle, ArrowLeft, User, Calendar, Package, Tool } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { PrinterBuild, BuildPart, BuildMod } from "@/types/database";
 
 interface BuildDetailProps {
   id?: string;
+}
+
+interface ExtendedBuildPart extends BuildPart {
+  printer_parts?: {
+    id: string;
+    name: string;
+    [key: string]: any;
+  };
+}
+
+interface BuildWithProfile extends PrinterBuild {
+  profiles?: {
+    display_name: string | null;
+    avatar_url: string | null;
+  };
 }
 
 export default function BuildDetail({ id: propId }: BuildDetailProps) {
@@ -47,7 +63,7 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
         return null;
       }
 
-      return data;
+      return data as BuildWithProfile;
     },
     enabled: !!buildId,
   });
@@ -77,8 +93,8 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
       }
 
       return { 
-        parts: parts || [], 
-        mods: mods || [] 
+        parts: parts as ExtendedBuildPart[] || [], 
+        mods: mods as BuildMod[] || [] 
       };
     },
     enabled: !!buildId,
@@ -227,7 +243,7 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
                 <p className="text-muted-foreground">No parts specified for this build</p>
               ) : (
                 <div className="space-y-3">
-                  {buildComponents?.parts.map((part: any) => (
+                  {buildComponents?.parts.map((part: ExtendedBuildPart) => (
                     <div key={part.id} className="flex items-center p-3 border rounded-md">
                       <div className="flex-grow">
                         <div className="font-medium">{part.printer_parts?.name || "Unknown Part"}</div>
@@ -252,7 +268,7 @@ export default function BuildDetail({ id: propId }: BuildDetailProps) {
                 <p className="text-muted-foreground">No modifications specified for this build</p>
               ) : (
                 <div className="space-y-3">
-                  {buildComponents?.mods.map((mod: any) => (
+                  {buildComponents?.mods.map((mod: BuildMod) => (
                     <div key={mod.id} className="p-3 border rounded-md">
                       <div className="font-medium">{mod.name}</div>
                       <div className="text-sm text-muted-foreground mt-1">{mod.description}</div>
