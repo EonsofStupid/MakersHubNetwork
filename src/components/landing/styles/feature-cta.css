@@ -1,0 +1,63 @@
+
+@layer components {
+  .feature-cta {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .feature-cta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    transition: left 0.5s ease-in-out;
+    z-index: 1;
+    pointer-events: none;
+  }
+  
+  .feature-cta:hover::before {
+    left: 100%;
+  }
+  
+  .feature-cta-database {
+    --feature-color: var(--primary);
+    --feature-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+  }
+  
+  .feature-cta-forum {
+    --feature-color: var(--secondary);
+    --feature-shadow: 0 0 15px rgba(255, 45, 110, 0.15);
+  }
+  
+  .feature-cta-chat {
+    --feature-color: #8B5CF6;
+    --feature-shadow: 0 0 15px rgba(139, 92, 246, 0.15);
+  }
+
+  .feature-cta-hover-effect {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    background: linear-gradient(
+      45deg,
+      var(--feature-color, #00F0FF) 0%,
+      transparent 20%,
+      transparent 80%,
+      var(--feature-color, #00F0FF) 100%
+    );
+  }
+  
+  .feature-cta:hover .feature-cta-hover-effect {
+    opacity: 0.2;
+  }
+}
