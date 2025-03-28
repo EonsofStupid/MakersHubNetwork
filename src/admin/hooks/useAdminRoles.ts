@@ -15,48 +15,47 @@ export function useAdminRoles() {
   useEffect(() => {
     // Only load permissions when user is authenticated and roles are loaded
     if (status === 'authenticated' && roles && roles.length > 0) {
-      loadPermissions();
+      loadPermissions(mapRolesToPermissions(roles));
     }
   }, [status, roles, loadPermissions]);
   
   /**
-   * Maps a user role to a set of admin permissions
-   * @param role User role from auth store
+   * Maps user roles to a set of admin permissions
+   * @param userRoles Array of user roles from auth store
    * @returns Array of admin permissions
    */
-  const mapRoleToPermissions = (role: string): AdminPermission[] => {
-    switch (role) {
-      case 'super_admin':
-        return ['super_admin:all'];
-      case 'admin':
-        return [
-          'admin:access',
-          'admin:view',
-          'admin:edit',
-          'content:view',
-          'content:edit',
-          'users:view',
-          'builds:view',
-          'builds:approve',
-          'themes:view'
-        ];
-      case 'moderator':
-        return [
-          'admin:access',
-          'admin:view',
-          'content:view',
-          'users:view',
-          'builds:view'
-        ];
-      default:
-        return [];
-    }
+  const mapRolesToPermissions = (userRoles: string[]): AdminPermission[] => {
+    let allPermissions: AdminPermission[] = [];
+    
+    userRoles.forEach(role => {
+      switch (role) {
+        case 'super_admin':
+          allPermissions.push('super_admin:all');
+          break;
+        case 'admin':
+          allPermissions = [
+            ...allPermissions,
+            'admin:access',
+            'admin:view',
+            'admin:edit',
+            'content:view',
+            'content:edit',
+            'users:view',
+            'builds:view',
+            'builds:approve',
+            'themes:view'
+          ];
+          break;
+        // You can add more role mappings here if needed
+      }
+    });
+    
+    return allPermissions;
   };
   
   return {
-    isAdmin: Boolean(user?.role === 'admin' || roles?.includes('admin')),
+    isAdmin: Boolean(roles?.includes('admin') || roles?.includes('super_admin')),
     isSuperAdmin: Boolean(roles?.includes('super_admin')),
-    isModerator: Boolean(roles?.includes('moderator')),
-    mapRoleToPermissions
+    mapRolesToPermissions
   };
 }

@@ -3,18 +3,15 @@ import { useAuthStore } from "@/stores/auth/store";
 
 /**
  * Hook to check if the current user has admin access
- * This is a simplified version that just checks for a specific role
+ * Uses the roles array from auth store to determine admin access
  */
 export const useAdminAccess = () => {
-  const { user } = useAuthStore();
+  const { roles, isAdmin } = useAuthStore();
   
-  // Check if user has admin role
-  // In a real app, this would be more sophisticated with proper role checks
-  const hasAdminAccess = Boolean(user?.role === 'admin' || user?.email?.includes('admin'));
+  // Check if user has admin role using the auth store's roles array
+  const hasAdminAccess = isAdmin() || roles.includes('admin') || roles.includes('super_admin');
   
   return {
     hasAdminAccess,
-    // Additional admin permission checks could be added here
-    // For now, we'll just provide the basic admin access check
   };
 };
