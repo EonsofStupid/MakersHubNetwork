@@ -1,5 +1,5 @@
 
-// Admin permission types
+// Admin and Moderator permission types
 export type AdminPermission = 
   | 'admin:access' 
   | 'admin:view' 
@@ -16,7 +16,12 @@ export type AdminPermission =
   | 'themes:view'
   | 'themes:edit'
   | 'themes:delete'
+  | 'moderator:view'
+  | 'moderator:edit'
+  | 'moderator:ban'
+  | 'moderator:warn'
   | 'super_admin:all';
+
 
 // Admin component types
 export interface AdminComponentProps {
