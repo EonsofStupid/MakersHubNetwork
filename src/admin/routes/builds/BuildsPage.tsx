@@ -1,12 +1,7 @@
 
 import React from "react";
-import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
-import { BuildsOverview } from "@/admin/components/builds/BuildsOverview";
+import { PlaceholderPage } from "@/admin/routes";
 
 export default function BuildsPage() {
-  return (
-    <ImpulseAdminLayout title="Builds Management" requiresPermission="builds:view">
-      <BuildsOverview />
-    </ImpulseAdminLayout>
-  );
+  return <PlaceholderPage title="Builds Management" />;
 }
