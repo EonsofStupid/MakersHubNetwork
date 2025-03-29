@@ -1,71 +1,36 @@
 
-/**
- * Theme Effect System Types
- */
+export type EffectType = 'glitch' | 'gradient' | 'cyber' | 'pulse';
 
-export type EffectType = 'glitch' | 'gradient' | 'particle' | 'morph' | 'cyber' | 'pulse';
-
-export interface ThemeEffectBase {
+export interface ThemeEffect {
   id: string;
   type: EffectType;
-  duration?: number;
-  delay?: number;
-  intensity?: number;
   enabled: boolean;
+  duration?: number;
 }
 
-export interface GlitchEffect extends ThemeEffectBase {
+export interface GlitchEffect extends ThemeEffect {
   type: 'glitch';
-  frequency?: number;
-  amplitude?: number;
-  color?: string;
+  frequency: number;
+  amplitude: number;
 }
 
-export interface GradientEffect extends ThemeEffectBase {
+export interface GradientEffect extends ThemeEffect {
   type: 'gradient';
   colors: string[];
-  direction?: 'to-right' | 'to-left' | 'to-top' | 'to-bottom' | 'to-br' | 'to-bl' | 'to-tr' | 'to-tl';
-  speed?: number;
+  direction: 'to-right' | 'to-left' | 'to-top' | 'to-bottom' | 'to-br' | 'to-bl' | 'to-tr' | 'to-tl';
+  speed: number;
 }
 
-export interface ParticleEffect extends ThemeEffectBase {
-  type: 'particle';
-  count?: number;
-  size?: number;
-  color?: string;
-  speed?: number;
-}
-
-export interface MorphEffect extends ThemeEffectBase {
-  type: 'morph';
-  shapes?: string[];
-  speed?: number;
-  distortion?: number;
-}
-
-export interface CyberEffect extends ThemeEffectBase {
+export interface CyberEffect extends ThemeEffect {
   type: 'cyber';
-  glowColor?: string;
-  textShadow?: boolean;
+  glowColor: string;
+  textShadow: boolean;
   scanLines?: boolean;
 }
 
-export interface PulseEffect extends ThemeEffectBase {
+export interface PulseEffect extends ThemeEffect {
   type: 'pulse';
-  minOpacity?: number;
-  maxOpacity?: number;
-  color?: string;
-}
-
-export type ThemeEffect = 
-  | GlitchEffect 
-  | GradientEffect 
-  | ParticleEffect 
-  | MorphEffect 
-  | CyberEffect 
-  | PulseEffect;
-
-export interface EffectTarget {
-  elementId: string;
-  effect: ThemeEffect;
+  color: string;
+  minOpacity: number;
+  maxOpacity: number;
 }

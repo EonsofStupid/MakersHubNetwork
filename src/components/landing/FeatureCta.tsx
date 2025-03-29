@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Database, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useThemeEffects } from "@/hooks/useThemeEffects";
+import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 
 export type FeatureType = "database" | "forum" | "chat";
 
@@ -21,6 +22,15 @@ export const FeatureCta = ({ type, title, description, ctaText, ctaLink, classNa
     debounceDelay: 100,
     maxActiveEffects: 5
   });
+  const { componentStyles, variables } = useSiteTheme();
+
+  // Get styles from theme
+  const themeStyles = componentStyles?.FeatureCta || {
+    container: "relative overflow-hidden rounded-lg border p-6 transition-all duration-300 backdrop-blur-md shadow-lg hover:shadow-xl transform hover:-translate-y-1",
+    database: "border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10",
+    forum: "border-secondary/30 hover:border-secondary/60 bg-secondary/5 hover:bg-secondary/10",
+    chat: "border-[#8B5CF6]/30 hover:border-[#8B5CF6]/60 bg-[#8B5CF6]/5 hover:bg-[#8B5CF6]/10"
+  };
 
   // Generate a unique ID for this CTA
   const ctaId = `feature-cta-${type}`;
@@ -45,19 +55,19 @@ export const FeatureCta = ({ type, title, description, ctaText, ctaLink, classNa
     switch (type) {
       case "database":
         return {
-          container: "border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10",
+          container: themeStyles.database || "border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10",
           icon: "text-primary",
           button: "bg-primary/20 text-primary hover:bg-primary/30"
         };
       case "forum":
         return {
-          container: "border-secondary/30 hover:border-secondary/60 bg-secondary/5 hover:bg-secondary/10",
+          container: themeStyles.forum || "border-secondary/30 hover:border-secondary/60 bg-secondary/5 hover:bg-secondary/10",
           icon: "text-secondary",
           button: "bg-secondary/20 text-secondary hover:bg-secondary/30"
         };
       case "chat":
         return {
-          container: "border-[#8B5CF6]/30 hover:border-[#8B5CF6]/60 bg-[#8B5CF6]/5 hover:bg-[#8B5CF6]/10",
+          container: themeStyles.chat || "border-[#8B5CF6]/30 hover:border-[#8B5CF6]/60 bg-[#8B5CF6]/5 hover:bg-[#8B5CF6]/10",
           icon: "text-[#8B5CF6]",
           button: "bg-[#8B5CF6]/20 text-[#8B5CF6] hover:bg-[#8B5CF6]/30"
         };
@@ -70,9 +80,9 @@ export const FeatureCta = ({ type, title, description, ctaText, ctaLink, classNa
   const handleMouseEnter = () => {
     applyRandomEffect(ctaId, {
       types: ['glitch', 'gradient', 'cyber', 'pulse'],
-      colors: type === 'database' ? ['#00F0FF'] 
-           : type === 'forum' ? ['#FF2D6E'] 
-           : ['#8B5CF6'],
+      colors: type === 'database' ? [variables.effectColor] 
+           : type === 'forum' ? [variables.effectSecondary] 
+           : [variables.effectTertiary],
       duration: 2000
     });
   };
@@ -88,8 +98,7 @@ export const FeatureCta = ({ type, title, description, ctaText, ctaLink, classNa
     <div 
       id={ctaId}
       className={cn(
-        "feature-cta relative overflow-hidden rounded-lg border p-6 transition-all duration-300",
-        "backdrop-blur-md shadow-lg hover:shadow-xl transform hover:-translate-y-1",
+        themeStyles.container,
         styles.container,
         className
       )}

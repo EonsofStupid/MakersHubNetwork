@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { Theme } from '@/types/theme';
 
@@ -163,28 +162,24 @@ export function useThemeVariables(theme: Theme | null): ThemeVariables {
       }
       
       // Extract animation times
-      if (animation) {
-        if (animation.durations) {
-          const durations = animation.durations as Record<string, any>;
-          if (durations.fast) defaults.transitionFast = durations.fast as string;
-          if (durations.normal) defaults.transitionNormal = durations.normal as string;
-          if (durations.slow) defaults.transitionSlow = durations.slow as string;
-          
-          if (durations.animationFast) defaults.animationFast = durations.animationFast as string;
-          if (durations.animationNormal) defaults.animationNormal = durations.animationNormal as string;
-          if (durations.animationSlow) defaults.animationSlow = durations.animationSlow as string;
-        }
+      if (animation && animation.durations) {
+        const durations = animation.durations as Record<string, any>;
+        if (durations.fast) defaults.transitionFast = durations.fast as string;
+        if (durations.normal) defaults.transitionNormal = durations.normal as string;
+        if (durations.slow) defaults.transitionSlow = durations.slow as string;
+        
+        if (durations.animationFast) defaults.animationFast = durations.animationFast as string;
+        if (durations.animationNormal) defaults.animationNormal = durations.animationNormal as string;
+        if (durations.animationSlow) defaults.animationSlow = durations.animationSlow as string;
       }
       
       // Extract radius
-      if (spacing) {
-        if (spacing.radius) {
-          const radius = spacing.radius as Record<string, any>;
-          if (radius.sm) defaults.radiusSm = radius.sm as string;
-          if (radius.md) defaults.radiusMd = radius.md as string;
-          if (radius.lg) defaults.radiusLg = radius.lg as string;
-          if (radius.full) defaults.radiusFull = radius.full as string;
-        }
+      if (spacing && spacing.radius) {
+        const radius = spacing.radius as Record<string, any>;
+        if (radius.sm) defaults.radiusSm = radius.sm as string;
+        if (radius.md) defaults.radiusMd = radius.md as string;
+        if (radius.lg) defaults.radiusLg = radius.lg as string;
+        if (radius.full) defaults.radiusFull = radius.full as string;
       }
     } catch (error) {
       console.error('Error parsing theme tokens:', error);
