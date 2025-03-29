@@ -94,25 +94,23 @@ function QuickActionItem({
     navigate(path);
   };
   
-  // Handle dragging - using DOM events
+  // Fixed: Using HTML drag and drop attributes that work with framer-motion
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('text/plain', id);
     setDragSource(id);
   };
   
-  // Handle dropping actions onto this slot
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragTarget(null);
-    // Add drop logic here
-  };
-  
-  // Only handle dragover if we're dragging something
   const handleDragOver = (e: React.DragEvent) => {
     if (dragSource !== null) {
       e.preventDefault();
       setDragTarget(id);
     }
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragTarget(null);
+    // Add drop logic here
   };
   
   const handleDragEnd = () => {
@@ -127,13 +125,13 @@ function QuickActionItem({
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      className="impulse-quick-action relative group cursor-pointer"
+      data-tooltip={tooltip}
+      draggable="true"
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDrop={handleDrop}
-      draggable
-      className="impulse-quick-action relative group cursor-pointer"
-      data-tooltip={tooltip}
     >
       {getIconByName(icon)}
       
@@ -166,6 +164,7 @@ function EmptyActionSlot() {
   const [dragTarget, setDragTarget] = useAtom(dragTargetAtom);
   const [showActionSelector, setShowActionSelector] = React.useState(false);
   
+  // Fixed: Using HTML drag and drop attributes instead of framer-motion's onDrag events
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setDragTarget('empty-slot');
