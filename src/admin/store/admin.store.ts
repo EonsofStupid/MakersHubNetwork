@@ -16,6 +16,12 @@ interface AdminState {
   // Admin Theme
   adminTheme: string;
   
+  // Drag and drop state
+  hoveredIcon: string | null;
+  dragSource: string | null;
+  dragTarget: string | null;
+  showDragOverlay: boolean;
+  
   // Auth/Permissions State
   isLoadingPermissions: boolean;
   permissions: AdminPermission[];
@@ -31,6 +37,12 @@ interface AdminState {
   unpinIcon: (id: string) => void;
   setScrollY: (val: number) => void;
   setDashboardCollapsed: (collapsed: boolean) => void;
+  
+  // Drag and drop functions
+  setHoveredIcon: (id: string | null) => void;
+  setDragSource: (id: string | null) => void;
+  setDragTarget: (id: string | null) => void;
+  setShowDragOverlay: (show: boolean) => void;
   
   // Permission functions
   loadPermissions: (mappedPermissions?: AdminPermission[]) => Promise<void>;
@@ -50,6 +62,12 @@ export const useAdminStore = create<AdminState>()(
       
       // Default theme state
       adminTheme: 'cyberpunk',
+      
+      // Default drag and drop state
+      hoveredIcon: null,
+      dragSource: null,
+      dragTarget: null,
+      showDragOverlay: false,
       
       // Default auth state
       isLoadingPermissions: true,
@@ -75,6 +93,12 @@ export const useAdminStore = create<AdminState>()(
       })),
       
       setScrollY: (val) => set({ scrollY: val }),
+      
+      // Drag and drop functions
+      setHoveredIcon: (id) => set({ hoveredIcon: id }),
+      setDragSource: (id) => set({ dragSource: id }),
+      setDragTarget: (id) => set({ dragTarget: id }),
+      setShowDragOverlay: (show) => set({ showDragOverlay: show }),
       
       // Permission functions
       loadPermissions: async (mappedPermissions) => {

@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardShortcuts } from "@/admin/components/dashboard/DashboardShortcuts";
-import { useAdminPreferences } from "@/admin/store/adminPreferences.store";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useAdmin } from "@/admin/context/AdminContext";
+import { useAdminStore } from "@/admin/store/admin.store";
+import { useAdminPreferences } from "@/admin/store/adminPreferences.store";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -25,6 +26,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 }) => {
   const { checkPermission, isLoading } = useAdmin();
   const { 
+    scrollY, 
+    sidebarExpanded, 
+    setActiveSection 
+  } = useAdminStore();
+  const { 
     isDashboardCollapsed, 
     setDashboardCollapsed, 
     loadPreferences
@@ -33,7 +39,20 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   useEffect(() => {
     // Load preferences on component mount
     loadPreferences();
-  }, [loadPreferences]);
+    
+    // Extract the current section from location
+    const path = window.location.pathname.split('/');
+    const section = path[path.length - 1] || 'overview';
+    setActiveSection(section);
+    
+    // Add the admin theme class
+    document.body.classList.add('impulse-admin-root');
+    
+    return () => {
+      // Remove the admin theme class when unmounting
+      document.body.classList.remove('impulse-admin-root');
+    };
+  }, [loadPreferences, setActiveSection]);
 
   // Toggle dashboard collapsed state
   const toggleDashboard = () => {
@@ -55,11 +74,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-background/50 backdrop-blur-sm">
+    <div className="admin-theme min-h-screen">
       <AdminHeader title={title} />
       
       <div className={cn(
-        "transition-all duration-300 ease-in-out pt-4 pb-8",
+        "transition-all duration-300 ease-in-out pt-20 pb-8",
         isDashboardCollapsed ? "py-2" : "py-4"
       )}>
         <div className="container mx-auto px-4">
@@ -118,4 +137,4 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       </div>
     </div>
   );
-}
+};

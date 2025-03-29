@@ -3,9 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAdminStore } from "../store/admin.store";
-import { adminNavigationItems } from "../config/navigation.config";
-import { useAdmin } from "../context/AdminContext";
+import { useAdminStore } from "@/admin/store/admin.store";
+import { adminNavigationItems } from "@/admin/config/navigation.config";
+import { useAdmin } from "@/admin/context/AdminContext";
 
 interface SidebarIconProps {
   id: string;

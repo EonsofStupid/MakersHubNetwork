@@ -5,11 +5,17 @@ import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AdminRoutes } from "@/admin/routes";
 import { useAdmin } from "@/admin/context/AdminContext";
+import { useAdminStore } from "@/admin/store/admin.store";
+
+// Import admin theme styles
+import "@/admin/styles/admin-core.css";
+import "@/admin/theme/impulse/impulse-theme.css";
 
 export default function Admin() {
   const { toast } = useToast();
   const { hasAdminAccess, isLoading, initializeAdmin } = useAdmin();
   const [hasInitialized, setHasInitialized] = useState(false);
+  const { loadPermissions } = useAdminStore();
   
   useEffect(() => {
     console.log("Admin component mounted, admin access:", hasAdminAccess);
@@ -17,14 +23,23 @@ export default function Admin() {
     // Load admin permissions if user has access
     if (hasAdminAccess && !hasInitialized) {
       initializeAdmin();
+      loadPermissions();
       setHasInitialized(true);
+      
+      // Add admin theme class to body
+      document.body.classList.add('impulse-admin-root');
     }
-  }, [hasAdminAccess, hasInitialized, initializeAdmin]);
+    
+    return () => {
+      // Remove admin theme class from body
+      document.body.classList.remove('impulse-admin-root');
+    };
+  }, [hasAdminAccess, hasInitialized, initializeAdmin, loadPermissions]);
 
   // Show simple loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-background admin-theme">
         <div className="space-y-4 text-center">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="text-muted-foreground">Loading admin panel...</p>
