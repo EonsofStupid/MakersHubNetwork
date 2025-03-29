@@ -1,8 +1,9 @@
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createAdminPersistMiddleware } from '../middleware/persist.middleware';
 import { AdminPermission } from '../types/admin.types';
 import { defaultTopNavShortcuts, defaultDashboardShortcuts } from '@/admin/config/navigation.config';
+import { persist } from 'zustand/middleware';
 
 // Combined admin state interface
 interface AdminState {
@@ -58,6 +59,7 @@ interface AdminState {
   hasPermission: (permission: AdminPermission) => boolean;
 }
 
+// Create the admin store with database-backed persistence
 export const useAdminStore = create<AdminState>()(
   persist(
     (set, get) => ({
@@ -188,18 +190,6 @@ export const useAdminStore = create<AdminState>()(
         return permissions.includes(permission);
       }
     }),
-    {
-      name: 'admin-store',
-      partialize: (state) => ({
-        sidebarExpanded: state.sidebarExpanded,
-        pinnedTopNavItems: state.pinnedTopNavItems,
-        pinnedDashboardItems: state.pinnedDashboardItems,
-        activeSection: state.activeSection,
-        isDarkMode: state.isDarkMode,
-        adminTheme: state.adminTheme,
-        isDashboardCollapsed: state.isDashboardCollapsed,
-        frozenZones: state.frozenZones
-      })
-    }
+    createAdminPersistMiddleware('admin-store')
   )
 );

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useAdminStore } from '../store/admin.store';
 import { useAuthStore } from '@/stores/auth/store';
 import { AdminPermission } from '../types/admin.types';
+import { useAdminSync } from '../hooks/useAdminSync';
 
 interface AdminContextValue {
   hasAdminAccess: boolean;
@@ -26,6 +27,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   
   const hasAdminAccess = roles?.includes("admin") || roles?.includes("super_admin");
   const isSuperAdmin = roles?.includes("super_admin");
+  
+  // Initialize admin data sync (database <-> localStorage)
+  useAdminSync();
   
   const checkPermission = useCallback((permission: AdminPermission): boolean => {
     // Super admins have all permissions

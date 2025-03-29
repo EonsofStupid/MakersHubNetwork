@@ -1,5 +1,6 @@
 
 import { create } from 'zustand';
+import { createAdminPersistMiddleware } from '../middleware/persist.middleware';
 import { persist } from 'zustand/middleware';
 
 interface AdminPreferencesState {
@@ -60,15 +61,6 @@ export const useAdminPreferences = create<AdminPreferencesState>()(
         // When state changes, persist middleware saves automatically
       }
     }),
-    {
-      name: 'admin-preferences',
-      partialize: (state) => ({
-        isDashboardCollapsed: state.isDashboardCollapsed,
-        activeDashboardLayout: state.activeDashboardLayout,
-        pinnedTools: state.pinnedTools,
-        recentViews: state.recentViews,
-        theme: state.theme,
-      })
-    }
+    createAdminPersistMiddleware('admin-preferences')
   )
 );

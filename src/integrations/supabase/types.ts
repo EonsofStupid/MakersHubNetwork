@@ -11,23 +11,53 @@ export type Database = {
     Tables: {
       admin_shortcuts: {
         Row: {
+          active_section: string | null
           created_at: string | null
+          dashboard_collapsed: boolean | null
+          dashboard_items: Json | null
+          frozen_zones: Json | null
           id: string
+          layout_preference: string | null
+          recent_views: Json | null
           shortcuts: Json
+          sidebar_expanded: boolean | null
+          theme_preference: string | null
+          topnav_items: Json | null
+          ui_preferences: Json | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          active_section?: string | null
           created_at?: string | null
+          dashboard_collapsed?: boolean | null
+          dashboard_items?: Json | null
+          frozen_zones?: Json | null
           id?: string
+          layout_preference?: string | null
+          recent_views?: Json | null
           shortcuts?: Json
+          sidebar_expanded?: boolean | null
+          theme_preference?: string | null
+          topnav_items?: Json | null
+          ui_preferences?: Json | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          active_section?: string | null
           created_at?: string | null
+          dashboard_collapsed?: boolean | null
+          dashboard_items?: Json | null
+          frozen_zones?: Json | null
           id?: string
+          layout_preference?: string | null
+          recent_views?: Json | null
           shortcuts?: Json
+          sidebar_expanded?: boolean | null
+          theme_preference?: string | null
+          topnav_items?: Json | null
+          ui_preferences?: Json | null
           updated_at?: string | null
           user_id?: string
         }
