@@ -151,6 +151,10 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
         images: buildData.images || [],
         // Ensure status is a valid BuildStatus value
         status: (buildData.status as BuildStatus) || 'pending',
+        // Add default values for nullable numeric fields
+        complexity_score: buildData.complexity_score || 0,
+        parts_count: buildData.parts_count || 0, 
+        mods_count: buildData.mods_count || 0,
         parts,
         mods: modsData || [],
         reviews: [] // We'll populate this separately if needed
