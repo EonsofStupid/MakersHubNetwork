@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Package } from "lucide-react";
 import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
 import { BuildDetailView } from "@/admin/components/builds/BuildDetailView";
 
