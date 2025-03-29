@@ -2,70 +2,97 @@
 import { AdminPermission } from "@/admin/types/admin.types";
 
 /**
- * Map of admin sections to required permissions
+ * Map section names to their required permissions
+ * Used for both navigation and feature access control
  */
-export const sectionPermissions: Record<string, AdminPermission> = {
-  overview: "admin:access",
-  users: "users:view",
-  content: "content:view",
-  builds: "builds:view",
-  "data-maestro": "data:view",
-  themes: "themes:view",
-  settings: "settings:view",
-  analytics: "admin:access"
+export const sectionPermissionMap: Record<string, AdminPermission> = {
+  'overview': 'admin:access',
+  'users': 'users:view',
+  'content': 'content:view',
+  'builds': 'builds:view',
+  'data': 'data:view',
+  'themes': 'themes:view',
+  'settings': 'settings:view',
+  'analytics': 'admin:access'
 };
 
 /**
- * Maps a user role to a set of admin permissions
+ * Check if the specified permissions include admin access
+ * @param permissions Array of permissions to check
  */
-export function mapRoleToPermissions(role: string): AdminPermission[] {
-  switch (role) {
-    case 'super_admin':
-      return ['super_admin:all'] as AdminPermission[];
-      
-    case 'admin':
-      return [
-        'admin:access',
-        'content:view',
-        'content:manage',
-        'users:view',
-        'builds:view',
-        'builds:approve',
-        'settings:view',
-        'data:view',
-        'themes:view'
-      ] as AdminPermission[];
-      
-    case 'content_manager':
-      return [
-        'admin:access',
-        'content:view',
-        'content:manage'
-      ] as AdminPermission[];
-      
-    case 'build_moderator':
-      return [
-        'admin:access',
-        'builds:view',
-        'builds:approve'
-      ] as AdminPermission[];
-      
-    default:
-      return [] as AdminPermission[];
-  }
+export function hasAdminAccess(permissions: AdminPermission[]): boolean {
+  return permissions.some(p => 
+    p === 'admin:access' || 
+    p === 'admin:super' || 
+    p === 'super_admin:all'
+  );
 }
 
 /**
- * Checks if a specific permission is included in a list of permissions
+ * Map a permission to its display name
+ * @param permission Permission to get display name for
  */
-export function hasPermission(
-  permissions: AdminPermission[],
-  requiredPermission: AdminPermission
-): boolean {
-  // Super admin has all permissions
-  if (permissions.includes('super_admin:all')) {
-    return true;
-  }
+export function getPermissionDisplayName(permission: AdminPermission): string {
+  const displayNames: Record<AdminPermission, string> = {
+    'admin:access': 'Admin Access',
+    'admin:view': 'View Admin Panel',
+    'admin:edit': 'Edit Admin Settings',
+    'admin:super': 'Super Admin',
+    'content:view': 'View Content',
+    'content:edit': 'Edit Content',
+    'content:delete': 'Delete Content',
+    'users:view': 'View Users',
+    'users:edit': 'Edit Users',
+    'users:delete': 'Delete Users',
+    'builds:view': 'View Builds',
+    'builds:approve': 'Approve Builds',
+    'builds:reject': 'Reject Builds',
+    'themes:view': 'View Themes',
+    'themes:edit': 'Edit Themes',
+    'themes:delete': 'Delete Themes',
+    'data:view': 'View Data',
+    'data:edit': 'Edit Data',
+    'data:import': 'Import/Export Data',
+    'settings:view': 'View Settings',
+    'settings:edit': 'Edit Settings',
+    'super_admin:all': 'All Permissions'
+  };
   
-  return permissions.includes(requiredPermission);
+  return displayNames[permission] || permission;
+}
+
+/**
+ * Group permissions by category for the UI
+ */
+export function getPermissionGroups() {
+  return [
+    {
+      name: 'Admin',
+      permissions: ['admin:access', 'admin:view', 'admin:edit', 'admin:super'] as AdminPermission[]
+    },
+    {
+      name: 'Content',
+      permissions: ['content:view', 'content:edit', 'content:delete'] as AdminPermission[]
+    },
+    {
+      name: 'Users',
+      permissions: ['users:view', 'users:edit', 'users:delete'] as AdminPermission[]
+    },
+    {
+      name: 'Builds',
+      permissions: ['builds:view', 'builds:approve', 'builds:reject'] as AdminPermission[]
+    },
+    {
+      name: 'Themes',
+      permissions: ['themes:view', 'themes:edit', 'themes:delete'] as AdminPermission[]
+    },
+    {
+      name: 'Data',
+      permissions: ['data:view', 'data:edit', 'data:import'] as AdminPermission[]
+    },
+    {
+      name: 'Settings',
+      permissions: ['settings:view', 'settings:edit'] as AdminPermission[]
+    }
+  ];
 }

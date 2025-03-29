@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
-import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
 import { AdminLayout } from "@/admin/components/layout/AdminLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Card } from "@/components/ui/card";

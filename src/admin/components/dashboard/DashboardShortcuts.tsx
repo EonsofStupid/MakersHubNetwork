@@ -18,7 +18,7 @@ export function DashboardShortcuts() {
       name: "User Management",
       icon: "👥",
       path: "/admin/users",
-      permission: "admin:users:read" as AdminPermission,
+      permission: "users:view",
       color: "bg-blue-500/10 text-blue-500 border-blue-500/20"
     },
     {
@@ -26,7 +26,7 @@ export function DashboardShortcuts() {
       name: "Content",
       icon: "📝",
       path: "/admin/content",
-      permission: "admin:content:read" as AdminPermission,
+      permission: "content:view",
       color: "bg-green-500/10 text-green-500 border-green-500/20"
     },
     {
@@ -34,7 +34,7 @@ export function DashboardShortcuts() {
       name: "Data Maestro",
       icon: "🔍",
       path: "/admin/data-maestro",
-      permission: "admin:access" as AdminPermission,
+      permission: "data:view",
       color: "bg-purple-500/10 text-purple-500 border-purple-500/20"
     },
     {
@@ -42,7 +42,7 @@ export function DashboardShortcuts() {
       name: "Settings",
       icon: "⚙️",
       path: "/admin/settings",
-      permission: "admin:settings:read" as AdminPermission,
+      permission: "settings:view",
       color: "bg-orange-500/10 text-orange-500 border-orange-500/20"
     },
     {
@@ -50,7 +50,7 @@ export function DashboardShortcuts() {
       name: "Import/Export",
       icon: "📤",
       path: "/admin/import",
-      permission: "admin:data:import" as AdminPermission,
+      permission: "data:import",
       color: "bg-pink-500/10 text-pink-500 border-pink-500/20"
     },
     {
@@ -58,7 +58,7 @@ export function DashboardShortcuts() {
       name: "Analytics",
       icon: "📊",
       path: "/admin/analytics",
-      permission: "admin:access" as AdminPermission,
+      permission: "admin:access",
       color: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20"
     },
   ];
@@ -71,7 +71,7 @@ export function DashboardShortcuts() {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {shortcuts.map((shortcut) => {
         // Skip if user doesn't have required permission
-        if (!hasPermission(shortcut.permission || "admin:access")) return null;
+        if (!hasPermission(shortcut.permission)) return null;
         
         return (
           <Card 

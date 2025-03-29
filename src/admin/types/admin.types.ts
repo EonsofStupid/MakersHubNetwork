@@ -19,6 +19,11 @@ export type AdminPermission =
   | 'themes:view'
   | 'themes:edit'
   | 'themes:delete'
+  | 'data:view'
+  | 'data:edit'
+  | 'data:import'
+  | 'settings:view'
+  | 'settings:edit'
   | 'super_admin:all';
 
 // Admin roles with associated permissions
@@ -26,6 +31,26 @@ export interface AdminRole {
   id: string;
   name: string;
   permissions: AdminPermission[];
+}
+
+// Admin shortcut definition
+export interface AdminShortcut {
+  id: string;
+  name: string;
+  icon: string | ReactNode;
+  path: string;
+  permission: AdminPermission;
+  color?: string;
+}
+
+// Admin section definition (for navigation)
+export interface AdminSection {
+  id: string;
+  label: string;
+  path: string;
+  icon: string;
+  permission: AdminPermission;
+  children?: AdminSection[];
 }
 
 // Frozen zone definition

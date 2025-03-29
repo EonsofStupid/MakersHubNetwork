@@ -10,6 +10,7 @@ import { AdminInspector } from "../inspector/AdminInspector";
 import { AdminThemeProvider } from "@/admin/theme/AdminThemeProvider";
 import { AdminPermission } from "@/admin/types/admin.types";
 import { QuickActionBar } from "./QuickActionBar";
+import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
 
 interface ImpulseAdminLayoutProps {
   children: React.ReactNode;
@@ -20,9 +21,10 @@ interface ImpulseAdminLayoutProps {
 export function ImpulseAdminLayout({ 
   children, 
   title = "Admin Dashboard",
-  requiresPermission = "admin:access" as AdminPermission 
+  requiresPermission = "admin:access" 
 }: ImpulseAdminLayoutProps) {
-  const { hasPermission, isLoadingPermissions, loadPermissions } = useAdminStore();
+  const { loadPermissions } = useAdminStore();
+  const { checkPermission, isLoading } = useAdminPermissions();
   const { 
     isDashboardCollapsed, 
     setDashboardCollapsed, 
@@ -48,7 +50,7 @@ export function ImpulseAdminLayout({
     };
   }, [loadPermissions, loadPreferences]);
 
-  if (!isLoadingPermissions && requiresPermission && !hasPermission(requiresPermission)) {
+  if (!isLoading && requiresPermission && !checkPermission(requiresPermission)) {
     return (
       <div className="container mx-auto p-6">
         <div className="border border-destructive/20 p-6 text-center rounded-lg">
@@ -75,7 +77,7 @@ export function ImpulseAdminLayout({
             isDashboardCollapsed ? "collapsed" : ""
           )}>
             <ErrorBoundary>
-              {isLoadingPermissions ? (
+              {isLoading ? (
                 <div className="flex justify-center items-center min-h-[400px]">
                   <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
                 </div>

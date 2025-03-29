@@ -46,13 +46,13 @@ export const adminNavigation: AdminSection[] = [
     label: 'Data Maestro',
     path: '/admin/data-maestro',
     icon: 'Database',
-    permission: 'admin:access'
+    permission: 'data:view'
   },
   {
     id: 'settings',
     label: 'Settings',
     path: '/admin/settings',
     icon: 'Settings',
-    permission: 'admin:access'
+    permission: 'settings:view'
   }
 ];
