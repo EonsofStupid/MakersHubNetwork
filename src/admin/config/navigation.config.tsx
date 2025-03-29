@@ -6,9 +6,9 @@ import {
   FileText, 
   Package,
   Database, 
+  BarChart,
   PaintBucket,
   Settings,
-  BarChart,
   Shield
 } from "lucide-react";
 import { AdminPermission } from "../types/admin.types";
@@ -75,6 +75,6 @@ export const adminNavigationItems = [
     label: "Settings", 
     path: "/admin/settings", 
     icon: <Settings className="h-4 w-4 mr-2" />,
-    permission: "admin:access" as AdminPermission
+    permission: "settings:view" as AdminPermission
   }
 ];

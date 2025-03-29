@@ -1,54 +1,35 @@
 
-import { Routes, Route, BrowserRouter } from "react-router-dom";
-import IndexPage from "./pages/Index";
-import Login from "./pages/Login";
-import Admin from "./pages/Admin";
-import { AuthProvider } from "./components/auth/AuthProvider";
-import { ThemeProvider } from "./components/ui/theme-provider";
-import { Toaster } from "./components/ui/toaster";
-import { Toaster as SonnerToaster } from "./components/ui/sonner";
-import { SiteThemeProvider } from "./components/theme/SiteThemeProvider";
-import { ThemeInitializer } from "./components/theme/ThemeInitializer";
-import { DynamicKeyframes } from "./components/theme/DynamicKeyframes";
-import { ThemeEffectProvider } from "./components/theme/effects/ThemeEffectProvider";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import { AdminProvider } from "@/admin/context/AdminContext";
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+// Import pages
+import Index from "./pages/Index";
+import Admin from "./pages/Admin";
+import Login from "./pages/Login";
+
+// Import UI components
+import { MainNav } from "@/components/MainNav";
+import { Footer } from "@/components/Footer";
+
+import "./App.css";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <SiteThemeProvider>
-          <ThemeInitializer>
-            <DynamicKeyframes />
-            <ThemeEffectProvider>
-              <AuthProvider>
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={<IndexPage />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/admin/*" element={<Admin />} />
-                  </Routes>
-                  <Toaster />
-                  <SonnerToaster />
-                </BrowserRouter>
-              </AuthProvider>
-            </ThemeEffectProvider>
-          </ThemeInitializer>
-        </SiteThemeProvider>
-      </ThemeProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
+      <AuthProvider>
+        <AdminProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/admin/*" element={<Admin />} />
+          </Routes>
+          <Toaster />
+        </AdminProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

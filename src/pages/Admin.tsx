@@ -1,34 +1,26 @@
 
 import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AdminRoutes } from "@/admin/routes";
-import { useAdminStore } from "@/admin/store/admin.store";
-import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useAdmin } from "@/admin/context/AdminContext";
 
 export default function Admin() {
-  const { status } = useAuthStore();
   const { toast } = useToast();
-  const { loadPermissions } = useAdminStore();
-  const { hasAdminAccess, isLoading, initializeAdminAccess } = useAdminAccess();
-  
-  // Clear loading state check to ensure we're not getting stuck
-  const isPageLoading = status === "loading" || isLoading;
+  const { hasAdminAccess, isLoading, initializeAdmin } = useAdmin();
   
   useEffect(() => {
-    console.log("Admin component mounted, auth status:", status);
-    console.log("Admin access:", hasAdminAccess);
+    console.log("Admin component mounted, admin access:", hasAdminAccess);
     
     // Load admin permissions if user has access
     if (hasAdminAccess) {
-      initializeAdminAccess();
+      initializeAdmin();
     }
-  }, [status, hasAdminAccess, loadPermissions, initializeAdminAccess]);
+  }, [hasAdminAccess, initializeAdmin]);
 
   // Show simple loading state
-  if (isPageLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="space-y-4 text-center">

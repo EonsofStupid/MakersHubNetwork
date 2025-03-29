@@ -1,5 +1,5 @@
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { AdminPermission } from "@/admin/types/admin.types";
@@ -10,7 +10,7 @@ import { AdminPermission } from "@/admin/types/admin.types";
  */
 export function useAdminAccess() {
   const { roles, user, status } = useAuthStore();
-  const { loadPermissions, hasPermission } = useAdminStore();
+  const { loadPermissions, hasPermission, isLoadingPermissions } = useAdminStore();
   
   // Memoized admin access check
   const hasAdminAccess = useMemo(() => {
@@ -44,11 +44,18 @@ export function useAdminAccess() {
   /**
    * Initialize admin permissions based on auth roles
    */
-  const initializeAdminAccess = async () => {
+  const initializeAdminAccess = () => {
     if (user?.id && hasAdminAccess) {
-      await loadPermissions();
+      loadPermissions();
     }
   };
+  
+  // Initialize permissions on mount
+  useEffect(() => {
+    if (status === "authenticated" && hasAdminAccess) {
+      initializeAdminAccess();
+    }
+  }, [status, hasAdminAccess, user?.id]);
   
   return {
     hasAdminAccess,
@@ -56,6 +63,6 @@ export function useAdminAccess() {
     checkPermission,
     initializeAdminAccess,
     isAuthenticated: status === "authenticated" && !!user,
-    isLoading: status === "loading"
+    isLoading: status === "loading" || isLoadingPermissions
   };
 }
