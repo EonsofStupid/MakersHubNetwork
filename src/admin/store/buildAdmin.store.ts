@@ -73,6 +73,8 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
         ...build,
         display_name: build.profiles?.display_name,
         avatar_url: build.profiles?.avatar_url,
+        // Ensure submitted_by is never null
+        submitted_by: build.submitted_by || 'anonymous',
         reviews: [],
         parts: [],
         mods: []
@@ -147,6 +149,8 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
         updated_at: buildData.updated_at || currentDateString,
         display_name: buildData.profiles?.display_name || null,
         avatar_url: buildData.profiles?.avatar_url || null,
+        // Ensure submitted_by is never null by providing a default value
+        submitted_by: buildData.submitted_by || 'anonymous',
         // Convert null/undefined arrays to empty arrays
         images: buildData.images || [],
         // Ensure status is a valid BuildStatus value
