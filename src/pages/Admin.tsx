@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -9,15 +9,17 @@ import { useAdmin } from "@/admin/context/AdminContext";
 export default function Admin() {
   const { toast } = useToast();
   const { hasAdminAccess, isLoading, initializeAdmin } = useAdmin();
+  const [hasInitialized, setHasInitialized] = useState(false);
   
   useEffect(() => {
     console.log("Admin component mounted, admin access:", hasAdminAccess);
     
     // Load admin permissions if user has access
-    if (hasAdminAccess) {
+    if (hasAdminAccess && !hasInitialized) {
       initializeAdmin();
+      setHasInitialized(true);
     }
-  }, [hasAdminAccess, initializeAdmin]);
+  }, [hasAdminAccess, hasInitialized, initializeAdmin]);
 
   // Show simple loading state
   if (isLoading) {

@@ -1,23 +1,37 @@
 
-/**
- * Types for admin tools and utilities
- */
+// Types for admin tools and functionality
 
+// Frozen zones for content editing
 export interface FrozenZone {
   id: string;
-  isLocked: boolean;
-}
-
-export interface SmartOverlayPosition {
   x: number;
   y: number;
+  width: number;
+  height: number;
 }
 
-export interface SmartOverlayProps {
+// Admin tool configuration
+export interface AdminToolConfig {
   id: string;
-  title: string;
-  initialPosition?: SmartOverlayPosition;
-  width?: number;
-  height?: number;
-  children: React.ReactNode;
+  name: string;
+  icon: string;
+  component: React.ComponentType;
+  permissions: string[];
+}
+
+// Tool state for saving/restoring tool configurations
+export interface ToolState {
+  id: string;
+  position?: { x: number; y: number };
+  isOpen: boolean;
+  data?: Record<string, unknown>;
+}
+
+// Quick access tool configuration
+export interface QuickTool {
+  id: string;
+  label: string;
+  icon: string;
+  action: () => void;
+  shortcut?: string;
 }

@@ -1,15 +1,12 @@
 
-import { AdminLayout } from './components/layout/AdminLayout';
-import { AdminSidebar } from './components/layout/AdminSidebar';
+import { AdminLayout } from './components/AdminLayout';
+import { AdminSidebar } from './components/AdminSidebar';
 import { AdminHeader } from './components/AdminHeader';
 import { ImpulseAdminLayout } from './components/layout/ImpulseAdminLayout';
 import { useAdminStore } from './store/admin.store';
 import { AdminThemeProvider, useAdminTheme } from './theme/AdminThemeProvider';
 import { useAdminChat, useAdminChatListener } from './hooks/useAdminChat';
 import { useAdminPermissions } from './hooks/useAdminPermissions';
-
-// Admin Dashboard Routes
-import Themes from './routes/themes/Themes';
 
 // Export admin UI components
 export { AdminLayout };
@@ -23,11 +20,8 @@ export { AdminThemeProvider, useAdminTheme };
 export { useAdminChat, useAdminChatListener };
 export { useAdminPermissions };
 
-// Export admin route components
-export { Themes };
-
-// Main admin router component
-export default function AdminRouter() {
+// Main admin dashboard
+export default function AdminDashboard() {
   return (
     <ImpulseAdminLayout>
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
