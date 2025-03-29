@@ -1,251 +1,220 @@
 
 import { useState } from 'react';
-import { useThemeStore } from '@/stores/theme/store';
 import { supabase } from '@/integrations/supabase/client';
-import { Theme, ComponentTokens } from '@/types/theme';
-import { useToast } from '@/hooks/use-toast';
+import { Theme } from '@/types/theme';
 import { Json } from '@/integrations/supabase/types';
 
-// ThemeToken type for the hook usage
-interface ThemeToken {
-  id?: string;
-  token_name: string;
-  token_value: string;
-  category: string;
-  description?: string;
-  fallback_value?: string;
-  theme_id?: string;
-}
-
 export function useThemeManager() {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const { currentTheme, setTheme } = useThemeStore();
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const createTheme = async (theme: Omit<Theme, 'id' | 'created_at' | 'updated_at'>) => {
+  // Create a new theme
+  const createTheme = async (name: string, description: string = ''): Promise<string | null> => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setIsUpdating(true);
+      // First, check if a theme with this name already exists
+      const { data: existingThemes, error: checkError } = await supabase
+        .from('themes')
+        .select('id')
+        .eq('name', name);
+        
+      if (checkError) throw checkError;
       
-      // Convert the complex objects to Json type for the database
-      const themeToInsert = {
-        name: theme.name,
-        description: theme.description || '',
-        status: theme.status || 'draft',
-        is_default: theme.is_default || false,
-        version: theme.version || 1,
-        design_tokens: theme.design_tokens || {},
-        component_tokens: [], // These will be handled separately
-        composition_rules: theme.composition_rules || {},
-        cached_styles: theme.cached_styles || {}
+      if (existingThemes && existingThemes.length > 0) {
+        throw new Error(`A theme with the name "${name}" already exists.`);
+      }
+      
+      // Create a new theme
+      const themeData = {
+        name,
+        description,
+        status: 'draft' as const,
+        is_default: false,
+        version: 1,
+        design_tokens: {
+          colors: {
+            background: '#080F1E',
+            foreground: '#F9FAFB',
+            card: '#0E172A',
+            cardForeground: '#F9FAFB',
+            primary: '#00F0FF',
+            primaryForeground: '#F9FAFB',
+            secondary: '#FF2D6E',
+            secondaryForeground: '#F9FAFB',
+            muted: '#131D35',
+            mutedForeground: '#94A3B8',
+            accent: '#131D35',
+            accentForeground: '#F9FAFB',
+            destructive: '#EF4444',
+            destructiveForeground: '#F9FAFB',
+            border: '#131D35',
+            input: '#131D35',
+            ring: '#1E293B',
+          },
+          effects: {
+            primary: '#00F0FF',
+            secondary: '#FF2D6E',
+            tertiary: '#8B5CF6',
+          },
+          animation: {
+            durations: {
+              fast: '150ms',
+              normal: '300ms',
+              slow: '500ms',
+              animationFast: '1s',
+              animationNormal: '2s',
+              animationSlow: '3s',
+            }
+          },
+          spacing: {
+            radius: {
+              sm: '0.25rem',
+              md: '0.5rem',
+              lg: '0.75rem',
+              full: '9999px',
+            }
+          }
+        },
+        component_tokens: [],
+        composition_rules: {},
+        cached_styles: {}
       };
       
-      const { data, error } = await supabase
+      // Insert the theme into the database
+      const { data, error: insertError } = await supabase
         .from('themes')
-        .insert(themeToInsert)
+        .insert(themeData as any)
         .select()
         .single();
-
-      if (error) throw error;
-
-      // If we have component tokens, insert them separately
-      if (theme.component_tokens && theme.component_tokens.length > 0) {
-        const componentTokensToInsert = theme.component_tokens.map(token => ({
-          theme_id: data.id,
-          component_name: token.component_name,
-          styles: token.styles
-        }));
+      
+      if (insertError) throw insertError;
+      
+      return data?.id || null;
+    } catch (err) {
+      console.error('Error creating theme:', err);
+      setError(err as Error);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Get a theme by ID
+  const getTheme = async (id: string): Promise<Theme | null> => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('themes')
+        .select('*')
+        .eq('id', id)
+        .single();
         
-        const { error: componentsError } = await supabase
-          .from('theme_components')
-          .insert(componentTokensToInsert);
-          
-        if (componentsError) throw componentsError;
-      }
-
-      toast({
-        title: "Theme created",
-        description: `Theme "${theme.name}" has been created successfully.`,
-      });
-
-      return data;
+      if (error) throw error;
+      
+      return data as Theme;
     } catch (err) {
-      const error = err as Error;
-      toast({
-        title: "Error creating theme",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
+      console.error('Error getting theme:', err);
+      setError(err as Error);
+      return null;
     } finally {
-      setIsUpdating(false);
+      setIsLoading(false);
     }
   };
-
-  const updateTheme = async (
-    themeId: string,
-    updates: Partial<Omit<Theme, 'id' | 'created_at' | 'updated_at'>>
-  ) => {
+  
+  // Update a theme
+  const updateTheme = async (id: string, updates: Partial<Theme>): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setIsUpdating(true);
+      const { error } = await supabase
+        .from('themes')
+        .update(updates as any)
+        .eq('id', id);
+        
+      if (error) throw error;
       
-      // Create a clean object with only the fields we want to update
-      const themeUpdates: Record<string, any> = {};
+      return true;
+    } catch (err) {
+      console.error('Error updating theme:', err);
+      setError(err as Error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Delete a theme
+  const deleteTheme = async (id: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // First check if this is the default theme
+      const { data: themeData, error: themeError } = await supabase
+        .from('themes')
+        .select('is_default')
+        .eq('id', id)
+        .single();
+        
+      if (themeError) throw themeError;
       
-      // Add basic fields directly
-      if (updates.name) themeUpdates.name = updates.name;
-      if (updates.description !== undefined) themeUpdates.description = updates.description;
-      if (updates.status) themeUpdates.status = updates.status;
-      if (updates.is_default !== undefined) themeUpdates.is_default = updates.is_default;
-      if (updates.version) themeUpdates.version = updates.version;
-      if (updates.published_at) themeUpdates.published_at = updates.published_at;
-      if (updates.parent_theme_id) themeUpdates.parent_theme_id = updates.parent_theme_id;
-      if (updates.cache_key) themeUpdates.cache_key = updates.cache_key;
+      if (themeData && themeData.is_default) {
+        throw new Error('Cannot delete the default theme.');
+      }
       
-      // Handle complex objects
-      if (updates.design_tokens) themeUpdates.design_tokens = updates.design_tokens as Json;
-      if (updates.composition_rules) themeUpdates.composition_rules = updates.composition_rules as Json;
-      if (updates.cached_styles) themeUpdates.cached_styles = updates.cached_styles as Json;
+      // Delete the theme
+      const { error } = await supabase
+        .from('themes')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
       
-      // Update the theme
+      return true;
+    } catch (err) {
+      console.error('Error deleting theme:', err);
+      setError(err as Error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Get all themes
+  const getAllThemes = async (): Promise<Theme[]> => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
       const { data, error } = await supabase
         .from('themes')
-        .update(themeUpdates)
-        .eq('id', themeId)
-        .select()
-        .single();
-
+        .select('*')
+        .order('created_at', { ascending: false });
+        
       if (error) throw error;
-
-      // If we have component tokens, handle them separately
-      if (updates.component_tokens && updates.component_tokens.length > 0) {
-        for (const component of updates.component_tokens) {
-          if (component.id) {
-            // Update existing component
-            const { error: updateError } = await supabase
-              .from('theme_components')
-              .update({
-                component_name: component.component_name,
-                styles: component.styles as Json
-              })
-              .eq('id', component.id);
-              
-            if (updateError) throw updateError;
-          } else {
-            // Insert new component
-            const { error: insertError } = await supabase
-              .from('theme_components')
-              .insert({
-                theme_id: themeId,
-                component_name: component.component_name,
-                styles: component.styles as Json
-              });
-              
-            if (insertError) throw insertError;
-          }
-        }
-      }
-
-      toast({
-        title: "Theme updated",
-        description: `Theme has been updated successfully.`,
-      });
-
-      if (currentTheme?.id === themeId) {
-        await setTheme(themeId);
-      }
-
-      return data;
+      
+      return data as Theme[];
     } catch (err) {
-      const error = err as Error;
-      toast({
-        title: "Error updating theme",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
+      console.error('Error getting themes:', err);
+      setError(err as Error);
+      return [];
     } finally {
-      setIsUpdating(false);
+      setIsLoading(false);
     }
   };
-
-  const updateThemeTokens = async (themeId: string, tokens: Omit<ThemeToken, 'id' | 'theme_id'>[]) => {
-    try {
-      setIsUpdating(true);
-      const { error } = await supabase
-        .from('theme_tokens')
-        .upsert(
-          tokens.map(token => ({
-            ...token,
-            theme_id: themeId,
-            category: token.category || 'default',
-          }))
-        );
-
-      if (error) throw error;
-
-      toast({
-        title: "Theme tokens updated",
-        description: "Theme tokens have been updated successfully.",
-      });
-
-      if (currentTheme?.id === themeId) {
-        await setTheme(themeId);
-      }
-    } catch (err) {
-      const error = err as Error;
-      toast({
-        title: "Error updating theme tokens",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const updateThemeComponents = async (themeId: string, components: Omit<ComponentTokens, 'id' | 'theme_id'>[]) => {
-    try {
-      setIsUpdating(true);
-      const { error } = await supabase
-        .from('theme_components')
-        .upsert(
-          components.map(component => ({
-            ...component,
-            theme_id: themeId,
-            component_name: component.component_name,
-            styles: component.styles as Json
-          }))
-        );
-
-      if (error) throw error;
-
-      toast({
-        title: "Theme components updated",
-        description: "Theme components have been updated successfully.",
-      });
-
-      if (currentTheme?.id === themeId) {
-        await setTheme(themeId);
-      }
-    } catch (err) {
-      const error = err as Error;
-      toast({
-        title: "Error updating theme components",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
+  
   return {
-    isUpdating,
     createTheme,
+    getTheme,
     updateTheme,
-    updateThemeTokens,
-    updateThemeComponents,
+    deleteTheme,
+    getAllThemes,
+    isLoading,
+    error
   };
 }
