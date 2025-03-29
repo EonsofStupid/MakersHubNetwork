@@ -4,10 +4,11 @@
 // Frozen zones for content editing
 export interface FrozenZone {
   id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  isLocked?: boolean;
 }
 
 // Admin tool configuration
