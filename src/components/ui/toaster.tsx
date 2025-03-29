@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -9,7 +10,7 @@ import {
 } from "@/components/ui/toast"
 import { motion, AnimatePresence } from "framer-motion"
 
-export function SystemToaster() {
+export function Toaster() {
   const { toasts } = useToast()
 
   return (

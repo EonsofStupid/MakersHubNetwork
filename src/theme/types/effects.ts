@@ -1,6 +1,7 @@
 
 export type EffectType = 'glitch' | 'gradient' | 'cyber' | 'pulse' | 'particle' | 'morph';
 
+// Base interface for all theme effects
 export interface ThemeEffect {
   id: string;
   type: EffectType;
@@ -8,6 +9,7 @@ export interface ThemeEffect {
   duration?: number;
 }
 
+// Specific effect interfaces that extend the base ThemeEffect
 export interface GlitchEffect extends ThemeEffect {
   type: 'glitch';
   frequency?: number;

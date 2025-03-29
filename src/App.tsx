@@ -5,8 +5,8 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import { ThemeProvider } from "./components/ui/theme-provider";
-import { Toaster } from "./components/ui/toaster";
-import { Toaster as Sonner } from "./components/ui/sonner";
+import { Toaster } from "./components/ui/toast";
+import { Toaster as SonnerToaster } from "./components/ui/sonner";
 import { SiteThemeProvider } from "./components/theme/SiteThemeProvider";
 import { ThemeInitializer } from "./components/theme/ThemeInitializer";
 import { DynamicKeyframes } from "./components/theme/DynamicKeyframes";
@@ -40,7 +40,7 @@ function App() {
                     <Route path="/admin/*" element={<Admin />} />
                   </Routes>
                   <Toaster />
-                  <Sonner />
+                  <SonnerToaster />
                 </BrowserRouter>
               </AuthProvider>
             </ThemeEffectProvider>
