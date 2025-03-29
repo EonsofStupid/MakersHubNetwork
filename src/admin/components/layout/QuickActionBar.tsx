@@ -94,7 +94,7 @@ function QuickActionItem({
     navigate(path);
   };
   
-  // Fixed: Using HTML drag and drop attributes that work with framer-motion
+  // HTML Drag and Drop handlers
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('text/plain', id);
     setDragSource(id);
@@ -122,18 +122,23 @@ function QuickActionItem({
     <motion.div
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
-      onClick={handleClick}
+      className="relative group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="impulse-quick-action relative group cursor-pointer"
-      data-tooltip={tooltip}
-      draggable="true"
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-      onDrop={handleDrop}
     >
-      {getIconByName(icon)}
+      {/* Inner div to handle HTML drag and drop operations */}
+      <div 
+        className="impulse-quick-action"
+        data-tooltip={tooltip}
+        draggable="true"
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+        onDrop={handleDrop}
+        onClick={handleClick}
+      >
+        {getIconByName(icon)}
+      </div>
       
       {isHovered && onRemove && (
         <button
@@ -164,7 +169,7 @@ function EmptyActionSlot() {
   const [dragTarget, setDragTarget] = useAtom(dragTargetAtom);
   const [showActionSelector, setShowActionSelector] = React.useState(false);
   
-  // Fixed: Using HTML drag and drop attributes instead of framer-motion's onDrag events
+  // HTML Drag and Drop handlers
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setDragTarget('empty-slot');
@@ -185,15 +190,19 @@ function EmptyActionSlot() {
     <motion.div
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
-      className={cn(
-        "impulse-quick-action border-dashed cursor-pointer",
-        dragTarget === 'empty-slot' ? "border-[var(--impulse-border-active)]" : "border-[var(--impulse-border-normal)]"
-      )}
-      onClick={handleClick}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
     >
-      <Plus className="w-5 h-5 text-[var(--impulse-text-secondary)]" />
+      {/* Inner div to handle HTML drag and drop operations */}
+      <div
+        className={cn(
+          "impulse-quick-action border-dashed cursor-pointer",
+          dragTarget === 'empty-slot' ? "border-[var(--impulse-border-active)]" : "border-[var(--impulse-border-normal)]"
+        )}
+        onClick={handleClick}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        <Plus className="w-5 h-5 text-[var(--impulse-text-secondary)]" />
+      </div>
     </motion.div>
   );
 }
