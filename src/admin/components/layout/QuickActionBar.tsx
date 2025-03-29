@@ -70,7 +70,7 @@ function QuickAction({
     navigate(path);
   };
   
-  // Handle dragging
+  // Handle dragging - using DOM events instead of framer-motion handlers
   const handleDragStart = (e: React.DragEvent) => {
     setDragSource(id);
   };

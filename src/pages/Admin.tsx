@@ -9,6 +9,7 @@ import { useAdminStore } from "@/admin/store/admin.store";
 
 // Import admin theme styles
 import "@/admin/styles/admin-core.css";
+import "@/admin/styles/impulse-admin.css";
 import "@/admin/theme/impulse/impulse-theme.css";
 
 export default function Admin() {

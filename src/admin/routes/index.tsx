@@ -2,6 +2,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AdminLayout } from "@/admin/components/AdminLayout";
+import { PlaceholderPage } from "./PlaceholderPage";
 
 // Import all the page components
 import OverviewPage from "./overview/OverviewPage";
@@ -106,3 +107,5 @@ export function AdminRoutes() {
     </Routes>
   );
 }
+
+export { PlaceholderPage };
