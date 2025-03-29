@@ -2,17 +2,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AdminPermission } from '../types/admin.types';
+import { defaultTopNavShortcuts, defaultDashboardShortcuts } from '@/admin/config/navigation.config';
 
 // Combined admin state interface
 interface AdminState {
   // UI State
   sidebarExpanded: boolean;
-  pinnedIcons: string[];
+  pinnedTopNavItems: string[];
+  pinnedDashboardItems: string[];
   scrollY: number;
   activeSection: string;
   isDarkMode: boolean;
   isDashboardCollapsed: boolean;
-  showQuickActionBar: boolean;
   
   // Admin Theme
   adminTheme: string;
@@ -37,11 +38,10 @@ interface AdminState {
   setActiveSection: (section: string) => void;
   toggleDarkMode: () => void;
   setAdminTheme: (theme: string) => void;
-  pinIcon: (id: string) => void;
-  unpinIcon: (id: string) => void;
+  setPinnedTopNavItems: (items: string[]) => void;
+  setPinnedDashboardItems: (items: string[]) => void;
   setScrollY: (val: number) => void;
   setDashboardCollapsed: (collapsed: boolean) => void;
-  toggleQuickActionBar: () => void;
   
   // Frozen zones functions
   addFrozenZone: (zone: string) => void;
@@ -63,12 +63,12 @@ export const useAdminStore = create<AdminState>()(
     (set, get) => ({
       // Default UI state
       sidebarExpanded: true,
-      pinnedIcons: [],
+      pinnedTopNavItems: defaultTopNavShortcuts,
+      pinnedDashboardItems: defaultDashboardShortcuts,
       scrollY: 0,
       activeSection: 'overview',
       isDarkMode: true,
       isDashboardCollapsed: false,
-      showQuickActionBar: true,
       
       // Default theme state
       adminTheme: 'cyberpunk',
@@ -94,7 +94,8 @@ export const useAdminStore = create<AdminState>()(
       toggleDarkMode: () => set(state => ({ isDarkMode: !state.isDarkMode })),
       setAdminTheme: (theme) => set({ adminTheme: theme }),
       setDashboardCollapsed: (collapsed) => set({ isDashboardCollapsed: collapsed }),
-      toggleQuickActionBar: () => set(state => ({ showQuickActionBar: !state.showQuickActionBar })),
+      setPinnedTopNavItems: (items) => set({ pinnedTopNavItems: items }),
+      setPinnedDashboardItems: (items) => set({ pinnedDashboardItems: items }),
       
       // Frozen zones functions
       addFrozenZone: (zone) => set(state => ({ 
@@ -102,16 +103,6 @@ export const useAdminStore = create<AdminState>()(
       })),
       removeFrozenZone: (zone) => set(state => ({ 
         frozenZones: state.frozenZones.filter(z => z !== zone) 
-      })),
-      
-      pinIcon: (id) => set((state) => ({
-        pinnedIcons: state.pinnedIcons.includes(id) 
-          ? state.pinnedIcons 
-          : [...state.pinnedIcons, id]
-      })),
-      
-      unpinIcon: (id) => set((state) => ({
-        pinnedIcons: state.pinnedIcons.filter(iconId => iconId !== id)
       })),
       
       setScrollY: (val) => set({ scrollY: val }),
@@ -201,12 +192,12 @@ export const useAdminStore = create<AdminState>()(
       name: 'admin-store',
       partialize: (state) => ({
         sidebarExpanded: state.sidebarExpanded,
-        pinnedIcons: state.pinnedIcons,
+        pinnedTopNavItems: state.pinnedTopNavItems,
+        pinnedDashboardItems: state.pinnedDashboardItems,
         activeSection: state.activeSection,
         isDarkMode: state.isDarkMode,
         adminTheme: state.adminTheme,
         isDashboardCollapsed: state.isDashboardCollapsed,
-        showQuickActionBar: state.showQuickActionBar,
         frozenZones: state.frozenZones
       })
     }

@@ -97,7 +97,6 @@ export function PendingReviewsList() {
                 onReject={handleReject}
               />
               
-              {/* Add a button to view the associated build */}
               <div className="flex justify-end">
                 <Button 
                   variant="ghost" 
