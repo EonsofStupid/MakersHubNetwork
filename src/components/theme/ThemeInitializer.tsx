@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { ensureDefaultTheme } from '@/utils/themeInitializer';
+import { ensureDefaultTheme, syncCSSToDatabase } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 

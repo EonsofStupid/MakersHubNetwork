@@ -5,8 +5,9 @@ import { useThemeEffect } from '@/components/theme/effects/ThemeEffectProvider';
 import { EffectRenderer } from '@/components/theme/effects/EffectRenderer';
 import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
 import { cn } from '@/lib/utils';
+import { CyberEffect } from '@/theme/types/effects';
 
-interface FeatureCtaProps {
+export interface FeatureCtaProps {
   title: string;
   description: string;
   icon?: React.ReactNode;
@@ -38,7 +39,8 @@ export const FeatureCta = ({
     const elementId = `feature-${id}`;
     const effectId = `${elementId}-glow`;
     
-    addEffect(elementId, {
+    // Cast to the specific effect type
+    const cyberEffect: CyberEffect = {
       id: effectId,
       type: 'cyber',
       enabled: true,
@@ -46,7 +48,9 @@ export const FeatureCta = ({
       glowColor: '#00F0FF',
       textShadow: true,
       scanLines: false
-    });
+    };
+    
+    addEffect(elementId, cyberEffect);
     
     applyRandomEffect(elementId, {
       types: ['cyber'],
