@@ -24,6 +24,12 @@
   --impulse-glow-primary: 0 0 15px rgba(0, 240, 255, 0.7);
   --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.7);
   --impulse-glow-hover: 0 0 20px rgba(0, 240, 255, 0.9);
+  
+  /* Admin-specific variables */
+  --admin-accent: var(--impulse-primary);
+  --admin-accent-2: var(--impulse-secondary);
+  --admin-border: var(--impulse-bg-card);
+  --admin-text-secondary: var(--impulse-text-secondary);
 }
 
 /* Admin theme root container */
@@ -32,4 +38,24 @@
   color: var(--impulse-text-primary);
   min-height: 100vh;
   width: 100%;
+}
+
+/* Admin theme class */
+.admin-theme {
+  background-color: var(--impulse-bg-main);
+  color: var(--impulse-text-primary);
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Sidebar styling */
+.admin-sidebar {
+  background-color: var(--impulse-bg-overlay);
+  border-right: 1px solid var(--impulse-border-normal);
+}
+
+/* Card styling */
+.admin-card {
+  background-color: var(--impulse-bg-card);
+  border: 1px solid var(--impulse-border-normal);
 }
