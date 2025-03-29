@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Theme } from '@/types/theme';
+import { Theme, ComponentTokens } from '@/types/theme';
 import { Json } from '@/integrations/supabase/types';
 
 export function useThemeManager() {
@@ -115,7 +115,40 @@ export function useThemeManager() {
         
       if (error) throw error;
       
-      return data as Theme;
+      if (!data) return null;
+      
+      // Convert the raw data to the Theme type
+      const themeData: Theme = {
+        id: data.id,
+        name: data.name,
+        description: data.description || '',
+        status: data.status || 'draft',
+        is_default: data.is_default || false,
+        created_by: data.created_by || undefined,
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || '',
+        published_at: data.published_at || undefined,
+        version: data.version || 1,
+        cache_key: data.cache_key || undefined,
+        parent_theme_id: data.parent_theme_id || undefined,
+        design_tokens: data.design_tokens as any || {},
+        component_tokens: Array.isArray(data.component_tokens) 
+          ? (data.component_tokens as any[]).map(token => ({
+              id: token.id || `token-${Date.now()}`,
+              component_name: token.component_name || '',
+              styles: token.styles || {},
+              description: token.description || '',
+              theme_id: token.theme_id,
+              context: token.context,
+              created_at: token.created_at || '',
+              updated_at: token.updated_at || ''
+            }))
+          : [],
+        composition_rules: data.composition_rules as any || {},
+        cached_styles: data.cached_styles as any || {},
+      };
+      
+      return themeData;
     } catch (err) {
       console.error('Error getting theme:', err);
       setError(err as Error);
@@ -198,7 +231,40 @@ export function useThemeManager() {
         
       if (error) throw error;
       
-      return data as Theme[];
+      if (!data) return [];
+      
+      // Convert the raw data to Theme array
+      const themes: Theme[] = data.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        status: item.status || 'draft',
+        is_default: item.is_default || false,
+        created_by: item.created_by || undefined,
+        created_at: item.created_at || '',
+        updated_at: item.updated_at || '',
+        published_at: item.published_at || undefined,
+        version: item.version || 1,
+        cache_key: item.cache_key || undefined,
+        parent_theme_id: item.parent_theme_id || undefined,
+        design_tokens: item.design_tokens as any || {},
+        component_tokens: Array.isArray(item.component_tokens) 
+          ? (item.component_tokens as any[]).map(token => ({
+              id: token.id || `token-${Date.now()}`,
+              component_name: token.component_name || '',
+              styles: token.styles || {},
+              description: token.description || '',
+              theme_id: token.theme_id,
+              context: token.context,
+              created_at: token.created_at || '',
+              updated_at: token.updated_at || ''
+            }))
+          : [],
+        composition_rules: item.composition_rules as any || {},
+        cached_styles: item.cached_styles as any || {},
+      }));
+      
+      return themes;
     } catch (err) {
       console.error('Error getting themes:', err);
       setError(err as Error);

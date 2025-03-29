@@ -1,5 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { Theme } from '@/types/theme';
+import { Theme, ComponentTokens } from '@/types/theme';
 import { Json } from '@/integrations/supabase/types';
 
 /**
@@ -22,6 +23,8 @@ export async function ensureDefaultTheme(): Promise<string | null> {
     
     // If a default theme exists, return its ID
     if (existingTheme) {
+      // Automatically sync CSS to this theme
+      await syncCSSToDatabase(existingTheme.id);
       return existingTheme.id;
     }
     
@@ -93,6 +96,11 @@ export async function ensureDefaultTheme(): Promise<string | null> {
       return null;
     }
     
+    // Sync CSS to the new theme
+    if (data && data.id) {
+      await syncCSSToDatabase(data.id);
+    }
+    
     console.log('Created default theme with ID:', data.id);
     return data.id;
   } catch (error) {
@@ -143,7 +151,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       }
     };
     
-    // Extract component styles
+    // Extract component styles with explicit ids
     const componentStyles = [
       {
         id: `main-nav-${Date.now()}`,
@@ -254,15 +262,21 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       }
     ];
     
-    // Update design tokens with animations
+    // Prepare the design tokens update 
+    // Start with existing design tokens or an empty object
+    const currentDesignTokens = theme.design_tokens && typeof theme.design_tokens === 'object' 
+      ? theme.design_tokens 
+      : {};
+    
+    // Add our animations
     const updatedDesignTokens = {
-      ...theme.design_tokens,
+      ...currentDesignTokens,
       animation: {
-        ...(theme.design_tokens?.animation || {}),
+        ...(currentDesignTokens.animation || {}),
         keyframes: animationsKeyframes,
-        transitions: theme.design_tokens?.animation?.transitions || {},
+        transitions: currentDesignTokens.animation?.transitions || {},
         durations: {
-          ...(theme.design_tokens?.animation?.durations || {}),
+          ...(currentDesignTokens.animation?.durations || {}),
           fast: '150ms',
           normal: '300ms',
           slow: '500ms',
@@ -309,6 +323,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         const { error: insertCompError } = await supabase
           .from('theme_components')
           .insert({
+            id: component.id,
             theme_id: themeId,
             component_name: component.component_name,
             styles: component.styles as Json
