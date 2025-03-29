@@ -1,63 +1,42 @@
 
-import { useEffect } from "react";
-import { useAdminUI } from "../../store/admin-ui";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Settings as SettingsIcon } from "lucide-react";
 
-const Settings = () => {
-  const { setActiveSection } = useAdminUI();
-  
-  useEffect(() => {
-    setActiveSection("settings");
-  }, [setActiveSection]);
-
+export default function Settings() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-[var(--admin-accent)]">Admin Settings</h1>
-      
-      <div className="bg-[var(--admin-border)] rounded-lg p-4 shadow-lg space-y-4">
-        <div>
-          <h3 className="text-lg font-medium mb-2">General Settings</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm mb-1">Site Name</label>
-              <input 
-                type="text" 
-                className="w-full bg-[var(--admin-bg)] border border-[var(--admin-accent-2)]/30 rounded p-2"
-                defaultValue="MakersImpulse"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm mb-1">Support Email</label>
-              <input 
-                type="email" 
-                className="w-full bg-[var(--admin-bg)] border border-[var(--admin-accent-2)]/30 rounded p-2"
-                defaultValue="support@makersimpulse.com"
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div>
-          <h3 className="text-lg font-medium mb-2">Security</h3>
-          <div className="flex items-center gap-2 mb-2">
-            <input type="checkbox" defaultChecked id="2fa" />
-            <label htmlFor="2fa">Require 2FA for admins</label>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="auto-logout" />
-            <label htmlFor="auto-logout">Auto-logout after 30 minutes</label>
-          </div>
-        </div>
-        
-        <div className="flex justify-end">
-          <button className="px-4 py-2 bg-[var(--admin-accent)] rounded hover:bg-[var(--admin-accent-2)] transition-colors">
-            Save Changes
-          </button>
-        </div>
+      <div className="flex items-center gap-2">
+        <SettingsIcon className="text-primary w-5 h-5" />
+        <h1 className="text-2xl font-bold">Admin Settings</h1>
       </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Global Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            Configure your admin panel preferences
+          </p>
+          
+          <div className="space-y-4">
+            <Card className="p-4 bg-muted/50">
+              <h3 className="font-medium mb-1">Theme Settings</h3>
+              <p className="text-sm text-muted-foreground">
+                Customize the admin theme and appearance
+              </p>
+            </Card>
+            
+            <Card className="p-4 bg-muted/50">
+              <h3 className="font-medium mb-1">Permissions</h3>
+              <p className="text-sm text-muted-foreground">
+                Configure admin roles and permissions
+              </p>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default Settings;
+}

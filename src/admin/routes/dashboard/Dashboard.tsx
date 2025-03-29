@@ -1,49 +1,43 @@
 
-import { useEffect } from "react";
-import { useAdminUI } from "../../store/admin-ui";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LayoutDashboard } from "lucide-react";
 
-const Dashboard = () => {
-  const { setActiveSection } = useAdminUI();
-  
-  useEffect(() => {
-    setActiveSection("dashboard");
-  }, [setActiveSection]);
-
+export default function Dashboard() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-[var(--admin-accent)]">Dashboard</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Stats Cards */}
-        <div className="bg-[var(--admin-border)] rounded-lg p-4 shadow-lg">
-          <h3 className="text-[var(--admin-accent-2)] font-medium">Total Users</h3>
-          <p className="text-3xl font-bold">1,234</p>
-        </div>
-        
-        <div className="bg-[var(--admin-border)] rounded-lg p-4 shadow-lg">
-          <h3 className="text-[var(--admin-accent-2)] font-medium">Active Projects</h3>
-          <p className="text-3xl font-bold">56</p>
-        </div>
-        
-        <div className="bg-[var(--admin-border)] rounded-lg p-4 shadow-lg">
-          <h3 className="text-[var(--admin-accent-2)] font-medium">Printer Parts</h3>
-          <p className="text-3xl font-bold">789</p>
-        </div>
+      <div className="flex items-center gap-2">
+        <LayoutDashboard className="text-primary w-5 h-5" />
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
       </div>
       
-      <div className="bg-[var(--admin-border)] rounded-lg p-4 shadow-lg">
-        <h2 className="text-xl font-bold mb-4">Recent Activity</h2>
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="border-b border-[var(--admin-accent-2)]/20 pb-2">
-              <p className="text-sm">User action #{i}</p>
-              <p className="text-xs text-[var(--admin-text-secondary)]">2 hours ago</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            Here's a snapshot of your platform's current status
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="p-4 bg-muted/50">
+              <div className="text-2xl font-bold">42</div>
+              <div className="text-sm text-muted-foreground">Active Users</div>
+            </Card>
+            
+            <Card className="p-4 bg-muted/50">
+              <div className="text-2xl font-bold">257</div>
+              <div className="text-sm text-muted-foreground">Builds Created</div>
+            </Card>
+            
+            <Card className="p-4 bg-muted/50">
+              <div className="text-2xl font-bold">15</div>
+              <div className="text-sm text-muted-foreground">Builds Pending</div>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default Dashboard;
+}
