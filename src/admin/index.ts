@@ -14,7 +14,6 @@ export { useAdminRoles } from './hooks/useAdminRoles';
 
 // Export admin types
 export * from './types/admin.types';
-export * from './types/tools.types';
 
 // Export admin routes
 export { AdminRoutes } from './routes';

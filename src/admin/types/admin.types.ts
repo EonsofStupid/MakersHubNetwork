@@ -31,15 +31,6 @@ export interface AdminSection {
   permission: AdminPermission;
 }
 
-// Frozen zone for drag-and-drop functionality
-export interface FrozenZone {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 // Admin overlay configuration
 export interface AdminOverlayConfig {
   id: string;

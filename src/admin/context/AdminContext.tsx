@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAdminStore } from '../store/admin.store';
 import { useAuthStore } from '@/stores/auth/store';
 import { AdminPermission } from '../types/admin.types';
@@ -22,10 +22,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     isLoadingPermissions 
   } = useAdminStore();
   
+  const [initialized, setInitialized] = useState(false);
+  
   const hasAdminAccess = roles?.includes("admin") || roles?.includes("super_admin");
   const isSuperAdmin = roles?.includes("super_admin");
   
-  const checkPermission = (permission: AdminPermission): boolean => {
+  const checkPermission = useCallback((permission: AdminPermission): boolean => {
     // Super admins have all permissions
     if (isSuperAdmin) {
       return true;
@@ -37,20 +39,21 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
     
     return hasPermission(permission);
-  };
+  }, [isSuperAdmin, hasAdminAccess, hasPermission]);
   
-  const initializeAdmin = () => {
-    if (user?.id && hasAdminAccess) {
+  const initializeAdmin = useCallback(() => {
+    if (user?.id && hasAdminAccess && !initialized) {
       loadPermissions();
+      setInitialized(true);
     }
-  };
+  }, [user?.id, hasAdminAccess, initialized, loadPermissions]);
   
-  // Initialize permissions once on mount
+  // Initialize permissions once when authenticated
   useEffect(() => {
-    if (status === "authenticated" && hasAdminAccess) {
+    if (status === "authenticated" && hasAdminAccess && !initialized) {
       initializeAdmin();
     }
-  }, [status, hasAdminAccess]);
+  }, [status, hasAdminAccess, initialized, initializeAdmin]);
   
   const value = {
     hasAdminAccess,
