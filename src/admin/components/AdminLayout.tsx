@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { AdminSidebar } from "@/admin/components/AdminSidebar";
 import { AdminHeader } from "@/admin/components/AdminHeader";
+import { QuickActionBar } from "@/admin/components/layout/QuickActionBar";
 import { AdminPermission } from "@/admin/types/admin.types";
 import { cn } from "@/lib/utils";
 import { ChevronUp, ChevronDown } from "lucide-react";
@@ -135,6 +136,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Quick Action Bar - floating on the right side */}
+      <QuickActionBar />
     </div>
   );
 };

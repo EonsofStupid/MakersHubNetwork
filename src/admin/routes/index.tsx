@@ -1,126 +1,108 @@
 
-import React, { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { AdminLayout } from '@/admin/components/AdminLayout';
-import { Spinner } from '@/components/ui/spinner';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AdminLayout } from "@/admin/components/AdminLayout";
 
-// Lazy-loaded admin pages
-const Overview = lazy(() => import('./overview/OverviewPage'));
-const Users = lazy(() => import('./users/UsersPage'));
-const Content = lazy(() => import('./content/ContentPage'));
-const Builds = lazy(() => import('./builds/BuildsPage'));
-const DataMaestro = lazy(() => import('./data/DataMaestroPage'));
-const Analytics = lazy(() => import('./analytics/AnalyticsPage'));
-const Themes = lazy(() => import('./themes/ThemesPage'));
-const Permissions = lazy(() => import('./permissions/PermissionsPage'));
-const Settings = lazy(() => import('./settings/SettingsPage'));
-
-// Loading fallback
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[300px]">
-    <Spinner />
-  </div>
-);
+// Import all the page components
+import OverviewPage from "./overview/OverviewPage";
+import UsersPage from "./users/UsersPage";
+import BuildsPage from "./builds/BuildsPage";
+import ContentPage from "./content/ContentPage";
+import ThemesPage from "./themes/ThemesPage";
+import SettingsPage from "./settings/SettingsPage";
+import AnalyticsPage from "./analytics/AnalyticsPage";
+import DataMaestroPage from "./data/DataMaestroPage";
+import BuildDetailPage from "./builds/BuildDetailPage";
+import PermissionsPage from "./permissions/PermissionsPage";
 
 export function AdminRoutes() {
   return (
     <Routes>
-      <Route path="/" element={
-        <AdminLayout>
-          <Suspense fallback={<PageLoader />}>
-            <Overview />
-          </Suspense>
-        </AdminLayout>
-      } />
-      
-      <Route path="/overview" element={
-        <AdminLayout title="Overview" requiredPermission="admin:access">
-          <Suspense fallback={<PageLoader />}>
-            <Overview />
-          </Suspense>
-        </AdminLayout>
-      } />
-      
-      <Route path="/users" element={
-        <AdminLayout title="User Management" requiredPermission="users:view">
-          <Suspense fallback={<PageLoader />}>
-            <Users />
-          </Suspense>
-        </AdminLayout>
-      } />
-      
-      <Route path="/content" element={
-        <AdminLayout title="Content Management" requiredPermission="content:view">
-          <Suspense fallback={<PageLoader />}>
-            <Content />
-          </Suspense>
-        </AdminLayout>
-      } />
-      
-      <Route path="/builds" element={
-        <AdminLayout title="Builds Management" requiredPermission="builds:view">
-          <Suspense fallback={<PageLoader />}>
-            <Builds />
-          </Suspense>
-        </AdminLayout>
-      } />
-      
-      <Route path="/data-maestro" element={
-        <AdminLayout title="Data Maestro" requiredPermission="data:view">
-          <Suspense fallback={<PageLoader />}>
-            <DataMaestro />
-          </Suspense>
-        </AdminLayout>
-      } />
-      
-      <Route path="/analytics" element={
-        <AdminLayout title="Analytics" requiredPermission="admin:access">
-          <Suspense fallback={<PageLoader />}>
-            <Analytics />
-          </Suspense>
-        </AdminLayout>
-      } />
-      
-      <Route path="/themes" element={
-        <AdminLayout title="Themes" requiredPermission="themes:view">
-          <Suspense fallback={<PageLoader />}>
-            <Themes />
-          </Suspense>
-        </AdminLayout>
-      } />
-      
-      <Route path="/permissions" element={
-        <AdminLayout title="Permissions" requiredPermission="super_admin:all">
-          <Suspense fallback={<PageLoader />}>
-            <Permissions />
-          </Suspense>
-        </AdminLayout>
-      } />
-      
-      <Route path="/settings" element={
-        <AdminLayout title="Settings" requiredPermission="settings:view">
-          <Suspense fallback={<PageLoader />}>
-            <Settings />
-          </Suspense>
-        </AdminLayout>
-      } />
-      
-      {/* Fallback route - redirects to overview */}
-      <Route path="*" element={
-        <AdminLayout>
-          <Suspense fallback={<PageLoader />}>
-            <Overview />
-          </Suspense>
-        </AdminLayout>
-      } />
+      <Route 
+        path="/" 
+        element={<Navigate to="/admin/overview" replace />} 
+      />
+      <Route 
+        path="/overview" 
+        element={
+          <AdminLayout title="Admin Overview">
+            <OverviewPage />
+          </AdminLayout>
+        } 
+      />
+      <Route 
+        path="/users" 
+        element={
+          <AdminLayout title="User Management" requiredPermission="users:view">
+            <UsersPage />
+          </AdminLayout>
+        } 
+      />
+      <Route 
+        path="/builds" 
+        element={
+          <AdminLayout title="Build Management" requiredPermission="builds:view">
+            <BuildsPage />
+          </AdminLayout>
+        } 
+      />
+      <Route 
+        path="/builds/:id" 
+        element={
+          <AdminLayout title="Build Details" requiredPermission="builds:view">
+            <BuildDetailPage />
+          </AdminLayout>
+        } 
+      />
+      <Route 
+        path="/content" 
+        element={
+          <AdminLayout title="Content Management" requiredPermission="content:view">
+            <ContentPage />
+          </AdminLayout>
+        } 
+      />
+      <Route 
+        path="/themes" 
+        element={
+          <AdminLayout title="Theme Manager" requiredPermission="themes:view">
+            <ThemesPage />
+          </AdminLayout>
+        } 
+      />
+      <Route 
+        path="/analytics" 
+        element={
+          <AdminLayout title="Analytics Dashboard" requiredPermission="data:view">
+            <AnalyticsPage />
+          </AdminLayout>
+        } 
+      />
+      <Route 
+        path="/data" 
+        element={
+          <AdminLayout title="Data Maestro" requiredPermission="data:view">
+            <DataMaestroPage />
+          </AdminLayout>
+        } 
+      />
+      <Route 
+        path="/settings" 
+        element={
+          <AdminLayout title="Admin Settings" requiredPermission="settings:view">
+            <SettingsPage />
+          </AdminLayout>
+        } 
+      />
+      <Route 
+        path="/permissions" 
+        element={
+          <AdminLayout title="Permission Manager" requiredPermission="super_admin:all">
+            <PermissionsPage />
+          </AdminLayout>
+        } 
+      />
+      <Route path="*" element={<Navigate to="/admin/overview" replace />} />
     </Routes>
   );
 }
-
-// Create placeholder pages for lazy loading
-export const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
-  <div className="p-4">
-    <h1 className="text-2xl font-bold mb-4">{title}</h1>
-    <p className="text-muted-foreground">This page is under construction.</p>
-  </div>
-);
