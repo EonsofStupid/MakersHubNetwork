@@ -144,6 +144,8 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
         avatar_url: buildData.profiles?.avatar_url || null,
         // Convert null/undefined arrays to empty arrays
         images: buildData.images || [],
+        // Ensure status is a valid BuildStatus value
+        status: (buildData.status as BuildStatus) || 'pending',
         parts,
         mods: modsData || [],
         reviews: [] // We'll populate this separately if needed
