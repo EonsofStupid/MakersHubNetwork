@@ -7,19 +7,14 @@ import {
   Package, Users, FileText, Settings, Database, 
   PaintBucket, LayoutDashboard 
 } from "lucide-react";
-import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
 
 export function AdminFeatureSection() {
-  const { checkPermission } = useAdminPermissions();
-  
-  // Define feature cards with permissions
   const features = [
     {
       id: "overview",
       title: "Dashboard",
       description: "Platform overview and statistics",
       icon: <LayoutDashboard className="h-5 w-5" />,
-      permission: "admin:access" as const,
       path: "/admin/overview",
       color: "bg-blue-500/10 text-blue-500 border-blue-500/20"
     },
@@ -28,7 +23,6 @@ export function AdminFeatureSection() {
       title: "User Management",
       description: "Manage user accounts and permissions",
       icon: <Users className="h-5 w-5" />,
-      permission: "users:view" as const,
       path: "/admin/users",
       color: "bg-green-500/10 text-green-500 border-green-500/20"
     },
@@ -37,7 +31,6 @@ export function AdminFeatureSection() {
       title: "Content Manager",
       description: "Edit and publish content across the platform",
       icon: <FileText className="h-5 w-5" />,
-      permission: "content:view" as const,
       path: "/admin/content",
       color: "bg-purple-500/10 text-purple-500 border-purple-500/20"
     },
@@ -46,7 +39,6 @@ export function AdminFeatureSection() {
       title: "Builds",
       description: "Review and manage build submissions",
       icon: <Package className="h-5 w-5" />,
-      permission: "builds:view" as const,
       path: "/admin/builds",
       color: "bg-amber-500/10 text-amber-500 border-amber-500/20"
     },
@@ -55,7 +47,6 @@ export function AdminFeatureSection() {
       title: "Data Maestro",
       description: "Database management and data tools",
       icon: <Database className="h-5 w-5" />,
-      permission: "admin:access" as const,
       path: "/admin/data-maestro",
       color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20"
     },
@@ -64,7 +55,6 @@ export function AdminFeatureSection() {
       title: "Themes",
       description: "Customize platform appearance",
       icon: <PaintBucket className="h-5 w-5" />,
-      permission: "themes:view" as const,
       path: "/admin/themes",
       color: "bg-pink-500/10 text-pink-500 border-pink-500/20"
     },
@@ -80,21 +70,16 @@ export function AdminFeatureSection() {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {features.map(feature => {
-            // Only show features the user has permission to access
-            if (!checkPermission(feature.permission)) return null;
-            
-            return (
-              <FeatureCard
-                key={feature.id}
-                title={feature.title}
-                description={feature.description}
-                icon={feature.icon}
-                path={feature.path}
-                colorClass={feature.color}
-              />
-            );
-          })}
+          {features.map(feature => (
+            <FeatureCard
+              key={feature.id}
+              title={feature.title}
+              description={feature.description}
+              icon={feature.icon}
+              path={feature.path}
+              colorClass={feature.color}
+            />
+          ))}
         </div>
       </CardContent>
     </Card>

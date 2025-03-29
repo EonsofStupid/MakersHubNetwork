@@ -1,12 +1,10 @@
 
 import { useEffect } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
-import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
 import { AdminLayout } from "@/admin/components/layout/AdminLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { motion } from "framer-motion";
 import { AdminFeatureSection } from "@/components/admin/dashboard/AdminFeatureSection";
 import { ActivityFeed } from "@/components/admin/dashboard/ActivityFeed";
 import { Stats } from "@/components/admin/dashboard/Stats";
@@ -15,31 +13,19 @@ import { ContentManagementWidget } from "@/components/admin/dashboard/ContentMan
 import { UserManagementWidget } from "@/components/admin/dashboard/UserManagementWidget";
 
 export default function Admin() {
-  const { status } = useAuthStore();
+  const { status, isAdmin } = useAuthStore();
   const { toast } = useToast();
-  const { hasAccess, isLoading } = useAdminPermissions();
-  const navigate = useNavigate();
   
-  useEffect(() => {
-    // Load the Impulse admin theme
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = '/admin-theme.css';
-    document.head.appendChild(link);
-    
-    // Clean up when unmounting
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, []);
+  // Simple check if user is admin directly from auth store
+  const hasAccess = isAdmin ? isAdmin() : false;
   
   // Loading state
-  if (status === "loading" || isLoading) {
+  if (status === "loading") {
     return (
-      <div className="min-h-screen impulse-admin-root flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="space-y-4 text-center">
-          <div className="w-8 h-8 border-4 border-[var(--impulse-primary)] border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-[var(--impulse-text-secondary)]">Loading admin panel...</p>
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-muted-foreground">Loading admin panel...</p>
         </div>
       </div>
     );
