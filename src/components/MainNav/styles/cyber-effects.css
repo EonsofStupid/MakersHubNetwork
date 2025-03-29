@@ -124,4 +124,31 @@
     75% { transform: translate(calc(-50% + 50px), -100px); }
     100% { transform: translate(-50%, 0); }
   }
+  
+  @keyframes morph-header {
+    0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); transform: translateZ(0); }
+    100% { clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%); transform: translateZ(20px); }
+  }
+  
+  @keyframes data-stream {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+  }
+  
+  @keyframes particles-1 {
+    0% { transform: translate(-50%, 0); }
+    20% { transform: translate(calc(-50% - 100px), 50px); }
+    40% { transform: translate(calc(-50% + 100px), -100px); }
+    60% { transform: translate(calc(-50% - 50px), 100px); }
+    80% { transform: translate(calc(-50% + 100px), -50px); }
+    100% { transform: translate(-50%, 0); }
+  }
+  
+  @keyframes particles-2 {
+    0% { transform: translate(-50%, 0); }
+    25% { transform: translate(calc(-50% + 100px), -50px); }
+    50% { transform: translate(calc(-50% - 100px), 100px); }
+    75% { transform: translate(calc(-50% + 50px), -100px); }
+    100% { transform: translate(-50%, 0); }
+  }
 }

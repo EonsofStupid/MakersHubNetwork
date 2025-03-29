@@ -1,8 +1,10 @@
 
 import { useEffect, useState } from 'react';
-import { ensureDefaultTheme, syncCSSToDatabase } from '@/utils/themeInitializer';
+import { ensureDefaultTheme } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
+import { DynamicKeyframes } from './DynamicKeyframes';
+import { SiteThemeProvider } from './SiteThemeProvider';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -28,7 +30,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           toast({
             title: 'Theme Warning',
             description: 'Could not find or create theme. Using default styling.',
-            variant: "destructive", // Using a valid variant
+            variant: "destructive",
           });
         }
       } catch (error) {
@@ -57,5 +59,10 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <SiteThemeProvider>
+      <DynamicKeyframes />
+      {children}
+    </SiteThemeProvider>
+  );
 }
