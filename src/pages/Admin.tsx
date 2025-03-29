@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
 import { AdminLayout } from "@/admin/components/layout/AdminLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { AdminFeatureSection } from "@/components/admin/dashboard/AdminFeatureSection";
 import { ActivityFeed } from "@/components/admin/dashboard/ActivityFeed";
