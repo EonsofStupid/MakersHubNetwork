@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 
@@ -9,11 +9,13 @@ const SiteThemeContext = createContext<{
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   componentStyles: Record<string, any>;
+  animations: Record<string, any>;
 }>({
   variables: {} as ThemeVariables,
   isDarkMode: true,
   toggleDarkMode: () => {},
   componentStyles: {},
+  animations: {},
 });
 
 // Custom hook to use the theme context
@@ -39,7 +41,7 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
   };
 
   // Get component styles from theme
-  const componentStyles = React.useMemo(() => {
+  const componentStyles = useMemo(() => {
     if (!currentTheme || !currentTheme.component_tokens) {
       return {};
     }
@@ -52,6 +54,15 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
     });
     
     return styles;
+  }, [currentTheme]);
+  
+  // Get animations from theme
+  const animations = useMemo(() => {
+    if (!currentTheme || !currentTheme.design_tokens?.animation?.keyframes) {
+      return {};
+    }
+    
+    return currentTheme.design_tokens.animation.keyframes;
   }, [currentTheme]);
 
   // Apply CSS variables when the theme changes
@@ -107,10 +118,41 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
       rootElement.classList.remove('dark');
     }
     
-  }, [variables, isLoading, isDarkMode]);
+    // Dynamically add keyframe animations to the page if they aren't already in the CSS
+    if (currentTheme?.design_tokens?.animation?.keyframes) {
+      let styleSheet = document.getElementById('dynamic-keyframes');
+      
+      if (!styleSheet) {
+        styleSheet = document.createElement('style');
+        styleSheet.id = 'dynamic-keyframes';
+        document.head.appendChild(styleSheet);
+      }
+      
+      const keyframesCSS = Object.entries(currentTheme.design_tokens.animation.keyframes)
+        .map(([name, frames]) => {
+          // Convert the keyframes object to CSS
+          const frameCSS = Object.entries(frames as Record<string, any>)
+            .map(([percent, styles]) => {
+              // Convert the styles object to CSS
+              const styleCSS = Object.entries(styles as Record<string, any>)
+                .map(([prop, value]) => `${prop.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`)
+                .join(' ');
+              
+              return `${percent} { ${styleCSS} }`;
+            })
+            .join('\n');
+          
+          return `@keyframes ${name} { ${frameCSS} }`;
+        })
+        .join('\n\n');
+      
+      styleSheet.textContent = keyframesCSS;
+    }
+    
+  }, [variables, isLoading, isDarkMode, currentTheme]);
   
   return (
-    <SiteThemeContext.Provider value={{ variables, isDarkMode, toggleDarkMode, componentStyles }}>
+    <SiteThemeContext.Provider value={{ variables, isDarkMode, toggleDarkMode, componentStyles, animations }}>
       {children}
     </SiteThemeContext.Provider>
   );

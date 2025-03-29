@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { initializeTheme } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
+import { ensureDefaultTheme } from '@/utils/themeInitializer';
+import { syncCSSToDatabase } from '@/utils/themeSync';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -10,13 +12,17 @@ interface ThemeInitializerProps {
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const [isInitialized, setIsInitialized] = useState(false);
-  const { setTheme } = useThemeStore();
+  const { setTheme, isLoading } = useThemeStore();
   const { toast } = useToast();
 
   useEffect(() => {
     async function initialize() {
       try {
-        const themeId = await initializeTheme();
+        // First, ensure the default theme exists in the database
+        const themeId = await ensureDefaultTheme();
+        
+        // Then sync all CSS styles to the database to ensure nothing is missed
+        await syncCSSToDatabase(themeId);
         
         if (themeId) {
           await setTheme(themeId);
@@ -40,7 +46,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   }, [setTheme, toast]);
 
   // Optional: Show loading state while theme is initializing
-  if (!isInitialized) {
+  if (!isInitialized || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="space-y-4 text-center">
