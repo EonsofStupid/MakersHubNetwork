@@ -60,9 +60,12 @@
 }
 
 .site-border-glow {
-  @apply border border-[hsl(var(--site-primary)/0.3)] transition-all duration-[var(--site-transition-normal)];
+  @apply border border-[hsl(var(--site-primary)/0.3)];
+  transition-property: all;
+  transition-duration: var(--site-transition-normal);
 }
 
 .site-border-glow:hover {
-  @apply border-[hsl(var(--site-primary)/0.6)] shadow-[0_0_15px_hsl(var(--site-primary)/0.3)];
+  @apply border-[hsl(var(--site-primary)/0.6)];
+  box-shadow: 0 0 15px hsl(var(--site-primary)/0.3);
 }

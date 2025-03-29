@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -51,6 +52,11 @@ export default {
       fontFamily: {
         sans: ["Inter", "sans-serif"],
         heading: ["Space Grotesk", "sans-serif"],
+      },
+      transitionDuration: {
+        'site-fast': 'var(--site-transition-fast)',
+        'site-normal': 'var(--site-transition-normal)',
+        'site-slow': 'var(--site-transition-slow)',
       },
       keyframes: {
         "morph-header": {
