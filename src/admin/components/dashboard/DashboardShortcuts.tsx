@@ -3,9 +3,8 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { AdminShortcut, AdminPermission } from "@/admin/types/admin.types";
+import { AdminShortcut } from "@/admin/types/admin.types";
 import { useAdminStore } from "@/admin/store/admin.store";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export function DashboardShortcuts() {
   const navigate = useNavigate();
@@ -46,11 +45,11 @@ export function DashboardShortcuts() {
       color: "bg-orange-500/10 text-orange-500 border-orange-500/20"
     },
     {
-      id: "import",
-      name: "Import/Export",
-      icon: "📤",
-      path: "/admin/import",
-      permission: "data:import",
+      id: "builds",
+      name: "Builds",
+      icon: "🔧",
+      path: "/admin/builds",
+      permission: "builds:view",
       color: "bg-pink-500/10 text-pink-500 border-pink-500/20"
     },
     {

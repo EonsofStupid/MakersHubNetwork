@@ -10,5 +10,8 @@ export { useAdminStore } from './store/admin.store';
 // Export admin types
 export * from './types/admin.types';
 
+// Export admin hooks
+export { useAdminPermissions } from './hooks/useAdminPermissions';
+
 // Re-export the main Admin page
 export { default } from '../pages/Admin';

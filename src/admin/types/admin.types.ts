@@ -18,6 +18,8 @@ export type AdminPermission =
   | 'themes:delete' 
   | 'data:view'
   | 'settings:view'
+  | 'settings:edit'
+  | 'data:import'
   | 'super_admin:all';
 
 // Admin section for navigation
@@ -70,4 +72,23 @@ export interface AdminUserData {
   status: 'active' | 'inactive' | 'pending' | 'suspended';
   joinedAt: string;
   lastActive?: string;
+}
+
+// Admin shortcuts for dashboard
+export interface AdminShortcut {
+  id: string;
+  name: string;
+  icon: string;
+  path: string;
+  permission: AdminPermission;
+  color: string;
+}
+
+// Admin preferences for user-specific settings
+export interface AdminPreferences {
+  sidebarExpanded: boolean;
+  dashboardLayout: string[];
+  pinnedTools: string[];
+  theme: string;
+  activeSection: string;
 }
