@@ -1,112 +1,57 @@
 
-import React, { createContext, useContext, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAdminStore } from "../store/admin.store";
-import { useAdminPreferences } from "../store/adminPreferences.store";
 import { defaultImpulseTokens } from "./impulse/tokens";
+import { applyCssVars } from "./utils/themeUtils";
+import { ImpulseTheme } from "../types/impulse.types";
 
-// Theme context type
-interface AdminThemeContextValue {
+// Create context for the admin theme
+interface AdminThemeContextType {
+  theme: ImpulseTheme;
   isDarkMode: boolean;
-  themeVariant: string;
   toggleDarkMode: () => void;
-  setThemeVariant: (variant: string) => void;
 }
 
-// Create context with defaults
-const AdminThemeContext = createContext<AdminThemeContextValue>({
-  isDarkMode: true,
-  themeVariant: "cyberpunk",
-  toggleDarkMode: () => {},
-  setThemeVariant: () => {}
-});
+const AdminThemeContext = createContext<AdminThemeContextType | undefined>(undefined);
 
-// Hook to use admin theme
-export const useAdminTheme = () => useContext(AdminThemeContext);
-
-interface AdminThemeProviderProps {
-  children: React.ReactNode;
-}
-
-export function AdminThemeProvider({ children }: AdminThemeProviderProps) {
-  const { isDarkMode, toggleDarkMode, adminTheme, setAdminTheme } = useAdminStore();
-  const { themeVariant, setThemeVariant } = useAdminPreferences();
+export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
+  const { isDarkMode, toggleDarkMode, adminTheme } = useAdminStore();
+  const [theme, setTheme] = useState<ImpulseTheme>(defaultImpulseTokens);
   
+  // Apply theme on mount and when it changes
   useEffect(() => {
-    // Apply CSS variables for the selected theme
-    const rootElement = document.documentElement;
+    // Apply CSS variables to the document root
+    applyCssVars(defaultImpulseTokens, "impulse");
     
-    // Base theme tokens
-    const tokens = defaultImpulseTokens;
-    
-    // Apply CSS variables based on the tokens
-    Object.entries(tokens.colors).forEach(([key, value]) => {
-      if (typeof value === 'object') {
-        Object.entries(value).forEach(([subKey, subValue]) => {
-          rootElement.style.setProperty(`--impulse-${key}-${subKey}`, subValue as string);
-        });
-      } else {
-        rootElement.style.setProperty(`--impulse-${key}`, value as string);
-      }
-    });
-    
-    // Apply effect variables
-    Object.entries(tokens.effects).forEach(([key, value]) => {
-      if (typeof value === 'object') {
-        Object.entries(value).forEach(([subKey, subValue]) => {
-          rootElement.style.setProperty(`--impulse-${key}-${subKey}`, subValue as string);
-        });
-      } else {
-        rootElement.style.setProperty(`--impulse-${key}`, value as string);
-      }
-    });
-    
-    // Apply animation variables
-    Object.entries(tokens.animation.duration).forEach(([key, value]) => {
-      rootElement.style.setProperty(`--impulse-duration-${key}`, value as string);
-    });
-    
-    Object.entries(tokens.animation.curves).forEach(([key, value]) => {
-      rootElement.style.setProperty(`--impulse-curve-${key}`, value as string);
-    });
-    
-    // Apply theme-specific overrides based on variant
-    switch (themeVariant) {
-      case 'neon':
-        rootElement.style.setProperty('--impulse-primary', '#FF00FF');
-        rootElement.style.setProperty('--impulse-secondary', '#00FF00');
-        break;
-      case 'corporate':
-        rootElement.style.setProperty('--impulse-primary', '#4F46E5');
-        rootElement.style.setProperty('--impulse-secondary', '#F59E0B');
-        break;
-      default: // Cyberpunk
-        // Use default tokens
-        break;
-    }
-    
-    // Add a class to the body for theme-specific CSS
-    document.body.classList.add(`impulse-theme-${themeVariant}`);
-    
+    // Add the admin theme CSS file
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/admin-theme.css';
+    document.head.appendChild(link);
+
+    // Clean up on unmount
     return () => {
-      // Clean up on unmount
-      document.body.classList.remove(`impulse-theme-${themeVariant}`);
+      document.head.removeChild(link);
     };
-  }, [themeVariant, isDarkMode]);
-  
-  // Context value for consumers
+  }, [adminTheme]);
+
   const contextValue = {
+    theme,
     isDarkMode,
-    themeVariant,
-    toggleDarkMode,
-    setThemeVariant: (variant: string) => {
-      setAdminTheme(variant);
-      setThemeVariant(variant as any);
-    }
+    toggleDarkMode
   };
-  
+
   return (
     <AdminThemeContext.Provider value={contextValue}>
       {children}
     </AdminThemeContext.Provider>
   );
+}
+
+export function useAdminTheme() {
+  const context = useContext(AdminThemeContext);
+  if (context === undefined) {
+    throw new Error("useAdminTheme must be used within an AdminThemeProvider");
+  }
+  return context;
 }
