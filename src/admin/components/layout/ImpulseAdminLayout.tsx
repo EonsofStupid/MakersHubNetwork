@@ -1,4 +1,9 @@
 
+/**
+ * DEPRECATED: This component is kept for backward compatibility.
+ * Please use AdminLayout directly from @/admin/components/AdminLayout
+ */
+
 import React from "react";
 import { AdminLayout } from "@/admin/components/AdminLayout";
 import { AdminPermission } from "@/admin/types/admin.types";
@@ -23,3 +28,5 @@ export const ImpulseAdminLayout: React.FC<ImpulseAdminLayoutProps> = ({
     </AdminLayout>
   );
 };
+
+export default ImpulseAdminLayout;
