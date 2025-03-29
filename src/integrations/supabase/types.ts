@@ -214,6 +214,63 @@ export type Database = {
           },
         ]
       }
+      build_reviews: {
+        Row: {
+          approved: boolean | null
+          body: string | null
+          build_id: string | null
+          category: string[] | null
+          created_at: string | null
+          id: string
+          image_urls: string[] | null
+          rating: number | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          approved?: boolean | null
+          body?: string | null
+          build_id?: string | null
+          category?: string[] | null
+          created_at?: string | null
+          id?: string
+          image_urls?: string[] | null
+          rating?: number | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          approved?: boolean | null
+          body?: string | null
+          build_id?: string | null
+          category?: string[] | null
+          created_at?: string | null
+          id?: string
+          image_urls?: string[] | null
+          rating?: number | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "build_reviews_build_id_fkey"
+            columns: ["build_id"]
+            isOneToOne: false
+            referencedRelation: "build_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "build_reviews_build_id_fkey"
+            columns: ["build_id"]
+            isOneToOne: false
+            referencedRelation: "printer_builds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       components: {
         Row: {
           category: string
@@ -1394,6 +1451,12 @@ export type Database = {
           id: string
           level: number
         }[]
+      }
+      is_admin_or_super_admin: {
+        Args: {
+          uid: string
+        }
+        Returns: boolean
       }
       jsonb_deep_merge: {
         Args: {

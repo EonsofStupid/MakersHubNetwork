@@ -15,6 +15,7 @@ import AnalyticsPage from "./analytics/AnalyticsPage";
 import DataMaestroPage from "./data/DataMaestroPage";
 import BuildDetailPage from "./builds/BuildDetailPage";
 import PermissionsPage from "./permissions/PermissionsPage";
+import ReviewsPage from "./reviews/ReviewsPage";
 
 export function AdminRoutes() {
   return (
@@ -48,10 +49,18 @@ export function AdminRoutes() {
         } 
       />
       <Route 
-        path="/builds/:id" 
+        path="/builds/:buildId" 
         element={
           <AdminLayout title="Build Details" requiredPermission="builds:view">
             <BuildDetailPage />
+          </AdminLayout>
+        } 
+      />
+      <Route 
+        path="/reviews" 
+        element={
+          <AdminLayout title="Reviews Management" requiredPermission="content:view">
+            <ReviewsPage />
           </AdminLayout>
         } 
       />
