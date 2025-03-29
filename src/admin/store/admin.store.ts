@@ -19,6 +19,7 @@ interface AdminState {
   // Auth/Permissions State
   isLoadingPermissions: boolean;
   permissions: AdminPermission[];
+  permissionsLoaded: boolean;
   
   // Admin functions
   setSidebar: (val: boolean) => void;
@@ -53,6 +54,7 @@ export const useAdminStore = create<AdminState>()(
       // Default auth state
       isLoadingPermissions: true,
       permissions: [],
+      permissionsLoaded: false,
       
       // UI functions
       setSidebar: (val) => set({ sidebarExpanded: val }),
@@ -76,6 +78,12 @@ export const useAdminStore = create<AdminState>()(
       
       // Permission functions
       loadPermissions: async (mappedPermissions) => {
+        // Skip loading if permissions are already loaded
+        if (get().permissionsLoaded) {
+          set({ isLoadingPermissions: false });
+          return;
+        }
+        
         set({ isLoadingPermissions: true });
         
         try {
@@ -83,7 +91,8 @@ export const useAdminStore = create<AdminState>()(
           if (mappedPermissions && mappedPermissions.length > 0) {
             set({ 
               permissions: mappedPermissions,
-              isLoadingPermissions: false 
+              isLoadingPermissions: false,
+              permissionsLoaded: true
             });
             return;
           }
@@ -118,13 +127,15 @@ export const useAdminStore = create<AdminState>()(
           
           set({ 
             permissions: allPermissions,
-            isLoadingPermissions: false 
+            isLoadingPermissions: false,
+            permissionsLoaded: true
           });
         } catch (error) {
           console.error('Failed to load admin permissions:', error);
           set({ 
             permissions: ['admin:access'], // Grant minimal permissions on error
-            isLoadingPermissions: false 
+            isLoadingPermissions: false,
+            permissionsLoaded: true
           });
         }
       },

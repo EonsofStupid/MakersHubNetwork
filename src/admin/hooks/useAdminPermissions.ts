@@ -1,8 +1,9 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { AdminPermission } from "@/admin/types/admin.types";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 /**
  * Custom hook for admin permission management
@@ -10,12 +11,13 @@ import { AdminPermission } from "@/admin/types/admin.types";
  */
 export function useAdminPermissions() {
   const [isLoading, setIsLoading] = useState(true);
-  const { user, roles, isAdmin } = useAuthStore();
+  const { user } = useAuthStore();
   const { 
     loadPermissions, 
     hasPermission: adminStoreHasPermission,
     isLoadingPermissions 
   } = useAdminStore();
+  const { hasAdminAccess, checkPermission } = useAdminAccess();
   
   useEffect(() => {
     // Load permissions if we have a user
@@ -31,26 +33,8 @@ export function useAdminPermissions() {
     }
   }, [isLoadingPermissions]);
 
-  /**
-   * Check if current user has a specific permission
-   */
-  const checkPermission = (permission: AdminPermission): boolean => {
-    // Super admins have all permissions
-    if (roles && roles.includes('super_admin')) {
-      return true;
-    }
-    
-    // Basic admin access check
-    if (permission === 'admin:access') {
-      return isAdmin ? isAdmin() : false;
-    }
-    
-    // Use admin store for specific permissions
-    return adminStoreHasPermission(permission);
-  };
-
   return {
-    hasAccess: isAdmin ? isAdmin() : false,
+    hasAccess: hasAdminAccess,
     isLoading,
     checkPermission
   };

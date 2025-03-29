@@ -1,7 +1,6 @@
 
 import React, { useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { useAdminStore } from "@/admin/store/admin.store";
 import { AdminSidebar } from "@/admin/components/AdminSidebar";
 import { AdminHeader } from "@/admin/components/AdminHeader";
 import { AdminPermission } from "@/admin/types/admin.types";
@@ -11,8 +10,8 @@ import { ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardShortcuts } from "@/admin/components/dashboard/DashboardShortcuts";
 import { useAdminPreferences } from "@/admin/store/adminPreferences.store";
-import { useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useAdmin } from "@/admin/context/AdminContext";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -25,19 +24,17 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   requiredPermission = "admin:access",
   title = "Admin Dashboard"
 }) => {
-  const { loadPermissions, hasPermission, isLoadingPermissions } = useAdminStore();
+  const { checkPermission, isLoading } = useAdmin();
   const { 
     isDashboardCollapsed, 
     setDashboardCollapsed, 
     loadPreferences
   } = useAdminPreferences();
-  const location = useLocation();
 
   useEffect(() => {
-    // Load permissions and preferences on component mount
-    loadPermissions();
+    // Load preferences on component mount
     loadPreferences();
-  }, [loadPermissions, loadPreferences]);
+  }, [loadPreferences]);
 
   // Toggle dashboard collapsed state
   const toggleDashboard = () => {
@@ -45,7 +42,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   };
 
   // Check if user has required permission
-  if (!isLoadingPermissions && requiredPermission && !hasPermission(requiredPermission)) {
+  if (!isLoading && requiredPermission && !checkPermission(requiredPermission)) {
     return (
       <>
         <MainNav />
@@ -108,7 +105,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               "transition-all duration-300 ease-in-out",
               isDashboardCollapsed ? "lg:col-span-10" : "lg:col-span-9"
             )}>
-              {isLoadingPermissions ? (
+              {isLoading ? (
                 <Card className="p-8 flex justify-center items-center min-h-[400px]">
                   <div className="space-y-4 text-center">
                     <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>

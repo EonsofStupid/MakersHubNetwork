@@ -9,3 +9,7 @@ export const frozenZonesAtom = atom<FrozenZone[]>([]);
 export const dragSourceAtom = atom<string | null>(null);
 export const showDragOverlayAtom = atom<boolean>(false);
 export const hoveredIconAtom = atom<string | null>(null);
+
+// Effects palette atoms
+export const effectsPaletteVisibleAtom = atom<boolean>(false);
+export const selectedEffectAtom = atom<string | null>(null);

@@ -5,6 +5,7 @@ import { Home, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminStore } from "../store/admin.store";
 import { adminNavigationItems } from "../config/navigation.config";
+import { useAdmin } from "../context/AdminContext";
 
 interface SidebarIconProps {
   id: string;
@@ -60,7 +61,8 @@ function SidebarIcon({
 export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarExpanded, toggleSidebar, hasPermission } = useAdminStore();
+  const { sidebarExpanded, toggleSidebar } = useAdminStore();
+  const { checkPermission } = useAdmin();
   
   // Use the collapsed prop if provided, otherwise use the store state
   const isCollapsed = collapsed ? collapsed : !sidebarExpanded;
@@ -104,7 +106,7 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
         <div className="space-y-1 overflow-y-auto scrollbar-thin">
           {adminNavigationItems.map(item => {
             // Only render items the user has permission to see
-            if (!hasPermission(item.permission)) {
+            if (!checkPermission(item.permission)) {
               return null;
             }
             
