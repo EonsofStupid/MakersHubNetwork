@@ -1,3 +1,4 @@
+
 import { Json } from "@/integrations/supabase/types";
 
 export type ThemeStatus = 'draft' | 'published' | 'archived';
@@ -38,13 +39,16 @@ export interface DesignTokensStructure {
     shadows: Record<string, any>;
     blurs: Record<string, any>;
     gradients: Record<string, any>;
+    primary?: string;
+    secondary?: string;
+    tertiary?: string;
   };
-  animations?: {
+  animation?: {
     keyframes: Record<string, any>;
     transitions: Record<string, any>;
     durations: Record<string, any>;
   };
-  admin?: Record<string, any>;  // Add this line
+  admin?: Record<string, any>;
 }
 
 export interface Theme {

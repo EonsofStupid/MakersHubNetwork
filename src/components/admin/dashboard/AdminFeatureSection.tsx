@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FeatureCard } from "@/components/admin/dashboard/FeatureCard";
-import { CubeIcon, UsersIcon, FileTextIcon, SettingsIcon, DatabaseIcon, PaintBucketIcon, LayoutDashboardIcon } from "lucide-react";
+import { Package, UsersIcon, FileTextIcon, SettingsIcon, DatabaseIcon, PaintBucketIcon, LayoutDashboardIcon } from "lucide-react";
 import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
 
 export function AdminFeatureSection() {
@@ -17,7 +17,7 @@ export function AdminFeatureSection() {
       title: "Dashboard",
       description: "Platform overview and statistics",
       icon: <LayoutDashboardIcon className="h-5 w-5" />,
-      permission: "admin:access",
+      permission: "admin:access" as const,
       path: "/admin/overview",
       color: "bg-blue-500/10 text-blue-500 border-blue-500/20"
     },
@@ -26,7 +26,7 @@ export function AdminFeatureSection() {
       title: "User Management",
       description: "Manage user accounts and permissions",
       icon: <UsersIcon className="h-5 w-5" />,
-      permission: "users:view",
+      permission: "users:view" as const,
       path: "/admin/users",
       color: "bg-green-500/10 text-green-500 border-green-500/20"
     },
@@ -35,7 +35,7 @@ export function AdminFeatureSection() {
       title: "Content Manager",
       description: "Edit and publish content across the platform",
       icon: <FileTextIcon className="h-5 w-5" />,
-      permission: "content:view",
+      permission: "content:view" as const,
       path: "/admin/content",
       color: "bg-purple-500/10 text-purple-500 border-purple-500/20"
     },
@@ -43,8 +43,8 @@ export function AdminFeatureSection() {
       id: "builds",
       title: "Builds",
       description: "Review and manage build submissions",
-      icon: <CubeIcon className="h-5 w-5" />,
-      permission: "builds:view",
+      icon: <Package className="h-5 w-5" />,
+      permission: "builds:view" as const,
       path: "/admin/builds",
       color: "bg-amber-500/10 text-amber-500 border-amber-500/20"
     },
@@ -53,7 +53,7 @@ export function AdminFeatureSection() {
       title: "Data Maestro",
       description: "Database management and data tools",
       icon: <DatabaseIcon className="h-5 w-5" />,
-      permission: "admin:access",
+      permission: "admin:access" as const,
       path: "/admin/data-maestro",
       color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20"
     },
@@ -62,7 +62,7 @@ export function AdminFeatureSection() {
       title: "Themes",
       description: "Customize platform appearance",
       icon: <PaintBucketIcon className="h-5 w-5" />,
-      permission: "themes:view",
+      permission: "themes:view" as const,
       path: "/admin/themes",
       color: "bg-pink-500/10 text-pink-500 border-pink-500/20"
     },
