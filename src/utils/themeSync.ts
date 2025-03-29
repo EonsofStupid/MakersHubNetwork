@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Theme, ComponentTokens } from '@/types/theme';
 import { keyframes, animation } from '@/theme/animations';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Extracts all animations from CSS files and formats them for the database
@@ -34,7 +34,7 @@ function extractAnimationsFromCSS() {
  */
 function extractComponentStyles() {
   // Component styles for various components that need to be in the database
-  const componentStyles: ComponentTokens[] = [
+  return [
     {
       component_name: 'MainNav',
       styles: {
@@ -134,8 +134,6 @@ function extractComponentStyles() {
       }
     }
   ];
-  
-  return componentStyles;
 }
 
 /**
@@ -272,15 +270,18 @@ export async function syncCSSToDatabase(themeId: string) {
       ...additionalAnimations
     };
     
+    // Handle design tokens properly
+    const designTokens = theme.design_tokens as Record<string, any>;
+    
     // Update design tokens with animations
     const updatedDesignTokens = {
-      ...theme.design_tokens,
+      ...designTokens,
       animation: {
-        ...(theme.design_tokens?.animation || {}),
+        ...(designTokens?.animation || {}),
         keyframes: allKeyframes,
-        transitions: theme.design_tokens?.animation?.transitions || {},
+        transitions: designTokens?.animation?.transitions || {},
         durations: {
-          ...(theme.design_tokens?.animation?.durations || {}),
+          ...(designTokens?.animation?.durations || {}),
           fast: '150ms',
           normal: '300ms',
           slow: '500ms',
@@ -298,7 +299,7 @@ export async function syncCSSToDatabase(themeId: string) {
     const { error: updateError } = await supabase
       .from('themes')
       .update({
-        design_tokens: updatedDesignTokens,
+        design_tokens: updatedDesignTokens as Json,
       })
       .eq('id', themeId);
       
@@ -320,7 +321,7 @@ export async function syncCSSToDatabase(themeId: string) {
         const { error: updateCompError } = await supabase
           .from('theme_components')
           .update({
-            styles: component.styles
+            styles: component.styles as Json
           })
           .eq('id', existingComponents[0].id);
           
@@ -332,7 +333,7 @@ export async function syncCSSToDatabase(themeId: string) {
           .insert({
             theme_id: themeId,
             component_name: component.component_name,
-            styles: component.styles
+            styles: component.styles as Json
           });
           
         if (insertCompError) throw insertCompError;
