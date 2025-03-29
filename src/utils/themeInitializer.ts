@@ -155,11 +155,66 @@ export async function ensureDefaultTheme(): Promise<string> {
               '0%': { opacity: '0.4', transform: 'translateY(0)' },
               '50%': { opacity: '0.1', transform: 'translateY(-100vh)' },
               '100%': { opacity: '0.4', transform: 'translateY(-200vh)' }
+            },
+            'morph-header': {
+              '0%': { clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)', transform: 'translateZ(0)' },
+              '100%': { clipPath: 'polygon(0 0, 100% 0, 98% 100%, 2% 100%)', transform: 'translateZ(20px)' }
+            },
+            'gradient': {
+              '0%': { backgroundPosition: '0% 50%' },
+              '50%': { backgroundPosition: '100% 50%' },
+              '100%': { backgroundPosition: '0% 50%' }
+            },
+            'footer-float': {
+              '0%, 100%': { transform: 'perspective(1000px) rotateX(1deg) translateY(0)' },
+              '50%': { transform: 'perspective(1000px) rotateX(2deg) translateY(-10px)' }
             }
           }
         }
       }
     };
+    
+    // Create initial component styles for the database
+    const initialComponentStyles = [
+      {
+        component_name: 'SimpleCyberText',
+        styles: {
+          base: 'relative inline-block',
+          primary: 'absolute -top-[2px] left-[2px] text-primary/40 z-10 skew-x-6',
+          secondary: 'absolute -bottom-[2px] left-[-2px] text-secondary/40 z-10 skew-x-[-6deg]'
+        }
+      },
+      {
+        component_name: 'MainNav',
+        styles: {
+          container: {
+            base: 'fixed top-0 w-full z-50 transition-all duration-300',
+            animated: 'animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(0,240,255,0.1)]'
+          },
+          header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30',
+          logo: 'text-xl font-bold text-primary hover:text-primary/80 transition-colors duration-300',
+          nav: 'flex items-center gap-1 md:gap-2',
+          navItem: 'px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors',
+          navItemActive: 'text-primary',
+          mobileToggle: 'block md:hidden'
+        }
+      },
+      {
+        component_name: 'Footer',
+        styles: {
+          container: 'fixed bottom-0 left-0 right-0 w-full z-40 transition-all ease-in-out',
+          base: 'bg-background/20 backdrop-blur-xl shadow-[0_-8px_32px_0_rgba(0,240,255,0.2)] border-t border-primary/30',
+          transform: 'transform perspective(1000px) rotateX(1deg) clip-path polygon(0 100%, 100% 100%, 98% 0%, 2% 0%)',
+          content: 'container mx-auto px-4 py-4',
+          linksSection: 'grid grid-cols-2 md:grid-cols-4 gap-8',
+          linkGroup: 'space-y-2',
+          linkGroupTitle: 'text-sm font-semibold text-primary',
+          linkItem: 'text-xs text-muted-foreground hover:text-primary transition-colors duration-200',
+          copyrightSection: 'mt-8 pt-4 border-t border-primary/20 text-xs text-muted-foreground',
+          socialIcons: 'flex mt-2 space-x-4'
+        }
+      }
+    ];
     
     // Insert the theme into the database
     const { data: newTheme, error: insertError } = await supabase
@@ -171,84 +226,18 @@ export async function ensureDefaultTheme(): Promise<string> {
     if (insertError) throw insertError;
     if (!newTheme) throw new Error('Failed to create default theme');
     
-    // Create component tokens for landing page elements
-    const componentTokens = [
-      {
-        component_name: 'MainNav',
-        theme_id: newTheme.id,
-        styles: {
-          container: {
-            base: 'fixed top-0 w-full z-50 transition-all duration-300',
-            animated: 'animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(0,240,255,0.1)]'
-          },
-          header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30',
-          gradient: 'before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-100'
-        }
-      },
-      {
-        component_name: 'PageTitle',
-        theme_id: newTheme.id,
-        styles: {
-          title: 'text-4xl md:text-5xl lg:text-6xl font-bold mb-6 relative',
-          gradient: 'bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mad-scientist-hover'
-        }
-      },
-      {
-        component_name: 'CyberCard',
-        theme_id: newTheme.id,
-        styles: {
-          base: 'relative overflow-hidden rounded-lg border border-primary/20 bg-background/40 backdrop-blur-xl transition-all duration-300 hover:border-primary/40',
-          gradient: 'before:absolute before:inset-0 before:bg-gradient-to-br before:from-primary/5 before:via-secondary/5 before:to-primary/5',
-          glow: 'hover:shadow-[0_0_20px_rgba(0,240,255,0.2)]'
-        }
-      },
-      {
-        component_name: 'Footer',
-        theme_id: newTheme.id,
-        styles: {
-          container: 'fixed bottom-0 left-0 right-0 w-full z-40 transition-all ease-in-out',
-          base: 'bg-background/20 backdrop-blur-xl shadow-[0_-8px_32px_0_rgba(0,240,255,0.2)] border-t border-primary/30',
-          gradient: 'before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-100 before:transition-opacity',
-          animation: 'transform: perspective(1000px) rotateX(1deg); clip-path: polygon(0 100%, 100% 100%, 98% 0%, 2% 0%);'
-        }
-      },
-      {
-        component_name: 'FeatureCta',
-        theme_id: newTheme.id,
-        styles: {
-          container: 'relative overflow-hidden rounded-lg border p-6 transition-all duration-300 backdrop-blur-md shadow-lg hover:shadow-xl transform hover:-translate-y-1',
-          database: 'border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10',
-          forum: 'border-secondary/30 hover:border-secondary/60 bg-secondary/5 hover:bg-secondary/10',
-          chat: 'border-[#8B5CF6]/30 hover:border-[#8B5CF6]/60 bg-[#8B5CF6]/5 hover:bg-[#8B5CF6]/10'
-        }
-      },
-      {
-        component_name: 'BuildCard',
-        theme_id: newTheme.id,
-        styles: {
-          container: 'overflow-hidden rounded-lg border border-primary/20 bg-background/40 shadow-lg hover:shadow-xl transition-all duration-300 h-full',
-          image: 'w-full h-full object-cover transition-transform duration-500 hover:scale-110',
-          overlay: 'absolute inset-0 bg-gradient-to-t from-background to-transparent',
-          category: 'inline-block px-2 py-1 text-xs rounded-md backdrop-blur-md bg-primary/30 text-primary-foreground border border-primary/40'
-        }
-      },
-      {
-        component_name: 'SimpleCyberText',
-        theme_id: newTheme.id,
-        styles: {
-          base: 'relative inline-block',
-          primary: 'absolute -top-[2px] left-[2px] text-primary/40 z-10 skew-x-6',
-          secondary: 'absolute -bottom-[2px] left-[-2px] text-secondary/40 z-10 skew-x-[-6deg]'
-        }
-      }
-    ];
-    
-    // Insert component tokens
-    const { error: componentsError } = await supabase
-      .from('theme_components')
-      .insert(componentTokens);
-    
-    if (componentsError) throw componentsError;
+    // Insert initial component styles
+    for (const component of initialComponentStyles) {
+      const { error: componentError } = await supabase
+        .from('theme_components')
+        .insert({
+          theme_id: newTheme.id,
+          component_name: component.component_name,
+          styles: component.styles
+        });
+        
+      if (componentError) throw componentError;
+    }
     
     return newTheme.id;
   } catch (error) {
@@ -258,14 +247,13 @@ export async function ensureDefaultTheme(): Promise<string> {
 }
 
 /**
- * Initializes the theme when the application starts
+ * Initialize theme from the database or create it if missing
  */
-export async function initializeTheme() {
+export async function initializeTheme(): Promise<string | null> {
   try {
-    const themeId = await ensureDefaultTheme();
-    return themeId;
+    return await ensureDefaultTheme();
   } catch (error) {
-    console.error('Failed to initialize theme:', error);
+    console.error('Theme initialization error:', error);
     return null;
   }
 }
