@@ -1,41 +1,34 @@
 
-/* 
- * Site Theme CSS Variables 
- * 
- * This file maps core design tokens to semantic variables used in the application.
- * These variables should be used in component styles.
- */
-@import './tokens.css';
-
+/* Site Theme CSS Variables */
 :root {
-  /* Base site colors - these will be used by ThemeProvider */
-  --site-background: var(--mi-color-dark-200);
-  --site-foreground: var(--mi-color-light-100);
-  --site-card: var(--mi-color-dark-300);
-  --site-card-foreground: var(--mi-color-light-100);
-  --site-primary: var(--mi-color-primary-base);
-  --site-primary-foreground: var(--mi-color-light-100);
-  --site-secondary: var(--mi-color-secondary-base);
-  --site-secondary-foreground: var(--mi-color-light-100);
-  --site-muted: var(--mi-color-dark-400);
-  --site-muted-foreground: var(--mi-color-light-500);
-  --site-accent: var(--mi-color-dark-400);
-  --site-accent-foreground: var(--mi-color-light-100);
-  --site-destructive: hsl(0, 84%, 60%);
-  --site-destructive-foreground: var(--mi-color-light-100);
-  --site-border: var(--mi-color-dark-400);
-  --site-input: var(--mi-color-dark-400);
-  --site-ring: var(--mi-color-dark-500);
+  /* Base site colors - these will be overridden by ThemeProvider */
+  --site-background: 228 47% 8%;
+  --site-foreground: 210 40% 98%;
+  --site-card: 228 47% 11%;
+  --site-card-foreground: 210 40% 98%;
+  --site-primary: 186 100% 50%;
+  --site-primary-foreground: 210 40% 98%;
+  --site-secondary: 334 100% 59%;
+  --site-secondary-foreground: 210 40% 98%;
+  --site-muted: 228 47% 15%;
+  --site-muted-foreground: 215 20.2% 65.1%;
+  --site-accent: 228 47% 15%;
+  --site-accent-foreground: 210 40% 98%;
+  --site-destructive: 0 84.2% 60.2%;
+  --site-destructive-foreground: 210 40% 98%;
+  --site-border: 228 47% 15%;
+  --site-input: 228 47% 15%;
+  --site-ring: 228 47% 20%;
 
   /* Site-specific effect colors */
-  --site-effect-color: var(--mi-color-primary-base);
-  --site-effect-secondary: var(--mi-color-secondary-base);
-  --site-effect-tertiary: var(--mi-color-accent);
+  --site-effect-color: #00F0FF;
+  --site-effect-secondary: #FF2D6E;
+  --site-effect-tertiary: #8B5CF6;
   
   /* Site transition durations */
-  --site-transition-fast: var(--mi-duration-fast);
-  --site-transition-normal: var(--mi-duration-normal);
-  --site-transition-slow: var(--mi-duration-slow);
+  --site-transition-fast: 150ms;
+  --site-transition-normal: 300ms;
+  --site-transition-slow: 500ms;
   
   /* Site animation durations */
   --site-animation-fast: 1s;
@@ -43,10 +36,10 @@
   --site-animation-slow: 3s;
   
   /* Site border radius */
-  --site-radius-sm: var(--mi-radius-sm);
-  --site-radius-md: var(--mi-radius-md);
-  --site-radius-lg: var(--mi-radius-lg);
-  --site-radius-full: var(--mi-radius-full);
+  --site-radius-sm: 0.25rem;
+  --site-radius-md: 0.5rem;
+  --site-radius-lg: 0.75rem;
+  --site-radius-full: 9999px;
 }
 
 /* Utility classes that use site variables */
