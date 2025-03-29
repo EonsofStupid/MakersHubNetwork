@@ -12,6 +12,7 @@ interface AdminState {
   activeSection: string;
   isDarkMode: boolean;
   isDashboardCollapsed: boolean;
+  showQuickActionBar: boolean;
   
   // Admin Theme
   adminTheme: string;
@@ -21,6 +22,9 @@ interface AdminState {
   dragSource: string | null;
   dragTarget: string | null;
   showDragOverlay: boolean;
+  
+  // Frozen zones
+  frozenZones: string[];
   
   // Auth/Permissions State
   isLoadingPermissions: boolean;
@@ -37,6 +41,11 @@ interface AdminState {
   unpinIcon: (id: string) => void;
   setScrollY: (val: number) => void;
   setDashboardCollapsed: (collapsed: boolean) => void;
+  toggleQuickActionBar: () => void;
+  
+  // Frozen zones functions
+  addFrozenZone: (zone: string) => void;
+  removeFrozenZone: (zone: string) => void;
   
   // Drag and drop functions
   setHoveredIcon: (id: string | null) => void;
@@ -59,6 +68,7 @@ export const useAdminStore = create<AdminState>()(
       activeSection: 'overview',
       isDarkMode: true,
       isDashboardCollapsed: false,
+      showQuickActionBar: true,
       
       // Default theme state
       adminTheme: 'cyberpunk',
@@ -68,6 +78,9 @@ export const useAdminStore = create<AdminState>()(
       dragSource: null,
       dragTarget: null,
       showDragOverlay: false,
+      
+      // Default frozen zones
+      frozenZones: [],
       
       // Default auth state
       isLoadingPermissions: true,
@@ -81,6 +94,15 @@ export const useAdminStore = create<AdminState>()(
       toggleDarkMode: () => set(state => ({ isDarkMode: !state.isDarkMode })),
       setAdminTheme: (theme) => set({ adminTheme: theme }),
       setDashboardCollapsed: (collapsed) => set({ isDashboardCollapsed: collapsed }),
+      toggleQuickActionBar: () => set(state => ({ showQuickActionBar: !state.showQuickActionBar })),
+      
+      // Frozen zones functions
+      addFrozenZone: (zone) => set(state => ({ 
+        frozenZones: [...state.frozenZones, zone] 
+      })),
+      removeFrozenZone: (zone) => set(state => ({ 
+        frozenZones: state.frozenZones.filter(z => z !== zone) 
+      })),
       
       pinIcon: (id) => set((state) => ({
         pinnedIcons: state.pinnedIcons.includes(id) 
@@ -183,7 +205,9 @@ export const useAdminStore = create<AdminState>()(
         activeSection: state.activeSection,
         isDarkMode: state.isDarkMode,
         adminTheme: state.adminTheme,
-        isDashboardCollapsed: state.isDashboardCollapsed
+        isDashboardCollapsed: state.isDashboardCollapsed,
+        showQuickActionBar: state.showQuickActionBar,
+        frozenZones: state.frozenZones
       })
     }
   )

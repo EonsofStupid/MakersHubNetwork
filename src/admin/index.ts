@@ -3,6 +3,7 @@
 export { AdminLayout } from "./components/AdminLayout";
 export { AdminSidebar } from "./components/AdminSidebar";
 export { AdminHeader } from "./components/AdminHeader";
+export { QuickActionBar } from "./components/layout/QuickActionBar";
 export { AdminProvider, useAdmin } from "./context/AdminContext";
 
 // Export admin routes
@@ -24,11 +25,15 @@ export * from "./types/dashboard";
 export * from "./types/data-maestro";
 export * from "./types/impulse.types";
 export * from "./types/theme";
+export * from "./types/tools.types";
 
 // Export admin utils
 export * from "./utils/adminUtils";
 export * from "./utils/permissions";
 export * from "./utils/routeUtils";
+
+// Export admin atoms
+export * from "./atoms";
 
 // Export admin page
 export { default as AdminPage } from "../pages/Admin";
