@@ -47,7 +47,7 @@ export const adminNavigationItems = [
     label: "Data Maestro", 
     path: "/admin/data-maestro", 
     icon: <Database className="h-4 w-4 mr-2" />,
-    permission: "admin:access" as AdminPermission
+    permission: "data:view" as AdminPermission
   },
   { 
     id: "analytics", 

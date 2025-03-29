@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AdminPermission } from '../types/admin.types';
 
-// Combined state interfaces from both admin-ui.ts and admin.store.ts
+// Combined admin state interface
 interface AdminState {
   // UI State
   sidebarExpanded: boolean;
@@ -11,6 +11,7 @@ interface AdminState {
   scrollY: number;
   activeSection: string;
   isDarkMode: boolean;
+  isDashboardCollapsed: boolean;
   
   // Admin Theme
   adminTheme: string;
@@ -28,6 +29,7 @@ interface AdminState {
   pinIcon: (id: string) => void;
   unpinIcon: (id: string) => void;
   setScrollY: (val: number) => void;
+  setDashboardCollapsed: (collapsed: boolean) => void;
   
   // Permission functions
   loadPermissions: (mappedPermissions?: AdminPermission[]) => Promise<void>;
@@ -43,6 +45,7 @@ export const useAdminStore = create<AdminState>()(
       scrollY: 0,
       activeSection: 'overview',
       isDarkMode: true,
+      isDashboardCollapsed: false,
       
       // Default theme state
       adminTheme: 'cyberpunk',
@@ -57,6 +60,7 @@ export const useAdminStore = create<AdminState>()(
       setActiveSection: (section) => set({ activeSection: section }),
       toggleDarkMode: () => set(state => ({ isDarkMode: !state.isDarkMode })),
       setAdminTheme: (theme) => set({ adminTheme: theme }),
+      setDashboardCollapsed: (collapsed) => set({ isDashboardCollapsed: collapsed }),
       
       pinIcon: (id) => set((state) => ({
         pinnedIcons: state.pinnedIcons.includes(id) 
@@ -105,6 +109,10 @@ export const useAdminStore = create<AdminState>()(
             'themes:view',
             'themes:edit',
             'themes:delete',
+            'data:view',
+            'settings:view',
+            'settings:edit',
+            'data:import',
             'super_admin:all'
           ];
           
@@ -139,7 +147,8 @@ export const useAdminStore = create<AdminState>()(
         pinnedIcons: state.pinnedIcons,
         activeSection: state.activeSection,
         isDarkMode: state.isDarkMode,
-        adminTheme: state.adminTheme
+        adminTheme: state.adminTheme,
+        isDashboardCollapsed: state.isDashboardCollapsed
       })
     }
   )

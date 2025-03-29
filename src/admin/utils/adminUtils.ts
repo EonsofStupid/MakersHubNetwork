@@ -37,7 +37,6 @@ export function getPermissionDisplayName(permission: AdminPermission): string {
     'admin:access': 'Admin Access',
     'admin:view': 'View Admin Panel',
     'admin:edit': 'Edit Admin Settings',
-    'admin:super': 'Super Admin',
     'content:view': 'View Content',
     'content:edit': 'Edit Content',
     'content:delete': 'Delete Content',
@@ -51,7 +50,6 @@ export function getPermissionDisplayName(permission: AdminPermission): string {
     'themes:edit': 'Edit Themes',
     'themes:delete': 'Delete Themes',
     'data:view': 'View Data',
-    'data:edit': 'Edit Data',
     'data:import': 'Import/Export Data',
     'settings:view': 'View Settings',
     'settings:edit': 'Edit Settings',
@@ -68,7 +66,7 @@ export function getPermissionGroups() {
   return [
     {
       name: 'Admin',
-      permissions: ['admin:access', 'admin:view', 'admin:edit', 'admin:super'] as AdminPermission[]
+      permissions: ['admin:access', 'admin:view', 'admin:edit'] as AdminPermission[]
     },
     {
       name: 'Content',
@@ -88,7 +86,7 @@ export function getPermissionGroups() {
     },
     {
       name: 'Data',
-      permissions: ['data:view', 'data:edit', 'data:import'] as AdminPermission[]
+      permissions: ['data:view', 'data:import'] as AdminPermission[]
     },
     {
       name: 'Settings',
