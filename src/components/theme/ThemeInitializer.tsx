@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from 'react';
 import { ensureDefaultTheme } from '@/utils/themeInitializer';
-import { syncCSSToDatabase } from '@/utils/themeUtils';
 import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,9 +20,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         const themeId = await ensureDefaultTheme();
         
         if (themeId) {
-          // Then sync all CSS styles to the database to ensure nothing is missed
-          await syncCSSToDatabase(themeId);
-          
+          // Then sync CSS using the ensureDefaultTheme's built-in sync capability
           await setTheme(themeId);
           console.log('Theme initialized successfully with ID:', themeId);
         } else {

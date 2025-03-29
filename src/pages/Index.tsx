@@ -1,3 +1,4 @@
+
 import { MainNav } from "@/components/MainNav";
 import { Footer } from "@/components/Footer";
 import { useEffect, useState, useCallback, Suspense, memo } from "react";
@@ -137,9 +138,12 @@ const SubscriptionForm = memo(() => {
 
 const IndexPage = () => {
   const { 
-    applyRandomEffect, 
-    removeEffect 
-  } = useThemeEffects({
+    effects, 
+    isLoading, 
+    error,
+    applyRandomEffect,
+    removeEffect
+  } = useThemeEffects(undefined, {
     debounceDelay: 100, 
     maxActiveEffects: 5
   });

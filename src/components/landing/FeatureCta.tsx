@@ -1,131 +1,99 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
-import { Database, MessageSquare } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useThemeEffects } from "@/hooks/useThemeEffects";
-import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
-
-export type FeatureType = "database" | "forum" | "chat";
+import { useCallback } from 'react';
+import { useThemeEffects } from '@/hooks/useThemeEffects';
+import { useThemeEffect } from '@/components/theme/effects/ThemeEffectProvider';
+import { EffectRenderer } from '@/components/theme/effects/EffectRenderer';
+import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
+import { cn } from '@/lib/utils';
 
 interface FeatureCtaProps {
-  type: FeatureType;
   title: string;
   description: string;
-  ctaText: string;
-  ctaLink: string;
-  className?: string;
+  icon?: React.ReactNode;
+  ctaText?: string;
+  ctaLink?: string;
+  id: string;
 }
 
-export const FeatureCta = ({ type, title, description, ctaText, ctaLink, className }: FeatureCtaProps) => {
-  const { applyRandomEffect, removeEffect, getEffectForElement } = useThemeEffects({
-    debounceDelay: 100,
-    maxActiveEffects: 5
-  });
-  const { componentStyles, variables } = useSiteTheme();
+export const FeatureCta = ({
+  title,
+  description,
+  icon,
+  ctaText = "Learn More",
+  ctaLink = "#",
+  id
+}: FeatureCtaProps) => {
+  const { applyRandomEffect, removeEffect } = useThemeEffects();
+  const { addEffect, removeEffect: removeThemeEffect, getEffectForElement } = useThemeEffect();
+  const { componentStyles } = useSiteTheme();
 
-  // Get styles from theme
-  const themeStyles = componentStyles?.FeatureCta || {
-    container: "relative overflow-hidden rounded-lg border p-6 transition-all duration-300 backdrop-blur-md shadow-lg hover:shadow-xl transform hover:-translate-y-1",
-    database: "border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10",
-    forum: "border-secondary/30 hover:border-secondary/60 bg-secondary/5 hover:bg-secondary/10",
-    chat: "border-[#8B5CF6]/30 hover:border-[#8B5CF6]/60 bg-[#8B5CF6]/5 hover:bg-[#8B5CF6]/10"
+  const styles = componentStyles?.FeatureCta || {
+    container: "p-6 bg-card border border-border rounded-lg transition-all duration-300 hover:shadow-md hover:border-primary/30",
+    title: "text-xl font-semibold mb-2",
+    description: "text-muted-foreground mb-4",
+    cta: "text-primary hover:text-primary/80 hover:underline inline-flex items-center"
   };
 
-  // Generate a unique ID for this CTA
-  const ctaId = `feature-cta-${type}`;
-  
-  // Get the appropriate icon for this feature
-  const Icon = React.useMemo(() => {
-    switch (type) {
-      case "database":
-        return Database;
-      case "forum":
-        // Using MessageSquare instead of Forum since Forum doesn't exist in lucide-react
-        return MessageSquare;
-      case "chat":
-        return MessageSquare;
-      default:
-        return Database;
-    }
-  }, [type]);
-
-  // Get the appropriate styles for this feature
-  const getFeatureStyles = () => {
-    switch (type) {
-      case "database":
-        return {
-          container: themeStyles.database || "border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10",
-          icon: "text-primary",
-          button: "bg-primary/20 text-primary hover:bg-primary/30"
-        };
-      case "forum":
-        return {
-          container: themeStyles.forum || "border-secondary/30 hover:border-secondary/60 bg-secondary/5 hover:bg-secondary/10",
-          icon: "text-secondary",
-          button: "bg-secondary/20 text-secondary hover:bg-secondary/30"
-        };
-      case "chat":
-        return {
-          container: themeStyles.chat || "border-[#8B5CF6]/30 hover:border-[#8B5CF6]/60 bg-[#8B5CF6]/5 hover:bg-[#8B5CF6]/10",
-          icon: "text-[#8B5CF6]",
-          button: "bg-[#8B5CF6]/20 text-[#8B5CF6] hover:bg-[#8B5CF6]/30"
-        };
-    }
-  };
-
-  const styles = getFeatureStyles();
-  const effect = getEffectForElement(ctaId);
-
-  const handleMouseEnter = () => {
-    applyRandomEffect(ctaId, {
-      types: ['glitch', 'gradient', 'cyber', 'pulse'],
-      colors: type === 'database' ? [variables.effectColor] 
-           : type === 'forum' ? [variables.effectSecondary] 
-           : [variables.effectTertiary],
+  const handleHover = useCallback(() => {
+    const elementId = `feature-${id}`;
+    const effectId = `${elementId}-glow`;
+    
+    addEffect(elementId, {
+      id: effectId,
+      type: 'cyber',
+      enabled: true,
+      duration: 2000,
+      glowColor: '#00F0FF',
+      textShadow: true,
+      scanLines: false
+    });
+    
+    applyRandomEffect(elementId, {
+      types: ['cyber'],
+      colors: ['#00F0FF'],
       duration: 2000
     });
-  };
+    
+    return () => {
+      removeThemeEffect(effectId);
+      removeEffect(elementId);
+    };
+  }, [id, addEffect, applyRandomEffect, removeThemeEffect, removeEffect]);
 
-  const handleMouseLeave = () => {
-    removeEffect(`${ctaId}-glitch`);
-    removeEffect(`${ctaId}-gradient`);
-    removeEffect(`${ctaId}-cyber`);
-    removeEffect(`${ctaId}-pulse`);
-  };
+  const effect = getEffectForElement(`feature-${id}`);
 
   return (
-    <div 
-      id={ctaId}
-      className={cn(
-        themeStyles.container,
-        styles.container,
-        className
-      )}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <EffectRenderer 
+      effect={effect} 
+      className={cn(styles.container)}
     >
-      <div className="flex flex-row items-start gap-4">
-        <div className={cn("p-2 rounded-full bg-background/50", styles.icon)}>
-          <Icon className="h-6 w-6" />
-        </div>
-        
-        <div className="flex-1">
-          <h3 className="text-xl font-bold mb-2">{title}</h3>
-          <p className="text-muted-foreground mb-4">{description}</p>
-          
-          <Link 
-            to={ctaLink} 
-            className={cn(
-              "inline-flex items-center px-4 py-2 rounded-md font-medium",
-              "transition-colors duration-300",
-              styles.button
-            )}
+      <div 
+        id={`feature-${id}`} 
+        className="relative z-10"
+        onMouseEnter={handleHover}
+        onMouseLeave={() => removeThemeEffect(`feature-${id}-glow`)}
+      >
+        {icon && <div className="mb-4 text-primary">{icon}</div>}
+        <h3 className={cn(styles.title)}>{title}</h3>
+        <p className={cn(styles.description)}>{description}</p>
+        <a href={ctaLink} className={cn(styles.cta)}>
+          {ctaText}
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-4 w-4 ml-1" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
           >
-            {ctaText}
-          </Link>
-        </div>
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M9 5l7 7-7 7" 
+            />
+          </svg>
+        </a>
       </div>
-    </div>
+    </EffectRenderer>
   );
 };
