@@ -32,10 +32,16 @@ interface AdminState {
   permissions: AdminPermission[];
   permissionsLoaded: boolean;
   
-  // Admin functions
+  // Actions
   setState: (state: Partial<AdminState>) => void;
   loadPermissions: (mappedPermissions?: AdminPermission[]) => Promise<void>;
   hasPermission: (permission: AdminPermission) => boolean;
+  toggleSidebar: () => void;
+  setActiveSection: (section: string) => void;
+  setPinnedDashboardItems: (items: string[]) => void;
+  setDragSource: (source: string | null) => void;
+  setDragTarget: (target: string | null) => void;
+  toggleDarkMode: () => void;
 }
 
 // Create the admin store with localStorage persistence
@@ -68,8 +74,20 @@ export const useAdminStore = create<AdminState>()(
       permissions: [],
       permissionsLoaded: false,
       
-      // State setter (required for compatibility with useAdminSync)
+      // Actions
       setState: (partialState) => set(partialState),
+      
+      toggleSidebar: () => set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
+      
+      setActiveSection: (section) => set({ activeSection: section }),
+      
+      setPinnedDashboardItems: (items) => set({ pinnedDashboardItems: items }),
+      
+      setDragSource: (source) => set({ dragSource: source }),
+      
+      setDragTarget: (target) => set({ dragTarget: target }),
+      
+      toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
       
       // Permission functions
       loadPermissions: async (mappedPermissions) => {
@@ -156,3 +174,14 @@ export const useAdminStore = create<AdminState>()(
     }
   )
 );
+
+// Add subscribe method to store for sync functionality
+const store = useAdminStore;
+store.subscribe = (callback: (state: AdminState, prevState: AdminState) => void) => {
+  let previousState = store.getState();
+  return store.subscribe((state) => {
+    const nextState = state;
+    callback(nextState, previousState);
+    previousState = nextState;
+  });
+};

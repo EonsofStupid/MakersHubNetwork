@@ -1,6 +1,5 @@
-
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   Home, 
   ChevronLeft, 
@@ -29,7 +28,6 @@ interface SidebarIconProps {
   isEditMode?: boolean;
 }
 
-// Custom DragDropIcon component defined locally
 function DragDropIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg 
@@ -84,7 +82,6 @@ function SidebarIcon({
     }
   };
 
-  // Fix for the drag event handler
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     if (onDragStart) {
       onDragStart(e, id);
@@ -170,10 +167,8 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
   const { checkPermission } = useAdmin();
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Use the collapsed prop if provided, otherwise use the store state
   const isCollapsed = collapsed ? collapsed : !sidebarExpanded;
   
-  // Extract active section from path
   const currentPath = location.pathname;
   const activeItem = currentPath.split('/').pop() || 'overview';
   
@@ -181,25 +176,24 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
     navigate(path);
   };
 
-  // Fixed type for drag start event
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
-    e.dataTransfer.setData('text/plain', id);
-    e.dataTransfer.effectAllowed = 'move';
-    setDragSource(id);
+    if (e.dataTransfer) {
+      e.dataTransfer.setData('text/plain', id);
+      e.dataTransfer.effectAllowed = 'move';
+      setDragSource(id);
 
-    // Create a custom drag image
-    const dragPreview = document.createElement('div');
-    dragPreview.className = 'bg-[var(--impulse-bg-overlay)] backdrop-blur-lg p-2 rounded shadow-lg border border-[var(--impulse-primary)]';
-    
-    // Find the navigation item
-    const item = adminNavigationItems.find(item => item.id === id);
-    if (item) {
-      dragPreview.textContent = item.label;
-      document.body.appendChild(dragPreview);
-      e.dataTransfer.setDragImage(dragPreview, 20, 20);
-      setTimeout(() => {
-        document.body.removeChild(dragPreview);
-      }, 0);
+      const dragPreview = document.createElement('div');
+      dragPreview.className = 'bg-[var(--impulse-bg-overlay)] backdrop-blur-lg p-2 rounded shadow-lg border border-[var(--impulse-primary)]';
+      
+      const item = adminNavigationItems.find(item => item.id === id);
+      if (item) {
+        dragPreview.textContent = item.label;
+        document.body.appendChild(dragPreview);
+        e.dataTransfer.setDragImage(dragPreview, 20, 20);
+        setTimeout(() => {
+          document.body.removeChild(dragPreview);
+        }, 0);
+      }
     }
   };
 
@@ -255,7 +249,6 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
         
         <div className="space-y-1 overflow-y-auto scrollbar-thin flex-1">
           {adminNavigationItems.map(item => {
-            // Only render items the user has permission to see
             if (!checkPermission(item.permission)) {
               return null;
             }

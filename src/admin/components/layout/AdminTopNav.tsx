@@ -1,20 +1,19 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useAdminStore } from '../../store/admin.store';
 import { SyncIndicator } from '@/components/admin/SyncIndicator';
 import { Bell, User, Settings, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export function AdminTopNav() {
-  const { sidebarExpanded, setState } = useAdminStore();
-  
-  const toggleSidebar = () => {
-    setState({ sidebarExpanded: !sidebarExpanded });
-  };
+interface AdminTopNavProps {
+  title?: string;
+  className?: string;
+}
+
+export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNavProps) {
+  const { sidebarExpanded, toggleSidebar } = useAdminStore();
   
   return (
-    <div className="admin-topnav border-b border-border/20 bg-card/30 backdrop-blur-md h-14 fixed top-0 left-0 right-0 z-30">
+    <div className={`admin-topnav border-b border-border/20 bg-card/30 backdrop-blur-md h-14 fixed top-0 left-0 right-0 z-30 ${className}`}>
       <div className="flex items-center justify-between h-full px-4">
         <div className="flex items-center space-x-4">
           <Button 
@@ -27,7 +26,7 @@ export function AdminTopNav() {
           </Button>
           
           <Link to="/admin" className="text-foreground hover:text-primary transition-colors">
-            <h1 className="text-lg font-bold">MakersImpulse Admin</h1>
+            <h1 className="text-lg font-bold">{title}</h1>
           </Link>
         </div>
         
