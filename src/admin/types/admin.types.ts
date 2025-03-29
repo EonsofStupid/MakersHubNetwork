@@ -1,129 +1,73 @@
 
-import { ReactNode } from "react";
-
-// Admin permission types
+// Define admin permissions
 export type AdminPermission = 
   | 'admin:access' 
   | 'admin:view' 
-  | 'admin:edit'
-  | 'admin:super'
-  | 'content:view'
-  | 'content:edit'
-  | 'content:delete'
-  | 'users:view'
-  | 'users:edit'
-  | 'users:delete'
-  | 'builds:view'
-  | 'builds:approve'
-  | 'builds:reject'
-  | 'themes:view'
-  | 'themes:edit'
-  | 'themes:delete'
+  | 'admin:edit' 
+  | 'content:view' 
+  | 'content:edit' 
+  | 'content:delete' 
+  | 'users:view' 
+  | 'users:edit' 
+  | 'users:delete' 
+  | 'builds:view' 
+  | 'builds:approve' 
+  | 'builds:reject' 
+  | 'themes:view' 
+  | 'themes:edit' 
+  | 'themes:delete' 
   | 'data:view'
-  | 'data:edit'
-  | 'data:import'
   | 'settings:view'
-  | 'settings:edit'
   | 'super_admin:all';
 
-// Admin roles with associated permissions
-export interface AdminRole {
-  id: string;
-  name: string;
-  permissions: AdminPermission[];
-}
-
-// Admin shortcut definition
-export interface AdminShortcut {
-  id: string;
-  name: string;
-  icon: string | ReactNode;
-  path: string;
-  permission: AdminPermission;
-  color?: string;
-}
-
-// Admin section definition (for navigation)
+// Admin section for navigation
 export interface AdminSection {
   id: string;
   label: string;
   path: string;
   icon: string;
   permission: AdminPermission;
-  children?: AdminSection[];
 }
 
-// Frozen zone definition
+// Frozen zone for drag-and-drop functionality
 export interface FrozenZone {
   id: string;
-  isLocked: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 // Admin overlay configuration
 export interface AdminOverlayConfig {
   id: string;
-  type: 'frozenZone' | 'aiAssistant' | 'effectsPalette' | 'rolePreset' | 'customFlow';
   title: string;
-  isVisible: boolean;
-  position: {
-    x: number;
-    y: number;
-  };
+  description?: string;
+  position: { x: number, y: number };
+  size: { width: number, height: number };
+  isOpen: boolean;
 }
 
-// Admin tool configuration
-export interface AdminToolConfig {
-  id: string;
-  icon: ReactNode;
-  title: string;
-  description: string;
-  permission: AdminPermission;
-  overlayType?: string;
-}
-
-// Admin dashboard widget
-export interface AdminDashboardWidget {
-  id: string;
-  title: string;
-  type: 'stats' | 'chart' | 'activity' | 'quickActions';
-  size: 'small' | 'medium' | 'large';
-  position: number;
-  permission: AdminPermission;
-}
-
-// Admin inspector
-export interface AdminInspectorConfig {
-  enabled: boolean;
-  highlight: boolean;
-  showComponentTree: boolean;
-  showState: boolean;
-}
-
-// Admin theme variant
-export interface AdminThemeVariant {
+// Admin UI theme configuration
+export interface AdminThemeConfig {
   id: string;
   name: string;
-  isPrimary: boolean;
-  colors: Record<string, string>;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  bgColor: string;
+  textColor: string;
+  isDark: boolean;
 }
 
-// Admin build review item
-export interface AdminBuildReview {
+// User data interface for admin views
+export interface AdminUserData {
   id: string;
-  title: string;
-  submittedBy: string;
-  submittedAt: string;
-  status: 'pending' | 'approved' | 'rejected' | 'needsChanges';
-  notes?: string;
-  reviewedBy?: string;
-  reviewedAt?: string;
-}
-
-// Admin preferences
-export interface AdminPreferences {
-  sidebarExpanded: boolean;
-  dashboardLayout: AdminDashboardWidget[];
-  pinnedTools: string[];
-  theme: string;
-  activeSection: string;
+  name: string;
+  email: string;
+  roles: string[];
+  avatar?: string;
+  status: 'active' | 'inactive' | 'pending' | 'suspended';
+  joinedAt: string;
+  lastActive?: string;
 }

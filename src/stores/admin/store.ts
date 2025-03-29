@@ -1,6 +1,6 @@
 
 /**
- * This file is deprecated and maintained only for backward compatibility.
+ * This file is maintained only for backward compatibility.
  * Please use the new admin store at src/admin/store/admin.store.ts
  */
 
