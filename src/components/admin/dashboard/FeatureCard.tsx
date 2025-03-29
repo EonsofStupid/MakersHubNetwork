@@ -1,8 +1,8 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 interface FeatureCardProps {
@@ -13,45 +13,39 @@ interface FeatureCardProps {
   colorClass?: string;
 }
 
-export function FeatureCard({ 
-  title, 
-  description, 
-  icon, 
-  path, 
-  colorClass 
+export function FeatureCard({
+  title,
+  description,
+  icon,
+  path,
+  colorClass = "bg-primary/10 text-primary border-primary/20"
 }: FeatureCardProps) {
   const navigate = useNavigate();
-  
-  const handleClick = () => {
-    navigate(path);
-  };
   
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
-      <Card 
+      <Card
+        onClick={() => navigate(path)}
         className={cn(
-          "p-4 cursor-pointer hover:shadow-md transition-all duration-300",
-          "border-primary/10 overflow-hidden relative h-full",
+          "relative h-full p-6 overflow-hidden backdrop-blur-md cursor-pointer transition-colors",
+          "hover:bg-card/90 border-[1px]",
           colorClass
         )}
-        onClick={handleClick}
       >
-        <div className="absolute -right-4 -top-4 opacity-10 text-4xl rotate-12">
+        <div className="absolute right-2 top-2 opacity-30">
           {icon}
         </div>
         
         <div className="space-y-2">
-          <div className="text-lg font-medium flex items-center gap-2">
-            <span className="text-base">{icon}</span> 
-            {title}
-          </div>
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {description}
-          </p>
+          <h3 className="font-semibold">{title}</h3>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
+        
+        {/* Bottom accent line */}
+        <div className="absolute bottom-0 left-0 w-full h-[2px] opacity-30 bg-gradient-to-r from-transparent via-current to-transparent" />
       </Card>
     </motion.div>
   );

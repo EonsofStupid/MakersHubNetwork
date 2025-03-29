@@ -1,121 +1,104 @@
 
-// Admin system type definitions
+import { ReactNode } from "react";
 
-// Admin permission types - expanded with all needed permissions
+// Admin permission types
 export type AdminPermission = 
-  | 'admin:access'        // General admin access
-  | 'admin:view'          // View admin dashboard
-  | 'admin:edit'          // Edit admin settings
-  | 'users:view'          // View users
-  | 'users:manage'        // Manage users (create, update)
-  | 'users:edit'          // Edit users
-  | 'users:delete'        // Delete users
-  | 'content:view'        // View content
-  | 'content:manage'      // Manage content
-  | 'content:edit'        // Edit content
-  | 'content:delete'      // Delete content
-  | 'builds:view'         // View builds (including pending)
-  | 'builds:approve'      // Approve builds
-  | 'builds:reject'       // Reject builds
-  | 'builds:manage'       // Manage builds
-  | 'settings:view'       // View settings
-  | 'settings:manage'     // Manage settings
-  | 'data:view'           // View data
-  | 'data:manage'         // Manage data
-  | 'analytics:view'      // View analytics 
-  | 'themes:view'         // View themes
-  | 'themes:manage'       // Manage themes
-  | 'themes:edit'         // Edit themes
-  | 'themes:delete'       // Delete themes
-  | 'super_admin:all';    // Super admin permission
+  | 'admin:access' 
+  | 'admin:view' 
+  | 'admin:edit'
+  | 'admin:super'
+  | 'content:view'
+  | 'content:edit'
+  | 'content:delete'
+  | 'users:view'
+  | 'users:edit'
+  | 'users:delete'
+  | 'builds:view'
+  | 'builds:approve'
+  | 'builds:reject'
+  | 'themes:view'
+  | 'themes:edit'
+  | 'themes:delete'
+  | 'super_admin:all';
 
-// Admin navigation section
-export interface AdminSection {
-  id: string;
-  label: string;
-  path: string;
-  icon: string;
-  permission: AdminPermission;
-  children?: AdminSection[];
-}
-
-// Admin dashboard stats
-export interface DashboardStats {
-  usersCount: number;
-  activeUsersCount: number;
-  totalBuildsCount: number;
-  pendingBuildsCount: number;
-  recentBuildsCount: number;
-}
-
-// Admin activity
-export interface Activity {
-  id: string;
-  action: string;
-  userId?: string;
-  userName?: string;
-  targetType?: string;
-  targetId?: string;
-  targetName?: string;
-  timestamp: string;
-  metadata?: Record<string, any>;
-}
-
-// Admin Shortcut type
-export interface AdminShortcut {
+// Admin roles with associated permissions
+export interface AdminRole {
   id: string;
   name: string;
-  icon: string;
-  path: string;
-  color?: string;
+  permissions: AdminPermission[];
+}
+
+// Frozen zone definition
+export interface FrozenZone {
+  id: string;
+  isLocked: boolean;
+}
+
+// Admin overlay configuration
+export interface AdminOverlayConfig {
+  id: string;
+  type: 'frozenZone' | 'aiAssistant' | 'effectsPalette' | 'rolePreset' | 'customFlow';
+  title: string;
+  isVisible: boolean;
+  position: {
+    x: number;
+    y: number;
+  };
+}
+
+// Admin tool configuration
+export interface AdminToolConfig {
+  id: string;
+  icon: ReactNode;
+  title: string;
+  description: string;
+  permission: AdminPermission;
+  overlayType?: string;
+}
+
+// Admin dashboard widget
+export interface AdminDashboardWidget {
+  id: string;
+  title: string;
+  type: 'stats' | 'chart' | 'activity' | 'quickActions';
+  size: 'small' | 'medium' | 'large';
+  position: number;
   permission: AdminPermission;
 }
 
-// Admin Overlay Configuration
-export interface AdminOverlayConfig {
-  id: string;
-  type: 'info' | 'warning' | 'error';
-  message: string;
-  target: string;
-  position: 'top' | 'right' | 'bottom' | 'left';
+// Admin inspector
+export interface AdminInspectorConfig {
+  enabled: boolean;
+  highlight: boolean;
+  showComponentTree: boolean;
+  showState: boolean;
 }
 
-// Frozen Zone for UI inspections
-export interface FrozenZone {
+// Admin theme variant
+export interface AdminThemeVariant {
   id: string;
-  selector: string;
-  label: string;
-  color: string;
+  name: string;
+  isPrimary: boolean;
+  colors: Record<string, string>;
 }
 
-// State for the admin store
-export interface AdminState {
-  // Auth & permissions
-  isLoadingPermissions: boolean;
-  permissions: AdminPermission[];
-  
-  // UI state
+// Admin build review item
+export interface AdminBuildReview {
+  id: string;
+  title: string;
+  submittedBy: string;
+  submittedAt: string;
+  status: 'pending' | 'approved' | 'rejected' | 'needsChanges';
+  notes?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+}
+
+// Admin preferences
+export interface AdminPreferences {
   sidebarExpanded: boolean;
+  dashboardLayout: AdminDashboardWidget[];
+  pinnedTools: string[];
+  theme: string;
   activeSection: string;
-  
-  // Error state
-  error: string | null;
 }
-
-// Actions for the admin store
-export interface AdminActions {
-  // Permission actions
-  loadPermissions: (mappedPermissions?: AdminPermission[]) => Promise<void>;
-  hasPermission: (permission: AdminPermission) => boolean;
-  
-  // UI actions
-  toggleSidebar: () => void;
-  setSidebar: (expanded: boolean) => void;
-  setActiveSection: (section: string) => void;
-  
-  // Error handling
-  setError: (error: string | null) => void;
-}
-
-// Combined admin store type
-export type AdminStore = AdminState & AdminActions;

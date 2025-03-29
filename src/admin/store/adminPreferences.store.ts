@@ -1,99 +1,70 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { AdminPreferences } from '../types/admin.types';
 
-export interface AdminPreferencesState {
-  // UI preferences
+interface AdminPreferencesState extends AdminPreferences {
+  // UI state
   isDashboardCollapsed: boolean;
-  sidebarPosition: 'left' | 'right';
-  themeVariant: 'cyberpunk' | 'neon' | 'corporate';
   
-  // Feature preferences
-  showQuickActions: boolean;
-  usedInspector: boolean;
-  enableAnimations: boolean;
-  
-  // User settings
-  lastVisitedSection: string;
-  pinnedShortcuts: string[];
-  customTokens: Record<string, string>;
-}
-
-export interface AdminPreferencesActions {
+  // Actions
   setDashboardCollapsed: (collapsed: boolean) => void;
-  setSidebarPosition: (position: 'left' | 'right') => void;
-  setThemeVariant: (variant: 'cyberpunk' | 'neon' | 'corporate') => void;
-  setShowQuickActions: (show: boolean) => void;
-  setUsedInspector: (used: boolean) => void;
-  setEnableAnimations: (enable: boolean) => void;
-  setLastVisitedSection: (section: string) => void;
-  addPinnedShortcut: (shortcut: string) => void;
-  removePinnedShortcut: (shortcut: string) => void;
-  setCustomToken: (key: string, value: string) => void;
+  setPinnedTools: (tools: string[]) => void;
+  setTheme: (theme: string) => void;
+  setActiveSection: (section: string) => void;
+  
+  // Load/Save preferences
   loadPreferences: () => void;
+  savePreferences: () => void;
 }
 
-export type AdminPreferencesStore = AdminPreferencesState & AdminPreferencesActions;
-
-export const useAdminPreferences = create<AdminPreferencesStore>()(
+export const useAdminPreferences = create<AdminPreferencesState>()(
   persist(
     (set, get) => ({
-      // Default UI preferences
+      // Default preferences
+      sidebarExpanded: true,
+      dashboardLayout: [],
+      pinnedTools: ['users', 'builds', 'themes'],
+      theme: 'cyberpunk',
+      activeSection: 'overview',
+      
+      // UI state
       isDashboardCollapsed: false,
-      sidebarPosition: 'left',
-      themeVariant: 'cyberpunk',
-      
-      // Default feature preferences
-      showQuickActions: true,
-      usedInspector: false,
-      enableAnimations: true,
-      
-      // Default user settings
-      lastVisitedSection: 'overview',
-      pinnedShortcuts: ['users', 'builds', 'themes'],
-      customTokens: {},
       
       // Actions
       setDashboardCollapsed: (collapsed) => set({ isDashboardCollapsed: collapsed }),
-      setSidebarPosition: (position) => set({ sidebarPosition: position }),
-      setThemeVariant: (variant) => set({ themeVariant: variant }),
-      setShowQuickActions: (show) => set({ showQuickActions: show }),
-      setUsedInspector: (used) => set({ usedInspector: used }),
-      setEnableAnimations: (enable) => set({ enableAnimations: enable }),
-      setLastVisitedSection: (section) => set({ lastVisitedSection: section }),
       
-      addPinnedShortcut: (shortcut) => set((state) => ({
-        pinnedShortcuts: [...state.pinnedShortcuts, shortcut]
-      })),
+      setPinnedTools: (tools) => set({ pinnedTools: tools }),
       
-      removePinnedShortcut: (shortcut) => set((state) => ({
-        pinnedShortcuts: state.pinnedShortcuts.filter(s => s !== shortcut)
-      })),
+      setTheme: (theme) => set({ theme }),
       
-      setCustomToken: (key, value) => set((state) => ({
-        customTokens: { ...state.customTokens, [key]: value }
-      })),
+      setActiveSection: (section) => set({ activeSection: section }),
       
+      // Load preferences (could fetch from API in the future)
       loadPreferences: () => {
-        // This is called on component mount to initialize preferences
-        // If there's API-based persistence, this would fetch from there
-        console.log("Loading admin preferences...");
-        
-        // For now, we just use the persisted state from Zustand
+        // For now we're just using the persisted state 
+        // This function exists as a hook for future API integration
+        console.log('Admin preferences loaded from store');
+      },
+      
+      // Save preferences (could save to API in the future)
+      savePreferences: () => {
+        // For now we're just using persisted state
+        // This function exists as a hook for future API integration
+        console.log('Admin preferences saved to store');
+        return Promise.resolve();
       }
     }),
     {
-      name: 'admin-preferences-storage',
-      // Only persist these fields to localStorage
+      name: 'admin-preferences',
+      // Only persist these fields
       partialize: (state) => ({
-        isDashboardCollapsed: state.isDashboardCollapsed,
-        sidebarPosition: state.sidebarPosition,
-        themeVariant: state.themeVariant,
-        showQuickActions: state.showQuickActions,
-        lastVisitedSection: state.lastVisitedSection,
-        pinnedShortcuts: state.pinnedShortcuts,
-        customTokens: state.customTokens,
-      })
+        sidebarExpanded: state.sidebarExpanded,
+        dashboardLayout: state.dashboardLayout,
+        pinnedTools: state.pinnedTools,
+        theme: state.theme,
+        activeSection: state.activeSection,
+      }),
     }
   )
 );

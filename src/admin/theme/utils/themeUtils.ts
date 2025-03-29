@@ -1,100 +1,73 @@
 
+import { ImpulseTheme, ImpulseTokens } from "../../types/impulse.types";
+
 /**
- * Deep merges two objects, preferring the source values over target values
+ * Convert a theme object to CSS variables
  */
-export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
-  const output = { ...target };
-  
-  if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach(key => {
-      if (isObject(source[key as keyof typeof source])) {
-        if (!(key in target)) {
-          Object.assign(output, { [key]: source[key as keyof typeof source] });
-        } else {
-          (output as any)[key] = deepMerge(
-            (target as any)[key], 
-            source[key as keyof typeof source] as any
-          );
-        }
-      } else {
-        Object.assign(output, { [key]: source[key as keyof typeof source] });
-      }
-    });
+export function tokensToCssVars(
+  tokens: Record<string, any>,
+  prefix: string = "",
+  path: string = ""
+): Record<string, string> {
+  const cssVars: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(tokens)) {
+    const varPath = path ? `${path}-${key}` : key;
+    const varName = `--${prefix ? `${prefix}-` : ""}${varPath}`;
+
+    if (typeof value === "object" && value !== null) {
+      // Recursively process nested objects
+      const nestedVars = tokensToCssVars(value, prefix, varPath);
+      Object.assign(cssVars, nestedVars);
+    } else {
+      // Convert leaf values to CSS variable values
+      cssVars[varName] = value.toString();
+    }
   }
+
+  return cssVars;
+}
+
+/**
+ * Apply CSS variables to a DOM element
+ */
+export function applyCssVars(
+  tokens: Record<string, any>,
+  prefix: string = "",
+  element: HTMLElement = document.documentElement
+) {
+  const cssVars = tokensToCssVars(tokens, prefix);
   
+  for (const [name, value] of Object.entries(cssVars)) {
+    element.style.setProperty(name, value);
+  }
+}
+
+/**
+ * Deep merge two objects
+ */
+export function deepMerge<T>(target: T, source: Partial<T>): T {
+  if (typeof source !== 'object' || source === null) {
+    return target;
+  }
+
+  const output = { ...target } as any;
+
+  for (const key in source) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      if (
+        typeof source[key] === 'object' && 
+        source[key] !== null &&
+        Object.prototype.hasOwnProperty.call(target, key) &&
+        typeof (target as any)[key] === 'object' && 
+        (target as any)[key] !== null
+      ) {
+        output[key] = deepMerge((target as any)[key], source[key] as any);
+      } else {
+        output[key] = source[key];
+      }
+    }
+  }
+
   return output;
-}
-
-/**
- * Checks if a value is an object
- */
-export function isObject(item: any): boolean {
-  return item && typeof item === 'object' && !Array.isArray(item);
-}
-
-/**
- * Converts theme tokens to CSS variables
- */
-export function tokensToCssVars(theme: Record<string, any>, prefix = '--impulse-'): Record<string, string> {
-  const result: Record<string, string> = {};
-  
-  function processObject(obj: Record<string, any>, path: string) {
-    for (const key in obj) {
-      const value = obj[key];
-      const newPath = path ? `${path}-${key}` : key;
-      
-      if (typeof value === 'object') {
-        processObject(value, newPath);
-      } else {
-        result[`${prefix}${newPath}`] = value;
-      }
-    }
-  }
-  
-  processObject(theme, '');
-  return result;
-}
-
-/**
- * Applies CSS variables to an element
- */
-export function applyCssVars(element: HTMLElement, vars: Record<string, string>) {
-  for (const [key, value] of Object.entries(vars)) {
-    element.style.setProperty(key, value);
-  }
-}
-
-/**
- * Gets a nested value from an object using a path
- */
-export function getValueByPath(obj: Record<string, any>, path: string): any {
-  const keys = path.split('.');
-  let current = obj;
-  
-  for (const key of keys) {
-    if (current === undefined || current === null) return undefined;
-    current = current[key];
-  }
-  
-  return current;
-}
-
-/**
- * Sets a value at a nested path within an object
- */
-export function setValueAtPath(obj: Record<string, any>, path: string, value: any): Record<string, any> {
-  const result = { ...obj };
-  const keys = path.split('.');
-  let current = result;
-  
-  for (let i = 0; i < keys.length - 1; i++) {
-    const key = keys[i];
-    if (!(key in current) || !isObject(current[key])) {
-      current[key] = {};
-    }
-    current = current[key];
-  }
-  
-  current[keys[keys.length - 1]] = value;
-  return result;
 }
