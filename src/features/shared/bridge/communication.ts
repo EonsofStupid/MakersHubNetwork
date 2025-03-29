@@ -1,5 +1,6 @@
 
 import { create } from 'zustand';
+import React from 'react';
 
 // Message types for communication between admin and feature components
 export type MessageType = 'FEATURE_DATA' | 'FEATURE_EVENT' | 'ADMIN_COMMAND' | 'ADMIN_DATA';
