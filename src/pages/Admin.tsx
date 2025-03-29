@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -6,6 +5,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AdminRoutes } from "@/admin/routes";
 import { useAdmin } from "@/admin/context/AdminContext";
 import { useAdminStore } from "@/admin/store/admin.store";
+import { useAdminSync } from "@/admin/hooks/useAdminSync"; 
 
 // Import admin theme styles
 import "@/admin/styles/admin-core.css";
@@ -18,6 +18,9 @@ export default function Admin() {
   const { hasAdminAccess, isLoading, initializeAdmin } = useAdmin();
   const [hasInitialized, setHasInitialized] = useState(false);
   const { loadPermissions } = useAdminStore();
+  
+  // Use admin sync hook to keep database and localStorage in sync
+  useAdminSync();
   
   useEffect(() => {
     console.log("Admin component mounted, admin access:", hasAdminAccess);

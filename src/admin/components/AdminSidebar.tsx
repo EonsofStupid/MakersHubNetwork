@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Home, 
   ChevronLeft, 
-  ChevronRight, 
-  DragDropIcon,
+  ChevronRight,
   Edit,
   Plus,
   X
@@ -25,13 +24,13 @@ interface SidebarIconProps {
   active?: boolean;
   expanded?: boolean;
   onClick?: () => void;
-  onDragStart?: (e: React.DragEvent, id: string) => void;
+  onDragStart?: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
   isDraggable?: boolean;
   isEditMode?: boolean;
 }
 
-// Custom DragDropIcon component since it's not included in lucide-react
-function DragDropIcon(props: any) {
+// Custom DragDropIcon component defined locally
+function DragDropIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -85,6 +84,13 @@ function SidebarIcon({
     }
   };
 
+  // Fix for the drag event handler
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    if (onDragStart) {
+      onDragStart(e, id);
+    }
+  };
+
   return (
     <TooltipProvider delayDuration={300}>
       <Tooltip>
@@ -98,7 +104,7 @@ function SidebarIcon({
                       "text-[var(--impulse-text-secondary)] hover:bg-[rgba(0,240,255,0.1)]"
             )}
             draggable={isDraggable}
-            onDragStart={(e) => onDragStart && onDragStart(e, id)}
+            onDragStart={handleDragStart}
             onClick={onClick}
             variants={iconVariants}
             initial="initial"
@@ -175,7 +181,8 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
     navigate(path);
   };
 
-  const handleDragStart = (e: React.DragEvent, id: string) => {
+  // Fixed type for drag start event
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
     e.dataTransfer.setData('text/plain', id);
     e.dataTransfer.effectAllowed = 'move';
     setDragSource(id);
