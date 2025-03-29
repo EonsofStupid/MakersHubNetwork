@@ -1,27 +1,27 @@
 
 import React from "react";
-import { FeatureCta } from "./FeatureCta";
+import { FeatureCta, FeatureType } from "./FeatureCta";
 import "./styles/feature-cta.css"; // Make sure we import our styles
 
 export const FeaturesSection = () => {
-  // Define our features data
+  // Define our features data with correct FeatureType values
   const features = [
     {
-      type: "database",
+      type: "database" as FeatureType,
       title: "3D Printer Database",
       description: "Access our comprehensive database of 3D printer builds, parts, and specifications.",
       ctaText: "Explore Database",
       ctaLink: "/database"
     },
     {
-      type: "forum",
+      type: "forum" as FeatureType,
       title: "Maker Forums",
       description: "Join discussions with fellow makers, share your knowledge, and get help with your builds.",
       ctaText: "Join Forums",
       ctaLink: "/forums"
     },
     {
-      type: "chat",
+      type: "chat" as FeatureType,
       title: "Live Chat",
       description: "Get real-time advice and connect with makers around the world through our chat platform.",
       ctaText: "Start Chatting",

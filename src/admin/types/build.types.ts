@@ -33,7 +33,7 @@ export interface Build {
   id: string;
   title: string;
   description: string;
-  images?: string[];
+  images: string[];
   status: BuildStatus;
   created_at: string;
   updated_at: string;
