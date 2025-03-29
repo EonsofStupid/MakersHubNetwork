@@ -3,8 +3,8 @@ import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
-import { AdminLayout } from "@/admin/components/layout/AdminLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AdminLayout } from "@/admin/layout/AdminLayout";
 import { AdminFeatureSection } from "@/components/admin/dashboard/AdminFeatureSection";
 import { ActivityFeed } from "@/components/admin/dashboard/ActivityFeed";
 import { Stats } from "@/components/admin/dashboard/Stats";
@@ -13,14 +13,28 @@ import { ContentManagementWidget } from "@/components/admin/dashboard/ContentMan
 import { UserManagementWidget } from "@/components/admin/dashboard/UserManagementWidget";
 
 export default function Admin() {
-  const { status, isAdmin } = useAuthStore();
+  const { isAdmin, status } = useAuthStore();
   const { toast } = useToast();
   
-  // Simple check if user is admin directly from auth store
+  // Clear loading state check to ensure we're not getting stuck
+  const isLoading = status === "loading";
   const hasAccess = isAdmin ? isAdmin() : false;
   
-  // Loading state
-  if (status === "loading") {
+  useEffect(() => {
+    console.log("Admin component mounted, auth status:", status);
+    console.log("Admin access:", hasAccess);
+    
+    // Add the admin theme class to body
+    document.body.classList.add('impulse-admin-root');
+    
+    return () => {
+      // Clean up
+      document.body.classList.remove('impulse-admin-root');
+    };
+  }, [status, hasAccess]);
+
+  // Show simple loading state
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="space-y-4 text-center">
@@ -43,7 +57,7 @@ export default function Admin() {
 
   return (
     <ErrorBoundary>
-      <AdminLayout title="Admin Dashboard">
+      <AdminLayout>
         <div className="space-y-6">
           {/* Admin stats overview */}
           <Stats />

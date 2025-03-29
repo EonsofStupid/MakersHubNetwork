@@ -53,7 +53,7 @@ export function UserManagementWidget() {
   
   const getRoleBadge = (role: string) => {
     let className = "";
-    let icon = null;
+    let icon: React.ReactNode = null;
     
     switch(role) {
       case "admin":

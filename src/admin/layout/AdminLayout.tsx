@@ -15,23 +15,24 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { setScrollY, sidebarExpanded, setActiveSection } = useAdminUI();
 
   useEffect(() => {
+    // Simple scroll handler
     const handleScroll = () => {
       setScrollY(window.scrollY);
     };
     
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [setScrollY]);
-
-  // Extract the current section from the location path
-  useEffect(() => {
+    // Extract the current section from the location path
     const path = location.pathname.split('/');
     const section = path[path.length - 1] || 'dashboard';
     setActiveSection(section);
-  }, [location, setActiveSection]);
+    
+    console.log("AdminLayout mounted, setting active section:", section);
+    
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [location, setActiveSection, setScrollY]);
 
   return (
-    <div className="admin-theme">
+    <div className="admin-theme min-h-screen">
       <AdminTopNav />
       <div className="flex">
         <AdminSidebar />
