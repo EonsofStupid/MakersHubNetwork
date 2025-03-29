@@ -1,3 +1,4 @@
+
 import { MainNav } from "@/components/MainNav";
 import { Footer } from "@/components/Footer";
 import { useEffect, useState, useCallback, Suspense, memo } from "react";
@@ -8,6 +9,8 @@ import { useThemeEffects } from "@/hooks/useThemeEffects";
 import { EffectRenderer } from "@/components/theme/effects/EffectRenderer";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { BuildShowcase } from "@/components/landing/BuildShowcase";
+import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
+import { cn } from "@/lib/utils";
 
 // Memoize components that don't need to re-render often
 const MemoizedThemeDataStream = memo(ThemeDataStream);
@@ -17,12 +20,20 @@ const ActionButtons = memo(({ onHover, onLeave }: {
   onHover: (id: string) => void, 
   onLeave: (id: string) => void 
 }) => {
+  const { componentStyles } = useSiteTheme();
+  
+  const ctaStyles = componentStyles?.ActionButtons || {
+    buildCta: "cyber-card inline-flex h-12 items-center justify-center rounded-md bg-primary/20 px-8 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(0,240,255,0.15)] transition-all duration-300 hover:scale-105 hover:bg-primary/30 hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden",
+    browseCta: "glass-morphism inline-flex h-12 items-center justify-center rounded-md border border-primary/30 bg-background/30 backdrop-blur-xl px-8 text-sm font-medium ring-offset-background transition-colors hover:bg-accent/10 hover:text-accent-foreground hover:border-primary/50 hover:shadow-[0_0_15px_rgba(0,240,255,0.15)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden",
+    communityCta: "neo-blur inline-flex h-12 items-center justify-center rounded-md border border-secondary/30 bg-background/30 backdrop-blur-xl px-8 text-sm font-medium transition-colors hover:bg-secondary/10 hover:text-secondary-foreground hover:border-secondary/50 hover:shadow-[0_0_15px_rgba(255,45,110,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden"
+  };
+
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-center">
       {/* Build CTA */}
       <a 
         href="/builder" 
-        className="cyber-card inline-flex h-12 items-center justify-center rounded-md bg-primary/20 px-8 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(0,240,255,0.15)] transition-all duration-300 hover:scale-105 hover:bg-primary/30 hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden"
+        className={cn(ctaStyles.buildCta)}
         onMouseEnter={() => onHover('build-cta')}
         onMouseLeave={() => onLeave('build-cta')}
         id="build-cta"
@@ -34,7 +45,7 @@ const ActionButtons = memo(({ onHover, onLeave }: {
       {/* Browse CTA */}
       <a 
         href="/builds" 
-        className="glass-morphism inline-flex h-12 items-center justify-center rounded-md border border-primary/30 bg-background/30 backdrop-blur-xl px-8 text-sm font-medium ring-offset-background transition-colors hover:bg-accent/10 hover:text-accent-foreground hover:border-primary/50 hover:shadow-[0_0_15px_rgba(0,240,255,0.15)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden"
+        className={cn(ctaStyles.browseCta)}
         onMouseEnter={() => onHover('browse-cta')}
         onMouseLeave={() => onLeave('browse-cta')}
         id="browse-cta"
@@ -45,7 +56,7 @@ const ActionButtons = memo(({ onHover, onLeave }: {
       {/* Community Hub CTA */}
       <a 
         href="/community" 
-        className="neo-blur inline-flex h-12 items-center justify-center rounded-md border border-secondary/30 bg-background/30 backdrop-blur-xl px-8 text-sm font-medium transition-colors hover:bg-secondary/10 hover:text-secondary-foreground hover:border-secondary/50 hover:shadow-[0_0_15px_rgba(255,45,110,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden"
+        className={cn(ctaStyles.communityCta)}
         onMouseEnter={() => onHover('community-cta')}
         onMouseLeave={() => onLeave('community-cta')}
         id="community-cta"
@@ -57,13 +68,21 @@ const ActionButtons = memo(({ onHover, onLeave }: {
 });
 
 // Prevent unnecessary re-renders by memoizing the title
-const PageTitle = memo(() => (
-  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 relative">
-    <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mad-scientist-hover">
-      MakersImpulse
-    </span>
-  </h1>
-));
+const PageTitle = memo(() => {
+  const { componentStyles } = useSiteTheme();
+  const titleStyles = componentStyles?.PageTitle || {
+    title: "text-4xl md:text-5xl lg:text-6xl font-bold mb-6 relative",
+    gradient: "bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mad-scientist-hover"
+  };
+
+  return (
+    <h1 className={cn(titleStyles.title)}>
+      <span className={cn(titleStyles.gradient)}>
+        MakersImpulse
+      </span>
+    </h1>
+  );
+});
 
 // Memoize the subtitle section
 const PageSubtitle = memo(() => (
@@ -78,24 +97,32 @@ const PageSubtitle = memo(() => (
 ));
 
 // Memoize the subscription form to prevent unnecessary re-renders
-const SubscriptionForm = memo(() => (
-  <div className="subscribe-banner cyber-card p-4 md:p-6 max-w-xl mx-auto my-8 relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10"></div>
-    <h3 className="text-xl font-bold text-primary mb-2 relative z-10">Join Our Maker Community</h3>
-    <p className="text-muted-foreground mb-4 relative z-10">Get early access to new features and showcase your builds</p>
-    
-    <div className="flex flex-col sm:flex-row gap-2 relative z-10">
-      <input 
-        type="email" 
-        placeholder="Your email" 
-        className="flex h-10 w-full rounded-md border border-primary/20 bg-background/30 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-      />
-      <button className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30">
-        Subscribe
-      </button>
+const SubscriptionForm = memo(() => {
+  const { componentStyles } = useSiteTheme();
+  const formStyles = componentStyles?.SubscriptionForm || {
+    container: "subscribe-banner cyber-card p-4 md:p-6 max-w-xl mx-auto my-8 relative overflow-hidden",
+    gradient: "absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10"
+  };
+
+  return (
+    <div className={cn(formStyles.container)}>
+      <div className={cn(formStyles.gradient)}></div>
+      <h3 className="text-xl font-bold text-primary mb-2 relative z-10">Join Our Maker Community</h3>
+      <p className="text-muted-foreground mb-4 relative z-10">Get early access to new features and showcase your builds</p>
+      
+      <div className="flex flex-col sm:flex-row gap-2 relative z-10">
+        <input 
+          type="email" 
+          placeholder="Your email" 
+          className="flex h-10 w-full rounded-md border border-primary/20 bg-background/30 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        />
+        <button className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30">
+          Subscribe
+        </button>
+      </div>
     </div>
-  </div>
-));
+  );
+});
 
 const IndexPage = () => {
   // Use our new effects system hook

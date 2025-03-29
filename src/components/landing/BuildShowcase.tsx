@@ -1,8 +1,8 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
+import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 
 // Sample data - in a real implementation, this would come from an API
 const FEATURED_BUILDS = [
@@ -107,25 +107,30 @@ interface BuildCardProps {
   };
 }
 
+// Update the BuildCard component to use the theme from the database
 const BuildCard = ({ build }: BuildCardProps) => {
+  const { componentStyles } = useSiteTheme();
+  const styles = componentStyles?.BuildCard || {
+    container: "overflow-hidden rounded-lg border border-primary/20 bg-background/40 shadow-lg hover:shadow-xl transition-all duration-300 h-full",
+    image: "w-full h-full object-cover transition-transform duration-500 hover:scale-110",
+    overlay: "absolute inset-0 bg-gradient-to-t from-background to-transparent",
+    category: "inline-block px-2 py-1 text-xs rounded-md backdrop-blur-md bg-primary/30 text-primary-foreground border border-primary/40"
+  };
+
   return (
     <motion.div
       whileHover={{ y: -10 }}
-      className="overflow-hidden rounded-lg border border-primary/20 bg-background/40
-                 shadow-lg hover:shadow-xl transition-all duration-300 h-full"
+      className={cn(styles.container)}
     >
       <div className="relative aspect-video overflow-hidden">
         <img 
           src={build.imageUrl} 
           alt={build.title} 
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+          className={cn(styles.image)}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
+        <div className={cn(styles.overlay)}></div>
         <div className="absolute bottom-2 left-2">
-          <span className={cn(
-            "inline-block px-2 py-1 text-xs rounded-md backdrop-blur-md",
-            "bg-primary/30 text-primary-foreground border border-primary/40"
-          )}>
+          <span className={cn(styles.category)}>
             {build.category}
           </span>
         </div>

@@ -8,10 +8,12 @@ const SiteThemeContext = createContext<{
   variables: ThemeVariables;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  componentStyles: Record<string, any>;
 }>({
   variables: {} as ThemeVariables,
   isDarkMode: true,
   toggleDarkMode: () => {},
+  componentStyles: {},
 });
 
 // Custom hook to use the theme context
@@ -35,6 +37,22 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
     setIsDarkMode(newMode);
     localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
   };
+
+  // Get component styles from theme
+  const componentStyles = React.useMemo(() => {
+    if (!currentTheme || !currentTheme.component_tokens) {
+      return {};
+    }
+
+    const styles: Record<string, any> = {};
+    
+    // Convert component tokens array to a map of component name -> styles
+    currentTheme.component_tokens.forEach((component) => {
+      styles[component.component_name] = component.styles;
+    });
+    
+    return styles;
+  }, [currentTheme]);
 
   // Apply CSS variables when the theme changes
   useEffect(() => {
@@ -92,7 +110,7 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
   }, [variables, isLoading, isDarkMode]);
   
   return (
-    <SiteThemeContext.Provider value={{ variables, isDarkMode, toggleDarkMode }}>
+    <SiteThemeContext.Provider value={{ variables, isDarkMode, toggleDarkMode, componentStyles }}>
       {children}
     </SiteThemeContext.Provider>
   );
