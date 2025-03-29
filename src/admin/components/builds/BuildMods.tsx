@@ -19,7 +19,10 @@ export function BuildMods({ mods }: BuildModsProps) {
     );
   }
   
-  const getComplexityColor = (score: number) => {
+  const getComplexityColor = (score: number | null | undefined) => {
+    // Handle null or undefined complexity
+    if (score === null || score === undefined) return "bg-gray-500/10 text-gray-500 border-gray-500/20";
+    
     if (score <= 2) return "bg-green-500/10 text-green-500 border-green-500/20";
     if (score <= 4) return "bg-amber-500/10 text-amber-500 border-amber-500/20";
     return "bg-rose-500/10 text-rose-500 border-rose-500/20";
@@ -35,9 +38,9 @@ export function BuildMods({ mods }: BuildModsProps) {
               <h4 className="font-medium">{mod.name}</h4>
               <Badge 
                 variant="outline" 
-                className={`${getComplexityColor(mod.complexity)}`}
+                className={getComplexityColor(mod.complexity)}
               >
-                Complexity: {mod.complexity}
+                Complexity: {mod.complexity ?? "N/A"}
               </Badge>
             </div>
             <p className="text-muted-foreground text-sm">

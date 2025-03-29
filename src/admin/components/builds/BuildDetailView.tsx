@@ -185,7 +185,7 @@ export function BuildDetailView() {
             
             <TabsContent value="details" className="mt-0">
               <div className="space-y-4">
-                <ImageGallery images={selectedBuild.images} />
+                <ImageGallery images={selectedBuild.images || []} />
                 
                 <div>
                   <h3 className="font-medium mb-2">Description</h3>

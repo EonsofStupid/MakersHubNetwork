@@ -1,11 +1,11 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Database, Forum, MessageSquare } from "lucide-react";
+import { Database, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useThemeEffects } from "@/hooks/useThemeEffects";
 
-type FeatureType = "database" | "forum" | "chat";
+export type FeatureType = "database" | "forum" | "chat";
 
 interface FeatureCtaProps {
   type: FeatureType;
@@ -31,7 +31,8 @@ export const FeatureCta = ({ type, title, description, ctaText, ctaLink, classNa
       case "database":
         return Database;
       case "forum":
-        return Forum;
+        // Using MessageSquare instead of Forum since Forum doesn't exist in lucide-react
+        return MessageSquare;
       case "chat":
         return MessageSquare;
       default:

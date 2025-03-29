@@ -139,8 +139,11 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
       // Format the build with all related data
       const build: Build = {
         ...buildData,
+        // Handle nullable/undefined fields with default values
         display_name: buildData.profiles?.display_name || null,
         avatar_url: buildData.profiles?.avatar_url || null,
+        // Convert null/undefined arrays to empty arrays
+        images: buildData.images || [],
         parts,
         mods: modsData || [],
         reviews: [] // We'll populate this separately if needed
