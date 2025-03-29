@@ -136,10 +136,15 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
         notes: part.notes
       }));
       
+      // Use current date as fallback for required date fields
+      const currentDateString = new Date().toISOString();
+      
       // Format the build with all related data
       const build: Build = {
         ...buildData,
         // Handle nullable/undefined fields with default values
+        created_at: buildData.created_at || currentDateString,
+        updated_at: buildData.updated_at || currentDateString,
         display_name: buildData.profiles?.display_name || null,
         avatar_url: buildData.profiles?.avatar_url || null,
         // Convert null/undefined arrays to empty arrays
