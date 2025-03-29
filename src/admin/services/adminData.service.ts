@@ -22,8 +22,7 @@ export const AdminDataService = {
           user_id: userId,
           ...data
         }, {
-          onConflict: 'user_id',
-          returning: 'minimal'
+          onConflict: 'user_id'
         });
 
       if (error) {

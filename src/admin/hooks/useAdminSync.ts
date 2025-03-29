@@ -4,6 +4,10 @@ import { useAuthStore } from '@/stores/auth/store';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminDataService } from '@/admin/services/adminData.service';
 import { useToast } from '@/hooks/use-toast';
+import { Loader, Check, X } from 'lucide-react';
+import { useSharedStore } from '@/stores/shared/store';
+
+const SYNC_ID = 'admin-sync';
 
 /**
  * Hook to handle syncing admin data between localStorage and database
@@ -12,6 +16,7 @@ export function useAdminSync() {
   const { user } = useAuthStore();
   const adminStore = useAdminStore();
   const { toast } = useToast();
+  const { setLoading, clearLoading, setError, clearError } = useSharedStore();
 
   // Load admin data from database on mount
   useEffect(() => {
@@ -21,10 +26,12 @@ export function useAdminSync() {
       if (!user?.id) return;
 
       try {
+        setLoading(SYNC_ID, { isLoading: true, message: 'Loading preferences...' });
         const { data, error } = await AdminDataService.loadPreferences(user.id);
         
         if (error) {
           console.warn('Failed to load admin data:', error);
+          setError(SYNC_ID, { message: `Failed to load preferences: ${error}` });
           return;
         }
 
@@ -50,10 +57,14 @@ export function useAdminSync() {
             }
           });
 
+          clearError(SYNC_ID);
           console.log('Admin data loaded from database');
         }
       } catch (error) {
         console.error('Error loading admin data:', error);
+        setError(SYNC_ID, { message: `Error loading admin data: ${error}` });
+      } finally {
+        clearLoading(SYNC_ID);
       }
     };
 
@@ -61,6 +72,7 @@ export function useAdminSync() {
 
     return () => {
       isMounted = false;
+      clearLoading(SYNC_ID);
     };
   }, [user?.id]);
 
@@ -70,6 +82,8 @@ export function useAdminSync() {
       if (!user?.id) return;
 
       try {
+        setLoading(SYNC_ID, { isLoading: true, message: 'Saving preferences...' });
+        
         // Extract store data for database
         const {
           sidebarExpanded,
@@ -99,18 +113,24 @@ export function useAdminSync() {
 
         if (!success && error) {
           console.error('Failed to save admin data:', error);
+          setError(SYNC_ID, { message: `Failed to save preferences: ${error}` });
           toast({
             title: "Sync Failed",
             description: "Your preferences couldn't be saved to the cloud",
             variant: "destructive",
           });
+        } else {
+          clearError(SYNC_ID);
         }
       } catch (error) {
         console.error('Error saving admin data:', error);
+        setError(SYNC_ID, { message: `Error saving admin data: ${error}` });
+      } finally {
+        clearLoading(SYNC_ID);
       }
     };
 
-    // Set up store subscription
+    // Set up state change listener instead of store.subscribe
     const unsubscribe = adminStore.subscribe((state, prevState) => {
       // Check if relevant state has changed
       const keysToCheck = [
@@ -124,10 +144,10 @@ export function useAdminSync() {
         'isDarkMode'
       ];
 
-      const hasChanged = keysToCheck.some(key => 
+      const hasChanged = keysToCheck.some(key => {
         // @ts-ignore - dynamic key access
-        state[key] !== prevState[key]
-      );
+        return state[key] !== prevState[key];
+      });
 
       if (hasChanged && user?.id) {
         // Debounce save to reduce database calls
@@ -144,5 +164,37 @@ export function useAdminSync() {
     };
   }, [user?.id, adminStore, toast]);
 
-  return null;
+  // Create a sync status indicator component
+  return {
+    SyncIndicator: () => {
+      const { loading, errors } = useSharedStore();
+      const isLoading = loading[SYNC_ID]?.isLoading;
+      const error = errors[SYNC_ID];
+      
+      if (isLoading) {
+        return (
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Loader size={14} className="mr-1 animate-spin" />
+            <span>{loading[SYNC_ID]?.message || 'Syncing...'}</span>
+          </div>
+        );
+      }
+      
+      if (error) {
+        return (
+          <div className="flex items-center text-sm text-destructive">
+            <X size={14} className="mr-1" />
+            <span>Sync error</span>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="flex items-center text-sm text-muted-foreground">
+          <Check size={14} className="mr-1 text-primary" />
+          <span>Synced</span>
+        </div>
+      );
+    }
+  };
 }

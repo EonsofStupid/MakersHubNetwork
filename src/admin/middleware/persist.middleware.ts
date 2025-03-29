@@ -2,133 +2,144 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
+import { PersistOptions, StorageValue } from "zustand/middleware";
+
+// Define type for the storage adapter
+interface CustomStorage {
+  getItem: (name: string) => Promise<string | null> | string | null;
+  setItem: (name: string, value: string) => Promise<void> | void;
+  removeItem: (name: string) => Promise<void> | void;
+}
 
 /**
  * Middleware for syncing admin preferences between localStorage and database
  */
-export const createAdminPersistMiddleware = (storeName: string) => ({
-  name: storeName,
-  
-  onRehydrateStorage: (state: any) => {
-    return (rehydratedState: any, error: any) => {
-      if (error) {
-        console.error(`Error rehydrating ${storeName}:`, error);
-      }
-    };
-  },
+export function createAdminPersistMiddleware(storeName: string): PersistOptions<any, any> {
+  return {
+    name: storeName,
+    
+    onRehydrateStorage: (state: any) => {
+      return (rehydratedState: any, error: any) => {
+        if (error) {
+          console.error(`Error rehydrating ${storeName}:`, error);
+        }
+      };
+    },
 
-  // Filter out what we want to persist to localStorage
-  partialize: (state: any) => {
-    // Only persist UI preferences to localStorage
-    const { permissions, isLoadingPermissions, ...persistedState } = state;
-    return persistedState;
-  },
+    // Filter out what we want to persist to localStorage
+    partialize: (state: any) => {
+      // Only persist UI preferences to localStorage, exclude function properties
+      const { permissions, isLoadingPermissions, loadPermissions, hasPermission, ...persistedState } = state;
+      return persistedState;
+    },
 
-  // Custom storage adapter that syncs with Supabase
-  storage: {
-    getItem: async (name: string): Promise<string | null> => {
-      try {
-        // First try localStorage
-        const localData = localStorage.getItem(name);
-        
-        // If user is authenticated, also fetch from database
-        const { user } = useAuthStore.getState();
-        
-        if (user?.id) {
-          const { data, error } = await supabase
-            .from('admin_shortcuts')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
+    // Custom storage adapter that syncs with Supabase
+    storage: {
+      getItem: async (name: string): Promise<string | null> => {
+        try {
+          // First try localStorage
+          const localData = localStorage.getItem(name);
+          
+          // If user is authenticated, also fetch from database
+          const { user } = useAuthStore.getState();
+          
+          if (user?.id) {
+            const { data, error } = await supabase
+              .from('admin_shortcuts')
+              .select('*')
+              .eq('user_id', user.id)
+              .single();
+              
+            if (error) {
+              console.warn('Failed to fetch admin preferences from database:', error.message);
+              // Fall back to localStorage data
+              return localData;
+            }
             
-          if (error) {
-            console.warn('Failed to fetch admin preferences from database:', error.message);
-            // Fall back to localStorage data
-            return localData;
+            if (data) {
+              // If we have data from the database, use it and update localStorage
+              const mergedData = mergePreferences(
+                localData ? JSON.parse(localData) : {},
+                data
+              );
+              
+              // Update localStorage with merged data
+              localStorage.setItem(name, JSON.stringify(mergedData));
+              
+              return JSON.stringify(mergedData);
+            }
           }
           
-          if (data) {
-            // If we have data from the database, use it and update localStorage
-            const mergedData = mergePreferences(
-              localData ? JSON.parse(localData) : {},
-              data
-            );
-            
-            // Update localStorage with merged data
-            localStorage.setItem(name, JSON.stringify(mergedData));
-            
-            return JSON.stringify(mergedData);
-          }
+          return localData;
+        } catch (error) {
+          console.error('Error retrieving admin preferences:', error);
+          return localStorage.getItem(name);
         }
-        
-        return localData;
-      } catch (error) {
-        console.error('Error retrieving admin preferences:', error);
-        return localStorage.getItem(name);
-      }
-    },
-    
-    setItem: async (name: string, value: string): Promise<void> => {
-      try {
-        // Always update localStorage first
-        localStorage.setItem(name, value);
-        
-        // Then sync to database if user is authenticated
-        const { user } = useAuthStore.getState();
-        const valueObj = JSON.parse(value);
-        
-        if (user?.id) {
-          // Convert the data to match the database schema
-          const dbData = formatForDatabase(valueObj);
+      },
+      
+      setItem: async (name: string, value: string): Promise<void> => {
+        try {
+          // Always update localStorage first
+          localStorage.setItem(name, value);
           
-          const { error } = await supabase
-            .from('admin_shortcuts')
-            .upsert({
-              user_id: user.id,
-              ...dbData
-            }, { 
-              onConflict: 'user_id',
-              returning: 'minimal'
-            });
+          // Then sync to database if user is authenticated
+          const { user } = useAuthStore.getState();
+          const valueObj = JSON.parse(value);
+          
+          if (user?.id) {
+            // Convert the data to match the database schema
+            const dbData = formatForDatabase(valueObj);
             
-          if (error) {
-            console.error('Failed to save admin preferences to database:', error.message);
-            useToast.getState().toast({
-              title: "Sync Failed",
-              description: "Your preferences couldn't be saved to the cloud",
-              variant: "destructive",
-            });
+            const { error } = await supabase
+              .from('admin_shortcuts')
+              .upsert({
+                user_id: user.id,
+                ...dbData
+              }, { 
+                onConflict: 'user_id'
+              });
+              
+            if (error) {
+              console.error('Failed to save admin preferences to database:', error.message);
+              // Use imported toast function directly
+              const { toast } = useToast();
+              toast({
+                title: "Sync Failed",
+                description: "Your preferences couldn't be saved to the cloud",
+                variant: "destructive",
+              });
+            }
           }
+        } catch (error) {
+          console.error('Error saving admin preferences:', error);
+          localStorage.setItem(name, value);
         }
-      } catch (error) {
-        console.error('Error saving admin preferences:', error);
-        localStorage.setItem(name, value);
-      }
-    },
-    
-    removeItem: async (name: string): Promise<void> => {
-      try {
-        localStorage.removeItem(name);
-        
-        const { user } = useAuthStore.getState();
-        
-        if (user?.id) {
-          const { error } = await supabase
-            .from('admin_shortcuts')
-            .delete()
-            .eq('user_id', user.id);
-            
-          if (error) {
-            console.error('Failed to delete admin preferences from database:', error.message);
+      },
+      
+      removeItem: async (name: string): Promise<void> => {
+        try {
+          localStorage.removeItem(name);
+          
+          const { user } = useAuthStore.getState();
+          
+          if (user?.id) {
+            const { error } = await supabase
+              .from('admin_shortcuts')
+              .delete()
+              .eq('user_id', user.id);
+              
+            if (error) {
+              console.error('Failed to delete admin preferences from database:', error.message);
+            }
           }
+        } catch (error) {
+          console.error('Error removing admin preferences:', error);
+          localStorage.removeItem(name);
         }
-      } catch (error) {
-        console.error('Error removing admin preferences:', error);
-        localStorage.removeItem(name);
-      }
-    },
-  }
-});
+      },
+    } as CustomStorage
+  };
+}
 
 /**
  * Helper function to merge localStorage and database preferences

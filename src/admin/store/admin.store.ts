@@ -1,9 +1,8 @@
 
 import { create } from 'zustand';
-import { createAdminPersistMiddleware } from '../middleware/persist.middleware';
+import { persist } from 'zustand/middleware';
 import { AdminPermission } from '../types/admin.types';
 import { defaultTopNavShortcuts, defaultDashboardShortcuts } from '@/admin/config/navigation.config';
-import { persist } from 'zustand/middleware';
 
 // Combined admin state interface
 interface AdminState {
@@ -34,32 +33,12 @@ interface AdminState {
   permissionsLoaded: boolean;
   
   // Admin functions
-  setSidebar: (val: boolean) => void;
-  toggleSidebar: () => void;
-  setActiveSection: (section: string) => void;
-  toggleDarkMode: () => void;
-  setAdminTheme: (theme: string) => void;
-  setPinnedTopNavItems: (items: string[]) => void;
-  setPinnedDashboardItems: (items: string[]) => void;
-  setScrollY: (val: number) => void;
-  setDashboardCollapsed: (collapsed: boolean) => void;
-  
-  // Frozen zones functions
-  addFrozenZone: (zone: string) => void;
-  removeFrozenZone: (zone: string) => void;
-  
-  // Drag and drop functions
-  setHoveredIcon: (id: string | null) => void;
-  setDragSource: (id: string | null) => void;
-  setDragTarget: (id: string | null) => void;
-  setShowDragOverlay: (show: boolean) => void;
-  
-  // Permission functions
+  setState: (state: Partial<AdminState>) => void;
   loadPermissions: (mappedPermissions?: AdminPermission[]) => Promise<void>;
   hasPermission: (permission: AdminPermission) => boolean;
 }
 
-// Create the admin store with database-backed persistence
+// Create the admin store with localStorage persistence
 export const useAdminStore = create<AdminState>()(
   persist(
     (set, get) => ({
@@ -89,31 +68,8 @@ export const useAdminStore = create<AdminState>()(
       permissions: [],
       permissionsLoaded: false,
       
-      // UI functions
-      setSidebar: (val) => set({ sidebarExpanded: val }),
-      toggleSidebar: () => set(state => ({ sidebarExpanded: !state.sidebarExpanded })),
-      setActiveSection: (section) => set({ activeSection: section }),
-      toggleDarkMode: () => set(state => ({ isDarkMode: !state.isDarkMode })),
-      setAdminTheme: (theme) => set({ adminTheme: theme }),
-      setDashboardCollapsed: (collapsed) => set({ isDashboardCollapsed: collapsed }),
-      setPinnedTopNavItems: (items) => set({ pinnedTopNavItems: items }),
-      setPinnedDashboardItems: (items) => set({ pinnedDashboardItems: items }),
-      
-      // Frozen zones functions
-      addFrozenZone: (zone) => set(state => ({ 
-        frozenZones: [...state.frozenZones, zone] 
-      })),
-      removeFrozenZone: (zone) => set(state => ({ 
-        frozenZones: state.frozenZones.filter(z => z !== zone) 
-      })),
-      
-      setScrollY: (val) => set({ scrollY: val }),
-      
-      // Drag and drop functions
-      setHoveredIcon: (id) => set({ hoveredIcon: id }),
-      setDragSource: (id) => set({ dragSource: id }),
-      setDragTarget: (id) => set({ dragTarget: id }),
-      setShowDragOverlay: (show) => set({ showDragOverlay: show }),
+      // State setter (required for compatibility with useAdminSync)
+      setState: (partialState) => set(partialState),
       
       // Permission functions
       loadPermissions: async (mappedPermissions) => {
@@ -190,6 +146,13 @@ export const useAdminStore = create<AdminState>()(
         return permissions.includes(permission);
       }
     }),
-    createAdminPersistMiddleware('admin-store')
+    {
+      name: 'admin-store',
+      partialize: (state) => {
+        // Only persist UI preferences to localStorage, exclude function properties and loading states
+        const { permissions, isLoadingPermissions, permissionsLoaded, loadPermissions, hasPermission, setState, ...persistedState } = state;
+        return persistedState;
+      },
+    }
   )
 );
