@@ -11,6 +11,9 @@ import { motion } from "framer-motion";
 import { AdminFeatureSection } from "@/components/admin/dashboard/AdminFeatureSection";
 import { ActivityFeed } from "@/components/admin/dashboard/ActivityFeed";
 import { Stats } from "@/components/admin/dashboard/Stats";
+import { BuildApprovalWidget } from "@/components/admin/dashboard/BuildApprovalWidget";
+import { ContentManagementWidget } from "@/components/admin/dashboard/ContentManagementWidget";
+import { UserManagementWidget } from "@/components/admin/dashboard/UserManagementWidget";
 
 export default function Admin() {
   const { status } = useAuthStore();
@@ -62,6 +65,13 @@ export default function Admin() {
           
           {/* Admin feature cards */}
           <AdminFeatureSection />
+          
+          {/* Management widgets grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <BuildApprovalWidget />
+            <ContentManagementWidget />
+            <UserManagementWidget />
+          </div>
           
           {/* Recent activity feed */}
           <ActivityFeed />
