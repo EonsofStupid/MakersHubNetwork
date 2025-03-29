@@ -2,10 +2,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
-import { PersistOptions, StorageValue } from "zustand/middleware";
+import { PersistOptions, StateStorage } from "zustand/middleware";
 
 // Define type for the storage adapter
-interface CustomStorage {
+interface CustomStorage extends StateStorage {
   getItem: (name: string) => Promise<string | null> | string | null;
   setItem: (name: string, value: string) => Promise<void> | void;
   removeItem: (name: string) => Promise<void> | void;
