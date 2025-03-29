@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { AdminSidebar } from "@/admin/components/AdminSidebar";
 import { AdminHeader } from "@/admin/components/AdminHeader";
 import { AdminPermission } from "@/admin/types/admin.types";
-import { MainNav } from "@/components/MainNav";
 import { cn } from "@/lib/utils";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,23 +43,19 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   // Check if user has required permission
   if (!isLoading && requiredPermission && !checkPermission(requiredPermission)) {
     return (
-      <>
-        <MainNav />
-        <div className="container mx-auto p-6">
-          <Card className="border-destructive/20 p-6 text-center">
-            <h2 className="text-2xl font-heading text-destructive mb-2">Access Denied</h2>
-            <p className="text-muted-foreground">
-              You don't have permission to access this admin area.
-            </p>
-          </Card>
-        </div>
-      </>
+      <div className="container mx-auto p-6">
+        <Card className="border-destructive/20 p-6 text-center">
+          <h2 className="text-2xl font-heading text-destructive mb-2">Access Denied</h2>
+          <p className="text-muted-foreground">
+            You don't have permission to access this admin area.
+          </p>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background/50 backdrop-blur-sm">
-      <MainNav />
       <AdminHeader title={title} />
       
       <div className={cn(

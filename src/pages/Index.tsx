@@ -1,5 +1,3 @@
-
-import { MainNav } from "@/components/MainNav";
 import { Footer } from "@/components/Footer";
 import { useEffect, useState, useCallback, Suspense, memo } from "react";
 import { ThemeDataStream } from "@/components/theme/ThemeDataStream";
@@ -36,7 +34,6 @@ const ActionButtons = memo(({ onHover, onLeave }: {
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-      {/* Build CTA */}
       <EffectRenderer effect={buildEffect} className={cn(ctaStyles.buildCta)}>
         <a 
           href="/builder" 
@@ -50,7 +47,6 @@ const ActionButtons = memo(({ onHover, onLeave }: {
         </a>
       </EffectRenderer>
       
-      {/* Browse CTA */}
       <EffectRenderer effect={browseEffect} className={cn(ctaStyles.browseCta)}>
         <a 
           href="/builds" 
@@ -63,7 +59,6 @@ const ActionButtons = memo(({ onHover, onLeave }: {
         </a>
       </EffectRenderer>
       
-      {/* Community Hub CTA */}
       <EffectRenderer effect={communityEffect} className={cn(ctaStyles.communityCta)}>
         <a 
           href="/community" 
@@ -156,7 +151,6 @@ const IndexPage = () => {
     const effectType = effectTypes[Math.floor(Math.random() * effectTypes.length)] as any;
     const effectId = `${id}-${effectType}`;
     
-    // Create base effect
     const effect = {
       id: effectId,
       type: effectType,
@@ -164,7 +158,6 @@ const IndexPage = () => {
       duration: 2000
     };
     
-    // Add effect-specific properties
     let enhancedEffect;
     switch (effectType) {
       case 'glitch':
@@ -219,14 +212,12 @@ const IndexPage = () => {
     
     addEffect(id, enhancedEffect);
     
-    // Also use the old effect system for compatibility
     applyRandomEffect(id, {
       types: [effectType],
       colors: ['#00F0FF', '#FF2D6E', '#8B5CF6'],
       duration: 2000
     });
     
-    // Remove effect after duration
     setTimeout(() => {
       removeThemeEffect(effectId);
     }, 2000);
@@ -234,7 +225,6 @@ const IndexPage = () => {
 
   // Clear effects when mouse leaves
   const handleLeave = useCallback((id: string) => {
-    // Clear any existing effects
     ['glitch', 'gradient', 'cyber', 'pulse', 'particle', 'morph'].forEach(type => {
       removeEffect(`${id}-${type}`);
       removeThemeEffect(`${id}-${type}`);
@@ -243,8 +233,6 @@ const IndexPage = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <MainNav />
-      
       <div className="container px-4 py-24 mx-auto relative">
         <ErrorBoundary fallback={<div>Something went wrong with the data stream.</div>}>
           <Suspense fallback={<div className="opacity-10">Loading...</div>}>
