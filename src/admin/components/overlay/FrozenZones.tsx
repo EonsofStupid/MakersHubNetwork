@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAtom } from "jotai";
 import { frozenZonesAtom } from "@/admin/atoms/tools.atoms";
 import { SmartOverlay } from "./SmartOverlay";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Lock, Unlock, Plus, Trash, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { FrozenZone } from "@/admin/types/tools.types";
 
 export function FrozenZonesOverlay() {
   const [frozenZones, setFrozenZones] = useAtom(frozenZonesAtom);

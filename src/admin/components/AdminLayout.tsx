@@ -64,7 +64,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   return (
     <div className="min-h-screen bg-background/50 backdrop-blur-sm">
       <MainNav />
-      <AdminHeader title={title} collapsed={isDashboardCollapsed} />
+      <AdminHeader title={title} />
       
       <div className={cn(
         "transition-all duration-300 ease-in-out pt-4 pb-8",
@@ -126,4 +126,4 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       </div>
     </div>
   );
-};
+}
