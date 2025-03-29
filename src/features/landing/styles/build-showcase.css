@@ -1,0 +1,116 @@
+
+/**
+ * Build showcase styles
+ */
+
+.showcase-section {
+  --showcase-background: var(--site-background);
+  --showcase-text: var(--site-foreground);
+  --showcase-muted: var(--site-muted-foreground);
+  --showcase-primary: var(--site-primary);
+  --showcase-secondary: var(--site-secondary);
+  --showcase-border: var(--site-border);
+  --showcase-radius: var(--site-radius-md);
+  --showcase-transition: var(--site-transition-normal);
+  
+  @apply py-16 relative;
+  position: relative;
+  background-color: rgba(var(--showcase-background), 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.showcase-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 10%,
+    var(--showcase-primary) 0%,
+    transparent 70%
+  );
+  opacity: 0.05;
+  z-index: -1;
+}
+
+.showcase-title {
+  @apply text-3xl md:text-4xl font-bold text-center mb-2;
+}
+
+.showcase-title-gradient {
+  background: linear-gradient(to right, var(--showcase-primary), var(--showcase-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.showcase-description {
+  @apply text-center mb-10 max-w-2xl mx-auto;
+  color: var(--showcase-muted);
+}
+
+.build-card {
+  @apply relative overflow-hidden rounded-lg border shadow-lg hover:shadow-xl transition-all duration-300 h-full;
+  border-color: rgba(var(--showcase-primary), 0.2);
+  background-color: rgba(var(--showcase-background), 0.4);
+}
+
+.build-card-image-container {
+  @apply relative aspect-video overflow-hidden;
+}
+
+.build-card-image {
+  @apply w-full h-full object-cover transition-transform duration-500;
+}
+
+.build-card:hover .build-card-image {
+  @apply scale-110;
+}
+
+.build-card-gradient-overlay {
+  @apply absolute inset-0;
+  background: linear-gradient(to top, 
+    var(--showcase-background),
+    transparent
+  );
+}
+
+.build-card-category {
+  @apply absolute bottom-2 left-2 inline-block px-2 py-1 text-xs rounded-md border;
+  background-color: rgba(var(--showcase-primary), 0.3);
+  color: var(--showcase-text);
+  border-color: rgba(var(--showcase-primary), 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.build-card-content {
+  @apply p-4;
+}
+
+.build-card-title {
+  @apply font-bold text-lg mb-1 line-clamp-1;
+  color: var(--showcase-text);
+}
+
+.build-card-creator {
+  @apply text-sm mb-2;
+  color: var(--showcase-muted);
+}
+
+.build-card-stats {
+  @apply flex items-center justify-between text-xs;
+  color: var(--showcase-muted);
+}
+
+.showcase-cta {
+  @apply inline-flex items-center justify-center px-6 py-3 rounded-md border transition-colors duration-300;
+  background-color: rgba(var(--showcase-primary), 0.2);
+  color: var(--showcase-text);
+  border-color: rgba(var(--showcase-primary), 0.3);
+  box-shadow: 0 0 15px rgba(var(--showcase-primary), 0.15);
+}
+
+.showcase-cta:hover {
+  background-color: rgba(var(--showcase-primary), 0.3);
+  border-color: rgba(var(--showcase-primary), 0.5);
+  box-shadow: 0 0 30px rgba(var(--showcase-primary), 0.3);
+}

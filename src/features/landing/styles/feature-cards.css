@@ -1,0 +1,152 @@
+
+/**
+ * Feature cards styles
+ */
+
+.features-section {
+  --features-background: var(--site-background);
+  --features-text: var(--site-foreground);
+  --features-muted: var(--site-muted-foreground);
+  --features-primary: var(--site-primary);
+  --features-secondary: var(--site-secondary);
+  --features-accent: var(--site-effect-tertiary);
+  --features-radius: var(--site-radius-md);
+  --features-transition: var(--site-transition-normal);
+  
+  @apply py-12 relative;
+  background-color: rgba(var(--features-background), 0.5);
+}
+
+.features-title {
+  @apply text-3xl md:text-4xl font-bold text-center mb-8;
+}
+
+.features-title-gradient {
+  background: linear-gradient(to right, var(--features-primary), var(--features-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.features-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+
+/* Base feature card styles */
+.feature-cta {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--features-radius);
+  padding: var(--mi-space-6);
+  background-color: rgba(var(--features-background), 0.8);
+  backdrop-filter: blur(12px);
+  transition: all var(--features-transition);
+  @apply border border-border/20 hover:shadow-md hover:-translate-y-1;
+}
+
+.feature-cta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease-in-out;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.feature-cta:hover::before {
+  left: 100%;
+}
+
+/* Feature type-specific styles */
+.feature-cta-database {
+  --feature-color: var(--features-primary);
+  --feature-shadow: 0 0 15px rgba(var(--features-primary), 0.15);
+  border-color: rgba(var(--features-primary), 0.3);
+}
+
+.feature-cta-database:hover {
+  border-color: rgba(var(--features-primary), 0.6);
+  box-shadow: var(--feature-shadow);
+}
+
+.feature-cta-forum {
+  --feature-color: var(--features-secondary);
+  --feature-shadow: 0 0 15px rgba(var(--features-secondary), 0.15);
+  border-color: rgba(var(--features-secondary), 0.3);
+}
+
+.feature-cta-forum:hover {
+  border-color: rgba(var(--features-secondary), 0.6);
+  box-shadow: var(--feature-shadow);
+}
+
+.feature-cta-chat {
+  --feature-color: var(--features-accent);
+  --feature-shadow: 0 0 15px rgba(var(--features-accent), 0.15);
+  border-color: rgba(var(--features-accent), 0.3);
+}
+
+.feature-cta-chat:hover {
+  border-color: rgba(var(--features-accent), 0.6);
+  box-shadow: var(--feature-shadow);
+}
+
+.feature-cta-hover-effect {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  background: linear-gradient(
+    45deg,
+    var(--feature-color, var(--features-primary)) 0%,
+    transparent 20%,
+    transparent 80%,
+    var(--feature-color, var(--features-primary)) 100%
+  );
+}
+
+.feature-cta:hover .feature-cta-hover-effect {
+  opacity: 0.2;
+}
+
+.feature-cta-icon {
+  @apply p-2 rounded-full;
+  background-color: rgba(var(--features-background), 0.5);
+  color: var(--feature-color);
+}
+
+.feature-cta-title {
+  @apply text-xl font-bold mb-2 text-foreground;
+  position: relative;
+  z-index: 2;
+}
+
+.feature-cta-description {
+  @apply mb-4;
+  color: var(--features-muted);
+  position: relative;
+  z-index: 2;
+}
+
+.feature-cta-button {
+  @apply inline-flex items-center gap-1 px-4 py-2 rounded-md text-sm font-medium;
+  @apply transition-colors duration-200;
+  background-color: rgba(var(--feature-color), 0.2);
+  color: var(--feature-color);
+  position: relative;
+  z-index: 2;
+}
+
+.feature-cta-button:hover {
+  background-color: rgba(var(--feature-color), 0.3);
+}
