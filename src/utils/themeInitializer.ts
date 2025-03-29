@@ -265,7 +265,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
     // Prepare the design tokens update 
     // Start with existing design tokens or an empty object
     const currentDesignTokens = theme.design_tokens && typeof theme.design_tokens === 'object' 
-      ? theme.design_tokens 
+      ? theme.design_tokens as Record<string, any>
       : {};
     
     // Add our animations
