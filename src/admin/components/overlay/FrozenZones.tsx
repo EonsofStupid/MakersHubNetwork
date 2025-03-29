@@ -13,6 +13,7 @@ import { FrozenZone } from "@/admin/types/tools.types";
 export function FrozenZonesOverlay() {
   const [frozenZones, setFrozenZones] = useAtom(frozenZonesAtom);
   const [newZoneId, setNewZoneId] = useState("");
+  const [newZoneName, setNewZoneName] = useState("");
   const { toast } = useToast();
   
   const handleAddZone = () => {
@@ -35,12 +36,17 @@ export function FrozenZonesOverlay() {
       return;
     }
     
-    setFrozenZones([
-      ...frozenZones,
-      { id: newZoneId, isLocked: true }
-    ]);
+    const newZone: FrozenZone = {
+      id: newZoneId,
+      name: newZoneName || newZoneId,
+      elementId: newZoneId,
+      isLocked: true
+    };
+    
+    setFrozenZones([...frozenZones, newZone]);
     
     setNewZoneId("");
+    setNewZoneName("");
     
     toast({
       title: "Success",
@@ -84,20 +90,26 @@ export function FrozenZonesOverlay() {
           Lock sections of your page to prevent editing without admin access.
         </p>
         
-        <div className="flex gap-2">
+        <div className="space-y-2">
           <Input
             value={newZoneId}
             onChange={(e) => setNewZoneId(e.target.value)}
             placeholder="Enter element ID"
             className="flex-1 bg-black/20 border-[var(--impulse-border-normal)]"
           />
+          <Input
+            value={newZoneName}
+            onChange={(e) => setNewZoneName(e.target.value)}
+            placeholder="Enter display name (optional)"
+            className="flex-1 bg-black/20 border-[var(--impulse-border-normal)]"
+          />
           <Button
             size="sm"
             onClick={handleAddZone}
-            className="impulse-button"
+            className="impulse-button w-full"
           >
             <Plus className="w-4 h-4 mr-1" />
-            Add
+            Add Frozen Zone
           </Button>
         </div>
         
@@ -120,9 +132,14 @@ export function FrozenZonesOverlay() {
                       : "border-[var(--impulse-secondary)]/30"
                   )}
                 >
-                  <span className="text-[var(--impulse-text-primary)]">
-                    #{zone.id}
-                  </span>
+                  <div>
+                    <span className="text-[var(--impulse-text-primary)]">
+                      {zone.name}
+                    </span>
+                    <div className="text-xs text-[var(--impulse-text-secondary)]">
+                      #{zone.elementId}
+                    </div>
+                  </div>
                   
                   <div className="flex gap-1">
                     <Button

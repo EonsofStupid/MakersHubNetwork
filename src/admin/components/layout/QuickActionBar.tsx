@@ -6,48 +6,72 @@ import { pinnedActionsAtom, dragTargetAtom, dragSourceAtom } from "@/admin/atoms
 import { UserPlus, Database, Palette, Settings, Plus, Package, BarChart, FileText, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { QuickAction } from "@/admin/types/tools.types";
 
 // Define the available quick actions with paths
-const availableActions = {
+const availableActions: Record<string, QuickAction> = {
   users: { 
-    icon: <Users className="w-5 h-5" />, 
+    id: "users",
+    icon: "Users",
     tooltip: "User Management",
     path: "/admin/users"
   },
   builds: { 
-    icon: <Package className="w-5 h-5" />, 
+    id: "builds",
+    icon: "Package", 
     tooltip: "Build Manager",
     path: "/admin/builds"
   },
   database: { 
-    icon: <Database className="w-5 h-5" />, 
+    id: "database",
+    icon: "Database", 
     tooltip: "Database",
     path: "/admin/data"
   },
   themes: { 
-    icon: <Palette className="w-5 h-5" />, 
+    id: "themes",
+    icon: "Palette", 
     tooltip: "Themes",
     path: "/admin/themes"
   },
   analytics: { 
-    icon: <BarChart className="w-5 h-5" />, 
+    id: "analytics",
+    icon: "BarChart", 
     tooltip: "Analytics",
     path: "/admin/analytics" 
   },
   settings: { 
-    icon: <Settings className="w-5 h-5" />, 
+    id: "settings",
+    icon: "Settings", 
     tooltip: "Settings",
     path: "/admin/settings"
   },
   content: {
-    icon: <FileText className="w-5 h-5" />,
+    id: "content",
+    icon: "FileText",
     tooltip: "Content Management",
     path: "/admin/content"
   }
 };
 
-// QuickAction component
-function QuickAction({ 
+// Get the icon component by name
+const getIconByName = (iconName: string) => {
+  const iconMap: Record<string, React.ReactNode> = {
+    Users: <Users className="w-5 h-5" />,
+    Package: <Package className="w-5 h-5" />,
+    Database: <Database className="w-5 h-5" />,
+    Palette: <Palette className="w-5 h-5" />,
+    BarChart: <BarChart className="w-5 h-5" />,
+    Settings: <Settings className="w-5 h-5" />,
+    FileText: <FileText className="w-5 h-5" />,
+    UserPlus: <UserPlus className="w-5 h-5" />
+  };
+  
+  return iconMap[iconName] || <Settings className="w-5 h-5" />;
+};
+
+// QuickActionItem component
+function QuickActionItem({ 
   id, 
   icon, 
   tooltip, 
@@ -55,7 +79,7 @@ function QuickAction({
   onRemove 
 }: { 
   id: string; 
-  icon: React.ReactNode; 
+  icon: string; 
   tooltip: string;
   path: string;
   onRemove?: () => void; 
@@ -70,8 +94,9 @@ function QuickAction({
     navigate(path);
   };
   
-  // Handle dragging - using DOM events instead of framer-motion handlers
+  // Handle dragging - using DOM events
   const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('text/plain', id);
     setDragSource(id);
   };
   
@@ -110,7 +135,7 @@ function QuickAction({
       className="impulse-quick-action relative group cursor-pointer"
       data-tooltip={tooltip}
     >
-      {icon}
+      {getIconByName(icon)}
       
       {isHovered && onRemove && (
         <button
@@ -189,13 +214,13 @@ export function QuickActionBar() {
       className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-50"
     >
       {pinnedActions.map(actionId => {
-        const action = availableActions[actionId as keyof typeof availableActions];
+        const action = availableActions[actionId];
         if (!action) return null;
         
         return (
-          <QuickAction
+          <QuickActionItem
             key={actionId}
-            id={actionId}
+            id={action.id}
             icon={action.icon}
             tooltip={action.tooltip}
             path={action.path}
