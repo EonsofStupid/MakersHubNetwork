@@ -4,10 +4,9 @@ import { useAuthStore } from '@/stores/auth/store';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminDataService } from '@/admin/services/adminData.service';
 import { useToast } from '@/hooks/use-toast';
-import { Loader, Check, X } from 'lucide-react';
 import { useSharedStore } from '@/stores/shared/store';
 
-const SYNC_ID = 'admin-sync';
+export const SYNC_ID = 'admin-sync';
 
 /**
  * Hook to handle syncing admin data between localStorage and database
@@ -163,38 +162,4 @@ export function useAdminSync() {
       unsubscribe();
     };
   }, [user?.id, adminStore, toast]);
-
-  // Create a sync status indicator component
-  return {
-    SyncIndicator: () => {
-      const { loading, errors } = useSharedStore();
-      const isLoading = loading[SYNC_ID]?.isLoading;
-      const error = errors[SYNC_ID];
-      
-      if (isLoading) {
-        return (
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Loader size={14} className="mr-1 animate-spin" />
-            <span>{loading[SYNC_ID]?.message || 'Syncing...'}</span>
-          </div>
-        );
-      }
-      
-      if (error) {
-        return (
-          <div className="flex items-center text-sm text-destructive">
-            <X size={14} className="mr-1" />
-            <span>Sync error</span>
-          </div>
-        );
-      }
-      
-      return (
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Check size={14} className="mr-1 text-primary" />
-          <span>Synced</span>
-        </div>
-      );
-    }
-  };
 }
