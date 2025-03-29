@@ -1,18 +1,20 @@
 
 import { AdminLayout } from './components/AdminLayout';
 import { AdminSidebar } from './components/AdminSidebar';
-import { AdminHeader } from './components/AdminHeader';
+import { AdminTopNav } from './components/layout/AdminTopNav';
 import { ImpulseAdminLayout } from './components/layout/ImpulseAdminLayout';
 import { useAdminStore } from './store/admin.store';
 import { AdminThemeProvider, useAdminTheme } from './theme/AdminThemeProvider';
 import { useAdminChat, useAdminChatListener } from './hooks/useAdminChat';
 import { useAdminPermissions } from './hooks/useAdminPermissions';
+import { DashboardShortcuts } from './components/dashboard/DashboardShortcuts';
 
 // Export admin UI components
 export { AdminLayout };
 export { AdminSidebar };
-export { AdminHeader };
+export { AdminTopNav };
 export { ImpulseAdminLayout };
+export { DashboardShortcuts };
 
 // Export admin state and hooks
 export { useAdminStore };
@@ -24,8 +26,9 @@ export { useAdminPermissions };
 export default function AdminDashboard() {
   return (
     <ImpulseAdminLayout>
-      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <DashboardShortcuts />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         {/* Admin stats cards */}
         <div className="bg-card/30 backdrop-blur-md p-6 rounded-lg border border-border/20">
           <h2 className="font-medium text-lg mb-3">Platform Overview</h2>
@@ -36,19 +39,13 @@ export default function AdminDashboard() {
           </div>
         </div>
         
-        {/* Quick actions */}
+        {/* Recent activity */}
         <div className="bg-card/30 backdrop-blur-md p-6 rounded-lg border border-border/20">
-          <h2 className="font-medium text-lg mb-3">Quick Actions</h2>
-          <div className="flex flex-wrap gap-3">
-            <button className="bg-primary/20 hover:bg-primary/30 px-4 py-2 rounded-md text-sm">
-              Review Builds
-            </button>
-            <button className="bg-primary/20 hover:bg-primary/30 px-4 py-2 rounded-md text-sm">
-              Manage Users
-            </button>
-            <button className="bg-primary/20 hover:bg-primary/30 px-4 py-2 rounded-md text-sm">
-              Edit Content
-            </button>
+          <h2 className="font-medium text-lg mb-3">Recent Activity</h2>
+          <div className="space-y-2">
+            <p>New users today: <span className="text-primary font-bold">24</span></p>
+            <p>New builds today: <span className="text-primary font-bold">8</span></p>
+            <p>Reviews pending: <span className="text-primary font-bold">12</span></p>
           </div>
         </div>
       </div>

@@ -2,8 +2,7 @@
 import React, { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { AdminSidebar } from "@/admin/components/AdminSidebar";
-import { AdminHeader } from "@/admin/components/AdminHeader";
-import { QuickActionBar } from "@/admin/components/layout/QuickActionBar";
+import { AdminTopNav } from "@/admin/components/layout/AdminTopNav";
 import { useAdmin } from "@/admin/context/AdminContext";
 import { AdminPermission } from "@/admin/types/admin.types";
 import { cn } from "@/lib/utils";
@@ -55,17 +54,17 @@ export function ImpulseAdminLayout({
       "min-h-[calc(100vh-4rem)]"
     )}>
       <ErrorBoundary>
-        <div className="container mx-auto px-4 py-6">
-          {title && (
-            <h1 className="text-2xl font-bold mb-6 text-primary">{title}</h1>
-          )}
+        <div className="flex h-screen overflow-hidden">
+          <AdminSidebar />
           
-          <div className="relative">
-            {children}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <AdminTopNav title={title} />
+            
+            <main className="flex-1 overflow-y-auto pt-20 px-6 pb-6">
+              {children}
+            </main>
           </div>
         </div>
-        
-        <QuickActionBar />
       </ErrorBoundary>
     </div>
   );
