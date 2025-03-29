@@ -15,13 +15,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBuildAdminStore } from "@/admin/store/buildAdmin.store";
-import { AlertCircle, ArrowLeft, CheckCircle, Clock, Package, ThumbsDown, ThumbsUp, Wrench } from "lucide-react";
+import { AlertCircle, ArrowLeft, Clock, Package, ThumbsDown, ThumbsUp, Wrench, MessageSquare } from "lucide-react";
 import { formatDistance } from "date-fns";
 import { BuildStatusBadge } from "./BuildStatusBadge";
 import { ImageGallery } from "./ImageGallery";
 import { BuildParts } from "./BuildParts";
 import { BuildMods } from "./BuildMods";
-import { BuildReview, BuildStatus } from "@/admin/types/build.types";
+import { ReviewList } from "../reviews/ReviewList";
+import { ReviewForm } from "../reviews/ReviewForm";
 import { useToast } from "@/hooks/use-toast";
 
 export function BuildDetailView() {
@@ -42,6 +43,7 @@ export function BuildDetailView() {
   const [activeTab, setActiveTab] = useState("details");
   const [reviewComment, setReviewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
   
   useEffect(() => {
     if (buildId) {
@@ -53,7 +55,7 @@ export function BuildDetailView() {
     };
   }, [buildId, fetchBuildById, clearError]);
   
-  const handleReviewSubmit = async (status: BuildStatus) => {
+  const handleReviewSubmit = async (status: 'approved' | 'rejected' | 'needs_revision') => {
     if (!buildId) return;
     
     if (!reviewComment.trim()) {
@@ -86,6 +88,11 @@ export function BuildDetailView() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  const handleReviewFormSuccess = () => {
+    setShowReviewForm(false);
+    toast.success("Your review has been submitted and is awaiting approval");
   };
   
   if (isLoading) {
@@ -177,10 +184,14 @@ export function BuildDetailView() {
         
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <CardContent className="pb-0">
-            <TabsList className="grid grid-cols-3 mb-4">
+            <TabsList className="grid grid-cols-4 mb-4">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="parts">Parts</TabsTrigger>
               <TabsTrigger value="mods">Modifications</TabsTrigger>
+              <TabsTrigger value="reviews" className="flex items-center gap-1">
+                Reviews
+                <MessageSquare className="w-4 h-4" />
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="details" className="mt-0">
@@ -202,6 +213,37 @@ export function BuildDetailView() {
             
             <TabsContent value="mods" className="mt-0">
               <BuildMods mods={selectedBuild.mods || []} />
+            </TabsContent>
+            
+            <TabsContent value="reviews" className="mt-0">
+              <div className="space-y-6">
+                {/* Show review form toggle button */}
+                {!showReviewForm && selectedBuild.status === 'approved' && (
+                  <Button onClick={() => setShowReviewForm(true)}>
+                    Write a Review
+                  </Button>
+                )}
+                
+                {/* Review form */}
+                {showReviewForm && buildId && (
+                  <div className="mb-8">
+                    <ReviewForm 
+                      buildId={buildId} 
+                      onSuccess={handleReviewFormSuccess} 
+                    />
+                  </div>
+                )}
+                
+                {/* Reviews list */}
+                {buildId && (
+                  <ReviewList 
+                    buildId={buildId} 
+                    showStats={true} 
+                    isAdmin={true} 
+                    showFilters={true} 
+                  />
+                )}
+              </div>
             </TabsContent>
           </CardContent>
         </Tabs>

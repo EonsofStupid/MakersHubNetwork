@@ -3,7 +3,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { pinnedActionsAtom, dragTargetAtom, dragSourceAtom } from "@/admin/atoms";
-import { UserPlus, Database, Palette, Settings, Plus, Package, BarChart, FileText, Users } from "lucide-react";
+import { UserPlus, Database, Palette, Settings, Plus, Package, BarChart, FileText, Users, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { QuickAction } from "@/admin/types/tools.types";
@@ -21,6 +21,12 @@ const availableActions: Record<string, QuickAction> = {
     icon: "Package", 
     tooltip: "Build Manager",
     path: "/admin/builds"
+  },
+  reviews: { 
+    id: "reviews",
+    icon: "MessageSquare", 
+    tooltip: "Review Management",
+    path: "/admin/reviews"
   },
   database: { 
     id: "database",
@@ -64,7 +70,8 @@ const getIconByName = (iconName: string) => {
     BarChart: <BarChart className="w-5 h-5" />,
     Settings: <Settings className="w-5 h-5" />,
     FileText: <FileText className="w-5 h-5" />,
-    UserPlus: <UserPlus className="w-5 h-5" />
+    UserPlus: <UserPlus className="w-5 h-5" />,
+    MessageSquare: <MessageSquare className="w-5 h-5" />
   };
   
   return iconMap[iconName] || <Settings className="w-5 h-5" />;
