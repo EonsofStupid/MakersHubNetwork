@@ -1,5 +1,6 @@
 
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth/store';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminDataService } from '@/admin/services/adminData.service';
@@ -129,8 +130,8 @@ export function useAdminSync() {
       }
     };
 
-    // Set up state change listener instead of store.subscribe
-    const unsubscribe = adminStore.subscribe((state, prevState) => {
+    // Use custom subscribe method from store
+    const unsubscribe = adminStore.subscribe((state: any, prevState: any) => {
       // Check if relevant state has changed
       const keysToCheck = [
         'sidebarExpanded',

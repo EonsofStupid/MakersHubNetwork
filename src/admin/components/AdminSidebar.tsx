@@ -1,3 +1,4 @@
+
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -107,6 +108,7 @@ function SidebarIcon({
             initial="initial"
             whileHover="hover"
             whileTap="tap"
+            // Remove the invalid motion prop that's causing the error
           >
             {isDraggable && isEditMode && (
               <span className="text-[var(--impulse-text-secondary)] cursor-grab">
