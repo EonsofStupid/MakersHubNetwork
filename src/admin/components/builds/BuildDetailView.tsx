@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
@@ -24,11 +23,12 @@ import { BuildMods } from "./BuildMods";
 import { ReviewList } from "../reviews/ReviewList";
 import { ReviewForm } from "../reviews/ReviewForm";
 import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export function BuildDetailView() {
   const { buildId } = useParams<{ buildId: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const { 
     selectedBuild, 
     isLoading, 
@@ -59,7 +59,7 @@ export function BuildDetailView() {
     if (!buildId) return;
     
     if (!reviewComment.trim()) {
-      toast({
+      uiToast({
         title: "Missing Comment",
         description: "Please provide a review comment before submitting",
         variant: "destructive",

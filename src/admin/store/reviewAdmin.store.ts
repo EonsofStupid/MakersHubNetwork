@@ -71,10 +71,13 @@ export const useReviewAdminStore = create<ReviewAdminStore>((set, get) => ({
       if (error) throw error;
       
       // Transform data to match our BuildReview interface
-      const reviews = data.map(review => ({
-        ...review,
-        reviewer_name: review.profiles?.display_name,
-      })) as BuildReview[];
+      const reviews = data.map(review => {
+        const profiles = review.profiles as { display_name?: string; avatar_url?: string } | null;
+        return {
+          ...review,
+          reviewer_name: profiles?.display_name,
+        };
+      }) as BuildReview[];
       
       set({ reviews, isLoading: false });
     } catch (error) {
@@ -101,12 +104,17 @@ export const useReviewAdminStore = create<ReviewAdminStore>((set, get) => ({
       if (error) throw error;
       
       // Transform data to match our BuildReview interface
-      const pendingReviews = data.map(review => ({
-        ...review,
-        reviewer_name: review.profiles?.display_name,
-        // Include build title if needed
-        build_title: review.builds?.title,
-      })) as BuildReview[];
+      const pendingReviews = data.map(review => {
+        const profiles = review.profiles as { display_name?: string; avatar_url?: string } | null;
+        const builds = review.builds as { title?: string } | null;
+        
+        return {
+          ...review,
+          reviewer_name: profiles?.display_name,
+          // Include build title if needed
+          build_title: builds?.title,
+        };
+      }) as BuildReview[];
       
       set({ pendingReviews, isLoading: false });
     } catch (error) {
@@ -192,14 +200,15 @@ export const useReviewAdminStore = create<ReviewAdminStore>((set, get) => ({
       }
       
       // Calculate average rating
-      const ratings = data.map(review => review.rating);
-      const averageRating = ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
+      const ratings = data.map(review => review.rating || 0).filter(rating => rating > 0);
+      const sum = ratings.reduce((acc, rating) => acc + rating, 0);
+      const averageRating = ratings.length > 0 ? sum / ratings.length : 0;
       
       // Calculate rating distribution
       const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<ReviewRating, number>;
       ratings.forEach(rating => {
         if (rating >= 1 && rating <= 5) {
-          ratingDistribution[rating as ReviewRating]++;
+          ratingDistribution[rating as ReviewRating] = (ratingDistribution[rating as ReviewRating] || 0) + 1;
         }
       });
       
@@ -208,11 +217,8 @@ export const useReviewAdminStore = create<ReviewAdminStore>((set, get) => ({
       data.forEach(review => {
         if (review.category && Array.isArray(review.category)) {
           review.category.forEach(category => {
-            if (categoryBreakdown[category as ReviewCategory]) {
-              categoryBreakdown[category as ReviewCategory]++;
-            } else {
-              categoryBreakdown[category as ReviewCategory] = 1;
-            }
+            const categoryKey = category as ReviewCategory;
+            categoryBreakdown[categoryKey] = (categoryBreakdown[categoryKey] || 0) + 1;
           });
         }
       });
