@@ -1,10 +1,8 @@
 
 import { useEffect, useState } from 'react';
-import { initializeTheme } from '@/utils/themeInitializer';
+import { ensureDefaultTheme, syncCSSToDatabase } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
-import { ensureDefaultTheme } from '@/utils/themeInitializer';
-import { syncCSSToDatabase } from '@/utils/themeSync';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -21,14 +19,19 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         // First, ensure the default theme exists in the database
         const themeId = await ensureDefaultTheme();
         
-        // Then sync all CSS styles to the database to ensure nothing is missed
-        await syncCSSToDatabase(themeId);
-        
         if (themeId) {
+          // Then sync all CSS styles to the database to ensure nothing is missed
+          await syncCSSToDatabase(themeId);
+          
           await setTheme(themeId);
           console.log('Theme initialized successfully with ID:', themeId);
         } else {
           console.warn('Failed to initialize theme, falling back to default styles');
+          toast({
+            title: 'Theme Warning',
+            description: 'Could not find or create theme. Using default styling.',
+            variant: 'warning',
+          });
         }
       } catch (error) {
         console.error('Error initializing theme:', error);

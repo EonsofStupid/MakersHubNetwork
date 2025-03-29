@@ -1,4 +1,3 @@
-
 import { MainNav } from "@/components/MainNav";
 import { Footer } from "@/components/Footer";
 import { useEffect, useState, useCallback, Suspense, memo } from "react";
@@ -11,6 +10,7 @@ import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { BuildShowcase } from "@/components/landing/BuildShowcase";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { cn } from "@/lib/utils";
+import { useThemeEffect } from "@/components/theme/effects/ThemeEffectProvider";
 
 // Memoize components that don't need to re-render often
 const MemoizedThemeDataStream = memo(ThemeDataStream);
@@ -21,6 +21,7 @@ const ActionButtons = memo(({ onHover, onLeave }: {
   onLeave: (id: string) => void 
 }) => {
   const { componentStyles } = useSiteTheme();
+  const { getEffectForElement } = useThemeEffect();
   
   const ctaStyles = componentStyles?.ActionButtons || {
     buildCta: "cyber-card inline-flex h-12 items-center justify-center rounded-md bg-primary/20 px-8 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(0,240,255,0.15)] transition-all duration-300 hover:scale-105 hover:bg-primary/30 hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden",
@@ -28,41 +29,51 @@ const ActionButtons = memo(({ onHover, onLeave }: {
     communityCta: "neo-blur inline-flex h-12 items-center justify-center rounded-md border border-secondary/30 bg-background/30 backdrop-blur-xl px-8 text-sm font-medium transition-colors hover:bg-secondary/10 hover:text-secondary-foreground hover:border-secondary/50 hover:shadow-[0_0_15px_rgba(255,45,110,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden"
   };
 
+  const buildEffect = getEffectForElement('build-cta');
+  const browseEffect = getEffectForElement('browse-cta');
+  const communityEffect = getEffectForElement('community-cta');
+
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-center">
       {/* Build CTA */}
-      <a 
-        href="/builder" 
-        className={cn(ctaStyles.buildCta)}
-        onMouseEnter={() => onHover('build-cta')}
-        onMouseLeave={() => onLeave('build-cta')}
-        id="build-cta"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <span className="relative z-10">Start Building</span>
-      </a>
+      <EffectRenderer effect={buildEffect} className={cn(ctaStyles.buildCta)}>
+        <a 
+          href="/builder" 
+          className="relative z-10 w-full h-full flex items-center justify-center"
+          onMouseEnter={() => onHover('build-cta')}
+          onMouseLeave={() => onLeave('build-cta')}
+          id="build-cta"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <span className="relative z-10">Start Building</span>
+        </a>
+      </EffectRenderer>
       
       {/* Browse CTA */}
-      <a 
-        href="/builds" 
-        className={cn(ctaStyles.browseCta)}
-        onMouseEnter={() => onHover('browse-cta')}
-        onMouseLeave={() => onLeave('browse-cta')}
-        id="browse-cta"
-      >
-        <span className="relative z-10">Browse Builds</span>
-      </a>
+      <EffectRenderer effect={browseEffect} className={cn(ctaStyles.browseCta)}>
+        <a 
+          href="/builds" 
+          className="relative z-10 w-full h-full flex items-center justify-center"
+          onMouseEnter={() => onHover('browse-cta')}
+          onMouseLeave={() => onLeave('browse-cta')}
+          id="browse-cta"
+        >
+          <span className="relative z-10">Browse Builds</span>
+        </a>
+      </EffectRenderer>
       
       {/* Community Hub CTA */}
-      <a 
-        href="/community" 
-        className={cn(ctaStyles.communityCta)}
-        onMouseEnter={() => onHover('community-cta')}
-        onMouseLeave={() => onLeave('community-cta')}
-        id="community-cta"
-      >
-        <span className="relative z-10">Community Hub</span>
-      </a>
+      <EffectRenderer effect={communityEffect} className={cn(ctaStyles.communityCta)}>
+        <a 
+          href="/community" 
+          className="relative z-10 w-full h-full flex items-center justify-center"
+          onMouseEnter={() => onHover('community-cta')}
+          onMouseLeave={() => onLeave('community-cta')}
+          id="community-cta"
+        >
+          <span className="relative z-10">Community Hub</span>
+        </a>
+      </EffectRenderer>
     </div>
   );
 });
@@ -125,37 +136,106 @@ const SubscriptionForm = memo(() => {
 });
 
 const IndexPage = () => {
-  // Use our new effects system hook
   const { 
     applyRandomEffect, 
-    removeEffect, 
-    getEffectForElement 
+    removeEffect 
   } = useThemeEffects({
     debounceDelay: 100, 
     maxActiveEffects: 5
   });
+  
+  const { addEffect, removeEffect: removeThemeEffect } = useThemeEffect();
 
   // Function to apply random effect to a CTA on hover
   const handleHover = useCallback((id: string) => {
+    const effectTypes = ['glitch', 'gradient', 'cyber', 'pulse', 'particle', 'morph'];
+    const effectType = effectTypes[Math.floor(Math.random() * effectTypes.length)] as any;
+    const effectId = `${id}-${effectType}`;
+    
+    // Create base effect
+    const effect = {
+      id: effectId,
+      type: effectType,
+      enabled: true,
+      duration: 2000
+    };
+    
+    // Add effect-specific properties
+    let enhancedEffect;
+    switch (effectType) {
+      case 'glitch':
+        enhancedEffect = {
+          ...effect,
+          color: '#00F0FF',
+          frequency: Math.random() * 0.5 + 0.5,
+          amplitude: Math.random() * 0.5 + 0.5
+        };
+        break;
+      case 'gradient':
+        enhancedEffect = {
+          ...effect,
+          colors: ['#00F0FF', '#FF2D6E'],
+          direction: 'to-right',
+          speed: Math.random() * 2 + 1
+        };
+        break;
+      case 'cyber':
+        enhancedEffect = {
+          ...effect,
+          glowColor: '#00F0FF',
+          textShadow: true,
+          scanLines: Math.random() > 0.5
+        };
+        break;
+      case 'pulse':
+        enhancedEffect = {
+          ...effect,
+          color: '#00F0FF',
+          minOpacity: 0.2,
+          maxOpacity: 0.8
+        };
+        break;
+      case 'particle':
+        enhancedEffect = {
+          ...effect,
+          color: '#00F0FF',
+          count: Math.floor(Math.random() * 10) + 5
+        };
+        break;
+      case 'morph':
+        enhancedEffect = {
+          ...effect,
+          intensity: Math.random() * 2 + 1,
+          speed: Math.random() * 3 + 2
+        };
+        break;
+      default:
+        enhancedEffect = effect;
+    }
+    
+    addEffect(id, enhancedEffect);
+    
+    // Also use the old effect system for compatibility
     applyRandomEffect(id, {
-      types: ['glitch', 'gradient', 'cyber', 'pulse'],
+      types: [effectType],
       colors: ['#00F0FF', '#FF2D6E', '#8B5CF6'],
       duration: 2000
     });
-  }, [applyRandomEffect]);
+    
+    // Remove effect after duration
+    setTimeout(() => {
+      removeThemeEffect(effectId);
+    }, 2000);
+  }, [applyRandomEffect, addEffect, removeThemeEffect]);
 
   // Clear effects when mouse leaves
   const handleLeave = useCallback((id: string) => {
-    removeEffect(`${id}-glitch`);
-    removeEffect(`${id}-gradient`);
-    removeEffect(`${id}-cyber`);
-    removeEffect(`${id}-pulse`);
-  }, [removeEffect]);
-
-  // Get effects for each CTA
-  const buildEffect = getEffectForElement('build-cta');
-  const browseEffect = getEffectForElement('browse-cta');
-  const communityEffect = getEffectForElement('community-cta');
+    // Clear any existing effects
+    ['glitch', 'gradient', 'cyber', 'pulse', 'particle', 'morph'].forEach(type => {
+      removeEffect(`${id}-${type}`);
+      removeThemeEffect(`${id}-${type}`);
+    });
+  }, [removeEffect, removeThemeEffect]);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -180,10 +260,10 @@ const IndexPage = () => {
         </div>
       </div>
 
-      {/* New Feature CTAs Section */}
+      {/* Features Section */}
       <FeaturesSection />
       
-      {/* New Build Showcase Section */}
+      {/* Build Showcase Section */}
       <BuildShowcase />
 
       <Footer />

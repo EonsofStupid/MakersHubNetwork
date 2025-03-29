@@ -10,6 +10,7 @@ import { Toaster as Sonner } from "./components/ui/sonner";
 import { SiteThemeProvider } from "./components/theme/SiteThemeProvider";
 import { ThemeInitializer } from "./components/theme/ThemeInitializer";
 import { DynamicKeyframes } from "./components/theme/DynamicKeyframes";
+import { ThemeEffectProvider } from "./components/theme/effects/ThemeEffectProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
@@ -30,17 +31,19 @@ function App() {
         <SiteThemeProvider>
           <ThemeInitializer>
             <DynamicKeyframes />
-            <AuthProvider>
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<IndexPage />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/admin/*" element={<Admin />} />
-                </Routes>
-                <Toaster />
-                <Sonner />
-              </BrowserRouter>
-            </AuthProvider>
+            <ThemeEffectProvider>
+              <AuthProvider>
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<IndexPage />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/admin/*" element={<Admin />} />
+                  </Routes>
+                  <Toaster />
+                  <Sonner />
+                </BrowserRouter>
+              </AuthProvider>
+            </ThemeEffectProvider>
           </ThemeInitializer>
         </SiteThemeProvider>
       </ThemeProvider>
