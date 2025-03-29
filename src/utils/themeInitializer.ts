@@ -1,7 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ComponentTokens } from '@/types/theme';
 import { Json } from '@/integrations/supabase/types';
+import { keyframes } from '@/theme/animations';
 
 /**
  * Ensures that a default theme exists in the database
@@ -61,6 +61,7 @@ export async function ensureDefaultTheme(): Promise<string | null> {
           tertiary: '#8B5CF6',
         },
         animation: {
+          keyframes: keyframes,
           durations: {
             fast: '150ms',
             normal: '300ms',
@@ -126,30 +127,8 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
     if (themeError) throw themeError;
     if (!theme) throw new Error('Theme not found');
     
-    // Extract animations from CSS files
-    const animationsKeyframes = {
-      'fade-in': {
-        '0%': { opacity: '0', transform: 'translateY(10px)' },
-        '100%': { opacity: '1', transform: 'translateY(0)' }
-      },
-      'fade-out': {
-        '0%': { opacity: '1', transform: 'translateY(0)' },
-        '100%': { opacity: '0', transform: 'translateY(10px)' }
-      },
-      'scale-in': {
-        '0%': { transform: 'scale(0.95)', opacity: '0' },
-        '100%': { transform: 'scale(1)', opacity: '1' }
-      },
-      'float': {
-        '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
-        '50%': { transform: 'translateY(-20px) rotate(5deg)' }
-      },
-      'pulse': {
-        '0%': { opacity: '0.4' },
-        '50%': { opacity: '0.1' },
-        '100%': { opacity: '0.4' }
-      }
-    };
+    // Use our predefined keyframes
+    const animationsKeyframes = keyframes;
     
     // Extract component styles with explicit ids
     const componentStyles = [
@@ -166,7 +145,20 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
           nav: 'flex items-center gap-1 md:gap-2',
           navItem: 'px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors',
           navItemActive: 'text-primary',
-          mobileToggle: 'block md:hidden'
+          mobileToggle: 'block md:hidden',
+          dataStream: 'relative',
+          dataStreamEffect: `
+            before:content-[''] before:absolute before:inset-0 before:w-screen before:bg-repeat-x before:opacity-30 
+            before:transition-opacity before:duration-300 before:bg-gradient-to-r
+            before:from-transparent before:via-primary/50 before:to-transparent
+            before:animate-data-stream before:left-1/2 before:-translate-x-1/2
+          `,
+          glitchParticles: `
+            before:content-[''] before:absolute before:inset-0 before:pointer-events-none before:w-screen
+            before:left-1/2 before:-translate-x-1/2 before:opacity-50 before:animate-particles-1
+            after:content-[''] after:absolute after:inset-0 after:pointer-events-none after:w-screen
+            after:left-1/2 after:-translate-x-1/2 after:opacity-30 after:animate-particles-2
+          `,
         }
       },
       {

@@ -93,6 +93,42 @@ export const keyframes = {
   'cyber-scanlines': {
     '0%': { backgroundPosition: '0 0' },
     '100%': { backgroundPosition: '0 100%' }
+  },
+  
+  // MainNav specific animations
+  'mainnav-stream': {
+    'from': { backgroundPosition: '200% 0' },
+    'to': { backgroundPosition: '-200% 0' }
+  },
+  'mainnav-particles-1': {
+    '0%': { transform: 'translate(-50%, 0)' },
+    '20%': { transform: 'translate(calc(-50% - 100px), 50px)' },
+    '40%': { transform: 'translate(calc(-50% + 100px), -100px)' },
+    '60%': { transform: 'translate(calc(-50% - 50px), 100px)' },
+    '80%': { transform: 'translate(calc(-50% + 100px), -50px)' },
+    '100%': { transform: 'translate(-50%, 0)' }
+  },
+  'mainnav-particles-2': {
+    '0%': { transform: 'translate(-50%, 0)' },
+    '25%': { transform: 'translate(calc(-50% + 100px), -50px)' },
+    '50%': { transform: 'translate(calc(-50% - 100px), 100px)' },
+    '75%': { transform: 'translate(calc(-50% + 50px), -100px)' },
+    '100%': { transform: 'translate(-50%, 0)' }
+  },
+  'particles-1': {
+    '0%': { transform: 'translate(-50%, 0)' },
+    '20%': { transform: 'translate(calc(-50% - 100px), 50px)' },
+    '40%': { transform: 'translate(calc(-50% + 100px), -100px)' },
+    '60%': { transform: 'translate(calc(-50% - 50px), 100px)' },
+    '80%': { transform: 'translate(calc(-50% + 100px), -50px)' },
+    '100%': { transform: 'translate(-50%, 0)' }
+  },
+  'particles-2': {
+    '0%': { transform: 'translate(-50%, 0)' },
+    '25%': { transform: 'translate(calc(-50% + 100px), -50px)' },
+    '50%': { transform: 'translate(calc(-50% - 100px), 100px)' },
+    '75%': { transform: 'translate(calc(-50% + 50px), -100px)' },
+    '100%': { transform: 'translate(-50%, 0)' }
   }
 };
 
@@ -112,5 +148,8 @@ export const animation = {
   'morph-shape': 'morph-shape 10s infinite',
   'stream-vertical': 'stream-vertical 8s linear infinite',
   'stream-horizontal': 'stream-horizontal 12s linear infinite',
-  'data-stream': 'data-stream 2s linear infinite'
+  'data-stream': 'data-stream 2s linear infinite',
+  'mainnav-stream': 'mainnav-stream 8s linear infinite',
+  'mainnav-particles-1': 'mainnav-particles-1 6s linear infinite',
+  'mainnav-particles-2': 'mainnav-particles-2 8s linear infinite'
 };

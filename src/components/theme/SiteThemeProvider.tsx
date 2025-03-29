@@ -65,6 +65,13 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
     return currentTheme.design_tokens.animation.keyframes;
   }, [currentTheme]);
 
+  // For debugging
+  useEffect(() => {
+    console.log('Theme Provider - currentTheme:', currentTheme);
+    console.log('Theme Provider - animations:', animations);
+    console.log('Theme Provider - componentStyles:', componentStyles);
+  }, [currentTheme, animations, componentStyles]);
+
   // Apply CSS variables when the theme changes
   useEffect(() => {
     if (isLoading) return;
@@ -116,37 +123,6 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
     } else {
       rootElement.classList.add('light');
       rootElement.classList.remove('dark');
-    }
-    
-    // Dynamically add keyframe animations to the page if they aren't already in the CSS
-    if (currentTheme?.design_tokens?.animation?.keyframes) {
-      let styleSheet = document.getElementById('dynamic-keyframes');
-      
-      if (!styleSheet) {
-        styleSheet = document.createElement('style');
-        styleSheet.id = 'dynamic-keyframes';
-        document.head.appendChild(styleSheet);
-      }
-      
-      const keyframesCSS = Object.entries(currentTheme.design_tokens.animation.keyframes)
-        .map(([name, frames]) => {
-          // Convert the keyframes object to CSS
-          const frameCSS = Object.entries(frames as Record<string, any>)
-            .map(([percent, styles]) => {
-              // Convert the styles object to CSS
-              const styleCSS = Object.entries(styles as Record<string, any>)
-                .map(([prop, value]) => `${prop.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`)
-                .join(' ');
-              
-              return `${percent} { ${styleCSS} }`;
-            })
-            .join('\n');
-          
-          return `@keyframes ${name} { ${frameCSS} }`;
-        })
-        .join('\n\n');
-      
-      styleSheet.textContent = keyframesCSS;
     }
     
   }, [variables, isLoading, isDarkMode, currentTheme]);

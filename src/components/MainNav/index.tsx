@@ -9,17 +9,32 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Link } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
   const { hasAdminAccess } = useAdminAccess();
+  const { componentStyles } = useSiteTheme();
+
+  // Get MainNav styles from theme
+  const styles = componentStyles?.MainNav || {
+    container: {
+      base: 'fixed top-0 w-full z-50 transition-all duration-300',
+      animated: 'mainnav-morph'
+    },
+    header: 'mainnav-header',
+    dataStream: 'relative',
+    dataStreamEffect: '',
+    glitchParticles: '',
+  };
 
   useEffect(() => {
     console.log("MainNav - hasAdminAccess:", hasAdminAccess); // Debug admin access
+    console.log("MainNav - componentStyles:", componentStyles); // Debug styles
     requestAnimationFrame(() => {
       setIsLoaded(true);
     });
-  }, [hasAdminAccess]);
+  }, [hasAdminAccess, componentStyles]);
 
   return (
     <header
@@ -31,7 +46,12 @@ export function MainNav() {
       )}
     >
       <div className="mainnav-effects-wrapper absolute inset-0 w-full h-full overflow-hidden">
-        <div className="mainnav-data-stream mainnav-glitch-particles w-full h-full pointer-events-none" />
+        <div className={cn(
+          "w-full h-full pointer-events-none", 
+          styles.dataStream,
+          styles.dataStreamEffect,
+          styles.glitchParticles
+        )} />
       </div>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
