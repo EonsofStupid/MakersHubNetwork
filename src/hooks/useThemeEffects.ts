@@ -1,6 +1,14 @@
 
 import { useState, useCallback } from 'react';
-import { ThemeEffect } from '@/theme/types/effects';
+import { 
+  ThemeEffect, 
+  GlitchEffect, 
+  GradientEffect, 
+  CyberEffect,
+  PulseEffect,
+  ParticleEffect,
+  MorphEffect
+} from '@/theme/types/effects';
 
 interface EffectOptions {
   types: string[];
@@ -46,7 +54,7 @@ export function useThemeEffects(options: ThemeEffectsOptions = {}) {
             frequency: Math.random() * 0.5 + 0.5,
             amplitude: Math.random() * 0.5 + 0.5,
             color: colors[Math.floor(Math.random() * colors.length)]
-          };
+          } as GlitchEffect;
           break;
         case 'gradient':
           effect = {
@@ -57,7 +65,7 @@ export function useThemeEffects(options: ThemeEffectsOptions = {}) {
             colors: colors,
             direction: 'to-right',
             speed: Math.random() * 2 + 1
-          };
+          } as GradientEffect;
           break;
         case 'cyber':
           effect = {
@@ -68,7 +76,7 @@ export function useThemeEffects(options: ThemeEffectsOptions = {}) {
             glowColor: colors[Math.floor(Math.random() * colors.length)],
             textShadow: true,
             scanLines: Math.random() > 0.5
-          };
+          } as CyberEffect;
           break;
         case 'pulse':
           effect = {
@@ -79,7 +87,7 @@ export function useThemeEffects(options: ThemeEffectsOptions = {}) {
             color: colors[Math.floor(Math.random() * colors.length)],
             minOpacity: 0.2,
             maxOpacity: 0.8
-          };
+          } as PulseEffect;
           break;
         case 'particle':
           effect = {
@@ -87,16 +95,19 @@ export function useThemeEffects(options: ThemeEffectsOptions = {}) {
             type: 'particle',
             enabled: true,
             duration,
-            color: colors[Math.floor(Math.random() * colors.length)]
-          };
+            color: colors[Math.floor(Math.random() * colors.length)],
+            count: Math.floor(Math.random() * 10) + 5
+          } as ParticleEffect;
           break;
         case 'morph':
           effect = {
             id: effectId,
             type: 'morph',
             enabled: true,
-            duration
-          };
+            duration,
+            intensity: Math.random() * 2 + 1,
+            speed: Math.random() * 3 + 2
+          } as MorphEffect;
           break;
         default:
           effect = {

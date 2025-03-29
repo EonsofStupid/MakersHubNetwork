@@ -30,7 +30,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           toast({
             title: 'Theme Warning',
             description: 'Could not find or create theme. Using default styling.',
-            variant: 'warning',
+            variant: "destructive", // Using a valid variant
           });
         }
       } catch (error) {
@@ -38,7 +38,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         toast({
           title: 'Theme Error',
           description: 'Failed to load theme. Using default styling.',
-          variant: 'destructive',
+          variant: "destructive",
         });
       } finally {
         setIsInitialized(true);
