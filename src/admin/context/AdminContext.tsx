@@ -4,6 +4,7 @@ import { useAdminStore } from '../store/admin.store';
 import { useAuthStore } from '@/stores/auth/store';
 import { AdminPermission } from '../types/admin.types';
 import { useAdminSync } from '../hooks/useAdminSync';
+import { SyncIndicator } from '@/components/admin/SyncIndicator';
 
 interface AdminContextValue {
   hasAdminAccess: boolean;
@@ -11,6 +12,7 @@ interface AdminContextValue {
   isLoading: boolean;
   checkPermission: (permission: AdminPermission) => boolean;
   initializeAdmin: () => void;
+  SyncIndicator: React.FC;
 }
 
 const AdminContext = createContext<AdminContextValue | undefined>(undefined);
@@ -64,7 +66,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     isSuperAdmin,
     isLoading: status === "loading" || isLoadingPermissions,
     checkPermission,
-    initializeAdmin
+    initializeAdmin,
+    SyncIndicator
   };
   
   return (
