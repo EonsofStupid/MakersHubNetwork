@@ -11,10 +11,12 @@ import { Stats } from "@/components/admin/dashboard/Stats";
 import { BuildApprovalWidget } from "@/components/admin/dashboard/BuildApprovalWidget";
 import { ContentManagementWidget } from "@/components/admin/dashboard/ContentManagementWidget";
 import { UserManagementWidget } from "@/components/admin/dashboard/UserManagementWidget";
+import { useAdminStore } from "@/admin/store/admin.store";
 
 export default function Admin() {
   const { isAdmin, status } = useAuthStore();
   const { toast } = useToast();
+  const { loadPermissions } = useAdminStore();
   
   // Clear loading state check to ensure we're not getting stuck
   const isLoading = status === "loading";
@@ -24,14 +26,11 @@ export default function Admin() {
     console.log("Admin component mounted, auth status:", status);
     console.log("Admin access:", hasAccess);
     
-    // Add the admin theme class to body
-    document.body.classList.add('impulse-admin-root');
-    
-    return () => {
-      // Clean up
-      document.body.classList.remove('impulse-admin-root');
-    };
-  }, [status, hasAccess]);
+    // Load admin permissions if user has access
+    if (hasAccess) {
+      loadPermissions();
+    }
+  }, [status, hasAccess, loadPermissions]);
 
   // Show simple loading state
   if (isLoading) {
