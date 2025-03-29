@@ -15,6 +15,10 @@ interface SidebarIconProps {
   onClick?: () => void;
 }
 
+interface AdminSidebarProps {
+  collapsed?: boolean;
+}
+
 function SidebarIcon({ 
   id, 
   icon, 
@@ -53,10 +57,13 @@ function SidebarIcon({
   );
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { sidebarExpanded, toggleSidebar, hasPermission } = useAdminStore();
+  
+  // Use the collapsed prop if provided, otherwise use the store state
+  const isCollapsed = collapsed ? collapsed : !sidebarExpanded;
   
   // Extract active section from path
   const currentPath = location.pathname;
@@ -71,12 +78,11 @@ export function AdminSidebar() {
       initial={{ x: -20, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       className={cn(
-        "fixed top-0 left-0 z-30 h-full",
+        "h-full",
         "transition-all duration-300 ease-in-out overflow-hidden",
         "bg-[var(--impulse-bg-overlay)] backdrop-filter backdrop-blur-xl",
-        "border-r border-[var(--impulse-border-normal)]",
-        "pt-20", // Top padding for the main nav
-        sidebarExpanded ? "w-64" : "w-[4.5rem]"
+        "border border-[var(--impulse-border-normal)] rounded-lg shadow-sm",
+        isCollapsed ? "w-[4.5rem]" : "w-full"
       )}
     >
       <div className="flex flex-col h-full p-3 gap-1">
@@ -109,7 +115,7 @@ export function AdminSidebar() {
                 icon={item.icon}
                 label={item.label}
                 active={activeItem === item.id}
-                expanded={sidebarExpanded}
+                expanded={!isCollapsed}
                 onClick={() => handleIconClick(item.path)}
               />
             );
@@ -121,7 +127,7 @@ export function AdminSidebar() {
             id="backToSite"
             icon={<Home className="w-5 h-5" />}
             label="Back to Site"
-            expanded={sidebarExpanded}
+            expanded={!isCollapsed}
             onClick={() => navigate('/')}
           />
         </div>

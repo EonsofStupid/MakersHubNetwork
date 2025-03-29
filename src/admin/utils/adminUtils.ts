@@ -23,7 +23,7 @@ export const sectionPermissionMap: Record<string, AdminPermission> = {
 export function hasAdminAccess(permissions: AdminPermission[]): boolean {
   return permissions.some(p => 
     p === 'admin:access' || 
-    p === 'admin:super' || 
+    p === 'admin:view' || 
     p === 'super_admin:all'
   );
 }

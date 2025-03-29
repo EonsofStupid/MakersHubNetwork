@@ -4,10 +4,14 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAdminStore } from "@/admin/store/admin.store";
-import { adminNavigationItems } from "./navigation.config";
+import { adminNavigationItems } from "../../config/navigation.config";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 
-export function AdminNavigation({ collapsed = false }) {
+interface AdminNavigationProps {
+  collapsed?: boolean;
+}
+
+export function AdminNavigation({ collapsed = false }: AdminNavigationProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { setActiveSection } = useAdminStore();
