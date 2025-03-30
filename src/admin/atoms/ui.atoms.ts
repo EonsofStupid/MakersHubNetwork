@@ -1,34 +1,24 @@
 
 import { atom } from 'jotai';
 
-// UI visibility state
-export const mainNavHiddenAtom = atom<boolean>(false);
-export const iconOnlyModeAtom = atom<boolean>(false);
-export const aiPanelVisibleAtom = atom<boolean>(false);
-export const effectsPanelVisibleAtom = atom<boolean>(false);
-export const recordingAtom = atom<boolean>(false);
+// UI state atoms
+export const sidebarExpandedAtom = atom<boolean>(true);
+export const adminPanelVisibleAtom = atom<boolean>(false);
+export const activeSectionAtom = atom<string>('overview');
 
-// Active panel management
-export const activePanelAtom = atom<string | null>(null);
-export const panelPositionAtom = atom<{ x: number, y: number }>({ x: 0, y: 0 });
+// Modal state atoms
+export const modalOpenAtom = atom<boolean>(false);
+export const modalContentAtom = atom<React.ReactNode | null>(null);
+export const modalTitleAtom = atom<string>('');
 
-// Admin UI state
-export const adminSidebarExpandedAtom = atom<boolean>(true);
-export const adminScrollPositionAtom = atom<number>(0);
-export const adminActiveSectionAtom = atom<string>('overview');
+// Toast state atoms
+export const toastMessageAtom = atom<string | null>(null);
+export const toastTypeAtom = atom<'success' | 'error' | 'info' | 'warning'>('info');
+export const toastVisibleAtom = atom<boolean>(false);
 
-// Admin theme preferences
-export const adminThemeModeAtom = atom<'light' | 'dark' | 'system'>('dark');
-export const adminAccentColorAtom = atom<string>('#00F0FF');
+// Theme atoms
+export const themeAtom = atom<'dark' | 'light' | 'system'>('dark');
 
-// Quick bar state
-export const quickBarItemsAtom = atom<string[]>(["Users", "Roles", "Themes", "Settings"]);
-
-// Drag and drop atoms
-export const dragSourceAtom = atom<string | null>(null);
-export const dragTargetAtom = atom<string | null>(null);
-export const showDragOverlayAtom = atom<boolean>(false);
-export const hoveredIconAtom = atom<string | null>(null);
-
-// QuickActionBar atoms
-export const pinnedActionsAtom = atom<string[]>(['users', 'builds', 'themes', 'settings']);
+// Drag and drop related atoms
+export const draggableItemsAtom = atom<Record<string, any>>({});
+export const dropZonesAtom = atom<string[]>([]);

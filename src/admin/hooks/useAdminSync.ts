@@ -24,6 +24,7 @@ export function useAdminSync() {
         // which are already set in the store
         
         setLastSyncTime(new Date());
+        adminStore.initializeStore();
       } catch (error) {
         console.error('Error syncing from database:', error);
       } finally {
@@ -32,15 +33,15 @@ export function useAdminSync() {
     };
     
     // Only sync if the user is authenticated and has admin permissions
-    if (adminStore.hasInitialized) {
+    if (!adminStore.hasInitialized) {
       syncFromDatabase();
     }
-  }, [adminStore.hasInitialized]);
+  }, [adminStore]);
 
   // Sync to database when preferences change
   useEffect(() => {
     // Debounce to prevent excessive database writes
-    let syncTimeout: NodeJS.Timeout;
+    let syncTimeout: NodeJS.Timeout | null = null;
     
     const syncToDatabase = async () => {
       if (!adminStore.hasInitialized) return;
@@ -64,6 +65,7 @@ export function useAdminSync() {
         await new Promise(resolve => setTimeout(resolve, 300));
         
         setLastSyncTime(new Date());
+        adminStore.resetPreferencesChanged();
       } catch (error) {
         console.error('Error syncing to database:', error);
       } finally {
@@ -73,11 +75,13 @@ export function useAdminSync() {
     
     // Set up a debounced sync to database
     if (adminStore.preferencesChanged) {
-      clearTimeout(syncTimeout);
+      if (syncTimeout) clearTimeout(syncTimeout);
       syncTimeout = setTimeout(syncToDatabase, 1000);
     }
     
-    return () => clearTimeout(syncTimeout);
+    return () => {
+      if (syncTimeout) clearTimeout(syncTimeout);
+    };
   }, [
     adminStore.sidebarExpanded,
     adminStore.adminTopNavShortcuts,
