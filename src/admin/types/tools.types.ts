@@ -42,7 +42,7 @@ export interface AdminShortcut {
   id: string;
   label: string;
   path: string;
-  icon: React.ComponentType;
+  icon: React.ComponentType<{ className?: string }>;
   description?: string;
 }
 
