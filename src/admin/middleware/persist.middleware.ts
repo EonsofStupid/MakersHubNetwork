@@ -1,8 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
-import { PersistOptions, PersistStorage } from "zustand/middleware";
+import { PersistOptions, StorageValue } from "zustand/middleware";
 
 /**
  * Middleware for syncing admin preferences between localStorage and database
@@ -21,48 +20,53 @@ export function createAdminPersistMiddleware(storeName: string): PersistOptions<
 
     // Filter out what we want to persist to localStorage
     partialize: (state: any) => {
-      // Only persist UI preferences to localStorage, exclude function properties
-      const { permissions, isLoadingPermissions, loadPermissions, hasPermission, ...persistedState } = state;
+      const {
+        permissions,
+        isLoadingPermissions,
+        permissionsLoaded,
+        loadPermissions,
+        hasPermission,
+        setState,
+        ...persistedState
+      } = state;
       return persistedState;
     },
 
-    // Custom storage adapter that syncs with Supabase
+    // Zustand-compatible localStorage adapter
     storage: {
-      getItem: async (name: string): Promise<string | null> => {
+      getItem: (name: string): StorageValue<any> | null => {
         try {
-          // First try localStorage
           const value = localStorage.getItem(name);
-          return value;
+          return value ? JSON.parse(value) : null;
         } catch (error) {
           console.error('Error retrieving admin preferences:', error);
           return null;
         }
       },
-      
-      setItem: async (name: string, value: string): Promise<void> => {
+
+      setItem: (name: string, value: StorageValue<any>): void => {
         try {
-          // Always update localStorage first
-          localStorage.setItem(name, value);
+          localStorage.setItem(name, JSON.stringify(value));
         } catch (error) {
           console.error('Error saving admin preferences:', error);
         }
       },
-      
-      removeItem: async (name: string): Promise<void> => {
+
+      removeItem: (name: string): void => {
         try {
           localStorage.removeItem(name);
         } catch (error) {
           console.error('Error removing admin preferences:', error);
         }
       },
-    } as PersistStorage<any>
+    },
   };
 }
 
 /**
  * Helper function to merge localStorage and database preferences
  */
-function mergePreferences(localData: any, dbData: any): any {
+export function mergePreferences(localData: any, dbData: any): any {
   // Extract the relevant fields from the database record
   const {
     id,
@@ -71,10 +75,10 @@ function mergePreferences(localData: any, dbData: any): any {
     updated_at,
     ...dbPreferences
   } = dbData;
-  
+
   // Convert database column format back to store format
   const formattedDbPrefs = formatFromDatabase(dbPreferences);
-  
+
   // Merge with local data, preferring database values
   return {
     ...localData,
@@ -85,7 +89,7 @@ function mergePreferences(localData: any, dbData: any): any {
 /**
  * Format store data to match database schema
  */
-function formatForDatabase(storeData: any): any {
+export function formatForDatabase(storeData: any): any {
   return {
     sidebar_expanded: storeData.sidebarExpanded,
     topnav_items: storeData.pinnedTopNavItems,
@@ -95,15 +99,15 @@ function formatForDatabase(storeData: any): any {
     theme_preference: storeData.adminTheme,
     frozen_zones: storeData.frozenZones,
     ui_preferences: {
-      isDarkMode: storeData.isDarkMode
-    }
+      isDarkMode: storeData.isDarkMode,
+    },
   };
 }
 
 /**
  * Format database data to match store schema
  */
-function formatFromDatabase(dbData: any): any {
+export function formatFromDatabase(dbData: any): any {
   return {
     sidebarExpanded: dbData.sidebar_expanded,
     pinnedTopNavItems: dbData.topnav_items || [],
@@ -112,6 +116,6 @@ function formatFromDatabase(dbData: any): any {
     isDashboardCollapsed: dbData.dashboard_collapsed,
     adminTheme: dbData.theme_preference,
     frozenZones: dbData.frozen_zones || [],
-    isDarkMode: dbData.ui_preferences?.isDarkMode
+    isDarkMode: dbData.ui_preferences?.isDarkMode ?? true,
   };
 }
