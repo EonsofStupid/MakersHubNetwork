@@ -14,6 +14,8 @@ import { useAtom } from "jotai";
 import { isDraggingAtom, adminEditModeAtom } from "@/admin/atoms/tools.atoms";
 import { useToast } from "@/hooks/use-toast";
 import { scrollbarStyle } from "@/admin/utils/styles";
+import { Navigate } from "react-router-dom";
+import { Card } from "@/components/ui/card";
 
 interface ImpulseAdminLayoutProps {
   children: ReactNode;
@@ -27,13 +29,31 @@ export function ImpulseAdminLayout({
   requiresPermission = "admin:access"
 }: ImpulseAdminLayoutProps) {
   const { checkPermission, isLoading } = useAdmin();
-  const { sidebarExpanded, isDashboardCollapsed, setDashboardCollapsed } = useAdminStore();
+  const { sidebarExpanded, isDashboardCollapsed } = useAdminStore();
   const [isDragging] = useAtom(isDraggingAtom);
   const [isEditMode] = useAtom(adminEditModeAtom);
   const { toast } = useToast();
 
   // Check for required permission
   const hasPermission = checkPermission(requiresPermission);
+  
+  // Effect to manage body classes
+  useEffect(() => {
+    // Add the admin theme class
+    document.body.classList.add('impulse-admin-root');
+    
+    if (isEditMode) {
+      document.body.classList.add('edit-mode');
+    } else {
+      document.body.classList.remove('edit-mode');
+    }
+    
+    return () => {
+      // Remove the admin theme class when unmounting
+      document.body.classList.remove('impulse-admin-root');
+      document.body.classList.remove('edit-mode');
+    };
+  }, [isEditMode]);
   
   // Show a tutorial for new admin users
   useEffect(() => {
@@ -69,14 +89,12 @@ export function ImpulseAdminLayout({
 
   if (!hasPermission) {
     return (
-      <div className="border-destructive/20 p-6 rounded-lg bg-card/30">
-        <div className="text-center space-y-2">
-          <h3 className="text-xl font-bold text-destructive">Access Denied</h3>
-          <p className="text-muted-foreground">
-            You don't have permission to access this section.
-          </p>
-        </div>
-      </div>
+      <Card className="border-destructive/20 p-6 text-center">
+        <h3 className="text-xl font-bold text-destructive">Access Denied</h3>
+        <p className="text-muted-foreground">
+          You don't have permission to access this section.
+        </p>
+      </Card>
     );
   }
 

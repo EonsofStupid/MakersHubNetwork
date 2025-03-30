@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { AdminLayout } from "@/admin/components/AdminLayout";
+import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
 import { PlaceholderPage } from "./PlaceholderPage";
 
 // Import all the page components
@@ -27,89 +27,89 @@ export function AdminRoutes() {
       <Route 
         path="/overview" 
         element={
-          <AdminLayout title="Admin Overview">
+          <ImpulseAdminLayout title="Admin Overview">
             <OverviewPage />
-          </AdminLayout>
+          </ImpulseAdminLayout>
         } 
       />
       <Route 
         path="/users" 
         element={
-          <AdminLayout title="User Management" requiredPermission="users:view">
+          <ImpulseAdminLayout title="User Management" requiresPermission="users:view">
             <UsersPage />
-          </AdminLayout>
+          </ImpulseAdminLayout>
         } 
       />
       <Route 
         path="/builds" 
         element={
-          <AdminLayout title="Build Management" requiredPermission="builds:view">
+          <ImpulseAdminLayout title="Build Management" requiresPermission="builds:view">
             <BuildsPage />
-          </AdminLayout>
+          </ImpulseAdminLayout>
         } 
       />
       <Route 
         path="/builds/:buildId" 
         element={
-          <AdminLayout title="Build Details" requiredPermission="builds:view">
+          <ImpulseAdminLayout title="Build Details" requiresPermission="builds:view">
             <BuildDetailPage />
-          </AdminLayout>
+          </ImpulseAdminLayout>
         } 
       />
       <Route 
         path="/reviews" 
         element={
-          <AdminLayout title="Reviews Management" requiredPermission="content:view">
+          <ImpulseAdminLayout title="Reviews Management" requiresPermission="content:view">
             <ReviewsPage />
-          </AdminLayout>
+          </ImpulseAdminLayout>
         } 
       />
       <Route 
         path="/content" 
         element={
-          <AdminLayout title="Content Management" requiredPermission="content:view">
+          <ImpulseAdminLayout title="Content Management" requiresPermission="content:view">
             <ContentPage />
-          </AdminLayout>
+          </ImpulseAdminLayout>
         } 
       />
       <Route 
         path="/themes" 
         element={
-          <AdminLayout title="Theme Manager" requiredPermission="themes:view">
+          <ImpulseAdminLayout title="Theme Manager" requiresPermission="themes:view">
             <ThemesPage />
-          </AdminLayout>
+          </ImpulseAdminLayout>
         } 
       />
       <Route 
         path="/analytics" 
         element={
-          <AdminLayout title="Analytics Dashboard" requiredPermission="data:view">
+          <ImpulseAdminLayout title="Analytics Dashboard" requiresPermission="data:view">
             <AnalyticsPage />
-          </AdminLayout>
+          </ImpulseAdminLayout>
         } 
       />
       <Route 
         path="/data" 
         element={
-          <AdminLayout title="Data Maestro" requiredPermission="data:view">
+          <ImpulseAdminLayout title="Data Maestro" requiresPermission="data:view">
             <DataMaestroPage />
-          </AdminLayout>
+          </ImpulseAdminLayout>
         } 
       />
       <Route 
         path="/settings" 
         element={
-          <AdminLayout title="Admin Settings" requiredPermission="settings:view">
+          <ImpulseAdminLayout title="Admin Settings" requiresPermission="settings:view">
             <SettingsPage />
-          </AdminLayout>
+          </ImpulseAdminLayout>
         } 
       />
       <Route 
         path="/permissions" 
         element={
-          <AdminLayout title="Permission Manager" requiredPermission="super_admin:all">
+          <ImpulseAdminLayout title="Permission Manager" requiresPermission="super_admin:all">
             <PermissionsPage />
-          </AdminLayout>
+          </ImpulseAdminLayout>
         } 
       />
       <Route path="*" element={<Navigate to="/admin/overview" replace />} />

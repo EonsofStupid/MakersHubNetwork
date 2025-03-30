@@ -1,138 +1,234 @@
 
 /* Dashboard Shortcuts Styles */
+
+.dashboard-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--impulse-border-normal);
+  transition: all 0.3s ease;
+}
+
+.dashboard-shortcuts:hover {
+  border-color: var(--impulse-primary);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+}
+
 .dashboard-shortcut {
   position: relative;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(10, 15, 20, 0.6);
+  border: 1px solid rgba(0, 240, 255, 0.1);
   transition: all 0.3s ease;
-  transform-origin: center bottom;
+  overflow: hidden;
+  cursor: pointer;
 }
 
 .dashboard-shortcut:hover {
   transform: translateY(-5px);
-}
-
-/* Cyber Effects */
-.cyber-effect-1::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(45deg, transparent 65%, rgba(var(--color-primary), 0.4) 100%);
-  z-index: -1;
-  animation: rotate-gradient 8s linear infinite;
-}
-
-.cyber-effect-2::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, rgba(var(--color-primary), 0.2) 0%, transparent 70%);
-  z-index: -1;
-  animation: pulse-gradient 6s ease-in-out infinite;
-}
-
-.cyber-effect-3::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 10px,
-    rgba(var(--color-primary), 0.05) 10px,
-    rgba(var(--color-primary), 0.05) 20px
-  );
-  z-index: -1;
-  animation: move-pattern 20s linear infinite;
-}
-
-/* Animations */
-@keyframes rotate-gradient {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes pulse-gradient {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.7; }
-}
-
-@keyframes move-pattern {
-  from { background-position: 0 0; }
-  to { background-position: 100px 100px; }
-}
-
-@keyframes cyber-glitch {
-  0%, 100% { 
-    clip-path: inset(0% 0% 0% 0%);
-    transform: translate(0);
-  }
-  20% { 
-    clip-path: inset(20% 0% 20% 0%);
-    transform: translate(-2px, 2px);
-  }
-  40% { 
-    clip-path: inset(40% 0% 0% 0%);
-    transform: translate(2px, -2px);
-  }
-  60% { 
-    clip-path: inset(0% 10% 40% 10%);
-    transform: translate(-1px, -1px);
-  }
-  80% { 
-    clip-path: inset(0% 40% 0% 40%);
-    transform: translate(1px, 1px);
-  }
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  border-color: var(--impulse-primary);
 }
 
 .dashboard-shortcut__icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  color: var(--impulse-primary);
   position: relative;
-  z-index: 2;
+  z-index: 1;
 }
 
 .dashboard-shortcut__title {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--impulse-text-primary);
+  text-align: center;
+  margin-bottom: 0.25rem;
   position: relative;
-  z-index: 2;
+  z-index: 1;
 }
 
 .dashboard-shortcut__description {
+  font-size: 0.75rem;
+  color: var(--impulse-text-secondary);
+  text-align: center;
   position: relative;
-  z-index: 2;
-  opacity: 0;
-  transform: translateY(5px);
-  transition: all 0.3s ease;
+  z-index: 1;
 }
 
-.dashboard-shortcut:hover .dashboard-shortcut__description {
-  opacity: 0.7;
-  transform: translateY(0);
+/* Cyber effects */
+.cyber-effect-1::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--impulse-primary), transparent);
+  animation: scanner 3s linear infinite;
 }
 
-/* Glass morphism effect */
-.dashboard-shortcut::after {
-  content: '';
+.cyber-effect-2::before {
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom right,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05) 30%,
-    rgba(0, 0, 0, 0.1)
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(0, 240, 255, 0.1),
+    rgba(0, 240, 255, 0.1) 2px,
+    transparent 2px,
+    transparent 4px
   );
-  backdrop-filter: blur(5px);
-  border-radius: inherit;
-  z-index: -2;
+  opacity: 0.2;
 }
 
-/* Glitch effect on hover */
-.dashboard-shortcut:hover .dashboard-shortcut__title {
-  animation: cyber-glitch 0.5s ease-in-out;
+.cyber-effect-3::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, var(--impulse-primary) 0%, transparent 60%);
+  opacity: 0.1;
+  animation: pulse 4s infinite;
+}
+
+@keyframes scanner {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.3; }
 }
 
 /* Edit mode styles */
-.edit-mode .dashboard-shortcut {
-  box-shadow: 0 0 0 1px var(--impulse-border-normal);
+.edit-mode .dashboard-shortcuts {
+  border: 2px dashed var(--impulse-primary);
+  background: rgba(0, 240, 255, 0.05);
 }
 
-.edit-mode .dashboard-shortcut:hover {
-  box-shadow: 0 0 0 2px var(--impulse-border-hover), 0 5px 15px rgba(0, 0, 0, 0.1);
+.edit-mode .dashboard-shortcut {
+  border: 1px dashed var(--impulse-primary);
+}
+
+/* Active drag styles */
+.dashboard-shortcuts.can-drop {
+  background: rgba(0, 240, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+}
+
+.dashboard-shortcut.active-drag {
+  opacity: 0.7;
+  transform: scale(0.95);
+}
+
+/* Delete button (only shown in edit mode) */
+.dashboard-shortcut__delete {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: rgba(255, 0, 0, 0.7);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.edit-mode .dashboard-shortcut:hover .dashboard-shortcut__delete {
+  opacity: 1;
+}
+
+/* Glassmorphism effect */
+.glassmorphism {
+  background: rgba(28, 32, 40, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.glassmorphism:hover {
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 240, 255, 0.3);
+}
+
+/* Cyber glow effects */
+.cyber-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.2) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cyber-glow:hover::after {
+  opacity: 1;
+}
+
+/* Color variants for cyber effects */
+.cyber-effect-blue .cyber-glow::after {
+  background: radial-gradient(circle at 50% 50%, rgba(0, 120, 255, 0.3) 0%, transparent 70%);
+}
+
+.cyber-effect-green .cyber-glow::after {
+  background: radial-gradient(circle at 50% 50%, rgba(0, 255, 150, 0.3) 0%, transparent 70%);
+}
+
+.cyber-effect-purple .cyber-glow::after {
+  background: radial-gradient(circle at 50% 50%, rgba(180, 0, 255, 0.3) 0%, transparent 70%);
+}
+
+.cyber-effect-red .cyber-glow::after {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 0, 80, 0.3) 0%, transparent 70%);
+}
+
+/* Empty state for dashboard shortcuts */
+.dashboard-shortcuts-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--impulse-text-secondary);
+  text-align: center;
+  padding: 2rem;
+}
+
+.dashboard-shortcuts-empty__icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.dashboard-shortcuts-empty__text {
+  font-size: 0.9rem;
+  max-width: 300px;
+}
+
+.dashboard-shortcuts-empty__hint {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  opacity: 0.7;
+  color: var(--impulse-primary);
 }
