@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -103,6 +102,31 @@ export function AdminSidebar() {
     return Math.random() * 5;
   };
 
+  // Add cyber scan lines to sidebar
+  useEffect(() => {
+    // Create random scan lines at random intervals
+    const createScanLine = () => {
+      const sidebarElement = document.querySelector('.admin-sidebar');
+      if (!sidebarElement) return;
+      
+      const scanLine = document.createElement('div');
+      scanLine.className = 'admin-sidebar-scan';
+      sidebarElement.appendChild(scanLine);
+      
+      setTimeout(() => {
+        sidebarElement.removeChild(scanLine);
+      }, 15000); // Remove after animation completes
+    };
+    
+    const interval = setInterval(() => {
+      if (Math.random() > 0.5) {
+        createScanLine();
+      }
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
   return (
     <div 
       ref={sidebarRef}

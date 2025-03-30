@@ -8,7 +8,7 @@ import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 
 interface TopNavItemProps {
   id: string;
-  icon: React.ReactNode;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   onClick: () => void;
   onRemove?: (e: React.MouseEvent) => void;
@@ -18,7 +18,7 @@ interface TopNavItemProps {
 
 export function TopNavItem({
   id,
-  icon,
+  icon: Icon,
   label,
   onClick,
   onRemove,
@@ -120,7 +120,7 @@ export function TopNavItem({
               repeatType: "reverse" 
             }}
           >
-            {icon}
+            <Icon className="w-4 h-4" />
           </motion.div>
           
           {/* Glow overlay effect */}
