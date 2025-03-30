@@ -30,7 +30,7 @@ export function DashboardShortcuts() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { dashboardShortcuts, setDashboardShortcuts } = useAdminStore();
   
-  const { registerDropZone, isDragging, dragTargetId } = useDragAndDrop({
+  const { registerDropZone, isDragging } = useDragAndDrop({
     items: dashboardShortcuts,
     onReorder: setDashboardShortcuts,
     containerId: 'dashboard-shortcuts',
@@ -70,7 +70,7 @@ export function DashboardShortcuts() {
               className="ml-2 text-xs bg-primary/20 text-primary px-2 py-1 rounded-full flex items-center gap-1"
             >
               <MoveHorizontal className="w-3 h-3" />
-              <span>Drag to add</span>
+              <span>Drag to customize</span>
             </motion.div>
           )}
         </h2>
@@ -83,13 +83,14 @@ export function DashboardShortcuts() {
         animate="visible"
         className={cn(
           "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 min-h-[140px] rounded-xl",
-          "border transition-all duration-300",
+          "border transition-all duration-300 glassmorphism",
           isDragging 
             ? "ring-2 ring-primary/50 bg-primary/5 border-primary/30" 
             : "bg-black/20 border-border/30",
           editMode && "border-dashed"
         )}
         id="dashboard-shortcuts"
+        data-container-id="dashboard-shortcuts"
       >
         <AnimatePresence mode="popLayout">
           {shortcutItems.length > 0 ? (

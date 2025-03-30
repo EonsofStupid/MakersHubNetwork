@@ -11,6 +11,7 @@ import {
   isDraggingAtom, 
   dropIndicatorPositionAtom 
 } from '@/admin/atoms/tools.atoms';
+import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 
 interface NavigationItemProps {
   id: string;
@@ -53,14 +54,14 @@ export function NavigationItem({
   onClick,
   className = '',
   tooltipContent,
-  showTooltip = true,
+  showTooltip = false,
 }: NavigationItemProps) {
   const [editMode] = useAtom(adminEditModeAtom);
   const [isDragging, setIsDragging] = useAtom(isDraggingAtom);
   const [, setDragSourceId] = useAtom(dragSourceIdAtom);
   const [, setDropPosition] = useAtom(dropIndicatorPositionAtom);
   const itemRef = useRef<HTMLDivElement>(null);
-
+  
   // Generate a color class based on the item ID for visual variety
   const getColorClass = () => {
     const colors = [
@@ -79,58 +80,18 @@ export function NavigationItem({
     return colors[Math.abs(hash) % colors.length];
   };
 
+  // Use our custom drag and drop hook
+  const { makeDraggable } = useDragAndDrop({
+    items: [id],
+    containerId: 'admin-nav',
+    dragOnlyInEditMode: true
+  });
+
   // Enable drag and drop only in edit mode
   useEffect(() => {
-    const element = itemRef.current;
-    if (!element) return;
-    
-    const handleDragStart = (e: DragEvent) => {
-      if (!editMode) {
-        e.preventDefault();
-        return;
-      }
-      
-      setIsDragging(true);
-      setDragSourceId(id);
-      
-      // Set position for drag indicator
-      setDropPosition({ x: e.clientX, y: e.clientY });
-      
-      // Add drag data for compatibility
-      e.dataTransfer?.setData('text/plain', id);
-      
-      // Create a custom drag image (optional)
-      const dragImage = document.createElement('div');
-      dragImage.textContent = label;
-      dragImage.style.position = 'absolute';
-      dragImage.style.top = '-9999px';
-      document.body.appendChild(dragImage);
-      e.dataTransfer?.setDragImage(dragImage, 0, 0);
-      
-      setTimeout(() => {
-        document.body.removeChild(dragImage);
-      }, 0);
-    };
-    
-    const handleDragEnd = () => {
-      setIsDragging(false);
-      setDragSourceId(null);
-      setDropPosition(null);
-    };
-    
-    if (editMode) {
-      element.setAttribute('draggable', 'true');
-      element.addEventListener('dragstart', handleDragStart as EventListener);
-      element.addEventListener('dragend', handleDragEnd);
-    } else {
-      element.removeAttribute('draggable');
-    }
-    
-    return () => {
-      element.removeEventListener('dragstart', handleDragStart as EventListener);
-      element.removeEventListener('dragend', handleDragEnd);
-    };
-  }, [editMode, id, setIsDragging, setDragSourceId, setDropPosition, label]);
+    if (!itemRef.current) return;
+    return makeDraggable(itemRef.current, id);
+  }, [editMode, id, makeDraggable]);
 
   const colorClass = getColorClass();
   const content = (
@@ -184,7 +145,7 @@ export function NavigationItem({
       {/* Drag handle in edit mode */}
       {editMode && (
         <motion.div 
-          className="absolute left-1 top-1/2 transform -translate-y-1/2 cursor-grab active:cursor-grabbing opacity-50 hover:opacity-100 transition-opacity"
+          className="nav-item__drag-handle"
           variants={{
             rest: { x: -10, opacity: 0 },
             hover: { x: 0, opacity: 0.7 }

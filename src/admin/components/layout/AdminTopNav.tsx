@@ -9,10 +9,7 @@ import { adminNavigationItems } from '@/admin/config/navigation.config';
 import { useAtom } from 'jotai';
 import { 
   adminEditModeAtom, 
-  isDraggingAtom, 
-  dragSourceIdAtom, 
-  dragTargetIdAtom, 
-  dropIndicatorPositionAtom 
+  isDraggingAtom,
 } from '@/admin/atoms/tools.atoms';
 import { TopNavItem } from '@/admin/components/navigation/TopNavItem';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +28,6 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
   const { toast } = useToast();
   const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
   const [isDragging] = useAtom(isDraggingAtom);
-  const [dragSourceId] = useAtom(dragSourceIdAtom);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   
   const { 
@@ -135,6 +131,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
             isEditMode && "edit-mode-highlight",
           )}
           id="top-nav-shortcuts"
+          data-container-id="top-nav-shortcuts"
         >
           <AnimatePresence mode="popLayout">
             {topNavIcons.length > 0 ? (
