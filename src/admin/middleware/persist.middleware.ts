@@ -31,7 +31,8 @@ export function createAdminPersistMiddleware(storeName: string): PersistOptions<
       getItem: (name: string): string | null => {
         try {
           // First try localStorage
-          return localStorage.getItem(name);
+          const value = localStorage.getItem(name);
+          return value;
         } catch (error) {
           console.error('Error retrieving admin preferences:', error);
           return null;

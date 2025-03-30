@@ -44,8 +44,9 @@ interface AdminState {
   toggleDarkMode: () => void;
 }
 
-// Type for the store including subscribe method
+// Extend the AdminState to include the subscribe method
 interface AdminStore extends AdminState {
+  getState: () => AdminState;
   subscribe: (callback: (state: AdminState, prevState: AdminState) => void) => () => void;
 }
 
@@ -180,13 +181,12 @@ export const useAdminStore = create<AdminState>()(
   )
 );
 
-// Add subscribe method to the store
+// Cast the store to include the extended interface with subscribe method
 const storeApi = useAdminStore as unknown as AdminStore;
 
-// Implement the subscribe method properly
-const originalSubscribe = storeApi.subscribe;
+// Implement a better subscribe method that correctly tracks previous state
 storeApi.subscribe = (callback: (state: AdminState, prevState: AdminState) => void) => {
-  let previousState = storeApi.getState();
+  let previousState = useAdminStore.getState();
   
   return useAdminStore.subscribe((state) => {
     const nextState = state;
