@@ -1,5 +1,5 @@
 
-import { StateStorage, PersistOptions } from 'zustand/middleware';
+import { StateStorage, PersistOptions, StorageValue } from 'zustand/middleware';
 
 /**
  * Creates a persist middleware for admin stores with a common pattern
@@ -10,7 +10,8 @@ export function createAdminPersistMiddleware<T>(storeName: string): PersistOptio
   const adminStorage: StateStorage = {
     getItem: (name: string): string | null => {
       try {
-        return localStorage.getItem(name);
+        const data = localStorage.getItem(name);
+        return data;
       } catch (e) {
         console.warn('Error loading admin state from localStorage:', e);
         return null;
@@ -35,15 +36,15 @@ export function createAdminPersistMiddleware<T>(storeName: string): PersistOptio
   // Return configured persist options
   return {
     name: storeName,
-    storage: adminStorage,
+    storage: adminStorage as PersistStorage<T>,
     // Only persist what we need
-    partialize: (state: T): T => {
+    partialize: (state: T): Partial<T> => {
       // Filter out any functions, actions, or computed properties
       const persistedState = Object.entries(state as Record<string, any>)
         .filter(([_, value]) => typeof value !== 'function')
         .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
       
-      return persistedState as T;
+      return persistedState as Partial<T>;
     },
   };
 }

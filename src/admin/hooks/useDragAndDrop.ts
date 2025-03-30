@@ -50,7 +50,7 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
   }, [editMode, setIsDragging, setDragSourceId, setDragTargetId, setDropIndicatorPosition]);
 
   // Handle the drop event - reorder items
-  const handleDrop = useCallback((sourceId: string, targetId: string) => {
+  const handleItemDrop = useCallback((sourceId: string, targetId: string) => {
     if (!sourceId || !targetId || sourceId === targetId) return;
 
     const sourceIndex = items.indexOf(sourceId);
@@ -116,7 +116,7 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
     const handleDrop = (e: DragEvent) => {
       e.preventDefault();
       if (dragSourceId && dragTargetId) {
-        handleDrop(dragSourceId, dragTargetId);
+        handleItemDrop(dragSourceId, dragTargetId);
       }
       
       setIsDragging(false);
@@ -143,7 +143,7 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
     setIsDragging, 
     setDragSourceId, 
     setDropIndicatorPosition,
-    handleDrop
+    handleItemDrop
   ]);
 
   return {
@@ -151,6 +151,6 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
     dragSourceId,
     dragTargetId,
     registerDropZone,
-    handleDrop
+    handleDrop: handleItemDrop
   };
 }

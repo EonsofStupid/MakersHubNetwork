@@ -9,6 +9,7 @@ interface NavigationItemProps {
   id: string;
   label: string;
   icon?: React.ReactNode;
+  description?: string;
   isActive?: boolean;
   onClick?: () => void;
   className?: string;
@@ -19,6 +20,7 @@ export const NavigationItem: React.FC<NavigationItemProps> = ({
   id,
   label,
   icon,
+  description,
   isActive = false,
   onClick,
   className = '',
@@ -75,6 +77,7 @@ export const NavigationItem: React.FC<NavigationItemProps> = ({
       )}
       
       <span className="nav-item__label">{label}</span>
+      {description && <span className="nav-item__description text-xs opacity-70">{description}</span>}
       
       {editMode && (
         <motion.div 
@@ -100,9 +103,9 @@ export const NavigationItem: React.FC<NavigationItemProps> = ({
     </motion.div>
   );
 
-  if (tooltipContent) {
+  if (tooltipContent || description) {
     return (
-      <AdminTooltip content={tooltipContent} side="right">
+      <AdminTooltip content={tooltipContent || description} side="right">
         {item}
       </AdminTooltip>
     );
