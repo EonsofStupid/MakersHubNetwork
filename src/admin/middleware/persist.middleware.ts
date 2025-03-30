@@ -1,13 +1,13 @@
 
-import { StateStorage, PersistOptions, StorageValue } from 'zustand/middleware';
+import { PersistStorage, PersistOptions, StorageValue } from 'zustand/middleware';
 
 /**
  * Creates a persist middleware for admin stores with a common pattern
  * @param storeName Name of the store for localStorage key
  */
 export function createAdminPersistMiddleware<T>(storeName: string): PersistOptions<T, T> {
-  // Create a custom storage that syncs with localStorage
-  const adminStorage: StateStorage = {
+  // Create a properly typed storage that syncs with localStorage
+  const adminStorage: PersistStorage<T> = {
     getItem: (name: string): StorageValue<T> | null => {
       try {
         const data = localStorage.getItem(name);
@@ -17,7 +17,7 @@ export function createAdminPersistMiddleware<T>(storeName: string): PersistOptio
         return null;
       }
     },
-    setItem: (name: string, value: string): void => {
+    setItem: (name: string, value: StorageValue<T>): void => {
       try {
         localStorage.setItem(name, JSON.stringify(value));
       } catch (e) {
