@@ -1,11 +1,9 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AdminPermission } from '../types/admin.types';
 import { defaultTopNavShortcuts, defaultDashboardShortcuts } from '@/admin/config/navigation.config';
 
-// Combined admin state interface
-interface AdminState {
+export interface AdminState {
   // UI State
   sidebarExpanded: boolean;
   pinnedTopNavItems: string[];
@@ -14,24 +12,24 @@ interface AdminState {
   activeSection: string;
   isDarkMode: boolean;
   isDashboardCollapsed: boolean;
-  
-  // Admin Theme
+
+  // Theme
   adminTheme: string;
-  
-  // Drag and drop state
+
+  // Drag & Drop
   hoveredIcon: string | null;
   dragSource: string | null;
   dragTarget: string | null;
   showDragOverlay: boolean;
-  
-  // Frozen zones
+
+  // Frozen Zones
   frozenZones: string[];
-  
-  // Auth/Permissions State
+
+  // Permissions
   isLoadingPermissions: boolean;
   permissions: AdminPermission[];
   permissionsLoaded: boolean;
-  
+
   // Actions
   setState: (state: Partial<AdminState>) => void;
   loadPermissions: (mappedPermissions?: AdminPermission[]) => Promise<void>;
@@ -44,11 +42,10 @@ interface AdminState {
   toggleDarkMode: () => void;
 }
 
-// Create the admin store with localStorage persistence
 export const useAdminStore = create<AdminState>()(
   persist(
     (set, get) => ({
-      // Default UI state
+      // UI Defaults
       sidebarExpanded: true,
       pinnedTopNavItems: defaultTopNavShortcuts,
       pinnedDashboardItems: defaultDashboardShortcuts,
@@ -56,65 +53,62 @@ export const useAdminStore = create<AdminState>()(
       activeSection: 'overview',
       isDarkMode: true,
       isDashboardCollapsed: false,
-      
-      // Default theme state
+
+      // Theme
       adminTheme: 'cyberpunk',
-      
-      // Default drag and drop state
+
+      // Drag and drop
       hoveredIcon: null,
       dragSource: null,
       dragTarget: null,
       showDragOverlay: false,
-      
-      // Default frozen zones
+
+      // Zones
       frozenZones: [],
-      
-      // Default auth state
+
+      // Permissions
       isLoadingPermissions: true,
       permissions: [],
       permissionsLoaded: false,
-      
+
       // Actions
-      setState: (partialState) => set(partialState),
-      
-      toggleSidebar: () => set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
-      
+      setState: (partial) => set(partial),
+
+      toggleSidebar: () =>
+        set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
+
       setActiveSection: (section) => set({ activeSection: section }),
-      
-      setPinnedDashboardItems: (items) => set({ pinnedDashboardItems: items }),
-      
+
+      setPinnedDashboardItems: (items) =>
+        set({ pinnedDashboardItems: items }),
+
       setDragSource: (source) => set({ dragSource: source }),
-      
+
       setDragTarget: (target) => set({ dragTarget: target }),
-      
-      toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
-      
-      // Permission functions
+
+      toggleDarkMode: () =>
+        set((state) => ({ isDarkMode: !state.isDarkMode })),
+
       loadPermissions: async (mappedPermissions) => {
-        // Skip loading if permissions are already loaded
         if (get().permissionsLoaded) {
           set({ isLoadingPermissions: false });
           return;
         }
-        
+
         set({ isLoadingPermissions: true });
-        
+
         try {
-          // If we already have mapped permissions from the role, use those
-          if (mappedPermissions && mappedPermissions.length > 0) {
-            set({ 
+          if (mappedPermissions?.length) {
+            set({
               permissions: mappedPermissions,
               isLoadingPermissions: false,
-              permissionsLoaded: true
+              permissionsLoaded: true,
             });
             return;
           }
 
-          // Simulate API call to load permissions
-          // In a real app, this would be an API call to fetch user permissions
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          // For demo purposes, we'll grant all permissions if no specific permissions are provided
+          await new Promise((res) => setTimeout(res, 300));
+
           const allPermissions: AdminPermission[] = [
             'admin:access',
             'admin:view',
@@ -135,78 +129,63 @@ export const useAdminStore = create<AdminState>()(
             'settings:view',
             'settings:edit',
             'data:import',
-            'super_admin:all'
+            'super_admin:all',
           ];
-          
-          set({ 
+
+          set({
             permissions: allPermissions,
             isLoadingPermissions: false,
-            permissionsLoaded: true
+            permissionsLoaded: true,
           });
         } catch (error) {
           console.error('Failed to load admin permissions:', error);
-          set({ 
-            permissions: ['admin:access'], // Grant minimal permissions on error
+          set({
+            permissions: ['admin:access'],
             isLoadingPermissions: false,
-            permissionsLoaded: true
+            permissionsLoaded: true,
           });
         }
       },
-      
+
       hasPermission: (permission) => {
         const { permissions } = get();
-        
-        // Super admin has all permissions
-        if (permissions.includes('super_admin:all')) {
-          return true;
-        }
-        
-        return permissions.includes(permission);
-      }
+        return permissions.includes('super_admin:all') || permissions.includes(permission);
+      },
     }),
     {
       name: 'admin-store',
       partialize: (state) => {
-        // Only persist UI preferences to localStorage, exclude function properties and loading states
-        const { permissions, isLoadingPermissions, permissionsLoaded, loadPermissions, hasPermission, setState, ...persistedState } = state;
-        return persistedState;
+        const {
+          permissions,
+          isLoadingPermissions,
+          permissionsLoaded,
+          loadPermissions,
+          hasPermission,
+          setState,
+          ...rest
+        } = state;
+        return rest;
       },
     }
   )
 );
 
-// Make subscribe method available for external use
-// This ensures useAdminSync can properly subscribe to store changes
-export type AdminStoreType = typeof useAdminStore;
-
-// Helper function to subscribe to store changes with proper typing
+/**
+ * Typed subscribe helper for Zustand stores
+ */
 export function subscribeWithSelector<T>(
   store: typeof useAdminStore,
   selector: (state: AdminState) => T,
-  callback: (selectedState: T, previousSelectedState: T) => void
+  callback: (next: T, prev: T) => void
 ) {
-  let currentState = selector(store.getState());
-  
-  return store.subscribe((state) => {
-    const nextState = selector(state);
-    if (nextState !== currentState) {
-      const previousState = currentState;
-      currentState = nextState;
-      callback(nextState, previousState);
-    }
-  });
-}
+  let current = selector(store.getState());
 
-// Subscribe to all state changes with previous state tracking
-export function subscribeWithPrevious(
-  store: typeof useAdminStore,
-  callback: (state: AdminState, prevState: AdminState) => void
-) {
-  let previousState = store.getState();
-  
   return store.subscribe((state) => {
-    const currentState = state;
-    callback(currentState, previousState);
-    previousState = { ...currentState };
+    const next = selector(state);
+    if (next !== current) {
+      const prev = current;
+      current = next;
+      callback(next, prev);
+    }
   });
 }
