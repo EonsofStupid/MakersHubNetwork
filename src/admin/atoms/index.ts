@@ -15,7 +15,14 @@ export {
   dragTargetIdAtom,
   dropIndicatorPositionAtom,
   darkModeAtom,
-  selectedThemeAtom
+  selectedThemeAtom,
+  // Add the other atoms that are actually exported from tools.atoms
+  frozenZonesAtom,
+  effectsPaletteVisibleAtom,
+  selectedEffectAtom,
+  searchActiveAtom,
+  searchQueryAtom,
+  searchResultsAtom
 } from './tools.atoms';
 
 // Export additional cyberpunk effects atoms
