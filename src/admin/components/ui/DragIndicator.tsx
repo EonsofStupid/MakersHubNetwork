@@ -41,6 +41,9 @@ export function DragIndicator() {
     return variants[Math.abs(hash) % variants.length];
   };
   
+  // Get the Icon component from the item
+  const Icon = draggedItem.icon;
+  
   return (
     <AnimatePresence>
       <motion.div
@@ -56,7 +59,7 @@ export function DragIndicator() {
         className={`fixed pointer-events-none z-50 flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-md border backdrop-blur-md ${getColorVariant()}`}
       >
         <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-[var(--impulse-text-primary)]">
-          {draggedItem.icon}
+          <Icon className="h-4 w-4" />
         </div>
         
         <span className="text-[var(--impulse-text-primary)] text-sm font-medium whitespace-nowrap">
