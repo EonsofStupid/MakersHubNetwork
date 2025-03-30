@@ -77,6 +77,23 @@ export function NavigationItem({
     
     return colors[Math.abs(hash) % colors.length];
   };
+  
+  // Generate a glow color for hover effects
+  const getGlowColor = () => {
+    const colors = [
+      "rgba(59, 130, 246, 0.6)", // blue
+      "rgba(168, 85, 247, 0.6)",  // purple
+      "rgba(16, 185, 129, 0.6)",  // emerald
+      "rgba(245, 158, 11, 0.6)"   // amber
+    ];
+    
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    return colors[Math.abs(hash) % colors.length];
+  };
 
   // Use our custom drag and drop hook
   const { makeDraggable } = useDragAndDrop({
@@ -96,6 +113,8 @@ export function NavigationItem({
   }, [editMode, id, makeDraggable]);
 
   const colorClass = getColorClass();
+  const glowColor = getGlowColor();
+  
   const content = (
     <motion.div
       ref={itemRef}
@@ -108,12 +127,17 @@ export function NavigationItem({
       whileTap="tap"
       className={cn(
         "nav-item relative overflow-hidden", 
-        isActive ? "active" : "", 
-        editMode ? "draggable" : "",
+        "flex items-center py-2 px-3 rounded-lg my-1 transition-all",
+        "text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-text-primary)]",
+        isActive ? "active bg-[var(--impulse-primary)]/10 text-[var(--impulse-primary)]" : "", 
+        editMode ? "draggable cursor-grab active:cursor-grabbing" : "cursor-pointer",
         className
       )}
       onClick={onClick}
       data-id={id}
+      style={{
+        "--hover-glow-color": glowColor
+      } as React.CSSProperties}
     >
       {/* Edit mode indicator */}
       {editMode && (
@@ -147,7 +171,7 @@ export function NavigationItem({
       {/* Drag handle in edit mode */}
       {editMode && (
         <motion.div 
-          className="nav-item__drag-handle"
+          className="nav-item__drag-handle mr-2 text-[var(--impulse-text-secondary)]"
           variants={{
             rest: { x: -10, opacity: 0 },
             hover: { x: 0, opacity: 0.7 }
@@ -162,30 +186,36 @@ export function NavigationItem({
       {/* Icon with glow effect */}
       {icon && (
         <motion.div 
-          className="nav-item__icon relative"
+          className="nav-item__icon relative flex-shrink-0 mr-3"
           variants={iconMotion}
           initial="rest"
           whileHover="hover"
           animate={isActive ? "hover" : "rest"}
         >
-          {icon}
+          <div className="w-5 h-5 flex items-center justify-center">
+            {icon}
+          </div>
           <motion.div 
-            className="nav-item__icon-glow absolute inset-0 rounded-full bg-primary/20 filter blur-md"
+            className="nav-item__icon-glow absolute inset-0 rounded-full filter blur-md"
             variants={glowMotion}
             initial="rest"
             whileHover="hover"
             animate={isActive ? "hover" : "rest"}
+            style={{ 
+              backgroundColor: isActive ? "var(--impulse-primary)" : "var(--hover-glow-color)",
+              opacity: 0
+            }}
           />
         </motion.div>
       )}
       
       {/* Label */}
-      <span className="nav-item__label font-medium">{label}</span>
+      <span className="nav-item__label font-medium truncate">{label}</span>
       
       {/* Active indicator */}
       {isActive && (
         <motion.span
-          className="ml-auto mr-1"
+          className="ml-auto"
           initial={{ opacity: 0, x: -5 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -5 }}
