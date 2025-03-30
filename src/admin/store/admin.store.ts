@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create, StoreApi } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AdminPermission } from '../types/admin.types';
 import { defaultTopNavShortcuts, defaultDashboardShortcuts } from '@/admin/config/navigation.config';
@@ -107,18 +107,13 @@ export const useAdminStore = create<AdminState>()(
           dragPreview: null,
           dragInfo: null,
         }),
-
       toggleSidebar: () =>
         set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
-
       setActiveSection: (section) => set({ activeSection: section }),
-
       setPinnedDashboardItems: (items) =>
         set({ pinnedDashboardItems: items }),
-
       toggleDarkMode: () =>
         set((state) => ({ isDarkMode: !state.isDarkMode })),
-
       loadPermissions: async (mappedPermissions) => {
         if (get().permissionsLoaded) {
           set({ isLoadingPermissions: false });
@@ -176,7 +171,6 @@ export const useAdminStore = create<AdminState>()(
           });
         }
       },
-
       hasPermission: (permission) => {
         const { permissions } = get();
         return permissions.includes('super_admin:all') || permissions.includes(permission);
@@ -204,7 +198,7 @@ export const useAdminStore = create<AdminState>()(
  * Typed subscribe helper for Zustand stores
  */
 export function subscribeWithSelector<T>(
-  store: any,
+  store: StoreApi<AdminState>,
   selector: (state: AdminState) => T,
   callback: (next: T, prev: T) => void
 ): () => void {
