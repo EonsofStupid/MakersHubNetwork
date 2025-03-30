@@ -8,10 +8,10 @@ import { StateStorage, PersistOptions, StorageValue } from 'zustand/middleware';
 export function createAdminPersistMiddleware<T>(storeName: string): PersistOptions<T, T> {
   // Create a custom storage that syncs with localStorage
   const adminStorage: StateStorage = {
-    getItem: (name: string): string | null => {
+    getItem: (name: string): StorageValue<T> | null => {
       try {
         const data = localStorage.getItem(name);
-        return data;
+        return data ? JSON.parse(data) : null;
       } catch (e) {
         console.warn('Error loading admin state from localStorage:', e);
         return null;
@@ -19,7 +19,7 @@ export function createAdminPersistMiddleware<T>(storeName: string): PersistOptio
     },
     setItem: (name: string, value: string): void => {
       try {
-        localStorage.setItem(name, value);
+        localStorage.setItem(name, JSON.stringify(value));
       } catch (e) {
         console.warn('Error saving admin state to localStorage:', e);
       }
