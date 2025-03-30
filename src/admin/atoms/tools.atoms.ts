@@ -1,5 +1,6 @@
 
 import { atom } from 'jotai';
+import { FrozenZone } from '@/admin/types/tools.types';
 
 // UI state atoms
 export const adminEditModeAtom = atom<boolean>(false);
@@ -17,7 +18,7 @@ export const searchQueryAtom = atom<string>('');
 export const searchResultsAtom = atom<any[]>([]);
 export const effectsPaletteVisibleAtom = atom<boolean>(false);
 export const selectedEffectAtom = atom<string | null>(null);
-export const frozenZonesAtom = atom<string[]>([]);
+export const frozenZonesAtom = atom<FrozenZone[]>([]);
 
 // Drag and drop atoms
 export const isDraggingAtom = atom<boolean>(false);
