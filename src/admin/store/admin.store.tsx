@@ -38,6 +38,10 @@ interface AdminState {
   permissions: AdminPermission[];
   hasPermission: (permission: AdminPermission) => boolean;
   loadPermissions: () => void;
+  
+  // Theme state
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 export const useAdminStore = create<AdminState>()(
@@ -97,6 +101,10 @@ export const useAdminStore = create<AdminState>()(
           ]
         });
       },
+      
+      // Theme state
+      isDarkMode: true,
+      toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
     }),
     {
       name: 'admin-store',
@@ -105,6 +113,7 @@ export const useAdminStore = create<AdminState>()(
         pinnedTopNavItems: state.pinnedTopNavItems,
         dashboardShortcuts: state.dashboardShortcuts,
         isDashboardCollapsed: state.isDashboardCollapsed,
+        isDarkMode: state.isDarkMode,
       }),
     }
   )

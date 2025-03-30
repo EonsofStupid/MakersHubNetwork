@@ -1,4 +1,9 @@
 
+// Import styles first to ensure proper cascade
+import '@/admin/theme/impulse/impulse.css';
+import '@/admin/styles/admin-topnav.css';
+import '@/admin/styles/electric-effects.css';
+
 // Admin components
 export { AdminLayout } from "./components/AdminLayout";
 export { AdminSidebar } from "./components/AdminSidebar";
@@ -30,9 +35,22 @@ export * from "./types/tools.types";
 export * from "./utils/adminUtils";
 export * from "./utils/permissions";
 export * from "./utils/routeUtils";
+export * from "./utils/styles";
 
 // Admin atoms
 export * from "./atoms";
 
 // Admin page
 export { default as AdminPage } from "../pages/Admin";
+
+// Navigation components
+export { AdminTopNav } from "./components/navigation/AdminTopNav";
+
+// UI components
+export { CyberCard } from "./components/ui/CyberCard";
+export { DragIndicator } from "./components/ui/DragIndicator";
+export { AdminTooltip } from "./components/ui/AdminTooltip"; 
+
+// Overlay components
+export { FrozenZonesOverlay } from "./components/overlay/FrozenZones";
+export { SmartOverlay } from "./components/overlay/SmartOverlay";
