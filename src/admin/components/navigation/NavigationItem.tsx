@@ -1,9 +1,10 @@
 
-import React from 'react';
-import { motion, useDragControls, PanInfo } from 'framer-motion';
+import React, { useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useAtom } from 'jotai';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
-import { adminEditModeAtom, dragSourceIdAtom, isDraggingAtom } from '@/admin/atoms/tools.atoms';
+import { adminEditModeAtom, dragSourceIdAtom, isDraggingAtom, dropIndicatorPositionAtom } from '@/admin/atoms/tools.atoms';
+import { cn } from '@/lib/utils';
 
 interface NavigationItemProps {
   id: string;
@@ -16,7 +17,7 @@ interface NavigationItemProps {
   tooltipContent?: React.ReactNode;
 }
 
-export const NavigationItem: React.FC<NavigationItemProps> = ({
+export function NavigationItem({
   id,
   label,
   icon,
@@ -25,36 +26,79 @@ export const NavigationItem: React.FC<NavigationItemProps> = ({
   onClick,
   className = '',
   tooltipContent,
-}) => {
+}: NavigationItemProps) {
   const [editMode] = useAtom(adminEditModeAtom);
   const [isDragging, setIsDragging] = useAtom(isDraggingAtom);
   const [, setDragSourceId] = useAtom(dragSourceIdAtom);
-  const dragControls = useDragControls();
+  const [, setDropPosition] = useAtom(dropIndicatorPositionAtom);
+  const itemRef = useRef<HTMLDivElement>(null);
 
-  const handleDragStart = () => {
-    setDragSourceId(id);
-    setIsDragging(true);
-  };
-
-  const handleDragEnd = (_event: MouseEvent, _info: PanInfo) => {
-    setDragSourceId(null);
-    setIsDragging(false);
-  };
+  // Enable drag and drop only in edit mode
+  useEffect(() => {
+    const element = itemRef.current;
+    if (!element) return;
+    
+    const handleDragStart = (e: DragEvent) => {
+      if (!editMode) {
+        e.preventDefault();
+        return;
+      }
+      
+      setIsDragging(true);
+      setDragSourceId(id);
+      
+      // Set position for drag indicator
+      setDropPosition({ x: e.clientX, y: e.clientY });
+      
+      // Add drag data for compatibility
+      e.dataTransfer?.setData('text/plain', id);
+      
+      // Create a custom drag image (optional)
+      const dragImage = document.createElement('div');
+      dragImage.textContent = label;
+      dragImage.style.position = 'absolute';
+      dragImage.style.top = '-9999px';
+      document.body.appendChild(dragImage);
+      e.dataTransfer?.setDragImage(dragImage, 0, 0);
+      
+      setTimeout(() => {
+        document.body.removeChild(dragImage);
+      }, 0);
+    };
+    
+    const handleDragEnd = () => {
+      setIsDragging(false);
+      setDragSourceId(null);
+      setDropPosition(null);
+    };
+    
+    if (editMode) {
+      element.setAttribute('draggable', 'true');
+      element.addEventListener('dragstart', handleDragStart as EventListener);
+      element.addEventListener('dragend', handleDragEnd);
+    } else {
+      element.removeAttribute('draggable');
+    }
+    
+    return () => {
+      element.removeEventListener('dragstart', handleDragStart as EventListener);
+      element.removeEventListener('dragend', handleDragEnd);
+    };
+  }, [editMode, id, setIsDragging, setDragSourceId, setDropPosition, label]);
 
   const item = (
     <motion.div
+      ref={itemRef}
       layout
-      className={`nav-item ${isActive ? 'active' : ''} ${editMode ? 'draggable' : ''} ${className}`}
+      className={cn(
+        "nav-item", 
+        isActive ? "active" : "", 
+        editMode ? "draggable" : "",
+        className
+      )}
       onClick={onClick}
-      drag={editMode ? true : false}
-      dragControls={dragControls}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      whileDrag={{ scale: 1.05, boxShadow: "0 5px 15px rgba(0, 240, 255, 0.2)" }}
-      dragSnapToOrigin={true}
-      data-id={id}
       transition={{ 
         type: "spring", 
         stiffness: 500, 
@@ -63,6 +107,7 @@ export const NavigationItem: React.FC<NavigationItemProps> = ({
           duration: 0.15
         }
       }}
+      data-id={id}
     >
       {editMode && (
         <motion.div 
@@ -87,7 +132,6 @@ export const NavigationItem: React.FC<NavigationItemProps> = ({
           className="nav-item__drag-handle ml-auto"
           onPointerDown={(e) => {
             e.stopPropagation();
-            dragControls.start(e);
           }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -115,4 +159,4 @@ export const NavigationItem: React.FC<NavigationItemProps> = ({
   }
 
   return item;
-};
+}

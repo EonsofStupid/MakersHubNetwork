@@ -14,9 +14,15 @@ interface UseDragAndDropOptions {
   items: string[];
   onReorder?: (newItems: string[]) => void;
   containerId: string;
+  dragOnlyInEditMode?: boolean;
 }
 
-export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDropOptions) {
+export function useDragAndDrop({ 
+  items, 
+  onReorder, 
+  containerId,
+  dragOnlyInEditMode = true
+}: UseDragAndDropOptions) {
   const [editMode] = useAtom(adminEditModeAtom);
   const [isDragging, setIsDragging] = useAtom(isDraggingAtom);
   const [dragSourceId, setDragSourceId] = useAtom(dragSourceIdAtom);
@@ -33,21 +39,21 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
 
   // Set up global mouse move listener for drag indicator
   useEffect(() => {
-    if (editMode) {
+    if ((dragOnlyInEditMode && editMode) || !dragOnlyInEditMode) {
       window.addEventListener('mousemove', updateCursorPosition);
       return () => window.removeEventListener('mousemove', updateCursorPosition);
     }
-  }, [editMode, updateCursorPosition]);
+  }, [editMode, updateCursorPosition, dragOnlyInEditMode]);
 
   // Reset dragging state when edit mode is toggled off
   useEffect(() => {
-    if (!editMode) {
+    if (dragOnlyInEditMode && !editMode) {
       setIsDragging(false);
       setDragSourceId(null);
       setDragTargetId(null);
       setDropIndicatorPosition(null);
     }
-  }, [editMode, setIsDragging, setDragSourceId, setDragTargetId, setDropIndicatorPosition]);
+  }, [editMode, setIsDragging, setDragSourceId, setDragTargetId, setDropIndicatorPosition, dragOnlyInEditMode]);
 
   // Handle the drop event - reorder items
   const handleItemDrop = useCallback((sourceId: string, targetId: string) => {
@@ -56,8 +62,25 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
     const sourceIndex = items.indexOf(sourceId);
     const targetIndex = items.indexOf(targetId);
     
-    if (sourceIndex === -1 || targetIndex === -1) return;
+    // Add item if it doesn't exist in the target container
+    if (sourceIndex === -1) {
+      // Item doesn't exist in this container, add it
+      const newItems = [...items];
+      newItems.splice(targetIndex !== -1 ? targetIndex : 0, 0, sourceId);
+      onReorder?.(newItems);
+      
+      toast({
+        title: "Item added",
+        description: `Successfully added item to ${containerId}`,
+        variant: "default",
+        duration: 2000
+      });
+      return;
+    }
+    
+    if (targetIndex === -1) return;
 
+    // Reorder existing items
     const newItems = [...items];
     newItems.splice(sourceIndex, 1);
     newItems.splice(targetIndex, 0, sourceId);
@@ -66,11 +89,11 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
     
     toast({
       title: "Item moved",
-      description: `Successfully reordered your shortcuts`,
+      description: `Successfully reordered your shortcuts in ${containerId}`,
       variant: "default",
       duration: 2000
     });
-  }, [items, onReorder, toast]);
+  }, [items, onReorder, toast, containerId]);
 
   // Register a drop zone container
   const registerDropZone = useCallback((element: HTMLElement | null) => {
@@ -78,7 +101,10 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
 
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
-      if (!isDragging || !editMode) return;
+      if (!isDragging || (dragOnlyInEditMode && !editMode)) return;
+      
+      // Add active class to the container
+      element.classList.add('active-drop');
       
       // Find the closest draggable item
       const items = Array.from(element.querySelectorAll('[data-id]'));
@@ -105,20 +131,59 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
         const targetId = (closestItem as HTMLElement).getAttribute('data-id');
         if (targetId && targetId !== dragTargetId) {
           setDragTargetId(targetId);
+          
+          // Add a visual cue to the target item
+          document.querySelectorAll('.drop-target-item').forEach(el => 
+            el.classList.remove('drop-target-item')
+          );
+          closestItem.classList.add('drop-target-item');
         }
+      } else if (items.length === 0) {
+        // If there are no items, we can still drop here
+        setDragTargetId(`${containerId}-empty`);
       }
     };
 
-    const handleDragLeave = () => {
-      setDragTargetId(null);
+    const handleDragLeave = (e: DragEvent) => {
+      // Check if we're actually leaving the container (not just moving between children)
+      if (!element.contains(e.relatedTarget as Node)) {
+        element.classList.remove('active-drop');
+        setDragTargetId(null);
+        
+        // Remove visual cues
+        document.querySelectorAll('.drop-target-item').forEach(el => 
+          el.classList.remove('drop-target-item')
+        );
+      }
     };
 
     const handleDrop = (e: DragEvent) => {
       e.preventDefault();
-      if (dragSourceId && dragTargetId) {
-        handleItemDrop(dragSourceId, dragTargetId);
+      element.classList.remove('active-drop');
+      
+      if (dragSourceId) {
+        if (dragTargetId && dragTargetId !== `${containerId}-empty`) {
+          // Drop on a specific item
+          handleItemDrop(dragSourceId, dragTargetId);
+        } else if (dragTargetId === `${containerId}-empty`) {
+          // Drop in an empty container
+          onReorder?.([...items, dragSourceId]);
+          
+          toast({
+            title: "Item added",
+            description: `Successfully added item to ${containerId}`,
+            variant: "default",
+            duration: 2000
+          });
+        }
       }
       
+      // Remove visual cues
+      document.querySelectorAll('.drop-target-item').forEach(el => 
+        el.classList.remove('drop-target-item')
+      );
+      
+      // Reset drag state
       setIsDragging(false);
       setDragSourceId(null);
       setDragTargetId(null);
@@ -126,12 +191,12 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
     };
 
     element.addEventListener('dragover', handleDragOver as EventListener);
-    element.addEventListener('dragleave', handleDragLeave);
+    element.addEventListener('dragleave', handleDragLeave as EventListener);
     element.addEventListener('drop', handleDrop as EventListener);
 
     return () => {
       element.removeEventListener('dragover', handleDragOver as EventListener);
-      element.removeEventListener('dragleave', handleDragLeave);
+      element.removeEventListener('dragleave', handleDragLeave as EventListener);
       element.removeEventListener('drop', handleDrop as EventListener);
     };
   }, [
@@ -143,7 +208,76 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
     setIsDragging, 
     setDragSourceId, 
     setDropIndicatorPosition,
-    handleItemDrop
+    handleItemDrop,
+    containerId,
+    onReorder,
+    toast,
+    dragOnlyInEditMode
+  ]);
+
+  // Make an item draggable
+  const makeDraggable = useCallback((el: HTMLElement | null, id: string) => {
+    if (!el) return;
+    
+    const handleDragStart = (e: DragEvent) => {
+      if (dragOnlyInEditMode && !editMode) {
+        e.preventDefault();
+        return false;
+      }
+      
+      setIsDragging(true);
+      setDragSourceId(id);
+      
+      // Add visual feedback
+      el.classList.add('dragging');
+      
+      // Set drag image (optional)
+      const dragImage = document.createElement('div');
+      dragImage.textContent = id;
+      dragImage.style.position = 'absolute';
+      dragImage.style.top = '-9999px';
+      document.body.appendChild(dragImage);
+      e.dataTransfer?.setDragImage(dragImage, 0, 0);
+      
+      // Clean up after dragging starts
+      setTimeout(() => {
+        document.body.removeChild(dragImage);
+      }, 0);
+      
+      return true;
+    };
+    
+    const handleDragEnd = () => {
+      setIsDragging(false);
+      setDragSourceId(null);
+      setDragTargetId(null);
+      setDropIndicatorPosition(null);
+      
+      // Remove visual feedback
+      el.classList.remove('dragging');
+      
+      // Remove any lingering visual cues
+      document.querySelectorAll('.drop-target-item').forEach(el => 
+        el.classList.remove('drop-target-item')
+      );
+    };
+    
+    el.setAttribute('draggable', (dragOnlyInEditMode ? editMode : true).toString());
+    el.addEventListener('dragstart', handleDragStart as EventListener);
+    el.addEventListener('dragend', handleDragEnd);
+    
+    return () => {
+      el.removeAttribute('draggable');
+      el.removeEventListener('dragstart', handleDragStart as EventListener);
+      el.removeEventListener('dragend', handleDragEnd);
+    };
+  }, [
+    editMode, 
+    setIsDragging, 
+    setDragSourceId, 
+    setDragTargetId, 
+    setDropIndicatorPosition,
+    dragOnlyInEditMode
   ]);
 
   return {
@@ -151,6 +285,7 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
     dragSourceId,
     dragTargetId,
     registerDropZone,
+    makeDraggable,
     handleDrop: handleItemDrop
   };
 }

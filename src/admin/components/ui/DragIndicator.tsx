@@ -1,46 +1,65 @@
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAtom } from 'jotai';
-import { dropIndicatorPositionAtom, isDraggingAtom } from '@/admin/atoms/tools.atoms';
+import { isDraggingAtom, dropIndicatorPositionAtom, dragSourceIdAtom } from '@/admin/atoms/tools.atoms';
+import { adminNavigationItems } from '@/admin/config/navigation.config';
 
-export const DragIndicator: React.FC = () => {
+export function DragIndicator() {
   const [isDragging] = useAtom(isDraggingAtom);
-  const [position] = useAtom(dropIndicatorPositionAtom);
-
+  const [dropPosition] = useAtom(dropIndicatorPositionAtom);
+  const [dragSourceId] = useAtom(dragSourceIdAtom);
+  
+  if (!isDragging || !dropPosition || !dragSourceId) {
+    return null;
+  }
+  
+  // Find the icon for the dragged item
+  const draggedItem = adminNavigationItems.find(item => item.id === dragSourceId);
+  
   return (
-    <AnimatePresence>
-      {isDragging && position && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          style={{
-            position: 'fixed',
-            left: position.x - 10,
-            top: position.y - 10,
-            width: 20,
-            height: 20,
-            borderRadius: '50%',
-            background: 'var(--impulse-primary)',
-            zIndex: 9999,
-            pointerEvents: 'none',
-          }}
-          transition={{ duration: 0.1 }}
-        >
-          <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-            style={{
-              position: 'absolute',
-              inset: -5,
-              borderRadius: '50%',
-              border: '2px solid var(--impulse-primary)',
-              opacity: 0.7,
-            }}
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      style={{
+        position: 'fixed',
+        left: dropPosition.x + 15,
+        top: dropPosition.y + 15,
+        pointerEvents: 'none',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        background: 'rgba(0, 240, 255, 0.1)',
+        backdropFilter: 'blur(8px)',
+        border: '1px solid rgba(0, 240, 255, 0.3)',
+        boxShadow: '0 0 15px rgba(0, 240, 255, 0.4)',
+        padding: '6px 12px',
+        borderRadius: '6px',
+      }}
+    >
+      {draggedItem?.icon}
+      <span className="text-[var(--impulse-text-primary)] text-sm whitespace-nowrap">
+        {draggedItem?.label}
+      </span>
+      
+      {/* Glow effect */}
+      <motion.div
+        className="absolute inset-0 rounded-md opacity-75"
+        animate={{
+          boxShadow: [
+            '0 0 5px rgba(0, 240, 255, 0.3)',
+            '0 0 15px rgba(0, 240, 255, 0.7)',
+            '0 0 5px rgba(0, 240, 255, 0.3)'
+          ]
+        }}
+        transition={{ 
+          duration: 2, 
+          repeat: Infinity,
+          ease: 'easeInOut'
+        }}
+      />
+    </motion.div>
   );
-};
+}

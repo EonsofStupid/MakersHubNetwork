@@ -2,189 +2,143 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronLeft, 
-  ChevronRight,
-  Edit,
-  X,
-  Home
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
-import { useAdmin } from '@/admin/context/AdminContext';
-import { NavigationItem } from './navigation/NavigationItem';
-import { useToast } from '@/hooks/use-toast';
+import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
+import { scrollbarStyle } from '@/admin/utils/styles';
+import '@/admin/styles/sidebar-navigation.css';
 
-export function AdminSidebar({ collapsed = false, className }: { collapsed?: boolean, className?: string }) {
+export function AdminSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
-  const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
-  
+  const [isEditMode] = useAtom(adminEditModeAtom);
   const { 
     sidebarExpanded, 
-    toggleSidebar,
-    setActiveSection
+    setSidebarExpanded, 
+    activeSection,
+    setActiveSection,
+    permissions,
+    hasPermission
   } = useAdminStore();
-  
-  const { checkPermission } = useAdmin();
-  
-  const isCollapsed = collapsed ? collapsed : !sidebarExpanded;
-  
-  // Get current section from the path
-  const currentPath = location.pathname.split('/').pop() || 'overview';
-  const activeItem = currentPath;
-  
-  // Set active section based on path
+
+  // Set active section based on URL
   useEffect(() => {
-    setActiveSection(currentPath);
-  }, [currentPath, setActiveSection]);
-  
-  // Handle click on navigation item
-  const handleNavigate = (itemId: string, path: string) => {
+    const pathSegments = location.pathname.split('/');
+    const currentSection = pathSegments[pathSegments.length - 1] || 'overview';
+    setActiveSection(currentSection);
+  }, [location.pathname, setActiveSection]);
+
+  // Filter items based on permissions
+  const visibleItems = adminNavigationItems.filter(item => 
+    !item.permission || hasPermission(item.permission)
+  );
+
+  // Handle navigation item click
+  const handleNavClick = (path: string, id: string) => {
     navigate(path);
-    setActiveSection(itemId);
+    setActiveSection(id);
   };
 
-  // Toggle edit mode
-  const handleToggleEditMode = () => {
-    if (isEditMode) {
-      toast({
-        title: "Edit Mode Disabled",
-        description: "You've exited the edit mode for navigation customization.",
-      });
-    } else {
-      toast({
-        title: "Edit Mode Enabled",
-        description: "You can now drag menu items to the top bar or dashboard.",
-        duration: 5000,
-      });
-    }
-    
-    setEditMode(!isEditMode);
-  };
-
-  // Animation variants
-  const sidebarVariants = {
-    expanded: { width: '240px' },
-    collapsed: { width: '4.5rem' }
-  };
-  
   return (
-    <motion.aside
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ 
-        x: 0, 
-        opacity: 1,
-        ...(isCollapsed ? sidebarVariants.collapsed : sidebarVariants.expanded)
-      }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className={cn(
-        "admin-sidebar",
-        "bg-[var(--impulse-bg-overlay)] backdrop-filter backdrop-blur-xl",
-        "border border-[var(--impulse-border-normal)] rounded-lg shadow-sm",
-        isCollapsed && "sidebar-collapsed",
-        className
-      )}
-    >
-      <div className="admin-sidebar__header">
-        {!isCollapsed && (
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={handleToggleEditMode}
-            className={cn(
-              "p-1 rounded-full text-[var(--impulse-text-secondary)]",
-              isEditMode ? "bg-[rgba(0,240,255,0.2)]" : "hover:bg-[rgba(0,240,255,0.2)]"
-            )}
-          >
-            {isEditMode ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Edit className="w-5 h-5" />
-            )}
-          </motion.button>
-        )}
+    <div className={cn(
+      "admin-sidebar rounded-xl border border-[var(--impulse-border-normal)] bg-[var(--impulse-bg-card)] backdrop-blur-md overflow-hidden",
+      sidebarExpanded ? "w-full" : "w-[70px]",
+      isEditMode && "border-[var(--impulse-border-hover)]"
+    )}>
+      <div className="admin-sidebar__header py-4 px-2 flex justify-between items-center border-b border-[var(--impulse-border-normal)]">
+        <AnimatePresence mode="wait">
+          {sidebarExpanded && (
+            <motion.div
+              key="sidebar-title"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="text-sm font-medium text-[var(--impulse-text-primary)] px-4"
+            >
+              Admin Navigation
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={toggleSidebar}
-          className={cn(
-            "p-1 rounded-full hover:bg-[rgba(0,240,255,0.2)] text-[var(--impulse-text-secondary)]",
-            !isCollapsed && "ml-auto"
-          )}
+          onClick={() => setSidebarExpanded(!sidebarExpanded)}
+          className="p-2 rounded-full bg-[var(--impulse-bg-main)] text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors"
         >
           {sidebarExpanded ? (
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
           ) : (
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           )}
         </motion.button>
       </div>
       
-      <div className="admin-sidebar__content">
+      <div 
+        className={cn(
+          "admin-sidebar__content py-4",
+          scrollbarStyle
+        )}
+      >
         <AnimatePresence mode="popLayout">
-          {adminNavigationItems.map(item => {
-            if (!checkPermission(item.permission)) {
-              return null;
-            }
-            
-            return (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <NavigationItem
-                  id={item.id}
-                  icon={item.icon}
-                  label={item.label}
-                  description={item.description}
-                  isActive={activeItem === item.id}
-                  onClick={() => handleNavigate(item.id, item.path)}
-                />
-              </motion.div>
-            );
-          })}
+          {visibleItems.map((item) => (
+            <NavigationItem
+              key={item.id}
+              id={item.id}
+              label={item.label}
+              icon={item.icon}
+              description={item.description}
+              isActive={activeSection === item.id}
+              onClick={() => handleNavClick(item.path, item.id)}
+              tooltipContent={!sidebarExpanded ? item.label : undefined}
+            />
+          ))}
         </AnimatePresence>
         
-        {isEditMode && !isCollapsed && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-4 mx-4 p-3 border border-dashed border-[var(--impulse-border-normal)] rounded-lg text-center"
+        {isEditMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-4 mx-4 p-2 rounded-md bg-[var(--impulse-primary)]/10 border border-[var(--impulse-border-normal)]"
           >
-            <p className="text-xs text-[var(--impulse-text-secondary)] mb-2">
-              Drag menu items to the top navigation or dashboard shortcuts
+            <p className="text-xs text-[var(--impulse-primary)] text-center">
+              {sidebarExpanded ? "Drag items to customize" : ""}
             </p>
-            {isEditMode && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-xs text-[var(--impulse-primary)]"
-              >
-                Edit mode active
-              </motion.p>
-            )}
           </motion.div>
         )}
       </div>
       
-      <div className="admin-sidebar__footer">
-        <NavigationItem
-          id="backToSite"
-          icon={<Home className="w-5 h-5" />}
-          label="Back to Site"
-          onClick={() => navigate('/')}
-        />
+      <div className="admin-sidebar__footer border-t border-[var(--impulse-border-normal)] p-4">
+        <AnimatePresence mode="wait">
+          {sidebarExpanded ? (
+            <motion.div
+              key="sidebar-expanded-footer"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-xs text-[var(--impulse-text-secondary)]"
+            >
+              {isEditMode ? "Edit mode active" : "MakersImpulse Admin"}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="sidebar-collapsed-footer"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex justify-center"
+            >
+              <div className="w-5 h-5 rounded-full bg-[var(--impulse-primary)]/20 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-[var(--impulse-primary)]" />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </motion.aside>
+    </div>
   );
 }
