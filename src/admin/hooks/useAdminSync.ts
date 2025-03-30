@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
-import { useAdminStore } from '@/admin/store/admin.store';
+import { useAdminStore, subscribeWithPrevious } from '@/admin/store/admin.store';
 import { AdminDataService } from '@/admin/services/adminData.service';
 import { useToast } from '@/hooks/use-toast';
 import { useSharedStore } from '@/stores/shared/store';
@@ -148,8 +148,8 @@ export function useAdminSync() {
       }
     };
 
-    // Subscribe to store changes
-    const unsubscribe = adminStore.subscribe(saveDataToDatabase);
+    // Use the new subscribe helper for proper state change tracking
+    const unsubscribe = subscribeWithPrevious(adminStore, saveDataToDatabase);
 
     return () => {
       unsubscribe();

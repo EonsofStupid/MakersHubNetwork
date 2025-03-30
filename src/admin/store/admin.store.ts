@@ -44,12 +44,6 @@ interface AdminState {
   toggleDarkMode: () => void;
 }
 
-// Extend the AdminState to include the subscribe method
-interface AdminStore extends AdminState {
-  getState: () => AdminState;
-  subscribe: (callback: (state: AdminState, prevState: AdminState) => void) => () => void;
-}
-
 // Create the admin store with localStorage persistence
 export const useAdminStore = create<AdminState>()(
   persist(
@@ -181,16 +175,38 @@ export const useAdminStore = create<AdminState>()(
   )
 );
 
-// Cast the store to include the extended interface with subscribe method
-const storeApi = useAdminStore as unknown as AdminStore;
+// Make subscribe method available for external use
+// This ensures useAdminSync can properly subscribe to store changes
+export type AdminStoreType = typeof useAdminStore;
 
-// Implement a better subscribe method that correctly tracks previous state
-storeApi.subscribe = (callback: (state: AdminState, prevState: AdminState) => void) => {
-  let previousState = useAdminStore.getState();
+// Helper function to subscribe to store changes with proper typing
+export function subscribeWithSelector<T>(
+  store: typeof useAdminStore,
+  selector: (state: AdminState) => T,
+  callback: (selectedState: T, previousSelectedState: T) => void
+) {
+  let currentState = selector(store.getState());
   
-  return useAdminStore.subscribe((state) => {
-    const nextState = state;
-    callback(nextState, previousState);
-    previousState = { ...nextState };
+  return store.subscribe((state) => {
+    const nextState = selector(state);
+    if (nextState !== currentState) {
+      const previousState = currentState;
+      currentState = nextState;
+      callback(nextState, previousState);
+    }
   });
-};
+}
+
+// Subscribe to all state changes with previous state tracking
+export function subscribeWithPrevious(
+  store: typeof useAdminStore,
+  callback: (state: AdminState, prevState: AdminState) => void
+) {
+  let previousState = store.getState();
+  
+  return store.subscribe((state) => {
+    const currentState = state;
+    callback(currentState, previousState);
+    previousState = { ...currentState };
+  });
+}

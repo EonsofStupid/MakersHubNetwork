@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
-import { PersistOptions, StateStorage } from "zustand/middleware";
+import { PersistOptions, PersistStorage } from "zustand/middleware";
 
 /**
  * Middleware for syncing admin preferences between localStorage and database
@@ -28,7 +28,7 @@ export function createAdminPersistMiddleware(storeName: string): PersistOptions<
 
     // Custom storage adapter that syncs with Supabase
     storage: {
-      getItem: (name: string): string | null => {
+      getItem: async (name: string): Promise<string | null> => {
         try {
           // First try localStorage
           const value = localStorage.getItem(name);
@@ -39,7 +39,7 @@ export function createAdminPersistMiddleware(storeName: string): PersistOptions<
         }
       },
       
-      setItem: (name: string, value: string): void => {
+      setItem: async (name: string, value: string): Promise<void> => {
         try {
           // Always update localStorage first
           localStorage.setItem(name, value);
@@ -48,14 +48,14 @@ export function createAdminPersistMiddleware(storeName: string): PersistOptions<
         }
       },
       
-      removeItem: (name: string): void => {
+      removeItem: async (name: string): Promise<void> => {
         try {
           localStorage.removeItem(name);
         } catch (error) {
           console.error('Error removing admin preferences:', error);
         }
       },
-    } as StateStorage
+    } as PersistStorage<any>
   };
 }
 
