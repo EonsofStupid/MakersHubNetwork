@@ -1,5 +1,6 @@
 
 import { atom } from 'jotai';
+import { FrozenZone } from "@/admin/types/tools.types";
 
 // Tool drawer state
 export const activeToolAtom = atom<string | null>(null);
@@ -17,3 +18,10 @@ export const exportDialogVisibleAtom = atom<boolean>(false);
 export const searchActiveAtom = atom<boolean>(false);
 export const searchQueryAtom = atom<string>('');
 export const searchResultsAtom = atom<any[]>([]);
+
+// Effects palette state
+export const effectsPaletteVisibleAtom = atom<boolean>(false);
+export const selectedEffectAtom = atom<string | null>(null);
+
+// Frozen zones state
+export const frozenZonesAtom = atom<FrozenZone[]>([]);

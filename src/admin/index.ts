@@ -3,7 +3,6 @@
 export { AdminLayout } from "./components/AdminLayout";
 export { AdminSidebar } from "./components/AdminSidebar";
 export { AdminHeader } from "./components/AdminHeader";
-export { QuickActionBar } from "./components/layout/QuickActionBar";
 export { ImpulseAdminLayout } from "./components/layout/ImpulseAdminLayout";
 export { AdminProvider, useAdmin } from "./context/AdminContext";
 

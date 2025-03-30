@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { 
   Home, 
   ChevronLeft, 
@@ -25,7 +25,7 @@ interface SidebarIconProps {
   active?: boolean;
   expanded?: boolean;
   onClick?: () => void;
-  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDragStart?: () => void;
   isDraggable?: boolean;
   isEditMode?: boolean;
 }
@@ -84,9 +84,13 @@ function SidebarIcon({
     }
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+  const dragControls = useDragControls();
+
+  // Custom drag handler for framer-motion
+  const handleDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    dragControls.start(event);
     if (onDragStart) {
-      onDragStart(e);
+      onDragStart();
     }
   };
 
@@ -102,9 +106,9 @@ function SidebarIcon({
               active ? "bg-[rgba(0,240,255,0.2)] text-[var(--impulse-text-accent)]" : 
                       "text-[var(--impulse-text-secondary)] hover:bg-[rgba(0,240,255,0.1)]"
             )}
-            draggable={isDraggable}
-            onDragStart={handleDragStart}
-            onClick={onClick}
+            drag={isDraggable && isEditMode}
+            dragControls={dragControls}
+            onPointerDown={handleDragStart}
             initial="initial"
             whileHover="hover"
             whileTap="tap"
@@ -177,30 +181,24 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
   
   const isCollapsed = collapsed ? collapsed : !sidebarExpanded;
   
-  const currentPath = location.pathname;
-  const activeItem = currentPath.split('/').pop() || 'overview';
+  const currentPath = location.pathname.split('/').pop() || 'overview';
+  const activeItem = currentPath;
   
   const handleIconClick = (path: string) => {
     navigate(path);
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
-    e.dataTransfer.setData('text/plain', id);
-    e.dataTransfer.effectAllowed = 'move';
+  const handleDragStart = (id: string) => {
     setDragSource(id);
-
-    // Create a ghost/preview image for the drag operation
-    const dragPreview = document.createElement('div');
-    dragPreview.className = 'bg-[var(--impulse-bg-overlay)] backdrop-blur-lg p-2 rounded shadow-lg border border-[var(--impulse-primary)]';
     
+    // Create custom DOM for drag image
     const item = adminNavigationItems.find(item => item.id === id);
     if (item) {
-      dragPreview.textContent = item.label;
-      document.body.appendChild(dragPreview);
-      e.dataTransfer.setDragImage(dragPreview, 20, 20);
-      setTimeout(() => {
-        document.body.removeChild(dragPreview);
-      }, 0);
+      toast({
+        title: "Dragging Item",
+        description: `You're dragging ${item.label}. Drop it in a target area.`,
+        duration: 3000,
+      });
     }
   };
 
@@ -277,7 +275,7 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
                     active={activeItem === item.id}
                     expanded={!isCollapsed}
                     onClick={() => handleIconClick(item.path)}
-                    onDragStart={(e) => handleDragStart(e, item.id)}
+                    onDragStart={() => handleDragStart(item.id)}
                     isDraggable={true}
                     isEditMode={isEditMode}
                   />
