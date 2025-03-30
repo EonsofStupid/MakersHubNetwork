@@ -17,14 +17,6 @@
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--impulse-border-normal);
   transition: all 0.3s ease;
-  clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
-  transform-origin: center top;
-}
-
-/* Trapezoid animation for top nav */
-.admin-topnav-container:hover .admin-topnav {
-  clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
-  border-bottom-color: var(--impulse-primary);
 }
 
 /* Top nav shortcuts container */
