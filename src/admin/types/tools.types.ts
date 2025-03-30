@@ -1,6 +1,4 @@
 
-// Admin tools types
-
 export interface FrozenZone {
   id: string;
   name: string;
@@ -8,18 +6,10 @@ export interface FrozenZone {
   isLocked: boolean;
 }
 
-export interface AdminTool {
-  id: string;
-  name: string;
-  icon: string;
-  description: string;
-  shortcut?: string;
-  permission: string;
-}
-
-export interface QuickAction {
-  id: string;
-  icon: string;
-  tooltip: string;
-  path: string;
+export interface ToolsState {
+  activeToolName: string | null;
+  isEditModeActive: boolean;
+  activePalettes: string[];
+  selectedEffect: string | null;
+  frozenZones: FrozenZone[];
 }

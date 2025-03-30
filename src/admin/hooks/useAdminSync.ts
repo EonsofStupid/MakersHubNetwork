@@ -49,8 +49,8 @@ export function useAdminSync() {
 
           Object.entries(storeData).forEach(([key, value]) => {
             if (value !== undefined && value !== null) {
-              // @ts-expect-error dynamic key
-              if (adminStore[key] !== value) adminStore.setState({ [key]: value });
+              // Update the store with dynamic keys
+              adminStore.setState({ [key]: value } as Partial<AdminState>);
             }
           });
 
