@@ -1,6 +1,11 @@
 
-import { StateStorage, PersistOptions } from 'zustand/middleware';
+import { PersistOptions } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
+
+type StorageValue<T> = {
+  state: T;
+  version?: number;
+};
 
 /**
  * Creates a custom Zustand middleware for persisting state
@@ -8,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export function createAdminPersistMiddleware<T>(storeName: string): PersistOptions<T, T> {
   // Create custom state storage
-  const customStorage: StateStorage = {
+  const storage = {
     getItem: async (name: string): Promise<string | null> => {
       // First try to get from localStorage for fast initial load
       const localValue = localStorage.getItem(name);
@@ -103,28 +108,46 @@ export function createAdminPersistMiddleware<T>(storeName: string): PersistOptio
   
   return {
     name: storeName,
-    storage: customStorage,
-    // Only persist specific fields
+    storage: {
+      getItem: async (name) => {
+        const value = await storage.getItem(name);
+        if (!value) return null;
+        
+        try {
+          // Convert string to StorageValue<T>
+          const parsed = JSON.parse(value);
+          return { state: parsed };
+        } catch (e) {
+          console.error('Error parsing persisted state:', e);
+          return null;
+        }
+      },
+      setItem: async (name, value) => {
+        await storage.setItem(name, JSON.stringify(value.state));
+      },
+      removeItem: async (name) => {
+        await storage.removeItem(name);
+      }
+    },
     partialize: (state) => {
-      const { 
-        sidebarExpanded, 
-        activeSection, 
-        adminTheme, 
-        isDarkMode, 
-        showLabels,
-        dashboardShortcuts, 
-        pinnedTopNavItems 
-      } = state as any;
+      const keysToSave = [
+        'sidebarExpanded',
+        'activeSection',
+        'adminTheme',
+        'isDarkMode',
+        'showLabels',
+        'dashboardShortcuts',
+        'pinnedTopNavItems'
+      ];
       
-      return {
-        sidebarExpanded,
-        activeSection,
-        adminTheme,
-        isDarkMode,
-        showLabels,
-        dashboardShortcuts,
-        pinnedTopNavItems
-      };
+      const partialState = Object.entries(state as object).reduce((acc, [key, value]) => {
+        if (keysToSave.includes(key)) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
+      return partialState as T;
     },
   };
 }

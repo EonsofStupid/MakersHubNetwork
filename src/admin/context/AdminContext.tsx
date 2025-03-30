@@ -1,105 +1,87 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { useAdminDataSync } from '@/admin/services/adminData.service';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
+import { useToast } from '@/hooks/use-toast';
 import { AdminPermission } from '@/admin/types/admin.types';
 
 interface AdminContextProps {
+  hasAdminAccess: boolean;
   isLoading: boolean;
-  isEditMode: boolean;
-  setEditMode: (isEditMode: boolean) => void;
+  initializeAdmin: () => void;
   checkPermission: (permission: AdminPermission) => boolean;
-  syncPreferences: () => void;
-  isSyncingPreferences: boolean;
 }
 
 const AdminContext = createContext<AdminContextProps>({
-  isLoading: true,
-  isEditMode: false,
-  setEditMode: () => {},
-  checkPermission: () => false,
-  syncPreferences: () => {},
-  isSyncingPreferences: false,
+  hasAdminAccess: false,
+  isLoading: false,
+  initializeAdmin: () => {},
+  checkPermission: () => false
 });
 
 export const useAdmin = () => useContext(AdminContext);
 
-export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { toast } = useToast();
-  const { user, isLoaded: authLoaded } = useAuthStore();
+interface AdminProviderProps {
+  children: ReactNode;
+}
+
+export const AdminProvider = ({ children }: AdminProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
+  const { roles, status } = useAuthStore();
+  const { toast } = useToast();
   
-  const { 
-    isEditMode, 
-    setEditMode, 
-    hasPermission,
-    loadPermissions,
-    sidebarExpanded,
-    activeSection,
-    adminTheme,
-    isDarkMode,
-    dashboardShortcuts,
-    pinnedTopNavItems
-  } = useAdminStore();
+  // Check if user has admin access
+  const hasAdminAccess = roles?.includes('admin') || roles?.includes('super_admin');
   
-  // Sync admin data with the database
-  const { isSyncing } = useAdminDataSync({
-    sidebarExpanded,
-    activeSection,
-    adminTheme,
-    isDarkMode,
-    dashboardShortcuts,
-    pinnedTopNavItems
-  }, (data) => {
-    console.log('Admin data loaded from DB:', data);
-  });
-  
-  // Load permissions when auth is loaded
-  useEffect(() => {
-    const initialize = async () => {
-      if (!authLoaded) return;
-      
-      try {
-        setIsLoading(true);
-        await loadPermissions();
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Failed to initialize admin context:', error);
-        toast({
-          title: 'Admin initialization failed',
-          description: 'Could not load admin permissions',
-          variant: 'destructive',
-        });
-        setIsLoading(false);
-      }
-    };
+  // Check if user has a specific permission
+  const checkPermission = (permission: AdminPermission): boolean => {
+    // Basic admin access check
+    if (permission === 'admin:access') {
+      return hasAdminAccess;
+    }
     
-    initialize();
-  }, [authLoaded, loadPermissions, toast]);
-  
-  // Function to manually sync preferences
-  const syncPreferences = () => {
-    console.log('Manually syncing preferences...');
-    // The useAdminDataSync hook will automatically handle syncing
-    toast({
-      title: 'Preferences synced',
-      description: 'Your admin preferences have been saved to the cloud',
-    });
+    // Super admins have all permissions
+    if (roles?.includes('super_admin')) {
+      return true;
+    }
+    
+    // For specific permissions, we would check against a more detailed permissions system
+    // For now, we'll assume admin users have all basic permissions
+    return hasAdminAccess;
   };
   
-  const contextValue: AdminContextProps = {
+  // Initialize admin functionality
+  const initializeAdmin = () => {
+    try {
+      // Additional initialization logic would go here
+      // For now, just setting loading to false
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error initializing admin:', error);
+      toast({
+        title: 'Admin Initialization Error',
+        description: 'There was a problem loading the admin panel.',
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+    }
+  };
+  
+  // Auto-initialize on mount if authenticated
+  React.useEffect(() => {
+    if (status === 'authenticated') {
+      setIsLoading(false);
+    }
+  }, [status]);
+  
+  const value = {
+    hasAdminAccess,
     isLoading,
-    isEditMode,
-    setEditMode,
-    checkPermission: hasPermission,
-    syncPreferences,
-    isSyncingPreferences: isSyncing,
+    initializeAdmin,
+    checkPermission
   };
   
   return (
-    <AdminContext.Provider value={contextValue}>
+    <AdminContext.Provider value={value}>
       {children}
     </AdminContext.Provider>
   );
