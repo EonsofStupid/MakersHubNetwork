@@ -1,6 +1,6 @@
 
 import { atom } from 'jotai';
-import { FrozenZone } from '@/admin/types/tools.types';
+import { FrozenZone, CyberEffect, AdminNotification, DragAndDropItem } from '@/admin/types/tools.types';
 
 // UI state atoms
 export const adminEditModeAtom = atom<boolean>(false);
@@ -29,3 +29,19 @@ export const dropIndicatorPositionAtom = atom<{ x: number; y: number } | null>(n
 // Theme atoms
 export const darkModeAtom = atom<boolean>(false);
 export const selectedThemeAtom = atom<string>('cyberpunk');
+
+// Effect atoms
+export const cyberEffectVariantsAtom = atom<string[]>([
+  'pulse',
+  'glitch',
+  'data-stream',
+  'energy-wave',
+  'matrix-rain'
+]);
+
+export const cyberColorVariantsAtom = atom<string[]>([
+  'var(--impulse-primary)',
+  '#FF2D6E',
+  '#7B61FF',
+  '#00FFAA'
+]);

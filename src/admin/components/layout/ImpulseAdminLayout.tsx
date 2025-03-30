@@ -10,11 +10,9 @@ import { DragIndicator } from '@/admin/components/ui/DragIndicator';
 import { motion } from 'framer-motion';
 import { AdminPermission } from '@/admin/types/admin.types';
 
-// Import our cyberpunk style sheets
-import '@/admin/styles/cyber-effects.css';
+// Import our main theme styles - consolidated
+import '@/admin/theme/impulse/impulse.css';
 import '@/admin/styles/electric-effects.css';
-import '@/admin/theme/impulse/impulse-admin.css';
-import '@/admin/theme/impulse/impulse-theme.css';
 
 interface ImpulseAdminLayoutProps {
   children: React.ReactNode;
@@ -84,7 +82,7 @@ export function ImpulseAdminLayout({
         
         {/* Left sidebar */}
         <div className={cn(
-          "impulse-sidebar transition-all z-10 electric-background", // Added electric-background
+          "impulse-sidebar transition-all z-10 electric-background",
           sidebarExpanded ? "w-60" : "w-16"
         )}>
           <AdminSidebar />
@@ -94,7 +92,7 @@ export function ImpulseAdminLayout({
         <main className={cn(
           "impulse-main flex-1 p-6 transition-all z-10",
           sidebarExpanded ? "ml-60" : "ml-16",
-          "apple-glass backdrop-blur-xl"
+          "glassmorphism backdrop-blur-xl"
         )}>
           {/* Editable indicator in edit mode */}
           {isEditMode && (
@@ -119,7 +117,7 @@ export function ImpulseAdminLayout({
             </motion.div>
           ) : (
             <div className="flex items-center justify-center h-full">
-              <div className="p-6 rounded-xl glass-panel text-center">
+              <div className="p-6 rounded-xl glassmorphism text-center">
                 <h3 className="text-xl font-semibold mb-2">Permission Required</h3>
                 <p className="text-muted-foreground">
                   You need {requiresPermission} permission to access this page.

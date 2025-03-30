@@ -17,13 +17,14 @@
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--impulse-border-normal);
   transition: all 0.3s ease;
-  clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+  /* Reduced slant angle by 40% */
+  clip-path: polygon(0 0, 100% 0, 97% 100%, 3% 100%);
   transform-origin: center top;
 }
 
-/* Trapezoid animation for top nav */
+/* Trapezoid animation for top nav - also reduced by 40% */
 .admin-topnav-container:hover .admin-topnav {
-  clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+  clip-path: polygon(0 0, 100% 0, 96% 100%, 4% 100%);
   border-bottom-color: var(--impulse-primary);
 }
 

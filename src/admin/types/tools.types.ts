@@ -46,3 +46,12 @@ export interface AdminNotification {
   read: boolean;
   type: 'info' | 'warning' | 'error' | 'success';
 }
+
+// Dashboard shortcut type (consolidated from previous type)
+export interface DashboardShortcut {
+  id: string;
+  label: string;
+  path: string;
+  icon: React.ComponentType;
+  description?: string;
+}
