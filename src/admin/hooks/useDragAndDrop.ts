@@ -134,14 +134,12 @@ export function useDragAndDrop({
           
           // Add a visual cue to the target item
           document.querySelectorAll('.drop-target-item').forEach(el => {
-            if (el instanceof HTMLElement) {
-              el.classList.remove('drop-target-item');
+            if (el instanceof Element) {
+              (el as HTMLElement).classList.remove('drop-target-item');
             }
           });
           
-          if (closestItem instanceof HTMLElement) {
-            closestItem.classList.add('drop-target-item');
-          }
+          (closestItem as HTMLElement).classList.add('drop-target-item');
         }
       } else if (items.length === 0) {
         // If there are no items, we can still drop here
@@ -164,8 +162,8 @@ export function useDragAndDrop({
       
       // Remove visual cues
       document.querySelectorAll('.drop-target-item').forEach(el => {
-        if (el instanceof HTMLElement) {
-          el.classList.remove('drop-target-item');
+        if (el instanceof Element) {
+          (el as HTMLElement).classList.remove('drop-target-item');
         }
       });
     };
@@ -193,8 +191,8 @@ export function useDragAndDrop({
       
       // Remove visual cues
       document.querySelectorAll('.drop-target-item').forEach(el => {
-        if (el instanceof HTMLElement) {
-          el.classList.remove('drop-target-item');
+        if (el instanceof Element) {
+          (el as HTMLElement).classList.remove('drop-target-item');
         }
       });
       
@@ -274,8 +272,8 @@ export function useDragAndDrop({
       
       // Remove any lingering visual cues
       document.querySelectorAll('.drop-target-item').forEach(el => {
-        if (el instanceof HTMLElement) {
-          el.classList.remove('drop-target-item');
+        if (el instanceof Element) {
+          (el as HTMLElement).classList.remove('drop-target-item');
         }
       });
     };
