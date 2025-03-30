@@ -6,6 +6,18 @@ export const adminEditModeAtom = atom<boolean>(false);
 export const sidebarExpandedAtom = atom<boolean>(true);
 export const showLabelsAtom = atom<boolean>(true);
 export const activePageAtom = atom<string>('dashboard');
+export const activeToolAtom = atom<string | null>(null);
+export const toolsVisibleAtom = atom<boolean>(false);
+export const settingsOpenAtom = atom<boolean>(false);
+export const activeSettingsCategoryAtom = atom<string>('general');
+export const importDialogVisibleAtom = atom<boolean>(false);
+export const exportDialogVisibleAtom = atom<boolean>(false);
+export const searchActiveAtom = atom<boolean>(false);
+export const searchQueryAtom = atom<string>('');
+export const searchResultsAtom = atom<any[]>([]);
+export const effectsPaletteVisibleAtom = atom<boolean>(false);
+export const selectedEffectAtom = atom<string | null>(null);
+export const frozenZonesAtom = atom<string[]>([]);
 
 // Drag and drop atoms
 export const isDraggingAtom = atom<boolean>(false);
