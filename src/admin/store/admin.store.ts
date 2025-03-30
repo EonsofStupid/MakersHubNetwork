@@ -44,6 +44,7 @@ export interface AdminState {
   setDragTarget: (target: string | null) => void;
   toggleDarkMode: () => void;
   toggleEditMode: () => void;
+  setDashboardCollapsed: (collapsed: boolean) => void;
 }
 
 export const useAdminStore = create<AdminState>()(
@@ -99,6 +100,9 @@ export const useAdminStore = create<AdminState>()(
         
       toggleEditMode: () =>
         set((state) => ({ isEditMode: !state.isEditMode })),
+        
+      setDashboardCollapsed: (collapsed) =>
+        set({ isDashboardCollapsed: collapsed }),
 
       loadPermissions: async (mappedPermissions) => {
         if (get().permissionsLoaded) {

@@ -1,146 +1,255 @@
 
-/* Impulse Admin CSS - Cyberpunk theme */
+/* Impulse Admin CSS - Main Theme */
 
-.impulse-admin-root {
-  --impulse-primary: #00F0FF;
-  --impulse-secondary: #FF2D6E;
-  --impulse-accent: #FF9D00;
-  
-  --impulse-bg-main: #12121A;
-  --impulse-bg-overlay: rgba(22, 24, 32, 0.9);
-  --impulse-bg-card: rgba(28, 32, 42, 0.8);
-  
-  --impulse-text-primary: #F6F6F7;
-  --impulse-text-secondary: rgba(255, 255, 255, 0.7);
-  --impulse-text-accent: var(--impulse-primary);
-  
-  --impulse-border-normal: rgba(0, 240, 255, 0.2);
-  --impulse-border-hover: rgba(0, 240, 255, 0.4);
-  --impulse-border-active: rgba(0, 240, 255, 0.6);
-  
-  --impulse-glow-primary: 0 0 15px rgba(0, 240, 255, 0.5);
-  --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.5);
-  
-  background-color: var(--impulse-bg-main);
-  color: var(--impulse-text-primary);
+/* Core layout */
+.impulse-admin-layout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
 }
 
-/* Quick Action Bar */
-.impulse-quick-action {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--impulse-bg-overlay);
-  border: 1px solid var(--impulse-border-normal);
-  border-radius: 8px;
-  color: var(--impulse-text-primary);
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+/* Glowing effects */
+.impulse-glow {
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+  transition: box-shadow 0.3s ease;
 }
 
-.impulse-quick-action:hover {
-  border-color: var(--impulse-border-hover);
-  box-shadow: var(--impulse-glow-primary);
+.impulse-glow:hover {
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
 }
 
-/* Admin layout enhancements */
-.admin-impulse-layout {
+/* Cyber text effects */
+.cyber-text {
   position: relative;
+  display: inline-block;
 }
 
-/* Frozen zones */
-.impulse-frozen-zone {
-  position: relative;
-  border: 2px dashed var(--impulse-border-normal);
-}
-
-.impulse-frozen-zone::before {
-  content: "🔒";
+.cyber-text::before {
+  content: attr(data-text);
   position: absolute;
-  top: -10px;
-  right: -10px;
-  background-color: var(--impulse-bg-overlay);
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
+  left: -2px;
+  text-shadow: 2px 0 var(--impulse-primary);
+  top: 0;
+  color: var(--impulse-text-primary);
+  background: var(--impulse-bg-main);
+  overflow: hidden;
+  clip: rect(0, 900px, 0, 0);
+  animation: cyber-text-1 3s infinite linear alternate-reverse;
 }
 
-/* Drag and drop helpers */
-.impulse-drop-zone {
-  border: 2px dashed var(--impulse-border-hover);
-  background-color: rgba(0, 240, 255, 0.05);
+.cyber-text::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 2px;
+  text-shadow: -2px 0 var(--impulse-secondary);
+  top: 0;
+  color: var(--impulse-text-primary);
+  background: var(--impulse-bg-main);
+  overflow: hidden;
+  clip: rect(0, 900px, 0, 0);
+  animation: cyber-text-2 6s infinite linear alternate-reverse;
 }
 
-.drag-target-highlight {
+@keyframes cyber-text-1 {
+  0% {
+    clip: rect(45px, 9999px, 56px, 0);
+  }
+  5% {
+    clip: rect(83px, 9999px, 88px, 0);
+  }
+  10% {
+    clip: rect(91px, 9999px, 97px, 0);
+  }
+  15% {
+    clip: rect(26px, 9999px, 35px, 0);
+  }
+  20% {
+    clip: rect(67px, 9999px, 71px, 0);
+  }
+  25% {
+    clip: rect(17px, 9999px, 26px, 0);
+  }
+  30% {
+    clip: rect(75px, 9999px, 85px, 0);
+  }
+  35% {
+    clip: rect(84px, 9999px, 95px, 0);
+  }
+  40% {
+    clip: rect(32px, 9999px, 39px, 0);
+  }
+  45% {
+    clip: rect(67px, 9999px, 76px, 0);
+  }
+  50% {
+    clip: rect(7px, 9999px, 12px, 0);
+  }
+  55% {
+    clip: rect(43px, 9999px, 50px, 0);
+  }
+  60% {
+    clip: rect(36px, 9999px, 45px, 0);
+  }
+  65% {
+    clip: rect(94px, 9999px, 99px, 0);
+  }
+  70% {
+    clip: rect(34px, 9999px, 44px, 0);
+  }
+  75% {
+    clip: rect(93px, 9999px, 98px, 0);
+  }
+  80% {
+    clip: rect(26px, 9999px, 35px, 0);
+  }
+  85% {
+    clip: rect(67px, 9999px, 72px, 0);
+  }
+  90% {
+    clip: rect(67px, 9999px, 78px, 0);
+  }
+  95% {
+    clip: rect(13px, 9999px, 19px, 0);
+  }
+  100% {
+    clip: rect(53px, 9999px, 62px, 0);
+  }
+}
+
+@keyframes cyber-text-2 {
+  0% {
+    clip: rect(14px, 9999px, 22px, 0);
+  }
+  5% {
+    clip: rect(67px, 9999px, 72px, 0);
+  }
+  10% {
+    clip: rect(37px, 9999px, 46px, 0);
+  }
+  15% {
+    clip: rect(83px, 9999px, 88px, 0);
+  }
+  20% {
+    clip: rect(89px, 9999px, 95px, 0);
+  }
+  25% {
+    clip: rect(3px, 9999px, 9px, 0);
+  }
+  30% {
+    clip: rect(62px, 9999px, 67px, 0);
+  }
+  35% {
+    clip: rect(65px, 9999px, 70px, 0);
+  }
+  40% {
+    clip: rect(17px, 9999px, 22px, 0);
+  }
+  45% {
+    clip: rect(13px, 9999px, 23px, 0);
+  }
+  50% {
+    clip: rect(42px, 9999px, 49px, 0);
+  }
+  55% {
+    clip: rect(67px, 9999px, 72px, 0);
+  }
+  60% {
+    clip: rect(93px, 9999px, 99px, 0);
+  }
+  65% {
+    clip: rect(28px, 9999px, 33px, 0);
+  }
+  70% {
+    clip: rect(57px, 9999px, 63px, 0);
+  }
+  75% {
+    clip: rect(23px, 9999px, 29px, 0);
+  }
+  80% {
+    clip: rect(46px, 9999px, 51px, 0);
+  }
+  85% {
+    clip: rect(21px, 9999px, 27px, 0);
+  }
+  90% {
+    clip: rect(84px, 9999px, 94px, 0);
+  }
+  95% {
+    clip: rect(7px, 9999px, 14px, 0);
+  }
+  100% {
+    clip: rect(71px, 9999px, 77px, 0);
+  }
+}
+
+/* Glass morphism */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Data line effect */
+.data-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.data-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 150%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--impulse-primary), transparent);
+  animation: data-line-animation 3s linear infinite;
+}
+
+@keyframes data-line-animation {
+  0% {
+    left: -150%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Pulse effects */
+.pulse-effect {
   position: relative;
 }
 
-.drag-target-highlight::after {
-  content: 'Drop here';
+.pulse-effect::before {
+  content: '';
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 240, 255, 0.1);
-  border: 2px dashed var(--impulse-border-active);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  opacity: 0;
-  animation: pulse-visibility 2s infinite ease-in-out;
-  pointer-events: none;
-}
-
-@keyframes pulse-visibility {
-  0%, 100% { opacity: 0.1; }
-  50% { opacity: 0.3; }
-}
-
-/* Animation effects */
-@keyframes impulse-pulse {
-  0% { opacity: 0.7; }
-  50% { opacity: 1; }
-  100% { opacity: 0.7; }
-}
-
-.impulse-pulse {
-  animation: impulse-pulse 2s infinite ease-in-out;
-}
-
-@keyframes impulse-shimmer {
-  0% { background-position: -100% 0; }
-  100% { background-position: 100% 0; }
-}
-
-.impulse-shimmer {
+  border-radius: inherit;
+  padding: 2px;
   background: linear-gradient(
-    to right,
-    rgba(0, 240, 255, 0) 0%,
-    rgba(0, 240, 255, 0.3) 50%,
-    rgba(0, 240, 255, 0) 100%
+    45deg,
+    var(--impulse-primary),
+    var(--impulse-secondary),
+    var(--impulse-primary)
   );
-  background-size: 200% 100%;
-  animation: impulse-shimmer 2s infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  animation: pulse-border 2s ease infinite;
 }
 
-/* Admin overlay tools */
-.admin-overlay-tool {
-  background-color: var(--impulse-bg-overlay);
-  border: 1px solid var(--impulse-border-normal);
-  border-radius: 8px;
-  padding: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Improved focus states */
-.impulse-focus:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--impulse-primary);
+@keyframes pulse-border {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
