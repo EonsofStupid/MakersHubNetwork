@@ -77,6 +77,32 @@
   background-color: rgba(0, 240, 255, 0.05);
 }
 
+.drag-target-highlight {
+  position: relative;
+}
+
+.drag-target-highlight::after {
+  content: 'Drop here';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 240, 255, 0.1);
+  border: 2px dashed var(--impulse-border-active);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  opacity: 0;
+  animation: pulse-visibility 2s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes pulse-visibility {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.3; }
+}
+
 /* Animation effects */
 @keyframes impulse-pulse {
   0% { opacity: 0.7; }

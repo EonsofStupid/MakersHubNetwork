@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +7,7 @@ import { useAdmin } from "@/admin/context/AdminContext";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { useAdminSync } from "@/admin/hooks/useAdminSync";
 import { SyncIndicator } from "@/components/admin/SyncIndicator";
+import { DragIndicator } from "@/admin/components/ui/DragIndicator";
 
 // Import admin theme styles
 import "@/admin/styles/admin-core.css";
@@ -19,7 +19,7 @@ export default function Admin() {
   const { toast } = useToast();
   const { hasAdminAccess, isLoading, initializeAdmin } = useAdmin();
   const [hasInitialized, setHasInitialized] = useState(false);
-  const { loadPermissions } = useAdminStore();
+  const { loadPermissions, dragSource } = useAdminStore();
   
   // Use admin sync hook to keep database and localStorage in sync
   useAdminSync();
@@ -67,6 +67,7 @@ export default function Admin() {
 
   return (
     <ErrorBoundary>
+      {dragSource && <DragIndicator />}
       <div className="fixed bottom-4 right-4 z-50 bg-background/90 border border-border/30 backdrop-blur-md py-1 px-3 rounded-full shadow-md">
         <SyncIndicator />
       </div>

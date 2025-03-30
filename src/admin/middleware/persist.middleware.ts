@@ -1,7 +1,8 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
-import { PersistOptions, StorageValue } from "zustand/middleware";
+import { PersistOptions, StorageValue, PersistStorage } from "zustand/middleware";
 
 /**
  * Middleware for syncing admin preferences between localStorage and database
@@ -34,7 +35,7 @@ export function createAdminPersistMiddleware(storeName: string): PersistOptions<
 
     // Zustand-compatible localStorage adapter
     storage: {
-      getItem: (name: string): StorageValue<any> | null => {
+      getItem: (name: string): StorageValue<any> | Promise<StorageValue<any> | null> | null => {
         try {
           const value = localStorage.getItem(name);
           return value ? JSON.parse(value) : null;
@@ -44,7 +45,7 @@ export function createAdminPersistMiddleware(storeName: string): PersistOptions<
         }
       },
 
-      setItem: (name: string, value: StorageValue<any>): void => {
+      setItem: (name: string, value: StorageValue<any>): void | Promise<void> => {
         try {
           localStorage.setItem(name, JSON.stringify(value));
         } catch (error) {
@@ -52,7 +53,7 @@ export function createAdminPersistMiddleware(storeName: string): PersistOptions<
         }
       },
 
-      removeItem: (name: string): void => {
+      removeItem: (name: string): void | Promise<void> => {
         try {
           localStorage.removeItem(name);
         } catch (error) {
