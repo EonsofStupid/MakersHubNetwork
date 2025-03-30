@@ -1,89 +1,163 @@
 
-/* Admin Top Navigation Styles */
+/* Admin Top Navigation Bar Styles */
+
 .admin-topnav-container {
-  display: flex;
-  flex-direction: column;
+  position: fixed;
+  width: 100%;
+  z-index: 40;
 }
 
 .admin-topnav {
-  position: relative;
-  z-index: 40;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-.admin-topnav::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    rgba(0, 240, 255, 0),
-    rgba(0, 240, 255, 0.4) 50%,
-    rgba(0, 240, 255, 0)
-  );
-  pointer-events: none;
-}
-
-.admin-topnav-shortcuts {
-  min-height: 40px;
-  min-width: 200px;
-  border: 1px dashed transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  height: 3.5rem;
+  background-color: var(--impulse-bg-overlay);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--impulse-border-normal);
   transition: all 0.3s ease;
 }
 
-.admin-topnav-shortcuts:hover {
-  border-color: var(--impulse-border-hover);
+/* Top nav shortcuts container */
+.admin-topnav-shortcuts {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 1rem;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
 }
 
-/* Edit mode styles */
-.edit-mode .admin-topnav-shortcuts {
-  border-color: var(--impulse-border-normal);
+.admin-topnav-shortcuts.edit-mode-highlight {
+  border: 1px dashed var(--impulse-border-hover);
+}
+
+.admin-topnav-shortcuts.edit-mode-highlight:hover {
+  border-color: var(--impulse-primary);
   background-color: rgba(0, 240, 255, 0.05);
 }
 
-.edit-mode-highlight {
-  border: 1px dashed var(--impulse-border-active);
-  background-color: rgba(0, 240, 255, 0.05);
-  animation: pulse-border 2s infinite;
-}
-
-@keyframes pulse-border {
-  0%, 100% { border-color: var(--impulse-border-normal); }
-  50% { border-color: var(--impulse-primary); }
-}
-
-/* Top nav item animations */
-@keyframes highlight-glow {
-  0% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.3); }
-  50% { box-shadow: 0 0 15px rgba(0, 240, 255, 0.7); }
-  100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.3); }
-}
-
+/* Top nav item styles */
 .admin-topnav-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.admin-topnav-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle at center, rgba(0, 240, 255, 0.3) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.admin-topnav-item:hover::before {
+  opacity: 0.5;
+}
+
+/* When in edit mode */
+.edit-mode .admin-topnav-shortcuts {
+  border: 1px dashed var(--impulse-border-hover);
+  background-color: rgba(0, 240, 255, 0.05);
+}
+
+/* When shortcut container is active drop target */
+.admin-topnav-shortcuts.active-drop {
+  background-color: rgba(0, 240, 255, 0.1) !important;
+  box-shadow: inset 0 0 0 2px var(--impulse-primary), 0 0 15px rgba(0, 240, 255, 0.3) !important;
+}
+
+/* Title animation */
+@keyframes title-glow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0);
+  }
+  50% {
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+  }
+}
+
+.admin-topnav h1 {
+  transition: all 0.3s ease;
+}
+
+.admin-topnav:hover h1 {
+  animation: title-glow 2s infinite;
+}
+
+/* User menu button */
+.user-menu-button {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--impulse-bg-card);
+  border: 1px solid var(--impulse-border-normal);
+  color: var(--impulse-text-primary);
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.user-menu-button:hover {
+  border-color: var(--impulse-border-hover);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+/* Menu button effects */
+.admin-menu-button {
+  padding: 0.5rem;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.admin-menu-button:hover {
+  background-color: rgba(0, 240, 255, 0.1);
+  transform: rotate(5deg);
+}
+
+/* Edit mode toggle button specific styles */
+.edit-mode-toggle {
   position: relative;
   overflow: hidden;
 }
 
-.admin-topnav-item:hover::after {
+.edit-mode-toggle::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(0, 240, 255, 0.2) 0%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(0, 240, 255, 0.5) 0%, transparent 70%);
   opacity: 0;
-  animation: pulse-in 0.3s ease forwards;
+  transition: opacity 0.3s ease;
+  z-index: -1;
 }
 
-@keyframes pulse-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.edit-mode-toggle.active {
+  background-color: rgba(0, 240, 255, 0.2);
 }
 
-/* Drag target highlight */
-.drop-target {
-  border: 2px dashed var(--impulse-primary);
-  background-color: rgba(0, 240, 255, 0.1);
-  animation: highlight-glow 2s infinite;
+.edit-mode-toggle.active::after {
+  opacity: 1;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }

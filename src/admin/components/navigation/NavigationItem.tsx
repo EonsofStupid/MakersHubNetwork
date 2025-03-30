@@ -8,8 +8,7 @@ import { ChevronRight, GripVertical } from 'lucide-react';
 import { 
   adminEditModeAtom, 
   dragSourceIdAtom, 
-  isDraggingAtom, 
-  dropIndicatorPositionAtom 
+  isDraggingAtom 
 } from '@/admin/atoms/tools.atoms';
 import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 
@@ -59,7 +58,6 @@ export function NavigationItem({
   const [editMode] = useAtom(adminEditModeAtom);
   const [isDragging, setIsDragging] = useAtom(isDraggingAtom);
   const [, setDragSourceId] = useAtom(dragSourceIdAtom);
-  const [, setDropPosition] = useAtom(dropIndicatorPositionAtom);
   const itemRef = useRef<HTMLDivElement>(null);
   
   // Generate a color class based on the item ID for visual variety
@@ -90,7 +88,11 @@ export function NavigationItem({
   // Enable drag and drop only in edit mode
   useEffect(() => {
     if (!itemRef.current) return;
-    return makeDraggable(itemRef.current, id);
+    
+    // Only make draggable if in edit mode
+    if (editMode) {
+      return makeDraggable(itemRef.current, id);
+    }
   }, [editMode, id, makeDraggable]);
 
   const colorClass = getColorClass();
