@@ -1,55 +1,46 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { cn } from '@/lib/utils';
-import { adminNavigationItems } from '@/admin/config/navigation.config';
+import { useAtom } from 'jotai';
+import { dropIndicatorPositionAtom, isDraggingAtom } from '@/admin/atoms/tools.atoms';
 
-export function DragIndicator() {
-  const { dragSource, dragTarget } = useAdminStore();
-  
-  if (!dragSource) return null;
-  
-  const sourceItem = adminNavigationItems.find(item => item.id === dragSource);
-  const sourceName = sourceItem ? sourceItem.label : 'Item';
-  
-  let targetName = '';
-  switch (dragTarget) {
-    case 'topnav':
-      targetName = 'top navigation';
-      break;
-    case 'dashboard':
-      targetName = 'dashboard shortcuts';
-      break;
-    default:
-      targetName = '';
-  }
-  
+export const DragIndicator: React.FC = () => {
+  const [isDragging] = useAtom(isDraggingAtom);
+  const [position] = useAtom(dropIndicatorPositionAtom);
+
   return (
     <AnimatePresence>
-      {dragSource && (
+      {isDragging && position && (
         <motion.div
-          key="drag-indicator"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          style={{
+            position: 'fixed',
+            left: position.x - 10,
+            top: position.y - 10,
+            width: 20,
+            height: 20,
+            borderRadius: '50%',
+            background: 'var(--impulse-primary)',
+            zIndex: 9999,
+            pointerEvents: 'none',
+          }}
+          transition={{ duration: 0.1 }}
         >
-          <div className={cn(
-            "px-4 py-2 rounded-full backdrop-blur-md border",
-            "bg-[var(--impulse-bg-overlay)] text-[var(--impulse-text-primary)]",
-            "border-[var(--impulse-border-normal)] shadow-md",
-            "flex items-center gap-2"
-          )}>
-            <span className="animate-pulse">⟠</span>
-            <span className="text-sm">
-              {targetName 
-                ? `Drop "${sourceName}" to add to ${targetName}` 
-                : `Drag "${sourceName}" to add to dashboard or top navigation`}
-            </span>
-          </div>
+          <motion.div
+            animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+            style={{
+              position: 'absolute',
+              inset: -5,
+              borderRadius: '50%',
+              border: '2px solid var(--impulse-primary)',
+              opacity: 0.7,
+            }}
+          />
         </motion.div>
       )}
     </AnimatePresence>
   );
-}
+};

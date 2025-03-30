@@ -1,0 +1,77 @@
+
+/* Drag and Drop styling */
+.draggable {
+  cursor: grab;
+  position: relative;
+}
+
+.draggable:active {
+  cursor: grabbing;
+}
+
+.drop-indicator {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: var(--impulse-primary);
+  border-radius: 50%;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0 0 10px var(--impulse-primary);
+}
+
+.drop-zone {
+  transition: all 0.2s ease;
+  min-height: 40px;
+  border-radius: 4px;
+}
+
+.drop-zone.active {
+  background-color: rgba(0, 240, 255, 0.05);
+  box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.2);
+}
+
+.dashboard-shortcut {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--impulse-bg-card);
+  border: 1px solid var(--impulse-border-normal);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.dashboard-shortcut:hover {
+  border-color: var(--impulse-border-hover);
+  background-color: rgba(0, 240, 255, 0.05);
+}
+
+.dashboard-shortcut.active {
+  border-color: var(--impulse-primary);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+.edit-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: rgba(0, 240, 255, 0.1);
+  border-radius: 20px;
+  border: 1px solid var(--impulse-border-normal);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-mode-toggle:hover {
+  background-color: rgba(0, 240, 255, 0.15);
+  border-color: var(--impulse-border-hover);
+}
+
+.edit-mode-toggle.active {
+  background-color: rgba(0, 240, 255, 0.2);
+  border-color: var(--impulse-primary);
+}
