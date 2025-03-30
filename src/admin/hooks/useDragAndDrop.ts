@@ -147,15 +147,19 @@ export function useDragAndDrop({
     const handleDragLeave = (e: DragEvent) => {
       // Check if we're actually leaving the container (not just moving between children)
       const relatedTarget = e.relatedTarget as Node | null;
-      if (relatedTarget && !element.contains(relatedTarget)) {
-        element.classList.remove('active-drop');
-        setDragTargetId(null);
-        
-        // Remove visual cues
-        document.querySelectorAll('.drop-target-item').forEach(el => 
-          el.classList.remove('drop-target-item')
-        );
+      // This is the line causing the error - we need to check if relatedTarget exists first
+      if (relatedTarget && element.contains(relatedTarget)) {
+        // We're still within the container, don't remove classes or reset state
+        return;
       }
+      
+      element.classList.remove('active-drop');
+      setDragTargetId(null);
+      
+      // Remove visual cues
+      document.querySelectorAll('.drop-target-item').forEach(el => 
+        el.classList.remove('drop-target-item')
+      );
     };
 
     const handleDrop = (e: DragEvent) => {
