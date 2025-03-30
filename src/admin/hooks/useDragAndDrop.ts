@@ -133,10 +133,15 @@ export function useDragAndDrop({
           setDragTargetId(targetId);
           
           // Add a visual cue to the target item
-          document.querySelectorAll('.drop-target-item').forEach(el => 
-            el.classList.remove('drop-target-item')
-          );
-          closestItem.classList.add('drop-target-item');
+          document.querySelectorAll('.drop-target-item').forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.classList.remove('drop-target-item');
+            }
+          });
+          
+          if (closestItem instanceof HTMLElement) {
+            closestItem.classList.add('drop-target-item');
+          }
         }
       } else if (items.length === 0) {
         // If there are no items, we can still drop here
@@ -147,7 +152,8 @@ export function useDragAndDrop({
     const handleDragLeave = (e: DragEvent) => {
       // Check if we're actually leaving the container (not just moving between children)
       const relatedTarget = e.relatedTarget as Node | null;
-      // This is the line causing the error - we need to check if relatedTarget exists first
+      
+      // Check if relatedTarget exists and is contained within the element
       if (relatedTarget && element.contains(relatedTarget)) {
         // We're still within the container, don't remove classes or reset state
         return;
@@ -157,9 +163,11 @@ export function useDragAndDrop({
       setDragTargetId(null);
       
       // Remove visual cues
-      document.querySelectorAll('.drop-target-item').forEach(el => 
-        el.classList.remove('drop-target-item')
-      );
+      document.querySelectorAll('.drop-target-item').forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.classList.remove('drop-target-item');
+        }
+      });
     };
 
     const handleDrop = (e: DragEvent) => {
@@ -184,9 +192,11 @@ export function useDragAndDrop({
       }
       
       // Remove visual cues
-      document.querySelectorAll('.drop-target-item').forEach(el => 
-        el.classList.remove('drop-target-item')
-      );
+      document.querySelectorAll('.drop-target-item').forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.classList.remove('drop-target-item');
+        }
+      });
       
       // Reset drag state
       setIsDragging(false);
@@ -263,9 +273,11 @@ export function useDragAndDrop({
       el.classList.remove('dragging');
       
       // Remove any lingering visual cues
-      document.querySelectorAll('.drop-target-item').forEach(el => 
-        el.classList.remove('drop-target-item')
-      );
+      document.querySelectorAll('.drop-target-item').forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.classList.remove('drop-target-item');
+        }
+      });
     };
     
     el.setAttribute('draggable', (dragOnlyInEditMode ? editMode : true).toString());
