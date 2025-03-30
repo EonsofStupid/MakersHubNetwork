@@ -1,235 +1,131 @@
 
 /* Admin Sidebar Navigation Styles */
 .admin-sidebar {
-  position: relative;
-  height: 100%;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 10;
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 2rem);
+  transition: width 0.3s ease;
+  max-width: 100%;
+  z-index: 30;
+  overflow: hidden;
 }
 
 .admin-sidebar__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 1rem;
   border-bottom: 1px solid var(--impulse-border-normal);
 }
 
 .admin-sidebar__content {
+  flex: 1;
   overflow-y: auto;
-  height: calc(100% - 60px);
-  scrollbar-width: thin;
-  scrollbar-color: var(--impulse-border-normal) transparent;
-}
-
-.admin-sidebar__content::-webkit-scrollbar {
-  width: 4px;
-}
-
-.admin-sidebar__content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.admin-sidebar__content::-webkit-scrollbar-thumb {
-  background-color: var(--impulse-border-normal);
-  border-radius: 6px;
+  padding: 1rem 0;
 }
 
 .admin-sidebar__footer {
-  border-top: 1px solid var(--impulse-border-normal);
   padding: 1rem;
+  border-top: 1px solid var(--impulse-border-normal);
 }
 
 /* Navigation Item Styles */
 .nav-item {
-  position: relative;
-  padding: 0.75rem 1rem;
-  margin: 0.25rem 0.5rem;
-  border-radius: 8px;
   display: flex;
   align-items: center;
-  cursor: pointer;
+  padding: 0.75rem 1rem;
+  margin: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
   transition: all 0.2s ease;
+  cursor: pointer;
   color: var(--impulse-text-secondary);
+  position: relative;
   overflow: hidden;
 }
 
 .nav-item:hover {
-  background: rgba(0, 240, 255, 0.1);
+  background-color: rgba(0, 240, 255, 0.05);
   color: var(--impulse-text-primary);
 }
 
 .nav-item.active {
-  background: rgba(0, 240, 255, 0.2);
-  color: var(--impulse-text-accent);
+  background-color: rgba(0, 240, 255, 0.1);
+  color: var(--impulse-primary);
+}
+
+.nav-item.dragging {
+  opacity: 0.7;
+  outline: 2px dashed var(--impulse-border-active);
 }
 
 .nav-item__icon {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: rgba(0, 240, 255, 0.05);
-  margin-right: 12px;
-  position: relative;
-  overflow: hidden;
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.75rem;
 }
 
-.nav-item.active .nav-item__icon {
-  background: rgba(0, 240, 255, 0.15);
+.nav-item__icon-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(0, 240, 255, 0.5) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: -1;
 }
 
 .nav-item__label {
+  font-size: 0.9rem;
   font-weight: 500;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.3s ease;
 }
 
-.nav-item__badge {
-  background: var(--impulse-secondary);
-  color: white;
-  border-radius: 9999px;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.7rem;
-  font-weight: 700;
+.nav-item__drag-handle {
+  cursor: grab;
+  opacity: 0.7;
 }
 
-/* Collapsed state */
-.sidebar-collapsed .nav-item {
-  padding: 0.75rem 0;
-  margin: 0.25rem auto;
-  justify-content: center;
-  width: 48px;
+.nav-item__drag-handle:hover {
+  opacity: 1;
 }
 
-.sidebar-collapsed .nav-item__label,
-.sidebar-collapsed .nav-item__badge {
+/* Cyberpunk Effects */
+@keyframes cyber-pulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.5); }
+  50% { box-shadow: 0 0 15px rgba(0, 240, 255, 0.8); }
+}
+
+@keyframes cyber-glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(2px, -2px); }
+  60% { transform: translate(-1px, -1px); }
+  80% { transform: translate(1px, 1px); }
+}
+
+.nav-item.active .nav-item__icon {
+  animation: cyber-pulse 2s infinite;
+}
+
+.nav-item:hover .nav-item__icon {
+  animation: cyber-glitch 0.5s;
+}
+
+/* Sidebar collapsed state */
+.sidebar-collapsed .nav-item__label {
+  opacity: 0;
+  width: 0;
   display: none;
+}
+
+.sidebar-collapsed .nav-item {
+  padding: 0.75rem 0.5rem;
+  justify-content: center;
 }
 
 .sidebar-collapsed .nav-item__icon {
   margin-right: 0;
-}
-
-/* Cyber effects */
-.nav-item__icon-glow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, rgba(0, 240, 255, 0.8) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.nav-item.active .nav-item__icon-glow {
-  opacity: 0.4;
-  animation: pulse-glow 2s infinite alternate;
-}
-
-@keyframes pulse-glow {
-  0% { opacity: 0.2; transform: scale(0.95); }
-  100% { opacity: 0.4; transform: scale(1.05); }
-}
-
-.nav-item__cyberpunk-effect {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(45deg, transparent 45%, rgba(0, 240, 255, 0.5) 50%, transparent 55%);
-  background-size: 200% 200%;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.nav-item:hover .nav-item__cyberpunk-effect {
-  opacity: 0.3;
-  animation: cyber-scan 3s infinite linear;
-}
-
-@keyframes cyber-scan {
-  0% { background-position: 200% 0%; }
-  100% { background-position: -200% 0%; }
-}
-
-/* Drag handle */
-.nav-item__drag-handle {
-  visibility: hidden;
-  opacity: 0;
-  width: 12px;
-  cursor: grab;
-  transition: all 0.2s ease;
-  color: var(--impulse-text-secondary);
-}
-
-.edit-mode .nav-item__drag-handle {
-  visibility: visible;
-  opacity: 0.7;
-}
-
-.edit-mode .nav-item:hover .nav-item__drag-handle {
-  opacity: 1;
-}
-
-/* Dragging state */
-.nav-item.dragging {
-  background: rgba(0, 240, 255, 0.2);
-  box-shadow: 0 0 0 2px var(--impulse-primary), 0 4px 20px rgba(0, 0, 0, 0.2);
-  pointer-events: none;
-}
-
-/* Drop target indicators */
-.drop-target {
-  position: relative;
-  border: 2px dashed var(--impulse-primary);
-  background: rgba(0, 240, 255, 0.05);
-  transition: all 0.2s ease;
-}
-
-.drop-target::before {
-  content: 'Drop here';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--impulse-primary);
-  font-size: 0.8rem;
-  opacity: 0.7;
-}
-
-/* Tooltip */
-.admin-tooltip {
-  position: absolute;
-  z-index: 1000;
-  background: var(--impulse-bg-overlay);
-  border: 1px solid var(--impulse-border-normal);
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.2s ease;
-}
-
-.admin-tooltip.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.admin-tooltip::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 10px;
-  height: 10px;
-  background: inherit;
-  border-left: 1px solid var(--impulse-border-normal);
-  border-top: 1px solid var(--impulse-border-normal);
-  transform-origin: center;
-  transform: translateX(-50%) rotate(45deg);
 }

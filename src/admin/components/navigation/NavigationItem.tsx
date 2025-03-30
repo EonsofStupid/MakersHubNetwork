@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminStore } from '@/admin/store/admin.store';
-import { AdminTooltip } from '../ui/AdminTooltip';
+import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 
 interface NavigationItemProps {
   id: string;
@@ -25,10 +25,10 @@ export function NavigationItem({
   onClick,
   className
 }: NavigationItemProps) {
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDragging, setIsDragging] = React.useState(false);
   const { isEditMode, sidebarExpanded, setDragSource } = useAdminStore();
 
-  // Handle drag start
+  // Handle drag start as a regular DOM event, not a Framer Motion event
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData('text/plain', id);
     e.dataTransfer.effectAllowed = 'copy';
@@ -38,7 +38,7 @@ export function NavigationItem({
     // Create drag image
     const dragImage = document.createElement('div');
     dragImage.innerHTML = `<div class="p-2 bg-[var(--impulse-bg-overlay)] border border-[var(--impulse-border-normal)] rounded-md flex items-center">
-      <div class="mr-2">${icon}</div>
+      <div class="mr-2">${typeof icon === 'string' ? icon : 'Icon'}</div>
       <span>${label}</span>
     </div>`;
     document.body.appendChild(dragImage);
@@ -58,21 +58,6 @@ export function NavigationItem({
     setTimeout(() => {
       setDragSource(null);
     }, 300);
-  };
-
-  // Base animation variants
-  const iconGlowVariants = {
-    inactive: { opacity: 0 },
-    active: { 
-      opacity: 1,
-      scale: [1, 1.2, 1],
-      transition: { duration: 3, repeat: Infinity }
-    }
-  };
-  
-  const cyberpunkEffectVariants = {
-    inactive: { opacity: 0 },
-    active: { opacity: 0.3 }
   };
 
   return (
@@ -107,16 +92,9 @@ export function NavigationItem({
         
         <motion.div
           className="nav-item__icon-glow"
-          initial="inactive"
-          animate={isActive ? "active" : "inactive"}
-          variants={iconGlowVariants}
-        />
-        
-        <motion.div
-          className="nav-item__cyberpunk-effect"
-          initial="inactive"
-          whileHover="active"
-          variants={cyberpunkEffectVariants}
+          initial={{ opacity: 0 }}
+          animate={isActive ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: 0.3 }}
         />
       </div>
       
@@ -136,7 +114,7 @@ export function NavigationItem({
           }
           side="right"
         >
-          <span></span>
+          <span className="sr-only">{label}</span>
         </AdminTooltip>
       )}
     </motion.div>
