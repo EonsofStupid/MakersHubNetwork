@@ -1,12 +1,14 @@
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAtom } from "jotai";
 import { pinnedActionsAtom, dragTargetAtom, dragSourceAtom } from "@/admin/atoms";
 import { UserPlus, Database, Palette, Settings, Plus, Package, BarChart, FileText, Users, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { QuickAction } from "@/admin/types/tools.types";
+import { useToast } from "@/hooks/use-toast";
+import { useAdminStore } from "@/admin/store/admin.store";
 
 // Define the available quick actions with paths
 const availableActions: Record<string, QuickAction> = {
@@ -108,16 +110,22 @@ function QuickActionItem({
   };
   
   const handleDragOver = (e: React.DragEvent) => {
-    if (dragSource !== null) {
-      e.preventDefault();
+    e.preventDefault();
+    if (dragSource !== null && dragSource !== id) {
       setDragTarget(id);
+    }
+  };
+  
+  const handleDragLeave = () => {
+    if (dragTarget === id) {
+      setDragTarget(null);
     }
   };
   
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragTarget(null);
-    // Add drop logic here
+    // Add drop logic here for reordering
   };
   
   const handleDragEnd = () => {
@@ -135,11 +143,15 @@ function QuickActionItem({
     >
       {/* Inner div to handle HTML drag and drop operations */}
       <div 
-        className="impulse-quick-action"
+        className={cn(
+          "impulse-quick-action",
+          dragTarget === id ? "ring-2 ring-[var(--impulse-primary)]" : ""
+        )}
         data-tooltip={tooltip}
         draggable="true"
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDragEnd={handleDragEnd}
         onDrop={handleDrop}
         onClick={handleClick}
@@ -173,24 +185,48 @@ function QuickActionItem({
 
 // Empty slot component for adding new actions
 function EmptyActionSlot() {
+  const { toast } = useToast();
+  const { dragSource } = useAdminStore();
+  const [pinnedActions, setPinnedActions] = useAtom(pinnedActionsAtom);
   const [dragTarget, setDragTarget] = useAtom(dragTargetAtom);
   const [showActionSelector, setShowActionSelector] = React.useState(false);
   
   // HTML Drag and Drop handlers
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragTarget('empty-slot');
+    if (dragSource) {
+      e.preventDefault();
+      setDragTarget('empty-slot');
+    }
+  };
+  
+  const handleDragLeave = () => {
+    if (dragTarget === 'empty-slot') {
+      setDragTarget(null);
+    }
   };
   
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    const droppedItemId = e.dataTransfer.getData('text/plain');
+    
+    if (droppedItemId && !pinnedActions.includes(droppedItemId) && availableActions[droppedItemId]) {
+      setPinnedActions([...pinnedActions, droppedItemId]);
+      toast({
+        title: "Action Added",
+        description: `${availableActions[droppedItemId].tooltip} has been added to your quick actions`,
+      });
+    }
+    
     setDragTarget(null);
-    // Handle adding the dropped item
   };
   
   const handleClick = () => {
     setShowActionSelector(true);
     // In a real implementation, this would show a menu of available actions to add
+    toast({
+      title: "Adding actions",
+      description: "Drag items from the sidebar to add them here",
+    });
   };
   
   return (
@@ -202,10 +238,13 @@ function EmptyActionSlot() {
       <div
         className={cn(
           "impulse-quick-action border-dashed cursor-pointer",
-          dragTarget === 'empty-slot' ? "border-[var(--impulse-border-active)]" : "border-[var(--impulse-border-normal)]"
+          dragTarget === 'empty-slot' || (dragSource && !dragTarget)
+            ? "ring-2 ring-[var(--impulse-primary)] border-[var(--impulse-border-active)] bg-[var(--impulse-primary)]/10"
+            : "border-[var(--impulse-border-normal)]"
         )}
         onClick={handleClick}
         onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         <Plus className="w-5 h-5 text-[var(--impulse-text-secondary)]" />
@@ -215,10 +254,15 @@ function EmptyActionSlot() {
 }
 
 export function QuickActionBar() {
+  const { toast } = useToast();
   const [pinnedActions, setPinnedActions] = useAtom(pinnedActionsAtom);
   
   const handleRemoveAction = (id: string) => {
     setPinnedActions(pinnedActions.filter(actionId => actionId !== id));
+    toast({
+      title: "Action removed",
+      description: `${availableActions[id]?.tooltip || "Action"} has been removed`,
+    });
   };
   
   return (
@@ -228,23 +272,34 @@ export function QuickActionBar() {
       transition={{ duration: 0.3 }}
       className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-50"
     >
-      {pinnedActions.map(actionId => {
-        const action = availableActions[actionId];
-        if (!action) return null;
+      <AnimatePresence mode="popLayout">
+        {pinnedActions.map(actionId => {
+          const action = availableActions[actionId];
+          if (!action) return null;
+          
+          return (
+            <motion.div
+              key={actionId}
+              layout
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+            >
+              <QuickActionItem
+                id={action.id}
+                icon={action.icon}
+                tooltip={action.tooltip}
+                path={action.path}
+                onRemove={() => handleRemoveAction(actionId)}
+              />
+            </motion.div>
+          );
+        })}
         
-        return (
-          <QuickActionItem
-            key={actionId}
-            id={action.id}
-            icon={action.icon}
-            tooltip={action.tooltip}
-            path={action.path}
-            onRemove={() => handleRemoveAction(actionId)}
-          />
-        );
-      })}
-      
-      <EmptyActionSlot />
+        <motion.div layout key="empty-slot">
+          <EmptyActionSlot />
+        </motion.div>
+      </AnimatePresence>
     </motion.div>
   );
 }

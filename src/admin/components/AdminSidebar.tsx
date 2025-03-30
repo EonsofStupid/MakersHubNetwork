@@ -1,3 +1,4 @@
+
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -23,7 +24,7 @@ interface SidebarIconProps {
   active?: boolean;
   expanded?: boolean;
   onClick?: () => void;
-  onDragStart?: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
+  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
   isDraggable?: boolean;
   isEditMode?: boolean;
 }
@@ -84,7 +85,7 @@ function SidebarIcon({
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     if (onDragStart) {
-      onDragStart(e, id);
+      onDragStart(e);
     }
   };
 
@@ -181,6 +182,7 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
       e.dataTransfer.effectAllowed = 'move';
       setDragSource(id);
 
+      // Create a ghost/preview image for the drag operation
       const dragPreview = document.createElement('div');
       dragPreview.className = 'bg-[var(--impulse-bg-overlay)] backdrop-blur-lg p-2 rounded shadow-lg border border-[var(--impulse-primary)]';
       
@@ -262,7 +264,7 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
                 active={activeItem === item.id}
                 expanded={!isCollapsed}
                 onClick={() => handleIconClick(item.path)}
-                onDragStart={handleDragStart}
+                onDragStart={(e) => handleDragStart(e, item.id)}
                 isDraggable={isEditMode}
                 isEditMode={isEditMode}
               />

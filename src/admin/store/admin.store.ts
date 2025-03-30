@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AdminPermission } from '../types/admin.types';
@@ -174,13 +175,13 @@ export const useAdminStore = create<AdminState>()(
  * Typed subscribe helper for Zustand stores
  */
 export function subscribeWithSelector<T>(
-  store: typeof useAdminStore,
+  store: any,
   selector: (state: AdminState) => T,
   callback: (next: T, prev: T) => void
-) {
+): () => void {
   let current = selector(store.getState());
-
-  return store.subscribe((state) => {
+  
+  return store.subscribe((state: AdminState) => {
     const next = selector(state);
     if (next !== current) {
       const prev = current;

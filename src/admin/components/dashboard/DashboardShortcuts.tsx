@@ -8,15 +8,19 @@ import { AdminShortcut } from "@/admin/types/admin.types";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { adminNavigationItems, defaultDashboardShortcuts } from "@/admin/config/navigation.config";
 import { Plus, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export function DashboardShortcuts() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { 
     hasPermission, 
     pinnedDashboardItems, 
     setPinnedDashboardItems, 
+    dragSource,
     dragTarget, 
-    setDragTarget
+    setDragTarget,
+    setDragSource
   } = useAdminStore();
   
   const [isEditMode, setIsEditMode] = useState(false);
@@ -56,6 +60,10 @@ export function DashboardShortcuts() {
   const removeShortcut = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setPinnedDashboardItems(pinnedDashboardItems.filter(item => item !== id));
+    toast({
+      title: "Shortcut removed",
+      description: "The shortcut has been removed from your dashboard",
+    });
   };
   
   const handleDragOver = (e: React.DragEvent) => {
@@ -80,9 +88,18 @@ export function DashboardShortcuts() {
     // If it's not already in the pinned items, add it
     if (itemId && !pinnedDashboardItems.includes(itemId)) {
       setPinnedDashboardItems([...pinnedDashboardItems, itemId]);
+      
+      const item = adminNavigationItems.find(nav => nav.id === itemId);
+      if (item) {
+        toast({
+          title: "Added to dashboard",
+          description: `${item.label} has been added to your dashboard`,
+        });
+      }
     }
     
     setDragTarget(null);
+    setDragSource(null); // Clear drag source when dropped
   };
   
   return (
@@ -105,7 +122,10 @@ export function DashboardShortcuts() {
       <div 
         className={cn(
           "admin-dashboard-shortcuts grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4",
-          isDraggingOver || dragTarget === 'dashboard' ? "ring-2 ring-[var(--impulse-primary)] rounded-lg p-2" : "p-2"
+          (isDraggingOver || dragTarget === 'dashboard') 
+            ? "ring-2 ring-[var(--impulse-primary)] bg-[var(--impulse-primary)]/5 rounded-lg p-2" 
+            : "p-2",
+          dragSource && "drag-target-highlight transition-all duration-300"
         )}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
