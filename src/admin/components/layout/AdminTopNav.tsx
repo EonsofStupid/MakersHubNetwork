@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, User, Settings, Menu, Shield, Edit, X } from 'lucide-react';
@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
 import { useAtom } from 'jotai';
-import { adminEditModeAtom, isDraggingAtom, dragSourceIdAtom } from '@/admin/atoms/tools.atoms';
+import { adminEditModeAtom, isDraggingAtom, dragSourceIdAtom, dragTargetIdAtom, dropIndicatorPositionAtom } from '@/admin/atoms/tools.atoms';
 import { TopNavItem } from '@/admin/components/navigation/TopNavItem';
 import { useToast } from '@/hooks/use-toast';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
@@ -25,6 +25,8 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
   const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
   const [isDragging] = useAtom(isDraggingAtom);
   const [dragSourceId] = useAtom(dragSourceIdAtom);
+  const [, setDragTargetId] = useAtom(dragTargetIdAtom);
+  const [, setDropPosition] = useAtom(dropIndicatorPositionAtom);
   
   const { 
     sidebarExpanded, 
@@ -32,6 +34,18 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
     pinnedTopNavItems, 
     setPinnedTopNavItems
   } = useAdminStore();
+
+  // Update drop indicator position during dragging
+  useEffect(() => {
+    if (!isDragging) return;
+    
+    const updateDropIndicator = (e: MouseEvent) => {
+      setDropPosition({ x: e.clientX, y: e.clientY });
+    };
+    
+    window.addEventListener('mousemove', updateDropIndicator);
+    return () => window.removeEventListener('mousemove', updateDropIndicator);
+  }, [isDragging, setDropPosition]);
   
   // Get icons for the top nav
   const topNavIcons = adminNavigationItems
@@ -58,6 +72,10 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
         description: "Item has been added to your quick access menu",
       });
     }
+    
+    // Reset drag state
+    setDragTargetId(null);
+    setDropPosition(null);
   };
   
   const removeTopNavItem = (id: string, e: React.MouseEvent) => {

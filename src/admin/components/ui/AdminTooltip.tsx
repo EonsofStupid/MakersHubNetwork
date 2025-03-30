@@ -1,104 +1,143 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useHover } from '@/hooks/use-hover';
+import { cn } from '@/lib/utils';
 
 interface AdminTooltipProps {
-  content: React.ReactNode;
   children: React.ReactNode;
+  content: React.ReactNode;
   side?: 'top' | 'right' | 'bottom' | 'left';
   align?: 'start' | 'center' | 'end';
   delay?: number;
+  className?: string;
 }
 
 export function AdminTooltip({
-  content,
   children,
+  content,
   side = 'top',
   align = 'center',
   delay = 300,
+  className
 }: AdminTooltipProps) {
   const [hoverRef, isHovered] = useHover<HTMLDivElement>(delay);
+  const [ready, setReady] = useState(false);
   
-  // Calculate the position based on side and align
-  const getPosition = () => {
-    const positions = {
-      top: { y: -10, x: 0, originY: 1 },
-      right: { x: 10, y: 0, originX: 0 },
-      bottom: { y: 10, x: 0, originY: 0 },
-      left: { x: -10, y: 0, originX: 1 }
-    };
-    
-    const alignments = {
-      start: { align: 'flex-start' },
-      center: { align: 'center' },
-      end: { align: 'flex-end' }
-    };
-    
-    return {
-      ...positions[side],
-      ...alignments[align]
-    };
-  };
-  
-  const position = getPosition();
-  
-  const variants = {
-    hidden: {
-      opacity: 0,
-      scale: 0.9,
-      y: side === 'top' ? -5 : side === 'bottom' ? 5 : 0,
-      x: side === 'left' ? -5 : side === 'right' ? 5 : 0,
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: side === 'top' ? -10 : side === 'bottom' ? 10 : 0,
-      x: side === 'left' ? -10 : side === 'right' ? 10 : 0,
+  // Position the tooltip based on the side prop
+  const getTooltipPosition = () => {
+    switch (side) {
+      case 'top':
+        return { bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)' };
+      case 'right':
+        return { left: 'calc(100% + 10px)', top: '50%', transform: 'translateY(-50%)' };
+      case 'bottom':
+        return { top: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)' };
+      case 'left':
+        return { right: 'calc(100% + 10px)', top: '50%', transform: 'translateY(-50%)' };
+      default:
+        return {};
     }
   };
-
+  
+  // Position the arrow based on the side prop
+  const getArrowPosition = () => {
+    switch (side) {
+      case 'top':
+        return { bottom: '-5px', left: '50%', transform: 'translateX(-50%) rotate(45deg)' };
+      case 'right':
+        return { left: '-5px', top: '50%', transform: 'translateY(-50%) rotate(45deg)' };
+      case 'bottom':
+        return { top: '-5px', left: '50%', transform: 'translateX(-50%) rotate(45deg)' };
+      case 'left':
+        return { right: '-5px', top: '50%', transform: 'translateY(-50%) rotate(45deg)' };
+      default:
+        return {};
+    }
+  };
+  
+  // Adjust alignment based on the align prop
+  const getAlignmentStyle = () => {
+    if (side === 'top' || side === 'bottom') {
+      switch (align) {
+        case 'start':
+          return { transform: 'translateX(0)', left: '0' };
+        case 'end':
+          return { transform: 'translateX(0)', right: '0' };
+        default:
+          return {};
+      }
+    } else if (side === 'left' || side === 'right') {
+      switch (align) {
+        case 'start':
+          return { transform: 'translateY(0)', top: '0' };
+        case 'end':
+          return { transform: 'translateY(0)', bottom: '0' };
+        default:
+          return {};
+      }
+    }
+    
+    return {};
+  };
+  
   return (
-    <div ref={hoverRef} className="relative inline-flex">
+    <div
+      ref={hoverRef}
+      className="relative inline-block"
+      onMouseEnter={() => setReady(true)}
+    >
       {children}
       
       <AnimatePresence>
-        {isHovered && (
+        {ready && isHovered && content && (
           <motion.div
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            variants={variants}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.15 } }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className={cn(
+              "absolute z-50 px-3 py-1.5 text-xs rounded-md",
+              "bg-[var(--impulse-bg-card)] backdrop-blur-md",
+              "text-[var(--impulse-text-primary)]",
+              "border border-[var(--impulse-border-normal)]",
+              "whitespace-nowrap",
+              "shadow-md",
+              className
+            )}
             style={{
-              transformOrigin: `${position.originX || 0.5} ${position.originY || 0.5}`,
+              ...getTooltipPosition(),
+              ...getAlignmentStyle()
             }}
-            className={`absolute z-50 px-2 py-1 text-xs rounded-md bg-[var(--impulse-bg-overlay)] border border-[var(--impulse-border-normal)] text-[var(--impulse-text-primary)] shadow-lg backdrop-blur-sm whitespace-nowrap pointer-events-none
-              ${side === 'top' ? 'bottom-full mb-1' : 
-                side === 'bottom' ? 'top-full mt-1' :
-                side === 'left' ? 'right-full mr-1' : 'left-full ml-1'}
-              ${align === 'start' ? 'left-0' : 
-                align === 'end' ? 'right-0' : 'left-1/2 -translate-x-1/2'}
-            `}
           >
-            <div className="relative z-10">
-              {content}
-            </div>
+            {content}
             
-            {/* Glass effect and highlight */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 rounded-md pointer-events-none" />
-            <div className="absolute inset-0 border-t border-l border-white/10 rounded-md pointer-events-none" />
+            {/* Arrow */}
+            <motion.div
+              className="absolute w-2 h-2 bg-[var(--impulse-bg-card)] border-[var(--impulse-border-normal)]"
+              style={{
+                ...getArrowPosition(),
+                borderWidth: '0 1px 1px 0',
+                borderStyle: 'solid',
+                borderColor: 'inherit',
+              }}
+            />
             
-            {/* Arrow/caret */}
-            <div 
-              className={`absolute w-2 h-2 bg-[var(--impulse-bg-overlay)] border border-[var(--impulse-border-normal)] transform rotate-45
-                ${side === 'top' ? 'top-full -translate-y-1/2 border-r border-b' : 
-                  side === 'bottom' ? 'bottom-full translate-y-1/2 border-l border-t' :
-                  side === 'left' ? 'left-full -translate-x-1/2 border-t border-r' : 
-                  'right-full translate-x-1/2 border-b border-l'}
-                ${align === 'start' ? 'left-3' : 
-                  align === 'end' ? 'right-3' : 'left-1/2 -translate-x-1/2'}
-              `}
+            {/* Glow effect */}
+            <motion.div
+              className="absolute inset-0 rounded-md -z-10"
+              animate={{
+                boxShadow: [
+                  '0 0 5px rgba(0, 240, 255, 0.1)',
+                  '0 0 8px rgba(0, 240, 255, 0.2)',
+                  '0 0 5px rgba(0, 240, 255, 0.1)'
+                ]
+              }}
+              transition={{ 
+                duration: 2, 
+                repeat: Infinity,
+                ease: 'easeInOut'
+              }}
             />
           </motion.div>
         )}
