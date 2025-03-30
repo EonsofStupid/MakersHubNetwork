@@ -11,6 +11,9 @@ export interface FrozenZone {
   height: number;
   content?: string;
   type?: string;
+  name: string;
+  elementId: string;
+  isLocked: boolean;
 }
 
 export interface DragAndDropItem {
@@ -33,14 +36,6 @@ export interface CyberEffect {
   name: string;
   css: string;
   animation?: string;
-}
-
-export interface AdminShortcut {
-  id: string;
-  label: string;
-  path: string;
-  icon: React.ComponentType;
-  description?: string;
 }
 
 export interface AdminNotification {

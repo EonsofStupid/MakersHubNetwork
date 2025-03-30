@@ -1,24 +1,23 @@
 
-// Export admin components
+// Admin components
 export { AdminLayout } from "./components/AdminLayout";
 export { AdminSidebar } from "./components/AdminSidebar";
 export { AdminHeader } from "./components/AdminHeader";
 export { ImpulseAdminLayout } from "./components/layout/ImpulseAdminLayout";
 export { AdminProvider, useAdmin } from "./context/AdminContext";
 
-// Export admin routes
+// Admin routes
 export { AdminRoutes } from "./routes";
 
-// Export admin store
+// Admin store
 export { useAdminStore } from "./store/admin.store";
 export { useAdminPreferences } from "./store/adminPreferences.store";
 
-// Export admin hooks
+// Admin hooks
 export { useAdminPermissions } from "./hooks/useAdminPermissions";
 export { useAdminRoles } from "./hooks/useAdminRoles"; 
 
-// Export admin types
-export * from "./types/admin.types";
+// Admin types - export each file separately to avoid naming conflicts
 export * from "./types/build.types";
 export * from "./types/content";
 export * from "./types/dashboard";
@@ -27,13 +26,13 @@ export * from "./types/impulse.types";
 export * from "./types/theme";
 export * from "./types/tools.types";
 
-// Export admin utils
+// Admin utils
 export * from "./utils/adminUtils";
 export * from "./utils/permissions";
 export * from "./utils/routeUtils";
 
-// Export admin atoms
+// Admin atoms
 export * from "./atoms";
 
-// Export admin page
+// Admin page
 export { default as AdminPage } from "../pages/Admin";
