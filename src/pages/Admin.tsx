@@ -13,20 +13,20 @@ import { DragIndicator } from "@/admin/components/ui/DragIndicator";
 import "@/admin/styles/admin-core.css";
 import "@/admin/styles/impulse-admin.css";
 import "@/admin/styles/admin-topnav.css";
+import "@/admin/styles/sidebar-navigation.css";
+import "@/admin/styles/dashboard-shortcuts.css";
 import "@/admin/theme/impulse/impulse-theme.css";
 
 export default function Admin() {
   const { toast } = useToast();
   const { hasAdminAccess, isLoading, initializeAdmin } = useAdmin();
   const [hasInitialized, setHasInitialized] = useState(false);
-  const { loadPermissions, dragSource } = useAdminStore();
+  const { loadPermissions, dragSource, isEditMode } = useAdminStore();
   
   // Use admin sync hook to keep database and localStorage in sync
   useAdminSync();
   
   useEffect(() => {
-    console.log("Admin component mounted, admin access:", hasAdminAccess);
-    
     // Load admin permissions if user has access
     if (hasAdminAccess && !hasInitialized) {
       initializeAdmin();
@@ -37,11 +37,19 @@ export default function Admin() {
       document.body.classList.add('impulse-admin-root');
     }
     
+    // Apply edit mode class if needed
+    if (isEditMode) {
+      document.body.classList.add('edit-mode');
+    } else {
+      document.body.classList.remove('edit-mode');
+    }
+    
     return () => {
       // Remove admin theme class from body
       document.body.classList.remove('impulse-admin-root');
+      document.body.classList.remove('edit-mode');
     };
-  }, [hasAdminAccess, hasInitialized, initializeAdmin, loadPermissions]);
+  }, [hasAdminAccess, hasInitialized, initializeAdmin, loadPermissions, isEditMode]);
 
   // Show a first-time user tutorial for drag and drop
   useEffect(() => {

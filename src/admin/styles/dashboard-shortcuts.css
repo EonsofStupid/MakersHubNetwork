@@ -2,6 +2,7 @@
 /* Dashboard Shortcuts Styling */
 .admin-dashboard-shortcuts {
   position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Custom transition for the shortcuts */
@@ -16,6 +17,9 @@
   text-align: center;
   border: 1px solid var(--impulse-border-normal);
   border-radius: 8px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .dashboard-shortcut:hover {
@@ -184,13 +188,6 @@
   border-radius: 8px;
   background-color: rgba(0, 240, 255, 0.05);
   transition: all 0.3s ease;
-}
-
-/* Apple glass effect */
-.dashboard-shortcut {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Responsive adjustments */

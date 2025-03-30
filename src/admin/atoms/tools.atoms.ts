@@ -25,3 +25,8 @@ export const selectedEffectAtom = atom<string | null>(null);
 
 // Frozen zones state
 export const frozenZonesAtom = atom<FrozenZone[]>([]);
+
+// Admin edit mode
+export const adminEditModeAtom = atom<boolean>(false);
+export const dragSourceAtom = atom<string | null>(null);
+export const dragTargetAtom = atom<string | null>(null);

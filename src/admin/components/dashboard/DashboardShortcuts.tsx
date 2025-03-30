@@ -6,8 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { adminNavigationItems, defaultDashboardShortcuts } from "@/admin/config/navigation.config";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { DashboardShortcut } from "./DashboardShortcut";
 
 import "@/admin/styles/dashboard-shortcuts.css";
 
@@ -41,10 +42,9 @@ export function DashboardShortcuts() {
       id: item.id,
       name: item.label,
       description: item.description || "",
-      icon: getCyberIcon(item.id, item.icon),
+      icon: item.icon,
       path: item.path,
-      permission: item.permission,
-      color: getRandomColor(item.id)
+      permission: item.permission
     }));
   
   // Empty slots to fill the grid
@@ -107,15 +107,25 @@ export function DashboardShortcuts() {
         className="flex justify-between items-center mb-4"
       >
         <h2 className="text-xl font-semibold">Quick Access</h2>
+        {isEditMode && (
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-sm text-[var(--impulse-primary)]"
+          >
+            Edit Mode Active
+          </motion.span>
+        )}
       </motion.div>
       
       <motion.div 
         className={cn(
           "admin-dashboard-shortcuts grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4",
           (isDraggingOver || dragTarget === 'dashboard') 
-            ? "ring-2 ring-[var(--impulse-primary)] bg-[var(--impulse-primary)]/5 rounded-lg p-2" 
+            ? "drag-target-highlight" 
             : "p-2",
-          dragSource && "drag-target-highlight transition-all duration-300"
+          dragSource && "transition-all duration-300"
         )}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -123,45 +133,16 @@ export function DashboardShortcuts() {
       >
         <AnimatePresence mode="popLayout">
           {shortcuts.map((shortcut) => (
-            <motion.div
+            <DashboardShortcut
               key={shortcut.id}
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Card 
-                className={cn(
-                  "dashboard-shortcut group cursor-pointer h-full",
-                  getCyberEffect(shortcut.id),
-                  shortcut.color
-                )}
-                onClick={() => handleNavigate(shortcut.path)}
-              >
-                <div className="dashboard-shortcut__icon">
-                  {shortcut.icon}
-                </div>
-                
-                <h3 className="dashboard-shortcut__title">{shortcut.name}</h3>
-                
-                {shortcut.description && (
-                  <p className="dashboard-shortcut__description">{shortcut.description}</p>
-                )}
-                
-                {isEditMode && (
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
-                    onClick={(e) => removeShortcut(shortcut.id, e)}
-                  >
-                    <X className="w-3 h-3" />
-                  </motion.button>
-                )}
-              </Card>
-            </motion.div>
+              id={shortcut.id}
+              title={shortcut.name}
+              description={shortcut.description}
+              icon={shortcut.icon}
+              onClick={() => handleNavigate(shortcut.path)}
+              onRemove={isEditMode ? (e) => removeShortcut(shortcut.id, e) : undefined}
+              isEditMode={isEditMode}
+            />
           ))}
           
           {isEditMode && Array.from({ length: emptySlots }).map((_, i) => (
@@ -194,59 +175,4 @@ export function DashboardShortcuts() {
       )}
     </div>
   );
-}
-
-// Helper function to get consistent random color based on ID
-function getRandomColor(id: string): string {
-  // Create a hash from the id string
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  // Get a value between 0 and 5 to select one of the predefined colors
-  const colorIndex = Math.abs(hash) % 5;
-  
-  const colors = [
-    "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    "bg-green-500/10 text-green-500 border-green-500/20",
-    "bg-purple-500/10 text-purple-500 border-purple-500/20",
-    "bg-pink-500/10 text-pink-500 border-pink-500/20",
-    "bg-cyan-500/10 text-cyan-500 border-cyan-500/20"
-  ];
-  
-  return colors[colorIndex];
-}
-
-// Helper function to apply a cyber effect based on ID
-function getCyberEffect(id: string): string {
-  // Create a hash from the id
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  // Get a value between 0 and 2 to select one of the predefined effects
-  const effectIndex = Math.abs(hash) % 3;
-  
-  const effects = [
-    "cyber-effect-1",
-    "cyber-effect-2",
-    "cyber-effect-3"
-  ];
-  
-  return effects[effectIndex];
-}
-
-// Helper function to wrap icons with their cyber effects
-function getCyberIcon(id: string, icon: React.ReactNode): React.ReactNode {
-  // Create a hash from the id
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  return React.cloneElement(icon as React.ReactElement, {
-    className: "w-6 h-6" // Ensure consistent sizing
-  });
 }

@@ -44,41 +44,6 @@
   background-color: rgba(0, 240, 255, 0.05);
 }
 
-/* Tooltip animations */
-.admin-tooltip {
-  position: absolute;
-  z-index: 1000;
-  pointer-events: none;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  background: var(--impulse-bg-overlay);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--impulse-border-normal);
-  color: var(--impulse-text-primary);
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
-  font-size: 0.75rem;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  transform: translateY(10px);
-}
-
-.admin-tooltip.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.admin-tooltip::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 0 5px 5px;
-  border-style: solid;
-  border-color: transparent transparent var(--impulse-border-normal);
-}
-
 /* Top nav item animations */
 @keyframes highlight-glow {
   0% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.3); }
@@ -106,7 +71,7 @@
 }
 
 /* Drag target highlight */
-.drag-target {
+.drop-target {
   border: 2px dashed var(--impulse-primary);
   background-color: rgba(0, 240, 255, 0.1);
   animation: highlight-glow 2s infinite;
