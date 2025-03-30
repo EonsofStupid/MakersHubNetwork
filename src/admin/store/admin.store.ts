@@ -1,8 +1,8 @@
-import { create, StoreApi } from 'zustand';
+
+import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AdminPermission } from '../types/admin.types';
 import { defaultTopNavShortcuts, defaultDashboardShortcuts } from '@/admin/config/navigation.config';
-import { PanInfo } from 'framer-motion';
 
 export interface AdminState {
   // UI State
@@ -18,14 +18,10 @@ export interface AdminState {
   adminTheme: string;
 
   // Drag & Drop
+  hoveredIcon: string | null;
   dragSource: string | null;
   dragTarget: string | null;
-  isDragging: boolean;
-  dragPreview: {
-    label: string;
-    icon?: React.ReactNode;
-  } | null;
-  dragInfo: PanInfo | null;
+  showDragOverlay: boolean;
 
   // Frozen Zones
   frozenZones: string[];
@@ -44,10 +40,6 @@ export interface AdminState {
   setPinnedDashboardItems: (items: string[]) => void;
   setDragSource: (source: string | null) => void;
   setDragTarget: (target: string | null) => void;
-  setIsDragging: (isDragging: boolean) => void;
-  setDragPreview: (preview: { label: string; icon?: React.ReactNode } | null) => void;
-  setDragInfo: (info: PanInfo | null) => void;
-  resetDrag: () => void;
   toggleDarkMode: () => void;
 }
 
@@ -66,54 +58,38 @@ export const useAdminStore = create<AdminState>()(
       // Theme
       adminTheme: 'cyberpunk',
 
-      // Drag & Drop
+      // Drag and drop
+      hoveredIcon: null,
       dragSource: null,
       dragTarget: null,
-      isDragging: false,
-      dragPreview: null,
-      dragInfo: null,
+      showDragOverlay: false,
 
-      // Frozen Zones
+      // Zones
       frozenZones: [],
 
       // Permissions
-      isLoadingPermissions: false,
+      isLoadingPermissions: true,
       permissions: [],
       permissionsLoaded: false,
 
       // Actions
-      setState: (state) => set(state),
-      setDragSource: (source) => set({ dragSource: source }),
-      setDragTarget: (target) => set({ dragTarget: target }),
-      setIsDragging: (isDragging) => 
-        set((state) => 
-          isDragging 
-            ? { isDragging: true }
-            : {
-                isDragging: false,
-                dragSource: null,
-                dragTarget: null,
-                dragPreview: null,
-                dragInfo: null,
-              }
-        ),
-      setDragPreview: (preview) => set({ dragPreview: preview }),
-      setDragInfo: (info) => set({ dragInfo: info }),
-      resetDrag: () => 
-        set({
-          dragSource: null,
-          dragTarget: null,
-          isDragging: false,
-          dragPreview: null,
-          dragInfo: null,
-        }),
+      setState: (partial) => set(partial),
+
       toggleSidebar: () =>
         set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
+
       setActiveSection: (section) => set({ activeSection: section }),
+
       setPinnedDashboardItems: (items) =>
         set({ pinnedDashboardItems: items }),
+
+      setDragSource: (source) => set({ dragSource: source }),
+
+      setDragTarget: (target) => set({ dragTarget: target }),
+
       toggleDarkMode: () =>
         set((state) => ({ isDarkMode: !state.isDarkMode })),
+
       loadPermissions: async (mappedPermissions) => {
         if (get().permissionsLoaded) {
           set({ isLoadingPermissions: false });
@@ -171,6 +147,7 @@ export const useAdminStore = create<AdminState>()(
           });
         }
       },
+
       hasPermission: (permission) => {
         const { permissions } = get();
         return permissions.includes('super_admin:all') || permissions.includes(permission);
@@ -198,7 +175,7 @@ export const useAdminStore = create<AdminState>()(
  * Typed subscribe helper for Zustand stores
  */
 export function subscribeWithSelector<T>(
-  store: StoreApi<AdminState>,
+  store: any,
   selector: (state: AdminState) => T,
   callback: (next: T, prev: T) => void
 ): () => void {
