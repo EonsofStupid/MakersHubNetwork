@@ -20,7 +20,7 @@ export const adminNavigationItems = [
     id: "overview", 
     label: "Overview", 
     path: "/admin/overview", 
-    icon: <LayoutDashboard className="h-4 w-4 mr-2" />,
+    icon: LayoutDashboard,
     permission: "admin:access" as AdminPermission,
     description: "Dashboard overview of the platform"
   },
@@ -28,7 +28,7 @@ export const adminNavigationItems = [
     id: "content", 
     label: "Content", 
     path: "/admin/content", 
-    icon: <FileText className="h-4 w-4 mr-2" />,
+    icon: FileText,
     permission: "content:view" as AdminPermission,
     description: "Manage website content and pages" 
   },
@@ -36,7 +36,7 @@ export const adminNavigationItems = [
     id: "users", 
     label: "Users", 
     path: "/admin/users", 
-    icon: <Users className="h-4 w-4 mr-2" />,
+    icon: Users,
     permission: "users:view" as AdminPermission,
     description: "Manage user accounts and permissions"
   },
@@ -44,7 +44,7 @@ export const adminNavigationItems = [
     id: "builds", 
     label: "Builds", 
     path: "/admin/builds", 
-    icon: <Package className="h-4 w-4 mr-2" />,
+    icon: Package,
     permission: "builds:view" as AdminPermission,
     description: "View and manage user builds"
   },
@@ -52,7 +52,7 @@ export const adminNavigationItems = [
     id: "reviews", 
     label: "Reviews", 
     path: "/admin/reviews", 
-    icon: <MessageSquare className="h-4 w-4 mr-2" />,
+    icon: MessageSquare,
     permission: "builds:view" as AdminPermission,
     description: "Manage build reviews and feedback"
   },
@@ -60,7 +60,7 @@ export const adminNavigationItems = [
     id: "data-maestro", 
     label: "Data Maestro", 
     path: "/admin/data-maestro", 
-    icon: <Database className="h-4 w-4 mr-2" />,
+    icon: Database,
     permission: "data:view" as AdminPermission,
     description: "Advanced data management tools"
   },
@@ -68,7 +68,7 @@ export const adminNavigationItems = [
     id: "analytics", 
     label: "Analytics", 
     path: "/admin/analytics", 
-    icon: <BarChart className="h-4 w-4 mr-2" />,
+    icon: BarChart,
     permission: "admin:access" as AdminPermission,
     description: "Platform usage statistics and trends"
   },
@@ -76,7 +76,7 @@ export const adminNavigationItems = [
     id: "themes", 
     label: "Themes", 
     path: "/admin/themes", 
-    icon: <PaintBucket className="h-4 w-4 mr-2" />,
+    icon: PaintBucket,
     permission: "themes:view" as AdminPermission,
     description: "Customize platform appearance"
   },
@@ -84,7 +84,7 @@ export const adminNavigationItems = [
     id: "permissions", 
     label: "Permissions", 
     path: "/admin/permissions", 
-    icon: <Shield className="h-4 w-4 mr-2" />,
+    icon: Shield,
     permission: "super_admin:all" as AdminPermission,
     description: "Manage admin access levels and permissions"
   },
@@ -92,7 +92,7 @@ export const adminNavigationItems = [
     id: "settings", 
     label: "Settings", 
     path: "/admin/settings", 
-    icon: <Settings className="h-4 w-4 mr-2" />,
+    icon: Settings,
     permission: "settings:view" as AdminPermission,
     description: "Configure platform settings"
   },
@@ -100,7 +100,7 @@ export const adminNavigationItems = [
     id: "featured", 
     label: "Featured", 
     path: "/admin/featured", 
-    icon: <Star className="h-4 w-4 mr-2" />,
+    icon: Star,
     permission: "content:view" as AdminPermission,
     description: "Manage featured content and promotions"
   }
