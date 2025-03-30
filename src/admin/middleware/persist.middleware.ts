@@ -1,14 +1,19 @@
 
-import { StateStorage, PersistOptions } from 'zustand/middleware';
+import { PersistOptions } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
+
+type StorageValue<T> = {
+  state: T;
+  version?: number;
+};
 
 /**
  * Creates a custom Zustand middleware for persisting state
  * that syncs with both localStorage and the Supabase database
  */
-export function createAdminPersistMiddleware<T>(storeName: string): PersistOptions<T, T> {
+export function createAdminPersistMiddleware<T>(storeName: string): PersistOptions<T> {
   // Create custom state storage
-  const customStorage: StateStorage = {
+  const storage = {
     getItem: async (name: string): Promise<string | null> => {
       // First try to get from localStorage for fast initial load
       const localValue = localStorage.getItem(name);
@@ -103,28 +108,26 @@ export function createAdminPersistMiddleware<T>(storeName: string): PersistOptio
   
   return {
     name: storeName,
-    storage: customStorage,
-    // Only persist specific fields
-    partialize: (state) => {
-      const { 
-        sidebarExpanded, 
-        activeSection, 
-        adminTheme, 
-        isDarkMode, 
-        showLabels,
-        dashboardShortcuts, 
-        pinnedTopNavItems 
-      } = state as any;
+    storage,
+    partialize: (state: T) => {
+      const partialState = {} as Partial<T>;
+      const keysToSave = [
+        'sidebarExpanded',
+        'activeSection',
+        'adminTheme',
+        'isDarkMode',
+        'showLabels',
+        'dashboardShortcuts',
+        'pinnedTopNavItems'
+      ];
       
-      return {
-        sidebarExpanded,
-        activeSection,
-        adminTheme,
-        isDarkMode,
-        showLabels,
-        dashboardShortcuts,
-        pinnedTopNavItems
-      };
+      Object.keys(state as object).forEach(key => {
+        if (keysToSave.includes(key)) {
+          (partialState as any)[key] = (state as any)[key];
+        }
+      });
+      
+      return partialState as T;
     },
   };
 }
