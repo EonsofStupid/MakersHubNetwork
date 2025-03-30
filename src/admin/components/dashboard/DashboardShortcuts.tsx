@@ -1,93 +1,108 @@
 
 import React, { useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAtom } from 'jotai';
-import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
-import { DashboardShortcut } from '@/admin/components/dashboard/DashboardShortcut';
-import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
-import { DragIndicator } from '@/admin/components/ui/DragIndicator';
-import { adminNavigationItems } from '@/admin/config/navigation.config';
-import { useAdminStore } from '@/admin/store/admin.store';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MoveHorizontal, Plus } from 'lucide-react';
-
-// Container animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { 
-    opacity: 1,
-    transition: { 
-      staggerChildren: 0.1,
-      delayChildren: 0.1 
-    }
-  }
-};
+import { useAdminStore } from '@/admin/store/admin.store';
+import { adminNavigationItems } from '@/admin/config/navigation.config';
+import { useAtom } from 'jotai';
+import { adminEditModeAtom, isDraggingAtom } from '@/admin/atoms/tools.atoms';
+import { useToast } from '@/hooks/use-toast';
+import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
+import { Card } from '@/components/ui/card';
 
 export function DashboardShortcuts() {
   const navigate = useNavigate();
-  const [editMode] = useAtom(adminEditModeAtom);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { dashboardShortcuts, setDashboardShortcuts } = useAdminStore();
+  const { toast } = useToast();
+  const [isEditMode] = useAtom(adminEditModeAtom);
+  const [isDragging] = useAtom(isDraggingAtom);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
   
-  const { registerDropZone, isDragging } = useDragAndDrop({
+  const { 
+    dashboardShortcuts, 
+    setDashboardShortcuts,
+    isDashboardCollapsed,
+    setDashboardCollapsed
+  } = useAdminStore();
+
+  // Use the draggable hook for the dashboard shortcuts
+  const { registerDropZone } = useDragAndDrop({
     items: dashboardShortcuts,
     onReorder: setDashboardShortcuts,
     containerId: 'dashboard-shortcuts',
     acceptExternalItems: true
   });
 
-  // Register the container as a drop zone
+  // Register the dashboard as a drop zone
   useEffect(() => {
-    if (containerRef.current) {
-      return registerDropZone(containerRef.current);
+    if (dropZoneRef.current) {
+      return registerDropZone(dropZoneRef.current);
     }
   }, [registerDropZone]);
-
-  // Filter navigation items to only include those in dashboardShortcuts
-  const shortcutItems = adminNavigationItems.filter(item => 
-    dashboardShortcuts.includes(item.id)
-  );
+  
+  // Get icons for the dashboard
+  const shortcutItems = adminNavigationItems
+    .filter(item => dashboardShortcuts.includes(item.id))
+    .map(item => ({
+      id: item.id,
+      icon: item.icon,
+      label: item.label,
+      path: item.path
+    }));
+  
+  const removeShortcut = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDashboardShortcuts(dashboardShortcuts.filter(item => item !== id));
+    
+    toast({
+      title: "Removed from Dashboard",
+      description: "Item has been removed from your dashboard shortcuts",
+    });
+  };
   
   const handleShortcutClick = (path: string) => {
     navigate(path);
   };
   
-  const handleRemoveShortcut = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDashboardShortcuts(dashboardShortcuts.filter(itemId => itemId !== id));
+  const toggleCollapsed = () => {
+    setDashboardCollapsed(!isDashboardCollapsed);
   };
-
-  return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-[var(--impulse-text-primary)] flex items-center gap-2">
-          <span>Dashboard Shortcuts</span>
-          {editMode && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="ml-2 text-xs bg-primary/20 text-primary px-2 py-1 rounded-full flex items-center gap-1"
-            >
-              <MoveHorizontal className="w-3 h-3" />
-              <span>Drag to customize</span>
-            </motion.div>
-          )}
-        </h2>
+  
+  if (isDashboardCollapsed) {
+    return (
+      <div className="mb-6">
+        <button 
+          onClick={toggleCollapsed}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Show dashboard shortcuts</span>
+        </button>
       </div>
-
+    );
+  }
+  
+  return (
+    <Card className="p-4 mb-6 backdrop-blur-md bg-background/30 border border-border/30 glassmorphism">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-medium">Quick Access</h2>
+        <button 
+          onClick={toggleCollapsed}
+          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      
       <motion.div 
-        ref={containerRef}
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
+        ref={dropZoneRef}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         className={cn(
-          "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 min-h-[140px] rounded-xl",
-          "border transition-all duration-300 glassmorphism",
-          isDragging 
-            ? "ring-2 ring-primary/50 bg-primary/5 border-primary/30" 
-            : "bg-black/20 border-border/30",
-          editMode && "border-dashed"
+          "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
+          isDragging && "ring-2 ring-dashed ring-primary/50 bg-primary/5 p-2 rounded-md",
+          isEditMode && "ring-2 ring-dashed ring-primary/20 p-2 rounded-md"
         )}
         id="dashboard-shortcuts"
         data-container-id="dashboard-shortcuts"
@@ -95,45 +110,60 @@ export function DashboardShortcuts() {
         <AnimatePresence mode="popLayout">
           {shortcutItems.length > 0 ? (
             shortcutItems.map((item) => (
-              <DashboardShortcut
+              <motion.div
                 key={item.id}
-                id={item.id}
-                title={item.label}
-                icon={item.icon}
-                description={item.description}
-                onClick={() => handleShortcutClick(item.path)}
-                onRemove={editMode ? (e) => handleRemoveShortcut(item.id, e) : undefined}
-                isEditMode={editMode}
-              />
+                layoutId={`dashboard-${item.id}`}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                whileHover={{ scale: 1.05 }}
+                className="relative"
+                data-id={item.id}
+              >
+                <div
+                  onClick={() => handleShortcutClick(item.path)}
+                  className="flex flex-col items-center justify-center p-4 rounded-md 
+                            bg-card/40 hover:bg-card/60 border border-border/30 
+                            transition-all cursor-pointer h-24 electric-background"
+                >
+                  <div className="text-primary mb-2">
+                    {item.icon}
+                  </div>
+                  <span className="text-sm">{item.label}</span>
+                </div>
+                
+                {isEditMode && (
+                  <button
+                    onClick={(e) => removeShortcut(item.id, e)}
+                    className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 
+                              text-white shadow-lg hover:bg-red-600 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </motion.div>
             ))
           ) : (
-            <motion.div
-              key="empty-state"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="col-span-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground min-h-[200px]"
-            >
-              {editMode ? (
-                <>
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                    <Plus className="w-8 h-8 text-primary/70" />
-                  </div>
-                  <p className="text-sm">Drag items here from the sidebar to create shortcuts</p>
-                  <p className="text-xs mt-2 text-primary/70">
-                    Tip: Any item from the left navigation can be dragged here
-                  </p>
-                </>
-              ) : (
-                <p>No shortcuts added yet. Enter edit mode to customize your dashboard.</p>
-              )}
-            </motion.div>
+            isEditMode && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="col-span-4 py-8 text-center text-muted-foreground"
+              >
+                <p className="mb-2">Drag items here from sidebar to create shortcuts</p>
+                <p className="text-xs">These shortcuts will appear on your dashboard for quick access</p>
+              </motion.div>
+            )
           )}
         </AnimatePresence>
       </motion.div>
-
-      {/* Drag indicator for visual feedback */}
-      <DragIndicator />
-    </div>
+      
+      {isEditMode && shortcutItems.length > 0 && (
+        <p className="text-xs text-muted-foreground mt-4 text-center">
+          Drag to reorder • Click the X to remove
+        </p>
+      )}
+    </Card>
   );
 }

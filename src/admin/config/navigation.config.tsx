@@ -1,113 +1,104 @@
 
-import React from "react";
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
+import React from 'react';
+import {
+  LayoutDashboard,
+  Users,
   Package,
-  Database, 
-  BarChart,
-  PaintBucket,
+  FileText,
+  Palette,
   Settings,
-  Shield,
-  MessageSquare,
-  Star
-} from "lucide-react";
-import { AdminPermission } from "../types/admin.types";
+  BarChart,
+  Database,
+  Star,
+  ShieldCheck
+} from 'lucide-react';
 
-export const adminNavigationItems = [
-  { 
-    id: "overview", 
-    label: "Overview", 
-    path: "/admin/overview", 
-    icon: <LayoutDashboard className="h-4 w-4 mr-2" />,
-    permission: "admin:access" as AdminPermission,
-    description: "Dashboard overview of the platform"
+export interface AdminNavigationItem {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  path: string;
+  permission?: string;
+  children?: AdminNavigationItem[];
+}
+
+export const adminNavigationItems: AdminNavigationItem[] = [
+  {
+    id: 'overview',
+    label: 'Overview',
+    icon: <LayoutDashboard className="w-5 h-5" />,
+    path: '/admin/overview',
+    permission: 'admin:access'
   },
-  { 
-    id: "content", 
-    label: "Content", 
-    path: "/admin/content", 
-    icon: <FileText className="h-4 w-4 mr-2" />,
-    permission: "content:view" as AdminPermission,
-    description: "Manage website content and pages" 
+  {
+    id: 'users',
+    label: 'Users',
+    icon: <Users className="w-5 h-5" />,
+    path: '/admin/users',
+    permission: 'users:view'
   },
-  { 
-    id: "users", 
-    label: "Users", 
-    path: "/admin/users", 
-    icon: <Users className="h-4 w-4 mr-2" />,
-    permission: "users:view" as AdminPermission,
-    description: "Manage user accounts and permissions"
+  {
+    id: 'builds',
+    label: 'Builds',
+    icon: <Package className="w-5 h-5" />,
+    path: '/admin/builds',
+    permission: 'builds:view'
   },
-  { 
-    id: "builds", 
-    label: "Builds", 
-    path: "/admin/builds", 
-    icon: <Package className="h-4 w-4 mr-2" />,
-    permission: "builds:view" as AdminPermission,
-    description: "View and manage user builds"
+  {
+    id: 'reviews',
+    label: 'Reviews',
+    icon: <Star className="w-5 h-5" />,
+    path: '/admin/reviews',
+    permission: 'content:view'
   },
-  { 
-    id: "reviews", 
-    label: "Reviews", 
-    path: "/admin/reviews", 
-    icon: <MessageSquare className="h-4 w-4 mr-2" />,
-    permission: "builds:view" as AdminPermission,
-    description: "Manage build reviews and feedback"
+  {
+    id: 'content',
+    label: 'Content',
+    icon: <FileText className="w-5 h-5" />,
+    path: '/admin/content',
+    permission: 'content:view'
   },
-  { 
-    id: "data-maestro", 
-    label: "Data Maestro", 
-    path: "/admin/data-maestro", 
-    icon: <Database className="h-4 w-4 mr-2" />,
-    permission: "data:view" as AdminPermission,
-    description: "Advanced data management tools"
+  {
+    id: 'themes',
+    label: 'Themes',
+    icon: <Palette className="w-5 h-5" />,
+    path: '/admin/themes',
+    permission: 'themes:view'
   },
-  { 
-    id: "analytics", 
-    label: "Analytics", 
-    path: "/admin/analytics", 
-    icon: <BarChart className="h-4 w-4 mr-2" />,
-    permission: "admin:access" as AdminPermission,
-    description: "Platform usage statistics and trends"
+  {
+    id: 'analytics',
+    label: 'Analytics',
+    icon: <BarChart className="w-5 h-5" />,
+    path: '/admin/analytics',
+    permission: 'data:view'
   },
-  { 
-    id: "themes", 
-    label: "Themes", 
-    path: "/admin/themes", 
-    icon: <PaintBucket className="h-4 w-4 mr-2" />,
-    permission: "themes:view" as AdminPermission,
-    description: "Customize platform appearance"
+  {
+    id: 'data',
+    label: 'Data Maestro',
+    icon: <Database className="w-5 h-5" />,
+    path: '/admin/data',
+    permission: 'data:view'
   },
-  { 
-    id: "permissions", 
-    label: "Permissions", 
-    path: "/admin/permissions", 
-    icon: <Shield className="h-4 w-4 mr-2" />,
-    permission: "super_admin:all" as AdminPermission,
-    description: "Manage admin access levels and permissions"
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: <Settings className="w-5 h-5" />,
+    path: '/admin/settings',
+    permission: 'settings:view'
   },
-  { 
-    id: "settings", 
-    label: "Settings", 
-    path: "/admin/settings", 
-    icon: <Settings className="h-4 w-4 mr-2" />,
-    permission: "settings:view" as AdminPermission,
-    description: "Configure platform settings"
-  },
-  { 
-    id: "featured", 
-    label: "Featured", 
-    path: "/admin/featured", 
-    icon: <Star className="h-4 w-4 mr-2" />,
-    permission: "content:view" as AdminPermission,
-    description: "Manage featured content and promotions"
+  {
+    id: 'permissions',
+    label: 'Permissions',
+    icon: <ShieldCheck className="w-5 h-5" />,
+    path: '/admin/permissions',
+    permission: 'super_admin:all'
   }
 ];
 
-// Define draggable navigation shortcuts for the top bar
-export const defaultTopNavShortcuts = ["users", "builds", "reviews"]; 
+export function getNavigationItemById(id: string): AdminNavigationItem | undefined {
+  return adminNavigationItems.find(item => item.id === id);
+}
 
-// Define default dashboard shortcuts (larger icons)
-export const defaultDashboardShortcuts = ["content", "data-maestro", "themes", "settings"];
+export function getNavigationItemByPath(path: string): AdminNavigationItem | undefined {
+  return adminNavigationItems.find(item => item.path === path);
+}

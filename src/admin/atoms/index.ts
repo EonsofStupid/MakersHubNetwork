@@ -1,3 +1,4 @@
 
-// Export all atoms to make them easier to import
 export * from './tools.atoms';
+export * from './theme.atoms';
+export * from './metrics.atoms';
