@@ -1,57 +1,8 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
-import { PersistOptions, StorageValue } from "zustand/middleware";
-
-// FIX: Custom storage with proper return value format for Zustand
-const zustandStorage: Storage = {
-  getItem: (name: string): string | null => {
-    try {
-      return localStorage.getItem(name);
-    } catch (error) {
-      console.error('Error retrieving admin preferences:', error);
-      return null;
-    }
-  },
-  setItem: (name: string, value: string): void => {
-    try {
-      localStorage.setItem(name, value);
-    } catch (error) {
-      console.error('Error saving admin preferences:', error);
-    }
-  },
-  removeItem: (name: string): void => {
-    try {
-      localStorage.removeItem(name);
-    } catch (error) {
-      console.error('Error removing admin preferences:', error);
-    }
-  },
-};
-
-const storageAdapter = {
-  getItem: (name: string): StorageValue<any> | null => {
-    const value = zustandStorage.getItem(name);
-    if (!value) return null;
-
-    try {
-      return JSON.parse(value);
-    } catch (error) {
-      console.error('Error parsing admin store value from localStorage:', error);
-      return null;
-    }
-  },
-  setItem: (name: string, value: StorageValue<any>): void => {
-    try {
-      zustandStorage.setItem(name, JSON.stringify(value));
-    } catch (error) {
-      console.error('Error stringifying admin store value for localStorage:', error);
-    }
-  },
-  removeItem: (name: string): void => {
-    zustandStorage.removeItem(name);
-  }
-};
+import { PersistOptions, StateStorage } from "zustand/middleware";
 
 /**
  * Middleware for syncing admin preferences between localStorage and database
@@ -59,7 +10,7 @@ const storageAdapter = {
 export function createAdminPersistMiddleware(storeName: string): PersistOptions<any, any> {
   return {
     name: storeName,
-
+    
     onRehydrateStorage: (state: any) => {
       return (rehydratedState: any, error: any) => {
         if (error) {
@@ -70,24 +21,49 @@ export function createAdminPersistMiddleware(storeName: string): PersistOptions<
 
     // Filter out what we want to persist to localStorage
     partialize: (state: any) => {
-      const {
-        permissions,
-        isLoadingPermissions,
-        loadPermissions,
-        hasPermission,
-        ...persistedState
-      } = state;
+      // Only persist UI preferences to localStorage, exclude function properties
+      const { permissions, isLoadingPermissions, loadPermissions, hasPermission, ...persistedState } = state;
       return persistedState;
     },
 
-    storage: storageAdapter,
+    // Custom storage adapter that syncs with Supabase
+    storage: {
+      getItem: (name: string): string | null => {
+        try {
+          // First try localStorage
+          const value = localStorage.getItem(name);
+          return value;
+        } catch (error) {
+          console.error('Error retrieving admin preferences:', error);
+          return null;
+        }
+      },
+      
+      setItem: (name: string, value: string): void => {
+        try {
+          // Always update localStorage first
+          localStorage.setItem(name, value);
+        } catch (error) {
+          console.error('Error saving admin preferences:', error);
+        }
+      },
+      
+      removeItem: (name: string): void => {
+        try {
+          localStorage.removeItem(name);
+        } catch (error) {
+          console.error('Error removing admin preferences:', error);
+        }
+      },
+    } as StateStorage
   };
 }
 
 /**
  * Helper function to merge localStorage and database preferences
  */
-export function mergePreferences(localData: any, dbData: any): any {
+function mergePreferences(localData: any, dbData: any): any {
+  // Extract the relevant fields from the database record
   const {
     id,
     user_id,
@@ -95,9 +71,11 @@ export function mergePreferences(localData: any, dbData: any): any {
     updated_at,
     ...dbPreferences
   } = dbData;
-
+  
+  // Convert database column format back to store format
   const formattedDbPrefs = formatFromDatabase(dbPreferences);
-
+  
+  // Merge with local data, preferring database values
   return {
     ...localData,
     ...formattedDbPrefs,
@@ -107,7 +85,7 @@ export function mergePreferences(localData: any, dbData: any): any {
 /**
  * Format store data to match database schema
  */
-export function formatForDatabase(storeData: any): any {
+function formatForDatabase(storeData: any): any {
   return {
     sidebar_expanded: storeData.sidebarExpanded,
     topnav_items: storeData.pinnedTopNavItems,
@@ -125,7 +103,7 @@ export function formatForDatabase(storeData: any): any {
 /**
  * Format database data to match store schema
  */
-export function formatFromDatabase(dbData: any): any {
+function formatFromDatabase(dbData: any): any {
   return {
     sidebarExpanded: dbData.sidebar_expanded,
     pinnedTopNavItems: dbData.topnav_items || [],
