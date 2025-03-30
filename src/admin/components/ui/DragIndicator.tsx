@@ -78,25 +78,6 @@ export function DragIndicator() {
             ease: "easeInOut"
           }}
         />
-        
-        {/* Glitch effect */}
-        <motion.div 
-          className="absolute inset-0 overflow-hidden opacity-50 rounded-md -z-20 mix-blend-screen"
-          animate={{ 
-            clipPath: [
-              "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
-              "polygon(0 5%, 100% 0, 100% 95%, 0 100%)",
-              "polygon(0 0, 100% 0, 100% 100%, 0 100%)"
-            ]
-          }}
-          transition={{ 
-            duration: 3, 
-            repeat: Infinity, 
-            repeatType: "mirror" 
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-secondary/30 to-primary/30"></div>
-        </motion.div>
       </motion.div>
     </AnimatePresence>
   );

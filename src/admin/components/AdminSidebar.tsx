@@ -6,20 +6,24 @@ import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
-import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { scrollbarStyle } from '@/admin/utils/styles';
 import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
+import { 
+  NavigationContainer, 
+  NavigationList, 
+  NavigationItem,
+  NavigationSection 
+} from '@/admin/components/navigation';
+
+// Import the navigation CSS
+import '@/admin/styles/navigation.css';
 import '@/admin/styles/sidebar-navigation.css';
+import '@/admin/styles/drag-drop.css';
 
 // Framer Motion variants
-const sidebarVariants = {
-  expanded: { width: '240px', transition: { type: "spring", stiffness: 300, damping: 30 } },
-  collapsed: { width: '70px', transition: { type: "spring", stiffness: 300, damping: 30 } }
-};
-
 const titleVariants = {
   expanded: { opacity: 1, x: 0, transition: { delay: 0.1 } },
   collapsed: { opacity: 0, x: -10 }
@@ -57,15 +61,7 @@ export function AdminSidebar() {
   };
 
   return (
-    <motion.div 
-      variants={sidebarVariants}
-      initial="expanded"
-      animate={sidebarExpanded ? "expanded" : "collapsed"}
-      className={cn(
-        "admin-sidebar rounded-xl border border-[var(--impulse-border-normal)] bg-[var(--impulse-bg-card)] backdrop-blur-md overflow-hidden",
-        isEditMode && "border-[var(--impulse-primary)]/30 shadow-[0_0_15px_rgba(0,240,255,0.2)]"
-      )}
-    >
+    <NavigationContainer expanded={sidebarExpanded}>
       {/* Header with title and collapse button */}
       <div className="admin-sidebar__header py-4 px-3 flex justify-between items-center border-b border-[var(--impulse-border-normal)]">
         <AnimatePresence mode="wait">
@@ -106,41 +102,42 @@ export function AdminSidebar() {
       </div>
       
       {/* Main navigation items */}
-      <div 
-        className={cn(
-          "admin-sidebar__content py-4",
-          scrollbarStyle
-        )}
+      <NavigationList 
+        containerId="main-navigation"
+        expanded={sidebarExpanded}
+        className={scrollbarStyle}
       >
-        <AnimatePresence mode="popLayout">
-          {visibleItems.map((item) => (
-            <NavigationItem
-              key={item.id}
-              id={item.id}
-              label={item.label}
-              icon={item.icon}
-              description={item.description}
-              isActive={activeSection === item.id}
-              onClick={() => handleNavClick(item.path, item.id)}
-              tooltipContent={!sidebarExpanded ? item.label : undefined}
-              showTooltip={!sidebarExpanded}
-              className={sidebarExpanded ? "mx-2" : "justify-center mx-2 px-0"}
-            />
-          ))}
-        </AnimatePresence>
+        <NavigationSection expanded={sidebarExpanded}>
+          <AnimatePresence mode="popLayout">
+            {visibleItems.map((item) => (
+              <NavigationItem
+                key={item.id}
+                id={item.id}
+                label={item.label}
+                icon={item.icon}
+                description={item.description}
+                isActive={activeSection === item.id}
+                onClick={() => handleNavClick(item.path, item.id)}
+                tooltipContent={!sidebarExpanded ? `${item.label}: ${item.description}` : undefined}
+                showTooltip={!sidebarExpanded}
+                className={sidebarExpanded ? "mx-2" : "justify-center mx-2 px-0"}
+              />
+            ))}
+          </AnimatePresence>
+        </NavigationSection>
         
-        {isEditMode && (
+        {isEditMode && sidebarExpanded && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mt-4 mx-4 p-2 rounded-md bg-[var(--impulse-primary)]/10 border border-[var(--impulse-border-normal)]"
           >
             <p className="text-xs text-[var(--impulse-primary)] text-center">
-              {sidebarExpanded ? "Drag items to customize" : ""}
+              Drag items to customize your dashboard
             </p>
           </motion.div>
         )}
-      </div>
+      </NavigationList>
       
       {/* Footer information */}
       <div className="admin-sidebar__footer border-t border-[var(--impulse-border-normal)] p-4">
@@ -182,6 +179,6 @@ export function AdminSidebar() {
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </NavigationContainer>
   );
 }

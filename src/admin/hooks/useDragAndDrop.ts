@@ -57,53 +57,48 @@ export function useDragAndDrop({
     }
   }, [editMode, setIsDragging, setDragSourceId, setDragTargetId, setDropIndicatorPosition, dragOnlyInEditMode]);
 
-  // Handle the drop event - reorder items
-  const handleItemDrop = useCallback((sourceId: string, targetId: string) => {
-    if (!sourceId || !targetId || sourceId === targetId) return;
-
-    // Handle drops within the same container
-    if (targetId !== `${containerId}-empty`) {
+  // Handle the drop event - reorder items or add from external source
+  const handleItemDrop = useCallback((sourceId: string, targetId: string | null, targetContainerId: string) => {
+    if (!sourceId) return;
+    
+    // If dropping within same container (reordering)
+    if (targetContainerId === containerId && targetId !== `${containerId}-empty`) {
       const sourceIndex = items.indexOf(sourceId);
-      const targetIndex = items.indexOf(targetId);
+      const targetIndex = targetId ? items.indexOf(targetId as string) : items.length;
       
-      // If target container already has the item, just reorder it
+      // If source exists in this container, reorder
       if (sourceIndex !== -1 && targetIndex !== -1) {
         const newItems = [...items];
         newItems.splice(sourceIndex, 1);
         newItems.splice(targetIndex, 0, sourceId);
         onReorder?.(newItems);
-        
-        toast({
-          title: "Item moved",
-          description: `Successfully reordered items in ${containerId}`,
-          variant: "default",
-          duration: 2000
-        });
         return;
       }
     }
     
-    // Handle drops from external container 
-    if (acceptExternalItems) {
+    // Handle drops from external container
+    if (acceptExternalItems && targetContainerId === containerId) {
       // If the item is not in the current container, add it
       if (!items.includes(sourceId)) {
         let newItems = [...items];
-        const targetIndex = targetId !== `${containerId}-empty` ? items.indexOf(targetId) : items.length;
         
-        if (targetIndex !== -1 || targetId === `${containerId}-empty`) {
-          newItems.splice(targetIndex !== -1 ? targetIndex : 0, 0, sourceId);
-          onReorder?.(newItems);
-          
-          toast({
-            title: "Item added",
-            description: `Successfully added item to ${containerId}`,
-            variant: "default",
-            duration: 2000
-          });
+        // If dropping on a specific item, insert before it
+        if (targetId && targetId !== `${containerId}-empty`) {
+          const targetIndex = items.indexOf(targetId as string);
+          if (targetIndex !== -1) {
+            newItems.splice(targetIndex, 0, sourceId);
+          } else {
+            newItems.push(sourceId);
+          }
+        } else {
+          // If dropping in empty space, add to end
+          newItems.push(sourceId);
         }
+        
+        onReorder?.(newItems);
       }
     }
-  }, [items, onReorder, toast, containerId, acceptExternalItems]);
+  }, [items, onReorder, containerId, acceptExternalItems]);
 
   // Register a drop zone container
   const registerDropZone = useCallback((element: HTMLElement | null) => {
@@ -111,10 +106,13 @@ export function useDragAndDrop({
 
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
-      if (!isDragging || (dragOnlyInEditMode && !editMode) || !acceptExternalItems) return;
       
-      // Add active class to the container
-      element.classList.add('active-drop');
+      // Check if we should handle this drag (edit mode check)
+      if ((dragOnlyInEditMode && !editMode) || !isDragging) return;
+      
+      if (!element.classList.contains('active-drop')) {
+        element.classList.add('active-drop');
+      }
       
       // Find the closest draggable item
       const dropItems = Array.from(element.querySelectorAll('[data-id]'));
@@ -137,73 +135,63 @@ export function useDragAndDrop({
         }
       });
 
+      // Remove previous target highlights
+      document.querySelectorAll('.drop-target-item').forEach(el => {
+        (el as HTMLElement).classList.remove('drop-target-item');
+      });
+
       if (closestItem) {
         const targetId = (closestItem as HTMLElement).getAttribute('data-id');
         if (targetId && targetId !== dragTargetId) {
           setDragTargetId(targetId);
-          
-          // Add a visual cue to the target item
-          document.querySelectorAll('.drop-target-item').forEach(el => {
-            if (el instanceof Element) {
-              (el as HTMLElement).classList.remove('drop-target-item');
-            }
-          });
-          
           (closestItem as HTMLElement).classList.add('drop-target-item');
         }
-      } else if (dropItems.length === 0) {
-        // If there are no items, we can still drop here
+      } else {
+        // If there are no items, we'll use a special empty target
         setDragTargetId(`${containerId}-empty`);
+      }
+      
+      // Update custom property for glow effect
+      if (e.clientX && e.clientY) {
+        const rect = element.getBoundingClientRect();
+        element.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        element.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
       }
     };
 
     const handleDragLeave = (e: DragEvent) => {
-      // Check if we're actually leaving the container (not just moving between children)
+      // Only process if we're actually leaving the container (not just moving between its children)
       const relatedTarget = e.relatedTarget as Node | null;
-      
-      // Check if relatedTarget exists and is contained within the element
       if (relatedTarget && element.contains(relatedTarget)) {
-        // We're still within the container, don't remove classes or reset state
         return;
       }
       
       element.classList.remove('active-drop');
-      setDragTargetId(null);
       
-      // Remove visual cues
+      // Remove target highlight
       document.querySelectorAll('.drop-target-item').forEach(el => {
-        if (el instanceof Element) {
-          (el as HTMLElement).classList.remove('drop-target-item');
-        }
+        (el as HTMLElement).classList.remove('drop-target-item');
       });
+      
+      setDragTargetId(null);
     };
 
     const handleDrop = (e: DragEvent) => {
       e.preventDefault();
       element.classList.remove('active-drop');
       
+      // Process the drop
       if (dragSourceId) {
-        if (dragTargetId && dragTargetId !== `${containerId}-empty`) {
-          // Drop on a specific item
-          handleItemDrop(dragSourceId, dragTargetId);
-        } else if (dragTargetId === `${containerId}-empty`) {
-          // Drop in an empty container
-          onReorder?.([...items, dragSourceId]);
-          
-          toast({
-            title: "Item added",
-            description: `Successfully added item to ${containerId}`,
-            variant: "default",
-            duration: 2000
-          });
-        }
+        handleItemDrop(dragSourceId, dragTargetId, containerId);
       }
       
-      // Remove visual cues
+      // Remove all visual cues
       document.querySelectorAll('.drop-target-item').forEach(el => {
-        if (el instanceof Element) {
-          (el as HTMLElement).classList.remove('drop-target-item');
-        }
+        (el as HTMLElement).classList.remove('drop-target-item');
+      });
+      
+      document.querySelectorAll('.dragging').forEach(el => {
+        (el as HTMLElement).classList.remove('dragging');
       });
       
       // Reset drag state
@@ -213,7 +201,8 @@ export function useDragAndDrop({
       setDropIndicatorPosition(null);
     };
 
-    // Type cast the event handlers to EventListener
+    // Set up event listeners
+    element.setAttribute('data-container-id', containerId);
     element.addEventListener('dragover', handleDragOver as unknown as EventListener);
     element.addEventListener('dragleave', handleDragLeave as unknown as EventListener);
     element.addEventListener('drop', handleDrop as unknown as EventListener);
@@ -234,10 +223,7 @@ export function useDragAndDrop({
     setDropIndicatorPosition,
     handleItemDrop,
     containerId,
-    onReorder,
-    toast,
-    dragOnlyInEditMode,
-    acceptExternalItems
+    dragOnlyInEditMode
   ]);
 
   // Make an item draggable
@@ -256,18 +242,14 @@ export function useDragAndDrop({
       // Add visual feedback
       el.classList.add('dragging');
       
-      // Set drag image (optional)
-      const dragImage = document.createElement('div');
-      dragImage.textContent = id;
-      dragImage.style.position = 'absolute';
-      dragImage.style.top = '-9999px';
-      document.body.appendChild(dragImage);
-      e.dataTransfer?.setDragImage(dragImage, 0, 0);
+      // Set data transfer for compatibility
+      e.dataTransfer?.setData('text/plain', id);
       
-      // Clean up after dragging starts
-      setTimeout(() => {
-        document.body.removeChild(dragImage);
-      }, 0);
+      // Set drag image (optional)
+      if (e.dataTransfer) {
+        // Use the element itself as the drag image with a slight offset
+        e.dataTransfer.setDragImage(el, 20, 20);
+      }
       
       return true;
     };
@@ -283,20 +265,26 @@ export function useDragAndDrop({
       
       // Remove any lingering visual cues
       document.querySelectorAll('.drop-target-item').forEach(el => {
-        if (el instanceof Element) {
-          (el as HTMLElement).classList.remove('drop-target-item');
-        }
+        (el as HTMLElement).classList.remove('drop-target-item');
       });
     };
     
-    el.setAttribute('draggable', (dragOnlyInEditMode ? editMode : true).toString());
+    // Set draggable attribute (only in edit mode if required)
+    if (!dragOnlyInEditMode || editMode) {
+      el.setAttribute('draggable', 'true');
+      el.classList.add('draggable');
+    } else {
+      el.removeAttribute('draggable');
+      el.classList.remove('draggable');
+    }
     
-    // Type cast the event handlers to EventListener
+    // Attach event listeners
     el.addEventListener('dragstart', handleDragStart as unknown as EventListener);
     el.addEventListener('dragend', handleDragEnd);
     
     return () => {
       el.removeAttribute('draggable');
+      el.classList.remove('draggable');
       el.removeEventListener('dragstart', handleDragStart as unknown as EventListener);
       el.removeEventListener('dragend', handleDragEnd);
     };

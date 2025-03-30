@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -11,15 +10,6 @@ import { SyncIndicator } from "@/admin/components/ui/SyncIndicator";
 import { DragIndicator } from "@/admin/components/ui/DragIndicator";
 import { useAtom } from "jotai";
 import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
-
-// Import admin theme styles
-import "@/admin/styles/admin-core.css";
-import "@/admin/styles/impulse-admin.css";
-import "@/admin/styles/admin-topnav.css";
-import "@/admin/styles/sidebar-navigation.css";
-import "@/admin/styles/dashboard-shortcuts.css";
-import "@/admin/styles/drag-drop.css";
-import "@/admin/theme/impulse/impulse-theme.css";
 
 export default function Admin() {
   const { toast } = useToast();
@@ -66,6 +56,7 @@ export default function Admin() {
     if (hasAdminAccess && hasInitialized && !hasSeenTutorial && !hasShownIntro) {
       setHasShownIntro(true);
       
+      // Show tutorials with a slight delay
       const timeout = setTimeout(() => {
         toast({
           title: "Admin Customization",
@@ -115,6 +106,7 @@ export default function Admin() {
         <SyncIndicator />
       </div>
       <AdminRoutes />
+      <DragIndicator />
     </ErrorBoundary>
   );
 }

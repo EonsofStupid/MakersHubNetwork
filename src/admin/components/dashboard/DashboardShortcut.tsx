@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AdminTooltip } from '../ui/AdminTooltip';
+import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 
 interface DashboardShortcutProps {
   id: string;
@@ -46,6 +47,22 @@ export function DashboardShortcut({
   isEditMode = false,
   className
 }: DashboardShortcutProps) {
+  const itemRef = useRef<HTMLDivElement>(null);
+  
+  // Use drag and drop hook
+  const { makeDraggable } = useDragAndDrop({
+    items: [id],
+    containerId: 'dashboard-shortcuts',
+    dragOnlyInEditMode: true
+  });
+  
+  // Enable dragging in edit mode
+  useEffect(() => {
+    if (itemRef.current && isEditMode) {
+      return makeDraggable(itemRef.current, id);
+    }
+  }, [id, isEditMode, makeDraggable]);
+
   // Generate a consistent effect class based on the ID
   const getEffectClass = () => {
     // Create a simple hash from the id string
@@ -90,6 +107,7 @@ export function DashboardShortcut({
       delay={500}
     >
       <motion.div
+        ref={itemRef}
         layoutId={`dashboard-${id}`}
         variants={cardVariants}
         initial="hidden"
@@ -101,12 +119,15 @@ export function DashboardShortcut({
         className={cn(
           "dashboard-shortcut relative aspect-square cursor-pointer p-4 flex flex-col items-center justify-center",
           "rounded-xl backdrop-blur-md border overflow-hidden",
-          `bg-gradient-to-br ${colorClass}`,
+          `bg-gradient-to-br ${colorClass} ${effectClass}`,
           isEditMode && "ring-2 ring-primary/30",
           className
         )}
         onClick={onClick}
       >
+        {/* Cyber glitch effect layer */}
+        <div className="cyber-glitch-layer absolute inset-0 pointer-events-none"></div>
+        
         {/* Main icon */}
         <motion.div 
           className="dashboard-shortcut__icon flex items-center justify-center w-12 h-12 mb-3 rounded-full bg-white/10 relative z-10"
@@ -130,43 +151,6 @@ export function DashboardShortcut({
         {description && (
           <p className="dashboard-shortcut__description text-xs text-center mt-1 opacity-70">{description}</p>
         )}
-        
-        {/* CyberGlitch effect */}
-        <div className="absolute inset-0 pointer-events-none z-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent opacity-30" />
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0"
-            animate={{ 
-              backgroundPosition: ["0% 0%", "100% 100%"]
-            }}
-            transition={{ duration: 10, repeat: Infinity, repeatType: "mirror" }}
-          />
-          
-          {/* Scan line effect */}
-          <motion.div
-            className="absolute w-full h-10 bg-white/5 -left-full"
-            animate={{ 
-              left: ["100%", "-100%"],
-            }}
-            transition={{ 
-              duration: 3,
-              repeat: Infinity,
-              ease: "linear",
-              repeatDelay: 1
-            }}
-          />
-          
-          {/* Horizontal lines */}
-          <div className="absolute inset-0 overflow-hidden opacity-10">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div 
-                key={i}
-                className="w-full h-[1px] bg-white/50"
-                style={{ top: `${i * 10}%` }}
-              />
-            ))}
-          </div>
-        </div>
         
         {/* Remove button in edit mode */}
         {isEditMode && onRemove && (
