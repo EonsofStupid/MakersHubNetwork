@@ -99,7 +99,7 @@ export function DashboardShortcuts() {
                 key={item.id}
                 id={item.id}
                 title={item.label}
-                icon={item.icon}
+                icon={item.icon || Plus}
                 description={item.description}
                 onClick={() => handleShortcutClick(item.path)}
                 onRemove={editMode ? (e) => handleRemoveShortcut(item.id, e) : undefined}

@@ -5,10 +5,13 @@
 
 export interface FrozenZone {
   id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  name: string;
+  elementId: string;
+  isLocked: boolean;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
   content?: string;
   type?: string;
 }
