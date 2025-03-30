@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -26,7 +26,6 @@ export function TopNavItem({
   className
 }: TopNavItemProps) {
   const itemRef = useRef<HTMLDivElement>(null);
-  const [hoverGlowColor, setHoverGlowColor] = useState<string>('');
   
   // Make the item draggable for reordering
   const { makeDraggable } = useDragAndDrop({
@@ -43,7 +42,7 @@ export function TopNavItem({
   }, [id, isEditMode, makeDraggable]);
 
   // Create color variant based on ID for visual variety
-  const getBaseColorClass = () => {
+  const getColorClass = () => {
     // Create a simple hash from the id
     let hash = 0;
     for (let i = 0; i < id.length; i++) {
@@ -62,25 +61,6 @@ export function TopNavItem({
     
     return glows[colorIndex];
   };
-  
-  // Generate a random glow color on hover
-  const getRandomGlowColor = () => {
-    const colors = [
-      "0 0 15px rgba(0, 240, 255, 0.7)",      // Cyan
-      "0 0 15px rgba(255, 0, 128, 0.7)",      // Pink
-      "0 0 15px rgba(0, 255, 128, 0.7)",      // Green
-      "0 0 15px rgba(255, 128, 0, 0.7)",      // Orange
-      "0 0 15px rgba(138, 43, 226, 0.7)",     // BlueViolet
-      "0 0 15px rgba(255, 215, 0, 0.7)"       // Gold
-    ];
-    
-    return colors[Math.floor(Math.random() * colors.length)];
-  };
-  
-  // Event handler for mouse enter to randomize glow color
-  const handleMouseEnter = () => {
-    setHoverGlowColor(getRandomGlowColor());
-  };
 
   return (
     <AdminTooltip content={label} side="bottom">
@@ -88,7 +68,6 @@ export function TopNavItem({
         ref={itemRef}
         data-id={id}
         className="relative group"
-        onMouseEnter={handleMouseEnter}
       >
         <motion.button
           layoutId={`topnav-${id}`}
@@ -102,12 +81,9 @@ export function TopNavItem({
             "hover:bg-[var(--impulse-primary)]/20",
             "hover:text-[var(--impulse-primary)]",
             "transition-all",
-            getBaseColorClass(),
+            getColorClass(),
             className
           )}
-          style={hoverGlowColor ? {
-            boxShadow: hoverGlowColor
-          } : undefined}
         >
           <motion.div 
             className="relative z-10"
