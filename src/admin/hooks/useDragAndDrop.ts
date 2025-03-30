@@ -41,11 +41,11 @@ export function useDragAndDrop({
 
   // Set up global mouse move listener for drag indicator
   useEffect(() => {
-    if ((dragOnlyInEditMode && editMode) || !dragOnlyInEditMode) {
+    if (isDragging) {
       window.addEventListener('mousemove', updateCursorPosition);
       return () => window.removeEventListener('mousemove', updateCursorPosition);
     }
-  }, [editMode, updateCursorPosition, dragOnlyInEditMode]);
+  }, [isDragging, updateCursorPosition]);
 
   // Reset dragging state when edit mode is toggled off
   useEffect(() => {
@@ -96,9 +96,15 @@ export function useDragAndDrop({
         }
         
         onReorder?.(newItems);
+        
+        toast({
+          title: "Item Added",
+          description: `Item has been added to ${containerId === 'top-nav-shortcuts' ? 'top navigation' : 'dashboard shortcuts'}`,
+          duration: 2000,
+        });
       }
     }
-  }, [items, onReorder, containerId, acceptExternalItems]);
+  }, [items, onReorder, containerId, acceptExternalItems, toast]);
 
   // Register a drop zone container
   const registerDropZone = useCallback((element: HTMLElement | null) => {
@@ -108,7 +114,7 @@ export function useDragAndDrop({
       e.preventDefault();
       
       // Check if we should handle this drag (edit mode check)
-      if ((dragOnlyInEditMode && !editMode) || !isDragging) return;
+      if (dragOnlyInEditMode && !editMode) return;
       
       if (!element.classList.contains('active-drop')) {
         element.classList.add('active-drop');
@@ -140,14 +146,14 @@ export function useDragAndDrop({
         (el as HTMLElement).classList.remove('drop-target-item');
       });
 
-      if (closestItem) {
+      if (closestItem && closestDistance < 100) {
         const targetId = (closestItem as HTMLElement).getAttribute('data-id');
         if (targetId && targetId !== dragTargetId) {
           setDragTargetId(targetId);
           (closestItem as HTMLElement).classList.add('drop-target-item');
         }
       } else {
-        // If there are no items, we'll use a special empty target
+        // If there are no items or item is too far, we'll use a special empty target
         setDragTargetId(`${containerId}-empty`);
       }
       

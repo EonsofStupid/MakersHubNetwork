@@ -3,8 +3,10 @@ import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { AdminTooltip } from '../ui/AdminTooltip';
+import { useAtom } from 'jotai';
+import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
+import { AdminTooltip } from '../ui/AdminTooltip';
 
 interface DashboardShortcutProps {
   id: string;
@@ -14,28 +16,7 @@ interface DashboardShortcutProps {
   onClick: () => void;
   onRemove?: (e: React.MouseEvent) => void;
   isEditMode?: boolean;
-  className?: string;
 }
-
-// Animation variants
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 25 } },
-  hover: { y: -5, transition: { type: "spring", stiffness: 400, damping: 10 } },
-  tap: { scale: 0.97, transition: { duration: 0.1 } },
-  exit: { opacity: 0, scale: 0.8, transition: { duration: 0.2 } }
-};
-
-const glowVariants = {
-  initial: { opacity: 0 },
-  hover: { opacity: 1, transition: { duration: 0.3 } }
-};
-
-const iconVariants = {
-  initial: { scale: 1 },
-  hover: { scale: 1.1, rotate: 5, transition: { type: "spring", stiffness: 400, damping: 10 } },
-  tap: { scale: 0.9, rotate: 0, transition: { duration: 0.1 } }
-};
 
 export function DashboardShortcut({
   id,
@@ -44,147 +25,133 @@ export function DashboardShortcut({
   icon,
   onClick,
   onRemove,
-  isEditMode = false,
-  className
+  isEditMode = false
 }: DashboardShortcutProps) {
   const itemRef = useRef<HTMLDivElement>(null);
+  const [editMode] = useAtom(adminEditModeAtom);
   
-  // Use drag and drop hook
+  // Register for drag and drop
   const { makeDraggable } = useDragAndDrop({
     items: [id],
     containerId: 'dashboard-shortcuts',
     dragOnlyInEditMode: true
   });
   
-  // Enable dragging in edit mode
+  // Set up drag functionality
   useEffect(() => {
-    if (itemRef.current && isEditMode) {
+    if (itemRef.current && editMode) {
       return makeDraggable(itemRef.current, id);
     }
-  }, [id, isEditMode, makeDraggable]);
-
-  // Generate a consistent effect class based on the ID
-  const getEffectClass = () => {
-    // Create a simple hash from the id string
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-      hash = id.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    
-    // Get effect index based on hash
-    const effectIndex = Math.abs(hash) % 3;
-    return `cyber-effect-${effectIndex + 1}`;
-  };
+  }, [id, editMode, makeDraggable]);
   
-  // Generate a color class based on the ID
-  const getColorClass = () => {
-    // Create a hash from the id string
+  // Generate random cyber effects based on the item id
+  const getCyberEffectClass = () => {
+    // Create a simple hash from the id
     let hash = 0;
     for (let i = 0; i < id.length; i++) {
       hash = id.charCodeAt(i) + ((hash << 5) - hash);
     }
     
-    // Get a value between 0 and 3 to select one of the predefined colors
-    const colorIndex = Math.abs(hash) % 4;
+    // Get a value between 0 and 3
+    const effectIndex = Math.abs(hash) % 3;
     
-    const colors = [
-      "from-blue-500/10 to-cyan-500/20 border-blue-500/30 text-blue-500",
-      "from-purple-500/10 to-pink-500/20 border-purple-500/30 text-purple-500",
-      "from-emerald-500/10 to-teal-500/20 border-emerald-500/30 text-emerald-500",
-      "from-amber-500/10 to-orange-500/20 border-amber-500/30 text-amber-500"
+    const effects = [
+      "cyber-effect-1",
+      "cyber-effect-2",
+      "cyber-effect-3"
     ];
     
-    return colors[colorIndex];
+    return effects[effectIndex];
   };
-  
-  const effectClass = getEffectClass();
-  const colorClass = getColorClass();
-  
+
   return (
-    <AdminTooltip 
-      content={description || title}
-      side="bottom"
-      delay={500}
+    <motion.div
+      ref={itemRef}
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+      whileHover={{ scale: 1.03, y: -5 }}
+      whileTap={{ scale: 0.97 }}
+      onClick={onClick}
+      className={cn(
+        "glassmorphism relative overflow-hidden",
+        "p-4 rounded-xl cursor-pointer",
+        "min-h-[120px] flex flex-col justify-between",
+        "cyber-glow",
+        getCyberEffectClass(),
+        editMode && "border-dashed border-primary/40 hover:border-primary",
+        "transition-all duration-300"
+      )}
+      data-id={id}
     >
-      <motion.div
-        ref={itemRef}
-        layoutId={`dashboard-${id}`}
-        variants={cardVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        whileHover="hover"
-        whileTap="tap"
-        data-id={id}
-        className={cn(
-          "dashboard-shortcut relative aspect-square cursor-pointer p-4 flex flex-col items-center justify-center",
-          "rounded-xl backdrop-blur-md border overflow-hidden",
-          `bg-gradient-to-br ${colorClass} ${effectClass}`,
-          isEditMode && "ring-2 ring-primary/30",
-          className
-        )}
-        onClick={onClick}
-      >
-        {/* Cyber glitch effect layer */}
-        <div className="cyber-glitch-layer absolute inset-0 pointer-events-none"></div>
-        
-        {/* Main icon */}
-        <motion.div 
-          className="dashboard-shortcut__icon flex items-center justify-center w-12 h-12 mb-3 rounded-full bg-white/10 relative z-10"
-          variants={iconVariants}
+      {/* Cyber effect layer */}
+      <div className="cyber-glitch-layer absolute inset-0 pointer-events-none" />
+      
+      {/* Icon */}
+      <div className="flex-1 flex flex-col items-center justify-center mb-2">
+        <motion.div
+          className="text-[var(--impulse-text-accent)] text-3xl"
+          animate={editMode ? {
+            rotate: [0, -5, 5, 0],
+            scale: [1, 1.1, 1],
+          } : {}}
+          transition={{ 
+            duration: 4, 
+            repeat: editMode ? Infinity : 0,
+            repeatType: "reverse" 
+          }}
         >
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            variants={glowVariants}
-            initial="initial"
-            whileHover="hover"
-            animate={isEditMode ? "hover" : "initial"}
-            transition={{ duration: 2, repeat: Infinity, repeatType: "mirror" }}
-          />
           {icon}
         </motion.div>
-        
-        {/* Title */}
-        <h3 className="dashboard-shortcut__title text-center font-medium">{title}</h3>
-        
-        {/* Brief description if available */}
+      </div>
+      
+      {/* Title and description */}
+      <div className="text-center">
+        <h3 className="font-medium text-[var(--impulse-text-primary)]">{title}</h3>
         {description && (
-          <p className="dashboard-shortcut__description text-xs text-center mt-1 opacity-70">{description}</p>
+          <p className="text-xs text-[var(--impulse-text-secondary)]">{description}</p>
         )}
-        
-        {/* Remove button in edit mode */}
-        {isEditMode && onRemove && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
-            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center z-20"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove(e);
-            }}
-          >
-            <X className="w-3 h-3" />
-          </motion.button>
-        )}
-        
-        {/* Edit mode indicator */}
-        {isEditMode && (
-          <motion.div 
-            className="absolute bottom-2 right-2 w-2 h-2 bg-primary rounded-full"
-            animate={{ 
-              scale: [1, 1.5, 1], 
-              opacity: [0.5, 1, 0.5] 
-            }}
-            transition={{ 
-              duration: 2, 
-              repeat: Infinity 
-            }}
-          />
-        )}
-      </motion.div>
-    </AdminTooltip>
+      </div>
+      
+      {/* Glow effect on hover */}
+      <motion.div
+        className="absolute inset-0 bg-primary/5 pointer-events-none"
+        animate={{
+          background: [
+            "radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.1) 0%, transparent 70%)",
+            "radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.2) 0%, transparent 70%)",
+            "radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.1) 0%, transparent 70%)"
+          ]
+        }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
+      
+      {/* Remove Button (only in edit mode) */}
+      {editMode && onRemove && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute top-2 right-2 bg-red-500 rounded-full p-1 text-white"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(e);
+          }}
+        >
+          <X className="w-3 h-3" />
+        </motion.button>
+      )}
+      
+      {/* Drag handle indicator in edit mode */}
+      {editMode && (
+        <motion.div
+          className="absolute inset-x-0 top-0 flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div className="h-1 w-12 bg-primary/30 rounded-full mt-2" />
+        </motion.div>
+      )}
+    </motion.div>
   );
 }

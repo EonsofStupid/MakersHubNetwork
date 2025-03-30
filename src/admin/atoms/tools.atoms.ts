@@ -26,9 +26,11 @@ export const selectedEffectAtom = atom<string | null>(null);
 // Frozen zones state
 export const frozenZonesAtom = atom<FrozenZone[]>([]);
 
-// Admin edit mode - moved from index.ts to avoid duplicate exports
+// Admin edit mode and drag-drop state
 export const adminEditModeAtom = atom<boolean>(false);
 export const dragSourceIdAtom = atom<string | null>(null);
 export const dragTargetIdAtom = atom<string | null>(null);
 export const isDraggingAtom = atom<boolean>(false);
 export const dropIndicatorPositionAtom = atom<{ x: number, y: number } | null>(null);
+export const lastDropTargetAtom = atom<string | null>(null);
+export const dragSourceContainerAtom = atom<string | null>(null);
