@@ -110,4 +110,4 @@ export const adminNavigationItems = [
 export const defaultTopNavShortcuts = ["users", "builds", "reviews"]; 
 
 // Define default dashboard shortcuts (larger icons)
-export const defaultDashboardShortcuts = ["users", "content", "data-maestro", "settings"];
+export const defaultDashboardShortcuts = ["content", "data-maestro", "themes", "settings"];

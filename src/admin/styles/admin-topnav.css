@@ -44,6 +44,17 @@
   background-color: rgba(0, 240, 255, 0.05);
 }
 
+.edit-mode-highlight {
+  border: 1px dashed var(--impulse-border-active);
+  background-color: rgba(0, 240, 255, 0.05);
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--impulse-border-normal); }
+  50% { border-color: var(--impulse-primary); }
+}
+
 /* Top nav item animations */
 @keyframes highlight-glow {
   0% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.3); }

@@ -15,19 +15,21 @@ import { adminNavigationItems } from '@/admin/config/navigation.config';
 import { useAdmin } from '@/admin/context/AdminContext';
 import { NavigationItem } from './navigation/NavigationItem';
 import { useToast } from '@/hooks/use-toast';
+import { useAtom } from 'jotai';
+import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 
 export function AdminSidebar({ collapsed = false, className }: { collapsed?: boolean, className?: string }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
+  
   const { 
     sidebarExpanded, 
-    toggleSidebar, 
-    isEditMode, 
-    toggleEditMode,
-    setDragSource, 
+    toggleSidebar,
     setActiveSection
   } = useAdminStore();
+  
   const { checkPermission } = useAdmin();
   
   const isCollapsed = collapsed ? collapsed : !sidebarExpanded;
@@ -62,12 +64,12 @@ export function AdminSidebar({ collapsed = false, className }: { collapsed?: boo
       });
     }
     
-    toggleEditMode();
+    setEditMode(!isEditMode);
   };
 
   // Animation variants
   const sidebarVariants = {
-    expanded: { width: 'auto' },
+    expanded: { width: '240px' },
     collapsed: { width: '4.5rem' }
   };
   

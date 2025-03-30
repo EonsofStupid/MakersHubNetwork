@@ -1,6 +1,8 @@
 
 import { useEffect, useState } from 'react';
 import { useAdminStore } from '@/admin/store/admin.store';
+import { AdminDataService } from '@/admin/services/adminData.service';
+import { useAuthStore } from '@/stores/auth/store';
 
 /**
  * Custom hook to sync admin state between local storage and database
@@ -9,22 +11,41 @@ export function useAdminSync() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const adminStore = useAdminStore();
-
+  const { user } = useAuthStore();
+  
   // Sync from database on initial load
   useEffect(() => {
     const syncFromDatabase = async () => {
+      if (!user?.id) return;
+      
       try {
         setIsSyncing(true);
         
-        // Here we would fetch admin preferences from the database
-        // For now, we'll just simulate a delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Load admin preferences from the database
+        const { data } = await AdminDataService.loadPreferences(user.id);
         
-        // If there's no database data yet, we would initialize with defaults
-        // which are already set in the store
+        if (data) {
+          // Update local store with database values
+          if (data.pinnedTopNavItems) {
+            adminStore.setPinnedTopNavItems(data.pinnedTopNavItems);
+          }
+          
+          if (data.dashboardShortcuts) {
+            adminStore.setDashboardShortcuts(data.dashboardShortcuts);
+          }
+          
+          if (data.sidebarExpanded !== undefined) {
+            adminStore.setSidebarExpanded(data.sidebarExpanded);
+          }
+          
+          if (data.activeSection) {
+            adminStore.setActiveSection(data.activeSection);
+          }
+        }
         
         setLastSyncTime(new Date());
         adminStore.initializeStore();
+        adminStore.resetPreferencesChanged();
       } catch (error) {
         console.error('Error syncing from database:', error);
       } finally {
@@ -33,10 +54,10 @@ export function useAdminSync() {
     };
     
     // Only sync if the user is authenticated and has admin permissions
-    if (!adminStore.hasInitialized) {
+    if (user?.id && !adminStore.hasInitialized) {
       syncFromDatabase();
     }
-  }, [adminStore]);
+  }, [adminStore, user?.id]);
 
   // Sync to database when preferences change
   useEffect(() => {
@@ -44,7 +65,7 @@ export function useAdminSync() {
     let syncTimeout: NodeJS.Timeout | null = null;
     
     const syncToDatabase = async () => {
-      if (!adminStore.hasInitialized) return;
+      if (!adminStore.hasInitialized || !user?.id) return;
       
       try {
         setIsSyncing(true);
@@ -52,17 +73,13 @@ export function useAdminSync() {
         // Extract only the relevant data that needs to be synced
         const dataToSync = {
           sidebarExpanded: adminStore.sidebarExpanded,
-          adminTopNavShortcuts: adminStore.adminTopNavShortcuts,
+          pinnedTopNavItems: adminStore.pinnedTopNavItems,
           dashboardShortcuts: adminStore.dashboardShortcuts,
-          isEditMode: adminStore.isEditMode,
           activeSection: adminStore.activeSection,
         };
         
-        // Here we would save to the database
-        console.log('Syncing to database:', dataToSync);
-        
-        // Simulate a delay
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Save to the database
+        await AdminDataService.savePreferences(user.id, dataToSync);
         
         setLastSyncTime(new Date());
         adminStore.resetPreferencesChanged();
@@ -74,7 +91,7 @@ export function useAdminSync() {
     };
     
     // Set up a debounced sync to database
-    if (adminStore.preferencesChanged) {
+    if (adminStore.preferencesChanged && user?.id) {
       if (syncTimeout) clearTimeout(syncTimeout);
       syncTimeout = setTimeout(syncToDatabase, 1000);
     }
@@ -84,10 +101,13 @@ export function useAdminSync() {
     };
   }, [
     adminStore.sidebarExpanded,
-    adminStore.adminTopNavShortcuts,
+    adminStore.pinnedTopNavItems,
     adminStore.dashboardShortcuts,
+    adminStore.activeSection,
     adminStore.hasInitialized,
     adminStore.preferencesChanged,
+    adminStore.resetPreferencesChanged,
+    user?.id
   ]);
   
   return { isSyncing, lastSyncTime };
