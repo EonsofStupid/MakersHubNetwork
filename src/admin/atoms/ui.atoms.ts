@@ -5,6 +5,8 @@ import { atom } from 'jotai';
 export const sidebarExpandedAtom = atom<boolean>(true);
 export const adminPanelVisibleAtom = atom<boolean>(false);
 export const activeSectionAtom = atom<string>('overview');
+export const activePanelAtom = atom<string | null>(null);
+export const panelPositionAtom = atom<{ x: number, y: number }>({ x: 100, y: 100 });
 
 // Modal state atoms
 export const modalOpenAtom = atom<boolean>(false);
