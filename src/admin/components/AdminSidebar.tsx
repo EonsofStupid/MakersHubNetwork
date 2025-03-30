@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
@@ -10,7 +10,20 @@ import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { scrollbarStyle } from '@/admin/utils/styles';
+import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
+import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import '@/admin/styles/sidebar-navigation.css';
+
+// Framer Motion variants
+const sidebarVariants = {
+  expanded: { width: '240px', transition: { type: "spring", stiffness: 300, damping: 30 } },
+  collapsed: { width: '70px', transition: { type: "spring", stiffness: 300, damping: 30 } }
+};
+
+const titleVariants = {
+  expanded: { opacity: 1, x: 0, transition: { delay: 0.1 } },
+  collapsed: { opacity: 0, x: -10 }
+};
 
 export function AdminSidebar() {
   const navigate = useNavigate();
@@ -44,40 +57,55 @@ export function AdminSidebar() {
   };
 
   return (
-    <div className={cn(
-      "admin-sidebar rounded-xl border border-[var(--impulse-border-normal)] bg-[var(--impulse-bg-card)] backdrop-blur-md overflow-hidden",
-      sidebarExpanded ? "w-full" : "w-[70px]",
-      isEditMode && "border-[var(--impulse-border-hover)]"
-    )}>
-      <div className="admin-sidebar__header py-4 px-2 flex justify-between items-center border-b border-[var(--impulse-border-normal)]">
+    <motion.div 
+      variants={sidebarVariants}
+      initial="expanded"
+      animate={sidebarExpanded ? "expanded" : "collapsed"}
+      className={cn(
+        "admin-sidebar rounded-xl border border-[var(--impulse-border-normal)] bg-[var(--impulse-bg-card)] backdrop-blur-md overflow-hidden",
+        isEditMode && "border-[var(--impulse-primary)]/30 shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+      )}
+    >
+      {/* Header with title and collapse button */}
+      <div className="admin-sidebar__header py-4 px-3 flex justify-between items-center border-b border-[var(--impulse-border-normal)]">
         <AnimatePresence mode="wait">
           {sidebarExpanded && (
             <motion.div
               key="sidebar-title"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="text-sm font-medium text-[var(--impulse-text-primary)] px-4"
+              variants={titleVariants}
+              initial="collapsed"
+              animate="expanded"
+              exit="collapsed"
+              className="flex items-center gap-2"
             >
-              Admin Navigation
+              <span className="text-sm font-medium text-[var(--impulse-text-primary)] px-2">Admin Navigation</span>
             </motion.div>
           )}
         </AnimatePresence>
         
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setSidebarExpanded(!sidebarExpanded)}
-          className="p-2 rounded-full bg-[var(--impulse-bg-main)] text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors"
-        >
-          {sidebarExpanded ? (
-            <ChevronLeft className="w-4 h-4" />
-          ) : (
-            <ChevronRight className="w-4 h-4" />
+        <div className="flex items-center gap-2">
+          {sidebarExpanded && (
+            <EditModeToggle className="mr-1" />
           )}
-        </motion.button>
+          
+          <AdminTooltip content={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setSidebarExpanded(!sidebarExpanded)}
+              className="p-2 rounded-full bg-[var(--impulse-bg-main)] text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors"
+            >
+              {sidebarExpanded ? (
+                <ChevronLeft className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </motion.button>
+          </AdminTooltip>
+        </div>
       </div>
       
+      {/* Main navigation items */}
       <div 
         className={cn(
           "admin-sidebar__content py-4",
@@ -95,6 +123,8 @@ export function AdminSidebar() {
               isActive={activeSection === item.id}
               onClick={() => handleNavClick(item.path, item.id)}
               tooltipContent={!sidebarExpanded ? item.label : undefined}
+              showTooltip={!sidebarExpanded}
+              className={sidebarExpanded ? "mx-2" : "justify-center mx-2 px-0"}
             />
           ))}
         </AnimatePresence>
@@ -112,6 +142,7 @@ export function AdminSidebar() {
         )}
       </div>
       
+      {/* Footer information */}
       <div className="admin-sidebar__footer border-t border-[var(--impulse-border-normal)] p-4">
         <AnimatePresence mode="wait">
           {sidebarExpanded ? (
@@ -120,9 +151,21 @@ export function AdminSidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-xs text-[var(--impulse-text-secondary)]"
+              className="flex items-center justify-between"
             >
-              {isEditMode ? "Edit mode active" : "MakersImpulse Admin"}
+              <span className="text-xs text-[var(--impulse-text-secondary)]">
+                {isEditMode ? "Edit mode active" : "MakersImpulse Admin"}
+              </span>
+              
+              <AdminTooltip content="Settings">
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 15 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => navigate("/admin/settings")}
+                >
+                  <Settings className="w-4 h-4 text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)]" />
+                </motion.button>
+              </AdminTooltip>
             </motion.div>
           ) : (
             <motion.div
@@ -139,6 +182,6 @@ export function AdminSidebar() {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }

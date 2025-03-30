@@ -10,6 +10,19 @@ import { adminNavigationItems } from '@/admin/config/navigation.config';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { MoveHorizontal, Plus } from 'lucide-react';
+
+// Container animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: { 
+      staggerChildren: 0.1,
+      delayChildren: 0.1 
+    }
+  }
+};
 
 export function DashboardShortcuts() {
   const navigate = useNavigate();
@@ -20,7 +33,8 @@ export function DashboardShortcuts() {
   const { registerDropZone, isDragging, dragTargetId } = useDragAndDrop({
     items: dashboardShortcuts,
     onReorder: setDashboardShortcuts,
-    containerId: 'dashboard-shortcuts'
+    containerId: 'dashboard-shortcuts',
+    acceptExternalItems: true
   });
 
   // Register the container as a drop zone
@@ -47,23 +61,33 @@ export function DashboardShortcuts() {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-[var(--impulse-text-primary)]">Dashboard Shortcuts</h2>
-        {editMode && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full"
-          >
-            Edit Mode Active
-          </motion.div>
-        )}
+        <h2 className="text-xl font-semibold text-[var(--impulse-text-primary)] flex items-center gap-2">
+          <span>Dashboard Shortcuts</span>
+          {editMode && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="ml-2 text-xs bg-primary/20 text-primary px-2 py-1 rounded-full flex items-center gap-1"
+            >
+              <MoveHorizontal className="w-3 h-3" />
+              <span>Drag to add</span>
+            </motion.div>
+          )}
+        </h2>
       </div>
 
       <motion.div 
         ref={containerRef}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
         className={cn(
-          "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 min-h-[140px] rounded-xl bg-black/20 border border-border/30",
-          isDragging && "ring-2 ring-primary/20 bg-primary/5"
+          "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 min-h-[140px] rounded-xl",
+          "border transition-all duration-300",
+          isDragging 
+            ? "ring-2 ring-primary/50 bg-primary/5 border-primary/30" 
+            : "bg-black/20 border-border/30",
+          editMode && "border-dashed"
         )}
         id="dashboard-shortcuts"
       >
@@ -83,14 +107,21 @@ export function DashboardShortcuts() {
             ))
           ) : (
             <motion.div
+              key="empty-state"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="col-span-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground"
+              exit={{ opacity: 0 }}
+              className="col-span-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground min-h-[200px]"
             >
               {editMode ? (
                 <>
-                  <p>Drag menu items here to add shortcuts</p>
-                  <p className="text-xs mt-1 text-primary">Items from the sidebar can be dragged here</p>
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                    <Plus className="w-8 h-8 text-primary/70" />
+                  </div>
+                  <p className="text-sm">Drag items here from the sidebar to create shortcuts</p>
+                  <p className="text-xs mt-2 text-primary/70">
+                    Tip: Any item from the left navigation can be dragged here
+                  </p>
                 </>
               ) : (
                 <p>No shortcuts added yet. Enter edit mode to customize your dashboard.</p>
