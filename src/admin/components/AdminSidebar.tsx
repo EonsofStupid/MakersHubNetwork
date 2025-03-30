@@ -104,11 +104,9 @@ function SidebarIcon({
             draggable={isDraggable}
             onDragStart={handleDragStart}
             onClick={onClick}
-            variants={iconVariants}
             initial="initial"
             whileHover="hover"
             whileTap="tap"
-            // Remove the invalid motion prop that's causing the error
           >
             {isDraggable && isEditMode && (
               <span className="text-[var(--impulse-text-secondary)] cursor-grab">

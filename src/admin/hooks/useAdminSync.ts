@@ -1,6 +1,5 @@
 
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth/store';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminDataService } from '@/admin/services/adminData.service';
@@ -78,10 +77,29 @@ export function useAdminSync() {
 
   // Sync admin data to database when store changes
   useEffect(() => {
-    const saveDataToDatabase = async () => {
-      if (!user?.id) return;
-
+    if (!user?.id) return;
+    
+    const saveDataToDatabase = async (state: any, prevState: any) => {
       try {
+        // Check if relevant state has changed
+        const keysToCheck = [
+          'sidebarExpanded',
+          'pinnedTopNavItems',
+          'pinnedDashboardItems',
+          'activeSection',
+          'isDashboardCollapsed',
+          'adminTheme',
+          'frozenZones',
+          'isDarkMode'
+        ];
+
+        const hasChanged = keysToCheck.some(key => {
+          // @ts-ignore - dynamic key access
+          return state[key] !== prevState[key];
+        });
+
+        if (!hasChanged) return;
+
         setLoading(SYNC_ID, { isLoading: true, message: 'Saving preferences...' });
         
         // Extract store data for database
@@ -94,7 +112,7 @@ export function useAdminSync() {
           adminTheme,
           frozenZones,
           isDarkMode
-        } = adminStore;
+        } = state;
 
         // Format data for database schema
         const dbData = {
@@ -130,37 +148,11 @@ export function useAdminSync() {
       }
     };
 
-    // Use custom subscribe method from store
-    const unsubscribe = adminStore.subscribe((state: any, prevState: any) => {
-      // Check if relevant state has changed
-      const keysToCheck = [
-        'sidebarExpanded',
-        'pinnedTopNavItems',
-        'pinnedDashboardItems',
-        'activeSection',
-        'isDashboardCollapsed',
-        'adminTheme',
-        'frozenZones',
-        'isDarkMode'
-      ];
-
-      const hasChanged = keysToCheck.some(key => {
-        // @ts-ignore - dynamic key access
-        return state[key] !== prevState[key];
-      });
-
-      if (hasChanged && user?.id) {
-        // Debounce save to reduce database calls
-        const timeoutId = setTimeout(() => {
-          saveDataToDatabase();
-        }, 2000);
-
-        return () => clearTimeout(timeoutId);
-      }
-    });
+    // Subscribe to store changes
+    const unsubscribe = adminStore.subscribe(saveDataToDatabase);
 
     return () => {
       unsubscribe();
     };
-  }, [user?.id, adminStore, toast]);
+  }, [user?.id, adminStore, toast, setLoading, clearLoading, setError, clearError]);
 }
