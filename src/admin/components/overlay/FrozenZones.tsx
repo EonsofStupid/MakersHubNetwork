@@ -40,11 +40,7 @@ export function FrozenZonesOverlay() {
       id: newZoneId,
       name: newZoneName || newZoneId,
       elementId: newZoneId,
-      isLocked: true,
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0
+      isLocked: true
     };
     
     setFrozenZones([...frozenZones, newZone]);

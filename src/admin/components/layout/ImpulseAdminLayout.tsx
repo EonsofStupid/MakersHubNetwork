@@ -9,11 +9,12 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { DragIndicator } from '@/admin/components/ui/DragIndicator';
 import { motion } from 'framer-motion';
 import { AdminPermission } from '@/admin/types/admin.types';
-import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
 
-// Import our styles
-import '@/admin/theme/impulse/impulse.css';
+// Import our cyberpunk style sheets
+import '@/admin/styles/cyber-effects.css';
 import '@/admin/styles/electric-effects.css';
+import '@/admin/theme/impulse/impulse-admin.css';
+import '@/admin/theme/impulse/impulse-theme.css';
 
 interface ImpulseAdminLayoutProps {
   children: React.ReactNode;
@@ -74,7 +75,7 @@ export function ImpulseAdminLayout({
       <AdminTopNav title={title} />
       
       {/* Main content area with sidebar */}
-      <div className="flex-1 flex relative mt-14"> {/* Added mt-14 to respect top nav height */}
+      <div className="flex-1 flex relative">
         {/* Electric ambient background */}
         <div className="absolute inset-0 pointer-events-none z-0">
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--impulse-bg-main)] to-[var(--impulse-bg-main)] opacity-90" />
@@ -83,7 +84,7 @@ export function ImpulseAdminLayout({
         
         {/* Left sidebar */}
         <div className={cn(
-          "impulse-sidebar transition-all z-10 electric-background",
+          "impulse-sidebar transition-all z-10",
           sidebarExpanded ? "w-60" : "w-16"
         )}>
           <AdminSidebar />
@@ -93,7 +94,7 @@ export function ImpulseAdminLayout({
         <main className={cn(
           "impulse-main flex-1 p-6 transition-all z-10",
           sidebarExpanded ? "ml-60" : "ml-16",
-          "glassmorphism backdrop-blur-xl"
+          "apple-glass backdrop-blur-xl"
         )}>
           {/* Editable indicator in edit mode */}
           {isEditMode && (
@@ -105,9 +106,6 @@ export function ImpulseAdminLayout({
               <span className="font-medium">Edit mode active</span> - Drag items to customize your dashboard
             </motion.div>
           )}
-          
-          {/* Dashboard shortcuts - Add to every admin page */}
-          <DashboardShortcuts />
           
           {/* Render children only if user has required permission */}
           {hasPermission(requiresPermission) ? (
@@ -121,7 +119,7 @@ export function ImpulseAdminLayout({
             </motion.div>
           ) : (
             <div className="flex items-center justify-center h-full">
-              <div className="p-6 rounded-xl glassmorphism text-center">
+              <div className="p-6 rounded-xl glass-panel text-center">
                 <h3 className="text-xl font-semibold mb-2">Permission Required</h3>
                 <p className="text-muted-foreground">
                   You need {requiresPermission} permission to access this page.

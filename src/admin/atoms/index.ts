@@ -1,4 +1,35 @@
 
-export * from './tools.atoms';
-export * from './theme.atoms';
-export * from './metrics.atoms';
+import { atom } from 'jotai';
+
+// Re-export atoms from ui.atoms
+export * from './ui.atoms';
+
+// Re-export atoms from tools.atoms
+export {
+  adminEditModeAtom,
+  sidebarExpandedAtom,
+  showLabelsAtom,
+  activePageAtom,
+  isDraggingAtom,
+  dragSourceIdAtom,
+  dragTargetIdAtom,
+  dropIndicatorPositionAtom,
+  darkModeAtom,
+  selectedThemeAtom
+} from './tools.atoms';
+
+// Export additional cyberpunk effects atoms
+export const cyberEffectVariantsAtom = atom<string[]>([
+  'pulse',
+  'glitch',
+  'data-stream',
+  'energy-wave',
+  'matrix-rain'
+]);
+
+export const cyberColorVariantsAtom = atom<string[]>([
+  'var(--impulse-primary)',
+  '#FF2D6E',
+  '#7B61FF',
+  '#00FFAA'
+]);

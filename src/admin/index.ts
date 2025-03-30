@@ -1,33 +1,24 @@
 
-// Import styles first to ensure proper cascade
-import '@/admin/theme/impulse/impulse.css';
-import '@/admin/styles/admin-topnav.css';
-import '@/admin/styles/electric-effects.css';
-
-// Admin components
+// Export admin components
 export { AdminLayout } from "./components/AdminLayout";
 export { AdminSidebar } from "./components/AdminSidebar";
 export { AdminHeader } from "./components/AdminHeader";
 export { ImpulseAdminLayout } from "./components/layout/ImpulseAdminLayout";
 export { AdminProvider, useAdmin } from "./context/AdminContext";
-export { AdminTopNav } from "./components/navigation/AdminTopNav";
-export { TopNavShortcuts } from "./components/navigation/TopNavShortcuts";
-export { TopNavItem } from "./components/navigation/TopNavItem";
-export { DashboardShortcuts } from "./components/dashboard/DashboardShortcuts";
 
-// Admin routes
+// Export admin routes
 export { AdminRoutes } from "./routes";
 
-// Admin store
+// Export admin store
 export { useAdminStore } from "./store/admin.store";
 export { useAdminPreferences } from "./store/adminPreferences.store";
 
-// Admin hooks
+// Export admin hooks
 export { useAdminPermissions } from "./hooks/useAdminPermissions";
 export { useAdminRoles } from "./hooks/useAdminRoles"; 
-export { useDragAndDrop } from "./hooks/useDragAndDrop";
 
-// Admin types - export each file separately to avoid naming conflicts
+// Export admin types
+export * from "./types/admin.types";
 export * from "./types/build.types";
 export * from "./types/content";
 export * from "./types/dashboard";
@@ -36,23 +27,13 @@ export * from "./types/impulse.types";
 export * from "./types/theme";
 export * from "./types/tools.types";
 
-// Admin utils
+// Export admin utils
 export * from "./utils/adminUtils";
 export * from "./utils/permissions";
 export * from "./utils/routeUtils";
-export * from "./utils/styles";
 
-// Admin atoms
+// Export admin atoms
 export * from "./atoms";
 
-// Admin page
+// Export admin page
 export { default as AdminPage } from "../pages/Admin";
-
-// UI components
-export { CyberCard } from "./components/ui/CyberCard";
-export { DragIndicator } from "./components/ui/DragIndicator";
-export { AdminTooltip } from "./components/ui/AdminTooltip"; 
-
-// Overlay components
-export { FrozenZonesOverlay } from "./components/overlay/FrozenZones";
-export { SmartOverlay } from "./components/overlay/SmartOverlay";
