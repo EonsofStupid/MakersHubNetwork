@@ -1,14 +1,15 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { AdminShortcut } from "@/admin/types/admin.types";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { adminNavigationItems, defaultDashboardShortcuts } from "@/admin/config/navigation.config";
 import { Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+import "@/admin/styles/dashboard-shortcuts.css";
 
 export function DashboardShortcuts() {
   const navigate = useNavigate();
@@ -20,11 +21,11 @@ export function DashboardShortcuts() {
     dragSource,
     dragTarget, 
     setDragTarget,
-    setDragSource
+    setDragSource,
+    isEditMode
   } = useAdminStore();
   
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = React.useState(false);
   
   // Initialize with default shortcuts if not set
   useEffect(() => {
@@ -51,10 +52,6 @@ export function DashboardShortcuts() {
   
   const handleNavigate = (path: string) => {
     navigate(path);
-  };
-  
-  const toggleEditMode = () => {
-    setIsEditMode(!isEditMode);
   };
   
   const removeShortcut = (id: string, e: React.MouseEvent) => {
@@ -104,22 +101,15 @@ export function DashboardShortcuts() {
   
   return (
     <div className="relative mb-10">
-      <div className="flex justify-between items-center mb-4">
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex justify-between items-center mb-4"
+      >
         <h2 className="text-xl font-semibold">Quick Access</h2>
-        <button 
-          onClick={toggleEditMode}
-          className={cn(
-            "p-2 rounded-md text-sm",
-            isEditMode 
-              ? "bg-[var(--impulse-primary)] text-[var(--impulse-bg-overlay)]" 
-              : "bg-[rgba(0,240,255,0.1)] text-[var(--impulse-text-primary)] hover:bg-[rgba(0,240,255,0.2)]"
-          )}
-        >
-          {isEditMode ? "Done" : "Customize"}
-        </button>
-      </div>
+      </motion.div>
       
-      <div 
+      <motion.div 
         className={cn(
           "admin-dashboard-shortcuts grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4",
           (isDraggingOver || dragTarget === 'dashboard') 
@@ -143,20 +133,20 @@ export function DashboardShortcuts() {
             >
               <Card 
                 className={cn(
-                  "admin-dashboard-shortcut group cursor-pointer h-full",
+                  "dashboard-shortcut group cursor-pointer h-full",
                   getCyberEffect(shortcut.id),
                   shortcut.color
                 )}
                 onClick={() => handleNavigate(shortcut.path)}
               >
-                <div className="admin-dashboard-shortcut__icon">
+                <div className="dashboard-shortcut__icon">
                   {shortcut.icon}
                 </div>
                 
-                <h3 className="admin-dashboard-shortcut__title">{shortcut.name}</h3>
+                <h3 className="dashboard-shortcut__title">{shortcut.name}</h3>
                 
                 {shortcut.description && (
-                  <p className="admin-dashboard-shortcut__description">{shortcut.description}</p>
+                  <p className="dashboard-shortcut__description">{shortcut.description}</p>
                 )}
                 
                 {isEditMode && (
@@ -183,7 +173,7 @@ export function DashboardShortcuts() {
               exit={{ opacity: 0 }}
             >
               <Card 
-                className="admin-dashboard-shortcut border-dashed border-[var(--impulse-border-normal)] flex flex-col items-center justify-center h-full opacity-60 hover:opacity-100"
+                className="dashboard-shortcut dashboard-shortcut--empty border-dashed border-[var(--impulse-border-normal)] flex flex-col items-center justify-center h-full opacity-60 hover:opacity-100"
               >
                 <Plus className="w-8 h-8 text-[var(--impulse-text-secondary)]" />
                 <p className="text-xs text-[var(--impulse-text-secondary)] mt-2">Add Shortcut</p>
@@ -191,7 +181,7 @@ export function DashboardShortcuts() {
             </motion.div>
           ))}
         </AnimatePresence>
-      </div>
+      </motion.div>
       
       {isEditMode && (
         <motion.div

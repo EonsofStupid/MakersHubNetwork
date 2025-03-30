@@ -1,21 +1,22 @@
 
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Home, 
   ChevronLeft, 
   ChevronRight,
   Edit,
-  Plus,
-  X
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { adminNavigationItems } from "@/admin/config/navigation.config";
 import { useAdmin } from "@/admin/context/AdminContext";
-import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 
+// Create a separate file for the component
 interface SidebarIconProps {
   id: string;
   icon: React.ReactNode;
@@ -107,6 +108,7 @@ function SidebarIcon({
             initial="initial"
             whileHover="hover"
             whileTap="tap"
+            variants={iconVariants}
           >
             {isDraggable && isEditMode && (
               <span className="text-[var(--impulse-text-secondary)] cursor-grab">
@@ -163,9 +165,15 @@ interface AdminSidebarProps {
 export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarExpanded, toggleSidebar, setDragSource } = useAdminStore();
+  const { toast } = useToast();
+  const { 
+    sidebarExpanded, 
+    toggleSidebar, 
+    isEditMode, 
+    toggleEditMode,
+    setDragSource 
+  } = useAdminStore();
   const { checkPermission } = useAdmin();
-  const [isEditMode, setIsEditMode] = useState(false);
   
   const isCollapsed = collapsed ? collapsed : !sidebarExpanded;
   
@@ -177,29 +185,23 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
-    if (e.dataTransfer) {
-      e.dataTransfer.setData('text/plain', id);
-      e.dataTransfer.effectAllowed = 'move';
-      setDragSource(id);
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+    setDragSource(id);
 
-      // Create a ghost/preview image for the drag operation
-      const dragPreview = document.createElement('div');
-      dragPreview.className = 'bg-[var(--impulse-bg-overlay)] backdrop-blur-lg p-2 rounded shadow-lg border border-[var(--impulse-primary)]';
-      
-      const item = adminNavigationItems.find(item => item.id === id);
-      if (item) {
-        dragPreview.textContent = item.label;
-        document.body.appendChild(dragPreview);
-        e.dataTransfer.setDragImage(dragPreview, 20, 20);
-        setTimeout(() => {
-          document.body.removeChild(dragPreview);
-        }, 0);
-      }
+    // Create a ghost/preview image for the drag operation
+    const dragPreview = document.createElement('div');
+    dragPreview.className = 'bg-[var(--impulse-bg-overlay)] backdrop-blur-lg p-2 rounded shadow-lg border border-[var(--impulse-primary)]';
+    
+    const item = adminNavigationItems.find(item => item.id === id);
+    if (item) {
+      dragPreview.textContent = item.label;
+      document.body.appendChild(dragPreview);
+      e.dataTransfer.setDragImage(dragPreview, 20, 20);
+      setTimeout(() => {
+        document.body.removeChild(dragPreview);
+      }, 0);
     }
-  };
-
-  const toggleEditMode = () => {
-    setIsEditMode(!isEditMode);
   };
 
   return (
@@ -221,7 +223,10 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={toggleEditMode}
-              className="p-1 rounded-full hover:bg-[rgba(0,240,255,0.2)] text-[var(--impulse-text-secondary)]"
+              className={cn(
+                "p-1 rounded-full text-[var(--impulse-text-secondary)]",
+                isEditMode ? "bg-[rgba(0,240,255,0.2)]" : "hover:bg-[rgba(0,240,255,0.2)]"
+              )}
             >
               {isEditMode ? (
                 <X className="w-5 h-5" />
@@ -249,27 +254,37 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
         </div>
         
         <div className="space-y-1 overflow-y-auto scrollbar-thin flex-1">
-          {adminNavigationItems.map(item => {
-            if (!checkPermission(item.permission)) {
-              return null;
-            }
-            
-            return (
-              <SidebarIcon
-                key={item.id}
-                id={item.id}
-                icon={item.icon}
-                label={item.label}
-                description={item.description}
-                active={activeItem === item.id}
-                expanded={!isCollapsed}
-                onClick={() => handleIconClick(item.path)}
-                onDragStart={(e) => handleDragStart(e, item.id)}
-                isDraggable={isEditMode}
-                isEditMode={isEditMode}
-              />
-            );
-          })}
+          <AnimatePresence mode="popLayout">
+            {adminNavigationItems.map(item => {
+              if (!checkPermission(item.permission)) {
+                return null;
+              }
+              
+              return (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <SidebarIcon
+                    id={item.id}
+                    icon={item.icon}
+                    label={item.label}
+                    description={item.description}
+                    active={activeItem === item.id}
+                    expanded={!isCollapsed}
+                    onClick={() => handleIconClick(item.path)}
+                    onDragStart={(e) => handleDragStart(e, item.id)}
+                    isDraggable={true}
+                    isEditMode={isEditMode}
+                  />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
           
           {isEditMode && !isCollapsed && (
             <motion.div 
@@ -280,16 +295,15 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
               <p className="text-xs text-[var(--impulse-text-secondary)] mb-2">
                 Drag menu items to the top navigation or dashboard shortcuts
               </p>
-              <div className="flex justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-1 py-1 px-2 bg-[var(--impulse-bg-overlay)] text-[var(--impulse-text-primary)] rounded-md text-xs"
+              {isEditMode && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-xs text-[var(--impulse-primary)]"
                 >
-                  <Plus className="w-3 h-3" />
-                  Add Custom Link
-                </motion.button>
-              </div>
+                  Edit mode active
+                </motion.p>
+              )}
             </motion.div>
           )}
         </div>
