@@ -3,7 +3,7 @@ import React from 'react';
 import { motion, useDragControls, PanInfo } from 'framer-motion';
 import { useAtom } from 'jotai';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
-import { adminEditModeAtom, dragSourceIdAtom } from '@/admin/atoms/tools.atoms';
+import { adminEditModeAtom, dragSourceIdAtom, isDraggingAtom } from '@/admin/atoms/tools.atoms';
 
 interface NavigationItemProps {
   id: string;
@@ -27,15 +27,18 @@ export const NavigationItem: React.FC<NavigationItemProps> = ({
   tooltipContent,
 }) => {
   const [editMode] = useAtom(adminEditModeAtom);
+  const [isDragging, setIsDragging] = useAtom(isDraggingAtom);
   const [, setDragSourceId] = useAtom(dragSourceIdAtom);
   const dragControls = useDragControls();
 
   const handleDragStart = () => {
     setDragSourceId(id);
+    setIsDragging(true);
   };
 
   const handleDragEnd = (_event: MouseEvent, _info: PanInfo) => {
     setDragSourceId(null);
+    setIsDragging(false);
   };
 
   const item = (

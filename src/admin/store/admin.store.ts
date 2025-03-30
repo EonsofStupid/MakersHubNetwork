@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createAdminPersistMiddleware } from "../middleware/persist.middleware";
@@ -76,7 +77,7 @@ export const useAdminStore = create<AdminState>()(
       dragTarget: null,
       pinnedTopNavItems: ['users', 'builds', 'reviews'],
       adminTopNavShortcuts: ['users', 'builds', 'reviews'],
-      dashboardShortcuts: ['users', 'content', 'data-maestro', 'settings'],
+      dashboardShortcuts: ['content', 'data-maestro', 'themes', 'settings'],
       permissions: [],
       isLoadingPermissions: false,
       isDarkMode: false,
@@ -147,7 +148,8 @@ export const useAdminStore = create<AdminState>()(
             'admin:access', 'admin:view', 'admin:edit',
             'content:view', 'content:edit',
             'users:view', 'users:edit',
-            'builds:view', 'builds:approve'
+            'builds:view', 'builds:approve',
+            'themes:view'
           ];
           set({ permissions: userPermissions, isLoadingPermissions: false });
         } catch (error) {

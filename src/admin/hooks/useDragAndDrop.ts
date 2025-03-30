@@ -66,7 +66,7 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
     
     toast({
       title: "Item moved",
-      description: `${sourceId} has been moved to a new position`,
+      description: `Successfully reordered your shortcuts`,
       variant: "default",
       duration: 2000
     });

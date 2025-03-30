@@ -15,13 +15,14 @@ import "@/admin/styles/impulse-admin.css";
 import "@/admin/styles/admin-topnav.css";
 import "@/admin/styles/sidebar-navigation.css";
 import "@/admin/styles/dashboard-shortcuts.css";
+import "@/admin/styles/drag-drop.css";
 import "@/admin/theme/impulse/impulse-theme.css";
 
 export default function Admin() {
   const { toast } = useToast();
   const { hasAdminAccess, isLoading, initializeAdmin } = useAdmin();
   const [hasInitialized, setHasInitialized] = useState(false);
-  const { loadPermissions, dragSource, isEditMode } = useAdminStore();
+  const { loadPermissions, isEditMode } = useAdminStore();
   
   // Use admin sync hook to keep database and localStorage in sync
   useAdminSync();
@@ -60,7 +61,7 @@ export default function Admin() {
       const timeout = setTimeout(() => {
         toast({
           title: "Admin Customization",
-          description: "You can drag menu items to the top bar or dashboard for quick access.",
+          description: "You can drag menu items from the sidebar to the top bar or dashboard for quick access.",
           duration: 6000,
         });
         localStorage.setItem('admin-tutorial-seen', 'true');
@@ -94,7 +95,6 @@ export default function Admin() {
 
   return (
     <ErrorBoundary>
-      {dragSource && <DragIndicator />}
       <div className="fixed bottom-4 right-4 z-50 bg-background/90 border border-border/30 backdrop-blur-md py-1 px-3 rounded-full shadow-md">
         <SyncIndicator />
       </div>

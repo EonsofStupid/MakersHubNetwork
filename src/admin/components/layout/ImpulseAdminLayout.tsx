@@ -1,6 +1,5 @@
 
-import React, { ReactNode, useState } from "react";
-import { Card } from "@/components/ui/card";
+import React, { ReactNode } from "react";
 import { AdminSidebar } from "@/admin/components/AdminSidebar";
 import { AdminTopNav } from "@/admin/components/layout/AdminTopNav";
 import { useAdmin } from "@/admin/context/AdminContext";
@@ -10,6 +9,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DashboardShortcuts } from "@/admin/components/dashboard/DashboardShortcuts";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminStore } from "@/admin/store/admin.store";
+import { DragIndicator } from "@/admin/components/ui/DragIndicator";
+import { useAtom } from "jotai";
+import { isDraggingAtom } from "@/admin/atoms/tools.atoms";
 
 interface ImpulseAdminLayoutProps {
   children: ReactNode;
@@ -23,8 +25,8 @@ export function ImpulseAdminLayout({
   requiresPermission = "admin:access"
 }: ImpulseAdminLayoutProps) {
   const { checkPermission, isLoading } = useAdmin();
-  const [isDashboardCollapsed, setIsDashboardCollapsed] = useState(false);
-  const { sidebarExpanded } = useAdminStore();
+  const { sidebarExpanded, isDashboardCollapsed } = useAdminStore();
+  const [isDragging] = useAtom(isDraggingAtom);
 
   // Check for required permission
   const hasPermission = checkPermission(requiresPermission);
@@ -42,22 +44,19 @@ export function ImpulseAdminLayout({
 
   if (!hasPermission) {
     return (
-      <Card className="border-destructive/20 p-6">
+      <div className="border-destructive/20 p-6 rounded-lg bg-card/30">
         <div className="text-center space-y-2">
           <h3 className="text-xl font-bold text-destructive">Access Denied</h3>
           <p className="text-muted-foreground">
             You don't have permission to access this section.
           </p>
         </div>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <div className={cn(
-      "admin-impulse-layout",
-      "min-h-screen"
-    )}>
+    <div className="admin-impulse-layout min-h-screen">
       <ErrorBoundary>
         <AdminTopNav title={title} />
         
@@ -90,6 +89,9 @@ export function ImpulseAdminLayout({
             </div>
           </main>
         </div>
+        
+        {/* Show drag indicator when dragging */}
+        {isDragging && <DragIndicator />}
       </ErrorBoundary>
     </div>
   );

@@ -123,92 +123,59 @@
   transform: scale(1.1);
 }
 
-.dashboard-shortcuts__drop-indicator {
-  position: absolute;
-  border: 2px dashed var(--impulse-primary);
-  background-color: rgba(0, 240, 255, 0.1);
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-  animation: glow-pulse 2s infinite;
-}
-
-.dashboard-shortcuts.drop-target {
-  border-color: var(--impulse-primary);
-  background-color: rgba(0, 240, 255, 0.05);
-}
-
-.dashboard-shortcut.drop-target {
-  border-color: var(--impulse-primary);
-  background-color: rgba(0, 240, 255, 0.1);
-}
-
-.dashboard-shortcuts.empty-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: var(--impulse-text-secondary);
-  font-style: italic;
-  min-height: 100px;
-}
-
 /* Cyberpunk effects */
-.effect-pulse {
-  animation: cyber-pulse 3s infinite;
+.cyber-effect-1::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(0, 240, 255, 0.1) 50%,
+    transparent 100%
+  );
+  animation: cyber-effect-1 8s linear infinite;
 }
 
-.effect-glitch {
-  animation: cyber-glitch 0.5s steps(1) infinite;
-}
-
-.effect-data-stream {
+.cyber-effect-2::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: repeating-linear-gradient(
     45deg,
     transparent,
-    transparent 2px,
-    rgba(0, 240, 255, 0.1) 2px,
-    rgba(0, 240, 255, 0.1) 4px
+    transparent 10px,
+    rgba(0, 240, 255, 0.03) 10px,
+    rgba(0, 240, 255, 0.03) 20px
   );
-  animation: data-stream 20s linear infinite;
+  animation: cyber-effect-2 20s linear infinite;
 }
 
-.effect-energy-wave::before {
+.cyber-effect-3::before {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at center, var(--color, rgba(0, 240, 255, 0.3)) 0%, transparent 70%);
-  transform: translate(-50%, -50%);
-  animation: energy-wave 4s ease-in-out infinite;
-}
-
-.effect-matrix-rain {
-  background: linear-gradient(
-    to bottom,
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
     transparent 0%,
-    rgba(0, 240, 255, 0.05) 50%,
-    transparent 100%
+    rgba(255, 45, 110, 0.1) 100%
   );
-  animation: matrix-rain 10s linear infinite;
+  animation: cyber-effect-3 4s ease-in-out infinite;
 }
 
-@keyframes data-stream {
-  from { background-position: 0 0; }
-  to { background-position: 100px 100px; }
+@keyframes cyber-effect-1 {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 200%; }
 }
 
-@keyframes energy-wave {
-  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.8); }
-  50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.2); }
+@keyframes cyber-effect-2 {
+  0% { transform: translateX(-20px) translateY(-20px); }
+  100% { transform: translateX(20px) translateY(20px); }
 }
 
-@keyframes matrix-rain {
-  from { background-position: 0 -100px; }
-  to { background-position: 0 100px; }
+@keyframes cyber-effect-3 {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
 }
 
 /* Glass effect */
