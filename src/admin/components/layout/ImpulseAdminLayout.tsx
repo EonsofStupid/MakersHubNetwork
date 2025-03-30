@@ -75,7 +75,7 @@ export function ImpulseAdminLayout({
       <AdminTopNav title={title} />
       
       {/* Main content area with sidebar */}
-      <div className="flex-1 flex relative">
+      <div className="flex-1 flex relative mt-14"> {/* Added mt-14 to respect top nav height */}
         {/* Electric ambient background */}
         <div className="absolute inset-0 pointer-events-none z-0">
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--impulse-bg-main)] to-[var(--impulse-bg-main)] opacity-90" />
@@ -84,7 +84,7 @@ export function ImpulseAdminLayout({
         
         {/* Left sidebar */}
         <div className={cn(
-          "impulse-sidebar transition-all z-10",
+          "impulse-sidebar transition-all z-10 electric-background", // Added electric-background
           sidebarExpanded ? "w-60" : "w-16"
         )}>
           <AdminSidebar />
