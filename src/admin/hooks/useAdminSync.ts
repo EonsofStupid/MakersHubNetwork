@@ -36,7 +36,7 @@ export function useAdminSync() {
         }
 
         if (data && isMounted) {
-          const storeData = {
+          const storeData: Partial<AdminState> = {
             sidebarExpanded: data.sidebar_expanded ?? true,
             pinnedTopNavItems: data.topnav_items ?? [],
             pinnedDashboardItems: data.dashboard_items ?? [],
@@ -47,12 +47,8 @@ export function useAdminSync() {
             isDarkMode: data.ui_preferences?.isDarkMode ?? true,
           };
 
-          Object.entries(storeData).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-              // Update the store with dynamic keys
-              adminStore.setState({ [key]: value } as Partial<AdminState>);
-            }
-          });
+          // Update the store with the loaded preferences
+          adminStore.setState(storeData);
 
           clearError(SYNC_ID);
           console.log('Admin preferences loaded from DB');
@@ -91,7 +87,7 @@ export function useAdminSync() {
     const unsubscribe = subscribeWithSelector(
       useAdminStore,
       (state) => keysToSync.reduce((acc, key) => {
-        acc[key] = state[key];
+        acc[key] = state[key] as any;
         return acc;
       }, {} as Pick<AdminState, typeof keysToSync[number]>),
       async (state, prevState) => {
