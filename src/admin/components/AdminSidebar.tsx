@@ -1,6 +1,5 @@
-
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, PanInfo } from "framer-motion";
 import { 
   Home, 
   ChevronLeft, 
@@ -24,7 +23,9 @@ interface SidebarIconProps {
   active?: boolean;
   expanded?: boolean;
   onClick?: () => void;
-  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDragStart?: (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void;
+  onDragEnd?: (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void;
+  onDrag?: (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void;
   isDraggable?: boolean;
   isEditMode?: boolean;
 }
@@ -53,18 +54,22 @@ function DragDropIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function SidebarIcon({ 
-  id, 
-  icon, 
-  label, 
+const SidebarIcon = ({
+  id,
+  icon,
+  label,
   description,
-  active = false, 
+  active = false,
   expanded = true,
   onClick,
   onDragStart,
+  onDragEnd,
+  onDrag,
   isDraggable = false,
   isEditMode = false
-}: SidebarIconProps) {
+}: SidebarIconProps) => {
+  const { setDragSource, setDragTarget, setIsDragging, setDragPreview, resetDrag } = useAdminStore();
+
   const iconVariants = {
     initial: { scale: 1 },
     hover: { scale: 1.05, transition: { duration: 0.2 } },
@@ -83,14 +88,30 @@ function SidebarIcon({
     }
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-    if (onDragStart) {
-      onDragStart(e);
+  const handleDragStart = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (isEditMode) {
+      setDragSource(id);
+      setIsDragging(true);
+      setDragPreview({ label, icon });
+      onDragStart?.(e, info);
+    }
+  };
+
+  const handleDragEnd = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (isEditMode) {
+      resetDrag();
+      onDragEnd?.(e, info);
+    }
+  };
+
+  const handleDrag = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (isEditMode) {
+      onDrag?.(e, info);
     }
   };
 
   return (
-    <TooltipProvider delayDuration={300}>
+    <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <motion.div
@@ -103,10 +124,13 @@ function SidebarIcon({
             )}
             draggable={isDraggable}
             onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDrag={handleDrag}
             onClick={onClick}
             initial="initial"
             whileHover="hover"
             whileTap="tap"
+            variants={iconVariants}
           >
             {isDraggable && isEditMode && (
               <span className="text-[var(--impulse-text-secondary)] cursor-grab">
@@ -116,7 +140,6 @@ function SidebarIcon({
             
             <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-[rgba(0,240,255,0.1)] relative z-10">
               {icon}
-              
               {active && (
                 <motion.div 
                   className="absolute inset-0 rounded-md bg-[var(--impulse-primary)]"
@@ -154,47 +177,64 @@ function SidebarIcon({
       </Tooltip>
     </TooltipProvider>
   );
-}
+};
 
 interface AdminSidebarProps {
-  collapsed?: boolean;
+  expanded?: boolean;
 }
 
-export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
+const AdminSidebar = ({ expanded = false }: AdminSidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarExpanded, toggleSidebar, setDragSource } = useAdminStore();
+  const { 
+    sidebarExpanded, 
+    toggleSidebar, 
+    setDragSource, 
+    setDragTarget, 
+    setIsDragging, 
+    setDragPreview, 
+    setDragInfo,
+    resetDrag,
+    dragSource,
+    dragTarget,
+    dragInfo,
+    dragPreview,
+    isDragging
+  } = useAdminStore();
   const { checkPermission } = useAdmin();
   const [isEditMode, setIsEditMode] = useState(false);
-  
-  const isCollapsed = collapsed ? collapsed : !sidebarExpanded;
-  
+
+  const isCollapsed = !sidebarExpanded;
   const currentPath = location.pathname;
-  const activeItem = currentPath.split('/').pop() || 'overview';
-  
+  const activeSection = currentPath.split('/')[2] || 'overview';
+
   const handleIconClick = (path: string) => {
     navigate(path);
+    if (isCollapsed) {
+      toggleSidebar();
+    }
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
-    if (e.dataTransfer) {
-      e.dataTransfer.setData('text/plain', id);
-      e.dataTransfer.effectAllowed = 'move';
-      setDragSource(id);
+  const handleDragStart = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo, itemId: string) => {
+    if (isEditMode) {
+      setDragSource(itemId);
+      setIsDragging(true);
+      setDragPreview({ 
+        label: adminNavigationItems.find(item => item.id === itemId)?.label || '',
+        icon: adminNavigationItems.find(item => item.id === itemId)?.icon
+      });
+    }
+  };
 
-      // Create a ghost/preview image for the drag operation
-      const dragPreview = document.createElement('div');
-      dragPreview.className = 'bg-[var(--impulse-bg-overlay)] backdrop-blur-lg p-2 rounded shadow-lg border border-[var(--impulse-primary)]';
-      
-      const item = adminNavigationItems.find(item => item.id === id);
-      if (item) {
-        dragPreview.textContent = item.label;
-        document.body.appendChild(dragPreview);
-        e.dataTransfer.setDragImage(dragPreview, 20, 20);
-        setTimeout(() => {
-          document.body.removeChild(dragPreview);
-        }, 0);
-      }
+  const handleDragEnd = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (isEditMode) {
+      resetDrag();
+    }
+  };
+
+  const handleDrag = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (isEditMode) {
+      setDragInfo(info);
     }
   };
 
@@ -204,14 +244,10 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
 
   return (
     <motion.aside
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
       className={cn(
-        "h-full",
-        "transition-all duration-300 ease-in-out overflow-hidden",
-        "bg-[var(--impulse-bg-overlay)] backdrop-filter backdrop-blur-xl",
-        "border border-[var(--impulse-border-normal)] rounded-lg shadow-sm",
-        isCollapsed ? "w-[4.5rem]" : "w-full"
+        "fixed top-0 left-0 h-full bg-[var(--impulse-bg-primary)] border-r border-[var(--impulse-border)]",
+        "flex flex-col transition-all duration-300 z-40",
+        expanded ? "w-64" : "w-20"
       )}
     >
       <div className="flex flex-col h-full p-3 gap-1">
@@ -260,11 +296,12 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
                 id={item.id}
                 icon={item.icon}
                 label={item.label}
-                description={item.description}
-                active={activeItem === item.id}
+                active={activeSection === item.id}
                 expanded={!isCollapsed}
                 onClick={() => handleIconClick(item.path)}
-                onDragStart={(e) => handleDragStart(e, item.id)}
+                onDragStart={(e, info) => handleDragStart(e, info, item.id)}
+                onDragEnd={handleDragEnd}
+                onDrag={handleDrag}
                 isDraggable={isEditMode}
                 isEditMode={isEditMode}
               />
@@ -304,6 +341,25 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
           />
         </div>
       </div>
+
+      {isDragging && dragSource && dragPreview && dragInfo && (
+        <motion.div
+          className="fixed top-0 left-0 pointer-events-none z-50"
+          style={{
+            x: dragInfo.point.x,
+            y: dragInfo.point.y,
+          }}
+        >
+          <div className="bg-[var(--impulse-bg-overlay)] backdrop-blur-lg p-2 rounded shadow-lg border border-[var(--impulse-primary)]">
+            <div className="flex items-center gap-2">
+              {dragPreview.icon}
+              <span>{dragPreview.label}</span>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </motion.aside>
   );
-}
+};
+
+export default AdminSidebar;

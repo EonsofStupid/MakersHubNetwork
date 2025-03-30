@@ -1,8 +1,8 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AdminPermission } from '../types/admin.types';
 import { defaultTopNavShortcuts, defaultDashboardShortcuts } from '@/admin/config/navigation.config';
+import { PanInfo } from 'framer-motion';
 
 export interface AdminState {
   // UI State
@@ -18,10 +18,14 @@ export interface AdminState {
   adminTheme: string;
 
   // Drag & Drop
-  hoveredIcon: string | null;
   dragSource: string | null;
   dragTarget: string | null;
-  showDragOverlay: boolean;
+  isDragging: boolean;
+  dragPreview: {
+    label: string;
+    icon?: React.ReactNode;
+  } | null;
+  dragInfo: PanInfo | null;
 
   // Frozen Zones
   frozenZones: string[];
@@ -40,6 +44,10 @@ export interface AdminState {
   setPinnedDashboardItems: (items: string[]) => void;
   setDragSource: (source: string | null) => void;
   setDragTarget: (target: string | null) => void;
+  setIsDragging: (isDragging: boolean) => void;
+  setDragPreview: (preview: { label: string; icon?: React.ReactNode } | null) => void;
+  setDragInfo: (info: PanInfo | null) => void;
+  resetDrag: () => void;
   toggleDarkMode: () => void;
 }
 
@@ -58,22 +66,47 @@ export const useAdminStore = create<AdminState>()(
       // Theme
       adminTheme: 'cyberpunk',
 
-      // Drag and drop
-      hoveredIcon: null,
+      // Drag & Drop
       dragSource: null,
       dragTarget: null,
-      showDragOverlay: false,
+      isDragging: false,
+      dragPreview: null,
+      dragInfo: null,
 
-      // Zones
+      // Frozen Zones
       frozenZones: [],
 
       // Permissions
-      isLoadingPermissions: true,
+      isLoadingPermissions: false,
       permissions: [],
       permissionsLoaded: false,
 
       // Actions
-      setState: (partial) => set(partial),
+      setState: (state) => set(state),
+      setDragSource: (source) => set({ dragSource: source }),
+      setDragTarget: (target) => set({ dragTarget: target }),
+      setIsDragging: (isDragging) => 
+        set((state) => 
+          isDragging 
+            ? { isDragging: true }
+            : {
+                isDragging: false,
+                dragSource: null,
+                dragTarget: null,
+                dragPreview: null,
+                dragInfo: null,
+              }
+        ),
+      setDragPreview: (preview) => set({ dragPreview: preview }),
+      setDragInfo: (info) => set({ dragInfo: info }),
+      resetDrag: () => 
+        set({
+          dragSource: null,
+          dragTarget: null,
+          isDragging: false,
+          dragPreview: null,
+          dragInfo: null,
+        }),
 
       toggleSidebar: () =>
         set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
@@ -82,10 +115,6 @@ export const useAdminStore = create<AdminState>()(
 
       setPinnedDashboardItems: (items) =>
         set({ pinnedDashboardItems: items }),
-
-      setDragSource: (source) => set({ dragSource: source }),
-
-      setDragTarget: (target) => set({ dragTarget: target }),
 
       toggleDarkMode: () =>
         set((state) => ({ isDarkMode: !state.isDarkMode })),
