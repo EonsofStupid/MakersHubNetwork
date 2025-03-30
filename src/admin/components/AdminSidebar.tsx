@@ -1,8 +1,8 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
@@ -12,13 +12,11 @@ import { scrollbarStyle } from '@/admin/utils/styles';
 import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
-import { useAdminDataSync } from '@/admin/services/adminData.service';
 
-// Import the navigation and new electric CSS
+// Import the navigation CSS
 import '@/admin/styles/navigation.css';
 import '@/admin/styles/sidebar-navigation.css';
 import '@/admin/styles/drag-drop.css';
-import '@/admin/styles/electric-effects.css';
 
 // Framer Motion variants
 const titleVariants = {
@@ -30,55 +28,13 @@ export function AdminSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isEditMode] = useAtom(adminEditModeAtom);
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  
   const { 
     sidebarExpanded, 
     setSidebarExpanded, 
     activeSection,
     setActiveSection,
-    hasPermission,
-    showLabels,
-    setShowLabels,
-    isDarkMode
+    hasPermission
   } = useAdminStore();
-  
-  // Track mouse position for electric effects
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!sidebarRef.current) return;
-      
-      const rect = sidebarRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
-      sidebarRef.current.style.setProperty('--mouse-x', `${x}px`);
-      sidebarRef.current.style.setProperty('--mouse-y', `${y}px`);
-    };
-    
-    const sidebarEl = sidebarRef.current;
-    if (sidebarEl) {
-      sidebarEl.addEventListener('mousemove', handleMouseMove);
-    }
-    
-    return () => {
-      if (sidebarEl) {
-        sidebarEl.removeEventListener('mousemove', handleMouseMove);
-      }
-    };
-  }, []);
-  
-  // Sync admin preferences with the database
-  const { isSyncing } = useAdminDataSync({
-    sidebarExpanded,
-    activeSection,
-    showLabels
-  }, (data) => {
-    // This callback updates the store when data is loaded from the database
-    if (data.sidebarExpanded !== undefined) setSidebarExpanded(data.sidebarExpanded);
-    if (data.activeSection !== undefined) setActiveSection(data.activeSection);
-    if (data.showLabels !== undefined) setShowLabels(data.showLabels);
-  });
 
   // Set active section based on URL
   useEffect(() => {
@@ -98,20 +54,8 @@ export function AdminSidebar() {
     setActiveSection(id);
   };
 
-  // Generate random idle animation delay
-  const generateRandomDelay = () => {
-    return Math.random() * 5;
-  };
-
   return (
-    <div 
-      ref={sidebarRef}
-      className={cn(
-        "admin-sidebar h-full flex flex-col",
-        "electric-background glitch-effect",
-        isDarkMode ? "apple-glass-dark" : "apple-glass"
-      )}
-    >
+    <div className="admin-sidebar h-full flex flex-col">
       {/* Header with title and collapse button */}
       <div className="admin-sidebar__header py-4 px-3 flex justify-between items-center border-b border-[var(--impulse-border-normal)]">
         <AnimatePresence mode="wait">
@@ -124,31 +68,14 @@ export function AdminSidebar() {
               exit="collapsed"
               className="flex items-center gap-2"
             >
-              <motion.span 
-                className="text-sm font-medium text-[var(--impulse-text-primary)] px-2 idle-flicker"
-                style={{ animationDelay: `${generateRandomDelay()}s` }}
-              >
-                Admin Navigation
-              </motion.span>
+              <span className="text-sm font-medium text-[var(--impulse-text-primary)] px-2">Admin Navigation</span>
             </motion.div>
           )}
         </AnimatePresence>
         
         <div className="flex items-center gap-2">
           {sidebarExpanded && (
-            <>
-              <EditModeToggle className="mr-1" />
-              <AdminTooltip content={showLabels ? "Hide labels" : "Show labels"}>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowLabels(!showLabels)}
-                  className="p-2 rounded-full text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors hover-glow"
-                >
-                  {showLabels ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </motion.button>
-              </AdminTooltip>
-            </>
+            <EditModeToggle className="mr-1" />
           )}
           
           <AdminTooltip content={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}>
@@ -156,7 +83,7 @@ export function AdminSidebar() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              className="p-2 rounded-full bg-[var(--impulse-bg-main)] text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors hover-glow"
+              className="p-2 rounded-full bg-[var(--impulse-bg-main)] text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors"
             >
               {sidebarExpanded ? (
                 <ChevronLeft className="w-4 h-4" />
@@ -179,23 +106,18 @@ export function AdminSidebar() {
       >
         <div className={sidebarExpanded ? "px-2" : "px-1"}>
           <AnimatePresence mode="popLayout">
-            {visibleItems.map((item, index) => (
+            {visibleItems.map((item) => (
               <NavigationItem
                 key={item.id}
                 id={item.id}
-                label={showLabels ? item.label : ""}
+                label={item.label}
                 icon={item.icon}
                 description={item.description}
                 isActive={activeSection === item.id}
                 onClick={() => handleNavClick(item.path, item.id)}
-                tooltipContent={!showLabels || !sidebarExpanded ? `${item.label}: ${item.description}` : undefined}
-                showTooltip={!showLabels || !sidebarExpanded}
-                className={cn(
-                  sidebarExpanded ? "mx-2" : "justify-center mx-2 px-0",
-                  !showLabels && sidebarExpanded && "justify-center",
-                  "electric-nav-item",
-                  `random-color-${(index % 5) + 1}`
-                )}
+                tooltipContent={!sidebarExpanded ? `${item.label}: ${item.description}` : undefined}
+                showTooltip={!sidebarExpanded}
+                className={sidebarExpanded ? "mx-2" : "justify-center mx-2 px-0"}
               />
             ))}
           </AnimatePresence>
@@ -205,7 +127,7 @@ export function AdminSidebar() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-4 mx-4 p-2 rounded-md bg-[var(--impulse-primary)]/10 border border-[var(--impulse-border-normal)] electric-border"
+            className="mt-4 mx-4 p-2 rounded-md bg-[var(--impulse-primary)]/10 border border-[var(--impulse-border-normal)]"
           >
             <p className="text-xs text-[var(--impulse-primary)] text-center">
               Drag items to customize your dashboard
@@ -228,13 +150,6 @@ export function AdminSidebar() {
               <span className="text-xs text-[var(--impulse-text-secondary)]">
                 {isEditMode ? "Edit mode active" : "MakersImpulse Admin"}
               </span>
-              {isSyncing && (
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                  className="w-2 h-2 rounded-full bg-primary"
-                />
-              )}
             </motion.div>
           ) : (
             <motion.div

@@ -14,7 +14,6 @@ export interface AdminState {
   sidebarExpanded: boolean;
   activeSection: string;
   isDashboardCollapsed: boolean;
-  showLabels: boolean;
   
   // Drag and drop state
   dragSource: string | null;
@@ -40,7 +39,6 @@ export interface AdminState {
   toggleEditMode: () => void;
   setActiveSection: (section: string) => void;
   setDashboardCollapsed: (collapsed: boolean) => void;
-  setShowLabels: (show: boolean) => void;
   
   // Actions - Drag and drop
   setDragSource: (source: string | null) => void;
@@ -75,7 +73,6 @@ export const useAdminStore = create<AdminState>()(
       sidebarExpanded: true,
       activeSection: 'overview',
       isDashboardCollapsed: false,
-      showLabels: true,
       dragSource: null,
       dragTarget: null,
       pinnedTopNavItems: ['users', 'builds', 'reviews'],
@@ -84,7 +81,7 @@ export const useAdminStore = create<AdminState>()(
       permissions: [],
       isLoadingPermissions: false,
       isDarkMode: false,
-      adminTheme: 'cyberpunk',
+      adminTheme: 'default',
       
       // UI Actions
       setEditMode: (isEditMode) => set({ isEditMode }),
@@ -97,18 +94,8 @@ export const useAdminStore = create<AdminState>()(
         preferencesChanged: true 
       })),
       toggleEditMode: () => set((state) => ({ isEditMode: !state.isEditMode })),
-      setActiveSection: (section) => set({ 
-        activeSection: section,
-        preferencesChanged: true 
-      }),
-      setDashboardCollapsed: (collapsed) => set({ 
-        isDashboardCollapsed: collapsed,
-        preferencesChanged: true 
-      }),
-      setShowLabels: (show) => set({ 
-        showLabels: show,
-        preferencesChanged: true 
-      }),
+      setActiveSection: (section) => set({ activeSection: section }),
+      setDashboardCollapsed: (collapsed) => set({ isDashboardCollapsed: collapsed }),
       
       // Drag and drop actions
       setDragSource: (source) => set({ dragSource: source }),
