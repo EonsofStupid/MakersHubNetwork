@@ -2,20 +2,17 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
 import { useToast } from '@/hooks/use-toast';
-import { AdminPermission } from '@/admin/types/admin.types';
 
 interface AdminContextProps {
   hasAdminAccess: boolean;
   isLoading: boolean;
   initializeAdmin: () => void;
-  checkPermission: (permission: AdminPermission) => boolean;
 }
 
 const AdminContext = createContext<AdminContextProps>({
   hasAdminAccess: false,
   isLoading: false,
-  initializeAdmin: () => {},
-  checkPermission: () => false
+  initializeAdmin: () => {}
 });
 
 export const useAdmin = () => useContext(AdminContext);
@@ -31,23 +28,6 @@ export const AdminProvider = ({ children }: AdminProviderProps) => {
   
   // Check if user has admin access
   const hasAdminAccess = roles?.includes('admin') || roles?.includes('super_admin');
-  
-  // Check if user has a specific permission
-  const checkPermission = (permission: AdminPermission): boolean => {
-    // Basic admin access check
-    if (permission === 'admin:access') {
-      return hasAdminAccess;
-    }
-    
-    // Super admins have all permissions
-    if (roles?.includes('super_admin')) {
-      return true;
-    }
-    
-    // For specific permissions, we would check against a more detailed permissions system
-    // For now, we'll assume admin users have all basic permissions
-    return hasAdminAccess;
-  };
   
   // Initialize admin functionality
   const initializeAdmin = () => {
@@ -76,8 +56,7 @@ export const AdminProvider = ({ children }: AdminProviderProps) => {
   const value = {
     hasAdminAccess,
     isLoading,
-    initializeAdmin,
-    checkPermission
+    initializeAdmin
   };
   
   return (

@@ -9,7 +9,6 @@ import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { useToast } from '@/hooks/use-toast';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
-import { TopNavShortcuts } from '@/admin/components/navigation/TopNavShortcuts';
 
 import '@/admin/styles/admin-topnav.css';
 
@@ -73,9 +72,6 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
           </div>
         </div>
         
-        {/* Add TopNavShortcuts component */}
-        <TopNavShortcuts />
-        
         <div className="flex items-center space-x-3">
           <AdminTooltip 
             content={isEditMode ? "Exit Edit Mode" : "Customize Interface"} 
@@ -100,7 +96,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] relative electric-border"
+              className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] relative"
             >
               <Bell className="w-5 h-5" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--impulse-secondary)] rounded-full"></span>
@@ -111,7 +107,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] electric-border"
+              className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
             >
               <Settings className="w-5 h-5" />
             </motion.button>
@@ -121,7 +117,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
             <motion.div
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="w-8 h-8 rounded-full bg-[var(--impulse-bg-card)] flex items-center justify-center border border-[var(--impulse-border-normal)] text-[var(--impulse-text-primary)] cursor-pointer overflow-hidden electric-border"
+              className="w-8 h-8 rounded-full bg-[var(--impulse-bg-card)] flex items-center justify-center border border-[var(--impulse-border-normal)] text-[var(--impulse-text-primary)] cursor-pointer overflow-hidden"
             >
               <User className="w-5 h-5" />
             </motion.div>
