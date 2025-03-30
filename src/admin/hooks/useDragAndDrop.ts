@@ -146,7 +146,8 @@ export function useDragAndDrop({
 
     const handleDragLeave = (e: DragEvent) => {
       // Check if we're actually leaving the container (not just moving between children)
-      if (!element.contains(e.relatedTarget as Node)) {
+      const relatedTarget = e.relatedTarget as Node | null;
+      if (relatedTarget && !element.contains(relatedTarget)) {
         element.classList.remove('active-drop');
         setDragTargetId(null);
         
@@ -190,14 +191,15 @@ export function useDragAndDrop({
       setDropIndicatorPosition(null);
     };
 
-    element.addEventListener('dragover', handleDragOver as EventListener);
-    element.addEventListener('dragleave', handleDragLeave as EventListener);
-    element.addEventListener('drop', handleDrop as EventListener);
+    // Type cast the event handlers to EventListener
+    element.addEventListener('dragover', handleDragOver as unknown as EventListener);
+    element.addEventListener('dragleave', handleDragLeave as unknown as EventListener);
+    element.addEventListener('drop', handleDrop as unknown as EventListener);
 
     return () => {
-      element.removeEventListener('dragover', handleDragOver as EventListener);
-      element.removeEventListener('dragleave', handleDragLeave as EventListener);
-      element.removeEventListener('drop', handleDrop as EventListener);
+      element.removeEventListener('dragover', handleDragOver as unknown as EventListener);
+      element.removeEventListener('dragleave', handleDragLeave as unknown as EventListener);
+      element.removeEventListener('drop', handleDrop as unknown as EventListener);
     };
   }, [
     isDragging, 
@@ -263,12 +265,14 @@ export function useDragAndDrop({
     };
     
     el.setAttribute('draggable', (dragOnlyInEditMode ? editMode : true).toString());
-    el.addEventListener('dragstart', handleDragStart as EventListener);
+    
+    // Type cast the event handlers to EventListener
+    el.addEventListener('dragstart', handleDragStart as unknown as EventListener);
     el.addEventListener('dragend', handleDragEnd);
     
     return () => {
       el.removeAttribute('draggable');
-      el.removeEventListener('dragstart', handleDragStart as EventListener);
+      el.removeEventListener('dragstart', handleDragStart as unknown as EventListener);
       el.removeEventListener('dragend', handleDragEnd);
     };
   }, [
