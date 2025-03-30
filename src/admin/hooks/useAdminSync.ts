@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminDataService } from '@/admin/services/adminData.service';
@@ -16,6 +16,7 @@ export function useAdminSync() {
   const adminStore = useAdminStore();
   const { toast } = useToast();
   const { setLoading, clearLoading, setError, clearError } = useSharedStore();
+  const unsubscribeRef = useRef<() => void | null>(null);
 
   // Load admin data from database on mount
   useEffect(() => {
@@ -79,8 +80,13 @@ export function useAdminSync() {
   useEffect(() => {
     if (!user?.id) return;
     
-    const saveDataToDatabase = async (state: any, prevState: any) => {
+    const saveDataToDatabase = async (state: any) => {
       try {
+        // Get previous state from local storage
+        const storeKey = 'admin-store';
+        const storedData = localStorage.getItem(storeKey);
+        const prevState = storedData ? JSON.parse(storedData).state : {};
+
         // Check if relevant state has changed
         const keysToCheck = [
           'sidebarExpanded',
@@ -148,11 +154,14 @@ export function useAdminSync() {
       }
     };
 
-    // Subscribe to store changes
+    // Subscribe to store changes using Zustand's API
     const unsubscribe = adminStore.subscribe(saveDataToDatabase);
+    unsubscribeRef.current = unsubscribe;
 
     return () => {
-      unsubscribe();
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
     };
   }, [user?.id, adminStore, toast, setLoading, clearLoading, setError, clearError]);
 }

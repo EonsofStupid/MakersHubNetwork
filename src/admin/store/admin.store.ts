@@ -1,5 +1,6 @@
+
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, StateStorage, StorageValue } from 'zustand/middleware';
 import { AdminPermission } from '../types/admin.types';
 import { defaultTopNavShortcuts, defaultDashboardShortcuts } from '@/admin/config/navigation.config';
 
@@ -31,6 +32,33 @@ interface AdminState {
   setDragTarget: (target: string | null) => void;
   toggleDarkMode: () => void;
 }
+
+// Create a custom storage adapter to handle JSON serialization
+const customStorage: StateStorage = {
+  getItem: (name) => {
+    try {
+      const value = localStorage.getItem(name);
+      return value ? JSON.parse(value) : null;
+    } catch (error) {
+      console.error('Error retrieving from localStorage:', error);
+      return null;
+    }
+  },
+  setItem: (name, value) => {
+    try {
+      localStorage.setItem(name, JSON.stringify(value));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  },
+  removeItem: (name) => {
+    try {
+      localStorage.removeItem(name);
+    } catch (error) {
+      console.error('Error removing from localStorage:', error);
+    }
+  }
+};
 
 export const useAdminStore = create<AdminState>()(
   persist(
@@ -123,6 +151,7 @@ export const useAdminStore = create<AdminState>()(
     }),
     {
       name: 'admin-store',
+      storage: customStorage,
       partialize: (state) => {
         const {
           permissions,
