@@ -15,13 +15,15 @@ interface UseDragAndDropOptions {
   onReorder?: (newItems: string[]) => void;
   containerId: string;
   dragOnlyInEditMode?: boolean;
+  acceptExternalItems?: boolean;
 }
 
 export function useDragAndDrop({ 
   items, 
   onReorder, 
   containerId,
-  dragOnlyInEditMode = true
+  dragOnlyInEditMode = true,
+  acceptExternalItems = true
 }: UseDragAndDropOptions) {
   const [editMode] = useAtom(adminEditModeAtom);
   const [isDragging, setIsDragging] = useAtom(isDraggingAtom);
@@ -59,41 +61,49 @@ export function useDragAndDrop({
   const handleItemDrop = useCallback((sourceId: string, targetId: string) => {
     if (!sourceId || !targetId || sourceId === targetId) return;
 
-    const sourceIndex = items.indexOf(sourceId);
-    const targetIndex = items.indexOf(targetId);
-    
-    // Add item if it doesn't exist in the target container
-    if (sourceIndex === -1) {
-      // Item doesn't exist in this container, add it
-      const newItems = [...items];
-      newItems.splice(targetIndex !== -1 ? targetIndex : 0, 0, sourceId);
-      onReorder?.(newItems);
+    // Handle drops within the same container
+    if (targetId !== `${containerId}-empty`) {
+      const sourceIndex = items.indexOf(sourceId);
+      const targetIndex = items.indexOf(targetId);
       
-      toast({
-        title: "Item added",
-        description: `Successfully added item to ${containerId}`,
-        variant: "default",
-        duration: 2000
-      });
-      return;
+      // If target container already has the item, just reorder it
+      if (sourceIndex !== -1 && targetIndex !== -1) {
+        const newItems = [...items];
+        newItems.splice(sourceIndex, 1);
+        newItems.splice(targetIndex, 0, sourceId);
+        onReorder?.(newItems);
+        
+        toast({
+          title: "Item moved",
+          description: `Successfully reordered items in ${containerId}`,
+          variant: "default",
+          duration: 2000
+        });
+        return;
+      }
     }
     
-    if (targetIndex === -1) return;
-
-    // Reorder existing items
-    const newItems = [...items];
-    newItems.splice(sourceIndex, 1);
-    newItems.splice(targetIndex, 0, sourceId);
-
-    onReorder?.(newItems);
-    
-    toast({
-      title: "Item moved",
-      description: `Successfully reordered your shortcuts in ${containerId}`,
-      variant: "default",
-      duration: 2000
-    });
-  }, [items, onReorder, toast, containerId]);
+    // Handle drops from external container 
+    if (acceptExternalItems) {
+      // If the item is not in the current container, add it
+      if (!items.includes(sourceId)) {
+        let newItems = [...items];
+        const targetIndex = targetId !== `${containerId}-empty` ? items.indexOf(targetId) : items.length;
+        
+        if (targetIndex !== -1 || targetId === `${containerId}-empty`) {
+          newItems.splice(targetIndex !== -1 ? targetIndex : 0, 0, sourceId);
+          onReorder?.(newItems);
+          
+          toast({
+            title: "Item added",
+            description: `Successfully added item to ${containerId}`,
+            variant: "default",
+            duration: 2000
+          });
+        }
+      }
+    }
+  }, [items, onReorder, toast, containerId, acceptExternalItems]);
 
   // Register a drop zone container
   const registerDropZone = useCallback((element: HTMLElement | null) => {
@@ -101,17 +111,17 @@ export function useDragAndDrop({
 
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
-      if (!isDragging || (dragOnlyInEditMode && !editMode)) return;
+      if (!isDragging || (dragOnlyInEditMode && !editMode) || !acceptExternalItems) return;
       
       // Add active class to the container
       element.classList.add('active-drop');
       
       // Find the closest draggable item
-      const items = Array.from(element.querySelectorAll('[data-id]'));
+      const dropItems = Array.from(element.querySelectorAll('[data-id]'));
       let closestItem: Element | null = null;
       let closestDistance = Infinity;
 
-      items.forEach(item => {
+      dropItems.forEach(item => {
         const rect = item.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
@@ -141,7 +151,7 @@ export function useDragAndDrop({
           
           (closestItem as HTMLElement).classList.add('drop-target-item');
         }
-      } else if (items.length === 0) {
+      } else if (dropItems.length === 0) {
         // If there are no items, we can still drop here
         setDragTargetId(`${containerId}-empty`);
       }
@@ -226,7 +236,8 @@ export function useDragAndDrop({
     containerId,
     onReorder,
     toast,
-    dragOnlyInEditMode
+    dragOnlyInEditMode,
+    acceptExternalItems
   ]);
 
   // Make an item draggable

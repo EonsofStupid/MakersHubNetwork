@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, User, Settings, Menu, Shield, Edit, X } from 'lucide-react';
@@ -7,10 +7,17 @@ import { cn } from '@/lib/utils';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
 import { useAtom } from 'jotai';
-import { adminEditModeAtom, isDraggingAtom, dragSourceIdAtom, dragTargetIdAtom, dropIndicatorPositionAtom } from '@/admin/atoms/tools.atoms';
+import { 
+  adminEditModeAtom, 
+  isDraggingAtom, 
+  dragSourceIdAtom, 
+  dragTargetIdAtom, 
+  dropIndicatorPositionAtom 
+} from '@/admin/atoms/tools.atoms';
 import { TopNavItem } from '@/admin/components/navigation/TopNavItem';
 import { useToast } from '@/hooks/use-toast';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
+import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 
 import '@/admin/styles/admin-topnav.css';
 
@@ -25,8 +32,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
   const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
   const [isDragging] = useAtom(isDraggingAtom);
   const [dragSourceId] = useAtom(dragSourceIdAtom);
-  const [, setDragTargetId] = useAtom(dragTargetIdAtom);
-  const [, setDropPosition] = useAtom(dropIndicatorPositionAtom);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
   
   const { 
     sidebarExpanded, 
@@ -35,17 +41,20 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
     setPinnedTopNavItems
   } = useAdminStore();
 
-  // Update drop indicator position during dragging
+  // Use the draggable hook for the top nav
+  const { registerDropZone } = useDragAndDrop({
+    items: pinnedTopNavItems,
+    onReorder: setPinnedTopNavItems,
+    containerId: 'top-nav-shortcuts',
+    acceptExternalItems: true
+  });
+
+  // Register the top nav as a drop zone
   useEffect(() => {
-    if (!isDragging) return;
-    
-    const updateDropIndicator = (e: MouseEvent) => {
-      setDropPosition({ x: e.clientX, y: e.clientY });
-    };
-    
-    window.addEventListener('mousemove', updateDropIndicator);
-    return () => window.removeEventListener('mousemove', updateDropIndicator);
-  }, [isDragging, setDropPosition]);
+    if (dropZoneRef.current) {
+      return registerDropZone(dropZoneRef.current);
+    }
+  }, [registerDropZone]);
   
   // Get icons for the top nav
   const topNavIcons = adminNavigationItems
@@ -56,27 +65,6 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
       label: item.label,
       path: item.path
     }));
-  
-  // Handle drop on the top nav
-  const handleTopNavDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    
-    if (!dragSourceId) return;
-    
-    // Check if the item is already in topNavItems
-    if (!pinnedTopNavItems.includes(dragSourceId)) {
-      setPinnedTopNavItems([...pinnedTopNavItems, dragSourceId]);
-      
-      toast({
-        title: "Added to Top Navigation",
-        description: "Item has been added to your quick access menu",
-      });
-    }
-    
-    // Reset drag state
-    setDragTargetId(null);
-    setDropPosition(null);
-  };
   
   const removeTopNavItem = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -137,14 +125,16 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
           </div>
         </div>
         
-        <div 
+        <motion.div 
+          ref={dropZoneRef}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           className={cn(
             "admin-topnav-shortcuts flex items-center gap-2 px-4 py-1 rounded-full transition-all",
-            isDragging && "drop-target",
+            isDragging && "ring-2 ring-primary/50 bg-primary/5",
             isEditMode && "edit-mode-highlight",
           )}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleTopNavDrop}
+          id="top-nav-shortcuts"
         >
           <AnimatePresence mode="popLayout">
             {topNavIcons.length > 0 ? (
@@ -165,14 +155,14 @@ export function AdminTopNav({ title = "Admin Dashboard", className }: AdminTopNa
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="text-[var(--impulse-text-secondary)] text-xs px-2"
+                  className="flex items-center gap-1 text-[var(--impulse-text-secondary)] text-xs px-2"
                 >
-                  Drag items here from sidebar
+                  <span>Drag items here from sidebar</span>
                 </motion.div>
               )
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
         
         <div className="flex items-center space-x-3">
           <AdminTooltip 

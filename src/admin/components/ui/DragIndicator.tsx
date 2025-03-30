@@ -1,8 +1,12 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAtom } from 'jotai';
-import { isDraggingAtom, dropIndicatorPositionAtom, dragSourceIdAtom } from '@/admin/atoms/tools.atoms';
+import { 
+  isDraggingAtom, 
+  dropIndicatorPositionAtom, 
+  dragSourceIdAtom 
+} from '@/admin/atoms/tools.atoms';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
 
 export function DragIndicator() {
@@ -17,49 +21,83 @@ export function DragIndicator() {
   // Find the icon for the dragged item
   const draggedItem = adminNavigationItems.find(item => item.id === dragSourceId);
   
+  if (!draggedItem) return null;
+  
+  // Generate random color variant for each drag operation
+  const getColorVariant = () => {
+    const variants = [
+      "bg-gradient-to-r from-blue-500/10 to-cyan-500/20 border-blue-500/30",
+      "bg-gradient-to-r from-purple-500/10 to-pink-500/20 border-purple-500/30",
+      "bg-gradient-to-r from-emerald-500/10 to-teal-500/20 border-emerald-500/30",
+      "bg-gradient-to-r from-amber-500/10 to-orange-500/20 border-amber-500/30"
+    ];
+    
+    // Create a simple hash from the dragSourceId
+    let hash = 0;
+    for (let i = 0; i < dragSourceId.length; i++) {
+      hash = dragSourceId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    return variants[Math.abs(hash) % variants.length];
+  };
+  
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.8 }}
-      style={{
-        position: 'fixed',
-        left: dropPosition.x + 15,
-        top: dropPosition.y + 15,
-        pointerEvents: 'none',
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        background: 'rgba(0, 240, 255, 0.1)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(0, 240, 255, 0.3)',
-        boxShadow: '0 0 15px rgba(0, 240, 255, 0.4)',
-        padding: '6px 12px',
-        borderRadius: '6px',
-      }}
-    >
-      {draggedItem?.icon}
-      <span className="text-[var(--impulse-text-primary)] text-sm whitespace-nowrap">
-        {draggedItem?.label}
-      </span>
-      
-      {/* Glow effect */}
+    <AnimatePresence>
       <motion.div
-        className="absolute inset-0 rounded-md opacity-75"
-        animate={{
-          boxShadow: [
-            '0 0 5px rgba(0, 240, 255, 0.3)',
-            '0 0 15px rgba(0, 240, 255, 0.7)',
-            '0 0 5px rgba(0, 240, 255, 0.3)'
-          ]
+        key="drag-indicator"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ 
+          opacity: 1, 
+          scale: 1,
+          x: dropPosition.x + 15,
+          y: dropPosition.y + 15
         }}
-        transition={{ 
-          duration: 2, 
-          repeat: Infinity,
-          ease: 'easeInOut'
-        }}
-      />
-    </motion.div>
+        exit={{ opacity: 0, scale: 0.8 }}
+        className={`fixed pointer-events-none z-50 flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-md border backdrop-blur-md ${getColorVariant()}`}
+      >
+        <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-[var(--impulse-text-primary)]">
+          {draggedItem.icon}
+        </div>
+        
+        <span className="text-[var(--impulse-text-primary)] text-sm font-medium whitespace-nowrap">
+          {draggedItem.label}
+        </span>
+        
+        <motion.div
+          className="absolute inset-0 rounded-md -z-10"
+          animate={{
+            boxShadow: [
+              "0 0 5px rgba(0, 240, 255, 0.1)",
+              "0 0 15px rgba(0, 240, 255, 0.3)",
+              "0 0 5px rgba(0, 240, 255, 0.1)"
+            ]
+          }}
+          transition={{ 
+            duration: 2, 
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        
+        {/* Glitch effect */}
+        <motion.div 
+          className="absolute inset-0 overflow-hidden opacity-50 rounded-md -z-20 mix-blend-screen"
+          animate={{ 
+            clipPath: [
+              "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+              "polygon(0 5%, 100% 0, 100% 95%, 0 100%)",
+              "polygon(0 0, 100% 0, 100% 100%, 0 100%)"
+            ]
+          }}
+          transition={{ 
+            duration: 3, 
+            repeat: Infinity, 
+            repeatType: "mirror" 
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-secondary/30 to-primary/30"></div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
