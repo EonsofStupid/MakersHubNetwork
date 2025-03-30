@@ -1,23 +1,23 @@
-
 import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
-import { useAdminStore, subscribeWithPrevious } from '@/admin/store/admin.store';
+import { useAdminStore, subscribeWithSelector } from '@/admin/store/admin.store';
 import { AdminDataService } from '@/admin/services/adminData.service';
 import { useToast } from '@/hooks/use-toast';
 import { useSharedStore } from '@/stores/shared/store';
+import { AdminState } from '@/admin/store/admin.store';
 
 export const SYNC_ID = 'admin-sync';
 
 /**
- * Hook to handle syncing admin data between localStorage and database
+ * Hook to sync admin UI preferences with Supabase
  */
 export function useAdminSync() {
   const { user } = useAuthStore();
-  const adminStore = useAdminStore();
   const { toast } = useToast();
   const { setLoading, clearLoading, setError, clearError } = useSharedStore();
+  const adminStore = useAdminStore();
 
-  // Load admin data from database on mount
+  // Initial load from DB to Zustand
   useEffect(() => {
     let isMounted = true;
 
@@ -27,7 +27,7 @@ export function useAdminSync() {
       try {
         setLoading(SYNC_ID, { isLoading: true, message: 'Loading preferences...' });
         const { data, error } = await AdminDataService.loadPreferences(user.id);
-        
+
         if (error) {
           console.warn('Failed to load admin data:', error);
           setError(SYNC_ID, { message: `Failed to load preferences: ${error}` });
@@ -35,7 +35,6 @@ export function useAdminSync() {
         }
 
         if (data && isMounted) {
-          // Format data to match store schema
           const storeData = {
             sidebarExpanded: data.sidebar_expanded ?? true,
             pinnedTopNavItems: data.topnav_items ?? [],
@@ -44,20 +43,18 @@ export function useAdminSync() {
             isDashboardCollapsed: data.dashboard_collapsed ?? false,
             adminTheme: data.theme_preference ?? 'cyberpunk',
             frozenZones: data.frozen_zones ?? [],
-            isDarkMode: data.ui_preferences?.isDarkMode ?? true
+            isDarkMode: data.ui_preferences?.isDarkMode ?? true,
           };
 
-          // Update store with database values
           Object.entries(storeData).forEach(([key, value]) => {
-            // Only update store if value exists in database
             if (value !== undefined && value !== null) {
-              // @ts-ignore - dynamic key access
-              adminStore[key] !== value && adminStore.setState({ [key]: value });
+              // @ts-expect-error dynamic key
+              if (adminStore[key] !== value) adminStore.setState({ [key]: value });
             }
           });
 
           clearError(SYNC_ID);
-          console.log('Admin data loaded from database');
+          console.log('Admin preferences loaded from DB');
         }
       } catch (error) {
         console.error('Error loading admin data:', error);
@@ -75,84 +72,70 @@ export function useAdminSync() {
     };
   }, [user?.id]);
 
-  // Sync admin data to database when store changes
+  // Sync Zustand to DB on change
   useEffect(() => {
     if (!user?.id) return;
-    
-    const saveDataToDatabase = async (state: any, prevState: any) => {
-      try {
-        // Check if relevant state has changed
-        const keysToCheck = [
-          'sidebarExpanded',
-          'pinnedTopNavItems',
-          'pinnedDashboardItems',
-          'activeSection',
-          'isDashboardCollapsed',
-          'adminTheme',
-          'frozenZones',
-          'isDarkMode'
-        ];
 
-        const hasChanged = keysToCheck.some(key => {
-          // @ts-ignore - dynamic key access
-          return state[key] !== prevState[key];
-        });
+    const keysToSync: (keyof AdminState)[] = [
+      'sidebarExpanded',
+      'pinnedTopNavItems',
+      'pinnedDashboardItems',
+      'activeSection',
+      'isDashboardCollapsed',
+      'adminTheme',
+      'frozenZones',
+      'isDarkMode',
+    ];
 
-        if (!hasChanged) return;
+    const unsubscribe = subscribeWithSelector(
+      useAdminStore,
+      (state) => keysToSync.reduce((acc, key) => {
+        acc[key] = state[key];
+        return acc;
+      }, {} as Pick<AdminState, typeof keysToSync[number]>),
+      async (state, prevState) => {
+        const changed = keysToSync.some((key) => state[key] !== prevState[key]);
+        if (!changed) return;
 
-        setLoading(SYNC_ID, { isLoading: true, message: 'Saving preferences...' });
-        
-        // Extract store data for database
-        const {
-          sidebarExpanded,
-          pinnedTopNavItems,
-          pinnedDashboardItems,
-          activeSection,
-          isDashboardCollapsed,
-          adminTheme,
-          frozenZones,
-          isDarkMode
-        } = state;
+        try {
+          setLoading(SYNC_ID, { isLoading: true, message: 'Saving preferences...' });
 
-        // Format data for database schema
-        const dbData = {
-          sidebar_expanded: sidebarExpanded,
-          topnav_items: pinnedTopNavItems,
-          dashboard_items: pinnedDashboardItems,
-          active_section: activeSection,
-          dashboard_collapsed: isDashboardCollapsed,
-          theme_preference: adminTheme,
-          frozen_zones: frozenZones,
-          ui_preferences: { isDarkMode }
-        };
+          const dbData = {
+            sidebar_expanded: state.sidebarExpanded,
+            topnav_items: state.pinnedTopNavItems,
+            dashboard_items: state.pinnedDashboardItems,
+            active_section: state.activeSection,
+            dashboard_collapsed: state.isDashboardCollapsed,
+            theme_preference: state.adminTheme,
+            frozen_zones: state.frozenZones,
+            ui_preferences: { isDarkMode: state.isDarkMode },
+          };
 
-        // Save to database
-        const { success, error } = await AdminDataService.savePreferences(user.id, dbData);
+          const { success, error } = await AdminDataService.savePreferences(user.id, dbData);
 
-        if (!success && error) {
-          console.error('Failed to save admin data:', error);
-          setError(SYNC_ID, { message: `Failed to save preferences: ${error}` });
-          toast({
-            title: "Sync Failed",
-            description: "Your preferences couldn't be saved to the cloud",
-            variant: "destructive",
-          });
-        } else {
-          clearError(SYNC_ID);
+          if (!success && error) {
+            console.error('Failed to save admin data:', error);
+            setError(SYNC_ID, { message: `Failed to save preferences: ${error}` });
+
+            toast({
+              title: 'Sync Failed',
+              description: "Your preferences couldn't be saved to the cloud",
+              variant: 'destructive',
+            });
+          } else {
+            clearError(SYNC_ID);
+          }
+        } catch (error) {
+          console.error('Error saving admin data:', error);
+          setError(SYNC_ID, { message: `Error saving admin data: ${error}` });
+        } finally {
+          clearLoading(SYNC_ID);
         }
-      } catch (error) {
-        console.error('Error saving admin data:', error);
-        setError(SYNC_ID, { message: `Error saving admin data: ${error}` });
-      } finally {
-        clearLoading(SYNC_ID);
       }
-    };
-
-    // Use the new subscribe helper for proper state change tracking
-    const unsubscribe = subscribeWithPrevious(adminStore, saveDataToDatabase);
+    );
 
     return () => {
       unsubscribe();
     };
-  }, [user?.id, adminStore, toast, setLoading, clearLoading, setError, clearError]);
+  }, [user?.id, toast, setLoading, clearLoading, setError, clearError]);
 }
