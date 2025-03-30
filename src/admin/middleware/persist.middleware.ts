@@ -1,19 +1,15 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
-import { PersistOptions, StorageValue, StateStorage } from "zustand/middleware";
+import { PersistOptions, StorageValue } from "zustand/middleware";
 
-/**
- * Custom storage adapter for zustand persist middleware
- */
-const createCustomStorage = (storeName: string): StateStorage => ({
+// FIX: Custom storage with proper return value format for Zustand
+const zustandStorage: Storage = {
   getItem: (name: string): string | null => {
     try {
-      const value = localStorage.getItem(name);
-      return value;
+      return localStorage.getItem(name);
     } catch (error) {
-      console.error(`Error retrieving ${storeName} preferences:`, error);
+      console.error('Error retrieving admin preferences:', error);
       return null;
     }
   },
@@ -21,17 +17,41 @@ const createCustomStorage = (storeName: string): StateStorage => ({
     try {
       localStorage.setItem(name, value);
     } catch (error) {
-      console.error(`Error saving ${storeName} preferences:`, error);
+      console.error('Error saving admin preferences:', error);
     }
   },
   removeItem: (name: string): void => {
     try {
       localStorage.removeItem(name);
     } catch (error) {
-      console.error(`Error removing ${storeName} preferences:`, error);
+      console.error('Error removing admin preferences:', error);
     }
   },
-});
+};
+
+const storageAdapter = {
+  getItem: (name: string): StorageValue<any> | null => {
+    const value = zustandStorage.getItem(name);
+    if (!value) return null;
+
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      console.error('Error parsing admin store value from localStorage:', error);
+      return null;
+    }
+  },
+  setItem: (name: string, value: StorageValue<any>): void => {
+    try {
+      zustandStorage.setItem(name, JSON.stringify(value));
+    } catch (error) {
+      console.error('Error stringifying admin store value for localStorage:', error);
+    }
+  },
+  removeItem: (name: string): void => {
+    zustandStorage.removeItem(name);
+  }
+};
 
 /**
  * Middleware for syncing admin preferences between localStorage and database
@@ -60,7 +80,7 @@ export function createAdminPersistMiddleware(storeName: string): PersistOptions<
       return persistedState;
     },
 
-    storage: createCustomStorage(storeName),
+    storage: storageAdapter,
   };
 }
 
