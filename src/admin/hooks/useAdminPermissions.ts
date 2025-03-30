@@ -1,37 +1,38 @@
 
-import { useState, useEffect } from "react";
-import { useAuthStore } from "@/stores/auth/store";
-import { useAdminStore } from "@/admin/store/admin.store";
-import { AdminPermission } from "@/admin/types/admin.types";
-import { useAdmin } from "@/admin/context/AdminContext";
+import { useCallback } from 'react';
+import { useAdmin } from '@/admin/context/AdminContext';
+import { useAdminStore } from '@/admin/store/admin.store';
+import { AdminPermission } from '@/admin/types/admin.types';
 
 /**
- * Custom hook for admin permission management
- * Combines authentication roles with admin-specific permissions
+ * Hook for checking admin permissions
  */
 export function useAdminPermissions() {
-  const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuthStore();
-  const { loadPermissions, isLoadingPermissions } = useAdminStore();
-  const { checkPermission, hasAdminAccess } = useAdmin();
+  const { hasAdminAccess } = useAdmin();
+  const { hasPermission, loadPermissions } = useAdminStore();
   
-  useEffect(() => {
-    // Load permissions if we have a user
-    if (user) {
+  /**
+   * Check if the current user has a specific permission
+   */
+  const checkPermission = useCallback((permission: AdminPermission): boolean => {
+    // Check basic admin access first
+    if (!hasAdminAccess) return false;
+    
+    // Check specific permission
+    return hasPermission(permission);
+  }, [hasAdminAccess, hasPermission]);
+  
+  /**
+   * Reload all permissions
+   */
+  const refreshPermissions = useCallback(() => {
+    if (hasAdminAccess) {
       loadPermissions();
     }
-  }, [user, loadPermissions]);
-
-  // Wait for permissions to load
-  useEffect(() => {
-    if (!isLoadingPermissions) {
-      setIsLoading(false);
-    }
-  }, [isLoadingPermissions]);
-
+  }, [hasAdminAccess, loadPermissions]);
+  
   return {
-    hasAccess: hasAdminAccess,
-    isLoading,
-    checkPermission
+    hasPermission: checkPermission,
+    refreshPermissions
   };
 }
