@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -29,6 +29,8 @@ export function DashboardShortcut({
 }: DashboardShortcutProps) {
   const itemRef = useRef<HTMLDivElement>(null);
   const [editMode] = useAtom(adminEditModeAtom);
+  const [randomizedEffect, setRandomizedEffect] = useState<string>('');
+  const [hoverGlowColor, setHoverGlowColor] = useState<string>('');
   
   // Register for drag and drop
   const { makeDraggable } = useDragAndDrop({
@@ -45,7 +47,7 @@ export function DashboardShortcut({
   }, [id, editMode, makeDraggable]);
   
   // Generate random cyber effects based on the item id
-  const getCyberEffectClass = () => {
+  useEffect(() => {
     // Create a simple hash from the id
     let hash = 0;
     for (let i = 0; i < id.length; i++) {
@@ -61,7 +63,26 @@ export function DashboardShortcut({
       "cyber-effect-3"
     ];
     
-    return effects[effectIndex];
+    setRandomizedEffect(effects[effectIndex]);
+  }, [id]);
+  
+  // Generate a random glow color on hover
+  const getRandomGlowColor = () => {
+    const colors = [
+      "0 0 20px rgba(0, 240, 255, 0.7)",      // Cyan
+      "0 0 20px rgba(255, 0, 128, 0.7)",      // Pink
+      "0 0 20px rgba(0, 255, 128, 0.7)",      // Green
+      "0 0 20px rgba(255, 128, 0, 0.7)",      // Orange
+      "0 0 20px rgba(138, 43, 226, 0.7)",     // BlueViolet
+      "0 0 20px rgba(255, 215, 0, 0.7)"       // Gold
+    ];
+    
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+  
+  // Event handler for mouse enter to randomize glow color
+  const handleMouseEnter = () => {
+    setHoverGlowColor(getRandomGlowColor());
   };
 
   return (
@@ -74,16 +95,20 @@ export function DashboardShortcut({
       whileHover={{ scale: 1.03, y: -5 }}
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
+      onMouseEnter={handleMouseEnter}
       className={cn(
         "glassmorphism relative overflow-hidden",
         "p-4 rounded-xl cursor-pointer",
         "min-h-[120px] flex flex-col justify-between",
         "cyber-glow",
-        getCyberEffectClass(),
+        randomizedEffect,
         editMode && "border-dashed border-primary/40 hover:border-primary",
         "transition-all duration-300"
       )}
       data-id={id}
+      style={hoverGlowColor ? {
+        boxShadow: hoverGlowColor
+      } : undefined}
     >
       {/* Cyber effect layer */}
       <div className="cyber-glitch-layer absolute inset-0 pointer-events-none" />
@@ -127,6 +152,13 @@ export function DashboardShortcut({
         transition={{ duration: 3, repeat: Infinity }}
       />
       
+      {/* Cyberpunk angle cut corner */}
+      <div className="absolute top-0 right-0 w-8 h-8" style={{
+        clipPath: "polygon(100% 0, 100% 100%, 0 0)",
+        background: "linear-gradient(135deg, var(--impulse-primary) 0%, transparent 80%)",
+        opacity: 0.6
+      }} />
+      
       {/* Remove Button (only in edit mode) */}
       {editMode && onRemove && (
         <motion.button
@@ -150,6 +182,24 @@ export function DashboardShortcut({
           animate={{ opacity: 1 }}
         >
           <div className="h-1 w-12 bg-primary/30 rounded-full mt-2" />
+        </motion.div>
+      )}
+      
+      {/* Cyber scanning line effect */}
+      {editMode && (
+        <motion.div
+          className="absolute inset-0 bg-primary/5 pointer-events-none overflow-hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <motion.div
+            className="h-[1px] w-full bg-primary/40"
+            animate={{
+              top: ["0%", "100%", "0%"]
+            }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            style={{ position: "absolute" }}
+          />
         </motion.div>
       )}
     </motion.div>

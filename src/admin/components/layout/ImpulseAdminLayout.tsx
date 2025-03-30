@@ -1,161 +1,137 @@
 
-import React, { ReactNode, useEffect } from "react";
-import { AdminSidebar } from "@/admin/components/AdminSidebar";
-import { AdminTopNav } from "@/admin/components/layout/AdminTopNav";
-import { useAdmin } from "@/admin/context/AdminContext";
-import { AdminPermission } from "@/admin/types/admin.types";
-import { cn } from "@/lib/utils";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { DashboardShortcuts } from "@/admin/components/dashboard/DashboardShortcuts";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAdminStore } from "@/admin/store/admin.store";
-import { DragIndicator } from "@/admin/components/ui/DragIndicator";
-import { useAtom } from "jotai";
-import { isDraggingAtom, adminEditModeAtom } from "@/admin/atoms/tools.atoms";
-import { useToast } from "@/hooks/use-toast";
-import { scrollbarStyle } from "@/admin/utils/styles";
-import { Navigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
+import React, { useEffect } from 'react';
+import { AdminTopNav } from '@/admin/components/navigation/AdminTopNav';
+import { AdminSidebar } from '@/admin/components/AdminSidebar';
+import { useAdminStore } from '@/admin/store/admin.store';
+import { cn } from '@/lib/utils';
+import { useAtom } from 'jotai';
+import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
+import { DragIndicator } from '@/admin/components/ui/DragIndicator';
+import { motion } from 'framer-motion';
+import { AdminPermission } from '@/admin/types/admin.types';
+
+// Import our cyberpunk style sheets
+import '@/admin/styles/cyber-effects.css';
+import '@/admin/styles/electric-effects.css';
+import '@/admin/theme/impulse/impulse-admin.css';
+import '@/admin/theme/impulse/impulse-theme.css';
 
 interface ImpulseAdminLayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
   title?: string;
   requiresPermission?: AdminPermission;
 }
 
-export function ImpulseAdminLayout({
+export function ImpulseAdminLayout({ 
   children,
   title = "Admin Dashboard",
   requiresPermission = "admin:access"
 }: ImpulseAdminLayoutProps) {
-  const { checkPermission, isLoading } = useAdmin();
-  const { sidebarExpanded, isDashboardCollapsed } = useAdminStore();
-  const [isDragging] = useAtom(isDraggingAtom);
+  const { sidebarExpanded, hasPermission, isDarkMode, activeSection } = useAdminStore();
   const [isEditMode] = useAtom(adminEditModeAtom);
-  const { toast } = useToast();
-
-  // Check for required permission
-  const hasPermission = checkPermission(requiresPermission);
   
-  // Effect to manage body classes
+  // Set page title
   useEffect(() => {
-    // Add the admin theme class
-    document.body.classList.add('impulse-admin-root');
-    
-    if (isEditMode) {
-      document.body.classList.add('edit-mode');
+    document.title = `${title} | MakersImpulse Admin`;
+    return () => {
+      document.title = 'MakersImpulse';
+    };
+  }, [title]);
+  
+  // Apply dark mode class to the document body
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark-mode');
     } else {
-      document.body.classList.remove('edit-mode');
+      document.documentElement.classList.remove('dark-mode');
     }
+  }, [isDarkMode]);
+  
+  // Track mouse position for electric effects
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
     
     return () => {
-      // Remove the admin theme class when unmounting
-      document.body.classList.remove('impulse-admin-root');
-      document.body.classList.remove('edit-mode');
+      window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [isEditMode]);
+  }, []);
   
-  // Show a tutorial for new admin users
-  useEffect(() => {
-    // Check if this is the first time viewing the admin dashboard
-    const hasSeenDashboardIntro = localStorage.getItem('dashboard-intro-seen');
-    
-    if (!hasSeenDashboardIntro && !isLoading && hasPermission) {
-      // Show the dashboard tutorial after a brief delay
-      const timer = setTimeout(() => {
-        toast({
-          title: "Welcome to Admin Dashboard",
-          description: "This is your customizable admin center. Try clicking the edit button in the top bar to customize it.",
-          duration: 6000,
-        });
-        
-        localStorage.setItem('dashboard-intro-seen', 'true');
-      }, 1500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, hasPermission, toast]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-[400px] flex items-center justify-center">
-        <div className="space-y-2 text-center">
-          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!hasPermission) {
-    return (
-      <Card className="border-destructive/20 p-6 text-center">
-        <h3 className="text-xl font-bold text-destructive">Access Denied</h3>
-        <p className="text-muted-foreground">
-          You don't have permission to access this section.
-        </p>
-      </Card>
-    );
-  }
-
   return (
-    <div className="admin-impulse-layout min-h-screen">
-      <ErrorBoundary>
-        <AdminTopNav title={title} />
-        
-        <div className="flex pt-14 min-h-screen">
-          <div className={cn(
-            "sidebar-container flex-shrink-0 p-4 pt-6",
-            sidebarExpanded ? "w-64" : "w-24",
-            "transition-all duration-300"
-          )}>
-            <AdminSidebar />
-          </div>
-          
-          <main className={cn(
-            "flex-1 p-6 overflow-hidden flex flex-col",
-            scrollbarStyle
-          )}>
-            <AnimatePresence mode="wait">
-              {!isDashboardCollapsed && (
-                <motion.div
-                  key="dashboard-shortcuts"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <DashboardShortcuts />
-                </motion.div>
-              )}
-            </AnimatePresence>
-            
-            <div className="flex-1">
-              {children}
-            </div>
-          </main>
+    <div 
+      className={cn(
+        "impulse-admin-root min-h-screen flex flex-col",
+        isEditMode && "edit-mode",
+        isDarkMode && "dark-mode",
+        "glitch-effect"
+      )}
+      data-active-section={activeSection}
+    >
+      {/* Top navigation */}
+      <AdminTopNav title={title} />
+      
+      {/* Main content area with sidebar */}
+      <div className="flex-1 flex relative">
+        {/* Electric ambient background */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--impulse-bg-main)] to-[var(--impulse-bg-main)] opacity-90" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mouse-x,50%)_var(--mouse-y,50%),rgba(0,240,255,0.08)_0%,transparent_60%)]" />
         </div>
         
-        {/* Show drag indicator when dragging */}
-        {isDragging && <DragIndicator />}
+        {/* Left sidebar */}
+        <div className={cn(
+          "impulse-sidebar transition-all z-10",
+          sidebarExpanded ? "w-60" : "w-16"
+        )}>
+          <AdminSidebar />
+        </div>
         
-        {/* First-time user tutorial tooltips */}
-        {isEditMode && (
-          <div className="fixed bottom-4 left-4 z-50">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
+        {/* Main content */}
+        <main className={cn(
+          "impulse-main flex-1 p-6 transition-all z-10",
+          sidebarExpanded ? "ml-60" : "ml-16",
+          "apple-glass backdrop-blur-xl"
+        )}>
+          {/* Editable indicator in edit mode */}
+          {isEditMode && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-[var(--impulse-bg-card)] backdrop-blur-md border border-[var(--impulse-primary)] rounded-lg p-4 max-w-xs shadow-lg"
+              className="mb-4 p-2 rounded bg-primary/10 border border-primary/20 text-sm text-primary electric-border"
             >
-              <h3 className="text-[var(--impulse-primary)] text-sm font-semibold mb-2">Edit Mode Active</h3>
-              <p className="text-xs text-[var(--impulse-text-secondary)]">
-                You can now drag items from the sidebar to the top navigation bar or dashboard shortcuts.
-                Click the X icon to exit edit mode when done.
-              </p>
+              <span className="font-medium">Edit mode active</span> - Drag items to customize your dashboard
             </motion.div>
-          </div>
-        )}
-      </ErrorBoundary>
+          )}
+          
+          {/* Render children only if user has required permission */}
+          {hasPermission(requiresPermission) ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {children}
+            </motion.div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="p-6 rounded-xl glass-panel text-center">
+                <h3 className="text-xl font-semibold mb-2">Permission Required</h3>
+                <p className="text-muted-foreground">
+                  You need {requiresPermission} permission to access this page.
+                </p>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+      
+      {/* Global drag indicator */}
+      <DragIndicator />
     </div>
   );
 }
