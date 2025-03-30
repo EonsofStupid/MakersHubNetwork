@@ -11,7 +11,7 @@ type StorageValue<T> = {
  * Creates a custom Zustand middleware for persisting state
  * that syncs with both localStorage and the Supabase database
  */
-export function createAdminPersistMiddleware<T>(storeName: string): PersistOptions<T> {
+export function createAdminPersistMiddleware<T>(storeName: string): PersistOptions<T, T> {
   // Create custom state storage
   const storage = {
     getItem: async (name: string): Promise<string | null> => {
@@ -108,9 +108,28 @@ export function createAdminPersistMiddleware<T>(storeName: string): PersistOptio
   
   return {
     name: storeName,
-    storage,
-    partialize: (state: T) => {
-      const partialState = {} as Partial<T>;
+    storage: {
+      getItem: async (name) => {
+        const value = await storage.getItem(name);
+        if (!value) return null;
+        
+        try {
+          // Convert string to StorageValue<T>
+          const parsed = JSON.parse(value);
+          return { state: parsed };
+        } catch (e) {
+          console.error('Error parsing persisted state:', e);
+          return null;
+        }
+      },
+      setItem: async (name, value) => {
+        await storage.setItem(name, JSON.stringify(value.state));
+      },
+      removeItem: async (name) => {
+        await storage.removeItem(name);
+      }
+    },
+    partialize: (state) => {
       const keysToSave = [
         'sidebarExpanded',
         'activeSection',
@@ -121,11 +140,12 @@ export function createAdminPersistMiddleware<T>(storeName: string): PersistOptio
         'pinnedTopNavItems'
       ];
       
-      Object.keys(state as object).forEach(key => {
+      const partialState = Object.entries(state as object).reduce((acc, [key, value]) => {
         if (keysToSave.includes(key)) {
-          (partialState as any)[key] = (state as any)[key];
+          acc[key] = value;
         }
-      });
+        return acc;
+      }, {} as Record<string, any>);
       
       return partialState as T;
     },
