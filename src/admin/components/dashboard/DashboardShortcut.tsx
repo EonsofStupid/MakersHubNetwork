@@ -8,7 +8,7 @@ interface DashboardShortcutProps {
   id: string;
   title: string;
   description?: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string }>;
   onClick?: () => void;
   onRemove?: (e: React.MouseEvent) => void;
   isEditMode?: boolean;

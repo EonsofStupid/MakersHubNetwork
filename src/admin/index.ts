@@ -25,7 +25,8 @@ export * from "./types/dashboard";
 export * from "./types/data-maestro";
 export * from "./types/impulse.types";
 export * from "./types/theme";
-// Rename the AdminShortcut export to prevent naming conflict
+
+// Explicitly rename conflicting types to avoid ambiguity
 export { type AdminShortcut as AdminShortcutType } from "./types/tools.types";
 export * from "./types/tools.types";
 
