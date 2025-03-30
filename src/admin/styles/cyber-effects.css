@@ -1,0 +1,260 @@
+
+/**
+ * Cyberpunk Visual Effects
+ * Special effects for the admin interface
+ */
+
+/* Glassmorphism style for cards and panels */
+.glassmorphism {
+  background-color: rgba(20, 20, 35, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.glassmorphism:hover {
+  background-color: rgba(20, 20, 35, 0.6);
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+/* Cyber glow effects */
+.cyber-glow {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.cyber-glow:hover {
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+}
+
+/* Glitch layer for advanced effects */
+.cyber-glitch-layer {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at top right,
+    rgba(0, 240, 255, 0.1),
+    transparent 70%
+  );
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Specific cyber effect variations */
+.cyber-effect-1::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--impulse-primary));
+  animation: scan-line 2s linear infinite;
+}
+
+.cyber-effect-2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  height: 1px;
+  background: linear-gradient(to right, var(--impulse-primary), transparent);
+  animation: scan-line-reverse 2s linear infinite;
+}
+
+.cyber-effect-3::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 50%;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--impulse-primary), transparent);
+  animation: scan-line-vertical 2s linear infinite;
+}
+
+@keyframes scan-line {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes scan-line-reverse {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes scan-line-vertical {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+/* Neon text effect */
+.neon-text {
+  color: var(--impulse-primary);
+  text-shadow: 
+    0 0 5px rgba(0, 240, 255, 0.5),
+    0 0 10px rgba(0, 240, 255, 0.3),
+    0 0 15px rgba(0, 240, 255, 0.1);
+}
+
+/* Angled corner cuts for cyberpunk aesthetic */
+.cyber-cut-corner {
+  position: relative;
+}
+
+.cyber-cut-corner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  background-color: transparent;
+  border-top: 2px solid var(--impulse-primary);
+  border-right: 2px solid var(--impulse-primary);
+  opacity: 0.6;
+}
+
+.cyber-cut-corner::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  background-color: transparent;
+  border-bottom: 2px solid var(--impulse-primary);
+  border-left: 2px solid var(--impulse-primary);
+  opacity: 0.6;
+}
+
+/* Button hover effects */
+.cyber-button {
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: var(--impulse-primary);
+  border: 1px solid var(--impulse-primary);
+  padding: 0.5rem 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.cyber-button:hover {
+  background-color: rgba(0, 240, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+}
+
+.cyber-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 240, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.cyber-button:hover::before {
+  left: 100%;
+}
+
+/* Hologram effect */
+.hologram {
+  position: relative;
+  overflow: hidden;
+}
+
+.hologram::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 240, 255, 0.1),
+    rgba(0, 240, 255, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  opacity: 0.3;
+  pointer-events: none;
+  animation: hologram-scan 8s linear infinite;
+}
+
+@keyframes hologram-scan {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+/* Terminal text effect for code blocks or logs */
+.terminal-text {
+  font-family: var(--impulse-font-mono);
+  color: var(--impulse-primary);
+  background-color: rgba(0, 0, 0, 0.7);
+  border-left: 2px solid var(--impulse-primary);
+  padding: 0.5rem;
+}
+
+/* Cyber grid background */
+.cyber-grid {
+  position: relative;
+  background-color: rgba(10, 12, 20, 0.8);
+  background-image: 
+    linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: center center;
+}
+
+/* Digital noise effect */
+.digital-noise {
+  position: relative;
+}
+
+.digital-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E");
+  opacity: 0.1;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Cyber badge for status indicators */
+.cyber-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--impulse-primary);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--impulse-primary);
+  box-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
+}
+
+/* Active/online status indicator */
+.cyber-status {
+  position: relative;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--impulse-primary);
+  margin-right: 0.5rem;
+  box-shadow: 0 0 5px var(--impulse-primary);
+  animation: cyber-pulse 2s ease infinite;
+}
+
+@keyframes cyber-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.8); }
+}

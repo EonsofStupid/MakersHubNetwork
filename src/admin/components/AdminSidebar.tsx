@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
@@ -12,6 +12,7 @@ import { scrollbarStyle } from '@/admin/utils/styles';
 import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
+import { useAdminDataSync } from '@/admin/services/adminData.service';
 
 // Import the navigation CSS
 import '@/admin/styles/navigation.css';
@@ -33,8 +34,22 @@ export function AdminSidebar() {
     setSidebarExpanded, 
     activeSection,
     setActiveSection,
-    hasPermission
+    hasPermission,
+    showLabels,
+    setShowLabels
   } = useAdminStore();
+  
+  // Sync admin preferences with the database
+  const { isSyncing } = useAdminDataSync({
+    sidebarExpanded,
+    activeSection,
+    showLabels
+  }, (data) => {
+    // This callback updates the store when data is loaded from the database
+    if (data.sidebarExpanded !== undefined) setSidebarExpanded(data.sidebarExpanded);
+    if (data.activeSection !== undefined) setActiveSection(data.activeSection);
+    if (data.showLabels !== undefined) setShowLabels(data.showLabels);
+  });
 
   // Set active section based on URL
   useEffect(() => {
@@ -75,7 +90,19 @@ export function AdminSidebar() {
         
         <div className="flex items-center gap-2">
           {sidebarExpanded && (
-            <EditModeToggle className="mr-1" />
+            <>
+              <EditModeToggle className="mr-1" />
+              <AdminTooltip content={showLabels ? "Hide labels" : "Show labels"}>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowLabels(!showLabels)}
+                  className="p-2 rounded-full text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors"
+                >
+                  {showLabels ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </motion.button>
+              </AdminTooltip>
+            </>
           )}
           
           <AdminTooltip content={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}>
@@ -110,14 +137,17 @@ export function AdminSidebar() {
               <NavigationItem
                 key={item.id}
                 id={item.id}
-                label={item.label}
+                label={showLabels ? item.label : ""}
                 icon={item.icon}
                 description={item.description}
                 isActive={activeSection === item.id}
                 onClick={() => handleNavClick(item.path, item.id)}
-                tooltipContent={!sidebarExpanded ? `${item.label}: ${item.description}` : undefined}
-                showTooltip={!sidebarExpanded}
-                className={sidebarExpanded ? "mx-2" : "justify-center mx-2 px-0"}
+                tooltipContent={!showLabels || !sidebarExpanded ? `${item.label}: ${item.description}` : undefined}
+                showTooltip={!showLabels || !sidebarExpanded}
+                className={cn(
+                  sidebarExpanded ? "mx-2" : "justify-center mx-2 px-0",
+                  !showLabels && sidebarExpanded && "justify-center"
+                )}
               />
             ))}
           </AnimatePresence>
@@ -150,6 +180,13 @@ export function AdminSidebar() {
               <span className="text-xs text-[var(--impulse-text-secondary)]">
                 {isEditMode ? "Edit mode active" : "MakersImpulse Admin"}
               </span>
+              {isSyncing && (
+                <motion.div
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="w-2 h-2 rounded-full bg-primary"
+                />
+              )}
             </motion.div>
           ) : (
             <motion.div
