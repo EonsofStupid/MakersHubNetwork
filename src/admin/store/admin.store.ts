@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createAdminPersistMiddleware } from "../middleware/persist.middleware";
@@ -59,7 +58,7 @@ export interface AdminState {
   initializeStore: () => void;
   
   // Actions - Permissions
-  loadPermissions: () => Promise<void>;
+  loadPermissions: (permissions?: AdminPermission[]) => Promise<void>;
   hasPermission: (permission: AdminPermission) => boolean;
 }
 
@@ -133,10 +132,16 @@ export const useAdminStore = create<AdminState>()(
       initializeStore: () => set({ hasInitialized: true }),
       
       // Permission actions
-      loadPermissions: async () => {
+      loadPermissions: async (permissions) => {
         set({ isLoadingPermissions: true });
         try {
-          // Simulated API call for now
+          // If permissions were passed in, use those
+          if (permissions && permissions.length > 0) {
+            set({ permissions, isLoadingPermissions: false });
+            return;
+          }
+          
+          // Otherwise simulate API call for now
           await new Promise(resolve => setTimeout(resolve, 500));
           const userPermissions: AdminPermission[] = [
             'admin:access', 'admin:view', 'admin:edit',

@@ -36,15 +36,15 @@ export function createAdminPersistMiddleware<T>(storeName: string): PersistOptio
   // Return configured persist options
   return {
     name: storeName,
-    storage: adminStorage as PersistStorage<T>,
-    // Only persist what we need
-    partialize: (state: T): Partial<T> => {
+    storage: adminStorage,
+    // Only persist what we need - using type assertion to make TypeScript happy
+    partialize: (state: T) => {
       // Filter out any functions, actions, or computed properties
       const persistedState = Object.entries(state as Record<string, any>)
         .filter(([_, value]) => typeof value !== 'function')
         .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
       
-      return persistedState as Partial<T>;
+      return persistedState as T;
     },
   };
 }

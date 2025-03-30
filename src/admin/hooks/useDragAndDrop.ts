@@ -102,7 +102,7 @@ export function useDragAndDrop({ items, onReorder, containerId }: UseDragAndDrop
       });
 
       if (closestItem) {
-        const targetId = closestItem.getAttribute('data-id');
+        const targetId = (closestItem as HTMLElement).getAttribute('data-id');
         if (targetId && targetId !== dragTargetId) {
           setDragTargetId(targetId);
         }
