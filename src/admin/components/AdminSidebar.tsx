@@ -16,14 +16,7 @@ import { useAdmin } from '@/admin/context/AdminContext';
 import { NavigationItem } from './navigation/NavigationItem';
 import { useToast } from '@/hooks/use-toast';
 
-import '@/admin/styles/sidebar-navigation.css';
-
-interface AdminSidebarProps {
-  collapsed?: boolean;
-  className?: string;
-}
-
-export function AdminSidebar({ collapsed = false, className }: AdminSidebarProps) {
+export function AdminSidebar({ collapsed = false, className }: { collapsed?: boolean, className?: string }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();

@@ -5,7 +5,7 @@ import { StateStorage, PersistOptions } from 'zustand/middleware';
  * Creates a persist middleware for admin stores with a common pattern
  * @param storeName Name of the store for localStorage key
  */
-export function createAdminPersistMiddleware<T>(storeName: string): PersistOptions<T, T> {
+export function createAdminPersistMiddleware<T>(storeName: string): PersistOptions<T> {
   // Create a custom storage that syncs with localStorage
   const adminStorage: StateStorage = {
     getItem: (name: string): string | null => {
@@ -39,21 +39,11 @@ export function createAdminPersistMiddleware<T>(storeName: string): PersistOptio
     // Only persist what we need
     partialize: (state) => {
       // Filter out any functions, actions, or computed properties
-      const persistedState = Object.fromEntries(
-        Object.entries(state as Record<string, any>).filter(
-          ([_, value]) => typeof value !== 'function'
-        )
-      );
+      const persistedState = Object.entries(state as Record<string, any>)
+        .filter(([_, value]) => typeof value !== 'function')
+        .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
       
-      return persistedState as T;
+      return persistedState as Partial<T>;
     },
-    // Optional: add migration logic here if the state structure changes over time
-    // version: 1,
-    // migrate: (persistedState, version) => {
-    //   if (version === 0) {
-    //     // Do migration
-    //   }
-    //   return persistedState as T;
-    // },
   };
 }
