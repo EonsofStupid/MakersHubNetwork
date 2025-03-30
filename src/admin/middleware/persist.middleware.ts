@@ -1,50 +1,133 @@
 
-import { PersistStorage, PersistOptions, StorageValue } from 'zustand/middleware';
+import { PersistOptions } from 'zustand/middleware';
+import { supabase } from '@/integrations/supabase/client';
+
+type StorageValue<T> = {
+  state: T;
+  version?: number;
+};
 
 /**
- * Creates a persist middleware for admin stores with a common pattern
- * @param storeName Name of the store for localStorage key
+ * Creates a custom Zustand middleware for persisting state
+ * that syncs with both localStorage and the Supabase database
  */
-export function createAdminPersistMiddleware<T>(storeName: string): PersistOptions<T, T> {
-  // Create a properly typed storage that syncs with localStorage
-  const adminStorage: PersistStorage<T> = {
-    getItem: (name: string): StorageValue<T> | null => {
+export function createAdminPersistMiddleware<T>(storeName: string): PersistOptions<T> {
+  // Create custom state storage
+  const storage = {
+    getItem: async (name: string): Promise<string | null> => {
+      // First try to get from localStorage for fast initial load
+      const localValue = localStorage.getItem(name);
+      
       try {
-        const data = localStorage.getItem(name);
-        return data ? JSON.parse(data) : null;
-      } catch (e) {
-        console.warn('Error loading admin state from localStorage:', e);
-        return null;
+        // Check authentication status
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // If authenticated, try to get from Supabase
+          const { data, error } = await supabase
+            .from('admin_shortcuts')
+            .select('shortcuts')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (error) {
+            console.warn('Failed to load from DB, using localStorage:', error.message);
+            return localValue;
+          }
+          
+          if (data && data.shortcuts) {
+            // Store in localStorage for next time
+            const serialized = JSON.stringify(data.shortcuts);
+            localStorage.setItem(name, serialized);
+            return serialized;
+          }
+        }
+      } catch (err) {
+        console.error('Error accessing Supabase for state:', err);
+      }
+      
+      // Fall back to localStorage
+      return localValue;
+    },
+    
+    setItem: async (name: string, value: string): Promise<void> => {
+      // Always update localStorage
+      localStorage.setItem(name, value);
+      
+      try {
+        // Check authentication status
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Parse and store in Supabase
+          const parsedValue = JSON.parse(value);
+          
+          const { error } = await supabase
+            .from('admin_shortcuts')
+            .upsert({
+              user_id: user.id,
+              shortcuts: parsedValue,
+              updated_at: new Date().toISOString()
+            }, { 
+              onConflict: 'user_id'
+            });
+            
+          if (error) {
+            console.error('Failed to sync state to DB:', error.message);
+          }
+        }
+      } catch (err) {
+        console.error('Error accessing Supabase for state storage:', err);
       }
     },
-    setItem: (name: string, value: StorageValue<T>): void => {
+    
+    removeItem: async (name: string): Promise<void> => {
+      // Remove from localStorage
+      localStorage.removeItem(name);
+      
       try {
-        localStorage.setItem(name, JSON.stringify(value));
-      } catch (e) {
-        console.warn('Error saving admin state to localStorage:', e);
+        // Check authentication status
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Remove from Supabase
+          const { error } = await supabase
+            .from('admin_shortcuts')
+            .update({ shortcuts: null })
+            .eq('user_id', user.id);
+            
+          if (error) {
+            console.error('Failed to remove state from DB:', error.message);
+          }
+        }
+      } catch (err) {
+        console.error('Error accessing Supabase for state removal:', err);
       }
-    },
-    removeItem: (name: string): void => {
-      try {
-        localStorage.removeItem(name);
-      } catch (e) {
-        console.warn('Error removing admin state from localStorage:', e);
-      }
-    },
+    }
   };
-
-  // Return configured persist options
+  
   return {
     name: storeName,
-    storage: adminStorage,
-    // Only persist what we need - using type assertion to make TypeScript happy
+    storage,
     partialize: (state: T) => {
-      // Filter out any functions, actions, or computed properties
-      const persistedState = Object.entries(state as Record<string, any>)
-        .filter(([_, value]) => typeof value !== 'function')
-        .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+      const partialState = {} as Partial<T>;
+      const keysToSave = [
+        'sidebarExpanded',
+        'activeSection',
+        'adminTheme',
+        'isDarkMode',
+        'showLabels',
+        'dashboardShortcuts',
+        'pinnedTopNavItems'
+      ];
       
-      return persistedState as T;
+      Object.keys(state as object).forEach(key => {
+        if (keysToSave.includes(key)) {
+          (partialState as any)[key] = (state as any)[key];
+        }
+      });
+      
+      return partialState as T;
     },
   };
 }

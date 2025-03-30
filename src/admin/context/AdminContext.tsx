@@ -1,73 +1,62 @@
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { useAdminStore } from '../store/admin.store';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
-import { AdminPermission } from '../types/admin.types';
-import { useAdminSync } from '../hooks/useAdminSync';
-import { SyncIndicator } from '@/components/admin/SyncIndicator';
+import { useToast } from '@/hooks/use-toast';
 
-interface AdminContextValue {
+interface AdminContextProps {
   hasAdminAccess: boolean;
-  isSuperAdmin: boolean;
   isLoading: boolean;
-  checkPermission: (permission: AdminPermission) => boolean;
   initializeAdmin: () => void;
-  SyncIndicator: React.FC;
 }
 
-const AdminContext = createContext<AdminContextValue | undefined>(undefined);
+const AdminContext = createContext<AdminContextProps>({
+  hasAdminAccess: false,
+  isLoading: false,
+  initializeAdmin: () => {}
+});
 
-export function AdminProvider({ children }: { children: React.ReactNode }) {
-  const { roles, user, status } = useAuthStore();
-  const { 
-    loadPermissions, 
-    hasPermission, 
-    isLoadingPermissions 
-  } = useAdminStore();
+export const useAdmin = () => useContext(AdminContext);
+
+interface AdminProviderProps {
+  children: ReactNode;
+}
+
+export const AdminProvider = ({ children }: AdminProviderProps) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const { roles, status } = useAuthStore();
+  const { toast } = useToast();
   
-  const [initialized, setInitialized] = useState(false);
+  // Check if user has admin access
+  const hasAdminAccess = roles?.includes('admin') || roles?.includes('super_admin');
   
-  const hasAdminAccess = roles?.includes("admin") || roles?.includes("super_admin");
-  const isSuperAdmin = roles?.includes("super_admin");
-  
-  // Initialize admin data sync (database <-> localStorage)
-  useAdminSync();
-  
-  const checkPermission = useCallback((permission: AdminPermission): boolean => {
-    // Super admins have all permissions
-    if (isSuperAdmin) {
-      return true;
+  // Initialize admin functionality
+  const initializeAdmin = () => {
+    try {
+      // Additional initialization logic would go here
+      // For now, just setting loading to false
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error initializing admin:', error);
+      toast({
+        title: 'Admin Initialization Error',
+        description: 'There was a problem loading the admin panel.',
+        variant: 'destructive',
+      });
+      setIsLoading(false);
     }
-    
-    // Basic admin access check
-    if (permission === 'admin:access') {
-      return hasAdminAccess;
-    }
-    
-    return hasPermission(permission);
-  }, [isSuperAdmin, hasAdminAccess, hasPermission]);
+  };
   
-  const initializeAdmin = useCallback(() => {
-    if (user?.id && hasAdminAccess && !initialized) {
-      loadPermissions();
-      setInitialized(true);
+  // Auto-initialize on mount if authenticated
+  React.useEffect(() => {
+    if (status === 'authenticated') {
+      setIsLoading(false);
     }
-  }, [user?.id, hasAdminAccess, initialized, loadPermissions]);
-  
-  // Initialize permissions once when authenticated
-  useEffect(() => {
-    if (status === "authenticated" && hasAdminAccess && !initialized) {
-      initializeAdmin();
-    }
-  }, [status, hasAdminAccess, initialized, initializeAdmin]);
+  }, [status]);
   
   const value = {
     hasAdminAccess,
-    isSuperAdmin,
-    isLoading: status === "loading" || isLoadingPermissions,
-    checkPermission,
-    initializeAdmin,
-    SyncIndicator
+    isLoading,
+    initializeAdmin
   };
   
   return (
@@ -75,12 +64,4 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AdminContext.Provider>
   );
-}
-
-export function useAdmin() {
-  const context = useContext(AdminContext);
-  if (context === undefined) {
-    throw new Error('useAdmin must be used within an AdminProvider');
-  }
-  return context;
-}
+};
