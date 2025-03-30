@@ -11,11 +11,27 @@
   backdrop-filter: blur(10px);
   border: 1px solid var(--impulse-border-normal);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .dashboard-shortcuts:hover {
   border-color: var(--impulse-primary);
   box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+}
+
+/* Ambient glow effect */
+.dashboard-shortcuts::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.dashboard-shortcuts:hover::before {
+  opacity: 1;
 }
 
 .dashboard-shortcut {
@@ -31,11 +47,12 @@
   transition: all 0.3s ease;
   overflow: hidden;
   cursor: pointer;
+  backdrop-filter: blur(8px);
 }
 
 .dashboard-shortcut:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 15px rgba(0, 240, 255, 0.2);
   border-color: var(--impulse-primary);
 }
 
@@ -45,6 +62,12 @@
   color: var(--impulse-primary);
   position: relative;
   z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.dashboard-shortcut:hover .dashboard-shortcut__icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 8px var(--impulse-primary));
 }
 
 .dashboard-shortcut__title {
@@ -55,6 +78,12 @@
   margin-bottom: 0.25rem;
   position: relative;
   z-index: 1;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.3), 0 0 8px rgba(0, 240, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.dashboard-shortcut:hover .dashboard-shortcut__title {
+  color: var(--impulse-primary);
 }
 
 .dashboard-shortcut__description {
@@ -63,9 +92,34 @@
   text-align: center;
   position: relative;
   z-index: 1;
+  transition: all 0.3s ease;
 }
 
-/* Cyber effects */
+.dashboard-shortcut:hover .dashboard-shortcut__description {
+  color: var(--impulse-text-primary);
+}
+
+/* Cyber effects with random variations */
+.dashboard-shortcut.color-1 {
+  --effect-color: var(--impulse-primary);
+}
+
+.dashboard-shortcut.color-2 {
+  --effect-color: var(--impulse-secondary);
+}
+
+.dashboard-shortcut.color-3 {
+  --effect-color: #7C3AED; /* Purple */
+}
+
+.dashboard-shortcut.color-4 {
+  --effect-color: #10B981; /* Emerald */
+}
+
+.dashboard-shortcut.color-5 {
+  --effect-color: #F59E0B; /* Amber */
+}
+
 .cyber-effect-1::before {
   content: "";
   position: absolute;
@@ -73,7 +127,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, transparent, var(--impulse-primary), transparent);
+  background: linear-gradient(90deg, transparent, var(--effect-color, var(--impulse-primary)), transparent);
   animation: scanner 3s linear infinite;
 }
 
@@ -95,7 +149,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, var(--impulse-primary) 0%, transparent 60%);
+  background: radial-gradient(circle at center, var(--effect-color, var(--impulse-primary)) 0%, transparent 60%);
   opacity: 0.1;
   animation: pulse 4s infinite;
 }
@@ -184,23 +238,6 @@
 
 .cyber-glow:hover::after {
   opacity: 1;
-}
-
-/* Color variants for cyber effects */
-.cyber-effect-blue .cyber-glow::after {
-  background: radial-gradient(circle at 50% 50%, rgba(0, 120, 255, 0.3) 0%, transparent 70%);
-}
-
-.cyber-effect-green .cyber-glow::after {
-  background: radial-gradient(circle at 50% 50%, rgba(0, 255, 150, 0.3) 0%, transparent 70%);
-}
-
-.cyber-effect-purple .cyber-glow::after {
-  background: radial-gradient(circle at 50% 50%, rgba(180, 0, 255, 0.3) 0%, transparent 70%);
-}
-
-.cyber-effect-red .cyber-glow::after {
-  background: radial-gradient(circle at 50% 50%, rgba(255, 0, 80, 0.3) 0%, transparent 70%);
 }
 
 /* Empty state for dashboard shortcuts */

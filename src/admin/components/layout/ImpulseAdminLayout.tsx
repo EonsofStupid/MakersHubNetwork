@@ -9,6 +9,7 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { DragIndicator } from '@/admin/components/ui/DragIndicator';
 import { motion } from 'framer-motion';
 import { AdminPermission } from '@/admin/types/admin.types';
+import { SimpleCyberText } from '@/components/theme/SimpleCyberText';
 
 // Import our cyberpunk style sheets
 import '@/admin/styles/cyber-effects.css';
@@ -60,6 +61,31 @@ export function ImpulseAdminLayout({
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
+
+  // Add cyber scan lines to sidebar
+  useEffect(() => {
+    // Create random scan lines at random intervals
+    const createScanLine = () => {
+      const sidebarElement = document.querySelector('.admin-sidebar');
+      if (!sidebarElement) return;
+      
+      const scanLine = document.createElement('div');
+      scanLine.className = 'admin-sidebar-scan';
+      sidebarElement.appendChild(scanLine);
+      
+      setTimeout(() => {
+        sidebarElement.removeChild(scanLine);
+      }, 15000); // Remove after animation completes
+    };
+    
+    const interval = setInterval(() => {
+      if (Math.random() > 0.5) {
+        createScanLine();
+      }
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
   
   return (
     <div 
@@ -84,7 +110,7 @@ export function ImpulseAdminLayout({
         
         {/* Left sidebar */}
         <div className={cn(
-          "impulse-sidebar transition-all z-10 electric-background", // Added electric-background
+          "impulse-sidebar transition-all z-10 electric-background", 
           sidebarExpanded ? "w-60" : "w-16"
         )}>
           <AdminSidebar />
@@ -103,7 +129,7 @@ export function ImpulseAdminLayout({
               animate={{ opacity: 1, y: 0 }}
               className="mb-4 p-2 rounded bg-primary/10 border border-primary/20 text-sm text-primary electric-border"
             >
-              <span className="font-medium">Edit mode active</span> - Drag items to customize your dashboard
+              <span className="font-medium cyber-text">Edit mode active</span> - Drag items to customize your dashboard
             </motion.div>
           )}
           
@@ -115,12 +141,15 @@ export function ImpulseAdminLayout({
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
+              <h1 className="text-2xl font-bold mb-6 cyber-text">
+                <SimpleCyberText text={title} />
+              </h1>
               {children}
             </motion.div>
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="p-6 rounded-xl glass-panel text-center">
-                <h3 className="text-xl font-semibold mb-2">Permission Required</h3>
+                <h3 className="text-xl font-semibold mb-2 cyber-text">Permission Required</h3>
                 <p className="text-muted-foreground">
                   You need {requiresPermission} permission to access this page.
                 </p>
@@ -135,3 +164,4 @@ export function ImpulseAdminLayout({
     </div>
   );
 }
+

@@ -125,7 +125,7 @@ export function AdminSidebar() {
               className="flex items-center gap-2"
             >
               <motion.span 
-                className="text-sm font-medium text-[var(--impulse-text-primary)] px-2 idle-flicker"
+                className="text-sm font-medium text-[var(--impulse-text-primary)] px-2 idle-flicker cyber-text"
                 style={{ animationDelay: `${generateRandomDelay()}s` }}
               >
                 Admin Navigation

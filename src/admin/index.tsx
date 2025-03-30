@@ -1,3 +1,4 @@
+
 // Import styles first to ensure proper cascade
 import '@/admin/styles/admin-core.css';
 import '@/admin/styles/impulse-admin.css';
@@ -6,6 +7,9 @@ import '@/admin/styles/navigation.css';
 import '@/admin/styles/sidebar-navigation.css';
 import '@/admin/styles/dashboard-shortcuts.css';
 import '@/admin/styles/drag-drop.css';
+import '@/admin/styles/cyber-effects.css';
+import '@/admin/styles/electric-effects.css';
+import '@/admin/styles/text-effects.css';
 import '@/admin/theme/impulse/impulse-theme.css';
 
 // Export components
@@ -42,22 +46,22 @@ export default function AdminDashboard() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         {/* Admin stats cards */}
-        <div className="bg-card/30 backdrop-blur-md p-6 rounded-lg border border-border/20">
-          <h2 className="font-medium text-lg mb-3">Platform Overview</h2>
+        <div className="glassmorphism p-6 rounded-lg border border-[var(--impulse-border-normal)] cyber-effect-1">
+          <h2 className="font-medium text-lg mb-3 cyber-text">Platform Overview</h2>
           <div className="space-y-2">
-            <p>Users: <span className="text-primary font-bold">1,245</span></p>
-            <p>Builds: <span className="text-primary font-bold">386</span></p>
-            <p>Active makers: <span className="text-primary font-bold">89</span></p>
+            <p>Users: <span className="text-[var(--impulse-primary)] font-bold">1,245</span></p>
+            <p>Builds: <span className="text-[var(--impulse-primary)] font-bold">386</span></p>
+            <p>Active makers: <span className="text-[var(--impulse-primary)] font-bold">89</span></p>
           </div>
         </div>
         
         {/* Recent activity */}
-        <div className="bg-card/30 backdrop-blur-md p-6 rounded-lg border border-border/20">
-          <h2 className="font-medium text-lg mb-3">Recent Activity</h2>
+        <div className="glassmorphism p-6 rounded-lg border border-[var(--impulse-border-normal)] cyber-effect-2">
+          <h2 className="font-medium text-lg mb-3 cyber-text">Recent Activity</h2>
           <div className="space-y-2">
-            <p>New users today: <span className="text-primary font-bold">24</span></p>
-            <p>New builds today: <span className="text-primary font-bold">8</span></p>
-            <p>Reviews pending: <span className="text-primary font-bold">12</span></p>
+            <p>New users today: <span className="text-[var(--impulse-primary)] font-bold">24</span></p>
+            <p>New builds today: <span className="text-[var(--impulse-primary)] font-bold">8</span></p>
+            <p>Reviews pending: <span className="text-[var(--impulse-primary)] font-bold">12</span></p>
           </div>
         </div>
       </div>
