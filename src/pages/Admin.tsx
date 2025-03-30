@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +43,25 @@ export default function Admin() {
       document.body.classList.remove('impulse-admin-root');
     };
   }, [hasAdminAccess, hasInitialized, initializeAdmin, loadPermissions]);
+
+  // Show a first-time user tutorial for drag and drop
+  useEffect(() => {
+    // Only show once based on localStorage flag
+    const hasSeenTutorial = localStorage.getItem('admin-tutorial-seen');
+    
+    if (hasAdminAccess && hasInitialized && !hasSeenTutorial) {
+      const timeout = setTimeout(() => {
+        toast({
+          title: "Admin Customization",
+          description: "You can drag menu items to the top bar or dashboard for quick access.",
+          duration: 6000,
+        });
+        localStorage.setItem('admin-tutorial-seen', 'true');
+      }, 2000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [hasAdminAccess, hasInitialized, toast]);
 
   // Show simple loading state
   if (isLoading) {

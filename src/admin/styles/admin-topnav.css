@@ -1,273 +1,113 @@
 
-/* Admin TopNav Styles */
-.admin-topnav {
-  --glow-opacity: 0.2;
-  --accent-color: var(--impulse-primary, #00F0FF);
-  --accent-color-muted: rgba(0, 240, 255, 0.2);
-  --border-color: var(--impulse-border-normal);
-  --bg-overlay: var(--impulse-bg-overlay);
-  --text-primary: var(--impulse-text-primary);
-  --text-secondary: var(--impulse-text-secondary);
-  
+/* Admin Top Navigation Styles */
+.admin-topnav-container {
   display: flex;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  z-index: 100;
-  padding: 0 1rem;
-  background: var(--bg-overlay);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
+  flex-direction: column;
+}
+
+.admin-topnav {
+  position: relative;
+  z-index: 40;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.admin-topnav__title {
-  font-weight: bold;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.admin-topnav__shortcuts {
-  display: flex;
-  align-items: center;
-  margin-left: 2rem;
-  gap: 0.5rem;
-  height: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0 0.5rem;
-}
-
-.admin-topnav__shortcuts::-webkit-scrollbar {
-  display: none;
-}
-
-.admin-topnav__dropzone {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  padding: 0 0.5rem;
-  border: 2px dashed transparent;
-  transition: all 0.3s ease;
-}
-
-.admin-topnav__dropzone.active {
-  border-color: var(--accent-color);
-  background-color: var(--accent-color-muted);
-}
-
-.admin-shortcut {
-  --icon-size: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem;
-  border-radius: 4px;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-.admin-shortcut:hover {
-  background-color: var(--accent-color-muted);
-}
-
-.admin-shortcut__icon {
-  width: var(--icon-size);
-  height: var(--icon-size);
-  border-radius: 8px;
-  background-color: var(--bg-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-.admin-shortcut__icon:before {
+.admin-topnav::before {
   content: '';
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 1px;
   background: linear-gradient(
-    45deg,
-    transparent, 
-    rgba(0, 240, 255, 0.1), 
-    transparent
+    90deg,
+    rgba(0, 240, 255, 0),
+    rgba(0, 240, 255, 0.4) 50%,
+    rgba(0, 240, 255, 0)
   );
-  background-size: 200% 200%;
-  animation: shimmer 3s linear infinite;
   pointer-events: none;
 }
 
-.admin-shortcut:hover .admin-shortcut__icon {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 240, 255, 0.2);
+.admin-topnav-shortcuts {
+  min-height: 40px;
+  min-width: 200px;
+  border: 1px dashed transparent;
+  transition: all 0.3s ease;
 }
 
-.admin-shortcut__tooltip {
+.admin-topnav-shortcuts:hover {
+  border-color: var(--impulse-border-hover);
+}
+
+/* Edit mode styles */
+.edit-mode .admin-topnav-shortcuts {
+  border-color: var(--impulse-border-normal);
+  background-color: rgba(0, 240, 255, 0.05);
+}
+
+/* Tooltip animations */
+.admin-tooltip {
   position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--bg-overlay);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
+  z-index: 1000;
+  pointer-events: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--impulse-bg-overlay);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--impulse-border-normal);
+  color: var(--impulse-text-primary);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
   font-size: 0.75rem;
   white-space: nowrap;
   opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
-  pointer-events: none;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-  z-index: 10;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: translateY(10px);
 }
 
-.admin-shortcut:hover .admin-shortcut__tooltip {
+.admin-tooltip.visible {
   opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(5px);
+  transform: translateY(0);
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+.admin-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 0 5px 5px;
+  border-style: solid;
+  border-color: transparent transparent var(--impulse-border-normal);
 }
 
-/* Dashboard Shortcuts Styles */
-.admin-dashboard-shortcuts {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+/* Top nav item animations */
+@keyframes highlight-glow {
+  0% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(0, 240, 255, 0.7); }
+  100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.3); }
 }
 
-.admin-dashboard-shortcut {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  border-radius: 8px;
-  background-color: var(--bg-overlay);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
-  cursor: pointer;
+.admin-topnav-item {
   position: relative;
   overflow: hidden;
 }
 
-.admin-dashboard-shortcut:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 25px rgba(0, 240, 255, 0.15);
-  border-color: var(--accent-color);
-}
-
-.admin-dashboard-shortcut__icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background-color: var(--accent-color-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 0.75rem;
-}
-
-.admin-dashboard-shortcut__title {
-  font-weight: 500;
-  color: var(--text-primary);
-  text-align: center;
-  font-size: 0.875rem;
-}
-
-.admin-dashboard-shortcut__description {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  text-align: center;
-  margin-top: 0.25rem;
-  line-height: 1.2;
-}
-
-/* Cyber effects */
-.cyber-effect-1:before {
+.admin-topnav-item:hover::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(0, 240, 255, 0.2),
-    transparent 70%
-  );
+  background: radial-gradient(circle at center, rgba(0, 240, 255, 0.2) 0%, transparent 70%);
   opacity: 0;
-  animation: pulse 3s ease-in-out infinite;
+  animation: pulse-in 0.3s ease forwards;
 }
 
-.cyber-effect-2:after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(0, 240, 255, 0.1),
-    transparent
-  );
-  animation: rotate 8s linear infinite;
+@keyframes pulse-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.cyber-effect-3 {
-  position: relative;
-}
-
-.cyber-effect-3:before {
-  content: '';
-  position: absolute;
-  inset: -5px;
-  background: conic-gradient(
-    transparent,
-    transparent,
-    transparent,
-    var(--accent-color)
-  );
-  opacity: 0.2;
-  animation: rotate 4s linear infinite;
-  border-radius: inherit;
-  z-index: -1;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 1; }
-}
-
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Add animation for the dropzone */
-@keyframes dropzone-pulse {
-  0%, 100% { 
-    box-shadow: 0 0 0 0 rgba(0, 240, 255, 0); 
-    border-color: var(--accent-color);
-  }
-  50% { 
-    box-shadow: 0 0 0 4px rgba(0, 240, 255, 0.3); 
-    border-color: transparent;
-  }
-}
-
-.dropzone-pulse {
-  animation: dropzone-pulse 2s ease-in-out infinite;
+/* Drag target highlight */
+.drag-target {
+  border: 2px dashed var(--impulse-primary);
+  background-color: rgba(0, 240, 255, 0.1);
+  animation: highlight-glow 2s infinite;
 }

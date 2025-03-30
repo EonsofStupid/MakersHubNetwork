@@ -1,5 +1,5 @@
 
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { AdminSidebar } from "@/admin/components/AdminSidebar";
 import { AdminTopNav } from "@/admin/components/layout/AdminTopNav";
@@ -7,6 +7,9 @@ import { useAdmin } from "@/admin/context/AdminContext";
 import { AdminPermission } from "@/admin/types/admin.types";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { DashboardShortcuts } from "@/admin/components/dashboard/DashboardShortcuts";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAdminStore } from "@/admin/store/admin.store";
 
 interface ImpulseAdminLayoutProps {
   children: ReactNode;
@@ -20,6 +23,8 @@ export function ImpulseAdminLayout({
   requiresPermission = "admin:access"
 }: ImpulseAdminLayoutProps) {
   const { checkPermission, isLoading } = useAdmin();
+  const [isDashboardCollapsed, setIsDashboardCollapsed] = useState(false);
+  const { sidebarExpanded } = useAdminStore();
 
   // Check for required permission
   const hasPermission = checkPermission(requiresPermission);
@@ -51,19 +56,39 @@ export function ImpulseAdminLayout({
   return (
     <div className={cn(
       "admin-impulse-layout",
-      "min-h-[calc(100vh-4rem)]"
+      "min-h-screen"
     )}>
       <ErrorBoundary>
-        <div className="flex h-screen overflow-hidden">
-          <AdminSidebar />
-          
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <AdminTopNav title={title} className="w-full" />
-            
-            <main className="flex-1 overflow-y-auto pt-20 px-6 pb-6">
-              {children}
-            </main>
+        <AdminTopNav title={title} />
+        
+        <div className="flex pt-14 min-h-screen">
+          <div className={cn(
+            "sidebar-container flex-shrink-0 p-4 pt-6",
+            sidebarExpanded ? "w-64" : "w-24",
+            "transition-all duration-300"
+          )}>
+            <AdminSidebar />
           </div>
+          
+          <main className="flex-1 p-6 overflow-hidden flex flex-col">
+            <AnimatePresence mode="wait">
+              {!isDashboardCollapsed && (
+                <motion.div
+                  key="dashboard-shortcuts"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <DashboardShortcuts />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            <div className="flex-1">
+              {children}
+            </div>
+          </main>
         </div>
       </ErrorBoundary>
     </div>

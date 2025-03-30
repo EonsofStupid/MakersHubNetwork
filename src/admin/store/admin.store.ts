@@ -22,6 +22,7 @@ export interface AdminState {
   dragSource: string | null;
   dragTarget: string | null;
   showDragOverlay: boolean;
+  isEditMode: boolean;
 
   // Frozen Zones
   frozenZones: string[];
@@ -38,9 +39,11 @@ export interface AdminState {
   toggleSidebar: () => void;
   setActiveSection: (section: string) => void;
   setPinnedDashboardItems: (items: string[]) => void;
+  setPinnedTopNavItems: (items: string[]) => void;
   setDragSource: (source: string | null) => void;
   setDragTarget: (target: string | null) => void;
   toggleDarkMode: () => void;
+  toggleEditMode: () => void;
 }
 
 export const useAdminStore = create<AdminState>()(
@@ -54,6 +57,7 @@ export const useAdminStore = create<AdminState>()(
       activeSection: 'overview',
       isDarkMode: true,
       isDashboardCollapsed: false,
+      isEditMode: false,
 
       // Theme
       adminTheme: 'cyberpunk',
@@ -82,6 +86,9 @@ export const useAdminStore = create<AdminState>()(
 
       setPinnedDashboardItems: (items) =>
         set({ pinnedDashboardItems: items }),
+        
+      setPinnedTopNavItems: (items) =>
+        set({ pinnedTopNavItems: items }),
 
       setDragSource: (source) => set({ dragSource: source }),
 
@@ -89,6 +96,9 @@ export const useAdminStore = create<AdminState>()(
 
       toggleDarkMode: () =>
         set((state) => ({ isDarkMode: !state.isDarkMode })),
+        
+      toggleEditMode: () =>
+        set((state) => ({ isEditMode: !state.isEditMode })),
 
       loadPermissions: async (mappedPermissions) => {
         if (get().permissionsLoaded) {

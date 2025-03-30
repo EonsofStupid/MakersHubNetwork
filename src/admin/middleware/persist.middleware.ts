@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth/store";
 import { useToast } from "@/hooks/use-toast";
-import { PersistOptions, StorageValue, PersistStorage } from "zustand/middleware";
+import { PersistOptions, StorageValue } from "zustand/middleware";
 
 /**
  * Middleware for syncing admin preferences between localStorage and database
@@ -101,6 +101,7 @@ export function formatForDatabase(storeData: any): any {
     frozen_zones: storeData.frozenZones,
     ui_preferences: {
       isDarkMode: storeData.isDarkMode,
+      isEditMode: storeData.isEditMode
     },
   };
 }
@@ -118,5 +119,6 @@ export function formatFromDatabase(dbData: any): any {
     adminTheme: dbData.theme_preference,
     frozenZones: dbData.frozen_zones || [],
     isDarkMode: dbData.ui_preferences?.isDarkMode ?? true,
+    isEditMode: dbData.ui_preferences?.isEditMode ?? false,
   };
 }

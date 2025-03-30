@@ -1,0 +1,215 @@
+
+/* Dashboard Shortcuts Styling */
+.admin-dashboard-shortcuts {
+  position: relative;
+}
+
+/* Custom transition for the shortcuts */
+.dashboard-shortcut {
+  position: relative;
+  padding: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px solid var(--impulse-border-normal);
+  border-radius: 8px;
+}
+
+.dashboard-shortcut:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  border-color: var(--impulse-border-hover);
+}
+
+.dashboard-shortcut__icon {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(0, 240, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.dashboard-shortcut:hover .dashboard-shortcut__icon {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+}
+
+.dashboard-shortcut__title {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  transition: color 0.3s ease;
+}
+
+.dashboard-shortcut__description {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  max-width: 100%;
+  transition: opacity 0.3s ease;
+}
+
+.dashboard-shortcut:hover .dashboard-shortcut__description {
+  opacity: 1;
+}
+
+/* Cyber effects */
+.cyber-effect-1 .dashboard-shortcut__icon::before {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(0, 240, 255, 0.3) 45%,
+    rgba(0, 240, 255, 0.3) 50%,
+    transparent 55%
+  );
+  animation: cyber-scan-1 8s linear infinite;
+}
+
+@keyframes cyber-scan-1 {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.cyber-effect-2 .dashboard-shortcut__icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 240, 255, 0.5) 0%,
+    transparent 60%
+  );
+  animation: cyber-pulse 4s ease-in-out infinite alternate;
+}
+
+@keyframes cyber-pulse {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0.4;
+    transform: scale(1.2);
+  }
+}
+
+.cyber-effect-3 .dashboard-shortcut__icon::before,
+.cyber-effect-3 .dashboard-shortcut__icon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 240, 255, 0.5);
+  animation: cyber-glitch 10s linear infinite;
+}
+
+.cyber-effect-3 .dashboard-shortcut__icon::after {
+  animation-delay: -5s;
+  animation-duration: 5s;
+}
+
+@keyframes cyber-glitch {
+  0%, 100% {
+    clip-path: inset(0 0 0 0);
+  }
+  10% {
+    clip-path: inset(10% 0 0 10%);
+    transform: translate(-2px, 2px);
+  }
+  20% {
+    clip-path: inset(0 10% 10% 0);
+    transform: translate(2px, -2px);
+  }
+  30% {
+    clip-path: inset(0 0 10% 0);
+    transform: translate(0, 2px);
+  }
+  40% {
+    clip-path: inset(10% 10% 0 0);
+    transform: translate(2px, 0);
+  }
+  50% {
+    clip-path: inset(0 0 0 10%);
+    transform: translate(-2px, 0);
+  }
+  60% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(0, 0);
+  }
+  70% {
+    clip-path: inset(10% 0 10% 10%);
+    transform: translate(-2px, -2px);
+  }
+  80% {
+    clip-path: inset(0 10% 0 0);
+    transform: translate(2px, 2px);
+  }
+  90% {
+    clip-path: inset(10% 0 0 0);
+    transform: translate(0, -2px);
+  }
+}
+
+/* Empty slot styling */
+.dashboard-shortcut--empty {
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.dashboard-shortcut--empty:hover {
+  background: rgba(0, 240, 255, 0.05);
+}
+
+/* Drag and drop visual cues */
+.drag-target-highlight {
+  border: 2px dashed var(--impulse-border-hover);
+  border-radius: 8px;
+  background-color: rgba(0, 240, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* Apple glass effect */
+.dashboard-shortcut {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .dashboard-shortcut {
+    padding: 1rem;
+  }
+  
+  .dashboard-shortcut__icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .dashboard-shortcut__title {
+    font-size: 0.875rem;
+  }
+  
+  .dashboard-shortcut__description {
+    font-size: 0.7rem;
+  }
+}
