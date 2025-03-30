@@ -10,6 +10,10 @@ export { AdminSidebar } from "./components/AdminSidebar";
 export { AdminHeader } from "./components/AdminHeader";
 export { ImpulseAdminLayout } from "./components/layout/ImpulseAdminLayout";
 export { AdminProvider, useAdmin } from "./context/AdminContext";
+export { AdminTopNav } from "./components/navigation/AdminTopNav";
+export { TopNavShortcuts } from "./components/navigation/TopNavShortcuts";
+export { TopNavItem } from "./components/navigation/TopNavItem";
+export { DashboardShortcuts } from "./components/dashboard/DashboardShortcuts";
 
 // Admin routes
 export { AdminRoutes } from "./routes";
@@ -21,6 +25,7 @@ export { useAdminPreferences } from "./store/adminPreferences.store";
 // Admin hooks
 export { useAdminPermissions } from "./hooks/useAdminPermissions";
 export { useAdminRoles } from "./hooks/useAdminRoles"; 
+export { useDragAndDrop } from "./hooks/useDragAndDrop";
 
 // Admin types - export each file separately to avoid naming conflicts
 export * from "./types/build.types";
@@ -42,9 +47,6 @@ export * from "./atoms";
 
 // Admin page
 export { default as AdminPage } from "../pages/Admin";
-
-// Navigation components
-export { AdminTopNav } from "./components/navigation/AdminTopNav";
 
 // UI components
 export { CyberCard } from "./components/ui/CyberCard";

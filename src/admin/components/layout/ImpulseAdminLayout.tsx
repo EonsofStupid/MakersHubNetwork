@@ -9,8 +9,9 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { DragIndicator } from '@/admin/components/ui/DragIndicator';
 import { motion } from 'framer-motion';
 import { AdminPermission } from '@/admin/types/admin.types';
+import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
 
-// Import our main theme styles - consolidated
+// Import our styles
 import '@/admin/theme/impulse/impulse.css';
 import '@/admin/styles/electric-effects.css';
 
@@ -104,6 +105,9 @@ export function ImpulseAdminLayout({
               <span className="font-medium">Edit mode active</span> - Drag items to customize your dashboard
             </motion.div>
           )}
+          
+          {/* Dashboard shortcuts - Add to every admin page */}
+          <DashboardShortcuts />
           
           {/* Render children only if user has required permission */}
           {hasPermission(requiresPermission) ? (

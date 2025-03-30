@@ -1,314 +1,208 @@
 
+import { useState, useCallback, useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { useCallback, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import {
-  adminEditModeAtom,
-  dragSourceIdAtom,
-  dragTargetIdAtom,
-  isDraggingAtom,
-  dropIndicatorPositionAtom
-} from '@/admin/atoms/tools.atoms';
+import { isDraggingAtom, dragSourceIdAtom, dragTargetIdAtom } from '@/admin/atoms/tools.atoms';
+import { useAdminStore } from '@/admin/store/admin.store';
 
-interface UseDragAndDropOptions {
+interface DragAndDropOptions {
   items: string[];
-  onReorder?: (newItems: string[]) => void;
   containerId: string;
-  dragOnlyInEditMode?: boolean;
+  onReorder?: (items: string[]) => void;
+  onExternalDrop?: (item: any, position: { x: number, y: number }) => void;
   acceptExternalItems?: boolean;
+  dragOnlyInEditMode?: boolean;
 }
 
-export function useDragAndDrop({ 
-  items, 
-  onReorder, 
+export function useDragAndDrop({
+  items,
   containerId,
-  dragOnlyInEditMode = true,
-  acceptExternalItems = true
-}: UseDragAndDropOptions) {
-  const [editMode] = useAtom(adminEditModeAtom);
+  onReorder,
+  onExternalDrop,
+  acceptExternalItems = false,
+  dragOnlyInEditMode = false
+}: DragAndDropOptions) {
   const [isDragging, setIsDragging] = useAtom(isDraggingAtom);
   const [dragSourceId, setDragSourceId] = useAtom(dragSourceIdAtom);
   const [dragTargetId, setDragTargetId] = useAtom(dragTargetIdAtom);
-  const [, setDropIndicatorPosition] = useAtom(dropIndicatorPositionAtom);
-  const { toast } = useToast();
-
-  // Update cursor position for indicator
-  const updateCursorPosition = useCallback((e: MouseEvent) => {
-    if (isDragging) {
-      setDropIndicatorPosition({ x: e.clientX, y: e.clientY });
-    }
-  }, [isDragging, setDropIndicatorPosition]);
-
-  // Set up global mouse move listener for drag indicator
+  const [dropTargets, setDropTargets] = useState<Set<HTMLElement>>(new Set());
+  const { isEditMode } = useAdminStore();
+  
+  // Clean up on unmount
   useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', updateCursorPosition);
-      return () => window.removeEventListener('mousemove', updateCursorPosition);
-    }
-  }, [isDragging, updateCursorPosition]);
-
-  // Reset dragging state when edit mode is toggled off
-  useEffect(() => {
-    if (dragOnlyInEditMode && !editMode) {
-      setIsDragging(false);
-      setDragSourceId(null);
-      setDragTargetId(null);
-      setDropIndicatorPosition(null);
-    }
-  }, [editMode, setIsDragging, setDragSourceId, setDragTargetId, setDropIndicatorPosition, dragOnlyInEditMode]);
-
-  // Handle the drop event - reorder items or add from external source
-  const handleItemDrop = useCallback((sourceId: string, targetId: string | null, targetContainerId: string) => {
-    if (!sourceId) return;
-    
-    // If dropping within same container (reordering)
-    if (targetContainerId === containerId && targetId !== `${containerId}-empty`) {
-      const sourceIndex = items.indexOf(sourceId);
-      const targetIndex = targetId ? items.indexOf(targetId as string) : items.length;
-      
-      // If source exists in this container, reorder
-      if (sourceIndex !== -1 && targetIndex !== -1) {
-        const newItems = [...items];
-        newItems.splice(sourceIndex, 1);
-        newItems.splice(targetIndex, 0, sourceId);
-        onReorder?.(newItems);
-        return;
+    return () => {
+      if (dragSourceId && dragSourceId.startsWith(containerId)) {
+        setIsDragging(false);
+        setDragSourceId(null);
+        setDragTargetId(null);
       }
+    };
+  }, [dragSourceId, containerId, setIsDragging, setDragSourceId, setDragTargetId]);
+  
+  // Process items for reordering
+  const reorderItems = useCallback((sourceId: string, targetId: string) => {
+    // Make sure we have a valid source and target
+    if (!sourceId || !targetId || sourceId === targetId) return items;
+    
+    // Get the source and target indices
+    const sourceIndex = items.indexOf(sourceId);
+    const targetIndex = items.indexOf(targetId);
+    
+    // If source not found, it might be from external container
+    if (sourceIndex === -1) {
+      if (acceptExternalItems && onExternalDrop) {
+        // This would be handled by the external drop handler
+        return items;
+      }
+      return items;
     }
     
-    // Handle drops from external container
-    if (acceptExternalItems && targetContainerId === containerId) {
-      // If the item is not in the current container, add it
-      if (!items.includes(sourceId)) {
-        let newItems = [...items];
-        
-        // If dropping on a specific item, insert before it
-        if (targetId && targetId !== `${containerId}-empty`) {
-          const targetIndex = items.indexOf(targetId as string);
-          if (targetIndex !== -1) {
-            newItems.splice(targetIndex, 0, sourceId);
-          } else {
-            newItems.push(sourceId);
-          }
-        } else {
-          // If dropping in empty space, add to end
-          newItems.push(sourceId);
-        }
-        
-        onReorder?.(newItems);
-        
-        toast({
-          title: "Item Added",
-          description: `Item has been added to ${containerId === 'top-nav-shortcuts' ? 'top navigation' : 'dashboard shortcuts'}`,
-          duration: 2000,
-        });
-      }
-    }
-  }, [items, onReorder, containerId, acceptExternalItems, toast]);
+    // Create a new array without the source item
+    const newItems = [...items];
+    newItems.splice(sourceIndex, 1);
+    
+    // Insert the source item at the target position
+    newItems.splice(targetIndex, 0, sourceId);
+    
+    return newItems;
+  }, [items, acceptExternalItems, onExternalDrop]);
 
-  // Register a drop zone container
-  const registerDropZone = useCallback((element: HTMLElement | null) => {
-    if (!element) return;
-
-    const handleDragOver = (e: DragEvent) => {
+  // Register a container as a drop zone
+  const registerDropZone = useCallback((element: HTMLElement) => {
+    setDropTargets(prev => {
+      const newSet = new Set(prev);
+      newSet.add(element);
+      return newSet;
+    });
+    
+    // Set up drag hover effect for the container
+    element.addEventListener('dragover', (e) => {
       e.preventDefault();
-      
-      // Check if we should handle this drag (edit mode check)
-      if (dragOnlyInEditMode && !editMode) return;
-      
-      if (!element.classList.contains('active-drop')) {
+      if (isDragging) {
         element.classList.add('active-drop');
       }
-      
-      // Find the closest draggable item
-      const dropItems = Array.from(element.querySelectorAll('[data-id]'));
-      let closestItem: Element | null = null;
-      let closestDistance = Infinity;
-
-      dropItems.forEach(item => {
-        const rect = item.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        
-        const distance = Math.sqrt(
-          Math.pow(e.clientX - centerX, 2) + 
-          Math.pow(e.clientY - centerY, 2)
-        );
-        
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestItem = item;
-        }
-      });
-
-      // Remove previous target highlights
-      document.querySelectorAll('.drop-target-item').forEach(el => {
-        (el as HTMLElement).classList.remove('drop-target-item');
-      });
-
-      if (closestItem && closestDistance < 100) {
-        const targetId = (closestItem as HTMLElement).getAttribute('data-id');
-        if (targetId && targetId !== dragTargetId) {
-          setDragTargetId(targetId);
-          (closestItem as HTMLElement).classList.add('drop-target-item');
-        }
-      } else {
-        // If there are no items or item is too far, we'll use a special empty target
-        setDragTargetId(`${containerId}-empty`);
-      }
-      
-      // Update custom property for glow effect
-      if (e.clientX && e.clientY) {
-        const rect = element.getBoundingClientRect();
-        element.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-        element.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-      }
-    };
-
-    const handleDragLeave = (e: DragEvent) => {
-      // Only process if we're actually leaving the container (not just moving between its children)
-      const relatedTarget = e.relatedTarget as Node | null;
-      if (relatedTarget && element.contains(relatedTarget)) {
-        return;
-      }
-      
+    });
+    
+    element.addEventListener('dragleave', () => {
       element.classList.remove('active-drop');
-      
-      // Remove target highlight
-      document.querySelectorAll('.drop-target-item').forEach(el => {
-        (el as HTMLElement).classList.remove('drop-target-item');
-      });
-      
-      setDragTargetId(null);
-    };
-
-    const handleDrop = (e: DragEvent) => {
+    });
+    
+    element.addEventListener('drop', (e) => {
       e.preventDefault();
       element.classList.remove('active-drop');
       
-      // Process the drop
-      if (dragSourceId) {
-        handleItemDrop(dragSourceId, dragTargetId, containerId);
+      if (dragSourceId && onReorder) {
+        // If we have external items being dropped
+        if (dragSourceId.indexOf(':') !== -1 && !dragSourceId.startsWith(containerId)) {
+          // External item - extract the ID
+          const externalId = dragSourceId.split(':')[1];
+          
+          if (acceptExternalItems && onExternalDrop) {
+            onExternalDrop(
+              { id: externalId, type: dragSourceId.split(':')[0] },
+              { x: e.clientX, y: e.clientY }
+            );
+          }
+        }
       }
-      
-      // Remove all visual cues
-      document.querySelectorAll('.drop-target-item').forEach(el => {
-        (el as HTMLElement).classList.remove('drop-target-item');
+    });
+    
+    // Cleanup function
+    return () => {
+      setDropTargets(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(element);
+        return newSet;
       });
+    };
+  }, [isDragging, dragSourceId, containerId, onReorder, acceptExternalItems, onExternalDrop]);
+
+  // Make an element draggable
+  const makeDraggable = useCallback((element: HTMLElement, itemId: string) => {
+    const fullItemId = `${containerId}:${itemId}`;
+    
+    element.setAttribute('draggable', 'true');
+    
+    const handleDragStart = (e: DragEvent) => {
+      if (dragOnlyInEditMode && !isEditMode) return;
       
-      document.querySelectorAll('.dragging').forEach(el => {
-        (el as HTMLElement).classList.remove('dragging');
-      });
+      // Set drag data and update state
+      e.dataTransfer?.setData('text/plain', fullItemId);
+      element.classList.add('dragging');
+      
+      // Update global drag state
+      setIsDragging(true);
+      setDragSourceId(fullItemId);
+    };
+    
+    const handleDragEnd = () => {
+      element.classList.remove('dragging');
+      
+      // If we have a target and source, reorder items
+      if (dragTargetId && dragSourceId && onReorder) {
+        // Extract the actual IDs without container prefix
+        const sourceId = dragSourceId.split(':')[1];
+        const targetId = dragTargetId.split(':')[1];
+        
+        // Only reorder if both items are from this container
+        if (dragSourceId.startsWith(containerId) && dragTargetId.startsWith(containerId)) {
+          const newItems = reorderItems(sourceId, targetId);
+          onReorder(newItems);
+        }
+      }
       
       // Reset drag state
       setIsDragging(false);
       setDragSourceId(null);
       setDragTargetId(null);
-      setDropIndicatorPosition(null);
-    };
-
-    // Set up event listeners
-    element.setAttribute('data-container-id', containerId);
-    element.addEventListener('dragover', handleDragOver as unknown as EventListener);
-    element.addEventListener('dragleave', handleDragLeave as unknown as EventListener);
-    element.addEventListener('drop', handleDrop as unknown as EventListener);
-
-    return () => {
-      element.removeEventListener('dragover', handleDragOver as unknown as EventListener);
-      element.removeEventListener('dragleave', handleDragLeave as unknown as EventListener);
-      element.removeEventListener('drop', handleDrop as unknown as EventListener);
-    };
-  }, [
-    isDragging, 
-    editMode, 
-    dragSourceId, 
-    dragTargetId, 
-    setDragTargetId, 
-    setIsDragging, 
-    setDragSourceId, 
-    setDropIndicatorPosition,
-    handleItemDrop,
-    containerId,
-    dragOnlyInEditMode
-  ]);
-
-  // Make an item draggable
-  const makeDraggable = useCallback((el: HTMLElement | null, id: string) => {
-    if (!el) return;
-    
-    const handleDragStart = (e: DragEvent) => {
-      if (dragOnlyInEditMode && !editMode) {
-        e.preventDefault();
-        return false;
-      }
       
-      setIsDragging(true);
-      setDragSourceId(id);
-      
-      // Add visual feedback
-      el.classList.add('dragging');
-      
-      // Set data transfer for compatibility
-      e.dataTransfer?.setData('text/plain', id);
-      
-      // Set drag image (optional)
-      if (e.dataTransfer) {
-        // Use the element itself as the drag image with a slight offset
-        e.dataTransfer.setDragImage(el, 20, 20);
-      }
-      
-      return true;
-    };
-    
-    const handleDragEnd = () => {
-      setIsDragging(false);
-      setDragSourceId(null);
-      setDragTargetId(null);
-      setDropIndicatorPosition(null);
-      
-      // Remove visual feedback
-      el.classList.remove('dragging');
-      
-      // Remove any lingering visual cues
-      document.querySelectorAll('.drop-target-item').forEach(el => {
-        (el as HTMLElement).classList.remove('drop-target-item');
+      // Remove active-drop from all containers
+      dropTargets.forEach(target => {
+        target.classList.remove('active-drop');
       });
     };
     
-    // Set draggable attribute (only in edit mode if required)
-    if (!dragOnlyInEditMode || editMode) {
-      el.setAttribute('draggable', 'true');
-      el.classList.add('draggable');
-    } else {
-      el.removeAttribute('draggable');
-      el.classList.remove('draggable');
-    }
+    const handleDragOver = (e: DragEvent) => {
+      if (dragOnlyInEditMode && !isEditMode) return;
+      e.preventDefault();
+      
+      if (isDragging && dragSourceId && dragSourceId !== fullItemId) {
+        setDragTargetId(fullItemId);
+      }
+    };
     
-    // Attach event listeners
-    el.addEventListener('dragstart', handleDragStart as unknown as EventListener);
-    el.addEventListener('dragend', handleDragEnd);
+    // Add event listeners
+    element.addEventListener('dragstart', handleDragStart);
+    element.addEventListener('dragend', handleDragEnd);
+    element.addEventListener('dragover', handleDragOver);
     
+    // Return cleanup function
     return () => {
-      el.removeAttribute('draggable');
-      el.classList.remove('draggable');
-      el.removeEventListener('dragstart', handleDragStart as unknown as EventListener);
-      el.removeEventListener('dragend', handleDragEnd);
+      element.removeAttribute('draggable');
+      element.classList.remove('dragging');
+      element.removeEventListener('dragstart', handleDragStart);
+      element.removeEventListener('dragend', handleDragEnd);
+      element.removeEventListener('dragover', handleDragOver);
     };
   }, [
-    editMode, 
+    containerId, 
+    dragOnlyInEditMode, 
+    isEditMode, 
+    isDragging, 
+    dragSourceId, 
+    dragTargetId, 
+    onReorder, 
+    reorderItems, 
     setIsDragging, 
     setDragSourceId, 
     setDragTargetId, 
-    setDropIndicatorPosition,
-    dragOnlyInEditMode
+    dropTargets
   ]);
 
   return {
+    makeDraggable,
+    registerDropZone,
     isDragging,
     dragSourceId,
-    dragTargetId,
-    registerDropZone,
-    makeDraggable,
-    handleDrop: handleItemDrop
+    dragTargetId
   };
 }
