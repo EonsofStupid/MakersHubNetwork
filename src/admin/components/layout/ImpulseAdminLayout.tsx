@@ -12,6 +12,7 @@ import { AdminPermission } from '@/admin/types/admin.types';
 
 // Import our cyberpunk style sheets
 import '@/admin/styles/cyber-effects.css';
+import '@/admin/styles/electric-effects.css';
 import '@/admin/theme/impulse/impulse-admin.css';
 import '@/admin/theme/impulse/impulse-theme.css';
 
@@ -46,12 +47,27 @@ export function ImpulseAdminLayout({
     }
   }, [isDarkMode]);
   
+  // Track mouse position for electric effects
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+  
   return (
     <div 
       className={cn(
         "impulse-admin-root min-h-screen flex flex-col",
         isEditMode && "edit-mode",
-        isDarkMode && "dark-mode"
+        isDarkMode && "dark-mode",
+        "glitch-effect"
       )}
       data-active-section={activeSection}
     >
@@ -59,10 +75,16 @@ export function ImpulseAdminLayout({
       <AdminTopNav title={title} />
       
       {/* Main content area with sidebar */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex relative">
+        {/* Electric ambient background */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--impulse-bg-main)] to-[var(--impulse-bg-main)] opacity-90" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mouse-x,50%)_var(--mouse-y,50%),rgba(0,240,255,0.08)_0%,transparent_60%)]" />
+        </div>
+        
         {/* Left sidebar */}
         <div className={cn(
-          "impulse-sidebar transition-all",
+          "impulse-sidebar transition-all z-10",
           sidebarExpanded ? "w-60" : "w-16"
         )}>
           <AdminSidebar />
@@ -70,15 +92,16 @@ export function ImpulseAdminLayout({
         
         {/* Main content */}
         <main className={cn(
-          "impulse-main flex-1 p-6 transition-all",
-          sidebarExpanded ? "ml-60" : "ml-16"
+          "impulse-main flex-1 p-6 transition-all z-10",
+          sidebarExpanded ? "ml-60" : "ml-16",
+          "apple-glass backdrop-blur-xl"
         )}>
           {/* Editable indicator in edit mode */}
           {isEditMode && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-4 p-2 rounded bg-primary/10 border border-primary/20 text-sm text-primary"
+              className="mb-4 p-2 rounded bg-primary/10 border border-primary/20 text-sm text-primary electric-border"
             >
               <span className="font-medium">Edit mode active</span> - Drag items to customize your dashboard
             </motion.div>
@@ -86,10 +109,17 @@ export function ImpulseAdminLayout({
           
           {/* Render children only if user has required permission */}
           {hasPermission(requiresPermission) ? (
-            children
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {children}
+            </motion.div>
           ) : (
             <div className="flex items-center justify-center h-full">
-              <div className="p-6 rounded-xl bg-card text-center">
+              <div className="p-6 rounded-xl glass-panel text-center">
                 <h3 className="text-xl font-semibold mb-2">Permission Required</h3>
                 <p className="text-muted-foreground">
                   You need {requiresPermission} permission to access this page.
