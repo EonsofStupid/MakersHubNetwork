@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
@@ -14,10 +14,11 @@ import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
 import { useAdminDataSync } from '@/admin/services/adminData.service';
 
-// Import the navigation CSS
+// Import the navigation and new electric CSS
 import '@/admin/styles/navigation.css';
 import '@/admin/styles/sidebar-navigation.css';
 import '@/admin/styles/drag-drop.css';
+import '@/admin/styles/electric-effects.css';
 
 // Framer Motion variants
 const titleVariants = {
@@ -29,6 +30,8 @@ export function AdminSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isEditMode] = useAtom(adminEditModeAtom);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  
   const { 
     sidebarExpanded, 
     setSidebarExpanded, 
@@ -36,8 +39,34 @@ export function AdminSidebar() {
     setActiveSection,
     hasPermission,
     showLabels,
-    setShowLabels
+    setShowLabels,
+    isDarkMode
   } = useAdminStore();
+  
+  // Track mouse position for electric effects
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!sidebarRef.current) return;
+      
+      const rect = sidebarRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      sidebarRef.current.style.setProperty('--mouse-x', `${x}px`);
+      sidebarRef.current.style.setProperty('--mouse-y', `${y}px`);
+    };
+    
+    const sidebarEl = sidebarRef.current;
+    if (sidebarEl) {
+      sidebarEl.addEventListener('mousemove', handleMouseMove);
+    }
+    
+    return () => {
+      if (sidebarEl) {
+        sidebarEl.removeEventListener('mousemove', handleMouseMove);
+      }
+    };
+  }, []);
   
   // Sync admin preferences with the database
   const { isSyncing } = useAdminDataSync({
@@ -69,8 +98,20 @@ export function AdminSidebar() {
     setActiveSection(id);
   };
 
+  // Generate random idle animation delay
+  const generateRandomDelay = () => {
+    return Math.random() * 5;
+  };
+
   return (
-    <div className="admin-sidebar h-full flex flex-col">
+    <div 
+      ref={sidebarRef}
+      className={cn(
+        "admin-sidebar h-full flex flex-col",
+        "electric-background glitch-effect",
+        isDarkMode ? "apple-glass-dark" : "apple-glass"
+      )}
+    >
       {/* Header with title and collapse button */}
       <div className="admin-sidebar__header py-4 px-3 flex justify-between items-center border-b border-[var(--impulse-border-normal)]">
         <AnimatePresence mode="wait">
@@ -83,7 +124,12 @@ export function AdminSidebar() {
               exit="collapsed"
               className="flex items-center gap-2"
             >
-              <span className="text-sm font-medium text-[var(--impulse-text-primary)] px-2">Admin Navigation</span>
+              <motion.span 
+                className="text-sm font-medium text-[var(--impulse-text-primary)] px-2 idle-flicker"
+                style={{ animationDelay: `${generateRandomDelay()}s` }}
+              >
+                Admin Navigation
+              </motion.span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -97,7 +143,7 @@ export function AdminSidebar() {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowLabels(!showLabels)}
-                  className="p-2 rounded-full text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors"
+                  className="p-2 rounded-full text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors hover-glow"
                 >
                   {showLabels ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </motion.button>
@@ -110,7 +156,7 @@ export function AdminSidebar() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              className="p-2 rounded-full bg-[var(--impulse-bg-main)] text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors"
+              className="p-2 rounded-full bg-[var(--impulse-bg-main)] text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors hover-glow"
             >
               {sidebarExpanded ? (
                 <ChevronLeft className="w-4 h-4" />
@@ -133,7 +179,7 @@ export function AdminSidebar() {
       >
         <div className={sidebarExpanded ? "px-2" : "px-1"}>
           <AnimatePresence mode="popLayout">
-            {visibleItems.map((item) => (
+            {visibleItems.map((item, index) => (
               <NavigationItem
                 key={item.id}
                 id={item.id}
@@ -146,7 +192,9 @@ export function AdminSidebar() {
                 showTooltip={!showLabels || !sidebarExpanded}
                 className={cn(
                   sidebarExpanded ? "mx-2" : "justify-center mx-2 px-0",
-                  !showLabels && sidebarExpanded && "justify-center"
+                  !showLabels && sidebarExpanded && "justify-center",
+                  "electric-nav-item",
+                  `random-color-${(index % 5) + 1}`
                 )}
               />
             ))}
@@ -157,7 +205,7 @@ export function AdminSidebar() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-4 mx-4 p-2 rounded-md bg-[var(--impulse-primary)]/10 border border-[var(--impulse-border-normal)]"
+            className="mt-4 mx-4 p-2 rounded-md bg-[var(--impulse-primary)]/10 border border-[var(--impulse-border-normal)] electric-border"
           >
             <p className="text-xs text-[var(--impulse-primary)] text-center">
               Drag items to customize your dashboard
