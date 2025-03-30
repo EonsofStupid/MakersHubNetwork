@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
@@ -11,12 +11,7 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { scrollbarStyle } from '@/admin/utils/styles';
 import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
-import { 
-  NavigationContainer, 
-  NavigationList, 
-  NavigationItem,
-  NavigationSection 
-} from '@/admin/components/navigation';
+import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
 
 // Import the navigation CSS
 import '@/admin/styles/navigation.css';
@@ -38,7 +33,6 @@ export function AdminSidebar() {
     setSidebarExpanded, 
     activeSection,
     setActiveSection,
-    permissions,
     hasPermission
   } = useAdminStore();
 
@@ -61,7 +55,7 @@ export function AdminSidebar() {
   };
 
   return (
-    <NavigationContainer expanded={sidebarExpanded}>
+    <div className="admin-sidebar h-full flex flex-col">
       {/* Header with title and collapse button */}
       <div className="admin-sidebar__header py-4 px-3 flex justify-between items-center border-b border-[var(--impulse-border-normal)]">
         <AnimatePresence mode="wait">
@@ -102,12 +96,15 @@ export function AdminSidebar() {
       </div>
       
       {/* Main navigation items */}
-      <NavigationList 
-        containerId="main-navigation"
-        expanded={sidebarExpanded}
-        className={scrollbarStyle}
+      <div 
+        className={cn(
+          "admin-sidebar__content flex-1 overflow-y-auto py-4",
+          scrollbarStyle
+        )}
+        id="main-navigation"
+        data-container-id="main-navigation"
       >
-        <NavigationSection expanded={sidebarExpanded}>
+        <div className={sidebarExpanded ? "px-2" : "px-1"}>
           <AnimatePresence mode="popLayout">
             {visibleItems.map((item) => (
               <NavigationItem
@@ -124,7 +121,7 @@ export function AdminSidebar() {
               />
             ))}
           </AnimatePresence>
-        </NavigationSection>
+        </div>
         
         {isEditMode && sidebarExpanded && (
           <motion.div
@@ -137,7 +134,7 @@ export function AdminSidebar() {
             </p>
           </motion.div>
         )}
-      </NavigationList>
+      </div>
       
       {/* Footer information */}
       <div className="admin-sidebar__footer border-t border-[var(--impulse-border-normal)] p-4">
@@ -153,16 +150,6 @@ export function AdminSidebar() {
               <span className="text-xs text-[var(--impulse-text-secondary)]">
                 {isEditMode ? "Edit mode active" : "MakersImpulse Admin"}
               </span>
-              
-              <AdminTooltip content="Settings">
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 15 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => navigate("/admin/settings")}
-                >
-                  <Settings className="w-4 h-4 text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)]" />
-                </motion.button>
-              </AdminTooltip>
             </motion.div>
           ) : (
             <motion.div
@@ -172,13 +159,13 @@ export function AdminSidebar() {
               exit={{ opacity: 0 }}
               className="flex justify-center"
             >
-              <div className="w-5 h-5 rounded-full bg-[var(--impulse-primary)]/20 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-[var(--impulse-primary)]" />
-              </div>
+              <span className="text-xs text-[var(--impulse-primary)]">
+                {isEditMode ? "✏️" : "🛠️"}
+              </span>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    </NavigationContainer>
+    </div>
   );
 }
