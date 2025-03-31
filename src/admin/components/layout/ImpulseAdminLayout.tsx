@@ -1,3 +1,4 @@
+
 import React, { ReactNode, useEffect } from 'react';
 import { AdminSidebar } from '@/admin/components/AdminSidebar';
 import { AdminTopNav } from '@/admin/components/navigation/AdminTopNav';
@@ -9,10 +10,9 @@ import { DragIndicator } from '../ui/DragIndicator';
 
 interface ImpulseAdminLayoutProps {
   children: ReactNode;
-  title?: string;
 }
 
-export function ImpulseAdminLayout({ children, title = "Admin Dashboard" }: ImpulseAdminLayoutProps) {
+export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
   const { isEditMode, sidebarExpanded } = useAdminStore();
   
   // Apply edit mode class to body

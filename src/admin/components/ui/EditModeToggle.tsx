@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Edit, X } from 'lucide-react';
@@ -32,13 +33,11 @@ export function EditModeToggle({ className }: EditModeToggleProps) {
           <Edit className="w-4 h-4" />
         )}
         
-        <style>
-          {`
-            .shadow-glow {
-              box-shadow: 0 0 15px var(--impulse-primary);
-            }
-          `}
-        </style>
+        <style jsx>{`
+          .shadow-glow {
+            box-shadow: 0 0 15px var(--impulse-primary);
+          }
+        `}</style>
       </motion.button>
     </AdminTooltip>
   );
