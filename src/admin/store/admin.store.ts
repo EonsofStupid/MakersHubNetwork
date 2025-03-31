@@ -1,8 +1,7 @@
-
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createAdminPersistMiddleware } from "../middleware/persist.middleware";
-import { AdminPermissionValue } from "../constants/permissions";
+import { AdminPermissionValue, AdminPermissions } from "../constants/permissions";
 import { toast } from "sonner";
 
 export interface AdminState {
@@ -66,6 +65,20 @@ export interface AdminState {
   loadPermissions: (permissions?: AdminPermissionValue[]) => Promise<void>;
   hasPermission: (permission: AdminPermissionValue) => boolean;
 }
+
+// Default permissions for admin users
+const defaultAdminPermissions: AdminPermissionValue[] = [
+  AdminPermissions.ADMIN_ACCESS,
+  AdminPermissions.ADMIN_VIEW,
+  AdminPermissions.ADMIN_EDIT,
+  AdminPermissions.CONTENT_VIEW,
+  AdminPermissions.CONTENT_EDIT,
+  AdminPermissions.USERS_VIEW,
+  AdminPermissions.USERS_EDIT,
+  AdminPermissions.BUILDS_VIEW,
+  AdminPermissions.BUILDS_APPROVE,
+  AdminPermissions.THEMES_VIEW
+];
 
 export const useAdminStore = create<AdminState>()(
   persist(
@@ -209,13 +222,13 @@ export const useAdminStore = create<AdminState>()(
         }
       },
       hasPermission: (permission: AdminPermissionValue) => {
-        // Super admin has all permissions
-        if (get().permissions.includes('super_admin:all')) {
+        // Check if user has super admin access
+        if (get().permissions.includes(AdminPermissions.SUPER_ADMIN)) {
           return true;
         }
         
-        // Basic admin access always granted if in admin permissions
-        if (permission === 'admin:access' && get().permissions.length > 0) {
+        // Basic admin access check
+        if (permission === AdminPermissions.ADMIN_ACCESS && get().permissions.length > 0) {
           return true;
         }
         
