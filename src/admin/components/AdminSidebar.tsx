@@ -11,6 +11,9 @@ import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 import { NavItem } from '@/admin/components/navigation/NavItem';
 import { NavGroup } from '@/admin/components/navigation/NavGroup';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
+import { useAtom } from 'jotai';
+import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
+import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 
 // Import styles directly
 import '@/admin/styles/sidebar-navigation.css';
@@ -21,6 +24,7 @@ export function AdminSidebar() {
   const { hasPermission } = useAdminPermissions();
   const { sidebarExpanded, toggleSidebar, showLabels, setActiveSection } = useAdminStore();
   const [hasMounted, setHasMounted] = useState(false);
+  const [isEditMode] = useAtom(adminEditModeAtom);
   
   // Set mounted state for animations
   useEffect(() => {
@@ -92,8 +96,9 @@ export function AdminSidebar() {
       animate={sidebarExpanded ? 'expanded' : 'collapsed'}
       variants={sidebarVariants}
     >
-      {/* Sidebar header with toggle button */}
-      <div className="admin-sidebar__header justify-end">
+      {/* Sidebar header with EditModeToggle and toggle button */}
+      <div className="admin-sidebar__header flex justify-between">
+        <EditModeToggle />
         <AdminTooltip 
           content={sidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
           side="right"
