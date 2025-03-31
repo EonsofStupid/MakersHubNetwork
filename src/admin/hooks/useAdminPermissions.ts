@@ -2,25 +2,31 @@
 import { useCallback } from 'react';
 import { useAdmin } from '@/admin/context/AdminContext';
 import { useAdminStore } from '@/admin/store/admin.store';
-import { AdminPermission } from '@/admin/types/admin.types';
+import { AdminPermissionValue, AdminPermissions } from '@/admin/constants/permissions';
 
 /**
  * Hook for checking admin permissions
  */
 export function useAdminPermissions() {
   const { hasAdminAccess } = useAdmin();
-  const { hasPermission, loadPermissions } = useAdminStore();
+  const { hasPermission: storeHasPermission, loadPermissions } = useAdminStore();
   
   /**
    * Check if the current user has a specific permission
    */
-  const checkPermission = useCallback((permission: AdminPermission): boolean => {
+  const checkPermission = useCallback((permission: AdminPermissionValue): boolean => {
     // Check basic admin access first
     if (!hasAdminAccess) return false;
     
+    // If super admin, allow all permissions
+    if (storeHasPermission(AdminPermissions.SUPER_ADMIN)) return true;
+    
+    // If checking for basic admin access, always return true if user has admin access
+    if (permission === AdminPermissions.ADMIN_ACCESS) return true;
+    
     // Check specific permission
-    return hasPermission(permission);
-  }, [hasAdminAccess, hasPermission]);
+    return storeHasPermission(permission);
+  }, [hasAdminAccess, storeHasPermission]);
   
   /**
    * Reload all permissions

@@ -2,6 +2,7 @@
 import React from "react";
 import { Shield } from "lucide-react";
 import { PlaceholderPage } from "@/admin/routes";
+import { AdminPermissions } from "@/admin/constants/permissions";
 
 export default function PermissionsPage() {
   return (
@@ -9,7 +10,7 @@ export default function PermissionsPage() {
       title="Permission Manager" 
       description="Configure user roles and permissions for the platform." 
       icon={<Shield className="h-8 w-8 text-primary" />}
-      requiredPermission="super_admin:all"
+      requiredPermission={AdminPermissions.SUPER_ADMIN}
     />
   );
 }

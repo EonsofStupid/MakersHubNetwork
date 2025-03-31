@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
 import { PlaceholderPage } from "./PlaceholderPage";
 import { RequirePermission } from "@/admin/components/auth/RequirePermission";
+import { AdminPermissions } from "@/admin/constants/permissions";
 
 // Import all the page components
 import OverviewPage from "./overview/OverviewPage";
@@ -37,7 +38,7 @@ export function AdminRoutes() {
       <Route 
         path="/users" 
         element={
-          <RequirePermission permission="users:view">
+          <RequirePermission permission={AdminPermissions.USERS_VIEW}>
             <ImpulseAdminLayout title="User Management">
               <UsersPage />
             </ImpulseAdminLayout>
@@ -47,7 +48,7 @@ export function AdminRoutes() {
       <Route 
         path="/builds" 
         element={
-          <RequirePermission permission="builds:view">
+          <RequirePermission permission={AdminPermissions.BUILDS_VIEW}>
             <ImpulseAdminLayout title="Build Management">
               <BuildsPage />
             </ImpulseAdminLayout>
@@ -57,7 +58,7 @@ export function AdminRoutes() {
       <Route 
         path="/builds/:buildId" 
         element={
-          <RequirePermission permission="builds:view">
+          <RequirePermission permission={AdminPermissions.BUILDS_VIEW}>
             <BuildDetailPage />
           </RequirePermission>
         } 
@@ -65,7 +66,7 @@ export function AdminRoutes() {
       <Route 
         path="/reviews" 
         element={
-          <RequirePermission permission="content:view">
+          <RequirePermission permission={AdminPermissions.CONTENT_VIEW}>
             <ReviewsPage />
           </RequirePermission>
         } 
@@ -73,7 +74,7 @@ export function AdminRoutes() {
       <Route 
         path="/content" 
         element={
-          <RequirePermission permission="content:view">
+          <RequirePermission permission={AdminPermissions.CONTENT_VIEW}>
             <ImpulseAdminLayout title="Content Management">
               <ContentPage />
             </ImpulseAdminLayout>
@@ -83,7 +84,7 @@ export function AdminRoutes() {
       <Route 
         path="/themes" 
         element={
-          <RequirePermission permission="themes:view">
+          <RequirePermission permission={AdminPermissions.THEMES_VIEW}>
             <ImpulseAdminLayout title="Theme Manager">
               <ThemesPage />
             </ImpulseAdminLayout>
@@ -93,7 +94,7 @@ export function AdminRoutes() {
       <Route 
         path="/analytics" 
         element={
-          <RequirePermission permission="data:view">
+          <RequirePermission permission={AdminPermissions.DATA_VIEW}>
             <ImpulseAdminLayout title="Analytics Dashboard">
               <AnalyticsPage />
             </ImpulseAdminLayout>
@@ -103,7 +104,7 @@ export function AdminRoutes() {
       <Route 
         path="/data" 
         element={
-          <RequirePermission permission="data:view">
+          <RequirePermission permission={AdminPermissions.DATA_VIEW}>
             <ImpulseAdminLayout title="Data Maestro">
               <DataMaestroPage />
             </ImpulseAdminLayout>
@@ -113,7 +114,7 @@ export function AdminRoutes() {
       <Route 
         path="/settings" 
         element={
-          <RequirePermission permission="settings:view">
+          <RequirePermission permission={AdminPermissions.SETTINGS_VIEW}>
             <ImpulseAdminLayout title="Admin Settings">
               <SettingsPage />
             </ImpulseAdminLayout>
@@ -123,7 +124,7 @@ export function AdminRoutes() {
       <Route 
         path="/permissions" 
         element={
-          <RequirePermission permission="super_admin:all">
+          <RequirePermission permission={AdminPermissions.SUPER_ADMIN}>
             <ImpulseAdminLayout title="Permission Manager">
               <PermissionsPage />
             </ImpulseAdminLayout>

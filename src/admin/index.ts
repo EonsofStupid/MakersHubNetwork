@@ -17,7 +17,11 @@ export { useAdminPreferences } from "./store/adminPreferences.store";
 export { useAdminPermissions } from "./hooks/useAdminPermissions";
 export { useAdminRoles } from "./hooks/useAdminRoles"; 
 
-// Export admin types - consolidate to avoid conflicts
+// Export admin constants
+export { AdminPermissions } from "./constants/permissions";
+
+// Export admin types
+export type { AdminPermissionValue } from "./constants/permissions";
 export type { AdminPermission } from "./types/admin.types";
 export type { AdminSection } from "./types/admin.types";
 export type { AdminOverlayConfig } from "./types/admin.types";

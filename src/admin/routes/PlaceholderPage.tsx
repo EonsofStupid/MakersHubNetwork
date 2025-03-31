@@ -1,13 +1,15 @@
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
 import { RequirePermission } from "@/admin/components/auth/RequirePermission";
+import { AdminPermissionValue } from "@/admin/constants/permissions";
 
 interface PlaceholderPageProps {
   title: string;
   description?: string;
   icon?: React.ReactNode;
-  requiredPermission?: string;
+  requiredPermission?: AdminPermissionValue;
 }
 
 export function PlaceholderPage({ 
