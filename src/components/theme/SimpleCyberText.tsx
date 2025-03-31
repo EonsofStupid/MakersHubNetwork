@@ -1,31 +1,47 @@
 
-import { cn } from "@/lib/utils";
-import { useSiteTheme } from "./SiteThemeProvider";
+import React from 'react';
+import { motion } from 'framer-motion';
 
 interface SimpleCyberTextProps {
   text: string;
   className?: string;
+  glitch?: boolean;
 }
 
-export function SimpleCyberText({ text, className }: SimpleCyberTextProps) {
-  const { componentStyles } = useSiteTheme();
-  const styles = componentStyles?.SimpleCyberText || {
-    base: "relative inline-block",
-    primary: "absolute -top-[2px] left-[2px] text-primary/40 z-10 skew-x-6",
-    secondary: "absolute -bottom-[2px] left-[-2px] text-secondary/40 z-10 skew-x-[-6deg]"
-  };
+export function SimpleCyberText({ text, className = '', glitch = false }: SimpleCyberTextProps) {
+  const letters = text.split('');
+
+  if (glitch) {
+    return (
+      <motion.span 
+        className={`inline-block relative ${className}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {letters.map((letter, index) => (
+          <motion.span
+            key={index}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05, duration: 0.3 }}
+            className="inline-block"
+            style={{ 
+              textShadow: '0 0 2px rgba(0, 240, 255, 0.5), 0 0 5px rgba(0, 240, 255, 0.3)'
+            }}
+          >
+            {letter === ' ' ? '\u00A0' : letter}
+          </motion.span>
+        ))}
+      </motion.span>
+    );
+  }
 
   return (
-    <span className={cn(styles.base, className)}>
+    <span className={className} style={{ 
+      textShadow: '0 0 2px rgba(0, 240, 255, 0.5), 0 0 5px rgba(0, 240, 255, 0.3)'
+    }}>
       {text}
-      <span className={styles.primary}
-          style={{ clipPath: 'polygon(0 0, 100% 0, 100% 50%, 0 100%)' }}>
-        {text}
-      </span>
-      <span className={styles.secondary}
-          style={{ clipPath: 'polygon(0 50%, 100% 0, 100% 100%, 0 100%)' }}>
-        {text}
-      </span>
     </span>
   );
 }

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +11,16 @@ import { SyncIndicator } from "@/admin/components/ui/SyncIndicator";
 import { DragIndicator } from "@/admin/components/ui/DragIndicator";
 import { useAtom } from "jotai";
 import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
+
+// Import all admin styles
+import '@/admin/styles/cyber-effects.css';
+import '@/admin/styles/electric-effects.css';
+import '@/admin/styles/admin-topnav.css';
+import '@/admin/styles/dashboard-shortcuts.css';
+import '@/admin/styles/drag-drop.css';
+import '@/admin/styles/navigation.css';
+import '@/admin/theme/impulse/impulse-admin.css';
+import '@/admin/theme/impulse/impulse-theme.css';
 
 export default function Admin() {
   const { toast } = useToast();

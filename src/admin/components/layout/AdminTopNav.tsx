@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 
+// Import the CSS directly (ensure the path is correct)
 import '@/admin/styles/admin-topnav.css';
 
 interface AdminTopNavProps {
