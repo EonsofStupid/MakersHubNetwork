@@ -2,42 +2,98 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Edit, X } from 'lucide-react';
-import { useAdminStore } from '@/admin/store/admin.store';
 import { cn } from '@/lib/utils';
+import { useAtom } from 'jotai';
+import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
+import { useToast } from '@/hooks/use-toast';
 import { AdminTooltip } from './AdminTooltip';
 
 interface EditModeToggleProps {
   className?: string;
+  buttonSize?: 'sm' | 'md' | 'lg';
 }
 
-export function EditModeToggle({ className }: EditModeToggleProps) {
-  const { isEditMode, toggleEditMode } = useAdminStore();
+export function EditModeToggle({ className, buttonSize = 'md' }: EditModeToggleProps) {
+  const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
+  const { toast } = useToast();
+  
+  const handleToggle = () => {
+    const newMode = !isEditMode;
+    setEditMode(newMode);
+    
+    if (newMode) {
+      toast({
+        title: "Edit Mode Enabled",
+        description: "You can now customize your admin interface by dragging items",
+        duration: 4000,
+      });
+      
+      // Add edit-mode class to body for global styling
+      document.body.classList.add('edit-mode');
+    } else {
+      toast({
+        title: "Edit Mode Disabled",
+        description: "Your customizations have been saved",
+        duration: 3000,
+      });
+      
+      // Remove edit-mode class from body
+      document.body.classList.remove('edit-mode');
+    }
+  };
+  
+  const sizeClasses = {
+    sm: "p-1.5 rounded-md",
+    md: "p-2 rounded-full",
+    lg: "p-3 rounded-full"
+  };
+  
+  const iconSizes = {
+    sm: "w-3 h-3",
+    md: "w-4 h-4",
+    lg: "w-5 h-5"
+  };
   
   return (
-    <AdminTooltip content={isEditMode ? "Exit Edit Mode" : "Enter Edit Mode"}>
+    <AdminTooltip content={isEditMode ? "Exit Edit Mode" : "Customize Interface"}>
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        onClick={toggleEditMode}
+        onClick={handleToggle}
         className={cn(
-          "p-2 rounded-full transition-all duration-300",
+          "edit-mode-toggle transition-colors relative",
+          sizeClasses[buttonSize],
           isEditMode 
-            ? "bg-[var(--impulse-primary)] text-white shadow-glow" 
-            : "bg-[var(--impulse-bg-hover)] text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] hover:bg-[var(--impulse-primary)]/20",
+            ? "bg-[var(--impulse-primary)]/20 text-[var(--impulse-primary)]" 
+            : "text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] hover:bg-[var(--impulse-border-hover)]",
+          isEditMode && "active",
           className
         )}
       >
         {isEditMode ? (
-          <X className="w-4 h-4" />
+          <X className={iconSizes[buttonSize]} />
         ) : (
-          <Edit className="w-4 h-4" />
+          <Edit className={iconSizes[buttonSize]} />
         )}
         
-        <style jsx>{`
-          .shadow-glow {
-            box-shadow: 0 0 15px var(--impulse-primary);
-          }
-        `}</style>
+        {/* Animated glow effect */}
+        {isEditMode && (
+          <motion.span
+            className="absolute inset-0 rounded-full"
+            animate={{
+              boxShadow: [
+                "0 0 0 0 rgba(0, 240, 255, 0)",
+                "0 0 0 4px rgba(0, 240, 255, 0.3)",
+                "0 0 0 0 rgba(0, 240, 255, 0)"
+              ]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              repeatType: "loop"
+            }}
+          />
+        )}
       </motion.button>
     </AdminTooltip>
   );

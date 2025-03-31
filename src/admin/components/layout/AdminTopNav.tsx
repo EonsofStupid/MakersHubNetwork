@@ -50,10 +50,10 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
   
   return (
     <div className={cn(
-      "admin-topnav-container fixed top-0 left-0 right-0 z-40",
+      "admin-topnav-container fixed top-0 left-0 right-0 z-40 w-full",
       className
     )}>
-      <div className="admin-topnav border-b border-[var(--impulse-border-normal)] bg-[var(--impulse-bg-overlay)] backdrop-blur-xl h-14 flex items-center justify-between px-4">
+      <div className="admin-topnav flex justify-between items-center border-b border-[var(--impulse-border-normal)] bg-[var(--impulse-bg-overlay)] backdrop-blur-xl h-14 w-full px-4">
         <div className="flex items-center space-x-4">
           <motion.button 
             whileHover={{ scale: 1.1 }}
@@ -117,6 +117,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
+              onClick={() => navigate('/admin/settings')}
             >
               <Settings className="w-5 h-5" />
             </motion.button>
