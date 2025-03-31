@@ -15,6 +15,8 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
+  /* Trapezoid shape for top nav */
+  clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%);
 }
 
 .admin-topnav::before {
@@ -140,6 +142,11 @@
 @keyframes pulse-subtle {
   0%, 100% { opacity: 0.8; }
   50% { opacity: 1; }
+}
+
+/* Top navigation trapezoid shape */
+.top-nav-trapezoid {
+  clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%);
 }
 
 /* Responsive adjustments */
