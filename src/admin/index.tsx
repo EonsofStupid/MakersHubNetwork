@@ -15,7 +15,7 @@ import '@/admin/theme/impulse/impulse-theme.css';
 // Export components
 import { AdminLayout } from './components/AdminLayout';
 import { AdminSidebar } from './components/AdminSidebar';
-import { AdminTopNav } from './components/layout/AdminTopNav';
+import { AdminTopNav } from './components/navigation/AdminTopNav';
 import { ImpulseAdminLayout } from './components/layout/ImpulseAdminLayout';
 import { useAdminStore } from './store/admin.store';
 import { AdminThemeProvider, useAdminTheme } from './theme/AdminThemeProvider';
@@ -23,6 +23,7 @@ import { useAdminChat, useAdminChatListener } from './hooks/useAdminChat';
 import { useAdminPermissions } from './hooks/useAdminPermissions';
 import { DashboardShortcuts } from './components/dashboard/DashboardShortcuts';
 import { DragIndicator } from './components/ui/DragIndicator';
+import React from 'react';
 
 // Export admin UI components
 export { AdminLayout };
@@ -39,7 +40,7 @@ export { useAdminChat, useAdminChatListener };
 export { useAdminPermissions };
 
 // Main admin dashboard
-export default function AdminDashboard() {
+export function AdminDashboard() {
   return (
     <ImpulseAdminLayout>
       <DashboardShortcuts />

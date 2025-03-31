@@ -12,12 +12,12 @@ export function TopNavShortcuts() {
   const navigate = useNavigate();
   const shortcutsRef = useRef<HTMLDivElement>(null);
   const [isEditMode] = useAtom(adminEditModeAtom);
-  const { adminTopNavShortcuts, setTopNavShortcuts } = useAdminStore();
+  const { pinnedTopNavItems, setPinnedTopNavItems } = useAdminStore();
   
   // Set up drag and drop for the container
   const { registerDropZone } = useDragAndDrop({
-    items: adminTopNavShortcuts,
-    onReorder: setTopNavShortcuts,
+    items: pinnedTopNavItems,
+    onReorder: setPinnedTopNavItems,
     containerId: 'top-nav-shortcuts',
     dragOnlyInEditMode: true
   });
@@ -41,12 +41,12 @@ export function TopNavShortcuts() {
   const handleRemoveItem = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    const newShortcuts = adminTopNavShortcuts.filter(item => item !== id);
-    setTopNavShortcuts(newShortcuts);
+    const newShortcuts = pinnedTopNavItems.filter(item => item !== id);
+    setPinnedTopNavItems(newShortcuts);
   };
   
   // Filter shortcuts to only show items that exist in navigation config
-  const visibleShortcuts = adminTopNavShortcuts.filter(id => 
+  const visibleShortcuts = pinnedTopNavItems.filter(id => 
     adminNavigationItems.some(item => item.id === id)
   );
   

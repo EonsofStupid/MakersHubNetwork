@@ -1,6 +1,4 @@
 
-export type AdminPermissionValue = string;
-
 export const AdminPermissions = {
   // Super admin has all permissions
   SUPER_ADMIN: 'super_admin:all',
@@ -61,3 +59,5 @@ export const AdminPermissions = {
   MESSAGING_ACCESS: 'messaging:access',
   MESSAGING_MANAGE: 'messaging:manage',
 } as const;
+
+export type AdminPermissionValue = (typeof AdminPermissions)[keyof typeof AdminPermissions];
