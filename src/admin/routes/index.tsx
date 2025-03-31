@@ -1,145 +1,144 @@
 
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
+import React, { lazy, Suspense } from "react";
+import { Route, Routes, Navigate } from "react-router-dom";
 import { PlaceholderPage } from "./PlaceholderPage";
-import { RequirePermission } from "@/admin/components/auth/RequirePermission";
+import { Shell, Users, Database, Settings, FileText, BarChart, Paintbrush, Shield } from "lucide-react";
 import { AdminPermissions } from "@/admin/constants/permissions";
 
-// Import all the page components
-import OverviewPage from "./overview/OverviewPage";
-import UsersPage from "./users/UsersPage";
-import BuildsPage from "./builds/BuildsPage";
-import ContentPage from "./content/ContentPage";
-import ThemesPage from "./themes/ThemesPage";
-import SettingsPage from "./settings/SettingsPage";
-import AnalyticsPage from "./analytics/AnalyticsPage";
-import DataMaestroPage from "./data/DataMaestroPage";
-import BuildDetailPage from "./builds/BuildDetailPage";
-import PermissionsPage from "./permissions/PermissionsPage";
-import ReviewsPage from "./reviews/ReviewsPage";
-import UnauthorizedPage from "./unauthorized/UnauthorizedPage";
+// Import dashboard as default view
+import AdminDashboard from "@/admin/index";
+
+// Lazy load other admin pages
+const UsersPage = lazy(() => import("./users/UsersPage"));
+const ContentPage = lazy(() => import("./content/ContentPage"));
+const DataMaestroPage = lazy(() => import("./data/DataMaestroPage"));
+const AnalyticsPage = lazy(() => import("./analytics/AnalyticsPage"));
+const ThemesPage = lazy(() => import("./themes/ThemesPage"));
+const SettingsPage = lazy(() => import("./settings/SettingsPage"));
+const PermissionsPage = lazy(() => import("./permissions/PermissionsPage"));
+
+// Loading fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-[60vh]">
+    <div className="h-10 w-10 border-4 border-t-primary border-primary/20 rounded-full animate-spin"></div>
+  </div>
+);
 
 export function AdminRoutes() {
   return (
     <Routes>
-      <Route 
-        path="/" 
-        element={<Navigate to="/admin/overview" replace />} 
-      />
-      <Route 
-        path="/overview" 
+      {/* Redirect /admin to /admin/overview */}
+      <Route path="/" element={<Navigate to="overview" replace />} />
+      
+      {/* Dashboard Overview */}
+      <Route path="overview" element={<AdminDashboard />} />
+      
+      {/* Main admin routes */}
+      <Route
+        path="users/*"
         element={
-          <ImpulseAdminLayout title="Admin Overview">
-            <OverviewPage />
-          </ImpulseAdminLayout>
-        } 
+          <Suspense fallback={<PageLoader />}>
+            <UsersPage />
+          </Suspense>
+        }
       />
-      <Route 
-        path="/users" 
+      
+      <Route
+        path="content/*"
         element={
-          <RequirePermission permission={AdminPermissions.USERS_VIEW}>
-            <ImpulseAdminLayout title="User Management">
-              <UsersPage />
-            </ImpulseAdminLayout>
-          </RequirePermission>
-        } 
+          <Suspense fallback={<PageLoader />}>
+            <ContentPage />
+          </Suspense>
+        }
       />
-      <Route 
-        path="/builds" 
+      
+      <Route
+        path="data-maestro/*"
         element={
-          <RequirePermission permission={AdminPermissions.BUILDS_VIEW}>
-            <ImpulseAdminLayout title="Build Management">
-              <BuildsPage />
-            </ImpulseAdminLayout>
-          </RequirePermission>
-        } 
+          <Suspense fallback={<PageLoader />}>
+            <DataMaestroPage />
+          </Suspense>
+        }
       />
-      <Route 
-        path="/builds/:buildId" 
+      
+      <Route
+        path="analytics/*"
         element={
-          <RequirePermission permission={AdminPermissions.BUILDS_VIEW}>
-            <BuildDetailPage />
-          </RequirePermission>
-        } 
+          <Suspense fallback={<PageLoader />}>
+            <AnalyticsPage />
+          </Suspense>
+        }
       />
-      <Route 
-        path="/reviews" 
+      
+      <Route
+        path="themes/*"
         element={
-          <RequirePermission permission={AdminPermissions.CONTENT_VIEW}>
-            <ReviewsPage />
-          </RequirePermission>
-        } 
+          <Suspense fallback={<PageLoader />}>
+            <ThemesPage />
+          </Suspense>
+        }
       />
-      <Route 
-        path="/content" 
+      
+      <Route
+        path="settings/*"
         element={
-          <RequirePermission permission={AdminPermissions.CONTENT_VIEW}>
-            <ImpulseAdminLayout title="Content Management">
-              <ContentPage />
-            </ImpulseAdminLayout>
-          </RequirePermission>
-        } 
+          <Suspense fallback={<PageLoader />}>
+            <SettingsPage />
+          </Suspense>
+        }
       />
-      <Route 
-        path="/themes" 
+      
+      <Route
+        path="permissions/*"
         element={
-          <RequirePermission permission={AdminPermissions.THEMES_VIEW}>
-            <ImpulseAdminLayout title="Theme Manager">
-              <ThemesPage />
-            </ImpulseAdminLayout>
-          </RequirePermission>
-        } 
+          <Suspense fallback={<PageLoader />}>
+            <PermissionsPage />
+          </Suspense>
+        }
       />
-      <Route 
-        path="/analytics" 
+      
+      {/* Placeholder pages */}
+      <Route
+        path="builds/*"
         element={
-          <RequirePermission permission={AdminPermissions.DATA_VIEW}>
-            <ImpulseAdminLayout title="Analytics Dashboard">
-              <AnalyticsPage />
-            </ImpulseAdminLayout>
-          </RequirePermission>
-        } 
+          <PlaceholderPage 
+            title="Builds Manager" 
+            description="Review and manage 3D printer builds from the community" 
+            icon={<Shell className="h-8 w-8 text-primary" />}
+            requiredPermission={AdminPermissions.BUILDS_VIEW}
+          />
+        }
       />
-      <Route 
-        path="/data" 
+      
+      <Route
+        path="messaging/*"
         element={
-          <RequirePermission permission={AdminPermissions.DATA_VIEW}>
-            <ImpulseAdminLayout title="Data Maestro">
-              <DataMaestroPage />
-            </ImpulseAdminLayout>
-          </RequirePermission>
-        } 
+          <PlaceholderPage 
+            title="Messaging" 
+            description="Community messaging system management" 
+            icon={<FileText className="h-8 w-8 text-primary" />}
+            requiredPermission={AdminPermissions.MESSAGING_ACCESS}
+          />
+        }
       />
-      <Route 
-        path="/settings" 
+      
+      {/* Unauthorized page */}
+      <Route
+        path="unauthorized"
         element={
-          <RequirePermission permission={AdminPermissions.SETTINGS_VIEW}>
-            <ImpulseAdminLayout title="Admin Settings">
-              <SettingsPage />
-            </ImpulseAdminLayout>
-          </RequirePermission>
-        } 
+          <PlaceholderPage 
+            title="Access Denied" 
+            description="You don't have permission to access this area" 
+            icon={<Shield className="h-8 w-8 text-destructive" />}
+          />
+        }
       />
-      <Route 
-        path="/permissions" 
-        element={
-          <RequirePermission permission={AdminPermissions.SUPER_ADMIN}>
-            <ImpulseAdminLayout title="Permission Manager">
-              <PermissionsPage />
-            </ImpulseAdminLayout>
-          </RequirePermission>
-        } 
-      />
-      <Route 
-        path="/unauthorized" 
-        element={
-          <UnauthorizedPage />
-        } 
-      />
-      <Route path="*" element={<Navigate to="/admin/overview" replace />} />
+      
+      {/* Catch-all route - redirect to overview */}
+      <Route path="*" element={<Navigate to="overview" replace />} />
     </Routes>
   );
 }
 
+// Re-export PlaceholderPage for use in other routes
 export { PlaceholderPage };

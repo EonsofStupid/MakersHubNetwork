@@ -27,7 +27,12 @@ interface ImpulseAdminLayoutProps {
   readonly?: boolean;
 }
 
-export function ImpulseAdminLayout({ children, title = "Admin Dashboard", className, readonly = false }: ImpulseAdminLayoutProps) {
+export function ImpulseAdminLayout({ 
+  children, 
+  title = "Admin Dashboard", 
+  className, 
+  readonly = false 
+}: ImpulseAdminLayoutProps) {
   const { sidebarExpanded } = useAdminStore();
   
   return (
