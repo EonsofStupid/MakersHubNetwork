@@ -6,7 +6,7 @@ import { BuildDetailView } from "@/admin/components/builds/BuildDetailView";
 
 export default function BuildDetailPage() {
   return (
-    <ImpulseAdminLayout title="Build Review" requiresPermission="builds:view">
+    <ImpulseAdminLayout title="Build Review">
       <BuildDetailView />
     </ImpulseAdminLayout>
   );

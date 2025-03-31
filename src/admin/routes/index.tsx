@@ -3,6 +3,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
 import { PlaceholderPage } from "./PlaceholderPage";
+import { RequirePermission } from "@/admin/components/auth/RequirePermission";
 
 // Import all the page components
 import OverviewPage from "./overview/OverviewPage";
@@ -16,6 +17,7 @@ import DataMaestroPage from "./data/DataMaestroPage";
 import BuildDetailPage from "./builds/BuildDetailPage";
 import PermissionsPage from "./permissions/PermissionsPage";
 import ReviewsPage from "./reviews/ReviewsPage";
+import UnauthorizedPage from "./unauthorized/UnauthorizedPage";
 
 export function AdminRoutes() {
   return (
@@ -35,81 +37,107 @@ export function AdminRoutes() {
       <Route 
         path="/users" 
         element={
-          <ImpulseAdminLayout title="User Management" requiresPermission="users:view">
-            <UsersPage />
-          </ImpulseAdminLayout>
+          <RequirePermission permission="users:view">
+            <ImpulseAdminLayout title="User Management">
+              <UsersPage />
+            </ImpulseAdminLayout>
+          </RequirePermission>
         } 
       />
       <Route 
         path="/builds" 
         element={
-          <ImpulseAdminLayout title="Build Management" requiresPermission="builds:view">
-            <BuildsPage />
-          </ImpulseAdminLayout>
+          <RequirePermission permission="builds:view">
+            <ImpulseAdminLayout title="Build Management">
+              <BuildsPage />
+            </ImpulseAdminLayout>
+          </RequirePermission>
         } 
       />
       <Route 
         path="/builds/:buildId" 
         element={
-          <ImpulseAdminLayout title="Build Details" requiresPermission="builds:view">
-            <BuildDetailPage />
-          </ImpulseAdminLayout>
+          <RequirePermission permission="builds:view">
+            <ImpulseAdminLayout title="Build Details">
+              <BuildDetailPage />
+            </ImpulseAdminLayout>
+          </RequirePermission>
         } 
       />
       <Route 
         path="/reviews" 
         element={
-          <ImpulseAdminLayout title="Reviews Management" requiresPermission="content:view">
-            <ReviewsPage />
-          </ImpulseAdminLayout>
+          <RequirePermission permission="content:view">
+            <ImpulseAdminLayout title="Reviews Management">
+              <ReviewsPage />
+            </ImpulseAdminLayout>
+          </RequirePermission>
         } 
       />
       <Route 
         path="/content" 
         element={
-          <ImpulseAdminLayout title="Content Management" requiresPermission="content:view">
-            <ContentPage />
-          </ImpulseAdminLayout>
+          <RequirePermission permission="content:view">
+            <ImpulseAdminLayout title="Content Management">
+              <ContentPage />
+            </ImpulseAdminLayout>
+          </RequirePermission>
         } 
       />
       <Route 
         path="/themes" 
         element={
-          <ImpulseAdminLayout title="Theme Manager" requiresPermission="themes:view">
-            <ThemesPage />
-          </ImpulseAdminLayout>
+          <RequirePermission permission="themes:view">
+            <ImpulseAdminLayout title="Theme Manager">
+              <ThemesPage />
+            </ImpulseAdminLayout>
+          </RequirePermission>
         } 
       />
       <Route 
         path="/analytics" 
         element={
-          <ImpulseAdminLayout title="Analytics Dashboard" requiresPermission="data:view">
-            <AnalyticsPage />
-          </ImpulseAdminLayout>
+          <RequirePermission permission="data:view">
+            <ImpulseAdminLayout title="Analytics Dashboard">
+              <AnalyticsPage />
+            </ImpulseAdminLayout>
+          </RequirePermission>
         } 
       />
       <Route 
         path="/data" 
         element={
-          <ImpulseAdminLayout title="Data Maestro" requiresPermission="data:view">
-            <DataMaestroPage />
-          </ImpulseAdminLayout>
+          <RequirePermission permission="data:view">
+            <ImpulseAdminLayout title="Data Maestro">
+              <DataMaestroPage />
+            </ImpulseAdminLayout>
+          </RequirePermission>
         } 
       />
       <Route 
         path="/settings" 
         element={
-          <ImpulseAdminLayout title="Admin Settings" requiresPermission="settings:view">
-            <SettingsPage />
-          </ImpulseAdminLayout>
+          <RequirePermission permission="settings:view">
+            <ImpulseAdminLayout title="Admin Settings">
+              <SettingsPage />
+            </ImpulseAdminLayout>
+          </RequirePermission>
         } 
       />
       <Route 
         path="/permissions" 
         element={
-          <ImpulseAdminLayout title="Permission Manager" requiresPermission="super_admin:all">
-            <PermissionsPage />
-          </ImpulseAdminLayout>
+          <RequirePermission permission="super_admin:all">
+            <ImpulseAdminLayout title="Permission Manager">
+              <PermissionsPage />
+            </ImpulseAdminLayout>
+          </RequirePermission>
+        } 
+      />
+      <Route 
+        path="/unauthorized" 
+        element={
+          <UnauthorizedPage />
         } 
       />
       <Route path="*" element={<Navigate to="/admin/overview" replace />} />
