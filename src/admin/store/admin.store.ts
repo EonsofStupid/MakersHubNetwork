@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createAdminPersistMiddleware } from "../middleware/persist.middleware";
 import { AdminPermissionValue } from "../constants/permissions";
+import { toast } from "sonner";
 
 export interface AdminState {
   // Session and initialization
@@ -59,6 +60,7 @@ export interface AdminState {
   markPreferencesChanged: () => void;
   resetPreferencesChanged: () => void;
   initializeStore: () => void;
+  savePreferences: () => Promise<void>;
   
   // Actions - Permissions
   loadPermissions: (permissions?: AdminPermissionValue[]) => Promise<void>;
@@ -78,8 +80,8 @@ export const useAdminStore = create<AdminState>()(
       showLabels: true,
       dragSource: null,
       dragTarget: null,
-      pinnedTopNavItems: ['users', 'builds', 'reviews'],
-      adminTopNavShortcuts: ['users', 'builds', 'reviews'],
+      pinnedTopNavItems: ['users', 'builds', 'reviews', 'settings'],
+      adminTopNavShortcuts: ['users', 'builds', 'reviews', 'settings'],
       dashboardShortcuts: ['content', 'data-maestro', 'themes', 'settings'],
       permissions: [],
       isLoadingPermissions: false,
@@ -96,7 +98,22 @@ export const useAdminStore = create<AdminState>()(
         sidebarExpanded: !state.sidebarExpanded,
         preferencesChanged: true 
       })),
-      toggleEditMode: () => set((state) => ({ isEditMode: !state.isEditMode })),
+      toggleEditMode: () => {
+        const currentMode = get().isEditMode;
+        set({ isEditMode: !currentMode });
+        
+        if (!currentMode) {
+          toast.success("Edit mode enabled", {
+            description: "You can now drag and drop items to customize your dashboard"
+          });
+        } else {
+          // Save preferences when exiting edit mode
+          get().savePreferences();
+          toast.success("Edit mode disabled", {
+            description: "Your changes have been saved"
+          });
+        }
+      },
       setActiveSection: (section) => set({ 
         activeSection: section,
         preferencesChanged: true 
@@ -144,6 +161,27 @@ export const useAdminStore = create<AdminState>()(
       markPreferencesChanged: () => set({ preferencesChanged: true }),
       resetPreferencesChanged: () => set({ preferencesChanged: false }),
       initializeStore: () => set({ hasInitialized: true }),
+      
+      // Save preferences to database
+      savePreferences: async () => {
+        if (!get().preferencesChanged) return;
+        
+        try {
+          console.log('Saving admin preferences to database...');
+          
+          // Here you would implement the actual call to your database
+          // For now we'll just simulate with a timeout
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          // Reset the flag once saved
+          set({ preferencesChanged: false });
+        } catch (error) {
+          console.error('Failed to save admin preferences:', error);
+          toast.error("Failed to save preferences", {
+            description: "Your changes will be saved locally but not synced to the server"
+          });
+        }
+      },
       
       // Permission actions
       loadPermissions: async (permissions) => {

@@ -2,9 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Edit, X } from 'lucide-react';
-import { useAtom } from 'jotai';
-import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
-import { useToast } from '@/hooks/use-toast';
+import { useAdminStore } from '@/admin/store/admin.store';
 import { cn } from '@/lib/utils';
 import { AdminTooltip } from './AdminTooltip';
 
@@ -13,31 +11,7 @@ interface EditModeToggleProps {
 }
 
 export function EditModeToggle({ className }: EditModeToggleProps) {
-  const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
-  const { toast } = useToast();
-  
-  const toggleEditMode = () => {
-    setEditMode(!isEditMode);
-    
-    if (!isEditMode) {
-      toast({
-        title: "Edit Mode Enabled",
-        description: "You can now customize your admin interface by dragging items",
-        duration: 4000,
-      });
-      
-      // Add edit-mode class to body for global styling
-      document.body.classList.add('edit-mode');
-    } else {
-      toast({
-        title: "Edit Mode Disabled",
-        description: "Your customizations have been saved",
-      });
-      
-      // Remove edit-mode class from body
-      document.body.classList.remove('edit-mode');
-    }
-  };
+  const { isEditMode, toggleEditMode } = useAdminStore();
   
   return (
     <AdminTooltip content={isEditMode ? "Exit Edit Mode" : "Enter Edit Mode"}>
@@ -46,10 +20,10 @@ export function EditModeToggle({ className }: EditModeToggleProps) {
         whileTap={{ scale: 0.9 }}
         onClick={toggleEditMode}
         className={cn(
-          "p-1.5 rounded-full transition-colors",
+          "p-2 rounded-full transition-all duration-300",
           isEditMode 
-            ? "bg-[var(--impulse-primary)]/20 text-[var(--impulse-primary)]" 
-            : "text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] hover:bg-[var(--impulse-bg-hover)]",
+            ? "bg-[var(--impulse-primary)] text-white shadow-glow" 
+            : "bg-[var(--impulse-bg-hover)] text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] hover:bg-[var(--impulse-primary)]/20",
           className
         )}
       >
@@ -58,6 +32,12 @@ export function EditModeToggle({ className }: EditModeToggleProps) {
         ) : (
           <Edit className="w-4 h-4" />
         )}
+        
+        <style jsx>{`
+          .shadow-glow {
+            box-shadow: 0 0 15px var(--impulse-primary);
+          }
+        `}</style>
       </motion.button>
     </AdminTooltip>
   );

@@ -89,12 +89,13 @@ export function TopNavItem({
         data-id={id}
         className="relative group"
         onMouseEnter={handleMouseEnter}
+        layout
       >
         <motion.button
           layoutId={`topnav-${id}`}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={onClick}
+          onClick={isEditMode ? undefined : onClick}
           className={cn(
             "admin-topnav-item p-2 rounded-full",
             "bg-[var(--impulse-bg-card)]",
@@ -102,6 +103,7 @@ export function TopNavItem({
             "hover:bg-[var(--impulse-primary)]/20",
             "hover:text-[var(--impulse-primary)]",
             "transition-all",
+            isEditMode && "cursor-grab active:cursor-grabbing",
             getBaseColorClass(),
             className
           )}

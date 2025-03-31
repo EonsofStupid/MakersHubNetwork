@@ -1,6 +1,6 @@
 
 import { useAtom } from 'jotai';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import {
   adminEditModeAtom,
@@ -30,6 +30,7 @@ export function useDragAndDrop({
   const [dragSourceId, setDragSourceId] = useAtom(dragSourceIdAtom);
   const [dragTargetId, setDragTargetId] = useAtom(dragTargetIdAtom);
   const [, setDropIndicatorPosition] = useAtom(dropIndicatorPositionAtom);
+  const [dragDisabled, setDragDisabled] = useState(false);
   const { toast } = useToast();
 
   // Update cursor position for indicator
@@ -54,6 +55,9 @@ export function useDragAndDrop({
       setDragSourceId(null);
       setDragTargetId(null);
       setDropIndicatorPosition(null);
+      setDragDisabled(true);
+    } else {
+      setDragDisabled(false);
     }
   }, [editMode, setIsDragging, setDragSourceId, setDragTargetId, setDropIndicatorPosition, dragOnlyInEditMode]);
 
@@ -61,10 +65,15 @@ export function useDragAndDrop({
   const handleItemDrop = useCallback((sourceId: string, targetId: string | null, targetContainerId: string) => {
     if (!sourceId) return;
     
+    // Log for debugging
+    console.log(`Drop detected: ${sourceId} -> ${targetId || 'end'} in ${targetContainerId}`);
+    
     // If dropping within same container (reordering)
     if (targetContainerId === containerId && targetId !== `${containerId}-empty`) {
       const sourceIndex = items.indexOf(sourceId);
       const targetIndex = targetId ? items.indexOf(targetId as string) : items.length;
+      
+      console.log(`Reordering in ${containerId}: ${sourceIndex} -> ${targetIndex}`);
       
       // If source exists in this container, reorder
       if (sourceIndex !== -1 && targetIndex !== -1) {
@@ -72,6 +81,12 @@ export function useDragAndDrop({
         newItems.splice(sourceIndex, 1);
         newItems.splice(targetIndex, 0, sourceId);
         onReorder?.(newItems);
+        
+        toast({
+          title: "Item Reordered",
+          description: `Item has been reordered in ${containerId}`,
+          duration: 2000,
+        });
         return;
       }
     }
@@ -95,11 +110,12 @@ export function useDragAndDrop({
           newItems.push(sourceId);
         }
         
+        console.log(`Adding to ${containerId}:`, newItems);
         onReorder?.(newItems);
         
         toast({
           title: "Item Added",
-          description: `Item has been added to ${containerId === 'top-nav-shortcuts' ? 'top navigation' : 'dashboard shortcuts'}`,
+          description: `Item has been added to ${containerId}`,
           duration: 2000,
         });
       }
@@ -116,9 +132,7 @@ export function useDragAndDrop({
       // Check if we should handle this drag (edit mode check)
       if (dragOnlyInEditMode && !editMode) return;
       
-      if (!element.classList.contains('active-drop')) {
-        element.classList.add('active-drop');
-      }
+      element.classList.add('active-drop');
       
       // Find the closest draggable item
       const dropItems = Array.from(element.querySelectorAll('[data-id]'));
@@ -186,6 +200,8 @@ export function useDragAndDrop({
       e.preventDefault();
       element.classList.remove('active-drop');
       
+      console.log(`Drop happened in ${containerId}`);
+      
       // Process the drop
       if (dragSourceId) {
         handleItemDrop(dragSourceId, dragTargetId, containerId);
@@ -237,10 +253,12 @@ export function useDragAndDrop({
     if (!el) return;
     
     const handleDragStart = (e: DragEvent) => {
-      if (dragOnlyInEditMode && !editMode) {
+      if (dragDisabled || (dragOnlyInEditMode && !editMode)) {
         e.preventDefault();
         return false;
       }
+      
+      console.log(`Drag started: ${id} from ${containerId}`);
       
       setIsDragging(true);
       setDragSourceId(id);
@@ -255,12 +273,15 @@ export function useDragAndDrop({
       if (e.dataTransfer) {
         // Use the element itself as the drag image with a slight offset
         e.dataTransfer.setDragImage(el, 20, 20);
+        e.dataTransfer.effectAllowed = 'move';
       }
       
       return true;
     };
     
     const handleDragEnd = () => {
+      console.log(`Drag ended: ${id}`);
+      
       setIsDragging(false);
       setDragSourceId(null);
       setDragTargetId(null);
@@ -272,6 +293,10 @@ export function useDragAndDrop({
       // Remove any lingering visual cues
       document.querySelectorAll('.drop-target-item').forEach(el => {
         (el as HTMLElement).classList.remove('drop-target-item');
+      });
+      
+      document.querySelectorAll('.active-drop').forEach(el => {
+        (el as HTMLElement).classList.remove('active-drop');
       });
     };
     
@@ -300,7 +325,9 @@ export function useDragAndDrop({
     setDragSourceId, 
     setDragTargetId, 
     setDropIndicatorPosition,
-    dragOnlyInEditMode
+    dragOnlyInEditMode,
+    dragDisabled,
+    containerId
   ]);
 
   return {

@@ -42,7 +42,7 @@ export function NavigationItem({
   
   // Make the item draggable in edit mode
   useEffect(() => {
-    if (itemRef.current && isEditMode) {
+    if (itemRef.current) {
       return makeDraggable(itemRef.current, id);
     }
   }, [id, isEditMode, makeDraggable]);
@@ -50,8 +50,8 @@ export function NavigationItem({
   const content = (
     <motion.div
       ref={itemRef}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
       data-active={isActive}
       data-id={id}
@@ -61,11 +61,12 @@ export function NavigationItem({
         isActive 
           ? "bg-[var(--impulse-primary)]/20 text-[var(--impulse-primary)]" 
           : "text-[var(--impulse-text-primary)] hover:bg-[var(--impulse-bg-hover)]",
-        isEditMode && "draggable",
+        isEditMode && "draggable cursor-grab active:cursor-grabbing",
         className
       )}
     >
-      <div className="flex-shrink-0 mr-3 flex items-center justify-center">
+      <div className="flex-shrink-0 mr-3 flex items-center justify-center relative">
+        <div className="absolute inset-0 bg-[var(--impulse-primary)]/10 rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <Icon className="w-4 h-4" />
       </div>
       
@@ -87,7 +88,7 @@ export function NavigationItem({
       )}
       
       {isEditMode && (
-        <div className="absolute inset-0 border border-dashed border-[var(--impulse-border-hover)] rounded-md opacity-0 group-hover:opacity-100 pointer-events-none" />
+        <div className="absolute inset-0 border border-dashed border-[var(--impulse-primary)]/50 rounded-md pointer-events-none" />
       )}
     </motion.div>
   );

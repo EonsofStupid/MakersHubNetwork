@@ -1,239 +1,294 @@
 
-/**
- * Electric visual effects for the admin interface
- */
+/* Electric and Cyber Effects for Admin UI */
 
-/* Electric border effect for cards and panels */
-.electric-border {
-  position: relative;
-  overflow: hidden;
-  transition: box-shadow 0.3s ease;
-}
-
-.electric-border:hover {
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
-}
-
-.electric-border::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  bottom: -2px;
-  left: -2px;
-  border: 1px solid transparent;
-  border-image: linear-gradient(
-    to right,
-    rgba(0, 240, 255, 0.3),
-    rgba(255, 45, 110, 0.3)
-  );
-  border-image-slice: 1;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.electric-border:hover::before {
-  opacity: 1;
-}
-
-/* Electric background */
+/* Electric background with subtle grid */
 .electric-background {
   position: relative;
   overflow: hidden;
+  background-color: rgba(10, 15, 25, 0.5);
 }
 
 .electric-background::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(0, 240, 255, 0.05) 0%,
-    transparent 50%,
-    rgba(255, 45, 110, 0.05) 100%
-  );
-  opacity: 0.3;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.electric-background:hover::before {
-  opacity: 0.5;
-}
-
-.electric-background::after {
-  content: '';
-  position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(0, 240, 255, 0.5),
-    transparent
-  );
-  animation: electric-scan 3s linear infinite;
-}
-
-@keyframes electric-scan {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(1000%); }
-}
-
-/* Pulsating electric effect */
-.electric-pulse {
-  animation: electric-pulse 2s infinite;
-}
-
-@keyframes electric-pulse {
-  0%, 100% {
-    filter: drop-shadow(0 0 2px rgba(0, 240, 255, 0.2));
-  }
-  50% {
-    filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
-  }
-}
-
-/* Glow effect on hover */
-.hover-glow {
-  transition: all 0.3s ease;
-}
-
-.hover-glow:hover {
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
-  transform: translateY(-2px);
-}
-
-/* Electric scan line for sidebar */
-.admin-sidebar-scan {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(0, 240, 255, 0.5),
-    transparent
-  );
-  opacity: 0.7;
-  animation: sidebar-scan 15s linear forwards;
-  pointer-events: none;
-  z-index: 5;
-}
-
-@keyframes sidebar-scan {
-  0% { transform: translateY(-100%); opacity: 0; }
-  5% { opacity: 1; }
-  95% { opacity: 1; }
-  100% { transform: translateY(1000%); opacity: 0; }
-}
-
-/* Apple-inspired glass effect */
-.apple-glass {
-  position: relative;
-  background-color: rgba(20, 25, 35, 0.6);
-  backdrop-filter: blur(24px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.apple-glass::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.02) 0%,
-    rgba(255, 255, 255, 0) 50%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  z-index: -1;
   pointer-events: none;
 }
 
-/* Electric text effect */
-.electric-text {
-  color: var(--impulse-primary);
-  text-shadow: 
-    0 0 2px rgba(0, 240, 255, 0.5),
-    0 0 8px rgba(0, 240, 255, 0.3);
-  filter: brightness(1.1);
-  transition: all 0.3s ease;
-}
-
-.electric-text:hover {
-  text-shadow: 
-    0 0 5px rgba(0, 240, 255, 0.7),
-    0 0 15px rgba(0, 240, 255, 0.5);
-  filter: brightness(1.2);
-}
-
-/* Animated electric border */
-.electric-border-animated {
+/* Electric border */
+.electric-border {
   position: relative;
+  border: 1px solid rgba(0, 240, 255, 0.3);
   overflow: hidden;
-  isolation: isolate;
 }
 
-.electric-border-animated::after {
+.electric-border::after {
   content: '';
   position: absolute;
-  inset: 0;
-  padding: 1px;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
   background: linear-gradient(
     90deg,
-    rgba(0, 240, 255, 0.6) 0%,
-    rgba(255, 45, 110, 0.6) 25%,
-    rgba(0, 240, 255, 0.6) 50%,
-    rgba(255, 45, 110, 0.6) 75%,
-    rgba(0, 240, 255, 0.6) 100%
+    transparent,
+    rgba(0, 240, 255, 0.3),
+    transparent
   );
-  background-size: 200% 100%;
-  background-position: 0% 0%;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: electric-border-animation 4s linear infinite;
+  animation: electric-border-pulse 3s infinite;
+  z-index: 1;
+  pointer-events: none;
 }
 
-@keyframes electric-border-animation {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 200% 0%; }
+@keyframes electric-border-pulse {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
 }
 
-/* Mouse position electric effect */
-:root {
-  --mouse-x: 50%;
-  --mouse-y: 50%;
+/* Electric text */
+.electric-text {
+  color: var(--impulse-text-primary);
+  text-shadow: 
+    0 0 2px rgba(255, 255, 255, 0.3),
+    0 0 10px rgba(0, 240, 255, 0.5);
+  animation: electric-text-flicker 5s infinite;
 }
 
-.mouse-glow {
+@keyframes electric-text-flicker {
+  0%, 100% { opacity: 1; }
+  3% { opacity: 0.8; }
+  6% { opacity: 1; }
+  7% { opacity: 0.6; }
+  8% { opacity: 1; }
+  9% { opacity: 0.9; }
+  10% { opacity: 1; }
+  30% { opacity: 1; }
+  31% { opacity: 0.8; }
+  32% { opacity: 1; }
+  98% { opacity: 1; }
+  99% { opacity: 0.7; }
+}
+
+/* Electric button */
+.electric-button {
+  background: linear-gradient(
+    45deg,
+    rgba(0, 240, 255, 0.1),
+    rgba(0, 240, 255, 0.2)
+  );
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
-.mouse-glow::before {
+.electric-button:hover {
+  background: linear-gradient(
+    45deg,
+    rgba(0, 240, 255, 0.2),
+    rgba(0, 240, 255, 0.3)
+  );
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+.electric-button::after {
   content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: all 0.5s ease;
+}
+
+.electric-button:hover::after {
+  left: 100%;
+}
+
+/* Electric nav item */
+.electric-nav-item {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.electric-nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 240, 255, 0.1),
+    transparent
+  );
+  transition: all 0.5s ease;
+  pointer-events: none;
+}
+
+.electric-nav-item:hover::before {
+  left: 100%;
+}
+
+/* Random nav item color classes */
+.random-color-1 {
+  --item-color: rgba(0, 240, 255, 0.7); /* Cyan */
+}
+
+.random-color-2 {
+  --item-color: rgba(255, 0, 128, 0.7); /* Pink */
+}
+
+.random-color-3 {
+  --item-color: rgba(0, 255, 128, 0.7); /* Green */
+}
+
+.random-color-4 {
+  --item-color: rgba(255, 128, 0, 0.7); /* Orange */
+}
+
+.random-color-5 {
+  --item-color: rgba(138, 43, 226, 0.7); /* BlueViolet */
+}
+
+/* Apply random colors to hover effects */
+.random-color-1:hover {
+  box-shadow: 0 0 10px var(--item-color);
+}
+
+.random-color-2:hover {
+  box-shadow: 0 0 10px var(--item-color);
+}
+
+.random-color-3:hover {
+  box-shadow: 0 0 10px var(--item-color);
+}
+
+.random-color-4:hover {
+  box-shadow: 0 0 10px var(--item-color);
+}
+
+.random-color-5:hover {
+  box-shadow: 0 0 10px var(--item-color);
+}
+
+/* Apple glass effect */
+.apple-glass {
+  backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.apple-glass-dark {
+  backdrop-filter: blur(12px);
+  background-color: rgba(10, 15, 25, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Glitch effect */
+.glitch-effect {
+  position: relative;
+}
+
+.glitch-effect::before {
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(
-    circle at var(--mouse-x) var(--mouse-y),
-    rgba(0, 240, 255, 0.15) 0%,
-    transparent 60%
+  background: linear-gradient(
+    transparent 0%,
+    rgba(0, 240, 255, 0.05) 50%,
+    transparent 100%
   );
-  pointer-events: none;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  animation: glitch-scan 15s linear infinite;
+  pointer-events: none;
 }
 
-.mouse-glow:hover::before {
-  opacity: 1;
+@keyframes glitch-scan {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  10% {
+    opacity: 0.1;
+  }
+  20% {
+    opacity: 0.2;
+  }
+  30% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  70% {
+    opacity: 0.1;
+  }
+  80% {
+    opacity: 0.2;
+  }
+  90% {
+    opacity: 0.1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+/* Cyber text effects */
+.cyber-text {
+  color: var(--impulse-primary);
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.5);
+  animation: cyber-text-pulse 4s infinite alternate;
+}
+
+.cyber-text-subtle {
+  transition: all 0.3s ease;
+}
+
+.cyber-text-subtle:hover {
+  color: var(--impulse-primary);
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.5);
+}
+
+@keyframes cyber-text-pulse {
+  0%, 100% { text-shadow: 0 0 2px rgba(0, 240, 255, 0.3); }
+  50% { text-shadow: 0 0 10px rgba(0, 240, 255, 0.7); }
+}
+
+/* Idle flickering animation for elements */
+.idle-flicker {
+  animation: idle-flicker 8s infinite;
+}
+
+@keyframes idle-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  94% { opacity: 0.8; }
+  96% { opacity: 1; }
+  98% { opacity: 0.5; }
+  99% { opacity: 1; }
 }

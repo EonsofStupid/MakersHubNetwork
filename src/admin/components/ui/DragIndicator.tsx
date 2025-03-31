@@ -26,10 +26,10 @@ export function DragIndicator() {
   // Generate random color variant for each drag operation
   const getColorVariant = () => {
     const variants = [
-      "bg-gradient-to-r from-blue-500/10 to-cyan-500/20 border-blue-500/30",
-      "bg-gradient-to-r from-purple-500/10 to-pink-500/20 border-purple-500/30",
-      "bg-gradient-to-r from-emerald-500/10 to-teal-500/20 border-emerald-500/30",
-      "bg-gradient-to-r from-amber-500/10 to-orange-500/20 border-amber-500/30"
+      "bg-gradient-to-r from-blue-500/20 to-cyan-500/30 border-blue-500/40",
+      "bg-gradient-to-r from-purple-500/20 to-pink-500/30 border-purple-500/40",
+      "bg-gradient-to-r from-emerald-500/20 to-teal-500/30 border-emerald-500/40",
+      "bg-gradient-to-r from-amber-500/20 to-orange-500/30 border-amber-500/40"
     ];
     
     // Create a simple hash from the dragSourceId

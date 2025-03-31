@@ -11,6 +11,7 @@ import { useAdminStore } from '@/admin/store/admin.store';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { MoveHorizontal, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 // Container animation variants
 const containerVariants = {
@@ -56,6 +57,9 @@ export function DashboardShortcuts() {
   const handleRemoveShortcut = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setDashboardShortcuts(dashboardShortcuts.filter(itemId => itemId !== id));
+    toast.success("Shortcut removed", {
+      description: `${id} has been removed from your dashboard`
+    });
   };
 
   return (
@@ -87,7 +91,7 @@ export function DashboardShortcuts() {
           isDragging 
             ? "ring-2 ring-primary/50 bg-primary/5 border-primary/30" 
             : "bg-black/20 border-border/30",
-          editMode && "border-dashed"
+          editMode && "border-dashed border-primary/50"
         )}
         id="dashboard-shortcuts"
         data-container-id="dashboard-shortcuts"
