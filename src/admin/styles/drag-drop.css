@@ -12,8 +12,12 @@
   cursor: grabbing;
 }
 
+.draggable {
+  transition: all 0.3s ease;
+}
+
 .draggable:hover {
-  box-shadow: 0 0 0 1px var(--impulse-primary);
+  box-shadow: 0 0 0 2px var(--impulse-primary);
 }
 
 /* Drop Target Styles */
@@ -102,12 +106,16 @@
 }
 
 .edit-mode .draggable:hover {
-  border-color: var(--impulse-border-hover);
+  border-color: var(--impulse-primary);
+  background-color: rgba(0, 240, 255, 0.05);
 }
 
 .edit-mode .draggable.dragging {
   opacity: 0.5;
-  border-color: var(--impulse-primary);
+  transform: scale(0.98);
+  box-shadow: 0 0 0 2px var(--impulse-primary), 0 0 20px rgba(0, 240, 255, 0.3);
+  background-color: rgba(0, 240, 255, 0.1);
+  z-index: 100;
 }
 
 /* Drag handle */
@@ -143,20 +151,30 @@
 
 /* Active dragging state */
 .dragging {
-  opacity: 0.6 !important;
+  opacity: 0.8 !important;
   transform: scale(0.98) !important;
   box-shadow: 0 0 0 2px var(--impulse-primary) !important;
+  z-index: 100 !important;
 }
 
 /* Edit mode highlight for drop zones */
 .edit-mode-highlight {
   border: 1px dashed var(--impulse-border-hover);
   transition: all 0.3s ease;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
 }
 
 .edit-mode-highlight:hover {
   border-color: var(--impulse-primary);
   background-color: rgba(0, 240, 255, 0.05);
+}
+
+/* Active drop highlight */
+.active-drop {
+  outline: 2px dashed var(--impulse-primary) !important;
+  background-color: rgba(0, 240, 255, 0.1) !important;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
 }
 
 /* Cyber glow effects for drag and drop */
@@ -182,4 +200,13 @@
 .cyber-glow-drag.dragging::after {
   opacity: 1;
   transform: translateX(100%);
+}
+
+/* Hover glow effect */
+.hover-glow {
+  transition: all 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
 }

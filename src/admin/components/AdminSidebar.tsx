@@ -12,8 +12,6 @@ import { scrollbarStyle } from '@/admin/utils/styles';
 import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
-import { useAdminDataSync } from '@/admin/services/adminData.service';
-import { AdminPermissionValue } from '@/admin/constants/permissions';
 
 // Import the navigation and new electric CSS
 import '@/admin/styles/navigation.css';
@@ -41,7 +39,8 @@ export function AdminSidebar() {
     hasPermission,
     showLabels,
     setShowLabels,
-    isDarkMode
+    isDarkMode,
+    toggleEditMode
   } = useAdminStore();
   
   // Track mouse position for electric effects
@@ -68,18 +67,6 @@ export function AdminSidebar() {
       }
     };
   }, []);
-  
-  // Sync admin preferences with the database
-  const { isSyncing } = useAdminDataSync({
-    sidebarExpanded,
-    activeSection,
-    showLabels
-  }, (data) => {
-    // This callback updates the store when data is loaded from the database
-    if (data.sidebarExpanded !== undefined) setSidebarExpanded(data.sidebarExpanded);
-    if (data.activeSection !== undefined) setActiveSection(data.activeSection);
-    if (data.showLabels !== undefined) setShowLabels(data.showLabels);
-  });
 
   // Set active section based on URL
   useEffect(() => {
@@ -90,7 +77,7 @@ export function AdminSidebar() {
 
   // Filter items based on permissions
   const visibleItems = adminNavigationItems.filter(item => 
-    !item.permission || hasPermission(item.permission as AdminPermissionValue)
+    !item.permission || hasPermission(item.permission)
   );
 
   // Handle navigation item click
@@ -135,6 +122,7 @@ export function AdminSidebar() {
       className={cn(
         "admin-sidebar h-full flex flex-col",
         "electric-background glitch-effect",
+        "relative z-30", // Higher z-index to ensure items appear above others for drag operations
         isDarkMode ? "apple-glass-dark" : "apple-glass"
       )}
     >
@@ -254,12 +242,16 @@ export function AdminSidebar() {
               <span className="text-xs text-[var(--impulse-text-secondary)]">
                 {isEditMode ? "Edit mode active" : "MakersImpulse Admin"}
               </span>
-              {isSyncing && (
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                  className="w-2 h-2 rounded-full bg-primary"
-                />
+              
+              {!isEditMode && (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={toggleEditMode}
+                  className="text-xs text-[var(--impulse-primary)] px-2 py-1 rounded-full bg-[var(--impulse-primary)]/10 hover:bg-[var(--impulse-primary)]/20"
+                >
+                  Customize
+                </motion.button>
               )}
             </motion.div>
           ) : (
