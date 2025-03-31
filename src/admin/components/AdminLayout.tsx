@@ -29,19 +29,19 @@ export function AdminLayout({ children, title = "Admin Dashboard", className }: 
   const { sidebarExpanded } = useAdminStore();
   
   return (
-    <div className="admin-layout min-h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)] text-[var(--impulse-text-primary)]">
-      {/* Full-width TopNav - Fixed at the top */}
+    <div className="min-h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)] text-[var(--impulse-text-primary)]">
+      {/* Full-width TopNav */}
       <AdminTopNav title={title} />
       
       {/* Main content area with sidebar and content */}
-      <div className="flex w-full h-[calc(100vh-3.5rem)] pt-14">
+      <div className="flex w-full h-[calc(100vh-3.5rem)]">
         {/* Trapezoid Sidebar */}
         <AdminSidebar />
         
         {/* Main Content - Scrollable */}
         <motion.div 
           className={cn(
-            "flex-1 p-6 overflow-auto transition-all duration-300",
+            "flex-1 p-6 overflow-auto transition-all duration-300 mt-14",
             sidebarExpanded ? "ml-[240px]" : "ml-[70px]",
             className
           )}

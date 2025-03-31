@@ -1,7 +1,7 @@
 
 import React from "react";
 import { DashboardShortcuts } from './DashboardShortcuts';
-import { ImpulseAdminLayout } from '../layout/ImpulseAdminLayout';
+import { AdminLayout } from '@/admin/components/AdminLayout';
 import { motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
@@ -12,7 +12,7 @@ export function AdminDashboard() {
   const [isEditMode] = useAtom(adminEditModeAtom);
   
   return (
-    <ImpulseAdminLayout>
+    <AdminLayout title="Admin Dashboard">
       <motion.div 
         className="space-y-6"
         initial={{ opacity: 0, y: 20 }}
@@ -147,7 +147,7 @@ export function AdminDashboard() {
           </motion.div>
         )}
       </motion.div>
-    </ImpulseAdminLayout>
+    </AdminLayout>
   );
 }
 

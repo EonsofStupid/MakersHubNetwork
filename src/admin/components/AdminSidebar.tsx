@@ -56,22 +56,34 @@ export function AdminSidebar() {
   // Get all sections
   const sections = Object.keys(groupedItems);
   
+  // Animation variants
+  const sidebarVariants = {
+    expanded: {
+      width: 240,
+      clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)',
+      transition: {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30
+      }
+    },
+    collapsed: {
+      width: 70,
+      clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)',
+      transition: {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30
+      }
+    }
+  };
+  
   return (
     <motion.div 
       className="admin-sidebar fixed left-0 top-14 h-[calc(100vh-3.5rem)] z-30"
-      initial={{ 
-        clipPath: hasMounted ? 'polygon(0 0, 0% 0, 0% 100%, 0% 100%)' : 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)'
-      }}
-      animate={{ 
-        clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)',
-        width: sidebarExpanded ? '240px' : '70px'
-      }}
-      transition={{ 
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-        delay: hasMounted ? 0.2 : 0
-      }}
+      initial={hasMounted ? 'collapsed' : false}
+      animate={sidebarExpanded ? 'expanded' : 'collapsed'}
+      variants={sidebarVariants}
     >
       {/* Sidebar header with toggle button */}
       <div className="admin-sidebar__header justify-end">

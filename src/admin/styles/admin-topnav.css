@@ -1,18 +1,6 @@
 
 /* Admin Top Navigation Bar Styles */
 
-.admin-topnav-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3.5rem;
-  width: 100%;
-  z-index: 40;
-  overflow: hidden;
-  clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%);
-}
-
 .admin-topnav {
   display: flex;
   align-items: center;
@@ -156,7 +144,7 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .admin-topnav-container {
-    clip-path: none;
+  .admin-topnav {
+    padding: 0 0.5rem;
   }
 }

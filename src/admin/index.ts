@@ -1,58 +1,43 @@
 
-// Export admin components
-export { AdminLayout } from "./components/AdminLayout";
-export { AdminSidebar } from "./components/AdminSidebar";
-export { AdminHeader } from "./components/AdminHeader";
-export { ImpulseAdminLayout } from "./components/layout/ImpulseAdminLayout";
-export { AdminProvider, useAdmin } from "./context/AdminContext";
-export { AdminDashboard } from "./components/dashboard/AdminDashboard";
+// Import styles first to ensure proper cascade
+import '@/admin/styles/admin-core.css';
+import '@/admin/styles/impulse-admin.css';
+import '@/admin/styles/admin-topnav.css';
+import '@/admin/styles/navigation.css';
+import '@/admin/styles/sidebar-navigation.css';
+import '@/admin/styles/dashboard-shortcuts.css';
+import '@/admin/styles/drag-drop.css';
+import '@/admin/styles/cyber-effects.css';
+import '@/admin/styles/electric-effects.css';
+import '@/admin/styles/text-effects.css';
+import '@/admin/theme/impulse/impulse-theme.css';
 
-// Export admin routes
-export { AdminRoutes } from "./routes";
+// Export the AdminDashboard from its dedicated component file
+export { AdminDashboard } from './components/dashboard/AdminDashboard';
 
-// Export admin store
-export { useAdminStore } from "./store/admin.store";
-export { useAdminPreferences } from "./store/adminPreferences.store";
+// Export components
+import { AdminLayout } from './components/AdminLayout';
+import { AdminSidebar } from './components/AdminSidebar';
+import { AdminTopNav } from './components/navigation/AdminTopNav';
+import { useAdminStore } from './store/admin.store';
+import { AdminThemeProvider, useAdminTheme } from './theme/AdminThemeProvider';
+import { useAdminChat, useAdminChatListener } from './hooks/useAdminChat';
+import { useAdminPermissions } from './hooks/useAdminPermissions';
+import { DashboardShortcuts } from './components/dashboard/DashboardShortcuts';
+import { DragIndicator } from './components/ui/DragIndicator';
+import { ImpulseAdminLayout } from './components/layout/ImpulseAdminLayout';
+import React from 'react';
 
-// Export admin hooks
-export { useAdminPermissions } from "./hooks/useAdminPermissions";
-export { useAdminRoles } from "./hooks/useAdminRoles"; 
+// Export admin UI components
+export { AdminLayout };
+export { AdminSidebar };
+export { AdminTopNav };
+export { DashboardShortcuts };
+export { DragIndicator };
+export { ImpulseAdminLayout };
 
-// Export admin constants
-export { ADMIN_PERMISSIONS } from "./constants/permissions";
-
-// Export admin types
-export type { AdminPermissionValue } from "./constants/permissions";
-export type { AdminPermission } from "./types/admin.types";
-export type { AdminSection } from "./types/admin.types";
-export type { AdminOverlayConfig } from "./types/admin.types";
-export type { AdminThemeConfig } from "./types/admin.types";
-export type { AdminUserData } from "./types/admin.types";
-export type { AdminPreferences } from "./types/admin.types";
-
-// Export from tools.types - this is the source of truth for AdminShortcut
-export type { AdminShortcut } from "./types/tools.types";
-export type { FrozenZone } from "./types/tools.types";
-export type { DragAndDropItem } from "./types/tools.types";
-export type { DragAndDropOptions } from "./types/tools.types";
-export type { CyberEffect } from "./types/tools.types";
-export type { AdminNotification } from "./types/tools.types";
-
-// Export admin types from other files
-export * from "./types/build.types";
-export * from "./types/content";
-export * from "./types/dashboard";
-export * from "./types/data-maestro";
-export * from "./types/impulse.types";
-export * from "./types/theme";
-
-// Export admin utils
-export { hasAdminAccess, getPermissionGroups, sectionPermissionMap } from "./utils/adminUtils";
-export { checkPermission, usePermissionCheck, getPermissionDisplayName } from "./utils/permissions";
-export * from "./utils/routeUtils";
-
-// Export admin atoms
-export * from "./atoms";
-
-// Export admin page
-export { default as AdminPage } from "../pages/Admin";
+// Export admin state and hooks
+export { useAdminStore };
+export { AdminThemeProvider, useAdminTheme };
+export { useAdminChat, useAdminChatListener };
+export { useAdminPermissions };
