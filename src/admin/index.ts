@@ -17,18 +17,29 @@ export { useAdminPreferences } from "./store/adminPreferences.store";
 export { useAdminPermissions } from "./hooks/useAdminPermissions";
 export { useAdminRoles } from "./hooks/useAdminRoles"; 
 
-// Export admin types
-export * from "./types/admin.types";
+// Export admin types - consolidate to avoid conflicts
+export type { AdminPermission } from "./types/admin.types";
+export type { AdminSection } from "./types/admin.types";
+export type { AdminOverlayConfig } from "./types/admin.types";
+export type { AdminThemeConfig } from "./types/admin.types";
+export type { AdminUserData } from "./types/admin.types";
+export type { AdminPreferences } from "./types/admin.types";
+
+// Export from tools.types - this is the source of truth for AdminShortcut
+export type { AdminShortcut } from "./types/tools.types";
+export type { FrozenZone } from "./types/tools.types";
+export type { DragAndDropItem } from "./types/tools.types";
+export type { DragAndDropOptions } from "./types/tools.types";
+export type { CyberEffect } from "./types/tools.types";
+export type { AdminNotification } from "./types/tools.types";
+
+// Export admin types from other files
 export * from "./types/build.types";
 export * from "./types/content";
 export * from "./types/dashboard";
 export * from "./types/data-maestro";
 export * from "./types/impulse.types";
 export * from "./types/theme";
-
-// Explicitly rename conflicting types to avoid ambiguity
-export { type AdminShortcut as AdminShortcutType } from "./types/tools.types";
-export * from "./types/tools.types";
 
 // Export admin utils
 export * from "./utils/adminUtils";
