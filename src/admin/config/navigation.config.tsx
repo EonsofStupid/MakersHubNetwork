@@ -13,7 +13,7 @@ export interface AdminNavigationItem {
   label: string;
   path: string;
   icon: React.ComponentType<{ className?: string }>;
-  section: string;  // Add the section property to the interface
+  section: string;  // Ensure section is defined and required
   permission?: AdminPermissionValue;
   description?: string;
   keywords?: string[];
