@@ -17,15 +17,14 @@
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--impulse-border-normal);
   transition: all 0.3s ease;
-  width: 100%;
-  clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%);
+  clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
   transform-origin: center top;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
 }
 
 /* Trapezoid animation for top nav */
 .admin-topnav-container:hover .admin-topnav {
-  clip-path: polygon(0 0, 100% 0, 97% 100%, 3% 100%);
+  clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
   border-bottom-color: var(--impulse-primary);
   box-shadow: 0 4px 20px rgba(0, 240, 255, 0.2);
 }
