@@ -123,7 +123,8 @@ export function AdminSidebar() {
         "admin-sidebar h-full flex flex-col",
         "electric-background glitch-effect",
         "relative z-30", // Higher z-index to ensure items appear above others for drag operations
-        isDarkMode ? "apple-glass-dark" : "apple-glass"
+        isDarkMode ? "apple-glass-dark" : "apple-glass",
+        "admin-sidebar-angled" // Added class for angled effect
       )}
     >
       {/* Header with title and collapse button */}
@@ -222,7 +223,7 @@ export function AdminSidebar() {
             className="mt-4 mx-4 p-2 rounded-md bg-[var(--impulse-primary)]/10 border border-[var(--impulse-border-normal)] electric-border"
           >
             <p className="text-xs text-[var(--impulse-primary)] text-center">
-              Drag items to customize your dashboard
+              Drag items here to customize your dashboard
             </p>
           </motion.div>
         )}

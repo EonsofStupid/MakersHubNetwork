@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +10,7 @@ import { SyncIndicator } from "@/admin/components/ui/SyncIndicator";
 import { DragIndicator } from "@/admin/components/ui/DragIndicator";
 import { useAtom } from "jotai";
 import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
+import { toast } from "sonner";
 
 // Import all admin styles
 import '@/admin/styles/cyber-effects.css';
@@ -29,7 +29,7 @@ export default function Admin() {
   const [hasInitialized, setHasInitialized] = useState(false);
   const [hasShownIntro, setHasShownIntro] = useState(false);
   const { loadPermissions } = useAdminStore();
-  const [isEditMode] = useAtom(adminEditModeAtom);
+  const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
   
   // Use admin sync hook to keep database and localStorage in sync
   useAdminSync();
@@ -88,6 +88,16 @@ export default function Admin() {
       return () => clearTimeout(timeout);
     }
   }, [hasAdminAccess, hasInitialized, toast, hasShownIntro]);
+
+  // Provide help text for users to understand how to use edit mode
+  useEffect(() => {
+    if (isEditMode) {
+      toast.info("Edit Mode Active", {
+        description: "Drag sidebar items to top bar or dashboard shortcuts for personalization",
+        duration: 5000,
+      });
+    }
+  }, [isEditMode]);
 
   // Show simple loading state
   if (isLoading) {
