@@ -1,42 +1,26 @@
 
 import { atom } from 'jotai';
 
-// Drag and drop state atoms
-export const isDraggingAtom = atom<boolean>(false);
-export const dragSourceIdAtom = atom<string | null>(null);
-export const dragTargetIdAtom = atom<string | null>(null);
-export const dropIndicatorPositionAtom = atom<{ x: number; y: number } | null>(null);
-export const dragEffectAtom = atom<string>('move');
-
-// UI visibility state atoms
+// Atom to track edit mode state - shared between components
 export const adminEditModeAtom = atom<boolean>(false);
-export const adminSettingsOpenAtom = atom<boolean>(false);
-export const hoveredIconAtom = atom<string | null>(null);
-export const activeModalAtom = atom<string | null>(null);
-export const activeOverlayAtom = atom<string | null>(null);
 
-// Navigation state atoms
-export const sidebarExpandedAtom = atom<boolean>(true);
-export const showLabelsAtom = atom<boolean>(true);
-export const activePageAtom = atom<string>('overview');
+// Atom to track current drag operation
+export const adminDragSourceAtom = atom<string | null>(null);
+export const adminDragTargetAtom = atom<string | null>(null);
 
-// Customization atoms
-export const selectedThemeAtom = atom<string>('cyberpunk');
-export const customThemeAtom = atom<Record<string, string>>({});
-export const themeModeAtom = atom<'dark' | 'light'>('dark');
-export const darkModeAtom = atom<boolean>(false);
+// Atom for tracking mouse position during drag operations
+export const adminMousePositionAtom = atom<{ x: number; y: number }>({ x: 0, y: 0 });
 
-// Admin features
-export const adminToolsExpandedAtom = atom<boolean>(false);
-export const dashboardEditModeAtom = atom<boolean>(false);
-export const userPreferencesAtom = atom<Record<string, any>>({});
+// Atoms for dashboard customization
+export const adminDashboardLayoutAtom = atom<string[]>([]);
+export const adminFavoriteItemsAtom = atom<string[]>([]);
 
-// Frozen zones and effects
-export const frozenZonesAtom = atom<string[]>([]);
-export const effectsPaletteVisibleAtom = atom<boolean>(false);
-export const selectedEffectAtom = atom<string | null>(null);
+// Atoms for theme customization
+export const adminThemeAtom = atom<string>('cyber');
+export const adminColorSchemeAtom = atom<'dark' | 'light' | 'system'>('dark');
 
-// Search atoms
-export const searchActiveAtom = atom<boolean>(false);
-export const searchQueryAtom = atom<string>('');
-export const searchResultsAtom = atom<any[]>([]);
+// Atom for admin focus mode
+export const adminFocusModeAtom = atom<boolean>(false);
+
+// Atom for admin UI density
+export const adminUIDensityAtom = atom<'compact' | 'comfortable' | 'spacious'>('comfortable');

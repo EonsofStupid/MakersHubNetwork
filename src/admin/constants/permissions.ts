@@ -1,63 +1,49 @@
 
-export const AdminPermissions = {
-  // Super admin has all permissions
+export type AdminPermissionValue = 
+  | 'admin:access'
+  | 'admin:view'
+  | 'admin:edit'
+  | 'admin:manage'
+  | 'super_admin:all'
+  | 'content:view'
+  | 'content:edit'
+  | 'content:publish'
+  | 'users:view'
+  | 'users:edit'
+  | 'users:delete'
+  | 'builds:view'
+  | 'builds:edit'
+  | 'builds:approve'
+  | 'builds:delete'
+  | 'reviews:view'
+  | 'reviews:edit'
+  | 'reviews:moderate'
+  | 'settings:view'
+  | 'settings:edit'
+  | 'themes:view'
+  | 'themes:edit';
+
+export const ADMIN_PERMISSIONS: Record<string, AdminPermissionValue> = {
+  ACCESS: 'admin:access',
+  VIEW: 'admin:view',
+  EDIT: 'admin:edit',
+  MANAGE: 'admin:manage',
   SUPER_ADMIN: 'super_admin:all',
-  
-  // Basic admin access
-  ADMIN_ACCESS: 'admin:access',
-  ADMIN_VIEW: 'admin:view',
-  ADMIN_EDIT: 'admin:edit',
-  
-  // User management permissions
-  USERS_VIEW: 'users:view',
-  USERS_EDIT: 'users:edit',
-  USERS_CREATE: 'users:create',
-  USERS_DELETE: 'users:delete',
-  
-  // Content management permissions
   CONTENT_VIEW: 'content:view',
   CONTENT_EDIT: 'content:edit',
-  CONTENT_CREATE: 'content:create',
-  CONTENT_DELETE: 'content:delete',
-  
-  // Data permissions
-  DATA_VIEW: 'data:view',
-  DATA_EDIT: 'data:edit',
-  DATA_IMPORT: 'data:import',
-  
-  // Analytics permissions
-  ANALYTICS_VIEW: 'analytics:view',
-  
-  // Settings permissions
-  SETTINGS_VIEW: 'settings:view',
-  SETTINGS_EDIT: 'settings:edit',
-  
-  // Theme permissions
-  THEMES_VIEW: 'themes:view',
-  THEMES_EDIT: 'themes:edit',
-  THEMES_DELETE: 'themes:delete',
-  
-  // Layout permissions
-  LAYOUTS_VIEW: 'layouts:view',
-  LAYOUTS_EDIT: 'layouts:edit',
-  
-  // Build permissions
+  CONTENT_PUBLISH: 'content:publish',
+  USERS_VIEW: 'users:view',
+  USERS_EDIT: 'users:edit',
+  USERS_DELETE: 'users:delete',
   BUILDS_VIEW: 'builds:view',
   BUILDS_EDIT: 'builds:edit',
   BUILDS_APPROVE: 'builds:approve',
-  BUILDS_REJECT: 'builds:reject',
-  
-  // Workflow permissions
-  WORKFLOWS_VIEW: 'workflows:view',
-  WORKFLOWS_EDIT: 'workflows:edit',
-  
-  // Review permissions
+  BUILDS_DELETE: 'builds:delete',
   REVIEWS_VIEW: 'reviews:view',
-  REVIEWS_MANAGE: 'reviews:manage',
-  
-  // Messaging permissions
-  MESSAGING_ACCESS: 'messaging:access',
-  MESSAGING_MANAGE: 'messaging:manage',
-} as const;
-
-export type AdminPermissionValue = (typeof AdminPermissions)[keyof typeof AdminPermissions];
+  REVIEWS_EDIT: 'reviews:edit',
+  REVIEWS_MODERATE: 'reviews:moderate',
+  SETTINGS_VIEW: 'settings:view',
+  SETTINGS_EDIT: 'settings:edit',
+  THEMES_VIEW: 'themes:view',
+  THEMES_EDIT: 'themes:edit'
+};

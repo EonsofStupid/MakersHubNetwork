@@ -12,7 +12,7 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 
 interface ImpulseAdminLayoutProps {
   children: ReactNode;
-  title?: string; // Added title prop to fix type errors
+  title?: string;
 }
 
 export function ImpulseAdminLayout({ children, title = "Admin Dashboard" }: ImpulseAdminLayoutProps) {
