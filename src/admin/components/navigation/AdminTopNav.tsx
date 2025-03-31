@@ -87,7 +87,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
   };
   
   return (
-    <div className="admin-topnav-container">
+    <div className="admin-topnav-container fixed top-0 left-0 w-full z-40">
       <div className="admin-topnav w-full flex items-center justify-between px-4 electric-border">
         <div className="flex items-center space-x-4">
           <motion.button 

@@ -19,7 +19,6 @@ export { AdminDashboard } from './components/dashboard/AdminDashboard';
 import { AdminLayout } from './components/AdminLayout';
 import { AdminSidebar } from './components/AdminSidebar';
 import { AdminTopNav } from './components/navigation/AdminTopNav';
-import { ImpulseAdminLayout } from './components/layout/ImpulseAdminLayout';
 import { useAdminStore } from './store/admin.store';
 import { AdminThemeProvider, useAdminTheme } from './theme/AdminThemeProvider';
 import { useAdminChat, useAdminChatListener } from './hooks/useAdminChat';
@@ -32,7 +31,6 @@ import React from 'react';
 export { AdminLayout };
 export { AdminSidebar };
 export { AdminTopNav };
-export { ImpulseAdminLayout };
 export { DashboardShortcuts };
 export { DragIndicator };
 

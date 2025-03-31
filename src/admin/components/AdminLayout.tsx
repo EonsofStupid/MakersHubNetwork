@@ -29,43 +29,31 @@ export function AdminLayout({ children, title = "Admin Dashboard", className }: 
   const { sidebarExpanded } = useAdminStore();
   
   return (
-    <div 
-      className={cn(
-        "admin-layout min-h-screen flex w-full overflow-hidden",
-        "bg-[var(--impulse-bg-main)]",
-        "text-[var(--impulse-text-primary)]"
-      )}
-    >
-      {/* Admin Sidebar */}
-      <AdminSidebar />
+    <div className="admin-layout min-h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)] text-[var(--impulse-text-primary)]">
+      {/* Full-width TopNav - Fixed at the top */}
+      <AdminTopNav title={title} />
       
-      {/* Main Content */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ 
-          opacity: 1,
-          marginLeft: sidebarExpanded ? '240px' : '80px' 
-        }}
-        className={cn(
-          "flex-1 transition-all duration-300 flex flex-col overflow-hidden",
-          className
-        )}
-      >
-        {/* Top Navigation - Fixed */}
-        <div className="w-full">
-          <AdminTopNav title={title} />
-        </div>
+      {/* Main content area with sidebar and content */}
+      <div className="flex w-full h-[calc(100vh-3.5rem)] pt-14">
+        {/* Trapezoid Sidebar */}
+        <AdminSidebar />
         
-        {/* Page Content - Scrollable */}
-        <div className="flex-1 p-6 overflow-auto">
+        {/* Main Content - Scrollable */}
+        <motion.div 
+          className={cn(
+            "flex-1 p-6 overflow-auto transition-all duration-300",
+            sidebarExpanded ? "ml-[240px]" : "ml-[70px]",
+            className
+          )}
+        >
           {children}
-        </div>
+        </motion.div>
         
         {/* Floating UI Components */}
         <DragIndicator />
         <FrozenZones />
         <EffectsPalette />
-      </motion.div>
+      </div>
     </div>
   );
 }
