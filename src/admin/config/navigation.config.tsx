@@ -13,7 +13,7 @@ import {
   MessageSquare,
   Star
 } from "lucide-react";
-import { AdminPermission } from "../types/admin.types";
+import { AdminPermissions } from "../constants/permissions";
 
 export const adminNavigationItems = [
   { 
@@ -21,7 +21,7 @@ export const adminNavigationItems = [
     label: "Overview", 
     path: "/admin/overview", 
     icon: LayoutDashboard,
-    permission: "admin:access" as AdminPermission,
+    permission: AdminPermissions.ADMIN_ACCESS,
     description: "Dashboard overview of the platform"
   },
   { 
@@ -29,7 +29,7 @@ export const adminNavigationItems = [
     label: "Content", 
     path: "/admin/content", 
     icon: FileText,
-    permission: "content:view" as AdminPermission,
+    permission: AdminPermissions.CONTENT_VIEW,
     description: "Manage website content and pages" 
   },
   { 
@@ -37,7 +37,7 @@ export const adminNavigationItems = [
     label: "Users", 
     path: "/admin/users", 
     icon: Users,
-    permission: "users:view" as AdminPermission,
+    permission: AdminPermissions.USERS_VIEW,
     description: "Manage user accounts and permissions"
   },
   { 
@@ -45,7 +45,7 @@ export const adminNavigationItems = [
     label: "Builds", 
     path: "/admin/builds", 
     icon: Package,
-    permission: "builds:view" as AdminPermission,
+    permission: AdminPermissions.BUILDS_VIEW,
     description: "View and manage user builds"
   },
   { 
@@ -53,7 +53,7 @@ export const adminNavigationItems = [
     label: "Reviews", 
     path: "/admin/reviews", 
     icon: MessageSquare,
-    permission: "builds:view" as AdminPermission,
+    permission: AdminPermissions.BUILDS_VIEW,
     description: "Manage build reviews and feedback"
   },
   { 
@@ -61,7 +61,7 @@ export const adminNavigationItems = [
     label: "Data Maestro", 
     path: "/admin/data-maestro", 
     icon: Database,
-    permission: "data:view" as AdminPermission,
+    permission: AdminPermissions.DATA_VIEW,
     description: "Advanced data management tools"
   },
   { 
@@ -69,7 +69,7 @@ export const adminNavigationItems = [
     label: "Analytics", 
     path: "/admin/analytics", 
     icon: BarChart,
-    permission: "admin:access" as AdminPermission,
+    permission: AdminPermissions.ADMIN_ACCESS,
     description: "Platform usage statistics and trends"
   },
   { 
@@ -77,7 +77,7 @@ export const adminNavigationItems = [
     label: "Themes", 
     path: "/admin/themes", 
     icon: PaintBucket,
-    permission: "themes:view" as AdminPermission,
+    permission: AdminPermissions.THEMES_VIEW,
     description: "Customize platform appearance"
   },
   { 
@@ -85,7 +85,7 @@ export const adminNavigationItems = [
     label: "Permissions", 
     path: "/admin/permissions", 
     icon: Shield,
-    permission: "super_admin:all" as AdminPermission,
+    permission: AdminPermissions.SUPER_ADMIN,
     description: "Manage admin access levels and permissions"
   },
   { 
@@ -93,7 +93,7 @@ export const adminNavigationItems = [
     label: "Settings", 
     path: "/admin/settings", 
     icon: Settings,
-    permission: "settings:view" as AdminPermission,
+    permission: AdminPermissions.SETTINGS_VIEW,
     description: "Configure platform settings"
   },
   { 
@@ -101,7 +101,7 @@ export const adminNavigationItems = [
     label: "Featured", 
     path: "/admin/featured", 
     icon: Star,
-    permission: "content:view" as AdminPermission,
+    permission: AdminPermissions.CONTENT_VIEW,
     description: "Manage featured content and promotions"
   }
 ];

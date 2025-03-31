@@ -2,7 +2,7 @@
 import { useMemo, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { useAdminStore } from "@/admin/store/admin.store";
-import { AdminPermission } from "@/admin/types/admin.types";
+import { AdminPermissionValue, AdminPermissions } from "@/admin/constants/permissions";
 
 /**
  * Central hook for checking admin access and permissions
@@ -26,14 +26,14 @@ export function useAdminAccess() {
    * Check for a specific admin permission
    * @param permission The admin permission to check
    */
-  const checkPermission = (permission: AdminPermission): boolean => {
+  const checkPermission = (permission: AdminPermissionValue): boolean => {
     // Super admins have all permissions
     if (isSuperAdmin) {
       return true;
     }
     
     // Basic admin access check
-    if (permission === 'admin:access') {
+    if (permission === AdminPermissions.ADMIN_ACCESS) {
       return hasAdminAccess;
     }
     
