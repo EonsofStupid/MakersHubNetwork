@@ -121,10 +121,9 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] relative"
+              className="admin-topnav-item"
             >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--impulse-secondary)] rounded-full pulse-subtle"></span>
             </motion.button>
           </AdminTooltip>
           
@@ -132,21 +131,21 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] electric-hover"
+              className="admin-topnav-item"
               onClick={() => navigate('/admin/settings')}
             >
               <Settings className="w-5 h-5" />
             </motion.button>
           </AdminTooltip>
           
-          <AdminTooltip content="User Account" side="bottom">
-            <motion.div
+          <AdminTooltip content="Profile" side="bottom">
+            <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="w-8 h-8 rounded-full bg-[var(--impulse-bg-card)] flex items-center justify-center border border-[var(--impulse-border-normal)] text-[var(--impulse-text-primary)] cursor-pointer overflow-hidden electric-border"
+              className="admin-topnav-item"
             >
               <User className="w-5 h-5" />
-            </motion.div>
+            </motion.button>
           </AdminTooltip>
         </div>
       </div>

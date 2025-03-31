@@ -31,7 +31,7 @@ export function AdminSidebar() {
       if (!sidebarExpanded) {
         toggleSidebar();
       }
-    }, 800);
+    }, 600);
     return () => clearTimeout(timer);
   }, []);
   
@@ -67,28 +67,32 @@ export function AdminSidebar() {
   const sidebarVariants = {
     expanded: {
       width: 240,
-      clipPath: 'polygon(0 0, 100% 0, 80% 100%, 0% 100%)',
+      clipPath: 'polygon(0 0, 100% 0, 65% 100%, 0% 100%)',
       transition: {
         type: 'spring',
-        stiffness: 300,
-        damping: 30
+        stiffness: 400,
+        damping: 40
       }
     },
     collapsed: {
       width: 70,
-      clipPath: 'polygon(0 0, 100% 0, 75% 100%, 0% 100%)',
+      clipPath: 'polygon(0 0, 100% 0, 45% 100%, 0% 100%)',
       transition: {
         type: 'spring',
-        stiffness: 300,
-        damping: 30
+        stiffness: 400,
+        damping: 40
       }
+    },
+    initial: {
+      width: 70,
+      clipPath: 'polygon(0 0, 100% 0, 45% 100%, 0% 100%)',
     }
   };
   
   return (
     <motion.div 
       className="admin-sidebar fixed left-0 top-14 h-[calc(100vh-3.5rem)] z-30"
-      initial={false}
+      initial="initial"
       animate={sidebarExpanded ? 'expanded' : 'collapsed'}
       variants={sidebarVariants}
     >

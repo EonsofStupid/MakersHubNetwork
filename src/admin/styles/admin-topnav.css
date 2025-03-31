@@ -15,8 +15,8 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
-  /* Trapezoid shape for top nav */
-  clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%);
+  /* More aggressive trapezoid shape for top nav */
+  clip-path: polygon(0 0, 100% 0, 97% 100%, 3% 100%);
 }
 
 .admin-topnav::before {
@@ -146,7 +146,20 @@
 
 /* Top navigation trapezoid shape */
 .top-nav-trapezoid {
-  clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%);
+  clip-path: polygon(0 0, 100% 0, 97% 100%, 3% 100%);
+}
+
+/* Glitch effect for random occasions */
+.admin-topnav.glitch-effect {
+  animation: glitch 0.2s step-end infinite alternate-reverse;
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); clip-path: polygon(0 5%, 100% 0, 99% 100%, 1% 96%); }
+  40% { transform: translate(2px, -2px); clip-path: polygon(0 0, 100% 2%, 98% 100%, 2% 100%); }
+  60% { transform: translate(-1px, -1px); clip-path: polygon(0 0, 100% 0, 97% 95%, 3% 98%); }
+  80% { transform: translate(1px, 1px); clip-path: polygon(0 2%, 100% 0, 96% 100%, 4% 97%); }
 }
 
 /* Responsive adjustments */
