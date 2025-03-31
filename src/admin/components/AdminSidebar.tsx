@@ -26,6 +26,13 @@ export function AdminSidebar() {
   // Set mounted state for animations
   useEffect(() => {
     setHasMounted(true);
+    // Auto-expand after a short delay
+    const timer = setTimeout(() => {
+      if (!sidebarExpanded) {
+        toggleSidebar();
+      }
+    }, 800);
+    return () => clearTimeout(timer);
   }, []);
   
   // Set active section based on path
@@ -56,11 +63,11 @@ export function AdminSidebar() {
   // Get all sections
   const sections = Object.keys(groupedItems);
   
-  // Animation variants
+  // Animation variants - more aggressive trapezoid
   const sidebarVariants = {
     expanded: {
       width: 240,
-      clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)',
+      clipPath: 'polygon(0 0, 100% 0, 80% 100%, 0% 100%)',
       transition: {
         type: 'spring',
         stiffness: 300,
@@ -69,7 +76,7 @@ export function AdminSidebar() {
     },
     collapsed: {
       width: 70,
-      clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)',
+      clipPath: 'polygon(0 0, 100% 0, 75% 100%, 0% 100%)',
       transition: {
         type: 'spring',
         stiffness: 300,
@@ -81,7 +88,7 @@ export function AdminSidebar() {
   return (
     <motion.div 
       className="admin-sidebar fixed left-0 top-14 h-[calc(100vh-3.5rem)] z-30"
-      initial={hasMounted ? 'collapsed' : false}
+      initial={false}
       animate={sidebarExpanded ? 'expanded' : 'collapsed'}
       variants={sidebarVariants}
     >

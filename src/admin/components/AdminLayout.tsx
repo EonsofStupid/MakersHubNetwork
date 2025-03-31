@@ -45,6 +45,11 @@ export function AdminLayout({ children, title = "Admin Dashboard", className }: 
             sidebarExpanded ? "ml-[240px]" : "ml-[70px]",
             className
           )}
+          style={{
+            height: 'calc(100vh - 3.5rem)',
+            overflowY: 'auto',
+            overflowX: 'hidden'
+          }}
         >
           {children}
         </motion.div>
