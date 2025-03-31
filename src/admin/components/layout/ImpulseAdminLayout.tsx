@@ -1,32 +1,19 @@
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode } from 'react';
 import { AdminSidebar } from '@/admin/components/AdminSidebar';
 import { AdminTopNav } from '@/admin/components/navigation/AdminTopNav';
-import { useAdminStore } from '@/admin/store/admin.store';
+import { useAtom } from 'jotai';
+import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { TopNavShortcuts } from '../navigation/TopNavShortcuts';
-import { DragIndicator } from '../ui/DragIndicator';
 
 interface ImpulseAdminLayoutProps {
   children: ReactNode;
 }
 
 export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
-  const { isEditMode, sidebarExpanded } = useAdminStore();
-  
-  // Apply edit mode class to body
-  useEffect(() => {
-    if (isEditMode) {
-      document.body.classList.add('edit-mode');
-    } else {
-      document.body.classList.remove('edit-mode');
-    }
-    
-    return () => {
-      document.body.classList.remove('edit-mode');
-    };
-  }, [isEditMode]);
+  const [isEditMode] = useAtom(adminEditModeAtom);
   
   return (
     <div className="flex h-screen overflow-hidden w-full">
@@ -34,14 +21,11 @@ export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
       <AdminSidebar />
       
       {/* Main content area */}
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarExpanded ? "ml-[240px]" : "ml-[80px]"
-      )}>
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top navigation */}
         <div className={cn(
           "admin-topnav border-b border-[var(--impulse-border-normal)] glassmorphism z-20",
-          "transition-all duration-300 ease-in-out w-full"
+          "transition-all duration-300 ease-in-out"
         )}>
           <div className="flex items-center justify-between px-4 py-2">
             <div className="flex items-center gap-4">
@@ -85,9 +69,6 @@ export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
           </main>
         </div>
       </div>
-
-      {/* Drag indicator for visual feedback */}
-      <DragIndicator />
     </div>
   );
 }

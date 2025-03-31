@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AdminRoutes } from "@/admin/routes";
 import { useAdmin } from "@/admin/context/AdminContext";
@@ -8,8 +9,8 @@ import { useAdminStore } from "@/admin/store/admin.store";
 import { useAdminSync } from "@/admin/hooks/useAdminSync";
 import { SyncIndicator } from "@/admin/components/ui/SyncIndicator";
 import { DragIndicator } from "@/admin/components/ui/DragIndicator";
-import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
-import { useToast } from "@/hooks/use-toast";
+import { useAtom } from "jotai";
+import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
 
 // Import all admin styles
 import '@/admin/styles/cyber-effects.css';
@@ -27,7 +28,8 @@ export default function Admin() {
   const { hasAdminAccess, isLoading, initializeAdmin } = useAdmin();
   const [hasInitialized, setHasInitialized] = useState(false);
   const [hasShownIntro, setHasShownIntro] = useState(false);
-  const { loadPermissions, isEditMode } = useAdminStore();
+  const { loadPermissions } = useAdminStore();
+  const [isEditMode] = useAtom(adminEditModeAtom);
   
   // Use admin sync hook to keep database and localStorage in sync
   useAdminSync();
@@ -114,9 +116,7 @@ export default function Admin() {
       <div className="fixed bottom-4 right-4 z-50 bg-background/90 border border-border/30 backdrop-blur-md py-1 px-3 rounded-full shadow-md">
         <SyncIndicator />
       </div>
-      <ImpulseAdminLayout>
-        <AdminRoutes />
-      </ImpulseAdminLayout>
+      <AdminRoutes />
       <DragIndicator />
     </ErrorBoundary>
   );
