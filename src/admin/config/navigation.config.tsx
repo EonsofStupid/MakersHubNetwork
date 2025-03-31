@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   LayoutDashboard, Users, Package, Star, Settings, 
@@ -12,7 +13,7 @@ export interface AdminNavigationItem {
   label: string;
   path: string;
   icon: React.ComponentType<{ className?: string }>;
-  section: string;
+  section: string;  // Add the section property to the interface
   permission?: AdminPermissionValue;
   description?: string;
   keywords?: string[];

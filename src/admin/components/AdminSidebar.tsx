@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminPermissionValue } from '@/admin/constants/permissions';
-import { adminNavigationItems } from '@/admin/config/navigation.config';
+import { adminNavigationItems, AdminNavigationItem } from '@/admin/config/navigation.config';
 import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 import { NavItem } from '@/admin/components/navigation/NavItem';
 import { NavGroup } from '@/admin/components/navigation/NavGroup';
@@ -43,7 +43,7 @@ export function AdminSidebar() {
     }
     acc[item.section].push(item);
     return acc;
-  }, {} as Record<string, typeof adminNavigationItems>);
+  }, {} as Record<string, AdminNavigationItem[]>);
   
   // Get all sections
   const sections = Object.keys(groupedItems);
