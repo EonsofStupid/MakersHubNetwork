@@ -126,7 +126,7 @@ export function AdminSidebar() {
         "admin-sidebar h-full flex flex-col",
         "electric-background glitch-effect",
         "relative z-30", // Higher z-index to ensure items appear above others for drag operations
-        isDarkMode ? "apple-glass-dark" : "apple-glass"
+        isDarkMode ? "glass-dark" : "glass-effect"
       )}
     >
       {/* Header with title and collapse button */}

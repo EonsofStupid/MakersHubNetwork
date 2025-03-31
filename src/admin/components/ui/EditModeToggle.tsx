@@ -25,7 +25,7 @@ export function EditModeToggle({ className }: EditModeToggleProps) {
         className={cn(
           "p-2 rounded-full transition-all duration-300",
           isEditMode 
-            ? "bg-[var(--impulse-primary)] text-white shadow-glow" 
+            ? "bg-[var(--impulse-primary)] text-[var(--impulse-bg-main)] shadow-glow" 
             : "bg-[var(--impulse-bg-hover)] text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] hover:bg-[var(--impulse-primary)]/20",
           className
         )}
@@ -34,6 +34,20 @@ export function EditModeToggle({ className }: EditModeToggleProps) {
           <X className="w-4 h-4" />
         ) : (
           <Edit className="w-4 h-4" />
+        )}
+        
+        {isEditMode && (
+          <motion.div
+            className="absolute inset-0 rounded-full z-[-1]"
+            animate={{
+              boxShadow: [
+                "0 0 0 0 rgba(0, 240, 255, 0)",
+                "0 0 0 4px rgba(0, 240, 255, 0.2)",
+                "0 0 0 0 rgba(0, 240, 255, 0)"
+              ]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
         )}
         
         <style jsx>{`
