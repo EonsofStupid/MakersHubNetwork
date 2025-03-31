@@ -1,7 +1,7 @@
 
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import {
   adminEditModeAtom,
   dragSourceIdAtom,
@@ -31,6 +31,7 @@ export function useDragAndDrop({
   const [dragTargetId, setDragTargetId] = useAtom(dragTargetIdAtom);
   const [, setDropIndicatorPosition] = useAtom(dropIndicatorPositionAtom);
   const [dragDisabled, setDragDisabled] = useState(false);
+  const { toast } = useToast();
 
   // Update cursor position for indicator
   const updateCursorPosition = useCallback((e: MouseEvent) => {
@@ -81,8 +82,10 @@ export function useDragAndDrop({
         newItems.splice(targetIndex, 0, sourceId);
         onReorder?.(newItems);
         
-        toast.success("Item reordered", {
+        toast({
+          title: "Item Reordered",
           description: `Item has been reordered in ${containerId}`,
+          duration: 2000,
         });
         return;
       }
@@ -110,12 +113,14 @@ export function useDragAndDrop({
         console.log(`Adding to ${containerId}:`, newItems);
         onReorder?.(newItems);
         
-        toast.success("Item added", {
+        toast({
+          title: "Item Added",
           description: `Item has been added to ${containerId}`,
+          duration: 2000,
         });
       }
     }
-  }, [items, onReorder, containerId, acceptExternalItems]);
+  }, [items, onReorder, containerId, acceptExternalItems, toast]);
 
   // Register a drop zone container
   const registerDropZone = useCallback((element: HTMLElement | null) => {
@@ -230,6 +235,7 @@ export function useDragAndDrop({
       element.removeEventListener('drop', handleDrop as unknown as EventListener);
     };
   }, [
+    isDragging, 
     editMode, 
     dragSourceId, 
     dragTargetId, 
