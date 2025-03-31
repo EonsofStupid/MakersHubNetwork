@@ -62,6 +62,7 @@ export function NavItem({
           ? "bg-[var(--impulse-bg-hover)] text-[var(--impulse-primary)]" 
           : "text-[var(--impulse-text-primary)] hover:bg-[var(--impulse-bg-hover)]",
         isEditMode && draggable && "draggable opacity-90 hover:opacity-100",
+        !showLabel && "justify-center",
         className
       )}
     >
@@ -71,12 +72,12 @@ export function NavItem({
         </span>
       )}
       
-      <div className="icon-wrapper flex-shrink-0 mr-3">
+      <div className={cn("icon-wrapper flex-shrink-0", showLabel ? "mr-3" : "")}>
         <Icon className="w-5 h-5" />
       </div>
       
       {showLabel && (
-        <span className="nav-item-label">{label}</span>
+        <span className="nav-item-label truncate">{label}</span>
       )}
       
       {isActive && (

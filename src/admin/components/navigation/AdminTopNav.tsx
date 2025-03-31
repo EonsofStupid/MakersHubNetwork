@@ -99,6 +99,9 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
             <Menu className="w-5 h-5" />
           </motion.button>
           
+          {/* Edit Mode Toggle moved to left side */}
+          <EditModeToggle />
+          
           <div className="text-[var(--impulse-text-primary)] hover:text-[var(--impulse-primary)] transition-colors flex items-center gap-2">
             <Shield className="w-5 h-5 text-[var(--impulse-primary)] pulse-glow" />
             <motion.h1 
@@ -115,8 +118,6 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
         <TopNavShortcuts />
         
         <div className="flex items-center space-x-3">
-          <EditModeToggle />
-          
           <AdminTooltip content="Notifications" side="bottom">
             <motion.button
               whileHover={{ scale: 1.1 }}
