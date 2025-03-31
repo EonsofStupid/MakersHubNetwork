@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { AdminTooltip } from '../ui/AdminTooltip';
+import { useAtom } from 'jotai';
+import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
+import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 
 interface NavigationItemProps {
   id: string;
@@ -27,8 +30,26 @@ export function NavigationItem({
   showTooltip = false,
   className
 }: NavigationItemProps) {
+  const itemRef = useRef<HTMLDivElement>(null);
+  const [isEditMode] = useAtom(adminEditModeAtom);
+  
+  // Use the drag and drop hook
+  const { makeDraggable } = useDragAndDrop({
+    items: [id],
+    containerId: 'main-navigation',
+    dragOnlyInEditMode: true
+  });
+  
+  // Make the item draggable in edit mode
+  useEffect(() => {
+    if (itemRef.current && isEditMode) {
+      return makeDraggable(itemRef.current, id);
+    }
+  }, [id, isEditMode, makeDraggable]);
+  
   const content = (
-    <motion.button
+    <motion.div
+      ref={itemRef}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
@@ -40,6 +61,7 @@ export function NavigationItem({
         isActive 
           ? "bg-[var(--impulse-primary)]/20 text-[var(--impulse-primary)]" 
           : "text-[var(--impulse-text-primary)] hover:bg-[var(--impulse-bg-hover)]",
+        isEditMode && "draggable",
         className
       )}
     >
@@ -63,7 +85,11 @@ export function NavigationItem({
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
         />
       )}
-    </motion.button>
+      
+      {isEditMode && (
+        <div className="absolute inset-0 border border-dashed border-[var(--impulse-border-hover)] rounded-md opacity-0 group-hover:opacity-100 pointer-events-none" />
+      )}
+    </motion.div>
   );
   
   if (showTooltip && tooltipContent) {

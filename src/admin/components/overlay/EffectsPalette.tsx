@@ -1,145 +1,105 @@
 
-import React, { useState } from "react";
-import { useAtom } from "jotai";
-import { effectsPaletteVisibleAtom, selectedEffectAtom } from "@/admin/atoms/tools.atoms";
-import { SmartOverlay } from "./SmartOverlay";
-import { cn } from "@/lib/utils";
-import { Sparkles, Zap, RefreshCw, Waves, Flame, Droplet } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { useAtom } from 'jotai';
+import { motion } from 'framer-motion';
+import { X, Copy, Sparkles, Wand2 } from 'lucide-react';
+import { 
+  effectsPaletteVisibleAtom, 
+  selectedEffectAtom,
+  adminEditModeAtom 
+} from '@/admin/atoms/tools.atoms';
+import { Button } from '@/components/ui/button';
+import { SimpleCyberText } from '@/components/theme/SimpleCyberText';
 
-// Define our available effects
-const effects = [
-  { id: "glow", name: "Glow", icon: Sparkles, class: "impulse-glow", description: "Soft neon glow effect" },
-  { id: "pulse", name: "Pulse", icon: Zap, class: "impulse-pulse", description: "Pulsating animation" },
-  { id: "shimmer", name: "Shimmer", icon: Waves, class: "impulse-shimmer", description: "Horizontal shimmer sweep" },
-  { id: "rotate", name: "Rotate", icon: RefreshCw, class: "impulse-rotate", description: "Slow rotation animation" },
-  { id: "burn", name: "Burn", icon: Flame, class: "impulse-burn", description: "Fiery glow effect" },
-  { id: "liquid", name: "Liquid", icon: Droplet, class: "impulse-liquid", description: "Wavy liquid animation" },
+// Sample effect definitions
+const cyberEffects = [
+  { id: 'cyber-glow', name: 'Cyber Glow', cssClass: 'cyber-glow' },
+  { id: 'electric-border', name: 'Electric Border', cssClass: 'electric-border' },
+  { id: 'cyber-pulse', name: 'Cyber Pulse', cssClass: 'electric-pulse' },
+  { id: 'hover-glow', name: 'Hover Glow', cssClass: 'hover-glow' },
+  { id: 'electric-text', name: 'Electric Text', cssClass: 'electric-text' },
+  { id: 'mouse-glow', name: 'Mouse Glow', cssClass: 'mouse-glow' },
+  { id: 'electric-border-animated', name: 'Animated Border', cssClass: 'electric-border-animated' },
 ];
 
 export function EffectsPalette() {
-  const [, setEffectsPaletteVisible] = useAtom(effectsPaletteVisibleAtom);
+  const [isVisible, setIsVisible] = useAtom(effectsPaletteVisibleAtom);
   const [selectedEffect, setSelectedEffect] = useAtom(selectedEffectAtom);
-  const [draggedEffect, setDraggedEffect] = useState<string | null>(null);
-  const { toast } = useToast();
-  
-  const handleSelectEffect = (effectId: string) => {
-    setSelectedEffect(effectId);
-    toast({
-      title: "Effect Selected",
-      description: `"${effects.find(e => e.id === effectId)?.name}" effect is ready to apply`
-    });
-  };
-  
-  const handleDragStart = (effectId: string, e: React.DragEvent) => {
-    setDraggedEffect(effectId);
+  const [isEditMode] = useAtom(adminEditModeAtom);
+
+  if (!isVisible || !isEditMode) {
+    return null;
+  }
+
+  const copyEffectClass = (className: string) => {
+    navigator.clipboard.writeText(className);
+    setSelectedEffect(className);
     
-    // Set drag data
-    if (e.dataTransfer) {
-      e.dataTransfer.setData("application/x-impulse-effect", effectId);
-      e.dataTransfer.effectAllowed = "copy";
-      
-      // Create a custom drag image
-      const dragPreview = document.createElement("div");
-      dragPreview.className = cn(
-        "bg-[var(--impulse-bg-card)] p-2 rounded border border-[var(--impulse-border-active)]",
-        "text-[var(--impulse-text-primary)] shadow-[var(--impulse-glow-primary)]"
-      );
-      dragPreview.textContent = effects.find(e => e.id === effectId)?.name || "";
-      
-      document.body.appendChild(dragPreview);
-      e.dataTransfer.setDragImage(dragPreview, 15, 15);
-      
-      // Remove the element after drag starts
-      setTimeout(() => {
-        document.body.removeChild(dragPreview);
-      }, 0);
-    }
+    // Show a brief highlight effect and reset after a second
+    setTimeout(() => {
+      setSelectedEffect(null);
+    }, 1000);
   };
-  
-  const handleDragEnd = () => {
-    setDraggedEffect(null);
-  };
-  
-  const applyEffectToSelection = () => {
-    if (!selectedEffect) {
-      toast({
-        title: "No Effect Selected",
-        description: "Please select an effect first",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const effect = effects.find(e => e.id === selectedEffect);
-    
-    toast({
-      title: "Effect Applied",
-      description: `"${effect?.name}" effect applied to selected element`
-    });
-  };
-  
+
   return (
-    <SmartOverlay
-      id="effects-palette"
-      title="Impulse Effects Palette"
-      initialPosition={{ x: 150, y: 150 }}
-      width={320}
-      height={480}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="fixed bottom-4 left-4 z-50 w-64 bg-[var(--impulse-bg-overlay)] backdrop-blur-md border border-[var(--impulse-border-normal)] rounded-lg shadow-lg"
     >
-      <div className="space-y-4">
-        <p className="text-sm text-[var(--impulse-text-secondary)]">
-          Drag effects onto page elements or select and apply to the current selection.
+      <div className="flex items-center justify-between p-3 border-b border-[var(--impulse-border-normal)]">
+        <h3 className="text-sm font-medium flex items-center gap-1 text-[var(--impulse-text-primary)]">
+          <Wand2 className="h-4 w-4 text-[var(--impulse-primary)]" />
+          <SimpleCyberText text="Effect Styles" glitch />
+        </h3>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-6 w-6 p-0"
+          onClick={() => setIsVisible(false)}
+        >
+          <X className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      
+      <div className="p-3 max-h-[300px] overflow-y-auto">
+        <p className="text-xs text-[var(--impulse-text-secondary)] mb-3">
+          Click an effect to copy its CSS class name:
         </p>
-        
-        <div className="grid grid-cols-2 gap-3">
-          {effects.map((effect) => (
-            <div
+        <div className="space-y-2">
+          {cyberEffects.map((effect) => (
+            <motion.button
               key={effect.id}
-              draggable
-              onDragStart={(e) => handleDragStart(effect.id, e)}
-              onDragEnd={handleDragEnd}
-              onClick={() => handleSelectEffect(effect.id)}
-              className={cn(
-                "impulse-effect-card flex flex-col items-center p-3 rounded",
-                "border border-[var(--impulse-border-normal)] cursor-grab",
-                "bg-[rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-200",
-                "hover:border-[var(--impulse-border-hover)] hover:bg-[rgba(0,0,0,0.4)]",
-                selectedEffect === effect.id && "ring-1 ring-[var(--impulse-primary)] border-[var(--impulse-border-active)]"
-              )}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`w-full text-left flex items-center justify-between p-2 rounded-md text-xs ${
+                selectedEffect === effect.cssClass 
+                  ? "bg-[var(--impulse-primary)]/20 text-[var(--impulse-primary)]" 
+                  : "bg-[var(--impulse-bg-card)] text-[var(--impulse-text-primary)] hover:bg-[var(--impulse-bg-hover)]"
+              } ${effect.cssClass}`}
+              onClick={() => copyEffectClass(effect.cssClass)}
             >
-              <div className={cn(
-                "w-12 h-12 rounded-full mb-2 flex items-center justify-center",
-                "bg-[rgba(0,240,255,0.1)]",
-                effect.class
-              )}>
-                <effect.icon className="w-6 h-6 text-[var(--impulse-primary)]" />
-              </div>
-              <span className="text-sm font-medium text-[var(--impulse-text-primary)]">
-                {effect.name}
-              </span>
-              <span className="text-xs text-[var(--impulse-text-secondary)] text-center mt-1">
-                {effect.description}
-              </span>
-            </div>
+              <span>{effect.name}</span>
+              <Copy className="h-3 w-3 opacity-60" />
+            </motion.button>
           ))}
         </div>
-        
-        <div className="mt-4 space-y-3">
+      </div>
+      
+      <div className="border-t border-[var(--impulse-border-normal)] p-3">
+        <div className="flex justify-center">
           <Button 
-            className="w-full impulse-button"
-            onClick={applyEffectToSelection}
-            disabled={!selectedEffect}
+            variant="outline" 
+            size="sm" 
+            className="text-xs w-full flex items-center gap-1.5 cyber-glow"
+            onClick={() => setIsVisible(false)}
           >
-            Apply to Selection
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Close Palette</span>
           </Button>
-          
-          <p className="text-xs text-[var(--impulse-text-secondary)]">
-            Tip: For best results, apply effects to containers rather than text elements.
-          </p>
         </div>
       </div>
-    </SmartOverlay>
+    </motion.div>
   );
 }
