@@ -58,9 +58,7 @@ export function AdminRoutes() {
         path="/builds/:buildId" 
         element={
           <RequirePermission permission="builds:view">
-            <ImpulseAdminLayout title="Build Details">
-              <BuildDetailPage />
-            </ImpulseAdminLayout>
+            <BuildDetailPage />
           </RequirePermission>
         } 
       />
@@ -68,9 +66,7 @@ export function AdminRoutes() {
         path="/reviews" 
         element={
           <RequirePermission permission="content:view">
-            <ImpulseAdminLayout title="Reviews Management">
-              <ReviewsPage />
-            </ImpulseAdminLayout>
+            <ReviewsPage />
           </RequirePermission>
         } 
       />
