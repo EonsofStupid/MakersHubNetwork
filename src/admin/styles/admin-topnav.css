@@ -13,20 +13,12 @@
   justify-content: space-between;
   padding: 0 1rem;
   height: 3.5rem;
+  width: 100%;
   background-color: var(--impulse-bg-overlay);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--impulse-border-normal);
   transition: all 0.3s ease;
-  clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
-  transform-origin: center top;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-}
-
-/* Trapezoid animation for top nav */
-.admin-topnav-container:hover .admin-topnav {
-  clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
-  border-bottom-color: var(--impulse-primary);
-  box-shadow: 0 4px 20px rgba(0, 240, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 /* Top nav shortcuts container */
@@ -89,95 +81,6 @@
   box-shadow: inset 0 0 0 2px var(--impulse-primary), 0 0 15px rgba(0, 240, 255, 0.3) !important;
 }
 
-/* Title animation */
-@keyframes title-glow {
-  0%, 100% {
-    text-shadow: 0 0 10px rgba(0, 240, 255, 0);
-    filter: brightness(1);
-  }
-  50% {
-    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-    filter: brightness(1.2);
-  }
-}
-
-.admin-topnav h1 {
-  transition: all 0.3s ease;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.admin-topnav:hover h1 {
-  animation: title-glow 2s infinite;
-}
-
-/* User menu button */
-.user-menu-button {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--impulse-bg-card);
-  border: 1px solid var(--impulse-border-normal);
-  color: var(--impulse-text-primary);
-  transition: all 0.2s ease;
-  overflow: hidden;
-}
-
-.user-menu-button:hover {
-  border-color: var(--impulse-border-hover);
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
-}
-
-/* Menu button effects */
-.admin-menu-button {
-  padding: 0.5rem;
-  border-radius: 9999px;
-  transition: all 0.2s ease;
-}
-
-.admin-menu-button:hover {
-  background-color: rgba(0, 240, 255, 0.1);
-  transform: rotate(5deg);
-}
-
-/* Edit mode toggle button specific styles */
-.edit-mode-toggle {
-  position: relative;
-  overflow: hidden;
-}
-
-.edit-mode-toggle::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, rgba(0, 240, 255, 0.5) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: -1;
-}
-
-.edit-mode-toggle.active {
-  background-color: rgba(0, 240, 255, 0.2);
-}
-
-.edit-mode-toggle.active::after {
-  opacity: 1;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 0.6;
-  }
-}
-
 /* Digital brightness for text */
 .cyber-text {
   color: var(--impulse-text-primary);
@@ -186,46 +89,36 @@
   letter-spacing: 0.02em;
 }
 
-/* Animation for the top navigation icons */
-.topnav-icon {
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.topnav-icon::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 1px;
-  background: var(--impulse-primary);
-  transition: width 0.3s ease;
-}
-
-.topnav-icon:hover::after {
-  width: 80%;
-}
-
-/* Add a subtle animated border bottom for the navlink */
-.topnav-link {
-  position: relative;
-}
-
-.topnav-link::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
+/* Admin layout container */
+.admin-layout-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   width: 100%;
-  height: 1px;
-  background: linear-gradient(to right, transparent, var(--impulse-primary), transparent);
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 0.3s ease;
+  background-color: var(--impulse-bg-main);
 }
 
-.topnav-link:hover::after {
-  transform: scaleX(1);
+/* Admin sidebar wrapper with angled shape */
+.admin-sidebar-wrapper {
+  height: 100%;
+  width: 240px;
+  z-index: 30;
+  position: relative;
+  clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-sidebar-wrapper {
+    position: fixed;
+    left: 0;
+    top: 3.5rem;
+    bottom: 0;
+    z-index: 40;
+    transform: translateX(-100%);
+  }
+  
+  .admin-sidebar-wrapper.open {
+    transform: translateX(0);
+  }
 }

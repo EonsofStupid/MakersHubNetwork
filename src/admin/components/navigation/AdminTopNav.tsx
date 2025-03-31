@@ -1,81 +1,132 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Bell, Moon, Settings, Sun, User } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bell, User, Settings, Menu, Shield, Edit, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useAdminStore } from '@/admin/store/admin.store';
-import { EditModeToggle } from '../ui/EditModeToggle';
+import { useAtom } from 'jotai';
+import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
+import { useToast } from '@/hooks/use-toast';
+import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
+import { TopNavShortcuts } from '@/admin/components/navigation/TopNavShortcuts';
+import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 
-export function AdminTopNav() {
-  const { isDarkMode, toggleDarkMode } = useAdminStore();
+import '@/admin/styles/admin-topnav.css';
+import '@/admin/styles/cyber-effects.css';
+
+interface AdminTopNavProps {
+  title?: string;
+  className?: string;
+  readonly?: boolean;
+}
+
+export function AdminTopNav({ title = "Admin Dashboard", className, readonly = false }: AdminTopNavProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
   
-  // Animate the notification badge
-  const notificationVariants = {
-    initial: { scale: 0.8, opacity: 0 },
-    animate: { 
-      scale: 1,
-      opacity: 1,
-      transition: {
-        duration: 0.3,
-        type: "spring",
-        stiffness: 500,
-        damping: 30
+  const { 
+    sidebarExpanded, 
+    toggleSidebar,
+    toggleEditMode,
+    savePreferences,
+  } = useAdminStore();
+  
+  // Sync edit mode between jotai atom and zustand store
+  useEffect(() => {
+    const handleSyncStore = async () => {
+      if (isEditMode) {
+        await savePreferences();
       }
+    };
+    
+    handleSyncStore();
+  }, [isEditMode, savePreferences]);
+  
+  const handleToggleEditMode = () => {
+    if (readonly) return;
+    
+    // Toggle the edit mode in Zustand store
+    toggleEditMode();
+    
+    // Show appropriate toast
+    if (!isEditMode) {
+      toast({
+        title: "Edit Mode Enabled",
+        description: "You can now customize your admin interface by dragging items",
+        duration: 4000,
+      });
+    } else {
+      toast({
+        title: "Edit Mode Disabled",
+        description: "Your customizations have been saved",
+      });
     }
   };
   
   return (
-    <div className="flex items-center gap-3">
-      {/* Theme toggle */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={toggleDarkMode}
-        className="p-2 rounded-full text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] hover:bg-[var(--impulse-bg-hover)] transition-colors"
-      >
-        {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-      </motion.button>
-      
-      {/* Notifications */}
-      <motion.div className="relative">
-        <motion.button
+    <div className="admin-topnav w-full border-b border-[var(--impulse-border-normal)] bg-[var(--impulse-bg-overlay)] backdrop-blur-xl h-14 flex items-center justify-between px-4 electric-border">
+      <div className="flex items-center space-x-4">
+        <motion.button 
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="p-2 rounded-full text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] hover:bg-[var(--impulse-bg-hover)] transition-colors"
+          onClick={toggleSidebar}
+          className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
         >
-          <Bell className="w-4 h-4" />
+          <Menu className="w-5 h-5" />
         </motion.button>
         
-        <motion.div
-          variants={notificationVariants}
-          initial="initial"
-          animate="animate"
-          className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500"
-        />
-      </motion.div>
-      
-      {/* Settings */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        className="p-2 rounded-full text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] hover:bg-[var(--impulse-bg-hover)] transition-colors"
-      >
-        <Settings className="w-4 h-4" />
-      </motion.button>
-      
-      {/* Edit mode toggle */}
-      <EditModeToggle />
-      
-      {/* User menu */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="ml-2 flex items-center gap-2 px-2 py-1 rounded-full bg-[var(--impulse-bg-card)] hover:bg-[var(--impulse-bg-hover)] transition-colors"
-      >
-        <div className="w-6 h-6 rounded-full bg-[var(--impulse-primary)]/20 flex items-center justify-center">
-          <User className="w-3 h-3 text-[var(--impulse-primary)]" />
+        <div className="text-[var(--impulse-text-primary)] hover:text-[var(--impulse-primary)] transition-colors flex items-center gap-2">
+          <Shield className="w-5 h-5 text-[var(--impulse-primary)] pulse-glow" />
+          <motion.h1 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-lg font-bold cyber-text"
+          >
+            {title}
+          </motion.h1>
         </div>
-        <span className="text-sm font-medium">Admin</span>
-      </motion.button>
+      </div>
+      
+      {/* Shortcuts in the top navigation */}
+      <TopNavShortcuts />
+      
+      <div className="flex items-center space-x-3">
+        <EditModeToggle />
+        
+        <AdminTooltip content="Notifications" side="bottom">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] relative"
+          >
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--impulse-secondary)] rounded-full"></span>
+          </motion.button>
+        </AdminTooltip>
+        
+        <AdminTooltip content="Settings" side="bottom">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
+            onClick={() => navigate('/admin/settings')}
+          >
+            <Settings className="w-5 h-5" />
+          </motion.button>
+        </AdminTooltip>
+        
+        <AdminTooltip content="User Account" side="bottom">
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-8 h-8 rounded-full bg-[var(--impulse-bg-card)] flex items-center justify-center border border-[var(--impulse-border-normal)] text-[var(--impulse-text-primary)] cursor-pointer overflow-hidden electric-border"
+          >
+            <User className="w-5 h-5" />
+          </motion.div>
+        </AdminTooltip>
+      </div>
     </div>
   );
 }
