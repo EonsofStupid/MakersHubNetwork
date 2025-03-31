@@ -1,47 +1,27 @@
 
 import React from 'react';
-import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
+import { useAtom } from 'jotai';
 import { frozenZonesAtom } from '@/admin/atoms/tools.atoms';
-import { Button } from '@/admin/components/ui/Button';
 
-export const FrozenZones: React.FC = () => {
-  const [frozenZones, setFrozenZones] = useAtom(frozenZonesAtom);
-
-  if (!frozenZones || frozenZones.length === 0) {
-    return null;
-  }
-
-  const removeFrozenZone = (id: string) => {
-    setFrozenZones(frozenZones.filter(zone => zone !== id));
-  };
-
+export function FrozenZones() {
+  const [frozenZones] = useAtom(frozenZonesAtom);
+  
+  if (!frozenZones.length) return null;
+  
   return (
-    <div className="fixed bottom-4 left-4 z-50">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="p-3 backdrop-blur-md bg-[var(--impulse-bg-card)]/80 border border-[var(--impulse-border-light)] rounded-lg shadow-lg"
-      >
-        <div className="text-sm font-medium mb-2">Protected Areas</div>
-        <div className="space-y-2">
-          {frozenZones.map((zone) => (
-            <div key={zone} className="flex items-center justify-between">
-              <span className="text-xs text-[var(--impulse-text-secondary)]">
-                {zone}
-              </span>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => removeFrozenZone(zone)}
-                className="h-6 px-2 text-xs"
-              >
-                Unprotect
-              </Button>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-    </div>
+    <>
+      {frozenZones.map((zone, index) => (
+        <motion.div
+          key={`frozen-zone-${index}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          className="fixed inset-0 bg-black/50 pointer-events-none z-50"
+          style={{
+            clipPath: `polygon(${zone})`
+          }}
+        />
+      ))}
+    </>
   );
-};
+}
