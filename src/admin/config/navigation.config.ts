@@ -8,7 +8,7 @@ import {
   Layers,
   Paintbrush,
   FileText,
-  ShieldCheck,
+  Shield,
   LineChart,
   Package,
   Blocks,
