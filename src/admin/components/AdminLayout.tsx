@@ -8,7 +8,6 @@ import { AdminTopNav } from '@/admin/components/layout/AdminTopNav';
 import { DragIndicator } from '@/admin/components/ui/DragIndicator';
 import { FrozenZones } from '@/admin/components/overlay/FrozenZones';
 import { EffectsPalette } from '@/admin/components/overlay/EffectsPalette';
-import { scrollbarStyle } from '@/admin/utils/styles';
 
 // Import all necessary styles
 import '@/admin/styles/admin-core.css';
@@ -48,17 +47,17 @@ export function AdminLayout({ children, title = "Admin Dashboard", className }: 
           marginLeft: sidebarExpanded ? '240px' : '80px' 
         }}
         className={cn(
-          "flex-1 transition-all duration-300",
-          "pt-14 pb-6 px-6", // Account for fixed topnav
-          scrollbarStyle,
+          "flex-1 transition-all duration-300 relative overflow-auto",
           className
         )}
       >
-        {/* Top Navigation */}
-        <AdminTopNav title={title} />
+        {/* Top Navigation - Fixed */}
+        <div className="sticky top-0 z-40 w-full">
+          <AdminTopNav title={title} />
+        </div>
         
-        {/* Page Content */}
-        <div className="mt-4">
+        {/* Page Content - Scrollable */}
+        <div className="p-6">
           {children}
         </div>
         

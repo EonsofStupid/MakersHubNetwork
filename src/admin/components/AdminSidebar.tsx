@@ -6,11 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminPermissionValue } from '@/admin/constants/permissions';
-import { adminNavigationItems } from '@/admin/config/navigation.config';
+import { adminNavigationItems, AdminNavigationItem } from '@/admin/config/navigation.config';
 import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 import { NavItem } from '@/admin/components/navigation/NavItem';
 import { NavGroup } from '@/admin/components/navigation/NavGroup';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Import styles directly
 import '@/admin/styles/sidebar-navigation.css';
@@ -44,7 +45,7 @@ export function AdminSidebar() {
     }
     acc[section].push(item);
     return acc;
-  }, {} as Record<string, typeof adminNavigationItems>);
+  }, {} as Record<string, AdminNavigationItem[]>);
   
   // Get all sections
   const sections = Object.keys(groupedItems);
@@ -77,8 +78,8 @@ export function AdminSidebar() {
       {/* Animated scan lines for cyber effect */}
       <div className="admin-sidebar-scan" />
       
-      {/* Sidebar content with navigation */}
-      <div className="admin-sidebar__content">
+      {/* Sidebar content with navigation - now with ScrollArea */}
+      <ScrollArea className="admin-sidebar__content h-[calc(100vh-8rem)]">
         <AnimatePresence mode="wait">
           {sections.map(section => (
             <NavGroup
@@ -102,7 +103,7 @@ export function AdminSidebar() {
             </NavGroup>
           ))}
         </AnimatePresence>
-      </div>
+      </ScrollArea>
       
       {/* Sidebar footer */}
       <div className="admin-sidebar__footer">

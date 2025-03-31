@@ -31,15 +31,15 @@ export function ImpulseAdminLayout({ children, title = "Admin Dashboard" }: Impu
   }, []);
   
   return (
-    <div className="admin-layout-container h-screen overflow-hidden w-full flex flex-col">
-      {/* Top navigation - full width */}
-      <div className="admin-topnav-container fixed top-0 left-0 right-0 z-40 w-full">
+    <div className="admin-layout-container h-screen w-full flex flex-col">
+      {/* Top navigation - fixed */}
+      <div className="sticky top-0 z-40 w-full">
         <AdminTopNav title={title} />
       </div>
       
       {/* Main layout with sidebar and content */}
-      <div className="flex h-[calc(100vh-3.5rem)] mt-14 w-full overflow-hidden">
-        {/* Sidebar - angled and extended from left side */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
         <AnimatePresence>
           <motion.div 
             className="admin-sidebar-wrapper"
@@ -62,8 +62,8 @@ export function ImpulseAdminLayout({ children, title = "Admin Dashboard" }: Impu
           </motion.div>
         </AnimatePresence>
         
-        {/* Main content area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Main content area - scrollable */}
+        <div className="flex-1 flex flex-col overflow-auto">
           {/* Edit mode indicator */}
           <AnimatePresence>
             {isEditMode && (
@@ -79,7 +79,7 @@ export function ImpulseAdminLayout({ children, title = "Admin Dashboard" }: Impu
           </AnimatePresence>
           
           {/* Main content wrapper */}
-          <main className="flex-1 overflow-auto p-6 cyber-grid">
+          <main className="flex-1 p-6 cyber-grid">
             {children}
           </main>
         </div>
