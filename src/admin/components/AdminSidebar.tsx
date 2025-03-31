@@ -21,6 +21,12 @@ export function AdminSidebar() {
   const navigate = useNavigate();
   const { hasPermission } = useAdminPermissions();
   const { sidebarExpanded, toggleSidebar, showLabels, setActiveSection } = useAdminStore();
+  const [hasMounted, setHasMounted] = useState(false);
+  
+  // Set mounted state for animations
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
   
   // Set active section based on path
   useEffect(() => {
@@ -51,12 +57,21 @@ export function AdminSidebar() {
   const sections = Object.keys(groupedItems);
   
   return (
-    <div 
-      className={cn(
-        "admin-sidebar h-full",
-        !sidebarExpanded && "sidebar-collapsed"
-      )}
-      style={{ width: sidebarExpanded ? '240px' : '70px' }}
+    <motion.div 
+      className="admin-sidebar fixed left-0 top-14 h-[calc(100vh-3.5rem)] z-30"
+      initial={{ 
+        clipPath: hasMounted ? 'polygon(0 0, 0% 0, 0% 100%, 0% 100%)' : 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)'
+      }}
+      animate={{ 
+        clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)',
+        width: sidebarExpanded ? '240px' : '70px'
+      }}
+      transition={{ 
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
+        delay: hasMounted ? 0.2 : 0
+      }}
     >
       {/* Sidebar header with toggle button */}
       <div className="admin-sidebar__header justify-end">
@@ -109,6 +124,6 @@ export function AdminSidebar() {
       <div className="admin-sidebar__footer">
         {/* Footer content here if needed */}
       </div>
-    </div>
+    </motion.div>
   );
 }
