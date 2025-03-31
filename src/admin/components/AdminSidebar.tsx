@@ -63,11 +63,10 @@ export function AdminSidebar() {
   // Get all sections
   const sections = Object.keys(groupedItems);
   
-  // Animation variants - more aggressive trapezoid
+  // Animation variants for width only
   const sidebarVariants = {
     expanded: {
       width: 240,
-      clipPath: 'polygon(0 0, 100% 0, 65% 100%, 0% 100%)',
       transition: {
         type: 'spring',
         stiffness: 400,
@@ -76,7 +75,6 @@ export function AdminSidebar() {
     },
     collapsed: {
       width: 70,
-      clipPath: 'polygon(0 0, 100% 0, 45% 100%, 0% 100%)',
       transition: {
         type: 'spring',
         stiffness: 400,
@@ -84,8 +82,7 @@ export function AdminSidebar() {
       }
     },
     initial: {
-      width: 70,
-      clipPath: 'polygon(0 0, 100% 0, 45% 100%, 0% 100%)',
+      width: 70
     }
   };
   
@@ -116,8 +113,8 @@ export function AdminSidebar() {
       {/* Animated scan lines for cyber effect */}
       <div className="admin-sidebar-scan" />
       
-      {/* Sidebar content with navigation - now with ScrollArea */}
-      <ScrollArea className="admin-sidebar__content h-[calc(100vh-8rem)]">
+      {/* Sidebar content with navigation */}
+      <div className="admin-sidebar__content h-[calc(100vh-8rem)] overflow-y-auto">
         <AnimatePresence mode="wait">
           {sections.map(section => (
             <NavGroup
@@ -141,7 +138,7 @@ export function AdminSidebar() {
             </NavGroup>
           ))}
         </AnimatePresence>
-      </ScrollArea>
+      </div>
       
       {/* Sidebar footer */}
       <div className="admin-sidebar__footer">

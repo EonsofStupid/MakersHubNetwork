@@ -1,4 +1,3 @@
-
 /* Admin Sidebar Navigation Styles */
 .admin-sidebar {
   display: flex;
@@ -11,13 +10,11 @@
   background: var(--impulse-bg-overlay);
   backdrop-filter: blur(12px);
   border-right: 1px solid var(--impulse-border-normal);
-  clip-path: polygon(0 0, 100% 0, 65% 100%, 0% 100%);
   width: 240px;
 }
 
 .sidebar-collapsed {
   width: 70px !important;
-  clip-path: polygon(0 0, 100% 0, 45% 100%, 0% 100%);
 }
 
 .admin-sidebar__header {
@@ -257,5 +254,3 @@
 .edit-mode .nav-item.draggable:hover {
   border-color: var(--impulse-primary);
 }
-
-/* The rest is kept the same */

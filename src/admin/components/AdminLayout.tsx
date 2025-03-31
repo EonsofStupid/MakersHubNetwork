@@ -17,7 +17,6 @@ import '@/admin/styles/sidebar-navigation.css';
 import '@/admin/styles/dashboard-shortcuts.css';
 import '@/admin/styles/drag-drop.css';
 import '@/admin/styles/cyber-effects.css';
-import '@/admin/styles/electric-effects.css';
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
@@ -35,20 +34,18 @@ export function AdminLayout({ children, title = "Admin Dashboard", className }: 
       
       {/* Main content area with sidebar and content */}
       <div className="flex w-full h-[calc(100vh-3.5rem)]">
-        {/* Trapezoid Sidebar */}
+        {/* Sidebar */}
         <AdminSidebar />
         
         {/* Main Content - Scrollable */}
         <motion.div 
           className={cn(
-            "flex-1 p-6 overflow-auto transition-all duration-300 mt-14",
+            "flex-1 p-6 mt-14",
             sidebarExpanded ? "ml-[240px]" : "ml-[70px]",
             className
           )}
           style={{
-            height: 'calc(100vh - 3.5rem)',
-            overflowY: 'auto',
-            overflowX: 'hidden'
+            height: 'calc(100vh - 3.5rem)'
           }}
         >
           {children}

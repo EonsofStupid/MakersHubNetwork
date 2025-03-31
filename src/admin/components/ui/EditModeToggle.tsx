@@ -14,7 +14,20 @@ interface EditModeToggleProps {
 
 export function EditModeToggle({ className }: EditModeToggleProps) {
   const { toggleEditMode } = useAdminStore();
-  const [isEditMode] = useAtom(adminEditModeAtom);
+  const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
+  
+  const handleToggleClick = () => {
+    toggleEditMode();
+    setEditMode(!isEditMode);
+    console.log("Edit mode toggled:", !isEditMode); // Debug
+    
+    // Force edit mode class on body
+    if (!isEditMode) {
+      document.body.classList.add('edit-mode');
+    } else {
+      document.body.classList.remove('edit-mode');
+    }
+  };
   
   return (
     <>
@@ -22,7 +35,7 @@ export function EditModeToggle({ className }: EditModeToggleProps) {
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={toggleEditMode}
+          onClick={handleToggleClick}
           className={cn(
             "p-2 rounded-full transition-all duration-300",
             isEditMode 
