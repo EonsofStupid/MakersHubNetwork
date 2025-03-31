@@ -14,6 +14,12 @@
   background: var(--impulse-bg-overlay);
   backdrop-filter: blur(12px);
   border-right: 1px solid var(--impulse-border-normal);
+  clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+  width: 240px;
+}
+
+.sidebar-collapsed {
+  width: 70px !important;
 }
 
 .admin-sidebar__header {

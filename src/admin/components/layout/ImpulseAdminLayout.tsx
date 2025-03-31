@@ -31,9 +31,9 @@ export function ImpulseAdminLayout({ children, title = "Admin Dashboard" }: Impu
   }, []);
   
   return (
-    <div className="admin-layout-container h-screen w-full flex flex-col">
+    <div className="admin-layout-container h-screen flex flex-col overflow-hidden">
       {/* Top navigation - fixed */}
-      <div className="sticky top-0 z-40 w-full">
+      <div className="z-40 w-full">
         <AdminTopNav title={title} />
       </div>
       
@@ -63,7 +63,7 @@ export function ImpulseAdminLayout({ children, title = "Admin Dashboard" }: Impu
         </AnimatePresence>
         
         {/* Main content area - scrollable */}
-        <div className="flex-1 flex flex-col overflow-auto">
+        <div className="flex-1 overflow-auto">
           {/* Edit mode indicator */}
           <AnimatePresence>
             {isEditMode && (
