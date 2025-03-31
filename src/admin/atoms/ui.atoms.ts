@@ -11,6 +11,10 @@ export const adminActionAtom = atom<string | null>(null);
 export const isMobileAtom = atom<boolean>(false);
 export const showQuickBarAtom = atom<boolean>(false);
 
+// Missing atoms needed for SmartOverlay
+export const activePanelAtom = atom<string | null>(null);
+export const panelPositionAtom = atom<{ x: number, y: number }>({ x: 100, y: 100 });
+
 // UI appearance atoms
 export const uiScaleAtom = atom<number>(1);
 export const fontSizeAtom = atom<number>(16);

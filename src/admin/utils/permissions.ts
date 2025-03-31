@@ -1,5 +1,6 @@
 
 import { AdminPermissionValue, AdminPermissions } from '@/admin/constants/permissions';
+import { useAdminStore } from '@/admin/store/admin.store';
 
 /**
  * Utility functions for admin permissions

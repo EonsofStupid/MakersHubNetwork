@@ -1,26 +1,9 @@
 
-// Define admin permissions
-export type AdminPermission = 
-  | 'admin:access' 
-  | 'admin:view' 
-  | 'admin:edit' 
-  | 'content:view' 
-  | 'content:edit' 
-  | 'content:delete' 
-  | 'users:view' 
-  | 'users:edit' 
-  | 'users:delete' 
-  | 'builds:view' 
-  | 'builds:approve' 
-  | 'builds:reject' 
-  | 'themes:view' 
-  | 'themes:edit' 
-  | 'themes:delete' 
-  | 'data:view'
-  | 'settings:view'
-  | 'settings:edit'
-  | 'data:import'
-  | 'super_admin:all';
+// Import the standard permission value type
+import { AdminPermissionValue } from '@/admin/constants/permissions';
+
+// Make AdminPermission a type alias to AdminPermissionValue for consistency
+export type AdminPermission = AdminPermissionValue;
 
 // Admin section for navigation
 export interface AdminSection {
