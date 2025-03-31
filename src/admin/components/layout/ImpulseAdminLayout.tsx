@@ -12,9 +12,10 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 
 interface ImpulseAdminLayoutProps {
   children: ReactNode;
+  title?: string; // Added title prop to fix type errors
 }
 
-export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
+export function ImpulseAdminLayout({ children, title = "Admin Dashboard" }: ImpulseAdminLayoutProps) {
   const { isEditMode, toggleEditMode } = useAdminStore();
   const [, setEditMode] = useAtom(adminEditModeAtom);
   const [hasMounted, setHasMounted] = useState(false);
@@ -33,7 +34,7 @@ export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
     <div className="admin-layout-container h-screen overflow-hidden w-full flex flex-col">
       {/* Top navigation - full width */}
       <div className="admin-topnav-container fixed top-0 left-0 right-0 z-40 w-full">
-        <AdminTopNav />
+        <AdminTopNav title={title} />
       </div>
       
       {/* Main layout with sidebar and content */}

@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { toast } from 'sonner';
 
@@ -12,6 +12,8 @@ export function useAdminSync() {
     isEditMode,
   } = useAdminStore();
   
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
   const firstRenderRef = useRef(true);
   
@@ -31,15 +33,22 @@ export function useAdminSync() {
         clearTimeout(syncTimerRef.current);
       }
       
+      setIsSyncing(true);
+      
       // Set a new timer to save preferences after a delay
-      syncTimerRef.current = setTimeout(() => {
-        savePreferences().then(() => {
+      syncTimerRef.current = setTimeout(async () => {
+        try {
+          await savePreferences();
+          setLastSyncTime(new Date());
+          
           if (isEditMode) {
             toast.success("Changes saved", {
               description: "Your customizations have been saved"
             });
           }
-        });
+        } finally {
+          setIsSyncing(false);
+        }
       }, 2000); // 2 seconds debounce
     }
     
@@ -64,7 +73,20 @@ export function useAdminSync() {
     }
   }, [isEditMode, preferencesChanged, savePreferences, hasInitialized]);
   
+  const syncNow = async () => {
+    setIsSyncing(true);
+    try {
+      const result = await savePreferences();
+      setLastSyncTime(new Date());
+      return result;
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+  
   return {
-    syncNow: savePreferences
+    syncNow,
+    isSyncing,
+    lastSyncTime
   };
 }

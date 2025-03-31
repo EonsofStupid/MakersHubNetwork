@@ -3,13 +3,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, RefreshCw } from 'lucide-react';
 import { useAdminStore } from '@/admin/store/admin.store';
+import { useAdminSync } from '@/admin/hooks/useAdminSync';
 
 export function SyncIndicator() {
   const { preferencesChanged } = useAdminStore();
+  const { isSyncing, lastSyncTime } = useAdminSync();
   
   return (
     <div className="flex items-center gap-2 text-xs">
-      {preferencesChanged ? (
+      {isSyncing || preferencesChanged ? (
         <>
           <motion.div
             animate={{ rotate: 360 }}
@@ -40,7 +42,9 @@ export function SyncIndicator() {
           >
             <Check className="w-3 h-3" />
           </motion.div>
-          <span className="text-[var(--impulse-text-secondary)]">All changes saved</span>
+          <span className="text-[var(--impulse-text-secondary)]">
+            {lastSyncTime ? `Synced ${lastSyncTime.toLocaleTimeString()}` : 'All changes saved'}
+          </span>
         </>
       )}
     </div>

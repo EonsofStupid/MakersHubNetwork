@@ -49,13 +49,15 @@ export function EditModeToggle({ className }: EditModeToggleProps) {
             transition={{ duration: 2, repeat: Infinity }}
           />
         )}
-        
-        <style jsx>{`
+      </motion.button>
+      
+      <style dangerouslySetInnerHTML={{
+        __html: `
           .shadow-glow {
             box-shadow: 0 0 15px var(--impulse-primary);
           }
-        `}</style>
-      </motion.button>
+        `
+      }} />
     </AdminTooltip>
   );
 }
