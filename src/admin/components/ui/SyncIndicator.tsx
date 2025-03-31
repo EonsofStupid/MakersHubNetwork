@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Cloud, CloudOff } from 'lucide-react';
 import { useAdminSync } from '@/admin/hooks/useAdminSync';
-import { Cloud, CheckCircle } from 'lucide-react';
 
 export function SyncIndicator() {
   const { isSyncing, lastSyncTime } = useAdminSync();
@@ -13,23 +13,17 @@ export function SyncIndicator() {
         <>
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
           >
-            <Cloud className="w-3 h-3 text-primary" />
+            <Cloud className="h-3 w-3 text-primary" />
           </motion.div>
-          <span>Syncing...</span>
+          <span className="text-muted-foreground">Syncing...</span>
         </>
       ) : (
         <>
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.2 }}
-          >
-            <CheckCircle className="w-3 h-3 text-green-500" />
-          </motion.div>
-          <span>
-            {lastSyncTime ? `Synced ${lastSyncTime.toLocaleTimeString()}` : 'Ready'}
+          <Cloud className="h-3 w-3 text-primary" />
+          <span className="text-muted-foreground">
+            {lastSyncTime ? `Last synced: ${lastSyncTime.toLocaleTimeString()}` : 'Synced'}
           </span>
         </>
       )}
