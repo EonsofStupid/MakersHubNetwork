@@ -10,7 +10,6 @@ import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
 import { DragIndicator } from '../ui/DragIndicator';
 import { Plus } from 'lucide-react';
-import { toast } from 'sonner';
 
 export function TopNavShortcuts() {
   const navigate = useNavigate();
@@ -39,7 +38,6 @@ export function TopNavShortcuts() {
     const item = adminNavigationItems.find(item => item.id === id);
     if (item) {
       navigate(item.path);
-      toast.success(`Navigating to ${item.label}`);
     }
   };
   
@@ -49,7 +47,6 @@ export function TopNavShortcuts() {
     
     const newShortcuts = pinnedTopNavItems.filter(item => item !== id);
     setPinnedTopNavItems(newShortcuts);
-    toast.success(`Removed ${id} from shortcuts`);
   };
   
   // Filter shortcuts to only show items that exist in navigation config
