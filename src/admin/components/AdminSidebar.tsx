@@ -11,7 +11,6 @@ import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 import { NavItem } from '@/admin/components/navigation/NavItem';
 import { NavGroup } from '@/admin/components/navigation/NavGroup';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Import styles directly
 import '@/admin/styles/sidebar-navigation.css';
