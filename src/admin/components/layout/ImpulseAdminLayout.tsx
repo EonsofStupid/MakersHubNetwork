@@ -2,20 +2,22 @@
 import React, { ReactNode, useEffect } from 'react';
 import { AdminSidebar } from '@/admin/components/AdminSidebar';
 import { AdminTopNav } from '@/admin/components/navigation/AdminTopNav';
-import { useAdminStore } from '@/admin/store/admin.store';
+import { useAtom } from 'jotai';
+import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { TopNavShortcuts } from '../navigation/TopNavShortcuts';
 import { DragIndicator } from '../ui/DragIndicator';
+import { FrozenZones } from '../overlay/FrozenZones';
 
 interface ImpulseAdminLayoutProps {
   children: ReactNode;
 }
 
 export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
-  const { isEditMode, sidebarExpanded } = useAdminStore();
+  const [isEditMode] = useAtom(adminEditModeAtom);
   
-  // Apply edit mode class to body
+  // Add edit-mode class to body when edit mode is active
   useEffect(() => {
     if (isEditMode) {
       document.body.classList.add('edit-mode');
@@ -29,37 +31,18 @@ export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
   }, [isEditMode]);
   
   return (
-    <div className="flex h-screen overflow-hidden w-full">
+    <div className="flex h-screen overflow-hidden w-full bg-[var(--impulse-bg-main)]">
       {/* Sidebar */}
       <AdminSidebar />
       
       {/* Main content area */}
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarExpanded ? "ml-[240px]" : "ml-[80px]"
-      )}>
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top navigation */}
         <div className={cn(
-          "admin-topnav border-b border-[var(--impulse-border-normal)] glassmorphism z-20",
-          "transition-all duration-300 ease-in-out w-full"
+          "admin-topnav border-b border-[var(--impulse-border-normal)] glassmorphism z-20 w-full",
+          "transition-all duration-300 ease-in-out"
         )}>
-          <div className="flex items-center justify-between px-4 py-2">
-            <div className="flex items-center gap-4">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="font-medium text-[var(--impulse-text-primary)]"
-              >
-                MakersImpulse
-              </motion.div>
-              
-              {/* Top navigation shortcuts */}
-              <TopNavShortcuts />
-            </div>
-            
-            {/* Right side of top nav - user menu, etc. */}
-            <AdminTopNav />
-          </div>
+          <AdminTopNav />
         </div>
         
         {/* Main content */}
@@ -80,14 +63,15 @@ export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
           )}
           
           {/* Main content wrapper */}
-          <main>
+          <main className="p-6 pt-16">
             {children}
           </main>
         </div>
       </div>
-
-      {/* Drag indicator for visual feedback */}
+      
+      {/* Drag indicator and frozen zones for edit mode */}
       <DragIndicator />
+      <FrozenZones />
     </div>
   );
 }
