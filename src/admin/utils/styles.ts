@@ -1,34 +1,50 @@
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
-// Common scrollbar styling 
+// Reusable scrollbar style for admin components
 export const scrollbarStyle = cn(
   "scrollbar-thin",
-  "scrollbar-thumb-[var(--impulse-border-normal)]",
   "scrollbar-track-transparent",
-  "hover:scrollbar-thumb-[var(--impulse-border-hover)]"
+  "scrollbar-thumb-[var(--impulse-border-hover)]",
+  "hover:scrollbar-thumb-[var(--impulse-border-active)]"
 );
 
-// Electric effect styles for elements
-export const electricBorderStyle = cn(
+// Common card styles
+export const cardStyle = cn(
+  "bg-[var(--impulse-bg-card)]",
   "border border-[var(--impulse-border-normal)]",
-  "relative overflow-hidden",
-  "before:content-[''] before:absolute before:inset-0",
-  "before:bg-gradient-to-r before:from-[var(--impulse-primary)/0] before:via-[var(--impulse-primary)/30] before:to-[var(--impulse-primary)/0]",
-  "before:animate-pulse before:opacity-0 hover:before:opacity-100"
+  "hover:border-[var(--impulse-border-hover)]",
+  "rounded-md shadow-sm"
 );
 
-// Glassmorphism effect
-export const glassmorphismStyle = cn(
-  "bg-[var(--impulse-bg-overlay)]",
-  "backdrop-blur-md",
-  "border border-[var(--impulse-border-normal)]"
+// Cyber effect style
+export const cyberEffect = cn(
+  "relative",
+  "after:content-['']",
+  "after:absolute after:inset-0",
+  "after:border after:border-[var(--impulse-primary)]/30",
+  "after:shadow-[0_0_10px_var(--impulse-primary)]",
+  "after:opacity-0 after:transition-opacity",
+  "hover:after:opacity-100"
 );
 
-// Cyber text effect
-export const cyberTextStyle = cn(
+// Electric border style
+export const electricBorder = cn(
+  "border-[var(--impulse-border-normal)]",
+  "hover:border-[var(--impulse-primary)]",
+  "transition-colors"
+);
+
+// Admin heading styles
+export const headingStyle = cn(
+  "text-xl font-bold",
   "text-[var(--impulse-text-primary)]",
-  "tracking-wide",
-  "font-medium",
-  "relative"
+  "mb-4"
+);
+
+// Admin subheading style
+export const subheadingStyle = cn(
+  "text-sm font-medium",
+  "text-[var(--impulse-text-secondary)]",
+  "mb-2"
 );

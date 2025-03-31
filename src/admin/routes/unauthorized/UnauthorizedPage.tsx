@@ -1,42 +1,36 @@
 
 import React from "react";
-import { ShieldAlert } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { Shield } from "lucide-react";
 import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
+import { cn } from "@/lib/utils";
 
 export default function UnauthorizedPage() {
-  const navigate = useNavigate();
-  
   return (
     <ImpulseAdminLayout title="Access Denied">
-      <Card className="max-w-md mx-auto mt-8">
-        <CardContent className="pt-6 text-center">
-          <div className="mx-auto bg-red-500/10 w-16 h-16 flex items-center justify-center rounded-full mb-4">
-            <ShieldAlert className="text-red-500 h-8 w-8" />
-          </div>
-          
-          <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-          <p className="text-muted-foreground mb-6">
-            You don't have permission to access this area. Please contact an administrator if you believe this is an error.
-          </p>
-          
-          <div className="flex gap-4 justify-center">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate("/admin/overview")}
-            >
-              Back to Dashboard
-            </Button>
-            <Button 
-              onClick={() => navigate(-1)}
-            >
-              Go Back
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center py-12 px-4 text-center"
+        )}
+      >
+        <div className="w-16 h-16 mb-6 flex items-center justify-center rounded-full bg-red-500/10 border border-red-500/20">
+          <Shield className="h-8 w-8 text-red-500" />
+        </div>
+
+        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+        <p className="text-[var(--impulse-text-secondary)] max-w-md">
+          You don't have permission to access this area of the admin panel.
+        </p>
+
+        <div className="mt-8">
+          <Link
+            to="/admin/overview"
+            className="px-4 py-2 rounded-md bg-[var(--impulse-primary)]/10 hover:bg-[var(--impulse-primary)]/20 text-[var(--impulse-primary)] transition-colors"
+          >
+            Return to Dashboard
+          </Link>
+        </div>
+      </div>
     </ImpulseAdminLayout>
   );
 }

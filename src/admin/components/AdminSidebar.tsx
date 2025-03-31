@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +11,7 @@ import { scrollbarStyle } from '@/admin/utils/styles';
 import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
+import { AdminPermissionValue } from '@/admin/constants/permissions';
 
 // Import the navigation and styles
 import '@/admin/styles/navigation.css';
@@ -79,7 +79,7 @@ export function AdminSidebar() {
 
   // Filter items based on permissions
   const visibleItems = adminNavigationItems.filter(item => 
-    !item.permission || hasPermission(item.permission)
+    !item.permission || hasPermission(item.permission as AdminPermissionValue)
   );
 
   // Handle navigation item click
@@ -125,7 +125,7 @@ export function AdminSidebar() {
       className={cn(
         "admin-sidebar h-full flex flex-col",
         "electric-background glitch-effect",
-        "relative z-30", // Higher z-index to ensure items appear above others for drag operations
+        "relative z-30",
         isDarkMode ? "glass-dark" : "glass-effect"
       )}
     >
