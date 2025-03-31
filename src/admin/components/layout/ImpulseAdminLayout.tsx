@@ -1,6 +1,4 @@
-
 import React, { useEffect } from 'react';
-import { AdminTopNav } from '@/admin/components/navigation/AdminTopNav';
 import { AdminSidebar } from '@/admin/components/AdminSidebar';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { cn } from '@/lib/utils';
@@ -10,10 +8,15 @@ import { DragIndicator } from '@/admin/components/ui/DragIndicator';
 import { motion } from 'framer-motion';
 import { AdminPermission } from '@/admin/types/admin.types';
 import { SimpleCyberText } from '@/components/theme/SimpleCyberText';
+import { AdminTopNav } from '@/admin/components/layout/AdminTopNav';
 
 // Import our cyberpunk style sheets
 import '@/admin/styles/cyber-effects.css';
 import '@/admin/styles/electric-effects.css';
+import '@/admin/styles/admin-topnav.css';
+import '@/admin/styles/dashboard-shortcuts.css';
+import '@/admin/styles/drag-drop.css';
+import '@/admin/styles/navigation.css';
 import '@/admin/theme/impulse/impulse-admin.css';
 import '@/admin/theme/impulse/impulse-theme.css';
 
@@ -31,7 +34,6 @@ export function ImpulseAdminLayout({
   const { sidebarExpanded, hasPermission, isDarkMode, activeSection } = useAdminStore();
   const [isEditMode] = useAtom(adminEditModeAtom);
   
-  // Set page title
   useEffect(() => {
     document.title = `${title} | MakersImpulse Admin`;
     return () => {
@@ -39,7 +41,6 @@ export function ImpulseAdminLayout({
     };
   }, [title]);
   
-  // Apply dark mode class to the document body
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark-mode');
@@ -48,7 +49,6 @@ export function ImpulseAdminLayout({
     }
   }, [isDarkMode]);
   
-  // Track mouse position for electric effects
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
@@ -62,9 +62,7 @@ export function ImpulseAdminLayout({
     };
   }, []);
 
-  // Add cyber scan lines to sidebar
   useEffect(() => {
-    // Create random scan lines at random intervals
     const createScanLine = () => {
       const sidebarElement = document.querySelector('.admin-sidebar');
       if (!sidebarElement) return;
@@ -97,18 +95,14 @@ export function ImpulseAdminLayout({
       )}
       data-active-section={activeSection}
     >
-      {/* Top navigation */}
       <AdminTopNav title={title} />
       
-      {/* Main content area with sidebar */}
-      <div className="flex-1 flex relative mt-14"> {/* Added mt-14 to respect top nav height */}
-        {/* Electric ambient background */}
+      <div className="flex-1 flex relative mt-14">
         <div className="absolute inset-0 pointer-events-none z-0">
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--impulse-bg-main)] to-[var(--impulse-bg-main)] opacity-90" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mouse-x,50%)_var(--mouse-y,50%),rgba(0,240,255,0.08)_0%,transparent_60%)]" />
         </div>
         
-        {/* Left sidebar */}
         <div className={cn(
           "impulse-sidebar transition-all z-10 electric-background", 
           sidebarExpanded ? "w-60" : "w-16"
@@ -116,13 +110,11 @@ export function ImpulseAdminLayout({
           <AdminSidebar />
         </div>
         
-        {/* Main content */}
         <main className={cn(
           "impulse-main flex-1 p-6 transition-all z-10",
           sidebarExpanded ? "ml-60" : "ml-16",
           "apple-glass backdrop-blur-xl"
         )}>
-          {/* Editable indicator in edit mode */}
           {isEditMode && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
@@ -133,7 +125,6 @@ export function ImpulseAdminLayout({
             </motion.div>
           )}
           
-          {/* Render children only if user has required permission */}
           {hasPermission(requiresPermission) ? (
             <motion.div
               initial={{ opacity: 0 }}
@@ -159,9 +150,7 @@ export function ImpulseAdminLayout({
         </main>
       </div>
       
-      {/* Global drag indicator */}
       <DragIndicator />
     </div>
   );
 }
-

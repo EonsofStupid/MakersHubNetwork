@@ -1,31 +1,28 @@
 
 import { atom } from 'jotai';
-import { FrozenZone } from '@/admin/types/tools.types';
 
-// UI state atoms
-export const adminEditModeAtom = atom<boolean>(false);
-export const sidebarExpandedAtom = atom<boolean>(true);
-export const showLabelsAtom = atom<boolean>(true);
-export const activePageAtom = atom<string>('dashboard');
-export const activeToolAtom = atom<string | null>(null);
-export const toolsVisibleAtom = atom<boolean>(false);
-export const settingsOpenAtom = atom<boolean>(false);
-export const activeSettingsCategoryAtom = atom<string>('general');
-export const importDialogVisibleAtom = atom<boolean>(false);
-export const exportDialogVisibleAtom = atom<boolean>(false);
-export const searchActiveAtom = atom<boolean>(false);
-export const searchQueryAtom = atom<string>('');
-export const searchResultsAtom = atom<any[]>([]);
-export const effectsPaletteVisibleAtom = atom<boolean>(false);
-export const selectedEffectAtom = atom<string | null>(null);
-export const frozenZonesAtom = atom<FrozenZone[]>([]);
-
-// Drag and drop atoms
+// Drag and drop state atoms
 export const isDraggingAtom = atom<boolean>(false);
 export const dragSourceIdAtom = atom<string | null>(null);
 export const dragTargetIdAtom = atom<string | null>(null);
 export const dropIndicatorPositionAtom = atom<{ x: number; y: number } | null>(null);
+export const dragEffectAtom = atom<string>('move');
 
-// Theme atoms
-export const darkModeAtom = atom<boolean>(false);
+// Edit mode atom
+export const adminEditModeAtom = atom<boolean>(false);
+
+// UI state atoms
+export const adminSettingsOpenAtom = atom<boolean>(false);
+export const hoveredIconAtom = atom<string | null>(null);
+export const activeModalAtom = atom<string | null>(null);
+export const activeOverlayAtom = atom<string | null>(null);
+
+// Customization atoms
 export const selectedThemeAtom = atom<string>('cyberpunk');
+export const customThemeAtom = atom<Record<string, string>>({});
+export const themeModeAtom = atom<'dark' | 'light'>('dark');
+
+// Admin features
+export const adminToolsExpandedAtom = atom<boolean>(false);
+export const dashboardEditModeAtom = atom<boolean>(false);
+export const userPreferencesAtom = atom<Record<string, any>>({});
