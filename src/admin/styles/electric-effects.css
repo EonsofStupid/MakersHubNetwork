@@ -1,248 +1,230 @@
 
-/* Electric pulse effect */
-.electric-pulse {
+/* Electric and Cyber Effects */
+
+/* Electric border effect */
+.electric-border {
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-.electric-pulse::after {
+.electric-border::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    circle at center,
-    var(--cyber-color, rgba(0, 240, 255, 0.8)) 0%,
-    transparent 70%
-  );
-  opacity: 0;
-  z-index: -1;
-  animation: electric-pulse 3s infinite;
-}
-
-@keyframes electric-pulse {
-  0%, 100% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.2);
-  }
-}
-
-/* Electric glow scanline effect */
-.electric-scanline {
-  position: relative;
-  overflow: hidden;
-}
-
-.electric-scanline::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 2px;
   background: linear-gradient(
-    to right,
-    transparent,
-    var(--cyber-color, rgba(0, 240, 255, 0.8)),
+    90deg, 
+    transparent, 
+    rgba(0, 240, 255, 0.4), 
     transparent
   );
-  opacity: 0.6;
-  z-index: 1;
-  animation: electric-scanline 4s infinite linear;
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+  z-index: -1;
+  opacity: 0;
 }
 
-@keyframes electric-scanline {
-  0% {
-    top: -10%;
-  }
-  100% {
-    top: 110%;
-  }
+.electric-border:hover::before {
+  transform: translateX(100%);
+  opacity: 1;
 }
 
-/* Cyber grid background */
-.cyber-grid {
+/* Electric glow effect */
+.electric-glow {
   position: relative;
-  z-index: 0;
 }
 
-.cyber-grid::before {
+.electric-glow::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: transparent;
+  border-radius: inherit;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0);
+  z-index: -1;
+  transition: box-shadow 0.3s ease;
+}
+
+.electric-glow:hover::after {
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+}
+
+/* Electric background with scanlines */
+.electric-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.electric-background::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: 
-    linear-gradient(var(--cyber-color-dim, rgba(0, 240, 255, 0.1)) 1px, transparent 1px),
-    linear-gradient(90deg, var(--cyber-color-dim, rgba(0, 240, 255, 0.1)) 1px, transparent 1px);
-  background-size: 20px 20px;
-  opacity: 0.3;
+  background: 
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0, 240, 255, 0.03) 50%,
+      transparent 100%
+    );
+  background-size: 100% 4px;
   z-index: -1;
   pointer-events: none;
+}
+
+.electric-background::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, 
+    transparent 0%, 
+    rgba(0, 240, 255, 0.03) 50%, 
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: electric-gradient 10s linear infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes electric-gradient {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
 }
 
 /* Electric text effect */
 .electric-text {
-  color: var(--cyber-color, rgba(0, 240, 255, 0.8));
-  text-shadow: 0 0 8px var(--cyber-color, rgba(0, 240, 255, 0.8));
-  animation: electric-text-flicker 4s infinite;
+  color: var(--impulse-text-primary);
+  text-shadow: 0 0 2px rgba(0, 240, 255, 0.5);
+  position: relative;
+  transition: all 0.3s ease;
 }
 
-@keyframes electric-text-flicker {
-  0%, 100% {
-    text-shadow: 0 0 4px var(--cyber-color, rgba(0, 240, 255, 0.8));
-  }
-  25% {
-    text-shadow: 0 0 8px var(--cyber-color, rgba(0, 240, 255, 0.8));
-  }
-  50% {
-    text-shadow: 0 0 4px var(--cyber-color, rgba(0, 240, 255, 0.8));
-  }
-  52% {
-    text-shadow: 0 0 10px var(--cyber-color, rgba(0, 240, 255, 0.8));
-  }
-  54% {
-    text-shadow: 0 0 4px var(--cyber-color, rgba(0, 240, 255, 0.8));
-  }
-  75% {
-    text-shadow: 0 0 6px var(--cyber-color, rgba(0, 240, 255, 0.8));
-  }
+.electric-text:hover {
+  color: var(--impulse-primary);
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
 }
 
-/* Electric data flow overlay */
-.electric-data-flow {
+/* Electric nav item */
+.electric-nav-item {
   position: relative;
   overflow: hidden;
 }
 
-.electric-data-flow::after {
+.electric-nav-item::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background-image: linear-gradient(
-    -45deg,
-    transparent 95%,
-    var(--cyber-color-dim, rgba(0, 240, 255, 0.4)) 95%,
-    var(--cyber-color-dim, rgba(0, 240, 255, 0.4)) 96%,
-    transparent 96%
-  );
-  background-size: 10px 10px;
-  background-position: center;
-  opacity: 0;
-  z-index: -1;
-  animation: electric-data-flow 20s linear infinite;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--impulse-primary);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+  opacity: 0.7;
 }
 
-.electric-data-flow:hover::after {
-  opacity: 0.3;
+.electric-nav-item:hover::before {
+  transform: scaleX(1);
+  transform-origin: left;
 }
 
-@keyframes electric-data-flow {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 100% 100%;
-  }
+/* Different color variants for electric effects */
+.random-color-1 .nav-item__icon {
+  color: rgb(0, 240, 255);
 }
 
-/* Circuit board pattern */
-.circuit-board {
+.random-color-2 .nav-item__icon {
+  color: rgb(255, 0, 128);
+}
+
+.random-color-3 .nav-item__icon {
+  color: rgb(0, 255, 128);
+}
+
+.random-color-4 .nav-item__icon {
+  color: rgb(255, 128, 0);
+}
+
+.random-color-5 .nav-item__icon {
+  color: rgb(138, 43, 226);
+}
+
+/* Glitch effect */
+.glitch-effect {
   position: relative;
-  overflow: hidden;
 }
 
-.circuit-board::before {
+.glitch-effect:hover::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background-image: 
-    radial-gradient(var(--cyber-color-dim, rgba(0, 240, 255, 0.2)) 2px, transparent 2px),
-    linear-gradient(to right, transparent 45%, var(--cyber-color-dim, rgba(0, 240, 255, 0.2)) 45%, 
-                   var(--cyber-color-dim, rgba(0, 240, 255, 0.2)) 55%, transparent 55%),
-    linear-gradient(to bottom, transparent 45%, var(--cyber-color-dim, rgba(0, 240, 255, 0.2)) 45%, 
-                   var(--cyber-color-dim, rgba(0, 240, 255, 0.2)) 55%, transparent 55%);
-  background-size: 20px 20px, 100% 3px, 3px 100%;
-  background-position: center;
-  opacity: 0.1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 240, 255, 0.05);
+  animation: glitch 0.5s ease;
   z-index: -1;
   pointer-events: none;
 }
 
-.circuit-board:hover::before {
-  opacity: 0.3;
-  transition: opacity 0.3s ease;
+@keyframes glitch {
+  0%, 100% { clip-path: inset(0 0 0 0); }
+  20% { clip-path: inset(20% 0 0 0); }
+  40% { clip-path: inset(0 0 20% 0); }
+  60% { clip-path: inset(0 20% 0 0); }
+  80% { clip-path: inset(0 0 0 20%); }
 }
 
-/* Random color animations */
-.random-animation-1 {
-  animation: electric-pulse 3s infinite;
+/* Idle animation effects */
+.idle-flicker {
+  animation: flicker 10s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
 }
 
-.random-animation-2 {
-  animation: electric-scanline 4s infinite linear;
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  10% { opacity: 0.8; }
+  20% { opacity: 1; }
+  50% { opacity: 0.9; }
+  60% { opacity: 1; }
+  70% { opacity: 0.7; }
+  80% { opacity: 0.8; }
+  90% { opacity: 1; }
 }
 
-.random-animation-3 {
-  animation: electric-data-flow 20s linear infinite;
-}
-
-/* Hover effects for electric elements */
-.hover-electric:hover {
-  box-shadow: 0 0 15px var(--cyber-color, rgba(0, 240, 255, 0.8));
-  transition: box-shadow 0.3s ease;
-}
-
-/* Different electric border effects */
-.electric-border-1 {
-  border: 1px solid var(--cyber-color-dim, rgba(0, 240, 255, 0.3));
-  box-shadow: 0 0 5px var(--cyber-color-dim, rgba(0, 240, 255, 0.3));
+/* Hover glow for buttons and links */
+.hover-glow {
   transition: all 0.3s ease;
 }
 
-.electric-border-1:hover {
-  border-color: var(--cyber-color, rgba(0, 240, 255, 0.8));
-  box-shadow: 0 0 10px var(--cyber-color, rgba(0, 240, 255, 0.8));
+.hover-glow:hover {
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
 }
 
-.electric-border-2 {
-  position: relative;
+/* Apple glass-like effects */
+.apple-glass {
+  background: rgba(20, 24, 40, 0.7);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.electric-border-2::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 1px solid var(--cyber-color, rgba(0, 240, 255, 0.8));
-  opacity: 0;
-  transition: all 0.3s ease;
+.apple-glass-dark {
+  background: rgba(12, 14, 22, 0.8);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.electric-border-2:hover::after {
-  opacity: 1;
-  filter: blur(1px);
-}
-
-/* Animated background gradient */
-.electric-gradient-bg {
-  background: linear-gradient(
-    45deg,
-    var(--impulse-bg-main),
-    var(--cyber-color-dim, rgba(0, 240, 255, 0.2)),
-    var(--impulse-bg-main)
-  );
-  background-size: 200% 200%;
-  animation: electric-gradient 10s ease infinite;
-}
-
-@keyframes electric-gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+/* Glassmorphism effect */
+.glassmorphism {
+  background: rgba(20, 24, 40, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
