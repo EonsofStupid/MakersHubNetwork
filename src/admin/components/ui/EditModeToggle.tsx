@@ -1,76 +1,64 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Edit, X } from 'lucide-react';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
-import { Edit, Check } from 'lucide-react';
-import { AdminTooltip } from './AdminTooltip';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { AdminTooltip } from './AdminTooltip';
 
 interface EditModeToggleProps {
   className?: string;
 }
 
-export const EditModeToggle: React.FC<EditModeToggleProps> = ({ className = '' }) => {
-  const [editMode, setEditMode] = useAtom(adminEditModeAtom);
-
+export function EditModeToggle({ className }: EditModeToggleProps) {
+  const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
+  const { toast } = useToast();
+  
   const toggleEditMode = () => {
-    setEditMode(!editMode);
+    setEditMode(!isEditMode);
+    
+    if (!isEditMode) {
+      toast({
+        title: "Edit Mode Enabled",
+        description: "You can now customize your admin interface by dragging items",
+        duration: 4000,
+      });
+      
+      // Add edit-mode class to body for global styling
+      document.body.classList.add('edit-mode');
+    } else {
+      toast({
+        title: "Edit Mode Disabled",
+        description: "Your customizations have been saved",
+      });
+      
+      // Remove edit-mode class from body
+      document.body.classList.remove('edit-mode');
+    }
   };
-
+  
   return (
-    <AdminTooltip 
-      content={editMode ? "Exit edit mode" : "Enter edit mode"}
-      side="bottom"
-    >
+    <AdminTooltip content={isEditMode ? "Exit Edit Mode" : "Enter Edit Mode"}>
       <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={toggleEditMode}
         className={cn(
-          "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-all",
-          editMode 
-            ? "bg-primary text-primary-foreground" 
-            : "bg-muted text-muted-foreground hover:bg-muted/80",
+          "p-1.5 rounded-full transition-colors",
+          isEditMode 
+            ? "bg-[var(--impulse-primary)]/20 text-[var(--impulse-primary)]" 
+            : "text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] hover:bg-[var(--impulse-bg-hover)]",
           className
         )}
-        onClick={toggleEditMode}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        layout
       >
-        <motion.span
-          initial={false}
-          animate={{ rotate: editMode ? 360 : 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {editMode ? (
-            <Check className="w-3.5 h-3.5" />
-          ) : (
-            <Edit className="w-3.5 h-3.5" />
-          )}
-        </motion.span>
-        
-        <span className="font-medium">
-          {editMode ? "Done" : "Edit"}
-        </span>
-        
-        {editMode && (
-          <motion.div 
-            className="absolute inset-0 rounded-md -z-10"
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: 1,
-              boxShadow: [
-                "0 0 5px rgba(0, 240, 255, 0.3)",
-                "0 0 15px rgba(0, 240, 255, 0.7)",
-                "0 0 5px rgba(0, 240, 255, 0.3)"
-              ]
-            }}
-            transition={{ 
-              duration: 2, 
-              repeat: Infinity 
-            }}
-          />
+        {isEditMode ? (
+          <X className="w-4 h-4" />
+        ) : (
+          <Edit className="w-4 h-4" />
         )}
       </motion.button>
     </AdminTooltip>
   );
-};
+}

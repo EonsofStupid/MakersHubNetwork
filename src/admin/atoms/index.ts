@@ -16,7 +16,6 @@ export {
   dropIndicatorPositionAtom,
   darkModeAtom,
   selectedThemeAtom,
-  // Add the other atoms that are actually exported from tools.atoms
   frozenZonesAtom,
   effectsPaletteVisibleAtom,
   selectedEffectAtom,

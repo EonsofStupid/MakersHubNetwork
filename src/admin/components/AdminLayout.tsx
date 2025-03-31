@@ -1,38 +1,72 @@
 
-import React from "react";
-import { Navigate } from "react-router-dom";
-import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
-import { AdminPermission } from "@/admin/types/admin.types";
-import { useAdmin } from "@/admin/context/AdminContext";
+import React from 'react';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import { useAdminStore } from '@/admin/store/admin.store';
+import { AdminSidebar } from '@/admin/components/AdminSidebar';
+import { AdminTopNav } from '@/admin/components/layout/AdminTopNav';
+import { DragIndicator } from '@/admin/components/ui/DragIndicator';
+import { FrozenZones } from '@/admin/components/overlay/FrozenZones';
+import { EffectsPalette } from '@/admin/components/overlay/EffectsPalette';
+import { scrollbarStyle } from '@/admin/utils/styles';
 
-// This component is now a wrapper around ImpulseAdminLayout for backward compatibility
+// Import all necessary styles
+import '@/admin/styles/admin-core.css';
+import '@/admin/styles/admin-topnav.css';
+import '@/admin/styles/navigation.css';
+import '@/admin/styles/sidebar-navigation.css';
+import '@/admin/styles/dashboard-shortcuts.css';
+import '@/admin/styles/drag-drop.css';
+import '@/admin/styles/cyber-effects.css';
+import '@/admin/styles/electric-effects.css';
+
 interface AdminLayoutProps {
-  children: React.ReactNode;
-  requiredPermission?: AdminPermission;
+  children?: React.ReactNode;
   title?: string;
+  className?: string;
 }
 
-export const AdminLayout: React.FC<AdminLayoutProps> = ({
-  children,
-  requiredPermission = "admin:access",
-  title = "Admin Dashboard"
-}) => {
-  const { checkPermission, isLoading } = useAdmin();
+export function AdminLayout({ children, title = "Admin Dashboard", className }: AdminLayoutProps) {
+  const { sidebarExpanded } = useAdminStore();
   
-  // If loading, show nothing (ImpulseAdminLayout will handle loading state)
-  if (isLoading) {
-    return null;
-  }
-  
-  // Check if user has required permission
-  if (!checkPermission(requiredPermission)) {
-    return <Navigate to="/admin" replace />;
-  }
-  
-  // Forward props to ImpulseAdminLayout
   return (
-    <ImpulseAdminLayout title={title} requiresPermission={requiredPermission}>
-      {children}
-    </ImpulseAdminLayout>
+    <div 
+      className={cn(
+        "admin-layout min-h-screen flex w-full",
+        "bg-[var(--impulse-bg-main)]",
+        "text-[var(--impulse-text-primary)]"
+      )}
+    >
+      {/* Admin Sidebar */}
+      <AdminSidebar />
+      
+      {/* Main Content */}
+      <motion.main 
+        initial={{ opacity: 0 }}
+        animate={{ 
+          opacity: 1,
+          marginLeft: sidebarExpanded ? '240px' : '80px' 
+        }}
+        className={cn(
+          "flex-1 transition-all duration-300",
+          "pt-14 pb-6 px-6", // Account for fixed topnav
+          scrollbarStyle,
+          className
+        )}
+      >
+        {/* Top Navigation */}
+        <AdminTopNav title={title} />
+        
+        {/* Page Content */}
+        <div className="mt-4">
+          {children}
+        </div>
+        
+        {/* Floating UI Components */}
+        <DragIndicator />
+        <FrozenZones />
+        <EffectsPalette />
+      </motion.main>
+    </div>
   );
-};
+}
