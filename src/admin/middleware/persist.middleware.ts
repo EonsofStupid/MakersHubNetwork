@@ -5,7 +5,7 @@ import { createZustandStorage } from '@/lib/storage/createZustandStorage';
 export const createAdminPersistMiddleware = <T>(name: string): PersistOptions<T, T> => {
   return {
     name,
-    // Use the createZustandStorage function which already correctly handles JSON parsing
+    // Use the createZustandStorage function to handle storage operations 
     storage: createZustandStorage('makers-impulse-admin'),
     // Custom merge strategy
     merge: (persistedState: any, currentState: T) => {
