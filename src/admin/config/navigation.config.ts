@@ -1,4 +1,3 @@
-
 import {
   Home,
   Users,
@@ -112,7 +111,7 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     id: 'permissions',
     label: 'Permissions',
     description: 'Manage user permissions',
-    icon: ShieldCheck,
+    icon: Shield,
     path: '/admin/permissions',
     section: 'Management',
     permission: AdminPermissions.SUPER_ADMIN,
