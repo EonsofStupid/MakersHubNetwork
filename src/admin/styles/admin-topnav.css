@@ -1,6 +1,15 @@
 
 /* Admin Top Navigation Bar Styles */
 
+.admin-topnav-container {
+  position: relative;
+  height: 3.5rem;
+  width: 100%;
+  z-index: 40;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%);
+}
+
 .admin-topnav {
   display: flex;
   align-items: center;
@@ -120,13 +129,6 @@
   width: 100%;
   background-color: var(--impulse-bg-main);
   overflow: hidden; /* Prevent double scrollbars */
-}
-
-/* Properly position the main content to respect fixed elements */
-.admin-layout-container > main {
-  overflow: auto;
-  height: calc(100vh - 3.5rem); /* Subtract top nav height */
-  padding-top: 0;
 }
 
 /* Admin sidebar wrapper with angled shape */

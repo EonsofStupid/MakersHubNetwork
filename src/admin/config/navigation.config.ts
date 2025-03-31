@@ -40,7 +40,7 @@ export interface AdminNavigationItem {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   path: string;
-  section: string; // Explicitly defined section property
+  section: string; // Explicit section property
   permission?: string;
 }
 

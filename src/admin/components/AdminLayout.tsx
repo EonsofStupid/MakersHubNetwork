@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminSidebar } from '@/admin/components/AdminSidebar';
-import { AdminTopNav } from '@/admin/components/layout/AdminTopNav';
+import { AdminTopNav } from '@/admin/components/navigation/AdminTopNav';
 import { DragIndicator } from '@/admin/components/ui/DragIndicator';
 import { FrozenZones } from '@/admin/components/overlay/FrozenZones';
 import { EffectsPalette } from '@/admin/components/overlay/EffectsPalette';
@@ -31,7 +31,7 @@ export function AdminLayout({ children, title = "Admin Dashboard", className }: 
   return (
     <div 
       className={cn(
-        "admin-layout min-h-screen flex w-full",
+        "admin-layout min-h-screen flex w-full overflow-hidden",
         "bg-[var(--impulse-bg-main)]",
         "text-[var(--impulse-text-primary)]"
       )}
@@ -40,24 +40,24 @@ export function AdminLayout({ children, title = "Admin Dashboard", className }: 
       <AdminSidebar />
       
       {/* Main Content */}
-      <motion.main 
+      <motion.div 
         initial={{ opacity: 0 }}
         animate={{ 
           opacity: 1,
           marginLeft: sidebarExpanded ? '240px' : '80px' 
         }}
         className={cn(
-          "flex-1 transition-all duration-300 relative overflow-auto",
+          "flex-1 transition-all duration-300 flex flex-col overflow-hidden",
           className
         )}
       >
         {/* Top Navigation - Fixed */}
-        <div className="sticky top-0 z-40 w-full">
+        <div className="w-full">
           <AdminTopNav title={title} />
         </div>
         
         {/* Page Content - Scrollable */}
-        <div className="p-6">
+        <div className="flex-1 p-6 overflow-auto">
           {children}
         </div>
         
@@ -65,7 +65,7 @@ export function AdminLayout({ children, title = "Admin Dashboard", className }: 
         <DragIndicator />
         <FrozenZones />
         <EffectsPalette />
-      </motion.main>
+      </motion.div>
     </div>
   );
 }

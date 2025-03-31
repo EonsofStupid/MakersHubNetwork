@@ -87,66 +87,68 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
   };
   
   return (
-    <div className="admin-topnav w-full border-b border-[var(--impulse-border-normal)] bg-[var(--impulse-bg-overlay)] backdrop-blur-xl h-14 flex items-center justify-between px-4 electric-border">
-      <div className="flex items-center space-x-4">
-        <motion.button 
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={toggleSidebar}
-          className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
-        >
-          <Menu className="w-5 h-5" />
-        </motion.button>
-        
-        <div className="text-[var(--impulse-text-primary)] hover:text-[var(--impulse-primary)] transition-colors flex items-center gap-2">
-          <Shield className="w-5 h-5 text-[var(--impulse-primary)] pulse-glow" />
-          <motion.h1 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-lg font-bold cyber-text"
+    <div className="admin-topnav-container">
+      <div className="admin-topnav w-full flex items-center justify-between px-4 electric-border">
+        <div className="flex items-center space-x-4">
+          <motion.button 
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleSidebar}
+            className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
           >
-            {title}
-          </motion.h1>
+            <Menu className="w-5 h-5" />
+          </motion.button>
+          
+          <div className="text-[var(--impulse-text-primary)] hover:text-[var(--impulse-primary)] transition-colors flex items-center gap-2">
+            <Shield className="w-5 h-5 text-[var(--impulse-primary)] pulse-glow" />
+            <motion.h1 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-lg font-bold cyber-text"
+            >
+              {title}
+            </motion.h1>
+          </div>
         </div>
-      </div>
-      
-      {/* Shortcuts in the top navigation */}
-      <TopNavShortcuts />
-      
-      <div className="flex items-center space-x-3">
-        <EditModeToggle />
         
-        <AdminTooltip content="Notifications" side="bottom">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] relative"
-          >
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--impulse-secondary)] rounded-full pulse-subtle"></span>
-          </motion.button>
-        </AdminTooltip>
+        {/* Shortcuts in the top navigation */}
+        <TopNavShortcuts />
         
-        <AdminTooltip content="Settings" side="bottom">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] electric-hover"
-            onClick={() => navigate('/admin/settings')}
-          >
-            <Settings className="w-5 h-5" />
-          </motion.button>
-        </AdminTooltip>
-        
-        <AdminTooltip content="User Account" side="bottom">
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="w-8 h-8 rounded-full bg-[var(--impulse-bg-card)] flex items-center justify-center border border-[var(--impulse-border-normal)] text-[var(--impulse-text-primary)] cursor-pointer overflow-hidden electric-border"
-          >
-            <User className="w-5 h-5" />
-          </motion.div>
-        </AdminTooltip>
+        <div className="flex items-center space-x-3">
+          <EditModeToggle />
+          
+          <AdminTooltip content="Notifications" side="bottom">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] relative"
+            >
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--impulse-secondary)] rounded-full pulse-subtle"></span>
+            </motion.button>
+          </AdminTooltip>
+          
+          <AdminTooltip content="Settings" side="bottom">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] electric-hover"
+              onClick={() => navigate('/admin/settings')}
+            >
+              <Settings className="w-5 h-5" />
+            </motion.button>
+          </AdminTooltip>
+          
+          <AdminTooltip content="User Account" side="bottom">
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-8 h-8 rounded-full bg-[var(--impulse-bg-card)] flex items-center justify-center border border-[var(--impulse-border-normal)] text-[var(--impulse-text-primary)] cursor-pointer overflow-hidden electric-border"
+            >
+              <User className="w-5 h-5" />
+            </motion.div>
+          </AdminTooltip>
+        </div>
       </div>
     </div>
   );
