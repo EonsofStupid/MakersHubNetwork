@@ -5,13 +5,16 @@ import { Edit, X } from 'lucide-react';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { cn } from '@/lib/utils';
 import { AdminTooltip } from './AdminTooltip';
+import { useAtom } from 'jotai';
+import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 
 interface EditModeToggleProps {
   className?: string;
 }
 
 export function EditModeToggle({ className }: EditModeToggleProps) {
-  const { isEditMode, toggleEditMode } = useAdminStore();
+  const { toggleEditMode } = useAdminStore();
+  const [isEditMode] = useAtom(adminEditModeAtom);
   
   return (
     <AdminTooltip content={isEditMode ? "Exit Edit Mode" : "Enter Edit Mode"}>

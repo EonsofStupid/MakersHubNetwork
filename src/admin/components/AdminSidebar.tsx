@@ -13,11 +13,12 @@ import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
 
-// Import the navigation and new electric CSS
+// Import the navigation and styles
 import '@/admin/styles/navigation.css';
 import '@/admin/styles/sidebar-navigation.css';
 import '@/admin/styles/drag-drop.css';
 import '@/admin/styles/electric-effects.css';
+import '@/admin/styles/cyber-effects.css';
 
 // Framer Motion variants
 const titleVariants = {
@@ -40,7 +41,8 @@ export function AdminSidebar() {
     showLabels,
     setShowLabels,
     isDarkMode,
-    toggleEditMode
+    toggleEditMode,
+    savePreferences
   } = useAdminStore();
   
   // Track mouse position for electric effects
@@ -84,6 +86,7 @@ export function AdminSidebar() {
   const handleNavClick = (path: string, id: string) => {
     navigate(path);
     setActiveSection(id);
+    savePreferences();
   };
 
   // Generate random idle animation delay

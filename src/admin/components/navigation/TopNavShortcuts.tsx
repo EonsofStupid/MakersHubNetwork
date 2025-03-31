@@ -8,19 +8,23 @@ import { useAdminStore } from '@/admin/store/admin.store';
 import { TopNavItem } from './TopNavItem';
 import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
-import { DragIndicator } from '../ui/DragIndicator';
 import { Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export function TopNavShortcuts() {
   const navigate = useNavigate();
   const shortcutsRef = useRef<HTMLDivElement>(null);
   const [isEditMode] = useAtom(adminEditModeAtom);
-  const { pinnedTopNavItems, setPinnedTopNavItems } = useAdminStore();
+  const { pinnedTopNavItems, setPinnedTopNavItems, savePreferences } = useAdminStore();
+  const { toast } = useToast();
   
   // Set up drag and drop for the container
   const { registerDropZone, isDragging } = useDragAndDrop({
     items: pinnedTopNavItems,
-    onReorder: setPinnedTopNavItems,
+    onReorder: (newItems) => {
+      setPinnedTopNavItems(newItems);
+      savePreferences();
+    },
     containerId: 'top-nav-shortcuts',
     dragOnlyInEditMode: true,
     acceptExternalItems: true
@@ -47,6 +51,13 @@ export function TopNavShortcuts() {
     
     const newShortcuts = pinnedTopNavItems.filter(item => item !== id);
     setPinnedTopNavItems(newShortcuts);
+    savePreferences();
+    
+    toast({
+      title: "Shortcut removed",
+      description: `Removed from top navigation bar`,
+      duration: 2000,
+    });
   };
   
   // Filter shortcuts to only show items that exist in navigation config
@@ -88,7 +99,7 @@ export function TopNavShortcuts() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex items-center justify-center h-10 px-3 text-[var(--impulse-text-secondary)] text-sm"
+                className="flex items-center justify-center h-10 px-3 text-[var(--impulse-text-secondary)] text-sm cyber-text"
               >
                 <Plus className="w-4 h-4 mr-2 text-[var(--impulse-primary)]" />
                 <span>Drag items here</span>
@@ -97,8 +108,6 @@ export function TopNavShortcuts() {
           )}
         </AnimatePresence>
       </motion.div>
-      
-      <DragIndicator />
     </>
   );
 }

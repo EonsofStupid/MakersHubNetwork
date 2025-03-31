@@ -19,6 +19,7 @@ import '@/admin/styles/admin-topnav.css';
 import '@/admin/styles/dashboard-shortcuts.css';
 import '@/admin/styles/drag-drop.css';
 import '@/admin/styles/navigation.css';
+import '@/admin/styles/sidebar-navigation.css';
 import '@/admin/theme/impulse/impulse-admin.css';
 import '@/admin/theme/impulse/impulse-theme.css';
 
@@ -28,7 +29,7 @@ export default function Admin() {
   const { hasAdminAccess, isLoading, initializeAdmin } = useAdmin();
   const [hasInitialized, setHasInitialized] = useState(false);
   const [hasShownIntro, setHasShownIntro] = useState(false);
-  const { loadPermissions } = useAdminStore();
+  const { loadPermissions, initializeStore, savePreferences } = useAdminStore();
   const [isEditMode] = useAtom(adminEditModeAtom);
   
   // Use admin sync hook to keep database and localStorage in sync
@@ -38,6 +39,7 @@ export default function Admin() {
     // Load admin permissions if user has access
     if (hasAdminAccess && !hasInitialized) {
       initializeAdmin();
+      initializeStore();
       loadPermissions();
       setHasInitialized(true);
       
@@ -57,7 +59,7 @@ export default function Admin() {
       document.body.classList.remove('impulse-admin-root');
       document.body.classList.remove('edit-mode');
     };
-  }, [hasAdminAccess, hasInitialized, initializeAdmin, loadPermissions, isEditMode]);
+  }, [hasAdminAccess, hasInitialized, initializeAdmin, loadPermissions, isEditMode, initializeStore]);
 
   // Show a first-time user tutorial for drag and drop
   useEffect(() => {

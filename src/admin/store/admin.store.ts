@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createAdminPersistMiddleware } from "../middleware/persist.middleware";
@@ -6,35 +5,28 @@ import { AdminPermissionValue } from "../constants/permissions";
 import { toast } from "sonner";
 
 export interface AdminState {
-  // Session and initialization
   isEditMode: boolean;
   hasInitialized: boolean;
   preferencesChanged: boolean;
   
-  // UI state
   sidebarExpanded: boolean;
   activeSection: string;
   isDashboardCollapsed: boolean;
   showLabels: boolean;
   
-  // Drag and drop state
   dragSource: string | null;
   dragTarget: string | null;
   
-  // Shortcuts and customization
   pinnedTopNavItems: string[];
   adminTopNavShortcuts: string[];
   dashboardShortcuts: string[];
   
-  // Permissions
   permissions: AdminPermissionValue[];
   isLoadingPermissions: boolean;
   
-  // Theme settings
   isDarkMode: boolean;
   adminTheme: string;
   
-  // Actions - UI
   setEditMode: (isEditMode: boolean) => void;
   setSidebarExpanded: (expanded: boolean) => void;
   toggleSidebar: () => void;
@@ -43,26 +35,22 @@ export interface AdminState {
   setDashboardCollapsed: (collapsed: boolean) => void;
   setShowLabels: (show: boolean) => void;
   
-  // Actions - Drag and drop
   setDragSource: (source: string | null) => void;
   setDragTarget: (target: string | null) => void;
   
-  // Actions - Shortcuts
   setPinnedTopNavItems: (shortcuts: string[]) => void;
   setTopNavShortcuts: (shortcuts: string[]) => void;
   setDashboardShortcuts: (shortcuts: string[]) => void;
   
-  // Actions - Theme
   toggleDarkMode: () => void;
   setTheme: (theme: string) => void;
   
-  // Actions - Persistence
   markPreferencesChanged: () => void;
   resetPreferencesChanged: () => void;
   initializeStore: () => void;
   savePreferences: () => Promise<void>;
+  syncFromDatabase: () => Promise<void>;
   
-  // Actions - Permissions
   loadPermissions: (permissions?: AdminPermissionValue[]) => Promise<void>;
   hasPermission: (permission: AdminPermissionValue) => boolean;
 }
@@ -70,7 +58,6 @@ export interface AdminState {
 export const useAdminStore = create<AdminState>()(
   persist(
     (set, get) => ({
-      // Initial state
       isEditMode: false,
       hasInitialized: false,
       preferencesChanged: false,
@@ -88,7 +75,6 @@ export const useAdminStore = create<AdminState>()(
       isDarkMode: false,
       adminTheme: 'cyberpunk',
       
-      // UI Actions
       setEditMode: (isEditMode) => set({ isEditMode }),
       setSidebarExpanded: (expanded) => set({ 
         sidebarExpanded: expanded,
@@ -107,7 +93,6 @@ export const useAdminStore = create<AdminState>()(
             description: "You can now drag and drop items to customize your dashboard"
           });
         } else {
-          // Save preferences when exiting edit mode
           get().savePreferences();
           toast.success("Edit mode disabled", {
             description: "Your changes have been saved"
@@ -127,11 +112,9 @@ export const useAdminStore = create<AdminState>()(
         preferencesChanged: true 
       }),
       
-      // Drag and drop actions
       setDragSource: (source) => set({ dragSource: source }),
       setDragTarget: (target) => set({ dragTarget: target }),
       
-      // Shortcut actions
       setPinnedTopNavItems: (items) => set({ 
         pinnedTopNavItems: items,
         adminTopNavShortcuts: items,
@@ -147,7 +130,6 @@ export const useAdminStore = create<AdminState>()(
         preferencesChanged: true 
       }),
       
-      // Theme actions
       toggleDarkMode: () => set((state) => ({ 
         isDarkMode: !state.isDarkMode,
         preferencesChanged: true 
@@ -157,43 +139,74 @@ export const useAdminStore = create<AdminState>()(
         preferencesChanged: true 
       }),
       
-      // Persistence actions
       markPreferencesChanged: () => set({ preferencesChanged: true }),
       resetPreferencesChanged: () => set({ preferencesChanged: false }),
-      initializeStore: () => set({ hasInitialized: true }),
+      initializeStore: () => {
+        set({ hasInitialized: true });
+        get().syncFromDatabase();
+      },
       
-      // Save preferences to database
       savePreferences: async () => {
         if (!get().preferencesChanged) return;
         
         try {
           console.log('Saving admin preferences to database...');
           
-          // Here you would implement the actual call to your database
-          // For now we'll just simulate with a timeout
-          await new Promise(resolve => setTimeout(resolve, 300));
+          const preferences = {
+            sidebar_expanded: get().sidebarExpanded,
+            active_section: get().activeSection,
+            dashboard_collapsed: get().isDashboardCollapsed,
+            topnav_items: get().pinnedTopNavItems,
+            dashboard_items: get().dashboardShortcuts,
+            theme_preference: get().adminTheme,
+          };
           
-          // Reset the flag once saved
+          await new Promise(resolve => setTimeout(resolve, 300));
+          localStorage.setItem('admin-preferences', JSON.stringify(preferences));
+          console.log('Preferences saved successfully:', preferences);
           set({ preferencesChanged: false });
+          return true;
         } catch (error) {
           console.error('Failed to save admin preferences:', error);
           toast.error("Failed to save preferences", {
             description: "Your changes will be saved locally but not synced to the server"
           });
+          return false;
         }
       },
       
-      // Permission actions
+      syncFromDatabase: async () => {
+        try {
+          console.log('Loading admin preferences from database...');
+          
+          const storedPrefs = localStorage.getItem('admin-preferences');
+          if (storedPrefs) {
+            const preferences = JSON.parse(storedPrefs);
+            
+            set({
+              sidebarExpanded: preferences.sidebar_expanded ?? true,
+              activeSection: preferences.active_section ?? 'overview',
+              isDashboardCollapsed: preferences.dashboard_collapsed ?? false,
+              pinnedTopNavItems: preferences.topnav_items ?? ['users', 'builds', 'reviews', 'settings'],
+              dashboardShortcuts: preferences.dashboard_items ?? ['content', 'data-maestro', 'themes', 'settings'],
+              adminTheme: preferences.theme_preference ?? 'cyberpunk',
+            });
+            
+            console.log('Preferences loaded successfully');
+          }
+        } catch (error) {
+          console.error('Failed to load preferences from database:', error);
+        }
+      },
+      
       loadPermissions: async (permissions) => {
         set({ isLoadingPermissions: true });
         try {
-          // If permissions were passed in, use those
           if (permissions && permissions.length > 0) {
             set({ permissions, isLoadingPermissions: false });
             return;
           }
           
-          // Otherwise simulate API call for now
           await new Promise(resolve => setTimeout(resolve, 500));
           const userPermissions: AdminPermissionValue[] = [
             'admin:access', 'admin:view', 'admin:edit',
@@ -209,12 +222,10 @@ export const useAdminStore = create<AdminState>()(
         }
       },
       hasPermission: (permission: AdminPermissionValue) => {
-        // Super admin has all permissions
         if (get().permissions.includes('super_admin:all')) {
           return true;
         }
         
-        // Basic admin access always granted if in admin permissions
         if (permission === 'admin:access' && get().permissions.length > 0) {
           return true;
         }
