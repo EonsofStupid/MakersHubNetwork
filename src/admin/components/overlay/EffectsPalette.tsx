@@ -5,6 +5,7 @@ import { useAtom } from 'jotai';
 import { X, Wand2 } from 'lucide-react';
 import { effectsPaletteVisibleAtom, selectedEffectAtom } from '@/admin/atoms/tools.atoms';
 import { cyberEffectVariantsAtom, cyberColorVariantsAtom } from '@/admin/atoms';
+import { CyberEffect } from '@/admin/types/tools.types';
 
 export function EffectsPalette() {
   const [isVisible, setIsVisible] = useAtom(effectsPaletteVisibleAtom);
@@ -13,6 +14,16 @@ export function EffectsPalette() {
   const [colorVariants] = useAtom(cyberColorVariantsAtom);
   
   if (!isVisible) return null;
+  
+  // Create a CyberEffect object for the selected effect
+  const handleSelectEffect = (effectName: string) => {
+    const effect: CyberEffect = {
+      id: effectName,
+      name: effectName,
+      css: `cyber-effect-${effectName}`,
+    };
+    setSelectedEffect(effect);
+  };
   
   return (
     <AnimatePresence>
@@ -44,10 +55,10 @@ export function EffectsPalette() {
               {effectVariants.map(effect => (
                 <button
                   key={effect}
-                  onClick={() => setSelectedEffect(effect)}
+                  onClick={() => handleSelectEffect(effect)}
                   className={`
                     p-2 rounded border text-sm
-                    ${selectedEffect === effect 
+                    ${selectedEffect?.id === effect 
                       ? 'bg-[var(--impulse-primary)]/20 border-[var(--impulse-primary)] text-[var(--impulse-primary)]' 
                       : 'border-[var(--impulse-border-normal)] hover:border-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]'}
                   `}
