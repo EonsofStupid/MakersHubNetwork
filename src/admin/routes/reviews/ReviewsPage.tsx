@@ -6,7 +6,7 @@ import { PendingReviewsList } from "@/admin/components/reviews/PendingReviewsLis
 
 export default function ReviewsPage() {
   return (
-    <ImpulseAdminLayout title="Review Management" requiresPermission="content:view">
+    <ImpulseAdminLayout title="Review Management">
       <div className="space-y-6">
         <div className="flex items-center gap-2">
           <MessageSquare className="text-primary w-5 h-5" />

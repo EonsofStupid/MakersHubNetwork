@@ -24,9 +24,10 @@ interface ImpulseAdminLayoutProps {
   children?: React.ReactNode;
   title?: string;
   className?: string;
+  readonly?: boolean;
 }
 
-export function ImpulseAdminLayout({ children, title = "Admin Dashboard", className }: ImpulseAdminLayoutProps) {
+export function ImpulseAdminLayout({ children, title = "Admin Dashboard", className, readonly = false }: ImpulseAdminLayoutProps) {
   const { sidebarExpanded } = useAdminStore();
   
   return (
@@ -34,7 +35,8 @@ export function ImpulseAdminLayout({ children, title = "Admin Dashboard", classN
       className={cn(
         "impulse-admin-layout min-h-screen flex w-full",
         "bg-[var(--impulse-bg-main)]",
-        "text-[var(--impulse-text-primary)]"
+        "text-[var(--impulse-text-primary)]",
+        readonly && "admin-readonly-mode"
       )}
     >
       {/* Admin Sidebar */}
@@ -55,7 +57,7 @@ export function ImpulseAdminLayout({ children, title = "Admin Dashboard", classN
         )}
       >
         {/* Top Navigation */}
-        <AdminTopNav title={title} />
+        <AdminTopNav title={title} readonly={readonly} />
         
         {/* Page Content */}
         <div className="mt-6">
