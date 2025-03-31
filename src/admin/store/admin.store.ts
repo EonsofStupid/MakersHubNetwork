@@ -2,7 +2,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createAdminPersistMiddleware } from "../middleware/persist.middleware";
-import { AdminPermission } from "../types/admin.types";
+import { AdminPermissionValue } from "../constants/permissions";
 
 export interface AdminState {
   // Session and initialization
@@ -26,7 +26,7 @@ export interface AdminState {
   dashboardShortcuts: string[];
   
   // Permissions
-  permissions: AdminPermission[];
+  permissions: AdminPermissionValue[];
   isLoadingPermissions: boolean;
   
   // Theme settings
@@ -61,8 +61,8 @@ export interface AdminState {
   initializeStore: () => void;
   
   // Actions - Permissions
-  loadPermissions: (permissions?: AdminPermission[]) => Promise<void>;
-  hasPermission: (permission: AdminPermission) => boolean;
+  loadPermissions: (permissions?: AdminPermissionValue[]) => Promise<void>;
+  hasPermission: (permission: AdminPermissionValue) => boolean;
 }
 
 export const useAdminStore = create<AdminState>()(
@@ -157,7 +157,7 @@ export const useAdminStore = create<AdminState>()(
           
           // Otherwise simulate API call for now
           await new Promise(resolve => setTimeout(resolve, 500));
-          const userPermissions: AdminPermission[] = [
+          const userPermissions: AdminPermissionValue[] = [
             'admin:access', 'admin:view', 'admin:edit',
             'content:view', 'content:edit',
             'users:view', 'users:edit',
@@ -170,7 +170,7 @@ export const useAdminStore = create<AdminState>()(
           set({ isLoadingPermissions: false });
         }
       },
-      hasPermission: (permission: AdminPermission) => {
+      hasPermission: (permission: AdminPermissionValue) => {
         // Super admin has all permissions
         if (get().permissions.includes('super_admin:all')) {
           return true;

@@ -46,8 +46,8 @@ export * from "./types/impulse.types";
 export * from "./types/theme";
 
 // Export admin utils
-export * from "./utils/adminUtils";
-export * from "./utils/permissions";
+export { hasAdminAccess, getPermissionGroups, sectionPermissionMap } from "./utils/adminUtils";
+export { checkPermission, usePermissionCheck, getPermissionDisplayName } from "./utils/permissions";
 export * from "./utils/routeUtils";
 
 // Export admin atoms

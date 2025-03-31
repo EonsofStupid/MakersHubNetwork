@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +13,7 @@ import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
 import { useAdminDataSync } from '@/admin/services/adminData.service';
+import { AdminPermissionValue } from '@/admin/constants/permissions';
 
 // Import the navigation and new electric CSS
 import '@/admin/styles/navigation.css';
@@ -88,7 +90,7 @@ export function AdminSidebar() {
 
   // Filter items based on permissions
   const visibleItems = adminNavigationItems.filter(item => 
-    !item.permission || hasPermission(item.permission)
+    !item.permission || hasPermission(item.permission as AdminPermissionValue)
   );
 
   // Handle navigation item click

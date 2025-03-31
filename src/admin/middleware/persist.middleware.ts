@@ -1,3 +1,4 @@
+
 import { StateStorage, PersistOptions } from 'zustand/middleware';
 
 // Custom storage adapter for admin store
@@ -38,6 +39,19 @@ export const createAdminPersistMiddleware = <T>(name: string): PersistOptions<T,
     partialize: (state) => {
       const { isEditMode, dragSource, dragTarget, isLoadingPermissions, ...rest } = state as any;
       return rest;
+    },
+    // Add deserialize option to parse JSON
+    deserialize: (str) => {
+      if (!str) return undefined;
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        return undefined;
+      }
+    },
+    // Add serialize option to stringify JSON
+    serialize: (state) => {
+      return JSON.stringify(state);
     },
   };
 };

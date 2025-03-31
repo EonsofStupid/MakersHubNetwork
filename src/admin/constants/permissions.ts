@@ -25,6 +25,7 @@ export const AdminPermissions = {
   // Data permissions
   DATA_VIEW: 'data:view',
   DATA_EDIT: 'data:edit',
+  DATA_IMPORT: 'data:import',
   
   // Analytics permissions
   ANALYTICS_VIEW: 'analytics:view',
@@ -36,6 +37,7 @@ export const AdminPermissions = {
   // Theme permissions
   THEMES_VIEW: 'themes:view',
   THEMES_EDIT: 'themes:edit',
+  THEMES_DELETE: 'themes:delete',
   
   // Layout permissions
   LAYOUTS_VIEW: 'layouts:view',
@@ -45,6 +47,7 @@ export const AdminPermissions = {
   BUILDS_VIEW: 'builds:view',
   BUILDS_EDIT: 'builds:edit',
   BUILDS_APPROVE: 'builds:approve',
+  BUILDS_REJECT: 'builds:reject',
   
   // Workflow permissions
   WORKFLOWS_VIEW: 'workflows:view',

@@ -1,19 +1,20 @@
 
 import { AdminPermission } from "@/admin/types/admin.types";
+import { AdminPermissions } from "@/admin/constants/permissions";
 
 /**
  * Map section names to their required permissions
  * Used for both navigation and feature access control
  */
 export const sectionPermissionMap: Record<string, AdminPermission> = {
-  'overview': 'admin:access',
-  'users': 'users:view',
-  'content': 'content:view',
-  'builds': 'builds:view',
-  'data': 'data:view',
-  'themes': 'themes:view',
-  'settings': 'settings:view',
-  'analytics': 'admin:access'
+  'overview': AdminPermissions.ADMIN_ACCESS,
+  'users': AdminPermissions.USERS_VIEW,
+  'content': AdminPermissions.CONTENT_VIEW,
+  'builds': AdminPermissions.BUILDS_VIEW,
+  'data': AdminPermissions.DATA_VIEW,
+  'themes': AdminPermissions.THEMES_VIEW,
+  'settings': AdminPermissions.SETTINGS_VIEW,
+  'analytics': AdminPermissions.ADMIN_ACCESS
 };
 
 /**
@@ -22,41 +23,10 @@ export const sectionPermissionMap: Record<string, AdminPermission> = {
  */
 export function hasAdminAccess(permissions: AdminPermission[]): boolean {
   return permissions.some(p => 
-    p === 'admin:access' || 
-    p === 'admin:view' || 
-    p === 'super_admin:all'
+    p === AdminPermissions.ADMIN_ACCESS || 
+    p === AdminPermissions.ADMIN_VIEW || 
+    p === AdminPermissions.SUPER_ADMIN
   );
-}
-
-/**
- * Map a permission to its display name
- * @param permission Permission to get display name for
- */
-export function getPermissionDisplayName(permission: AdminPermission): string {
-  const displayNames: Record<AdminPermission, string> = {
-    'admin:access': 'Admin Access',
-    'admin:view': 'View Admin Panel',
-    'admin:edit': 'Edit Admin Settings',
-    'content:view': 'View Content',
-    'content:edit': 'Edit Content',
-    'content:delete': 'Delete Content',
-    'users:view': 'View Users',
-    'users:edit': 'Edit Users',
-    'users:delete': 'Delete Users',
-    'builds:view': 'View Builds',
-    'builds:approve': 'Approve Builds',
-    'builds:reject': 'Reject Builds',
-    'themes:view': 'View Themes',
-    'themes:edit': 'Edit Themes',
-    'themes:delete': 'Delete Themes',
-    'data:view': 'View Data',
-    'data:import': 'Import/Export Data',
-    'settings:view': 'View Settings',
-    'settings:edit': 'Edit Settings',
-    'super_admin:all': 'All Permissions'
-  };
-  
-  return displayNames[permission] || permission;
 }
 
 /**
@@ -66,31 +36,57 @@ export function getPermissionGroups() {
   return [
     {
       name: 'Admin',
-      permissions: ['admin:access', 'admin:view', 'admin:edit'] as AdminPermission[]
+      permissions: [
+        AdminPermissions.ADMIN_ACCESS,
+        AdminPermissions.ADMIN_VIEW,
+        AdminPermissions.ADMIN_EDIT
+      ] as AdminPermission[]
     },
     {
       name: 'Content',
-      permissions: ['content:view', 'content:edit', 'content:delete'] as AdminPermission[]
+      permissions: [
+        AdminPermissions.CONTENT_VIEW,
+        AdminPermissions.CONTENT_EDIT,
+        AdminPermissions.CONTENT_DELETE
+      ] as AdminPermission[]
     },
     {
       name: 'Users',
-      permissions: ['users:view', 'users:edit', 'users:delete'] as AdminPermission[]
+      permissions: [
+        AdminPermissions.USERS_VIEW,
+        AdminPermissions.USERS_EDIT,
+        AdminPermissions.USERS_DELETE
+      ] as AdminPermission[]
     },
     {
       name: 'Builds',
-      permissions: ['builds:view', 'builds:approve', 'builds:reject'] as AdminPermission[]
+      permissions: [
+        AdminPermissions.BUILDS_VIEW,
+        AdminPermissions.BUILDS_APPROVE,
+        AdminPermissions.BUILDS_REJECT
+      ] as AdminPermission[]
     },
     {
       name: 'Themes',
-      permissions: ['themes:view', 'themes:edit', 'themes:delete'] as AdminPermission[]
+      permissions: [
+        AdminPermissions.THEMES_VIEW,
+        AdminPermissions.THEMES_EDIT,
+        AdminPermissions.THEMES_DELETE
+      ] as AdminPermission[]
     },
     {
       name: 'Data',
-      permissions: ['data:view', 'data:import'] as AdminPermission[]
+      permissions: [
+        AdminPermissions.DATA_VIEW,
+        AdminPermissions.DATA_IMPORT
+      ] as AdminPermission[]
     },
     {
       name: 'Settings',
-      permissions: ['settings:view', 'settings:edit'] as AdminPermission[]
+      permissions: [
+        AdminPermissions.SETTINGS_VIEW,
+        AdminPermissions.SETTINGS_EDIT
+      ] as AdminPermission[]
     }
   ];
 }
