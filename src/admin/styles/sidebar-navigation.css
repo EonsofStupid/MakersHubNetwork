@@ -15,38 +15,6 @@
   border-right: 1px solid var(--impulse-border-normal);
 }
 
-/* Angled sidebar effect - creates the L shape */
-.admin-sidebar-angled::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: -20px;
-  width: 20px;
-  height: 100%;
-  background: var(--impulse-bg-overlay);
-  backdrop-filter: blur(12px);
-  border-right: 1px solid var(--impulse-border-normal);
-  z-index: -1;
-  transform-origin: left bottom;
-  transform: skewX(-5deg);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-}
-
-.admin-sidebar::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 50px;
-  background: var(--impulse-bg-overlay);
-  z-index: -1;
-  transform-origin: bottom left;
-  transform: skewX(-5deg);
-  border-bottom: 1px solid var(--impulse-border-normal);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-}
-
 .admin-sidebar__header {
   display: flex;
   align-items: center;
@@ -258,19 +226,4 @@
 
 .edit-mode .nav-item.draggable:hover {
   border-color: var(--impulse-primary);
-}
-
-/* L-shaped bottom area of sidebar */
-.admin-sidebar__footer::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: -50px;
-  width: 50px;
-  height: 50px;
-  background: var(--impulse-bg-overlay);
-  border-right: 1px solid var(--impulse-border-normal);
-  border-bottom: 1px solid var(--impulse-border-normal);
-  z-index: -1;
-  transform-origin: bottom left;
 }
