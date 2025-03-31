@@ -1,12 +1,6 @@
 
 /* Admin Top Navigation Bar Styles */
 
-.admin-topnav-container {
-  position: fixed;
-  width: 100%;
-  z-index: 40;
-}
-
 .admin-topnav {
   display: flex;
   align-items: center;
@@ -122,14 +116,22 @@
 .admin-layout-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   background-color: var(--impulse-bg-main);
+  overflow: hidden; /* Prevent double scrollbars */
+}
+
+/* Properly position the main content to respect fixed elements */
+.admin-layout-container > main {
+  overflow: auto;
+  height: calc(100vh - 3.5rem); /* Subtract top nav height */
+  padding-top: 0;
 }
 
 /* Admin sidebar wrapper with angled shape */
 .admin-sidebar-wrapper {
-  height: 100%;
+  height: 100vh;
   width: 240px;
   z-index: 30;
   position: relative;
