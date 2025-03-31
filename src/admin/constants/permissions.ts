@@ -21,13 +21,20 @@ export type AdminPermissionValue =
   | 'settings:view'
   | 'settings:edit'
   | 'themes:view'
-  | 'themes:edit';
+  | 'themes:edit'
+  | 'data:view'
+  | 'data:import'
+  | 'analytics:view'
+  | 'messaging:access'
+  | 'layouts:view'
+  | 'workflows:view'
+  | 'reviews:manage';
 
 export const ADMIN_PERMISSIONS: Record<string, AdminPermissionValue> = {
-  ACCESS: 'admin:access',
-  VIEW: 'admin:view',
-  EDIT: 'admin:edit',
-  MANAGE: 'admin:manage',
+  ADMIN_ACCESS: 'admin:access',
+  ADMIN_VIEW: 'admin:view',
+  ADMIN_EDIT: 'admin:edit',
+  ADMIN_MANAGE: 'admin:manage',
   SUPER_ADMIN: 'super_admin:all',
   CONTENT_VIEW: 'content:view',
   CONTENT_EDIT: 'content:edit',
@@ -42,8 +49,18 @@ export const ADMIN_PERMISSIONS: Record<string, AdminPermissionValue> = {
   REVIEWS_VIEW: 'reviews:view',
   REVIEWS_EDIT: 'reviews:edit',
   REVIEWS_MODERATE: 'reviews:moderate',
+  REVIEWS_MANAGE: 'reviews:manage',
   SETTINGS_VIEW: 'settings:view',
   SETTINGS_EDIT: 'settings:edit',
   THEMES_VIEW: 'themes:view',
-  THEMES_EDIT: 'themes:edit'
+  THEMES_EDIT: 'themes:edit',
+  DATA_VIEW: 'data:view',
+  DATA_IMPORT: 'data:import',
+  ANALYTICS_VIEW: 'analytics:view',
+  MESSAGING_ACCESS: 'messaging:access',
+  LAYOUTS_VIEW: 'layouts:view',
+  WORKFLOWS_VIEW: 'workflows:view'
 };
+
+// Alias to maintain backward compatibility
+export const AdminPermissions = ADMIN_PERMISSIONS;

@@ -1,9 +1,8 @@
-
 import React, { lazy, Suspense } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { PlaceholderPage } from "./PlaceholderPage";
 import { Shell, Users, Database, Settings, FileText, BarChart, Paintbrush, Shield } from "lucide-react";
-import { AdminPermissions } from "@/admin/constants/permissions";
+import { ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
 
 // Import AdminDashboard component from its new location
 import { AdminDashboard } from "@/admin/components/dashboard/AdminDashboard";
@@ -105,7 +104,7 @@ export function AdminRoutes() {
             title="Builds Manager" 
             description="Review and manage 3D printer builds from the community" 
             icon={<Shell className="h-8 w-8 text-primary" />}
-            requiredPermission={AdminPermissions.BUILDS_VIEW}
+            requiredPermission={ADMIN_PERMISSIONS.BUILDS_VIEW}
           />
         }
       />
@@ -117,7 +116,7 @@ export function AdminRoutes() {
             title="Messaging" 
             description="Community messaging system management" 
             icon={<FileText className="h-8 w-8 text-primary" />}
-            requiredPermission={AdminPermissions.MESSAGING_ACCESS}
+            requiredPermission={ADMIN_PERMISSIONS.MESSAGING_ACCESS}
           />
         }
       />

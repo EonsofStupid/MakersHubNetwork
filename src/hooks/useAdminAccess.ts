@@ -2,7 +2,7 @@
 import { useMemo, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth/store";
 import { useAdminStore } from "@/admin/store/admin.store";
-import { AdminPermissionValue, AdminPermissions } from "@/admin/constants/permissions";
+import { AdminPermissionValue, ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
 
 /**
  * Central hook for checking admin access and permissions
@@ -33,7 +33,7 @@ export function useAdminAccess() {
     }
     
     // Basic admin access check
-    if (permission === AdminPermissions.ADMIN_ACCESS) {
+    if (permission === ADMIN_PERMISSIONS.ADMIN_ACCESS) {
       return hasAdminAccess;
     }
     

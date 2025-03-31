@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   LayoutDashboard, Users, Package, Star, Settings, 
@@ -6,7 +5,7 @@ import {
   Image, BarChart, HelpCircle, Book, Terminal,
   MessageSquare, Mail, GitBranch
 } from 'lucide-react';
-import { AdminPermissionValue } from '@/admin/constants/permissions';
+import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
 export interface AdminNavigationItem {
   id: string;
@@ -38,7 +37,7 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     path: '/admin/users',
     icon: Users,
     section: 'Management',
-    permission: 'users:view',
+    permission: ADMIN_PERMISSIONS.USERS_VIEW,
     description: 'Manage user accounts',
     keywords: ['users', 'accounts', 'members', 'profiles']
   },
@@ -50,7 +49,7 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     path: '/admin/content',
     icon: FileText,
     section: 'Management',
-    permission: 'content:view',
+    permission: ADMIN_PERMISSIONS.CONTENT_VIEW,
     description: 'Manage site content',
     keywords: ['content', 'pages', 'articles', 'posts']
   },
@@ -62,7 +61,7 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     path: '/admin/builds',
     icon: Package,
     section: 'Management',
-    permission: 'builds:view',
+    permission: ADMIN_PERMISSIONS.BUILDS_VIEW,
     description: 'Manage 3D printer builds',
     keywords: ['builds', 'printers', 'projects', 'maker']
   },
@@ -74,7 +73,7 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     path: '/admin/reviews',
     icon: Star,
     section: 'Management',
-    permission: 'reviews:view',
+    permission: ADMIN_PERMISSIONS.REVIEWS_VIEW,
     description: 'Manage user reviews',
     keywords: ['reviews', 'ratings', 'comments', 'feedback']
   },
@@ -240,7 +239,7 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     path: '/admin/settings',
     icon: Settings,
     section: 'System',
-    permission: 'settings:view',
+    permission: ADMIN_PERMISSIONS.SETTINGS_VIEW,
     description: 'Admin settings and preferences',
     keywords: ['settings', 'preferences', 'options', 'configure']
   }

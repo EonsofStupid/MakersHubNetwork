@@ -7,29 +7,15 @@ export * from './ui.atoms';
 // Re-export atoms from tools.atoms
 export {
   adminEditModeAtom,
-  sidebarExpandedAtom,
-  showLabelsAtom,
-  activePageAtom,
-  isDraggingAtom,
-  dragSourceIdAtom,
-  dragTargetIdAtom,
-  dropIndicatorPositionAtom,
-  darkModeAtom,
-  selectedThemeAtom,
-  frozenZonesAtom,
-  effectsPaletteVisibleAtom,
-  selectedEffectAtom,
-  searchActiveAtom,
-  searchQueryAtom,
-  searchResultsAtom,
-  adminSettingsOpenAtom,
-  hoveredIconAtom,
-  activeModalAtom,
-  activeOverlayAtom,
-  dragEffectAtom,
-  adminToolsExpandedAtom,
-  dashboardEditModeAtom,
-  userPreferencesAtom
+  adminDragSourceAtom,
+  adminDragTargetAtom,
+  adminMousePositionAtom,
+  adminDashboardLayoutAtom,
+  adminFavoriteItemsAtom,
+  adminThemeAtom,
+  adminColorSchemeAtom,
+  adminFocusModeAtom,
+  adminUIDensityAtom,
 } from './tools.atoms';
 
 // Export additional cyberpunk effects atoms

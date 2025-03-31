@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { useAdmin } from '@/admin/context/AdminContext';
 import { useAdminStore } from '@/admin/store/admin.store';
-import { AdminPermissionValue, AdminPermissions } from '@/admin/constants/permissions';
+import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
 /**
  * Hook for checking admin permissions
@@ -19,10 +19,10 @@ export function useAdminPermissions() {
     if (!hasAdminAccess) return false;
     
     // If super admin, allow all permissions
-    if (storeHasPermission(AdminPermissions.SUPER_ADMIN)) return true;
+    if (storeHasPermission(ADMIN_PERMISSIONS.SUPER_ADMIN)) return true;
     
     // If checking for basic admin access, always return true if user has admin access
-    if (permission === AdminPermissions.ADMIN_ACCESS) return true;
+    if (permission === ADMIN_PERMISSIONS.ADMIN_ACCESS) return true;
     
     // Check specific permission
     return storeHasPermission(permission);

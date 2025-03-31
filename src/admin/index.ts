@@ -19,7 +19,7 @@ export { useAdminPermissions } from "./hooks/useAdminPermissions";
 export { useAdminRoles } from "./hooks/useAdminRoles"; 
 
 // Export admin constants
-export { AdminPermissions } from "./constants/permissions";
+export { ADMIN_PERMISSIONS } from "./constants/permissions";
 
 // Export admin types
 export type { AdminPermissionValue } from "./constants/permissions";

@@ -1,20 +1,20 @@
 
 import { AdminPermission } from "@/admin/types/admin.types";
-import { AdminPermissions } from "@/admin/constants/permissions";
+import { ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
 
 /**
  * Map section names to their required permissions
  * Used for both navigation and feature access control
  */
 export const sectionPermissionMap: Record<string, AdminPermission> = {
-  'overview': AdminPermissions.ADMIN_ACCESS,
-  'users': AdminPermissions.USERS_VIEW,
-  'content': AdminPermissions.CONTENT_VIEW,
-  'builds': AdminPermissions.BUILDS_VIEW,
-  'data': AdminPermissions.DATA_VIEW,
-  'themes': AdminPermissions.THEMES_VIEW,
-  'settings': AdminPermissions.SETTINGS_VIEW,
-  'analytics': AdminPermissions.ADMIN_ACCESS
+  'overview': ADMIN_PERMISSIONS.ADMIN_ACCESS,
+  'users': ADMIN_PERMISSIONS.USERS_VIEW,
+  'content': ADMIN_PERMISSIONS.CONTENT_VIEW,
+  'builds': ADMIN_PERMISSIONS.BUILDS_VIEW,
+  'data': ADMIN_PERMISSIONS.DATA_VIEW,
+  'themes': ADMIN_PERMISSIONS.THEMES_VIEW,
+  'settings': ADMIN_PERMISSIONS.SETTINGS_VIEW,
+  'analytics': ADMIN_PERMISSIONS.ADMIN_ACCESS
 };
 
 /**
@@ -23,9 +23,9 @@ export const sectionPermissionMap: Record<string, AdminPermission> = {
  */
 export function hasAdminAccess(permissions: AdminPermission[]): boolean {
   return permissions.some(p => 
-    p === AdminPermissions.ADMIN_ACCESS || 
-    p === AdminPermissions.ADMIN_VIEW || 
-    p === AdminPermissions.SUPER_ADMIN
+    p === ADMIN_PERMISSIONS.ADMIN_ACCESS || 
+    p === ADMIN_PERMISSIONS.ADMIN_VIEW || 
+    p === ADMIN_PERMISSIONS.SUPER_ADMIN
   );
 }
 
@@ -37,55 +37,55 @@ export function getPermissionGroups() {
     {
       name: 'Admin',
       permissions: [
-        AdminPermissions.ADMIN_ACCESS,
-        AdminPermissions.ADMIN_VIEW,
-        AdminPermissions.ADMIN_EDIT
+        ADMIN_PERMISSIONS.ADMIN_ACCESS,
+        ADMIN_PERMISSIONS.ADMIN_VIEW,
+        ADMIN_PERMISSIONS.ADMIN_EDIT
       ] as AdminPermission[]
     },
     {
       name: 'Content',
       permissions: [
-        AdminPermissions.CONTENT_VIEW,
-        AdminPermissions.CONTENT_EDIT,
-        AdminPermissions.CONTENT_DELETE
+        ADMIN_PERMISSIONS.CONTENT_VIEW,
+        ADMIN_PERMISSIONS.CONTENT_EDIT,
+        ADMIN_PERMISSIONS.CONTENT_DELETE
       ] as AdminPermission[]
     },
     {
       name: 'Users',
       permissions: [
-        AdminPermissions.USERS_VIEW,
-        AdminPermissions.USERS_EDIT,
-        AdminPermissions.USERS_DELETE
+        ADMIN_PERMISSIONS.USERS_VIEW,
+        ADMIN_PERMISSIONS.USERS_EDIT,
+        ADMIN_PERMISSIONS.USERS_DELETE
       ] as AdminPermission[]
     },
     {
       name: 'Builds',
       permissions: [
-        AdminPermissions.BUILDS_VIEW,
-        AdminPermissions.BUILDS_APPROVE,
-        AdminPermissions.BUILDS_REJECT
+        ADMIN_PERMISSIONS.BUILDS_VIEW,
+        ADMIN_PERMISSIONS.BUILDS_APPROVE,
+        ADMIN_PERMISSIONS.BUILDS_REJECT
       ] as AdminPermission[]
     },
     {
       name: 'Themes',
       permissions: [
-        AdminPermissions.THEMES_VIEW,
-        AdminPermissions.THEMES_EDIT,
-        AdminPermissions.THEMES_DELETE
+        ADMIN_PERMISSIONS.THEMES_VIEW,
+        ADMIN_PERMISSIONS.THEMES_EDIT,
+        ADMIN_PERMISSIONS.THEMES_DELETE
       ] as AdminPermission[]
     },
     {
       name: 'Data',
       permissions: [
-        AdminPermissions.DATA_VIEW,
-        AdminPermissions.DATA_IMPORT
+        ADMIN_PERMISSIONS.DATA_VIEW,
+        ADMIN_PERMISSIONS.DATA_IMPORT
       ] as AdminPermission[]
     },
     {
       name: 'Settings',
       permissions: [
-        AdminPermissions.SETTINGS_VIEW,
-        AdminPermissions.SETTINGS_EDIT
+        ADMIN_PERMISSIONS.SETTINGS_VIEW,
+        ADMIN_PERMISSIONS.SETTINGS_EDIT
       ] as AdminPermission[]
     }
   ];
