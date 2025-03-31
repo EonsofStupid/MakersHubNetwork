@@ -1,276 +1,111 @@
-import React, { useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAdminStore } from '@/admin/store/admin.store';
-import { adminNavigationItems } from '@/admin/config/navigation.config';
-import { useAtom } from 'jotai';
-import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
-import { scrollbarStyle } from '@/admin/utils/styles';
-import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
-import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
-import { NavigationItem } from '@/admin/components/navigation/NavigationItem';
 import { AdminPermissionValue } from '@/admin/constants/permissions';
+import { adminNavigationItems } from '@/admin/config/navigation.config';
+import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
+import { NavItem } from '@/admin/components/navigation/NavItem';
+import { NavGroup } from '@/admin/components/navigation/NavGroup';
+import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 
-// Import the navigation and styles
-import '@/admin/styles/navigation.css';
+// Import styles directly
 import '@/admin/styles/sidebar-navigation.css';
-import '@/admin/styles/drag-drop.css';
-import '@/admin/styles/electric-effects.css';
-import '@/admin/styles/cyber-effects.css';
-
-// Framer Motion variants
-const titleVariants = {
-  expanded: { opacity: 1, x: 0, transition: { delay: 0.1 } },
-  collapsed: { opacity: 0, x: -10 }
-};
 
 export function AdminSidebar() {
-  const navigate = useNavigate();
   const location = useLocation();
-  const [isEditMode] = useAtom(adminEditModeAtom);
-  const sidebarRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { hasPermission } = useAdminPermissions();
+  const { sidebarExpanded, toggleSidebar, showLabels, setActiveSection } = useAdminStore();
   
-  const { 
-    sidebarExpanded, 
-    setSidebarExpanded, 
-    activeSection,
-    setActiveSection,
-    hasPermission,
-    showLabels,
-    setShowLabels,
-    isDarkMode,
-    toggleEditMode,
-    savePreferences
-  } = useAdminStore();
-  
-  // Track mouse position for electric effects
+  // Set active section based on path
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!sidebarRef.current) return;
-      
-      const rect = sidebarRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
-      sidebarRef.current.style.setProperty('--mouse-x', `${x}px`);
-      sidebarRef.current.style.setProperty('--mouse-y', `${y}px`);
-    };
-    
-    const sidebarEl = sidebarRef.current;
-    if (sidebarEl) {
-      sidebarEl.addEventListener('mousemove', handleMouseMove);
-    }
-    
-    return () => {
-      if (sidebarEl) {
-        sidebarEl.removeEventListener('mousemove', handleMouseMove);
-      }
-    };
-  }, []);
-
-  // Set active section based on URL
-  useEffect(() => {
-    const pathSegments = location.pathname.split('/');
-    const currentSection = pathSegments[pathSegments.length - 1] || 'overview';
-    setActiveSection(currentSection);
+    const path = location.pathname.split('/')[2] || 'overview';
+    setActiveSection(path);
   }, [location.pathname, setActiveSection]);
-
-  // Filter items based on permissions
-  const visibleItems = adminNavigationItems.filter(item => 
-    !item.permission || hasPermission(item.permission as AdminPermissionValue)
-  );
-
-  // Handle navigation item click
-  const handleNavClick = (path: string, id: string) => {
-    navigate(path);
-    setActiveSection(id);
-    savePreferences();
-  };
-
-  // Generate random idle animation delay
-  const generateRandomDelay = () => {
-    return Math.random() * 5;
-  };
-
-  // Add cyber scan lines to sidebar
-  useEffect(() => {
-    // Create random scan lines at random intervals
-    const createScanLine = () => {
-      const sidebarElement = document.querySelector('.admin-sidebar');
-      if (!sidebarElement) return;
-      
-      const scanLine = document.createElement('div');
-      scanLine.className = 'admin-sidebar-scan';
-      sidebarElement.appendChild(scanLine);
-      
-      setTimeout(() => {
-        sidebarElement.removeChild(scanLine);
-      }, 15000); // Remove after animation completes
-    };
+  
+  // Filter navigation items based on permissions
+  const filteredItems = adminNavigationItems.filter(item => {
+    // If no permission required, show the item
+    if (!item.permission) return true;
     
-    const interval = setInterval(() => {
-      if (Math.random() > 0.5) {
-        createScanLine();
-      }
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
+    // Check if user has the required permission
+    return hasPermission(item.permission as AdminPermissionValue);
+  });
+  
+  // Group items by section
+  const groupedItems = filteredItems.reduce((acc, item) => {
+    if (!acc[item.section]) {
+      acc[item.section] = [];
+    }
+    acc[item.section].push(item);
+    return acc;
+  }, {} as Record<string, typeof adminNavigationItems>);
+  
+  // Get all sections
+  const sections = Object.keys(groupedItems);
   
   return (
     <div 
-      ref={sidebarRef}
       className={cn(
-        "admin-sidebar h-full flex flex-col",
-        "electric-background glitch-effect",
-        "relative z-30",
-        isDarkMode ? "glass-dark" : "glass-effect"
+        "admin-sidebar h-full",
+        !sidebarExpanded && "sidebar-collapsed"
       )}
+      style={{ width: sidebarExpanded ? '240px' : '70px' }}
     >
-      {/* Header with title and collapse button */}
-      <div className="admin-sidebar__header py-4 px-3 flex justify-between items-center border-b border-[var(--impulse-border-normal)]">
-        <AnimatePresence mode="wait">
-          {sidebarExpanded && (
-            <motion.div
-              key="sidebar-title"
-              variants={titleVariants}
-              initial="collapsed"
-              animate="expanded"
-              exit="collapsed"
-              className="flex items-center gap-2"
-            >
-              <motion.span 
-                className="text-sm font-medium text-[var(--impulse-text-primary)] px-2 idle-flicker cyber-text"
-                style={{ animationDelay: `${generateRandomDelay()}s` }}
-              >
-                Admin Navigation
-              </motion.span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        <div className="flex items-center gap-2">
-          {sidebarExpanded && (
-            <>
-              <EditModeToggle className="mr-1" />
-              <AdminTooltip content={showLabels ? "Hide labels" : "Show labels"}>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowLabels(!showLabels)}
-                  className="p-2 rounded-full text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors hover-glow"
-                >
-                  {showLabels ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </motion.button>
-              </AdminTooltip>
-            </>
-          )}
-          
-          <AdminTooltip content={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              className="p-2 rounded-full bg-[var(--impulse-bg-main)] text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-primary)] transition-colors hover-glow"
-            >
-              {sidebarExpanded ? (
-                <ChevronLeft className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-            </motion.button>
-          </AdminTooltip>
-        </div>
-      </div>
-      
-      {/* Main navigation items */}
-      <div 
-        className={cn(
-          "admin-sidebar__content flex-1 overflow-y-auto py-4",
-          scrollbarStyle
-        )}
-        id="main-navigation"
-        data-container-id="main-navigation"
-      >
-        <div className={sidebarExpanded ? "px-2" : "px-1"}>
-          <AnimatePresence mode="popLayout">
-            {visibleItems.map((item, index) => (
-              <NavigationItem
-                key={item.id}
-                id={item.id}
-                label={showLabels ? item.label : ""}
-                icon={item.icon}
-                description={item.description}
-                isActive={activeSection === item.id}
-                onClick={() => handleNavClick(item.path, item.id)}
-                tooltipContent={!showLabels || !sidebarExpanded ? `${item.label}: ${item.description}` : undefined}
-                showTooltip={!showLabels || !sidebarExpanded}
-                className={cn(
-                  sidebarExpanded ? "mx-2" : "justify-center mx-2 px-0",
-                  !showLabels && sidebarExpanded && "justify-center",
-                  "electric-nav-item",
-                  `random-color-${(index % 5) + 1}`
-                )}
-              />
-            ))}
-          </AnimatePresence>
-        </div>
-        
-        {isEditMode && sidebarExpanded && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-4 mx-4 p-2 rounded-md bg-[var(--impulse-primary)]/10 border border-[var(--impulse-border-normal)] electric-border"
+      {/* Sidebar header with toggle button */}
+      <div className="admin-sidebar__header justify-end">
+        <AdminTooltip 
+          content={sidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
+          side="right"
+        >
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleSidebar}
+            className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
           >
-            <p className="text-xs text-[var(--impulse-primary)] text-center">
-              Drag items to customize your dashboard
-            </p>
-          </motion.div>
-        )}
+            {sidebarExpanded ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          </motion.button>
+        </AdminTooltip>
       </div>
       
-      {/* Footer information */}
-      <div className="admin-sidebar__footer border-t border-[var(--impulse-border-normal)] p-4">
+      {/* Animated scan lines for cyber effect */}
+      <div className="admin-sidebar-scan" />
+      
+      {/* Sidebar content with navigation */}
+      <div className="admin-sidebar__content">
         <AnimatePresence mode="wait">
-          {sidebarExpanded ? (
-            <motion.div
-              key="sidebar-expanded-footer"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center justify-between"
+          {sections.map(section => (
+            <NavGroup
+              key={section}
+              title={section}
+              collapsed={!sidebarExpanded}
             >
-              <span className="text-xs text-[var(--impulse-text-secondary)]">
-                {isEditMode ? "Edit mode active" : "MakersImpulse Admin"}
-              </span>
-              
-              {!isEditMode && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={toggleEditMode}
-                  className="text-xs text-[var(--impulse-primary)] px-2 py-1 rounded-full bg-[var(--impulse-primary)]/10 hover:bg-[var(--impulse-primary)]/20"
-                >
-                  Customize
-                </motion.button>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="sidebar-collapsed-footer"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex justify-center"
-            >
-              <span className="text-xs text-[var(--impulse-primary)]">
-                {isEditMode ? "✏️" : "🛠️"}
-              </span>
-            </motion.div>
-          )}
+              {groupedItems[section].map(item => (
+                <NavItem
+                  key={item.id}
+                  id={item.id}
+                  icon={item.icon}
+                  label={item.label}
+                  path={item.path}
+                  showLabel={sidebarExpanded && showLabels}
+                  isActive={location.pathname === item.path}
+                  onClick={() => navigate(item.path)}
+                  draggable={true}
+                />
+              ))}
+            </NavGroup>
+          ))}
         </AnimatePresence>
+      </div>
+      
+      {/* Sidebar footer */}
+      <div className="admin-sidebar__footer">
+        {/* Footer content here if needed */}
       </div>
     </div>
   );

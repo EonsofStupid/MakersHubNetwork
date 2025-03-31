@@ -48,3 +48,56 @@ export const subheadingStyle = cn(
   "text-[var(--impulse-text-secondary)]",
   "mb-2"
 );
+
+// Grid layout style
+export const adminGrid = cn(
+  "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+);
+
+// Admin button styles
+export const adminButtonPrimary = cn(
+  "bg-[var(--impulse-primary)] text-[var(--impulse-bg-main)]",
+  "hover:bg-[var(--impulse-primary)]/90",
+  "rounded-md px-4 py-2",
+  "transition-all duration-200"
+);
+
+export const adminButtonSecondary = cn(
+  "bg-[var(--impulse-bg-card)] text-[var(--impulse-text-primary)]",
+  "border border-[var(--impulse-border-normal)]",
+  "hover:border-[var(--impulse-primary)] hover:bg-[var(--impulse-primary)]/10",
+  "rounded-md px-4 py-2",
+  "transition-all duration-200"
+);
+
+export const adminButtonOutline = cn(
+  "bg-transparent",
+  "border border-[var(--impulse-border-normal)]",
+  "text-[var(--impulse-text-primary)]",
+  "hover:border-[var(--impulse-primary)] hover:text-[var(--impulse-primary)]",
+  "rounded-md px-4 py-2",
+  "transition-all duration-200"
+);
+
+// Admin glassmorphism effect
+export const glassMorphism = cn(
+  "bg-[var(--impulse-bg-overlay)]",
+  "backdrop-blur-lg",
+  "border border-[var(--impulse-border-normal)]",
+  "hover:border-[var(--impulse-border-hover)]"
+);
+
+// Admin section wrapper
+export const sectionWrapper = cn(
+  "p-6 rounded-lg",
+  "bg-[var(--impulse-bg-card)]",
+  "border border-[var(--impulse-border-normal)]",
+  "mb-6"
+);
+
+// Admin panel container
+export const panelContainer = cn(
+  "flex flex-col",
+  "h-full w-full",
+  "overflow-hidden"
+);

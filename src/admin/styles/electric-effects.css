@@ -1,34 +1,16 @@
 
-/* Electric effects for admin interface */
+/* Electric effects for admin UI */
 
-/* Electric background */
-.electric-background {
-  position: relative;
-  overflow: hidden;
-}
-
-.electric-background::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    var(--impulse-primary) 0%,
-    transparent 60%
-  );
-  opacity: 0;
-  transition: opacity 0.3s;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.electric-background:hover::before {
-  opacity: 0.1;
-}
-
-/* Electric border */
+/* Electric border effect */
 .electric-border {
   position: relative;
+  border: 1px solid var(--impulse-border-normal);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.electric-border:hover {
+  border-color: var(--impulse-primary);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
 }
 
 .electric-border::after {
@@ -37,88 +19,53 @@
   inset: 0;
   border: 1px solid var(--impulse-primary);
   opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
 .electric-border:hover::after {
-  opacity: 0.4;
-  box-shadow: 0 0 8px var(--impulse-primary);
+  opacity: 0.6;
 }
 
-/* Electric navigation item */
-.electric-nav-item {
+/* Electric glow on text */
+.electric-text {
+  position: relative;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.electric-text:hover {
+  color: var(--impulse-primary);
+  text-shadow: 0 0 8px var(--impulse-primary);
+}
+
+/* Electric flow animation */
+.electric-flow {
   position: relative;
   overflow: hidden;
 }
 
-.electric-nav-item::before {
+.electric-flow::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at var(--mouse-x, 0) var(--mouse-y, 0),
-    var(--impulse-primary) 0%,
-    transparent 70%
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 240, 255, 0.2) 50%,
+    transparent 100%
   );
-  opacity: 0;
-  transition: opacity 0.3s;
-  z-index: 0;
-  pointer-events: none;
+  transform: skewX(-15deg);
+  animation: electric-flow 3s infinite;
 }
 
-.electric-nav-item:hover::before {
-  opacity: 0.15;
+@keyframes electric-flow {
+  0% { left: -50%; }
+  100% { left: 150%; }
 }
 
-.electric-nav-item.active::before {
-  opacity: 0.2;
-}
-
-/* Electricity spark */
-.electric-spark {
-  position: relative;
-}
-
-.electric-spark::after {
-  content: '';
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: var(--impulse-primary);
-  box-shadow: 0 0 8px var(--impulse-primary);
-  filter: blur(1px);
-  animation: spark-travel 5s infinite linear;
-  opacity: 0.7;
-  pointer-events: none;
-  z-index: 2;
-}
-
-@keyframes spark-travel {
-  0% { left: 0; top: 0; }
-  25% { left: 100%; top: 0; }
-  50% { left: 100%; top: 100%; }
-  75% { left: 0; top: 100%; }
-  100% { left: 0; top: 0; }
-}
-
-/* Circuit pattern */
-.circuit-pattern {
-  position: relative;
-}
-
-.circuit-pattern::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2300F0FF' fill-opacity='0.1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3Cpath d='M3 13h10v1H3v-1zM13 3h1v10h-1V3z'/%3E%3C/g%3E%3C/svg%3E");
-  z-index: -1;
-  opacity: 0.15;
-  pointer-events: none;
-}
-
-/* Electric pulse */
+/* Electric pulse for buttons */
 .electric-pulse {
   position: relative;
 }
@@ -128,125 +75,121 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: 0 0 0 1px var(--impulse-primary);
-  animation: electric-pulse-animation 2s infinite;
   opacity: 0;
-  pointer-events: none;
+  transition: all 0.5s ease;
+  background: radial-gradient(circle, var(--impulse-primary) 0%, transparent 70%);
 }
 
-@keyframes electric-pulse-animation {
-  0% { opacity: 0.8; transform: scale(0.8); }
-  100% { opacity: 0; transform: scale(1.5); }
+.electric-pulse:hover::after {
+  opacity: 0.15;
+  transform: scale(1.2);
 }
 
-/* Electric field */
-.electric-field {
-  position: relative;
-}
-
-.electric-field::before {
-  content: '';
-  position: absolute;
-  inset: -20px;
-  border-radius: inherit;
-  background: radial-gradient(circle at center, var(--impulse-primary) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.electric-field:hover::before {
-  opacity: 0.1;
-}
-
-/* Lightning effect */
-.lightning-effect {
+/* Corner sparks effect */
+.electric-corners {
   position: relative;
   overflow: hidden;
 }
 
-.lightning-effect::before {
+.electric-corners::before,
+.electric-corners::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.4) 50%,
-    transparent 80%
-  );
-  transform: skewX(-25deg);
-  animation: lightning-effect-animation 8s infinite;
-  z-index: 1;
-  pointer-events: none;
+  width: 10px;
+  height: 10px;
+  background: var(--impulse-primary);
+  border-radius: 50%;
+  opacity: 0;
+  filter: blur(2px);
+  transition: opacity 0.3s ease;
 }
 
-@keyframes lightning-effect-animation {
-  0% { left: -100%; opacity: 0; }
-  20% { opacity: 0; }
-  21% { opacity: 0.8; }
-  23% { opacity: 0; }
-  50% { opacity: 0; }
-  51% { opacity: 0.8; }
-  53% { opacity: 0; }
-  100% { left: 100%; opacity: 0; }
+.electric-corners::before {
+  top: -5px;
+  left: -5px;
 }
 
-/* Energy flow */
-.energy-flow {
+.electric-corners::after {
+  bottom: -5px;
+  right: -5px;
+}
+
+.electric-corners:hover::before,
+.electric-corners:hover::after {
+  opacity: 0.7;
+  animation: spark 2s infinite;
+}
+
+@keyframes spark {
+  0%, 100% { 
+    transform: scale(0.2);
+    opacity: 0.2;
+  }
+  50% { 
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+/* Electric edges effect */
+.electric-edges {
   position: relative;
-  overflow: hidden;
 }
 
-.energy-flow::after {
+.electric-edges::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--impulse-primary) 50%,
-    transparent 100%
-  );
-  opacity: 0.1;
-  animation: energy-flow-animation 5s infinite;
-  z-index: 0;
-  pointer-events: none;
+  border: 1px solid transparent;
+  border-image: linear-gradient(
+    to right,
+    var(--impulse-primary) 0%,
+    transparent 10%,
+    transparent 90%,
+    var(--impulse-primary) 100%
+  ) 1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-@keyframes energy-flow-animation {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+.electric-edges:hover::before {
+  opacity: 1;
 }
 
-/* Electric edge */
-.electric-edge {
+/* Neon outline effect */
+.neon-outline {
   position: relative;
 }
 
-.electric-edge::after {
+.neon-outline::after {
   content: '';
   position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    var(--impulse-primary) 50%,
-    transparent 100%
-  );
-  opacity: 0.5;
-  box-shadow: 0 0 5px var(--impulse-primary);
-  animation: electric-edge-pulse 4s infinite;
+  inset: -2px;
+  border: 1px solid var(--impulse-primary);
+  opacity: 0;
+  filter: blur(2px);
+  transition: all 0.3s ease;
 }
 
-@keyframes electric-edge-pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.8; }
+.neon-outline:hover::after {
+  opacity: 0.8;
+  box-shadow: 0 0 15px var(--impulse-primary);
+}
+
+/* Electric hover effect - changes on hover */
+.electric-hover {
+  transition: all 0.3s ease;
+}
+
+.electric-hover:hover {
+  color: var(--impulse-primary);
+  text-shadow: 0 0 4px rgba(0, 240, 255, 0.7);
+}
+
+.electric-hover-bg {
+  transition: all 0.3s ease;
+}
+
+.electric-hover-bg:hover {
+  background-color: rgba(0, 240, 255, 0.1);
 }
