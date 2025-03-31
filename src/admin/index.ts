@@ -5,6 +5,7 @@ export { AdminSidebar } from "./components/AdminSidebar";
 export { AdminHeader } from "./components/AdminHeader";
 export { ImpulseAdminLayout } from "./components/layout/ImpulseAdminLayout";
 export { AdminProvider, useAdmin } from "./context/AdminContext";
+export { AdminDashboard } from "./components/dashboard/AdminDashboard";
 
 // Export admin routes
 export { AdminRoutes } from "./routes";

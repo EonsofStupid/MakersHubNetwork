@@ -5,8 +5,8 @@ import { PlaceholderPage } from "./PlaceholderPage";
 import { Shell, Users, Database, Settings, FileText, BarChart, Paintbrush, Shield } from "lucide-react";
 import { AdminPermissions } from "@/admin/constants/permissions";
 
-// Import dashboard as named export
-import { AdminDashboard } from "@/admin/index";
+// Import AdminDashboard component from its new location
+import { AdminDashboard } from "@/admin/components/dashboard/AdminDashboard";
 
 // Lazy load other admin pages
 const UsersPage = lazy(() => import("./users/UsersPage"));
