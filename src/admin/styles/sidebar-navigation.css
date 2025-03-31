@@ -219,6 +219,30 @@
   margin-right: 0;
 }
 
+/* Edge glow effect */
+.admin-sidebar::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, 
+    transparent 0%, 
+    var(--impulse-primary) 50%, 
+    transparent 100%
+  );
+  opacity: 0.5;
+  box-shadow: 0 0 10px var(--impulse-primary);
+  animation: pulse-edge 4s infinite;
+  z-index: 1;
+}
+
+@keyframes pulse-edge {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
 /* Edit mode indication */
 .edit-mode .nav-item.draggable {
   border: 1px dashed transparent;

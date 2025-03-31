@@ -44,6 +44,27 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
     handleSyncStore();
   }, [isEditMode, savePreferences]);
   
+  // Generate random glitch effect
+  useEffect(() => {
+    const applyRandomGlitch = () => {
+      const nav = document.querySelector('.admin-topnav');
+      if (nav) {
+        nav.classList.add('glitch-effect');
+        setTimeout(() => {
+          nav.classList.remove('glitch-effect');
+        }, 200);
+      }
+    };
+    
+    const interval = setInterval(() => {
+      if (Math.random() > 0.9) {
+        applyRandomGlitch();
+      }
+    }, 8000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
   const handleToggleEditMode = () => {
     if (readonly) return;
     
@@ -102,7 +123,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
             className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] relative"
           >
             <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--impulse-secondary)] rounded-full"></span>
+            <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--impulse-secondary)] rounded-full pulse-subtle"></span>
           </motion.button>
         </AdminTooltip>
         
@@ -110,7 +131,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
+            className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)] electric-hover"
             onClick={() => navigate('/admin/settings')}
           >
             <Settings className="w-5 h-5" />

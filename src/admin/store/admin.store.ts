@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createAdminPersistMiddleware } from "../middleware/persist.middleware";
@@ -48,7 +49,7 @@ export interface AdminState {
   markPreferencesChanged: () => void;
   resetPreferencesChanged: () => void;
   initializeStore: () => void;
-  savePreferences: () => Promise<void>;
+  savePreferences: () => Promise<boolean>;
   syncFromDatabase: () => Promise<void>;
   
   loadPermissions: (permissions?: AdminPermissionValue[]) => Promise<void>;
@@ -147,7 +148,7 @@ export const useAdminStore = create<AdminState>()(
       },
       
       savePreferences: async () => {
-        if (!get().preferencesChanged) return;
+        if (!get().preferencesChanged) return true;
         
         try {
           console.log('Saving admin preferences to database...');
@@ -159,11 +160,18 @@ export const useAdminStore = create<AdminState>()(
             topnav_items: get().pinnedTopNavItems,
             dashboard_items: get().dashboardShortcuts,
             theme_preference: get().adminTheme,
+            show_labels: get().showLabels,
+            is_dark_mode: get().isDarkMode,
           };
           
+          // Simulate API call with timeout
           await new Promise(resolve => setTimeout(resolve, 300));
+          
+          // Save to localStorage for now, but this would be an API call
           localStorage.setItem('admin-preferences', JSON.stringify(preferences));
           console.log('Preferences saved successfully:', preferences);
+          
+          // Reset the changed flag
           set({ preferencesChanged: false });
           return true;
         } catch (error) {
@@ -188,8 +196,12 @@ export const useAdminStore = create<AdminState>()(
               activeSection: preferences.active_section ?? 'overview',
               isDashboardCollapsed: preferences.dashboard_collapsed ?? false,
               pinnedTopNavItems: preferences.topnav_items ?? ['users', 'builds', 'reviews', 'settings'],
+              adminTopNavShortcuts: preferences.topnav_items ?? ['users', 'builds', 'reviews', 'settings'],
               dashboardShortcuts: preferences.dashboard_items ?? ['content', 'data-maestro', 'themes', 'settings'],
               adminTheme: preferences.theme_preference ?? 'cyberpunk',
+              showLabels: preferences.show_labels ?? true,
+              isDarkMode: preferences.is_dark_mode ?? false,
+              preferencesChanged: false,
             });
             
             console.log('Preferences loaded successfully');

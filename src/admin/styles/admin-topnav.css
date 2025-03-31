@@ -19,6 +19,35 @@
   border-bottom: 1px solid var(--impulse-border-normal);
   transition: all 0.3s ease;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-topnav::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, var(--impulse-primary) 0%, transparent 80%);
+  opacity: 0.05;
+  z-index: -1;
+}
+
+.admin-topnav::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--impulse-primary) 50%,
+    transparent 100%
+  );
+  opacity: 0.6;
 }
 
 /* Top nav shortcuts container */
@@ -104,7 +133,38 @@
   width: 240px;
   z-index: 30;
   position: relative;
-  clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+  clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+  box-shadow: 5px 0 25px rgba(0, 240, 255, 0.1);
+}
+
+/* Scanning line effect for top nav */
+.admin-topnav::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 1px;
+  background: var(--impulse-primary);
+  opacity: 0.3;
+  animation: scan-line 8s linear infinite;
+}
+
+@keyframes scan-line {
+  0% { left: -100%; opacity: 0; }
+  20% { opacity: 0.5; }
+  80% { opacity: 0.2; }
+  100% { left: 100%; opacity: 0; }
+}
+
+/* Pulse animation for elements */
+.pulse-subtle {
+  animation: pulse-subtle 2s infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
 }
 
 /* Responsive adjustments */

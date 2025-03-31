@@ -59,3 +59,39 @@
   background-color: var(--impulse-bg-card);
   border: 1px solid var(--impulse-border-normal);
 }
+
+/* Glowing borders */
+.glow-border {
+  position: relative;
+}
+
+.glow-border::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--impulse-primary);
+  opacity: 0;
+  transition: opacity 0.3s;
+  box-shadow: 0 0 8px var(--impulse-primary);
+}
+
+.glow-border:hover::after {
+  opacity: 0.5;
+}
+
+/* Cyber grid effect */
+.cyber-grid-bg {
+  position: relative;
+}
+
+.cyber-grid-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(to right, transparent 98%, var(--impulse-primary) 100%),
+    linear-gradient(to bottom, transparent 98%, var(--impulse-primary) 100%);
+  background-size: 20px 20px;
+  opacity: 0.1;
+  pointer-events: none;
+}

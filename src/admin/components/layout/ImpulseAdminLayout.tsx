@@ -31,24 +31,24 @@ export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
   
   return (
     <div className="admin-layout-container h-screen overflow-hidden w-full flex flex-col">
-      {/* Top navigation - sticky across full width */}
+      {/* Top navigation - full width */}
       <div className="admin-topnav-container fixed top-0 left-0 right-0 z-40 w-full">
         <AdminTopNav />
       </div>
       
       {/* Main layout with sidebar and content */}
       <div className="flex h-[calc(100vh-3.5rem)] mt-14 w-full overflow-hidden">
-        {/* Sidebar - angled and extended from left */}
+        {/* Sidebar - angled and extended from left side */}
         <AnimatePresence>
           <motion.div 
             className="admin-sidebar-wrapper"
             initial={{ 
               x: hasMounted ? -300 : 0,
-              clipPath: hasMounted ? 'polygon(0 0, 0% 0, 0% 100%, 0% 100%)' : 'polygon(0 0, 100% 0, 95% 100%, 0% 100%)'
+              clipPath: hasMounted ? 'polygon(0 0, 0% 0, 0% 100%, 0% 100%)' : 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)'
             }}
             animate={{ 
               x: 0,
-              clipPath: 'polygon(0 0, 100% 0, 95% 100%, 0% 100%)'
+              clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)'
             }}
             transition={{ 
               type: 'spring', 
@@ -70,7 +70,7 @@ export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="sticky top-0 w-full bg-primary text-white py-1 text-center text-sm font-medium z-10 border-b border-primary/20"
+                className="sticky top-0 w-full bg-[var(--impulse-primary)] text-[var(--impulse-bg-main)] py-1 text-center text-sm font-medium z-10 border-b border-[var(--impulse-primary)]/20"
               >
                 <span className="cyber-text pulse-subtle">Edit Mode: Drag items to customize your dashboard and navigation</span>
               </motion.div>
@@ -78,7 +78,7 @@ export function ImpulseAdminLayout({ children }: ImpulseAdminLayoutProps) {
           </AnimatePresence>
           
           {/* Main content wrapper */}
-          <main className="flex-1 overflow-auto p-6">
+          <main className="flex-1 overflow-auto p-6 cyber-grid">
             {children}
           </main>
         </div>
