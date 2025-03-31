@@ -1,5 +1,5 @@
 
-import { AdminPermissionValue, AdminPermissions } from '@/admin/constants/permissions';
+import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 import { useAdminStore } from '@/admin/store/admin.store';
 
 /**
@@ -10,7 +10,7 @@ export const checkPermission = (
   userPermissions: AdminPermissionValue[]
 ): boolean => {
   // Super admin has all permissions
-  if (userPermissions.includes(AdminPermissions.SUPER_ADMIN)) {
+  if (userPermissions.includes(ADMIN_PERMISSIONS.SUPER_ADMIN)) {
     return true;
   }
   
@@ -41,26 +41,26 @@ export const usePermissionCheck = (requiredPermission?: AdminPermissionValue) =>
  */
 export function getPermissionDisplayName(permission: AdminPermissionValue): string {
   const displayNames: Record<string, string> = {
-    [AdminPermissions.ADMIN_ACCESS]: 'Admin Access',
-    [AdminPermissions.ADMIN_VIEW]: 'View Admin Panel',
-    [AdminPermissions.ADMIN_EDIT]: 'Edit Admin Settings',
-    [AdminPermissions.CONTENT_VIEW]: 'View Content',
-    [AdminPermissions.CONTENT_EDIT]: 'Edit Content',
-    [AdminPermissions.CONTENT_DELETE]: 'Delete Content',
-    [AdminPermissions.USERS_VIEW]: 'View Users',
-    [AdminPermissions.USERS_EDIT]: 'Edit Users',
-    [AdminPermissions.USERS_DELETE]: 'Delete Users',
-    [AdminPermissions.BUILDS_VIEW]: 'View Builds',
-    [AdminPermissions.BUILDS_APPROVE]: 'Approve Builds',
-    [AdminPermissions.BUILDS_REJECT]: 'Reject Builds',
-    [AdminPermissions.THEMES_VIEW]: 'View Themes',
-    [AdminPermissions.THEMES_EDIT]: 'Edit Themes',
-    [AdminPermissions.THEMES_DELETE]: 'Delete Themes',
-    [AdminPermissions.DATA_VIEW]: 'View Data',
-    [AdminPermissions.DATA_IMPORT]: 'Import/Export Data',
-    [AdminPermissions.SETTINGS_VIEW]: 'View Settings',
-    [AdminPermissions.SETTINGS_EDIT]: 'Edit Settings',
-    [AdminPermissions.SUPER_ADMIN]: 'All Permissions'
+    [ADMIN_PERMISSIONS.ADMIN_ACCESS]: 'Admin Access',
+    [ADMIN_PERMISSIONS.ADMIN_VIEW]: 'View Admin Panel',
+    [ADMIN_PERMISSIONS.ADMIN_EDIT]: 'Edit Admin Settings',
+    [ADMIN_PERMISSIONS.CONTENT_VIEW]: 'View Content',
+    [ADMIN_PERMISSIONS.CONTENT_EDIT]: 'Edit Content',
+    [ADMIN_PERMISSIONS.CONTENT_DELETE]: 'Delete Content',
+    [ADMIN_PERMISSIONS.USERS_VIEW]: 'View Users',
+    [ADMIN_PERMISSIONS.USERS_EDIT]: 'Edit Users',
+    [ADMIN_PERMISSIONS.USERS_DELETE]: 'Delete Users',
+    [ADMIN_PERMISSIONS.BUILDS_VIEW]: 'View Builds',
+    [ADMIN_PERMISSIONS.BUILDS_APPROVE]: 'Approve Builds',
+    [ADMIN_PERMISSIONS.BUILDS_REJECT]: 'Reject Builds',
+    [ADMIN_PERMISSIONS.THEMES_VIEW]: 'View Themes',
+    [ADMIN_PERMISSIONS.THEMES_EDIT]: 'Edit Themes',
+    [ADMIN_PERMISSIONS.THEMES_DELETE]: 'Delete Themes',
+    [ADMIN_PERMISSIONS.DATA_VIEW]: 'View Data',
+    [ADMIN_PERMISSIONS.DATA_IMPORT]: 'Import/Export Data',
+    [ADMIN_PERMISSIONS.SETTINGS_VIEW]: 'View Settings',
+    [ADMIN_PERMISSIONS.SETTINGS_EDIT]: 'Edit Settings',
+    [ADMIN_PERMISSIONS.SUPER_ADMIN]: 'All Permissions'
   };
   
   return displayNames[permission] || permission;

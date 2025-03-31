@@ -1,34 +1,28 @@
 
-import React, { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface NavigationSectionProps {
-  children: ReactNode;
+  children: React.ReactNode;
   title?: string;
-  className?: string;
   expanded?: boolean;
+  className?: string;
 }
 
-export function NavigationSection({ 
-  children, 
-  title, 
-  className,
-  expanded = true 
+export function NavigationSection({
+  children,
+  title,
+  expanded = true,
+  className
 }: NavigationSectionProps) {
   return (
-    <div className={cn("admin-navigation-section py-2", className)}>
+    <div className={cn("navigation-section", className)}>
       {title && expanded && (
-        <motion.h3
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -10 }}
-          className="px-4 text-xs uppercase text-[var(--impulse-text-secondary)] font-medium tracking-wider mb-2"
-        >
+        <h3 className="text-xs font-medium uppercase text-[var(--impulse-text-secondary)] px-4 py-2">
           {title}
-        </motion.h3>
+        </h3>
       )}
-      <div className="space-y-1">
+      <div className="navigation-section-content">
         {children}
       </div>
     </div>

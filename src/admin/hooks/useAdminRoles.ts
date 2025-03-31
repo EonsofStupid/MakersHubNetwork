@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
 import { useAdminStore } from '@/admin/store/admin.store';
-import { AdminPermissionValue, AdminPermissions } from '@/admin/constants/permissions';
+import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
 /**
  * Maps user roles to admin permissions
@@ -31,20 +31,20 @@ export function useAdminRoles() {
     userRoles.forEach(role => {
       switch (role) {
         case 'super_admin':
-          allPermissions.push(AdminPermissions.SUPER_ADMIN);
+          allPermissions.push(ADMIN_PERMISSIONS.SUPER_ADMIN);
           break;
         case 'admin':
           allPermissions = [
             ...allPermissions,
-            AdminPermissions.ADMIN_ACCESS,
-            AdminPermissions.ADMIN_VIEW,
-            AdminPermissions.ADMIN_EDIT,
-            AdminPermissions.CONTENT_VIEW,
-            AdminPermissions.CONTENT_EDIT,
-            AdminPermissions.USERS_VIEW,
-            AdminPermissions.BUILDS_VIEW,
-            AdminPermissions.BUILDS_APPROVE,
-            AdminPermissions.THEMES_VIEW
+            ADMIN_PERMISSIONS.ADMIN_ACCESS,
+            ADMIN_PERMISSIONS.ADMIN_VIEW,
+            ADMIN_PERMISSIONS.ADMIN_EDIT,
+            ADMIN_PERMISSIONS.CONTENT_VIEW,
+            ADMIN_PERMISSIONS.CONTENT_EDIT,
+            ADMIN_PERMISSIONS.USERS_VIEW,
+            ADMIN_PERMISSIONS.BUILDS_VIEW,
+            ADMIN_PERMISSIONS.BUILDS_APPROVE,
+            ADMIN_PERMISSIONS.THEMES_VIEW
           ];
           break;
         // You can add more role mappings here if needed

@@ -2,6 +2,7 @@
 import React from "react";
 import { Database } from "lucide-react";
 import { PlaceholderPage } from "@/admin/routes";
+import { ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
 
 export default function DataMaestroPage() {
   return (
@@ -9,7 +10,7 @@ export default function DataMaestroPage() {
       title="Data Maestro" 
       description="Advanced data management tools for your platform." 
       icon={<Database className="h-8 w-8 text-primary" />}
-      requiredPermission="data:view"
+      requiredPermission={ADMIN_PERMISSIONS.DATA_VIEW}
     />
   );
 }
