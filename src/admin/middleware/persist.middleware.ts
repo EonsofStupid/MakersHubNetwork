@@ -1,10 +1,11 @@
-import { StateStorage, PersistOptions } from 'zustand/middleware';
+import { PersistOptions } from 'zustand/middleware';
 import { createZustandStorage } from '@/lib/storage/createZustandStorage';
 
 // Create persist middleware with custom storage and merge function
 export const createAdminPersistMiddleware = <T>(name: string): PersistOptions<T, T> => {
   return {
     name,
+    // Use the createZustandStorage function which already correctly handles JSON parsing
     storage: createZustandStorage('makers-impulse-admin'),
     // Custom merge strategy
     merge: (persistedState: any, currentState: T) => {
@@ -21,19 +22,6 @@ export const createAdminPersistMiddleware = <T>(name: string): PersistOptions<T,
     partialize: (state) => {
       const { isEditMode, dragSource, dragTarget, isLoadingPermissions, ...rest } = state as any;
       return rest;
-    },
-    // Add deserialize option to parse JSON
-    deserialize: (str) => {
-      if (!str) return undefined;
-      try {
-        return JSON.parse(str);
-      } catch (e) {
-        return undefined;
-      }
-    },
-    // Add serialize option to stringify JSON
-    serialize: (state) => {
-      return JSON.stringify(state);
     },
   };
 };
