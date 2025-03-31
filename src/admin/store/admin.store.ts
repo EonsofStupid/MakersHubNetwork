@@ -1,9 +1,10 @@
-
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createAdminPersistMiddleware } from "../middleware/persist.middleware";
 import { AdminPermissionValue } from "../constants/permissions";
 import { toast } from "sonner";
+import { AdminDataService } from "../services/adminData.service";
+import { useAuthStore } from "@/stores/auth/store";
 
 export interface AdminState {
   isEditMode: boolean;
@@ -151,27 +152,34 @@ export const useAdminStore = create<AdminState>()(
         if (!get().preferencesChanged) return true;
         
         try {
-          console.log('Saving admin preferences to database...');
+          const user = useAuthStore.getState().user;
+          
+          if (!user?.id) {
+            console.error('Cannot save admin preferences: User not authenticated');
+            return false;
+          }
           
           const preferences = {
-            sidebar_expanded: get().sidebarExpanded,
-            active_section: get().activeSection,
-            dashboard_collapsed: get().isDashboardCollapsed,
-            topnav_items: get().pinnedTopNavItems,
-            dashboard_items: get().dashboardShortcuts,
-            theme_preference: get().adminTheme,
-            show_labels: get().showLabels,
-            is_dark_mode: get().isDarkMode,
+            sidebarExpanded: get().sidebarExpanded,
+            activeSection: get().activeSection,
+            isDashboardCollapsed: get().isDashboardCollapsed,
+            pinnedTopNavItems: get().pinnedTopNavItems,
+            dashboardShortcuts: get().dashboardShortcuts,
+            adminTheme: get().adminTheme,
+            showLabels: get().showLabels,
+            isDarkMode: get().isDarkMode,
           };
           
-          // Simulate API call with timeout
-          await new Promise(resolve => setTimeout(resolve, 300));
+          const { success, error } = await AdminDataService.savePreferences(user.id, preferences);
           
-          // Save to localStorage for now, but this would be an API call
-          localStorage.setItem('admin-preferences', JSON.stringify(preferences));
-          console.log('Preferences saved successfully:', preferences);
+          if (!success) {
+            console.error('Failed to save admin preferences:', error);
+            toast.error("Failed to save preferences", {
+              description: error || "Your changes couldn't be saved to the database"
+            });
+            return false;
+          }
           
-          // Reset the changed flag
           set({ preferencesChanged: false });
           return true;
         } catch (error) {
@@ -185,12 +193,21 @@ export const useAdminStore = create<AdminState>()(
       
       syncFromDatabase: async () => {
         try {
-          console.log('Loading admin preferences from database...');
+          const user = useAuthStore.getState().user;
           
-          const storedPrefs = localStorage.getItem('admin-preferences');
-          if (storedPrefs) {
-            const preferences = JSON.parse(storedPrefs);
-            
+          if (!user?.id) {
+            console.warn('Cannot sync admin preferences: User not authenticated');
+            return;
+          }
+          
+          const { data: preferences, error } = await AdminDataService.loadPreferences(user.id);
+          
+          if (error) {
+            console.warn('Failed to load preferences from database:', error);
+            return;
+          }
+          
+          if (preferences) {
             set({
               sidebarExpanded: preferences.sidebar_expanded ?? true,
               activeSection: preferences.active_section ?? 'overview',
@@ -204,7 +221,7 @@ export const useAdminStore = create<AdminState>()(
               preferencesChanged: false,
             });
             
-            console.log('Preferences loaded successfully');
+            console.log('Admin preferences loaded successfully from database');
           }
         } catch (error) {
           console.error('Failed to load preferences from database:', error);
@@ -219,20 +236,38 @@ export const useAdminStore = create<AdminState>()(
             return;
           }
           
+          const roles = useAuthStore.getState().roles;
+          const isAdmin = roles?.includes('admin');
+          const isSuperAdmin = roles?.includes('super_admin');
+          
+          if (!isAdmin && !isSuperAdmin) {
+            set({ permissions: [], isLoadingPermissions: false });
+            return;
+          }
+          
           await new Promise(resolve => setTimeout(resolve, 500));
-          const userPermissions: AdminPermissionValue[] = [
-            'admin:access', 'admin:view', 'admin:edit',
-            'content:view', 'content:edit',
-            'users:view', 'users:edit',
-            'builds:view', 'builds:approve',
-            'themes:view'
-          ];
+          
+          let userPermissions: AdminPermissionValue[] = [];
+          
+          if (isSuperAdmin) {
+            userPermissions = ['super_admin:all', 'admin:access', 'admin:view', 'admin:edit'];
+          } else if (isAdmin) {
+            userPermissions = [
+              'admin:access', 'admin:view', 'admin:edit',
+              'content:view', 'content:edit',
+              'users:view', 'users:edit',
+              'builds:view', 'builds:approve',
+              'themes:view'
+            ];
+          }
+          
           set({ permissions: userPermissions, isLoadingPermissions: false });
         } catch (error) {
           console.error('Failed to load permissions:', error);
           set({ isLoadingPermissions: false });
         }
       },
+      
       hasPermission: (permission: AdminPermissionValue) => {
         if (get().permissions.includes('super_admin:all')) {
           return true;

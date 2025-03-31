@@ -17,9 +17,11 @@ export type Database = {
           dashboard_items: Json | null
           frozen_zones: Json | null
           id: string
+          is_dark_mode: boolean | null
           layout_preference: string | null
           recent_views: Json | null
           shortcuts: Json
+          show_labels: boolean | null
           sidebar_expanded: boolean | null
           theme_preference: string | null
           topnav_items: Json | null
@@ -34,9 +36,11 @@ export type Database = {
           dashboard_items?: Json | null
           frozen_zones?: Json | null
           id?: string
+          is_dark_mode?: boolean | null
           layout_preference?: string | null
           recent_views?: Json | null
           shortcuts?: Json
+          show_labels?: boolean | null
           sidebar_expanded?: boolean | null
           theme_preference?: string | null
           topnav_items?: Json | null
@@ -51,9 +55,11 @@ export type Database = {
           dashboard_items?: Json | null
           frozen_zones?: Json | null
           id?: string
+          is_dark_mode?: boolean | null
           layout_preference?: string | null
           recent_views?: Json | null
           shortcuts?: Json
+          show_labels?: boolean | null
           sidebar_expanded?: boolean | null
           theme_preference?: string | null
           topnav_items?: Json | null

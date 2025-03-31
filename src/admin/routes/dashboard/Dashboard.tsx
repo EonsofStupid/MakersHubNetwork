@@ -1,12 +1,33 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LayoutDashboard } from "lucide-react";
 import { BuildApprovalWidget } from "@/components/admin/dashboard/BuildApprovalWidget";
 import { AdminFeatureSection } from "@/components/admin/dashboard/AdminFeatureSection";
 import { DashboardShortcuts } from "@/admin/components/dashboard/DashboardShortcuts";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useAdminStore } from "@/admin/store/admin.store";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+  const { hasAdminAccess, isAuthenticated } = useAdminAccess();
+  const { initializeStore, hasInitialized } = useAdminStore();
+  const navigate = useNavigate();
+  
+  // Initialize admin store if it hasn't been initialized yet
+  useEffect(() => {
+    if (isAuthenticated && hasAdminAccess && !hasInitialized) {
+      initializeStore();
+    }
+  }, [isAuthenticated, hasAdminAccess, hasInitialized, initializeStore]);
+  
+  // Redirect if not admin
+  useEffect(() => {
+    if (isAuthenticated && !hasAdminAccess) {
+      navigate('/admin/unauthorized');
+    }
+  }, [isAuthenticated, hasAdminAccess, navigate]);
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">

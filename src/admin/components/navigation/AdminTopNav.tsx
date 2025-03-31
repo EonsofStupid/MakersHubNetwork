@@ -10,6 +10,9 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { useToast } from '@/hooks/use-toast';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { TopNavShortcuts } from '@/admin/components/navigation/TopNavShortcuts';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
+import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
+import { SyncIndicator } from '@/admin/components/ui/SyncIndicator';
 
 import '@/admin/styles/admin-topnav.css';
 import '@/admin/styles/cyber-effects.css';
@@ -24,6 +27,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
+  const { hasAdminAccess } = useAdminAccess();
   
   const { 
     sidebarExpanded, 
@@ -64,6 +68,11 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
     return () => clearInterval(interval);
   }, []);
   
+  // Restrict access to admin/super_admin only
+  if (!hasAdminAccess) {
+    return null;
+  }
+  
   return (
     <div className="fixed top-0 left-0 right-0 w-full z-40">
       <div className="admin-topnav w-full flex items-center justify-between px-4 h-14 top-nav-trapezoid">
@@ -93,6 +102,16 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
         <TopNavShortcuts />
         
         <div className="flex items-center space-x-3">
+          {/* Sync indicator */}
+          <div className="mr-2">
+            <SyncIndicator />
+          </div>
+          
+          {/* Edit mode toggle - only show if not readonly */}
+          {!readonly && (
+            <EditModeToggle />
+          )}
+          
           <AdminTooltip content="Notifications" side="bottom">
             <motion.button
               whileHover={{ scale: 1.1 }}
