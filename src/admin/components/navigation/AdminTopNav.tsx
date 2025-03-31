@@ -10,7 +10,6 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { useToast } from '@/hooks/use-toast';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { TopNavShortcuts } from '@/admin/components/navigation/TopNavShortcuts';
-import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 
 import '@/admin/styles/admin-topnav.css';
 import '@/admin/styles/cyber-effects.css';
@@ -65,27 +64,6 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
     return () => clearInterval(interval);
   }, []);
   
-  const handleToggleEditMode = () => {
-    if (readonly) return;
-    
-    // Toggle the edit mode in Zustand store
-    toggleEditMode();
-    
-    // Show appropriate toast
-    if (!isEditMode) {
-      toast({
-        title: "Edit Mode Enabled",
-        description: "You can now customize your admin interface by dragging items",
-        duration: 4000,
-      });
-    } else {
-      toast({
-        title: "Edit Mode Disabled",
-        description: "Your customizations have been saved",
-      });
-    }
-  };
-  
   return (
     <div className="fixed top-0 left-0 right-0 w-full z-40">
       <div className="admin-topnav w-full flex items-center justify-between px-4 h-14 top-nav-trapezoid">
@@ -98,9 +76,6 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
           >
             <Menu className="w-5 h-5" />
           </motion.button>
-          
-          {/* Edit Mode Toggle moved to left side */}
-          <EditModeToggle />
           
           <div className="text-[var(--impulse-text-primary)] hover:text-[var(--impulse-primary)] transition-colors flex items-center gap-2">
             <Shield className="w-5 h-5 text-[var(--impulse-primary)] pulse-glow" />
