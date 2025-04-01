@@ -621,6 +621,51 @@ export type Database = {
         }
         Relationships: []
       }
+      layout_skeletons: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          is_locked: boolean
+          layout_json: Json
+          name: string
+          scope: string
+          type: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_locked?: boolean
+          layout_json?: Json
+          name: string
+          scope: string
+          type: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_locked?: boolean
+          layout_json?: Json
+          name?: string
+          scope?: string
+          type?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       manufacturers: {
         Row: {
           created_at: string
