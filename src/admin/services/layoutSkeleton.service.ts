@@ -1,7 +1,7 @@
 
 import { PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutSkeleton } from "@/admin/types/layout.types";
+import { LayoutSkeleton, Layout } from "@/admin/types/layout.types";
 
 interface LayoutResponse {
   data: LayoutSkeleton | null;
@@ -16,6 +16,7 @@ interface LayoutsResponse {
 interface CreateLayoutResponse {
   success: boolean;
   data?: LayoutSkeleton;
+  id?: string;
   error?: string;
 }
 
@@ -173,7 +174,8 @@ class LayoutSkeletonService {
 
       return { 
         success: true, 
-        data: this.transformDatabaseResponse(data) 
+        data: this.transformDatabaseResponse(data),
+        id: data.id
       };
     } catch (error) {
       return { 
@@ -248,6 +250,49 @@ class LayoutSkeletonService {
   }
 
   /**
+   * Save a layout (create or update)
+   */
+  async saveLayout(layout: Partial<LayoutSkeleton>): Promise<CreateLayoutResponse> {
+    if (layout.id) {
+      const result = await this.update(layout.id, layout);
+      return {
+        success: result.success,
+        data: result.data,
+        id: result.data?.id,
+        error: result.error
+      };
+    } else {
+      return await this.create(layout);
+    }
+  }
+
+  /**
+   * Delete a layout
+   */
+  async deleteLayout(id: string): Promise<DeleteLayoutResponse> {
+    return await this.delete(id);
+  }
+
+  /**
+   * Convert a LayoutSkeleton to a Layout
+   */
+  convertToLayout(skeleton: LayoutSkeleton | null): Layout | null {
+    if (!skeleton) return null;
+    
+    return {
+      id: skeleton.id,
+      name: skeleton.name,
+      type: skeleton.type,
+      scope: skeleton.scope,
+      components: Array.isArray(skeleton.layout_json?.components) 
+        ? skeleton.layout_json.components 
+        : [],
+      version: skeleton.version,
+      meta: skeleton.meta || {}
+    };
+  }
+
+  /**
    * Transform database response to our internal type
    */
   private transformDatabaseResponse(data: any): LayoutSkeleton {
@@ -262,10 +307,9 @@ class LayoutSkeletonService {
       created_at: data.created_at,
       updated_at: data.updated_at,
       created_by: data.created_by,
-      layout_json: data.layout_json,
-      version: data.version,
-      meta: data.meta || {},
-      components: data.layout_json?.components || []
+      layout_json: data.layout_json || { components: [] },
+      version: data.version || 1,
+      meta: data.meta || {}
     };
   }
 }
