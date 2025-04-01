@@ -16,6 +16,7 @@ const AnalyticsPage = lazy(() => import("./analytics/AnalyticsPage"));
 const LayoutsPage = lazy(() => import("./layouts/LayoutsPage"));
 const UnauthorizedPage = lazy(() => import("./unauthorized/UnauthorizedPage"));
 const ReviewsPage = lazy(() => import("./reviews/ReviewsPage"));
+const LogsPage = lazy(() => import("./logs/LogsPage"));
 
 // Loading fallback for lazy-loaded components
 const LoadingFallback = () => (
@@ -43,6 +44,7 @@ export function AdminRoutes() {
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/layouts" element={<LayoutsPage />} />
         <Route path="/reviews" element={<ReviewsPage />} />
+        <Route path="/logs" element={<LogsPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="*" element={<OverviewPage />} />
       </Routes>
