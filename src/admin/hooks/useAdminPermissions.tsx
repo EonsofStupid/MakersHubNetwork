@@ -1,21 +1,18 @@
 
 import { useMemo } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
+import { useAdminStore } from '@/admin/store/admin.store';
 import { PERMISSIONS } from '@/auth/permissions';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { mapRolesToPermissions } from '@/auth/rbac/roles';
 import { AdminPermissionValue } from '@/admin/types/permissions';
 
 export function useAdminPermissions() {
-  const { roles, status, isLoading: authLoading } = useAuthStore();
-  const isLoading = authLoading || status === 'loading';
+  const { isLoading: authLoading, status } = useAuthStore();
+  const { permissions, isLoadingPermissions } = useAdminStore();
+  
+  const isLoading = authLoading || isLoadingPermissions || status === 'loading';
   const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
-
-  // Calculate permissions based on user roles
-  const permissions = useMemo(() => {
-    return mapRolesToPermissions(roles);
-  }, [roles]);
 
   // Memoize the hasPermission function
   const hasPermission = useMemo(() => {
@@ -32,7 +29,7 @@ export function useAdminPermissions() {
   logger.debug('Admin permissions computed', { 
     details: { 
       permissionsCount: permissions.length,
-      roles
+      isLoading
     } 
   });
 
