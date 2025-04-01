@@ -1,129 +1,214 @@
 
-/**
- * Custom CSS for the logging system
- */
+/* Cyberpunk styling for logging components */
 
-/* Log console styles */
-.log-debug {
-  /* Subtle debug styling */
-}
-
-.log-info {
-  color: var(--impulse-primary);
-}
-
-.log-warning {
-  color: #FFB400;
-}
-
-.log-error {
-  color: var(--impulse-secondary);
-}
-
-.log-critical {
-  color: #FF4136;
-  font-weight: bold;
-}
-
-/* Modified toast for log notifications */
-.toast-log-notification {
-  backdrop-filter: blur(8px);
-  border-width: 1px;
-}
-
-.toast-log-notification.debug {
-  border-color: rgba(120, 120, 120, 0.5);
-  background-color: rgba(120, 120, 120, 0.1);
-}
-
-.toast-log-notification.info {
-  border-color: var(--impulse-primary);
-  background-color: rgba(0, 240, 255, 0.1);
-}
-
-.toast-log-notification.warning {
-  border-color: #FFB400;
-  background-color: rgba(255, 180, 0, 0.1);
-}
-
-.toast-log-notification.error {
-  border-color: var(--impulse-secondary);
-  background-color: rgba(255, 45, 110, 0.1);
-}
-
-.toast-log-notification.critical {
-  border-color: #FF4136;
-  background-color: rgba(255, 65, 54, 0.15);
-}
-
-/* Performance log indicators */
-.perf-indicator {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 4px;
-}
-
-.perf-fast {
-  background-color: #2ECC40;
-}
-
-.perf-medium {
-  background-color: #FFB400;
-}
-
-.perf-slow {
-  background-color: var(--impulse-secondary);
-}
-
-.perf-very-slow {
-  background-color: #FF4136;
-  animation: pulse 1s infinite;
-}
-
-/* Log message animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.log-entry-appear {
-  animation: fadeIn 0.2s ease-out;
-}
-
-/* Electric border for critical logs */
-.log-critical-border {
+/* Log console effects */
+.electric-effect-border {
+  box-shadow: 0 0 10px 0 rgba(0, 240, 255, 0.3);
   position: relative;
   overflow: hidden;
 }
 
-.log-critical-border::after {
+.electric-effect-border::before {
   content: '';
   position: absolute;
   top: 0;
   left: -100%;
-  width: 200%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255, 65, 54, 0.5) 50%, 
-    transparent 100%
-  );
-  animation: criticalScan 2s linear infinite;
+  width: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.8), transparent);
+  animation: electric-scan 2s linear infinite;
 }
 
-@keyframes criticalScan {
-  from { left: -100%; }
-  to { left: 100%; }
+.electric-effect-border::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: -100%;
+  width: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.8), transparent);
+  animation: electric-scan-reverse 2s linear infinite;
 }
 
-/* Animation for log level indicators */
-.log-level-indicator {
-  transition: all 0.3s ease;
+@keyframes electric-scan {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 200%;
+  }
 }
 
-.log-level-indicator:hover {
-  transform: scale(1.2);
+@keyframes electric-scan-reverse {
+  0% {
+    right: -100%;
+  }
+  100% {
+    right: 200%;
+  }
+}
+
+/* Cyber window */
+.cyber-window {
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-window::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--impulse-primary), transparent);
+  opacity: 0.5;
+}
+
+/* Cyber dots */
+.cyber-dots div {
+  position: relative;
+  transition: all 0.2s;
+}
+
+.cyber-dots div:hover {
   box-shadow: 0 0 8px currentColor;
+}
+
+/* Admin log indicator styles */
+.admin-log-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  gap: 0.25rem;
+  transition: all 0.2s;
+}
+
+.admin-log-indicator:hover {
+  transform: translateY(-1px);
+}
+
+.admin-log-indicator.critical {
+  border-left: 2px solid rgb(239, 68, 68);
+  color: rgb(239, 68, 68);
+}
+
+.admin-log-indicator.error {
+  border-left: 2px solid rgb(248, 113, 113);
+  color: rgb(248, 113, 113);
+}
+
+.admin-log-indicator.warning {
+  border-left: 2px solid rgb(250, 204, 21);
+  color: rgb(250, 204, 21);
+}
+
+.admin-log-indicator.info {
+  border-left: 2px solid rgb(59, 130, 246);
+  color: rgb(59, 130, 246);
+}
+
+.admin-log-indicator.debug {
+  border-left: 2px solid rgb(156, 163, 175);
+  color: rgb(156, 163, 175);
+}
+
+/* Console animations */
+.admin-sidebar-scan {
+  position: absolute;
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--impulse-primary), transparent);
+  opacity: 0.5;
+  top: 0;
+  left: 0;
+  animation: scan-line 3s linear infinite;
+}
+
+@keyframes scan-line {
+  0% {
+    top: 0%;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+/* Glitch animation for critical errors */
+.glitch-text {
+  position: relative;
+  animation: glitch 1s infinite;
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-1px, 1px);
+  }
+  40% {
+    transform: translate(-1px, -1px);
+  }
+  60% {
+    transform: translate(1px, 1px);
+  }
+  80% {
+    transform: translate(1px, -1px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+/* Log level badges */
+.log-level-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.log-level-badge.debug {
+  background-color: rgba(156, 163, 175, 0.2);
+  color: rgb(156, 163, 175);
+}
+
+.log-level-badge.info {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: rgb(59, 130, 246);
+}
+
+.log-level-badge.warning {
+  background-color: rgba(250, 204, 21, 0.2);
+  color: rgb(250, 204, 21);
+}
+
+.log-level-badge.error {
+  background-color: rgba(248, 113, 113, 0.2);
+  color: rgb(248, 113, 113);
+}
+
+.log-level-badge.critical {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: rgb(239, 68, 68);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }

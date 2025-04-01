@@ -1,48 +1,76 @@
 
 import { LogEntry, LogLevel, LogTransport } from "../types";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
+import { alertToast } from "../components/LogNotification";
+
+interface UITransportOptions {
+  showDebug?: boolean;
+  showInfo?: boolean;
+  showWarning?: boolean;
+  showError?: boolean;
+  showCritical?: boolean;
+  throttleMs?: number;
+}
 
 /**
- * UI Transport for displaying logs as toast notifications
+ * Transport for displaying logs in the UI via toasts
  */
 export class UITransport implements LogTransport {
-  private throttleMap = new Map<string, number>();
+  private options: UITransportOptions;
+  private lastMessages: Map<string, { timestamp: number, count: number }> = new Map();
   
-  constructor(private options: {
-    showDebug?: boolean;
-    showInfo?: boolean;
-    showWarning?: boolean;
-    showError?: boolean;
-    showCritical?: boolean;
-    throttleMs?: number;
-  } = {
-    showDebug: false,
-    showInfo: true,
-    showWarning: true,
-    showError: true,
-    showCritical: true,
-    throttleMs: 1000 // Default throttle of 1 second
-  }) {}
-
+  constructor(options: UITransportOptions = {}) {
+    this.options = {
+      showDebug: false,
+      showInfo: true,
+      showWarning: true,
+      showError: true,
+      showCritical: true,
+      throttleMs: 5000,
+      ...options
+    };
+  }
+  
   log(entry: LogEntry): void {
-    // Check if we should show this log level
+    // Determine if we should show this log level
     if (!this.shouldShowLevel(entry.level)) {
       return;
     }
     
-    // Create a key for throttling similar messages
-    const throttleKey = `${entry.level}-${entry.category}-${entry.message}`;
+    // Create a key for the message to track duplicates
+    const messageKey = `${entry.level}-${entry.category}-${entry.message}`;
     
-    // Check if we're throttling this message
-    if (this.isThrottled(throttleKey)) {
-      return;
+    // Check for throttling
+    if (this.options.throttleMs && this.options.throttleMs > 0) {
+      const now = Date.now();
+      const lastMessage = this.lastMessages.get(messageKey);
+      
+      if (lastMessage) {
+        // If within throttle window, increment count and skip showing
+        if (now - lastMessage.timestamp < this.options.throttleMs) {
+          this.lastMessages.set(messageKey, {
+            timestamp: lastMessage.timestamp,
+            count: lastMessage.count + 1
+          });
+          return;
+        }
+        
+        // If outside throttle window, update with new timestamp and show with count
+        this.lastMessages.set(messageKey, { timestamp: now, count: 1 });
+        
+        // If we had multiple of the same message, show with count
+        if (lastMessage.count > 1) {
+          this.showToast(entry, `(${lastMessage.count}x)`);
+          return;
+        }
+      } else {
+        // First time seeing this message
+        this.lastMessages.set(messageKey, { timestamp: now, count: 1 });
+      }
     }
     
-    // Show toast based on log level
+    // Show the toast
     this.showToast(entry);
-    
-    // Set throttle
-    this.setThrottle(throttleKey);
   }
   
   private shouldShowLevel(level: LogLevel): boolean {
@@ -62,98 +90,63 @@ export class UITransport implements LogTransport {
     }
   }
   
-  private isThrottled(key: string): boolean {
-    const lastShown = this.throttleMap.get(key);
-    return lastShown !== undefined && 
-           Date.now() - lastShown < (this.options.throttleMs || 1000);
-  }
-  
-  private setThrottle(key: string): void {
-    this.throttleMap.set(key, Date.now());
+  private showToast(entry: LogEntry, suffix = ''): void {
+    const suffixText = suffix ? ` ${suffix}` : '';
     
-    // Clean up old entries
-    if (this.throttleMap.size > 100) {
-      const now = Date.now();
-      for (const [k, time] of this.throttleMap.entries()) {
-        if (now - time > 30000) { // Remove entries older than 30 seconds
-          this.throttleMap.delete(k);
-        }
-      }
-    }
-  }
-  
-  private showToast(entry: LogEntry): void {
-    const variant = this.getVariantForLevel(entry.level);
-    const duration = this.getDurationForLevel(entry.level);
-    const className = this.getClassNameForLevel(entry.level);
-    
-    toast({
-      title: this.getTitleForEntry(entry),
-      description: entry.message,
-      variant,
-      duration,
-      className,
-    });
-  }
-  
-  private getTitleForEntry(entry: LogEntry): string {
     switch (entry.level) {
-      case LogLevel.DEBUG:
-        return `Debug: ${entry.category}`;
-      case LogLevel.INFO:
-        return `Info: ${entry.category}`;
-      case LogLevel.WARNING:
-        return `Warning: ${entry.category}`;
       case LogLevel.ERROR:
-        return `Error: ${entry.category}`;
       case LogLevel.CRITICAL:
-        return `CRITICAL: ${entry.category}`;
-      default:
-        return `${entry.category}`;
+        alertToast({
+          title: `${this.getLevelName(entry.level)}: ${entry.category}${suffixText}`,
+          description: entry.message,
+          variant: "destructive",
+          duration: 6000,
+        });
+        break;
+      case LogLevel.WARNING:
+        alertToast({
+          title: `${this.getLevelName(entry.level)}: ${entry.category}${suffixText}`,
+          description: entry.message,
+          variant: "warning",
+          duration: 5000,
+        });
+        break;
+      case LogLevel.INFO:
+        if (this.options.showInfo) {
+          toast({
+            title: `${entry.category}${suffixText}`,
+            description: entry.message,
+            duration: 3000,
+          });
+        }
+        break;
+      case LogLevel.DEBUG:
+        if (this.options.showDebug) {
+          toast({
+            title: `Debug: ${entry.category}${suffixText}`,
+            description: entry.message,
+            variant: "secondary",
+            duration: 2000,
+          });
+        }
+        break;
     }
   }
   
-  private getVariantForLevel(level: LogLevel): "default" | "destructive" {
-    switch (level) {
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-        return "destructive";
-      default:
-        return "default";
-    }
-  }
-  
-  private getDurationForLevel(level: LogLevel): number {
+  private getLevelName(level: LogLevel): string {
     switch (level) {
       case LogLevel.DEBUG:
-        return 3000;
+        return 'Debug';
       case LogLevel.INFO:
-        return 5000;
+        return 'Info';
       case LogLevel.WARNING:
-        return 7000;
+        return 'Warning';
       case LogLevel.ERROR:
-        return 10000;
+        return 'Error';
       case LogLevel.CRITICAL:
-        return 0; // 0 means don't auto-dismiss
+        return 'Critical';
       default:
-        return 5000;
-    }
-  }
-  
-  private getClassNameForLevel(level: LogLevel): string {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return "log-debug"; 
-      case LogLevel.INFO:
-        return "log-info electric-hover";
-      case LogLevel.WARNING:
-        return "log-warning electric-border";
-      case LogLevel.ERROR:
-        return "log-error text-glitch-hover";
-      case LogLevel.CRITICAL:
-        return "log-critical text-glitch";
-      default:
-        return "";
+        return 'Unknown';
     }
   }
 }

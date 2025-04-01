@@ -1,95 +1,187 @@
 
 import React, { useEffect } from "react";
-import { LayoutRenderer } from "@/admin/components/layout/LayoutRenderer";
-import { useLayoutSkeleton } from "@/admin/hooks/useLayoutSkeleton";
-import { useAdminAccess } from "@/hooks/useAdminAccess";
-import { useAdminStore } from "@/admin/store/admin.store";
-import { useNavigate } from "react-router-dom";
-import { initializeComponentRegistry } from "@/admin/components/layout/ComponentRegistrations";
-import { layoutSkeletonService } from "@/admin/services/layoutSkeleton.service";
-import { DashboardLayout } from "@/admin/components/dashboard/DashboardLayout";
-
-// Initialize component registry for layout system
-initializeComponentRegistry();
+import { useNavigate } from 'react-router-dom';
+import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
+import { AdminLayout } from '@/admin/components/AdminLayout';
+import { motion } from "framer-motion";
+import { useAtom } from "jotai";
+import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
+import { cn } from "@/lib/utils";
+import { BarChart3, Users, Activity, Zap } from "lucide-react";
+import { ActiveUsersList } from "@/admin/components/dashboard/ActiveUsersList";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging/types";
+import { InlineLogIndicator } from "@/logging/components/InlineLogIndicator";
 
 export default function Dashboard() {
-  const { hasAdminAccess, isAuthenticated } = useAdminAccess();
-  const { initializeStore, hasInitialized } = useAdminStore();
   const navigate = useNavigate();
+  const [isEditMode] = useAtom(adminEditModeAtom);
+  const logger = useLogger('Dashboard', LogCategory.ADMIN);
   
-  // Get the dashboard layout from the database
-  const { useActiveLayout, useCreateDefaultLayout } = useLayoutSkeleton();
-  const { data: dashboardSkeleton, isLoading, error } = useActiveLayout('dashboard', 'admin');
-  const { mutate: createDefaultLayout } = useCreateDefaultLayout();
-  
-  // Initialize admin store if it hasn't been initialized yet
+  // Log dashboard access on mount
   useEffect(() => {
-    console.log("Dashboard component mounted");
-    console.log("Authentication status:", isAuthenticated);
-    console.log("Has admin access:", hasAdminAccess);
-    console.log("Store initialized:", hasInitialized);
-    
-    if (isAuthenticated && hasAdminAccess && !hasInitialized) {
-      console.log("Initializing admin store from Dashboard...");
-      initializeStore();
-    }
-  }, [isAuthenticated, hasAdminAccess, hasInitialized, initializeStore]);
-  
-  // Redirect if not admin
-  useEffect(() => {
-    if (isAuthenticated && !hasAdminAccess) {
-      console.log("Redirecting to unauthorized page - no admin access");
-      navigate('/admin/unauthorized');
-    }
-  }, [isAuthenticated, hasAdminAccess, navigate]);
-  
-  // If no layout exists and user has permission, create a default one
-  useEffect(() => {
-    console.log("Dashboard layout status:", { 
-      isLoading, 
-      hasLayout: !!dashboardSkeleton, 
-      hasError: !!error 
+    logger.info("Admin dashboard accessed", {
+      details: { editMode: isEditMode }
     });
-    
-    if (!isLoading && !dashboardSkeleton && !error && hasAdminAccess) {
-      console.log("Creating default dashboard layout...");
-      createDefaultLayout({ type: 'dashboard', scope: 'admin' });
-    }
-  }, [isLoading, dashboardSkeleton, error, hasAdminAccess, createDefaultLayout]);
-
-  // Convert skeleton to layout using the service
-  const dashboardLayout = dashboardSkeleton ? 
-    layoutSkeletonService.convertToLayout(dashboardSkeleton) : null;
-  
-  console.log("Dashboard layout:", dashboardLayout);
-  
-  if (isLoading) {
-    console.log("Dashboard is loading...");
-    return (
-      <div className="flex justify-center items-center h-[calc(100vh-64px)]">
-        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-  
-  if (error) {
-    console.error("Dashboard error:", error);
-    return (
-      <div className="p-6">
-        <h2 className="text-xl font-bold text-destructive mb-2">Error Loading Dashboard</h2>
-        <p className="text-muted-foreground">{error instanceof Error ? error.message : 'Unknown error'}</p>
-      </div>
-    );
-  }
-  
-  console.log("Rendering dashboard with layout:", !!dashboardLayout);
+  }, [logger, isEditMode]);
   
   return (
-    <LayoutRenderer
-      layout={dashboardLayout}
-      isLoading={isLoading}
-      error={error instanceof Error ? error : null}
-      fallback={<DashboardLayout />}
-    />
+    <AdminLayout title="Admin Dashboard">
+      <motion.div 
+        className="space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <motion.div className="flex justify-between items-center">
+          <motion.h1 
+            className="text-2xl font-bold"
+            layoutId="dashboard-title"
+          >
+            Admin Dashboard
+          </motion.h1>
+          
+          {isEditMode && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="px-3 py-1.5 bg-primary/20 rounded-full text-sm font-medium text-primary flex items-center gap-1"
+            >
+              <span>Drag & Drop Mode</span>
+            </motion.div>
+          )}
+        </motion.div>
+        
+        {/* System status indicator */}
+        <div className="flex flex-wrap gap-2">
+          <InlineLogIndicator 
+            message="System logs enabled" 
+            variant="info"
+            onClick={() => navigate('/admin/settings')}
+          />
+        </div>
+        
+        {/* Dashboard Shortcuts - Draggable area */}
+        <DashboardShortcuts />
+        
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatsCard 
+            title="Total Users" 
+            value="1,234"
+            icon={Users}
+            trend={12.5}
+            delay={0}
+          />
+          <StatsCard 
+            title="Active Now" 
+            value="56"
+            icon={Activity}
+            trend={-3.2}
+            delay={1}
+          />
+          <StatsCard 
+            title="Builds This Week" 
+            value="87"
+            icon={BarChart3}
+            trend={24.8}
+            delay={2}
+          />
+          <StatsCard 
+            title="System Status" 
+            value="Operational"
+            icon={Zap}
+            trend={0}
+            delay={3}
+          />
+        </div>
+        
+        {/* Performance Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="lg:col-span-2"
+          >
+            <div className={cn(
+              "glassmorphism p-6 rounded-lg border border-[var(--impulse-border-normal)]",
+              "cyber-effect-1 hover-glow transition-all duration-300",
+              isEditMode && "border-dashed"
+            )}>
+              <h2 className="font-medium text-lg mb-3 cyber-text">Performance Metrics</h2>
+              <div className="h-[240px] flex items-center justify-center text-[var(--impulse-text-secondary)]">
+                Graph coming soon
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <ActiveUsersList />
+          </motion.div>
+        </div>
+        
+        {isEditMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-center text-sm text-muted-foreground my-8 p-4 border border-dashed border-primary/20 rounded-lg bg-primary/5"
+          >
+            <p>
+              You're in edit mode. Drag items from the sidebar to add shortcuts to your dashboard or top navigation.
+              Click the edit button again to save your changes.
+            </p>
+          </motion.div>
+        )}
+      </motion.div>
+    </AdminLayout>
   );
 }
+
+interface StatsCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  trend?: number;
+  delay?: number;
+}
+
+const StatsCard = ({ title, value, icon: Icon, trend = 0, delay = 0 }: StatsCardProps) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: delay * 0.1, duration: 0.5 }}
+  >
+    <div className={cn(
+      "glassmorphism p-5 rounded-lg border border-[var(--impulse-border-normal)]",
+      "hover-glow transition-all duration-300 h-32"
+    )}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium text-[var(--impulse-text-secondary)]">{title}</h3>
+        <Icon className="w-5 h-5 text-[var(--impulse-text-accent)]" />
+      </div>
+      <div className="mt-2">
+        <p className="text-2xl font-bold text-[var(--impulse-text-primary)]">{value}</p>
+        {typeof trend === 'number' && (
+          <div className="flex items-center mt-1">
+            <span 
+              className={
+                trend > 0 
+                  ? "text-emerald-400" 
+                  : "text-red-400"
+              }
+            >
+              {trend > 0 ? '+' : ''}{trend}%
+            </span>
+            <span className="text-xs ml-1 text-[var(--impulse-text-secondary)]">vs last month</span>
+          </div>
+        )}
+      </div>
+    </div>
+  </motion.div>
+);

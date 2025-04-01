@@ -1,11 +1,20 @@
 
 import React from "react";
 import { FileText, FolderOpen, Image, FilePlus, FileX } from "lucide-react";
-import { PlaceholderPage } from "@/admin/routes";
+import { PlaceholderPage } from "@/admin/routes/PlaceholderPage";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging/types";
 
 export default function ContentPage() {
+  const logger = useLogger('ContentPage', LogCategory.CONTENT);
+  
+  // Log page access
+  React.useEffect(() => {
+    logger.info("Content management page accessed");
+  }, [logger]);
+  
   // For demo purposes, showing content management UI
   return (
     <div className="space-y-6">
@@ -70,15 +79,31 @@ export default function ContentPage() {
       <div className="mt-8">
         <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
-          <button className="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-md text-sm">
+          <button 
+            className="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-md text-sm"
+            onClick={() => logger.info("Create article button clicked", {
+              category: LogCategory.ADMIN
+            })}
+          >
             <FilePlus className="h-4 w-4" />
             Create new article
           </button>
-          <button className="flex items-center gap-2 bg-muted hover:bg-muted/80 text-muted-foreground px-4 py-2 rounded-md text-sm">
+          <button 
+            className="flex items-center gap-2 bg-muted hover:bg-muted/80 text-muted-foreground px-4 py-2 rounded-md text-sm"
+            onClick={() => logger.info("Upload media button clicked", {
+              category: LogCategory.ADMIN
+            })}
+          >
             <Image className="h-4 w-4" />
             Upload media
           </button>
-          <button className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 px-4 py-2 rounded-md text-sm">
+          <button 
+            className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 px-4 py-2 rounded-md text-sm"
+            onClick={() => logger.warn("Viewing trash content", {
+              category: LogCategory.ADMIN,
+              details: { source: "ContentPage" }
+            })}
+          >
             <FileX className="h-4 w-4" />
             View trash
           </button>

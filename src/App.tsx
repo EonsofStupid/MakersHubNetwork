@@ -8,6 +8,8 @@ import { LoggingProvider } from "@/logging/context/LoggingContext";
 import { LogConsole } from "@/logging/components/LogConsole";
 import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
+import { useEffect } from "react";
+import { initializeLogger } from "@/logging";
 
 // Import pages
 import Index from "./pages/Index";
@@ -34,9 +36,21 @@ function LoggingComponents() {
   );
 }
 
+// Initialize logging system
+initializeLogger();
+
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Log route changes
+  useEffect(() => {
+    const logger = getLogger();
+    logger.info(`Navigated to ${location.pathname}`, {
+      category: 'SYSTEM',
+      details: { path: location.pathname }
+    });
+  }, [location.pathname]);
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">

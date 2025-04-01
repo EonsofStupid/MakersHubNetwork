@@ -3,6 +3,7 @@ import React from 'react';
 import { AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLoggingContext } from '../context/LoggingContext';
+import { motion } from 'framer-motion';
 
 interface LogToggleButtonProps {
   className?: string;
@@ -14,7 +15,7 @@ export const LogToggleButton: React.FC<LogToggleButtonProps> = ({
   const { showLogConsole, setShowLogConsole } = useLoggingContext();
   
   return (
-    <button
+    <motion.button
       onClick={() => setShowLogConsole(!showLogConsole)}
       className={cn(
         "fixed z-40 bottom-4 right-4 p-3 rounded-full",
@@ -27,8 +28,12 @@ export const LogToggleButton: React.FC<LogToggleButtonProps> = ({
         className
       )}
       title="Toggle Log Console"
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
     >
       <AlertCircle size={20} />
-    </button>
+    </motion.button>
   );
 };

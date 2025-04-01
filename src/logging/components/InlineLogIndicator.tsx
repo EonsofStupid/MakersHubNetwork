@@ -1,108 +1,115 @@
 
-import React, { useState } from 'react';
-import { LogLevel } from '../types';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { AlertCircle, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LogLevel } from '../types';
+
+// Define indicator variants
+export type LogIndicatorVariant = 'debug' | 'info' | 'warning' | 'error' | 'critical';
 
 interface InlineLogIndicatorProps {
-  level: LogLevel;
   message: string;
-  details?: unknown;
+  level?: LogLevel;
+  variant?: LogIndicatorVariant;
   onClick?: () => void;
   className?: string;
-  pulseEffect?: boolean;
+  showIcon?: boolean;
+  children?: React.ReactNode;
 }
 
+/**
+ * A small inline indicator that can be used to show log-related information
+ * directly in the UI next to relevant components
+ */
 export const InlineLogIndicator: React.FC<InlineLogIndicatorProps> = ({
-  level,
   message,
-  details,
+  level,
+  variant = 'info',
   onClick,
   className,
-  pulseEffect = true
+  showIcon = true,
+  children
 }) => {
-  const [showTooltip, setShowTooltip] = useState(false);
+  // Map LogLevel to variant if provided
+  if (level !== undefined) {
+    switch (level) {
+      case LogLevel.DEBUG:
+        variant = 'debug';
+        break;
+      case LogLevel.INFO:
+        variant = 'info';
+        break;
+      case LogLevel.WARNING:
+        variant = 'warning';
+        break;
+      case LogLevel.ERROR:
+        variant = 'error';
+        break;
+      case LogLevel.CRITICAL:
+        variant = 'critical';
+        break;
+    }
+  }
   
-  const handleMouseEnter = () => {
-    setShowTooltip(true);
+  // Determine icon and styles based on variant
+  const getVariantProps = (variant: LogIndicatorVariant) => {
+    switch (variant) {
+      case 'debug':
+        return {
+          Icon: Info,
+          colorClass: 'text-gray-400 border-gray-400/30 bg-gray-400/10',
+          hoverClass: 'hover:bg-gray-400/20'
+        };
+      case 'info':
+        return {
+          Icon: Info,
+          colorClass: 'text-blue-400 border-blue-400/30 bg-blue-400/10',
+          hoverClass: 'hover:bg-blue-400/20'
+        };
+      case 'warning':
+        return {
+          Icon: AlertTriangle,
+          colorClass: 'text-yellow-400 border-yellow-400/30 bg-yellow-400/10',
+          hoverClass: 'hover:bg-yellow-400/20'
+        };
+      case 'error':
+        return {
+          Icon: AlertCircle,
+          colorClass: 'text-red-400 border-red-400/30 bg-red-400/10',
+          hoverClass: 'hover:bg-red-400/20'
+        };
+      case 'critical':
+        return {
+          Icon: AlertCircle,
+          colorClass: 'text-red-600 border-red-600/30 bg-red-600/10',
+          hoverClass: 'hover:bg-red-600/20'
+        };
+    }
   };
   
-  const handleMouseLeave = () => {
-    setShowTooltip(false);
-  };
+  const { Icon, colorClass, hoverClass } = getVariantProps(variant);
   
   return (
-    <div className="relative inline-block">
-      <div
-        onClick={onClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className={cn(
-          "w-2 h-2 rounded-full inline-block cursor-pointer",
-          getLogLevelClass(level),
-          pulseEffect && getPulseClass(level),
-          className
-        )}
-      />
-      
-      {showTooltip && (
-        <div className={cn(
-          "absolute z-50 bottom-full mb-2 p-2 rounded-md text-xs w-max max-w-xs", 
-          "transform -translate-x-1/2 left-1/2",
-          "bg-[var(--impulse-bg-card)] border border-[var(--impulse-border-normal)]",
-          "backdrop-blur-md text-[var(--impulse-text-primary)]"
-        )}>
-          <div className="font-bold mb-1">{message}</div>
-          {details && (
-            <div className="text-[var(--impulse-text-secondary)]">
-              {typeof details === 'object' 
-                ? JSON.stringify(details).substring(0, 100) + (JSON.stringify(details).length > 100 ? '...' : '')
-                : String(details)
-              }
-            </div>
-          )}
-          <div className="text-center text-[var(--impulse-text-secondary)] mt-1 text-[10px]">
-            Click for more details
-          </div>
-          
-          {/* Arrow */}
-          <div className="absolute w-2 h-2 bg-[var(--impulse-bg-card)] border-r border-b border-[var(--impulse-border-normal)] transform rotate-45 left-1/2 -bottom-1 -ml-1" />
-        </div>
+    <motion.div
+      className={cn(
+        'inline-flex items-center gap-1.5 px-2 py-1 text-xs border rounded-md',
+        onClick && 'cursor-pointer',
+        colorClass,
+        onClick && hoverClass,
+        'transition-all duration-150 backdrop-blur-sm',
+        className
       )}
-    </div>
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      onClick={onClick}
+      whileHover={onClick ? { scale: 1.02 } : undefined}
+      whileTap={onClick ? { scale: 0.98 } : undefined}
+    >
+      {showIcon && <Icon className="w-3 h-3" />}
+      <span>{message}</span>
+      {children}
+    </motion.div>
   );
 };
-
-// Helper functions for styling
-function getLogLevelClass(level: LogLevel): string {
-  switch (level) {
-    case LogLevel.DEBUG:
-      return 'bg-gray-400';
-    case LogLevel.INFO:
-      return 'bg-[var(--impulse-primary)]';
-    case LogLevel.WARNING:
-      return 'bg-yellow-400';
-    case LogLevel.ERROR:
-      return 'bg-[var(--impulse-secondary)]';
-    case LogLevel.CRITICAL:
-      return 'bg-red-600';
-    default:
-      return 'bg-gray-400';
-  }
-}
-
-function getPulseClass(level: LogLevel): string {
-  switch (level) {
-    case LogLevel.DEBUG:
-      return '';
-    case LogLevel.INFO:
-      return 'animate-pulse';
-    case LogLevel.WARNING:
-      return 'animate-pulse';
-    case LogLevel.ERROR:
-      return 'animate-[pulse_1s_cubic-bezier(0.4,0,0.6,1)_infinite]';
-    case LogLevel.CRITICAL:
-      return 'animate-[pulse_0.5s_cubic-bezier(0.4,0,0.6,1)_infinite]';
-    default:
-      return '';
-  }
-}
