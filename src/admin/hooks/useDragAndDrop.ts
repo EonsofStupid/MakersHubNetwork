@@ -1,7 +1,7 @@
 
 import { useCallback, useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { motion, useDragControls, PanInfo } from 'framer-motion';
+import { PanInfo } from 'framer-motion';
 import {
   dragSourceIdAtom,
   dragTargetIdAtom,
@@ -45,7 +45,7 @@ export function useDragAndDrop({
     
     setDragSourceId(itemId);
     setIsDragging(true);
-    logger.info(`Drag started: ${itemId}`, { level: LogLevel.DEBUG });
+    logger.debug(`Drag started: ${itemId}`);
   }, [setDragSourceId, setIsDragging, logger, dragOnlyInEditMode, isEditMode]);
   
   // Handle drag end using Framer Motion

@@ -1,7 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { LogCategory, LogEntry, LogTransport, LoggingConfig } from './types';
-import { LOG_LEVELS, LogLevel, isLogLevelAtLeast } from './constants/log-level';
+import { LogLevel, isLogLevelAtLeast } from './constants/log-level';
 import { defaultLoggingConfig } from './config';
 
 /**
@@ -59,7 +59,7 @@ export class LoggerService {
     source?: string;
     tags?: string[];
   }): void {
-    this.log(LOG_LEVELS.DEBUG, message, options);
+    this.log(LogLevel.DEBUG, message, options);
   }
   
   /**
@@ -71,7 +71,7 @@ export class LoggerService {
     source?: string;
     tags?: string[];
   }): void {
-    this.log(LOG_LEVELS.INFO, message, options);
+    this.log(LogLevel.INFO, message, options);
   }
   
   /**
@@ -83,7 +83,7 @@ export class LoggerService {
     source?: string;
     tags?: string[];
   }): void {
-    this.log(LOG_LEVELS.WARN, message, options);
+    this.log(LogLevel.WARN, message, options);
   }
   
   /**
@@ -95,7 +95,7 @@ export class LoggerService {
     source?: string;
     tags?: string[];
   }): void {
-    this.log(LOG_LEVELS.ERROR, message, options);
+    this.log(LogLevel.ERROR, message, options);
   }
   
   /**
@@ -107,7 +107,7 @@ export class LoggerService {
     source?: string;
     tags?: string[];
   }): void {
-    this.log(LOG_LEVELS.CRITICAL, message, options);
+    this.log(LogLevel.CRITICAL, message, options);
   }
   
   /**
@@ -125,7 +125,7 @@ export class LoggerService {
       { duration };
       
     this.log(
-      duration > 1000 ? LOG_LEVELS.WARN : LOG_LEVELS.INFO,
+      duration > 1000 ? LogLevel.WARN : LogLevel.INFO,
       message,
       {
         ...options,
@@ -191,7 +191,7 @@ export class LoggerService {
     // Process immediately or wait for flush
     if (
       this.buffer.length >= (this.config.bufferSize || 1) ||
-      isLogLevelAtLeast(level, LOG_LEVELS.ERROR)
+      isLogLevelAtLeast(level, LogLevel.ERROR)
     ) {
       this.flush();
     }
