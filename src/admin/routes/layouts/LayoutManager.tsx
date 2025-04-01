@@ -12,6 +12,7 @@ import LayoutsPage from './LayoutsPage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LayoutEditor } from '@/admin/components/layout/LayoutEditor';
 import { RequirePermission } from '@/admin/components/auth/RequirePermission';
+import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
 export function LayoutManager() {
   const [selectedType, setSelectedType] = useState<string>('dashboard');

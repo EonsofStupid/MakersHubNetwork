@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { LayoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
+import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
 import { toast } from 'sonner';
 import { createDefaultDashboardLayout } from '@/admin/utils/layoutUtils';
@@ -19,7 +19,7 @@ export function useLayoutSkeleton() {
     return useQuery({
       queryKey: ['layouts', 'all'],
       queryFn: async () => {
-        return await LayoutSkeletonService.getAllLayouts();
+        return await layoutSkeletonService.getAll();
       },
     });
   };
@@ -32,9 +32,9 @@ export function useLayoutSkeleton() {
       queryKey: ['layout', id],
       queryFn: async () => {
         if (!id) return null;
-        const skeleton = await LayoutSkeletonService.getById(id);
-        if (!skeleton) return null;
-        return LayoutSkeletonService.convertToLayout(skeleton);
+        const skeleton = await layoutSkeletonService.getById(id);
+        if (!skeleton?.data) return null;
+        return skeleton.data;
       },
       enabled: !!id,
     });
@@ -47,9 +47,9 @@ export function useLayoutSkeleton() {
     return useQuery({
       queryKey: ['layout', type, scope, 'active'],
       queryFn: async () => {
-        const skeleton = await LayoutSkeletonService.getActiveLayout(type, scope);
-        if (!skeleton) return null;
-        return LayoutSkeletonService.convertToLayout(skeleton);
+        const response = await layoutSkeletonService.getByTypeAndScope(type, scope);
+        if (!response?.data) return null;
+        return response.data;
       },
     });
   };
@@ -61,8 +61,8 @@ export function useLayoutSkeleton() {
     return useMutation({
       mutationFn: async ({ type, scope }: { type: string, scope: string }) => {
         // Check if a layout already exists
-        const existingLayout = await LayoutSkeletonService.getActiveLayout(type, scope);
-        if (existingLayout) return { success: false, error: 'Layout already exists' };
+        const existingLayout = await layoutSkeletonService.getByTypeAndScope(type, scope);
+        if (existingLayout?.data) return { success: false, error: 'Layout already exists' };
         
         // Create a default layout based on type
         let defaultLayout: Layout;
@@ -97,7 +97,7 @@ export function useLayoutSkeleton() {
         }
         
         // Save to database
-        return await LayoutSkeletonService.saveLayout({
+        return await layoutSkeletonService.create({
           name: defaultLayout.name,
           type: defaultLayout.type,
           scope: defaultLayout.scope,
@@ -129,7 +129,11 @@ export function useLayoutSkeleton() {
   const useSaveLayout = () => {
     return useMutation({
       mutationFn: async (layout: Partial<LayoutSkeleton>) => {
-        return await LayoutSkeletonService.saveLayout(layout);
+        if (layout.id) {
+          return await layoutSkeletonService.update(layout.id, layout);
+        } else {
+          return await layoutSkeletonService.create(layout);
+        }
       },
       onSuccess: (data, variables) => {
         // Invalidate relevant queries
@@ -153,7 +157,7 @@ export function useLayoutSkeleton() {
   const useDeleteLayout = () => {
     return useMutation({
       mutationFn: async (id: string) => {
-        return await LayoutSkeletonService.deleteLayout(id);
+        return await layoutSkeletonService.delete(id);
       },
       onSuccess: (data, variables) => {
         // Invalidate relevant queries

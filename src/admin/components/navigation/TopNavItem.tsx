@@ -5,10 +5,11 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
+import { LucideIcon } from 'lucide-react';
 
 interface TopNavItemProps {
   id: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   label: string;
   onClick: () => void;
   onRemove?: (e: React.MouseEvent) => void;

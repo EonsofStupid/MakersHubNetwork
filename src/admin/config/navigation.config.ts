@@ -1,7 +1,8 @@
 
 import { 
   Users, Settings, LayoutDashboard, Package, 
-  FileText, Database, Paintbrush, Shield, BarChart 
+  FileText, Database, Paintbrush, Shield, BarChart, 
+  LucideIcon
 } from "lucide-react";
 import { AdminPermissionValue } from "@/admin/constants/permissions";
 
@@ -9,10 +10,10 @@ export interface AdminNavigationItem {
   id: string;
   label: string;
   path: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   section?: string;
   permission?: AdminPermissionValue;
-  description?: string; // Add description property
+  description?: string;
 }
 
 export const adminNavigationItems: AdminNavigationItem[] = [

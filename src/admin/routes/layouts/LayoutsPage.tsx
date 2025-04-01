@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ImpulseAdminLayout } from '@/admin/components/layout/ImpulseAdminLayout';
 import { Button } from '@/components/ui/button';
 import { Layout, LayoutSkeleton, LayoutSchema } from '@/admin/types/layout.types';
-import { LayoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
+import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { LayoutEditor } from '@/admin/components/layout/LayoutEditor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -29,7 +28,6 @@ function LayoutsPage() {
     description: '',
   });
   
-  // Fetch all layouts
   const { data: layouts, isLoading, refetch } = useQuery({
     queryKey: ['layouts'],
     queryFn: async () => {
@@ -47,28 +45,25 @@ function LayoutsPage() {
     },
   });
   
-  // Fetch selected layout
   const { data: selectedLayout, isLoading: isLoadingSelected } = useQuery({
     queryKey: ['layout', selectedLayoutId],
     queryFn: async () => {
       if (!selectedLayoutId) return null;
       
-      const skeleton = await LayoutSkeletonService.getById(selectedLayoutId);
+      const skeleton = await layoutSkeletonService.getById(selectedLayoutId);
       if (!skeleton) return null;
       
-      return LayoutSkeletonService.convertToLayout(skeleton);
+      return layoutSkeletonService.convertToLayout(skeleton);
     },
     enabled: !!selectedLayoutId,
   });
   
-  // Handle create new layout
   const handleCreateLayout = async () => {
     if (!newLayout.name || !newLayout.type || !newLayout.scope) {
       toast.error('Please fill in all required fields');
       return;
     }
     
-    // Create a default empty layout
     const defaultLayout: Partial<LayoutSkeleton> = {
       name: newLayout.name,
       type: newLayout.type,
@@ -84,7 +79,7 @@ function LayoutsPage() {
     };
     
     try {
-      const result = await LayoutSkeletonService.saveLayout(defaultLayout);
+      const result = await layoutSkeletonService.saveLayout(defaultLayout);
       
       if (result.success) {
         toast.success('Layout created successfully');
@@ -97,7 +92,6 @@ function LayoutsPage() {
         });
         refetch();
         
-        // Select the new layout
         if (result.id) {
           setSelectedLayoutId(result.id);
         }
@@ -113,16 +107,14 @@ function LayoutsPage() {
     }
   };
   
-  // Handle delete layout
   const handleDeleteLayout = async (id: string) => {
     try {
-      const result = await LayoutSkeletonService.deleteLayout(id);
+      const result = await layoutSkeletonService.deleteLayout(id);
       
       if (result.success) {
         toast.success('Layout deleted successfully');
         refetch();
         
-        // Clear selection if the deleted layout was selected
         if (selectedLayoutId === id) {
           setSelectedLayoutId(null);
         }
