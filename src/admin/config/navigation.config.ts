@@ -1,10 +1,23 @@
 
 import { 
-  Users, Settings, LayoutDashboard, Package, 
-  FileText, Database, Paintbrush, Shield, BarChart, 
+  LayoutDashboard, 
+  Users, 
+  Settings, 
+  Package, 
+  FileText, 
+  BarChart, 
+  ShieldAlert,
+  Bell,
+  Heart,
+  Database,
+  Code,
+  Briefcase,
+  MessageSquare,
+  Megaphone,
+  Map,
   LucideIcon
-} from "lucide-react";
-import { AdminPermissionValue } from "@/admin/constants/permissions";
+} from 'lucide-react';
+import { AdminPermissionValue } from '@/admin/constants/permissions';
 
 export interface AdminNavigationItem {
   id: string;
@@ -18,81 +31,112 @@ export interface AdminNavigationItem {
 
 export const adminNavigationItems: AdminNavigationItem[] = [
   {
-    id: "overview",
-    label: "Dashboard",
-    path: "/admin/overview",
+    id: 'overview',
+    label: 'Overview',
+    path: '/admin/overview',
     icon: LayoutDashboard,
-    section: "Main",
-    description: "Dashboard overview and stats"
+    section: 'General'
   },
   {
-    id: "users",
-    label: "Users",
-    path: "/admin/users",
+    id: 'users',
+    label: 'Users',
+    path: '/admin/users',
     icon: Users,
-    section: "Main",
-    permission: "users:view",
-    description: "Manage user accounts"
+    section: 'General',
+    permission: 'read:users'
   },
   {
-    id: "builds",
-    label: "Builds",
-    path: "/admin/builds",
+    id: 'builds',
+    label: 'Builds',
+    path: '/admin/builds',
     icon: Package,
-    section: "Main",
-    permission: "builds:view",
-    description: "Review printer builds"
+    section: 'Content'
   },
   {
-    id: "content",
-    label: "Content",
-    path: "/admin/content",
+    id: 'content',
+    label: 'Content',
+    path: '/admin/content',
     icon: FileText,
-    section: "Management",
-    permission: "content:view",
-    description: "Manage site content"
+    section: 'Content'
   },
   {
-    id: "data-maestro",
-    label: "Data Maestro",
-    path: "/admin/data-maestro",
-    icon: Database,
-    section: "Management",
-    permission: "admin:view",
-    description: "Database management tools"
-  },
-  {
-    id: "analytics",
-    label: "Analytics",
-    path: "/admin/analytics",
+    id: 'analytics',
+    label: 'Analytics',
+    path: '/admin/analytics',
     icon: BarChart,
-    section: "Insights",
-    description: "View site analytics"
+    section: 'Reports'
   },
   {
-    id: "themes",
-    label: "Themes",
-    path: "/admin/themes",
-    icon: Paintbrush,
-    section: "Settings",
-    permission: "themes:view",
-    description: "Customize site appearance"
+    id: 'security',
+    label: 'Security',
+    path: '/admin/security',
+    icon: ShieldAlert,
+    section: 'Settings',
+    permission: 'read:security'
   },
   {
-    id: "permissions",
-    label: "Permissions",
-    path: "/admin/permissions",
-    icon: Shield,
-    section: "Settings",
-    permission: "admin:edit",
-    description: "Manage user permissions"
-  },
-  {
-    id: "settings",
-    label: "Settings",
-    path: "/admin/settings",
+    id: 'settings',
+    label: 'Settings',
+    path: '/admin/settings',
     icon: Settings,
-    section: "Settings",
-    description: "Configure system settings"
+    section: 'Settings'
+  },
+  {
+    id: 'notifications',
+    label: 'Notifications',
+    path: '/admin/notifications',
+    icon: Bell,
+    section: 'Communication'
+  },
+  {
+    id: 'community',
+    label: 'Community',
+    path: '/admin/community',
+    icon: Heart,
+    section: 'Communication'
+  },
+  {
+    id: 'database',
+    label: 'Database',
+    path: '/admin/database',
+    icon: Database,
+    section: 'Developer',
+    permission: 'read:database'
+  },
+  {
+    id: 'code',
+    label: 'Code',
+    path: '/admin/code',
+    icon: Code,
+    section: 'Developer',
+    permission: 'read:code'
+  },
+  {
+    id: 'jobs',
+    label: 'Jobs',
+    path: '/admin/jobs',
+    icon: Briefcase,
+    section: 'Management'
+  },
+  {
+    id: 'messages',
+    label: 'Messages',
+    path: '/admin/messages',
+    icon: MessageSquare,
+    section: 'Communication'
+  },
+  {
+    id: 'marketing',
+    label: 'Marketing',
+    path: '/admin/marketing',
+    icon: Megaphone,
+    section: 'Management'
+  },
+  {
+    id: 'locations',
+    label: 'Locations',
+    path: '/admin/locations',
+    icon: Map,
+    section: 'Management'
   }
 ];

@@ -1,22 +1,45 @@
 
+import React from 'react';
+
+interface ComponentRegistration {
+  component: React.ComponentType<any> | keyof JSX.IntrinsicElements;
+  defaultProps?: Record<string, any>;
+  permissions?: string[];
+  meta?: Record<string, any>;
+}
+
 /**
  * Component Registry Service
  * Manages the registration and retrieval of components for the layout engine
  */
 class ComponentRegistry {
-  private components: Record<string, React.ComponentType<any> | keyof JSX.IntrinsicElements> = {};
+  private components: Record<string, ComponentRegistration> = {};
   
   /**
    * Register a component with the registry
    */
-  registerComponent(type: string, component: React.ComponentType<any> | keyof JSX.IntrinsicElements) {
-    this.components[type] = component;
+  registerComponent(
+    type: string, 
+    component: React.ComponentType<any> | keyof JSX.IntrinsicElements,
+    options: Omit<ComponentRegistration, 'component'> = {}
+  ) {
+    this.components[type] = {
+      component,
+      ...options
+    };
   }
   
   /**
    * Get a component from the registry by type
    */
   getComponent(type: string): React.ComponentType<any> | keyof JSX.IntrinsicElements | null {
+    return this.components[type]?.component || null;
+  }
+  
+  /**
+   * Get a component registration from the registry by type
+   */
+  getRegistration(type: string): ComponentRegistration | null {
     return this.components[type] || null;
   }
   
@@ -32,6 +55,13 @@ class ComponentRegistry {
    */
   getRegisteredComponents(): string[] {
     return Object.keys(this.components);
+  }
+  
+  /**
+   * Get all registered components
+   */
+  getAll(): Record<string, ComponentRegistration> {
+    return this.components;
   }
   
   /**

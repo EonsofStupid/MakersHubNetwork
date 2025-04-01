@@ -6,6 +6,8 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { useNavigate } from "react-router-dom";
 import { initializeComponentRegistry } from "@/admin/components/layout/ComponentRegistrations";
+import { layoutSkeletonService } from "@/admin/services/layoutSkeleton.service";
+import { DashboardLayout } from "@/admin/components/dashboard/DashboardLayout";
 
 // Initialize component registry for layout system
 initializeComponentRegistry();
@@ -53,14 +55,7 @@ export default function Dashboard() {
       layout={dashboardLayout}
       isLoading={isLoading}
       error={error instanceof Error ? error : null}
-      fallback={
-        <DashboardLayout />
-      }
+      fallback={<DashboardLayout />}
     />
   );
 }
-
-// Import remaining dependencies
-import { DashboardLayout } from "@/admin/components/dashboard/DashboardLayout";
-import { FallbackLayoutDisplay } from "@/admin/components/layout/FallbackLayoutDisplay";
-import { layoutSkeletonService } from "@/admin/services/layoutSkeleton.service";

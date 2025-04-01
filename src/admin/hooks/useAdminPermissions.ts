@@ -4,17 +4,21 @@ import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminPermissionValue } from '@/admin/constants/permissions';
 
 export function useAdminPermissions() {
-  const { permissions } = useAdminStore();
+  const { permissions, isLoadingPermissions } = useAdminStore();
   
   const hasPermission = useCallback((permission: AdminPermissionValue | string) => {
     // Admin users have all permissions
-    // For simplicity now we're just checking if the permission exists in the list
-    return permissions.includes(permission as string) || 
-           permissions.includes('all:all');
+    if (permissions.includes('all:all')) {
+      return true;
+    }
+    
+    // Check for specific permission
+    return permissions.includes(permission as string);
   }, [permissions]);
   
   return {
     hasPermission,
-    permissions
+    permissions,
+    isLoading: isLoadingPermissions
   };
 }

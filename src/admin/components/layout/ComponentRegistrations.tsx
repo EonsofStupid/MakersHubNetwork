@@ -31,9 +31,17 @@ export function initializeComponentRegistry() {
   componentRegistry.registerComponent('AdminTopNav', AdminTopNav);
   
   // Register basic HTML components
-  componentRegistry.registerComponent('div', Div);
-  componentRegistry.registerComponent('heading', Heading);
-  componentRegistry.registerComponent('span', 'span');
+  componentRegistry.registerComponent('div', Div, {
+    defaultProps: { className: '' }
+  });
+  
+  componentRegistry.registerComponent('heading', Heading, {
+    defaultProps: { level: 1, className: '' }
+  });
+  
+  componentRegistry.registerComponent('span', 'span', {
+    defaultProps: { className: '' }
+  });
   
   console.log("Component registry initialized:", componentRegistry.getRegisteredComponents());
 }

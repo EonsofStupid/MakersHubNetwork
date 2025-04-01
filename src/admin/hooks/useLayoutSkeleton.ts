@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
@@ -187,7 +188,7 @@ export function useLayoutSkeleton() {
     useLayoutById,
     useActiveLayout,
     useCreateDefaultLayout,
-    useSaveLayout: () => {}, // Using placeholder to maintain compatibility
-    useDeleteLayout: () => {}, // Using placeholder to maintain compatibility
+    useSaveLayout,
+    useDeleteLayout
   };
 }
