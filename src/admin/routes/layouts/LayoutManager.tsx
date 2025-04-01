@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,11 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowDownUp, FileText, Plus } from 'lucide-react';
-import { LayoutsPage } from './LayoutsPage';
+import LayoutsPage from './LayoutsPage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LayoutEditor } from '@/admin/components/layout/LayoutEditor';
 import { RequirePermission } from '@/admin/components/auth/RequirePermission';
-import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
 export function LayoutManager() {
   const [selectedType, setSelectedType] = useState<string>('dashboard');
@@ -21,7 +19,6 @@ export function LayoutManager() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Fetch all layouts
   const { data: layouts, isLoading } = useQuery({
     queryKey: ['layouts', selectedType, scope, sortDirection, searchQuery],
     queryFn: async () => {

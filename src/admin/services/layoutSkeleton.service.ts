@@ -1,61 +1,40 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { LayoutSkeleton, LayoutSchema, Layout } from '@/admin/types/layout.types';
-import { toast } from 'sonner';
+import { PostgrestError } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { LayoutSkeleton } from "@/admin/types/layout.types";
 
-/**
- * Service for interacting with layout_skeletons table
- */
-export const LayoutSkeletonService = {
+interface LayoutResponse {
+  data: LayoutSkeleton | null;
+  error: PostgrestError | Error | null;
+}
+
+interface LayoutsResponse {
+  data: LayoutSkeleton[] | null;
+  error: PostgrestError | Error | null;
+}
+
+interface CreateLayoutResponse {
+  success: boolean;
+  data?: LayoutSkeleton;
+  error?: string;
+}
+
+interface UpdateLayoutResponse {
+  success: boolean;
+  data?: LayoutSkeleton;
+  error?: string;
+}
+
+interface DeleteLayoutResponse {
+  success: boolean;
+  error?: string;
+}
+
+class LayoutSkeletonService {
   /**
-   * Fetch all layout skeletons
+   * Get a single layout by id
    */
-  async getAllLayouts(): Promise<LayoutSkeleton[]> {
-    try {
-      const { data, error } = await supabase
-        .from('layout_skeletons')
-        .select('*')
-        .order('updated_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching all layouts:', error);
-        return [];
-      }
-
-      return data as LayoutSkeleton[];
-    } catch (error) {
-      console.error('Error in getAllLayouts:', error);
-      return [];
-    }
-  },
-
-  /**
-   * Fetch layouts by type
-   */
-  async getLayoutsByType(type: string): Promise<LayoutSkeleton[]> {
-    try {
-      const { data, error } = await supabase
-        .from('layout_skeletons')
-        .select('*')
-        .eq('type', type)
-        .order('updated_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching layouts by type:', error);
-        return [];
-      }
-
-      return data as LayoutSkeleton[];
-    } catch (error) {
-      console.error('Error in getLayoutsByType:', error);
-      return [];
-    }
-  },
-
-  /**
-   * Fetch a layout skeleton by id
-   */
-  async getById(id: string): Promise<LayoutSkeleton | null> {
+  async getById(id: string): Promise<LayoutResponse> {
     try {
       const { data, error } = await supabase
         .from('layout_skeletons')
@@ -64,21 +43,25 @@ export const LayoutSkeletonService = {
         .single();
 
       if (error) {
-        console.error('Error fetching layout skeleton:', error);
-        return null;
+        return { data: null, error };
       }
 
-      return data as LayoutSkeleton;
+      return { 
+        data: this.transformDatabaseResponse(data), 
+        error: null 
+      };
     } catch (error) {
-      console.error('Error in getById:', error);
-      return null;
+      return { 
+        data: null, 
+        error: error instanceof Error ? error : new Error(String(error)) 
+      };
     }
-  },
+  }
 
   /**
-   * Fetch active layout by type and scope
+   * Get a layout by type and scope
    */
-  async getActiveLayout(type: string, scope: string): Promise<LayoutSkeleton | null> {
+  async getByTypeAndScope(type: string, scope: string): Promise<LayoutResponse> {
     try {
       const { data, error } = await supabase
         .from('layout_skeletons')
@@ -86,206 +69,205 @@ export const LayoutSkeletonService = {
         .eq('type', type)
         .eq('scope', scope)
         .eq('is_active', true)
-        .order('version', { ascending: false })
+        .order('updated_at', { ascending: false })
         .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching active layout:', error);
-        return null;
-      }
-
-      return data as LayoutSkeleton;
-    } catch (error) {
-      console.error('Error in getActiveLayout:', error);
-      return null;
-    }
-  },
-
-  /**
-   * Save a layout skeleton to the database
-   */
-  async saveLayout(layout: Partial<LayoutSkeleton>): Promise<{ success: boolean; id?: string; error?: string }> {
-    try {
-      const isUpdate = !!layout.id;
-      
-      if (isUpdate) {
-        const { data, error } = await supabase
-          .from('layout_skeletons')
-          .update({
-            name: layout.name,
-            type: layout.type,
-            scope: layout.scope,
-            layout_json: layout.layout_json,
-            is_active: layout.is_active,
-            is_locked: layout.is_locked,
-            description: layout.description,
-            version: layout.version || 1,
-          })
-          .eq('id', layout.id)
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error updating layout:', error);
-          return { success: false, error: error.message };
-        }
-
-        return { success: true, id: data.id };
-      } else {
-        const { data, error } = await supabase
-          .from('layout_skeletons')
-          .insert({
-            name: layout.name,
-            type: layout.type,
-            scope: layout.scope,
-            layout_json: layout.layout_json,
-            is_active: layout.is_active || true,
-            is_locked: layout.is_locked || false,
-            description: layout.description,
-            version: layout.version || 1,
-          })
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error creating layout:', error);
-          return { success: false, error: error.message };
-        }
-
-        return { success: true, id: data.id };
-      }
-    } catch (error: any) {
-      console.error('Error in saveLayout:', error);
-      return { success: false, error: error.message };
-    }
-  },
-
-  /**
-   * Set a layout as active and make all others of the same type/scope inactive
-   */
-  async setLayoutActive(id: string, type: string, scope: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      // First set all other layouts to inactive
-      const { error: deactivateError } = await supabase
-        .from('layout_skeletons')
-        .update({ is_active: false })
-        .eq('type', type)
-        .eq('scope', scope)
-        .neq('id', id);
-
-      if (deactivateError) {
-        console.error('Error deactivating other layouts:', deactivateError);
-        return { success: false, error: deactivateError.message };
-      }
-
-      // Then set the selected layout to active
-      const { error: activateError } = await supabase
-        .from('layout_skeletons')
-        .update({ is_active: true })
-        .eq('id', id);
-
-      if (activateError) {
-        console.error('Error activating layout:', activateError);
-        return { success: false, error: activateError.message };
-      }
-
-      return { success: true };
-    } catch (error: any) {
-      console.error('Error in setLayoutActive:', error);
-      return { success: false, error: error.message };
-    }
-  },
-
-  /**
-   * Delete a layout skeleton
-   */
-  async deleteLayout(id: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      // First check if this is the only active layout
-      const { data: layoutData, error: layoutError } = await supabase
-        .from('layout_skeletons')
-        .select('*')
-        .eq('id', id)
         .single();
 
-      if (layoutError) {
-        console.error('Error checking layout before delete:', layoutError);
-        return { success: false, error: layoutError.message };
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows returned, not really an error
+          return { data: null, error: null };
+        }
+        return { data: null, error };
       }
 
-      if (layoutData.is_active) {
-        const { count, error: countError } = await supabase
-          .from('layout_skeletons')
-          .select('*', { count: 'exact', head: true })
-          .eq('type', layoutData.type)
-          .eq('scope', layoutData.scope)
-          .eq('is_active', true);
+      return { 
+        data: this.transformDatabaseResponse(data), 
+        error: null 
+      };
+    } catch (error) {
+      return { 
+        data: null, 
+        error: error instanceof Error ? error : new Error(String(error)) 
+      };
+    }
+  }
 
-        if (countError) {
-          console.error('Error counting active layouts:', countError);
-          return { success: false, error: countError.message };
-        }
+  /**
+   * Get all layouts with optional filtering
+   */
+  async getAll(options?: {
+    type?: string;
+    scope?: string;
+    isActive?: boolean;
+  }): Promise<LayoutsResponse> {
+    try {
+      let query = supabase.from('layout_skeletons').select('*');
 
-        if (count === 1) {
-          return { 
-            success: false, 
-            error: 'Cannot delete the only active layout. Create another active layout first or set another layout as active.' 
-          };
-        }
+      if (options?.type) {
+        query = query.eq('type', options.type);
       }
 
-      // Proceed with deletion
+      if (options?.scope) {
+        query = query.eq('scope', options.scope);
+      }
+
+      if (options?.isActive !== undefined) {
+        query = query.eq('is_active', options.isActive);
+      }
+
+      const { data, error } = await query.order('updated_at', { ascending: false });
+
+      if (error) {
+        return { data: null, error };
+      }
+
+      return { 
+        data: data.map(this.transformDatabaseResponse), 
+        error: null 
+      };
+    } catch (error) {
+      return { 
+        data: null, 
+        error: error instanceof Error ? error : new Error(String(error)) 
+      };
+    }
+  }
+
+  /**
+   * Create a new layout
+   */
+  async create(layout: Partial<LayoutSkeleton>): Promise<CreateLayoutResponse> {
+    try {
+      if (!layout.type) {
+        return { 
+          success: false, 
+          error: 'Layout type is required' 
+        };
+      }
+
+      // Set defaults
+      const layoutToInsert = {
+        name: layout.name || `${layout.type} Layout`,
+        type: layout.type,
+        scope: layout.scope || 'global',
+        description: layout.description || null,
+        is_active: layout.is_active !== undefined ? layout.is_active : true,
+        is_locked: layout.is_locked !== undefined ? layout.is_locked : false,
+        layout_json: layout.layout_json || { components: [], version: 1 },
+        version: layout.version || 1
+      };
+
+      const { data, error } = await supabase
+        .from('layout_skeletons')
+        .insert([layoutToInsert])
+        .select()
+        .single();
+
+      if (error) {
+        return { 
+          success: false, 
+          error: error.message 
+        };
+      }
+
+      return { 
+        success: true, 
+        data: this.transformDatabaseResponse(data) 
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      };
+    }
+  }
+
+  /**
+   * Update an existing layout
+   */
+  async update(id: string, layout: Partial<LayoutSkeleton>): Promise<UpdateLayoutResponse> {
+    try {
+      const { data, error } = await supabase
+        .from('layout_skeletons')
+        .update({
+          name: layout.name,
+          description: layout.description,
+          is_active: layout.is_active,
+          is_locked: layout.is_locked,
+          layout_json: layout.layout_json,
+          version: layout.version
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        return { 
+          success: false, 
+          error: error.message 
+        };
+      }
+
+      return { 
+        success: true, 
+        data: this.transformDatabaseResponse(data) 
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      };
+    }
+  }
+
+  /**
+   * Delete a layout
+   */
+  async delete(id: string): Promise<DeleteLayoutResponse> {
+    try {
       const { error } = await supabase
         .from('layout_skeletons')
         .delete()
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting layout:', error);
-        return { success: false, error: error.message };
+        return { 
+          success: false, 
+          error: error.message 
+        };
       }
 
       return { success: true };
-    } catch (error: any) {
-      console.error('Error in deleteLayout:', error);
-      return { success: false, error: error.message };
-    }
-  },
-
-  /**
-   * Convert database layout to component layout
-   */
-  convertToLayout(skeleton: LayoutSkeleton): Layout | null {
-    try {
-      // Try to parse the layout_json field
-      const layoutData = {
-        id: skeleton.id,
-        name: skeleton.name,
-        type: skeleton.type,
-        scope: skeleton.scope,
-        components: Array.isArray(skeleton.layout_json.components) 
-          ? skeleton.layout_json.components 
-          : [],
-        version: skeleton.version,
-        meta: {
-          description: skeleton.description,
-          created_at: skeleton.created_at,
-          updated_at: skeleton.updated_at,
-          is_locked: skeleton.is_locked,
-          created_by: skeleton.created_by,
-        }
-      };
-
-      // Validate with zod schema
-      const validatedLayout = LayoutSchema.parse(layoutData);
-      return validatedLayout;
     } catch (error) {
-      console.error('Error converting layout skeleton to layout:', error);
-      toast.error("Layout validation error", {
-        description: "The layout from the database couldn't be parsed correctly"
-      });
-      return null;
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      };
     }
   }
-};
+
+  /**
+   * Transform database response to our internal type
+   */
+  private transformDatabaseResponse(data: any): LayoutSkeleton {
+    return {
+      id: data.id,
+      name: data.name,
+      type: data.type,
+      scope: data.scope,
+      description: data.description,
+      is_active: data.is_active,
+      is_locked: data.is_locked,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      created_by: data.created_by,
+      layout_json: data.layout_json,
+      version: data.version,
+      meta: data.meta || {},
+      components: data.layout_json?.components || []
+    };
+  }
+}
+
+export const layoutSkeletonService = new LayoutSkeletonService();

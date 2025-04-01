@@ -45,7 +45,7 @@ export default function Dashboard() {
   
   return (
     <LayoutRenderer
-      layout={dashboardLayout}
+      layout={dashboardLayout ?? null}
       isLoading={isLoading}
       error={error instanceof Error ? error : null}
       fallback={
