@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Filter, Download, Clock, Tag, RefreshCw, Search } from 'lucide-react';
@@ -215,7 +214,7 @@ export const LogConsole: React.FC = () => {
     return String(details);
   };
 
-  // Render log details when a log is selected
+  // Update the renderLogDetails function to properly use the renderUnknownAsNode
   const renderLogDetails = useMemo(() => {
     if (!selectedLog) return null;
 
