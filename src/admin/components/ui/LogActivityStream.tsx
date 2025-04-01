@@ -1,11 +1,12 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { LogCategory, LogEntry, memoryTransport } from '@/logging';
-import { LogLevel } from '@/logging/constants/log-level';
+import { LogLevel, isLogLevelAtLeast } from '@/logging/constants/log-level';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { renderUnknownAsNode } from '@/shared/utils/render';
+import { LOG_LEVEL_MAP } from '@/logging/utils/map-log-level';
 
 interface LogActivityStreamProps {
   maxEntries?: number;
@@ -37,7 +38,7 @@ export function LogActivityStream({
       
       // Filter by level
       let filteredLogs = allLogs.filter(log => 
-        LogLevel[log.level as keyof typeof LogLevel] >= LogLevel[level as keyof typeof LogLevel]
+        isLogLevelAtLeast(log.level, level)
       );
       
       // Filter by categories if specified
@@ -91,20 +92,7 @@ export function LogActivityStream({
   
   // Get name for log level
   const getLevelName = (level: LogLevel): string => {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return 'DEBUG';
-      case LogLevel.INFO:
-        return 'INFO';
-      case LogLevel.WARN:
-        return 'WARN';
-      case LogLevel.ERROR:
-        return 'ERROR';
-      case LogLevel.CRITICAL:
-        return 'CRITICAL';
-      default:
-        return 'UNKNOWN';
-    }
+    return LOG_LEVEL_MAP[level] || "UNKNOWN";
   };
   
   // Get log item class based on level
