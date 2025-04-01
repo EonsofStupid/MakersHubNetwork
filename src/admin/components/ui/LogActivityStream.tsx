@@ -2,6 +2,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { LogCategory, LogEntry, LogLevel, memoryTransport } from '@/logging';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { renderUnknownAsNode } from '@/shared/utils/render';
 
 interface LogActivityStreamProps {
   maxEntries?: number;
@@ -28,19 +31,25 @@ export function LogActivityStream({
   // Update logs from memory transport
   useEffect(() => {
     const updateLogs = () => {
-      // Use the new getFilteredLogs method with our filtering options
-      const filteredLogs = memoryTransport.getFilteredLogs({
-        level,
-        category: categories?.length === 1 ? categories[0] : undefined,
-        limit: maxEntries
-      });
+      // Get all logs and filter them
+      const allLogs = memoryTransport.getLogs();
       
-      // If we have multiple categories, filter further
-      const finalLogs = categories && categories.length > 1
-        ? filteredLogs.filter(log => categories.includes(log.category as LogCategory))
-        : filteredLogs;
+      // Filter by level
+      let filteredLogs = allLogs.filter(log => 
+        log.level >= (level || LogLevel.INFO)
+      );
       
-      setLogs(finalLogs);
+      // Filter by categories if specified
+      if (categories && categories.length > 0) {
+        filteredLogs = filteredLogs.filter(log => 
+          categories.includes(log.category as LogCategory)
+        );
+      }
+      
+      // Apply limit
+      filteredLogs = filteredLogs.slice(-maxEntries);
+      
+      setLogs(filteredLogs);
     };
     
     // Initial update
@@ -61,19 +70,73 @@ export function LogActivityStream({
     }
   }, [logs, autoScroll]);
   
+  // Get color class for log level
+  const getLevelColorClass = (level: LogLevel): string => {
+    switch (level) {
+      case LogLevel.DEBUG:
+        return 'text-gray-400';
+      case LogLevel.INFO:
+        return 'text-blue-400';
+      case LogLevel.WARNING:
+        return 'text-yellow-400';
+      case LogLevel.ERROR:
+        return 'text-red-400';
+      case LogLevel.CRITICAL:
+        return 'text-red-600 font-bold';
+      default:
+        return 'text-gray-400';
+    }
+  };
+  
+  // Get name for log level
+  const getLevelName = (level: LogLevel): string => {
+    switch (level) {
+      case LogLevel.DEBUG:
+        return 'DEBUG';
+      case LogLevel.INFO:
+        return 'INFO';
+      case LogLevel.WARNING:
+        return 'WARN';
+      case LogLevel.ERROR:
+        return 'ERROR';
+      case LogLevel.CRITICAL:
+        return 'CRITICAL';
+      default:
+        return 'UNKNOWN';
+    }
+  };
+  
+  // Get log item class based on level
+  const getLogItemClass = (level: LogLevel): string => {
+    switch (level) {
+      case LogLevel.WARNING:
+        return 'border-l-2 border-l-yellow-500';
+      case LogLevel.ERROR:
+        return 'border-l-2 border-l-red-500';
+      case LogLevel.CRITICAL:
+        return 'border-l-2 border-l-red-600 bg-red-950/20';
+      default:
+        return '';
+    }
+  };
+  
+  // Format timestamp
+  const formatTime = (date: Date): string => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
+  
   return (
-    <div 
-      ref={scrollRef}
+    <ScrollArea
+      ref={scrollRef as any}
       className={cn(
-        "overflow-auto font-mono text-xs bg-[var(--impulse-bg-main)]/50",
+        "font-mono text-xs bg-[var(--impulse-bg-main)]/50",
         "border border-[var(--impulse-border-normal)] rounded-md",
-        "electric-border",
         className
       )}
       style={{ height }}
     >
       {logs.length === 0 ? (
-        <div className="flex items-center justify-center h-full text-[var(--impulse-text-secondary)] italic">
+        <div className="flex items-center justify-center h-full text-[var(--impulse-text-secondary)] italic p-4">
           No logs to display
         </div>
       ) : (
@@ -83,75 +146,38 @@ export function LogActivityStream({
               key={log.id}
               className={cn(
                 "py-1 px-2 border-b border-[var(--impulse-border-normal)]/30",
-                "hover:bg-[var(--impulse-bg-overlay)]",
+                "hover:bg-[var(--impulse-bg-overlay)]/50",
                 "transition-colors duration-150",
                 getLogItemClass(log.level)
               )}
             >
-              <div className="flex items-start">
-                <span className="inline-block w-14 text-[var(--impulse-text-secondary)]">
-                  {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              <div className="flex items-start gap-2 overflow-hidden">
+                <span className={cn("flex-shrink-0", getLevelColorClass(log.level))}>
+                  {getLevelName(log.level)}
                 </span>
                 
-                <span className={cn("inline-block w-20", getLogCategoryClass(log.category as LogCategory))}>
-                  {log.category}
+                <span className="flex-shrink-0 text-gray-400">
+                  {formatTime(log.timestamp)}
                 </span>
+                
+                <Badge variant="outline" className="flex-shrink-0 py-0 h-5">
+                  {log.category}
+                </Badge>
                 
                 {showSource && log.source && (
-                  <span className="inline-block w-24 truncate text-[var(--impulse-text-secondary)]">
+                  <Badge variant="secondary" className="flex-shrink-0 py-0 h-5">
                     {log.source}
-                  </span>
+                  </Badge>
                 )}
                 
-                <span className="flex-1">{log.message}</span>
+                <span className="flex-grow truncate">
+                  {renderUnknownAsNode(log.message)}
+                </span>
               </div>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </ScrollArea>
   );
-}
-
-// Helper functions for styling
-function getLogItemClass(level: LogLevel): string {
-  switch (level) {
-    case LogLevel.DEBUG:
-      return 'text-gray-400';
-    case LogLevel.INFO:
-      return 'text-[var(--impulse-text-primary)]';
-    case LogLevel.WARNING:
-      return 'text-yellow-400';
-    case LogLevel.ERROR:
-      return 'text-[var(--impulse-secondary)]';
-    case LogLevel.CRITICAL:
-      return 'text-red-600 font-semibold animate-pulse';
-    default:
-      return '';
-  }
-}
-
-function getLogCategoryClass(category: LogCategory): string {
-  switch (category) {
-    case LogCategory.SYSTEM:
-      return 'text-[var(--impulse-primary)]';
-    case LogCategory.NETWORK:
-      return 'text-blue-400';
-    case LogCategory.AUTH:
-      return 'text-yellow-400';
-    case LogCategory.UI:
-      return 'text-green-400';
-    case LogCategory.ADMIN:
-      return 'text-[var(--impulse-secondary)]';
-    case LogCategory.CHAT:
-      return 'text-purple-400';
-    case LogCategory.DATABASE:
-      return 'text-orange-400';
-    case LogCategory.PERFORMANCE:
-      return 'text-cyan-400';
-    case LogCategory.CONTENT:
-      return 'text-pink-400';
-    default:
-      return 'text-gray-400';
-  }
 }

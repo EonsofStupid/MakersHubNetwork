@@ -1,68 +1,40 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAdminStore } from '../store/admin.store';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { canAccessAdmin } from '@/auth/rbac/enforce';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useAdminStore } from '@/admin/store/admin.store';
+import { useAdminSync } from '@/admin/hooks/useAdminSync';
+import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { subscribeToAuthEvents } from '@/auth/bridge';
 
+// Create context
 interface AdminContextValue {
-  isInitialized: boolean;
-  hasAdminAccess: boolean;
-  isEditMode: boolean;
-  toggleEditMode: () => void;
+  initialized: boolean;
 }
 
 const AdminContext = createContext<AdminContextValue | undefined>(undefined);
 
+// Provider component
 export function AdminProvider({ children }: { children: React.ReactNode }) {
-  const { roles, isAuthenticated } = useAuthState();
-  const { isEditMode, setEditMode, initializeStore } = useAdminStore();
-  const [isInitialized, setIsInitialized] = useState(false);
+  const { setPermissions } = useAdminStore();
+  const { permissions, isLoading } = useAdminPermissions();
+  const { isSyncing } = useAdminSync();
+  const [initialized, setInitialized] = React.useState(false);
   const logger = useLogger('AdminContext', LogCategory.ADMIN);
   
-  // Check if user has admin access
-  const hasAdminAccess = canAccessAdmin(roles);
-  
-  // Initialize admin module
+  // Initialize admin context
   useEffect(() => {
-    if (isAuthenticated) {
-      logger.info('Initializing admin context');
-      
-      // Initialize the admin store
-      initializeStore().then(() => {
-        setIsInitialized(true);
-        logger.info('Admin context initialized');
-      }).catch(error => {
-        logger.error('Failed to initialize admin context', { details: error });
+    if (!isLoading && !isSyncing && !initialized) {
+      logger.info('Initializing admin context', {
+        details: { permissions }
       });
-    }
-  }, [isAuthenticated, initializeStore, logger]);
-  
-  // Subscribe to auth events
-  useEffect(() => {
-    const unsubscribe = subscribeToAuthEvents((event) => {
-      logger.info(`Admin context received auth event: ${event.type}`);
       
-      // Handle specific auth events as needed
-    });
-    
-    return () => unsubscribe();
-  }, [logger]);
+      // Update permissions in store
+      setPermissions(permissions);
+      setInitialized(true);
+    }
+  }, [isLoading, isSyncing, initialized, setPermissions, permissions, logger]);
   
-  // Method to toggle edit mode
-  const toggleEditMode = () => {
-    setEditMode(!isEditMode);
-    logger.info(`Admin edit mode ${!isEditMode ? 'enabled' : 'disabled'}`);
-  };
-  
-  const value = {
-    isInitialized,
-    hasAdminAccess,
-    isEditMode,
-    toggleEditMode
-  };
+  const value = { initialized };
   
   return (
     <AdminContext.Provider value={value}>
@@ -71,12 +43,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useAdmin() {
+// Hook to use admin context
+export function useAdminContext() {
   const context = useContext(AdminContext);
-  
   if (context === undefined) {
-    throw new Error('useAdmin must be used within an AdminProvider');
+    throw new Error('useAdminContext must be used within an AdminProvider');
   }
-  
   return context;
 }
