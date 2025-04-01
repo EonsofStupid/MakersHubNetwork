@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useAtom } from 'jotai';
 import { PanInfo } from 'framer-motion';
 import {
@@ -10,7 +10,7 @@ import {
   adminEditModeAtom
 } from '@/admin/atoms/tools.atoms';
 import { useLogger } from '@/hooks/use-logger';
-import { LogLevel, LogCategory } from '@/logging';
+import { LogCategory } from '@/logging';
 
 interface DragAndDropOptions {
   items: string[];
@@ -53,7 +53,7 @@ export function useDragAndDrop({
     setIsDragging(false);
     setDragSourceId(null);
     setDragTargetId(null);
-    setDropPosition('none');
+    setDropPosition(null);
   }, [setIsDragging, setDragSourceId, setDragTargetId, setDropPosition]);
   
   // Function to make an element draggable with Framer Motion

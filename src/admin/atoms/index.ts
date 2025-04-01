@@ -4,6 +4,9 @@ import { atom } from 'jotai';
 // Re-export atoms from ui.atoms
 export * from './ui.atoms';
 
+// Re-export admin sidebar state atom (component level state)
+export const adminSidebarExpandedAtom = atom<boolean>(true);
+
 // Re-export specific atoms from tools.atoms
 export {
   adminEditModeAtom,
@@ -16,6 +19,7 @@ export {
   dropIndicatorPositionAtom,
   dragEffectAtom,
   frozenZonesAtom,
+  selectedComponentAtom,
   effectsPaletteVisibleAtom,
   selectedEffectAtom,
   hoveredIconAtom,
@@ -38,4 +42,3 @@ export const cyberColorVariantsAtom = atom<string[]>([
   '#7B61FF',
   '#00FFAA'
 ]);
-
