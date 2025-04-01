@@ -1,8 +1,8 @@
 
 import React, { useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
@@ -11,46 +11,41 @@ interface AdminAuthGuardProps {
 }
 
 export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
-  const { user, status, isAdmin, isSuperAdmin, isLoading } = useAuth();
-  const isAuthenticated = status === 'authenticated' && !!user;
-  
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const location = useLocation();
+  const { hasAdminAccess, isLoading, isAuthenticated } = useAdminAccess();
   const logger = useLogger('AdminAuthGuard', LogCategory.ADMIN);
-
+  
   useEffect(() => {
-    if (!isLoading && isAuthenticated && !isAdmin && !isSuperAdmin) {
-      logger.warn('Non-admin user attempted to access admin area', {
-        details: { path: location.pathname, userId: user?.id }
-      });
-      
+    if (!isLoading && !isAuthenticated) {
+      logger.info('User not authenticated, redirecting to login page');
+      navigate('/login?from=/admin');
+    } else if (!isLoading && isAuthenticated && !hasAdminAccess) {
+      logger.warn('User does not have admin access, redirecting to home page');
       toast({
-        title: "Access Denied",
-        description: "You don't have permission to access the admin panel",
-        variant: "destructive"
+        title: 'Access Denied',
+        description: 'You do not have permission to access the admin section',
+        variant: 'destructive'
       });
+      navigate('/');
     }
-  }, [isLoading, isAuthenticated, isAdmin, isSuperAdmin, location.pathname, toast, user, logger]);
-
-  // Show loading state
+  }, [isLoading, isAuthenticated, hasAdminAccess, navigate, toast, logger]);
+  
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="h-8 w-8 border-t-2 border-primary animate-spin rounded-full" />
       </div>
     );
   }
-
-  // Redirect to login if not authenticated
+  
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return null;
   }
-
-  // Redirect to unauthorized page if authenticated but not admin
-  if (!isAdmin && !isSuperAdmin) {
-    return <Navigate to="/admin/unauthorized" replace />;
+  
+  if (!hasAdminAccess) {
+    return <Navigate to="/" replace />;
   }
-
-  // Render children if authenticated and has admin access
+  
   return <>{children}</>;
 }

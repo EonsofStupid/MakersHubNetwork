@@ -1,38 +1,25 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
 
 interface AdminGridProps {
-  children?: React.ReactNode;
+  children: React.ReactNode;
+  columns?: 1 | 2 | 3 | 4;
   className?: string;
-  cols?: number;
-  gap?: number;
 }
 
-export function AdminGrid({ 
-  children, 
-  className = '', 
-  cols = 1,
-  gap = 6
-}: AdminGridProps) {
-  const gridCols = {
-    1: 'grid-cols-1',
-    2: 'grid-cols-1 md:grid-cols-2',
-    3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
-  }[cols] || 'grid-cols-1';
-  
-  const gridGap = {
-    2: 'gap-2',
-    3: 'gap-3',
-    4: 'gap-4',
-    5: 'gap-5',
-    6: 'gap-6',
-    8: 'gap-8',
-  }[gap] || 'gap-4';
+export function AdminGrid({ children, columns = 2, className = '' }: AdminGridProps) {
+  const getGridClass = () => {
+    switch (columns) {
+      case 1: return 'grid-cols-1';
+      case 2: return 'grid-cols-1 md:grid-cols-2';
+      case 3: return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+      case 4: return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4';
+      default: return 'grid-cols-1 md:grid-cols-2';
+    }
+  };
   
   return (
-    <div className={cn("grid", gridCols, gridGap, className)}>
+    <div className={`grid gap-6 ${getGridClass()} ${className}`}>
       {children}
     </div>
   );

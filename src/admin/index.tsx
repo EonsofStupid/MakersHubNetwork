@@ -15,6 +15,9 @@ import '@/admin/theme/impulse/impulse-theme.css';
 // Export the AdminDashboard from its dedicated component file
 export { AdminDashboard } from './components/dashboard/AdminDashboard';
 
+// Export routes
+export { AdminRoutes } from './routes';
+
 // Export components
 import { AdminLayout } from './components/AdminLayout';
 import { AdminSidebar } from './components/AdminSidebar';

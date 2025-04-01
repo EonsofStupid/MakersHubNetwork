@@ -1,49 +1,54 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { useTheme } from '@/components/ui/theme-provider';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAdminPreferences } from '@/admin/store/adminPreferences.store';
+
+type Theme = 'cyberpunk' | 'neon' | 'minimal' | 'dark' | 'light';
 
 interface AdminThemeContextType {
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-  primaryColor: string;
-  setPrimaryColor: (color: string) => void;
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
 }
 
-const AdminThemeContext = createContext<AdminThemeContextType>({
-  isDarkMode: false,
-  toggleDarkMode: () => {},
-  primaryColor: '#00F0FF',
-  setPrimaryColor: () => {}
-});
+const AdminThemeContext = createContext<AdminThemeContextType | undefined>(undefined);
 
-export const useAdminTheme = () => useContext(AdminThemeContext);
-
-interface AdminThemeProviderProps {
-  children: React.ReactNode;
-}
-
-export function AdminThemeProvider({ children }: AdminThemeProviderProps) {
-  const { isDarkMode, toggleDarkMode } = useAdminStore();
-  const { setTheme } = useTheme();
-  const [primaryColor, setPrimaryColor] = React.useState('#00F0FF');
+export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
+  const { theme: storedTheme, setTheme: storeTheme } = useAdminPreferences();
+  const [theme, setThemeState] = useState<Theme>((storedTheme as Theme) || 'cyberpunk');
   
-  // Sync theme with admin store
+  // Update theme in store when changed
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
+    storeTheme(newTheme);
+    
+    // Apply theme to document
+    document.documentElement.setAttribute('data-admin-theme', newTheme);
+  };
+  
+  // Toggle between cyberpunk and minimal themes
+  const toggleTheme = () => {
+    setTheme(theme === 'cyberpunk' ? 'minimal' : 'cyberpunk');
+  };
+  
+  // Initialize theme from store
   useEffect(() => {
-    setTheme(isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode, setTheme]);
+    if (storedTheme) {
+      setThemeState(storedTheme as Theme);
+      document.documentElement.setAttribute('data-admin-theme', storedTheme);
+    }
+  }, [storedTheme]);
   
   return (
-    <AdminThemeContext.Provider 
-      value={{ 
-        isDarkMode, 
-        toggleDarkMode, 
-        primaryColor, 
-        setPrimaryColor 
-      }}
-    >
+    <AdminThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
       {children}
     </AdminThemeContext.Provider>
   );
 }
 
+export function useAdminTheme() {
+  const context = useContext(AdminThemeContext);
+  if (context === undefined) {
+    throw new Error('useAdminTheme must be used within an AdminThemeProvider');
+  }
+  return context;
+}

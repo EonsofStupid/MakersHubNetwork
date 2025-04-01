@@ -1,11 +1,48 @@
 
-import { PERMISSIONS, PermissionValue, ROLE_PERMISSIONS } from '@/auth/permissions';
+import { PERMISSIONS, PermissionValue } from '@/auth/permissions';
 
-// Re-export the permissions for backward compatibility
-export const ADMIN_PERMISSIONS = PERMISSIONS;
+// Re-export central permissions as admin-specific types
+export const ADMIN_PERMISSIONS = {
+  // Admin dashboard access
+  ADMIN_ACCESS: PERMISSIONS.ADMIN_ACCESS,
+  ADMIN_VIEW: PERMISSIONS.ADMIN_VIEW,
+  ADMIN_EDIT: PERMISSIONS.ADMIN_EDIT,
+  
+  // User management 
+  USERS_VIEW: PERMISSIONS.USERS_VIEW,
+  USERS_CREATE: PERMISSIONS.USERS_CREATE,
+  USERS_EDIT: PERMISSIONS.USERS_EDIT,
+  USERS_DELETE: PERMISSIONS.USERS_DELETE,
+  
+  // Content management
+  CONTENT_VIEW: PERMISSIONS.CONTENT_VIEW,
+  CONTENT_CREATE: PERMISSIONS.CONTENT_CREATE,
+  CONTENT_EDIT: PERMISSIONS.CONTENT_EDIT,
+  CONTENT_DELETE: PERMISSIONS.CONTENT_DELETE,
+  CONTENT_PUBLISH: PERMISSIONS.CONTENT_PUBLISH,
+  
+  // Build management
+  BUILDS_VIEW: PERMISSIONS.BUILDS_VIEW,
+  BUILDS_CREATE: PERMISSIONS.BUILDS_CREATE,
+  BUILDS_EDIT: PERMISSIONS.BUILDS_EDIT,
+  BUILDS_APPROVE: PERMISSIONS.BUILDS_APPROVE,
+  
+  // Settings management
+  SETTINGS_VIEW: PERMISSIONS.SETTINGS_VIEW,
+  SETTINGS_EDIT: PERMISSIONS.SETTINGS_EDIT,
+  
+  // System management
+  SYSTEM_VIEW: PERMISSIONS.SYSTEM_VIEW,
+  SYSTEM_SETTINGS: PERMISSIONS.SYSTEM_SETTINGS,
+  SYSTEM_LOGS: PERMISSIONS.SYSTEM_LOGS,
+  SYSTEM_RESTART: PERMISSIONS.SYSTEM_RESTART,
+  
+  // Super admin
+  SUPER_ADMIN: PERMISSIONS.SUPER_ADMIN
+};
 
-// Re-export the role permissions
-export { ROLE_PERMISSIONS };
-
-// Export the admin permission value type
+// Type for admin permission values
 export type AdminPermissionValue = PermissionValue;
+
+// Re-export the role permissions mapping
+export { ROLE_PERMISSIONS } from '@/auth/permissions';
