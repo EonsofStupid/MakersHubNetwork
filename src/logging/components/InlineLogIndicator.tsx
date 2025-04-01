@@ -4,12 +4,13 @@ import { motion } from 'framer-motion';
 import { AlertCircle, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LogLevel } from '../constants/log-level';
+import { renderUnknownAsNode } from '@/shared/utils/render';
 
 // Define indicator variants
 export type LogIndicatorVariant = 'debug' | 'info' | 'warning' | 'error' | 'critical';
 
 interface InlineLogIndicatorProps {
-  message: string;
+  message: string | React.ReactNode;
   level?: LogLevel;
   variant?: LogIndicatorVariant;
   onClick?: () => void;
@@ -108,7 +109,7 @@ export const InlineLogIndicator: React.FC<InlineLogIndicatorProps> = ({
       whileTap={onClick ? { scale: 0.98 } : undefined}
     >
       {showIcon && <Icon className="w-3 h-3" />}
-      <span>{message}</span>
+      <span>{typeof message === 'string' ? message : renderUnknownAsNode(message)}</span>
       {children}
     </motion.div>
   );
