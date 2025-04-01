@@ -7,26 +7,39 @@ import { FormLabel } from '@/components/ui/form';
 import { RatingStars, ReviewRating } from './RatingStars';
 import { CategorySelector } from './CategorySelector';
 import { ReviewImageUpload } from './ReviewImageUpload';
+import { ReviewCategory } from '@/admin/types/review.types';
+import { useReviewImages } from '@/admin/hooks/useReviewImages';
 
 interface ReviewFormProps {
-  onSubmit: (review: any) => void;
+  buildId?: string;
+  onSubmit?: (review: any) => void;
+  onSuccess?: () => void;
   initialData?: any;
   isLoading?: boolean;
 }
 
-export function ReviewForm({ onSubmit, initialData, isLoading = false }: ReviewFormProps) {
+export function ReviewForm({ buildId, onSubmit, onSuccess, initialData, isLoading = false }: ReviewFormProps) {
   const [title, setTitle] = useState(initialData?.title || '');
   const [content, setContent] = useState(initialData?.content || '');
   const [rating, setRating] = useState<ReviewRating>(initialData?.rating || 0);
-  const [category, setCategory] = useState(initialData?.category || '');
+  const [categories, setCategories] = useState<ReviewCategory[]>(initialData?.categories || []);
   const [images, setImages] = useState<string[]>(initialData?.images || []);
+  
+  const { uploadImage, isUploading } = useReviewImages();
   
   const handleRatingChange = (newRating: ReviewRating) => {
     setRating(newRating);
   };
   
-  const handleImageUpload = (imageUrl: string) => {
-    setImages(prev => [...prev, imageUrl]);
+  const handleCategoryChange = (selectedCategories: ReviewCategory[]) => {
+    setCategories(selectedCategories);
+  };
+  
+  const handleAddImage = async (file: File) => {
+    const imageUrl = await uploadImage(file);
+    if (imageUrl) {
+      setImages(prev => [...prev, imageUrl]);
+    }
   };
   
   const handleRemoveImage = (indexToRemove: number) => {
@@ -36,13 +49,20 @@ export function ReviewForm({ onSubmit, initialData, isLoading = false }: ReviewF
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    onSubmit({
-      title,
-      content,
-      rating,
-      category,
-      images
-    });
+    if (onSubmit) {
+      onSubmit({
+        buildId,
+        title,
+        content,
+        rating,
+        categories,
+        images
+      });
+    }
+    
+    if (onSuccess) {
+      onSuccess();
+    }
   };
   
   return (
@@ -70,10 +90,10 @@ export function ReviewForm({ onSubmit, initialData, isLoading = false }: ReviewF
       </div>
       
       <div className="space-y-2">
-        <FormLabel htmlFor="category">Category</FormLabel>
+        <FormLabel htmlFor="category">Categories</FormLabel>
         <CategorySelector 
-          selectedCategory={category}
-          onCategoryChange={setCategory}
+          selectedCategories={categories}
+          onChange={handleCategoryChange}
         />
       </div>
       
@@ -92,35 +112,16 @@ export function ReviewForm({ onSubmit, initialData, isLoading = false }: ReviewF
       <div className="space-y-2">
         <FormLabel>Images</FormLabel>
         <ReviewImageUpload 
-          onImageUploaded={handleImageUpload}
+          imageUrls={images}
+          onAddImage={handleAddImage}
+          onRemoveImage={handleRemoveImage}
+          disabled={isLoading || isUploading}
         />
-        
-        {images.length > 0 && (
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            {images.map((image, idx) => (
-              <div key={idx} className="relative group">
-                <img 
-                  src={image} 
-                  alt={`Review image ${idx + 1}`}
-                  className="w-full h-24 object-cover rounded-md"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveImage(idx)}
-                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full 
-                            opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  &times;
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
       
       <div className="flex justify-end">
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Submitting...' : initialData ? 'Update Review' : 'Submit Review'}
+        <Button type="submit" disabled={isLoading || isUploading}>
+          {isLoading || isUploading ? 'Submitting...' : initialData ? 'Update Review' : 'Submit Review'}
         </Button>
       </div>
     </form>
