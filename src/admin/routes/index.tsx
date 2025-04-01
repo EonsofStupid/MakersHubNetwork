@@ -1,3 +1,4 @@
+
 import React, { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 
@@ -43,7 +44,7 @@ export function AdminRoutes() {
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/layouts" element={<LayoutsPage />} />
         <Route path="/reviews" element={<ReviewsPage />} />
-        <Route path="logs" element={<LogsPage />} />
+        <Route path="/logs" element={<LogsPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="*" element={<OverviewPage />} />
       </Routes>

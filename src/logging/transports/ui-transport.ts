@@ -139,7 +139,7 @@ export class UITransport implements LogTransport {
       title,
       description: entry.message,
       variant,
-      // The toast API accepts a string for the icon name
+      // Use plain strings for icon names - the toast component will handle rendering
       icon: iconName,
       duration: entry.level >= LogLevel.ERROR ? 7000 : 4000,
     });

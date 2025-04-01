@@ -1,3 +1,4 @@
+
 // This is a proper implementation of the toast hook that doesn't create a circular dependency
 import * as React from "react"
 import {
@@ -13,6 +14,7 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  icon?: string
 }
 
 const actionTypes = {
