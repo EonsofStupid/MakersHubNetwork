@@ -1,4 +1,3 @@
-
 import React from 'react';
 import componentRegistry from '@/admin/services/componentRegistry';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,9 +38,16 @@ function Div({ children, className, ...props }: React.HTMLAttributes<HTMLDivElem
   return <div className={className} {...props}>{children}</div>;
 }
 
-function Heading({ level = 1, children, className, ...props }: { level?: 1 | 2 | 3 | 4 | 5 | 6 } & React.HTMLAttributes<HTMLHeadingElement>) {
+function Heading({ 
+  level = 1, 
+  children, 
+  className, 
+  ...props 
+}: { 
+  level?: 1 | 2 | 3 | 4 | 5 | 6 
+} & React.HTMLAttributes<HTMLHeadingElement>) {
   const Tag = `h${level}` as keyof JSX.IntrinsicElements;
-  return <Tag className={className} {...props}>{children}</Tag>;
+  return React.createElement(Tag, { className, ...props }, children);
 }
 
 // Layout components

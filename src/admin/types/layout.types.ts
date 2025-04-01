@@ -40,6 +40,7 @@ export const LayoutSkeletonSchema = z.object({
   updated_at: z.string(),
   description: z.string().optional(),
   created_by: z.string().uuid().optional(),
+  meta: z.record(z.any()).optional(),
 });
 
 // Zod types

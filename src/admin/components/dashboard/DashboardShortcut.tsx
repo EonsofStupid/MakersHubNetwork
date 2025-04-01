@@ -5,12 +5,13 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 import { useAdminStore } from '@/admin/store/admin.store';
+import { LucideIcon } from 'lucide-react';
 
 interface DashboardShortcutProps {
   id: string;
   title: string;
   description?: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   onClick: () => void;
   onRemove?: (e: React.MouseEvent) => void;
   isEditMode?: boolean;

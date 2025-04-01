@@ -7,12 +7,13 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { GripVertical } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 
 interface NavItemProps {
   id: string;
   label: string;
   path: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   isActive?: boolean;
   onClick?: () => void;
   showLabel?: boolean;
