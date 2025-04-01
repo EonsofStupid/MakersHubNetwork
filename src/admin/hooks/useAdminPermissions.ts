@@ -4,7 +4,7 @@ import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminPermissionValue } from '@/admin/constants/permissions';
 
 export function useAdminPermissions() {
-  const { permissions, isLoadingPermissions } = useAdminStore();
+  const { permissions, syncing } = useAdminStore();
   
   const hasPermission = useCallback((permission: AdminPermissionValue | string) => {
     // Admin users have all permissions
@@ -19,6 +19,6 @@ export function useAdminPermissions() {
   return {
     hasPermission,
     permissions,
-    isLoading: isLoadingPermissions
+    isLoading: syncing
   };
 }

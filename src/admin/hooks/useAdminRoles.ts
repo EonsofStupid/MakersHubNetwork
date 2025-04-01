@@ -15,8 +15,7 @@ export function useAdminRoles() {
   useEffect(() => {
     // Only load permissions when user is authenticated and roles are loaded
     if (status === 'authenticated' && roles && roles.length > 0) {
-      const permissions = mapRolesToPermissions(roles);
-      loadPermissions(permissions);
+      loadPermissions();
     }
   }, [status, roles, loadPermissions]);
   

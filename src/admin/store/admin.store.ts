@@ -1,4 +1,5 @@
 
+// Updated parts of the admin store
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
@@ -114,18 +115,18 @@ export const useAdminStore = create<AdminState>()(
             }
             
             if (shortcuts) {
-              // Update state with saved preferences
+              // Update state with saved preferences, ensuring proper types
               set({
                 adminShortcutsId: shortcuts.id,
                 sidebarExpanded: shortcuts.sidebar_expanded ?? true,
                 showLabels: shortcuts.show_labels ?? true,
                 isDarkMode: shortcuts.is_dark_mode ?? false,
-                topnavItems: Array.isArray(shortcuts.topnav_items) ? shortcuts.topnav_items : [],
-                dashboardItems: Array.isArray(shortcuts.dashboard_items) ? shortcuts.dashboard_items : [],
+                topnavItems: Array.isArray(shortcuts.topnav_items) ? shortcuts.topnav_items.filter(Boolean).map(String) : [],
+                dashboardItems: Array.isArray(shortcuts.dashboard_items) ? shortcuts.dashboard_items.filter(Boolean).map(String) : [],
                 themePreference: shortcuts.theme_preference || 'cyberpunk',
                 layoutPreference: shortcuts.layout_preference || 'default',
                 activeSection: shortcuts.active_section || 'overview',
-                shortcuts: Array.isArray(shortcuts.shortcuts) ? shortcuts.shortcuts : [],
+                shortcuts: Array.isArray(shortcuts.shortcuts) ? shortcuts.shortcuts.filter(Boolean).map(String) : [],
                 hasInitialized: true,
                 lastSynced: new Date()
               });

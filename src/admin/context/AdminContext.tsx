@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
 import { useToast } from '@/hooks/use-toast';
-import { AdminPermissionValue } from '@/admin/constants/permissions';
+import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
 interface AdminContextProps {
   hasAdminAccess: boolean;
@@ -34,14 +34,14 @@ export const AdminProvider = ({ children }: AdminProviderProps) => {
   
   // Check if user has a specific permission
   const checkPermission = (permission: AdminPermissionValue): boolean => {
-    // Basic admin access check
-    if (permission === 'admin:access') {
-      return hasAdminAccess;
-    }
-    
     // Super admins have all permissions
     if (roles?.includes('super_admin')) {
       return true;
+    }
+    
+    // Basic admin access check
+    if (permission === ADMIN_PERMISSIONS.ADMIN_ACCESS) {
+      return hasAdminAccess;
     }
     
     // For specific permissions, we would check against a more detailed permissions system

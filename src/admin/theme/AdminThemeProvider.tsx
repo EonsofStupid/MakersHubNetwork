@@ -15,7 +15,7 @@ interface AdminThemeContextType {
 const AdminThemeContext = createContext<AdminThemeContextType | undefined>(undefined);
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
-  const { isDarkMode, toggleDarkMode, adminTheme } = useAdminStore();
+  const { isDarkMode, toggleDarkMode } = useAdminStore();
   const [theme, setTheme] = useState<ImpulseTheme>(defaultImpulseTokens);
   
   // Apply theme on mount and when it changes
@@ -33,7 +33,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
     return () => {
       document.head.removeChild(link);
     };
-  }, [adminTheme]);
+  }, []);
 
   const contextValue = {
     theme,
