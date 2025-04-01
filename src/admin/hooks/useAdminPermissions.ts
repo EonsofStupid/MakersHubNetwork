@@ -3,6 +3,10 @@ import { useCallback } from 'react';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
+/**
+ * Legacy admin permissions hook that uses the admin store
+ * @deprecated Use the main useAdminPermissions implementation from useAdminPermissions.tsx
+ */
 export function useAdminPermissions() {
   const { permissions, syncing } = useAdminStore();
   
