@@ -1,5 +1,5 @@
 
-import { AppPermissionValue, APP_PERMISSIONS } from "../constants/permissions";
+import { PermissionValue, PERMISSIONS } from "../permissions";
 import { UserRole } from "../types/auth.types";
 import { mapRolesToPermissions } from "./roles";
 
@@ -11,12 +11,12 @@ import { mapRolesToPermissions } from "./roles";
  */
 export const hasPermission = (
   userRoles: UserRole[] = [],
-  permission: AppPermissionValue
+  permission: PermissionValue
 ): boolean => {
   const permissions = mapRolesToPermissions(userRoles);
   
   // Super admin permission grants access to everything
-  if (permissions.includes(APP_PERMISSIONS.SUPER_ADMIN)) {
+  if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) {
     return true;
   }
   
@@ -30,7 +30,7 @@ export const hasPermission = (
  * @returns A function that checks if the user has a specific permission
  */
 export const createPermissionChecker = (userRoles: UserRole[] = []) => {
-  return (permission: AppPermissionValue): boolean => {
+  return (permission: PermissionValue): boolean => {
     return hasPermission(userRoles, permission);
   };
 };
@@ -48,4 +48,3 @@ export const canAccessAdmin = (userRoles: UserRole[] = []): boolean => {
 export const canAccessDevFeatures = (userRoles: UserRole[] = []): boolean => {
   return userRoles.includes('admin') || userRoles.includes('super_admin');
 };
-

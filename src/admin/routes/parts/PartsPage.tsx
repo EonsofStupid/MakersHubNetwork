@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { Box } from 'lucide-react';
-import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import { PERMISSIONS } from '@/auth/permissions';
 import { RequirePermission } from '@/admin/components/auth/RequirePermission';
 
 export default function PartsPage() {
   return (
-    <RequirePermission permission={ADMIN_PERMISSIONS.ADMIN_VIEW}>
+    <RequirePermission permission={PERMISSIONS.ADMIN_VIEW}>
       <div className="container mx-auto p-4">
         <div className="flex items-center mb-6 space-x-2">
           <Box className="h-6 w-6 text-primary" />
@@ -27,4 +27,3 @@ export default function PartsPage() {
     </RequirePermission>
   );
 }
-

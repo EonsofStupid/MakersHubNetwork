@@ -1,14 +1,15 @@
+
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthState } from '../hooks/useAuthState';
 import { hasPermission } from '../rbac/enforce';
-import { AppPermissionValue } from '../constants/permissions';
+import { PermissionValue } from '../permissions';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 
 interface RequirePermissionProps {
   children: React.ReactNode;
-  permission: AppPermissionValue;
+  permission: PermissionValue;
   fallback?: React.ReactNode;
   redirectTo?: string;
 }

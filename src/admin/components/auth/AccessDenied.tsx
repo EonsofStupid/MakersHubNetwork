@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { ShieldAlert } from 'lucide-react';
-import { AdminPermissionValue } from '@/admin/types/permissions';
+import { PermissionValue } from '@/auth/permissions';
 
 interface AccessDeniedProps {
-  permission?: AdminPermissionValue;
+  permission?: PermissionValue;
 }
 
 export function AccessDenied({ permission }: AccessDeniedProps) {
