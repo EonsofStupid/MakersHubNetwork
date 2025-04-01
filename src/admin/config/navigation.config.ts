@@ -1,134 +1,72 @@
 
-import {
-  BarChart3,
-  Users,
-  FileText,
-  Package,
-  Star,
-  Settings,
-  Palette,
-  Database,
-  Code,
-  Shield,
-  Layout,
-  MessagesSquare,
-  ClipboardList,
-  FileCode,
-  KeySquare,
-  ServerCog
-} from "lucide-react";
-import { ADMIN_PERMISSIONS } from "../constants/permissions";
+import { LayoutDashboard, Users, Settings, FileText, Package, Palette, Database, BarChart } from 'lucide-react';
+import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
 export const adminNavigationItems = [
   {
-    id: "overview",
-    label: "Overview",
-    path: "/admin/overview",
-    icon: BarChart3,
-    permission: ADMIN_PERMISSIONS.ADMIN_VIEW
+    id: 'overview',
+    label: 'Overview',
+    path: '/admin/overview',
+    icon: LayoutDashboard,
+    permission: ADMIN_PERMISSIONS.ADMIN_VIEW,
+    section: 'Dashboard'
   },
   {
-    id: "users",
-    label: "Users",
-    path: "/admin/users",
+    id: 'users',
+    label: 'Users',
+    path: '/admin/users',
     icon: Users,
-    permission: ADMIN_PERMISSIONS.USERS_VIEW
+    permission: ADMIN_PERMISSIONS.USERS_VIEW,
+    section: 'Management'
   },
   {
-    id: "builds",
-    label: "Builds",
-    path: "/admin/builds",
-    icon: Package,
-    permission: ADMIN_PERMISSIONS.BUILDS_VIEW
-  },
-  {
-    id: "reviews",
-    label: "Reviews",
-    path: "/admin/reviews",
-    icon: Star,
-    permission: ADMIN_PERMISSIONS.REVIEWS_VIEW
-  },
-  {
-    id: "content",
-    label: "Content",
-    path: "/admin/content",
+    id: 'content',
+    label: 'Content',
+    path: '/admin/content',
     icon: FileText,
-    permission: ADMIN_PERMISSIONS.CONTENT_VIEW
+    permission: ADMIN_PERMISSIONS.CONTENT_VIEW,
+    section: 'Management'
   },
   {
-    id: "permissions",
-    label: "Permissions",
-    path: "/admin/permissions",
-    icon: Shield,
-    permission: ADMIN_PERMISSIONS.ADMIN_VIEW
+    id: 'builds',
+    label: 'Builds',
+    path: '/admin/builds',
+    icon: Package,
+    permission: ADMIN_PERMISSIONS.BUILDS_VIEW,
+    section: 'Management'
   },
   {
-    id: "themes",
-    label: "Themes",
-    path: "/admin/themes",
+    id: 'themes',
+    label: 'Themes',
+    path: '/admin/themes',
     icon: Palette,
-    permission: ADMIN_PERMISSIONS.THEMES_VIEW
+    permission: ADMIN_PERMISSIONS.THEMES_VIEW,
+    section: 'Customization'
   },
   {
-    id: "layouts",
-    label: "Layouts",
-    path: "/admin/layouts",
-    icon: Layout,
-    permission: ADMIN_PERMISSIONS.ADMIN_EDIT
-  },
-  {
-    id: "data-maestro",
-    label: "Data Maestro",
-    path: "/admin/data",
+    id: 'data',
+    label: 'Data',
+    path: '/admin/data',
     icon: Database,
-    permission: ADMIN_PERMISSIONS.DATA_VIEW
+    permission: ADMIN_PERMISSIONS.DATA_VIEW,
+    section: 'System'
   },
   {
-    id: "code-studio",
-    label: "Code Studio",
-    path: "/admin/code",
-    icon: Code,
-    permission: ADMIN_PERMISSIONS.DATA_VIEW
+    id: 'analytics',
+    label: 'Analytics',
+    path: '/admin/analytics',
+    icon: BarChart,
+    permission: ADMIN_PERMISSIONS.ANALYTICS_VIEW,
+    section: 'System'
   },
   {
-    id: "settings",
-    label: "Settings",
-    path: "/admin/settings",
+    id: 'settings',
+    label: 'Settings',
+    path: '/admin/settings',
     icon: Settings,
-    permission: ADMIN_PERMISSIONS.SYSTEM_SETTINGS
+    permission: ADMIN_PERMISSIONS.SETTINGS_VIEW,
+    section: 'System'
   }
 ];
 
-// Admin top navigation shortcuts
-export const adminTopNavShortcuts = [
-  {
-    id: "chat",
-    label: "Chat",
-    icon: MessagesSquare,
-    action: "toggleChat"
-  },
-  {
-    id: "snippets",
-    label: "Snippets",
-    icon: ClipboardList,
-    action: "toggleSnippets"
-  },
-  {
-    id: "editor",
-    label: "Editor",
-    icon: FileCode,
-    action: "toggleEditor"
-  },
-  {
-    id: "api-keys",
-    label: "API Keys",
-    icon: KeySquare,
-    action: "toggleApiKeys"
-  },
-  {
-    id: "system",
-    label: "System",
-    icon: ServerCog,
-    action: "toggleSystem"
-  }
-];
+export default adminNavigationItems;

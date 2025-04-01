@@ -16,28 +16,20 @@ import '@/admin/theme/impulse/impulse-theme.css';
 export { AdminDashboard } from './components/dashboard/AdminDashboard';
 
 // Export components
-import { AdminLayout } from './components/AdminLayout';
-import { AdminSidebar } from './components/AdminSidebar';
-import { AdminTopNav } from './components/navigation/AdminTopNav';
-import { useAdminStore } from './store/admin.store';
-import { AdminThemeProvider, useAdminTheme } from './theme/AdminThemeProvider';
-import { useAdminChat, useAdminChatListener } from './hooks/useAdminChat';
-import { useAdminPermissions } from './hooks/useAdminPermissions';
-import { DashboardShortcuts } from './components/dashboard/DashboardShortcuts';
-import { DragIndicator } from './components/ui/DragIndicator';
-import { ImpulseAdminLayout } from './components/layout/ImpulseAdminLayout';
-import React from 'react';
-
-// Export admin UI components
-export { AdminLayout };
-export { AdminSidebar };
-export { AdminTopNav };
-export { DashboardShortcuts };
-export { DragIndicator };
-export { ImpulseAdminLayout };
+export { AdminLayout } from './components/AdminLayout';
+export { AdminSidebar } from './components/AdminSidebar';
+export { AdminTopNav } from './components/navigation/AdminTopNav';
+export { useAdminStore } from './store/admin.store';
+export { AdminThemeProvider, useAdminTheme } from './theme/AdminThemeProvider';
+export { useAdminChat, useAdminChatListener } from './hooks/useAdminChat';
+export { useAdminPermissions } from './hooks/useAdminPermissions';
+export { DashboardShortcuts } from './components/dashboard/DashboardShortcuts';
+export { DragIndicator } from './components/ui/DragIndicator';
+export { ImpulseAdminLayout } from './components/layout/ImpulseAdminLayout';
+export { SyncIndicator } from './components/ui/SyncIndicator';
 
 // Export admin state and hooks
-export { useAdminStore };
-export { AdminThemeProvider, useAdminTheme };
-export { useAdminChat, useAdminChatListener };
-export { useAdminPermissions };
+export { useAdminSync } from './hooks/useAdminSync';
+
+// Export types
+export type { AdminPermissionValue } from './constants/permissions';

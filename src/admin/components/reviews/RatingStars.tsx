@@ -3,6 +3,7 @@ import React from "react";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Define ReviewRating as number type
 export type ReviewRating = number;
 
 interface RatingStarsProps {
