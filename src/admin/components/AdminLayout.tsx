@@ -2,7 +2,6 @@
 import React, { useEffect } from "react";
 import { AdminHeader } from "./AdminHeader";
 import { AdminSidebar } from "./AdminSidebar";
-import { useAdminStore } from "../store/admin.store";
 import { useNavigate } from "react-router-dom";
 import { EditModeToggle } from "./ui/EditModeToggle";
 import { useAtom } from "jotai";
@@ -15,6 +14,7 @@ import { LogConsole } from "@/logging/components/LogConsole";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
+import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -29,7 +29,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   fullWidth = false,
   className
 }) => {
-  const { permissions } = useAdminStore();
+  const { permissions } = useAdminPermissions();
   const [isEditMode] = useAtom(adminEditModeAtom);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -42,7 +42,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     logger.info("Admin layout rendered", {
       details: { 
         isEditMode, 
-        permissions,
+        permissionsCount: permissions.length,
         hasAdminAccess,
         isAuthenticated
       },
@@ -94,4 +94,4 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       {showLogConsole && <LogConsole />}
     </div>
   );
-};
+}

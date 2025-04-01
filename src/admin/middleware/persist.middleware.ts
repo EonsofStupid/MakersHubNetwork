@@ -1,4 +1,3 @@
-
 import { PersistOptions, StateStorage, createJSONStorage } from 'zustand/middleware';
 
 // Create persist middleware for admin stores

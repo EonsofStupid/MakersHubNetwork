@@ -1,61 +1,44 @@
 
-import { useCallback, useMemo } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { PERMISSIONS, PermissionValue } from '@/auth/permissions';
+import { useMemo } from 'react';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { PERMISSIONS } from '@/auth/permissions';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { mapRolesToPermissions } from '@/auth/rbac/roles';
+import { AdminPermissionValue } from '@/admin/types/permissions';
 
-/**
- * Hook for working with admin permissions
- * Maps user roles to admin permissions
- */
 export function useAdminPermissions() {
-  const { roles, isAdmin, isSuperAdmin, isLoading } = useAuth();
-  const logger = useLogger("AdminPermissions", LogCategory.ADMIN);
-  
-  // Map roles to permissions
+  const { roles, status, isLoading: authLoading } = useAuthStore();
+  const isLoading = authLoading || status === 'loading';
+  const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
+
+  // Calculate permissions based on user roles
   const permissions = useMemo(() => {
-    if (isSuperAdmin) {
-      logger.info("User has super_admin role, granting all permissions");
-      return [PERMISSIONS.SUPER_ADMIN];
-    }
-    
-    if (isAdmin) {
-      logger.info("User has admin role, granting admin permissions");
-      return [
-        PERMISSIONS.ADMIN_ACCESS,
-        PERMISSIONS.ADMIN_VIEW,
-        PERMISSIONS.ADMIN_EDIT,
-        PERMISSIONS.CONTENT_VIEW,
-        PERMISSIONS.CONTENT_EDIT,
-        PERMISSIONS.USERS_VIEW,
-        PERMISSIONS.BUILDS_VIEW,
-        PERMISSIONS.BUILDS_APPROVE,
-        PERMISSIONS.THEMES_VIEW,
-        PERMISSIONS.SYSTEM_LOGS
-      ];
-    }
-    
-    logger.info("User has no admin permissions");
-    return [] as PermissionValue[];
-  }, [roles, isAdmin, isSuperAdmin, logger]);
-  
-  // Check if user has a specific permission
-  const hasPermission = useCallback((permission: PermissionValue) => {
-    // Super admins have all permissions
-    if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) {
-      return true;
-    }
-    
-    // Check for specific permission
-    return permissions.includes(permission);
+    return mapRolesToPermissions(roles);
+  }, [roles]);
+
+  // Memoize the hasPermission function
+  const hasPermission = useMemo(() => {
+    return (permission: AdminPermissionValue): boolean => {
+      // Super admin permission grants access to everything
+      if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) {
+        return true;
+      }
+      
+      return permissions.includes(permission);
+    };
   }, [permissions]);
-  
+
+  logger.debug('Admin permissions computed', { 
+    details: { 
+      permissionsCount: permissions.length,
+      roles
+    } 
+  });
+
   return {
-    hasPermission,
     permissions,
-    isLoading,
-    isAdmin,
-    isSuperAdmin
+    hasPermission,
+    isLoading
   };
 }

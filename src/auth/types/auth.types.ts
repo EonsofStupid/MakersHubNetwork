@@ -11,48 +11,28 @@ export interface UserProfile {
   website?: string;
   created_at?: string;
   updated_at?: string;
-  roles?: UserRole[];
 }
 
-export interface AuthUser extends User {
-  profile?: UserProfile;
-  roles?: UserRole[];
-}
+export type AuthUser = User;
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 
 export interface AuthState {
   user: AuthUser | null;
   session: Session | null;
-  profile: UserProfile | null;
   roles: UserRole[];
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
   status: AuthStatus;
+  initialized?: boolean;
 }
 
-export interface AuthContextType extends AuthState {
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
-  refreshSession: () => Promise<void>;
+export interface AdminAccess {
   isAdmin: boolean;
-  isSuperAdmin: boolean;
+  hasAdminAccess: boolean;
 }
 
-export interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export interface SignInCredentials {
-  email: string;
-  password: string;
-}
-
-export interface SignUpCredentials extends SignInCredentials {
-  username?: string;
-  full_name?: string;
+export interface WithAdminAccess {
+  hasAdminAccess: boolean;
 }
