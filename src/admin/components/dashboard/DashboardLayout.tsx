@@ -4,7 +4,7 @@ import { LayoutDashboard } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { BuildApprovalWidget } from '@/components/admin/dashboard/BuildApprovalWidget';
 import { AdminFeatureSection } from '@/components/admin/dashboard/AdminFeatureSection';
-import { StatsCards } from '@/admin/dashboard/StatsCards';
+import { StatsCards } from '@/admin/components/dashboard/StatsCards';
 
 /**
  * Default fallback dashboard layout when no database layout is available

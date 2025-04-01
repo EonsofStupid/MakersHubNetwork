@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { LayoutSkeleton } from '@/admin/types/layout.types';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowDownUp, FileText, Plus } from 'lucide-react';
-import { LayoutsPage } from '../layouts/LayoutsPage';
+import { LayoutsPage } from './LayoutsPage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LayoutEditor } from '@/admin/components/layout/LayoutEditor';
 import { RequirePermission } from '@/admin/components/auth/RequirePermission';
