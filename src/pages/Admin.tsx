@@ -1,10 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AdminRoutes } from "@/admin/routes";
-import { useAdmin } from "@/admin/context/AdminContext";
+import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { useAdminSync } from "@/admin/hooks/useAdminSync";
 import { SyncIndicator } from "@/admin/components/ui/SyncIndicator";
@@ -26,7 +25,7 @@ import '@/admin/theme/impulse/impulse-theme.css';
 export default function Admin() {
   const { toast } = useToast();
   const location = useLocation();
-  const { hasAdminAccess, isLoading, initializeAdmin } = useAdmin();
+  const { hasAdminAccess, isLoading, initializeAdmin } = useAdminAccess();
   const [hasInitialized, setHasInitialized] = useState(false);
   const [hasShownIntro, setHasShownIntro] = useState(false);
   const { loadPermissions, initializeStore, savePreferences } = useAdminStore();

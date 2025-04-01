@@ -1,34 +1,49 @@
 
 import { useCallback, useEffect, useState } from 'react';
-import { useAuthSelector } from '@/store/slices/auth/auth.selector';
-import { useAuthStore } from '@/store/slices/auth/auth.slice';
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useAdminAccess() {
   const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { roles, isAuthenticated } = useAuthSelector();
-  const { fetchUserRoles } = useAuthStore();
-  const { getCurrentUser } = useSupabaseAuth();
-  
-  useEffect(() => {
-    // Check if user has admin or super_admin role
-    const adminRoles = roles.filter(role => role === 'admin' || role === 'super_admin');
-    setHasAdminAccess(adminRoles.length > 0);
-    setIsLoading(false);
-  }, [roles]);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   
   // Initialize admin data
   const initializeAdmin = useCallback(async () => {
     try {
-      const user = await getCurrentUser();
+      const { data: { user }, error } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+      
       if (user) {
-        await fetchUserRoles();
+        // Get user roles
+        const { data: userRoles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+          
+        if (rolesError) {
+          console.error("Error fetching user roles:", rolesError);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Check if user has admin or super_admin role
+        const adminRoles = userRoles?.filter(role => 
+          role.role === 'admin' || role.role === 'super_admin'
+        ) || [];
+        
+        setHasAdminAccess(adminRoles.length > 0);
       }
     } catch (error) {
       console.error("Error initializing admin access:", error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [getCurrentUser, fetchUserRoles]);
+  }, []);
+
+  // Check admin access on mount
+  useEffect(() => {
+    initializeAdmin();
+  }, [initializeAdmin]);
 
   return {
     hasAdminAccess,

@@ -1,52 +1,43 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, RefreshCw } from 'lucide-react';
+import { CloudCheck, CloudOff, RotateCw } from 'lucide-react';
 import { useAdminStore } from '@/admin/store/admin.store';
-import { useAdminSync } from '@/admin/hooks/useAdminSync';
 
 export function SyncIndicator() {
-  const { preferencesChanged } = useAdminStore();
-  const { isSyncing, lastSyncTime } = useAdminSync();
+  const { syncing, syncError, lastSynced } = useAdminStore();
+  
+  if (syncError) {
+    return (
+      <div className="flex items-center text-xs text-red-500">
+        <CloudOff className="w-3 h-3 mr-1" />
+        <span>Sync error</span>
+      </div>
+    );
+  }
+  
+  if (syncing) {
+    return (
+      <div className="flex items-center text-xs text-[var(--impulse-text-secondary)]">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <RotateCw className="w-3 h-3 mr-1" />
+        </motion.div>
+        <span>Syncing...</span>
+      </div>
+    );
+  }
   
   return (
-    <div className="flex items-center gap-2 text-xs">
-      {isSyncing || preferencesChanged ? (
-        <>
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="relative"
-          >
-            <RefreshCw className="w-3 h-3 text-[var(--impulse-primary)]" />
-            <motion.div 
-              className="absolute inset-0 rounded-full"
-              animate={{ 
-                boxShadow: [
-                  "0 0 0 0 rgba(0, 240, 255, 0)",
-                  "0 0 0 4px rgba(0, 240, 255, 0.3)",
-                  "0 0 0 0 rgba(0, 240, 255, 0)"
-                ]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-          </motion.div>
-          <span className="text-[var(--impulse-text-secondary)]">Syncing changes...</span>
-        </>
-      ) : (
-        <>
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            className="text-green-500"
-          >
-            <Check className="w-3 h-3" />
-          </motion.div>
-          <span className="text-[var(--impulse-text-secondary)]">
-            {lastSyncTime ? `Synced ${lastSyncTime.toLocaleTimeString()}` : 'All changes saved'}
-          </span>
-        </>
-      )}
+    <div className="flex items-center text-xs text-[var(--impulse-text-secondary)]">
+      <CloudCheck className="w-3 h-3 mr-1 text-green-500" />
+      <span>
+        {lastSynced 
+          ? `Synced ${new Date(lastSynced).toLocaleTimeString()}` 
+          : 'Up to date'}
+      </span>
     </div>
   );
 }

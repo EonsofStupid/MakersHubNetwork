@@ -1,7 +1,16 @@
 
 import React from "react";
-import UsersManagement from "@/admin/features/users/UsersManagement";
+import { AdminLayout } from "@/admin/components/AdminLayout";
 
 export default function UsersPage() {
-  return <UsersManagement />;
+  return (
+    <AdminLayout title="Users Management">
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">Users Management</h1>
+        <p className="text-muted-foreground">
+          Manage your users here. This page is under construction.
+        </p>
+      </div>
+    </AdminLayout>
+  );
 }

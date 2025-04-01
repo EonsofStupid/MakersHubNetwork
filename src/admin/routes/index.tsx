@@ -1,157 +1,65 @@
 
-import React, { lazy, Suspense } from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
-import { PlaceholderPage } from "./PlaceholderPage";
-import { Shell, Users, Database, Settings, FileText, BarChart, Paintbrush, Shield, LayoutDashboard } from "lucide-react";
-import { ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AdminLayout } from '@/admin/components/AdminLayout';
 
-// Import AdminDashboard component from its new location
-import { AdminDashboard } from "@/admin/components/dashboard/AdminDashboard";
+// Import all admin pages - using lazy loading for better performance
+const OverviewPage = React.lazy(() => import('./overview/OverviewPage'));
+const UsersPage = React.lazy(() => import('./users/UsersPage'));
+const SettingsPage = React.lazy(() => import('./settings/SettingsPage'));
+const UnauthorizedPage = React.lazy(() => import('./UnauthorizedPage'));
 
-// Import Dashboard from its source location (using the new implementation)
-import Dashboard from "@/admin/routes/dashboard/Dashboard";
-
-// Lazy load other admin pages
-const UsersPage = lazy(() => import("./users/UsersPage"));
-const ContentPage = lazy(() => import("./content/ContentPage"));
-const DataMaestroPage = lazy(() => import("./data/DataMaestroPage"));
-const AnalyticsPage = lazy(() => import("./analytics/AnalyticsPage"));
-const ThemesPage = lazy(() => import("./themes/ThemesPage"));
-const SettingsPage = lazy(() => import("./settings/SettingsPage"));
-const PermissionsPage = lazy(() => import("./permissions/PermissionsPage"));
-const LayoutsPage = lazy(() => import("./layouts/LayoutsPage"));
-
-// Loading fallback
-const PageLoader = () => (
-  <div className="flex items-center justify-center h-[60vh]">
-    <div className="h-10 w-10 border-4 border-t-primary border-primary/20 rounded-full animate-spin"></div>
+// Default loading component for lazy-loaded pages
+const PageLoading = () => (
+  <div className="flex items-center justify-center h-full">
+    <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+    <p className="ml-3 text-muted-foreground">Loading...</p>
   </div>
 );
 
 export function AdminRoutes() {
   return (
     <Routes>
-      {/* Redirect /admin to /admin/overview */}
-      <Route path="/" element={<Navigate to="overview" replace />} />
-      
-      {/* Dashboard Overview */}
-      <Route path="overview" element={<Dashboard />} />
-      
-      {/* Main admin routes */}
       <Route
-        path="users/*"
+        path="/"
+        element={<Navigate to="/admin/overview" replace />}
+      />
+      <Route 
+        path="/overview" 
         element={
-          <Suspense fallback={<PageLoader />}>
+          <React.Suspense fallback={<AdminLayout><PageLoading /></AdminLayout>}>
+            <OverviewPage />
+          </React.Suspense>
+        } 
+      />
+      <Route 
+        path="/users" 
+        element={
+          <React.Suspense fallback={<AdminLayout><PageLoading /></AdminLayout>}>
             <UsersPage />
-          </Suspense>
-        }
+          </React.Suspense>
+        } 
       />
-      
-      <Route
-        path="content/*"
+      <Route 
+        path="/settings" 
         element={
-          <Suspense fallback={<PageLoader />}>
-            <ContentPage />
-          </Suspense>
-        }
-      />
-      
-      <Route
-        path="data-maestro/*"
-        element={
-          <Suspense fallback={<PageLoader />}>
-            <DataMaestroPage />
-          </Suspense>
-        }
-      />
-      
-      <Route
-        path="analytics/*"
-        element={
-          <Suspense fallback={<PageLoader />}>
-            <AnalyticsPage />
-          </Suspense>
-        }
-      />
-      
-      <Route
-        path="themes/*"
-        element={
-          <Suspense fallback={<PageLoader />}>
-            <ThemesPage />
-          </Suspense>
-        }
-      />
-      
-      <Route
-        path="layouts/*"
-        element={
-          <Suspense fallback={<PageLoader />}>
-            <LayoutsPage />
-          </Suspense>
-        }
-      />
-      
-      <Route
-        path="settings/*"
-        element={
-          <Suspense fallback={<PageLoader />}>
+          <React.Suspense fallback={<AdminLayout><PageLoading /></AdminLayout>}>
             <SettingsPage />
-          </Suspense>
-        }
+          </React.Suspense>
+        } 
       />
-      
-      <Route
-        path="permissions/*"
+      <Route 
+        path="/unauthorized" 
         element={
-          <Suspense fallback={<PageLoader />}>
-            <PermissionsPage />
-          </Suspense>
-        }
+          <React.Suspense fallback={<div className="h-screen"></div>}>
+            <UnauthorizedPage />
+          </React.Suspense>
+        } 
       />
-      
-      {/* Placeholder pages */}
-      <Route
-        path="builds/*"
-        element={
-          <PlaceholderPage 
-            title="Builds Manager" 
-            description="Review and manage 3D printer builds from the community" 
-            icon={<Shell className="h-8 w-8 text-primary" />}
-            requiredPermission={ADMIN_PERMISSIONS.BUILDS_VIEW}
-          />
-        }
+      <Route 
+        path="*" 
+        element={<Navigate to="/admin/overview" replace />} 
       />
-      
-      <Route
-        path="messaging/*"
-        element={
-          <PlaceholderPage 
-            title="Messaging" 
-            description="Community messaging system management" 
-            icon={<FileText className="h-8 w-8 text-primary" />}
-            requiredPermission={ADMIN_PERMISSIONS.MESSAGING_ACCESS}
-          />
-        }
-      />
-      
-      {/* Unauthorized page */}
-      <Route
-        path="unauthorized"
-        element={
-          <PlaceholderPage 
-            title="Access Denied" 
-            description="You don't have permission to access this area" 
-            icon={<Shield className="h-8 w-8 text-destructive" />}
-          />
-        }
-      />
-      
-      {/* Catch-all route - redirect to overview */}
-      <Route path="*" element={<Navigate to="overview" replace />} />
     </Routes>
   );
 }
-
-// Re-export PlaceholderPage for use in other routes
-export { PlaceholderPage };

@@ -1,68 +1,54 @@
 
-import { useMemo, useEffect } from "react";
-import { useAuthStore } from "@/stores/auth/store";
-import { useAdminStore } from "@/admin/store/admin.store";
-import { AdminPermissionValue, ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
+import { useCallback, useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Central hook for checking admin access and permissions
- * This is the source of truth for all admin access checks
- */
 export function useAdminAccess() {
-  const { roles, user, status } = useAuthStore();
-  const { loadPermissions, hasPermission, isLoadingPermissions } = useAdminStore();
+  const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   
-  // Memoized admin access check
-  const hasAdminAccess = useMemo(() => {
-    return roles?.includes("admin") || roles?.includes("super_admin");
-  }, [roles]);
-  
-  // Memoized super admin check
-  const isSuperAdmin = useMemo(() => {
-    return roles?.includes("super_admin");
-  }, [roles]);
-  
-  /**
-   * Check for a specific admin permission
-   * @param permission The admin permission to check
-   */
-  const checkPermission = (permission: AdminPermissionValue): boolean => {
-    // Super admins have all permissions
-    if (isSuperAdmin) {
-      return true;
+  // Initialize admin data
+  const initializeAdmin = useCallback(async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+      
+      if (user) {
+        // Get user roles
+        const { data: userRoles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+          
+        if (rolesError) {
+          console.error("Error fetching user roles:", rolesError);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Check if user has admin or super_admin role
+        const adminRoles = userRoles?.filter(role => 
+          role.role === 'admin' || role.role === 'super_admin'
+        ) || [];
+        
+        setHasAdminAccess(adminRoles.length > 0);
+      }
+    } catch (error) {
+      console.error("Error initializing admin access:", error);
+    } finally {
+      setIsLoading(false);
     }
-    
-    // Basic admin access check
-    if (permission === ADMIN_PERMISSIONS.ADMIN_ACCESS) {
-      return hasAdminAccess;
-    }
-    
-    // Delegate to admin store for specific permissions
-    return hasPermission(permission);
-  };
-  
-  /**
-   * Initialize admin permissions based on auth roles
-   */
-  const initializeAdminAccess = () => {
-    if (user?.id && hasAdminAccess) {
-      loadPermissions();
-    }
-  };
-  
-  // Initialize permissions on mount
+  }, []);
+
+  // Check admin access on mount
   useEffect(() => {
-    if (status === "authenticated" && hasAdminAccess) {
-      initializeAdminAccess();
-    }
-  }, [status, hasAdminAccess, user?.id]);
-  
+    initializeAdmin();
+  }, [initializeAdmin]);
+
   return {
     hasAdminAccess,
-    isSuperAdmin,
-    checkPermission,
-    initializeAdminAccess,
-    isAuthenticated: status === "authenticated" && !!user,
-    isLoading: status === "loading" || isLoadingPermissions
+    isLoading,
+    isAuthenticated,
+    initializeAdmin
   };
 }
