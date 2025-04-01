@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ImpulseAdminLayout } from '@/admin/components/layout/ImpulseAdminLayout';
 import { Button } from '@/components/ui/button';
-import { Layout, LayoutSkeleton, LayoutSchema } from '@/admin/types/layout.types';
+import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { LayoutEditor } from '@/admin/components/layout/LayoutEditor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -50,10 +51,10 @@ function LayoutsPage() {
     queryFn: async () => {
       if (!selectedLayoutId) return null;
       
-      const skeleton = await layoutSkeletonService.getById(selectedLayoutId);
-      if (!skeleton) return null;
+      const response = await layoutSkeletonService.getById(selectedLayoutId);
+      if (!response.data) return null;
       
-      return layoutSkeletonService.convertToLayout(skeleton);
+      return layoutSkeletonService.convertToLayout(response.data);
     },
     enabled: !!selectedLayoutId,
   });
