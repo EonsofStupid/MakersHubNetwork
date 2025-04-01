@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { UserRole, AuthStatus } from "../types/auth.types";
-import { subscribeToAuthEvents } from "../bridge";
+import { subscribeToAuthEvents, AuthEvent } from "../bridge";
 import { getSession, fetchUserRoles } from "../providers/supabase-auth";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging/types";
@@ -92,7 +92,7 @@ export const useAuthState = () => {
   
   // Subscribe to auth events
   useEffect(() => {
-    const unsubscribe = subscribeToAuthEvents((event) => {
+    const handleAuthEvent = (event: AuthEvent) => {
       logger.info(`Auth event received: ${event.type}`, { 
         category: LogCategory.AUTH,
         source: "useAuthState", 
@@ -126,9 +126,13 @@ export const useAuthState = () => {
           setError(event.payload?.error || null);
           break;
       }
-    });
+    };
     
-    return () => unsubscribe();
+    const unsubscribe = subscribeToAuthEvents(handleAuthEvent);
+    
+    return () => {
+      unsubscribe();
+    };
   }, [logger]);
   
   return {

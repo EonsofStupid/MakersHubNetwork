@@ -178,13 +178,18 @@ export function useDragAndDrop({
     };
   }, [handleDragStart, handleDragOver, handleDragEnd]);
   
+  // Add the makeDraggable function to match component usage
+  const makeDraggable = useCallback((element: HTMLElement, itemId: string) => {
+    return registerDraggable(element, itemId);
+  }, [registerDraggable]);
+  
   return {
     isDragging,
     dragSourceId,
     dragTargetId,
     dropPosition,
     registerDropZone,
-    registerDraggable
+    registerDraggable,
+    makeDraggable // Add this method
   };
 }
-

@@ -11,7 +11,9 @@ interface AdminAuthGuardProps {
 }
 
 export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
-  const { user, isAuthenticated, isAdmin, isSuperAdmin, isLoading } = useAuth();
+  const { user, status, isAdmin, isSuperAdmin, isLoading } = useAuth();
+  const isAuthenticated = status === 'authenticated' && !!user;
+  
   const { toast } = useToast();
   const location = useLocation();
   const logger = useLogger('AdminAuthGuard', LogCategory.ADMIN);
@@ -52,4 +54,3 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   // Render children if authenticated and has admin access
   return <>{children}</>;
 }
-

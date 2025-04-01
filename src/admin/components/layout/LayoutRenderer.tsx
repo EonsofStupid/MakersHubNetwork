@@ -6,6 +6,7 @@ import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
+import { PermissionValue } from '@/auth/permissions';
 
 interface LayoutRendererProps {
   layout: Layout | null;
@@ -65,7 +66,7 @@ export function LayoutRenderer({ layout, isLoading, fallback, error }: LayoutRen
 
 interface ComponentRendererProps {
   component: Component;
-  hasPermission: (permission: string) => boolean;
+  hasPermission: (permission: PermissionValue) => boolean;
   isEditMode: boolean;
 }
 
@@ -76,7 +77,7 @@ function ComponentRenderer({ component, hasPermission, isEditMode }: ComponentRe
       return true;
     }
     
-    return component.permissions.some(permission => hasPermission(permission));
+    return component.permissions.some(permission => hasPermission(permission as PermissionValue));
   }, [component.permissions, hasPermission]);
   
   // Skip rendering if no permissions

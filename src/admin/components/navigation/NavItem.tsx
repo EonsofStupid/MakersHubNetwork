@@ -1,8 +1,8 @@
 
-import React from 'react';
-import { useAtom } from 'jotai';
+import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useAtom } from 'jotai';
 import { adminDraggedItemAtom } from '@/admin/atoms/tools.atoms';
 import { AdminTooltip } from '../ui/AdminTooltip';
 
@@ -28,9 +28,10 @@ export function NavItem({
   draggable = false
 }: NavItemProps) {
   const [, setDraggedItem] = useAtom(adminDraggedItemAtom);
+  const itemRef = useRef<HTMLLIElement>(null);
   
   // Handle drag start
-  const handleDragStart = (e: React.DragEvent) => {
+  const handleDragStart = (e: React.DragEvent<HTMLLIElement>) => {
     if (!draggable) return;
     
     e.dataTransfer.setData('text/plain', id);
@@ -55,6 +56,7 @@ export function NavItem({
       align="center"
     >
       <motion.li
+        ref={itemRef}
         whileTap={{ scale: 0.97 }}
         draggable={draggable}
         onDragStart={handleDragStart}

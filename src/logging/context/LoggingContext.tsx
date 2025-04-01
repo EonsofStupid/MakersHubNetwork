@@ -1,28 +1,46 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getLogger } from '../index';
-import { LogLevel, LogCategory } from '../types';
+import { LogLevel, LogCategory, LogEntry } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 interface LoggingContextType {
   showLogConsole: boolean;
   setShowLogConsole: (show: boolean) => void;
   logSystemStartup: () => void;
+  logs: LogEntry[];
+  clearLogs: () => void;
+  toggleLogConsole: () => void;
 }
 
 const LoggingContext = createContext<LoggingContextType>({
   showLogConsole: false,
   setShowLogConsole: () => {},
-  logSystemStartup: () => {}
+  logSystemStartup: () => {},
+  logs: [],
+  clearLogs: () => {},
+  toggleLogConsole: () => {}
 });
 
 export const useLoggingContext = () => useContext(LoggingContext);
 
 export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [showLogConsole, setShowLogConsole] = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   const logger = getLogger();
   
+  // Toggle log console
+  const toggleLogConsole = useCallback(() => {
+    setShowLogConsole(prev => !prev);
+  }, []);
+  
+  // Clear logs
+  const clearLogs = useCallback(() => {
+    setLogs([]);
+  }, []);
+  
   // Log system startup
-  const logSystemStartup = () => {
+  const logSystemStartup = useCallback(() => {
     logger.info('Application UI initialized', {
       category: LogCategory.SYSTEM,
       details: {
@@ -31,22 +49,24 @@ export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       },
       tags: ['startup', 'initialization']
     });
-  };
+  }, [logger]);
   
-  // Log initial startup
+  // Listen for log events
   useEffect(() => {
-    logSystemStartup();
+    const handleLogEvent = (entry: LogEntry) => {
+      setLogs(prevLogs => [...prevLogs, {
+        ...entry,
+        id: entry.id || uuidv4()
+      }]);
+    };
     
-    // Log performance data
-    const startTime = performance.now();
+    // Add listener for log events
+    // This is a simplified version - in a real app we'd need to implement
+    // a proper event system for the logger
+    const unsubscribe = subscribeToLogEvents(handleLogEvent);
     
     return () => {
-      const duration = performance.now() - startTime;
-      logger.info('LoggingProvider unmounted', {
-        category: LogCategory.PERFORMANCE,
-        details: { durationMs: duration },
-        tags: ['lifecycle', 'performance']
-      });
+      unsubscribe();
     };
   }, []);
   
@@ -54,7 +74,7 @@ export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'L') {
-        setShowLogConsole(prev => !prev);
+        toggleLogConsole();
       }
     };
     
@@ -62,15 +82,25 @@ export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [toggleLogConsole]);
   
   return (
     <LoggingContext.Provider value={{ 
       showLogConsole, 
       setShowLogConsole,
-      logSystemStartup 
+      logSystemStartup,
+      logs,
+      clearLogs,
+      toggleLogConsole
     }}>
       {children}
     </LoggingContext.Provider>
   );
 };
+
+// Helper function to subscribe to log events
+// This is a placeholder - in a real app we'd implement a proper event system
+function subscribeToLogEvents(callback: (entry: LogEntry) => void): () => void {
+  // Implementation would depend on how the logging system emits events
+  return () => {};
+}

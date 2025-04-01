@@ -3,13 +3,7 @@
  * Logging system type definitions
  */
 
-export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARNING = 2,
-  ERROR = 3,
-  CRITICAL = 4
-}
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'success' | 'trace';
 
 export enum LogCategory {
   SYSTEM = 'system',
