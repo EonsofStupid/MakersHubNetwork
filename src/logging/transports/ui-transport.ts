@@ -2,6 +2,7 @@
 import { toast } from '@/hooks/use-toast';
 import { LogEntry, LogTransport } from '../types';
 import { LogLevel } from '../constants/log-level';
+import { nodeToSearchableString } from '@/shared/utils/render';
 
 interface UITransportOptions {
   showDebug?: boolean;
@@ -38,7 +39,8 @@ export class UITransport implements LogTransport {
     }
     
     // Create a key for this message to track duplicates
-    const messageKey = `${entry.level}-${entry.category}-${entry.message}`;
+    const messageStr = nodeToSearchableString(entry.message);
+    const messageKey = `${entry.level}-${entry.category}-${messageStr}`;
     
     // Check if we're throttling this message
     if (this.isThrottled(messageKey)) {
@@ -108,6 +110,7 @@ export class UITransport implements LogTransport {
     let iconName: string;
     let variant: "default" | "destructive" | undefined;
     const title = this.getTitle(entry);
+    const messageStr = nodeToSearchableString(entry.message);
     
     switch (entry.level) {
       case LogLevel.DEBUG:
@@ -138,7 +141,7 @@ export class UITransport implements LogTransport {
     // Show toast with appropriate styling
     toast({
       title,
-      description: String(entry.message),
+      description: messageStr,
       variant,
       // Use plain strings for icon names - the toast component will handle rendering
       icon: iconName,
