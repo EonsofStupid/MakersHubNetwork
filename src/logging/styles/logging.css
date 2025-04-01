@@ -1,0 +1,129 @@
+
+/**
+ * Custom CSS for the logging system
+ */
+
+/* Log console styles */
+.log-debug {
+  /* Subtle debug styling */
+}
+
+.log-info {
+  color: var(--impulse-primary);
+}
+
+.log-warning {
+  color: #FFB400;
+}
+
+.log-error {
+  color: var(--impulse-secondary);
+}
+
+.log-critical {
+  color: #FF4136;
+  font-weight: bold;
+}
+
+/* Modified toast for log notifications */
+.toast-log-notification {
+  backdrop-filter: blur(8px);
+  border-width: 1px;
+}
+
+.toast-log-notification.debug {
+  border-color: rgba(120, 120, 120, 0.5);
+  background-color: rgba(120, 120, 120, 0.1);
+}
+
+.toast-log-notification.info {
+  border-color: var(--impulse-primary);
+  background-color: rgba(0, 240, 255, 0.1);
+}
+
+.toast-log-notification.warning {
+  border-color: #FFB400;
+  background-color: rgba(255, 180, 0, 0.1);
+}
+
+.toast-log-notification.error {
+  border-color: var(--impulse-secondary);
+  background-color: rgba(255, 45, 110, 0.1);
+}
+
+.toast-log-notification.critical {
+  border-color: #FF4136;
+  background-color: rgba(255, 65, 54, 0.15);
+}
+
+/* Performance log indicators */
+.perf-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.perf-fast {
+  background-color: #2ECC40;
+}
+
+.perf-medium {
+  background-color: #FFB400;
+}
+
+.perf-slow {
+  background-color: var(--impulse-secondary);
+}
+
+.perf-very-slow {
+  background-color: #FF4136;
+  animation: pulse 1s infinite;
+}
+
+/* Log message animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.log-entry-appear {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Electric border for critical logs */
+.log-critical-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.log-critical-border::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 65, 54, 0.5) 50%, 
+    transparent 100%
+  );
+  animation: criticalScan 2s linear infinite;
+}
+
+@keyframes criticalScan {
+  from { left: -100%; }
+  to { left: 100%; }
+}
+
+/* Animation for log level indicators */
+.log-level-indicator {
+  transition: all 0.3s ease;
+}
+
+.log-level-indicator:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 8px currentColor;
+}

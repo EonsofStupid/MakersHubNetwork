@@ -4,6 +4,10 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { AdminProvider } from "@/admin/context/AdminContext";
+import { LoggingProvider } from "@/logging/context/LoggingContext";
+import { LogConsole } from "@/logging/components/LogConsole";
+import { LogToggleButton } from "@/logging/components/LogToggleButton";
+import { useLoggingContext } from "@/logging/context/LoggingContext";
 
 // Import pages
 import Index from "./pages/Index";
@@ -14,7 +18,21 @@ import Login from "./pages/Login";
 import { MainNav } from "@/components/MainNav";
 import { Footer } from "@/components/Footer";
 
+// Import styles
 import "./App.css";
+import "@/logging/styles/logging.css";
+
+// LoggingComponents wrapper to avoid context issues
+function LoggingComponents() {
+  const { showLogConsole } = useLoggingContext();
+  
+  return (
+    <>
+      {showLogConsole && <LogConsole />}
+      <LogToggleButton />
+    </>
+  );
+}
 
 function App() {
   const location = useLocation();
@@ -22,18 +40,21 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
-      <AuthProvider>
-        <AdminProvider>
-          {!isAdminRoute && <MainNav />}
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/admin/*" element={<Admin />} />
-          </Routes>
-          {!isAdminRoute && <Footer />}
-          <Toaster />
-        </AdminProvider>
-      </AuthProvider>
+      <LoggingProvider>
+        <AuthProvider>
+          <AdminProvider>
+            {!isAdminRoute && <MainNav />}
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/admin/*" element={<Admin />} />
+            </Routes>
+            {!isAdminRoute && <Footer />}
+            <Toaster />
+            <LoggingComponents />
+          </AdminProvider>
+        </AuthProvider>
+      </LoggingProvider>
     </ThemeProvider>
   );
 }
