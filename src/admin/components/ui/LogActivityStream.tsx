@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { LogCategory, LogEntry, memoryTransport } from '@/logging';
 import { LogLevel } from '@/logging/constants/log-level';
@@ -31,34 +30,27 @@ export function LogActivityStream({
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  // Update logs from memory transport
   useEffect(() => {
     const updateLogs = () => {
-      // Get all logs and filter them
       const allLogs = memoryTransport.getLogs();
       
-      // Filter by level
       let filteredLogs = allLogs.filter(log => 
         isLogLevelAtLeast(log.level, level)
       );
       
-      // Filter by categories if specified
       if (categories && categories.length > 0) {
         filteredLogs = filteredLogs.filter(log => 
           categories.includes(log.category as LogCategory)
         );
       }
       
-      // Apply limit
       filteredLogs = filteredLogs.slice(-maxEntries);
       
       setLogs(filteredLogs);
     };
     
-    // Initial update
     updateLogs();
     
-    // Set up interval to update logs
     const interval = setInterval(updateLogs, 2000);
     
     return () => {
@@ -66,14 +58,12 @@ export function LogActivityStream({
     };
   }, [level, categories, maxEntries]);
   
-  // Auto-scroll to bottom
   useEffect(() => {
     if (autoScroll && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [logs, autoScroll]);
   
-  // Get color class for log level
   const getLevelColorClass = (level: LogLevel): string => {
     switch (level) {
       case LogLevel.DEBUG:
@@ -91,12 +81,10 @@ export function LogActivityStream({
     }
   };
   
-  // Get name for log level
   const getLevelName = (level: LogLevel): string => {
     return LOG_LEVEL_MAP[level] || "UNKNOWN";
   };
   
-  // Get log item class based on level
   const getLogItemClass = (level: LogLevel): string => {
     switch (level) {
       case LogLevel.WARN:
@@ -110,7 +98,6 @@ export function LogActivityStream({
     }
   };
   
-  // Format timestamp
   const formatTime = (date: Date): string => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };

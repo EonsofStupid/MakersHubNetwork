@@ -1,4 +1,3 @@
-
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry } from '../types';
@@ -7,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
 import '../styles/logging.css';
 import { nodeToSearchableString } from '@/shared/utils/render';
-import { safelyRenderNode, isReactNode } from '@/shared/utils/react-utils';
+import { safelyRenderNode } from '@/shared/utils/react-utils';
 
 interface LogDetailsProps {
   details: Record<string, any>;
@@ -143,8 +142,8 @@ export function LogConsole() {
     .filter(log => {
       if (search === '') return true;
       const searchLower = search.toLowerCase();
-      // Use the safelyRenderNode for type safety when converting to string
-      const messageStr = log.message ? nodeToSearchableString(safelyRenderNode(log.message)) : '';
+      
+      const messageStr = nodeToSearchableString(log.message);
       return messageStr.toLowerCase().includes(searchLower) || 
              log.category.toLowerCase().includes(searchLower);
     });
