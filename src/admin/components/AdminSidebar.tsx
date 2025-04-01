@@ -1,162 +1,229 @@
 
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { AdminPermissionValue } from '@/admin/constants/permissions';
-import { adminNavigationItems } from '@/admin/config/navigation.config';
-import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
-import { NavItem } from '@/admin/components/navigation/NavItem';
-import { NavGroup } from '@/admin/components/navigation/NavGroup';
-import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAtom } from 'jotai';
-import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
-import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
-
-// Define the AdminNavigationItem type here to match the expected structure
-type AdminNavigationItem = {
-  id: string;
-  label: string;
-  path: string;
-  icon: LucideIcon;
-  permission?: AdminPermissionValue;
-  section?: string;
-};
-
-// Import styles directly
-import '@/admin/styles/sidebar-navigation.css';
+import { adminSidebarExpandedAtom } from '@/admin/atoms/tools.atoms';
+import { cn } from '@/lib/utils';
+import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
+import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import { NavGroup } from '@/admin/components/navigation/NavGroup';
+import { 
+  Home, 
+  Users, 
+  Layout, 
+  FileText, 
+  Package, 
+  Settings, 
+  Shield, 
+  Database, 
+  FileCode, 
+  ChevronLeft, 
+  ChevronRight 
+} from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AdminTooltip } from './ui/AdminTooltip';
 
 export function AdminSidebar() {
-  const location = useLocation();
+  const [expanded, setExpanded] = useAtom(adminSidebarExpandedAtom);
   const navigate = useNavigate();
+  const location = useLocation();
   const { hasPermission } = useAdminPermissions();
-  const { sidebarExpanded, toggleSidebar, showLabels, setActiveSection } = useAdminStore();
-  const [hasMounted, setHasMounted] = useState(false);
-  const [isEditMode] = useAtom(adminEditModeAtom);
-  
-  // Set mounted state for animations
-  useEffect(() => {
-    setHasMounted(true);
-    // Auto-expand after a short delay
-    const timer = setTimeout(() => {
-      if (!sidebarExpanded) {
-        toggleSidebar();
-      }
-    }, 600);
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // Set active section based on path
-  useEffect(() => {
-    const path = location.pathname.split('/')[2] || 'overview';
-    setActiveSection(path);
-  }, [location.pathname, setActiveSection]);
-  
-  // Filter navigation items based on permissions
-  const filteredItems = adminNavigationItems.filter(item => {
-    // If no permission required, show the item
-    if (!item.permission) return true;
-    
-    // Check if user has the required permission
-    return hasPermission(item.permission as AdminPermissionValue);
-  });
-  
-  // Group items by section, defaulting to 'General' if no section is specified
-  const groupedItems = filteredItems.reduce((acc, item) => {
-    const section = item.section || 'General';
-    if (!acc[section]) {
-      acc[section] = [];
-    }
-    acc[section].push(item as AdminNavigationItem);
-    return acc;
-  }, {} as Record<string, AdminNavigationItem[]>);
-  
-  // Get all sections
-  const sections = Object.keys(groupedItems);
-  
-  // Animation variants for width only
-  const sidebarVariants = {
-    expanded: {
-      width: 240,
-      transition: {
-        type: 'spring',
-        stiffness: 400,
-        damping: 40
-      }
-    },
-    collapsed: {
-      width: 70,
-      transition: {
-        type: 'spring',
-        stiffness: 400,
-        damping: 40
-      }
-    },
-    initial: {
-      width: 70
-    }
+
+  const toggleSidebar = () => {
+    setExpanded(!expanded);
   };
-  
+
+  // Navigation items with permission checks
+  const navItems = [
+    {
+      group: 'Core',
+      items: [
+        {
+          name: 'Dashboard',
+          path: '/admin/dashboard',
+          icon: <Home className="h-5 w-5" />,
+          permission: ADMIN_PERMISSIONS.ADMIN_VIEW
+        }
+      ]
+    },
+    {
+      group: 'Content',
+      items: [
+        {
+          name: 'Users',
+          path: '/admin/users',
+          icon: <Users className="h-5 w-5" />,
+          permission: ADMIN_PERMISSIONS.USERS_VIEW
+        },
+        {
+          name: 'Builds',
+          path: '/admin/builds',
+          icon: <Package className="h-5 w-5" />,
+          permission: ADMIN_PERMISSIONS.BUILDS_VIEW
+        },
+        {
+          name: 'Parts',
+          path: '/admin/parts',
+          icon: <Database className="h-5 w-5" />,
+          permission: ADMIN_PERMISSIONS.CONTENT_VIEW
+        },
+        {
+          name: 'Content',
+          path: '/admin/content',
+          icon: <FileText className="h-5 w-5" />,
+          permission: ADMIN_PERMISSIONS.CONTENT_VIEW
+        }
+      ]
+    },
+    {
+      group: 'Appearance',
+      items: [
+        {
+          name: 'Themes',
+          path: '/admin/themes',
+          icon: <Layout className="h-5 w-5" />,
+          permission: ADMIN_PERMISSIONS.THEMES_VIEW
+        }
+      ]
+    },
+    {
+      group: 'System',
+      items: [
+        {
+          name: 'Permissions',
+          path: '/admin/permissions',
+          icon: <Shield className="h-5 w-5" />,
+          permission: ADMIN_PERMISSIONS.SYSTEM_SETTINGS
+        },
+        {
+          name: 'Settings',
+          path: '/admin/settings',
+          icon: <Settings className="h-5 w-5" />,
+          permission: ADMIN_PERMISSIONS.SETTINGS_VIEW
+        },
+        {
+          name: 'Logs',
+          path: '/admin/logs',
+          icon: <FileCode className="h-5 w-5" />,
+          permission: ADMIN_PERMISSIONS.SYSTEM_LOGS
+        }
+      ]
+    }
+  ];
+
+  const isActive = (path: string) => {
+    return location.pathname.startsWith(path);
+  };
+
   return (
-    <motion.div 
-      className="admin-sidebar fixed left-0 top-14 h-[calc(100vh-3.5rem)] z-30"
-      initial="initial"
-      animate={sidebarExpanded ? 'expanded' : 'collapsed'}
-      variants={sidebarVariants}
+    <motion.div
+      layout
+      initial={{ width: expanded ? 256 : 80 }}
+      animate={{ width: expanded ? 256 : 80 }}
+      transition={{ duration: 0.2 }}
+      className={cn(
+        "h-screen overflow-hidden border-r border-[var(--impulse-border-normal)]",
+        "bg-[var(--impulse-bg-sidebar)] flex flex-col"
+      )}
     >
-      {/* Sidebar header with EditModeToggle and toggle button */}
-      <div className="admin-sidebar__header flex justify-between">
-        <EditModeToggle />
-        <AdminTooltip 
-          content={sidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
-          side="right"
-        >
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleSidebar}
-            className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
-          >
-            {sidebarExpanded ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-          </motion.button>
-        </AdminTooltip>
-      </div>
-      
-      {/* Animated scan lines for cyber effect */}
-      <div className="admin-sidebar-scan" />
-      
-      {/* Sidebar content with navigation */}
-      <div className="admin-sidebar__content h-[calc(100vh-8rem)] overflow-y-auto">
+      {/* Sidebar header */}
+      <div className="p-4 h-16 flex items-center justify-between border-b border-[var(--impulse-border-normal)]">
         <AnimatePresence mode="wait">
-          {sections.map(section => (
-            <NavGroup
-              key={section}
-              title={section}
-              collapsed={!sidebarExpanded}
+          {expanded ? (
+            <motion.div
+              key="full-logo"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center"
             >
-              {groupedItems[section].map(item => (
-                <NavItem
-                  key={item.id}
-                  id={item.id}
-                  icon={item.icon}
-                  label={item.label}
-                  path={item.path}
-                  showLabel={sidebarExpanded && showLabels}
-                  isActive={location.pathname === item.path}
-                  onClick={() => navigate(item.path)}
-                  draggable={true}
-                />
-              ))}
-            </NavGroup>
-          ))}
+              <span className="font-heading text-xl bg-gradient-to-r from-[var(--impulse-primary)] to-[var(--impulse-secondary)] bg-clip-text text-transparent">
+                MakersImpulse
+              </span>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="mini-logo"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center"
+            >
+              <span className="font-heading text-xl bg-gradient-to-r from-[var(--impulse-primary)] to-[var(--impulse-secondary)] bg-clip-text text-transparent">
+                MI
+              </span>
+            </motion.div>
+          )}
         </AnimatePresence>
+
+        <button
+          onClick={toggleSidebar}
+          className="h-6 w-6 rounded-full flex items-center justify-center text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-text-primary)] hover:bg-[var(--impulse-bg-hover)]"
+        >
+          {expanded ? (
+            <ChevronLeft className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </button>
       </div>
-      
-      {/* Sidebar footer */}
-      <div className="admin-sidebar__footer">
-        {/* Footer content here if needed */}
+
+      {/* Navigation items */}
+      <div className="flex-grow overflow-y-auto py-4 px-2">
+        {navItems.map((group) => {
+          // Filter items by permission
+          const visibleItems = group.items.filter(item => 
+            hasPermission(item.permission)
+          );
+          
+          // Skip empty groups
+          if (visibleItems.length === 0) return null;
+          
+          return (
+            <NavGroup 
+              key={group.group} 
+              title={group.group}
+              collapsed={!expanded}
+            >
+              {visibleItems.map((item) => {
+                const NavItem = (
+                  <li key={item.path}>
+                    <button
+                      onClick={() => navigate(item.path)}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-3 py-2 rounded-md",
+                        "transition-colors duration-150",
+                        isActive(item.path) 
+                          ? "bg-[var(--impulse-primary)]/10 text-[var(--impulse-primary)]" 
+                          : "text-[var(--impulse-text-secondary)] hover:text-[var(--impulse-text-primary)] hover:bg-[var(--impulse-bg-hover)]"
+                      )}
+                    >
+                      <span>{item.icon}</span>
+                      <AnimatePresence mode="wait">
+                        {expanded && (
+                          <motion.span
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="truncate"
+                          >
+                            {item.name}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </button>
+                  </li>
+                );
+
+                return expanded ? NavItem : (
+                  <AdminTooltip key={item.path} content={item.name} side="right">
+                    {NavItem}
+                  </AdminTooltip>
+                );
+              })}
+            </NavGroup>
+          );
+        })}
       </div>
     </motion.div>
   );

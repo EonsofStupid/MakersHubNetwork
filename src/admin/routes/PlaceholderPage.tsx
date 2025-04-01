@@ -1,52 +1,56 @@
 
-import React from 'react';
-import { AdminPermissionValue } from '@/admin/types/permissions';
-import { RequirePermission } from '@/admin/components/auth/RequirePermission';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import React, { ReactNode } from "react";
+import { ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
+import { RequirePermission } from "@/admin/components/auth/RequirePermission";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AdminPermissionValue } from "@/admin/types/permissions";
 
 interface PlaceholderPageProps {
   title: string;
   description: string;
-  icon?: React.ReactNode;
+  icon: ReactNode;
   requiredPermission?: AdminPermissionValue;
+  ctaText?: string;
+  ctaLink?: string;
+  onCtaClick?: () => void;
 }
 
-export function PlaceholderPage({
-  title,
-  description,
+export function PlaceholderPage({ 
+  title, 
+  description, 
   icon,
-  requiredPermission
+  requiredPermission = ADMIN_PERMISSIONS.ADMIN_VIEW,
+  ctaText,
+  ctaLink,
+  onCtaClick
 }: PlaceholderPageProps) {
-  const logger = useLogger('PlaceholderPage', LogCategory.ADMIN);
-  
-  // Log the page view for debugging
-  React.useEffect(() => {
-    logger.info(`Placeholder page viewed: ${title}`);
-  }, [title, logger]);
-  
-  // Wrap in permission check if required
   const content = (
-    <div className="container py-6 space-y-6">
-      <header className="flex items-center gap-3">
-        {icon}
-        <div>
-          <h1 className="text-2xl font-heading">{title}</h1>
-          <p className="text-muted-foreground">{description}</p>
-        </div>
-      </header>
-      
-      <div className="h-96 flex flex-col items-center justify-center border border-dashed border-muted-foreground/30 rounded-md p-8">
-        <div className="text-center max-w-xl">
-          <h2 className="text-xl font-heading mb-2">Coming Soon</h2>
-          <p className="text-muted-foreground">
-            This feature is currently in development. Check back later for updates.
-          </p>
-        </div>
-      </div>
+    <div className="py-12">
+      <Card className="mx-auto max-w-md">
+        <CardContent className="pt-6 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 mb-6">
+            {icon}
+          </div>
+          <h2 className="text-2xl font-heading mb-2">{title}</h2>
+          <p className="text-muted-foreground mb-6">{description}</p>
+        </CardContent>
+        {(ctaText || ctaLink || onCtaClick) && (
+          <CardFooter className="flex justify-center pb-6">
+            {ctaLink ? (
+              <Button asChild>
+                <a href={ctaLink}>{ctaText || "Learn More"}</a>
+              </Button>
+            ) : (
+              <Button onClick={onCtaClick}>{ctaText || "Learn More"}</Button>
+            )}
+          </CardFooter>
+        )}
+      </Card>
     </div>
   );
-  
+
+  // If a permission is required, wrap the content with RequirePermission
   if (requiredPermission) {
     return (
       <RequirePermission permission={requiredPermission}>
@@ -54,6 +58,6 @@ export function PlaceholderPage({
       </RequirePermission>
     );
   }
-  
+
   return content;
 }
