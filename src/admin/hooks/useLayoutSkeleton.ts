@@ -3,12 +3,26 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { LayoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
 import { toast } from 'sonner';
+import { createDefaultDashboardLayout } from '@/admin/utils/layoutUtils';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Hook for fetching and managing layout skeletons from the database
  */
 export function useLayoutSkeleton() {
   const queryClient = useQueryClient();
+
+  /**
+   * Get all layouts
+   */
+  const useAllLayouts = () => {
+    return useQuery({
+      queryKey: ['layouts', 'all'],
+      queryFn: async () => {
+        return await LayoutSkeletonService.getAllLayouts();
+      },
+    });
+  };
 
   /**
    * Load a specific layout by ID
@@ -37,6 +51,75 @@ export function useLayoutSkeleton() {
         if (!skeleton) return null;
         return LayoutSkeletonService.convertToLayout(skeleton);
       },
+    });
+  };
+
+  /**
+   * Create a default layout if none exists
+   */
+  const useCreateDefaultLayout = () => {
+    return useMutation({
+      mutationFn: async ({ type, scope }: { type: string, scope: string }) => {
+        // Check if a layout already exists
+        const existingLayout = await LayoutSkeletonService.getActiveLayout(type, scope);
+        if (existingLayout) return { success: false, error: 'Layout already exists' };
+        
+        // Create a default layout based on type
+        let defaultLayout: Layout;
+        
+        if (type === 'dashboard') {
+          defaultLayout = createDefaultDashboardLayout(uuidv4());
+        } else {
+          defaultLayout = {
+            id: uuidv4(),
+            name: `Default ${type}`,
+            type,
+            scope,
+            components: [
+              {
+                id: 'root',
+                type: 'AdminSection',
+                children: [
+                  {
+                    id: 'title',
+                    type: 'heading',
+                    props: {
+                      level: 1,
+                      className: 'text-2xl font-bold',
+                      children: `${type} Layout`
+                    }
+                  }
+                ]
+              }
+            ],
+            version: 1
+          };
+        }
+        
+        // Save to database
+        return await LayoutSkeletonService.saveLayout({
+          name: defaultLayout.name,
+          type: defaultLayout.type,
+          scope: defaultLayout.scope,
+          layout_json: {
+            components: defaultLayout.components,
+            version: 1
+          },
+          is_active: true,
+          version: 1
+        });
+      },
+      onSuccess: (data, variables) => {
+        if (data.success) {
+          queryClient.invalidateQueries({ queryKey: ['layout', variables.type, variables.scope] });
+          toast.success('Default layout created successfully');
+        } else if (data.error !== 'Layout already exists') {
+          toast.error('Failed to create default layout', { description: data.error });
+        }
+      },
+      onError: (error: any) => {
+        toast.error('Error creating default layout', { description: error.message });
+      }
     });
   };
 
@@ -89,8 +172,10 @@ export function useLayoutSkeleton() {
   };
 
   return {
+    useAllLayouts,
     useLayoutById,
     useActiveLayout,
+    useCreateDefaultLayout,
     useSaveLayout,
     useDeleteLayout,
   };
