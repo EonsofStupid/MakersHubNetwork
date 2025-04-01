@@ -41,6 +41,9 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
       icon = <XCircle className="h-4 w-4" />;
       variant = "destructive";
       break;
+    default:
+      icon = <Info className="h-4 w-4" />;
+      variant = "default";
   }
 
   // Get appropriate title based on level

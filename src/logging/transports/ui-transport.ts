@@ -1,6 +1,5 @@
 
 import { toast } from '@/hooks/use-toast';
-import { AlertCircle, Info, AlertTriangle, XCircle } from 'lucide-react';
 import { LogEntry, LogLevel, LogTransport } from '../types';
 
 interface UITransportOptions {
@@ -105,31 +104,34 @@ export class UITransport implements LogTransport {
   }
   
   private showToast(entry: LogEntry): void {
-    let icon;
+    let iconName: string;
     let variant: "default" | "destructive" | undefined;
     const title = this.getTitle(entry);
     
     switch (entry.level) {
       case LogLevel.DEBUG:
-        icon = <Info className="h-4 w-4" />;
+        iconName = "info";
         variant = "default";
         break;
       case LogLevel.INFO:
-        icon = <Info className="h-4 w-4" />;
+        iconName = "info";
         variant = "default";
         break;
       case LogLevel.WARNING:
-        icon = <AlertTriangle className="h-4 w-4" />;
+        iconName = "alert-triangle";
         variant = "default";
         break;
       case LogLevel.ERROR:
-        icon = <AlertCircle className="h-4 w-4" />;
+        iconName = "alert-circle";
         variant = "destructive";
         break;
       case LogLevel.CRITICAL:
-        icon = <XCircle className="h-4 w-4" />;
+        iconName = "x-circle";
         variant = "destructive";
         break;
+      default:
+        iconName = "info";
+        variant = "default";
     }
     
     // Show toast with appropriate styling
@@ -137,7 +139,7 @@ export class UITransport implements LogTransport {
       title,
       description: entry.message,
       variant,
-      icon,
+      icon: iconName,
       duration: entry.level >= LogLevel.ERROR ? 7000 : 4000,
     });
   }
