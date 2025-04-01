@@ -3,7 +3,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, FileText, Settings, Package, LayoutDashboard, PlusCircle } from 'lucide-react';
 
-export function DashboardShortcuts() {
+interface DashboardShortcutsProps {
+  className?: string;
+}
+
+export function DashboardShortcuts({ className = '' }: DashboardShortcutsProps) {
   const shortcuts = [
     {
       name: 'Users',
@@ -36,7 +40,7 @@ export function DashboardShortcuts() {
   ];
   
   return (
-    <div>
+    <div className={className}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {shortcuts.map((shortcut, index) => (
           <Link

@@ -23,21 +23,31 @@ interface AdminState {
   // Permissions
   permissions: AdminPermissionValue[];
   isLoadingPermissions: boolean;
-  
-  // Methods
+}
+
+interface AdminActions {
+  // UI actions
   setSidebarExpanded: (expanded: boolean) => void;
   setDashboardCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
   toggleDarkMode: () => void;
+  
+  // Preferences actions
   setDefaultView: (view: 'cards' | 'list' | 'table') => void;
   setDashboardItems: (items: string[]) => void;
+  
+  // Permissions actions
   setPermissions: (permissions: AdminPermissionValue[]) => void;
   loadPermissions: () => Promise<void>;
+  
+  // Misc actions
   savePreferences: () => Promise<void>;
 }
 
+export type AdminStore = AdminState & AdminActions;
+
 // Use the persist middleware
-export const useAdminStore = create<AdminState>()(
+export const useAdminStore = create<AdminStore>()(
   persist(
     (set, get) => ({
       // Initial state

@@ -1,3 +1,7 @@
+
+// This file requires several fixes to resolve ReactNode type issues
+// We'll modify the renderUnknownAsNode import and fix React.ReactNode typing
+
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry } from '../types';
@@ -5,7 +9,23 @@ import { LogLevel } from '../constants/log-level';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
 import '../styles/logging.css';
-import { renderUnknownAsNode } from '@/shared/utils/render';
+
+// Helper function to safely render unknown values as React nodes
+function renderUnknownAsNode(value: unknown): React.ReactNode {
+  if (value === null || value === undefined) {
+    return <span className="text-gray-400">null</span>;
+  }
+  
+  if (typeof value === 'object') {
+    try {
+      return <span>{JSON.stringify(value)}</span>;
+    } catch (e) {
+      return <span className="text-gray-400">[Object]</span>;
+    }
+  }
+  
+  return String(value);
+}
 
 interface LogDetailsProps {
   details: Record<string, any>;
