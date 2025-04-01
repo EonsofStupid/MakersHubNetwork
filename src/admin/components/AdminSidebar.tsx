@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminPermissionValue } from '@/admin/constants/permissions';
-import { adminNavigationItems, AdminNavigationItem } from '@/admin/config/navigation.config';
+import { adminNavigationItems } from '@/admin/config/navigation.config';
 import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 import { NavItem } from '@/admin/components/navigation/NavItem';
 import { NavGroup } from '@/admin/components/navigation/NavGroup';
@@ -14,6 +14,16 @@ import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
+
+// Define the AdminNavigationItem type here to match the expected structure
+type AdminNavigationItem = {
+  id: string;
+  label: string;
+  path: string;
+  icon: React.ComponentType<any>;
+  permission?: AdminPermissionValue;
+  section?: string;
+};
 
 // Import styles directly
 import '@/admin/styles/sidebar-navigation.css';
@@ -53,13 +63,13 @@ export function AdminSidebar() {
     return hasPermission(item.permission as AdminPermissionValue);
   });
   
-  // Group items by section
+  // Group items by section, defaulting to 'General' if no section is specified
   const groupedItems = filteredItems.reduce((acc, item) => {
     const section = item.section || 'General';
     if (!acc[section]) {
       acc[section] = [];
     }
-    acc[section].push(item);
+    acc[section].push(item as AdminNavigationItem);
     return acc;
   }, {} as Record<string, AdminNavigationItem[]>);
   
