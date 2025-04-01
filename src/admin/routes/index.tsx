@@ -8,6 +8,7 @@ import { PlaceholderPage } from './PlaceholderPage';
 const OverviewPage = React.lazy(() => import('./overview/OverviewPage'));
 const UsersPage = React.lazy(() => import('./users/UsersPage'));
 const SettingsPage = React.lazy(() => import('./settings/SettingsPage'));
+const ReviewsPage = React.lazy(() => import('./reviews/ReviewsPage'));
 const UnauthorizedPage = React.lazy(() => import('./UnauthorizedPage'));
 
 // Export PlaceholderPage for use in other routes
@@ -41,6 +42,14 @@ export function AdminRoutes() {
         element={
           <React.Suspense fallback={<AdminLayout><PageLoading /></AdminLayout>}>
             <UsersPage />
+          </React.Suspense>
+        } 
+      />
+      <Route 
+        path="/reviews" 
+        element={
+          <React.Suspense fallback={<AdminLayout><PageLoading /></AdminLayout>}>
+            <ReviewsPage />
           </React.Suspense>
         } 
       />

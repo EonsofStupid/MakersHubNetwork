@@ -1,38 +1,24 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { adminKeys, ActiveUser } from "@/admin/types/queries";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-export const useActiveUsers = () => {
+export function useActiveUsers(limit = 5) {
   return useQuery({
-    queryKey: adminKeys.activeUsers(),
-    queryFn: async (): Promise<ActiveUser[]> => {
-      console.log("Fetching active users data...");
-      
-      // Get active users from the profiles table
+    queryKey: ['admin', 'activeUsers', limit],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, display_name, avatar_url, last_login, is_active')
+        .select('id, display_name, avatar_url, last_seen, status')
         .eq('is_active', true)
-        .order('last_login', { ascending: false })
-        .limit(10);
-
+        .order('last_seen', { ascending: false })
+        .limit(limit);
+        
       if (error) {
-        console.error("Error fetching active users:", error);
-        throw error;
+        throw new Error(error.message);
       }
-
-      // Transform the data to match the ActiveUser interface
-      return data.map((user) => ({
-        id: user.id,
-        display_name: user.display_name,
-        avatar_url: user.avatar_url,
-        last_seen: user.last_login,
-        status: user.is_active ? 'Active' : 'Inactive'
-      }));
+      
+      return data || [];
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
-    staleTime: 10000, // Consider data stale after 10 seconds
-    retry: 3, // Retry failed requests 3 times
+    refetchInterval: 60000, // Refetch every minute
   });
-};
+}

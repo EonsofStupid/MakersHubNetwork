@@ -7,6 +7,7 @@ import { useAtom } from "jotai";
 import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
 import { cn } from "@/lib/utils";
 import { BarChart3, Users, Activity, Zap, Clock } from "lucide-react";
+import { ActiveUsersList } from "./ActiveUsersList";
 
 export function AdminDashboard() {
   const [isEditMode] = useAtom(adminEditModeAtom);
@@ -98,38 +99,7 @@ export function AdminDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <div className={cn(
-              "glassmorphism p-6 rounded-lg border border-[var(--impulse-border-normal)]",
-              "cyber-effect-2 hover-glow transition-all duration-300",
-              isEditMode && "border-dashed"
-            )}>
-              <h2 className="font-medium text-lg mb-3 cyber-text">System Status</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-[var(--impulse-text-accent)]" />
-                    <span className="text-[var(--impulse-text-secondary)]">CPU Usage</span>
-                  </div>
-                  <span className="text-[var(--impulse-text-primary)]">28%</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-[var(--impulse-text-accent)]" />
-                    <span className="text-[var(--impulse-text-secondary)]">Memory</span>
-                  </div>
-                  <span className="text-[var(--impulse-text-primary)]">1.2 GB</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-[var(--impulse-text-accent)]" />
-                    <span className="text-[var(--impulse-text-secondary)]">Uptime</span>
-                  </div>
-                  <span className="text-[var(--impulse-text-primary)]">99.8%</span>
-                </div>
-              </div>
-            </div>
+            <ActiveUsersList />
           </motion.div>
         </div>
         

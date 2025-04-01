@@ -8,6 +8,10 @@ import { AdminFeatureSection } from '@/admin/components/dashboard/AdminFeatureSe
 import { AdminSidebar } from '@/admin/components/AdminSidebar';
 import { AdminTopNav } from '@/admin/components/navigation/AdminTopNav';
 import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
+import { ActiveUsersList } from '@/admin/components/dashboard/ActiveUsersList';
+import { ReviewsOverview } from '@/admin/components/reviews/ReviewsOverview';
+import { ReviewCard } from '@/admin/components/reviews/ReviewCard';
+import { ReviewList } from '@/admin/components/reviews/ReviewList';
 import componentRegistry from '@/admin/services/componentRegistry';
 
 // Simple component to render headings with the specified level
@@ -29,6 +33,10 @@ export function initializeComponentRegistry() {
   componentRegistry.registerComponent('DashboardShortcuts', DashboardShortcuts);
   componentRegistry.registerComponent('AdminSidebar', AdminSidebar);
   componentRegistry.registerComponent('AdminTopNav', AdminTopNav);
+  componentRegistry.registerComponent('ActiveUsersList', ActiveUsersList);
+  componentRegistry.registerComponent('ReviewsOverview', ReviewsOverview);
+  componentRegistry.registerComponent('ReviewCard', ReviewCard);
+  componentRegistry.registerComponent('ReviewList', ReviewList);
   
   // Register basic HTML components
   componentRegistry.registerComponent('div', Div, {
