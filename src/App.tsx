@@ -10,6 +10,7 @@ import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { useEffect } from "react";
 import { initializeLogger, getLogger } from "@/logging";
+import { LogCategory } from "@/logging/types";
 
 // Import pages
 import Index from "./pages/Index";
@@ -47,7 +48,7 @@ function App() {
   useEffect(() => {
     const logger = getLogger();
     logger.info(`Navigated to ${location.pathname}`, {
-      category: 'SYSTEM',
+      category: LogCategory.SYSTEM,
       details: { path: location.pathname }
     });
   }, [location.pathname]);

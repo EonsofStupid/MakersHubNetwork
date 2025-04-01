@@ -1,277 +1,251 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { LogCategory, LogEntry, LogLevel, LogTransport, LoggingConfig } from './types';
+import { LogCategory, LogEntry, LogLevel, LoggingConfig } from './types';
+import { defaultLoggingConfig } from './config';
 
 /**
- * Core Logger Service
- * Centralizes logging functionality and handles dispatching to various transports
+ * Logger service - main class for logging management
  */
 export class LoggerService {
   private static instance: LoggerService;
   private config: LoggingConfig;
   private buffer: LogEntry[] = [];
-  private flushTimer: ReturnType<typeof setInterval> | null = null;
-
-  private constructor(config: LoggingConfig) {
-    this.config = config;
-    
-    // Set up flush interval if specified
-    if (config.flushInterval && config.flushInterval > 0) {
-      this.flushTimer = setInterval(() => this.flush(), config.flushInterval);
-    }
-    
-    // Initial log entry to confirm service startup
-    this.info('Logger service initialized', { 
-      category: LogCategory.SYSTEM,
-      source: 'logger.service.ts',
-      details: { config }
-    });
+  private flushInterval: ReturnType<typeof setInterval> | null = null;
+  private userId: string | undefined;
+  private sessionId: string | undefined;
+  
+  private constructor(config: LoggingConfig = defaultLoggingConfig) {
+    this.config = { ...defaultLoggingConfig, ...config };
+    this.sessionId = uuidv4();
+    this.setupFlushInterval();
   }
-
+  
   /**
-   * Get or create the logger instance (Singleton pattern)
+   * Get the singleton instance of the logger
    */
   public static getInstance(config?: LoggingConfig): LoggerService {
     if (!LoggerService.instance) {
-      if (!config) {
-        throw new Error('Logger must be initialized with a config the first time');
-      }
       LoggerService.instance = new LoggerService(config);
-    } else if (config) {
-      // If config is provided and instance exists, update the config
-      LoggerService.instance.updateConfig(config);
     }
-    
     return LoggerService.instance;
   }
-
+  
   /**
-   * Update logger configuration
+   * Update the logger configuration
    */
   public updateConfig(config: Partial<LoggingConfig>): void {
     this.config = { ...this.config, ...config };
     
-    // Reset flush timer if interval changed
-    if (config.flushInterval && this.flushTimer) {
-      clearInterval(this.flushTimer);
-      this.flushTimer = setInterval(() => this.flush(), config.flushInterval);
+    // Update flush interval if it changed
+    if (config.flushInterval && this.config.flushInterval !== config.flushInterval) {
+      this.setupFlushInterval();
     }
   }
-
+  
   /**
-   * Helper to check if a log should be processed based on level and category
+   * Set the current user ID for logs
    */
-  private shouldLog(level: LogLevel, category: LogCategory): boolean {
-    // Check minimum log level
-    if (level < this.config.minLevel) {
-      return false;
-    }
-    
-    // Check if category is enabled
-    if (this.config.enabledCategories && 
-        !this.config.enabledCategories.includes(category)) {
-      return false;
-    }
-    
-    return true;
+  public setUserId(userId: string | undefined): void {
+    this.userId = userId;
   }
-
+  
   /**
-   * Create a log entry
-   */
-  private createLogEntry(
-    level: LogLevel, 
-    message: string, 
-    options?: {
-      category?: LogCategory;
-      details?: unknown;
-      source?: string;
-      userId?: string;
-      sessionId?: string;
-      duration?: number;
-      tags?: string[];
-    }
-  ): LogEntry {
-    const timestamp = new Date();
-    const category = options?.category || LogCategory.SYSTEM;
-    
-    return {
-      id: uuidv4(),
-      timestamp,
-      level,
-      message,
-      category,
-      details: options?.details,
-      source: options?.source,
-      userId: options?.userId,
-      sessionId: options?.sessionId,
-      duration: options?.duration,
-      tags: options?.tags
-    };
-  }
-
-  /**
-   * Process a log entry - either buffer it or send it directly
-   */
-  private processLogEntry(entry: LogEntry): void {
-    // Add to buffer if buffering is enabled
-    if (this.config.bufferSize && this.config.bufferSize > 0) {
-      this.buffer.push(entry);
-      
-      // Flush if buffer is full
-      if (this.buffer.length >= this.config.bufferSize) {
-        this.flush();
-      }
-    } else {
-      // Direct processing (no buffer)
-      this.sendToTransports(entry);
-    }
-  }
-
-  /**
-   * Send an entry to all transports
-   */
-  private sendToTransports(entry: LogEntry): void {
-    this.config.transports.forEach(transport => {
-      try {
-        transport.log(entry);
-      } catch (error) {
-        console.error('Error in log transport:', error);
-      }
-    });
-  }
-
-  /**
-   * Flush the buffer to all transports
-   */
-  public async flush(): Promise<void> {
-    if (this.buffer.length === 0) return;
-    
-    // Send each buffered entry to all transports
-    this.buffer.forEach(entry => {
-      this.sendToTransports(entry);
-    });
-    
-    // Clear the buffer
-    this.buffer = [];
-    
-    // Call flush on transports that support it
-    await Promise.all(
-      this.config.transports
-        .filter(transport => transport.flush)
-        .map(transport => transport.flush?.())
-    );
-  }
-
-  /**
-   * Log a performance metric
-   */
-  public performance(message: string, duration: number, options?: {
-    category?: LogCategory;
-    details?: unknown;
-    source?: string;
-    userId?: string;
-    sessionId?: string;
-    tags?: string[];
-  }): void {
-    const category = options?.category || LogCategory.PERFORMANCE;
-    if (!this.shouldLog(LogLevel.INFO, category)) return;
-    
-    const entry = this.createLogEntry(LogLevel.INFO, message, {
-      ...options,
-      category,
-      duration,
-    });
-    
-    this.processLogEntry(entry);
-  }
-
-  /**
-   * Log methods for different levels
+   * Log a message at DEBUG level
    */
   public debug(message: string, options?: {
     category?: LogCategory;
     details?: unknown;
     source?: string;
-    userId?: string;
-    sessionId?: string;
-    duration?: number;
     tags?: string[];
   }): void {
-    const category = options?.category || LogCategory.SYSTEM;
-    if (!this.shouldLog(LogLevel.DEBUG, category)) return;
-    
-    const entry = this.createLogEntry(LogLevel.DEBUG, message, options);
-    this.processLogEntry(entry);
+    this.log(LogLevel.DEBUG, message, options);
   }
-
+  
+  /**
+   * Log a message at INFO level
+   */
   public info(message: string, options?: {
     category?: LogCategory;
     details?: unknown;
     source?: string;
-    userId?: string;
-    sessionId?: string;
-    duration?: number;
     tags?: string[];
   }): void {
-    const category = options?.category || LogCategory.SYSTEM;
-    if (!this.shouldLog(LogLevel.INFO, category)) return;
-    
-    const entry = this.createLogEntry(LogLevel.INFO, message, options);
-    this.processLogEntry(entry);
+    this.log(LogLevel.INFO, message, options);
   }
-
+  
+  /**
+   * Log a message at WARNING level
+   */
   public warn(message: string, options?: {
     category?: LogCategory;
     details?: unknown;
     source?: string;
-    userId?: string;
-    sessionId?: string;
-    duration?: number;
     tags?: string[];
   }): void {
-    const category = options?.category || LogCategory.SYSTEM;
-    if (!this.shouldLog(LogLevel.WARNING, category)) return;
-    
-    const entry = this.createLogEntry(LogLevel.WARNING, message, options);
-    this.processLogEntry(entry);
+    this.log(LogLevel.WARNING, message, options);
   }
-
+  
+  /**
+   * Log a message at ERROR level
+   */
   public error(message: string, options?: {
     category?: LogCategory;
     details?: unknown;
     source?: string;
-    userId?: string;
-    sessionId?: string;
-    duration?: number;
     tags?: string[];
   }): void {
-    const category = options?.category || LogCategory.SYSTEM;
-    if (!this.shouldLog(LogLevel.ERROR, category)) return;
-    
-    const entry = this.createLogEntry(LogLevel.ERROR, message, options);
-    this.processLogEntry(entry);
+    this.log(LogLevel.ERROR, message, options);
   }
-
+  
+  /**
+   * Log a message at CRITICAL level
+   */
   public critical(message: string, options?: {
     category?: LogCategory;
     details?: unknown;
     source?: string;
-    userId?: string;
-    sessionId?: string;
+    tags?: string[];
+  }): void {
+    this.log(LogLevel.CRITICAL, message, options);
+  }
+  
+  /**
+   * Log a performance measurement
+   */
+  public performance(message: string, duration: number, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
+    tags?: string[];
+  }): void {
+    const category = options?.category || LogCategory.PERFORMANCE;
+    this.log(
+      duration > 1000 ? LogLevel.WARNING : LogLevel.INFO,
+      message,
+      {
+        ...options,
+        category,
+        details: {
+          ...options?.details,
+          duration
+        },
+        duration
+      }
+    );
+  }
+  
+  /**
+   * The core logging method
+   */
+  private log(level: LogLevel, message: string, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
     duration?: number;
     tags?: string[];
   }): void {
-    const category = options?.category || LogCategory.SYSTEM;
-    if (!this.shouldLog(LogLevel.CRITICAL, category)) return;
+    // Check if this log should be processed based on level and category
+    if (level < this.config.minLevel) {
+      return;
+    }
     
-    const entry = this.createLogEntry(LogLevel.CRITICAL, message, options);
-    this.processLogEntry(entry);
+    if (
+      options?.category &&
+      this.config.enabledCategories &&
+      !this.config.enabledCategories.includes(options.category)
+    ) {
+      return;
+    }
+    
+    // Create the log entry
+    const entry: LogEntry = {
+      id: uuidv4(),
+      timestamp: new Date(),
+      level,
+      category: options?.category || LogCategory.SYSTEM,
+      message,
+      details: options?.details,
+      duration: options?.duration,
+      tags: options?.tags
+    };
+    
+    // Add source if configured
+    if (this.config.includeSource && options?.source) {
+      entry.source = options.source;
+    }
+    
+    // Add user ID if available and configured
+    if (this.config.includeUser && this.userId) {
+      entry.userId = this.userId;
+    }
+    
+    // Add session ID if configured
+    if (this.config.includeSession && this.sessionId) {
+      entry.sessionId = this.sessionId;
+    }
+    
+    // Add to buffer
+    this.buffer.push(entry);
+    
+    // Process immediately or wait for flush
+    if (
+      this.buffer.length >= (this.config.bufferSize || 1) ||
+      level >= LogLevel.ERROR
+    ) {
+      this.flush();
+    }
+  }
+  
+  /**
+   * Process all logs in the buffer
+   */
+  private flush(): void {
+    if (this.buffer.length === 0) {
+      return;
+    }
+    
+    // Process each log through all transports
+    for (const entry of this.buffer) {
+      for (const transport of this.config.transports) {
+        transport.log(entry);
+      }
+    }
+    
+    // Clear the buffer
+    this.buffer = [];
+  }
+  
+  /**
+   * Set up automatic flush interval
+   */
+  private setupFlushInterval(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+    }
+    
+    if (this.config.flushInterval && this.config.flushInterval > 0) {
+      this.flushInterval = setInterval(() => {
+        this.flush();
+      }, this.config.flushInterval);
+    }
+  }
+  
+  /**
+   * Clean up resources
+   */
+  public dispose(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+      this.flushInterval = null;
+    }
+    
+    // Final flush
+    this.flush();
   }
 }
 
 /**
- * Helper function to get the logger instance
+ * Get the global logger instance
  */
 export function getLogger(): LoggerService {
   return LoggerService.getInstance();
