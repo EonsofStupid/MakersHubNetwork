@@ -37,7 +37,7 @@ export function LogActivityStream({
       
       // Filter by level
       let filteredLogs = allLogs.filter(log => 
-        log.level >= (level || LogLevel.INFO)
+        LogLevel[log.level as keyof typeof LogLevel] >= LogLevel[level as keyof typeof LogLevel]
       );
       
       // Filter by categories if specified

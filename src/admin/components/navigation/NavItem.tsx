@@ -1,6 +1,6 @@
 
 import React, { useRef } from 'react';
-import { motion, useDragControls } from 'framer-motion';
+import { motion, useDragControls, PanInfo } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import { adminDraggedItemAtom } from '@/admin/atoms/tools.atoms';
@@ -32,7 +32,7 @@ export function NavItem({
   const dragControls = useDragControls();
   
   // Handle drag start using Framer Motion
-  const handleDragStart = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!draggable) return;
     
     // Start the drag with framer motion
