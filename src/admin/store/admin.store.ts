@@ -1,285 +1,278 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { createAdminPersistMiddleware } from "../middleware/persist.middleware";
-import { AdminPermissionValue } from "../constants/permissions";
-import { toast } from "sonner";
-import { AdminDataService } from "../services/adminData.service";
-import { useAuthStore } from "@/stores/auth/store";
 
-export interface AdminState {
-  isEditMode: boolean;
-  hasInitialized: boolean;
-  preferencesChanged: boolean;
-  
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+import { supabase } from '@/integrations/supabase/client';
+import { getDefaultAdminPreferences } from '@/admin/utils/adminInitialization';
+
+interface AdminState {
+  // Layout configuration
   sidebarExpanded: boolean;
-  activeSection: string;
-  isDashboardCollapsed: boolean;
   showLabels: boolean;
-  
-  dragSource: string | null;
-  dragTarget: string | null;
-  
-  pinnedTopNavItems: string[];
-  adminTopNavShortcuts: string[];
-  dashboardShortcuts: string[];
-  
-  permissions: AdminPermissionValue[];
-  isLoadingPermissions: boolean;
-  
+  topnavItems: string[];
+  dashboardItems: string[];
+  activeSection: string;
   isDarkMode: boolean;
-  adminTheme: string;
+  themePreference: string;
+  layoutPreference: string;
+  shortcuts: string[];
   
-  setEditMode: (isEditMode: boolean) => void;
-  setSidebarExpanded: (expanded: boolean) => void;
+  // UI State
+  syncing: boolean;
+  syncError: string | null;
+  lastSynced: Date | null;
+  
+  // Runtime state
+  hasInitialized: boolean;
+  editMode: boolean;
+  permissions: string[];
+  
+  // Database state
+  adminShortcutsId: string | null;
+  
+  // Actions
   toggleSidebar: () => void;
+  toggleShowLabels: () => void;
   toggleEditMode: () => void;
-  setActiveSection: (section: string) => void;
-  setDashboardCollapsed: (collapsed: boolean) => void;
-  setShowLabels: (show: boolean) => void;
-  
-  setDragSource: (source: string | null) => void;
-  setDragTarget: (target: string | null) => void;
-  
-  setPinnedTopNavItems: (shortcuts: string[]) => void;
-  setTopNavShortcuts: (shortcuts: string[]) => void;
-  setDashboardShortcuts: (shortcuts: string[]) => void;
-  
   toggleDarkMode: () => void;
-  setTheme: (theme: string) => void;
+  setActiveSection: (section: string) => void;
+  setThemePreference: (theme: string) => void;
+  setLayoutPreference: (layout: string) => void;
+  setPinnedTopNavItems: (items: string[]) => void;
+  setDashboardItems: (items: string[]) => void;
+  setShortcuts: (shortcuts: string[]) => void;
   
-  markPreferencesChanged: () => void;
-  resetPreferencesChanged: () => void;
-  initializeStore: () => void;
-  savePreferences: () => Promise<boolean>;
-  syncFromDatabase: () => Promise<void>;
+  // Admin functionality
+  initializeStore: () => Promise<void>;
+  loadPermissions: () => Promise<void>;
+  savePreferences: () => Promise<void>;
   
-  loadPermissions: (permissions?: AdminPermissionValue[]) => Promise<void>;
-  hasPermission: (permission: AdminPermissionValue) => boolean;
+  // Reset state
+  reset: () => void;
 }
 
 export const useAdminStore = create<AdminState>()(
-  persist(
-    (set, get) => ({
-      isEditMode: false,
-      hasInitialized: false,
-      preferencesChanged: false,
-      sidebarExpanded: true,
-      activeSection: 'overview',
-      isDashboardCollapsed: false,
-      showLabels: true,
-      dragSource: null,
-      dragTarget: null,
-      pinnedTopNavItems: ['users', 'builds', 'reviews', 'settings'],
-      adminTopNavShortcuts: ['users', 'builds', 'reviews', 'settings'],
-      dashboardShortcuts: ['content', 'data-maestro', 'themes', 'settings'],
-      permissions: [],
-      isLoadingPermissions: false,
-      isDarkMode: false,
-      adminTheme: 'cyberpunk',
-      
-      setEditMode: (isEditMode) => set({ isEditMode }),
-      setSidebarExpanded: (expanded) => set({ 
-        sidebarExpanded: expanded,
-        preferencesChanged: true 
-      }),
-      toggleSidebar: () => set((state) => ({ 
-        sidebarExpanded: !state.sidebarExpanded,
-        preferencesChanged: true 
-      })),
-      toggleEditMode: () => {
-        const currentMode = get().isEditMode;
-        set({ isEditMode: !currentMode });
+  devtools(
+    persist(
+      (set, get) => ({
+        // Layout configuration
+        sidebarExpanded: true,
+        showLabels: true,
+        topnavItems: [],
+        dashboardItems: [],
+        activeSection: 'overview',
+        isDarkMode: false,
+        themePreference: 'cyberpunk',
+        layoutPreference: 'default',
+        shortcuts: [],
         
-        if (!currentMode) {
-          toast.success("Edit mode enabled", {
-            description: "You can now drag and drop items to customize your dashboard"
-          });
-        } else {
-          get().savePreferences();
-          toast.success("Edit mode disabled", {
-            description: "Your changes have been saved"
-          });
-        }
-      },
-      setActiveSection: (section) => set({ 
-        activeSection: section,
-        preferencesChanged: true 
-      }),
-      setDashboardCollapsed: (collapsed) => set({ 
-        isDashboardCollapsed: collapsed,
-        preferencesChanged: true 
-      }),
-      setShowLabels: (show) => set({ 
-        showLabels: show,
-        preferencesChanged: true 
-      }),
-      
-      setDragSource: (source) => set({ dragSource: source }),
-      setDragTarget: (target) => set({ dragTarget: target }),
-      
-      setPinnedTopNavItems: (items) => set({ 
-        pinnedTopNavItems: items,
-        adminTopNavShortcuts: items,
-        preferencesChanged: true 
-      }),
-      setTopNavShortcuts: (shortcuts) => set({ 
-        adminTopNavShortcuts: shortcuts,
-        pinnedTopNavItems: shortcuts,
-        preferencesChanged: true 
-      }),
-      setDashboardShortcuts: (shortcuts) => set({ 
-        dashboardShortcuts: shortcuts,
-        preferencesChanged: true 
-      }),
-      
-      toggleDarkMode: () => set((state) => ({ 
-        isDarkMode: !state.isDarkMode,
-        preferencesChanged: true 
-      })),
-      setTheme: (theme) => set({ 
-        adminTheme: theme,
-        preferencesChanged: true 
-      }),
-      
-      markPreferencesChanged: () => set({ preferencesChanged: true }),
-      resetPreferencesChanged: () => set({ preferencesChanged: false }),
-      initializeStore: () => {
-        set({ hasInitialized: true });
-        get().syncFromDatabase();
-      },
-      
-      savePreferences: async () => {
-        if (!get().preferencesChanged) return true;
+        // UI State
+        syncing: false,
+        syncError: null,
+        lastSynced: null,
         
-        try {
-          const user = useAuthStore.getState().user;
-          
-          if (!user?.id) {
-            console.error('Cannot save admin preferences: User not authenticated');
-            return false;
-          }
-          
-          const preferences = {
-            sidebarExpanded: get().sidebarExpanded,
-            activeSection: get().activeSection,
-            isDashboardCollapsed: get().isDashboardCollapsed,
-            pinnedTopNavItems: get().pinnedTopNavItems,
-            dashboardShortcuts: get().dashboardShortcuts,
-            adminTheme: get().adminTheme,
-            showLabels: get().showLabels,
-            isDarkMode: get().isDarkMode,
-          };
-          
-          const { success, error } = await AdminDataService.savePreferences(user.id, preferences);
-          
-          if (!success) {
-            console.error('Failed to save admin preferences:', error);
-            toast.error("Failed to save preferences", {
-              description: error || "Your changes couldn't be saved to the database"
-            });
-            return false;
-          }
-          
-          set({ preferencesChanged: false });
-          return true;
-        } catch (error) {
-          console.error('Failed to save admin preferences:', error);
-          toast.error("Failed to save preferences", {
-            description: "Your changes will be saved locally but not synced to the server"
-          });
-          return false;
-        }
-      },
-      
-      syncFromDatabase: async () => {
-        try {
-          const user = useAuthStore.getState().user;
-          
-          if (!user?.id) {
-            console.warn('Cannot sync admin preferences: User not authenticated');
-            return;
-          }
-          
-          const { data: preferences, error } = await AdminDataService.loadPreferences(user.id);
-          
-          if (error) {
-            console.warn('Failed to load preferences from database:', error);
-            return;
-          }
-          
-          if (preferences) {
-            set({
-              sidebarExpanded: preferences.sidebar_expanded ?? true,
-              activeSection: preferences.active_section ?? 'overview',
-              isDashboardCollapsed: preferences.dashboard_collapsed ?? false,
-              pinnedTopNavItems: preferences.topnav_items ?? ['users', 'builds', 'reviews', 'settings'],
-              adminTopNavShortcuts: preferences.topnav_items ?? ['users', 'builds', 'reviews', 'settings'],
-              dashboardShortcuts: preferences.dashboard_items ?? ['content', 'data-maestro', 'themes', 'settings'],
-              adminTheme: preferences.theme_preference ?? 'cyberpunk',
-              showLabels: preferences.show_labels ?? true,
-              isDarkMode: preferences.is_dark_mode ?? false,
-              preferencesChanged: false,
-            });
+        // Runtime state
+        hasInitialized: false,
+        editMode: false,
+        permissions: [],
+        
+        // Database state
+        adminShortcutsId: null,
+        
+        // Actions
+        toggleSidebar: () => set(state => ({ sidebarExpanded: !state.sidebarExpanded })),
+        toggleShowLabels: () => set(state => ({ showLabels: !state.showLabels })),
+        toggleEditMode: () => set(state => ({ editMode: !state.editMode })),
+        toggleDarkMode: () => set(state => ({ isDarkMode: !state.isDarkMode })),
+        setActiveSection: (section) => set({ activeSection: section }),
+        setThemePreference: (theme) => set({ themePreference: theme }),
+        setLayoutPreference: (layout) => set({ layoutPreference: layout }),
+        setPinnedTopNavItems: (items) => set({ topnavItems: items }),
+        setDashboardItems: (items) => set({ dashboardItems: items }),
+        setShortcuts: (shortcuts) => set({ shortcuts }),
+        
+        // Admin functionality
+        initializeStore: async () => {
+          try {
+            set({ syncing: true, syncError: null });
             
-            console.log('Admin preferences loaded successfully from database');
+            // Load user preferences from the database
+            const { data: user } = await supabase.auth.getUser();
+            if (!user || !user.user) {
+              throw new Error('User not authenticated');
+            }
+            
+            // Get admin shortcuts from database
+            const { data: shortcuts, error } = await supabase
+              .from('admin_shortcuts')
+              .select('*')
+              .eq('user_id', user.user.id)
+              .single();
+            
+            if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" which just means we need to create a record
+              console.error('Error loading admin shortcuts:', error);
+              set({ syncError: error.message });
+            }
+            
+            if (shortcuts) {
+              // Update state with saved preferences
+              set({
+                adminShortcutsId: shortcuts.id,
+                sidebarExpanded: shortcuts.sidebar_expanded,
+                showLabels: shortcuts.show_labels,
+                isDarkMode: shortcuts.is_dark_mode,
+                topnavItems: shortcuts.topnav_items || [],
+                dashboardItems: shortcuts.dashboard_items || [],
+                themePreference: shortcuts.theme_preference || 'cyberpunk',
+                layoutPreference: shortcuts.layout_preference || 'default',
+                activeSection: shortcuts.active_section || 'overview',
+                shortcuts: shortcuts.shortcuts || [],
+                hasInitialized: true,
+                lastSynced: new Date()
+              });
+            } else {
+              // Create a new record with default settings
+              const defaults = getDefaultAdminPreferences();
+              
+              const { data: newShortcuts, error: insertError } = await supabase
+                .from('admin_shortcuts')
+                .insert({
+                  user_id: user.user.id,
+                  sidebar_expanded: defaults.sidebarExpanded,
+                  show_labels: defaults.showLabels,
+                  is_dark_mode: defaults.isDarkMode,
+                  topnav_items: defaults.topnavItems,
+                  dashboard_items: defaults.dashboardItems,
+                  theme_preference: defaults.themePreference,
+                  layout_preference: defaults.layoutPreference,
+                  active_section: defaults.activeSection,
+                  shortcuts: []
+                })
+                .select()
+                .single();
+              
+              if (insertError) {
+                console.error('Error creating admin shortcuts:', insertError);
+                set({ syncError: insertError.message });
+              }
+              
+              if (newShortcuts) {
+                set({
+                  adminShortcutsId: newShortcuts.id,
+                  hasInitialized: true,
+                  lastSynced: new Date()
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error initializing admin store:', error);
+            set({ syncError: error instanceof Error ? error.message : 'Unknown error' });
+          } finally {
+            set({ syncing: false });
           }
-        } catch (error) {
-          console.error('Failed to load preferences from database:', error);
-        }
-      },
-      
-      loadPermissions: async (permissions) => {
-        set({ isLoadingPermissions: true });
-        try {
-          if (permissions && permissions.length > 0) {
-            set({ permissions, isLoadingPermissions: false });
+        },
+        
+        loadPermissions: async () => {
+          try {
+            // Get user roles and permissions
+            const { data: user } = await supabase.auth.getUser();
+            if (!user || !user.user) {
+              throw new Error('User not authenticated');
+            }
+            
+            // Get user roles
+            const { data: userRoles, error: rolesError } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', user.user.id);
+            
+            if (rolesError) {
+              console.error('Error loading user roles:', rolesError);
+              return;
+            }
+            
+            const roles = userRoles.map(ur => ur.role);
+            
+            // Get permissions for these roles
+            const { data: permissionsData, error: permsError } = await supabase
+              .from('role_permissions')
+              .select('action, subject')
+              .in('role', roles);
+            
+            if (permsError) {
+              console.error('Error loading permissions:', permsError);
+              return;
+            }
+            
+            // Format permissions as CASL can use
+            const permissions = permissionsData.map(p => `${p.action}:${p.subject}`);
+            set({ permissions });
+            
+          } catch (error) {
+            console.error('Error loading permissions:', error);
+          }
+        },
+        
+        savePreferences: async () => {
+          const state = get();
+          if (!state.adminShortcutsId) {
+            console.warn('Cannot save preferences: No admin shortcuts ID');
             return;
           }
           
-          const roles = useAuthStore.getState().roles;
-          const isAdmin = roles?.includes('admin');
-          const isSuperAdmin = roles?.includes('super_admin');
-          
-          if (!isAdmin && !isSuperAdmin) {
-            set({ permissions: [], isLoadingPermissions: false });
-            return;
+          try {
+            set({ syncing: true, syncError: null });
+            
+            // Update record in database
+            const { error } = await supabase
+              .from('admin_shortcuts')
+              .update({
+                sidebar_expanded: state.sidebarExpanded,
+                show_labels: state.showLabels,
+                is_dark_mode: state.isDarkMode,
+                topnav_items: state.topnavItems,
+                dashboard_items: state.dashboardItems,
+                theme_preference: state.themePreference,
+                layout_preference: state.layoutPreference,
+                active_section: state.activeSection,
+                shortcuts: state.shortcuts
+              })
+              .eq('id', state.adminShortcutsId);
+            
+            if (error) {
+              console.error('Error saving admin preferences:', error);
+              set({ syncError: error.message });
+            } else {
+              set({ lastSynced: new Date() });
+            }
+          } catch (error) {
+            console.error('Error saving preferences:', error);
+            set({ syncError: error instanceof Error ? error.message : 'Unknown error' });
+          } finally {
+            set({ syncing: false });
           }
-          
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          let userPermissions: AdminPermissionValue[] = [];
-          
-          if (isSuperAdmin) {
-            userPermissions = ['super_admin:all', 'admin:access', 'admin:view', 'admin:edit'];
-          } else if (isAdmin) {
-            userPermissions = [
-              'admin:access', 'admin:view', 'admin:edit',
-              'content:view', 'content:edit',
-              'users:view', 'users:edit',
-              'builds:view', 'builds:approve',
-              'themes:view'
-            ];
-          }
-          
-          set({ permissions: userPermissions, isLoadingPermissions: false });
-        } catch (error) {
-          console.error('Failed to load permissions:', error);
-          set({ isLoadingPermissions: false });
-        }
-      },
-      
-      hasPermission: (permission: AdminPermissionValue) => {
-        if (get().permissions.includes('super_admin:all')) {
-          return true;
-        }
+        },
         
-        if (permission === 'admin:access' && get().permissions.length > 0) {
-          return true;
+        reset: () => {
+          const defaults = getDefaultAdminPreferences();
+          set({
+            sidebarExpanded: defaults.sidebarExpanded,
+            showLabels: defaults.showLabels,
+            topnavItems: defaults.topnavItems,
+            dashboardItems: defaults.dashboardItems,
+            isDarkMode: defaults.isDarkMode,
+            themePreference: defaults.themePreference,
+            layoutPreference: defaults.layoutPreference,
+            activeSection: defaults.activeSection,
+            hasInitialized: false
+          });
         }
-        
-        return get().permissions.includes(permission);
+      }),
+      {
+        name: 'admin-store'
       }
-    }),
-    createAdminPersistMiddleware<AdminState>('admin-store')
+    ),
+    {
+      name: 'AdminStore'
+    }
   )
 );

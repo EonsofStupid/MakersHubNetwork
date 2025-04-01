@@ -1,69 +1,46 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { usePartsCount } from '@/admin/queries/usePartsCount';
-import { useTotalUsersCount } from '@/admin/queries/useTotalUsersCount';
-import { useReviewsCount } from '@/admin/queries/useReviewsCount';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Package, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface StatsCardsProps {
-  minimal?: boolean;
+  className?: string;
 }
 
-export const StatsCards = ({ minimal = false }: StatsCardsProps) => {
-  const { data: partsCount, isLoading: isLoadingParts } = usePartsCount();
-  const { data: usersCount, isLoading: isLoadingUsers } = useTotalUsersCount();
-  const { data: reviewsCount, isLoading: isLoadingReviews } = useReviewsCount();
-
-  if (minimal) {
-    return (
-      <div className="space-y-2">
-        <div className="flex justify-between p-2 border-b">
-          <span className="text-sm font-medium">Total Parts</span>
-          <span className="text-sm">{isLoadingParts ? "Loading..." : partsCount}</span>
-        </div>
-        <div className="flex justify-between p-2 border-b">
-          <span className="text-sm font-medium">Users</span>
-          <span className="text-sm">{isLoadingUsers ? "Loading..." : usersCount}</span>
-        </div>
-        <div className="flex justify-between p-2 border-b">
-          <span className="text-sm font-medium">Reviews</span>
-          <span className="text-sm">{isLoadingReviews ? "Loading..." : reviewsCount}</span>
-        </div>
-      </div>
-    );
-  }
-
+export function StatsCards({ className }: StatsCardsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="cyber-card border-primary/20">
-        <CardHeader className="pb-2">
-          <CardTitle>Total Parts</CardTitle>
-          <CardDescription>Number of parts in database</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-bold">{isLoadingParts ? "Loading..." : partsCount}</p>
-        </CardContent>
-      </Card>
-      
-      <Card className="cyber-card border-primary/20">
-        <CardHeader className="pb-2">
-          <CardTitle>Users</CardTitle>
-          <CardDescription>Total registered users</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-bold">{isLoadingUsers ? "Loading..." : usersCount}</p>
-        </CardContent>
-      </Card>
-      
-      <Card className="cyber-card border-primary/20">
-        <CardHeader className="pb-2">
-          <CardTitle>Reviews</CardTitle>
-          <CardDescription>Total submitted reviews</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-bold">{isLoadingReviews ? "Loading..." : reviewsCount}</p>
-        </CardContent>
-      </Card>
-    </div>
+    <Card className={cn("", className)}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Platform Stats</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex items-center">
+            <Users className="mr-2 h-4 w-4 text-blue-500" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium leading-none">Total Users</p>
+              <p className="text-sm text-muted-foreground">1,234</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center">
+            <Package className="mr-2 h-4 w-4 text-green-500" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium leading-none">Published Builds</p>
+              <p className="text-sm text-muted-foreground">432</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center">
+            <Star className="mr-2 h-4 w-4 text-amber-500" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium leading-none">Average Rating</p>
+              <p className="text-sm text-muted-foreground">4.7 / 5</p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
-};
+}

@@ -6,10 +6,8 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { useNavigate } from "react-router-dom";
 import { initializeComponentRegistry } from "@/admin/components/layout/ComponentRegistrations";
-import { DashboardLayout } from "@/admin/components/dashboard/DashboardLayout";
-import { FallbackLayoutDisplay } from "@/admin/components/layout/FallbackLayoutDisplay";
 
-// Initialize component registry
+// Initialize component registry for layout system
 initializeComponentRegistry();
 
 export default function Dashboard() {
@@ -21,10 +19,6 @@ export default function Dashboard() {
   const { useActiveLayout, useCreateDefaultLayout } = useLayoutSkeleton();
   const { data: dashboardSkeleton, isLoading, error } = useActiveLayout('dashboard', 'admin');
   const { mutate: createDefaultLayout } = useCreateDefaultLayout();
-  
-  // Convert skeleton to layout
-  const dashboardLayout = dashboardSkeleton ? 
-    layoutSkeletonService.convertToLayout(dashboardSkeleton) : null;
   
   // Initialize admin store if it hasn't been initialized yet
   useEffect(() => {
@@ -43,9 +37,16 @@ export default function Dashboard() {
   // If no layout exists and user has permission, create a default one
   useEffect(() => {
     if (!isLoading && !dashboardSkeleton && !error && hasAdminAccess) {
+      console.log("Creating default dashboard layout...");
       createDefaultLayout({ type: 'dashboard', scope: 'admin' });
     }
   }, [isLoading, dashboardSkeleton, error, hasAdminAccess, createDefaultLayout]);
+
+  // Convert skeleton to layout using the service
+  const dashboardLayout = dashboardSkeleton ? 
+    layoutSkeletonService.convertToLayout(dashboardSkeleton) : null;
+  
+  console.log("Dashboard layout:", dashboardLayout);
   
   return (
     <LayoutRenderer
@@ -53,13 +54,13 @@ export default function Dashboard() {
       isLoading={isLoading}
       error={error instanceof Error ? error : null}
       fallback={
-        <FallbackLayoutDisplay type="dashboard" scope="admin">
-          <DashboardLayout />
-        </FallbackLayoutDisplay>
+        <DashboardLayout />
       }
     />
   );
 }
 
-// Import the service at the top
+// Import remaining dependencies
+import { DashboardLayout } from "@/admin/components/dashboard/DashboardLayout";
+import { FallbackLayoutDisplay } from "@/admin/components/layout/FallbackLayoutDisplay";
 import { layoutSkeletonService } from "@/admin/services/layoutSkeleton.service";

@@ -1,69 +1,48 @@
 
-import React from 'react';
-import { ComponentRegistration } from '@/admin/types/layout.types';
-
 /**
- * Registry for mapping component identifiers to React components
+ * Component Registry Service
+ * Manages the registration and retrieval of components for the layout engine
  */
 class ComponentRegistry {
-  private registry: Record<string, ComponentRegistration> = {};
-  private fallbackComponent: React.ComponentType<any> | null = null;
-
+  private components: Record<string, React.ComponentType<any> | keyof JSX.IntrinsicElements> = {};
+  
   /**
    * Register a component with the registry
    */
-  register(id: string, registration: ComponentRegistration): void {
-    this.registry[id] = registration;
+  registerComponent(type: string, component: React.ComponentType<any> | keyof JSX.IntrinsicElements) {
+    this.components[type] = component;
   }
-
+  
   /**
-   * Register multiple components at once
+   * Get a component from the registry by type
    */
-  registerBulk(components: Record<string, ComponentRegistration>): void {
-    this.registry = { ...this.registry, ...components };
+  getComponent(type: string): React.ComponentType<any> | keyof JSX.IntrinsicElements | null {
+    return this.components[type] || null;
   }
-
+  
   /**
-   * Get a component by ID
+   * Check if a component type is registered
    */
-  getComponent(id: string): React.ComponentType<any> | null {
-    if (this.registry[id]) {
-      return this.registry[id].component;
-    }
-    return this.fallbackComponent;
+  hasComponent(type: string): boolean {
+    return !!this.components[type];
   }
-
+  
   /**
-   * Get component registration by ID
+   * Get all registered component types
    */
-  getRegistration(id: string): ComponentRegistration | null {
-    return this.registry[id] || null;
+  getRegisteredComponents(): string[] {
+    return Object.keys(this.components);
   }
-
+  
   /**
-   * Set a fallback component to use when a component is not found
+   * Clear all registered components
    */
-  setFallbackComponent(component: React.ComponentType<any>): void {
-    this.fallbackComponent = component;
-  }
-
-  /**
-   * Clear the registry
-   */
-  clear(): void {
-    this.registry = {};
-  }
-
-  /**
-   * Get all registered components
-   */
-  getAll(): Record<string, ComponentRegistration> {
-    return { ...this.registry };
+  clear() {
+    this.components = {};
   }
 }
 
-// Singleton instance
-export const componentRegistry = new ComponentRegistry();
+// Create a singleton instance
+const componentRegistry = new ComponentRegistry();
 
-// Default export for easier imports
 export default componentRegistry;

@@ -1,38 +1,36 @@
 
 import React from 'react';
-import { LayoutDashboard } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { BuildApprovalWidget } from '@/components/admin/dashboard/BuildApprovalWidget';
-import { AdminFeatureSection } from '@/components/admin/dashboard/AdminFeatureSection';
-import { StatsCards } from '@/admin/components/dashboard/StatsCards';
+import { AdminSection } from '../layout/AdminSection';
+import { AdminGrid } from '../layout/AdminGrid';
+import { BuildApprovalWidget } from './BuildApprovalWidget';
+import { StatsCards } from './StatsCards';
+import { AdminFeatureSection } from './AdminFeatureSection';
+import { DashboardShortcuts } from './DashboardShortcuts';
 
 /**
- * Default fallback dashboard layout when no database layout is available
+ * Default dashboard layout when no layout is defined in the database
  */
 export function DashboardLayout() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <LayoutDashboard className="text-primary w-5 h-5" />
+      <AdminSection>
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-      </div>
+        <p className="text-muted-foreground">
+          Welcome to the MakersImpulse admin dashboard. 
+          This is the fallback layout when no custom layout is defined.
+        </p>
+      </AdminSection>
       
-      {/* Dashboard Shortcuts and Stats */}
-      <div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <BuildApprovalWidget />
-          </div>
-          <Card className="p-4">
-            <h3 className="text-lg font-medium mb-4">Quick Stats</h3>
-            <StatsCards minimal />
-          </Card>
-        </div>
-        
-        <div className="mt-6">
-          <AdminFeatureSection />
-        </div>
-      </div>
+      <AdminSection>
+        <DashboardShortcuts />
+      </AdminSection>
+      
+      <AdminGrid cols={2} gap={6}>
+        <BuildApprovalWidget />
+        <StatsCards />
+      </AdminGrid>
+      
+      <AdminFeatureSection />
     </div>
   );
 }
