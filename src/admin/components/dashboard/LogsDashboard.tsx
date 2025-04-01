@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { LogEntry, LogCategory, memoryTransport } from '@/logging';
 import { LogLevel } from '@/logging/constants/log-level';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { CyberCard } from '@/admin/components/ui/CyberCard';
 import { cn } from '@/lib/utils';
-import { renderUnknownAsNode } from '@/shared/utils/render';
+import { safelyRenderNode } from '@/shared/utils/react-utils';
 
 export function LogsDashboard() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -13,13 +12,11 @@ export function LogsDashboard() {
   const [categoryStats, setCategoryStats] = useState<{ name: string; value: number }[]>([]);
   const [timeStats, setTimeStats] = useState<{ name: string; count: number }[]>([]);
   
-  // Update logs and stats
   useEffect(() => {
     const updateStats = () => {
       const allLogs = memoryTransport.getLogs();
       setLogs(allLogs);
       
-      // Calculate level stats
       const levelCounts: Record<string, number> = {};
       Object.values(LogLevel)
         .filter(level => typeof level === 'string')
@@ -35,7 +32,6 @@ export function LogsDashboard() {
         Object.entries(levelCounts).map(([name, value]) => ({ name, value }))
       );
       
-      // Calculate category stats
       const categoryCounts: Record<string, number> = {};
       Object.values(LogCategory).forEach(category => {
         categoryCounts[category] = 0;
@@ -51,12 +47,10 @@ export function LogsDashboard() {
           .filter(({ value }) => value > 0)
       );
       
-      // Calculate time-based stats (last hour by 5 min intervals)
       const nowTime = new Date();
       const lastHour = new Date(nowTime.getTime() - 60 * 60 * 1000);
       const intervals: Record<string, number> = {};
       
-      // Create 12 5-minute intervals
       for (let i = 0; i < 12; i++) {
         const time = new Date(lastHour.getTime() + i * 5 * 60 * 1000);
         const label = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -66,7 +60,6 @@ export function LogsDashboard() {
       allLogs.forEach(log => {
         const logTime = new Date(log.timestamp);
         if (logTime >= lastHour && logTime <= nowTime) {
-          // Find which 5-min interval this belongs to
           const minutesSinceLastHour = Math.floor((logTime.getTime() - lastHour.getTime()) / (5 * 60 * 1000));
           const intervalTime = new Date(lastHour.getTime() + minutesSinceLastHour * 5 * 60 * 1000);
           const label = intervalTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -82,7 +75,6 @@ export function LogsDashboard() {
     
     updateStats();
     
-    // Update every 10 seconds
     const interval = setInterval(updateStats, 10000);
     
     return () => {
@@ -90,10 +82,8 @@ export function LogsDashboard() {
     };
   }, []);
   
-  // Colors for charts
   const COLORS = ['#00F0FF', '#FF2D6E', '#FFB400', '#00FF9D', '#8B5CF6'];
   
-  // Level colors
   const LEVEL_COLORS: Record<string, string> = {
     'DEBUG': '#888888',
     'INFO': '#00F0FF',
@@ -108,7 +98,6 @@ export function LogsDashboard() {
         Logs Dashboard
       </h2>
       
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <CyberCard className="p-4">
           <div className="text-lg font-medium mb-2">Total Logs</div>
@@ -130,7 +119,6 @@ export function LogsDashboard() {
         </CyberCard>
       </div>
       
-      {/* Log Level Distribution */}
       <CyberCard title="Log Level Distribution" className="p-4">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -158,7 +146,6 @@ export function LogsDashboard() {
         </div>
       </CyberCard>
       
-      {/* Log Categories Distribution */}
       <CyberCard title="Log Categories" className="p-4">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -188,7 +175,6 @@ export function LogsDashboard() {
         </div>
       </CyberCard>
       
-      {/* Log Activity Timeline */}
       <CyberCard title="Log Activity (Last Hour)" className="p-4">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -218,7 +204,6 @@ export function LogsDashboard() {
         </div>
       </CyberCard>
       
-      {/* Recent Logs Table */}
       <CyberCard title="Recent Logs" className="p-4">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -251,7 +236,7 @@ export function LogsDashboard() {
                   </td>
                   <td className="py-2 px-4 text-sm">{log.category}</td>
                   <td className="py-2 px-4 text-sm truncate max-w-md">
-                    {renderUnknownAsNode(log.message)}
+                    {safelyRenderNode(log.message)}
                   </td>
                 </tr>
               ))}
@@ -263,7 +248,6 @@ export function LogsDashboard() {
   );
 }
 
-// Helper function for level badge styling
 function getLevelBadgeClass(level: LogLevel): string {
   switch (level) {
     case LogLevel.DEBUG:
