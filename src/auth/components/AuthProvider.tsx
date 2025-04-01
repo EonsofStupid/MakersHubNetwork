@@ -46,10 +46,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const roles = (rolesData?.map(r => r.role) as UserRole[]) || [];
           
           // Notify auth system about authenticated user
-          notifySignIn({ user: session.user, session, roles });
+          notifySignIn(session.user, session, roles);
         } else {
           logger.info('No user session found');
-          notifyAuthReady({ user: null, session: null, roles: [] });
+          notifyAuthReady(null, null, []);
         }
         
         setInitialized(true);
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   }
                   
                   const roles = (rolesData?.map(r => r.role) as UserRole[]) || [];
-                  notifySignIn({ user: session.user, session, roles });
+                  notifySignIn(session.user, session, roles);
                 } catch (error) {
                   logger.error('Error processing sign in', { details: error });
                 }
