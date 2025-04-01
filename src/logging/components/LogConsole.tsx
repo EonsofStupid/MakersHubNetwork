@@ -143,8 +143,9 @@ export function LogConsole() {
     .filter(log => {
       if (search === '') return true;
       const searchLower = search.toLowerCase();
-      const messageStr = nodeToSearchableString(log.message).toLowerCase();
-      return messageStr.includes(searchLower) || 
+      // Use the safelyRenderNode for type safety when converting to string
+      const messageStr = log.message ? nodeToSearchableString(safelyRenderNode(log.message)) : '';
+      return messageStr.toLowerCase().includes(searchLower) || 
              log.category.toLowerCase().includes(searchLower);
     });
   

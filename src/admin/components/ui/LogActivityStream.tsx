@@ -5,9 +5,9 @@ import { LogLevel } from '@/logging/constants/log-level';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { renderUnknownAsNode } from '@/shared/utils/render';
 import { LOG_LEVEL_MAP } from '@/logging/utils/map-log-level';
 import { isLogLevelAtLeast } from '@/logging/constants/log-level';
+import { safelyRenderNode } from '@/shared/utils/react-utils';
 
 interface LogActivityStreamProps {
   maxEntries?: number;
@@ -161,7 +161,7 @@ export function LogActivityStream({
                 )}
                 
                 <span className="flex-grow truncate">
-                  {renderUnknownAsNode(log.message)}
+                  {safelyRenderNode(log.message)}
                 </span>
               </div>
             </div>
