@@ -1,49 +1,54 @@
-
-import React, { useState, useEffect } from 'react';
-import { Loader, Check } from 'lucide-react';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { useAdminSync } from '@/admin/hooks/useAdminSync';
+import { Loader } from 'lucide-react';
 import { AdminTooltip } from './AdminTooltip';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
 
 export function SyncIndicator() {
-  const { isSyncing, lastSyncTime, syncError } = useAdminSync();
-  const [showSuccess, setShowSuccess] = useState(false);
-  const logger = useLogger("SyncIndicator", LogCategory.ADMIN);
-
-  useEffect(() => {
-    if (!isSyncing && !syncError && lastSyncTime) {
-      setShowSuccess(true);
-      const timer = setTimeout(() => setShowSuccess(false), 3000);
-      return () => clearTimeout(timer);
+  const { isSyncing, lastSynced, sync } = useAdminSync();
+  
+  const formatLastSynced = () => {
+    if (!lastSynced) return 'Never synced';
+    
+    // If synced less than 1 minute ago
+    const diff = Math.floor((Date.now() - lastSynced.getTime()) / 1000);
+    if (diff < 60) return 'Just now';
+    
+    // If synced less than 1 hour ago
+    if (diff < 3600) {
+      const minutes = Math.floor(diff / 60);
+      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     }
-  }, [isSyncing, syncError, lastSyncTime]);
-
-  useEffect(() => {
-    if (syncError) {
-      logger.error("Sync error occurred", { details: { error: syncError } });
-    }
-  }, [syncError, logger]);
-
-  if (!isSyncing && !showSuccess) {
-    return null;
-  }
-
-  const tooltipContent = isSyncing
-    ? "Syncing admin data..."
-    : syncError
-    ? `Sync error: ${syncError}`
-    : `Last synced: ${lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString() : 'Never'}`;
-
+    
+    // Otherwise show time
+    return lastSynced.toLocaleTimeString();
+  };
+  
   return (
-    <AdminTooltip content={tooltipContent} side="bottom">
-      <div className="flex items-center gap-1">
+    <AdminTooltip content={`Last synced: ${formatLastSynced()}`} side="bottom">
+      <button 
+        onClick={() => !isSyncing && sync()}
+        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
+        disabled={isSyncing}
+      >
         {isSyncing ? (
-          <Loader className="h-4 w-4 text-[var(--impulse-primary)] animate-spin" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          >
+            <Loader className="w-4 h-4 text-[var(--impulse-primary)]" />
+          </motion.div>
         ) : (
-          <Check className="h-4 w-4 text-green-500" />
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <div className="w-4 h-4 rounded-full border-2 border-[var(--impulse-primary)] flex items-center justify-center">
+              <div className="w-2 h-2 bg-[var(--impulse-primary)] rounded-full" />
+            </div>
+          </motion.div>
         )}
-      </div>
+      </button>
     </AdminTooltip>
   );
 }

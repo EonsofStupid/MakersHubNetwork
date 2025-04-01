@@ -1,14 +1,8 @@
 
 import { PermissionValue } from '@/auth/permissions';
 
-// Re-export the permission value type for backward compatibility
+// Export admin permission value type
 export type AdminPermissionValue = PermissionValue;
 
-// Admin-specific permission context
-export interface AdminPermissionContext {
-  scope: string;
-  resource: string;
-}
-
-// Function to check permissions
-export type AdminPermissionCheckFn = (permission: PermissionValue) => boolean;
+// Permission check function type
+export type PermissionCheckFn = (permission: AdminPermissionValue) => boolean;

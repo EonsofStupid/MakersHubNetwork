@@ -1,115 +1,70 @@
 
-import React, { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus } from 'lucide-react';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { useAtom } from 'jotai';
-import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
-import { adminNavigationItems } from '@/admin/config/navigation.config';
-import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
-import { DashboardShortcut } from './DashboardShortcut';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Users, FileText, Settings, Package, LayoutDashboard, PlusCircle } from 'lucide-react';
 
-interface DashboardShortcutsProps {
-  className?: string;
-}
-
-export function DashboardShortcuts({ className = '' }: DashboardShortcutsProps) {
-  const shortcutsRef = useRef<HTMLDivElement>(null);
-  const [isEditMode] = useAtom(adminEditModeAtom);
-  const { dashboardItems, setDashboardItems, savePreferences } = useAdminStore();
-  const navigate = useNavigate();
-  
+export function DashboardShortcuts() {
   const shortcuts = [
-    { id: 'users', label: 'Users' },
-    { id: 'builds', label: 'Builds' },
-    { id: 'content', label: 'Content' },
-    { id: 'settings', label: 'Settings' }
+    {
+      name: 'Users',
+      description: 'Manage user accounts',
+      icon: <Users className="h-5 w-5" />,
+      link: '/admin/users',
+      color: 'bg-blue-500/10 text-blue-500'
+    },
+    {
+      name: 'Content',
+      description: 'Edit site content',
+      icon: <FileText className="h-5 w-5" />,
+      link: '/admin/content',
+      color: 'bg-green-500/10 text-green-500'
+    },
+    {
+      name: 'Builds',
+      description: 'Review printer builds',
+      icon: <Package className="h-5 w-5" />,
+      link: '/admin/builds',
+      color: 'bg-orange-500/10 text-orange-500'
+    },
+    {
+      name: 'Settings',
+      description: 'Configure system',
+      icon: <Settings className="h-5 w-5" />,
+      link: '/admin/settings',
+      color: 'bg-purple-500/10 text-purple-500'
+    }
   ];
   
-  // Mock implementation for drag and drop
-  const { registerDropZone, isDragging } = {
-    registerDropZone: (ref: React.RefObject<HTMLElement>) => () => {},
-    isDragging: false
-  };
-  
-  // Handle navigation when a shortcut is clicked
-  const handleShortcutClick = (id: string) => {
-    const item = adminNavigationItems.find(item => item.id === id);
-    if (item) {
-      navigate(item.path);
-    }
-  };
-  
-  // Handle removing an item from shortcuts
-  const handleRemoveItem = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    // Filter out the removed item
-    const newShortcuts = dashboardItems.filter(item => item !== id);
-    setDashboardItems(newShortcuts);
-    savePreferences();
-  };
-  
-  // Filter shortcuts to only show items that exist in navigation config
-  const visibleShortcuts = shortcuts.filter(s => 
-    adminNavigationItems.some(item => item.id === s.id)
-  );
-  
   return (
-    <Card className={className}>
-      <CardHeader className="pb-3">
-        <CardTitle>Quick Access</CardTitle>
-        <CardDescription>
-          {isEditMode 
-            ? "Drag items here from the sidebar for quick access" 
-            : "Your most important tools in one place"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div 
-          ref={shortcutsRef}
-          className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 ${
-            isEditMode ? 'edit-mode-highlight border border-dashed border-primary/50 rounded-lg p-4' : ''
-          } ${isDragging ? 'bg-primary/5 rounded-lg' : ''}`}
-          data-container-id="dashboard-shortcuts"
-        >
-          <AnimatePresence mode="popLayout">
-            {visibleShortcuts.length > 0 ? (
-              visibleShortcuts.map(shortcut => {
-                const item = adminNavigationItems.find(navItem => navItem.id === shortcut.id);
-                if (!item) return null;
-                
-                return (
-                  <DashboardShortcut
-                    key={shortcut.id}
-                    id={shortcut.id}
-                    icon={item.icon}
-                    label={item.label}
-                    onClick={() => handleShortcutClick(shortcut.id)}
-                    onRemove={isEditMode ? (e) => handleRemoveItem(shortcut.id, e) : undefined}
-                    isEditMode={isEditMode}
-                  />
-                );
-              })
-            ) : (
-              isEditMode && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="col-span-full flex flex-col items-center justify-center h-24 text-muted-foreground"
-                >
-                  <Plus className="w-8 h-8 mb-2 text-primary/50" />
-                  <span>Drag items here from the sidebar</span>
-                </motion.div>
-              )
-            )}
-          </AnimatePresence>
-        </div>
-      </CardContent>
-    </Card>
+    <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {shortcuts.map((shortcut, index) => (
+          <Link
+            key={index}
+            to={shortcut.link}
+            className="group flex flex-col space-y-2 rounded-lg border border-[var(--impulse-border)] p-4 hover:bg-[var(--impulse-bg-hover)] transition-colors"
+          >
+            <div className={`rounded-full ${shortcut.color} p-2 w-fit`}>
+              {shortcut.icon}
+            </div>
+            <div>
+              <h3 className="font-medium text-[var(--impulse-text-primary)] group-hover:text-[var(--impulse-primary)]">
+                {shortcut.name}
+              </h3>
+              <p className="text-sm text-[var(--impulse-text-secondary)]">
+                {shortcut.description}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+      
+      <div className="mt-4 flex items-center justify-center">
+        <button className="flex items-center space-x-1 text-sm text-[var(--impulse-primary)] hover:text-[var(--impulse-primary-hover)]">
+          <PlusCircle className="h-4 w-4" />
+          <span>Add Shortcut</span>
+        </button>
+      </div>
+    </div>
   );
 }
-

@@ -1,64 +1,63 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
+/**
+ * Hook to sync admin data with backend
+ */
 export function useAdminSync() {
   const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
-  const [syncError, setSyncError] = useState<string | null>(null);
-  const syncTimeoutRef = useRef<number | null>(null);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
   const logger = useLogger('useAdminSync', LogCategory.ADMIN);
-
-  // Simulate sync process - in a real app, this would connect to a backend
-  const syncAdminData = async () => {
-    if (isSyncing) return;
-    
-    try {
-      setIsSyncing(true);
-      setSyncError(null);
-      logger.info('Starting admin data sync');
-      
-      // Simulate network request
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // 10% chance of simulated error for testing
-      if (Math.random() < 0.1) {
-        throw new Error('Simulated sync error');
-      }
-      
-      setLastSyncTime(Date.now());
-      logger.info('Admin data sync completed successfully');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setSyncError(errorMessage);
-      logger.error('Admin data sync failed', { details: { error: errorMessage } });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // Initial sync on mount
+  
+  // Sync data periodically
   useEffect(() => {
-    syncAdminData();
+    let isMounted = true;
     
-    // Schedule periodic sync every 5 minutes
-    const intervalId = setInterval(() => {
-      syncAdminData();
-    }, 5 * 60 * 1000);
-    
-    return () => {
-      clearInterval(intervalId);
-      if (syncTimeoutRef.current) {
-        clearTimeout(syncTimeoutRef.current);
+    const syncData = async () => {
+      if (!isMounted) return;
+      
+      try {
+        setIsSyncing(true);
+        logger.info('Syncing admin data...');
+        
+        // Simulate sync with backend
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        if (isMounted) {
+          setLastSynced(new Date());
+          logger.info('Admin data synced successfully');
+        }
+      } catch (error) {
+        logger.error('Error syncing admin data', { details: error });
+      } finally {
+        if (isMounted) {
+          setIsSyncing(false);
+        }
       }
     };
-  }, []);
-
+    
+    // Initial sync
+    syncData();
+    
+    // Periodic sync every 5 minutes
+    const interval = setInterval(syncData, 5 * 60 * 1000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [logger]);
+  
   return {
     isSyncing,
-    lastSyncTime,
-    syncError,
-    triggerSync: syncAdminData
+    lastSynced,
+    sync: async () => {
+      setIsSyncing(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setLastSynced(new Date());
+      setIsSyncing(false);
+    }
   };
 }
