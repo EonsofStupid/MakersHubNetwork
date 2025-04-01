@@ -1,159 +1,139 @@
 
-import React, { lazy, Suspense } from 'react';
-import { Route, Routes, Navigate } from 'react-router-dom';
-import { AdminLayout } from '@/admin/components/AdminLayout';
-import { RequirePermission } from '@/auth/components/RequirePermission';
-import { APP_PERMISSIONS } from '@/auth/constants/permissions';
-import OverviewPage from './overview/OverviewPage';
-import BuildsPage from './builds/BuildsPage';
-import UsersPage from './users/UsersPage';
-import ContentPage from './content/ContentPage';
-import SettingsPage from './settings/SettingsPage';
-import ThemesPage from './themes/ThemesPage';
-import LayoutsPage from './layouts/LayoutsPage';
-import UnauthorizedPage from './unauthorized/UnauthorizedPage';
-import BuildDetailPage from './builds/BuildDetailPage';
-import AnalyticsPage from './analytics/AnalyticsPage';
-import ReviewsPage from './reviews/ReviewsPage';
-import DataMaestroPage from './data/DataMaestroPage';
-import PermissionsPage from './permissions/PermissionsPage';
-import LogsPage from './logs/LogsPage';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AdminLayout } from '@/admin/components/layouts/AdminLayout';
+import { AdminAuthGuard } from '@/admin/components/AdminAuthGuard';
 
-// Loading fallback
-const LoadingFallback = () => (
+// Import admin pages (Lazy load them for better performance)
+const Dashboard = React.lazy(() => import('./dashboard/DashboardPage'));
+const BuildsPage = React.lazy(() => import('./builds/BuildsPage'));
+const UsersPage = React.lazy(() => import('./users/UsersPage'));
+const PartsPage = React.lazy(() => import('./parts/PartsPage'));
+const ThemesPage = React.lazy(() => import('./themes/ThemesPage'));
+const ContentPage = React.lazy(() => import('./content/ContentPage'));
+const SettingsPage = React.lazy(() => import('./settings/SettingsPage'));
+const PermissionsPage = React.lazy(() => import('./permissions/PermissionsPage'));
+const LogsPage = React.lazy(() => import('./logs/LogsPage'));
+const UnauthorizedPage = React.lazy(() => import('./UnauthorizedPage'));
+const NotFoundPage = React.lazy(() => import('./NotFoundPage'));
+
+// Loading component for lazy-loaded routes
+const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
-    <div className="h-8 w-8 border-t-2 border-primary animate-spin rounded-full"></div>
+    <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
   </div>
 );
 
-export const AdminRoutes = () => {
+export function AdminRoutes() {
   return (
-    <AdminLayout>
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
-          <Route path="/" element={<Navigate to="/admin/overview" replace />} />
+    <AdminAuthGuard>
+      <Routes>
+        <Route path="/" element={<AdminLayout />}>
+          {/* Redirect to dashboard by default */}
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
           
-          <Route 
-            path="/overview" 
+          {/* Admin pages */}
+          <Route
+            path="dashboard/*"
             element={
-              <RequirePermission permission={APP_PERMISSIONS.ADMIN_VIEW}>
-                <OverviewPage />
-              </RequirePermission>
-            } 
+              <React.Suspense fallback={<PageLoader />}>
+                <Dashboard />
+              </React.Suspense>
+            }
           />
           
-          <Route 
-            path="/builds" 
+          <Route
+            path="builds/*"
             element={
-              <RequirePermission permission={APP_PERMISSIONS.BUILDS_VIEW}>
+              <React.Suspense fallback={<PageLoader />}>
                 <BuildsPage />
-              </RequirePermission>
-            } 
+              </React.Suspense>
+            }
           />
           
-          <Route 
-            path="/builds/:id" 
+          <Route
+            path="users/*"
             element={
-              <RequirePermission permission={APP_PERMISSIONS.BUILDS_VIEW}>
-                <BuildDetailPage />
-              </RequirePermission>
-            } 
-          />
-          
-          <Route 
-            path="/users" 
-            element={
-              <RequirePermission permission={APP_PERMISSIONS.USERS_VIEW}>
+              <React.Suspense fallback={<PageLoader />}>
                 <UsersPage />
-              </RequirePermission>
-            } 
+              </React.Suspense>
+            }
           />
           
-          <Route 
-            path="/content" 
+          <Route
+            path="parts/*"
             element={
-              <RequirePermission permission={APP_PERMISSIONS.CONTENT_VIEW}>
-                <ContentPage />
-              </RequirePermission>
-            } 
+              <React.Suspense fallback={<PageLoader />}>
+                <PartsPage />
+              </React.Suspense>
+            }
           />
           
-          <Route 
-            path="/settings" 
+          <Route
+            path="themes/*"
             element={
-              <RequirePermission permission={APP_PERMISSIONS.SETTINGS_VIEW}>
-                <SettingsPage />
-              </RequirePermission>
-            } 
-          />
-          
-          <Route 
-            path="/themes" 
-            element={
-              <RequirePermission permission={APP_PERMISSIONS.THEMES_VIEW}>
+              <React.Suspense fallback={<PageLoader />}>
                 <ThemesPage />
-              </RequirePermission>
-            } 
+              </React.Suspense>
+            }
           />
           
-          <Route 
-            path="/layouts" 
+          <Route
+            path="content/*"
             element={
-              <RequirePermission permission={APP_PERMISSIONS.LAYOUTS_VIEW}>
-                <LayoutsPage />
-              </RequirePermission>
-            } 
+              <React.Suspense fallback={<PageLoader />}>
+                <ContentPage />
+              </React.Suspense>
+            }
           />
           
-          <Route 
-            path="/analytics" 
+          <Route
+            path="settings/*"
             element={
-              <RequirePermission permission={APP_PERMISSIONS.ANALYTICS_VIEW}>
-                <AnalyticsPage />
-              </RequirePermission>
-            } 
+              <React.Suspense fallback={<PageLoader />}>
+                <SettingsPage />
+              </React.Suspense>
+            }
           />
           
-          <Route 
-            path="/reviews" 
+          <Route
+            path="permissions/*"
             element={
-              <RequirePermission permission={APP_PERMISSIONS.REVIEWS_VIEW}>
-                <ReviewsPage />
-              </RequirePermission>
-            } 
-          />
-          
-          <Route 
-            path="/data" 
-            element={
-              <RequirePermission permission={APP_PERMISSIONS.DATA_VIEW}>
-                <DataMaestroPage />
-              </RequirePermission>
-            } 
-          />
-          
-          <Route 
-            path="/permissions" 
-            element={
-              <RequirePermission permission={APP_PERMISSIONS.SUPER_ADMIN}>
+              <React.Suspense fallback={<PageLoader />}>
                 <PermissionsPage />
-              </RequirePermission>
-            } 
+              </React.Suspense>
+            }
           />
           
-          <Route 
-            path="/logs" 
+          <Route
+            path="logs/*"
             element={
-              <RequirePermission permission={APP_PERMISSIONS.SYSTEM_LOGS}>
+              <React.Suspense fallback={<PageLoader />}>
                 <LogsPage />
-              </RequirePermission>
-            } 
+              </React.Suspense>
+            }
           />
           
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
-          <Route path="*" element={<Navigate to="/admin/overview" replace />} />
-        </Routes>
-      </Suspense>
-    </AdminLayout>
+          {/* Error pages */}
+          <Route
+            path="unauthorized"
+            element={
+              <React.Suspense fallback={<PageLoader />}>
+                <UnauthorizedPage />
+              </React.Suspense>
+            }
+          />
+          
+          <Route
+            path="*"
+            element={
+              <React.Suspense fallback={<PageLoader />}>
+                <NotFoundPage />
+              </React.Suspense>
+            }
+          />
+        </Route>
+      </Routes>
+    </AdminAuthGuard>
   );
-};
+}

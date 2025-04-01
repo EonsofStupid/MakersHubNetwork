@@ -14,7 +14,28 @@ export function renderUnknownAsNode(input: unknown): ReactNode {
   
   // For objects, try to convert to string representation
   try {
-    return JSON.stringify(input);
+    // Check if object has a custom toString method
+    if (input instanceof Error) {
+      return input.message;
+    }
+    
+    if (typeof input === 'object' && input !== null) {
+      // Handle Date objects
+      if (input instanceof Date) {
+        return input.toISOString();
+      }
+      
+      // Handle objects with toString method
+      if (typeof (input as any).toString === 'function' && 
+          (input as any).toString !== Object.prototype.toString) {
+        return (input as any).toString();
+      }
+      
+      // For regular objects, stringify them
+      return JSON.stringify(input);
+    }
+    
+    return String(input);
   } catch (error) {
     return String(input);
   }
