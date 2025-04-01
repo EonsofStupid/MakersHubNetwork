@@ -27,6 +27,8 @@ export function usePerformanceLogger(source: string) {
     const startTime = timers.current[operationName];
     if (startTime) {
       const duration = performance.now() - startTime;
+      
+      // Use the added performance method
       logger.performance(
         `${operationName} completed in ${duration.toFixed(2)}ms`,
         duration,
@@ -36,6 +38,7 @@ export function usePerformanceLogger(source: string) {
           category: options?.category || LogCategory.PERFORMANCE
         }
       );
+      
       delete timers.current[operationName];
       return duration;
     }

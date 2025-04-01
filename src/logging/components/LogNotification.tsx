@@ -2,11 +2,23 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle, AlertTriangle, Info, CheckCircle } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Define toast variants
+// Adjust AlertToastVariant to match the available variant types
 export type AlertToastVariant = 'default' | 'destructive' | 'success' | 'warning';
+
+// Convert our variant types to toast variant types
+const mapVariantToToastVariant = (variant: AlertToastVariant): "default" | "destructive" | undefined => {
+  switch (variant) {
+    case 'destructive':
+      return 'destructive';
+    case 'success':
+    case 'warning':
+    default:
+      return 'default';
+  }
+};
 
 interface AlertToastProps {
   title: string;
@@ -21,7 +33,7 @@ export const alertToast = ({ title, description, variant = 'default', duration =
     title,
     description,
     duration,
-    variant,
+    variant: mapVariantToToastVariant(variant),
     // Use a custom component for the toast content
     action: <AlertToastIcon variant={variant} />,
   });

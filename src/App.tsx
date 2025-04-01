@@ -9,7 +9,7 @@ import { LogConsole } from "@/logging/components/LogConsole";
 import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { useEffect } from "react";
-import { initializeLogger } from "@/logging";
+import { initializeLogger, getLogger } from "@/logging";
 
 // Import pages
 import Index from "./pages/Index";

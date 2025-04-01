@@ -1,9 +1,18 @@
 
-/* Cyberpunk styling for logging components */
+/* Logging system styles */
 
-/* Log console effects */
+/* Cyber effects for log console */
+.cyber-window {
+  position: relative;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+}
+
+.cyber-dots {
+  position: relative;
+}
+
 .electric-effect-border {
-  box-shadow: 0 0 10px 0 rgba(0, 240, 255, 0.3);
   position: relative;
   overflow: hidden;
 }
@@ -11,197 +20,53 @@
 .electric-effect-border::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.8), transparent);
-  animation: electric-scan 2s linear infinite;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  z-index: -1;
+  background: linear-gradient(90deg, 
+    rgba(0, 240, 255, 0) 0%, 
+    rgba(0, 240, 255, 0.3) 25%, 
+    rgba(0, 240, 255, 0.3) 50%, 
+    rgba(0, 240, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: border-flow 4s linear infinite;
+  border-radius: inherit;
+  pointer-events: none;
 }
 
-.electric-effect-border::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: -100%;
-  width: 50%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.8), transparent);
-  animation: electric-scan-reverse 2s linear infinite;
-}
-
-@keyframes electric-scan {
+@keyframes border-flow {
   0% {
-    left: -100%;
+    background-position: 100% 0;
   }
   100% {
-    left: 200%;
+    background-position: -100% 0;
   }
 }
 
-@keyframes electric-scan-reverse {
-  0% {
-    right: -100%;
-  }
-  100% {
-    right: 200%;
-  }
+/* Toast animations */
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Cyber window */
-.cyber-window {
-  position: relative;
-  overflow: hidden;
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
-.cyber-window::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--impulse-primary), transparent);
-  opacity: 0.5;
+.animate-rotate-y {
+  animation: rotate-y 1s ease-in-out;
 }
 
-/* Cyber dots */
-.cyber-dots div {
-  position: relative;
-  transition: all 0.2s;
-}
-
-.cyber-dots div:hover {
-  box-shadow: 0 0 8px currentColor;
-}
-
-/* Admin log indicator styles */
-.admin-log-indicator {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  border-radius: 0.25rem;
-  background-color: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(8px);
-  gap: 0.25rem;
-  transition: all 0.2s;
-}
-
-.admin-log-indicator:hover {
-  transform: translateY(-1px);
-}
-
-.admin-log-indicator.critical {
-  border-left: 2px solid rgb(239, 68, 68);
-  color: rgb(239, 68, 68);
-}
-
-.admin-log-indicator.error {
-  border-left: 2px solid rgb(248, 113, 113);
-  color: rgb(248, 113, 113);
-}
-
-.admin-log-indicator.warning {
-  border-left: 2px solid rgb(250, 204, 21);
-  color: rgb(250, 204, 21);
-}
-
-.admin-log-indicator.info {
-  border-left: 2px solid rgb(59, 130, 246);
-  color: rgb(59, 130, 246);
-}
-
-.admin-log-indicator.debug {
-  border-left: 2px solid rgb(156, 163, 175);
-  color: rgb(156, 163, 175);
-}
-
-/* Console animations */
-.admin-sidebar-scan {
-  position: absolute;
-  height: 1px;
-  width: 100%;
-  background: linear-gradient(90deg, transparent, var(--impulse-primary), transparent);
-  opacity: 0.5;
-  top: 0;
-  left: 0;
-  animation: scan-line 3s linear infinite;
-}
-
-@keyframes scan-line {
-  0% {
-    top: 0%;
-  }
-  100% {
-    top: 100%;
-  }
-}
-
-/* Glitch animation for critical errors */
-.glitch-text {
-  position: relative;
-  animation: glitch 1s infinite;
-}
-
-@keyframes glitch {
-  0% {
-    transform: translate(0);
-  }
-  20% {
-    transform: translate(-1px, 1px);
-  }
-  40% {
-    transform: translate(-1px, -1px);
-  }
-  60% {
-    transform: translate(1px, 1px);
-  }
-  80% {
-    transform: translate(1px, -1px);
-  }
-  100% {
-    transform: translate(0);
-  }
-}
-
-/* Log level badges */
-.log-level-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-.log-level-badge.debug {
-  background-color: rgba(156, 163, 175, 0.2);
-  color: rgb(156, 163, 175);
-}
-
-.log-level-badge.info {
-  background-color: rgba(59, 130, 246, 0.2);
-  color: rgb(59, 130, 246);
-}
-
-.log-level-badge.warning {
-  background-color: rgba(250, 204, 21, 0.2);
-  color: rgb(250, 204, 21);
-}
-
-.log-level-badge.error {
-  background-color: rgba(248, 113, 113, 0.2);
-  color: rgb(248, 113, 113);
-}
-
-.log-level-badge.critical {
-  background-color: rgba(239, 68, 68, 0.2);
-  color: rgb(239, 68, 68);
-  animation: pulse 1.5s infinite;
+.animate-morph-header {
+  animation: morph-bg 15s ease infinite alternate;
+  background-size: 400%;
+  background-image: linear-gradient(
+    110deg,
+    var(--background) 0%,
+    var(--primary-dark) 25%,
+    var(--background) 50%
+  );
 }
 
 @keyframes pulse {
@@ -209,6 +74,97 @@
     opacity: 1;
   }
   50% {
-    opacity: 0.6;
+    opacity: 0.5;
   }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes rotate-y {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes morph-bg {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Log level indicators */
+.log-level-debug {
+  @apply text-gray-400;
+}
+
+.log-level-info {
+  @apply text-blue-400;
+}
+
+.log-level-warning {
+  @apply text-yellow-400;
+}
+
+.log-level-error {
+  @apply text-red-400;
+}
+
+.log-level-critical {
+  @apply text-red-600 font-bold;
+}
+
+/* Log category colors */
+.log-category-system {
+  @apply text-blue-400;
+}
+
+.log-category-network {
+  @apply text-indigo-400;
+}
+
+.log-category-auth {
+  @apply text-purple-400;
+}
+
+.log-category-ui {
+  @apply text-green-400;
+}
+
+.log-category-admin {
+  @apply text-pink-400;
+}
+
+.log-category-chat {
+  @apply text-yellow-400;
+}
+
+.log-category-database {
+  @apply text-orange-400;
+}
+
+.log-category-performance {
+  @apply text-cyan-400;
+}
+
+.log-category-content {
+  @apply text-lime-400;
 }
