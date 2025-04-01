@@ -2,7 +2,7 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider } from "@/auth/components/AuthProvider";
 import { AdminProvider } from "@/admin/context/AdminContext";
 import { LoggingProvider } from "@/logging/context/LoggingContext";
 import { LogConsole } from "@/logging/components/LogConsole";

@@ -2,8 +2,8 @@
 import React, { lazy, Suspense } from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { AdminLayout } from '@/admin/components/AdminLayout';
-import { RequirePermission } from '@/admin/components/auth/RequirePermission';
-import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import { RequirePermission } from '@/auth/components/RequirePermission';
+import { APP_PERMISSIONS } from '@/auth/constants/permissions';
 import OverviewPage from './overview/OverviewPage';
 import BuildsPage from './builds/BuildsPage';
 import UsersPage from './users/UsersPage';
@@ -36,7 +36,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/overview" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.ADMIN_VIEW}>
+              <RequirePermission permission={APP_PERMISSIONS.ADMIN_VIEW}>
                 <OverviewPage />
               </RequirePermission>
             } 
@@ -45,7 +45,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/builds" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.BUILDS_VIEW}>
+              <RequirePermission permission={APP_PERMISSIONS.BUILDS_VIEW}>
                 <BuildsPage />
               </RequirePermission>
             } 
@@ -54,7 +54,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/builds/:id" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.BUILDS_VIEW}>
+              <RequirePermission permission={APP_PERMISSIONS.BUILDS_VIEW}>
                 <BuildDetailPage />
               </RequirePermission>
             } 
@@ -63,7 +63,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/users" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.USERS_VIEW}>
+              <RequirePermission permission={APP_PERMISSIONS.USERS_VIEW}>
                 <UsersPage />
               </RequirePermission>
             } 
@@ -72,7 +72,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/content" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.CONTENT_VIEW}>
+              <RequirePermission permission={APP_PERMISSIONS.CONTENT_VIEW}>
                 <ContentPage />
               </RequirePermission>
             } 
@@ -81,7 +81,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/settings" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.SETTINGS_VIEW}>
+              <RequirePermission permission={APP_PERMISSIONS.SETTINGS_VIEW}>
                 <SettingsPage />
               </RequirePermission>
             } 
@@ -90,7 +90,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/themes" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.THEMES_VIEW}>
+              <RequirePermission permission={APP_PERMISSIONS.THEMES_VIEW}>
                 <ThemesPage />
               </RequirePermission>
             } 
@@ -99,7 +99,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/layouts" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.LAYOUTS_VIEW}>
+              <RequirePermission permission={APP_PERMISSIONS.LAYOUTS_VIEW}>
                 <LayoutsPage />
               </RequirePermission>
             } 
@@ -108,7 +108,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/analytics" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.ANALYTICS_VIEW}>
+              <RequirePermission permission={APP_PERMISSIONS.ANALYTICS_VIEW}>
                 <AnalyticsPage />
               </RequirePermission>
             } 
@@ -117,7 +117,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/reviews" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.REVIEWS_VIEW}>
+              <RequirePermission permission={APP_PERMISSIONS.REVIEWS_VIEW}>
                 <ReviewsPage />
               </RequirePermission>
             } 
@@ -126,7 +126,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/data" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.DATA_VIEW}>
+              <RequirePermission permission={APP_PERMISSIONS.DATA_VIEW}>
                 <DataMaestroPage />
               </RequirePermission>
             } 
@@ -135,7 +135,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/permissions" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.SUPER_ADMIN}>
+              <RequirePermission permission={APP_PERMISSIONS.SUPER_ADMIN}>
                 <PermissionsPage />
               </RequirePermission>
             } 
@@ -144,7 +144,7 @@ export const AdminRoutes = () => {
           <Route 
             path="/logs" 
             element={
-              <RequirePermission permission={ADMIN_PERMISSIONS.SYSTEM_LOGS}>
+              <RequirePermission permission={APP_PERMISSIONS.SYSTEM_LOGS}>
                 <LogsPage />
               </RequirePermission>
             } 
