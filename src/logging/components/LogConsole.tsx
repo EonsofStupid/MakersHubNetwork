@@ -1,3 +1,4 @@
+
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry } from '../types';
@@ -94,7 +95,9 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             </span>
             <span className="font-medium">{log.category}</span>
           </div>
-          <div className="message-content text-sm">{renderUnknownAsNode(log.message)}</div>
+          <div className="message-content text-sm">
+            {renderUnknownAsNode(log.message)}
+          </div>
           
           <AnimatePresence>
             {expanded && hasDetails && (
@@ -136,11 +139,15 @@ export function LogConsole() {
   
   const filteredLogs = logs
     .filter(log => filter === 'all' || log.level === filter)
-    .filter(log => 
-      search === '' || 
-      String(log.message).toLowerCase().includes(search.toLowerCase()) ||
-      log.category.toLowerCase().includes(search.toLowerCase())
-    );
+    .filter(log => {
+      if (search === '') return true;
+      const searchLower = search.toLowerCase();
+      const messageStr = typeof log.message === 'string' 
+        ? log.message.toLowerCase() 
+        : '';
+      return messageStr.includes(searchLower) || 
+             log.category.toLowerCase().includes(searchLower);
+    });
   
   const scrollToBottom = useCallback(() => {
     if (autoScroll && logsEndRef.current) {

@@ -69,7 +69,7 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
       {getIcon()}
       <AlertTitle>{getTitle()} - {category}</AlertTitle>
       <AlertDescription>
-        {typeof message === 'string' ? message : renderUnknownAsNode(message)}
+        {renderUnknownAsNode(message)}
       </AlertDescription>
     </Alert>
   );
