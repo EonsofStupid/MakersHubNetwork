@@ -13,7 +13,7 @@ export const sectionPermissionMap: Record<string, AdminPermission> = {
   'builds': ADMIN_PERMISSIONS.BUILDS_VIEW,
   'data': ADMIN_PERMISSIONS.DATA_VIEW,
   'themes': ADMIN_PERMISSIONS.THEMES_VIEW,
-  'settings': ADMIN_PERMISSIONS.SETTINGS_VIEW,
+  'settings': ADMIN_PERMISSIONS.SYSTEM_SETTINGS,
   'analytics': ADMIN_PERMISSIONS.ADMIN_ACCESS
 };
 
