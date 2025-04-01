@@ -7,6 +7,10 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { AdminPermissionValue } from '@/admin/types/permissions';
 
+/**
+ * Hook for accessing and checking admin permissions
+ * Uses both auth store (for user/roles) and admin store (for permissions)
+ */
 export function useAdminPermissions() {
   const { isLoading: authLoading, status } = useAuthStore();
   const { permissions, isLoadingPermissions } = useAdminStore();

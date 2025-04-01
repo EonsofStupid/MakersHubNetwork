@@ -6,6 +6,9 @@ export const adminEditModeAtom = atom(false);
 export const adminDebugModeAtom = atom(false);
 export const adminEditTargetAtom = atom<string | null>(null);
 
+// Sidebar state (moved from index.ts to here)
+export const adminSidebarExpandedAtom = atom<boolean>(true);
+
 // Drag and drop state
 export const adminDragStateAtom = atom<'idle' | 'dragging' | 'dropped'>('idle');
 export const dragSourceAtom = atom<string | null>(null);

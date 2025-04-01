@@ -5,7 +5,8 @@ import { atom } from 'jotai';
 export * from './ui.atoms';
 
 // Re-export admin sidebar state atom (component level state)
-export const adminSidebarExpandedAtom = atom<boolean>(true);
+// This is now moved to tools.atoms.ts for better organization
+export { adminSidebarExpandedAtom } from './tools.atoms';
 
 // Re-export specific atoms from tools.atoms
 export {

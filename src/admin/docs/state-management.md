@@ -62,6 +62,25 @@ This document outlines our state management approach to ensure consistency and m
 - **Component Atoms**: `src/admin/atoms/{feature}.atoms.ts`
 - **Custom Hooks**: `src/hooks/use{Feature}.ts` or `src/admin/hooks/use{Feature}.ts`
 
+## Guidelines for Choosing State Management
+
+1. **Use Zustand when:**
+   - State needs to be accessed across routes/pages
+   - State needs to persist between sessions
+   - State affects multiple unrelated components
+   - State contains core business logic
+
+2. **Use Jotai when:**
+   - State is shared between a few related components
+   - State is UI-focused (like open/closed dialogs)
+   - Components need fine-grained updates
+   - Components are in a component tree
+
+3. **Use React.useState when:**
+   - State is only needed in a single component
+   - State doesn't affect other components
+   - State is simple (boolean flags, input values)
+
 ## Migration Plan
 
 We're currently in the process of aligning all state management with these principles.

@@ -25,7 +25,7 @@ export function DashboardLayout() {
         <DashboardShortcuts />
       </AdminSection>
       
-      <AdminGrid cols={2} gap={6}>
+      <AdminGrid columns={2} gap={6}>
         <BuildApprovalWidget />
         <StatsCards />
       </AdminGrid>
