@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Filter, Download, Clock, Tag, RefreshCw, Search } from 'lucide-react';
@@ -280,7 +279,7 @@ export const LogConsole: React.FC = () => {
         <div className="space-y-1">
           <div className="text-[var(--impulse-text-secondary)] text-xs">Message</div>
           <div className="font-mono text-xs break-all bg-black/20 p-2 rounded">
-            {selectedLog.message}
+            {String(selectedLog.message)}
           </div>
         </div>
         

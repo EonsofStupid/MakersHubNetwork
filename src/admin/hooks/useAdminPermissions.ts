@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { useAdminStore } from '@/admin/store/admin.store';
-import { AdminPermissionValue } from '@/admin/constants/permissions';
+import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
 export function useAdminPermissions() {
   const { permissions, syncing } = useAdminStore();
@@ -13,7 +13,7 @@ export function useAdminPermissions() {
     }
     
     // Check for specific permission
-    return permissions.includes(permission as string);
+    return permissions.includes(permission as AdminPermissionValue);
   }, [permissions]);
   
   return {

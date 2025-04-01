@@ -31,6 +31,10 @@ export const ADMIN_PERMISSIONS = {
   // Analytics
   ANALYTICS_VIEW: 'analytics:view',
   
+  // Layout management 
+  LAYOUTS_VIEW: 'layouts:view',
+  LAYOUTS_EDIT: 'layouts:edit',
+  
   // Theme management
   THEMES_VIEW: 'themes:view',
   THEMES_EDIT: 'themes:edit',
@@ -52,6 +56,7 @@ export const ADMIN_PERMISSIONS = {
   SETTINGS_EDIT: 'settings:edit',
   
   // System management
+  SYSTEM_VIEW: 'system:view',
   SYSTEM_SETTINGS: 'system:settings',
   SYSTEM_LOGS: 'system:logs',
   SYSTEM_RESTART: 'system:restart'

@@ -19,11 +19,15 @@ import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 interface AdminLayoutProps {
   children: React.ReactNode;
   title?: string;
+  fullWidth?: boolean;
+  className?: string;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ 
   children, 
-  title = "Admin Dashboard" 
+  title = "Admin Dashboard",
+  fullWidth = false,
+  className
 }) => {
   const { permissions } = useAdminStore();
   const [isEditMode] = useAtom(adminEditModeAtom);
@@ -73,13 +77,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)]">
+    <div className={`flex h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)] ${fullWidth ? 'max-w-full' : ''} ${className || ''}`}>
       <AdminSidebar />
       
       <div className="flex flex-col flex-1 h-screen overflow-hidden">
         <AdminHeader title={title} />
         
-        <main className="flex-1 overflow-auto p-4 sm:p-6">
+        <main className={`flex-1 overflow-auto p-4 sm:p-6 ${fullWidth ? 'max-w-full' : ''}`}>
           {children}
         </main>
       </div>
