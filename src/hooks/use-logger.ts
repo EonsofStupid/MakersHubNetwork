@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { getLogger, LogCategory } from '@/logging';
-import { LOG_LEVELS } from '@/logging/constants/log-level';
+import { LogLevel } from '@/logging/constants/log-level';
 
 /**
  * Hook for logging from React components

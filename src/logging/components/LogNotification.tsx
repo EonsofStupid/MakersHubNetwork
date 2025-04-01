@@ -3,7 +3,7 @@ import React from 'react';
 import { AlertCircle, Info, AlertTriangle, XCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { LogCategory } from '../types';
-import { LOG_LEVELS, LogLevel } from '../constants/log-level';
+import { LogLevel } from '../constants/log-level';
 
 interface LogNotificationProps {
   level: LogLevel;
@@ -20,15 +20,15 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
 }) => {
   const getIcon = () => {
     switch (level) {
-      case LOG_LEVELS.DEBUG:
+      case LogLevel.DEBUG:
         return <Info className="h-4 w-4" />;
-      case LOG_LEVELS.INFO:
+      case LogLevel.INFO:
         return <Info className="h-4 w-4" />;
-      case LOG_LEVELS.WARN:
+      case LogLevel.WARN:
         return <AlertTriangle className="h-4 w-4" />;
-      case LOG_LEVELS.ERROR:
+      case LogLevel.ERROR:
         return <AlertCircle className="h-4 w-4" />;
-      case LOG_LEVELS.CRITICAL:
+      case LogLevel.CRITICAL:
         return <XCircle className="h-4 w-4" />;
       default:
         return <Info className="h-4 w-4" />;
@@ -37,8 +37,8 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
 
   const getVariant = (): "default" | "destructive" => {
     switch (level) {
-      case LOG_LEVELS.ERROR:
-      case LOG_LEVELS.CRITICAL:
+      case LogLevel.ERROR:
+      case LogLevel.CRITICAL:
         return "destructive";
       default:
         return "default";
@@ -48,15 +48,15 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
   // Get appropriate title based on level
   const getTitle = (): string => {
     switch (level) {
-      case LOG_LEVELS.DEBUG:
+      case LogLevel.DEBUG:
         return 'Debug';
-      case LOG_LEVELS.INFO:
+      case LogLevel.INFO:
         return 'Information';
-      case LOG_LEVELS.WARN:
+      case LogLevel.WARN:
         return 'Warning';
-      case LOG_LEVELS.ERROR:
+      case LogLevel.ERROR:
         return 'Error';
-      case LOG_LEVELS.CRITICAL:
+      case LogLevel.CRITICAL:
         return 'Critical Error';
       default:
         return 'Log';

@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LogLevel } from '../types';
+import { LogLevel } from '../constants/log-level';
 
 // Define indicator variants
 export type LogIndicatorVariant = 'debug' | 'info' | 'warning' | 'error' | 'critical';
@@ -40,7 +40,7 @@ export const InlineLogIndicator: React.FC<InlineLogIndicatorProps> = ({
       case LogLevel.INFO:
         variant = 'info';
         break;
-      case LogLevel.WARNING:
+      case LogLevel.WARN:
         variant = 'warning';
         break;
       case LogLevel.ERROR:

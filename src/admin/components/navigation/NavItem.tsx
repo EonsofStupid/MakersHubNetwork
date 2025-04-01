@@ -1,6 +1,6 @@
 
-import React, { useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef } from 'react';
+import { motion, useDragControls } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import { adminDraggedItemAtom } from '@/admin/atoms/tools.atoms';
@@ -28,25 +28,22 @@ export function NavItem({
   draggable = false
 }: NavItemProps) {
   const [, setDraggedItem] = useAtom(adminDraggedItemAtom);
-  const itemRef = useRef<HTMLLIElement>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
+  const dragControls = useDragControls();
   
-  // Handle drag start
-  const handleDragStart = (e: React.DragEvent<HTMLLIElement>) => {
+  // Handle drag start using Framer Motion
+  const handleDragStart = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!draggable) return;
     
-    e.dataTransfer.setData('text/plain', id);
-    e.dataTransfer.effectAllowed = 'move';
+    // Start the drag with framer motion
+    dragControls.start(event);
     
+    // Set state for the dragged item
     setDraggedItem({
       id,
       type: 'nav',
       data: { id, label, path, icon: Icon }
     });
-  };
-  
-  // Handle drag end
-  const handleDragEnd = () => {
-    setDraggedItem(null);
   };
   
   return (
@@ -55,12 +52,22 @@ export function NavItem({
       side="right"
       align="center"
     >
-      <motion.li
+      <motion.div
         ref={itemRef}
+        drag={draggable}
+        dragControls={dragControls}
+        onDragStart={() => {
+          setDraggedItem({
+            id,
+            type: 'nav',
+            data: { id, label, path, icon: Icon }
+          });
+        }}
+        onDragEnd={() => {
+          setDraggedItem(null);
+        }}
+        onPointerDown={handleDragStart}
         whileTap={{ scale: 0.97 }}
-        draggable={draggable}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
         className={cn(
           "flex items-center rounded-md px-3 py-2 cursor-pointer",
           "transition-colors duration-150",
@@ -75,7 +82,7 @@ export function NavItem({
         {showLabel && (
           <span className="ml-3 truncate">{label}</span>
         )}
-      </motion.li>
+      </motion.div>
     </AdminTooltip>
   );
 }

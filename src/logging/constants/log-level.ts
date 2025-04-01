@@ -1,32 +1,29 @@
 
 /**
- * Logging levels constants and types
+ * Logging levels as a proper enum with string values
  */
 
-// Define log levels as runtime constants
-export const LOG_LEVELS = {
-  DEBUG: 'debug',
-  INFO: 'info',
-  WARN: 'warn', 
-  ERROR: 'error',
-  SUCCESS: 'success',
-  TRACE: 'trace',
-  CRITICAL: 'critical',
-} as const;
+// Define log levels as an enum (recommended for this case)
+export enum LogLevel {
+  DEBUG = 'debug',
+  TRACE = 'trace',
+  INFO = 'info',
+  SUCCESS = 'success',
+  WARN = 'warn',
+  ERROR = 'error',
+  CRITICAL = 'critical',
+}
 
 // Define log level values for numeric comparison
 export const LOG_LEVEL_VALUES = {
-  [LOG_LEVELS.DEBUG]: 0,
-  [LOG_LEVELS.TRACE]: 1,
-  [LOG_LEVELS.INFO]: 2,
-  [LOG_LEVELS.SUCCESS]: 3,
-  [LOG_LEVELS.WARN]: 4,
-  [LOG_LEVELS.ERROR]: 5,
-  [LOG_LEVELS.CRITICAL]: 6,
+  [LogLevel.DEBUG]: 0,
+  [LogLevel.TRACE]: 1,
+  [LogLevel.INFO]: 2,
+  [LogLevel.SUCCESS]: 3,
+  [LogLevel.WARN]: 4,
+  [LogLevel.ERROR]: 5,
+  [LogLevel.CRITICAL]: 6,
 };
-
-// Type for log levels
-export type LogLevel = typeof LOG_LEVELS[keyof typeof LOG_LEVELS];
 
 // Function to compare log levels
 export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {

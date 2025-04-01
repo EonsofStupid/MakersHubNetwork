@@ -1,6 +1,6 @@
 
 import { LogEntry, LogTransport } from "../types";
-import { LOG_LEVELS, LogLevel } from "../constants/log-level";
+import { LogLevel } from "../constants/log-level";
 
 /**
  * Transport for logging to the browser console
@@ -14,17 +14,17 @@ export class ConsoleTransport implements LogTransport {
     
     // Log with appropriate console method based on level
     switch (entry.level) {
-      case LOG_LEVELS.DEBUG:
+      case LogLevel.DEBUG:
         console.debug(message, entry.details || '');
         break;
-      case LOG_LEVELS.INFO:
+      case LogLevel.INFO:
         console.info(message, entry.details || '');
         break;
-      case LOG_LEVELS.WARN:
+      case LogLevel.WARN:
         console.warn(message, entry.details || '');
         break;
-      case LOG_LEVELS.ERROR:
-      case LOG_LEVELS.CRITICAL:
+      case LogLevel.ERROR:
+      case LogLevel.CRITICAL:
         console.error(message, entry.details || '');
         break;
       default:
@@ -34,19 +34,19 @@ export class ConsoleTransport implements LogTransport {
   
   private getLevelPrefix(level: LogLevel): string {
     switch (level) {
-      case LOG_LEVELS.DEBUG:
+      case LogLevel.DEBUG:
         return '[DEBUG] ';
-      case LOG_LEVELS.INFO:
+      case LogLevel.INFO:
         return '[INFO] ';
-      case LOG_LEVELS.WARN:
+      case LogLevel.WARN:
         return '[WARN] ';
-      case LOG_LEVELS.ERROR:
+      case LogLevel.ERROR:
         return '[ERROR] ';
-      case LOG_LEVELS.CRITICAL:
+      case LogLevel.CRITICAL:
         return '[CRITICAL] ';
-      case LOG_LEVELS.SUCCESS:
+      case LogLevel.SUCCESS:
         return '[SUCCESS] ';
-      case LOG_LEVELS.TRACE:
+      case LogLevel.TRACE:
         return '[TRACE] ';
       default:
         return '[LOG] ';
