@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Users, Settings, FileText, Package, Palette, Database, BarChart, LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, FileText, Package, Palette, Database, BarChart, Star, LucideIcon } from 'lucide-react';
 import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
 interface AdminNavigationItem {
@@ -42,6 +42,14 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     path: '/admin/builds',
     icon: Package,
     permission: ADMIN_PERMISSIONS.BUILDS_VIEW,
+    section: 'Management'
+  },
+  {
+    id: 'reviews',
+    label: 'Reviews',
+    path: '/admin/reviews',
+    icon: Star,
+    permission: ADMIN_PERMISSIONS.CONTENT_VIEW,
     section: 'Management'
   },
   {
