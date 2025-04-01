@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Loader2, CloudOff } from 'lucide-react';
 
 export const SyncIndicator = () => {
-  const { isSyncing, lastSyncTime, syncError } = useAdminSync();
+  const { isSyncing, lastSyncTime, syncError, saveToDatabase } = useAdminSync();
 
   if (isSyncing) {
     return (

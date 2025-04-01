@@ -47,6 +47,10 @@ export const ADMIN_PERMISSIONS = {
   REVIEWS_APPROVE: 'reviews:approve',
   REVIEWS_REJECT: 'reviews:reject',
   
+  // Settings management
+  SETTINGS_VIEW: 'settings:view',
+  SETTINGS_EDIT: 'settings:edit',
+  
   // System management
   SYSTEM_SETTINGS: 'system:settings',
   SYSTEM_LOGS: 'system:logs',

@@ -13,6 +13,7 @@ interface RatingStarsProps {
   readOnly?: boolean;
   onChange?: (rating: ReviewRating) => void;
   className?: string;
+  interactive?: boolean;
 }
 
 export function RatingStars({
@@ -21,11 +22,12 @@ export function RatingStars({
   size = "md",
   color = "text-amber-500",
   readOnly = true,
+  interactive = false,
   onChange,
   className
 }: RatingStarsProps) {
   const handleClick = (index: number) => {
-    if (readOnly) return;
+    if (readOnly && !interactive) return;
     onChange?.(index + 1);
   };
   
@@ -41,7 +43,7 @@ export function RatingStars({
     <div 
       className={cn(
         "flex items-center gap-0.5", 
-        !readOnly && "cursor-pointer",
+        (!readOnly || interactive) && "cursor-pointer",
         className
       )}
     >
@@ -51,7 +53,7 @@ export function RatingStars({
           className={cn(
             getStarSize(),
             index < rating ? `${color} fill-current` : "text-gray-300",
-            !readOnly && "transition-transform hover:scale-110"
+            (!readOnly || interactive) && "transition-transform hover:scale-110"
           )}
           onClick={() => handleClick(index)}
         />

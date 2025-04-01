@@ -13,10 +13,12 @@ import {
   Code,
   Briefcase,
   MessageSquare,
-  MegaphoneSimple,
+  Star,
   Map,
+  Palette,
   LucideIcon
 } from 'lucide-react';
+import { ADMIN_PERMISSIONS } from '../constants/permissions';
 
 export interface AdminNavigationItem {
   id: string;
@@ -41,21 +43,31 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     path: '/admin/users',
     icon: Users,
     section: 'General',
-    permission: 'read:users'
+    permission: ADMIN_PERMISSIONS.USERS_VIEW
   },
   {
     id: 'builds',
     label: 'Builds',
     path: '/admin/builds',
     icon: Package,
-    section: 'Content'
+    section: 'Content',
+    permission: ADMIN_PERMISSIONS.BUILDS_VIEW
+  },
+  {
+    id: 'reviews',
+    label: 'Reviews',
+    path: '/admin/reviews',
+    icon: Star,
+    section: 'Content',
+    permission: ADMIN_PERMISSIONS.REVIEWS_VIEW
   },
   {
     id: 'content',
     label: 'Content',
     path: '/admin/content',
     icon: FileText,
-    section: 'Content'
+    section: 'Content',
+    permission: ADMIN_PERMISSIONS.CONTENT_VIEW
   },
   {
     id: 'analytics',
@@ -70,14 +82,23 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     path: '/admin/security',
     icon: ShieldAlert,
     section: 'Settings',
-    permission: 'read:security'
+    permission: ADMIN_PERMISSIONS.ADMIN_VIEW
   },
   {
     id: 'settings',
     label: 'Settings',
     path: '/admin/settings',
     icon: Settings,
-    section: 'Settings'
+    section: 'Settings',
+    permission: ADMIN_PERMISSIONS.SYSTEM_SETTINGS
+  },
+  {
+    id: 'themes',
+    label: 'Themes',
+    path: '/admin/themes',
+    icon: Palette,
+    section: 'Settings',
+    permission: ADMIN_PERMISSIONS.THEMES_VIEW
   },
   {
     id: 'notifications',
@@ -99,7 +120,7 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     path: '/admin/database',
     icon: Database,
     section: 'Developer',
-    permission: 'read:database'
+    permission: ADMIN_PERMISSIONS.DATA_VIEW
   },
   {
     id: 'code',
@@ -107,14 +128,7 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     path: '/admin/code',
     icon: Code,
     section: 'Developer',
-    permission: 'read:code'
-  },
-  {
-    id: 'jobs',
-    label: 'Jobs',
-    path: '/admin/jobs',
-    icon: Briefcase,
-    section: 'Management'
+    permission: ADMIN_PERMISSIONS.DATA_VIEW
   },
   {
     id: 'messages',
@@ -122,19 +136,5 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     path: '/admin/messages',
     icon: MessageSquare,
     section: 'Communication'
-  },
-  {
-    id: 'marketing',
-    label: 'Marketing',
-    path: '/admin/marketing',
-    icon: MegaphoneSimple,
-    section: 'Management'
-  },
-  {
-    id: 'locations',
-    label: 'Locations',
-    path: '/admin/locations',
-    icon: Map,
-    section: 'Management'
   }
 ];

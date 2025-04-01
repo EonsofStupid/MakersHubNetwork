@@ -62,6 +62,7 @@ export function getPermissionDisplayName(permission: AdminPermissionValue): stri
     [ADMIN_PERMISSIONS.DATA_IMPORT]: 'Import/Export Data',
     [ADMIN_PERMISSIONS.SETTINGS_VIEW]: 'View Settings',
     [ADMIN_PERMISSIONS.SETTINGS_EDIT]: 'Edit Settings',
+    [ADMIN_PERMISSIONS.SYSTEM_SETTINGS]: 'System Settings',
     [ADMIN_PERMISSIONS.SUPER_ADMIN]: 'All Permissions'
   };
   

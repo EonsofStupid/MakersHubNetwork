@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useReviewDraftStore } from "@/admin/store/reviewDraft.store";
-import { RatingStars } from "./RatingStars";
+import { RatingStars, ReviewRating } from "./RatingStars";
 import { CategorySelector } from "./CategorySelector";
 import { ReviewImageUpload } from "./ReviewImageUpload";
-import { ReviewCategory, ReviewRating } from "@/admin/types/review.types";
+import { ReviewCategory } from "@/admin/types/review.types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ReviewFormProps {
@@ -55,6 +55,15 @@ export function ReviewForm({ buildId, onSuccess, className }: ReviewFormProps) {
     }
   };
 
+  // Handle image upload and removal with proper typing
+  const handleAddImage = (url: string) => {
+    addImageUrl(url);
+  };
+
+  const handleRemoveImage = (index: number) => {
+    removeImageUrl(index);
+  };
+
   return (
     <form onSubmit={handleSubmit} className={className}>
       <Card>
@@ -68,9 +77,10 @@ export function ReviewForm({ buildId, onSuccess, className }: ReviewFormProps) {
             <Label htmlFor="rating">Rating</Label>
             <RatingStars 
               rating={draft.rating || 0} 
-              interactive 
+              readOnly={false}
+              interactive={true}
               size="lg" 
-              onChange={setRating} 
+              onChange={(rating: ReviewRating) => setRating(rating)} 
               className="py-2" 
             />
           </div>
@@ -115,8 +125,8 @@ export function ReviewForm({ buildId, onSuccess, className }: ReviewFormProps) {
             <Label>Images (Optional)</Label>
             <ReviewImageUpload
               imageUrls={draft.imageUrls || []}
-              onAddImage={addImageUrl}
-              onRemoveImage={removeImageUrl}
+              onAddImage={handleAddImage}
+              onRemoveImage={handleRemoveImage}
               disabled={isSubmitting}
             />
           </div>
