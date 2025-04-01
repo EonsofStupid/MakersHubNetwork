@@ -1,124 +1,118 @@
 
-import { LogEntry, LogTransport, LogCategory, LogLevel } from '../types';
+import { LogCategory, LogEntry, LogLevel, LogTransport } from '../types';
 
 /**
- * Transport for in-memory log storage for UI components
+ * Options for filtering logs in memory transport
+ */
+interface LogFilterOptions {
+  level?: LogLevel;
+  category?: LogCategory;
+  source?: string;
+  userId?: string;
+  search?: string;
+  fromDate?: Date;
+  toDate?: Date;
+  limit?: number;
+}
+
+/**
+ * Memory transport stores logs in memory for display in UI components
  */
 export class MemoryTransport implements LogTransport {
   private logs: LogEntry[] = [];
-  private maxLogs: number;
+  private maxEntries: number;
   
-  constructor(maxLogs: number = 1000) {
-    this.maxLogs = maxLogs;
+  constructor(maxEntries = 1000) {
+    this.maxEntries = maxEntries;
   }
   
+  /**
+   * Log an entry to memory
+   */
   log(entry: LogEntry): void {
-    this.logs.unshift(entry); // Add to beginning so newest is first
+    this.logs.unshift(entry); // Add to beginning for most recent first
     
-    // Trim if over max
-    if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(0, this.maxLogs);
+    // Trim if we exceed max entries
+    if (this.logs.length > this.maxEntries) {
+      this.logs = this.logs.slice(0, this.maxEntries);
     }
   }
   
   /**
-   * Get all logs in reverse chronological order (newest first)
+   * Get all logs in memory
    */
   getLogs(): LogEntry[] {
     return [...this.logs];
   }
   
   /**
-   * Get filtered logs based on criteria
+   * Get logs filtered by specified criteria
    */
-  getFilteredLogs(options?: {
-    level?: LogLevel;
-    category?: LogCategory;
-    search?: string;
-    limit?: number;
-    tags?: string[];
-    fromDate?: Date;
-    toDate?: Date;
-  }): LogEntry[] {
-    let filtered = [...this.logs];
-    
-    if (!options) {
-      return filtered;
-    }
+  getFilteredLogs(options: LogFilterOptions = {}): LogEntry[] {
+    let filteredLogs = [...this.logs];
     
     // Filter by level
     if (options.level !== undefined) {
-      filtered = filtered.filter(log => log.level >= options.level!);
+      filteredLogs = filteredLogs.filter(log => log.level >= options.level!);
     }
     
     // Filter by category
     if (options.category) {
-      filtered = filtered.filter(log => log.category === options.category);
+      filteredLogs = filteredLogs.filter(log => log.category === options.category);
+    }
+    
+    // Filter by source
+    if (options.source) {
+      filteredLogs = filteredLogs.filter(log => 
+        log.source && log.source.includes(options.source!)
+      );
+    }
+    
+    // Filter by user ID
+    if (options.userId) {
+      filteredLogs = filteredLogs.filter(log => 
+        log.userId && log.userId === options.userId
+      );
     }
     
     // Filter by search text
     if (options.search) {
-      const query = options.search.toLowerCase();
-      filtered = filtered.filter(log => 
-        log.message.toLowerCase().includes(query) || 
-        (log.source && log.source.toLowerCase().includes(query)) ||
-        log.category.toLowerCase().includes(query) ||
-        (typeof log.details === 'string' && log.details.toLowerCase().includes(query))
-      );
-    }
-    
-    // Filter by tags
-    if (options.tags && options.tags.length > 0) {
-      filtered = filtered.filter(log => 
-        log.tags && options.tags!.some(tag => log.tags!.includes(tag))
+      const searchLower = options.search.toLowerCase();
+      filteredLogs = filteredLogs.filter(log => 
+        log.message.toLowerCase().includes(searchLower) || 
+        (log.source && log.source.toLowerCase().includes(searchLower)) ||
+        log.category.toLowerCase().includes(searchLower)
       );
     }
     
     // Filter by date range
     if (options.fromDate) {
-      filtered = filtered.filter(log => log.timestamp >= options.fromDate!);
+      filteredLogs = filteredLogs.filter(log => 
+        log.timestamp >= options.fromDate!
+      );
     }
     
     if (options.toDate) {
-      filtered = filtered.filter(log => log.timestamp <= options.toDate!);
+      filteredLogs = filteredLogs.filter(log => 
+        log.timestamp <= options.toDate!
+      );
     }
     
     // Apply limit
     if (options.limit && options.limit > 0) {
-      filtered = filtered.slice(0, options.limit);
+      filteredLogs = filteredLogs.slice(0, options.limit);
     }
     
-    return filtered;
+    return filteredLogs;
   }
   
   /**
-   * Clear all logs
+   * Clear all logs from memory
    */
   clear(): void {
     this.logs = [];
   }
-  
-  /**
-   * Get logs by level
-   */
-  getLogsByLevel(level: number): LogEntry[] {
-    return this.logs.filter(log => log.level === level);
-  }
-  
-  /**
-   * Get logs by category
-   */
-  getLogsByCategory(category: string): LogEntry[] {
-    return this.logs.filter(log => log.category === category);
-  }
-  
-  /**
-   * Get count of logs
-   */
-  getCount(): number {
-    return this.logs.length;
-  }
 }
 
-// Create a singleton instance
+// Create singleton instance
 export const memoryTransport = new MemoryTransport();
