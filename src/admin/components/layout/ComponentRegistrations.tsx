@@ -8,7 +8,7 @@ import { AdminSidebar } from '@/admin/components/AdminSidebar';
 import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
 import { BuildApprovalWidget } from '@/components/admin/dashboard/BuildApprovalWidget';
 import { AdminFeatureSection } from '@/components/admin/dashboard/AdminFeatureSection';
-import { StatsCards } from '@/admin/dashboard/StatsCards';
+import { StatsCards } from '@/admin/components/dashboard/StatsCards';
 import { ActiveUsersList } from '@/admin/dashboard/ActiveUsersList';
 import { PerformanceMetrics } from '@/admin/dashboard/PerformanceMetrics';
 import { TrendingParts } from '@/admin/dashboard/TrendingParts';
