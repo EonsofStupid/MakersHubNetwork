@@ -1,5 +1,6 @@
 
 import { LogCategory, LogEntry, LogLevel, LogTransport } from '../types';
+import { nodeToSearchableString } from '@/shared/utils/render';
 
 /**
  * Options for filtering logs in memory transport
@@ -78,11 +79,16 @@ export class MemoryTransport implements LogTransport {
     // Filter by search text
     if (options.search) {
       const searchLower = options.search.toLowerCase();
-      filteredLogs = filteredLogs.filter(log => 
-        log.message.toLowerCase().includes(searchLower) || 
-        (log.source && log.source.toLowerCase().includes(searchLower)) ||
-        log.category.toLowerCase().includes(searchLower)
-      );
+      filteredLogs = filteredLogs.filter(log => {
+        // Convert message to searchable string
+        const messageStr = nodeToSearchableString(log.message).toLowerCase();
+        const sourceStr = log.source ? log.source.toLowerCase() : '';
+        const categoryStr = log.category.toLowerCase();
+        
+        return messageStr.includes(searchLower) || 
+               sourceStr.includes(searchLower) || 
+               categoryStr.includes(searchLower);
+      });
     }
     
     // Filter by date range
