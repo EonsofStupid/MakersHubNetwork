@@ -1,49 +1,33 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useAdminStore } from '@/admin/store/admin.store';
+import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * Hook to synchronize admin state between local storage and database
+ */
 export function useAdminSync() {
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
-  const [syncError, setSyncError] = useState<Error | null>(null);
-  const { savePreferences, shortcuts, isDarkMode, sidebarExpanded } = useAdminStore();
-  
-  const syncToDatabase = async () => {
-    if (isSyncing) return;
-    
-    try {
-      setIsSyncing(true);
-      setSyncError(null);
-      
-      // Sync state to database
-      await savePreferences({
-        isDarkMode,
-        sidebarExpanded,
-        shortcuts
-      });
-      
-      setLastSyncTime(new Date());
-    } catch (error) {
-      console.error("Error syncing to database:", error);
-      setSyncError(error instanceof Error ? error : new Error("Failed to sync"));
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-  
-  // Auto-sync when admin store changes
+  const { savePreferences, loadPreferences } = useAdminStore();
+
+  // Sync preferences with database
   useEffect(() => {
-    const syncTimer = setTimeout(() => {
-      syncToDatabase();
-    }, 2000); // Debounce sync to avoid too many requests
-    
-    return () => clearTimeout(syncTimer);
-  }, [isDarkMode, shortcuts, sidebarExpanded]);
-  
+    // Load preferences from database
+    loadPreferences();
+
+    // Subscribe to auth state changes to sync preferences
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        // Load user preferences when they sign in
+        loadPreferences();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [loadPreferences]);
+
   return {
-    isSyncing,
-    lastSyncTime,
-    syncError,
-    syncToDatabase
+    saveToDatabase: savePreferences
   };
 }

@@ -1,98 +1,60 @@
 
-// Define all admin permissions as constants
+// Define admin permissions as a type-safe object
 export const ADMIN_PERMISSIONS = {
-  // Super admin permission that grants all access
+  // Super admin has access to everything
   SUPER_ADMIN: 'all:all',
   
-  // Basic admin access
+  // General admin access
   ADMIN_ACCESS: 'admin:access',
   ADMIN_VIEW: 'admin:view',
   ADMIN_EDIT: 'admin:edit',
   
   // Content management
   CONTENT_VIEW: 'content:view',
+  CONTENT_CREATE: 'content:create',
   CONTENT_EDIT: 'content:edit',
-  CONTENT_PUBLISH: 'content:publish',
   CONTENT_DELETE: 'content:delete',
+  CONTENT_PUBLISH: 'content:publish',
   
   // User management
   USERS_VIEW: 'users:view',
+  USERS_CREATE: 'users:create',
   USERS_EDIT: 'users:edit',
   USERS_DELETE: 'users:delete',
   
   // Build management
   BUILDS_VIEW: 'builds:view',
-  BUILDS_EDIT: 'builds:edit',
-  BUILDS_DELETE: 'builds:delete',
   BUILDS_APPROVE: 'builds:approve',
+  BUILDS_REJECT: 'builds:reject',
+  BUILDS_EDIT: 'builds:edit',
   
-  // Review management
-  REVIEWS_VIEW: 'reviews:view',
-  REVIEWS_EDIT: 'reviews:edit',
-  REVIEWS_DELETE: 'reviews:delete',
-  REVIEWS_APPROVE: 'reviews:approve',
+  // Analytics
+  ANALYTICS_VIEW: 'analytics:view',
   
   // Theme management
   THEMES_VIEW: 'themes:view',
   THEMES_EDIT: 'themes:edit',
-  THEMES_PUBLISH: 'themes:publish',
+  THEMES_DELETE: 'themes:delete',
   
-  // Settings
-  SETTINGS_VIEW: 'settings:view',
-  SETTINGS_EDIT: 'settings:edit',
+  // Data management
+  DATA_VIEW: 'data:view',
+  DATA_EDIT: 'data:edit',
+  DATA_IMPORT: 'data:import',
+  DATA_EXPORT: 'data:export',
   
-  // API management
-  API_KEYS_VIEW: 'api_keys:view',
-  API_KEYS_EDIT: 'api_keys:edit',
+  // Reviews management
+  REVIEWS_VIEW: 'reviews:view',
+  REVIEWS_APPROVE: 'reviews:approve',
+  REVIEWS_REJECT: 'reviews:reject',
   
   // System management
-  SYSTEM_VIEW: 'system:view',
-  SYSTEM_EDIT: 'system:edit',
-  SYSTEM_RESTART: 'system:restart',
+  SYSTEM_SETTINGS: 'system:settings',
+  SYSTEM_LOGS: 'system:logs',
+  SYSTEM_RESTART: 'system:restart'
 } as const;
 
+// Create a type from the values in the ADMIN_PERMISSIONS object
 export type AdminPermissionValue = typeof ADMIN_PERMISSIONS[keyof typeof ADMIN_PERMISSIONS];
 
-export const PERMISSION_GROUPS = {
-  CONTENT: [
-    ADMIN_PERMISSIONS.CONTENT_VIEW,
-    ADMIN_PERMISSIONS.CONTENT_EDIT,
-    ADMIN_PERMISSIONS.CONTENT_PUBLISH,
-    ADMIN_PERMISSIONS.CONTENT_DELETE,
-  ],
-  USERS: [
-    ADMIN_PERMISSIONS.USERS_VIEW,
-    ADMIN_PERMISSIONS.USERS_EDIT,
-    ADMIN_PERMISSIONS.USERS_DELETE,
-  ],
-  BUILDS: [
-    ADMIN_PERMISSIONS.BUILDS_VIEW,
-    ADMIN_PERMISSIONS.BUILDS_EDIT,
-    ADMIN_PERMISSIONS.BUILDS_DELETE,
-    ADMIN_PERMISSIONS.BUILDS_APPROVE,
-  ],
-  REVIEWS: [
-    ADMIN_PERMISSIONS.REVIEWS_VIEW,
-    ADMIN_PERMISSIONS.REVIEWS_EDIT,
-    ADMIN_PERMISSIONS.REVIEWS_DELETE,
-    ADMIN_PERMISSIONS.REVIEWS_APPROVE,
-  ],
-  THEMES: [
-    ADMIN_PERMISSIONS.THEMES_VIEW,
-    ADMIN_PERMISSIONS.THEMES_EDIT,
-    ADMIN_PERMISSIONS.THEMES_PUBLISH,
-  ],
-  SETTINGS: [
-    ADMIN_PERMISSIONS.SETTINGS_VIEW,
-    ADMIN_PERMISSIONS.SETTINGS_EDIT,
-  ],
-  API_KEYS: [
-    ADMIN_PERMISSIONS.API_KEYS_VIEW,
-    ADMIN_PERMISSIONS.API_KEYS_EDIT,
-  ],
-  SYSTEM: [
-    ADMIN_PERMISSIONS.SYSTEM_VIEW,
-    ADMIN_PERMISSIONS.SYSTEM_EDIT,
-    ADMIN_PERMISSIONS.SYSTEM_RESTART,
-  ],
-};
+// Type for permissions check functions
+export type PermissionCheckFn = (permission: AdminPermissionValue) => boolean;

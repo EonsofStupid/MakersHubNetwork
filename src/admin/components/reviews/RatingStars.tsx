@@ -3,13 +3,15 @@ import React from "react";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export type ReviewRating = number;
+
 interface RatingStarsProps {
-  rating: number;
+  rating: ReviewRating;
   maxRating?: number;
   size?: "sm" | "md" | "lg";
   color?: string;
   readOnly?: boolean;
-  onChange?: (rating: number) => void;
+  onChange?: (rating: ReviewRating) => void;
   className?: string;
 }
 
