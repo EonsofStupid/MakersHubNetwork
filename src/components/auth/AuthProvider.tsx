@@ -1,23 +1,8 @@
+
 import { useEffect } from "react"
-import { supabase } from "@/integrations/supabase/client"
-import { useAuthStore } from "@/stores/auth/store"
+import { AuthProvider as CoreAuthProvider } from "@/hooks/useAuth"
 
+// This is just a wrapper around our new AuthProvider for backward compatibility
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const initialize = useAuthStore((state) => state.initialize)
-
-  useEffect(() => {
-    // Initial load of auth state (including user roles)
-    initialize()
-
-    // Listen for auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, _session) => {
-      initialize()
-    })
-
-    return () => subscription.unsubscribe()
-  }, [initialize])
-
-  return <>{children}</>
+  return <CoreAuthProvider>{children}</CoreAuthProvider>
 }

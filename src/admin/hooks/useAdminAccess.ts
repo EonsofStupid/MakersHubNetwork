@@ -1,45 +1,47 @@
 
-import { useEffect, useState } from 'react';
-import { useAuthStore } from '@/stores/auth/store';
-import { useAdminRoles } from './useAdminRoles';
+import { useCallback, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 /**
  * Hook to check if user has admin access
  */
 export function useAdminAccess() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasAdminAccess, setHasAdminAccess] = useState(false);
-  const { status, user } = useAuthStore();
-  const { isAdmin, isSuperAdmin } = useAdminRoles();
+  const { user, status, roles, isLoading: authLoading, isAdmin, isSuperAdmin } = useAuth();
+  const logger = useLogger("AdminAccess", LogCategory.ADMIN);
+  
+  const hasAdminAccess = isAdmin || isSuperAdmin;
   const isAuthenticated = status === 'authenticated' && !!user;
   
-  // Initialize admin access
-  const initializeAdmin = () => {
-    // Could add more initialization logic here if needed
-    console.log("Admin access initialized");
-  };
-  
+  // Log admin access attempts
   useEffect(() => {
-    const checkAccess = async () => {
-      setIsLoading(true);
-      
-      // Only proceed if user is authenticated
-      if (isAuthenticated) {
-        setHasAdminAccess(isAdmin || isSuperAdmin);
-      } else {
-        setHasAdminAccess(false);
-      }
-      
-      setIsLoading(false);
-    };
-    
-    checkAccess();
-  }, [isAuthenticated, isAdmin, isSuperAdmin]);
+    if (isAuthenticated) {
+      logger.info("Admin access check", { 
+        details: { 
+          userId: user?.id,
+          hasAdminAccess, 
+          roles,
+          isAdmin,
+          isSuperAdmin 
+        }
+      });
+    }
+  }, [isAuthenticated, hasAdminAccess, user, roles, isAdmin, isSuperAdmin, logger]);
   
+  // Initialize admin data
+  const initializeAdmin = useCallback(() => {
+    logger.info("Admin access initialized");
+    // Additional initialization can be added if needed
+  }, [logger]);
+
   return {
-    isLoading,
+    isLoading: authLoading,
     hasAdminAccess,
     isAuthenticated,
-    initializeAdmin
+    initializeAdmin,
+    adminUser: user,
+    isAdmin,
+    isSuperAdmin
   };
 }

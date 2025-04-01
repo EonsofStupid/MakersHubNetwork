@@ -1,9 +1,9 @@
-
 // Updated parts of the admin store
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
 import { getDefaultAdminPreferences } from '@/admin/utils/adminInitialization';
+import { AdminPermissionValue } from '@/admin/constants/permissions';
 
 interface AdminState {
   // Layout configuration
@@ -25,7 +25,7 @@ interface AdminState {
   // Runtime state
   hasInitialized: boolean;
   editMode: boolean;
-  permissions: string[];
+  permissions: AdminPermissionValue[];
   
   // Database state
   adminShortcutsId: string | null;
@@ -41,6 +41,7 @@ interface AdminState {
   setTopnavItems: (items: string[]) => void;
   setDashboardItems: (items: string[]) => void;
   setShortcuts: (shortcuts: string[]) => void;
+  setPermissions: (permissions: AdminPermissionValue[]) => void;
   
   // Admin functionality
   initializeStore: () => Promise<void>;
@@ -90,6 +91,7 @@ export const useAdminStore = create<AdminState>()(
         setTopnavItems: (items) => set({ topnavItems: items }),
         setDashboardItems: (items) => set({ dashboardItems: items }),
         setShortcuts: (shortcuts) => set({ shortcuts }),
+        setPermissions: (permissions) => set({ permissions }),
         
         // Admin functionality
         initializeStore: async () => {
@@ -174,40 +176,10 @@ export const useAdminStore = create<AdminState>()(
         
         loadPermissions: async () => {
           try {
-            // Get user roles and permissions
-            const { data: user } = await supabase.auth.getUser();
-            if (!user || !user.user) {
-              throw new Error('User not authenticated');
-            }
-            
-            // Get user roles
-            const { data: userRoles, error: rolesError } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', user.user.id);
-            
-            if (rolesError) {
-              console.error('Error loading user roles:', rolesError);
-              return;
-            }
-            
-            const roles = userRoles.map(ur => ur.role);
-            
-            // Get permissions for these roles
-            const { data: permissionsData, error: permsError } = await supabase
-              .from('role_permissions')
-              .select('action, subject')
-              .in('role', roles);
-            
-            if (permsError) {
-              console.error('Error loading permissions:', permsError);
-              return;
-            }
-            
-            // Format permissions as CASL can use
-            const permissions = permissionsData.map(p => `${p.action}:${p.subject}`);
-            set({ permissions });
-            
+            // Note: We don't actually need to fetch from the database here
+            // since we're now using the useAdminPermissions hook to get permissions
+            // This method is kept for backward compatibility
+            console.log("loadPermissions called - Use useAdminPermissions hook instead");
           } catch (error) {
             console.error('Error loading permissions:', error);
           }
