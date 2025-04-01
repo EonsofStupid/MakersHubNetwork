@@ -1,11 +1,15 @@
+
 import React, { lazy, Suspense } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { PlaceholderPage } from "./PlaceholderPage";
-import { Shell, Users, Database, Settings, FileText, BarChart, Paintbrush, Shield } from "lucide-react";
+import { Shell, Users, Database, Settings, FileText, BarChart, Paintbrush, Shield, LayoutDashboard } from "lucide-react";
 import { ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
 
 // Import AdminDashboard component from its new location
 import { AdminDashboard } from "@/admin/components/dashboard/AdminDashboard";
+
+// Import Dashboard from its source location (using the new implementation)
+import Dashboard from "@/admin/routes/dashboard/Dashboard";
 
 // Lazy load other admin pages
 const UsersPage = lazy(() => import("./users/UsersPage"));
@@ -15,6 +19,7 @@ const AnalyticsPage = lazy(() => import("./analytics/AnalyticsPage"));
 const ThemesPage = lazy(() => import("./themes/ThemesPage"));
 const SettingsPage = lazy(() => import("./settings/SettingsPage"));
 const PermissionsPage = lazy(() => import("./permissions/PermissionsPage"));
+const LayoutsPage = lazy(() => import("./layouts/LayoutsPage"));
 
 // Loading fallback
 const PageLoader = () => (
@@ -30,7 +35,7 @@ export function AdminRoutes() {
       <Route path="/" element={<Navigate to="overview" replace />} />
       
       {/* Dashboard Overview */}
-      <Route path="overview" element={<AdminDashboard />} />
+      <Route path="overview" element={<Dashboard />} />
       
       {/* Main admin routes */}
       <Route
@@ -74,6 +79,15 @@ export function AdminRoutes() {
         element={
           <Suspense fallback={<PageLoader />}>
             <ThemesPage />
+          </Suspense>
+        }
+      />
+      
+      <Route
+        path="layouts/*"
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <LayoutsPage />
           </Suspense>
         }
       />
