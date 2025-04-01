@@ -1,51 +1,56 @@
 
-import { User, Session } from "@supabase/supabase-js";
-import { Database } from "@/integrations/supabase/types";
+import { Session, User } from "@supabase/supabase-js";
 
-// Base role type from database
-export type UserRole = Database["public"]["Enums"]["user_role"];
+export type UserRole = 'super_admin' | 'admin' | 'maker' | 'builder';
 
-// Auth status enum
-export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
-
-// Core auth state interface
-export interface AuthState {
-  user: User | null;
-  session: Session | null;
-  roles: UserRole[];
-  status: AuthStatus;
-  error: string | null;
-  isLoading: boolean;
-  initialized: boolean;
-}
-
-// Basic user profile interface
 export interface UserProfile {
   id: string;
-  display_name?: string | null;
-  avatar_url?: string | null;
-  primary_role_id?: string | null;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+  website?: string;
+  created_at?: string;
+  updated_at?: string;
+  roles?: UserRole[];
 }
 
-// Event types for auth bridge
-export type AuthEventType = 
-  | "AUTH_READY" 
-  | "AUTH_SIGNED_IN" 
-  | "AUTH_SIGNED_OUT" 
-  | "AUTH_USER_UPDATED" 
-  | "AUTH_SESSION_UPDATED" 
-  | "AUTH_ERROR";
-
-// Auth event payload interface
-export interface AuthEvent {
-  type: AuthEventType;
-  payload?: {
-    user?: User | null;
-    session?: Session | null;
-    roles?: UserRole[];
-    error?: string | null;
-  };
+export interface AuthUser extends User {
+  profile?: UserProfile;
+  roles?: UserRole[];
 }
 
-// Auth event handler type
-export type AuthEventHandler = (event: AuthEvent) => void;
+export interface AuthState {
+  user: AuthUser | null;
+  session: Session | null;
+  profile: UserProfile | null;
+  roles: UserRole[];
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface AuthContextType extends AuthState {
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
+  refreshSession: () => Promise<void>;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+}
+
+export interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+export interface SignInCredentials {
+  email: string;
+  password: string;
+}
+
+export interface SignUpCredentials extends SignInCredentials {
+  username?: string;
+  full_name?: string;
+}
+

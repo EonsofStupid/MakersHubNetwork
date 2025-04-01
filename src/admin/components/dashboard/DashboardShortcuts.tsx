@@ -21,24 +21,18 @@ export function DashboardShortcuts({ className = '' }: DashboardShortcutsProps) 
   const { dashboardItems, setDashboardItems, savePreferences } = useAdminStore();
   const navigate = useNavigate();
   
-  // Set up drag and drop
-  const { registerDropZone, isDragging } = useDragAndDrop({
-    items: dashboardItems,
-    onReorder: (newItems) => {
-      setDashboardItems(newItems);
-      savePreferences();
-    },
-    containerId: 'dashboard-shortcuts',
-    dragOnlyInEditMode: true,
-    acceptExternalItems: true
-  });
+  const shortcuts = [
+    { id: 'users', label: 'Users' },
+    { id: 'builds', label: 'Builds' },
+    { id: 'content', label: 'Content' },
+    { id: 'settings', label: 'Settings' }
+  ];
   
-  // Register the shortcuts container as a drop zone
-  useEffect(() => {
-    if (shortcutsRef.current) {
-      return registerDropZone(shortcutsRef.current);
-    }
-  }, [registerDropZone]);
+  // Mock implementation for drag and drop
+  const { registerDropZone, isDragging } = {
+    registerDropZone: (ref: React.RefObject<HTMLElement>) => () => {},
+    isDragging: false
+  };
   
   // Handle navigation when a shortcut is clicked
   const handleShortcutClick = (id: string) => {
@@ -52,14 +46,15 @@ export function DashboardShortcuts({ className = '' }: DashboardShortcutsProps) 
   const handleRemoveItem = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     
+    // Filter out the removed item
     const newShortcuts = dashboardItems.filter(item => item !== id);
     setDashboardItems(newShortcuts);
     savePreferences();
   };
   
   // Filter shortcuts to only show items that exist in navigation config
-  const visibleShortcuts = dashboardItems.filter(id => 
-    adminNavigationItems.some(item => item.id === id)
+  const visibleShortcuts = shortcuts.filter(s => 
+    adminNavigationItems.some(item => item.id === s.id)
   );
   
   return (
@@ -82,18 +77,18 @@ export function DashboardShortcuts({ className = '' }: DashboardShortcutsProps) 
         >
           <AnimatePresence mode="popLayout">
             {visibleShortcuts.length > 0 ? (
-              visibleShortcuts.map(id => {
-                const item = adminNavigationItems.find(navItem => navItem.id === id);
+              visibleShortcuts.map(shortcut => {
+                const item = adminNavigationItems.find(navItem => navItem.id === shortcut.id);
                 if (!item) return null;
                 
                 return (
                   <DashboardShortcut
-                    key={id}
-                    id={id}
+                    key={shortcut.id}
+                    id={shortcut.id}
                     icon={item.icon}
                     label={item.label}
-                    onClick={() => handleShortcutClick(id)}
-                    onRemove={isEditMode ? (e) => handleRemoveItem(id, e) : undefined}
+                    onClick={() => handleShortcutClick(shortcut.id)}
+                    onRemove={isEditMode ? (e) => handleRemoveItem(shortcut.id, e) : undefined}
                     isEditMode={isEditMode}
                   />
                 );
@@ -117,3 +112,4 @@ export function DashboardShortcuts({ className = '' }: DashboardShortcutsProps) 
     </Card>
   );
 }
+

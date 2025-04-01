@@ -1,7 +1,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import { ADMIN_PERMISSIONS, AdminPermissionValue } from '@/admin/constants/permissions';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
@@ -41,14 +41,14 @@ export function useAdminPermissions() {
   }, [roles, isAdmin, isSuperAdmin, logger]);
   
   // Check if user has a specific permission
-  const hasPermission = useCallback((permission: AdminPermissionValue | string) => {
+  const hasPermission = useCallback((permission: AdminPermissionValue) => {
     // Super admins have all permissions
     if (permissions.includes(ADMIN_PERMISSIONS.SUPER_ADMIN)) {
       return true;
     }
     
     // Check for specific permission
-    return permissions.includes(permission as AdminPermissionValue);
+    return permissions.includes(permission);
   }, [permissions]);
   
   return {
@@ -59,3 +59,4 @@ export function useAdminPermissions() {
     isSuperAdmin
   };
 }
+

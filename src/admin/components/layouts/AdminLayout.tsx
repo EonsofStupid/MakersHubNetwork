@@ -14,6 +14,7 @@ import { LogConsole } from "@/logging/components/LogConsole";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { useAdminAccess } from "../../hooks/useAdminAccess";
+import { EditModeToggle } from "../ui/EditModeToggle";
 
 interface AdminLayoutProps {
   title?: string;
@@ -83,3 +84,4 @@ export function AdminLayout({
     </div>
   );
 }
+

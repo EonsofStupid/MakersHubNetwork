@@ -1,9 +1,8 @@
 
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Shield } from 'lucide-react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
@@ -12,47 +11,45 @@ interface AdminAuthGuardProps {
 }
 
 export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
-  const { hasAdminAccess, isAuthenticated, isLoading } = useAdminAccess();
-  const navigate = useNavigate();
+  const { user, isAuthenticated, isAdmin, isSuperAdmin, isLoading } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
   const logger = useLogger('AdminAuthGuard', LogCategory.ADMIN);
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        logger.warn('Unauthenticated user attempted to access admin area');
-        toast({
-          title: 'Authentication Required',
-          description: 'Please sign in to access the admin area',
-          variant: 'destructive'
-        });
-        navigate('/login', { replace: true });
-      } else if (!hasAdminAccess) {
-        logger.warn('Authenticated user without admin access attempted to access admin area');
-        toast({
-          title: 'Access Denied',
-          description: 'You do not have permission to access the admin area',
-          variant: 'destructive'
-        });
-        navigate('/admin/unauthorized', { replace: true });
-      }
+    if (!isLoading && isAuthenticated && !isAdmin && !isSuperAdmin) {
+      logger.warn('Non-admin user attempted to access admin area', {
+        details: { path: location.pathname, userId: user?.id }
+      });
+      
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access the admin panel",
+        variant: "destructive"
+      });
     }
-  }, [isAuthenticated, hasAdminAccess, isLoading, navigate, toast, logger]);
+  }, [isLoading, isAuthenticated, isAdmin, isSuperAdmin, location.pathname, toast, user, logger]);
 
+  // Show loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <Shield className="h-12 w-12 text-primary animate-pulse" />
-          <p className="text-sm text-muted-foreground">Verifying admin access...</p>
-        </div>
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  if (!isAuthenticated || !hasAdminAccess) {
-    return null;
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Redirect to unauthorized page if authenticated but not admin
+  if (!isAdmin && !isSuperAdmin) {
+    return <Navigate to="/admin/unauthorized" replace />;
+  }
+
+  // Render children if authenticated and has admin access
   return <>{children}</>;
 }
+

@@ -18,7 +18,9 @@ export {
   frozenZonesAtom,
   effectsPaletteVisibleAtom,
   selectedEffectAtom,
-  hoveredIconAtom
+  hoveredIconAtom,
+  adminDraggedItemAtom,
+  adminDropTargetAtom
 } from './tools.atoms';
 
 // Export additional cyberpunk effects atoms
@@ -36,3 +38,4 @@ export const cyberColorVariantsAtom = atom<string[]>([
   '#7B61FF',
   '#00FFAA'
 ]);
+

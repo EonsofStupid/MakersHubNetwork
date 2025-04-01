@@ -1,62 +1,73 @@
 
-import { BehaviorSubject, filter } from 'rxjs';
-import { AuthEvent, AuthEventType } from './types/auth.types';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { useAuthStore } from "@/stores/auth/store";
+import { User, Session } from "@supabase/supabase-js";
+import { UserRole } from "./types/auth.types";
 
-// Create a logger for the auth bridge
-const logger = getLogger();
+/**
+ * Simplified auth state to be consumed by legacy components
+ * and the new admin section
+ */
+export interface AuthBridgeState {
+  user: User | null;
+  session: Session | null;
+  roles: UserRole[];
+  error: string | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+}
 
-// Create a subject to publish auth events
-const authEvents$ = new BehaviorSubject<AuthEvent | null>(null);
+/**
+ * Bridge function to convert auth store state to a simpler format
+ * This helps decouple the admin section from the specific auth store implementation
+ */
+export function getAuthBridgeState(): AuthBridgeState {
+  const {
+    user,
+    session,
+    roles,
+    error,
+    status,
+  } = useAuthStore.getState();
 
-// Subscribe to auth events (filtered by type if specified)
-export const subscribeToAuthEvents = (
-  handler: (event: AuthEvent) => void,
-  eventType?: AuthEventType
-) => {
-  const subscription = authEvents$.pipe(
-    filter(event => !!event), // Filter out null events
-    filter(event => !eventType || (event as AuthEvent).type === eventType) // Filter by event type if specified
-  ).subscribe(event => {
-    handler(event as AuthEvent);
-  });
+  // Derive admin status from roles
+  const isAdmin = (roles || []).includes("admin") || (roles || []).includes("super_admin");
+  const isSuperAdmin = (roles || []).includes("super_admin");
+  
+  return {
+    user: user || null,
+    session: session || null,
+    roles: roles || [],
+    error: error || null,
+    isLoading: status === "loading",
+    isAuthenticated: status === "authenticated" && !!user,
+    isAdmin,
+    isSuperAdmin
+  };
+}
 
-  // Return unsubscribe function
-  return () => subscription.unsubscribe();
-};
+/**
+ * Hook to access auth state from auth store in a simplified format
+ * Useful for components that need access to auth state but don't need
+ * to perform auth actions
+ */
+export function useAuthBridge(): AuthBridgeState {
+  // Get initial state
+  const initialState = getAuthBridgeState();
+  
+  // Subscribe to auth store changes
+  const state = useAuthStore(state => ({
+    user: state.user || null,
+    session: state.session || null,
+    roles: state.roles || [],
+    error: state.error || null,
+    isLoading: state.status === "loading",
+    isAuthenticated: state.status === "authenticated" && !!state.user,
+    isAdmin: (state.roles || []).includes("admin") || (state.roles || []).includes("super_admin"),
+    isSuperAdmin: (state.roles || []).includes("super_admin")
+  }));
+  
+  return state;
+}
 
-// Publish an auth event
-export const publishAuthEvent = (event: AuthEvent) => {
-  logger.info(`Auth event published: ${event.type}`, {
-    category: LogCategory.AUTH,
-    source: 'AuthBridge',
-    details: { eventType: event.type }
-  });
-  authEvents$.next(event);
-};
-
-// Helper functions for common auth events
-export const notifyAuthReady = (payload: AuthEvent['payload']) => {
-  publishAuthEvent({ type: 'AUTH_READY', payload });
-};
-
-export const notifySignIn = (payload: AuthEvent['payload']) => {
-  publishAuthEvent({ type: 'AUTH_SIGNED_IN', payload });
-};
-
-export const notifySignOut = () => {
-  publishAuthEvent({ type: 'AUTH_SIGNED_OUT' });
-};
-
-export const notifyUserUpdated = (user: AuthEvent['payload']['user']) => {
-  publishAuthEvent({ type: 'AUTH_USER_UPDATED', payload: { user } });
-};
-
-export const notifySessionUpdated = (session: AuthEvent['payload']['session']) => {
-  publishAuthEvent({ type: 'AUTH_SESSION_UPDATED', payload: { session } });
-};
-
-export const notifyAuthError = (error: string) => {
-  publishAuthEvent({ type: 'AUTH_ERROR', payload: { error } });
-};

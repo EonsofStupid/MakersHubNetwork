@@ -32,8 +32,8 @@ export const mapRolesToPermissions = (roles: UserRole[] = []): AppPermissionValu
     ];
   }
   
-  // Map editor role to permissions (example)
-  if (roles.includes('editor')) {
+  // Map maker role to permissions
+  if (roles.includes('maker')) {
     permissions = [
       ...permissions,
       APP_PERMISSIONS.CONTENT_VIEW,
@@ -43,15 +43,14 @@ export const mapRolesToPermissions = (roles: UserRole[] = []): AppPermissionValu
     ];
   }
   
-  // Map moderator role to permissions (example)
-  if (roles.includes('moderator')) {
+  // Map builder role to permissions
+  if (roles.includes('builder')) {
     permissions = [
       ...permissions,
       APP_PERMISSIONS.CONTENT_VIEW,
       APP_PERMISSIONS.BUILDS_VIEW,
-      APP_PERMISSIONS.REVIEWS_VIEW,
-      APP_PERMISSIONS.REVIEWS_APPROVE,
-      APP_PERMISSIONS.REVIEWS_REJECT
+      APP_PERMISSIONS.BUILDS_CREATE,
+      APP_PERMISSIONS.REVIEWS_VIEW
     ];
   }
   
@@ -78,3 +77,4 @@ export const hasAdminAccess = (userRoles: UserRole[] = []): boolean => {
 export const isSuperAdmin = (userRoles: UserRole[] = []): boolean => {
   return userRoles.includes('super_admin');
 };
+
