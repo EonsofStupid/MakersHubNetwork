@@ -197,6 +197,23 @@ export const LogConsole: React.FC = () => {
     );
   };
 
+  // Format log details for display
+  const formatLogDetails = (details: unknown): string => {
+    if (details === null || details === undefined) {
+      return "No details available";
+    }
+    
+    if (typeof details === 'object') {
+      try {
+        return JSON.stringify(details, null, 2);
+      } catch (error) {
+        return "Error formatting details: " + String(error);
+      }
+    }
+    
+    return String(details);
+  };
+
   // Render log details when a log is selected
   const renderLogDetails = useMemo(() => {
     if (!selectedLog) return null;
@@ -272,9 +289,7 @@ export const LogConsole: React.FC = () => {
             <div className="text-[var(--impulse-text-secondary)] text-xs">Details</div>
             <Textarea
               readOnly
-              value={typeof selectedLog.details === 'object' 
-                ? JSON.stringify(selectedLog.details, null, 2) 
-                : String(selectedLog.details)}
+              value={formatLogDetails(selectedLog.details)}
               className="font-mono text-xs h-32 bg-black/20"
             />
           </div>

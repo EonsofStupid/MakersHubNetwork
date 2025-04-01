@@ -28,18 +28,19 @@ export function LogActivityStream({
   // Update logs from memory transport
   useEffect(() => {
     const updateLogs = () => {
-      const allLogs = memoryTransport.getFilteredLogs({
+      // Use the new getFilteredLogs method with our filtering options
+      const filteredLogs = memoryTransport.getFilteredLogs({
         level,
         category: categories?.length === 1 ? categories[0] : undefined,
         limit: maxEntries
       });
       
-      // Filter by categories if more than one
-      const filteredLogs = categories && categories.length > 1
-        ? allLogs.filter(log => categories.includes(log.category as LogCategory))
-        : allLogs;
+      // If we have multiple categories, filter further
+      const finalLogs = categories && categories.length > 1
+        ? filteredLogs.filter(log => categories.includes(log.category as LogCategory))
+        : filteredLogs;
       
-      setLogs(filteredLogs.slice(0, maxEntries));
+      setLogs(finalLogs);
     };
     
     // Initial update
@@ -148,6 +149,8 @@ function getLogCategoryClass(category: LogCategory): string {
       return 'text-orange-400';
     case LogCategory.PERFORMANCE:
       return 'text-cyan-400';
+    case LogCategory.CONTENT:
+      return 'text-pink-400';
     default:
       return 'text-gray-400';
   }
