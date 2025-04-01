@@ -1,132 +1,148 @@
 
-import React, { forwardRef } from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { AlertCircle, AlertTriangle, Info, CheckCircle } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
-import { LogLevel } from '../types';
 
-const notificationVariants = cva(
-  "relative w-full rounded-lg border p-4 shadow-md",
-  {
-    variants: {
-      variant: {
-        debug: "border-gray-400 bg-gray-400/10 text-gray-400",
-        info: "border-[var(--impulse-primary)] bg-[var(--impulse-primary)]/10 text-[var(--impulse-text-primary)]",
-        warning: "border-yellow-400 bg-yellow-400/10 text-yellow-400",
-        error: "border-[var(--impulse-secondary)] bg-[var(--impulse-secondary)]/10 text-[var(--impulse-text-primary)]",
-        critical: "border-red-600 bg-red-600/20 text-red-600",
-      },
-    },
-    defaultVariants: {
-      variant: "info",
-    },
+// Define toast variants
+export type AlertToastVariant = 'default' | 'destructive' | 'success' | 'warning';
+
+interface AlertToastProps {
+  title: string;
+  description?: string;
+  variant?: AlertToastVariant;
+  duration?: number;
+}
+
+// Enhanced toast with cyberpunk styling and animations
+export const alertToast = ({ title, description, variant = 'default', duration = 5000 }: AlertToastProps) => {
+  return toast({
+    title,
+    description,
+    duration,
+    variant,
+    // Use a custom component for the toast content
+    action: <AlertToastIcon variant={variant} />,
+  });
+};
+
+// Icon component for the toast notification
+const AlertToastIcon: React.FC<{ variant: AlertToastVariant }> = ({ variant }) => {
+  let Icon;
+  let animationClass;
+  let bgClass;
+  
+  switch (variant) {
+    case 'destructive':
+      Icon = AlertCircle;
+      animationClass = 'animate-pulse';
+      bgClass = 'bg-red-500/20';
+      break;
+    case 'warning':
+      Icon = AlertTriangle;
+      animationClass = 'animate-pulse';
+      bgClass = 'bg-amber-500/20';
+      break;
+    case 'success':
+      Icon = CheckCircle;
+      animationClass = '';
+      bgClass = 'bg-green-500/20';
+      break;
+    default:
+      Icon = Info;
+      animationClass = '';
+      bgClass = 'bg-blue-500/20';
   }
-);
+  
+  return (
+    <motion.div
+      className={cn(
+        'w-8 h-8 rounded-full flex items-center justify-center',
+        bgClass,
+        'relative overflow-hidden'
+      )}
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.8, opacity: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Icon className={cn('w-5 h-5', animationClass)} />
+      
+      {/* Cyber effect - pulsing ring */}
+      <motion.div
+        className="absolute inset-0 rounded-full border-2 border-current opacity-0"
+        animate={{ 
+          scale: [1, 1.5, 1],
+          opacity: [0, 0.2, 0],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 2,
+          ease: "easeInOut"
+        }}
+      />
+      
+      {/* Cyber effect - scan line */}
+      <motion.div
+        className="absolute h-[1px] bg-current opacity-50 left-0 right-0"
+        animate={{ 
+          top: ["0%", "100%", "0%"],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 2,
+          ease: "linear"
+        }}
+      />
+    </motion.div>
+  );
+};
 
-export interface LogNotificationProps 
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof notificationVariants> {
-  title?: string;
+// Inline Log Indicator component
+export const InlineLogIndicator: React.FC<{
   message: string;
-  timestamp?: Date;
-  source?: string;
-  level?: LogLevel;
-  showIcon?: boolean;
-  onClose?: () => void;
-}
-
-export const LogNotification = forwardRef<HTMLDivElement, LogNotificationProps>(
-  ({ className, title, message, timestamp, source, level = LogLevel.INFO, variant, showIcon = true, onClose, ...props }, ref) => {
-    // Determine variant based on level if not specified
-    const effectiveVariant = variant || mapLevelToVariant(level);
-    
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          notificationVariants({ variant: effectiveVariant }),
-          getEffectsForLevel(level),
-          className
-        )}
-        {...props}
-      >
-        {/* Header */}
-        {(title || timestamp || source) && (
-          <div className="flex justify-between items-center mb-2">
-            <div className="font-semibold">
-              {title || (level !== undefined ? LogLevel[level] : 'Notification')}
-            </div>
-            
-            <div className="flex items-center space-x-2 text-xs opacity-70">
-              {source && <span>{source}</span>}
-              {timestamp && <span>{timestamp.toLocaleTimeString()}</span>}
-            </div>
-          </div>
-        )}
-        
-        {/* Message */}
-        <div className="text-sm">{message}</div>
-        
-        {/* Close button */}
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 text-current opacity-70 hover:opacity-100"
-            aria-label="Close"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        )}
-      </div>
-    );
-  }
-);
-
-LogNotification.displayName = "LogNotification";
-
-// Helper functions
-function mapLevelToVariant(level: LogLevel): "debug" | "info" | "warning" | "error" | "critical" {
-  switch (level) {
-    case LogLevel.DEBUG:
-      return "debug";
-    case LogLevel.INFO:
-      return "info";
-    case LogLevel.WARNING:
-      return "warning";
-    case LogLevel.ERROR:
-      return "error";
-    case LogLevel.CRITICAL:
-      return "critical";
+  variant?: AlertToastVariant;
+  onClick?: () => void;
+  className?: string;
+}> = ({ message, variant = 'default', onClick, className }) => {
+  let Icon;
+  let colorClass;
+  
+  switch (variant) {
+    case 'destructive':
+      Icon = AlertCircle;
+      colorClass = 'text-red-500 border-red-500/30 bg-red-500/10';
+      break;
+    case 'warning':
+      Icon = AlertTriangle;
+      colorClass = 'text-amber-500 border-amber-500/30 bg-amber-500/10';
+      break;
+    case 'success':
+      Icon = CheckCircle;
+      colorClass = 'text-green-500 border-green-500/30 bg-green-500/10';
+      break;
     default:
-      return "info";
+      Icon = Info;
+      colorClass = 'text-blue-500 border-blue-500/30 bg-blue-500/10';
   }
-}
-
-function getEffectsForLevel(level: LogLevel): string {
-  switch (level) {
-    case LogLevel.DEBUG:
-      return "";
-    case LogLevel.INFO:
-      return "pulse-subtle electric-border";
-    case LogLevel.WARNING:
-      return "pulse-glow";
-    case LogLevel.ERROR:
-      return "text-glitch-hover";
-    case LogLevel.CRITICAL:
-      return "text-glitch";
-    default:
-      return "";
-  }
-}
+  
+  return (
+    <motion.div
+      className={cn(
+        'inline-flex items-center gap-1.5 px-2 py-1 text-xs border rounded-md cursor-pointer',
+        'hover:opacity-80 transition-all duration-150 backdrop-blur-sm',
+        colorClass,
+        className
+      )}
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      onClick={onClick}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <Icon className="w-3 h-3" />
+      <span>{message}</span>
+    </motion.div>
+  );
+};

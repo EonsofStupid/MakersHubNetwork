@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Database } from "lucide-react";
-import { PlaceholderPage } from "@/admin/routes";
+import { PlaceholderPage } from "@/admin/routes/PlaceholderPage";
 import { ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
 
 export default function DataMaestroPage() {

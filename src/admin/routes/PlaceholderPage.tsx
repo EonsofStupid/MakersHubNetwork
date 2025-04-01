@@ -6,6 +6,8 @@ import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout
 import { cn } from "@/lib/utils";
 import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
 import { AdminPermissionValue } from "@/admin/constants/permissions";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging/types";
 
 interface PlaceholderPageProps {
   title: string;
@@ -23,9 +25,19 @@ export function PlaceholderPage({
   className,
 }: PlaceholderPageProps) {
   const { hasPermission } = useAdminPermissions();
+  const logger = useLogger('PlaceholderPage', LogCategory.ADMIN);
+
+  // Log the page access attempt
+  logger.info(`Accessing placeholder page: ${title}`, {
+    details: { 
+      requiredPermission,
+      hasPermission: requiredPermission ? hasPermission(requiredPermission) : true
+    }
+  });
 
   // Redirect to unauthorized page if permission check fails
   if (requiredPermission && !hasPermission(requiredPermission)) {
+    logger.warn(`Access denied to ${title} page due to missing permission: ${requiredPermission}`);
     return <Navigate to="/admin/unauthorized" replace />;
   }
 
