@@ -41,14 +41,14 @@ export function useAdminPermissions() {
   }, [roles, isAdmin, isSuperAdmin, logger]);
   
   // Check if user has a specific permission
-  const hasPermission = useCallback((permission: AdminPermissionValue) => {
+  const hasPermission = useCallback((permission: AdminPermissionValue | string) => {
     // Super admins have all permissions
     if (permissions.includes(ADMIN_PERMISSIONS.SUPER_ADMIN)) {
       return true;
     }
     
     // Check for specific permission
-    return permissions.includes(permission);
+    return permissions.includes(permission as AdminPermissionValue);
   }, [permissions]);
   
   return {

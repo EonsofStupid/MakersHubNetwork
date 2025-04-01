@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Filter, Download, Clock, Tag, RefreshCw, Search } from 'lucide-react';
@@ -197,7 +198,7 @@ export const LogConsole: React.FC = () => {
     );
   };
 
-  // Format log details for display
+  // Format log details for display as string (for the textarea)
   const formatLogDetails = (details: unknown): string => {
     if (details === null || details === undefined) {
       return "No details available";
@@ -214,7 +215,7 @@ export const LogConsole: React.FC = () => {
     return String(details);
   };
 
-  // Update the renderLogDetails function to properly use the renderUnknownAsNode
+  // Render log details with proper type handling
   const renderLogDetails = useMemo(() => {
     if (!selectedLog) return null;
 

@@ -2,6 +2,8 @@
 import React, { lazy, Suspense } from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { AdminLayout } from '@/admin/components/AdminLayout';
+import { RequirePermission } from '@/admin/components/auth/RequirePermission';
+import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 import OverviewPage from './overview/OverviewPage';
 import BuildsPage from './builds/BuildsPage';
 import UsersPage from './users/UsersPage';
@@ -17,8 +19,6 @@ import DataMaestroPage from './data/DataMaestroPage';
 import PermissionsPage from './permissions/PermissionsPage';
 import LogsPage from './logs/LogsPage';
 
-// Import any other admin pages
-
 // Loading fallback
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-screen">
@@ -32,19 +32,124 @@ export const AdminRoutes = () => {
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
           <Route path="/" element={<Navigate to="/admin/overview" replace />} />
-          <Route path="/overview" element={<OverviewPage />} />
-          <Route path="/builds" element={<BuildsPage />} />
-          <Route path="/builds/:id" element={<BuildDetailPage />} />
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/content" element={<ContentPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/themes" element={<ThemesPage />} />
-          <Route path="/layouts" element={<LayoutsPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="/reviews" element={<ReviewsPage />} />
-          <Route path="/data" element={<DataMaestroPage />} />
-          <Route path="/permissions" element={<PermissionsPage />} />
-          <Route path="/logs" element={<LogsPage />} />
+          
+          <Route 
+            path="/overview" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.ADMIN_VIEW}>
+                <OverviewPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/builds" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.BUILDS_VIEW}>
+                <BuildsPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/builds/:id" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.BUILDS_VIEW}>
+                <BuildDetailPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/users" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.USERS_VIEW}>
+                <UsersPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/content" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.CONTENT_VIEW}>
+                <ContentPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/settings" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.SETTINGS_VIEW}>
+                <SettingsPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/themes" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.THEMES_VIEW}>
+                <ThemesPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/layouts" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.LAYOUTS_VIEW}>
+                <LayoutsPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/analytics" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.ANALYTICS_VIEW}>
+                <AnalyticsPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/reviews" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.REVIEWS_VIEW}>
+                <ReviewsPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/data" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.DATA_VIEW}>
+                <DataMaestroPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/permissions" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.SUPER_ADMIN}>
+                <PermissionsPage />
+              </RequirePermission>
+            } 
+          />
+          
+          <Route 
+            path="/logs" 
+            element={
+              <RequirePermission permission={ADMIN_PERMISSIONS.SYSTEM_LOGS}>
+                <LogsPage />
+              </RequirePermission>
+            } 
+          />
+          
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           <Route path="*" element={<Navigate to="/admin/overview" replace />} />
         </Routes>
