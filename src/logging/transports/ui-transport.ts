@@ -118,7 +118,6 @@ export class UITransport implements LogTransport {
         iconName = "info";
         variant = "default";
         break;
-      case LogLevel.WARNING:
       case LogLevel.WARN:
         iconName = "alert-triangle";
         variant = "default";

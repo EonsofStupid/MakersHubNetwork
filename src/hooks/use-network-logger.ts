@@ -1,7 +1,8 @@
 
 import { useCallback, useRef } from 'react';
 import { getLogger } from '@/logging';
-import { LogCategory, LogLevel } from '@/logging/types';
+import { LogCategory } from '@/logging/types';
+import { LogLevel } from '@/logging/constants/log-level';
 
 interface RequestLogOptions {
   url: string;
@@ -69,13 +70,13 @@ export function useNetworkLogger(source: string) {
     // Determine log level based on status code
     let level = LogLevel.INFO;
     if (options.status >= 400 && options.status < 500) {
-      level = LogLevel.WARNING;
+      level = LogLevel.WARN;
     } else if (options.status >= 500) {
       level = LogLevel.ERROR;
     }
     
     // Log the response using the appropriate level method
-    if (level === LogLevel.WARNING) {
+    if (level === LogLevel.WARN) {
       logger.warn(`Response (${options.status}): ${options.duration.toFixed(0)}ms`, {
         category: LogCategory.NETWORK,
         source,
