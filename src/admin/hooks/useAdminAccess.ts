@@ -1,31 +1,52 @@
 
-import { useAuth } from '@/hooks/useAuth';
+import { useCallback, useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { useAuthStore } from '@/auth/store/auth.store';
 
-/**
- * Hook for checking admin access
- */
 export function useAdminAccess() {
-  const { isAdmin, isSuperAdmin, isAuthenticated, isLoading } = useAuth();
-  const logger = useLogger('useAdminAccess', LogCategory.ADMIN);
+  const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
+  const { user, roles, isLoading: authLoading, status } = useAuthStore();
+  const isAuthenticated = status === 'authenticated';
+  const logger = useLogger("AdminAccess", LogCategory.AUTH);
   
-  const hasAdminAccess = isAdmin || isSuperAdmin;
-  
-  logger.debug('Admin access check', { 
-    details: { 
-      hasAdminAccess,
-      isAdmin,
-      isSuperAdmin,
-      isAuthenticated
+  // Initialize admin data
+  const initializeAdmin = useCallback(async () => {
+    try {
+      logger.info("Initializing admin access...");
+      
+      if (!user) {
+        setHasAdminAccess(false);
+        return;
+      }
+      
+      // Check if user has admin or super_admin role
+      const adminRoles = roles.filter(role => 
+        role === 'admin' || role === 'super_admin'
+      );
+      
+      logger.info("User roles retrieved:", { details: { 
+        roles,
+        adminRolesFound: adminRoles.length > 0
+      }});
+      
+      setHasAdminAccess(adminRoles.length > 0);
+    } catch (error) {
+      logger.error("Error initializing admin access:", { details: error });
+      setHasAdminAccess(false);
     }
-  });
-  
+  }, [logger, user, roles]);
+
+  // Check admin access on mount
+  useEffect(() => {
+    initializeAdmin();
+  }, [initializeAdmin]);
+
   return {
     hasAdminAccess,
-    isLoading,
+    isLoading: authLoading,
     isAuthenticated,
-    isAdmin,
-    isSuperAdmin
+    initializeAdmin
   };
 }
