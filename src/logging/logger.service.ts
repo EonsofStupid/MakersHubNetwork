@@ -119,17 +119,17 @@ export class LoggerService {
     tags?: string[];
   }): void {
     const category = options?.category || LogCategory.PERFORMANCE;
+    const details = options?.details ? 
+      { ...options.details, duration } : 
+      { duration };
+      
     this.log(
       duration > 1000 ? LogLevel.WARNING : LogLevel.INFO,
       message,
       {
         ...options,
         category,
-        details: {
-          ...options?.details,
-          duration
-        },
-        duration
+        details
       }
     );
   }
