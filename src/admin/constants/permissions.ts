@@ -1,94 +1,98 @@
 
-export type AdminPermissionAction = 
-  | 'create' 
-  | 'read' 
-  | 'update' 
-  | 'delete' 
-  | 'manage' 
-  | 'approve' 
-  | 'reject'
-  | 'all';
-
-export type AdminPermissionSubject = 
-  | 'users' 
-  | 'builds' 
-  | 'content' 
-  | 'settings' 
-  | 'roles' 
-  | 'analytics' 
-  | 'reports' 
-  | 'security'
-  | 'database'
-  | 'code'
-  | 'admin'
-  | 'themes'
-  | 'all';
-
-export type AdminPermissionValue = `${AdminPermissionAction}:${AdminPermissionSubject}`;
-
-export const ADMIN_PERMISSIONS: Record<string, AdminPermissionValue> = {
-  // Admin permissions
-  ADMIN_ACCESS: 'read:admin',
-  ADMIN_VIEW: 'read:admin',
-  ADMIN_EDIT: 'update:admin',
+// Define all admin permissions as constants
+export const ADMIN_PERMISSIONS = {
+  // Super admin permission that grants all access
   SUPER_ADMIN: 'all:all',
   
-  // User permissions
-  USERS_VIEW: 'read:users',
-  USERS_EDIT: 'update:users',
-  USERS_DELETE: 'delete:users',
+  // Basic admin access
+  ADMIN_ACCESS: 'admin:access',
+  ADMIN_VIEW: 'admin:view',
+  ADMIN_EDIT: 'admin:edit',
   
-  // Content permissions
-  CONTENT_VIEW: 'read:content',
-  CONTENT_EDIT: 'update:content',
-  CONTENT_DELETE: 'delete:content',
+  // Content management
+  CONTENT_VIEW: 'content:view',
+  CONTENT_EDIT: 'content:edit',
+  CONTENT_PUBLISH: 'content:publish',
+  CONTENT_DELETE: 'content:delete',
   
-  // Build permissions
-  BUILDS_VIEW: 'read:builds',
-  BUILDS_APPROVE: 'approve:builds',
-  BUILDS_REJECT: 'reject:builds',
+  // User management
+  USERS_VIEW: 'users:view',
+  USERS_EDIT: 'users:edit',
+  USERS_DELETE: 'users:delete',
   
-  // Theme permissions
-  THEMES_VIEW: 'read:themes',
-  THEMES_EDIT: 'update:themes',
-  THEMES_DELETE: 'delete:themes',
+  // Build management
+  BUILDS_VIEW: 'builds:view',
+  BUILDS_EDIT: 'builds:edit',
+  BUILDS_DELETE: 'builds:delete',
+  BUILDS_APPROVE: 'builds:approve',
   
-  // Settings permissions
-  SETTINGS_VIEW: 'read:settings',
-  SETTINGS_EDIT: 'update:settings',
+  // Review management
+  REVIEWS_VIEW: 'reviews:view',
+  REVIEWS_EDIT: 'reviews:edit',
+  REVIEWS_DELETE: 'reviews:delete',
+  REVIEWS_APPROVE: 'reviews:approve',
   
-  // Data permissions
-  DATA_VIEW: 'read:database',
-  DATA_IMPORT: 'update:database',
+  // Theme management
+  THEMES_VIEW: 'themes:view',
+  THEMES_EDIT: 'themes:edit',
+  THEMES_PUBLISH: 'themes:publish',
   
-  // Legacy permission mappings for backward compatibility
-  READ_USERS: 'read:users',
-  CREATE_USERS: 'create:users',
-  UPDATE_USERS: 'update:users',
-  DELETE_USERS: 'delete:users',
-  MANAGE_USERS: 'manage:users',
+  // Settings
+  SETTINGS_VIEW: 'settings:view',
+  SETTINGS_EDIT: 'settings:edit',
   
-  READ_BUILDS: 'read:builds',
-  CREATE_BUILDS: 'create:builds',
-  UPDATE_BUILDS: 'update:builds',
-  DELETE_BUILDS: 'delete:builds',
-  APPROVE_BUILDS: 'approve:builds',
+  // API management
+  API_KEYS_VIEW: 'api_keys:view',
+  API_KEYS_EDIT: 'api_keys:edit',
   
-  READ_CONTENT: 'read:content',
-  CREATE_CONTENT: 'create:content',
-  UPDATE_CONTENT: 'update:content',
-  DELETE_CONTENT: 'delete:content',
-  
-  READ_SETTINGS: 'read:settings',
-  UPDATE_SETTINGS: 'update:settings',
-  
-  MANAGE_ROLES: 'manage:roles',
-  
-  READ_ANALYTICS: 'read:analytics',
-  
-  READ_REPORTS: 'read:reports',
-  CREATE_REPORTS: 'create:reports',
-  
-  READ_SECURITY: 'read:security',
-  UPDATE_SECURITY: 'update:security'
+  // System management
+  SYSTEM_VIEW: 'system:view',
+  SYSTEM_EDIT: 'system:edit',
+  SYSTEM_RESTART: 'system:restart',
+} as const;
+
+export type AdminPermissionValue = typeof ADMIN_PERMISSIONS[keyof typeof ADMIN_PERMISSIONS];
+
+export const PERMISSION_GROUPS = {
+  CONTENT: [
+    ADMIN_PERMISSIONS.CONTENT_VIEW,
+    ADMIN_PERMISSIONS.CONTENT_EDIT,
+    ADMIN_PERMISSIONS.CONTENT_PUBLISH,
+    ADMIN_PERMISSIONS.CONTENT_DELETE,
+  ],
+  USERS: [
+    ADMIN_PERMISSIONS.USERS_VIEW,
+    ADMIN_PERMISSIONS.USERS_EDIT,
+    ADMIN_PERMISSIONS.USERS_DELETE,
+  ],
+  BUILDS: [
+    ADMIN_PERMISSIONS.BUILDS_VIEW,
+    ADMIN_PERMISSIONS.BUILDS_EDIT,
+    ADMIN_PERMISSIONS.BUILDS_DELETE,
+    ADMIN_PERMISSIONS.BUILDS_APPROVE,
+  ],
+  REVIEWS: [
+    ADMIN_PERMISSIONS.REVIEWS_VIEW,
+    ADMIN_PERMISSIONS.REVIEWS_EDIT,
+    ADMIN_PERMISSIONS.REVIEWS_DELETE,
+    ADMIN_PERMISSIONS.REVIEWS_APPROVE,
+  ],
+  THEMES: [
+    ADMIN_PERMISSIONS.THEMES_VIEW,
+    ADMIN_PERMISSIONS.THEMES_EDIT,
+    ADMIN_PERMISSIONS.THEMES_PUBLISH,
+  ],
+  SETTINGS: [
+    ADMIN_PERMISSIONS.SETTINGS_VIEW,
+    ADMIN_PERMISSIONS.SETTINGS_EDIT,
+  ],
+  API_KEYS: [
+    ADMIN_PERMISSIONS.API_KEYS_VIEW,
+    ADMIN_PERMISSIONS.API_KEYS_EDIT,
+  ],
+  SYSTEM: [
+    ADMIN_PERMISSIONS.SYSTEM_VIEW,
+    ADMIN_PERMISSIONS.SYSTEM_EDIT,
+    ADMIN_PERMISSIONS.SYSTEM_RESTART,
+  ],
 };

@@ -1,9 +1,8 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { ReviewStats } from "@/admin/types/review.types";
-import { RatingStars } from "./RatingStars";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
 interface ReviewStatsDisplayProps {
@@ -12,69 +11,54 @@ interface ReviewStatsDisplayProps {
 }
 
 export function ReviewStatsDisplay({ stats, className }: ReviewStatsDisplayProps) {
-  const { averageRating, totalReviews, ratingDistribution, categoryBreakdown } = stats;
-  
-  // Calculate percentages for rating distribution
-  const ratingPercentages = Object.entries(ratingDistribution).map(([rating, count]) => {
-    const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
-    return { rating: Number(rating), count, percentage };
-  }).sort((a, b) => b.rating - a.rating); // Sort by rating (5 to 1)
-  
-  // Sort categories by count (most common first)
-  const sortedCategories = Object.entries(categoryBreakdown)
-    .map(([category, count]) => ({ category, count }))
-    .sort((a, b) => b.count - a.count);
+  // Calculate the percentage for each star rating
+  const calculatePercentage = (rating: number) => {
+    if (stats.totalReviews === 0) return 0;
+    return (stats.ratingDistribution[rating] / stats.totalReviews) * 100;
+  };
   
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card className={cn("border-primary/20", className)}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Review Summary</CardTitle>
+        <CardTitle className="text-lg flex items-center justify-between">
+          <span>Reviews Summary</span>
+          <span className="text-2xl font-bold">{stats.averageRating.toFixed(1)}</span>
+        </CardTitle>
       </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {/* Overall rating */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-3xl font-bold mb-1">
-              {averageRating ? averageRating.toFixed(1) : "0.0"}
-            </div>
-            <RatingStars rating={averageRating} />
-          </div>
-          <div className="text-right">
-            <div className="text-muted-foreground text-sm">Based on</div>
-            <div className="font-medium">{totalReviews} {totalReviews === 1 ? 'review' : 'reviews'}</div>
-          </div>
-        </div>
+      <CardContent>
+        <div className="text-sm mb-1">{stats.totalReviews} total reviews</div>
         
-        {/* Rating distribution */}
-        <div className="space-y-2">
-          {ratingPercentages.map(({ rating, count, percentage }) => (
-            <div key={rating} className="grid grid-cols-12 gap-2 items-center">
-              <div className="col-span-1 text-sm font-medium text-right">{rating}</div>
-              <div className="col-span-9">
-                <Progress value={percentage} className="h-2" />
+        <div className="space-y-2 mt-3">
+          {[5, 4, 3, 2, 1].map(rating => (
+            <div key={rating} className="flex items-center gap-2">
+              <div className="flex items-center w-8">
+                <span className="text-sm font-medium">{rating}</span>
+                <span className="text-amber-500 ml-1">★</span>
               </div>
-              <div className="col-span-2 text-sm text-muted-foreground">
-                {count}
-              </div>
+              <Progress value={calculatePercentage(rating)} className="h-2" />
+              <span className="text-xs text-muted-foreground w-9">
+                {stats.ratingDistribution[rating] || 0}
+              </span>
             </div>
           ))}
         </div>
         
-        {/* Category breakdown */}
-        {sortedCategories.length > 0 && (
-          <div className="space-y-1 pt-2">
-            <div className="text-sm font-semibold mb-1">Most Mentioned</div>
-            <div className="flex flex-wrap gap-1">
-              {sortedCategories.slice(0, 3).map(({ category, count }) => (
-                <div 
-                  key={category} 
-                  className="px-2 py-1 bg-muted rounded-full text-xs flex items-center gap-1"
-                >
-                  <span>{category}</span>
-                  <span className="text-muted-foreground">({count})</span>
-                </div>
-              ))}
+        {stats.totalReviews > 0 && (
+          <div className="mt-4 border-t pt-4 border-border/60">
+            <h4 className="text-sm font-medium mb-2">Top Categories</h4>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(stats.categoryBreakdown)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 3)
+                .map(([category, count]) => (
+                  <div 
+                    key={category} 
+                    className="text-xs px-2 py-1 bg-primary/10 rounded-full"
+                  >
+                    {category} ({count})
+                  </div>
+                ))
+              }
             </div>
           </div>
         )}

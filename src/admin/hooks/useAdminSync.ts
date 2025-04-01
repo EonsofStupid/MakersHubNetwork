@@ -1,51 +1,49 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAdminStore } from '@/admin/store/admin.store';
-import { useAtom } from 'jotai';
-import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 
-/**
- * Hook to keep admin preferences in sync between UI, store and database
- */
 export function useAdminSync() {
-  const { savePreferences, syncing, lastSynced } = useAdminStore();
-  const [isEditMode] = useAtom(adminEditModeAtom);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [syncError, setSyncError] = useState<Error | null>(null);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(
-    lastSynced ? new Date(lastSynced) : null
-  );
+  const { savePreferences, shortcuts, isDarkMode, sidebarExpanded } = useAdminStore();
   
-  // Watch for edit mode changes to save preferences
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+  const syncToDatabase = async () => {
+    if (isSyncing) return;
     
-    if (!isEditMode) {
+    try {
       setIsSyncing(true);
+      setSyncError(null);
       
-      try {
-        savePreferences();
-        // Simulate a delay for the sync to complete
-        timeoutId = setTimeout(() => {
-          setIsSyncing(false);
-          setLastSyncTime(new Date());
-          setSyncError(null);
-        }, 500);
-      } catch (error) {
-        setIsSyncing(false);
-        setSyncError(error as Error);
-      }
+      // Sync state to database
+      await savePreferences({
+        isDarkMode,
+        sidebarExpanded,
+        shortcuts
+      });
+      
+      setLastSyncTime(new Date());
+    } catch (error) {
+      console.error("Error syncing to database:", error);
+      setSyncError(error instanceof Error ? error : new Error("Failed to sync"));
+    } finally {
+      setIsSyncing(false);
     }
+  };
+  
+  // Auto-sync when admin store changes
+  useEffect(() => {
+    const syncTimer = setTimeout(() => {
+      syncToDatabase();
+    }, 2000); // Debounce sync to avoid too many requests
     
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isEditMode, savePreferences]);
+    return () => clearTimeout(syncTimer);
+  }, [isDarkMode, shortcuts, sidebarExpanded]);
   
   return {
-    isSyncing: isSyncing || syncing,
-    lastSyncTime: lastSyncTime,
+    isSyncing,
+    lastSyncTime,
     syncError,
-    isEditMode
+    syncToDatabase
   };
 }

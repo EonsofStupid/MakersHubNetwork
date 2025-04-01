@@ -1,53 +1,44 @@
 
-import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
+import { useAuthStore } from '@/stores/auth/store';
+import { useAdminRoles } from './useAdminRoles';
 
+/**
+ * Hook to check if user has admin access
+ */
 export function useAdminAccess() {
-  const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
+  const { status, user } = useAuthStore();
+  const { isAdmin, isSuperAdmin } = useAdminRoles();
+  const isAuthenticated = status === 'authenticated' && !!user;
   
-  // Initialize admin data
-  const initializeAdmin = useCallback(async () => {
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user);
-      
-      if (user) {
-        // Get user roles
-        const { data: userRoles, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id);
-          
-        if (rolesError) {
-          console.error("Error fetching user roles:", rolesError);
-          setIsLoading(false);
-          return;
-        }
-        
-        // Check if user has admin or super_admin role
-        const adminRoles = userRoles?.filter(role => 
-          role.role === 'admin' || role.role === 'super_admin'
-        ) || [];
-        
-        setHasAdminAccess(adminRoles.length > 0);
-      }
-    } catch (error) {
-      console.error("Error initializing admin access:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Check admin access on mount
+  // Initialize admin access
+  const initializeAdmin = () => {
+    // Could add more initialization logic here if needed
+    console.log("Admin access initialized");
+  };
+  
   useEffect(() => {
-    initializeAdmin();
-  }, [initializeAdmin]);
-
+    const checkAccess = async () => {
+      setIsLoading(true);
+      
+      // Only proceed if user is authenticated
+      if (isAuthenticated) {
+        setHasAdminAccess(isAdmin || isSuperAdmin);
+      } else {
+        setHasAdminAccess(false);
+      }
+      
+      setIsLoading(false);
+    };
+    
+    checkAccess();
+  }, [isAuthenticated, isAdmin, isSuperAdmin]);
+  
   return {
-    hasAdminAccess,
     isLoading,
+    hasAdminAccess,
     isAuthenticated,
     initializeAdmin
   };
