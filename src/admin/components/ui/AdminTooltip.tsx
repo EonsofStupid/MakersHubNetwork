@@ -12,27 +12,21 @@ interface AdminTooltipProps {
   content: React.ReactNode;
   side?: 'top' | 'right' | 'bottom' | 'left';
   align?: 'start' | 'center' | 'end';
-  delayDuration?: number;
 }
 
-export function AdminTooltip({
-  children,
-  content,
-  side = 'top',
-  align = 'center',
-  delayDuration = 300,
+export function AdminTooltip({ 
+  children, 
+  content, 
+  side = 'top', 
+  align = 'center' 
 }: AdminTooltipProps) {
   return (
     <TooltipProvider>
-      <Tooltip delayDuration={delayDuration}>
+      <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
           {children}
         </TooltipTrigger>
-        <TooltipContent 
-          side={side} 
-          align={align}
-          className="bg-[var(--impulse-bg-tooltip)] border-[var(--impulse-border-normal)] text-[var(--impulse-text-primary)]"
-        >
+        <TooltipContent side={side} align={align} className="bg-[var(--impulse-bg-card)] border-[var(--impulse-border-normal)] text-[var(--impulse-text-primary)]">
           {content}
         </TooltipContent>
       </Tooltip>

@@ -1,62 +1,36 @@
+
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
-import { AdminPermissionValue } from '@/admin/constants/permissions';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { AdminPermissionValue } from '@/admin/types/permissions';
+import { AccessDenied } from './AccessDenied';
 
 interface RequirePermissionProps {
-  children: React.ReactNode;
   permission: AdminPermissionValue;
+  children: React.ReactNode;
   fallback?: React.ReactNode;
-  redirectTo?: string;
 }
 
-/**
- * Component that checks if the current user has the required permission
- * and either renders the children or redirects/renders fallback
- */
-export function RequirePermission({
-  children,
-  permission,
-  fallback,
-  redirectTo = '/admin/unauthorized'
+export function RequirePermission({ 
+  permission, 
+  children, 
+  fallback 
 }: RequirePermissionProps) {
   const { hasPermission, isLoading } = useAdminPermissions();
-  const logger = useLogger("RequirePermission", LogCategory.ADMIN);
   
-  // Show loading state while permissions are being determined
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full p-6">
-        <div className="h-6 w-6 border-t-2 border-primary animate-spin rounded-full" />
+      <div className="flex items-center justify-center p-8">
+        <div className="h-6 w-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
       </div>
     );
   }
   
-  // Check permission
-  const allowed = hasPermission(permission);
-  
-  // Log permission check
-  logger.info(`Permission check for ${permission}`, {
-    details: { 
-      permission,
-      allowed,
-      redirectTo: !allowed ? redirectTo : null 
-    }
-  });
-  
-  // If permission check fails
-  if (!allowed) {
-    // Return fallback if provided
-    if (fallback) {
-      return <>{fallback}</>;
-    }
-    
-    // Otherwise redirect
-    return <Navigate to={redirectTo} replace />;
+  // Check if user has the required permission
+  if (!hasPermission(permission)) {
+    // If fallback is provided, show it, otherwise show AccessDenied
+    return fallback ? <>{fallback}</> : <AccessDenied permission={permission} />;
   }
   
-  // Render children if permission check passes
+  // User has permission, render children
   return <>{children}</>;
 }
