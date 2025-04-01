@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
-import { AdminPermissionValue } from '@/admin/types/permissions';
+import { PermissionValue } from '@/auth/permissions';
 import { AccessDenied } from './AccessDenied';
 
 interface RequirePermissionProps {
-  permission: AdminPermissionValue;
+  permission: PermissionValue;
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }

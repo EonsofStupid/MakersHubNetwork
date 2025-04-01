@@ -1,34 +1,34 @@
 
 import { UserRole } from "../types/auth.types";
-import { AppPermissionValue, APP_PERMISSIONS } from "../constants/permissions";
+import { PermissionValue, PERMISSIONS } from "../permissions";
 
 /**
  * Maps user roles to app permissions
  * @param roles Array of user roles
  * @returns Array of app permissions
  */
-export const mapRolesToPermissions = (roles: UserRole[] = []): AppPermissionValue[] => {
-  let permissions: AppPermissionValue[] = [];
+export const mapRolesToPermissions = (roles: UserRole[] = []): PermissionValue[] => {
+  let permissions: PermissionValue[] = [];
   
   // Super admins get all permissions
   if (roles.includes('super_admin')) {
-    return [APP_PERMISSIONS.SUPER_ADMIN];
+    return [PERMISSIONS.SUPER_ADMIN];
   }
   
   // Map admin role to permissions
   if (roles.includes('admin')) {
     permissions = [
       ...permissions,
-      APP_PERMISSIONS.ADMIN_ACCESS,
-      APP_PERMISSIONS.ADMIN_VIEW,
-      APP_PERMISSIONS.ADMIN_EDIT,
-      APP_PERMISSIONS.CONTENT_VIEW,
-      APP_PERMISSIONS.CONTENT_EDIT,
-      APP_PERMISSIONS.USERS_VIEW,
-      APP_PERMISSIONS.BUILDS_VIEW,
-      APP_PERMISSIONS.BUILDS_APPROVE,
-      APP_PERMISSIONS.THEMES_VIEW,
-      APP_PERMISSIONS.SYSTEM_LOGS
+      PERMISSIONS.ADMIN_ACCESS,
+      PERMISSIONS.ADMIN_VIEW,
+      PERMISSIONS.ADMIN_EDIT,
+      PERMISSIONS.CONTENT_VIEW,
+      PERMISSIONS.CONTENT_EDIT,
+      PERMISSIONS.USERS_VIEW,
+      PERMISSIONS.BUILDS_VIEW,
+      PERMISSIONS.BUILDS_APPROVE,
+      PERMISSIONS.THEMES_VIEW,
+      PERMISSIONS.SYSTEM_LOGS
     ];
   }
   
@@ -36,10 +36,10 @@ export const mapRolesToPermissions = (roles: UserRole[] = []): AppPermissionValu
   if (roles.includes('maker')) {
     permissions = [
       ...permissions,
-      APP_PERMISSIONS.CONTENT_VIEW,
-      APP_PERMISSIONS.CONTENT_EDIT,
-      APP_PERMISSIONS.CONTENT_CREATE,
-      APP_PERMISSIONS.BUILDS_VIEW
+      PERMISSIONS.CONTENT_VIEW,
+      PERMISSIONS.CONTENT_EDIT,
+      PERMISSIONS.CONTENT_CREATE,
+      PERMISSIONS.BUILDS_VIEW
     ];
   }
   
@@ -47,10 +47,10 @@ export const mapRolesToPermissions = (roles: UserRole[] = []): AppPermissionValu
   if (roles.includes('builder')) {
     permissions = [
       ...permissions,
-      APP_PERMISSIONS.CONTENT_VIEW,
-      APP_PERMISSIONS.BUILDS_VIEW,
-      APP_PERMISSIONS.BUILDS_CREATE,
-      APP_PERMISSIONS.REVIEWS_VIEW
+      PERMISSIONS.CONTENT_VIEW,
+      PERMISSIONS.BUILDS_VIEW,
+      PERMISSIONS.BUILDS_CREATE,
+      PERMISSIONS.REVIEWS_VIEW
     ];
   }
   
@@ -77,4 +77,3 @@ export const hasAdminAccess = (userRoles: UserRole[] = []): boolean => {
 export const isSuperAdmin = (userRoles: UserRole[] = []): boolean => {
   return userRoles.includes('super_admin');
 };
-
