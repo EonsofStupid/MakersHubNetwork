@@ -1,9 +1,10 @@
+
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AdminRoutes } from "@/admin/routes";
-import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { useAdminSync } from "@/admin/hooks/useAdminSync";
 import { SyncIndicator } from "@/admin/components/ui/SyncIndicator";
@@ -25,7 +26,7 @@ import '@/admin/theme/impulse/impulse-theme.css';
 export default function Admin() {
   const { toast } = useToast();
   const location = useLocation();
-  const { hasAdminAccess, isLoading, initializeAdmin } = useAdminAccess();
+  const { hasAdminAccess, isLoading, initializeAdmin, isAuthenticated } = useAdminAccess();
   const [hasInitialized, setHasInitialized] = useState(false);
   const [hasShownIntro, setHasShownIntro] = useState(false);
   const { loadPermissions, initializeStore, savePreferences } = useAdminStore();
@@ -37,10 +38,13 @@ export default function Admin() {
   useEffect(() => {
     // Load admin permissions if user has access
     if (hasAdminAccess && !hasInitialized) {
+      console.log("Initializing admin panel...");
       initializeAdmin();
-      initializeStore();
+      initializeStore().then(() => {
+        console.log("Admin store initialized");
+        setHasInitialized(true);
+      });
       loadPermissions();
-      setHasInitialized(true);
       
       // Add admin theme class to body
       document.body.classList.add('impulse-admin-root');
@@ -103,7 +107,7 @@ export default function Admin() {
   }
   
   // Verify admin access
-  if (!hasAdminAccess) {
+  if (!hasAdminAccess && isAuthenticated) {
     toast({
       title: "Access Denied",
       description: "You don't have permission to access the admin section",

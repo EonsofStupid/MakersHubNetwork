@@ -10,8 +10,19 @@ export function useAdminAccess() {
   // Initialize admin data
   const initializeAdmin = useCallback(async () => {
     try {
+      console.log("Initializing admin access...");
       const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.error("Error fetching user:", error);
+        setIsAuthenticated(false);
+        setHasAdminAccess(false);
+        setIsLoading(false);
+        return;
+      }
+      
       setIsAuthenticated(!!user);
+      console.log("User authenticated:", !!user);
       
       if (user) {
         // Get user roles
@@ -31,10 +42,16 @@ export function useAdminAccess() {
           role.role === 'admin' || role.role === 'super_admin'
         ) || [];
         
+        console.log("User roles:", userRoles);
+        console.log("Admin roles found:", adminRoles.length > 0);
+        
         setHasAdminAccess(adminRoles.length > 0);
+      } else {
+        setHasAdminAccess(false);
       }
     } catch (error) {
       console.error("Error initializing admin access:", error);
+      setHasAdminAccess(false);
     } finally {
       setIsLoading(false);
     }
