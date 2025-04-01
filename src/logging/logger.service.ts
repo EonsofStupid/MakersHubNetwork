@@ -1,6 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { LogCategory, LogEntry, LogLevel, LoggingConfig } from './types';
+import { LogCategory, LogEntry, LogTransport, LoggingConfig } from './types';
+import { LOG_LEVELS, LogLevel, isLogLevelAtLeast } from './constants/log-level';
 import { defaultLoggingConfig } from './config';
 
 /**
@@ -58,7 +59,7 @@ export class LoggerService {
     source?: string;
     tags?: string[];
   }): void {
-    this.log(LogLevel.DEBUG, message, options);
+    this.log(LOG_LEVELS.DEBUG, message, options);
   }
   
   /**
@@ -70,7 +71,7 @@ export class LoggerService {
     source?: string;
     tags?: string[];
   }): void {
-    this.log(LogLevel.INFO, message, options);
+    this.log(LOG_LEVELS.INFO, message, options);
   }
   
   /**
@@ -82,7 +83,7 @@ export class LoggerService {
     source?: string;
     tags?: string[];
   }): void {
-    this.log(LogLevel.WARNING, message, options);
+    this.log(LOG_LEVELS.WARN, message, options);
   }
   
   /**
@@ -94,7 +95,7 @@ export class LoggerService {
     source?: string;
     tags?: string[];
   }): void {
-    this.log(LogLevel.ERROR, message, options);
+    this.log(LOG_LEVELS.ERROR, message, options);
   }
   
   /**
@@ -106,7 +107,7 @@ export class LoggerService {
     source?: string;
     tags?: string[];
   }): void {
-    this.log(LogLevel.CRITICAL, message, options);
+    this.log(LOG_LEVELS.CRITICAL, message, options);
   }
   
   /**
@@ -124,7 +125,7 @@ export class LoggerService {
       { duration };
       
     this.log(
-      duration > 1000 ? LogLevel.WARNING : LogLevel.INFO,
+      duration > 1000 ? LOG_LEVELS.WARN : LOG_LEVELS.INFO,
       message,
       {
         ...options,
@@ -145,7 +146,7 @@ export class LoggerService {
     tags?: string[];
   }): void {
     // Check if this log should be processed based on level and category
-    if (level < this.config.minLevel) {
+    if (!isLogLevelAtLeast(level, this.config.minLevel)) {
       return;
     }
     
@@ -190,7 +191,7 @@ export class LoggerService {
     // Process immediately or wait for flush
     if (
       this.buffer.length >= (this.config.bufferSize || 1) ||
-      level >= LogLevel.ERROR
+      isLogLevelAtLeast(level, LOG_LEVELS.ERROR)
     ) {
       this.flush();
     }

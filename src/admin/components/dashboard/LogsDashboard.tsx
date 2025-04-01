@@ -1,6 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
-import { LogEntry, LogLevel, LogCategory, memoryTransport } from '@/logging';
+import { LogEntry, LogCategory, memoryTransport } from '@/logging';
+import { LOG_LEVELS, LogLevel } from '@/logging/constants/log-level';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { CyberCard } from '@/admin/components/ui/CyberCard';
 import { cn } from '@/lib/utils';
@@ -19,15 +19,13 @@ export function LogsDashboard() {
       
       // Calculate level stats
       const levelCounts: Record<string, number> = {};
-      Object.keys(LogLevel)
-        .filter(key => isNaN(Number(key)))
+      Object.keys(LOG_LEVELS)
         .forEach(level => {
           levelCounts[level] = 0;
         });
       
       allLogs.forEach(log => {
-        const levelName = LogLevel[log.level];
-        levelCounts[levelName] = (levelCounts[levelName] || 0) + 1;
+        levelCounts[log.level] = (levelCounts[log.level] || 0) + 1;
       });
       
       setLevelStats(
@@ -117,14 +115,14 @@ export function LogsDashboard() {
         <CyberCard className="p-4">
           <div className="text-lg font-medium mb-2">Warning+ Logs</div>
           <div className="text-3xl font-bold text-yellow-400">
-            {logs.filter(log => log.level >= LogLevel.WARNING).length}
+            {logs.filter(log => log.level >= LOG_LEVELS.WARN).length}
           </div>
         </CyberCard>
         
         <CyberCard className="p-4">
           <div className="text-lg font-medium mb-2">Error+ Logs</div>
           <div className="text-3xl font-bold text-[var(--impulse-secondary)]">
-            {logs.filter(log => log.level >= LogLevel.ERROR).length}
+            {logs.filter(log => log.level >= LOG_LEVELS.ERROR).length}
           </div>
         </CyberCard>
       </div>
@@ -245,7 +243,7 @@ export function LogsDashboard() {
                         getLevelBadgeClass(log.level)
                       )}
                     >
-                      {LogLevel[log.level]}
+                      {log.level}
                     </span>
                   </td>
                   <td className="py-2 px-4 text-sm">{log.category}</td>
@@ -263,15 +261,15 @@ export function LogsDashboard() {
 // Helper function for level badge styling
 function getLevelBadgeClass(level: LogLevel): string {
   switch (level) {
-    case LogLevel.DEBUG:
+    case LOG_LEVELS.DEBUG:
       return 'bg-gray-400/20 text-gray-400';
-    case LogLevel.INFO:
+    case LOG_LEVELS.INFO:
       return 'bg-[var(--impulse-primary)]/20 text-[var(--impulse-primary)]';
-    case LogLevel.WARNING:
+    case LOG_LEVELS.WARN:
       return 'bg-yellow-400/20 text-yellow-400';
-    case LogLevel.ERROR:
+    case LOG_LEVELS.ERROR:
       return 'bg-[var(--impulse-secondary)]/20 text-[var(--impulse-secondary)]';
-    case LogLevel.CRITICAL:
+    case LOG_LEVELS.CRITICAL:
       return 'bg-red-600/20 text-red-600';
     default:
       return 'bg-gray-400/20 text-gray-400';
