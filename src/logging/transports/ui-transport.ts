@@ -1,6 +1,7 @@
 
 import { toast } from '@/hooks/use-toast';
-import { LogEntry, LogLevel, LogTransport } from '../types';
+import { LogEntry, LogTransport } from '../types';
+import { LOG_LEVELS, LogLevel } from '../constants/log-level';
 
 interface UITransportOptions {
   showDebug?: boolean;
@@ -50,15 +51,15 @@ export class UITransport implements LogTransport {
   
   private shouldShowToast(level: LogLevel): boolean {
     switch (level) {
-      case LogLevel.DEBUG:
+      case LOG_LEVELS.DEBUG:
         return !!this.options.showDebug;
-      case LogLevel.INFO:
+      case LOG_LEVELS.INFO:
         return !!this.options.showInfo;
-      case LogLevel.WARNING:
+      case LOG_LEVELS.WARN:
         return !!this.options.showWarning;
-      case LogLevel.ERROR:
+      case LOG_LEVELS.ERROR:
         return !!this.options.showError;
-      case LogLevel.CRITICAL:
+      case LOG_LEVELS.CRITICAL:
         return !!this.options.showCritical;
       default:
         return false;

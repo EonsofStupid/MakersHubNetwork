@@ -3,7 +3,7 @@
  * Logging system type definitions
  */
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'success' | 'trace';
+import { LogLevel } from './constants/log-level';
 
 export enum LogCategory {
   SYSTEM = 'system',
@@ -46,3 +46,6 @@ export interface LoggingConfig {
   includeUser?: boolean;
   includeSession?: boolean;
 }
+
+// Re-export LogLevel for backward compatibility
+export { LogLevel } from './constants/log-level';

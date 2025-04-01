@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { LogCategory, LogEntry, LogLevel, memoryTransport } from '@/logging';
+import { LogCategory, LogEntry, memoryTransport } from '@/logging';
+import { LOG_LEVELS, LogLevel } from '@/logging/constants/log-level';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,7 +21,7 @@ export function LogActivityStream({
   maxEntries = 50,
   height = '300px',
   autoScroll = true,
-  level = LogLevel.INFO,
+  level = LOG_LEVELS.INFO,
   categories,
   showSource = false,
   className
@@ -73,15 +74,15 @@ export function LogActivityStream({
   // Get color class for log level
   const getLevelColorClass = (level: LogLevel): string => {
     switch (level) {
-      case LogLevel.DEBUG:
+      case LOG_LEVELS.DEBUG:
         return 'text-gray-400';
-      case LogLevel.INFO:
+      case LOG_LEVELS.INFO:
         return 'text-blue-400';
-      case LogLevel.WARNING:
+      case LOG_LEVELS.WARN:
         return 'text-yellow-400';
-      case LogLevel.ERROR:
+      case LOG_LEVELS.ERROR:
         return 'text-red-400';
-      case LogLevel.CRITICAL:
+      case LOG_LEVELS.CRITICAL:
         return 'text-red-600 font-bold';
       default:
         return 'text-gray-400';
@@ -91,15 +92,15 @@ export function LogActivityStream({
   // Get name for log level
   const getLevelName = (level: LogLevel): string => {
     switch (level) {
-      case LogLevel.DEBUG:
+      case LOG_LEVELS.DEBUG:
         return 'DEBUG';
-      case LogLevel.INFO:
+      case LOG_LEVELS.INFO:
         return 'INFO';
-      case LogLevel.WARNING:
+      case LOG_LEVELS.WARN:
         return 'WARN';
-      case LogLevel.ERROR:
+      case LOG_LEVELS.ERROR:
         return 'ERROR';
-      case LogLevel.CRITICAL:
+      case LOG_LEVELS.CRITICAL:
         return 'CRITICAL';
       default:
         return 'UNKNOWN';
@@ -109,11 +110,11 @@ export function LogActivityStream({
   // Get log item class based on level
   const getLogItemClass = (level: LogLevel): string => {
     switch (level) {
-      case LogLevel.WARNING:
+      case LOG_LEVELS.WARN:
         return 'border-l-2 border-l-yellow-500';
-      case LogLevel.ERROR:
+      case LOG_LEVELS.ERROR:
         return 'border-l-2 border-l-red-500';
-      case LogLevel.CRITICAL:
+      case LOG_LEVELS.CRITICAL:
         return 'border-l-2 border-l-red-600 bg-red-950/20';
       default:
         return '';
