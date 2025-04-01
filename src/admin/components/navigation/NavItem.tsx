@@ -6,8 +6,7 @@ import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
-import { GripVertical } from 'lucide-react';
-import { LucideIcon } from 'lucide-react';
+import { GripVertical, LucideIcon } from 'lucide-react';
 
 interface NavItemProps {
   id: string;

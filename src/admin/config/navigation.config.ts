@@ -1,8 +1,17 @@
 
-import { LayoutDashboard, Users, Settings, FileText, Package, Palette, Database, BarChart } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, FileText, Package, Palette, Database, BarChart, LucideIcon } from 'lucide-react';
 import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
-export const adminNavigationItems = [
+interface AdminNavigationItem {
+  id: string;
+  label: string;
+  path: string;
+  icon: LucideIcon;
+  permission?: string;
+  section?: string;
+}
+
+export const adminNavigationItems: AdminNavigationItem[] = [
   {
     id: 'overview',
     label: 'Overview',

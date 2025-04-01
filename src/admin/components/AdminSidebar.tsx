@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminPermissionValue } from '@/admin/constants/permissions';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
@@ -20,7 +20,7 @@ type AdminNavigationItem = {
   id: string;
   label: string;
   path: string;
-  icon: React.ComponentType<any>;
+  icon: LucideIcon;
   permission?: AdminPermissionValue;
   section?: string;
 };
