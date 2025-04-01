@@ -10,7 +10,7 @@ import { LogCategory } from '@/logging';
  * Maps user roles to admin permissions
  */
 export function useAdminPermissions() {
-  const { roles, isAdmin, isSuperAdmin } = useAuth();
+  const { roles, isAdmin, isSuperAdmin, isLoading } = useAuth();
   const logger = useLogger("AdminPermissions", LogCategory.ADMIN);
   
   // Map roles to permissions
@@ -31,7 +31,8 @@ export function useAdminPermissions() {
         ADMIN_PERMISSIONS.USERS_VIEW,
         ADMIN_PERMISSIONS.BUILDS_VIEW,
         ADMIN_PERMISSIONS.BUILDS_APPROVE,
-        ADMIN_PERMISSIONS.THEMES_VIEW
+        ADMIN_PERMISSIONS.THEMES_VIEW,
+        ADMIN_PERMISSIONS.SYSTEM_LOGS
       ];
     }
     
@@ -40,20 +41,20 @@ export function useAdminPermissions() {
   }, [roles, isAdmin, isSuperAdmin, logger]);
   
   // Check if user has a specific permission
-  const hasPermission = useCallback((permission: AdminPermissionValue | string) => {
+  const hasPermission = useCallback((permission: AdminPermissionValue) => {
     // Super admins have all permissions
     if (permissions.includes(ADMIN_PERMISSIONS.SUPER_ADMIN)) {
       return true;
     }
     
     // Check for specific permission
-    return permissions.includes(permission as AdminPermissionValue);
+    return permissions.includes(permission);
   }, [permissions]);
   
   return {
     hasPermission,
     permissions,
-    isLoading: false,
+    isLoading,
     isAdmin,
     isSuperAdmin
   };
