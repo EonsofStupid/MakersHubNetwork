@@ -1,20 +1,23 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 export function useAdminAccess() {
   const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const logger = useLogger("AdminAccess", LogCategory.AUTH);
   
   // Initialize admin data
   const initializeAdmin = useCallback(async () => {
     try {
-      console.log("Initializing admin access...");
+      logger.info("Initializing admin access...");
       const { data: { user }, error } = await supabase.auth.getUser();
       
       if (error) {
-        console.error("Error fetching user:", error);
+        logger.error("Error fetching user:", { details: error });
         setIsAuthenticated(false);
         setHasAdminAccess(false);
         setIsLoading(false);
@@ -22,7 +25,7 @@ export function useAdminAccess() {
       }
       
       setIsAuthenticated(!!user);
-      console.log("User authenticated:", !!user);
+      logger.info("User authenticated status:", { details: { isAuthenticated: !!user }});
       
       if (user) {
         // Get user roles
@@ -32,7 +35,7 @@ export function useAdminAccess() {
           .eq('user_id', user.id);
           
         if (rolesError) {
-          console.error("Error fetching user roles:", rolesError);
+          logger.error("Error fetching user roles:", { details: rolesError });
           setIsLoading(false);
           return;
         }
@@ -42,20 +45,22 @@ export function useAdminAccess() {
           role.role === 'admin' || role.role === 'super_admin'
         ) || [];
         
-        console.log("User roles:", userRoles);
-        console.log("Admin roles found:", adminRoles.length > 0);
+        logger.info("User roles retrieved:", { details: { 
+          roles: userRoles,
+          adminRolesFound: adminRoles.length > 0
+        }});
         
         setHasAdminAccess(adminRoles.length > 0);
       } else {
         setHasAdminAccess(false);
       }
     } catch (error) {
-      console.error("Error initializing admin access:", error);
+      logger.error("Error initializing admin access:", { details: error });
       setHasAdminAccess(false);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [logger]);
 
   // Check admin access on mount
   useEffect(() => {
