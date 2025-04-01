@@ -5,6 +5,8 @@ import { AdminDashboard } from "@/admin/components/dashboard/AdminDashboard";
 
 export default function OverviewPage() {
   return (
-    <AdminDashboard />
+    <AdminLayout title="Admin Dashboard">
+      <AdminDashboard />
+    </AdminLayout>
   );
 }

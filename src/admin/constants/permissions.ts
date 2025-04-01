@@ -6,6 +6,7 @@ export type AdminPermissionAction =
   | 'delete' 
   | 'manage' 
   | 'approve' 
+  | 'reject'
   | 'all';
 
 export type AdminPermissionSubject = 
@@ -19,11 +20,48 @@ export type AdminPermissionSubject =
   | 'security'
   | 'database'
   | 'code'
+  | 'admin'
+  | 'themes'
   | 'all';
 
 export type AdminPermissionValue = `${AdminPermissionAction}:${AdminPermissionSubject}`;
 
 export const ADMIN_PERMISSIONS: Record<string, AdminPermissionValue> = {
+  // Admin permissions
+  ADMIN_ACCESS: 'read:admin',
+  ADMIN_VIEW: 'read:admin',
+  ADMIN_EDIT: 'update:admin',
+  SUPER_ADMIN: 'all:all',
+  
+  // User permissions
+  USERS_VIEW: 'read:users',
+  USERS_EDIT: 'update:users',
+  USERS_DELETE: 'delete:users',
+  
+  // Content permissions
+  CONTENT_VIEW: 'read:content',
+  CONTENT_EDIT: 'update:content',
+  CONTENT_DELETE: 'delete:content',
+  
+  // Build permissions
+  BUILDS_VIEW: 'read:builds',
+  BUILDS_APPROVE: 'approve:builds',
+  BUILDS_REJECT: 'reject:builds',
+  
+  // Theme permissions
+  THEMES_VIEW: 'read:themes',
+  THEMES_EDIT: 'update:themes',
+  THEMES_DELETE: 'delete:themes',
+  
+  // Settings permissions
+  SETTINGS_VIEW: 'read:settings',
+  SETTINGS_EDIT: 'update:settings',
+  
+  // Data permissions
+  DATA_VIEW: 'read:database',
+  DATA_IMPORT: 'update:database',
+  
+  // Legacy permission mappings for backward compatibility
   READ_USERS: 'read:users',
   CREATE_USERS: 'create:users',
   UPDATE_USERS: 'update:users',
@@ -52,8 +90,5 @@ export const ADMIN_PERMISSIONS: Record<string, AdminPermissionValue> = {
   CREATE_REPORTS: 'create:reports',
   
   READ_SECURITY: 'read:security',
-  UPDATE_SECURITY: 'update:security',
-  
-  // Super admin permission
-  ALL: 'all:all'
+  UPDATE_SECURITY: 'update:security'
 };
