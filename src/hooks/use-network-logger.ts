@@ -74,21 +74,50 @@ export function useNetworkLogger(source: string) {
       level = LogLevel.ERROR;
     }
     
-    // Log the response
-    logger.log(level, `Response (${options.status}): ${options.duration.toFixed(0)}ms`, {
-      category: LogCategory.NETWORK,
-      source,
-      details: {
-        requestId,
-        status: options.status,
-        statusText: options.statusText,
-        headers: options.headers,
-        body: options.body,
-        duration
-      },
-      duration,
-      tags: [...(options.tags || []), 'response']
-    });
+    // Log the response using the appropriate level method
+    if (level === LogLevel.WARNING) {
+      logger.warn(`Response (${options.status}): ${options.duration.toFixed(0)}ms`, {
+        category: LogCategory.NETWORK,
+        source,
+        details: {
+          requestId,
+          status: options.status,
+          statusText: options.statusText,
+          headers: options.headers,
+          body: options.body,
+          duration
+        },
+        tags: [...(options.tags || []), 'response']
+      });
+    } else if (level === LogLevel.ERROR) {
+      logger.error(`Response (${options.status}): ${options.duration.toFixed(0)}ms`, {
+        category: LogCategory.NETWORK,
+        source,
+        details: {
+          requestId,
+          status: options.status,
+          statusText: options.statusText,
+          headers: options.headers,
+          body: options.body,
+          duration
+        },
+        tags: [...(options.tags || []), 'response']
+      });
+    } else {
+      logger.info(`Response (${options.status}): ${options.duration.toFixed(0)}ms`, {
+        category: LogCategory.NETWORK,
+        source,
+        details: {
+          requestId,
+          status: options.status,
+          statusText: options.statusText,
+          headers: options.headers,
+          body: options.body,
+          duration
+        },
+        tags: [...(options.tags || []), 'response']
+      });
+    }
     
     // Clean up timer
     delete requestTimers.current[requestId];
@@ -114,7 +143,6 @@ export function useNetworkLogger(source: string) {
         url: options.url,
         duration
       },
-      duration,
       tags: [...(options.tags || []), 'error']
     });
     
