@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Filter, Download, Clock, Tag, RefreshCw, Search } from 'lucide-react';
@@ -12,6 +13,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { renderUnknownAsNode } from '@/shared/utils/render';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -190,7 +192,7 @@ export const LogConsole: React.FC = () => {
           </Badge>
         </div>
         <div className="flex-grow font-mono text-xs break-all">
-          {log.message}
+          {renderUnknownAsNode(log.message)}
         </div>
       </div>
     );
@@ -279,7 +281,7 @@ export const LogConsole: React.FC = () => {
         <div className="space-y-1">
           <div className="text-[var(--impulse-text-secondary)] text-xs">Message</div>
           <div className="font-mono text-xs break-all bg-black/20 p-2 rounded">
-            {String(selectedLog.message)}
+            {renderUnknownAsNode(selectedLog.message)}
           </div>
         </div>
         
