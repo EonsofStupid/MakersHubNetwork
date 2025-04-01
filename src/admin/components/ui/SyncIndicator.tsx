@@ -1,43 +1,38 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { CloudCheck, CloudOff, RotateCw } from 'lucide-react';
-import { useAdminStore } from '@/admin/store/admin.store';
+import { useAdminSync } from '@/admin/hooks/useAdminSync';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, Loader2, CloudOff } from 'lucide-react';
 
-export function SyncIndicator() {
-  const { syncing, syncError, lastSynced } = useAdminStore();
-  
-  if (syncError) {
+export const SyncIndicator = () => {
+  const { isSyncing, lastSynced, error } = useAdminSync();
+
+  if (isSyncing) {
     return (
-      <div className="flex items-center text-xs text-red-500">
-        <CloudOff className="w-3 h-3 mr-1" />
-        <span>Sync error</span>
-      </div>
-    );
-  }
-  
-  if (syncing) {
-    return (
-      <div className="flex items-center text-xs text-[var(--impulse-text-secondary)]">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        >
-          <RotateCw className="w-3 h-3 mr-1" />
-        </motion.div>
+      <Badge variant="outline" className="gap-1">
+        <Loader2 className="w-3 h-3 animate-spin" />
         <span>Syncing...</span>
-      </div>
+      </Badge>
     );
   }
-  
-  return (
-    <div className="flex items-center text-xs text-[var(--impulse-text-secondary)]">
-      <CloudCheck className="w-3 h-3 mr-1 text-green-500" />
-      <span>
-        {lastSynced 
-          ? `Synced ${new Date(lastSynced).toLocaleTimeString()}` 
-          : 'Up to date'}
-      </span>
-    </div>
-  );
-}
+
+  if (error) {
+    return (
+      <Badge variant="destructive" className="gap-1">
+        <CloudOff className="w-3 h-3" />
+        <span>Sync Failed</span>
+      </Badge>
+    );
+  }
+
+  if (lastSynced) {
+    return (
+      <Badge variant="outline" className="gap-1 bg-muted/30 hover:bg-muted/50">
+        <CheckCircle className="w-3 h-3" />
+        <span>Synced {lastSynced}</span>
+      </Badge>
+    );
+  }
+
+  return null;
+};
