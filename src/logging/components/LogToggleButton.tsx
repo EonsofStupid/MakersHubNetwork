@@ -1,39 +1,32 @@
 
 import React from 'react';
-import { AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Terminal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useLoggingContext } from '../context/LoggingContext';
-import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
-interface LogToggleButtonProps {
-  className?: string;
-}
-
-export const LogToggleButton: React.FC<LogToggleButtonProps> = ({
-  className
-}) => {
+export const LogToggleButton: React.FC = () => {
   const { showLogConsole, setShowLogConsole } = useLoggingContext();
   
   return (
-    <motion.button
-      onClick={() => setShowLogConsole(!showLogConsole)}
+    <Button
+      variant="outline"
+      size="icon"
       className={cn(
-        "fixed z-40 bottom-4 right-4 p-3 rounded-full",
-        "bg-[var(--impulse-bg-card)] border border-[var(--impulse-border-normal)]",
-        "text-[var(--impulse-text-primary)] hover:text-[var(--impulse-primary)]",
-        "hover:border-[var(--impulse-primary)] hover:shadow-[0_0_10px_var(--impulse-primary)]",
-        "transition-all duration-300 backdrop-blur-md",
-        showLogConsole && "text-[var(--impulse-primary)] border-[var(--impulse-primary)]",
-        showLogConsole && "shadow-[0_0_10px_var(--impulse-primary)]",
-        className
+        "fixed bottom-4 right-4 z-20 rounded-full w-10 h-10 border-primary/30 shadow-md",
+        "hover:bg-primary/20 hover:border-primary/50 transition-all",
+        "group backdrop-blur-sm bg-background/60",
+        showLogConsole && "bg-primary/20 border-primary/50"
       )}
-      title="Toggle Log Console"
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      onClick={() => setShowLogConsole(!showLogConsole)}
+      title={showLogConsole ? "Hide Log Console" : "Show Log Console"}
     >
-      <AlertCircle size={20} />
-    </motion.button>
+      <Terminal 
+        className={cn(
+          "h-4 w-4 text-primary group-hover:animate-pulse",
+          showLogConsole && "animate-pulse"
+        )} 
+      />
+    </Button>
   );
 };

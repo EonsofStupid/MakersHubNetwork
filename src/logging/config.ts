@@ -1,62 +1,53 @@
 
-import { ConsoleTransport } from "./transports/console-transport";
-import { MemoryTransport } from "./transports/memory-transport";
-import { UITransport } from "./transports/ui-transport";
-import { LogCategory, LogLevel, LoggingConfig } from "./types";
+import { LoggingConfig, LogLevel, LogCategory } from './types';
+import { ConsoleTransport } from './transports/console-transport';
+import { UITransport } from './transports/ui-transport';
+import { MemoryTransport, memoryTransport } from './transports/memory-transport';
 
-// Create shared instances of transports
-export const consoleTransport = new ConsoleTransport();
-export const memoryTransport = new MemoryTransport({ maxEntries: 1000 });
-export const uiTransport = new UITransport({
-  showDebug: false,
-  showInfo: true,
-  showWarning: true,
-  showError: true,
-  showCritical: true,
-  throttleMs: 2000 // Throttle similar messages to avoid UI spam
-});
-
-/**
- * Default logging configuration
- */
+// Default logging configuration
 export const defaultLoggingConfig: LoggingConfig = {
-  minLevel: LogLevel.DEBUG,
-  enabledCategories: Object.values(LogCategory),
+  minLevel: LogLevel.INFO, // Log info and above by default
   transports: [
-    consoleTransport,
-    memoryTransport,
-    uiTransport
+    new ConsoleTransport(), // Always log to console
+    new UITransport(),      // Show UI toasts for logs
+    memoryTransport,        // Keep logs in memory for UI components
   ],
-  bufferSize: 10,
-  flushInterval: 5000,
-  includeSource: true,
-  includeUser: true,
-  includeSession: true
+  bufferSize: 10,          // Buffer size before flush
+  flushInterval: 5000,     // Flush interval in ms
+  includeSource: true,     // Include source file/component info
+  includeUser: true,       // Include user ID if available
+  includeSession: true,    // Include session ID
 };
 
-/**
- * Development-specific configuration
- */
-export const developmentLoggingConfig: LoggingConfig = {
-  ...defaultLoggingConfig,
-  minLevel: LogLevel.DEBUG
-};
-
-/**
- * Production-specific configuration
- */
-export const productionLoggingConfig: LoggingConfig = {
-  ...defaultLoggingConfig,
-  minLevel: LogLevel.INFO,
-  includeSource: false
-};
-
-/**
- * Get the appropriate config based on environment
- */
+// Get config based on environment
 export function getLoggingConfig(): LoggingConfig {
-  if (process.env.NODE_ENV === 'production') {
-    return productionLoggingConfig;
+  // In development, debug everything
+  if (import.meta.env.DEV) {
+    return {
+      ...defaultLoggingConfig,
+      minLevel: LogLevel.DEBUG,
+      enabledCategories: Object.values(LogCategory),
+    };
   }
-  return developmentLoggingConfig;
+  
+  // In production, more selective
+  return {
+    ...defaultLoggingConfig,
+    minLevel: LogLevel.INFO,
+    // Exclude DEBUG level from UI transport in production
+    transports: [
+      new ConsoleTransport(),
+      new UITransport({
+        showDebug: false,
+        showInfo: true,
+        showWarning: true,
+        showError: true,
+        showCritical: true,
+      }),
+      memoryTransport,
+    ],
+  };
 }
+
+// Export the memory transport for direct access in components
+export { memoryTransport };
