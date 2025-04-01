@@ -4,27 +4,29 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button';
 import { RatingStars } from './RatingStars';
 import { Badge } from '@/components/ui/badge';
-import { ThumbsUp, ThumbsDown, Flag, Edit, Trash2, Eye } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Flag, Edit, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ReviewCategory } from '@/admin/types/review.types';
+import { ReviewCategory, BuildReview } from '@/admin/types/review.types';
 import { ReviewImageUpload } from './ReviewImageUpload';
 
 interface ReviewCardProps {
-  id: string;
-  title: string;
-  content: string;
-  rating: number;
-  categories: ReviewCategory[];
-  userName: string;
+  id?: string;
+  title?: string;
+  content?: string;
+  rating?: number;
+  categories?: ReviewCategory[];
+  userName?: string;
   userAvatar?: string;
   buildName?: string;
-  date: string;
-  likes: number;
-  dislikes: number;
+  date?: string;
+  likes?: number;
+  dislikes?: number;
   images?: string[];
   isVerified?: boolean;
   isAdmin?: boolean;
   isEditable?: boolean;
+  isPending?: boolean;
+  review?: BuildReview;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   onApprove?: (id: string) => void;
@@ -48,33 +50,48 @@ export function ReviewCard({
   isVerified = false,
   isAdmin = false,
   isEditable = false,
+  isPending = false,
+  review,
   onEdit,
   onDelete,
   onApprove,
   onReject,
   className
 }: ReviewCardProps) {
+  // If review object is provided, use its properties instead of individual props
+  const reviewId = review?.id || id || '';
+  const reviewTitle = review?.title || title || '';
+  const reviewContent = review?.body || content || '';
+  const reviewRating = review?.rating || rating || 0;
+  const reviewCategories = review?.category || categories || [];
+  const reviewUserName = review?.reviewer_name || userName || 'Anonymous';
+  const reviewDate = review?.created_at ? new Date(review.created_at).toLocaleDateString() : date || '';
+  const reviewImages = review?.image_urls || images || [];
+  const reviewIsVerified = review?.approved || isVerified;
+  const isPendingReview = isPending || (review && !review.approved);
+  
+  // State
   const [isExpanded, setIsExpanded] = useState(false);
-  const [localImages, setLocalImages] = useState<string[]>(images);
+  const [localImages, setLocalImages] = useState<string[]>(reviewImages);
   
   const toggleExpand = () => {
     setIsExpanded(prev => !prev);
   };
   
   const handleEdit = () => {
-    if (onEdit) onEdit(id);
+    if (onEdit) onEdit(reviewId);
   };
   
   const handleDelete = () => {
-    if (onDelete) onDelete(id);
+    if (onDelete) onDelete(reviewId);
   };
   
   const handleApprove = () => {
-    if (onApprove) onApprove(id);
+    if (onApprove) onApprove(reviewId);
   };
   
   const handleReject = () => {
-    if (onReject) onReject(id);
+    if (onReject) onReject(reviewId);
   };
   
   // Adding async to make it return a Promise<void>
@@ -92,9 +109,9 @@ export function ReviewCard({
     setLocalImages(prev => prev.filter((_, i) => i !== index));
   };
   
-  const truncatedContent = content.length > 200 && !isExpanded
-    ? content.substring(0, 200) + '...'
-    : content;
+  const truncatedContent = reviewContent.length > 200 && !isExpanded
+    ? reviewContent.substring(0, 200) + '...'
+    : reviewContent;
   
   return (
     <Card className={cn("overflow-hidden", className)}>
@@ -102,15 +119,20 @@ export function ReviewCard({
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg font-semibold">{title}</h3>
-              {isVerified && (
+              <h3 className="text-lg font-semibold">{reviewTitle}</h3>
+              {reviewIsVerified && !isPendingReview && (
                 <Badge variant="outline" className="text-xs bg-green-500/10 text-green-500 border-green-500/30">
                   Verified
                 </Badge>
               )}
+              {isPendingReview && (
+                <Badge variant="outline" className="text-xs bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
+                  Pending
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{userName}</span>
+              <span>{reviewUserName}</span>
               {buildName && (
                 <>
                   <span>•</span>
@@ -118,10 +140,10 @@ export function ReviewCard({
                 </>
               )}
               <span>•</span>
-              <span>{date}</span>
+              <span>{reviewDate}</span>
             </div>
           </div>
-          <RatingStars rating={rating} size="sm" />
+          <RatingStars rating={reviewRating} size="sm" />
         </div>
       </CardHeader>
       
@@ -140,7 +162,7 @@ export function ReviewCard({
         
         <p className="text-sm">
           {truncatedContent}
-          {content.length > 200 && (
+          {reviewContent.length > 200 && (
             <Button
               variant="link"
               className="px-0 h-auto font-normal"
@@ -151,9 +173,9 @@ export function ReviewCard({
           )}
         </p>
         
-        {categories.length > 0 && (
+        {reviewCategories.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {categories.map(category => (
+            {reviewCategories.map(category => (
               <Badge key={category} variant="secondary" className="text-xs">
                 {category}
               </Badge>
@@ -166,12 +188,12 @@ export function ReviewCard({
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" className="h-8 px-2">
             <ThumbsUp className="h-4 w-4 mr-1" />
-            {likes}
+            {likes || 0}
           </Button>
           
           <Button variant="ghost" size="sm" className="h-8 px-2">
             <ThumbsDown className="h-4 w-4 mr-1" />
-            {dislikes}
+            {dislikes || 0}
           </Button>
           
           <Button variant="ghost" size="sm" className="h-8 px-2">
