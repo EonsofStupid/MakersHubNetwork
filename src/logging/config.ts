@@ -1,13 +1,13 @@
 
 import { LoggingConfig, LogCategory } from './types';
-import { LOG_LEVELS, LogLevel } from './constants/log-level';
+import { LogLevel } from './constants/log-level';
 import { ConsoleTransport } from './transports/console-transport';
 import { UITransport } from './transports/ui-transport';
 import { MemoryTransport, memoryTransport } from './transports/memory-transport';
 
 // Default logging configuration
 export const defaultLoggingConfig: LoggingConfig = {
-  minLevel: LOG_LEVELS.INFO, // Log info and above by default
+  minLevel: LogLevel.INFO, // Log info and above by default
   transports: [
     new ConsoleTransport(), // Always log to console
     new UITransport(),      // Show UI toasts for logs
@@ -26,7 +26,7 @@ export function getLoggingConfig(): LoggingConfig {
   if (import.meta.env.DEV) {
     return {
       ...defaultLoggingConfig,
-      minLevel: LOG_LEVELS.DEBUG,
+      minLevel: LogLevel.DEBUG,
       enabledCategories: Object.values(LogCategory),
     };
   }
@@ -34,7 +34,7 @@ export function getLoggingConfig(): LoggingConfig {
   // In production, more selective
   return {
     ...defaultLoggingConfig,
-    minLevel: LOG_LEVELS.INFO,
+    minLevel: LogLevel.INFO,
     // Exclude DEBUG level from UI transport in production
     transports: [
       new ConsoleTransport(),

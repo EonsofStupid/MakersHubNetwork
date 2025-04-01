@@ -1,25 +1,11 @@
-
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
-import { LogEntry, LogLevel } from '../types';
+import { LogEntry } from '../types';
+import { LogLevel } from '../constants/log-level';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
 import '../styles/logging.css';
-
-const renderUnknownAsNode = (unknown: unknown): React.ReactNode => {
-  if (unknown === null) return <span className="text-gray-400">null</span>;
-  if (unknown === undefined) return <span className="text-gray-400">undefined</span>;
-  if (typeof unknown === 'string') return unknown;
-  if (typeof unknown === 'number' || typeof unknown === 'boolean') return String(unknown);
-  if (unknown instanceof Error) return unknown.message;
-  
-  // For objects and arrays, stringify them
-  try {
-    return JSON.stringify(unknown, null, 2);
-  } catch (error) {
-    return String(unknown);
-  }
-};
+import { renderUnknownAsNode } from '@/shared/utils/render';
 
 interface LogDetailsProps {
   details: Record<string, any>;
@@ -37,9 +23,7 @@ const LogDetails = forwardRef<HTMLDivElement, LogDetailsProps>(({ details, class
         <div key={key} className="flex">
           <span className="text-gray-400 mr-2">{key}:</span>
           <span className="text-gray-300">
-            {typeof value === 'object' 
-              ? JSON.stringify(value, null, 2) 
-              : renderUnknownAsNode(value)}
+            {renderUnknownAsNode(value)}
           </span>
         </div>
       ))}
@@ -56,21 +40,21 @@ interface LogItemProps {
 
 const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
   const [expanded, setExpanded] = useState(false);
-  const hasDetails = log.details && Object.keys(log.details).length > 0;
+  const hasDetails = log.details && Object.keys(log.details as object).length > 0;
   
   const getLevelIcon = (level: LogLevel) => {
     switch (level) {
-      case 'error':
+      case LogLevel.ERROR:
         return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'warn':
+      case LogLevel.WARN:
         return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'info':
+      case LogLevel.INFO:
         return <Info className="h-4 w-4 text-blue-500" />;
-      case 'success':
+      case LogLevel.SUCCESS:
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'debug':
+      case LogLevel.DEBUG:
         return <Bug className="h-4 w-4 text-purple-500" />;
-      case 'trace':
+      case LogLevel.TRACE:
         return <Code className="h-4 w-4 text-gray-500" />;
       default:
         return <Info className="h-4 w-4 text-blue-500" />;
@@ -79,17 +63,17 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
   
   const getBgColorClass = (level: LogLevel) => {
     switch (level) {
-      case 'error':
+      case LogLevel.ERROR:
         return 'border-l-4 border-l-red-500 bg-red-900/10';
-      case 'warn':
+      case LogLevel.WARN:
         return 'border-l-4 border-l-yellow-500 bg-yellow-900/10';
-      case 'info':
+      case LogLevel.INFO:
         return 'border-l-4 border-l-blue-500 bg-blue-900/10';
-      case 'success':
+      case LogLevel.SUCCESS:
         return 'border-l-4 border-l-green-500 bg-green-900/10';
-      case 'debug':
+      case LogLevel.DEBUG:
         return 'border-l-4 border-l-purple-500 bg-purple-900/10';
-      case 'trace':
+      case LogLevel.TRACE:
         return 'border-l-4 border-l-gray-500 bg-gray-900/10';
       default:
         return 'border-l-4 border-l-blue-500 bg-blue-900/10';
@@ -121,7 +105,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <LogDetails details={log.details || {}} />
+                <LogDetails details={log.details as Record<string, any> || {}} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -154,7 +138,7 @@ export function LogConsole() {
     .filter(log => filter === 'all' || log.level === filter)
     .filter(log => 
       search === '' || 
-      log.message.toString().toLowerCase().includes(search.toLowerCase()) ||
+      String(log.message).toLowerCase().includes(search.toLowerCase()) ||
       log.category.toLowerCase().includes(search.toLowerCase())
     );
   
@@ -198,12 +182,12 @@ export function LogConsole() {
             onChange={(e) => setFilter(e.target.value as LogLevel | 'all')}
           >
             <option value="all">All Levels</option>
-            <option value="error">Errors</option>
-            <option value="warn">Warnings</option>
-            <option value="info">Info</option>
-            <option value="success">Success</option>
-            <option value="debug">Debug</option>
-            <option value="trace">Trace</option>
+            <option value={LogLevel.ERROR}>Errors</option>
+            <option value={LogLevel.WARN}>Warnings</option>
+            <option value={LogLevel.INFO}>Info</option>
+            <option value={LogLevel.SUCCESS}>Success</option>
+            <option value={LogLevel.DEBUG}>Debug</option>
+            <option value={LogLevel.TRACE}>Trace</option>
           </select>
           
           <input
@@ -251,4 +235,3 @@ export function LogConsole() {
     </motion.div>
   );
 }
-

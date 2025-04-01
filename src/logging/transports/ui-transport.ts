@@ -1,7 +1,7 @@
 
 import { toast } from '@/hooks/use-toast';
 import { LogEntry, LogTransport } from '../types';
-import { LOG_LEVELS, LogLevel } from '../constants/log-level';
+import { LogLevel } from '../constants/log-level';
 
 interface UITransportOptions {
   showDebug?: boolean;
@@ -51,15 +51,15 @@ export class UITransport implements LogTransport {
   
   private shouldShowToast(level: LogLevel): boolean {
     switch (level) {
-      case LOG_LEVELS.DEBUG:
+      case LogLevel.DEBUG:
         return !!this.options.showDebug;
-      case LOG_LEVELS.INFO:
+      case LogLevel.INFO:
         return !!this.options.showInfo;
-      case LOG_LEVELS.WARN:
+      case LogLevel.WARN:
         return !!this.options.showWarning;
-      case LOG_LEVELS.ERROR:
+      case LogLevel.ERROR:
         return !!this.options.showError;
-      case LOG_LEVELS.CRITICAL:
+      case LogLevel.CRITICAL:
         return !!this.options.showCritical;
       default:
         return false;
@@ -119,6 +119,7 @@ export class UITransport implements LogTransport {
         variant = "default";
         break;
       case LogLevel.WARNING:
+      case LogLevel.WARN:
         iconName = "alert-triangle";
         variant = "default";
         break;
@@ -138,11 +139,11 @@ export class UITransport implements LogTransport {
     // Show toast with appropriate styling
     toast({
       title,
-      description: entry.message,
+      description: String(entry.message),
       variant,
       // Use plain strings for icon names - the toast component will handle rendering
       icon: iconName,
-      duration: entry.level >= LogLevel.ERROR ? 7000 : 4000,
+      duration: entry.level === LogLevel.ERROR || entry.level === LogLevel.CRITICAL ? 7000 : 4000,
     });
   }
   
@@ -152,7 +153,7 @@ export class UITransport implements LogTransport {
         return `Debug [${entry.category}]`;
       case LogLevel.INFO:
         return `Info [${entry.category}]`;
-      case LogLevel.WARNING:
+      case LogLevel.WARN:
         return `Warning [${entry.category}]`;
       case LogLevel.ERROR:
         return `Error [${entry.category}]`;
