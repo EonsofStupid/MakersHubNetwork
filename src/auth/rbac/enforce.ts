@@ -46,5 +46,6 @@ export const canAccessAdmin = (userRoles: UserRole[] = []): boolean => {
  * Check if user can use development features
  */
 export const canAccessDevFeatures = (userRoles: UserRole[] = []): boolean => {
-  return userRoles.includes('developer') || userRoles.includes('admin') || userRoles.includes('super_admin');
+  return userRoles.includes('admin') || userRoles.includes('super_admin');
 };
+

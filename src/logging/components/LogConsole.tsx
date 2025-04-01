@@ -1,572 +1,254 @@
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Filter, Download, Clock, Tag, RefreshCw, Search } from 'lucide-react';
-import { LogEntry, LogLevel, LogCategory } from '../types';
-import { memoryTransport } from '../config';
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { renderUnknownAsNode } from '@/shared/utils/render';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { LogEntry, LogLevel } from '../types';
+import { motion, AnimatePresence } from 'framer-motion';
+import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
+import '../styles/logging.css';
 
-/**
- * A console-like UI for viewing logs in real-time
- */
-export const LogConsole: React.FC = () => {
-  const { setShowLogConsole } = useLoggingContext();
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [filteredLogs, setFilteredLogs] = useState<LogEntry[]>([]);
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLevels, setSelectedLevels] = useState<LogLevel[]>([
-    LogLevel.INFO,
-    LogLevel.WARNING,
-    LogLevel.ERROR,
-    LogLevel.CRITICAL,
-  ]);
-  const [selectedCategories, setSelectedCategories] = useState<LogCategory[]>(
-    Object.values(LogCategory)
+const renderUnknownAsNode = (unknown: unknown): React.ReactNode => {
+  if (unknown === null) return <span className="text-gray-400">null</span>;
+  if (unknown === undefined) return <span className="text-gray-400">undefined</span>;
+  if (typeof unknown === 'string') return unknown;
+  if (typeof unknown === 'number' || typeof unknown === 'boolean') return String(unknown);
+  if (unknown instanceof Error) return unknown.message;
+  
+  // For objects and arrays, stringify them
+  try {
+    return JSON.stringify(unknown, null, 2);
+  } catch (error) {
+    return String(unknown);
+  }
+};
+
+interface LogDetailsProps {
+  details: Record<string, any>;
+  className?: string;
+}
+
+const LogDetails = forwardRef<HTMLDivElement, LogDetailsProps>(({ details, className = '' }, ref) => {
+  if (!details || Object.keys(details).length === 0) {
+    return null;
+  }
+  
+  return (
+    <div ref={ref} className={`log-details mt-1 p-2 bg-gray-800 rounded text-xs font-mono ${className}`}>
+      {Object.entries(details).map(([key, value]) => (
+        <div key={key} className="flex">
+          <span className="text-gray-400 mr-2">{key}:</span>
+          <span className="text-gray-300">
+            {typeof value === 'object' 
+              ? JSON.stringify(value, null, 2) 
+              : renderUnknownAsNode(value)}
+          </span>
+        </div>
+      ))}
+    </div>
   );
-  const [isFilterVisible, setIsFilterVisible] = useState(false);
-  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
-  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+});
 
-  // Function to refresh logs from memory transport
-  const refreshLogs = () => {
-    const updatedLogs = memoryTransport.getLogs();
-    setLogs(updatedLogs);
-  };
+LogDetails.displayName = 'LogDetails';
 
-  // Set up auto-refresh
-  useEffect(() => {
-    if (autoRefresh) {
-      refreshLogs(); // Initial load
-      refreshIntervalRef.current = setInterval(refreshLogs, 1000);
-    } else if (refreshIntervalRef.current) {
-      clearInterval(refreshIntervalRef.current);
-      refreshIntervalRef.current = null;
-    }
-    
-    return () => {
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
-      }
-    };
-  }, [autoRefresh]);
+interface LogItemProps {
+  log: LogEntry;
+  index: number;
+}
 
-  // Apply filters when logs, search, levels, or categories change
-  useEffect(() => {
-    let filtered = [...logs];
-    
-    // Filter by level
-    if (selectedLevels.length > 0) {
-      filtered = filtered.filter(log => selectedLevels.includes(log.level));
-    }
-    
-    // Filter by category
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter(log => selectedCategories.includes(log.category));
-    }
-    
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        log =>
-          log.message.toLowerCase().includes(query) ||
-          (log.source && log.source.toLowerCase().includes(query)) ||
-          log.category.toLowerCase().includes(query)
-      );
-    }
-    
-    setFilteredLogs(filtered);
-  }, [logs, searchQuery, selectedLevels, selectedCategories]);
-
-  // Handle level toggle
-  const handleLevelToggle = (level: LogLevel) => {
-    setSelectedLevels(prev => {
-      if (prev.includes(level)) {
-        return prev.filter(l => l !== level);
-      } else {
-        return [...prev, level];
-      }
-    });
-  };
-
-  // Handle category toggle
-  const handleCategoryToggle = (category: LogCategory) => {
-    setSelectedCategories(prev => {
-      if (prev.includes(category)) {
-        return prev.filter(c => c !== category);
-      } else {
-        return [...prev, category];
-      }
-    });
-  };
-
-  // Export logs to JSON file
-  const handleExportLogs = () => {
-    const dataStr = JSON.stringify(filteredLogs, null, 2);
-    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
-    const filename = `logs_${new Date().toISOString().replace(/:/g, '-')}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', filename);
-    linkElement.click();
-  };
-
-  // Clear all logs
-  const handleClearLogs = () => {
-    memoryTransport.clear();
-    refreshLogs();
-    setSelectedLog(null);
-  };
-
-  // Get color class for log level
-  const getLevelColorClass = (level: LogLevel): string => {
+const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
+  const [expanded, setExpanded] = useState(false);
+  const hasDetails = log.details && Object.keys(log.details).length > 0;
+  
+  const getLevelIcon = (level: LogLevel) => {
     switch (level) {
-      case LogLevel.DEBUG:
-        return 'text-gray-400';
-      case LogLevel.INFO:
-        return 'text-blue-400';
-      case LogLevel.WARNING:
-        return 'text-yellow-400';
-      case LogLevel.ERROR:
-        return 'text-red-400';
-      case LogLevel.CRITICAL:
-        return 'text-red-600 font-bold';
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'warn':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case 'info':
+        return <Info className="h-4 w-4 text-blue-500" />;
+      case 'success':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'debug':
+        return <Bug className="h-4 w-4 text-purple-500" />;
+      case 'trace':
+        return <Code className="h-4 w-4 text-gray-500" />;
       default:
-        return 'text-gray-400';
+        return <Info className="h-4 w-4 text-blue-500" />;
     }
   };
-
-  // Get name for log level
-  const getLevelName = (level: LogLevel): string => {
+  
+  const getBgColorClass = (level: LogLevel) => {
     switch (level) {
-      case LogLevel.DEBUG:
-        return 'DEBUG';
-      case LogLevel.INFO:
-        return 'INFO';
-      case LogLevel.WARNING:
-        return 'WARN';
-      case LogLevel.ERROR:
-        return 'ERROR';
-      case LogLevel.CRITICAL:
-        return 'CRITICAL';
+      case 'error':
+        return 'border-l-4 border-l-red-500 bg-red-900/10';
+      case 'warn':
+        return 'border-l-4 border-l-yellow-500 bg-yellow-900/10';
+      case 'info':
+        return 'border-l-4 border-l-blue-500 bg-blue-900/10';
+      case 'success':
+        return 'border-l-4 border-l-green-500 bg-green-900/10';
+      case 'debug':
+        return 'border-l-4 border-l-purple-500 bg-purple-900/10';
+      case 'trace':
+        return 'border-l-4 border-l-gray-500 bg-gray-900/10';
       default:
-        return 'UNKNOWN';
+        return 'border-l-4 border-l-blue-500 bg-blue-900/10';
     }
   };
-
-  // Format timestamp
-  const formatTime = (date: Date): string => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  };
-
-  // Format log message for display
-  const formatLogMessage = (log: LogEntry): React.ReactNode => {
-    return (
-      <div className="flex items-start space-x-2 py-1 px-2 hover:bg-black/10 rounded cursor-pointer" onClick={() => setSelectedLog(log)}>
-        <div className={cn("flex-shrink-0 font-mono text-xs py-0.5", getLevelColorClass(log.level))}>
-          {getLevelName(log.level)}
+  
+  return (
+    <div 
+      className={`log-item p-2 mb-1 rounded ${getBgColorClass(log.level)} ${index % 2 === 0 ? 'bg-opacity-50' : ''}`}
+      onClick={() => hasDetails && setExpanded(!expanded)}
+    >
+      <div className="flex items-start">
+        <div className="mr-2 mt-0.5">{getLevelIcon(log.level)}</div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center text-sm">
+            <span className="text-xs text-gray-400 mr-2">
+              {new Date(log.timestamp).toLocaleTimeString()}
+            </span>
+            <span className="font-medium">{log.category}</span>
+          </div>
+          <div className="message-content text-sm">{renderUnknownAsNode(log.message)}</div>
+          
+          <AnimatePresence>
+            {expanded && hasDetails && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <LogDetails details={log.details || {}} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        <div className="flex-shrink-0 text-xs text-gray-400 py-0.5">
-          {formatTime(log.timestamp)}
-        </div>
-        <div className="flex-shrink-0">
-          <Badge variant="outline" className="text-xs py-0">
-            {log.category}
-          </Badge>
-        </div>
-        <div className="flex-grow font-mono text-xs break-all">
-          {renderUnknownAsNode(log.message)}
-        </div>
-      </div>
-    );
-  };
-
-  // Format log details for display as string (for the textarea)
-  const formatLogDetails = (details: unknown): string => {
-    if (details === null || details === undefined) {
-      return "No details available";
-    }
-    
-    if (typeof details === 'object') {
-      try {
-        return JSON.stringify(details, null, 2);
-      } catch (error) {
-        return "Error formatting details: " + String(error);
-      }
-    }
-    
-    return String(details);
-  };
-
-  // Render log details with proper type handling
-  const renderLogDetails = useMemo(() => {
-    if (!selectedLog) return null;
-
-    return (
-      <div className="border-t border-[var(--impulse-border-normal)] p-4 space-y-3 bg-black/20">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-bold text-[var(--impulse-text-primary)]">Log Details</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSelectedLog(null)}
-            className="h-6 w-6 p-0"
+        
+        {hasDetails && (
+          <button 
+            className="text-xs text-gray-400 hover:text-white ml-2 mt-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(!expanded);
+            }}
           >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="space-y-1">
-            <div className="text-[var(--impulse-text-secondary)]">Timestamp</div>
-            <div>{selectedLog.timestamp.toISOString()}</div>
-          </div>
-          
-          <div className="space-y-1">
-            <div className="text-[var(--impulse-text-secondary)]">Level</div>
-            <div className={getLevelColorClass(selectedLog.level)}>
-              {getLevelName(selectedLog.level)}
-            </div>
-          </div>
-          
-          <div className="space-y-1">
-            <div className="text-[var(--impulse-text-secondary)]">Category</div>
-            <div>{selectedLog.category}</div>
-          </div>
-          
-          <div className="space-y-1">
-            <div className="text-[var(--impulse-text-secondary)]">Source</div>
-            <div>{selectedLog.source || 'Not specified'}</div>
-          </div>
-          
-          {selectedLog.userId && (
-            <div className="space-y-1">
-              <div className="text-[var(--impulse-text-secondary)]">User ID</div>
-              <div className="truncate">{selectedLog.userId}</div>
-            </div>
-          )}
-          
-          {selectedLog.sessionId && (
-            <div className="space-y-1">
-              <div className="text-[var(--impulse-text-secondary)]">Session ID</div>
-              <div className="truncate">{selectedLog.sessionId}</div>
-            </div>
-          )}
-          
-          {selectedLog.duration !== undefined && (
-            <div className="space-y-1">
-              <div className="text-[var(--impulse-text-secondary)]">Duration</div>
-              <div>{selectedLog.duration}ms</div>
-            </div>
-          )}
-        </div>
-        
-        <div className="space-y-1">
-          <div className="text-[var(--impulse-text-secondary)] text-xs">Message</div>
-          <div className="font-mono text-xs break-all bg-black/20 p-2 rounded">
-            {renderUnknownAsNode(selectedLog.message)}
-          </div>
-        </div>
-        
-        {selectedLog.details && (
-          <div className="space-y-1">
-            <div className="text-[var(--impulse-text-secondary)] text-xs">Details</div>
-            <Textarea
-              readOnly
-              value={formatLogDetails(selectedLog.details)}
-              className="font-mono text-xs h-32 bg-black/20"
-            />
-          </div>
-        )}
-        
-        {selectedLog.tags && selectedLog.tags.length > 0 && (
-          <div className="space-y-1">
-            <div className="text-[var(--impulse-text-secondary)] text-xs">Tags</div>
-            <div className="flex flex-wrap gap-1">
-              {selectedLog.tags.map((tag, i) => (
-                <Badge key={i} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </div>
+            {expanded ? 'Hide' : 'Show'}
+          </button>
         )}
       </div>
-    );
-  }, [selectedLog]);
+    </div>
+  );
+};
 
+export function LogConsole() {
+  const { logs, clearLogs } = useLoggingContext();
+  const [filter, setFilter] = useState<LogLevel | 'all'>('all');
+  const [search, setSearch] = useState('');
+  const [autoScroll, setAutoScroll] = useState(true);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+  
+  const filteredLogs = logs
+    .filter(log => filter === 'all' || log.level === filter)
+    .filter(log => 
+      search === '' || 
+      log.message.toString().toLowerCase().includes(search.toLowerCase()) ||
+      log.category.toLowerCase().includes(search.toLowerCase())
+    );
+  
+  const scrollToBottom = useCallback(() => {
+    if (autoScroll && logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [autoScroll]);
+  
+  useEffect(() => {
+    scrollToBottom();
+  }, [filteredLogs.length, scrollToBottom]);
+  
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.3 }}
-      className={cn(
-        'fixed bottom-16 right-4 z-30 w-[calc(100vw-2rem)] md:w-[600px] lg:w-[800px] h-[500px] max-h-[80vh]',
-        'rounded-lg border border-[var(--impulse-border-normal)] backdrop-blur-xl',
-        'bg-[var(--impulse-bg-card)]/90 shadow-2xl flex flex-col',
-        'electric-effect-border animate-in fade-in-50 cyber-window'
-      )}
+      initial={{ y: '100%' }}
+      animate={{ y: 0 }}
+      exit={{ y: '100%' }}
+      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      className="fixed bottom-0 left-0 right-0 z-50 h-64 bg-gray-900 text-white border-t border-gray-700 overflow-hidden flex flex-col"
     >
-      {/* Console header */}
-      <div className="p-3 border-b border-[var(--impulse-border-normal)] flex items-center justify-between">
+      <div className="p-2 flex items-center justify-between border-b border-gray-700">
         <div className="flex items-center space-x-2">
-          <div className="cyber-dots flex space-x-1">
-            <div className="w-3 h-3 bg-red-500 rounded-full hover:animate-pulse"></div>
-            <div className="w-3 h-3 bg-yellow-500 rounded-full hover:animate-pulse"></div>
-            <div className="w-3 h-3 bg-green-500 rounded-full hover:animate-pulse"></div>
+          <h3 className="text-sm font-medium">Console Logs</h3>
+          <div className="text-xs text-gray-400">
+            {filteredLogs.length} / {logs.length} logs
           </div>
-          <h2 className="text-sm font-bold text-[var(--impulse-text-primary)]">
-            System Logs
-          </h2>
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 hover:text-[var(--impulse-primary)]"
-            onClick={refreshLogs}
-            title="Refresh Logs"
+          <button 
+            className="px-2 py-1 text-xs rounded hover:bg-gray-700"
+            onClick={clearLogs}
           >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
+            Clear
+          </button>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-7 w-7 p-0 hover:text-[var(--impulse-primary)]",
-              isFilterVisible && "text-[var(--impulse-primary)]"
-            )}
-            onClick={() => setIsFilterVisible(!isFilterVisible)}
-            title="Filter Logs"
+          <select
+            className="bg-gray-800 text-xs rounded px-2 py-1 border border-gray-700"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as LogLevel | 'all')}
           >
-            <Filter className="h-4 w-4" />
-          </Button>
+            <option value="all">All Levels</option>
+            <option value="error">Errors</option>
+            <option value="warn">Warnings</option>
+            <option value="info">Info</option>
+            <option value="success">Success</option>
+            <option value="debug">Debug</option>
+            <option value="trace">Trace</option>
+          </select>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 hover:text-[var(--impulse-primary)]"
-            onClick={handleExportLogs}
-            title="Export Logs"
-          >
-            <Download className="h-4 w-4" />
-          </Button>
+          <input
+            type="text"
+            placeholder="Search logs..."
+            className="bg-gray-800 text-xs rounded px-2 py-1 border border-gray-700"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
           
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 text-gray-400 hover:text-[var(--impulse-primary)]"
-            onClick={() => setShowLogConsole(false)}
+          <button 
+            className={`flex items-center text-xs px-2 py-1 rounded ${autoScroll ? 'bg-blue-600' : 'bg-gray-700'}`}
+            onClick={() => setAutoScroll(!autoScroll)}
           >
-            <X className="h-4 w-4" />
-          </Button>
+            <ArrowDownCircle className="h-3 w-3 mr-1" />
+            Auto-scroll
+          </button>
+          
+          <button 
+            className="px-2 py-1 text-xs rounded hover:bg-gray-700"
+            onClick={() => {
+              const { useLoggingContext } = require('../context/LoggingContext');
+              if (useLoggingContext) {
+                useLoggingContext().toggleLogConsole();
+              }
+            }}
+          >
+            Close
+          </button>
         </div>
       </div>
       
-      {/* Filter section */}
-      <AnimatePresence>
-        {isFilterVisible && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="p-3 border-b border-[var(--impulse-border-normal)] bg-black/20 overflow-hidden"
-          >
-            <div className="flex flex-col space-y-3">
-              <div className="flex items-center space-x-2">
-                <Search className="h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search logs..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="h-8 text-sm"
-                />
-              </div>
-              
-              <div className="flex flex-col space-y-2">
-                <div className="text-xs text-[var(--impulse-text-secondary)] flex items-center space-x-1">
-                  <Tag className="h-3 w-3" />
-                  <span>Log Levels</span>
-                </div>
-                
-                <ToggleGroup type="multiple" className="justify-start">
-                  <ToggleGroupItem
-                    value="debug"
-                    size="sm"
-                    className="h-7 text-xs bg-black/20"
-                    data-state={selectedLevels.includes(LogLevel.DEBUG) ? 'on' : 'off'}
-                    onClick={() => handleLevelToggle(LogLevel.DEBUG)}
-                  >
-                    Debug
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    value="info"
-                    size="sm"
-                    className="h-7 text-xs bg-black/20"
-                    data-state={selectedLevels.includes(LogLevel.INFO) ? 'on' : 'off'}
-                    onClick={() => handleLevelToggle(LogLevel.INFO)}
-                  >
-                    Info
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    value="warning"
-                    size="sm"
-                    className="h-7 text-xs bg-black/20"
-                    data-state={selectedLevels.includes(LogLevel.WARNING) ? 'on' : 'off'}
-                    onClick={() => handleLevelToggle(LogLevel.WARNING)}
-                  >
-                    Warning
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    value="error"
-                    size="sm"
-                    className="h-7 text-xs bg-black/20"
-                    data-state={selectedLevels.includes(LogLevel.ERROR) ? 'on' : 'off'}
-                    onClick={() => handleLevelToggle(LogLevel.ERROR)}
-                  >
-                    Error
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    value="critical"
-                    size="sm"
-                    className="h-7 text-xs bg-black/20"
-                    data-state={selectedLevels.includes(LogLevel.CRITICAL) ? 'on' : 'off'}
-                    onClick={() => handleLevelToggle(LogLevel.CRITICAL)}
-                  >
-                    Critical
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-              
-              <div className="flex flex-col space-y-2">
-                <div className="text-xs text-[var(--impulse-text-secondary)] flex items-center space-x-1">
-                  <Clock className="h-3 w-3" />
-                  <span>Auto-refresh</span>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="auto-refresh"
-                    checked={autoRefresh}
-                    onCheckedChange={(checked) => setAutoRefresh(checked as boolean)}
-                  />
-                  <label
-                    htmlFor="auto-refresh"
-                    className="text-xs cursor-pointer"
-                  >
-                    Refresh automatically (1s)
-                  </label>
-                </div>
-              </div>
-              
-              <div className="flex flex-col space-y-2">
-                <div className="text-xs text-[var(--impulse-text-secondary)] flex items-center space-x-1">
-                  <span>Categories</span>
-                </div>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 text-xs">
-                      {selectedCategories.length === Object.values(LogCategory).length
-                        ? 'All Categories'
-                        : `${selectedCategories.length} Categories`}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {Object.values(LogCategory).map(category => (
-                      <DropdownMenuCheckboxItem
-                        key={category}
-                        checked={selectedCategories.includes(category)}
-                        onCheckedChange={() => handleCategoryToggle(category)}
-                      >
-                        {category}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              
-              <div className="flex justify-end">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={handleClearLogs}
-                >
-                  Clear All Logs
-                </Button>
-              </div>
-            </div>
-          </motion.div>
+      <div className="flex-1 overflow-y-auto p-2">
+        {filteredLogs.length > 0 ? (
+          filteredLogs.map((log, index) => (
+            <LogItem key={log.id} log={log} index={index} />
+          ))
+        ) : (
+          <div className="text-center text-gray-500 mt-4">
+            {logs.length > 0 ? 'No logs match your filters' : 'No logs to display'}
+          </div>
         )}
-      </AnimatePresence>
-      
-      {/* Logs container */}
-      <div className="flex-grow relative flex flex-col overflow-hidden">
-        <ScrollArea className="flex-grow">
-          {filteredLogs.length > 0 ? (
-            <div className="divide-y divide-[var(--impulse-border-normal)]/30">
-              {filteredLogs.map(log => (
-                <div
-                  key={log.id}
-                  className={cn(
-                    selectedLog?.id === log.id ? 'bg-[var(--impulse-primary)]/10' : 'hover:bg-[var(--impulse-border-normal)]/10',
-                    'transition-colors duration-150'
-                  )}
-                >
-                  {formatLogMessage(log)}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-[var(--impulse-text-secondary)] text-sm">
-                {logs.length > 0
-                  ? 'No logs match the current filters'
-                  : 'No logs available'}
-              </p>
-            </div>
-          )}
-        </ScrollArea>
-        
-        {/* Log details panel */}
-        {renderLogDetails}
-      </div>
-      
-      {/* Status bar */}
-      <div className="p-2 border-t border-[var(--impulse-border-normal)] flex items-center justify-between text-xs text-[var(--impulse-text-secondary)]">
-        <div className="flex items-center space-x-2">
-          <span>{filteredLogs.length} logs</span>
-          <span>•</span>
-          <span>{autoRefresh ? 'Auto-refresh on' : 'Auto-refresh off'}</span>
-        </div>
-        <div>
-          {selectedLevels.length === 0
-            ? 'No levels selected'
-            : `Showing: ${selectedLevels.map(l => getLevelName(l)).join(', ')}`}
-        </div>
+        <div ref={logsEndRef} />
       </div>
     </motion.div>
   );
-};
+}
+

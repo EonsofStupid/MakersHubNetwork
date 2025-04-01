@@ -1,57 +1,49 @@
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { useAdminStore } from "../store/admin.store";
-import { defaultImpulseTokens } from "./impulse/tokens";
-import { applyCssVars } from "./utils/themeUtils";
-import { ImpulseTheme } from "../types/impulse.types";
+import React, { createContext, useContext, useEffect } from 'react';
+import { useAdminStore } from '@/admin/store/admin.store';
+import { useTheme } from '@/components/ui/theme-provider';
 
-// Create context for the admin theme
 interface AdminThemeContextType {
-  theme: ImpulseTheme;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  primaryColor: string;
+  setPrimaryColor: (color: string) => void;
 }
 
-const AdminThemeContext = createContext<AdminThemeContextType | undefined>(undefined);
+const AdminThemeContext = createContext<AdminThemeContextType>({
+  isDarkMode: false,
+  toggleDarkMode: () => {},
+  primaryColor: '#00F0FF',
+  setPrimaryColor: () => {}
+});
 
-export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
+export const useAdminTheme = () => useContext(AdminThemeContext);
+
+interface AdminThemeProviderProps {
+  children: React.ReactNode;
+}
+
+export function AdminThemeProvider({ children }: AdminThemeProviderProps) {
   const { isDarkMode, toggleDarkMode } = useAdminStore();
-  const [theme, setTheme] = useState<ImpulseTheme>(defaultImpulseTokens);
+  const { setTheme } = useTheme();
+  const [primaryColor, setPrimaryColor] = React.useState('#00F0FF');
   
-  // Apply theme on mount and when it changes
+  // Sync theme with admin store
   useEffect(() => {
-    // Apply CSS variables to the document root
-    applyCssVars(defaultImpulseTokens, "impulse");
-    
-    // Add the admin theme CSS file
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = '/admin-theme.css';
-    document.head.appendChild(link);
-
-    // Clean up on unmount
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, []);
-
-  const contextValue = {
-    theme,
-    isDarkMode,
-    toggleDarkMode
-  };
-
+    setTheme(isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode, setTheme]);
+  
   return (
-    <AdminThemeContext.Provider value={contextValue}>
+    <AdminThemeContext.Provider 
+      value={{ 
+        isDarkMode, 
+        toggleDarkMode, 
+        primaryColor, 
+        setPrimaryColor 
+      }}
+    >
       {children}
     </AdminThemeContext.Provider>
   );
 }
 
-export function useAdminTheme() {
-  const context = useContext(AdminThemeContext);
-  if (context === undefined) {
-    throw new Error("useAdminTheme must be used within an AdminThemeProvider");
-  }
-  return context;
-}

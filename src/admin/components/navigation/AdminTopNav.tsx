@@ -32,7 +32,6 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
   const { 
     sidebarExpanded, 
     toggleSidebar,
-    toggleEditMode,
     savePreferences,
   } = useAdminStore();
   
@@ -147,3 +146,4 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
     </div>
   );
 }
+
