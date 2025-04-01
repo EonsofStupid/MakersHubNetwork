@@ -36,3 +36,10 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
   // Default fallback
   return String(value);
 }
+
+/**
+ * A React component that safely renders unknown values
+ */
+export function SafeRender({ value }: { value: unknown }): React.ReactNode {
+  return <>{renderUnknownAsNode(value)}</>;
+}
