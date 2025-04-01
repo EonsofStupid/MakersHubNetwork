@@ -1,53 +1,104 @@
 
-import React, { Suspense, lazy } from "react";
-import { Route, Routes } from "react-router-dom";
+import React, { Suspense, useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AdminLayout } from "@/admin/components/AdminLayout";
+import OverviewPage from "./overview/OverviewPage";
+import UsersPage from "./users/UsersPage";
+import BuildsPage from "./builds/BuildsPage";
+import ContentPage from "./content/ContentPage";
+import ReviewsPage from "./reviews/ReviewsPage";
+import LayoutsPage from "./layouts/LayoutsPage";
+import AnalyticsPage from "./analytics/AnalyticsPage";
+import SettingsPage from "./settings/SettingsPage";
+import UnauthorizedPage from "./unauthorized/UnauthorizedPage";
+import DataMaestroPage from "./data/DataMaestroPage";
+import ThemesPage from "./themes/ThemesPage";
+import PermissionsPage from "./permissions/PermissionsPage";
+import LogsPage from "./logs/LogsPage";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { PERMISSIONS, hasPermission } from "@/admin/utils/permissions";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging";
 
-// Lazy load components to improve initial load time
-const Dashboard = lazy(() => import("./dashboard/Dashboard"));
-const OverviewPage = lazy(() => import("./overview/OverviewPage"));
-const UsersPage = lazy(() => import("./users/UsersPage"));
-const BuildsPage = lazy(() => import("./builds/BuildsPage"));
-const BuildDetailPage = lazy(() => import("./builds/BuildDetailPage"));
-const ContentPage = lazy(() => import("./content/ContentPage"));
-const SettingsPage = lazy(() => import("./settings/SettingsPage"));
-const ThemesPage = lazy(() => import("./themes/ThemesPage"));
-const DataMaestroPage = lazy(() => import("./data/DataMaestroPage"));
-const AnalyticsPage = lazy(() => import("./analytics/AnalyticsPage"));
-const LayoutsPage = lazy(() => import("./layouts/LayoutsPage"));
-const UnauthorizedPage = lazy(() => import("./unauthorized/UnauthorizedPage"));
-const ReviewsPage = lazy(() => import("./reviews/ReviewsPage"));
-const LogsPage = lazy(() => import("./logs/LogsPage"));
-
-// Loading fallback for lazy-loaded components
+// Loading fallback for suspense
 const LoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+  <div className="flex items-center justify-center h-full p-6">
+    <div className="h-6 w-6 border-t-2 border-primary animate-spin rounded-full" />
   </div>
 );
 
-export function AdminRoutes() {
-  console.log("AdminRoutes component rendered");
-  
+export const AdminRoutes: React.FC = () => {
+  const { adminUser, hasAdminAccess } = useAdminAccess();
+  const logger = useLogger("AdminRoutes", LogCategory.ADMIN);
+
+  // Log route access
+  useEffect(() => {
+    if (hasAdminAccess) {
+      logger.info("Admin routes initialized", {
+        details: { permissions: adminUser?.permissions || [] }
+      });
+    }
+  }, [hasAdminAccess, adminUser, logger]);
+
+  if (!hasAdminAccess) {
+    return <UnauthorizedPage />;
+  }
+
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      <Routes>
-        <Route path="/" element={<OverviewPage />} />
-        <Route path="/overview" element={<OverviewPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/users" element={<UsersPage />} />
-        <Route path="/builds" element={<BuildsPage />} />
-        <Route path="/builds/:id" element={<BuildDetailPage />} />
-        <Route path="/content" element={<ContentPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/themes" element={<ThemesPage />} />
-        <Route path="/data" element={<DataMaestroPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/layouts" element={<LayoutsPage />} />
-        <Route path="/reviews" element={<ReviewsPage />} />
-        <Route path="/logs" element={<LogsPage />} />
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
-        <Route path="*" element={<OverviewPage />} />
-      </Routes>
-    </Suspense>
+    <AdminLayout>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/dashboard" element={<OverviewPage />} />
+          
+          {hasPermission(adminUser?.permissions || [], PERMISSIONS.USERS_VIEW) && (
+            <Route path="/users/*" element={<UsersPage />} />
+          )}
+          
+          {hasPermission(adminUser?.permissions || [], PERMISSIONS.BUILDS_VIEW) && (
+            <Route path="/builds/*" element={<BuildsPage />} />
+          )}
+          
+          {hasPermission(adminUser?.permissions || [], PERMISSIONS.CONTENT_VIEW) && (
+            <Route path="/content/*" element={<ContentPage />} />
+          )}
+          
+          {hasPermission(adminUser?.permissions || [], PERMISSIONS.REVIEWS_VIEW) && (
+            <Route path="/reviews/*" element={<ReviewsPage />} />
+          )}
+          
+          {hasPermission(adminUser?.permissions || [], PERMISSIONS.LAYOUTS_VIEW) && (
+            <Route path="/layouts/*" element={<LayoutsPage />} />
+          )}
+          
+          {hasPermission(adminUser?.permissions || [], PERMISSIONS.ANALYTICS_VIEW) && (
+            <Route path="/analytics/*" element={<AnalyticsPage />} />
+          )}
+          
+          {hasPermission(adminUser?.permissions || [], PERMISSIONS.SYSTEM_VIEW) && (
+            <Route path="/settings/*" element={<SettingsPage />} />
+          )}
+          
+          {hasPermission(adminUser?.permissions || [], PERMISSIONS.DATA_VIEW) && (
+            <Route path="/data/*" element={<DataMaestroPage />} />
+          )}
+          
+          {hasPermission(adminUser?.permissions || [], PERMISSIONS.THEMES_VIEW) && (
+            <Route path="/themes/*" element={<ThemesPage />} />
+          )}
+          
+          {hasPermission(adminUser?.permissions || [], PERMISSIONS.SYSTEM_VIEW) && (
+            <Route path="/permissions/*" element={<PermissionsPage />} />
+          )}
+          
+          {hasPermission(adminUser?.permissions || [], PERMISSIONS.SYSTEM_VIEW) && (
+            <Route path="/logs/*" element={<LogsPage />} />
+          )}
+          
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+        </Routes>
+      </Suspense>
+    </AdminLayout>
   );
-}
+};

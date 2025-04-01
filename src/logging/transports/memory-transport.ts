@@ -1,5 +1,5 @@
 
-import { LogEntry, LogTransport } from '../types';
+import { LogEntry, LogTransport, LogCategory, LogLevel } from '../types';
 
 /**
  * Transport for in-memory log storage for UI components
@@ -26,6 +26,69 @@ export class MemoryTransport implements LogTransport {
    */
   getLogs(): LogEntry[] {
     return [...this.logs];
+  }
+  
+  /**
+   * Get filtered logs based on criteria
+   */
+  getFilteredLogs(options?: {
+    level?: LogLevel;
+    category?: LogCategory;
+    search?: string;
+    limit?: number;
+    tags?: string[];
+    fromDate?: Date;
+    toDate?: Date;
+  }): LogEntry[] {
+    let filtered = [...this.logs];
+    
+    if (!options) {
+      return filtered;
+    }
+    
+    // Filter by level
+    if (options.level !== undefined) {
+      filtered = filtered.filter(log => log.level >= options.level!);
+    }
+    
+    // Filter by category
+    if (options.category) {
+      filtered = filtered.filter(log => log.category === options.category);
+    }
+    
+    // Filter by search text
+    if (options.search) {
+      const query = options.search.toLowerCase();
+      filtered = filtered.filter(log => 
+        log.message.toLowerCase().includes(query) || 
+        (log.source && log.source.toLowerCase().includes(query)) ||
+        log.category.toLowerCase().includes(query) ||
+        (typeof log.details === 'string' && log.details.toLowerCase().includes(query))
+      );
+    }
+    
+    // Filter by tags
+    if (options.tags && options.tags.length > 0) {
+      filtered = filtered.filter(log => 
+        log.tags && options.tags!.some(tag => log.tags!.includes(tag))
+      );
+    }
+    
+    // Filter by date range
+    if (options.fromDate) {
+      filtered = filtered.filter(log => log.timestamp >= options.fromDate!);
+    }
+    
+    if (options.toDate) {
+      filtered = filtered.filter(log => log.timestamp <= options.toDate!);
+    }
+    
+    // Apply limit
+    if (options.limit && options.limit > 0) {
+      filtered = filtered.slice(0, options.limit);
+    }
+    
+    return filtered;
   }
   
   /**
