@@ -1,69 +1,47 @@
 
-import { AdminPermissionValue } from '@/admin/constants/permissions';
+import { AdminPermissionValue } from './permissions';
 
+// Define the type for admin permission
 export type AdminPermission = AdminPermissionValue;
 
-export interface AdminSyncOptions {
-  autoSave?: boolean;
-  interval?: number;
-}
-
+// Define interface for admin user
 export interface AdminUser {
   id: string;
-  email: string;
+  email?: string;
   displayName?: string;
   avatarUrl?: string;
+  roles: string[];
   permissions: AdminPermission[];
-  roles?: string[];
-  lastLogin?: string;
-  createdAt: string;
   isActive: boolean;
 }
 
-export interface AdminSection {
+// Define interface for admin navigation item
+export interface AdminNavigationItem {
   id: string;
-  name: string;
-  permissions?: AdminPermission[];
-  isActive: boolean;
-}
-
-export interface AdminStats {
-  totalUsers: number;
-  newUsers: number;
-  totalBuilds: number;
-  pendingBuilds: number;
-  recentActivity: number;
-}
-
-export interface AdminShortcut {
-  id: string;
-  name: string;
+  label: string;
   path: string;
-  icon: string;
-  color?: string;
+  icon: any; // This should be a Lucide icon or similar
+  permission?: AdminPermission;
+  section?: string;
 }
 
+// Define interface for admin dashboard item
+export interface AdminDashboardItem {
+  id: string;
+  title: string;
+  type: 'chart' | 'stat' | 'list' | 'table' | 'custom';
+  size: 'sm' | 'md' | 'lg';
+  data?: any;
+  component?: React.ComponentType<any>;
+}
+
+// Define interface for admin notification
 export interface AdminNotification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'error' | 'success';
-  createdAt: string;
+  createdAt: Date;
   read: boolean;
+  level: 'info' | 'warning' | 'error' | 'success';
   link?: string;
-}
-
-export interface AdminPreferences {
-  sidebarExpanded: boolean;
-  showLabels: boolean;
-  isDarkMode: boolean;
-  dashboardItems: AdminShortcut[];
-  shortcuts: AdminShortcut[];
-  topnavItems: AdminShortcut[];
-  recentViews: AdminShortcut[];
-  frozenZones: string[];
-  uiPreferences: Record<string, any>;
-  themePreference: string;
-  layoutPreference: string;
-  activeSection: string;
 }

@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { subscribeToAuthEvents } from '@/auth/bridge';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { useLogger } from '@/hooks/use-logger';
@@ -10,7 +10,25 @@ import { LogCategory } from '@/logging';
  */
 export function useAdminSync() {
   const { setPermissions, setIsAuthenticated } = useAdminStore();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [syncError, setSyncError] = useState<Error | null>(null);
   const logger = useLogger('AdminSync', LogCategory.ADMIN);
+  
+  // Function to save admin state to database
+  const saveToDatabase = async () => {
+    setIsSyncing(true);
+    try {
+      // Implementation would go here
+      setLastSyncTime(new Date());
+      setSyncError(null);
+    } catch (error) {
+      setSyncError(error instanceof Error ? error : new Error('Unknown error during sync'));
+      logger.error('Error syncing admin data', { details: error });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
   
   useEffect(() => {
     logger.info('Setting up admin auth sync');
@@ -39,4 +57,11 @@ export function useAdminSync() {
       unsubscribe();
     };
   }, [logger, setIsAuthenticated, setPermissions]);
+  
+  return {
+    isSyncing,
+    lastSyncTime,
+    syncError,
+    saveToDatabase
+  };
 }

@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AdminPermissionValue } from '@/admin/constants/permissions';
+import { AdminPermissionValue } from '@/admin/types/permissions';
 
 interface AdminState {
   isAuthenticated: boolean;
@@ -11,6 +11,8 @@ interface AdminState {
   dashboardCollapsed: boolean;
   preferences: Record<string, any>;
   initialized: boolean;
+  showLabels: boolean;
+  activeSection: string;
 }
 
 interface AdminActions {
@@ -24,6 +26,9 @@ interface AdminActions {
   updatePreference: <T>(key: string, value: T) => void;
   savePreferences: () => Promise<void>;
   initializeStore: () => Promise<void>;
+  loadPermissions: () => void;
+  setActiveSection: (section: string) => void;
+  setShowLabels: (value: boolean) => void;
 }
 
 type AdminStore = AdminState & AdminActions;
@@ -39,6 +44,8 @@ export const useAdminStore = create<AdminStore>()(
       dashboardCollapsed: false,
       preferences: {},
       initialized: false,
+      showLabels: true,
+      activeSection: 'overview',
 
       // Actions
       setIsAuthenticated: (value) => set({ isAuthenticated: value }),
@@ -56,6 +63,7 @@ export const useAdminStore = create<AdminStore>()(
         const { preferences } = get();
         // TODO: Save to database if needed
         console.log('Saving preferences:', preferences);
+        return Promise.resolve();
       },
       initializeStore: async () => {
         try {
@@ -66,7 +74,13 @@ export const useAdminStore = create<AdminStore>()(
           console.error('Failed to initialize admin store:', error);
           return Promise.reject(error);
         }
-      }
+      },
+      loadPermissions: () => {
+        // This would be implemented to load permissions from the auth system
+        console.log('Loading permissions from auth system');
+      },
+      setActiveSection: (section) => set({ activeSection: section }),
+      setShowLabels: (value) => set({ showLabels: value })
     }),
     {
       name: 'admin-store',

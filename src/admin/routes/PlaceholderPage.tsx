@@ -1,69 +1,59 @@
 
-import React from "react";
-import { Shield } from "lucide-react";
-import { Navigate } from "react-router-dom";
-import { ImpulseAdminLayout } from "@/admin/components/layout/ImpulseAdminLayout";
-import { cn } from "@/lib/utils";
-import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
-import { AdminPermissionValue } from "@/admin/constants/permissions";
-import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging/types";
+import React from 'react';
+import { AdminPermissionValue } from '@/admin/types/permissions';
+import { RequirePermission } from '@/admin/components/auth/RequirePermission';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 interface PlaceholderPageProps {
   title: string;
   description: string;
   icon?: React.ReactNode;
   requiredPermission?: AdminPermissionValue;
-  className?: string;
 }
 
 export function PlaceholderPage({
   title,
   description,
   icon,
-  requiredPermission,
-  className,
+  requiredPermission
 }: PlaceholderPageProps) {
-  const { hasPermission } = useAdminPermissions();
   const logger = useLogger('PlaceholderPage', LogCategory.ADMIN);
-
-  // Log the page access attempt
-  logger.info(`Accessing placeholder page: ${title}`, {
-    details: { 
-      requiredPermission,
-      hasPermission: requiredPermission ? hasPermission(requiredPermission) : true
-    }
-  });
-
-  // Redirect to unauthorized page if permission check fails
-  if (requiredPermission && !hasPermission(requiredPermission)) {
-    logger.warn(`Access denied to ${title} page due to missing permission: ${requiredPermission}`);
-    return <Navigate to="/admin/unauthorized" replace />;
-  }
-
-  return (
-    <ImpulseAdminLayout title={title}>
-      <div
-        className={cn(
-          "flex flex-col items-center justify-center py-12 px-4 text-center",
-          className
-        )}
-      >
-        <div className="w-16 h-16 mb-6 flex items-center justify-center rounded-full bg-[var(--impulse-primary)]/10 border border-[var(--impulse-primary)]/20">
-          {icon || <Shield className="h-8 w-8 text-[var(--impulse-primary)]" />}
+  
+  // Log the page view for debugging
+  React.useEffect(() => {
+    logger.info(`Placeholder page viewed: ${title}`);
+  }, [title, logger]);
+  
+  // Wrap in permission check if required
+  const content = (
+    <div className="container py-6 space-y-6">
+      <header className="flex items-center gap-3">
+        {icon}
+        <div>
+          <h1 className="text-2xl font-heading">{title}</h1>
+          <p className="text-muted-foreground">{description}</p>
         </div>
-
-        <h1 className="text-2xl font-bold mb-2">{title}</h1>
-        <p className="text-[var(--impulse-text-secondary)] max-w-md">
-          {description}
-        </p>
-
-        <div className="mt-8 p-4 border border-[var(--impulse-border-normal)] rounded-md bg-[var(--impulse-bg-card)] w-full max-w-md">
-          <p className="text-sm text-[var(--impulse-text-secondary)]">
-            This section is under development. Check back soon for updates!
+      </header>
+      
+      <div className="h-96 flex flex-col items-center justify-center border border-dashed border-muted-foreground/30 rounded-md p-8">
+        <div className="text-center max-w-xl">
+          <h2 className="text-xl font-heading mb-2">Coming Soon</h2>
+          <p className="text-muted-foreground">
+            This feature is currently in development. Check back later for updates.
           </p>
         </div>
       </div>
-    </ImpulseAdminLayout>
+    </div>
   );
+  
+  if (requiredPermission) {
+    return (
+      <RequirePermission permission={requiredPermission}>
+        {content}
+      </RequirePermission>
+    );
+  }
+  
+  return content;
 }
