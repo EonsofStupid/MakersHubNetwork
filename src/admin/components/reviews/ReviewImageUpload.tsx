@@ -2,12 +2,12 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Plus, Image } from "lucide-react";
+import { X, Plus, Image, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ReviewImageUploadProps {
   imageUrls: string[];
-  onAddImage: (url: string) => void;
+  onAddImage: (file: File) => Promise<void>;
   onRemoveImage: (index: number) => void;
   disabled?: boolean;
   className?: string;
@@ -26,10 +26,7 @@ export function ReviewImageUpload({
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
-    // In a real application, you would upload this file to your server or CDN
-    // For this mock component, we'll create a fake URL
-    const fakeUrl = URL.createObjectURL(files[0]);
-    onAddImage(fakeUrl);
+    onAddImage(files[0]);
     
     // Reset the file input
     e.target.value = '';
@@ -64,7 +61,7 @@ export function ReviewImageUpload({
       {!disabled && (
         <label className="cursor-pointer">
           <div className="border-2 border-dashed border-primary/30 rounded-lg p-4 flex flex-col items-center justify-center hover:border-primary/50 transition-colors">
-            <Plus className="h-8 w-8 text-muted-foreground mb-2" />
+            <Upload className="h-8 w-8 text-muted-foreground mb-2" />
             <span className="text-sm text-muted-foreground">Add images to your review</span>
             <input 
               type="file" 
