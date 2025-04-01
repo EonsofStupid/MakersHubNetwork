@@ -18,20 +18,18 @@ export function isReactNode(value: unknown): value is React.ReactNode {
 
 /**
  * Safely converts unknown values to React nodes
- * Similar to renderUnknownAsNode but with type safety
+ * Always returns valid JSX which TypeScript recognizes as ReactNode
  */
 export function safelyRenderNode(value: unknown): React.ReactNode {
-  if (isReactNode(value)) {
-    return value;
-  }
-  
+  if (isReactNode(value)) return value;
+
   if (typeof value === 'object') {
     try {
-      return JSON.stringify(value);
-    } catch (e) {
-      return '[Object]';
+      return <>{JSON.stringify(value)}</>;
+    } catch {
+      return <>[Unrenderable Object]</>;
     }
   }
-  
-  return String(value);
+
+  return <>{String(value)}</>;
 }
