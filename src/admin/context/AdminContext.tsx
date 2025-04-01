@@ -1,83 +1,67 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useAuthStore } from '@/stores/auth/store';
-import { useToast } from '@/hooks/use-toast';
-import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useAdminStore } from '../store/admin.store';
+import { useAuthState } from '@/auth/hooks/useAuthState';
+import { canAccessAdmin } from '@/auth/rbac/enforce';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
+import { subscribeToAuthEvents } from '@/auth/bridge';
 
-interface AdminContextProps {
+interface AdminContextValue {
+  isInitialized: boolean;
   hasAdminAccess: boolean;
-  isLoading: boolean;
-  initializeAdmin: () => void;
-  checkPermission: (permission: AdminPermissionValue) => boolean;
+  isEditMode: boolean;
+  toggleEditMode: () => void;
 }
 
-const AdminContext = createContext<AdminContextProps>({
-  hasAdminAccess: false,
-  isLoading: false,
-  initializeAdmin: () => {},
-  checkPermission: () => false
-});
+const AdminContext = createContext<AdminContextValue | undefined>(undefined);
 
-export const useAdmin = () => useContext(AdminContext);
-
-interface AdminProviderProps {
-  children: ReactNode;
-}
-
-export const AdminProvider = ({ children }: AdminProviderProps) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const { roles, status } = useAuthStore();
-  const { toast } = useToast();
+export function AdminProvider({ children }: { children: React.ReactNode }) {
+  const { roles, isAuthenticated } = useAuthState();
+  const { isEditMode, setEditMode, initializeStore } = useAdminStore();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const logger = useLogger('AdminContext', LogCategory.ADMIN);
   
   // Check if user has admin access
-  const hasAdminAccess = roles?.includes('admin') || roles?.includes('super_admin');
+  const hasAdminAccess = canAccessAdmin(roles);
   
-  // Check if user has a specific permission
-  const checkPermission = (permission: AdminPermissionValue): boolean => {
-    // Super admins have all permissions
-    if (roles?.includes('super_admin')) {
-      return true;
-    }
-    
-    // Basic admin access check
-    if (permission === ADMIN_PERMISSIONS.ADMIN_ACCESS) {
-      return hasAdminAccess;
-    }
-    
-    // For specific permissions, we would check against a more detailed permissions system
-    // For now, we'll assume admin users have all basic permissions
-    return hasAdminAccess;
-  };
-  
-  // Initialize admin functionality
-  const initializeAdmin = () => {
-    try {
-      // Additional initialization logic would go here
-      // For now, just setting loading to false
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error initializing admin:', error);
-      toast({
-        title: 'Admin Initialization Error',
-        description: 'There was a problem loading the admin panel.',
-        variant: 'destructive',
+  // Initialize admin module
+  useEffect(() => {
+    if (isAuthenticated) {
+      logger.info('Initializing admin context');
+      
+      // Initialize the admin store
+      initializeStore().then(() => {
+        setIsInitialized(true);
+        logger.info('Admin context initialized');
+      }).catch(error => {
+        logger.error('Failed to initialize admin context', { details: error });
       });
-      setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, initializeStore, logger]);
   
-  // Auto-initialize on mount if authenticated
-  React.useEffect(() => {
-    if (status === 'authenticated') {
-      setIsLoading(false);
-    }
-  }, [status]);
+  // Subscribe to auth events
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthEvents((event) => {
+      logger.info(`Admin context received auth event: ${event.type}`);
+      
+      // Handle specific auth events as needed
+    });
+    
+    return () => unsubscribe();
+  }, [logger]);
+  
+  // Method to toggle edit mode
+  const toggleEditMode = () => {
+    setEditMode(!isEditMode);
+    logger.info(`Admin edit mode ${!isEditMode ? 'enabled' : 'disabled'}`);
+  };
   
   const value = {
+    isInitialized,
     hasAdminAccess,
-    isLoading,
-    initializeAdmin,
-    checkPermission
+    isEditMode,
+    toggleEditMode
   };
   
   return (
@@ -85,4 +69,14 @@ export const AdminProvider = ({ children }: AdminProviderProps) => {
       {children}
     </AdminContext.Provider>
   );
-};
+}
+
+export function useAdmin() {
+  const context = useContext(AdminContext);
+  
+  if (context === undefined) {
+    throw new Error('useAdmin must be used within an AdminProvider');
+  }
+  
+  return context;
+}

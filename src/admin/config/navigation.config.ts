@@ -1,24 +1,26 @@
 
-import { LayoutDashboard, Users, Settings, FileText, Package, Palette, Database, BarChart, Star, LucideIcon } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  Settings,
+  Wrench,
+  Palette,
+  Server,
+  Shield,
+  LineChart,
+  FileCode,
+} from 'lucide-react';
 import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
-interface AdminNavigationItem {
-  id: string;
-  label: string;
-  path: string;
-  icon: LucideIcon;
-  permission?: string;
-  section?: string;
-}
-
-export const adminNavigationItems: AdminNavigationItem[] = [
+export const adminNavigationItems = [
   {
-    id: 'overview',
-    label: 'Overview',
-    path: '/admin/overview',
+    id: 'dashboard',
+    label: 'Dashboard',
+    path: '/admin/dashboard',
     icon: LayoutDashboard,
-    permission: ADMIN_PERMISSIONS.ADMIN_VIEW,
-    section: 'Dashboard'
+    permission: ADMIN_PERMISSIONS.ADMIN_ACCESS,
+    section: 'General'
   },
   {
     id: 'users',
@@ -29,26 +31,26 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     section: 'Management'
   },
   {
-    id: 'content',
-    label: 'Content',
-    path: '/admin/content',
-    icon: FileText,
-    permission: ADMIN_PERMISSIONS.CONTENT_VIEW,
-    section: 'Management'
-  },
-  {
     id: 'builds',
     label: 'Builds',
     path: '/admin/builds',
-    icon: Package,
+    icon: Wrench,
     permission: ADMIN_PERMISSIONS.BUILDS_VIEW,
     section: 'Management'
   },
   {
-    id: 'reviews',
-    label: 'Reviews',
-    path: '/admin/reviews',
-    icon: Star,
+    id: 'parts',
+    label: 'Parts',
+    path: '/admin/parts',
+    icon: Wrench,
+    permission: ADMIN_PERMISSIONS.CONTENT_VIEW,
+    section: 'Management'
+  },
+  {
+    id: 'content',
+    label: 'Content',
+    path: '/admin/content',
+    icon: FileText,
     permission: ADMIN_PERMISSIONS.CONTENT_VIEW,
     section: 'Management'
   },
@@ -61,19 +63,27 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     section: 'Customization'
   },
   {
-    id: 'data',
-    label: 'Data',
-    path: '/admin/data',
-    icon: Database,
-    permission: ADMIN_PERMISSIONS.DATA_VIEW,
-    section: 'System'
-  },
-  {
     id: 'analytics',
     label: 'Analytics',
     path: '/admin/analytics',
-    icon: BarChart,
+    icon: LineChart,
     permission: ADMIN_PERMISSIONS.ANALYTICS_VIEW,
+    section: 'Insights'
+  },
+  {
+    id: 'logs',
+    label: 'System Logs',
+    path: '/admin/logs',
+    icon: FileCode,
+    permission: ADMIN_PERMISSIONS.SYSTEM_LOGS,
+    section: 'System'
+  },
+  {
+    id: 'permissions',
+    label: 'Permissions',
+    path: '/admin/permissions',
+    icon: Shield,
+    permission: ADMIN_PERMISSIONS.SYSTEM_SETTINGS,
     section: 'System'
   },
   {
@@ -85,5 +95,3 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     section: 'System'
   }
 ];
-
-export default adminNavigationItems;

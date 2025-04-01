@@ -28,7 +28,11 @@ export function AdminTooltip({
         <TooltipTrigger asChild>
           {children}
         </TooltipTrigger>
-        <TooltipContent side={side} align={align} className="cyber-tooltip">
+        <TooltipContent 
+          side={side} 
+          align={align}
+          className="bg-[var(--impulse-bg-tooltip)] border-[var(--impulse-border-normal)] text-[var(--impulse-text-primary)]"
+        >
           {content}
         </TooltipContent>
       </Tooltip>

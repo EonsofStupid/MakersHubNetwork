@@ -1,18 +1,18 @@
 
 import React from 'react';
-import { Shield } from 'lucide-react';
+import { FileQuestion } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
-export default function UnauthorizedPage() {
+export default function NotFoundPage() {
   const navigate = useNavigate();
   
   return (
     <div className="container py-12 flex flex-col items-center justify-center text-center">
-      <Shield className="w-16 h-16 text-muted-foreground mb-4" />
-      <h1 className="text-3xl font-heading mb-2">Access Denied</h1>
+      <FileQuestion className="w-16 h-16 text-muted-foreground mb-4" />
+      <h1 className="text-3xl font-heading mb-2">Page Not Found</h1>
       <p className="text-muted-foreground max-w-md mb-6">
-        You don't have permission to access this page. If you believe this is an error, please contact your administrator.
+        The page you are looking for doesn't exist or has been moved.
       </p>
       
       <div className="flex gap-3">
