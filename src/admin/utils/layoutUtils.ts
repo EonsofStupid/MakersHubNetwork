@@ -24,79 +24,124 @@ export function createDefaultDashboardLayout(id: string): Layout {
             },
             children: [
               {
-                id: 'dashboard-icon',
-                type: 'span',
+                id: 'dashboard-title',
+                type: 'heading',
                 props: {
-                  className: 'text-primary'
+                  level: 1,
+                  className: 'text-2xl font-bold',
+                  children: 'Admin Dashboard'
+                }
+              }
+            ]
+          },
+          {
+            id: 'admin-topnav',
+            type: 'AdminTopNav',
+            props: {
+              title: 'Admin Dashboard'
+            }
+          },
+          {
+            id: 'admin-layout',
+            type: 'div',
+            props: {
+              className: 'flex w-full'
+            },
+            children: [
+              {
+                id: 'admin-sidebar',
+                type: 'AdminSidebar'
+              },
+              {
+                id: 'admin-content',
+                type: 'div',
+                props: {
+                  className: 'flex-1 p-6'
                 },
                 children: [
                   {
-                    id: 'dashboard-icon-inner',
-                    type: 'heading',
+                    id: 'shortcuts-section',
+                    type: 'DashboardShortcuts',
+                  },
+                  {
+                    id: 'stats-grid',
+                    type: 'AdminGrid',
                     props: {
-                      level: 1,
-                      className: 'text-2xl font-bold',
-                      children: 'Admin Dashboard'
+                      cols: 2,
+                    },
+                    children: [
+                      {
+                        id: 'build-approval-section',
+                        type: 'BuildApprovalWidget',
+                        props: {
+                          className: 'md:col-span-1',
+                        }
+                      },
+                      {
+                        id: 'stats-section',
+                        type: 'StatsCards',
+                        props: {
+                          className: 'md:col-span-1',
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    id: 'features-section',
+                    type: 'AdminFeatureSection',
+                    props: {
+                      className: 'mt-6',
                     }
                   }
                 ]
               }
             ]
-          },
-          {
-            id: 'shortcuts-section',
-            type: 'DashboardShortcuts',
-          },
-          {
-            id: 'stats-grid',
-            type: 'AdminGrid',
-            props: {
-              cols: 2,
-            },
-            children: [
-              {
-                id: 'build-approval-section',
-                type: 'BuildApprovalWidget',
-                props: {
-                  className: 'md:col-span-1',
-                }
-              },
-              {
-                id: 'stats-section',
-                type: 'StatsCards',
-                props: {
-                  className: 'md:col-span-1',
-                }
-              }
-            ]
-          },
-          {
-            id: 'features-section',
-            type: 'AdminFeatureSection',
-            props: {
-              className: 'mt-6',
-            }
           }
         ],
       },
     ],
+    version: 1,
   };
 }
 
 /**
- * Create an empty layout with basic structure
+ * Create a default sidebar layout
  */
-export function createEmptyLayout(type: string, scope: string, name: string): Layout {
+export function createDefaultSidebarLayout(id: string): Layout {
   return {
-    id: uuidv4(),
-    name,
-    type,
-    scope,
+    id,
+    name: 'Default Sidebar',
+    type: 'sidebar',
+    scope: 'admin',
     components: [
       {
-        id: 'root',
-        type: 'AdminSection',
-        children: []
+        id: 'sidebar-root',
+        type: 'AdminSidebar',
+        props: {
+          expanded: true
+        }
+      }
+    ],
+    version: 1
+  };
+}
+
+/**
+ * Create a default top navigation layout
+ */
+export function createDefaultTopNavLayout(id: string): Layout {
+  return {
+    id,
+    name: 'Default TopNav',
+    type: 'topnav',
+    scope: 'admin',
+    components: [
+      {
+        id: 'topnav-root',
+        type: 'AdminTopNav',
+        props: {
+          title: 'Admin Dashboard'
+        }
       }
     ],
     version: 1

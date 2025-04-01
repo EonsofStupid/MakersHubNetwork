@@ -1,143 +1,119 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react';
+import { useAdminStore } from '@/admin/store/admin.store';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
-import { DashboardShortcut } from '@/admin/components/dashboard/DashboardShortcut';
-import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
-import { DragIndicator } from '@/admin/components/ui/DragIndicator';
 import { adminNavigationItems } from '@/admin/config/navigation.config';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { MoveHorizontal, Plus } from 'lucide-react';
-import { toast } from 'sonner';
+import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
+import { DashboardShortcut } from './DashboardShortcut';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Container animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { 
-    opacity: 1,
-    transition: { 
-      staggerChildren: 0.1,
-      delayChildren: 0.1 
-    }
-  }
-};
+interface DashboardShortcutsProps {
+  className?: string;
+}
 
-export function DashboardShortcuts() {
+export function DashboardShortcuts({ className = '' }: DashboardShortcutsProps) {
+  const shortcutsRef = useRef<HTMLDivElement>(null);
+  const [isEditMode] = useAtom(adminEditModeAtom);
+  const { dashboardItems, setDashboardItems, savePreferences } = useAdminStore();
   const navigate = useNavigate();
-  const [editMode] = useAtom(adminEditModeAtom);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { dashboardShortcuts, setDashboardShortcuts } = useAdminStore();
   
+  // Set up drag and drop
   const { registerDropZone, isDragging } = useDragAndDrop({
-    items: dashboardShortcuts,
-    onReorder: setDashboardShortcuts,
+    items: dashboardItems,
+    onReorder: (newItems) => {
+      setDashboardItems(newItems);
+      savePreferences();
+    },
     containerId: 'dashboard-shortcuts',
+    dragOnlyInEditMode: true,
     acceptExternalItems: true
   });
-
-  // Register the container as a drop zone
+  
+  // Register the shortcuts container as a drop zone
   useEffect(() => {
-    if (containerRef.current) {
-      return registerDropZone(containerRef.current);
+    if (shortcutsRef.current) {
+      return registerDropZone(shortcutsRef.current);
     }
   }, [registerDropZone]);
-
-  // Filter navigation items to only include those in dashboardShortcuts
-  const shortcutItems = adminNavigationItems.filter(item => 
-    dashboardShortcuts.includes(item.id)
+  
+  // Handle navigation when a shortcut is clicked
+  const handleShortcutClick = (id: string) => {
+    const item = adminNavigationItems.find(item => item.id === id);
+    if (item) {
+      navigate(item.path);
+    }
+  };
+  
+  // Handle removing an item from shortcuts
+  const handleRemoveItem = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const newShortcuts = dashboardItems.filter(item => item !== id);
+    setDashboardItems(newShortcuts);
+    savePreferences();
+  };
+  
+  // Filter shortcuts to only show items that exist in navigation config
+  const visibleShortcuts = dashboardItems.filter(id => 
+    adminNavigationItems.some(item => item.id === id)
   );
   
-  const handleShortcutClick = (path: string) => {
-    navigate(path);
-  };
-  
-  const handleRemoveShortcut = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDashboardShortcuts(dashboardShortcuts.filter(itemId => itemId !== id));
-    toast.success("Shortcut removed", {
-      description: `${id} has been removed from your dashboard`
-    });
-  };
-
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-[var(--impulse-text-primary)] flex items-center gap-2">
-          <span>Dashboard Shortcuts</span>
-          {editMode && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="ml-2 text-xs bg-primary/20 text-primary px-2 py-1 rounded-full flex items-center gap-1"
-            >
-              <MoveHorizontal className="w-3 h-3" />
-              <span>Drag to customize</span>
-            </motion.div>
-          )}
-        </h2>
-      </div>
-
-      <motion.div 
-        ref={containerRef}
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className={cn(
-          "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 min-h-[140px] rounded-xl",
-          "border transition-all duration-300 glassmorphism",
-          isDragging 
-            ? "ring-2 ring-primary/50 bg-primary/5 border-primary/30" 
-            : "bg-black/20 border-border/30",
-          editMode && "border-dashed border-primary/50"
-        )}
-        id="dashboard-shortcuts"
-        data-container-id="dashboard-shortcuts"
-      >
-        <AnimatePresence mode="popLayout">
-          {shortcutItems.length > 0 ? (
-            shortcutItems.map((item) => (
-              <DashboardShortcut
-                key={item.id}
-                id={item.id}
-                title={item.label}
-                icon={item.icon}
-                description={item.description}
-                onClick={() => handleShortcutClick(item.path)}
-                onRemove={editMode ? (e) => handleRemoveShortcut(item.id, e) : undefined}
-                isEditMode={editMode}
-              />
-            ))
-          ) : (
-            <motion.div
-              key="empty-state"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="col-span-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground min-h-[200px]"
-            >
-              {editMode ? (
-                <>
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                    <Plus className="w-8 h-8 text-primary/70" />
-                  </div>
-                  <p className="text-sm">Drag items here from the sidebar to create shortcuts</p>
-                  <p className="text-xs mt-2 text-primary/70">
-                    Tip: Any item from the left navigation can be dragged here
-                  </p>
-                </>
-              ) : (
-                <p>No shortcuts added yet. Enter edit mode to customize your dashboard.</p>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Drag indicator for visual feedback */}
-      <DragIndicator />
-    </div>
+    <Card className={className}>
+      <CardHeader className="pb-3">
+        <CardTitle>Quick Access</CardTitle>
+        <CardDescription>
+          {isEditMode 
+            ? "Drag items here from the sidebar for quick access" 
+            : "Your most important tools in one place"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div 
+          ref={shortcutsRef}
+          className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 ${
+            isEditMode ? 'edit-mode-highlight border border-dashed border-primary/50 rounded-lg p-4' : ''
+          } ${isDragging ? 'bg-primary/5 rounded-lg' : ''}`}
+          data-container-id="dashboard-shortcuts"
+        >
+          <AnimatePresence mode="popLayout">
+            {visibleShortcuts.length > 0 ? (
+              visibleShortcuts.map(id => {
+                const item = adminNavigationItems.find(navItem => navItem.id === id);
+                if (!item) return null;
+                
+                return (
+                  <DashboardShortcut
+                    key={id}
+                    id={id}
+                    icon={item.icon}
+                    label={item.label}
+                    onClick={() => handleShortcutClick(id)}
+                    onRemove={isEditMode ? (e) => handleRemoveItem(id, e) : undefined}
+                    isEditMode={isEditMode}
+                  />
+                );
+              })
+            ) : (
+              isEditMode && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="col-span-full flex flex-col items-center justify-center h-24 text-muted-foreground"
+                >
+                  <Plus className="w-8 h-8 mb-2 text-primary/50" />
+                  <span>Drag items here from the sidebar</span>
+                </motion.div>
+              )
+            )}
+          </AnimatePresence>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

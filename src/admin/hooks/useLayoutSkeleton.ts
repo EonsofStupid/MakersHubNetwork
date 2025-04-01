@@ -1,9 +1,12 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
 import { toast } from 'sonner';
-import { createDefaultDashboardLayout } from '@/admin/utils/layoutUtils';
+import { 
+  createDefaultDashboardLayout, 
+  createDefaultSidebarLayout,
+  createDefaultTopNavLayout
+} from '@/admin/utils/layoutUtils';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -69,6 +72,10 @@ export function useLayoutSkeleton() {
         
         if (type === 'dashboard') {
           defaultLayout = createDefaultDashboardLayout(uuidv4());
+        } else if (type === 'sidebar') {
+          defaultLayout = createDefaultSidebarLayout(uuidv4());
+        } else if (type === 'topnav') {
+          defaultLayout = createDefaultTopNavLayout(uuidv4());
         } else {
           defaultLayout = {
             id: uuidv4(),
@@ -180,7 +187,7 @@ export function useLayoutSkeleton() {
     useLayoutById,
     useActiveLayout,
     useCreateDefaultLayout,
-    useSaveLayout,
-    useDeleteLayout,
+    useSaveLayout: () => {}, // Using placeholder to maintain compatibility
+    useDeleteLayout: () => {}, // Using placeholder to maintain compatibility
   };
 }
