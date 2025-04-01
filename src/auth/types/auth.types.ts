@@ -19,6 +19,8 @@ export interface AuthUser extends User {
   roles?: UserRole[];
 }
 
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
+
 export interface AuthState {
   user: AuthUser | null;
   session: Session | null;
@@ -27,6 +29,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  status: AuthStatus;
 }
 
 export interface AuthContextType extends AuthState {
@@ -53,4 +56,3 @@ export interface SignUpCredentials extends SignInCredentials {
   username?: string;
   full_name?: string;
 }
-

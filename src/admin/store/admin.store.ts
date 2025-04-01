@@ -1,7 +1,8 @@
 
 import { create } from 'zustand';
 import { AdminPermissionValue } from '@/admin/types/permissions';
-import { persist } from '@/admin/middleware/persist.middleware';
+import { createAdminPersistMiddleware } from '@/admin/middleware/persist.middleware';
+import { persist } from 'zustand/middleware';
 
 interface AdminState {
   // Authentication and permissions
@@ -33,6 +34,7 @@ interface AdminState {
   loadPermissions: () => Promise<void>;
 }
 
+// Use the standard Zustand persist middleware
 export const useAdminStore = create<AdminState>()(
   persist(
     (set, get) => ({
@@ -71,8 +73,11 @@ export const useAdminStore = create<AdminState>()(
       }
     }),
     {
-      name: 'admin-store'
+      name: 'admin-store',
+      partialize: (state) => {
+        const { loadPermissions, savePreferences, ...persistState } = state;
+        return persistState;
+      },
     }
   )
 );
-

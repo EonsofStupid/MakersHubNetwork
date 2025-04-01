@@ -1,26 +1,26 @@
-import { PersistOptions, PersistStorage } from 'zustand/middleware';
+import { PersistOptions, StateStorage } from 'zustand/middleware';
 
-// Create persist middleware with custom storage and merge function
+// Create persist middleware for admin stores
 export const createAdminPersistMiddleware = <T>(name: string): PersistOptions<T, T> => {
   // Create a properly typed storage implementation
-  const storage: PersistStorage<T> = {
-    getItem: (name) => {
+  const storage: StateStorage = {
+    getItem: (name: string): string | null => {
       try {
         const value = localStorage.getItem(`makers-impulse-admin-${name}`);
-        return value ? JSON.parse(value) : null;
+        return value || null;
       } catch (error) {
         console.error(`Error retrieving state from localStorage: ${error}`);
         return null;
       }
     },
-    setItem: (name, value) => {
+    setItem: (name: string, value: string): void => {
       try {
-        localStorage.setItem(`makers-impulse-admin-${name}`, JSON.stringify(value));
+        localStorage.setItem(`makers-impulse-admin-${name}`, value);
       } catch (error) {
         console.error(`Error storing state to localStorage: ${error}`);
       }
     },
-    removeItem: (name) => {
+    removeItem: (name: string): void => {
       try {
         localStorage.removeItem(`makers-impulse-admin-${name}`);
       } catch (error) {
@@ -50,3 +50,6 @@ export const createAdminPersistMiddleware = <T>(name: string): PersistOptions<T,
     },
   };
 };
+
+// Export the persist function for backward compatibility
+export const persist = createAdminPersistMiddleware;
