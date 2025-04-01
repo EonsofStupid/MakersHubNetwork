@@ -12,8 +12,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useAuthStore } from "@/stores/auth/store";
-import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging";
 
 interface LoginProps {
   onSuccess?: () => void;
@@ -23,14 +25,16 @@ const Login = ({ onSuccess }: LoginProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const status = useAuthStore((state) => state.status);
+  const { status } = useAuth();
   const isAuthenticated = status === "authenticated";
   const { hasAdminAccess } = useAdminAccess();
+  const logger = useLogger("LoginPage", LogCategory.AUTH);
   
   const from = new URLSearchParams(location.search).get("from") || "/";
 
   useEffect(() => {
     if (isAuthenticated) {
+      logger.info("User authenticated, redirecting", { details: { redirectTo: from } });
       onSuccess?.();
       
       // Check if user was trying to access admin section or has admin access
@@ -38,12 +42,14 @@ const Login = ({ onSuccess }: LoginProps) => {
       
       if (goingToAdmin) {
         if (hasAdminAccess) {
+          logger.info("User has admin access, redirecting to admin");
           toast({
             title: "Admin Access",
             description: "Welcome to the admin dashboard",
           });
           navigate("/admin"); 
         } else {
+          logger.info("User lacks admin access, redirecting to home");
           toast({
             title: "Access Denied",
             description: "You don't have permission to access the admin section",
@@ -53,6 +59,7 @@ const Login = ({ onSuccess }: LoginProps) => {
         }
       } else if (from === "/login" && hasAdminAccess) {
         // If coming directly to login page and has admin access, suggest admin
+        logger.info("User has admin access, suggesting admin panel");
         toast({
           title: "Admin Access Available",
           description: "You can access the admin dashboard",
@@ -60,10 +67,11 @@ const Login = ({ onSuccess }: LoginProps) => {
         navigate("/"); // Navigate home first, admin is accessible from nav
       } else {
         // Normal redirect to requested page
+        logger.info("Standard redirect after login");
         navigate(from);
       }
     }
-  }, [isAuthenticated, navigate, onSuccess, hasAdminAccess, from, toast]);
+  }, [isAuthenticated, navigate, onSuccess, hasAdminAccess, from, toast, logger]);
 
   return (
     <div className="container mx-auto flex items-center justify-center min-h-screen p-4">

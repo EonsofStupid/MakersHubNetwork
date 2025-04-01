@@ -1,16 +1,18 @@
-
 import { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AdminRoutes } from "@/admin/routes";
-import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { useAdminSync } from "@/admin/hooks/useAdminSync";
 import { SyncIndicator } from "@/admin/components/ui/SyncIndicator";
 import { DragIndicator } from "@/admin/components/ui/DragIndicator";
 import { useAtom } from "jotai";
 import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging";
+import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
 
 // Import all admin styles
 import '@/admin/styles/cyber-effects.css';
@@ -25,26 +27,31 @@ import '@/admin/theme/impulse/impulse-theme.css';
 
 export default function Admin() {
   const { toast } = useToast();
-  const location = useLocation();
   const { hasAdminAccess, isLoading, initializeAdmin, isAuthenticated } = useAdminAccess();
+  const { permissions } = useAdminPermissions();
   const [hasInitialized, setHasInitialized] = useState(false);
   const [hasShownIntro, setHasShownIntro] = useState(false);
-  const { loadPermissions, initializeStore, savePreferences } = useAdminStore();
+  const { initializeStore, savePreferences, setPermissions } = useAdminStore();
   const [isEditMode] = useAtom(adminEditModeAtom);
+  const logger = useLogger("AdminPage", LogCategory.ADMIN);
   
   // Use admin sync hook to keep database and localStorage in sync
   useAdminSync();
   
+  // Update admin store permissions when permissions change
+  useEffect(() => {
+    setPermissions(permissions);
+  }, [permissions, setPermissions]);
+  
   useEffect(() => {
     // Load admin permissions if user has access
     if (hasAdminAccess && !hasInitialized) {
-      console.log("Initializing admin panel...");
+      logger.info("Initializing admin panel...");
       initializeAdmin();
       initializeStore().then(() => {
-        console.log("Admin store initialized");
+        logger.info("Admin store initialized");
         setHasInitialized(true);
       });
-      loadPermissions();
       
       // Add admin theme class to body
       document.body.classList.add('impulse-admin-root');
@@ -62,7 +69,7 @@ export default function Admin() {
       document.body.classList.remove('impulse-admin-root');
       document.body.classList.remove('edit-mode');
     };
-  }, [hasAdminAccess, hasInitialized, initializeAdmin, loadPermissions, isEditMode, initializeStore]);
+  }, [hasAdminAccess, hasInitialized, initializeAdmin, isEditMode, initializeStore, logger]);
 
   // Show a first-time user tutorial for drag and drop
   useEffect(() => {
@@ -94,6 +101,12 @@ export default function Admin() {
     }
   }, [hasAdminAccess, hasInitialized, toast, hasShownIntro]);
 
+  // Not authenticated at all
+  if (!isAuthenticated && !isLoading) {
+    logger.info("User not authenticated, redirecting to login");
+    return <Navigate to="/login" replace />;
+  }
+
   // Show simple loading state
   if (isLoading) {
     return (
@@ -108,6 +121,7 @@ export default function Admin() {
   
   // Verify admin access
   if (!hasAdminAccess && isAuthenticated) {
+    logger.info("User doesn't have admin access, redirecting to home");
     toast({
       title: "Access Denied",
       description: "You don't have permission to access the admin section",

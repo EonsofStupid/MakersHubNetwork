@@ -1,12 +1,11 @@
 
 import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
-import { useAdminStore } from '@/admin/store/admin.store';
 import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 
 /**
  * Utility functions for admin permissions
  */
-export const checkPermission = (
+export const hasPermission = (
   permission: AdminPermissionValue,
   userPermissions: AdminPermissionValue[]
 ): boolean => {
@@ -24,16 +23,15 @@ export const checkPermission = (
  * @returns Object with hasPermission boolean and loading state
  */
 export const usePermissionCheck = (requiredPermission?: AdminPermissionValue) => {
-  const { permissions, syncing } = useAdminStore();
-  const { hasPermission } = useAdminPermissions();
+  const { hasPermission, isLoading } = useAdminPermissions();
   
   if (!requiredPermission) {
-    return { hasPermission: true, isLoading: syncing };
+    return { hasPermission: true, isLoading };
   }
   
   return {
     hasPermission: hasPermission(requiredPermission),
-    isLoading: syncing
+    isLoading
   };
 };
 

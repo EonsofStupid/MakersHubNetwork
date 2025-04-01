@@ -15,10 +15,12 @@ import DataMaestroPage from "./data/DataMaestroPage";
 import ThemesPage from "./themes/ThemesPage";
 import PermissionsPage from "./permissions/PermissionsPage";
 import LogsPage from "./logs/LogsPage";
-import { useAdminAccess } from "@/hooks/useAdminAccess";
-import { PERMISSIONS, hasPermission } from "@/admin/utils/permissions";
+import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
+import { ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
+import { useAuth } from "@/hooks/useAuth";
+import { RequirePermission } from "@/admin/components/auth/RequirePermission";
 
 // Loading fallback for suspense
 const LoadingFallback = () => (
@@ -28,72 +30,97 @@ const LoadingFallback = () => (
 );
 
 export const AdminRoutes: React.FC = () => {
-  const { adminUser, hasAdminAccess } = useAdminAccess();
+  const { user, roles } = useAuth();
+  const { hasPermission } = useAdminPermissions();
   const logger = useLogger("AdminRoutes", LogCategory.ADMIN);
 
   // Log route access
   useEffect(() => {
-    if (hasAdminAccess) {
-      logger.info("Admin routes initialized", {
-        details: { permissions: adminUser?.permissions || [] }
-      });
-    }
-  }, [hasAdminAccess, adminUser, logger]);
-
-  if (!hasAdminAccess) {
-    return <UnauthorizedPage />;
-  }
+    logger.info("Admin routes initialized", {
+      details: { 
+        userId: user?.id,
+        roles: roles || [] 
+      }
+    });
+  }, [user, roles, logger]);
 
   return (
     <AdminLayout>
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
           <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="/dashboard" element={<OverviewPage />} />
           
-          {hasPermission(adminUser?.permissions || [], PERMISSIONS.USERS_VIEW) && (
-            <Route path="/users/*" element={<UsersPage />} />
-          )}
+          <Route path="/dashboard" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.ADMIN_ACCESS}>
+              <OverviewPage />
+            </RequirePermission>
+          } />
           
-          {hasPermission(adminUser?.permissions || [], PERMISSIONS.BUILDS_VIEW) && (
-            <Route path="/builds/*" element={<BuildsPage />} />
-          )}
+          <Route path="/users/*" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.USERS_VIEW}>
+              <UsersPage />
+            </RequirePermission>
+          } />
           
-          {hasPermission(adminUser?.permissions || [], PERMISSIONS.CONTENT_VIEW) && (
-            <Route path="/content/*" element={<ContentPage />} />
-          )}
+          <Route path="/builds/*" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.BUILDS_VIEW}>
+              <BuildsPage />
+            </RequirePermission>
+          } />
           
-          {hasPermission(adminUser?.permissions || [], PERMISSIONS.REVIEWS_VIEW) && (
-            <Route path="/reviews/*" element={<ReviewsPage />} />
-          )}
+          <Route path="/content/*" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.CONTENT_VIEW}>
+              <ContentPage />
+            </RequirePermission>
+          } />
           
-          {hasPermission(adminUser?.permissions || [], PERMISSIONS.LAYOUTS_VIEW) && (
-            <Route path="/layouts/*" element={<LayoutsPage />} />
-          )}
+          <Route path="/reviews/*" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.REVIEWS_VIEW}>
+              <ReviewsPage />
+            </RequirePermission>
+          } />
           
-          {hasPermission(adminUser?.permissions || [], PERMISSIONS.ANALYTICS_VIEW) && (
-            <Route path="/analytics/*" element={<AnalyticsPage />} />
-          )}
+          <Route path="/layouts/*" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.LAYOUTS_VIEW}>
+              <LayoutsPage />
+            </RequirePermission>
+          } />
           
-          {hasPermission(adminUser?.permissions || [], PERMISSIONS.SYSTEM_VIEW) && (
-            <Route path="/settings/*" element={<SettingsPage />} />
-          )}
+          <Route path="/analytics/*" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.ANALYTICS_VIEW}>
+              <AnalyticsPage />
+            </RequirePermission>
+          } />
           
-          {hasPermission(adminUser?.permissions || [], PERMISSIONS.DATA_VIEW) && (
-            <Route path="/data/*" element={<DataMaestroPage />} />
-          )}
+          <Route path="/settings/*" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.SYSTEM_VIEW}>
+              <SettingsPage />
+            </RequirePermission>
+          } />
           
-          {hasPermission(adminUser?.permissions || [], PERMISSIONS.THEMES_VIEW) && (
-            <Route path="/themes/*" element={<ThemesPage />} />
-          )}
+          <Route path="/data/*" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.DATA_VIEW}>
+              <DataMaestroPage />
+            </RequirePermission>
+          } />
           
-          {hasPermission(adminUser?.permissions || [], PERMISSIONS.SYSTEM_VIEW) && (
-            <Route path="/permissions/*" element={<PermissionsPage />} />
-          )}
+          <Route path="/themes/*" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.THEMES_VIEW}>
+              <ThemesPage />
+            </RequirePermission>
+          } />
           
-          {hasPermission(adminUser?.permissions || [], PERMISSIONS.SYSTEM_VIEW) && (
-            <Route path="/logs/*" element={<LogsPage />} />
-          )}
+          <Route path="/permissions/*" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.SYSTEM_VIEW}>
+              <PermissionsPage />
+            </RequirePermission>
+          } />
+          
+          <Route path="/logs/*" element={
+            <RequirePermission permission={ADMIN_PERMISSIONS.SYSTEM_VIEW}>
+              <LogsPage />
+            </RequirePermission>
+          } />
           
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />

@@ -14,36 +14,70 @@ import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { LogConsole } from "@/logging/components/LogConsole";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
+import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 
-export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isInitialized, adminCoreRights } = useAdminStore();
+interface AdminLayoutProps {
+  children: React.ReactNode;
+  title?: string;
+}
+
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ 
+  children, 
+  title = "Admin Dashboard" 
+}) => {
+  const { permissions } = useAdminStore();
   const [isEditMode] = useAtom(adminEditModeAtom);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { showLogConsole } = useLoggingContext();
   const logger = useLogger("AdminLayout", LogCategory.ADMIN);
+  const { hasAdminAccess, isAuthenticated } = useAdminAccess();
 
   useEffect(() => {
     // Log the admin layout initialization
     logger.info("Admin layout rendered", {
-      details: { isEditMode, rights: adminCoreRights },
+      details: { 
+        isEditMode, 
+        permissions,
+        hasAdminAccess,
+        isAuthenticated
+      },
     });
 
-    if (!isInitialized) {
+    // If somehow a non-admin user got here, redirect them
+    if (!hasAdminAccess && isAuthenticated) {
+      logger.warn("Non-admin user attempted to access admin layout", {
+        details: { permissions }
+      });
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access the admin panel",
+        variant: "destructive"
+      });
+      navigate("/");
+    }
+
+    // Notify when admin panel is initializing
+    if (!permissions || permissions.length === 0) {
       toast({
         title: "Admin panel is initializing",
         description: "Please wait while we set up the admin panel...",
         icon: "loader"
       });
     }
-  }, [isInitialized, isEditMode, adminCoreRights, toast, logger]);
+  }, [isEditMode, permissions, toast, logger, hasAdminAccess, isAuthenticated, navigate]);
+
+  // If user is not authenticated or doesn't have admin access, don't render the layout
+  if (!isAuthenticated || !hasAdminAccess) {
+    return null;
+  }
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)]">
       <AdminSidebar />
       
       <div className="flex flex-col flex-1 h-screen overflow-hidden">
-        <AdminHeader />
+        <AdminHeader title={title} />
         
         <main className="flex-1 overflow-auto p-4 sm:p-6">
           {children}
