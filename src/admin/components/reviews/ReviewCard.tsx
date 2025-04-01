@@ -1,125 +1,232 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { BuildReview } from "@/admin/types/review.types";
-import { RatingStars } from "./RatingStars";
-import { formatDistance } from "date-fns";
-import { CategorySelector } from "./CategorySelector";
-import { ReviewImageUpload } from "./ReviewImageUpload";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Check, ThumbsUp, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React, { useState } from 'react';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { RatingStars } from './RatingStars';
+import { Badge } from '@/components/ui/badge';
+import { ThumbsUp, ThumbsDown, Flag, Edit, Trash2, Eye } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ReviewCategory } from '@/admin/types/review.types';
+import { ReviewImageUpload } from './ReviewImageUpload';
 
 interface ReviewCardProps {
-  review: BuildReview;
+  id: string;
+  title: string;
+  content: string;
+  rating: number;
+  categories: ReviewCategory[];
+  userName: string;
+  userAvatar?: string;
+  buildName?: string;
+  date: string;
+  likes: number;
+  dislikes: number;
+  images?: string[];
+  isVerified?: boolean;
   isAdmin?: boolean;
-  isPending?: boolean;
-  onApprove?: (reviewId: string) => void;
-  onReject?: (reviewId: string) => void;
+  isEditable?: boolean;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onApprove?: (id: string) => void;
+  onReject?: (id: string) => void;
   className?: string;
 }
 
 export function ReviewCard({
-  review,
+  id,
+  title,
+  content,
+  rating,
+  categories,
+  userName,
+  userAvatar,
+  buildName,
+  date,
+  likes,
+  dislikes,
+  images = [],
+  isVerified = false,
   isAdmin = false,
-  isPending = false,
+  isEditable = false,
+  onEdit,
+  onDelete,
   onApprove,
   onReject,
   className
 }: ReviewCardProps) {
-  // Get first letter of reviewer name or use fallback
-  const getInitial = () => {
-    if (review.reviewer_name) {
-      return review.reviewer_name.charAt(0).toUpperCase();
-    }
-    return 'U';
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [localImages, setLocalImages] = useState<string[]>(images);
+  
+  const toggleExpand = () => {
+    setIsExpanded(prev => !prev);
   };
+  
+  const handleEdit = () => {
+    if (onEdit) onEdit(id);
+  };
+  
+  const handleDelete = () => {
+    if (onDelete) onDelete(id);
+  };
+  
+  const handleApprove = () => {
+    if (onApprove) onApprove(id);
+  };
+  
+  const handleReject = () => {
+    if (onReject) onReject(id);
+  };
+  
+  // Adding async to make it return a Promise<void>
+  const handleAddImage = async (file: File): Promise<void> => {
+    // In a real implementation, this would upload the image to a server
+    // For now, we'll just create a local URL
+    const url = URL.createObjectURL(file);
+    setLocalImages(prev => [...prev, url]);
+    
+    // Return a resolved promise to satisfy the type
+    return Promise.resolve();
+  };
+  
+  const handleRemoveImage = (index: number) => {
+    setLocalImages(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const truncatedContent = content.length > 200 && !isExpanded
+    ? content.substring(0, 200) + '...'
+    : content;
   
   return (
     <Card className={cn("overflow-hidden", className)}>
-      <CardHeader className="pb-2 flex flex-row items-start justify-between">
-        <div className="flex items-center space-x-4">
-          <Avatar>
-            <AvatarImage src={``} alt={review.reviewer_name || "User"} />
-            <AvatarFallback>{getInitial()}</AvatarFallback>
-          </Avatar>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
           <div>
-            <div className="font-semibold">{review.reviewer_name || "Anonymous"}</div>
-            <div className="flex items-center space-x-2">
-              <RatingStars rating={review.rating} size="sm" />
-              <span className="text-xs text-muted-foreground">
-                {formatDistance(new Date(review.created_at), new Date(), { addSuffix: true })}
-              </span>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-lg font-semibold">{title}</h3>
+              {isVerified && (
+                <Badge variant="outline" className="text-xs bg-green-500/10 text-green-500 border-green-500/30">
+                  Verified
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{userName}</span>
+              {buildName && (
+                <>
+                  <span>•</span>
+                  <span>{buildName}</span>
+                </>
+              )}
+              <span>•</span>
+              <span>{date}</span>
             </div>
           </div>
+          <RatingStars rating={rating} size="sm" />
         </div>
-        
-        {isPending && isAdmin && (
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 w-8 p-0"
-              onClick={() => onApprove && onApprove(review.id)}
-            >
-              <Check className="h-4 w-4 text-green-500" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 w-8 p-0"
-              onClick={() => onReject && onReject(review.id)}
-            >
-              <X className="h-4 w-4 text-red-500" />
-            </Button>
-          </div>
-        )}
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        {/* Review title and body */}
-        <div>
-          <h3 className="font-semibold mb-1">{review.title}</h3>
-          <p className="text-sm">{review.body}</p>
-        </div>
-        
-        {/* Categories */}
-        {review.category && review.category.length > 0 && (
-          <CategorySelector 
-            selectedCategories={review.category} 
-            onChange={() => {}} 
-            readOnly={true} 
-          />
+      <CardContent className="pt-0">
+        {localImages.length > 0 && (
+          <div className="mb-4">
+            <ReviewImageUpload 
+              imageUrls={localImages}
+              onAddImage={handleAddImage}
+              onRemoveImage={handleRemoveImage}
+              disabled={!isEditable}
+              className="mt-2"
+            />
+          </div>
         )}
         
-        {/* Images */}
-        {review.image_urls && review.image_urls.length > 0 && (
-          <ReviewImageUpload 
-            imageUrls={review.image_urls} 
-            onAddImage={() => {}} 
-            onRemoveImage={() => {}} 
-            disabled={true}
-          />
-        )}
-        
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-2">
-          {/* Pending badge */}
-          {isPending && (
-            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
-              Pending Approval
-            </Badge>
+        <p className="text-sm">
+          {truncatedContent}
+          {content.length > 200 && (
+            <Button
+              variant="link"
+              className="px-0 h-auto font-normal"
+              onClick={toggleExpand}
+            >
+              {isExpanded ? 'Show less' : 'Read more'}
+            </Button>
           )}
-          
-          {/* This would be helpful votes feature in the future */}
-          <Button variant="ghost" size="sm" className="text-muted-foreground">
+        </p>
+        
+        {categories.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {categories.map(category => (
+              <Badge key={category} variant="secondary" className="text-xs">
+                {category}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </CardContent>
+      
+      <CardFooter className="flex justify-between pt-0">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" className="h-8 px-2">
             <ThumbsUp className="h-4 w-4 mr-1" />
-            Helpful
+            {likes}
+          </Button>
+          
+          <Button variant="ghost" size="sm" className="h-8 px-2">
+            <ThumbsDown className="h-4 w-4 mr-1" />
+            {dislikes}
+          </Button>
+          
+          <Button variant="ghost" size="sm" className="h-8 px-2">
+            <Flag className="h-4 w-4" />
           </Button>
         </div>
-      </CardContent>
+        
+        {(isAdmin || isEditable) && (
+          <div className="flex items-center gap-1">
+            {isAdmin && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 bg-green-500/10 text-green-500 border-green-500/30 hover:bg-green-500/20"
+                  onClick={handleApprove}
+                >
+                  Approve
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 bg-red-500/10 text-red-500 border-red-500/30 hover:bg-red-500/20"
+                  onClick={handleReject}
+                >
+                  Reject
+                </Button>
+              </>
+            )}
+            
+            {isEditable && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleEdit}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+      </CardFooter>
     </Card>
   );
 }
