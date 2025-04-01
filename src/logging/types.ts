@@ -4,6 +4,7 @@
  */
 
 import { LogLevel } from './constants/log-level';
+import React from 'react';
 
 export enum LogCategory {
   SYSTEM = 'system',
@@ -22,7 +23,7 @@ export interface LogEntry {
   timestamp: Date;
   level: LogLevel;
   category: LogCategory;
-  message: string;
+  message: string | React.ReactNode;
   details?: unknown;
   source?: string;
   userId?: string;
