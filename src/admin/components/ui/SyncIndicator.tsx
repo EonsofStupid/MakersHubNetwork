@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Loader2, CloudOff } from 'lucide-react';
 
 export const SyncIndicator = () => {
-  const { isSyncing, lastSynced, error } = useAdminSync();
+  const { isSyncing, lastSyncTime, syncError } = useAdminSync();
 
   if (isSyncing) {
     return (
@@ -16,7 +16,7 @@ export const SyncIndicator = () => {
     );
   }
 
-  if (error) {
+  if (syncError) {
     return (
       <Badge variant="destructive" className="gap-1">
         <CloudOff className="w-3 h-3" />
@@ -25,11 +25,11 @@ export const SyncIndicator = () => {
     );
   }
 
-  if (lastSynced) {
+  if (lastSyncTime) {
     return (
       <Badge variant="outline" className="gap-1 bg-muted/30 hover:bg-muted/50">
         <CheckCircle className="w-3 h-3" />
-        <span>Synced {lastSynced}</span>
+        <span>Synced {lastSyncTime.toLocaleTimeString()}</span>
       </Badge>
     );
   }
