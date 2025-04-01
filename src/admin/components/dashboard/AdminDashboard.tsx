@@ -6,10 +6,11 @@ import { motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
 import { cn } from "@/lib/utils";
-import { BarChart3, Users, Activity, Zap, Clock } from "lucide-react";
+import { BarChart3, Users, Activity, Zap } from "lucide-react";
 import { ActiveUsersList } from "./ActiveUsersList";
 
 export function AdminDashboard() {
+  console.log("Rendering AdminDashboard component");
   const [isEditMode] = useAtom(adminEditModeAtom);
   
   return (
