@@ -4,21 +4,12 @@ import { atom } from 'jotai';
 // Re-export atoms from ui.atoms
 export * from './ui.atoms';
 
-// Re-export atoms from tools.atoms with the correct names
+// Re-export specific atoms from tools.atoms
 export {
   adminEditModeAtom,
-  sidebarExpandedAtom,
-  showLabelsAtom,
-  activePageAtom,
-  darkModeAtom,
-  selectedThemeAtom,
-  adminSettingsOpenAtom,
-  hoveredIconAtom,
-  activeModalAtom,
-  activeOverlayAtom,
-  adminToolsExpandedAtom,
-  dashboardEditModeAtom,
-  userPreferencesAtom,
+  adminDebugModeAtom,
+  adminEditTargetAtom,
+  adminDragStateAtom,
   isDraggingAtom,
   dragSourceIdAtom,
   dragTargetIdAtom,
@@ -27,9 +18,7 @@ export {
   frozenZonesAtom,
   effectsPaletteVisibleAtom,
   selectedEffectAtom,
-  searchActiveAtom,
-  searchQueryAtom,
-  searchResultsAtom
+  hoveredIconAtom
 } from './tools.atoms';
 
 // Export additional cyberpunk effects atoms
