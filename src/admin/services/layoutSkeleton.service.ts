@@ -8,6 +8,51 @@ import { toast } from 'sonner';
  */
 export const LayoutSkeletonService = {
   /**
+   * Fetch all layout skeletons
+   */
+  async getAllLayouts(): Promise<LayoutSkeleton[]> {
+    try {
+      const { data, error } = await supabase
+        .from('layout_skeletons')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching all layouts:', error);
+        return [];
+      }
+
+      return data as LayoutSkeleton[];
+    } catch (error) {
+      console.error('Error in getAllLayouts:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Fetch layouts by type
+   */
+  async getLayoutsByType(type: string): Promise<LayoutSkeleton[]> {
+    try {
+      const { data, error } = await supabase
+        .from('layout_skeletons')
+        .select('*')
+        .eq('type', type)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching layouts by type:', error);
+        return [];
+      }
+
+      return data as LayoutSkeleton[];
+    } catch (error) {
+      console.error('Error in getLayoutsByType:', error);
+      return [];
+    }
+  },
+
+  /**
    * Fetch a layout skeleton by id
    */
   async getById(id: string): Promise<LayoutSkeleton | null> {
@@ -43,7 +88,7 @@ export const LayoutSkeletonService = {
         .eq('is_active', true)
         .order('version', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching active layout:', error);
@@ -117,10 +162,80 @@ export const LayoutSkeletonService = {
   },
 
   /**
+   * Set a layout as active and make all others of the same type/scope inactive
+   */
+  async setLayoutActive(id: string, type: string, scope: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      // First set all other layouts to inactive
+      const { error: deactivateError } = await supabase
+        .from('layout_skeletons')
+        .update({ is_active: false })
+        .eq('type', type)
+        .eq('scope', scope)
+        .neq('id', id);
+
+      if (deactivateError) {
+        console.error('Error deactivating other layouts:', deactivateError);
+        return { success: false, error: deactivateError.message };
+      }
+
+      // Then set the selected layout to active
+      const { error: activateError } = await supabase
+        .from('layout_skeletons')
+        .update({ is_active: true })
+        .eq('id', id);
+
+      if (activateError) {
+        console.error('Error activating layout:', activateError);
+        return { success: false, error: activateError.message };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error in setLayoutActive:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  /**
    * Delete a layout skeleton
    */
   async deleteLayout(id: string): Promise<{ success: boolean; error?: string }> {
     try {
+      // First check if this is the only active layout
+      const { data: layoutData, error: layoutError } = await supabase
+        .from('layout_skeletons')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (layoutError) {
+        console.error('Error checking layout before delete:', layoutError);
+        return { success: false, error: layoutError.message };
+      }
+
+      if (layoutData.is_active) {
+        const { count, error: countError } = await supabase
+          .from('layout_skeletons')
+          .select('*', { count: 'exact', head: true })
+          .eq('type', layoutData.type)
+          .eq('scope', layoutData.scope)
+          .eq('is_active', true);
+
+        if (countError) {
+          console.error('Error counting active layouts:', countError);
+          return { success: false, error: countError.message };
+        }
+
+        if (count === 1) {
+          return { 
+            success: false, 
+            error: 'Cannot delete the only active layout. Create another active layout first or set another layout as active.' 
+          };
+        }
+      }
+
+      // Proceed with deletion
       const { error } = await supabase
         .from('layout_skeletons')
         .delete()

@@ -12,6 +12,9 @@ import { StatsCards } from '@/admin/dashboard/StatsCards';
 import { ActiveUsersList } from '@/admin/dashboard/ActiveUsersList';
 import { PerformanceMetrics } from '@/admin/dashboard/PerformanceMetrics';
 import { TrendingParts } from '@/admin/dashboard/TrendingParts';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { DashboardLayout } from '@/admin/components/dashboard/DashboardLayout';
 
 // Fallback component for unregistered components
 function UnregisteredComponent({ type, ...props }: { type: string; [key: string]: any }) {
@@ -25,6 +28,20 @@ function UnregisteredComponent({ type, ...props }: { type: string; [key: string]
       </pre>
     </div>
   );
+}
+
+// Basic HTML elements
+function Span({ children, className, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
+  return <span className={className} {...props}>{children}</span>;
+}
+
+function Div({ children, className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={className} {...props}>{children}</div>;
+}
+
+function Heading({ level = 1, children, className, ...props }: { level?: 1 | 2 | 3 | 4 | 5 | 6 } & React.HTMLAttributes<HTMLHeadingElement>) {
+  const Tag = `h${level}` as keyof JSX.IntrinsicElements;
+  return <Tag className={className} {...props}>{children}</Tag>;
 }
 
 // Layout components
@@ -55,6 +72,22 @@ export function initializeComponentRegistry() {
   // Set fallback component
   componentRegistry.setFallbackComponent(UnregisteredComponent);
   
+  // Register basic HTML elements
+  componentRegistry.registerBulk({
+    span: {
+      component: Span,
+      defaultProps: { className: '' },
+    },
+    div: {
+      component: Div,
+      defaultProps: { className: '' },
+    },
+    heading: {
+      component: Heading,
+      defaultProps: { level: 1, className: 'text-2xl font-bold' },
+    },
+  });
+  
   // Register layout components
   componentRegistry.registerBulk({
     // Core layout components
@@ -67,6 +100,11 @@ export function initializeComponentRegistry() {
     },
     AdminGrid: {
       component: AdminGrid,
+      defaultProps: { cols: 3 },
+    },
+    DashboardLayout: {
+      component: DashboardLayout,
+      permissions: ['admin:view'],
     },
     AdminTopNav: {
       component: AdminTopNav,
@@ -95,6 +133,13 @@ export function initializeComponentRegistry() {
     },
     CardFooter: {
       component: CardFooter,
+    },
+    Badge: {
+      component: Badge,
+    },
+    Button: {
+      component: Button,
+      defaultProps: { variant: 'default', size: 'default' },
     },
 
     // Admin dashboard components
