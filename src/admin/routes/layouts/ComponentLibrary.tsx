@@ -82,7 +82,7 @@ export function ComponentLibrary({ onSelectComponent }: ComponentLibraryProps) {
               <Grid3X3 className="h-4 w-4 mr-2" />
               Features
             </TabsTrigger>
-          </Tabs>
+          </TabsList>
           
           <ScrollArea className="h-[calc(100vh-260px)]">
             <TabsContent value="layout" className="m-0 p-0">
