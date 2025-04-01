@@ -1,7 +1,7 @@
 
-import { LogEntry, LogLevel, LogTransport } from "../types";
-import { toast } from "@/hooks/use-toast";
-import { alertToast } from "../components/LogNotification";
+import { toast } from '@/hooks/use-toast';
+import { AlertCircle, Info, AlertTriangle, XCircle } from 'lucide-react';
+import { LogEntry, LogLevel, LogTransport } from '../types';
 
 interface UITransportOptions {
   showDebug?: boolean;
@@ -13,11 +13,11 @@ interface UITransportOptions {
 }
 
 /**
- * Transport for displaying logs in the UI via toasts
+ * Transport for showing logs as UI toasts
  */
 export class UITransport implements LogTransport {
   private options: UITransportOptions;
-  private lastMessages: Map<string, { timestamp: number, count: number }> = new Map();
+  private recentMessages: Map<string, { timestamp: number, count: number }> = new Map();
   
   constructor(options: UITransportOptions = {}) {
     this.options = {
@@ -32,121 +32,130 @@ export class UITransport implements LogTransport {
   }
   
   log(entry: LogEntry): void {
-    // Determine if we should show this log level
-    if (!this.shouldShowLevel(entry.level)) {
+    // Check if we should show a toast for this log level
+    if (!this.shouldShowToast(entry.level)) {
       return;
     }
     
-    // Create a key for the message to track duplicates
+    // Create a key for this message to track duplicates
     const messageKey = `${entry.level}-${entry.category}-${entry.message}`;
     
-    // Check for throttling
-    if (this.options.throttleMs && this.options.throttleMs > 0) {
-      const now = Date.now();
-      const lastMessage = this.lastMessages.get(messageKey);
-      
-      if (lastMessage) {
-        // If within throttle window, increment count and skip showing
-        if (now - lastMessage.timestamp < this.options.throttleMs) {
-          this.lastMessages.set(messageKey, {
-            timestamp: lastMessage.timestamp,
-            count: lastMessage.count + 1
-          });
-          return;
-        }
-        
-        // If outside throttle window, update with new timestamp and show with count
-        this.lastMessages.set(messageKey, { timestamp: now, count: 1 });
-        
-        // If we had multiple of the same message, show with count
-        if (lastMessage.count > 1) {
-          this.showToast(entry, `(${lastMessage.count}x)`);
-          return;
-        }
-      } else {
-        // First time seeing this message
-        this.lastMessages.set(messageKey, { timestamp: now, count: 1 });
-      }
+    // Check if we're throttling this message
+    if (this.isThrottled(messageKey)) {
+      return;
     }
     
     // Show the toast
     this.showToast(entry);
   }
   
-  private shouldShowLevel(level: LogLevel): boolean {
+  private shouldShowToast(level: LogLevel): boolean {
     switch (level) {
       case LogLevel.DEBUG:
-        return this.options.showDebug || false;
+        return !!this.options.showDebug;
       case LogLevel.INFO:
-        return this.options.showInfo || false;
+        return !!this.options.showInfo;
       case LogLevel.WARNING:
-        return this.options.showWarning || false;
+        return !!this.options.showWarning;
       case LogLevel.ERROR:
-        return this.options.showError || false;
+        return !!this.options.showError;
       case LogLevel.CRITICAL:
-        return this.options.showCritical || false;
+        return !!this.options.showCritical;
       default:
         return false;
     }
   }
   
-  private showToast(entry: LogEntry, suffix = ''): void {
-    const suffixText = suffix ? ` ${suffix}` : '';
+  private isThrottled(messageKey: string): boolean {
+    const now = Date.now();
+    const recent = this.recentMessages.get(messageKey);
     
-    switch (entry.level) {
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-        alertToast({
-          title: `${this.getLevelName(entry.level)}: ${entry.category}${suffixText}`,
-          description: entry.message,
-          variant: "destructive",
-          duration: 6000,
+    if (recent) {
+      // If the message was seen recently
+      if (now - recent.timestamp < (this.options.throttleMs || 5000)) {
+        // Update count and timestamp
+        this.recentMessages.set(messageKey, {
+          timestamp: now,
+          count: recent.count + 1
         });
-        break;
-      case LogLevel.WARNING:
-        alertToast({
-          title: `${this.getLevelName(entry.level)}: ${entry.category}${suffixText}`,
-          description: entry.message,
-          variant: "warning",
-          duration: 5000,
-        });
-        break;
-      case LogLevel.INFO:
-        if (this.options.showInfo) {
-          alertToast({
-            title: `${entry.category}${suffixText}`,
-            description: entry.message,
-            variant: "default",
-            duration: 3000,
-          });
-        }
-        break;
-      case LogLevel.DEBUG:
-        if (this.options.showDebug) {
-          toast({
-            title: `Debug: ${entry.category}${suffixText}`,
-            description: entry.message,
-            duration: 2000,
-          });
-        }
-        break;
+        return true;
+      }
+    }
+    
+    // Not throttled, record it
+    this.recentMessages.set(messageKey, {
+      timestamp: now,
+      count: 1
+    });
+    
+    // Clean up old messages
+    this.cleanupOldMessages(now);
+    
+    return false;
+  }
+  
+  private cleanupOldMessages(now: number): void {
+    const expiryTime = now - ((this.options.throttleMs || 5000) * 2);
+    
+    for (const [key, data] of this.recentMessages.entries()) {
+      if (data.timestamp < expiryTime) {
+        this.recentMessages.delete(key);
+      }
     }
   }
   
-  private getLevelName(level: LogLevel): string {
-    switch (level) {
+  private showToast(entry: LogEntry): void {
+    let icon;
+    let variant: "default" | "destructive" | undefined;
+    const title = this.getTitle(entry);
+    
+    switch (entry.level) {
       case LogLevel.DEBUG:
-        return 'Debug';
+        icon = <Info className="h-4 w-4" />;
+        variant = "default";
+        break;
       case LogLevel.INFO:
-        return 'Info';
+        icon = <Info className="h-4 w-4" />;
+        variant = "default";
+        break;
       case LogLevel.WARNING:
-        return 'Warning';
+        icon = <AlertTriangle className="h-4 w-4" />;
+        variant = "default";
+        break;
       case LogLevel.ERROR:
-        return 'Error';
+        icon = <AlertCircle className="h-4 w-4" />;
+        variant = "destructive";
+        break;
       case LogLevel.CRITICAL:
-        return 'Critical';
+        icon = <XCircle className="h-4 w-4" />;
+        variant = "destructive";
+        break;
+    }
+    
+    // Show toast with appropriate styling
+    toast({
+      title,
+      description: entry.message,
+      variant,
+      icon,
+      duration: entry.level >= LogLevel.ERROR ? 7000 : 4000,
+    });
+  }
+  
+  private getTitle(entry: LogEntry): string {
+    switch (entry.level) {
+      case LogLevel.DEBUG:
+        return `Debug [${entry.category}]`;
+      case LogLevel.INFO:
+        return `Info [${entry.category}]`;
+      case LogLevel.WARNING:
+        return `Warning [${entry.category}]`;
+      case LogLevel.ERROR:
+        return `Error [${entry.category}]`;
+      case LogLevel.CRITICAL:
+        return `Critical Error [${entry.category}]`;
       default:
-        return 'Unknown';
+        return `Log [${entry.category}]`;
     }
   }
 }
