@@ -1,68 +1,36 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { AuthProvider as LegacyAuthProvider } from '@/hooks/useAuth';
-import { notifyAuthReady, notifySignIn, notifySignOut, notifyUserUpdated, notifySessionUpdated, notifyAuthError } from '@/auth/bridge';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { UserRole } from '@/auth/types/auth.types';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { UserRole } from '@/auth/types/auth.types';
 
 /**
  * Primary Authentication Provider
- * This component initializes authentication state and publishes auth events to the bridge
+ * Initializes authentication state and sets up auth event listeners
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [initialized, setInitialized] = useState(false);
+  const { 
+    setUser, 
+    setSession, 
+    setRoles, 
+    initialize, 
+    setStatus,
+    initialized
+  } = useAuthStore();
+  
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   
+  // Initialize auth state on mount
   useEffect(() => {
-    logger.info('Initializing auth provider');
+    initialize();
+  }, [initialize]);
+  
+  // Set up auth state change listener
+  useEffect(() => {
+    logger.info('Setting up auth state change listener');
     
-    const initializeAuth = async () => {
-      try {
-        // Get initial session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          logger.error('Error getting session', { details: error });
-          notifyAuthError(error.message);
-          setInitialized(true);
-          return;
-        }
-        
-        if (session) {
-          logger.info('User session found', { details: { userId: session.user.id } });
-          
-          // Get user roles
-          const { data: rolesData, error: rolesError } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id);
-            
-          if (rolesError) {
-            logger.error('Error fetching user roles', { details: rolesError });
-          }
-          
-          const roles = (rolesData?.map(r => r.role) as UserRole[]) || [];
-          
-          // Notify auth system about authenticated user
-          notifySignIn(session.user, session, roles);
-        } else {
-          logger.info('No user session found');
-          notifyAuthReady(null, null, []);
-        }
-        
-        setInitialized(true);
-      } catch (error) {
-        logger.error('Error initializing auth', { details: error });
-        notifyAuthError('Failed to initialize authentication');
-        setInitialized(true);
-      }
-    };
-    
-    initializeAuth();
-    
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         logger.info(`Auth state changed: ${event}`, { details: { event } });
@@ -70,6 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         switch (event) {
           case 'SIGNED_IN':
             if (session?.user) {
+              setUser(session.user);
+              setSession(session);
+              setStatus('authenticated');
+              
               // Get user roles with setTimeout to avoid potential deadlocks
               setTimeout(async () => {
                 try {
@@ -83,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   }
                   
                   const roles = (rolesData?.map(r => r.role) as UserRole[]) || [];
-                  notifySignIn(session.user, session, roles);
+                  setRoles(roles);
                 } catch (error) {
                   logger.error('Error processing sign in', { details: error });
                 }
@@ -92,18 +64,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             break;
             
           case 'SIGNED_OUT':
-            notifySignOut();
+            setUser(null);
+            setSession(null);
+            setRoles([]);
+            setStatus('unauthenticated');
             break;
             
           case 'USER_UPDATED':
             if (session?.user) {
-              notifyUserUpdated(session.user);
+              setUser(session.user);
             }
             break;
             
           case 'TOKEN_REFRESHED':
             if (session) {
-              notifySessionUpdated(session);
+              setSession(session);
             }
             break;
         }
@@ -114,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logger.info('Cleaning up auth provider');
       subscription.unsubscribe();
     };
-  }, [logger]);
+  }, [logger, setUser, setSession, setRoles, setStatus]);
   
   // If not initialized, show loading indicator
   if (!initialized) {
@@ -125,6 +100,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
   }
   
-  // Use the LegacyAuthProvider for backward compatibility
-  return <LegacyAuthProvider>{children}</LegacyAuthProvider>;
+  return <>{children}</>;
 }

@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
-import { createAdminPersistMiddleware } from '../middleware/persist.middleware';
 import { persist } from 'zustand/middleware';
+import { createAdminPersistMiddleware } from '../middleware/persist.middleware';
 
 interface AdminPreferencesState {
   // UI Preferences
@@ -19,15 +19,11 @@ interface AdminPreferencesState {
   setPinnedTools: (tools: string[]) => void;
   addRecentView: (path: string) => void;
   setTheme: (theme: string) => void;
-  
-  // Load/Save preferences
-  loadPreferences: () => void;
-  savePreferences: () => void;
 }
 
 export const useAdminPreferences = create<AdminPreferencesState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       // Default Preferences
       isDashboardCollapsed: false,
       activeDashboardLayout: 'default',
@@ -47,17 +43,6 @@ export const useAdminPreferences = create<AdminPreferencesState>()(
           recentViews: [path, ...existingViews].slice(0, 10) 
         };
       }),
-      
-      // Load/Save preferences
-      loadPreferences: () => {
-        // This function is primarily to provide a hook for future expansion
-        // When preferences are stored in persistence, they're loaded automatically
-      },
-      
-      savePreferences: () => {
-        // This function is primarily to provide a hook for future expansion
-        // When state changes, persist middleware saves automatically
-      }
     }),
     createAdminPersistMiddleware('admin-preferences')
   )

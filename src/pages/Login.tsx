@@ -25,8 +25,7 @@ const Login = ({ onSuccess }: LoginProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { status } = useAuth();
-  const isAuthenticated = status === "authenticated";
+  const { isAuthenticated } = useAuth();
   const { hasAdminAccess } = useAdminAccess();
   const logger = useLogger("LoginPage", LogCategory.AUTH);
   
@@ -64,7 +63,7 @@ const Login = ({ onSuccess }: LoginProps) => {
           title: "Admin Access Available",
           description: "You can access the admin dashboard",
         });
-        navigate("/"); // Navigate home first, admin is accessible from nav
+        navigate("/"); 
       } else {
         // Normal redirect to requested page
         logger.info("Standard redirect after login");
