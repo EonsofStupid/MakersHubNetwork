@@ -1,6 +1,6 @@
 
 import { LogEntry, LogLevel, LogTransport } from "../types";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { alertToast } from "../components/LogNotification";
 
 interface UITransportOptions {
@@ -113,9 +113,10 @@ export class UITransport implements LogTransport {
         break;
       case LogLevel.INFO:
         if (this.options.showInfo) {
-          toast({
+          alertToast({
             title: `${entry.category}${suffixText}`,
             description: entry.message,
+            variant: "default",
             duration: 3000,
           });
         }
@@ -125,7 +126,6 @@ export class UITransport implements LogTransport {
           toast({
             title: `Debug: ${entry.category}${suffixText}`,
             description: entry.message,
-            variant: "secondary",
             duration: 2000,
           });
         }

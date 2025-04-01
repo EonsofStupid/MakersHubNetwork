@@ -15,10 +15,10 @@ export function useErrorLogger(source: string) {
       category: LogCategory.SYSTEM,
       source,
       details: {
-        name: error.name,
+        errorName: error.name, // Changed from name to errorName
         stack: error.stack,
         componentStack: errorInfo?.componentStack,
-        ...error
+        error // Pass the full error object
       }
     });
   }, [logger, source]);
@@ -28,7 +28,7 @@ export function useErrorLogger(source: string) {
       category: LogCategory.SYSTEM,
       source,
       details: {
-        name: error.name,
+        errorName: error.name, // Changed from name to errorName
         stack: error.stack,
         context
       }

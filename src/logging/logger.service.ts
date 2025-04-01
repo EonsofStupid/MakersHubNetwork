@@ -164,6 +164,29 @@ export class LoggerService {
   }
 
   /**
+   * Log a performance metric
+   */
+  public performance(message: string, duration: number, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
+    userId?: string;
+    sessionId?: string;
+    tags?: string[];
+  }): void {
+    const category = options?.category || LogCategory.PERFORMANCE;
+    if (!this.shouldLog(LogLevel.INFO, category)) return;
+    
+    const entry = this.createLogEntry(LogLevel.INFO, message, {
+      ...options,
+      category,
+      duration,
+    });
+    
+    this.processLogEntry(entry);
+  }
+
+  /**
    * Log methods for different levels
    */
   public debug(message: string, options?: {
