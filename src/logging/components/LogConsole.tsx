@@ -6,7 +6,7 @@ import { LogLevel } from '../constants/log-level';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
 import '../styles/logging.css';
-import { renderUnknownAsNode } from '@/shared/utils/render';
+import { renderUnknownAsNode, nodeToSearchableString } from '@/shared/utils/render';
 
 interface LogDetailsProps {
   details: Record<string, any>;
@@ -142,9 +142,7 @@ export function LogConsole() {
     .filter(log => {
       if (search === '') return true;
       const searchLower = search.toLowerCase();
-      const messageStr = typeof log.message === 'string' 
-        ? log.message.toLowerCase() 
-        : '';
+      const messageStr = nodeToSearchableString(log.message).toLowerCase();
       return messageStr.includes(searchLower) || 
              log.category.toLowerCase().includes(searchLower);
     });
