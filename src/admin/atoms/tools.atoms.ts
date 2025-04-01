@@ -1,24 +1,27 @@
 
 import { atom } from 'jotai';
 
-// Atom for admin edit mode
+// Controls the admin edit mode
 export const adminEditModeAtom = atom<boolean>(false);
 
-// Atom for admin sidebar expanded state
+// Controls the admin sidebar expansion state
 export const adminSidebarExpandedAtom = atom<boolean>(true);
 
-// Atom for admin dashboard collapsed state
-export const adminDashboardCollapsedAtom = atom<boolean>(false);
+// Controls the admin toast notifications
+export const adminNotificationsEnabledAtom = atom<boolean>(true);
 
-// Atom for currently dragged item
-export const adminDraggedItemAtom = atom<{
-  id: string;
-  type: 'nav' | 'dashboard' | 'widget';
-  data: any;
-} | null>(null);
+// Controls the admin theme
+export const adminThemeModeAtom = atom<'light' | 'dark' | 'system'>('dark');
 
-// Atom for drop target area
-export const adminDropTargetAtom = atom<{
-  id: string;
-  type: 'topnav' | 'dashboard' | 'sidebar';
-} | null>(null);
+// Admin UI preferences
+export const adminPreferencesAtom = atom<{
+  dashboardLayout: string;
+  defaultView: 'grid' | 'list' | 'table';
+  compactMode: boolean;
+  sidebarCollapsed: boolean;
+}>({
+  dashboardLayout: 'default',
+  defaultView: 'grid',
+  compactMode: false,
+  sidebarCollapsed: false
+});

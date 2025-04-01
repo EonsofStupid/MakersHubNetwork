@@ -1,113 +1,70 @@
 
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAtom } from 'jotai';
-import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { TopNavItem } from './TopNavItem';
-import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
-import { adminNavigationItems } from '@/admin/config/navigation.config';
-import { Plus } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
+import { Plus, Search, Home, Settings, FileCode } from 'lucide-react';
+import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
+import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
+import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
 export function TopNavShortcuts() {
   const navigate = useNavigate();
-  const shortcutsRef = useRef<HTMLDivElement>(null);
-  const [isEditMode] = useAtom(adminEditModeAtom);
-  const { topnavItems, setTopnavItems, savePreferences } = useAdminStore();
-  const { toast } = useToast();
-  
-  // Set up drag and drop for the container
-  const { registerDropZone, isDragging } = useDragAndDrop({
-    items: topnavItems,
-    onReorder: (newItems) => {
-      setTopnavItems(newItems);
-      savePreferences();
-    },
-    containerId: 'top-nav-shortcuts',
-    dragOnlyInEditMode: true,
-    acceptExternalItems: true
-  });
-  
-  // Register the shortcuts container as a drop zone
-  useEffect(() => {
-    if (shortcutsRef.current) {
-      return registerDropZone(shortcutsRef.current);
-    }
-  }, [registerDropZone]);
-  
-  // Handle navigation to the corresponding route when a shortcut is clicked
-  const handleItemClick = (id: string) => {
-    const item = adminNavigationItems.find(item => item.id === id);
-    if (item) {
-      navigate(item.path);
-    }
-  };
-  
-  // Handle removing an item from shortcuts
-  const handleRemoveItem = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    const newShortcuts = topnavItems.filter(item => item !== id);
-    setTopnavItems(newShortcuts);
-    savePreferences();
-    
-    toast({
-      title: "Shortcut removed",
-      description: `Removed from top navigation bar`,
-      duration: 2000,
-    });
-  };
-  
-  // Filter shortcuts to only show items that exist in navigation config
-  const visibleShortcuts = topnavItems.filter(id => 
-    adminNavigationItems.some(item => item.id === id)
-  );
-  
+  const { hasPermission } = useAdminPermissions();
+
   return (
-    <>
-      <motion.div 
-        ref={shortcutsRef}
-        className={`admin-topnav-shortcuts flex items-center gap-2 ${isEditMode ? 'edit-mode-highlight border border-dashed border-[var(--impulse-primary)]/50 rounded-lg p-1' : ''} ${isDragging ? 'bg-[var(--impulse-primary)]/5 rounded-lg' : ''}`}
-        data-container-id="top-nav-shortcuts"
-        animate={isEditMode ? { 
-          boxShadow: isDragging ? "0 0 0 2px rgba(0, 240, 255, 0.3)" : "none"
-        } : {}}
-      >
-        <AnimatePresence mode="popLayout">
-          {visibleShortcuts.length > 0 ? (
-            visibleShortcuts.map(id => {
-              const item = adminNavigationItems.find(navItem => navItem.id === id);
-              if (!item) return null;
-              
-              return (
-                <TopNavItem
-                  key={id}
-                  id={id}
-                  icon={item.icon}
-                  label={item.label}
-                  onClick={() => handleItemClick(id)}
-                  onRemove={isEditMode ? (e) => handleRemoveItem(id, e) : undefined}
-                  isEditMode={isEditMode}
-                />
-              );
-            })
-          ) : (
-            isEditMode && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center justify-center h-10 px-3 text-[var(--impulse-text-secondary)] text-sm cyber-text"
-              >
-                <Plus className="w-4 h-4 mr-2 text-[var(--impulse-primary)]" />
-                <span>Drag items here</span>
-              </motion.div>
-            )
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </>
+    <div className="flex items-center space-x-1">
+      <AdminTooltip content="Dashboard" side="bottom">
+        <button 
+          onClick={() => navigate('/admin/dashboard')}
+          className="admin-topnav-item"
+        >
+          <Home className="w-5 h-5" />
+        </button>
+      </AdminTooltip>
+      
+      <Separator orientation="vertical" className="h-6 mx-1 bg-[var(--impulse-border-normal)]" />
+      
+      {hasPermission(ADMIN_PERMISSIONS.CONTENT_CREATE) && (
+        <AdminTooltip content="Create New Content" side="bottom">
+          <button 
+            onClick={() => navigate('/admin/content/create')}
+            className="admin-topnav-item"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        </AdminTooltip>
+      )}
+      
+      <AdminTooltip content="Search" side="bottom">
+        <button 
+          onClick={() => navigate('/admin/search')}
+          className="admin-topnav-item"
+        >
+          <Search className="w-5 h-5" />
+        </button>
+      </AdminTooltip>
+      
+      {hasPermission(ADMIN_PERMISSIONS.SETTINGS_VIEW) && (
+        <AdminTooltip content="Settings" side="bottom">
+          <button 
+            onClick={() => navigate('/admin/settings')}
+            className="admin-topnav-item"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
+        </AdminTooltip>
+      )}
+      
+      {hasPermission(ADMIN_PERMISSIONS.SYSTEM_LOGS) && (
+        <AdminTooltip content="System Logs" side="bottom">
+          <button 
+            onClick={() => navigate('/admin/logs')}
+            className="admin-topnav-item"
+          >
+            <FileCode className="w-5 h-5" />
+          </button>
+        </AdminTooltip>
+      )}
+    </div>
   );
 }

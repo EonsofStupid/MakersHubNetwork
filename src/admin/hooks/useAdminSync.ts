@@ -1,67 +1,64 @@
 
-import { useEffect, useState } from 'react';
-import { subscribeToAuthEvents } from '@/auth/bridge';
-import { useAdminStore } from '@/admin/store/admin.store';
+import { useState, useEffect, useRef } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
-/**
- * Hook to synchronize admin state with authentication events
- */
 export function useAdminSync() {
-  const { setPermissions, setIsAuthenticated } = useAdminStore();
   const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
-  const [syncError, setSyncError] = useState<Error | null>(null);
-  const logger = useLogger('AdminSync', LogCategory.ADMIN);
-  
-  // Function to save admin state to database
-  const saveToDatabase = async () => {
-    setIsSyncing(true);
+  const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const syncTimeoutRef = useRef<number | null>(null);
+  const logger = useLogger('useAdminSync', LogCategory.ADMIN);
+
+  // Simulate sync process - in a real app, this would connect to a backend
+  const syncAdminData = async () => {
+    if (isSyncing) return;
+    
     try {
-      // Implementation would go here
-      setLastSyncTime(new Date());
+      setIsSyncing(true);
       setSyncError(null);
+      logger.info('Starting admin data sync');
+      
+      // Simulate network request
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // 10% chance of simulated error for testing
+      if (Math.random() < 0.1) {
+        throw new Error('Simulated sync error');
+      }
+      
+      setLastSyncTime(Date.now());
+      logger.info('Admin data sync completed successfully');
     } catch (error) {
-      setSyncError(error instanceof Error ? error : new Error('Unknown error during sync'));
-      logger.error('Error syncing admin data', { details: error });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setSyncError(errorMessage);
+      logger.error('Admin data sync failed', { details: { error: errorMessage } });
     } finally {
       setIsSyncing(false);
     }
   };
-  
+
+  // Initial sync on mount
   useEffect(() => {
-    logger.info('Setting up admin auth sync');
+    syncAdminData();
     
-    // Subscribe to authentication events
-    const unsubscribe = subscribeToAuthEvents((event) => {
-      logger.info(`Admin received auth event: ${event.type}`, {
-        details: { eventType: event.type }
-      });
-      
-      switch (event.type) {
-        case 'AUTH_SIGNED_IN':
-          setIsAuthenticated(true);
-          // We'll set permissions via the useAdminPermissions hook
-          break;
-          
-        case 'AUTH_SIGNED_OUT':
-          setIsAuthenticated(false);
-          setPermissions([]);
-          break;
-      }
-    });
+    // Schedule periodic sync every 5 minutes
+    const intervalId = setInterval(() => {
+      syncAdminData();
+    }, 5 * 60 * 1000);
     
     return () => {
-      logger.info('Cleaning up admin auth sync');
-      unsubscribe();
+      clearInterval(intervalId);
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
     };
-  }, [logger, setIsAuthenticated, setPermissions]);
-  
+  }, []);
+
   return {
     isSyncing,
     lastSyncTime,
     syncError,
-    saveToDatabase
+    triggerSync: syncAdminData
   };
 }

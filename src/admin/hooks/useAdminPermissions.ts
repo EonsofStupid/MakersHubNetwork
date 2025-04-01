@@ -1,60 +1,74 @@
 
-import { useEffect, useState, useCallback } from 'react';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { mapRolesToPermissions } from '@/auth/rbac/roles';
-import { AdminPermissionValue } from '@/admin/constants/permissions';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { useEffect, useMemo, useState } from 'react';
+import { useAuthStore } from '@/stores/auth/store';
+import { ADMIN_PERMISSIONS, ROLE_PERMISSIONS } from '@/admin/constants/permissions';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
+import { AdminPermissionValue } from '@/admin/types/permissions';
 
 export function useAdminPermissions() {
-  const { roles, isLoading: isAuthLoading } = useAuthState();
-  const [isLoading, setIsLoading] = useState(true);
+  const user = useAuthStore(state => state.user);
+  const roles = useAuthStore(state => state.roles || []);
   const [permissions, setPermissions] = useState<AdminPermissionValue[]>([]);
-  const logger = getLogger();
+  const [isLoading, setIsLoading] = useState(true);
+  const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
 
-  // Map roles to permissions
+  // Fetch and set permissions based on user roles
   useEffect(() => {
-    if (!isAuthLoading) {
+    const fetchPermissions = async () => {
       try {
-        // Convert app permissions to admin permissions
-        // This will be improved when we fully standardize the permission systems
-        const mappedPermissions = mapRolesToPermissions(roles) as unknown as AdminPermissionValue[];
+        if (!user) {
+          setPermissions([]);
+          setIsLoading(false);
+          return;
+        }
+
+        // Get all permissions from the user's roles
+        const userPermissions: AdminPermissionValue[] = [];
         
-        logger.info('Admin permissions loaded', {
-          category: LogCategory.ADMIN,
-          source: 'useAdminPermissions',
-          details: { permissions: mappedPermissions }
+        roles.forEach(role => {
+          const rolePermissions = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS];
+          if (rolePermissions) {
+            rolePermissions.forEach(permission => {
+              if (!userPermissions.includes(permission)) {
+                userPermissions.push(permission);
+              }
+            });
+          }
         });
-        
-        setPermissions(mappedPermissions);
+
+        setPermissions(userPermissions);
+        logger.info('User permissions loaded', { 
+          details: { 
+            userId: user.id,
+            roles,
+            permissionsCount: userPermissions.length 
+          } 
+        });
       } catch (error) {
-        logger.error('Error loading admin permissions', {
-          category: LogCategory.ADMIN,
-          source: 'useAdminPermissions',
-          details: error
+        logger.error('Error loading user permissions', { 
+          details: { error } 
         });
+        setPermissions([]);
       } finally {
         setIsLoading(false);
       }
-    }
-  }, [roles, isAuthLoading, logger]);
+    };
 
-  // Check if user has a specific permission
-  const hasPermission = useCallback(
-    (permission: AdminPermissionValue): boolean => {
-      // Check for super admin first (has all permissions)
-      if (permissions.some(p => p === 'all:all')) {
-        return true;
-      }
-      
+    // Always run this effect when roles change
+    fetchPermissions();
+  }, [user, roles, logger]);
+
+  // Memoize the hasPermission function to prevent unnecessary re-renders
+  const hasPermission = useMemo(() => {
+    return (permission: AdminPermissionValue): boolean => {
       return permissions.includes(permission);
-    },
-    [permissions]
-  );
+    };
+  }, [permissions]);
 
   return {
     permissions,
     hasPermission,
-    isLoading: isLoading || isAuthLoading
+    isLoading
   };
 }

@@ -1,38 +1,49 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Loader, Check } from 'lucide-react';
 import { useAdminSync } from '@/admin/hooks/useAdminSync';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Loader2, CloudOff } from 'lucide-react';
+import { AdminTooltip } from './AdminTooltip';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
-export const SyncIndicator = () => {
-  const { isSyncing, lastSyncTime, syncError, saveToDatabase } = useAdminSync();
+export function SyncIndicator() {
+  const { isSyncing, lastSyncTime, syncError } = useAdminSync();
+  const [showSuccess, setShowSuccess] = useState(false);
+  const logger = useLogger("SyncIndicator", LogCategory.ADMIN);
 
-  if (isSyncing) {
-    return (
-      <Badge variant="outline" className="gap-1">
-        <Loader2 className="w-3 h-3 animate-spin" />
-        <span>Syncing...</span>
-      </Badge>
-    );
+  useEffect(() => {
+    if (!isSyncing && !syncError && lastSyncTime) {
+      setShowSuccess(true);
+      const timer = setTimeout(() => setShowSuccess(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSyncing, syncError, lastSyncTime]);
+
+  useEffect(() => {
+    if (syncError) {
+      logger.error("Sync error occurred", { details: { error: syncError } });
+    }
+  }, [syncError, logger]);
+
+  if (!isSyncing && !showSuccess) {
+    return null;
   }
 
-  if (syncError) {
-    return (
-      <Badge variant="destructive" className="gap-1">
-        <CloudOff className="w-3 h-3" />
-        <span>Sync Failed</span>
-      </Badge>
-    );
-  }
+  const tooltipContent = isSyncing
+    ? "Syncing admin data..."
+    : syncError
+    ? `Sync error: ${syncError}`
+    : `Last synced: ${lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString() : 'Never'}`;
 
-  if (lastSyncTime) {
-    return (
-      <Badge variant="outline" className="gap-1 bg-muted/30 hover:bg-muted/50">
-        <CheckCircle className="w-3 h-3" />
-        <span>Synced {lastSyncTime.toLocaleTimeString()}</span>
-      </Badge>
-    );
-  }
-
-  return null;
-};
+  return (
+    <AdminTooltip content={tooltipContent} side="bottom">
+      <div className="flex items-center gap-1">
+        {isSyncing ? (
+          <Loader className="h-4 w-4 text-[var(--impulse-primary)] animate-spin" />
+        ) : (
+          <Check className="h-4 w-4 text-green-500" />
+        )}
+      </div>
+    </AdminTooltip>
+  );
+}

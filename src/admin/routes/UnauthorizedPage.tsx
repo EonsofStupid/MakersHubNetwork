@@ -1,28 +1,39 @@
 
-import React from 'react';
-import { Shield } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Shield, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function UnauthorizedPage() {
   const navigate = useNavigate();
-  
+
   return (
-    <div className="container py-12 flex flex-col items-center justify-center text-center">
-      <Shield className="w-16 h-16 text-muted-foreground mb-4" />
-      <h1 className="text-3xl font-heading mb-2">Access Denied</h1>
-      <p className="text-muted-foreground max-w-md mb-6">
-        You don't have permission to access this page. If you believe this is an error, please contact your administrator.
-      </p>
-      
-      <div className="flex gap-3">
-        <Button onClick={() => navigate('/admin')}>
-          Go to Dashboard
-        </Button>
-        <Button variant="outline" onClick={() => navigate(-1)}>
-          Go Back
-        </Button>
-      </div>
+    <div className="flex items-center justify-center min-h-screen bg-background p-4">
+      <Card className="max-w-md w-full">
+        <CardHeader>
+          <div className="flex justify-center mb-4">
+            <div className="relative">
+              <Shield className="h-16 w-16 text-muted-foreground" />
+              <AlertTriangle className="h-8 w-8 text-destructive absolute bottom-0 right-0" />
+            </div>
+          </div>
+          <CardTitle className="text-center text-2xl">Access Denied</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground">
+            You don't have permission to access the admin area. If you believe this is an error, please contact your administrator.
+          </p>
+        </CardContent>
+        <CardFooter className="flex justify-center gap-4">
+          <Button variant="outline" onClick={() => navigate("/")}>
+            Return to Home
+          </Button>
+          <Button onClick={() => navigate(-1)}>
+            Go Back
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
