@@ -1,82 +1,31 @@
 
-import { LogCategory, LogEntry, LogLevel, LogTransport } from "../types";
-
-interface MemoryTransportOptions {
-  maxEntries?: number;
-}
+import { LogEntry, LogTransport } from '../types';
 
 /**
- * Transport for storing logs in memory (useful for UI display)
+ * Transport for in-memory log storage for UI components
  */
 export class MemoryTransport implements LogTransport {
   private logs: LogEntry[] = [];
-  private maxEntries: number;
+  private maxLogs: number;
   
-  constructor(options: MemoryTransportOptions = {}) {
-    this.maxEntries = options.maxEntries || 1000;
+  constructor(maxLogs: number = 1000) {
+    this.maxLogs = maxLogs;
   }
   
   log(entry: LogEntry): void {
-    this.logs.unshift(entry); // Add to beginning for newest first
+    this.logs.unshift(entry); // Add to beginning so newest is first
     
-    // Trim if exceeded max entries
-    if (this.logs.length > this.maxEntries) {
-      this.logs = this.logs.slice(0, this.maxEntries);
+    // Trim if over max
+    if (this.logs.length > this.maxLogs) {
+      this.logs = this.logs.slice(0, this.maxLogs);
     }
   }
   
   /**
-   * Get all logs, optionally filtered
+   * Get all logs in reverse chronological order (newest first)
    */
   getLogs(): LogEntry[] {
-    return this.logs;
-  }
-  
-  /**
-   * Get logs with basic filtering
-   */
-  getFilteredLogs(filters?: {
-    level?: LogLevel; // Minimum level
-    category?: LogCategory;
-    source?: string;
-    search?: string;
-    limit?: number;
-  }): LogEntry[] {
-    let result = [...this.logs];
-    
-    if (filters) {
-      // Filter by level (minimum level)
-      if (filters.level !== undefined) {
-        result = result.filter(log => log.level >= filters.level!);
-      }
-      
-      // Filter by category
-      if (filters.category) {
-        result = result.filter(log => log.category === filters.category);
-      }
-      
-      // Filter by source
-      if (filters.source) {
-        result = result.filter(log => log.source?.includes(filters.source!));
-      }
-      
-      // Filter by search text
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        result = result.filter(log => 
-          log.message.toLowerCase().includes(searchLower) ||
-          (log.source && log.source.toLowerCase().includes(searchLower)) ||
-          log.category.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      // Apply limit
-      if (filters.limit && filters.limit > 0) {
-        result = result.slice(0, filters.limit);
-      }
-    }
-    
-    return result;
+    return [...this.logs];
   }
   
   /**
@@ -87,27 +36,26 @@ export class MemoryTransport implements LogTransport {
   }
   
   /**
-   * Delete logs matching criteria
+   * Get logs by level
    */
-  deleteLogs(criteria: {
-    olderThan?: Date;
-    category?: LogCategory;
-    level?: LogLevel;
-  }): number {
-    const originalCount = this.logs.length;
-    
-    if (criteria.olderThan) {
-      this.logs = this.logs.filter(log => log.timestamp >= criteria.olderThan!);
-    }
-    
-    if (criteria.category) {
-      this.logs = this.logs.filter(log => log.category !== criteria.category);
-    }
-    
-    if (criteria.level) {
-      this.logs = this.logs.filter(log => log.level !== criteria.level);
-    }
-    
-    return originalCount - this.logs.length;
+  getLogsByLevel(level: number): LogEntry[] {
+    return this.logs.filter(log => log.level === level);
+  }
+  
+  /**
+   * Get logs by category
+   */
+  getLogsByCategory(category: string): LogEntry[] {
+    return this.logs.filter(log => log.category === category);
+  }
+  
+  /**
+   * Get count of logs
+   */
+  getCount(): number {
+    return this.logs.length;
   }
 }
+
+// Create a singleton instance
+export const memoryTransport = new MemoryTransport();

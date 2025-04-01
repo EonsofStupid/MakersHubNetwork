@@ -1,78 +1,76 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { LoggerService, getLogger, initializeLogger } from '..';
-import { LogCategory, LogLevel } from '../types';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getLogger } from '../index';
+import { LogLevel, LogCategory } from '../types';
 
 interface LoggingContextType {
-  logger: LoggerService;
   showLogConsole: boolean;
   setShowLogConsole: (show: boolean) => void;
-  minLogLevel: LogLevel;
-  setMinLogLevel: (level: LogLevel) => void;
-  enabledCategories: LogCategory[];
-  setEnabledCategories: (categories: LogCategory[]) => void;
+  logSystemStartup: () => void;
 }
 
-// Create the logging context
-const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
+const LoggingContext = createContext<LoggingContextType>({
+  showLogConsole: false,
+  setShowLogConsole: () => {},
+  logSystemStartup: () => {}
+});
 
-interface LoggingProviderProps {
-  children: React.ReactNode;
-}
+export const useLoggingContext = () => useContext(LoggingContext);
 
-export const LoggingProvider: React.FC<LoggingProviderProps> = ({ children }) => {
-  const [logInitialized, setLogInitialized] = useState(false);
+export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [showLogConsole, setShowLogConsole] = useState(false);
-  const [minLogLevel, setMinLogLevel] = useState<LogLevel>(LogLevel.INFO);
-  const [enabledCategories, setEnabledCategories] = useState<LogCategory[]>(
-    Object.values(LogCategory)
-  );
-
-  // Initialize logger on mount
-  useEffect(() => {
-    if (!logInitialized) {
-      try {
-        initializeLogger();
-        setLogInitialized(true);
-      } catch (error) {
-        console.error('Failed to initialize logger:', error);
-      }
-    }
-  }, [logInitialized]);
-
-  // Update logger config when settings change
-  useEffect(() => {
-    if (logInitialized) {
-      const logger = getLogger();
-      logger.updateConfig({
-        minLevel: minLogLevel,
-        enabledCategories
-      });
-    }
-  }, [logInitialized, minLogLevel, enabledCategories]);
-
-  const value = {
-    logger: getLogger(),
-    showLogConsole,
-    setShowLogConsole,
-    minLogLevel,
-    setMinLogLevel,
-    enabledCategories,
-    setEnabledCategories
+  const logger = getLogger();
+  
+  // Log system startup
+  const logSystemStartup = () => {
+    logger.info('Application UI initialized', {
+      category: LogCategory.SYSTEM,
+      details: {
+        environment: import.meta.env.MODE,
+        timestamp: new Date().toISOString(),
+      },
+      tags: ['startup', 'initialization']
+    });
   };
-
+  
+  // Log initial startup
+  useEffect(() => {
+    logSystemStartup();
+    
+    // Log performance data
+    const startTime = performance.now();
+    
+    return () => {
+      const duration = performance.now() - startTime;
+      logger.info('LoggingProvider unmounted', {
+        category: LogCategory.PERFORMANCE,
+        details: { durationMs: duration },
+        tags: ['lifecycle', 'performance']
+      });
+    };
+  }, []);
+  
+  // Listen for key combinations to toggle log console (Ctrl+Shift+L)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+        setShowLogConsole(prev => !prev);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+  
   return (
-    <LoggingContext.Provider value={value}>
+    <LoggingContext.Provider value={{ 
+      showLogConsole, 
+      setShowLogConsole,
+      logSystemStartup 
+    }}>
       {children}
     </LoggingContext.Provider>
   );
-};
-
-// Hook for using the logging context
-export const useLoggingContext = (): LoggingContextType => {
-  const context = useContext(LoggingContext);
-  if (context === undefined) {
-    throw new Error('useLoggingContext must be used within a LoggingProvider');
-  }
-  return context;
 };
