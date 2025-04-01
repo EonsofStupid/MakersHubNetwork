@@ -17,37 +17,35 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
   message,
   onClose
 }) => {
-  let icon;
-  let variant: "default" | "destructive" | undefined;
-  
-  switch (level) {
-    case LogLevel.DEBUG:
-      icon = <Info className="h-4 w-4" />;
-      variant = "default";
-      break;
-    case LogLevel.INFO:
-      icon = <Info className="h-4 w-4" />;
-      variant = "default";
-      break;
-    case LogLevel.WARNING:
-      icon = <AlertTriangle className="h-4 w-4" />;
-      variant = "default";
-      break;
-    case LogLevel.ERROR:
-      icon = <AlertCircle className="h-4 w-4" />;
-      variant = "destructive";
-      break;
-    case LogLevel.CRITICAL:
-      icon = <XCircle className="h-4 w-4" />;
-      variant = "destructive";
-      break;
-    default:
-      icon = <Info className="h-4 w-4" />;
-      variant = "default";
-  }
+  const getIcon = () => {
+    switch (level) {
+      case LogLevel.DEBUG:
+        return <Info className="h-4 w-4" />;
+      case LogLevel.INFO:
+        return <Info className="h-4 w-4" />;
+      case LogLevel.WARNING:
+        return <AlertTriangle className="h-4 w-4" />;
+      case LogLevel.ERROR:
+        return <AlertCircle className="h-4 w-4" />;
+      case LogLevel.CRITICAL:
+        return <XCircle className="h-4 w-4" />;
+      default:
+        return <Info className="h-4 w-4" />;
+    }
+  };
+
+  const getVariant = (): "default" | "destructive" => {
+    switch (level) {
+      case LogLevel.ERROR:
+      case LogLevel.CRITICAL:
+        return "destructive";
+      default:
+        return "default";
+    }
+  };
 
   // Get appropriate title based on level
-  const title = (() => {
+  const getTitle = (): string => {
     switch (level) {
       case LogLevel.DEBUG:
         return 'Debug';
@@ -62,12 +60,12 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
       default:
         return 'Log';
     }
-  })();
+  };
 
   return (
-    <Alert variant={variant} className="animate-in slide-in-from-right-5">
-      {icon}
-      <AlertTitle>{title} - {category}</AlertTitle>
+    <Alert variant={getVariant()} className="animate-in slide-in-from-right-5">
+      {getIcon()}
+      <AlertTitle>{getTitle()} - {category}</AlertTitle>
       <AlertDescription>{message}</AlertDescription>
     </Alert>
   );
