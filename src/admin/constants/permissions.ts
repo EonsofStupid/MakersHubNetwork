@@ -1,66 +1,59 @@
 
-export type AdminPermissionValue = 
-  | 'admin:access'
-  | 'admin:view'
-  | 'admin:edit'
-  | 'admin:manage'
-  | 'super_admin:all'
-  | 'content:view'
-  | 'content:edit'
-  | 'content:publish'
-  | 'users:view'
-  | 'users:edit'
-  | 'users:delete'
-  | 'builds:view'
-  | 'builds:edit'
-  | 'builds:approve'
-  | 'builds:delete'
-  | 'reviews:view'
-  | 'reviews:edit'
-  | 'reviews:moderate'
-  | 'settings:view'
-  | 'settings:edit'
-  | 'themes:view'
-  | 'themes:edit'
-  | 'data:view'
-  | 'data:import'
-  | 'analytics:view'
-  | 'messaging:access'
-  | 'layouts:view'
-  | 'workflows:view'
-  | 'reviews:manage';
+export type AdminPermissionAction = 
+  | 'create' 
+  | 'read' 
+  | 'update' 
+  | 'delete' 
+  | 'manage' 
+  | 'approve' 
+  | 'all';
+
+export type AdminPermissionSubject = 
+  | 'users' 
+  | 'builds' 
+  | 'content' 
+  | 'settings' 
+  | 'roles' 
+  | 'analytics' 
+  | 'reports' 
+  | 'security'
+  | 'database'
+  | 'code'
+  | 'all';
+
+export type AdminPermissionValue = `${AdminPermissionAction}:${AdminPermissionSubject}`;
 
 export const ADMIN_PERMISSIONS: Record<string, AdminPermissionValue> = {
-  ADMIN_ACCESS: 'admin:access',
-  ADMIN_VIEW: 'admin:view',
-  ADMIN_EDIT: 'admin:edit',
-  ADMIN_MANAGE: 'admin:manage',
-  SUPER_ADMIN: 'super_admin:all',
-  CONTENT_VIEW: 'content:view',
-  CONTENT_EDIT: 'content:edit',
-  CONTENT_PUBLISH: 'content:publish',
-  USERS_VIEW: 'users:view',
-  USERS_EDIT: 'users:edit',
-  USERS_DELETE: 'users:delete',
-  BUILDS_VIEW: 'builds:view',
-  BUILDS_EDIT: 'builds:edit',
-  BUILDS_APPROVE: 'builds:approve',
-  BUILDS_DELETE: 'builds:delete',
-  REVIEWS_VIEW: 'reviews:view',
-  REVIEWS_EDIT: 'reviews:edit',
-  REVIEWS_MODERATE: 'reviews:moderate',
-  REVIEWS_MANAGE: 'reviews:manage',
-  SETTINGS_VIEW: 'settings:view',
-  SETTINGS_EDIT: 'settings:edit',
-  THEMES_VIEW: 'themes:view',
-  THEMES_EDIT: 'themes:edit',
-  DATA_VIEW: 'data:view',
-  DATA_IMPORT: 'data:import',
-  ANALYTICS_VIEW: 'analytics:view',
-  MESSAGING_ACCESS: 'messaging:access',
-  LAYOUTS_VIEW: 'layouts:view',
-  WORKFLOWS_VIEW: 'workflows:view'
+  READ_USERS: 'read:users',
+  CREATE_USERS: 'create:users',
+  UPDATE_USERS: 'update:users',
+  DELETE_USERS: 'delete:users',
+  MANAGE_USERS: 'manage:users',
+  
+  READ_BUILDS: 'read:builds',
+  CREATE_BUILDS: 'create:builds',
+  UPDATE_BUILDS: 'update:builds',
+  DELETE_BUILDS: 'delete:builds',
+  APPROVE_BUILDS: 'approve:builds',
+  
+  READ_CONTENT: 'read:content',
+  CREATE_CONTENT: 'create:content',
+  UPDATE_CONTENT: 'update:content',
+  DELETE_CONTENT: 'delete:content',
+  
+  READ_SETTINGS: 'read:settings',
+  UPDATE_SETTINGS: 'update:settings',
+  
+  MANAGE_ROLES: 'manage:roles',
+  
+  READ_ANALYTICS: 'read:analytics',
+  
+  READ_REPORTS: 'read:reports',
+  CREATE_REPORTS: 'create:reports',
+  
+  READ_SECURITY: 'read:security',
+  UPDATE_SECURITY: 'update:security',
+  
+  // Super admin permission
+  ALL: 'all:all'
 };
-
-// Alias to maintain backward compatibility
-export const AdminPermissions = ADMIN_PERMISSIONS;

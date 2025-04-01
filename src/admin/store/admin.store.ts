@@ -37,7 +37,7 @@ interface AdminState {
   setActiveSection: (section: string) => void;
   setThemePreference: (theme: string) => void;
   setLayoutPreference: (layout: string) => void;
-  setPinnedTopNavItems: (items: string[]) => void;
+  setTopnavItems: (items: string[]) => void;
   setDashboardItems: (items: string[]) => void;
   setShortcuts: (shortcuts: string[]) => void;
   
@@ -86,7 +86,7 @@ export const useAdminStore = create<AdminState>()(
         setActiveSection: (section) => set({ activeSection: section }),
         setThemePreference: (theme) => set({ themePreference: theme }),
         setLayoutPreference: (layout) => set({ layoutPreference: layout }),
-        setPinnedTopNavItems: (items) => set({ topnavItems: items }),
+        setTopnavItems: (items) => set({ topnavItems: items }),
         setDashboardItems: (items) => set({ dashboardItems: items }),
         setShortcuts: (shortcuts) => set({ shortcuts }),
         
@@ -117,15 +117,15 @@ export const useAdminStore = create<AdminState>()(
               // Update state with saved preferences
               set({
                 adminShortcutsId: shortcuts.id,
-                sidebarExpanded: shortcuts.sidebar_expanded,
-                showLabels: shortcuts.show_labels,
-                isDarkMode: shortcuts.is_dark_mode,
-                topnavItems: shortcuts.topnav_items || [],
-                dashboardItems: shortcuts.dashboard_items || [],
+                sidebarExpanded: shortcuts.sidebar_expanded ?? true,
+                showLabels: shortcuts.show_labels ?? true,
+                isDarkMode: shortcuts.is_dark_mode ?? false,
+                topnavItems: Array.isArray(shortcuts.topnav_items) ? shortcuts.topnav_items : [],
+                dashboardItems: Array.isArray(shortcuts.dashboard_items) ? shortcuts.dashboard_items : [],
                 themePreference: shortcuts.theme_preference || 'cyberpunk',
                 layoutPreference: shortcuts.layout_preference || 'default',
                 activeSection: shortcuts.active_section || 'overview',
-                shortcuts: shortcuts.shortcuts || [],
+                shortcuts: Array.isArray(shortcuts.shortcuts) ? shortcuts.shortcuts : [],
                 hasInitialized: true,
                 lastSynced: new Date()
               });
