@@ -1,4 +1,5 @@
-import { PersistOptions, StateStorage } from 'zustand/middleware';
+
+import { PersistOptions, StateStorage, createJSONStorage } from 'zustand/middleware';
 
 // Create persist middleware for admin stores
 export const createAdminPersistMiddleware = <T>(name: string): PersistOptions<T, T> => {
@@ -24,14 +25,14 @@ export const createAdminPersistMiddleware = <T>(name: string): PersistOptions<T,
       try {
         localStorage.removeItem(`makers-impulse-admin-${name}`);
       } catch (error) {
-        console.error(`Error removing state from localStorage: ${error}`);
+        console.error(`Error removing from localStorage: ${error}`);
       }
     },
   };
 
   return {
     name,
-    storage,
+    storage: createJSONStorage(() => storage),
     // Custom merge strategy
     merge: (persistedState: any, currentState: T) => {
       // If this is the first time the app loads, use the default state

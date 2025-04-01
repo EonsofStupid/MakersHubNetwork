@@ -50,13 +50,11 @@ export const useAdminPreferences = create<AdminPreferencesState>()(
       
       // Load/Save preferences
       loadPreferences: () => {
-        console.log("Admin preferences loaded");
         // This function is primarily to provide a hook for future expansion
         // When preferences are stored in persistence, they're loaded automatically
       },
       
       savePreferences: () => {
-        console.log("Admin preferences saved");
         // This function is primarily to provide a hook for future expansion
         // When state changes, persist middleware saves automatically
       }
