@@ -5,6 +5,7 @@ import { LogLevel } from '@/logging/constants/log-level';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { CyberCard } from '@/admin/components/ui/CyberCard';
 import { cn } from '@/lib/utils';
+import { renderUnknownAsNode } from '@/shared/utils/render';
 
 export function LogsDashboard() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -249,7 +250,9 @@ export function LogsDashboard() {
                     </span>
                   </td>
                   <td className="py-2 px-4 text-sm">{log.category}</td>
-                  <td className="py-2 px-4 text-sm truncate max-w-md">{log.message}</td>
+                  <td className="py-2 px-4 text-sm truncate max-w-md">
+                    {renderUnknownAsNode(log.message)}
+                  </td>
                 </tr>
               ))}
             </tbody>
