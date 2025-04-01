@@ -22,7 +22,8 @@ export function EffectsPalette() {
       name: effectName,
       css: `cyber-effect-${effectName}`,
     };
-    setSelectedEffect(effect);
+    // Convert CyberEffect to string to match atom type
+    setSelectedEffect(effect.id);
   };
   
   return (
@@ -58,7 +59,7 @@ export function EffectsPalette() {
                   onClick={() => handleSelectEffect(effect)}
                   className={`
                     p-2 rounded border text-sm
-                    ${selectedEffect?.id === effect 
+                    ${selectedEffect === effect 
                       ? 'bg-[var(--impulse-primary)]/20 border-[var(--impulse-primary)] text-[var(--impulse-primary)]' 
                       : 'border-[var(--impulse-border-normal)] hover:border-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]'}
                   `}

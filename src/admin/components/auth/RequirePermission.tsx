@@ -1,8 +1,9 @@
+
 import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AdminPermissionValue } from '@/admin/constants/permissions';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
+import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 
 interface RequirePermissionProps {
   permission: AdminPermissionValue;
@@ -17,7 +18,8 @@ export const RequirePermission = ({
   fallbackPath = "/admin/unauthorized",
   readonly = false 
 }: RequirePermissionProps) => {
-  const { checkPermission, hasAdminAccess } = useAdminAccess();
+  const { hasAdminAccess } = useAdminAccess();
+  const { hasPermission } = useAdminPermissions();
 
   // First check if user has admin access at all
   if (!hasAdminAccess) {
@@ -25,7 +27,7 @@ export const RequirePermission = ({
   }
 
   // Then check specific permission
-  if (!permission || checkPermission(permission)) {
+  if (!permission || hasPermission(permission)) {
     // If readonly is true, wrap children with readonly context
     if (readonly) {
       // Here you could wrap with a context provider that indicates readonly mode

@@ -1,6 +1,7 @@
 
 import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 import { useAdminStore } from '@/admin/store/admin.store';
+import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 
 /**
  * Utility functions for admin permissions
@@ -23,15 +24,16 @@ export const checkPermission = (
  * @returns Object with hasPermission boolean and loading state
  */
 export const usePermissionCheck = (requiredPermission?: AdminPermissionValue) => {
-  const { permissions, isLoadingPermissions, hasPermission } = useAdminStore();
+  const { permissions, syncing } = useAdminStore();
+  const { hasPermission } = useAdminPermissions();
   
   if (!requiredPermission) {
-    return { hasPermission: true, isLoading: isLoadingPermissions };
+    return { hasPermission: true, isLoading: syncing };
   }
   
   return {
     hasPermission: hasPermission(requiredPermission),
-    isLoading: isLoadingPermissions
+    isLoading: syncing
   };
 };
 

@@ -2,12 +2,16 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AdminLayout } from '@/admin/components/AdminLayout';
+import { PlaceholderPage } from './PlaceholderPage';
 
 // Import all admin pages - using lazy loading for better performance
 const OverviewPage = React.lazy(() => import('./overview/OverviewPage'));
 const UsersPage = React.lazy(() => import('./users/UsersPage'));
 const SettingsPage = React.lazy(() => import('./settings/SettingsPage'));
 const UnauthorizedPage = React.lazy(() => import('./UnauthorizedPage'));
+
+// Export PlaceholderPage for use in other routes
+export { PlaceholderPage };
 
 // Default loading component for lazy-loaded pages
 const PageLoading = () => (
