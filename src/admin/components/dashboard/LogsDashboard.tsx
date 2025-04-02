@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { LogEntry, LogCategory, memoryTransport } from '@/logging';
 import { LogLevel } from '@/logging/constants/log-level';
@@ -218,7 +217,6 @@ export function LogsDashboard() {
             </thead>
             <tbody>
               {logs.slice(0, 10).map((log) => {
-                // Pre-render the message content with type safety
                 const messageContent = safelyRenderNode(log.message);
                 
                 return (

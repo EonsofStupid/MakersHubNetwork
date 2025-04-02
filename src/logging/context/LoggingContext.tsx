@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { LogEntry, LogCategory, LogLevel } from '../types';
 import { onLog, clearLogs, getLogs } from '../index';
 import { useLogger } from '@/hooks/use-logger';
-import { memoryTransport } from '@/logging/transports/memory.transport';
 import { nodeToSearchableString } from '@/shared/utils/react-utils';
 
 interface LoggingContextValue {

@@ -2,6 +2,7 @@
 import { useRef, useCallback } from 'react';
 import { useLogger } from './use-logger';
 import { LogCategory } from '@/logging/types';
+import { createSimpleMeasurement } from '@/shared/utils/performance';
 
 /**
  * Hook for measuring performance within React components
@@ -11,27 +12,20 @@ import { LogCategory } from '@/logging/types';
  */
 export function usePerformanceLogger(source: string) {
   const { performance } = useLogger(source, LogCategory.PERFORMANCE);
-  const measurements = useRef<Record<string, number>>({});
+  const simpleMeasurement = useRef(createSimpleMeasurement()).current;
   
   // Start measuring
   const start = useCallback((name: string) => {
-    measurements.current[name] = window.performance.now();
-  }, []);
+    simpleMeasurement.start(name);
+  }, [simpleMeasurement]);
   
   // End measuring and log
   const end = useCallback((name: string, description?: string) => {
-    const startTime = measurements.current[name];
+    const duration = simpleMeasurement.end(name);
     
-    if (!startTime) {
-      console.warn(`Measurement "${name}" was never started`);
+    if (duration === 0) {
       return 0;
     }
-    
-    const endTime = window.performance.now();
-    const duration = endTime - startTime;
-    
-    // Remove from measurements
-    delete measurements.current[name];
     
     // Log the performance
     const message = description || `Completed ${name}`;
@@ -40,7 +34,7 @@ export function usePerformanceLogger(source: string) {
     });
     
     return duration;
-  }, [performance]);
+  }, [simpleMeasurement, performance]);
   
   // Measure an operation
   const measure = useCallback(async <T>(
@@ -48,27 +42,28 @@ export function usePerformanceLogger(source: string) {
     operation: () => T | Promise<T>,
     description?: string
   ): Promise<T> => {
-    start(name);
-    
     try {
-      const result = await operation();
-      end(name, description);
+      const { result, duration } = await simpleMeasurement.measure(name, operation);
+      
+      // Log the performance
+      const message = description || `Completed ${name}`;
+      performance(message, duration, { 
+        details: { name, duration } 
+      });
+      
       return result;
     } catch (error) {
-      // Still log the duration on error
-      const startTime = measurements.current[name];
-      if (startTime) {
-        const duration = window.performance.now() - startTime;
-        delete measurements.current[name];
-        
-        performance(`Failed ${name}`, duration, { 
-          details: { name, error } 
-        });
-      }
+      // The error already has duration info from simpleMeasurement
+      const duration = (error as any).duration || 0;
+      
+      // Log the failed operation
+      performance(`Failed ${name}`, duration, { 
+        details: { name, error } 
+      });
       
       throw error;
     }
-  }, [start, end, performance]);
+  }, [simpleMeasurement, performance]);
   
   return {
     start,
