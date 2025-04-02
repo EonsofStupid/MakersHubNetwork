@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { Layout } from '@/admin/types/layout.types';
@@ -12,13 +11,13 @@ class LayoutSeederService {
     console.log('Checking for core layouts...');
     
     // Check and create main topnav layout
-    await this.ensureLayoutExists('topnav', 'main', this.createMainTopNavLayout());
+    await this.ensureLayoutExists('topnav', 'site', this.createMainTopNavLayout());
     
     // Check and create footer layout
-    await this.ensureLayoutExists('footer', 'main', this.createMainFooterLayout());
+    await this.ensureLayoutExists('footer', 'site', this.createMainFooterLayout());
     
     // Check and create usermenu layout
-    await this.ensureLayoutExists('usermenu', 'main', this.createUserMenuLayout());
+    await this.ensureLayoutExists('usermenu', 'site', this.createUserMenuLayout());
     
     console.log('Core layouts check completed');
   }
@@ -73,7 +72,7 @@ class LayoutSeederService {
       id: uuidv4(),
       name: 'Main TopNav',
       type: 'topnav',
-      scope: 'main',
+      scope: 'site',
       components: [
         {
           id: 'main-topnav-root',
@@ -156,7 +155,7 @@ class LayoutSeederService {
       id: uuidv4(),
       name: 'Main Footer',
       type: 'footer',
-      scope: 'main',
+      scope: 'site',
       components: [
         {
           id: 'main-footer-root',
@@ -386,7 +385,7 @@ class LayoutSeederService {
       id: uuidv4(),
       name: 'User Menu',
       type: 'usermenu',
-      scope: 'main',
+      scope: 'site',
       components: [
         {
           id: 'usermenu-root',
