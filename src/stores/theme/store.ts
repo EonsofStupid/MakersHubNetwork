@@ -5,6 +5,7 @@ import { ThemeState } from "./types";
 import { Theme, ComponentTokens } from "@/types/theme";
 import { isValidUUID } from "@/logging/utils/type-guards";
 import { getLogger } from "@/logging";
+import { safeDetails } from "@/logging/utils/safeDetails";
 
 // Create a logger instance for the theme store
 const logger = getLogger('ThemeStore');
@@ -49,7 +50,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
         .limit(1);
 
       if (error) {
-        logger.error("Database error fetching theme:", { details: { error } });
+        logger.error("Database error fetching theme:", { details: safeDetails(error) });
         throw error;
       }
       
@@ -80,8 +81,8 @@ export const useThemeStore = create<ThemeState>((set) => ({
                 id: token.id,
                 component_name: token.component_name || '',
                 styles: token.styles || {},
-                theme_id: token.theme_id,
-                context: token.context,
+                theme_id: token.theme_id || undefined,
+                context: token.context || undefined,
                 created_at: token.created_at || '',
                 updated_at: token.updated_at || '',
                 description: '',
@@ -90,11 +91,11 @@ export const useThemeStore = create<ThemeState>((set) => ({
           });
         } else {
           logger.warn("No component tokens found or error fetching them:", { 
-            details: { error: componentError } 
+            details: safeDetails(componentError) 
           });
         }
       } catch (compErr) {
-        logger.error("Error processing component tokens:", { details: { error: compErr } });
+        logger.error("Error processing component tokens:", { details: safeDetails(compErr) });
         // Continue without component tokens rather than failing completely
       }
       
@@ -118,13 +119,13 @@ export const useThemeStore = create<ThemeState>((set) => ({
         description: rawTheme.description || '', 
         status: rawTheme.status || 'draft', 
         is_default: rawTheme.is_default || false, 
-        created_by: rawTheme.created_by,
+        created_by: rawTheme.created_by || undefined,
         created_at: rawTheme.created_at || '', 
         updated_at: rawTheme.updated_at || '', 
-        published_at: rawTheme.published_at,
+        published_at: rawTheme.published_at || undefined,
         version: rawTheme.version || 1,
-        cache_key: rawTheme.cache_key,
-        parent_theme_id: rawTheme.parent_theme_id,
+        cache_key: rawTheme.cache_key || undefined,
+        parent_theme_id: rawTheme.parent_theme_id || undefined,
         design_tokens: designTokens,
         component_tokens: componentTokens,
         composition_rules: compositionRules,
@@ -134,7 +135,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
       logger.info("Theme loaded successfully", { details: { id: theme.id, name: theme.name } });
       set({ currentTheme: theme, isLoading: false });
     } catch (error) {
-      logger.error("Error fetching theme:", { details: { error, themeId } });
+      logger.error("Error fetching theme:", { details: safeDetails(error) });
       set({ 
         error: error instanceof Error ? error : new Error("Failed to fetch theme"), 
         isLoading: false 
@@ -154,7 +155,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
         .eq("context", "admin");
 
       if (error) {
-        logger.error("Database error loading admin components:", { details: { error } });
+        logger.error("Database error loading admin components:", { details: safeDetails(error) });
         throw error;
       }
 
@@ -164,8 +165,8 @@ export const useThemeStore = create<ThemeState>((set) => ({
         component_name: comp.component_name || '',
         styles: comp.styles as Record<string, any> || {},
         description: '', 
-        theme_id: comp.theme_id,
-        context: comp.context,
+        theme_id: comp.theme_id || undefined,
+        context: comp.context || undefined,
         created_at: comp.created_at || '',
         updated_at: comp.updated_at || ''
       }));
@@ -173,7 +174,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
       logger.info(`Loaded ${components.length} admin components`);
       set({ adminComponents: components, isLoading: false });
     } catch (error) {
-      logger.error("Error loading admin components:", { details: { error } });
+      logger.error("Error loading admin components:", { details: safeDetails(error) });
       set({ 
         error: error instanceof Error ? error : new Error("Failed to load admin components"), 
         isLoading: false 

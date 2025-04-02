@@ -2,6 +2,7 @@
 import { LogEntry, LogLevel, LogTransport } from '../types';
 import { getLogger } from '@/logging';
 import { supabase } from '@/integrations/supabase/client';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 /**
  * Transport that outputs logs to Supabase
@@ -57,7 +58,7 @@ class SupabaseTransport implements LogTransport {
       this.isConnected = true;
       this.consoleLogger.info('Network connection restored, flushing log buffer');
       this.flush().catch(error => {
-        this.consoleLogger.error('Error flushing logs after reconnection:', { details: { error } });
+        this.consoleLogger.error('Error flushing logs after reconnection:', { details: safeDetails(error) });
       });
     });
     
@@ -83,7 +84,7 @@ class SupabaseTransport implements LogTransport {
     if (this.buffer.length >= this.maxBufferSize || 
         (this.isConnected && entry.level >= LogLevel.ERROR)) {
       this.flush().catch(error => {
-        this.consoleLogger.error('Error flushing logs to Supabase:', { details: { error } });
+        this.consoleLogger.error('Error flushing logs to Supabase:', { details: safeDetails(error) });
       });
     }
   }
@@ -134,17 +135,20 @@ class SupabaseTransport implements LogTransport {
     }
     
     try {
+      // Prepare logs with proper JSON serialization for Supabase
+      const sanitizedLogs = logs.map(log => ({
+        level: log.level,
+        category: log.category,
+        message: typeof log.message === 'string' ? log.message : JSON.stringify(log.message),
+        details: log.details ? safeDetails(log.details) : {},
+        timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : log.timestamp,
+        source: 'frontend'
+      }));
+      
       // Actual implementation with Supabase
       const { error } = await supabase
         .from('application_logs')
-        .insert(logs.map(log => ({
-          level: log.level,
-          category: log.category,
-          message: log.message,
-          details: log.details,
-          timestamp: log.timestamp,
-          source: 'frontend'
-        })));
+        .insert(sanitizedLogs);
       
       if (error) {
         // Check if access was denied due to RLS
@@ -164,7 +168,7 @@ class SupabaseTransport implements LogTransport {
       this.consoleLogger.debug('Successfully sent logs to Supabase', { details: { count: logs.length } });
       return Promise.resolve();
     } catch (error) {
-      this.consoleLogger.warn('Failed to send logs to Supabase', { details: { error, retryCount: this.retryCount } });
+      this.consoleLogger.warn('Failed to send logs to Supabase', { details: safeDetails(error) });
       
       // Implement retry logic with backoff
       if (this.retryCount < this.maxRetries) {
