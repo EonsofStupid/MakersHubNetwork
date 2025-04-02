@@ -1,8 +1,8 @@
 
-import { useNetworkLogger } from '@/logging/hooks/useNetworkLogger';
+import { useNetworkLogger } from '@/logging';
 
 /**
  * Re-export the network logger hook from the centralized logging system
- * to maintain backward compatibility
+ * for backward compatibility
  */
 export { useNetworkLogger };

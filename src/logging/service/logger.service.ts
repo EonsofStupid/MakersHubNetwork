@@ -6,137 +6,151 @@ import {
   LogLevel, 
   LogCategory, 
   LoggerOptions, 
-  LogTransport
+  LoggingConfig
 } from '../types';
 import { consoleTransport } from '../transports/console.transport';
 import { memoryTransport } from '../transports/memory.transport';
 import { logEventEmitter } from '../events';
 import { isRecord } from '../utils/type-guards';
-
-/**
- * Default configuration for the logger
- */
-const DEFAULT_CONFIG = {
-  minLevel: LogLevel.INFO,
-  transports: [consoleTransport, memoryTransport],
-  bufferSize: 1000,
-  flushInterval: 10000,
-  includeSource: true,
-};
+import { defaultLoggingConfig } from '../config/default-config';
 
 /**
  * Core logger service implementation
  */
-class LoggerService implements Logger {
-  private config = DEFAULT_CONFIG;
-  private defaultSource = 'app';
+class LoggerService {
+  private static instance: LoggerService;
+  private buffer: LogEntry[] = [];
+  private flushInterval: ReturnType<typeof setInterval> | null = null;
+  private sessionId: string;
+  private userId?: string;
+  private config: LoggingConfig;
   
-  /**
-   * Initialize logger with optional configuration
-   */
-  constructor() {
-    // Pre-bind methods to maintain context
-    this.trace = this.trace.bind(this);
-    this.debug = this.debug.bind(this);
-    this.info = this.info.bind(this);
-    this.warn = this.warn.bind(this);
-    this.error = this.error.bind(this);
-    this.critical = this.critical.bind(this);
-    this.success = this.success.bind(this);
-    this.performance = this.performance.bind(this);
-    this.log = this.log.bind(this);
+  private constructor(config: LoggingConfig = defaultLoggingConfig) {
+    this.config = { ...defaultLoggingConfig, ...config };
+    this.sessionId = uuidv4();
+    this.setupFlushInterval();
   }
   
   /**
-   * Create a log entry with common attributes
+   * Get or create the singleton instance
    */
-  private createLogEntry(
-    level: LogLevel, 
-    message: string, 
-    options?: LoggerOptions
-  ): LogEntry {
-    return {
-      id: uuidv4(),
-      timestamp: new Date(),
-      level,
-      message,
-      category: options?.category || LogCategory.GENERAL,
-      source: options?.source || this.defaultSource,
-      details: options?.details,
-      tags: options?.tags,
-    };
+  public static getInstance(config?: LoggingConfig): LoggerService {
+    if (!LoggerService.instance) {
+      LoggerService.instance = new LoggerService(config);
+    } else if (config) {
+      LoggerService.instance.updateConfig(config);
+    }
+    return LoggerService.instance;
   }
   
   /**
-   * Send log entry to all transports
+   * Update configuration
    */
-  private processLogEntry(entry: LogEntry): void {
-    // Send to all transports
-    for (const transport of this.config.transports) {
-      transport.log(entry);
+  public updateConfig(config: Partial<LoggingConfig>): void {
+    this.config = { ...this.config, ...config };
+    
+    // Update flush interval if changed
+    if (config.flushInterval !== undefined) {
+      this.setupFlushInterval();
+    }
+  }
+  
+  /**
+   * Set up automatic flush interval
+   */
+  private setupFlushInterval(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+      this.flushInterval = null;
     }
     
-    // Emit event for subscribers
-    logEventEmitter.emitLogEvent(entry);
+    if (this.config.flushInterval && this.config.flushInterval > 0) {
+      this.flushInterval = setInterval(() => {
+        this.flush();
+      }, this.config.flushInterval);
+    }
   }
   
   /**
-   * Log a message at the specified level
+   * Set the current user ID
    */
-  public log(level: LogLevel, message: string, options?: LoggerOptions): void {
-    // Skip if below minimum level
+  public setUserId(userId: string | undefined): void {
+    this.userId = userId;
+  }
+  
+  /**
+   * Get the current session ID
+   */
+  public getSessionId(): string {
+    return this.sessionId;
+  }
+  
+  /**
+   * Check if a log should be processed based on level and category
+   */
+  private shouldProcessLog(level: LogLevel, category?: LogCategory): boolean {
+    // Check minimum log level
     if (level < this.config.minLevel) {
-      return;
+      return false;
     }
     
-    const entry = this.createLogEntry(level, message, options);
-    this.processLogEntry(entry);
+    // Check if category is enabled
+    if (
+      category &&
+      this.config.enabledCategories &&
+      this.config.enabledCategories.length > 0 &&
+      !this.config.enabledCategories.includes(category)
+    ) {
+      return false;
+    }
+    
+    return true;
   }
   
   /**
-   * Log a trace message (lowest level)
+   * Log a message at TRACE level
    */
   public trace(message: string, options?: LoggerOptions): void {
     this.log(LogLevel.TRACE, message, options);
   }
   
   /**
-   * Log a debug message
+   * Log a message at DEBUG level
    */
   public debug(message: string, options?: LoggerOptions): void {
     this.log(LogLevel.DEBUG, message, options);
   }
   
   /**
-   * Log an info message
+   * Log a message at INFO level
    */
   public info(message: string, options?: LoggerOptions): void {
     this.log(LogLevel.INFO, message, options);
   }
   
   /**
-   * Log a warning message
+   * Log a message at WARNING level
    */
   public warn(message: string, options?: LoggerOptions): void {
     this.log(LogLevel.WARN, message, options);
   }
   
   /**
-   * Log an error message
+   * Log a message at ERROR level
    */
   public error(message: string, options?: LoggerOptions): void {
     this.log(LogLevel.ERROR, message, options);
   }
   
   /**
-   * Log a critical error message
+   * Log a message at CRITICAL level
    */
   public critical(message: string, options?: LoggerOptions): void {
     this.log(LogLevel.CRITICAL, message, options);
   }
   
   /**
-   * Log a success message
+   * Log a message at SUCCESS level
    */
   public success(message: string, options?: LoggerOptions): void {
     this.log(LogLevel.SUCCESS, message, options);
@@ -145,105 +159,171 @@ class LoggerService implements Logger {
   /**
    * Log a performance measurement
    */
-  public performance(message: string, duration: number, options?: LoggerOptions): void {
-    this.log(LogLevel.INFO, `${message} (${duration.toFixed(2)}ms)`, {
-      ...options,
-      category: options?.category || LogCategory.PERFORMANCE,
-      details: {
-        ...(options?.details || {}),
-        duration,
-      },
-    });
+  public performance(
+    message: string, 
+    duration: number, 
+    options?: LoggerOptions
+  ): void {
+    const category = options?.category || LogCategory.PERFORMANCE;
+    const details = { ...(options?.details || {}), duration };
+    
+    this.log(
+      duration > 1000 ? LogLevel.WARN : LogLevel.INFO,
+      message,
+      {
+        ...options,
+        category,
+        details
+      }
+    );
+  }
+  
+  /**
+   * Core log method
+   */
+  private log(
+    level: LogLevel, 
+    message: string, 
+    options?: LoggerOptions
+  ): void {
+    if (!this.shouldProcessLog(level, options?.category)) {
+      return; // Log was filtered out
+    }
+    
+    // Create the log entry
+    const entry: LogEntry = {
+      id: uuidv4(),
+      timestamp: new Date(),
+      level,
+      category: options?.category || LogCategory.GENERAL,
+      message,
+      details: isRecord(options?.details) ? options.details : undefined,
+      tags: options?.tags
+    };
+    
+    // Add optional fields based on config
+    if (this.config.includeSource && options?.source) {
+      entry.source = options.source;
+    }
+    
+    if (this.config.includeUser && this.userId) {
+      entry.userId = this.userId;
+    }
+    
+    if (this.config.includeSession) {
+      entry.sessionId = this.sessionId;
+    }
+    
+    // Add to buffer
+    this.buffer.push(entry);
+    
+    // Emit real-time log event
+    try {
+      logEventEmitter.emitLogEvent(entry);
+    } catch (error) {
+      console.error('Error emitting log event:', error);
+    }
+    
+    // Check if we need to flush immediately
+    if (
+      level >= LogLevel.ERROR ||
+      this.buffer.length >= (this.config.bufferSize || 1)
+    ) {
+      this.flush();
+    }
+  }
+  
+  /**
+   * Manually flush the log buffer
+   */
+  public flush(): void {
+    if (this.buffer.length === 0) {
+      return;
+    }
+    
+    // Create a copy of the buffer
+    const logsToProcess = [...this.buffer];
+    this.buffer = [];
+    
+    // Send to all transports
+    for (const transport of this.config.transports) {
+      try {
+        for (const entry of logsToProcess) {
+          transport.log(entry);
+        }
+        
+        // Call transport.flush() if available
+        if (typeof transport.flush === 'function') {
+          transport.flush().catch(error => {
+            console.error('Error flushing transport:', error);
+          });
+        }
+      } catch (error) {
+        console.error('Error in log transport:', error);
+      }
+    }
   }
   
   /**
    * Get all logs from memory transport
    */
   public getLogs(): LogEntry[] {
-    const memoryTransportInstance = this.config.transports.find(
-      t => t === memoryTransport || t.constructor.name === 'MemoryTransport'
-    ) as LogTransport & { getLogs?: () => LogEntry[] };
-    
-    return memoryTransportInstance?.getLogs?.() || [];
+    return memoryTransport.getLogs();
   }
   
   /**
    * Clear logs from memory transport
    */
   public clearLogs(): void {
-    const memoryTransportInstance = this.config.transports.find(
-      t => t === memoryTransport || t.constructor.name === 'MemoryTransport'
-    ) as LogTransport & { clear?: () => void };
-    
-    memoryTransportInstance?.clear?.();
+    memoryTransport.clear();
   }
   
   /**
-   * Add a transport to the logger
+   * Clean up resources
    */
-  public addTransport(transport: LogTransport): void {
-    if (!this.config.transports.includes(transport)) {
-      this.config.transports.push(transport);
+  public dispose(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+      this.flushInterval = null;
     }
-  }
-  
-  /**
-   * Remove a transport from the logger
-   */
-  public removeTransport(transport: LogTransport): void {
-    this.config.transports = this.config.transports.filter(t => t !== transport);
-  }
-  
-  /**
-   * Set the minimum log level
-   */
-  public setMinLevel(level: LogLevel): void {
-    this.config.minLevel = level;
-  }
-  
-  /**
-   * Set the default source for logs
-   */
-  public setDefaultSource(source: string): void {
-    this.defaultSource = source;
-  }
-  
-  /**
-   * Create a new logger with a specific source
-   */
-  public createLogger(source: string): Logger {
-    const scopedLogger: Logger = {
-      trace: (message, options) => this.trace(message, { ...options, source }),
-      debug: (message, options) => this.debug(message, { ...options, source }),
-      info: (message, options) => this.info(message, { ...options, source }),
-      warn: (message, options) => this.warn(message, { ...options, source }),
-      error: (message, options) => this.error(message, { ...options, source }),
-      critical: (message, options) => this.critical(message, { ...options, source }),
-      success: (message, options) => this.success(message, { ...options, source }),
-      performance: (message, duration, options) => this.performance(message, duration, { ...options, source }),
-    };
-    
-    return scopedLogger;
-  }
-  
-  /**
-   * Flush all transports
-   */
-  public async flush(): Promise<void> {
-    await Promise.all(
-      this.config.transports
-        .filter(t => typeof t.flush === 'function')
-        .map(t => t.flush && t.flush())
-    );
+    this.flush();
   }
 }
 
-// Create singleton instance
-export const loggerService = new LoggerService();
+// Initialize the logger service
+const loggerServiceInstance = LoggerService.getInstance();
 
 /**
- * Get a logger with a specific source
+ * Get a logger for a specific source
  */
-export function getLogger(source = 'app'): Logger {
-  return loggerService.createLogger(source);
+export function getLogger(source: string = 'App'): Logger {
+  return {
+    trace: (message: string, options?: LoggerOptions) => {
+      loggerServiceInstance.trace(message, { ...options, source });
+    },
+    debug: (message: string, options?: LoggerOptions) => {
+      loggerServiceInstance.debug(message, { ...options, source });
+    },
+    info: (message: string, options?: LoggerOptions) => {
+      loggerServiceInstance.info(message, { ...options, source });
+    },
+    warn: (message: string, options?: LoggerOptions) => {
+      loggerServiceInstance.warn(message, { ...options, source });
+    },
+    error: (message: string, options?: LoggerOptions) => {
+      loggerServiceInstance.error(message, { ...options, source });
+    },
+    critical: (message: string, options?: LoggerOptions) => {
+      loggerServiceInstance.critical(message, { ...options, source });
+    },
+    success: (message: string, options?: LoggerOptions) => {
+      loggerServiceInstance.success(message, { ...options, source });
+    },
+    performance: (message: string, duration: number, options?: LoggerOptions) => {
+      loggerServiceInstance.performance(message, duration, { ...options, source });
+    }
+  };
 }
+
+// Export for use elsewhere
+export const loggerService = loggerServiceInstance;

@@ -1,57 +1,48 @@
 
 import React from 'react';
+import { isString, isNumber, isBoolean } from './type-guards';
 
 /**
- * Safely render a React node as a searchable string
+ * Safely render a React node or primitive value
  */
-export function nodeToSearchableString(node: React.ReactNode): string {
-  if (node === null || node === undefined) {
-    return '';
-  }
-  
-  if (typeof node === 'string') {
+export function safelyRenderNode(node: React.ReactNode | string | number | boolean): React.ReactNode {
+  if (React.isValidElement(node)) {
     return node;
   }
   
-  if (typeof node === 'number' || typeof node === 'boolean') {
+  if (isString(node) || isNumber(node) || isBoolean(node)) {
     return String(node);
   }
   
-  if (React.isValidElement(node)) {
-    const props = node.props as Record<string, unknown>;
-    let content = '';
-    
-    // Extract text content from children
-    if (props.children) {
-      content = nodeToSearchableString(props.children);
-    }
-    
-    // Add other text props
-    const textProps = ['label', 'title', 'alt', 'name', 'value'];
-    for (const prop of textProps) {
-      if (prop in props && typeof props[prop] === 'string') {
-        content += ' ' + props[prop];
-      }
-    }
-    
-    return content;
-  }
-  
-  if (Array.isArray(node)) {
-    return node.map(nodeToSearchableString).join(' ');
-  }
-  
-  return '';
+  return '[Complex Object]';
 }
 
 /**
- * Render React nodes safely for logging purposes
+ * Convert a React node to a searchable string for filtering
  */
-export function safelyRenderNode(node: React.ReactNode): string {
-  try {
-    return nodeToSearchableString(node);
-  } catch (error) {
-    console.error('Error rendering React node for logging:', error);
-    return '[Unrenderable React Node]';
+export function nodeToSearchableString(node: React.ReactNode): string {
+  if (React.isValidElement(node)) {
+    // Try to extract text content from element
+    const props = node.props as Record<string, unknown>;
+    
+    if (props.children) {
+      if (isString(props.children) || isNumber(props.children) || isBoolean(props.children)) {
+        return String(props.children);
+      }
+      
+      if (Array.isArray(props.children)) {
+        return props.children
+          .map(child => nodeToSearchableString(child))
+          .join(' ');
+      }
+    }
+    
+    return '';
   }
+  
+  if (isString(node) || isNumber(node) || isBoolean(node)) {
+    return String(node);
+  }
+  
+  return '';
 }

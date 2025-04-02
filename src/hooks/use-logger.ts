@@ -1,8 +1,8 @@
 
-import { useLogger } from '@/logging/hooks/useLogger';
+import { useLogger } from '@/logging';
 
 /**
  * Re-export the logger hook from the centralized logging system
- * to maintain backward compatibility
+ * for backward compatibility
  */
 export { useLogger };

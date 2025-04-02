@@ -8,8 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 /**
  * Hook for logging errors from React components and error boundaries
  */
-export function useErrorLogger(source: string) {
-  const logger = useLogger(source);
+export function useErrorLogger(source: string = 'error') {
+  const logger = useLogger(source, LogCategory.SYSTEM);
   const { toast } = useToast();
   
   const logError = useCallback((error: Error, errorInfo?: ErrorInfo) => {
