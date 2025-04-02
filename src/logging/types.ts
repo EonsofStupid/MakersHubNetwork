@@ -48,6 +48,7 @@ export interface LogEntry {
   details?: Record<string, unknown>;
   userId?: string;
   sessionId?: string;
+  duration?: number; // For performance logs
   tags?: string[];
 }
 

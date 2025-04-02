@@ -1,27 +1,42 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useLoggingContext } from '../context/LoggingContext';
-import { LogLevel, LogCategory } from '../types';
-import { LOG_LEVEL_NAMES } from '../constants/log-level';
-import { X, ArrowDown, ArrowUp, Filter, RefreshCw, Trash2 } from 'lucide-react';
-import { nodeToSearchableString, safelyRenderLogNode } from '../utils/react-utils';
+import { LogLevel, LogCategory, LogEntry } from '../types';
+import { LOG_LEVEL_NAMES } from '../constants';
+import { X, Filter, RefreshCw, Trash2 } from 'lucide-react';
+import { safelyRenderNode } from '../utils/react';
+import { memoryTransport } from '../transports/memory';
+import { logEventEmitter } from '../events';
+import { clearLogs } from '../index';
 
-export function LogConsole() {
-  const { 
-    logs, 
-    clearAllLogs, 
-    filterCategory, 
-    setFilterCategory,
-    filterMinLevel,
-    setFilterMinLevel,
-    searchTerm,
-    setSearchTerm,
-    showLogConsole,
-    toggleLogConsole 
-  } = useLoggingContext();
+interface LogConsoleProps {
+  className?: string;
+  maxHeight?: string;
+}
+
+export function LogConsole({ className = "", maxHeight = "24rem" }: LogConsoleProps) {
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [visible, setVisible] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<LogCategory | null>(null);
+  const [filterMinLevel, setFilterMinLevel] = useState<LogLevel>(LogLevel.INFO);
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Auto-scrolling
-  const logContainerRef = React.useRef<HTMLDivElement>(null);
+  const logContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Initialize logs and set up event listener
+  useEffect(() => {
+    // Get initial logs
+    setLogs(memoryTransport.getLogs());
+    
+    // Subscribe to log events
+    const unsubscribe = logEventEmitter.onLog((entry) => {
+      setLogs(prev => [entry, ...prev]);
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
   
   useEffect(() => {
     if (logContainerRef.current) {
@@ -29,10 +44,63 @@ export function LogConsole() {
     }
   }, [logs]);
   
-  // Don't render if not visible
-  if (!showLogConsole) {
-    return null;
-  }
+  // Filter logs based on category, level, and search term
+  const filteredLogs = logs.filter(log => {
+    // Filter by level
+    if (log.level < filterMinLevel) {
+      return false;
+    }
+    
+    // Filter by category
+    if (filterCategory && log.category !== filterCategory) {
+      return false;
+    }
+    
+    // Filter by search term
+    if (searchTerm && !logMatchesSearch(log, searchTerm)) {
+      return false;
+    }
+    
+    return true;
+  });
+  
+  // Check if a log matches the search term
+  const logMatchesSearch = (log: LogEntry, term: string): boolean => {
+    const searchLower = term.toLowerCase();
+    
+    // Check message
+    if (typeof log.message === 'string' && log.message.toLowerCase().includes(searchLower)) {
+      return true;
+    }
+    
+    // Check source
+    if (log.source && log.source.toLowerCase().includes(searchLower)) {
+      return true;
+    }
+    
+    // Check category
+    if (log.category.toLowerCase().includes(searchLower)) {
+      return true;
+    }
+    
+    // Check details
+    if (log.details && JSON.stringify(log.details).toLowerCase().includes(searchLower)) {
+      return true;
+    }
+    
+    return false;
+  };
+  
+  // Toggle console visibility
+  const toggleConsole = () => {
+    setVisible(prev => !prev);
+  };
+  
+  // Clear all logs
+  const handleClearLogs = () => {
+    clearLogs();
+    setLogs([]);
+  };
   
   const getLogLevelClass = (level: LogLevel) => {
     switch (level) {
@@ -75,19 +143,32 @@ export function LogConsole() {
     }
   };
   
+  // Don't render if not visible
+  if (!visible) {
+    return (
+      <button
+        onClick={toggleConsole}
+        className="fixed bottom-4 right-4 p-2 bg-blue-500 text-white rounded-full shadow-lg"
+        aria-label="Show logs"
+      >
+        <Filter size={20} />
+      </button>
+    );
+  }
+  
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50 h-96">
+    <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50 ${className}`} style={{ maxHeight }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
         <div className="flex items-center gap-2">
           <button
-            onClick={toggleLogConsole}
+            onClick={toggleConsole}
             className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
             aria-label="Close logs"
           >
             <X size={16} />
           </button>
-          <h3 className="text-sm font-medium">Application Logs ({logs.length})</h3>
+          <h3 className="text-sm font-medium">Application Logs ({filteredLogs.length})</h3>
         </div>
         
         <div className="flex items-center gap-2">
@@ -128,7 +209,7 @@ export function LogConsole() {
           </select>
           
           <button
-            onClick={clearAllLogs}
+            onClick={handleClearLogs}
             className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900 text-red-500"
             aria-label="Clear logs"
           >
@@ -140,9 +221,10 @@ export function LogConsole() {
       {/* Log content */}
       <div 
         ref={logContainerRef}
-        className="h-[calc(100%-36px)] overflow-auto font-mono text-xs p-2"
+        className="overflow-auto font-mono text-xs p-2"
+        style={{ height: 'calc(100% - 36px)' }}
       >
-        {logs.length === 0 ? (
+        {filteredLogs.length === 0 ? (
           <p className="text-center text-gray-500 my-4">No logs to display</p>
         ) : (
           <table className="w-full border-collapse">
@@ -156,7 +238,7 @@ export function LogConsole() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((log) => (
+              {filteredLogs.map((log) => (
                 <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                   <td className="p-1 border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">
                     {log.timestamp.toLocaleTimeString()}
@@ -173,7 +255,7 @@ export function LogConsole() {
                     {log.source || '-'}
                   </td>
                   <td className="p-1 border-b border-gray-100 dark:border-gray-800">
-                    {safelyRenderLogNode(log.message)}
+                    {safelyRenderNode(log.message)}
                     {log.details && (
                       <details className="mt-1">
                         <summary className="cursor-pointer text-blue-500 dark:text-blue-400">Details</summary>

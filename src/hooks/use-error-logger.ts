@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { useLogger } from '@/logging';
+import { useLogger } from '@/logging/hooks/useLogger';
 import { LogCategory } from '@/logging/types';
 import { ErrorInfo } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -27,8 +27,7 @@ export function useErrorLogger(source: string) {
     toast({
       title: 'Error Occurred',
       description: error.message,
-      variant: 'destructive',
-      icon: 'alert-triangle'
+      variant: 'destructive'
     });
   }, [logger, toast]);
 
@@ -45,8 +44,7 @@ export function useErrorLogger(source: string) {
     toast({
       title: 'Error Occurred',
       description: error.message,
-      variant: 'destructive',
-      icon: 'alert-triangle'
+      variant: 'destructive'
     });
   }, [logger, toast]);
 
@@ -67,8 +65,7 @@ export function useErrorLogger(source: string) {
     toast({
       title: 'API Error',
       description: errorMessage,
-      variant: 'destructive',
-      icon: 'cloud-off'
+      variant: 'destructive'
     });
   }, [logger, toast]);
 

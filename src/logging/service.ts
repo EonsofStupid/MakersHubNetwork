@@ -9,19 +9,37 @@ import {
   LogLevel 
 } from './types';
 import { logEventEmitter } from './events';
-import { defaultLoggingConfig, getLoggingConfig } from './config';
+import { defaultLoggingConfig } from './config';
 import { isRecord } from './utils/type-guards';
+import { memoryTransport } from './transports/memory';
 
 /**
- * Core logger class that handles log creation and processing
+ * Main logger service with singleton pattern
  */
-class LoggerCore {
+class LoggerService {
+  private static instance: LoggerService;
   private buffer: LogEntry[] = [];
+  private flushInterval: ReturnType<typeof setInterval> | null = null;
   private sessionId: string;
   private userId?: string;
+  private config: LoggingConfig;
   
-  constructor(private config: LoggingConfig) {
+  private constructor(config: LoggingConfig = defaultLoggingConfig) {
+    this.config = { ...defaultLoggingConfig };
     this.sessionId = uuidv4();
+    this.setupFlushInterval();
+  }
+  
+  /**
+   * Get or create the singleton instance
+   */
+  public static getInstance(config?: LoggingConfig): LoggerService {
+    if (!LoggerService.instance) {
+      LoggerService.instance = new LoggerService(config);
+    } else if (config) {
+      LoggerService.instance.updateConfig(config);
+    }
+    return LoggerService.instance;
   }
   
   /**
@@ -29,6 +47,27 @@ class LoggerCore {
    */
   public updateConfig(config: Partial<LoggingConfig>): void {
     this.config = { ...this.config, ...config };
+    
+    // Update flush interval if changed
+    if (config.flushInterval !== undefined) {
+      this.setupFlushInterval();
+    }
+  }
+  
+  /**
+   * Set up automatic flush interval
+   */
+  private setupFlushInterval(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+      this.flushInterval = null;
+    }
+    
+    if (this.config.flushInterval && this.config.flushInterval > 0) {
+      this.flushInterval = setInterval(() => {
+        this.flush();
+      }, this.config.flushInterval);
+    }
   }
   
   /**
@@ -65,169 +104,6 @@ class LoggerCore {
     }
     
     return true;
-  }
-  
-  /**
-   * Core method to create and buffer a log entry
-   */
-  public createLogEntry(
-    level: LogLevel,
-    message: string | number | boolean,
-    options?: LoggerOptions & { source?: string }
-  ): LogEntry | null {
-    if (!this.shouldProcessLog(level, options?.category)) {
-      return null;
-    }
-    
-    const entry: LogEntry = {
-      id: uuidv4(),
-      timestamp: new Date(),
-      level,
-      category: options?.category || LogCategory.GENERAL,
-      message,
-      details: isRecord(options?.details) ? options.details : undefined,
-      tags: options?.tags
-    };
-    
-    // Add optional fields based on config
-    if (this.config.includeSource && options?.source) {
-      entry.source = options.source;
-    }
-    
-    if (this.config.includeUser && this.userId) {
-      entry.userId = this.userId;
-    }
-    
-    if (this.config.includeSession) {
-      entry.sessionId = this.sessionId;
-    }
-    
-    // Add to buffer
-    this.buffer.push(entry);
-    
-    return entry;
-  }
-  
-  /**
-   * Process all buffered logs
-   */
-  public flush(): void {
-    if (this.buffer.length === 0) {
-      return;
-    }
-    
-    // Create a copy of the buffer
-    const logsToProcess = [...this.buffer];
-    this.buffer = [];
-    
-    // Send to all transports
-    for (const transport of this.config.transports) {
-      try {
-        for (const entry of logsToProcess) {
-          transport.log(entry);
-        }
-        
-        // Call transport.flush() if available
-        if (typeof transport.flush === 'function') {
-          transport.flush().catch(error => {
-            console.error('Error flushing transport:', error);
-          });
-        }
-      } catch (error) {
-        console.error('Error in log transport:', error);
-      }
-    }
-  }
-  
-  /**
-   * Force-flush on critical logs or when buffer is full
-   */
-  public checkFlush(level: LogLevel): void {
-    if (
-      level >= LogLevel.ERROR ||
-      this.buffer.length >= (this.config.bufferSize || 1)
-    ) {
-      this.flush();
-    }
-  }
-  
-  /**
-   * Get logs from memory transport
-   */
-  public getLogs(): LogEntry[] {
-    for (const transport of this.config.transports) {
-      if (transport.getLogs) {
-        return transport.getLogs();
-      }
-    }
-    return [];
-  }
-  
-  /**
-   * Clear logs from memory transport
-   */
-  public clearLogs(): void {
-    for (const transport of this.config.transports) {
-      if (transport.clear) {
-        transport.clear();
-      }
-    }
-  }
-}
-
-/**
- * Main logger service with singleton pattern
- */
-class LoggerService {
-  private static instance: LoggerService;
-  private core: LoggerCore;
-  private flushInterval: ReturnType<typeof setInterval> | null = null;
-  
-  private constructor(config: LoggingConfig = defaultLoggingConfig) {
-    this.core = new LoggerCore(config);
-    this.setupFlushInterval();
-  }
-  
-  /**
-   * Get or create the singleton instance
-   */
-  public static getInstance(config?: LoggingConfig): LoggerService {
-    if (!LoggerService.instance) {
-      LoggerService.instance = new LoggerService(config);
-    } else if (config) {
-      LoggerService.instance.updateConfig(config);
-    }
-    return LoggerService.instance;
-  }
-  
-  /**
-   * Update configuration
-   */
-  public updateConfig(config: Partial<LoggingConfig>): void {
-    this.core.updateConfig(config);
-    
-    // Update flush interval if changed
-    if (config.flushInterval !== undefined) {
-      this.setupFlushInterval();
-    }
-  }
-  
-  /**
-   * Set up automatic flush interval
-   */
-  private setupFlushInterval(): void {
-    const config = defaultLoggingConfig;
-    
-    if (this.flushInterval) {
-      clearInterval(this.flushInterval);
-      this.flushInterval = null;
-    }
-    
-    if (config.flushInterval && config.flushInterval > 0) {
-      this.flushInterval = setInterval(() => {
-        this.flush();
-      }, config.flushInterval);
-    }
   }
   
   /**
@@ -309,11 +185,36 @@ class LoggerService {
     message: string, 
     options?: LoggerOptions & { source?: string }
   ): void {
-    const entry = this.core.createLogEntry(level, message, options);
-    
-    if (!entry) {
+    if (!this.shouldProcessLog(level, options?.category)) {
       return; // Log was filtered out
     }
+    
+    // Create the log entry
+    const entry: LogEntry = {
+      id: uuidv4(),
+      timestamp: new Date(),
+      level,
+      category: options?.category || LogCategory.GENERAL,
+      message,
+      details: isRecord(options?.details) ? options.details : undefined,
+      tags: options?.tags
+    };
+    
+    // Add optional fields based on config
+    if (this.config.includeSource && options?.source) {
+      entry.source = options.source;
+    }
+    
+    if (this.config.includeUser && this.userId) {
+      entry.userId = this.userId;
+    }
+    
+    if (this.config.includeSession) {
+      entry.sessionId = this.sessionId;
+    }
+    
+    // Add to buffer
+    this.buffer.push(entry);
     
     // Emit real-time log event
     try {
@@ -323,42 +224,57 @@ class LoggerService {
     }
     
     // Check if we need to flush immediately
-    this.core.checkFlush(level);
+    if (
+      level >= LogLevel.ERROR ||
+      this.buffer.length >= (this.config.bufferSize || 1)
+    ) {
+      this.flush();
+    }
   }
   
   /**
    * Manually flush the log buffer
    */
   public flush(): void {
-    this.core.flush();
-  }
-  
-  /**
-   * Set the current user ID
-   */
-  public setUserId(userId: string | undefined): void {
-    this.core.setUserId(userId);
-  }
-  
-  /**
-   * Get the current session ID
-   */
-  public getSessionId(): string {
-    return this.core.getSessionId();
+    if (this.buffer.length === 0) {
+      return;
+    }
+    
+    // Create a copy of the buffer
+    const logsToProcess = [...this.buffer];
+    this.buffer = [];
+    
+    // Send to all transports
+    for (const transport of this.config.transports) {
+      try {
+        for (const entry of logsToProcess) {
+          transport.log(entry);
+        }
+        
+        // Call transport.flush() if available
+        if (typeof transport.flush === 'function') {
+          transport.flush().catch(error => {
+            console.error('Error flushing transport:', error);
+          });
+        }
+      } catch (error) {
+        console.error('Error in log transport:', error);
+      }
+    }
   }
   
   /**
    * Get all logs from memory transport
    */
   public getLogs(): LogEntry[] {
-    return this.core.getLogs();
+    return memoryTransport.getLogs();
   }
   
   /**
    * Clear logs from memory transport
    */
   public clearLogs(): void {
-    this.core.clearLogs();
+    memoryTransport.clear();
   }
   
   /**
@@ -374,7 +290,7 @@ class LoggerService {
 }
 
 // Initialize the logger service
-export const loggerService = LoggerService.getInstance(getLoggingConfig());
+export const loggerService = LoggerService.getInstance();
 
 /**
  * Get a logger for a specific source

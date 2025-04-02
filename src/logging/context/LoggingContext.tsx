@@ -1,9 +1,8 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { LogEntry, LogCategory, LogLevel } from '../types';
-import { onLog, clearLogs, getLogs } from '../index';
-import { useLogger } from '../hooks/use-logger';
-import { nodeToSearchableString } from '../utils/react-utils';
+import { onLog, clearLogs } from '../index';
+import { memoryTransport } from '../transports/memory';
 
 interface LoggingContextValue {
   logs: LogEntry[];
@@ -27,83 +26,44 @@ export function LoggingProvider({ children }: { children: React.ReactNode }) {
   const [filterMinLevel, setFilterMinLevel] = useState<LogLevel>(LogLevel.INFO);
   const [searchTerm, setSearchTerm] = useState('');
   
-  const logger = useLogger('LoggingContext', LogCategory.SYSTEM);
-
-  // Toggle console visibility
-  const toggleLogConsole = useCallback(() => {
-    setShowLogConsole(prev => !prev);
-  }, []);
-
-  // Clear all logs
-  const clearAllLogs = useCallback(() => {
-    clearLogs();
-    setLogs([]);
-    logger.info('Logs cleared by user');
-  }, [logger]);
-
-  // Subscribe to log events
+  // Initialize logs from memory transport
   useEffect(() => {
-    logger.debug('Setting up log event subscription');
-
+    setLogs(memoryTransport.getLogs());
+    
+    // Subscribe to log events
     const unsubscribe = onLog((entry: LogEntry) => {
       setLogs(prev => [entry, ...prev]);
     });
-
-    // Initial load of existing logs
-    setLogs(getLogs().reverse());
-
+    
     return () => {
       unsubscribe();
-      logger.debug('Log event subscription removed');
     };
-  }, [logger]);
+  }, []);
   
-  // Filter logs based on criteria
-  const filteredLogs = React.useMemo(() => {
-    let filtered = [...logs];
-    
-    // Filter by level
-    if (filterMinLevel !== undefined) {
-      filtered = filtered.filter(log => log.level >= filterMinLevel);
-    }
-    
-    // Filter by category
-    if (filterCategory) {
-      filtered = filtered.filter(log => log.category === filterCategory);
-    }
-    
-    // Filter by search term
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(log => {
-        const messageStr = nodeToSearchableString(log.message).toLowerCase();
-        const sourceStr = log.source ? log.source.toLowerCase() : '';
-        const categoryStr = log.category.toLowerCase();
-        
-        return messageStr.includes(searchLower) || 
-               sourceStr.includes(searchLower) || 
-               categoryStr.includes(searchLower);
-      });
-    }
-    
-    return filtered;
-  }, [logs, filterMinLevel, filterCategory, searchTerm]);
-
-  const value = {
-    logs: filteredLogs,
-    showLogConsole,
-    toggleLogConsole,
-    clearAllLogs,
-    filterCategory,
-    setFilterCategory,
-    filterMinLevel,
-    setFilterMinLevel,
-    searchTerm,
-    setSearchTerm
-  };
-
+  const toggleLogConsole = useCallback(() => {
+    setShowLogConsole(prev => !prev);
+  }, []);
+  
+  const clearAllLogs = useCallback(() => {
+    clearLogs();
+    setLogs([]);
+  }, []);
+  
   return (
-    <LoggingContext.Provider value={value}>
+    <LoggingContext.Provider
+      value={{
+        logs,
+        showLogConsole,
+        toggleLogConsole,
+        clearAllLogs,
+        filterCategory,
+        setFilterCategory,
+        filterMinLevel,
+        setFilterMinLevel,
+        searchTerm,
+        setSearchTerm
+      }}
+    >
       {children}
     </LoggingContext.Provider>
   );
@@ -112,7 +72,7 @@ export function LoggingProvider({ children }: { children: React.ReactNode }) {
 export function useLoggingContext() {
   const context = useContext(LoggingContext);
   
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useLoggingContext must be used within a LoggingProvider');
   }
   

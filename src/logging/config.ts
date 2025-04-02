@@ -1,6 +1,5 @@
 
 import { LoggingConfig, LogCategory, LogLevel } from './types';
-import { consoleTransport } from './transports/console';
 import { memoryTransport } from './transports/memory';
 
 /**
@@ -15,8 +14,8 @@ export const defaultLoggingConfig: LoggingConfig = {
   
   // Transports to use
   transports: [
-    consoleTransport,
     memoryTransport,
+    // Console transport will be dynamically added
   ],
   
   // Buffer settings
@@ -72,22 +71,25 @@ export const testLoggingConfig: LoggingConfig = {
  * Get the appropriate logging configuration for the current environment
  */
 export function getLoggingConfig(): LoggingConfig {
+  // Create a copy of the config to avoid modifying the original
+  let config: LoggingConfig;
+  
   if (process.env.NODE_ENV === 'production') {
-    return productionLoggingConfig;
+    config = { ...productionLoggingConfig };
+  } else if (process.env.NODE_ENV === 'test') {
+    config = { ...testLoggingConfig };
+  } else {
+    config = { ...developmentLoggingConfig };
   }
   
-  if (process.env.NODE_ENV === 'test') {
-    return testLoggingConfig;
+  // Dynamically add console transport
+  if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
+    import('./transports/console').then(({ consoleTransport }) => {
+      config.transports.push(consoleTransport);
+    }).catch(error => {
+      console.error('Failed to load console transport:', error);
+    });
   }
   
-  return developmentLoggingConfig;
-}
-
-// Add Production Supabase transport conditionally
-if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
-  import('./transports/supabase').then(({ supabaseTransport }) => {
-    productionLoggingConfig.transports.push(supabaseTransport);
-  }).catch(error => {
-    console.error('Failed to load Supabase transport:', error);
-  });
+  return config;
 }

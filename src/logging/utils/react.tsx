@@ -72,35 +72,6 @@ export function nodeToSearchableString(node: React.ReactNode): string {
 }
 
 /**
- * Creates a higher-order component that measures render time
- */
-export function withPerformanceTracking<P extends object>(
-  Component: React.ComponentType<P>,
-  name: string
-): React.FC<P> {
-  const displayName = Component.displayName || Component.name || name;
-  
-  const WrappedComponent: React.FC<P> = (props) => {
-    const renderStart = performance.now();
-    
-    // Track render time
-    useEffect(() => {
-      const renderTime = performance.now() - renderStart;
-      loggerService.performance(`Render time for ${displayName}`, renderTime, {
-        source: displayName,
-        category: LogCategory.PERFORMANCE,
-        details: { component: displayName }
-      });
-    });
-    
-    return <Component {...props} />;
-  };
-  
-  WrappedComponent.displayName = `WithPerformanceTracking(${displayName})`;
-  return WrappedComponent;
-}
-
-/**
  * Hook for monitoring React component performance
  */
 export function useComponentPerformance(componentName: string) {
