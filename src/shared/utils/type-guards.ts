@@ -1,43 +1,66 @@
 
 /**
- * Type guard to check if a value is a record (object)
+ * Type guard utilities for the application
+ */
+
+/**
+ * Check if a value is a plain object (Record)
  */
 export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return typeof value === 'object' && 
+         value !== null && 
+         !Array.isArray(value) && 
+         !(value instanceof Date) &&
+         !(value instanceof Map) &&
+         !(value instanceof Set) &&
+         !(value instanceof RegExp);
 }
 
 /**
- * Type guard to check if a value is a non-empty string
+ * Check if a value is an array of a specific type
  */
-export function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
+export function isArrayOf<T>(
+  value: unknown, 
+  itemGuard: (item: unknown) => item is T
+): value is T[] {
+  return Array.isArray(value) && value.every(itemGuard);
 }
 
 /**
- * Type guard to check if a value is a valid number
+ * Check if a value is a string
  */
-export function isValidNumber(value: unknown): value is number {
-  return typeof value === 'number' && !isNaN(value) && isFinite(value);
+export function isString(value: unknown): value is string {
+  return typeof value === 'string';
 }
 
 /**
- * Type guard to check if a value is a valid array
+ * Check if a value is a number
  */
-export function isArray<T>(value: unknown, itemGuard?: (item: unknown) => item is T): value is T[] {
-  if (!Array.isArray(value)) {
-    return false;
-  }
-  
-  if (itemGuard) {
-    return value.every(item => itemGuard(item));
-  }
-  
-  return true;
+export function isNumber(value: unknown): value is number {
+  return typeof value === 'number' && !isNaN(value);
 }
 
 /**
- * Type guard for checking if a value is a valid Date
+ * Check if a value is a boolean
  */
-export function isValidDate(value: unknown): value is Date {
-  return value instanceof Date && !isNaN(value.getTime());
+export function isBoolean(value: unknown): value is boolean {
+  return typeof value === 'boolean';
+}
+
+/**
+ * Check if a value is a function
+ */
+export function isFunction(value: unknown): value is Function {
+  return typeof value === 'function';
+}
+
+/**
+ * Check if a value is a promise
+ */
+export function isPromise<T = any>(value: unknown): value is Promise<T> {
+  return value instanceof Promise || (
+    isRecord(value) && 
+    isFunction((value as any).then) && 
+    isFunction((value as any).catch)
+  );
 }

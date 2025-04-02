@@ -1,138 +1,60 @@
 
-import { LogCategory, LogEntry, LogLevel, LogTransport } from '../types';
-import { nodeToSearchableString } from '@/shared/utils/react-utils';
+import { LogEntry, LogTransport } from "../types";
 
 /**
- * Options for filtering logs in memory transport
+ * In-memory transport for logs
+ * Stores logs in memory for access by the UI
  */
-interface LogFilterOptions {
-  level?: LogLevel;
-  category?: LogCategory;
-  source?: string;
-  userId?: string;
-  search?: string;
-  fromDate?: Date;
-  toDate?: Date;
-  limit?: number;
-}
-
-/**
- * Memory transport stores logs in memory for display in UI components
- */
-export class MemoryTransport implements LogTransport {
+class MemoryTransport implements LogTransport {
   private logs: LogEntry[] = [];
-  private maxEntries: number;
+  private maxLogs: number = 1000;
   
-  constructor(maxEntries = 1000) {
-    this.maxEntries = maxEntries;
-  }
-  
-  /**
-   * Log an entry to memory
-   */
-  log(entry: LogEntry): void {
-    this.logs.unshift(entry); // Add to beginning for most recent first
-    
-    // Trim if we exceed max entries
-    if (this.logs.length > this.maxEntries) {
-      this.logs = this.logs.slice(0, this.maxEntries);
+  constructor(maxLogs?: number) {
+    if (maxLogs) {
+      this.maxLogs = maxLogs;
     }
   }
   
   /**
-   * Get all logs in memory
+   * Log an entry
+   */
+  log(entry: LogEntry): void {
+    this.logs.unshift(entry); // Add to the front for newest first
+    
+    // Trim if we exceed the max logs
+    if (this.logs.length > this.maxLogs) {
+      this.logs = this.logs.slice(0, this.maxLogs);
+    }
+  }
+  
+  /**
+   * Get all logs
    */
   getLogs(): LogEntry[] {
     return [...this.logs];
   }
   
   /**
-   * Get logs filtered by specified criteria
-   */
-  getFilteredLogs(options: LogFilterOptions = {}): LogEntry[] {
-    let filteredLogs = [...this.logs];
-    
-    // Filter by level
-    if (options.level !== undefined) {
-      filteredLogs = filteredLogs.filter(log => log.level >= options.level!);
-    }
-    
-    // Filter by category
-    if (options.category) {
-      filteredLogs = filteredLogs.filter(log => log.category === options.category);
-    }
-    
-    // Filter by source
-    if (options.source) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.source && log.source.includes(options.source!)
-      );
-    }
-    
-    // Filter by user ID
-    if (options.userId) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.userId && log.userId === options.userId
-      );
-    }
-    
-    // Filter by search text
-    if (options.search) {
-      const searchLower = options.search.toLowerCase();
-      filteredLogs = filteredLogs.filter(log => {
-        // Convert message to searchable string
-        const messageStr = nodeToSearchableString(log.message).toLowerCase();
-        const sourceStr = log.source ? log.source.toLowerCase() : '';
-        const categoryStr = log.category.toLowerCase();
-        
-        return messageStr.includes(searchLower) || 
-               sourceStr.includes(searchLower) || 
-               categoryStr.includes(searchLower);
-      });
-    }
-    
-    // Filter by date range
-    if (options.fromDate) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.timestamp >= options.fromDate!
-      );
-    }
-    
-    if (options.toDate) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.timestamp <= options.toDate!
-      );
-    }
-    
-    // Apply limit
-    if (options.limit && options.limit > 0) {
-      filteredLogs = filteredLogs.slice(0, options.limit);
-    }
-    
-    return filteredLogs;
-  }
-  
-  /**
-   * Get the number of stored logs
+   * Get log count
    */
   getLogCount(): number {
     return this.logs.length;
   }
   
   /**
-   * Clear all logs from memory
+   * Clear all logs
    */
   clear(): void {
     this.logs = [];
   }
   
   /**
-   * For compatibility with LogTransport interface
+   * No-op flush as memory transport doesn't need flushing
    */
   flush(): Promise<void> {
     return Promise.resolve();
   }
 }
 
-// Export singleton instance
+// Export a singleton instance
 export const memoryTransport = new MemoryTransport();
