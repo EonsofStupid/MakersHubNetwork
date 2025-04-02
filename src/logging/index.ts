@@ -1,33 +1,25 @@
 
 import { LoggerService, getLogger } from './logger.service';
-import { LogCategory, LogEntry, LogTransport } from './types';
 import { LogLevel } from './constants/log-level';
-import { getLoggingConfig, memoryTransport } from './config';
+import { LogCategory, LogEntry, LogTransport, LoggingConfig } from './types';
+import { memoryTransport } from './transports/memory.transport';
+import { consoleTransport } from './transports/console.transport';
+import { defaultLoggingConfig } from './config';
 
-// Initialize the logger with appropriate config
-export function initializeLogger(): void {
-  const config = getLoggingConfig();
-  LoggerService.getInstance(config);
-  
-  // Log initialization
-  const logger = getLogger();
-  logger.info('Logging system initialized', {
-    category: LogCategory.SYSTEM,
-    details: { config },
-    source: 'logging/index.ts'
-  });
+// Initialize the logger when this module is imported
+export function initializeLogger(config?: LoggingConfig): LoggerService {
+  return LoggerService.getInstance(config);
 }
 
-// Export everything needed for the logging system
+// Export everything needed for logging system
 export {
   LoggerService,
   getLogger,
   LogLevel,
   LogCategory,
-  memoryTransport
+  memoryTransport,
+  consoleTransport,
+  defaultLoggingConfig
 };
 
-export type {
-  LogEntry,
-  LogTransport
-};
+export type { LogEntry, LogTransport, LoggingConfig };
