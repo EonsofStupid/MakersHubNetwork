@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Gauge, RefreshCcw, Database, Cpu } from "lucide-react";
+import { Icons } from "@/components/ui/icons";
 
 export function PerformanceMetrics() {
   const startMonitoring = usePerformanceStore(state => state.startMonitoring);
@@ -75,7 +75,7 @@ export function PerformanceMetrics() {
             {isMonitoring ? "Stop Monitoring" : "Start Monitoring"}
           </Button>
           <Button variant="outline" size="sm" onClick={handleReset}>
-            <RefreshCcw className="h-4 w-4 mr-1" />
+            <Icons.refresh className="h-4 w-4 mr-1" />
             Reset
           </Button>
         </div>
@@ -92,21 +92,21 @@ export function PerformanceMetrics() {
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-muted p-3 rounded-md flex items-center space-x-3">
-                  <Gauge className="h-5 w-5 text-primary" />
+                  <Icons.gauge className="h-5 w-5 text-primary" />
                   <div>
                     <p className="text-xs text-muted-foreground">Avg Frame Time</p>
                     <p className="text-lg font-semibold">{frameMetrics.averageTime.toFixed(2)}ms</p>
                   </div>
                 </div>
                 <div className="bg-muted p-3 rounded-md flex items-center space-x-3">
-                  <Cpu className="h-5 w-5 text-amber-500" />
+                  <Icons.cpu className="h-5 w-5 text-amber-500" />
                   <div>
                     <p className="text-xs text-muted-foreground">Frame Drops</p>
                     <p className="text-lg font-semibold">{frameMetrics.drops}</p>
                   </div>
                 </div>
                 <div className="bg-muted p-3 rounded-md flex items-center space-x-3">
-                  <RefreshCcw className="h-5 w-5 text-green-500" />
+                  <Icons.refresh className="h-5 w-5 text-green-500" />
                   <div>
                     <p className="text-xs text-muted-foreground">Last Update</p>
                     <p className="text-lg font-semibold">
@@ -143,14 +143,14 @@ export function PerformanceMetrics() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-muted p-3 rounded-md flex items-center space-x-3">
-                  <Database className="h-5 w-5 text-primary" />
+                  <Icons.database className="h-5 w-5 text-primary" />
                   <div>
                     <p className="text-xs text-muted-foreground">Heap Size</p>
                     <p className="text-lg font-semibold">{formatMemorySize(memoryMetrics.heapSize)}</p>
                   </div>
                 </div>
                 <div className="bg-muted p-3 rounded-md flex items-center space-x-3">
-                  <RefreshCcw className="h-5 w-5 text-green-500" />
+                  <Icons.refresh className="h-5 w-5 text-green-500" />
                   <div>
                     <p className="text-xs text-muted-foreground">Last GC</p>
                     <p className="text-lg font-semibold">
@@ -187,21 +187,21 @@ export function PerformanceMetrics() {
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-muted p-3 rounded-md flex items-center space-x-3">
-                  <Cpu className="h-5 w-5 text-primary" />
+                  <Icons.cpu className="h-5 w-5 text-primary" />
                   <div>
                     <p className="text-xs text-muted-foreground">Update Count</p>
                     <p className="text-lg font-semibold">{storeMetrics.updates}</p>
                   </div>
                 </div>
                 <div className="bg-muted p-3 rounded-md flex items-center space-x-3">
-                  <Gauge className="h-5 w-5 text-amber-500" />
+                  <Icons.gauge className="h-5 w-5 text-amber-500" />
                   <div>
                     <p className="text-xs text-muted-foreground">Compute Time</p>
                     <p className="text-lg font-semibold">{storeMetrics.computeTime.toFixed(2)}ms</p>
                   </div>
                 </div>
                 <div className="bg-muted p-3 rounded-md flex items-center space-x-3">
-                  <RefreshCcw className="h-5 w-5 text-green-500" />
+                  <Icons.refresh className="h-5 w-5 text-green-500" />
                   <div>
                     <p className="text-xs text-muted-foreground">Avg Update Time</p>
                     <p className="text-lg font-semibold">
