@@ -3,47 +3,51 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { canAccessAdmin } from '@/auth/rbac/enforce';
 
+/**
+ * Hook to determine if the current user has admin access
+ * This is the recommended hook for checking admin access throughout the application
+ */
 export function useAdminAccess() {
   const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
-  const auth = useAuthStore();
-  const isAuthenticated = auth.status === 'authenticated';
-  const isLoading = auth.isLoading || auth.status === 'loading' || auth.status === 'idle';
+  const { user, roles, status, isLoading } = useAuthStore();
+  const isAuthenticated = status === 'authenticated';
   const logger = useLogger("AdminAccess", LogCategory.AUTH);
   
-  // Initialize admin data
+  // Initialize admin access
   const initializeAdmin = useCallback(async () => {
     try {
-      logger.info("Initializing admin access check...", {
+      logger.info("Checking admin access", {
         details: { 
-          status: auth.status,
-          roles: auth.roles,
-          userId: auth.user?.id
+          status,
+          roles,
+          userId: user?.id
         }
       });
       
-      if (!auth.user) {
-        logger.info("No user found, setting hasAdminAccess to false");
+      if (!user || !isAuthenticated) {
+        logger.info("No authenticated user found, setting hasAdminAccess to false");
         setHasAdminAccess(false);
         return;
       }
       
-      // Check if user has admin or super_admin role
-      const adminRoles = auth.roles.filter(role => 
-        role === 'admin' || role === 'super_admin'
-      );
+      // Use the RBAC utility for consistent access checks
+      const hasAccess = canAccessAdmin(roles);
       
-      logger.info("User roles evaluated for admin access:", { details: { 
-        roles: auth.roles,
-        adminRolesFound: adminRoles.length > 0
-      }});
+      logger.info("Admin access evaluated", { 
+        details: { 
+          roles,
+          hasAccess 
+        }
+      });
       
-      setHasAdminAccess(adminRoles.length > 0);
+      setHasAdminAccess(hasAccess);
     } catch (error) {
-      logger.error("Error initializing admin access:", { details: error });
+      logger.error("Error checking admin access", { details: error });
       setHasAdminAccess(false);
     }
-  }, [logger, auth.user, auth.roles, auth.status]);
+  }, [logger, user, roles, status, isAuthenticated]);
 
   // Check admin access on mount and when auth state changes
   useEffect(() => {
@@ -54,7 +58,7 @@ export function useAdminAccess() {
       // If not authenticated and not loading, reset admin access
       setHasAdminAccess(false);
     }
-  }, [initializeAdmin, isAuthenticated, isLoading, auth.user, auth.roles]);
+  }, [initializeAdmin, isAuthenticated, isLoading, user, roles]);
 
   return {
     hasAdminAccess,
