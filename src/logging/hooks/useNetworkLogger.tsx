@@ -18,9 +18,9 @@ export function useNetworkLogger(source: string = 'API') {
     url: string, 
     options?: RequestInit,
     customConfig?: {
-      name?: string,
-      includeResponse?: boolean,
-      sensitiveKeys?: string[]
+      name?: string;
+      includeResponse?: boolean;
+      sensitiveKeys?: string[];
     }
   ): Promise<T> => {
     const requestName = customConfig?.name || `${options?.method || 'GET'} ${url}`;
