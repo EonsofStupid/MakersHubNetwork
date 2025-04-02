@@ -13,6 +13,8 @@ import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { useAuth } from "@/auth/hooks/useAuth";
 import { useCoreLayouts } from "@/hooks/useCoreLayouts";
 import { CoreLayoutRenderer } from "@/components/layout/CoreLayoutRenderer";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -20,6 +22,7 @@ export function MainNav() {
   const { isAuthenticated } = useAuth();
   const { componentStyles } = useSiteTheme();
   const { topNavLayout, isLoading: layoutsLoading } = useCoreLayouts();
+  const logger = useLogger('MainNav', LogCategory.UI);
 
   // Get MainNav styles from theme - with fallbacks
   const styles = componentStyles?.MainNav || {
@@ -34,15 +37,20 @@ export function MainNav() {
   };
 
   useEffect(() => {
-    console.log("MainNav - hasAdminAccess:", hasAdminAccess);
-    console.log("MainNav - isAuthenticated:", isAuthenticated);
-    console.log("MainNav - componentStyles:", componentStyles);
-    console.log("MainNav - topNavLayout:", topNavLayout);
+    logger.debug("MainNav - Component mounted", {
+      details: {
+        hasAdminAccess,
+        isAuthenticated,
+        hasThemeStyles: !!componentStyles?.MainNav,
+        hasTopNavLayout: !!topNavLayout,
+        layoutsLoading
+      }
+    });
     
     requestAnimationFrame(() => {
       setIsLoaded(true);
     });
-  }, [hasAdminAccess, componentStyles, isAuthenticated, topNavLayout]);
+  }, [hasAdminAccess, componentStyles, isAuthenticated, topNavLayout, layoutsLoading, logger]);
 
   // Render the layout from database if available, otherwise fall back to the hardcoded version
   return (

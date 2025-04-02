@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
+import { ErrorBoundary } from 'react-error-boundary';
 
 interface CoreLayoutRendererProps {
   layout: Layout | null;
@@ -13,6 +14,15 @@ interface CoreLayoutRendererProps {
   fallback?: React.ReactNode;
   className?: string;
   id?: string;
+}
+
+function ErrorFallback({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {
+  return (
+    <div className="p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-md">
+      <p className="font-medium">Layout rendering error:</p>
+      <p className="mt-1 text-sm">{error.message}</p>
+    </div>
+  );
 }
 
 export function CoreLayoutRenderer({ 
@@ -63,25 +73,19 @@ export function CoreLayoutRenderer({
     ) : null;
   }
   
-  // Render the actual layout
-  try {
-    logger.debug('Rendering layout', { details: { layoutId: layout.id, type: layout.type, componentCount: layout.components.length } });
-    return (
-      <div className={className} data-layout-id={layout.id} data-layout-type={layout.type}>
+  // Render the actual layout with error boundary
+  logger.debug('Rendering layout', { details: { layoutId: layout.id, type: layout.type, componentCount: layout.components.length } });
+  return (
+    <div className={className} data-layout-id={layout.id} data-layout-type={layout.type}>
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        onError={(error) => {
+          logger.error('Error rendering layout', { details: safeDetails(error) });
+        }}
+        resetKeys={[layout.id]}
+      >
         <LayoutRenderer layout={layout} />
-      </div>
-    );
-  } catch (error) {
-    logger.error('Error rendering layout', { details: safeDetails(error) });
-    
-    return fallback ? (
-      <div className={className} data-layout-error={id || true}>
-        {fallback}
-      </div>
-    ) : (
-      <div className="p-4 text-destructive" data-layout-error={id || true}>
-        Layout rendering error
-      </div>
-    );
-  }
+      </ErrorBoundary>
+    </div>
+  );
 }

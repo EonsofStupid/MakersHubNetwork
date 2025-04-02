@@ -29,7 +29,7 @@ export const useAdminPreferences = create<AdminPreferencesState>()(
       activeDashboardLayout: 'default',
       pinnedTools: [],
       recentViews: [],
-      theme: 'cyberpunk',
+      theme: 'impulse',
       
       // Actions
       setDashboardCollapsed: (collapsed) => set({ isDashboardCollapsed: collapsed }),
