@@ -2,7 +2,7 @@
 import { ImpulseTheme } from "../../types/impulse.types";
 
 /**
- * Default tokens for the Impulse admin theme
+ * Default tokens for the Impulsivity admin theme
  */
 export const defaultImpulseTokens: ImpulseTheme = {
   colors: {
@@ -70,7 +70,7 @@ export const defaultImpulseTokens: ImpulseTheme = {
 
 // Export for use in themes database
 export const impulseTokensForDB = {
-  name: "Impulse",
+  name: "Impulsivity",
   description: "Cyberpunk-inspired admin interface with glass morphism",
   tokens: defaultImpulseTokens
 };

@@ -6,6 +6,9 @@ import { safeDetails } from '@/logging/utils/safeDetails';
 
 const logger = getLogger('ThemeInitializer');
 
+// Standardize the theme name to "Impulsivity" throughout the application
+export const DEFAULT_THEME_NAME = 'Impulsivity';
+
 /**
  * Retrieves a theme ID by its name
  * @param themeName The name of the theme to retrieve
@@ -58,29 +61,29 @@ export async function ensureDefaultTheme(): Promise<string> {
       return existingDefault.id;
     }
     
-    // If no default theme, try to find the Impulse theme
-    const impulseThemeId = await getThemeByName('Impulse');
-    if (impulseThemeId) {
-      logger.debug('Found Impulse theme, setting as default', { details: { id: impulseThemeId } });
+    // If no default theme, try to find the Impulsivity theme
+    const impulsivityThemeId = await getThemeByName(DEFAULT_THEME_NAME);
+    if (impulsivityThemeId) {
+      logger.debug(`Found ${DEFAULT_THEME_NAME} theme, setting as default`, { details: { id: impulsivityThemeId } });
       
       // Make it the default
       const { error: updateError } = await supabase
         .from('themes')
         .update({ is_default: true })
-        .eq('id', impulseThemeId);
+        .eq('id', impulsivityThemeId);
         
       if (updateError) {
-        logger.warn('Error setting Impulse theme as default', { details: safeDetails(updateError) });
+        logger.warn(`Error setting ${DEFAULT_THEME_NAME} theme as default`, { details: safeDetails(updateError) });
       }
       
-      return impulseThemeId;
+      return impulsivityThemeId;
     }
     
     // Create a new default theme if none exists
     logger.info('Creating new default theme');
     const defaultTheme = {
-      name: 'Impulse',
-      description: 'Default Impulse theme',
+      name: DEFAULT_THEME_NAME,
+      description: `Default ${DEFAULT_THEME_NAME} theme`,
       status: 'published',
       is_default: true,
       design_tokens: {
