@@ -1,99 +1,112 @@
 
 /**
- * Type guard to check if a value is a Record (object)
+ * Type guards for working with unknown types in logging
  */
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 /**
- * Type guard to check if a value is an Error
+ * Check if a value is an Error
  */
 export function isError(value: unknown): value is Error {
   return value instanceof Error;
 }
 
 /**
- * Type guard to check if a value has a specific property
+ * Check if a value is a Record (object)
  */
-export function hasProperty<K extends string>(
-  value: unknown,
-  property: K
-): value is { [P in K]: unknown } {
-  return isRecord(value) && property in value;
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
- * Type guard to check if a value is a string
+ * Check if a value is a string
  */
 export function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
 
 /**
- * Type guard to check if a value is a number
+ * Check if a value is a number
  */
 export function isNumber(value: unknown): value is number {
   return typeof value === 'number' && !isNaN(value);
 }
 
 /**
- * Type guard to check if a value is a boolean
+ * Check if a value is a boolean
  */
 export function isBoolean(value: unknown): value is boolean {
   return typeof value === 'boolean';
 }
 
 /**
- * Safely convert any value to a Record suitable for logging details
+ * Safely convert any value to a details object for logging
  */
 export function toLogDetails(value: unknown): Record<string, unknown> {
-  // Handle errors specially to capture useful properties
-  if (isError(value)) {
-    return {
-      name: value.name,
-      message: value.message,
-      stack: value.stack,
-      ...extractErrorProperties(value)
-    };
-  }
-  
-  // If it's already a record, return it directly
   if (isRecord(value)) {
-    return value;
-  }
-  
-  // For primitives, wrap in a simple object
-  if (isString(value) || isNumber(value) || isBoolean(value) || value === null || value === undefined) {
+    return Object.entries(value).reduce((acc, [key, val]) => {
+      // Handle Error objects specially
+      if (val instanceof Error) {
+        acc[key] = {
+          message: val.message,
+          name: val.name,
+          stack: val.stack,
+          ...(val as any) // Include any custom properties on the error
+        };
+      } else if (typeof val === 'function') {
+        // Skip functions
+        acc[key] = '[Function]';
+      } else if (typeof val === 'symbol') {
+        // Convert symbols to strings
+        acc[key] = val.toString();
+      } else if (val === undefined) {
+        // Skip undefined values
+        acc[key] = '[undefined]';
+      } else if (val === null) {
+        // Include null values
+        acc[key] = null;
+      } else if (typeof val === 'object') {
+        try {
+          // Try to convert objects (including arrays) recursively
+          acc[key] = toLogDetails(val);
+        } catch (e) {
+          // If that fails, use JSON stringify as a fallback
+          try {
+            acc[key] = JSON.parse(JSON.stringify(val));
+          } catch (e2) {
+            acc[key] = '[Unstringifiable Object]';
+          }
+        }
+      } else {
+        // Primitives can be used directly
+        acc[key] = val;
+      }
+      return acc;
+    }, {} as Record<string, unknown>);
+  } else if (isError(value)) {
+    return {
+      message: value.message,
+      name: value.name,
+      stack: value.stack,
+      ...(value as any) // Include any custom properties on the error
+    };
+  } else if (Array.isArray(value)) {
+    return { array: value.map(item => (typeof item === 'object' && item !== null) ? toLogDetails(item) : item) };
+  } else if (value === null) {
+    return { value: null };
+  } else if (value === undefined) {
+    return { value: '[undefined]' };
+  } else if (typeof value === 'function') {
+    return { value: '[Function]' };
+  } else if (typeof value === 'symbol') {
+    return { value: value.toString() };
+  } else if (typeof value === 'object') {
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch (e) {
+      return { value: '[Unstringifiable Object]' };
+    }
+  } else {
+    // For primitives, wrap in an object
     return { value };
   }
-  
-  // For arrays, return the array wrapped in an object
-  if (Array.isArray(value)) {
-    return { array: value };
-  }
-  
-  // Default case: try to convert to string or just return a placeholder
-  try {
-    return { value: String(value) };
-  } catch {
-    return { type: typeof value, stringified: false };
-  }
-}
-
-/**
- * Extract additional properties from Error objects
- */
-function extractErrorProperties(error: Error): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  
-  // Extract any additional properties on the error
-  for (const key in error) {
-    if (key !== 'name' && key !== 'message' && key !== 'stack') {
-      const value = (error as any)[key];
-      result[key] = value;
-    }
-  }
-  
-  return result;
 }

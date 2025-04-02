@@ -81,7 +81,8 @@ export {
   isLogLevelAtLeast,
   getLogLevelName,
   getLogLevelColorClass,
-  getLogItemClass
+  getLogItemClass,
+  getLogLevelFromString
 } from './constants/log-level';
 
 // Transports
