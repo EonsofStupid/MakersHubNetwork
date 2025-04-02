@@ -1,8 +1,9 @@
 
+import React from 'react';
 import { toast } from '@/hooks/use-toast';
 import { LogEntry, LogTransport } from '../types';
-import { LogLevel } from '../constants/log-level';
-import { nodeToSearchableString } from '@/shared/utils/react-utils';
+import { LogLevel } from '../types';
+import { nodeToSearchableString } from '../utils/react';
 
 interface UITransportOptions {
   showDebug?: boolean;
@@ -166,3 +167,5 @@ export class UITransport implements LogTransport {
     }
   }
 }
+
+export const uiTransport = new UITransport();

@@ -117,9 +117,22 @@ export interface Logger {
 }
 
 /**
+ * Measurement completion callback interface
+ */
+export interface MeasurementCompletionData {
+  name: string;
+  duration: number;
+  success: boolean;
+  error?: unknown;
+  [key: string]: unknown;
+}
+
+/**
  * Performance measurement options
  */
-export type PerformanceMeasurementOptions = LoggerOptions;
+export interface PerformanceMeasurementOptions extends LoggerOptions {
+  onComplete?: (data: MeasurementCompletionData) => void;
+}
 
 /**
  * Performance measurement result
