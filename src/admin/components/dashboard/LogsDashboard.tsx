@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { LogEntry, LogCategory, memoryTransport } from '@/logging';
 import { LogLevel } from '@/logging/constants/log-level';
@@ -216,30 +217,35 @@ export function LogsDashboard() {
               </tr>
             </thead>
             <tbody>
-              {logs.slice(0, 10).map((log) => (
-                <tr 
-                  key={log.id} 
-                  className="border-b border-[var(--impulse-border-normal)] hover:bg-[var(--impulse-bg-overlay)]"
-                >
-                  <td className="py-2 px-4 text-sm">
-                    {new Date(log.timestamp).toLocaleTimeString()}
-                  </td>
-                  <td className="py-2 px-4">
-                    <span 
-                      className={cn(
-                        "px-2 py-1 text-xs rounded-full", 
-                        getLevelBadgeClass(log.level)
-                      )}
-                    >
-                      {log.level}
-                    </span>
-                  </td>
-                  <td className="py-2 px-4 text-sm">{log.category}</td>
-                  <td className="py-2 px-4 text-sm truncate max-w-md">
-                    {safelyRenderNode(log.message)}
-                  </td>
-                </tr>
-              ))}
+              {logs.slice(0, 10).map((log) => {
+                // Pre-render the message content with type safety
+                const messageContent = safelyRenderNode(log.message);
+                
+                return (
+                  <tr 
+                    key={log.id} 
+                    className="border-b border-[var(--impulse-border-normal)] hover:bg-[var(--impulse-bg-overlay)]"
+                  >
+                    <td className="py-2 px-4 text-sm">
+                      {new Date(log.timestamp).toLocaleTimeString()}
+                    </td>
+                    <td className="py-2 px-4">
+                      <span 
+                        className={cn(
+                          "px-2 py-1 text-xs rounded-full", 
+                          getLevelBadgeClass(log.level)
+                        )}
+                      >
+                        {log.level}
+                      </span>
+                    </td>
+                    <td className="py-2 px-4 text-sm">{log.category}</td>
+                    <td className="py-2 px-4 text-sm truncate max-w-md">
+                      {messageContent}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

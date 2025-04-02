@@ -23,8 +23,8 @@ export interface LogEntry {
   timestamp: Date;
   level: LogLevel;
   category: LogCategory;
-  message: string | React.ReactNode;
-  details?: unknown;
+  message: string | number | boolean | React.ReactNode;
+  details?: Record<string, unknown>;
   source?: string;
   userId?: string;
   sessionId?: string;

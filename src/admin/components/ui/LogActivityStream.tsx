@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { LogCategory, LogEntry, memoryTransport } from '@/logging';
 import { LogLevel } from '@/logging/constants/log-level';
@@ -118,41 +119,46 @@ export function LogActivityStream({
         </div>
       ) : (
         <div className="p-1">
-          {logs.map((log) => (
-            <div 
-              key={log.id}
-              className={cn(
-                "py-1 px-2 border-b border-[var(--impulse-border-normal)]/30",
-                "hover:bg-[var(--impulse-bg-overlay)]/50",
-                "transition-colors duration-150",
-                getLogItemClass(log.level)
-              )}
-            >
-              <div className="flex items-start gap-2 overflow-hidden">
-                <span className={cn("flex-shrink-0", getLevelColorClass(log.level))}>
-                  {getLevelName(log.level)}
-                </span>
-                
-                <span className="flex-shrink-0 text-gray-400">
-                  {formatTime(log.timestamp)}
-                </span>
-                
-                <Badge variant="outline" className="flex-shrink-0 py-0 h-5">
-                  {log.category}
-                </Badge>
-                
-                {showSource && log.source && (
-                  <Badge variant="secondary" className="flex-shrink-0 py-0 h-5">
-                    {log.source}
-                  </Badge>
+          {logs.map((log) => {
+            // Pre-render the message with type safety
+            const messageContent = safelyRenderNode(log.message);
+            
+            return (
+              <div 
+                key={log.id}
+                className={cn(
+                  "py-1 px-2 border-b border-[var(--impulse-border-normal)]/30",
+                  "hover:bg-[var(--impulse-bg-overlay)]/50",
+                  "transition-colors duration-150",
+                  getLogItemClass(log.level)
                 )}
-                
-                <span className="flex-grow truncate">
-                  {safelyRenderNode(log.message)}
-                </span>
+              >
+                <div className="flex items-start gap-2 overflow-hidden">
+                  <span className={cn("flex-shrink-0", getLevelColorClass(log.level))}>
+                    {getLevelName(log.level)}
+                  </span>
+                  
+                  <span className="flex-shrink-0 text-gray-400">
+                    {formatTime(log.timestamp)}
+                  </span>
+                  
+                  <Badge variant="outline" className="flex-shrink-0 py-0 h-5">
+                    {log.category}
+                  </Badge>
+                  
+                  {showSource && log.source && (
+                    <Badge variant="secondary" className="flex-shrink-0 py-0 h-5">
+                      {log.source}
+                    </Badge>
+                  )}
+                  
+                  <span className="flex-grow truncate">
+                    {messageContent}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </ScrollArea>

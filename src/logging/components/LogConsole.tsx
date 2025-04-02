@@ -1,3 +1,4 @@
+
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry } from '../types';
@@ -8,7 +9,7 @@ import '../styles/logging.css';
 import { safelyRenderNode, nodeToSearchableString } from '@/shared/utils/react-utils';
 
 interface LogDetailsProps {
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   className?: string;
 }
 
@@ -19,14 +20,17 @@ const LogDetails = forwardRef<HTMLDivElement, LogDetailsProps>(({ details, class
   
   return (
     <div ref={ref} className={`log-details mt-1 p-2 bg-gray-800 rounded text-xs font-mono ${className}`}>
-      {Object.entries(details).map(([key, value]) => (
-        <div key={key} className="flex">
-          <span className="text-gray-400 mr-2">{key}:</span>
-          <span className="text-gray-300">
-            {safelyRenderNode(value)}
-          </span>
-        </div>
-      ))}
+      {Object.entries(details).map(([key, value]) => {
+        const renderedValue = safelyRenderNode(value);
+        return (
+          <div key={key} className="flex">
+            <span className="text-gray-400 mr-2">{key}:</span>
+            <span className="text-gray-300">
+              {renderedValue}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 });
@@ -80,6 +84,9 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
     }
   };
   
+  // Pre-render the message content with type safety
+  const messageContent = safelyRenderNode(log.message);
+  
   return (
     <div 
       className={`log-item p-2 mb-1 rounded ${getBgColorClass(log.level)} ${index % 2 === 0 ? 'bg-opacity-50' : ''}`}
@@ -95,7 +102,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             <span className="font-medium">{log.category}</span>
           </div>
           <div className="message-content text-sm">
-            {safelyRenderNode(log.message)}
+            {messageContent}
           </div>
           
           <AnimatePresence>
@@ -107,7 +114,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <LogDetails details={log.details as Record<string, any> || {}} />
+                <LogDetails details={log.details as Record<string, unknown> || {}} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -142,6 +149,7 @@ export function LogConsole() {
       if (search === '') return true;
       const searchLower = search.toLowerCase();
       
+      // Use the type-safe nodeToSearchableString function
       const messageStr = nodeToSearchableString(log.message);
       return messageStr.toLowerCase().includes(searchLower) || 
              log.category.toLowerCase().includes(searchLower);
