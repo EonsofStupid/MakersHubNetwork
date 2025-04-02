@@ -41,6 +41,8 @@ export const useThemeStore = create<ThemeState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       logger.info(`Fetching theme with ID: ${themeId}`);
+      
+      // First try to get theme from the database
       const { data: themes, error } = await supabase
         .from("themes")
         .select("*")
@@ -60,24 +62,36 @@ export const useThemeStore = create<ThemeState>((set) => ({
       const rawTheme = themes[0];
       logger.debug("Raw theme data received", { details: { id: rawTheme.id, name: rawTheme.name } });
       
+      // Now get component tokens separately to ensure we have them even if RLS blocks direct access
+      const { data: componentTokens, error: componentError } = await supabase
+        .from("theme_components")
+        .select("*")
+        .eq("theme_id", themeId);
+
+      if (componentError) {
+        logger.warn("Error fetching component tokens, will use empty array:", { 
+          details: { error: componentError } 
+        });
+      }
+      
       // Type guard to ensure we have objects
       const designTokens = rawTheme.design_tokens && typeof rawTheme.design_tokens === 'object' 
         ? rawTheme.design_tokens as Record<string, any>
         : {};
       
       // Convert component tokens to the correct type with proper mapping
-      const componentTokens = rawTheme.component_tokens && Array.isArray(rawTheme.component_tokens)
-        ? (rawTheme.component_tokens as Json[]).map((token): ComponentTokens => ({
-            id: (token as any).id || '',
-            component_name: (token as any).component_name || '',
-            styles: (token as any).styles || {},
-            theme_id: (token as any).theme_id || undefined,
-            context: (token as any).context || undefined,
-            created_at: (token as any).created_at || '',
-            updated_at: (token as any).updated_at || '',
+      const mappedComponentTokens = !componentError && componentTokens && Array.isArray(componentTokens)
+        ? componentTokens.map((token): ComponentTokens => ({
+            id: token.id || '',
+            component_name: token.component_name || '',
+            styles: token.styles || {},
+            theme_id: token.theme_id || undefined,
+            context: token.context || undefined,
+            created_at: token.created_at || '',
+            updated_at: token.updated_at || '',
             description: '', // Add default empty description
           }))
-        : [];
+        : []; // Use empty array if there was an error or no components returned
 
       // Ensure composition rules is a Record
       const compositionRules = rawTheme.composition_rules && typeof rawTheme.composition_rules === 'object'
@@ -98,7 +112,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
         cache_key: rawTheme.cache_key || undefined,
         parent_theme_id: rawTheme.parent_theme_id || undefined,
         design_tokens: designTokens,
-        component_tokens: componentTokens,
+        component_tokens: mappedComponentTokens,
         composition_rules: compositionRules,
         cached_styles: rawTheme.cached_styles as Record<string, any> || {},
       };
@@ -118,6 +132,8 @@ export const useThemeStore = create<ThemeState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       logger.info("Loading admin components");
+      
+      // Try to fetch admin components
       const { data, error } = await supabase
         .from("theme_components")
         .select("*")

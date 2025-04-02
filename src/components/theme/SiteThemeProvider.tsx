@@ -76,34 +76,40 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
     logger.info(`Theme mode changed to ${newMode ? 'dark' : 'light'}`);
   };
 
+  // Extract and normalize component styles from theme with fallbacks
   const componentStyles = useMemo(() => {
-    if (!currentTheme || !currentTheme.component_tokens) {
+    if (!currentTheme) {
       return {};
     }
 
-    const styles: Record<string, any> = {};
-    
     try {
-      if (Array.isArray(currentTheme.component_tokens)) {
-        currentTheme.component_tokens.forEach((component) => {
-          if (component && component.component_name) {
-            styles[component.component_name] = component.styles || {};
-          }
-        });
-      } else {
-        logger.warn('component_tokens is not an array', { 
+      // Check if component_tokens is available and is an array
+      if (!currentTheme.component_tokens || !Array.isArray(currentTheme.component_tokens)) {
+        logger.warn('Theme component_tokens missing or invalid', { 
           details: { 
-            type: typeof currentTheme.component_tokens 
-          }
+            hasComponentTokens: Boolean(currentTheme.component_tokens),
+            type: typeof currentTheme.component_tokens
+          } 
         });
+        return {};
       }
+      
+      // Process component tokens into a lookup object
+      const styles: Record<string, any> = {};
+      currentTheme.component_tokens.forEach((component) => {
+        if (component && component.component_name) {
+          styles[component.component_name] = component.styles || {};
+        }
+      });
+      
+      return styles;
     } catch (error) {
       logger.error('Error processing component styles', { details: safeDetails(error) });
+      return {};
     }
-    
-    return styles;
   }, [currentTheme, logger]);
   
+  // Extract animations with fallbacks
   const animations = useMemo(() => {
     if (!currentTheme || !currentTheme.design_tokens?.animation?.keyframes) {
       return {};
@@ -117,27 +123,9 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
     }
   }, [currentTheme, logger]);
 
+  // Apply theme variables to CSS
   useEffect(() => {
-    if (import.meta.env.DEV) {
-      const logThemeDetails = () => {
-        if (currentTheme) {
-          logger.debug('Theme loaded', { 
-            details: { 
-              id: currentTheme.id,
-              name: currentTheme.name
-            } 
-          });
-        } else if (!isLoading) {
-          logger.debug('No theme loaded, using defaults');
-        }
-      };
-      
-      const timeoutId = setTimeout(logThemeDetails, 500);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [currentTheme, isLoading, logger]);
-
-  useEffect(() => {
+    // Use fallback variables if theme is loading or not available
     const themeVars = fallbackToDefault && (isLoading || !currentTheme) 
       ? defaultThemeVariables 
       : variables;
@@ -145,6 +133,7 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
     const rootElement = document.documentElement;
     
     try {
+      // Apply CSS variables
       rootElement.style.setProperty('--site-background', themeVars.background);
       rootElement.style.setProperty('--site-foreground', themeVars.foreground);
       rootElement.style.setProperty('--site-card', themeVars.card);
@@ -163,10 +152,12 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
       rootElement.style.setProperty('--site-input', themeVars.input);
       rootElement.style.setProperty('--site-ring', themeVars.ring);
       
+      // Effect colors
       rootElement.style.setProperty('--site-effect-color', themeVars.effectColor);
       rootElement.style.setProperty('--site-effect-secondary', themeVars.effectSecondary);
       rootElement.style.setProperty('--site-effect-tertiary', themeVars.effectTertiary);
       
+      // Timing values
       rootElement.style.setProperty('--site-transition-fast', themeVars.transitionFast);
       rootElement.style.setProperty('--site-transition-normal', themeVars.transitionNormal);
       rootElement.style.setProperty('--site-transition-slow', themeVars.transitionSlow);
@@ -174,11 +165,13 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
       rootElement.style.setProperty('--site-animation-normal', themeVars.animationNormal);
       rootElement.style.setProperty('--site-animation-slow', themeVars.animationSlow);
       
+      // Radius values
       rootElement.style.setProperty('--site-radius-sm', themeVars.radiusSm);
       rootElement.style.setProperty('--site-radius-md', themeVars.radiusMd);
       rootElement.style.setProperty('--site-radius-lg', themeVars.radiusLg);
       rootElement.style.setProperty('--site-radius-full', themeVars.radiusFull);
       
+      // Apply dark/light mode
       if (isDarkMode) {
         rootElement.classList.add('dark');
         rootElement.classList.remove('light');
