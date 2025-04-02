@@ -1,9 +1,11 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ComponentTokens } from '@/types/theme';
 import { Json } from '@/integrations/supabase/types';
 import { keyframes } from '@/theme/animations';
 import { generateUUID, isValidUUID } from '@/logging/utils/type-guards';
+import { getLogger } from '@/logging';
+
+const logger = getLogger('ThemeInitializer');
 
 /**
  * Ensures that a default theme exists in the database
@@ -11,6 +13,8 @@ import { generateUUID, isValidUUID } from '@/logging/utils/type-guards';
  */
 export async function ensureDefaultTheme(): Promise<string | null> {
   try {
+    logger.info('Ensuring default theme exists');
+    
     // Check if a default theme already exists
     const { data: existingTheme, error } = await supabase
       .from('themes')
@@ -18,26 +22,34 @@ export async function ensureDefaultTheme(): Promise<string | null> {
       .eq('is_default', true)
       .single();
     
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error checking for default theme:', error);
-      return null;
+    if (error) {
+      if (error.code !== 'PGRST116') {
+        // Only log if it's not the "no rows returned" error
+        logger.error('Error checking for default theme:', { details: { error } });
+        return null;
+      }
+      logger.debug('No default theme found, will create one');
     }
     
     // If a default theme exists, return its ID
-    if (existingTheme) {
+    if (existingTheme && existingTheme.id) {
       // Validate the UUID before returning
       if (isValidUUID(existingTheme.id)) {
+        logger.info('Found existing default theme', { details: { id: existingTheme.id } });
+        
         // Automatically sync CSS to this theme
         const syncResult = await syncCSSToDatabase(existingTheme.id);
-        console.log('Sync result for existing theme:', syncResult);
+        logger.debug('Sync result for existing theme:', { details: { syncResult, themeId: existingTheme.id } });
+        
         return existingTheme.id;
       } else {
-        console.error('Found default theme but ID is invalid:', existingTheme.id);
+        logger.error('Found default theme but ID is invalid:', { details: { id: existingTheme.id } });
         return null;
       }
     }
     
     // Otherwise, create a default theme
+    logger.info('Creating new default theme');
     const defaultTheme = {
       name: 'Default Theme',
       description: 'The default system theme',
@@ -102,20 +114,30 @@ export async function ensureDefaultTheme(): Promise<string | null> {
       .single();
     
     if (insertError) {
-      console.error('Error creating default theme:', insertError);
+      logger.error('Error creating default theme:', { details: { error: insertError } });
+      return null;
+    }
+    
+    if (!data || !data.id) {
+      logger.error('No data returned after inserting default theme');
+      return null;
+    }
+    
+    logger.info('Created default theme with ID:', { details: { id: data.id } });
+    
+    // Validate the new theme ID
+    if (!isValidUUID(data.id)) {
+      logger.error('Created theme but ID is invalid:', { details: { id: data.id } });
       return null;
     }
     
     // Sync CSS to the new theme
-    if (data && data.id) {
-      const syncResult = await syncCSSToDatabase(data.id);
-      console.log('Sync result for new theme:', syncResult);
-    }
+    const syncResult = await syncCSSToDatabase(data.id);
+    logger.debug('Sync result for new theme:', { details: { syncResult, themeId: data.id } });
     
-    console.log('Created default theme with ID:', data.id);
     return data.id;
   } catch (error) {
-    console.error('Unexpected error in ensureDefaultTheme:', error);
+    logger.error('Unexpected error in ensureDefaultTheme:', { details: { error } });
     return null;
   }
 }
@@ -125,11 +147,11 @@ export async function ensureDefaultTheme(): Promise<string | null> {
  */
 export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
   try {
-    console.log('Syncing CSS to database for theme:', themeId);
+    logger.info('Syncing CSS to database for theme:', { details: { themeId } });
     
     // Validate UUID before proceeding
     if (!isValidUUID(themeId)) {
-      console.error('Invalid theme ID provided to syncCSSToDatabase:', themeId);
+      logger.error('Invalid theme ID provided to syncCSSToDatabase:', { details: { themeId } });
       return false;
     }
     
@@ -141,12 +163,12 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       .single();
       
     if (themeError) {
-      console.error('Database error fetching theme:', themeError);
+      logger.error('Database error fetching theme:', { details: { error: themeError, themeId } });
       throw themeError;
     }
     
     if (!theme) {
-      console.error('Theme not found for ID:', themeId);
+      logger.error('Theme not found for ID:', { details: { themeId } });
       throw new Error('Theme not found');
     }
     
@@ -302,7 +324,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       .eq('id', themeId);
       
     if (updateError) {
-      console.error('Error updating theme design tokens:', updateError);
+      logger.error('Error updating theme design tokens:', { details: { error: updateError, themeId } });
       throw updateError;
     }
     
@@ -319,7 +341,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         .eq('component_name', component.component_name);
         
       if (compError) {
-        console.error('Error fetching existing component:', compError);
+        logger.error('Error fetching existing component:', { details: { error: compError, componentName: component.component_name } });
         throw compError;
       }
       
@@ -333,7 +355,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
           .eq('id', existingComponents[0].id);
           
         if (updateCompError) {
-          console.error('Error updating component:', updateCompError);
+          logger.error('Error updating component:', { details: { error: updateCompError, componentId: existingComponents[0].id } });
           throw updateCompError;
         }
       } else {
@@ -348,16 +370,16 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
           });
           
         if (insertCompError) {
-          console.error('Error inserting component:', insertCompError);
+          logger.error('Error inserting component:', { details: { error: insertCompError, componentName: component.component_name } });
           throw insertCompError;
         }
       }
     }
     
-    console.log('CSS successfully synced to database');
+    logger.info('CSS successfully synced to database', { details: { themeId } });
     return true;
   } catch (error) {
-    console.error('Error syncing CSS to database:', error);
+    logger.error('Error syncing CSS to database:', { details: { error, themeId } });
     return false;
   }
 }

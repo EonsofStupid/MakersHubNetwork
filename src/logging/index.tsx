@@ -20,7 +20,7 @@ export {
   loggerService
 } from './service/logger.service';
 
-// Re-export event emitter
+// Export event emitter
 export { logEventEmitter } from './events';
 
 // Context provider and hooks

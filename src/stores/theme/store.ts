@@ -5,6 +5,10 @@ import { ThemeState } from "./types";
 import { Theme, ComponentTokens } from "@/types/theme";
 import { Json } from "@/integrations/supabase/types";
 import { isValidUUID } from "@/logging/utils/type-guards";
+import { getLogger } from "@/logging";
+
+// Create a logger instance for the theme store
+const logger = getLogger('ThemeStore');
 
 export const useThemeStore = create<ThemeState>((set) => ({
   currentTheme: null,
@@ -16,7 +20,17 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
   setTheme: async (themeId: string) => {
     // Validate UUID before attempting to fetch
-    if (themeId && !isValidUUID(themeId)) {
+    if (!themeId) {
+      logger.error('No theme ID provided to setTheme');
+      set({ 
+        error: new Error('No theme ID provided'), 
+        isLoading: false 
+      });
+      return;
+    }
+
+    if (!isValidUUID(themeId)) {
+      logger.error(`Invalid theme ID format: ${themeId}`);
       set({ 
         error: new Error(`Invalid theme ID format: ${themeId}`), 
         isLoading: false 
@@ -26,22 +40,25 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const query = themeId 
-        ? supabase.from("themes").select("*").eq("id", themeId).limit(1)
-        : supabase.from("themes").select("*").eq("is_default", true).limit(1);
-      
-      const { data: themes, error } = await query;
+      logger.info(`Fetching theme with ID: ${themeId}`);
+      const { data: themes, error } = await supabase
+        .from("themes")
+        .select("*")
+        .eq("id", themeId)
+        .limit(1);
 
       if (error) {
-        console.error("Database error fetching theme:", error);
+        logger.error("Database error fetching theme:", { details: { error } });
         throw error;
       }
       
       if (!themes || themes.length === 0) {
-        throw new Error("No theme found");
+        logger.error("No theme found for ID:", { details: { themeId } });
+        throw new Error(`No theme found for ID: ${themeId}`);
       }
 
       const rawTheme = themes[0];
+      logger.debug("Raw theme data received", { details: { id: rawTheme.id, name: rawTheme.name } });
       
       // Type guard to ensure we have objects
       const designTokens = rawTheme.design_tokens && typeof rawTheme.design_tokens === 'object' 
@@ -86,9 +103,10 @@ export const useThemeStore = create<ThemeState>((set) => ({
         cached_styles: rawTheme.cached_styles as Record<string, any> || {},
       };
 
+      logger.info("Theme loaded successfully", { details: { id: theme.id, name: theme.name } });
       set({ currentTheme: theme, isLoading: false });
     } catch (error) {
-      console.error("Error fetching theme:", error);
+      logger.error("Error fetching theme:", { details: { error, themeId } });
       set({ 
         error: error instanceof Error ? error : new Error("Failed to fetch theme"), 
         isLoading: false 
@@ -99,13 +117,14 @@ export const useThemeStore = create<ThemeState>((set) => ({
   loadAdminComponents: async () => {
     set({ isLoading: true, error: null });
     try {
+      logger.info("Loading admin components");
       const { data, error } = await supabase
         .from("theme_components")
         .select("*")
         .eq("context", "admin");
 
       if (error) {
-        console.error("Database error loading admin components:", error);
+        logger.error("Database error loading admin components:", { details: { error } });
         throw error;
       }
 
@@ -120,9 +139,10 @@ export const useThemeStore = create<ThemeState>((set) => ({
         updated_at: comp.updated_at || ''
       }));
 
+      logger.info(`Loaded ${components.length} admin components`);
       set({ adminComponents: components, isLoading: false });
     } catch (error) {
-      console.error("Error loading admin components:", error);
+      logger.error("Error loading admin components:", { details: { error } });
       set({ 
         error: error instanceof Error ? error : new Error("Failed to load admin components"), 
         isLoading: false 

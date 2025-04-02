@@ -1,5 +1,6 @@
 
 import { LogEntry, LogLevel, LogTransport } from '../types';
+import { getLogger } from '@/logging';
 
 /**
  * Transport that outputs logs to Supabase
@@ -10,6 +11,7 @@ class SupabaseTransport implements LogTransport {
   private buffer: LogEntry[] = [];
   private maxBufferSize = 10;
   private flushPromise: Promise<void> | null = null;
+  private consoleLogger = getLogger('SupabaseTransport');
   
   /**
    * Log an entry to the Supabase buffer
@@ -26,7 +28,7 @@ class SupabaseTransport implements LogTransport {
     // Auto-flush when buffer is full
     if (this.buffer.length >= this.maxBufferSize) {
       this.flush().catch(error => {
-        console.error('Error flushing logs to Supabase:', error);
+        this.consoleLogger.error('Error flushing logs to Supabase:', { details: { error } });
       });
     }
   }
@@ -64,7 +66,7 @@ class SupabaseTransport implements LogTransport {
   private async sendLogsToSupabase(logs: LogEntry[]): Promise<void> {
     try {
       // This would be replaced with actual Supabase client code
-      console.log('Would send logs to Supabase:', logs.length);
+      this.consoleLogger.debug('Would send logs to Supabase:', { details: { count: logs.length } });
       
       // Simulate a network request
       await new Promise(resolve => setTimeout(resolve, 500));
