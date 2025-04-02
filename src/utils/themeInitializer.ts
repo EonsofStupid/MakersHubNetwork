@@ -10,6 +10,7 @@ const logger = getLogger('ThemeInitializer');
 /**
  * Ensures that a default theme exists in the database
  * If no default theme exists, creates one
+ * Returns the theme ID regardless of authenticated state
  */
 export async function ensureDefaultTheme(): Promise<string | null> {
   try {
@@ -26,9 +27,9 @@ export async function ensureDefaultTheme(): Promise<string | null> {
       if (error.code !== 'PGRST116') {
         // Only log if it's not the "no rows returned" error
         logger.error('Error checking for default theme:', { details: { error } });
-        return null;
+      } else {
+        logger.debug('No default theme found, will create one');
       }
-      logger.debug('No default theme found, will create one');
     }
     
     // If a default theme exists, return its ID
@@ -37,14 +38,19 @@ export async function ensureDefaultTheme(): Promise<string | null> {
       if (isValidUUID(existingTheme.id)) {
         logger.info('Found existing default theme', { details: { id: existingTheme.id } });
         
-        // Automatically sync CSS to this theme
-        const syncResult = await syncCSSToDatabase(existingTheme.id);
-        logger.debug('Sync result for existing theme:', { details: { syncResult, themeId: existingTheme.id } });
+        // Sync CSS to this theme
+        try {
+          const syncResult = await syncCSSToDatabase(existingTheme.id);
+          logger.debug('Sync result for existing theme:', { details: { syncResult, themeId: existingTheme.id } });
+        } catch (syncError) {
+          logger.error('Error syncing CSS for existing theme:', { details: { syncError, themeId: existingTheme.id } });
+          // Continue despite sync error - theme ID is still valid
+        }
         
         return existingTheme.id;
       } else {
         logger.error('Found default theme but ID is invalid:', { details: { id: existingTheme.id } });
-        return null;
+        // Continue to create a new theme
       }
     }
     
@@ -106,36 +112,65 @@ export async function ensureDefaultTheme(): Promise<string | null> {
       cached_styles: {}
     };
     
-    // Insert the default theme
-    const { data, error: insertError } = await supabase
-      .from('themes')
-      .insert(defaultTheme as any)
-      .select()
-      .single();
-    
-    if (insertError) {
-      logger.error('Error creating default theme:', { details: { error: insertError } });
+    // Try to insert the default theme
+    try {
+      // Insert the default theme
+      const { data, error: insertError } = await supabase
+        .from('themes')
+        .insert(defaultTheme as any)
+        .select()
+        .single();
+      
+      if (insertError) {
+        logger.error('Error creating default theme:', { details: { error: insertError } });
+        // Return null when we can't create a theme - app will use fallback
+        return null;
+      }
+      
+      if (!data || !data.id) {
+        logger.error('No data returned after inserting default theme');
+        return null;
+      }
+      
+      logger.info('Created default theme with ID:', { details: { id: data.id } });
+      
+      // Validate the new theme ID
+      if (!isValidUUID(data.id)) {
+        logger.error('Created theme but ID is invalid:', { details: { id: data.id } });
+        return null;
+      }
+      
+      // Sync CSS to the new theme
+      try {
+        const syncResult = await syncCSSToDatabase(data.id);
+        logger.debug('Sync result for new theme:', { details: { syncResult, themeId: data.id } });
+      } catch (syncError) {
+        logger.error('Error syncing CSS for new theme:', { details: { syncError, themeId: data.id } });
+        // Continue despite sync error - theme ID is still valid
+      }
+      
+      return data.id;
+    } catch (insertError) {
+      logger.error('Failed to insert default theme', { details: { error: insertError } });
+      
+      // Attempt to get the default theme ID as a fallback
+      try {
+        const { data: fallbackTheme } = await supabase
+          .from('themes')
+          .select('id')
+          .eq('is_default', true)
+          .single();
+          
+        if (fallbackTheme?.id && isValidUUID(fallbackTheme.id)) {
+          logger.info('Found existing default theme as fallback', { details: { id: fallbackTheme.id } });
+          return fallbackTheme.id;
+        }
+      } catch (fallbackError) {
+        logger.error('Error finding fallback theme', { details: { error: fallbackError } });
+      }
+      
       return null;
     }
-    
-    if (!data || !data.id) {
-      logger.error('No data returned after inserting default theme');
-      return null;
-    }
-    
-    logger.info('Created default theme with ID:', { details: { id: data.id } });
-    
-    // Validate the new theme ID
-    if (!isValidUUID(data.id)) {
-      logger.error('Created theme but ID is invalid:', { details: { id: data.id } });
-      return null;
-    }
-    
-    // Sync CSS to the new theme
-    const syncResult = await syncCSSToDatabase(data.id);
-    logger.debug('Sync result for new theme:', { details: { syncResult, themeId: data.id } });
-    
-    return data.id;
   } catch (error) {
     logger.error('Unexpected error in ensureDefaultTheme:', { details: { error } });
     return null;
@@ -157,9 +192,9 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
     
     // Get the current theme
     const { data: theme, error: themeError } = await supabase
-      .from('themes')
-      .select('*')
-      .eq('id', themeId)
+      .from("themes")
+      .select("*")
+      .eq("id", themeId)
       .single();
       
     if (themeError) {
@@ -172,10 +207,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       throw new Error('Theme not found');
     }
     
-    // Use our predefined keyframes
-    const animationsKeyframes = keyframes;
-    
-    // Extract component styles with explicit valid UUIDs
+    // Define our component styles
     const componentStyles = [
       {
         component_name: 'MainNav',
@@ -290,6 +322,9 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       }
     ];
     
+    // Use our animations
+    const animationsKeyframes = keyframes;
+    
     // Prepare the design tokens update 
     // Start with existing design tokens or an empty object
     const currentDesignTokens = theme.design_tokens && typeof theme.design_tokens === 'object' 
@@ -316,63 +351,89 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
     };
     
     // Update the theme with the new design tokens
-    const { error: updateError } = await supabase
-      .from('themes')
-      .update({
-        design_tokens: updatedDesignTokens as Json,
-      })
-      .eq('id', themeId);
-      
-    if (updateError) {
-      logger.error('Error updating theme design tokens:', { details: { error: updateError, themeId } });
-      throw updateError;
+    try {
+      const { error: updateError } = await supabase
+        .from('themes')
+        .update({
+          design_tokens: updatedDesignTokens as Json,
+        })
+        .eq('id', themeId);
+        
+      if (updateError) {
+        logger.error('Error updating theme design tokens:', { details: { error: updateError, themeId } });
+        throw updateError;
+      }
+    } catch (updateError) {
+      logger.error('Failed to update theme design tokens:', { details: { error: updateError, themeId } });
+      // Continue with component updates even if token update fails
     }
     
-    // Update component tokens
+    // Process component tokens with better error handling
     for (const component of componentStyles) {
-      // Generate a new valid UUID for each component
-      const componentId = generateUUID();
-      
-      // Check if component already exists
-      const { data: existingComponents, error: compError } = await supabase
-        .from('theme_components')
-        .select('id')
-        .eq('theme_id', themeId)
-        .eq('component_name', component.component_name);
+      try {
+        // Generate a new valid UUID for component
+        const componentId = generateUUID();
         
-      if (compError) {
-        logger.error('Error fetching existing component:', { details: { error: compError, componentName: component.component_name } });
-        throw compError;
-      }
-      
-      if (existingComponents && existingComponents.length > 0) {
-        // Update existing component
-        const { error: updateCompError } = await supabase
+        // Check if component already exists
+        const { data: existingComponents, error: compError } = await supabase
           .from('theme_components')
-          .update({
-            styles: component.styles as Json
-          })
-          .eq('id', existingComponents[0].id);
+          .select('id')
+          .eq('theme_id', themeId)
+          .eq('component_name', component.component_name);
           
-        if (updateCompError) {
-          logger.error('Error updating component:', { details: { error: updateCompError, componentId: existingComponents[0].id } });
-          throw updateCompError;
-        }
-      } else {
-        // Insert new component
-        const { error: insertCompError } = await supabase
-          .from('theme_components')
-          .insert({
-            id: componentId,
-            theme_id: themeId,
-            component_name: component.component_name,
-            styles: component.styles as Json
+        if (compError) {
+          logger.error('Error fetching existing component:', { 
+            details: { error: compError, componentName: component.component_name } 
           });
-          
-        if (insertCompError) {
-          logger.error('Error inserting component:', { details: { error: insertCompError, componentName: component.component_name } });
-          throw insertCompError;
+          // Continue with next component
+          continue;
         }
+        
+        if (existingComponents && existingComponents.length > 0) {
+          // Update existing component
+          const { error: updateCompError } = await supabase
+            .from('theme_components')
+            .update({
+              styles: component.styles as Json
+            })
+            .eq('id', existingComponents[0].id);
+            
+          if (updateCompError) {
+            logger.error('Error updating component:', { 
+              details: { error: updateCompError, componentId: existingComponents[0].id } 
+            });
+            // Continue with next component
+            continue;
+          }
+          
+          logger.debug(`Updated component ${component.component_name}`);
+        } else {
+          // Insert new component
+          const { error: insertCompError } = await supabase
+            .from('theme_components')
+            .insert({
+              id: componentId,
+              theme_id: themeId,
+              component_name: component.component_name,
+              styles: component.styles as Json
+            });
+            
+          if (insertCompError) {
+            logger.error('Error inserting component:', { 
+              details: { error: insertCompError, componentName: component.component_name } 
+            });
+            // Continue with next component
+            continue;
+          }
+          
+          logger.debug(`Inserted component ${component.component_name}`);
+        }
+      } catch (componentError) {
+        logger.error('Unexpected error processing component:', { 
+          details: { error: componentError, componentName: component.component_name } 
+        });
+        // Continue with next component
+        continue;
       }
     }
     

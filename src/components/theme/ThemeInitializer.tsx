@@ -19,6 +19,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [initializationAttempted, setInitializationAttempted] = useState(false);
   const [initError, setInitError] = useState<Error | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const { setTheme, isLoading, error: themeStoreError } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ThemeInitializer', LogCategory.SYSTEM);
@@ -30,7 +31,8 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         details: {
           errorMessage: themeStoreError.message,
           isInitialized,
-          initializationAttempted
+          initializationAttempted,
+          attempts: failedAttempts
         }
       });
       
@@ -45,13 +47,13 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         toast({
           title: 'Theme Recovery',
           description: 'Using default theme styling due to theme loading issue',
-          variant: "destructive", // Changed to destructive to make it more visible
+          variant: "default", // Changed to default for less alarmist message
         });
-      }, 1500); // Reduced to 1.5 seconds for faster fallback
+      }, 1000); // Reduced to 1 second for faster fallback
       
       return () => clearTimeout(timer);
     }
-  }, [themeStoreError, isInitialized, initializationAttempted, logger, toast]);
+  }, [themeStoreError, isInitialized, initializationAttempted, failedAttempts, logger, toast]);
 
   useEffect(() => {
     let isMounted = true;
@@ -65,21 +67,30 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         setInitializationAttempted(true);
         
         // Safety timeout - don't let theme initialization block the app forever
-        // Reduced timeout for better user experience
         initializationTimeout = setTimeout(() => {
           if (isMounted && !isInitialized) {
             logger.warn('Theme initialization timed out, continuing with default theme');
             setIsInitialized(true);
             toast({
-              title: 'Theme Warning',
-              description: 'Theme initialization timed out. Using default styling.',
-              variant: "destructive", // Changed to destructive
+              title: 'Theme Information',
+              description: 'Using default theme styling.',
+              variant: "default", // Changed to default
             });
           }
-        }, 3000); // Reduced to 3 seconds for faster fallback
+        }, 2000); // Reduced to 2 seconds for faster fallback
         
-        // First, ensure the default theme exists in the database
-        const themeId = await ensureDefaultTheme();
+        // Try to ensure the default theme exists in the database
+        // But don't block the app if this fails
+        let themeId: string | null = null;
+        
+        try {
+          themeId = await ensureDefaultTheme();
+        } catch (err) {
+          logger.warn('Error ensuring default theme, continuing with fallback', { 
+            details: { error: isError(err) ? err.message : 'Unknown error' } 
+          });
+          // Continue with null themeId to trigger fallback
+        }
         
         if (!isMounted) return;
         
@@ -103,13 +114,9 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
             });
             
             if (isMounted) {
+              setFailedAttempts(prev => prev + 1);
               // Continue with default styles even with a setTheme error
               setIsInitialized(true);
-              toast({
-                title: 'Theme Warning',
-                description: 'Error applying theme styles. Using default styling.',
-                variant: "destructive", // Changed to destructive
-              });
             }
           }
         } else {
@@ -121,11 +128,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           });
           
           if (isMounted) {
-            toast({
-              title: 'Theme Warning',
-              description: 'Could not find or create theme. Using default styling.',
-              variant: "destructive", // Changed to destructive
-            });
+            setFailedAttempts(prev => prev + 1);
             // Continue with default styles even without a theme
             setIsInitialized(true);
           }
@@ -142,11 +145,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         
         if (isMounted) {
           setInitError(err);
-          toast({
-            title: 'Theme Error',
-            description: err.message,
-            variant: "destructive", // Changed to destructive
-          });
+          setFailedAttempts(prev => prev + 1);
           // Continue with default styles even with an error
           setIsInitialized(true);
         }
