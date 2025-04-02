@@ -4,7 +4,7 @@ import { LogCategory, MeasurementResult } from '../types';
 import { loggerService } from '../service';
 
 /**
- * Creates a measurement utility
+ * Creates a measurement utility for logging performance metrics
  */
 export function createMeasurement(source: string, category: LogCategory = LogCategory.PERFORMANCE) {
   const measurements = new Map<string, number>();

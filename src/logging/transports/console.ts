@@ -3,101 +3,47 @@ import { LogEntry, LogLevel, LogTransport } from '../types';
 import { LOG_LEVEL_NAMES } from '../constants';
 
 /**
- * Transport that outputs logs to the browser console
+ * Transport that logs to the browser console
  */
-class ConsoleTransport implements LogTransport {
+export class ConsoleTransport implements LogTransport {
   /**
    * Log an entry to the console
    */
   public log(entry: LogEntry): void {
-    const timestamp = entry.timestamp.toLocaleTimeString();
-    const levelName = LOG_LEVEL_NAMES[entry.level];
-    const category = entry.category;
-    const source = entry.source ? `[${entry.source}]` : '';
+    const { level, message, timestamp, source, category, details } = entry;
     
-    // Format the log message
-    const formattedMessage = `${timestamp} ${levelName} ${category}${source}: ${entry.message}`;
+    // Format timestamp
+    const time = timestamp.toISOString().split('T')[1].slice(0, 8);
     
-    // Choose the appropriate console method based on the log level
-    let consoleMethod: keyof Console;
+    // Prepare message elements
+    const prefix = `[${time}] [${LOG_LEVEL_NAMES[level]}] [${category}]${source ? ` [${source}]` : ''}:`;
     
-    switch (entry.level) {
+    // Log to console using appropriate method
+    switch (level) {
       case LogLevel.TRACE:
       case LogLevel.DEBUG:
-        consoleMethod = 'debug';
+        console.debug(prefix, message, details || '');
         break;
       case LogLevel.INFO:
       case LogLevel.SUCCESS:
-        consoleMethod = 'info';
+        console.info(prefix, message, details || '');
         break;
       case LogLevel.WARN:
-        consoleMethod = 'warn';
+        console.warn(prefix, message, details || '');
         break;
       case LogLevel.ERROR:
       case LogLevel.CRITICAL:
-        consoleMethod = 'error';
+        console.error(prefix, message, details || '');
         break;
       default:
-        consoleMethod = 'log';
-    }
-    
-    // Styled console output for better readability
-    if (typeof window !== 'undefined') {
-      this.styledConsoleLog(consoleMethod, entry, formattedMessage);
-    } else {
-      // Basic console output for non-browser environments
-      console[consoleMethod](formattedMessage, entry.details || '');
+        console.log(prefix, message, details || '');
     }
   }
   
   /**
-   * Apply styling to console output in browser environments
-   */
-  private styledConsoleLog(
-    method: keyof Console, 
-    entry: LogEntry, 
-    message: string
-  ): void {
-    // Define styles based on log level
-    let style = '';
-    
-    switch (entry.level) {
-      case LogLevel.TRACE:
-        style = 'color: #6c757d;'; // gray
-        break;
-      case LogLevel.DEBUG:
-        style = 'color: #6c757d;'; // gray
-        break;
-      case LogLevel.INFO:
-        style = 'color: #0dcaf0;'; // info blue
-        break;
-      case LogLevel.WARN:
-        style = 'color: #ffc107; font-weight: bold;'; // warning yellow
-        break;
-      case LogLevel.ERROR:
-        style = 'color: #dc3545; font-weight: bold;'; // error red
-        break;
-      case LogLevel.CRITICAL:
-        style = 'color: #dc3545; font-weight: bold; background: #2c0b0e;'; // critical red with background
-        break;
-      case LogLevel.SUCCESS:
-        style = 'color: #198754;'; // success green
-        break;
-    }
-    
-    // Apply console styling
-    if (entry.details) {
-      console[method](`%c${message}`, style, entry.details);
-    } else {
-      console[method](`%c${message}`, style);
-    }
-  }
-  
-  /**
-   * No-op flush implementation (required by interface)
+   * Flush implementation (no-op for console)
    */
   public async flush(): Promise<void> {
-    // Console transport doesn't need to flush
     return Promise.resolve();
   }
 }

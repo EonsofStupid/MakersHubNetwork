@@ -10,7 +10,7 @@ import { createSimpleMeasurement } from '../utils/performance';
  * @returns Performance measurement utilities
  */
 export function usePerformanceLogger(source: string) {
-  const { performance } = useLogger(source, LogCategory.PERFORMANCE);
+  const logger = useLogger(source, LogCategory.PERFORMANCE);
   const simpleMeasurement = createSimpleMeasurement();
   
   // Start measuring
@@ -28,12 +28,12 @@ export function usePerformanceLogger(source: string) {
     
     // Log the performance
     const message = description || `Completed ${name}`;
-    performance(message, duration, { 
+    logger.performance(message, duration, { 
       details: { name, duration } 
     });
     
     return duration;
-  }, [simpleMeasurement, performance]);
+  }, [simpleMeasurement, logger]);
   
   // Measure an operation
   const measure = useCallback(async <T,>(
@@ -46,7 +46,7 @@ export function usePerformanceLogger(source: string) {
       
       // Log the performance
       const message = description || `Completed ${name}`;
-      performance(message, duration, { 
+      logger.performance(message, duration, { 
         details: { name, duration } 
       });
       
@@ -56,13 +56,13 @@ export function usePerformanceLogger(source: string) {
       const duration = (error as any).duration || 0;
       
       // Log the failed operation
-      performance(`Failed ${name}`, duration, { 
+      logger.performance(`Failed ${name}`, duration, { 
         details: { name, error } 
       });
       
       throw error;
     }
-  }, [simpleMeasurement, performance]);
+  }, [simpleMeasurement, logger]);
   
   return {
     start,
@@ -72,7 +72,6 @@ export function usePerformanceLogger(source: string) {
 }
 
 /**
- * Hook for measuring component performance
- * Re-export from utils/react for backward compatibility
+ * Re-export the component performance hook from React utilities
  */
 export { useComponentPerformance } from '../utils/react';
