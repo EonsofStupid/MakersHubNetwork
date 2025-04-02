@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { LogCategory } from '../types';
-import { loggerService } from '../service';
+import { loggerService } from '../service/logger.service';
 import { createMeasurement } from './performance';
 
 /**

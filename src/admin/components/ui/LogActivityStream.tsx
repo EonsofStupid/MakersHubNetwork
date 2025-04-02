@@ -1,13 +1,13 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { LogCategory, LogEntry, memoryTransport } from '@/logging';
-import { LogLevel } from '@/logging/constants/log-level';
+import { LogLevel } from '@/logging/types';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LOG_LEVEL_MAP } from '@/logging/utils/map-log-level';
+import { LOG_LEVEL_NAMES } from '@/logging/constants/log-level';
 import { isLogLevelAtLeast } from '@/logging/constants/log-level';
-import { safelyRenderNode } from '@/shared/utils/react-utils';
+import { safelyRenderNode } from '@/logging/utils/react';
 
 interface LogActivityStreamProps {
   maxEntries?: number;
@@ -83,7 +83,7 @@ export function LogActivityStream({
   };
   
   const getLevelName = (level: LogLevel): string => {
-    return LOG_LEVEL_MAP[level] || "UNKNOWN";
+    return LOG_LEVEL_NAMES[level] || "UNKNOWN";
   };
   
   const getLogItemClass = (level: LogLevel): string => {

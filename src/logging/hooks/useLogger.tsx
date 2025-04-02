@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { LogCategory, LoggerOptions } from '../types';
-import { getLogger } from '../service';
+import { getLogger } from '../service/logger.service';
 
 /**
  * Hook for accessing the logger within React components

@@ -3,8 +3,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LogLevel } from '../constants/log-level';
-import { safelyRenderNode } from '@/shared/utils/react-utils';
+import { LogLevel } from '../types';
+import { safelyRenderNode } from '../utils/react';
 
 // Define indicator variants
 export type LogIndicatorVariant = 'debug' | 'info' | 'warning' | 'error' | 'critical';
