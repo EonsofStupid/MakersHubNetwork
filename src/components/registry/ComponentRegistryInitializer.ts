@@ -1,3 +1,4 @@
+
 import { registerSiteComponents } from '@/components/layout/SiteComponentRegistrations';
 import { initializeComponentRegistry } from '@/admin/components/layout/ComponentRegistrations';
 import { getLogger } from '@/logging';
