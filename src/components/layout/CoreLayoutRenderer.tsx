@@ -33,17 +33,6 @@ export function CoreLayoutRenderer({
 }: CoreLayoutRendererProps) {
   const logger = useLogger('CoreLayoutRenderer', LogCategory.UI);
   
-  useEffect(() => {
-    if (!layout && !isLoading) {
-      logger.debug('No layout provided, using fallback', { 
-        details: { 
-          id, 
-          hasFallback: !!fallback 
-        } 
-      });
-    }
-  }, [layout, isLoading, id, fallback, logger]);
-  
   // Render a proper loading skeleton
   if (isLoading) {
     return (

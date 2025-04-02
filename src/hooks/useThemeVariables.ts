@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { Theme } from '@/types/theme';
 import { getLogger } from '@/logging';
@@ -43,23 +44,23 @@ export interface ThemeVariables {
   radiusFull: string;
 }
 
-// Default fallback values when theme isn't loaded
+// Default fallback values when theme isn't loaded - match Impulsivity theme
 const defaultThemeVariables: ThemeVariables = {
-  background: '#080F1E',
-  foreground: '#F9FAFB',
-  card: '#0E172A',
-  cardForeground: '#F9FAFB',
+  background: '#12121A',
+  foreground: '#F6F6F7',
+  card: 'rgba(28, 32, 42, 0.7)',
+  cardForeground: '#F6F6F7',
   primary: '#00F0FF',
-  primaryForeground: '#F9FAFB',
+  primaryForeground: '#F6F6F7',
   secondary: '#FF2D6E',
-  secondaryForeground: '#F9FAFB',
-  muted: '#131D35',
-  mutedForeground: '#94A3B8',
+  secondaryForeground: '#F6F6F7',
+  muted: 'rgba(255, 255, 255, 0.7)', 
+  mutedForeground: 'rgba(255, 255, 255, 0.5)',
   accent: '#131D35',
-  accentForeground: '#F9FAFB',
+  accentForeground: '#F6F6F7',
   destructive: '#EF4444',
-  destructiveForeground: '#F9FAFB',
-  border: '#131D35',
+  destructiveForeground: '#F6F6F7',
+  border: 'rgba(0, 240, 255, 0.2)',
   input: '#131D35',
   ring: '#1E293B',
   
@@ -95,73 +96,47 @@ export function useThemeVariables(theme: Theme | null): ThemeVariables {
     try {
       const designTokens = theme.design_tokens as Record<string, any>;
       
-      // Safe access helper function
-      const getPath = (obj: any, path: string, defaultValue: any) => {
-        const keys = path.split('.');
-        let result = obj;
-        
-        for (const key of keys) {
-          if (result && typeof result === 'object' && key in result) {
-            result = result[key];
-          } else {
-            return defaultValue;
-          }
-        }
-        
-        return result || defaultValue;
-      };
-      
-      // Extract values with proper fallbacks
-      const variables: ThemeVariables = {
-        // Base colors
-        background: getPath(designTokens, 'colors.background', defaultThemeVariables.background),
-        foreground: getPath(designTokens, 'colors.foreground', defaultThemeVariables.foreground),
-        card: getPath(designTokens, 'colors.card', defaultThemeVariables.card),
-        cardForeground: getPath(designTokens, 'colors.cardForeground', defaultThemeVariables.cardForeground),
-        primary: getPath(designTokens, 'colors.primary', defaultThemeVariables.primary),
-        primaryForeground: getPath(designTokens, 'colors.primaryForeground', defaultThemeVariables.primaryForeground),
-        secondary: getPath(designTokens, 'colors.secondary', defaultThemeVariables.secondary),
-        secondaryForeground: getPath(designTokens, 'colors.secondaryForeground', defaultThemeVariables.secondaryForeground),
-        muted: getPath(designTokens, 'colors.muted', defaultThemeVariables.muted),
-        mutedForeground: getPath(designTokens, 'colors.mutedForeground', defaultThemeVariables.mutedForeground),
-        accent: getPath(designTokens, 'colors.accent', defaultThemeVariables.accent),
-        accentForeground: getPath(designTokens, 'colors.accentForeground', defaultThemeVariables.accentForeground),
-        destructive: getPath(designTokens, 'colors.destructive', defaultThemeVariables.destructive),
-        destructiveForeground: getPath(designTokens, 'colors.destructiveForeground', defaultThemeVariables.destructiveForeground),
-        border: getPath(designTokens, 'colors.border', defaultThemeVariables.border),
-        input: getPath(designTokens, 'colors.input', defaultThemeVariables.input),
-        ring: getPath(designTokens, 'colors.ring', defaultThemeVariables.ring),
+      // Get the values or use defaults
+      return {
+        background: designTokens?.colors?.background || defaultThemeVariables.background,
+        foreground: designTokens?.colors?.foreground || defaultThemeVariables.foreground,
+        card: designTokens?.colors?.card || defaultThemeVariables.card,
+        cardForeground: designTokens?.colors?.cardForeground || defaultThemeVariables.cardForeground,
+        primary: designTokens?.colors?.primary || defaultThemeVariables.primary,
+        primaryForeground: designTokens?.colors?.primaryForeground || defaultThemeVariables.primaryForeground,
+        secondary: designTokens?.colors?.secondary || defaultThemeVariables.secondary,
+        secondaryForeground: designTokens?.colors?.secondaryForeground || defaultThemeVariables.secondaryForeground,
+        muted: designTokens?.colors?.muted || defaultThemeVariables.muted,
+        mutedForeground: designTokens?.colors?.mutedForeground || defaultThemeVariables.mutedForeground,
+        accent: designTokens?.colors?.accent || defaultThemeVariables.accent,
+        accentForeground: designTokens?.colors?.accentForeground || defaultThemeVariables.accentForeground,
+        destructive: designTokens?.colors?.destructive || defaultThemeVariables.destructive,
+        destructiveForeground: designTokens?.colors?.destructiveForeground || defaultThemeVariables.destructiveForeground,
+        border: designTokens?.colors?.border || defaultThemeVariables.border,
+        input: designTokens?.colors?.input || defaultThemeVariables.input,
+        ring: designTokens?.colors?.ring || defaultThemeVariables.ring,
         
         // Effect colors
-        effectColor: getPath(designTokens, 'effects.primary', defaultThemeVariables.effectColor),
-        effectSecondary: getPath(designTokens, 'effects.secondary', defaultThemeVariables.effectSecondary),
-        effectTertiary: getPath(designTokens, 'effects.tertiary', defaultThemeVariables.effectTertiary),
+        effectColor: designTokens?.effects?.primary || defaultThemeVariables.effectColor,
+        effectSecondary: designTokens?.effects?.secondary || defaultThemeVariables.effectSecondary,
+        effectTertiary: designTokens?.effects?.tertiary || defaultThemeVariables.effectTertiary,
         
         // Timing values
-        transitionFast: getPath(designTokens, 'animation.durations.fast', defaultThemeVariables.transitionFast),
-        transitionNormal: getPath(designTokens, 'animation.durations.normal', defaultThemeVariables.transitionNormal),
-        transitionSlow: getPath(designTokens, 'animation.durations.slow', defaultThemeVariables.transitionSlow),
-        animationFast: getPath(designTokens, 'animation.durations.animationFast', defaultThemeVariables.animationFast),
-        animationNormal: getPath(designTokens, 'animation.durations.animationNormal', defaultThemeVariables.animationNormal),
-        animationSlow: getPath(designTokens, 'animation.durations.animationSlow', defaultThemeVariables.animationSlow),
+        transitionFast: designTokens?.animation?.durations?.fast || defaultThemeVariables.transitionFast,
+        transitionNormal: designTokens?.animation?.durations?.normal || defaultThemeVariables.transitionNormal,
+        transitionSlow: designTokens?.animation?.durations?.slow || defaultThemeVariables.transitionSlow,
+        animationFast: designTokens?.animation?.durations?.animationFast || defaultThemeVariables.animationFast,
+        animationNormal: designTokens?.animation?.durations?.animationNormal || defaultThemeVariables.animationNormal,
+        animationSlow: designTokens?.animation?.durations?.animationSlow || defaultThemeVariables.animationSlow,
         
         // Radius values
-        radiusSm: getPath(designTokens, 'spacing.radius.sm', defaultThemeVariables.radiusSm),
-        radiusMd: getPath(designTokens, 'spacing.radius.md', defaultThemeVariables.radiusMd),
-        radiusLg: getPath(designTokens, 'spacing.radius.lg', defaultThemeVariables.radiusLg),
-        radiusFull: getPath(designTokens, 'spacing.radius.full', defaultThemeVariables.radiusFull)
+        radiusSm: designTokens?.spacing?.radius?.sm || defaultThemeVariables.radiusSm,
+        radiusMd: designTokens?.spacing?.radius?.md || defaultThemeVariables.radiusMd,
+        radiusLg: designTokens?.spacing?.radius?.lg || defaultThemeVariables.radiusLg,
+        radiusFull: designTokens?.spacing?.radius?.full || defaultThemeVariables.radiusFull
       };
-      
-      logger.debug('Theme variables extracted successfully', {
-        details: {
-          themeId: theme.id,
-          primaryColor: variables.primary
-        }
-      });
-      
-      return variables;
     } catch (error) {
-      logger.error('Error parsing theme variables', { details: safeDetails(error) });
+      logger.error('Error extracting theme variables', { details: safeDetails(error) });
       return defaultThemeVariables;
     }
   }, [theme, logger]);

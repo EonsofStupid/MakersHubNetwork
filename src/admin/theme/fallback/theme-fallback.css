@@ -23,6 +23,23 @@
   --impulse-text-primary: #F6F6F7;
   --impulse-primary: #00F0FF;
   --impulse-secondary: #FF2D6E;
+  --impulse-border-normal: rgba(0, 240, 255, 0.2);
+  --impulse-glow-primary: 0 0 15px rgba(0, 240, 255, 0.7);
+  
+  /* Standard variables */
+  --background: var(--fallback-background);
+  --foreground: var(--fallback-foreground);
+  --card: var(--fallback-card);
+  --card-foreground: var(--fallback-card-foreground);
+  --popover: var(--fallback-card);
+  --popover-foreground: var(--fallback-card-foreground);
+  --primary: var(--fallback-primary);
+  --primary-foreground: var(--fallback-primary-foreground);
+  --secondary: var(--fallback-secondary);
+  --secondary-foreground: var(--fallback-secondary-foreground);
+  --muted: var(--fallback-muted);
+  --muted-foreground: var(--fallback-muted-foreground);
+  --border: var(--fallback-border);
 }
 
 /* Applied as soon as the HTML loads for immediate styling */
@@ -33,13 +50,33 @@
 
 /* Force immediate styling for the body */
 body {
-  background-color: var(--fallback-background, #12121A);
-  color: var(--fallback-foreground, #F6F6F7);
+  background-color: var(--fallback-background, #12121A) !important;
+  color: var(--fallback-foreground, #F6F6F7) !important;
 }
 
 /* Base styling with fallbacks */
 html {
   background-color: var(--fallback-background, #12121A);
+}
+
+/* Scrollbar styling for immediate application */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--fallback-border, rgba(0, 240, 255, 0.2));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.4);
 }
 
 /* Loading skeleton styles */

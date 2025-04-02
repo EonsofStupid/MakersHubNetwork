@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
@@ -8,21 +7,21 @@ import { safeDetails } from '@/logging/utils/safeDetails';
 
 // Default theme variables for immediate fallback styling
 const defaultThemeVariables: ThemeVariables = {
-  background: '#080F1E',
-  foreground: '#F9FAFB',
-  card: '#0E172A',
-  cardForeground: '#F9FAFB',
+  background: '#12121A',
+  foreground: '#F6F6F7',
+  card: 'rgba(28, 32, 42, 0.7)',
+  cardForeground: '#F6F6F7',
   primary: '#00F0FF',
-  primaryForeground: '#F9FAFB',
+  primaryForeground: '#F6F6F7',
   secondary: '#FF2D6E',
-  secondaryForeground: '#F9FAFB',
-  muted: '#131D35',
-  mutedForeground: '#94A3B8',
+  secondaryForeground: '#F6F6F7',
+  muted: 'rgba(255, 255, 255, 0.7)',
+  mutedForeground: 'rgba(255, 255, 255, 0.5)',
   accent: '#131D35',
-  accentForeground: '#F9FAFB',
+  accentForeground: '#F6F6F7',
   destructive: '#EF4444',
-  destructiveForeground: '#F9FAFB',
-  border: '#131D35',
+  destructiveForeground: '#F6F6F7',
+  border: 'rgba(0, 240, 255, 0.2)',
   input: '#131D35',
   ring: '#1E293B',
   effectColor: '#00F0FF',
@@ -120,6 +119,8 @@ interface SiteThemeProviderProps {
 export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteThemeProviderProps) {
   const { currentTheme, isLoading } = useThemeStore();
   const logger = useLogger('SiteThemeProvider', LogCategory.UI);
+  
+  // Always start with default variables, then override when theme is loaded
   const variables = useThemeVariables(currentTheme) || defaultThemeVariables;
   
   const [isDarkMode, setIsDarkMode] = React.useState<boolean>(
@@ -183,7 +184,7 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
   // Apply theme variables to CSS - with immediate fallback application
   useEffect(() => {
     // Use fallback variables if theme is loading or not available
-    const themeVars = fallbackToDefault && (isLoading || !currentTheme) 
+    const themeVars = fallbackToDefault || isLoading || !currentTheme
       ? defaultThemeVariables 
       : variables;
       
@@ -229,6 +230,13 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
       rootElement.style.setProperty('--fallback-border', themeVars.border);
       rootElement.style.setProperty('--fallback-input', themeVars.input);
       rootElement.style.setProperty('--fallback-ring', themeVars.ring);
+      
+      // Also set Impulse theme variables for compatibility
+      rootElement.style.setProperty('--impulse-bg-main', themeVars.background);
+      rootElement.style.setProperty('--impulse-text-primary', themeVars.foreground);
+      rootElement.style.setProperty('--impulse-primary', themeVars.primary);
+      rootElement.style.setProperty('--impulse-secondary', themeVars.secondary);
+      rootElement.style.setProperty('--impulse-border-normal', themeVars.border);
       
       // Then apply the HSL variables
       const backgroundHSL = hexToHSL(themeVars.background);

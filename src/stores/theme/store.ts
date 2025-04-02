@@ -6,6 +6,7 @@ import { Theme, ComponentTokens } from "@/types/theme";
 import { isValidUUID } from "@/logging/utils/type-guards";
 import { getLogger } from "@/logging";
 import { safeDetails } from "@/logging/utils/safeDetails";
+import { DEFAULT_THEME_NAME } from "@/utils/themeInitializer";
 
 // Create a logger instance for the theme store
 const logger = getLogger('ThemeStore');
@@ -58,7 +59,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         return;
       }
 
-      // Safely access theme tokens - cast as an array with proper type safety
+      // Safely access theme tokens with proper type safety
       let tokens: any[] = [];
       try {
         // Fetch component tokens
@@ -78,7 +79,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         });
       }
 
-      // Fetch component styles
+      // Fetch component styles with proper error handling
       let components: ComponentTokens[] = [];
       try {
         const { data: componentsData, error: componentsError } = await supabase
@@ -97,7 +98,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         });
       }
 
-      // Set admin components from the theme definition
+      // Extract admin components with proper type safety
       let adminComponents: ComponentTokens[] = [];
       if (themeData.component_tokens && Array.isArray(themeData.component_tokens)) {
         try {
@@ -128,6 +129,31 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         details: safeDetails(err)
       });
       set({ error, isLoading: false });
+    }
+  },
+
+  loadAdminComponents: async () => {
+    try {
+      const { currentTheme } = get();
+      if (!currentTheme) {
+        logger.warn('No current theme available for loading admin components');
+        return;
+      }
+
+      // Extract admin components from the theme
+      let adminComponents: ComponentTokens[] = [];
+      if (currentTheme.component_tokens && Array.isArray(currentTheme.component_tokens)) {
+        adminComponents = currentTheme.component_tokens.filter(
+          comp => comp && typeof comp === 'object' && comp.context === 'admin'
+        );
+      }
+
+      set({ adminComponents });
+      logger.info('Admin components loaded successfully');
+    } catch (err) {
+      logger.error('Error loading admin components', {
+        details: safeDetails(err)
+      });
     }
   },
 
