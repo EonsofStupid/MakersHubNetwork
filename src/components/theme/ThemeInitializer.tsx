@@ -8,6 +8,7 @@ import { SiteThemeProvider } from './SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { isError, isValidUUID } from '@/logging/utils/type-guards';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -32,18 +33,18 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   useEffect(() => {
     if (themeStoreError && !isInitialized && initializationAttempted) {
       logger.warn('Theme store error detected, forcing fallback', {
-        details: {
+        details: safeDetails({
           errorMessage: themeStoreError.message,
           isInitialized,
           initializationAttempted,
           attempts: failedAttempts
-        }
+        })
       });
       
       // Short fallback timer for rapid recovery
       const timer = setTimeout(() => {
         logger.info('Forcing initialization after theme store error', { 
-          details: { error: themeStoreError.message }
+          details: safeDetails(themeStoreError) 
         });
         setIsInitialized(true);
       }, 300);
@@ -80,7 +81,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           logger.info(`Attempting to load ${THEME_NAME} theme`, { details: { themeId }});
         } catch (err) {
           logger.warn(`Error loading ${THEME_NAME} theme by name, trying default theme`, { 
-            details: { error: isError(err) ? err.message : 'Unknown error' } 
+            details: safeDetails(err)
           });
           
           // Fallback to default theme if Impulse not found
@@ -88,7 +89,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
             themeId = await ensureDefaultTheme();
           } catch (defaultErr) {
             logger.warn('Error ensuring default theme, continuing with fallback', { 
-              details: { error: isError(defaultErr) ? defaultErr.message : 'Unknown error' } 
+              details: safeDetails(defaultErr)
             });
             // Continue without a valid themeId - will trigger fallback
           }
@@ -119,10 +120,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           } catch (setThemeError) {
             clearTimeout(fetchTimeout);
             logger.error('Error setting theme', { 
-              details: {
-                error: isError(setThemeError) ? setThemeError.message : 'Unknown error',
-                themeId
-              }
+              details: safeDetails(setThemeError)
             });
             
             if (isMounted) {
@@ -145,7 +143,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
       } catch (error) {
         const err = isError(error) ? error : new Error('Unknown theme initialization error');
         logger.error('Error initializing theme', { 
-          details: { message: err.message, stack: err.stack }
+          details: safeDetails(error)
         });
         
         if (isMounted) {

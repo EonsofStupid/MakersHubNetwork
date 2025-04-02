@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { isValidUUID } from '@/logging/utils/type-guards';
 import { getLogger } from '@/logging';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 const logger = getLogger('ThemeInitializer');
 
@@ -21,7 +22,7 @@ export async function getThemeByName(themeName: string): Promise<string | null> 
       
     if (error) {
       logger.warn(`Error finding theme by name "${themeName}"`, { 
-        details: { error: error.message } 
+        details: safeDetails(error) 
       });
       throw error;
     }
@@ -33,7 +34,7 @@ export async function getThemeByName(themeName: string): Promise<string | null> 
     
     return data.id;
   } catch (err) {
-    logger.error(`Failed to get theme by name "${themeName}"`, { details: { error: err } });
+    logger.error(`Failed to get theme by name "${themeName}"`, { details: safeDetails(err) });
     throw err;
   }
 }
@@ -69,7 +70,7 @@ export async function ensureDefaultTheme(): Promise<string> {
         .eq('id', impulseThemeId);
         
       if (updateError) {
-        logger.warn('Error setting Impulse theme as default', { details: { error: updateError.message } });
+        logger.warn('Error setting Impulse theme as default', { details: safeDetails(updateError) });
       }
       
       return impulseThemeId;
@@ -135,7 +136,7 @@ export async function ensureDefaultTheme(): Promise<string> {
       .single();
       
     if (createError) {
-      logger.error('Error creating default theme', { details: { error: createError.message } });
+      logger.error('Error creating default theme', { details: safeDetails(createError) });
       throw createError;
     }
     
@@ -146,7 +147,7 @@ export async function ensureDefaultTheme(): Promise<string> {
     logger.info('Created new default theme', { details: { id: newTheme.id } });
     return newTheme.id;
   } catch (err) {
-    logger.error('Failed to ensure default theme', { details: { error: err } });
+    logger.error('Failed to ensure default theme', { details: safeDetails(err) });
     throw err;
   }
 }
@@ -171,13 +172,13 @@ export async function validateThemeExists(themeId: string): Promise<boolean> {
       .single();
       
     if (error) {
-      logger.warn('Error validating theme', { details: { error: error.message } });
+      logger.warn('Error validating theme', { details: safeDetails(error) });
       return false;
     }
     
     return !!data;
   } catch (err) {
-    logger.error('Failed to validate theme', { details: { error: err } });
+    logger.error('Failed to validate theme', { details: safeDetails(err) });
     return false;
   }
 }

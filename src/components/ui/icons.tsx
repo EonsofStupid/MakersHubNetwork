@@ -1,9 +1,12 @@
 
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
+import { LucideProps } from 'lucide-react';
+
+type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement> & { size?: number | string }>;
 
 // Export all the Lucide icons directly
-export const Icons = {
+export const Icons: Record<string, IconComponent> = {
   // Application UI icons
   logo: LucideIcons.Atom,
   close: LucideIcons.X,
@@ -44,9 +47,9 @@ export const Icons = {
   
   // Make all Lucide icons available too
   ...Object.entries(LucideIcons).reduce((acc, [name, icon]) => {
-    acc[name] = icon;
+    acc[name] = icon as IconComponent;
     return acc;
-  }, {} as Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>>)
+  }, {} as Record<string, IconComponent>)
 };
 
 /**
@@ -70,7 +73,7 @@ export function DynamicIcon({
   }
 
   // Try to find the icon component
-  const IconComponent = Icons[name as keyof typeof Icons];
+  const IconComponent = Icons[name as keyof typeof Icons] as React.ComponentType<LucideProps>;
   
   if (!IconComponent) {
     console.warn(`Icon "${name}" not found, using fallback`);

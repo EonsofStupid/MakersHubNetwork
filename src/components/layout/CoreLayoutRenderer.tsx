@@ -5,6 +5,7 @@ import { LayoutRenderer } from '@/admin/components/layout/LayoutRenderer';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface CoreLayoutRendererProps {
   layout: Layout | null;
