@@ -19,7 +19,8 @@ export function useAuth() {
     isAdmin,
     logout,
     initialize,
-    isAuthenticated
+    isAuthenticated,
+    initialized
   } = useAuthStore();
   
   const logger = useLogger('useAuth', LogCategory.AUTH);
@@ -44,6 +45,7 @@ export function useAuth() {
     isLoading,
     error,
     isAuthenticated,
+    initialized,
     isAdmin: isAdmin(),
     isSuperAdmin,
     hasRole,

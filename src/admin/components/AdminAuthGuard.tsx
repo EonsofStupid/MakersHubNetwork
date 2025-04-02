@@ -15,21 +15,19 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { hasAdminAccess, isLoading: adminLoading } = useAdminAccess();
-  const { isLoading: authLoading, isAuthenticated, status, initialize, initialized } = useAuth();
+  const { isLoading: authLoading, isAuthenticated, status, initialize } = useAuth();
   const [authChecked, setAuthChecked] = useState(false);
   const logger = useLogger('AdminAuthGuard', LogCategory.ADMIN);
   
   const isLoading = authLoading || adminLoading;
   
   useEffect(() => {
-    // If auth store isn't initialized yet, initialize it
-    if (!initialized) {
-      logger.info('Auth store not initialized, initializing now');
-      initialize().catch(error => {
-        logger.error('Failed to initialize auth store', { details: error });
-      });
-    }
-  }, [initialize, initialized, logger]);
+    // Initialize auth if needed
+    logger.info('Initializing auth check');
+    initialize().catch(error => {
+      logger.error('Failed to initialize auth store', { details: error });
+    });
+  }, [initialize, logger]);
   
   useEffect(() => {
     // Only run this check once auth is no longer loading
