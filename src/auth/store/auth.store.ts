@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { AuthState, AuthStatus, UserRole } from "../types/auth.types";
@@ -6,6 +5,7 @@ import { AuthUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 interface AuthStore extends AuthState {
   // State setters
@@ -132,10 +132,10 @@ export const useAuthStore = create<AuthStore>()(
           }
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : "Unknown error";
-          logger.error("Auth initialization error", { 
+          logger.error('Auth initialization error', {
             category: LogCategory.AUTH,
-            source: "authStore",
-            details: err
+            source: 'auth/store',
+            details: safeDetails(err)
           });
           
           set({
@@ -178,10 +178,10 @@ export const useAuthStore = create<AuthStore>()(
           });
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : "Unknown error";
-          logger.error("Logout error", { 
+          logger.error('Logout error', {
             category: LogCategory.AUTH,
-            source: "authStore",
-            details: err 
+            source: 'auth/store',
+            details: safeDetails(err)
           });
           
           set({

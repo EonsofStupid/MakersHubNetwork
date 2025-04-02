@@ -1,11 +1,10 @@
-
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
-// Default theme variables as fallback
 const defaultThemeVariables: ThemeVariables = {
   background: '#080F1E',
   foreground: '#F9FAFB',
@@ -39,7 +38,6 @@ const defaultThemeVariables: ThemeVariables = {
   radiusFull: '9999px'
 };
 
-// Create context
 const SiteThemeContext = createContext<{
   variables: ThemeVariables;
   isDarkMode: boolean;
@@ -54,7 +52,6 @@ const SiteThemeContext = createContext<{
   animations: {},
 });
 
-// Custom hook to use the theme context
 export const useSiteTheme = () => useContext(SiteThemeContext);
 
 interface SiteThemeProviderProps {
@@ -67,12 +64,10 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
   const logger = useLogger('SiteThemeProvider', LogCategory.UI);
   const variables = useThemeVariables(currentTheme) || defaultThemeVariables;
   
-  // Get UI theme mode from localStorage or default to dark
   const [isDarkMode, setIsDarkMode] = React.useState<boolean>(
     localStorage.getItem('theme-mode') === 'light' ? false : true
   );
   
-  // Toggle dark mode
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
@@ -80,7 +75,6 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
     logger.info(`Theme mode changed to ${newMode ? 'dark' : 'light'}`);
   };
 
-  // Get component styles from theme
   const componentStyles = useMemo(() => {
     if (!currentTheme || !currentTheme.component_tokens) {
       return {};
@@ -89,20 +83,18 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
     const styles: Record<string, any> = {};
     
     try {
-      // Convert component tokens array to a map of component name -> styles
       currentTheme.component_tokens.forEach((component) => {
         if (component && component.component_name) {
           styles[component.component_name] = component.styles || {};
         }
       });
     } catch (error) {
-      logger.error('Error processing component styles', { details: error });
+      logger.error('Error processing component styles', { details: safeDetails(error) });
     }
     
     return styles;
   }, [currentTheme, logger]);
   
-  // Get animations from theme
   const animations = useMemo(() => {
     if (!currentTheme || !currentTheme.design_tokens?.animation?.keyframes) {
       return {};
@@ -111,12 +103,11 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
     try {
       return currentTheme.design_tokens.animation.keyframes || {};
     } catch (error) {
-      logger.error('Error processing animations', { details: error });
+      logger.error('Error processing animations', { details: safeDetails(error) });
       return {};
     }
   }, [currentTheme, logger]);
 
-  // For development debugging
   useEffect(() => {
     if (import.meta.env.DEV) {
       const logThemeDetails = () => {
@@ -132,19 +123,15 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
         }
       };
       
-      // Debounce the log to avoid excessive logging
       const timeoutId = setTimeout(logThemeDetails, 500);
       return () => clearTimeout(timeoutId);
     }
   }, [currentTheme, isLoading, logger]);
 
-  // Apply CSS variables when the theme changes
   useEffect(() => {
-    // Use fallback if needed and specified
     const themeVars = fallbackToDefault && isLoading ? defaultThemeVariables : variables;
     const rootElement = document.documentElement;
     
-    // Apply the CSS variables
     rootElement.style.setProperty('--site-background', themeVars.background);
     rootElement.style.setProperty('--site-foreground', themeVars.foreground);
     rootElement.style.setProperty('--site-card', themeVars.card);
@@ -163,12 +150,10 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
     rootElement.style.setProperty('--site-input', themeVars.input);
     rootElement.style.setProperty('--site-ring', themeVars.ring);
     
-    // Apply effect colors
     rootElement.style.setProperty('--site-effect-color', themeVars.effectColor);
     rootElement.style.setProperty('--site-effect-secondary', themeVars.effectSecondary);
     rootElement.style.setProperty('--site-effect-tertiary', themeVars.effectTertiary);
     
-    // Apply timing values
     rootElement.style.setProperty('--site-transition-fast', themeVars.transitionFast);
     rootElement.style.setProperty('--site-transition-normal', themeVars.transitionNormal);
     rootElement.style.setProperty('--site-transition-slow', themeVars.transitionSlow);
@@ -176,13 +161,11 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
     rootElement.style.setProperty('--site-animation-normal', themeVars.animationNormal);
     rootElement.style.setProperty('--site-animation-slow', themeVars.animationSlow);
     
-    // Apply radius values
     rootElement.style.setProperty('--site-radius-sm', themeVars.radiusSm);
     rootElement.style.setProperty('--site-radius-md', themeVars.radiusMd);
     rootElement.style.setProperty('--site-radius-lg', themeVars.radiusLg);
     rootElement.style.setProperty('--site-radius-full', themeVars.radiusFull);
     
-    // Apply dark/light mode class
     if (isDarkMode) {
       rootElement.classList.add('dark');
       rootElement.classList.remove('light');
