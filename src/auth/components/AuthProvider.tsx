@@ -17,18 +17,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRoles, 
     initialize, 
     setStatus,
-    initialized
+    setInitialized
   } = useAuthStore();
   
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   
   // Initialize auth state on mount
   useEffect(() => {
-    initialize();
-  }, [initialize]);
-  
-  // Set up auth state change listener
-  useEffect(() => {
+    // Set loading state while initializing
+    setStatus('loading');
+    
     logger.info('Setting up auth state change listener');
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -85,20 +83,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
     
+    // CRITICAL CHANGE: Initialize auth in background but don't block rendering
+    initialize()
+      .then(() => {
+        logger.info('Auth initialized successfully');
+      })
+      .catch(error => {
+        logger.error('Failed to initialize auth', { details: error });
+      })
+      .finally(() => {
+        setInitialized(true);
+      });
+    
     return () => {
       logger.info('Cleaning up auth provider');
       subscription.unsubscribe();
     };
-  }, [logger, setUser, setSession, setRoles, setStatus]);
+  }, [logger, setUser, setSession, setRoles, setStatus, initialize, setInitialized]);
   
-  // If not initialized, show loading indicator
-  if (!initialized) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="h-6 w-6 border-t-2 border-primary animate-spin rounded-full" />
-      </div>
-    );
-  }
-  
+  // We no longer block rendering with a loading indicator
   return <>{children}</>;
 }
