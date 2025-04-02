@@ -1,14 +1,19 @@
 import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from 'uuid';
 import { Layout } from '@/admin/types/layout.types';
 import { layoutSkeletonService } from './layoutSkeleton.service';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging/types';
 
 class LayoutSeederService {
+  private logger = getLogger('LayoutSeederService');
+  
   /**
    * Check if core layouts exist and create them if they don't
    */
   async ensureCoreLayoutsExist(): Promise<void> {
-    console.log('Checking for core layouts...');
+    this.logger.info('Checking for core layouts...', {
+      category: LogCategory.SYSTEM
+    });
     
     // Check and create main topnav layout
     await this.ensureLayoutExists('topnav', 'site', this.createMainTopNavLayout());
@@ -19,7 +24,9 @@ class LayoutSeederService {
     // Check and create usermenu layout
     await this.ensureLayoutExists('usermenu', 'site', this.createUserMenuLayout());
     
-    console.log('Core layouts check completed');
+    this.logger.info('Core layouts check completed', {
+      category: LogCategory.SYSTEM
+    });
   }
   
   /**
@@ -35,7 +42,9 @@ class LayoutSeederService {
       const existingLayout = await layoutSkeletonService.getByTypeAndScope(type, scope);
       
       if (!existingLayout?.data) {
-        console.log(`Creating default ${type} layout for ${scope} scope...`);
+        this.logger.info(`Creating default ${type} layout for ${scope} scope...`, {
+          category: LogCategory.SYSTEM
+        });
         
         // Convert layout to layout skeleton format
         const result = await layoutSkeletonService.create({
@@ -52,15 +61,27 @@ class LayoutSeederService {
         });
         
         if (result.success) {
-          console.log(`Created default ${type} layout successfully`);
+          this.logger.info(`Created default ${type} layout successfully`, {
+            category: LogCategory.SYSTEM,
+            details: { layoutId: result.data?.id }
+          });
         } else {
-          console.error(`Failed to create default ${type} layout:`, result.error);
+          this.logger.error(`Failed to create default ${type} layout`, { 
+            category: LogCategory.SYSTEM,
+            details: result.error 
+          });
         }
       } else {
-        console.log(`${type} layout for ${scope} scope already exists`);
+        this.logger.debug(`${type} layout for ${scope} scope already exists`, {
+          category: LogCategory.SYSTEM,
+          details: { layoutId: existingLayout.data.id }
+        });
       }
     } catch (error) {
-      console.error(`Error ensuring ${type} layout exists:`, error);
+      this.logger.error(`Error ensuring ${type} layout exists`, {
+        category: LogCategory.SYSTEM,
+        details: error
+      });
     }
   }
   
@@ -69,7 +90,7 @@ class LayoutSeederService {
    */
   private createMainTopNavLayout(): Layout {
     return {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       name: 'Main TopNav',
       type: 'topnav',
       scope: 'site',
@@ -152,7 +173,7 @@ class LayoutSeederService {
    */
   private createMainFooterLayout(): Layout {
     return {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       name: 'Main Footer',
       type: 'footer',
       scope: 'site',
@@ -382,20 +403,20 @@ class LayoutSeederService {
    */
   private createUserMenuLayout(): Layout {
     return {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       name: 'User Menu',
       type: 'usermenu',
       scope: 'site',
       components: [
         {
-          id: 'usermenu-root',
+          id: 'user-menu-root',
           type: 'div',
           props: {
-            className: 'flex items-center gap-4'
+            className: 'user-menu-container'
           },
           children: [
             {
-              id: 'usermenu-component',
+              id: 'user-menu-content',
               type: 'UserMenu'
             }
           ]
@@ -406,4 +427,5 @@ class LayoutSeederService {
   }
 }
 
+// Create singleton instance
 export const layoutSeederService = new LayoutSeederService();
