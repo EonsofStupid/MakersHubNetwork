@@ -15,6 +15,9 @@ interface ThemeInitializerProps {
   children: React.ReactNode;
 }
 
+const FALLBACK_TIMEOUT = 1000; // 1 second fallback timeout
+const THEME_NAME = 'Impulse'; // Consistent theme name
+
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   // Track state in more detail for better debugging
   const [isInitialized, setIsInitialized] = useState(false);
@@ -48,7 +51,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
       
       return () => clearTimeout(timer);
     }
-  }, [themeStoreError, isInitialized, initializationAttempted, failedAttempts, logger, toast]);
+  }, [themeStoreError, isInitialized, initializationAttempted, failedAttempts, logger]);
 
   useEffect(() => {
     let isMounted = true;
@@ -67,16 +70,16 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
             logger.warn('Theme initialization timed out, continuing with default theme');
             setIsInitialized(true);
           }
-        }, 1000); // Reduced to 1 second for faster fallback
+        }, FALLBACK_TIMEOUT);
         
         // First try loading the Impulse theme by name
         let themeId: string | null = null;
         
         try {
-          themeId = await getThemeByName('Impulse');
-          logger.info('Attempting to load Impulse theme', { details: { themeId }});
+          themeId = await getThemeByName(THEME_NAME);
+          logger.info(`Attempting to load ${THEME_NAME} theme`, { details: { themeId }});
         } catch (err) {
-          logger.warn('Error loading Impulse theme by name, trying default theme', { 
+          logger.warn(`Error loading ${THEME_NAME} theme by name, trying default theme`, { 
             details: { error: isError(err) ? err.message : 'Unknown error' } 
           });
           

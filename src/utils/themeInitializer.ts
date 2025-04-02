@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ComponentTokens } from '@/types/theme';
 import { Json } from '@/integrations/supabase/types';
@@ -19,7 +20,7 @@ export async function getThemeByName(themeName: string): Promise<string | null> 
     const { data: themes, error } = await supabase
       .from('themes')
       .select('id')
-      .ilike('name', `%${themeName}%')
+      .ilike('name', `%${themeName}%`)
       .limit(1);
     
     if (error) {
