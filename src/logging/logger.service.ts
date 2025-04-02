@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { LogCategory, LogEntry, LogTransport, LoggingConfig } from './types';
 import { LogLevel, isLogLevelAtLeast } from './constants/log-level';
 import { defaultLoggingConfig } from './config';
+import { isRecord } from '@/shared/utils/type-guards';
 
 /**
  * Logger service - main class for logging management
@@ -120,7 +121,7 @@ export class LoggerService {
     tags?: string[];
   }): void {
     const category = options?.category || LogCategory.PERFORMANCE;
-    const details = options?.details ? 
+    const processedDetails = isRecord(options?.details) ? 
       { ...options.details, duration } : 
       { duration };
       
@@ -130,7 +131,7 @@ export class LoggerService {
       {
         ...options,
         category,
-        details
+        details: processedDetails
       }
     );
   }
@@ -158,6 +159,9 @@ export class LoggerService {
       return;
     }
     
+    // Process details with type safety
+    const safeDetails = isRecord(options?.details) ? options.details : undefined;
+    
     // Create the log entry
     const entry: LogEntry = {
       id: uuidv4(),
@@ -165,7 +169,7 @@ export class LoggerService {
       level,
       category: options?.category || LogCategory.SYSTEM,
       message,
-      details: options?.details,
+      details: safeDetails,
       duration: options?.duration,
       tags: options?.tags
     };
