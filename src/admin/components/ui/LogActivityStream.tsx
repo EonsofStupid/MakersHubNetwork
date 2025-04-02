@@ -11,22 +11,22 @@ import { safelyRenderNode } from '@/shared/utils/react-utils';
 
 interface LogActivityStreamProps {
   maxEntries?: number;
-  height?: string;
   autoScroll?: boolean;
   level?: LogLevel;
   categories?: LogCategory[];
   showSource?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export function LogActivityStream({
   maxEntries = 50,
-  height = '300px',
   autoScroll = true,
   level = LogLevel.INFO,
   categories,
   showSource = false,
-  className
+  className,
+  style
 }: LogActivityStreamProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -111,7 +111,7 @@ export function LogActivityStream({
         "border border-[var(--impulse-border-normal)] rounded-md",
         className
       )}
-      style={{ height }}
+      style={style}
     >
       {logs.length === 0 ? (
         <div className="flex items-center justify-center h-full text-[var(--impulse-text-secondary)] italic p-4">
