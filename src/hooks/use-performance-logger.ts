@@ -2,7 +2,7 @@
 import { usePerformanceLogger } from '@/logging';
 
 /**
- * Re-export the new implementation from the centralized logging system
+ * Re-export the performance logger hook from the centralized logging system
  * to maintain backward compatibility
  */
 export { usePerformanceLogger };

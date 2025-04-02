@@ -1,11 +1,26 @@
 
 /**
- * Logging system type definitions
+ * Core logging system type definitions
  */
 
-import { LogLevel } from './constants/log-level';
 import React from 'react';
 
+/**
+ * Log levels in order of severity
+ */
+export enum LogLevel {
+  TRACE = 0,
+  DEBUG = 1,
+  INFO = 2,
+  WARN = 3,
+  ERROR = 4,
+  CRITICAL = 5,
+  SUCCESS = 6
+}
+
+/**
+ * Log categories for grouping and filtering
+ */
 export enum LogCategory {
   SYSTEM = 'system',
   NETWORK = 'network',
@@ -20,6 +35,9 @@ export enum LogCategory {
   GENERAL = 'general'
 }
 
+/**
+ * Log entry structure
+ */
 export interface LogEntry {
   id: string;
   timestamp: Date;
@@ -30,15 +48,22 @@ export interface LogEntry {
   details?: Record<string, unknown>;
   userId?: string;
   sessionId?: string;
-  duration?: number; // For performance logs
   tags?: string[];
 }
 
+/**
+ * Transport interface for sending logs to different destinations
+ */
 export interface LogTransport {
   log(entry: LogEntry): void;
   flush?(): Promise<void>;
+  getLogs?(): LogEntry[];
+  clear?(): void;
 }
 
+/**
+ * Configuration options for the logging system
+ */
 export interface LoggingConfig {
   minLevel: LogLevel;
   enabledCategories?: LogCategory[];
@@ -50,8 +75,47 @@ export interface LoggingConfig {
   includeSession?: boolean;
 }
 
-// Define the callback type for log events
+/**
+ * Callback type for log events
+ */
 export type LogEventCallback = (entry: LogEntry) => void;
 
-// Re-export LogLevel for backward compatibility
-export { LogLevel } from './constants/log-level';
+/**
+ * Logger interface
+ */
+export interface Logger {
+  trace: (message: string, options?: LoggerOptions) => void;
+  debug: (message: string, options?: LoggerOptions) => void;
+  info: (message: string, options?: LoggerOptions) => void;
+  warn: (message: string, options?: LoggerOptions) => void;
+  error: (message: string, options?: LoggerOptions) => void;
+  critical: (message: string, options?: LoggerOptions) => void;
+  success: (message: string, options?: LoggerOptions) => void;
+  performance: (message: string, duration: number, options?: LoggerOptions) => void;
+}
+
+/**
+ * Options for individual log messages
+ */
+export interface LoggerOptions {
+  category?: LogCategory;
+  details?: Record<string, unknown>;
+  tags?: string[];
+}
+
+/**
+ * Performance measurement utility interface
+ */
+export interface PerformanceMeasurement {
+  start: (name: string) => void;
+  end: (name: string, description?: string, tags?: string[]) => number;
+  measure: <T>(name: string, operation: () => T | Promise<T>, description?: string, tags?: string[]) => Promise<T>;
+}
+
+/**
+ * Performance measurement result
+ */
+export interface MeasurementResult<T> {
+  result: T;
+  duration: number;
+}

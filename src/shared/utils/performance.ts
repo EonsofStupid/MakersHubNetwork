@@ -1,8 +1,9 @@
 
-import { createSimpleMeasurement, measureExecution } from '@/logging';
+import { createSimpleMeasurement, measurePerformance } from '@/logging';
 
 /**
- * Re-export the core utilities from the logging system
+ * Re-export the performance measurement utilities from the centralized logging system
  * to maintain backward compatibility
  */
-export { createSimpleMeasurement, measureExecution };
+export { createSimpleMeasurement, measurePerformance as measureExecution };
+

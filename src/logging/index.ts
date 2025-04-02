@@ -1,56 +1,56 @@
 
-import { LoggerService, getLogger } from './core/logger.service';
+// Core functionality
+import { loggerService, getLogger } from './service';
 import { LogCategory, LogLevel } from './types';
-import { getLoggingConfig } from './config';
-import { memoryTransport } from './transports/memory.transport';
-import { logEventEmitter } from './events/log-event-emitter';
+import { memoryTransport } from './transports/memory';
+import { logEventEmitter } from './events';
 
 // Re-export types and constants
 export { LogCategory, LogLevel } from './types';
-export { LOG_LEVEL_NAMES } from './constants/log-level';
-export { LoggingProvider, useLoggingContext } from './context/LoggingContext';
-export { LogConsole } from './components/LogConsole';
-export { LogToggleButton } from './components/LogToggleButton';
+export { LOG_LEVEL_NAMES, isLogLevelAtLeast } from './constants';
 
-// Re-export memory transport for direct access
-export { memoryTransport } from './transports/memory.transport';
+// Re-export hooks for React components
+export { useLogger } from './hooks/useLogger';
+export { usePerformanceLogger, useComponentPerformance } from './hooks/usePerformance';
 
-// Re-export hooks
-export { useLogger } from './hooks/use-logger';
-export { usePerformanceLogger, useComponentPerformance } from './hooks/use-performance';
+// Re-export utility functions
+export { safelyRenderNode, nodeToSearchableString } from './utils/react';
+export { 
+  createMeasurement, 
+  measureExecution, 
+  createSimpleMeasurement, 
+  measurePerformance 
+} from './utils/performance';
 
-// Re-export utils
-export * from './utils/react-utils';
-export * from './utils/performance';
+// Export memory transport for direct access
+export { memoryTransport } from './transports/memory';
 
 // Initialize the logging system
 export function initializeLogger(): void {
   try {
-    const config = getLoggingConfig();
-    const logger = LoggerService.getInstance(config);
-    logger.info('Logging system initialized successfully', {
-      category: LogCategory.SYSTEM,
-      source: 'LoggingSystem'
+    loggerService.info('Logging system initialized successfully', {
+      source: 'LoggingSystem',
+      category: LogCategory.SYSTEM
     });
   } catch (error) {
     console.error('Failed to initialize logging system:', error);
   }
 }
 
-// Export getLogger for convenience
-export { getLogger };
-
 // Get all logs
 export function getLogs() {
-  return LoggerService.getInstance().getLogs();
+  return loggerService.getLogs();
 }
 
 // Clear logs
 export function clearLogs() {
-  LoggerService.getInstance().clearLogs();
+  loggerService.clearLogs();
 }
 
 // Register callback for log events
 export function onLog(callback: (entry: any) => void) {
   return logEventEmitter.onLog(callback);
 }
+
+// Export getLogger for creating scoped loggers
+export { getLogger };

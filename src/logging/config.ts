@@ -1,8 +1,7 @@
 
 import { LoggingConfig, LogCategory, LogLevel } from './types';
-import { consoleTransport } from './transports/console.transport';
-import { memoryTransport } from './transports/memory.transport';
-import { supabaseTransport } from './transports/supabase.transport';
+import { consoleTransport } from './transports/console';
+import { memoryTransport } from './transports/memory';
 
 /**
  * Default logging configuration
@@ -18,8 +17,6 @@ export const defaultLoggingConfig: LoggingConfig = {
   transports: [
     consoleTransport,
     memoryTransport,
-    // Only include Supabase transport in production
-    ...(process.env.NODE_ENV === 'production' ? [supabaseTransport] : [])
   ],
   
   // Buffer settings
@@ -84,4 +81,13 @@ export function getLoggingConfig(): LoggingConfig {
   }
   
   return developmentLoggingConfig;
+}
+
+// Add Production Supabase transport conditionally
+if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
+  import('./transports/supabase').then(({ supabaseTransport }) => {
+    productionLoggingConfig.transports.push(supabaseTransport);
+  }).catch(error => {
+    console.error('Failed to load Supabase transport:', error);
+  });
 }
