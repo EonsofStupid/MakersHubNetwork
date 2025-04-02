@@ -101,16 +101,16 @@ export interface Logger {
 export interface LoggerOptions {
   category?: LogCategory;
   details?: Record<string, unknown>;
+  source?: string;
   tags?: string[];
 }
 
 /**
- * Performance measurement utility interface
+ * Performance measurement options
  */
-export interface PerformanceMeasurement {
-  start: (name: string) => void;
-  end: (name: string, description?: string, tags?: string[]) => number;
-  measure: <T>(name: string, operation: () => T | Promise<T>, description?: string, tags?: string[]) => Promise<T>;
+export interface PerformanceMeasurementOptions {
+  category?: LogCategory;
+  tags?: string[];
 }
 
 /**

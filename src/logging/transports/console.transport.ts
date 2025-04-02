@@ -1,6 +1,6 @@
 
 import { LogEntry, LogLevel, LogTransport } from '../types';
-import { LOG_LEVEL_NAMES, isLogLevelAtLeast } from '../constants/log-level';
+import { LOG_LEVEL_NAMES } from '../constants/log-level';
 
 /**
  * Transport that logs to the browser console

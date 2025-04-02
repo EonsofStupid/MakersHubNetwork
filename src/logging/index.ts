@@ -4,6 +4,7 @@ import { loggerService, getLogger } from './service/logger.service';
 import { LogCategory, LogLevel } from './types';
 import { memoryTransport } from './transports/memory.transport';
 import { logEventEmitter } from './events';
+import { LoggingProvider, useLoggingContext } from './context/LoggingContext';
 
 // Re-export types and constants
 export { LogCategory, LogLevel } from './types';
@@ -23,6 +24,9 @@ export {
   createSimpleMeasurement, 
   measurePerformance 
 } from './utils/performance';
+
+// Export context provider
+export { LoggingProvider, useLoggingContext };
 
 // Export memory transport for direct access
 export { memoryTransport } from './transports/memory.transport';

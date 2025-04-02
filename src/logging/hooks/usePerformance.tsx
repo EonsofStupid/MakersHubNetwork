@@ -1,80 +1,87 @@
 
-import { useCallback } from 'react';
-import { LogCategory } from '../types';
+import { useCallback, useMemo } from 'react';
 import { useLogger } from './useLogger';
-import { createSimpleMeasurement } from '../utils/performance';
+import { LogCategory, PerformanceMeasurementOptions } from '../types';
+import { createMeasurement } from '../utils/performance';
 
 /**
- * Hook for measuring performance within React components
- * @param source The source/component name
- * @returns Performance measurement utilities
+ * Hook for measuring performance in React components
  */
-export function usePerformanceLogger(source: string) {
+export function usePerformanceLogger(source: string = 'performance') {
   const logger = useLogger(source, LogCategory.PERFORMANCE);
-  const simpleMeasurement = createSimpleMeasurement();
   
-  // Start measuring
-  const start = useCallback((name: string) => {
-    simpleMeasurement.start(name);
-  }, [simpleMeasurement]);
+  // Create performance measurement utilities
+  const { start, end, measure } = useMemo(() => {
+    return createMeasurement(source);
+  }, [source]);
   
-  // End measuring and log
-  const end = useCallback((name: string, description?: string) => {
-    const duration = simpleMeasurement.end(name);
-    
-    if (duration === 0) {
-      return 0;
-    }
-    
-    // Log the performance
-    const message = description || `Completed ${name}`;
-    logger.performance(message, duration, { 
-      details: { name, duration } 
-    });
-    
-    return duration;
-  }, [simpleMeasurement, logger]);
-  
-  // Measure an operation
-  const measure = useCallback(async <T,>(
+  // Measure async function execution
+  const measureAsync = useCallback(async <T>(
     name: string,
-    operation: () => T | Promise<T>,
-    description?: string
+    fn: () => Promise<T> | T,
+    options?: PerformanceMeasurementOptions
   ): Promise<T> => {
+    const startTime = performance.now();
     try {
-      const { result, duration } = await simpleMeasurement.measure(name, operation);
+      const result = await fn();
+      const duration = performance.now() - startTime;
       
-      // Log the performance
-      const message = description || `Completed ${name}`;
-      logger.performance(message, duration, { 
-        details: { name, duration } 
+      logger.performance(name, duration, {
+        category: options?.category || LogCategory.PERFORMANCE,
+        tags: options?.tags
       });
       
       return result;
     } catch (error) {
-      // The error already has duration info from simpleMeasurement
-      const duration = (error as any).duration || 0;
-      
-      // Log the failed operation
-      logger.performance(`Failed ${name}`, duration, { 
-        details: { name, error } 
+      const duration = performance.now() - startTime;
+      logger.error(`${name} failed after ${duration.toFixed(2)}ms`, {
+        category: options?.category || LogCategory.PERFORMANCE,
+        details: { error }
       });
-      
       throw error;
     }
-  }, [simpleMeasurement, logger]);
-  
-  const measureAsync = measure; // Alias for clarity when using with async functions
+  }, [logger]);
   
   return {
     start,
     end,
     measure,
-    measureAsync
+    measureAsync,
+    
+    // Shorthand for common operations
+    measureRender: useCallback((componentName: string, renderTime: number) => {
+      logger.performance(`${componentName} render`, renderTime, {
+        tags: ['render']
+      });
+    }, [logger]),
+    
+    measureEffect: useCallback((effectName: string, fn: () => void | (() => void)) => {
+      const startTime = performance.now();
+      const cleanup = fn();
+      const duration = performance.now() - startTime;
+      
+      logger.performance(`Effect: ${effectName}`, duration, {
+        tags: ['effect']
+      });
+      
+      return cleanup;
+    }, [logger])
   };
 }
 
 /**
- * Re-export the component performance hook from React utilities
+ * Hook for measuring component render performance
  */
-export { useComponentPerformance } from '../utils/react';
+export function useComponentPerformance(componentName: string) {
+  const { measureRender } = usePerformanceLogger();
+  
+  useMemo(() => {
+    const startTime = performance.now();
+    return () => {
+      const renderTime = performance.now() - startTime;
+      measureRender(componentName, renderTime);
+    };
+  }, [componentName, measureRender])();
+  
+  return null; // No render output
+}
