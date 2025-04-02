@@ -11,8 +11,9 @@ import {
 import { consoleTransport } from '../transports/console.transport';
 import { memoryTransport } from '../transports/memory.transport';
 import { logEventEmitter } from '../events';
-import { isRecord } from '../utils/type-guards';
+import { isRecord, toLogDetails } from '../utils/type-guards';
 import { defaultLoggingConfig } from '../config/default-config';
+import { safelyRenderNode } from '../utils/react';
 
 /**
  * Core logger service implementation
@@ -165,7 +166,10 @@ class LoggerService {
     options?: LoggerOptions
   ): void {
     const category = options?.category || LogCategory.PERFORMANCE;
-    const details = { ...(options?.details || {}), duration };
+    const details = { 
+      ...(isRecord(options?.details) ? options.details : {}), 
+      duration 
+    };
     
     this.log(
       duration > 1000 ? LogLevel.WARN : LogLevel.INFO,
@@ -190,14 +194,17 @@ class LoggerService {
       return; // Log was filtered out
     }
     
+    // Process details to ensure they're in a consistent format
+    const processedDetails = options?.details ? toLogDetails(options.details) : undefined;
+    
     // Create the log entry
     const entry: LogEntry = {
       id: uuidv4(),
       timestamp: new Date(),
       level,
       category: options?.category || LogCategory.GENERAL,
-      message,
-      details: isRecord(options?.details) ? options.details : undefined,
+      message: safelyRenderNode(message),
+      details: processedDetails,
       tags: options?.tags
     };
     
@@ -328,8 +335,12 @@ export function getLogger(source: string = 'App'): Logger {
 /**
  * Initialize the logging system
  */
-export function initializeLogger(): void {
+export function initializeLogger(config?: LoggingConfig): void {
   try {
+    if (config) {
+      LoggerService.getInstance(config);
+    }
+    
     const logger = getLogger('LoggingSystem');
     logger.info('Logging system initialized successfully', {
       category: LogCategory.SYSTEM

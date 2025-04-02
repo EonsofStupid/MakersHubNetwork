@@ -1,6 +1,7 @@
 
 import { getLogger } from '../service/logger.service';
 import { LogCategory, PerformanceMeasurementOptions, MeasurementResult } from '../types';
+import { toLogDetails } from './type-guards';
 
 /**
  * Create a simple measurement utility for tracking performance
@@ -11,13 +12,49 @@ export function createSimpleMeasurement() {
   return {
     start: (name: string) => {
       timers[name] = performance.now();
+      
+      if (typeof performance.mark === 'function') {
+        try {
+          performance.mark(`${name}:start`);
+        } catch (e) {
+          // Silence browser compatibility errors
+        }
+      }
     },
+    
     end: (name: string) => {
       const start = timers[name];
       if (start == null) return 0;
+      
       const duration = performance.now() - start;
       delete timers[name];
+      
+      if (typeof performance.mark === 'function') {
+        try {
+          performance.mark(`${name}:end`);
+          if (typeof performance.measure === 'function') {
+            performance.measure(name, `${name}:start`, `${name}:end`);
+          }
+        } catch (e) {
+          // Silence browser compatibility errors
+        }
+      }
+      
       return duration;
+    },
+    
+    measure: async <T>(name: string, fn: () => T | Promise<T>): Promise<MeasurementResult<T>> => {
+      const startTime = performance.now();
+      
+      try {
+        const result = await Promise.resolve(fn());
+        const duration = performance.now() - startTime;
+        
+        return { result, duration };
+      } catch (error) {
+        const duration = performance.now() - startTime;
+        throw Object.assign(error, { duration });
+      }
     }
   };
 }
@@ -48,11 +85,11 @@ export async function measureExecution<T>(
     
     logger.error(`Error in measured function: ${name}`, {
       category: LogCategory.PERFORMANCE,
-      details: { 
-        error, 
+      details: toLogDetails({
+        error,
         duration,
         ...options?.details
-      }
+      })
     });
     
     throw error;
