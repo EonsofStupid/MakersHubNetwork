@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/auth/hooks/useAuth';
 import { useLogger } from '@/hooks/use-logger';
@@ -44,7 +45,9 @@ export function useAdminAccess() {
       
       setHasAdminAccess(hasAccess);
     } catch (error) {
-      logger.error("Error checking admin access", { details: error });
+      logger.error("Error checking admin access", { 
+        details: formatLogDetails(error)
+      });
       setHasAdminAccess(false);
     }
   }, [logger, user, roles, status, isAuthenticated]);

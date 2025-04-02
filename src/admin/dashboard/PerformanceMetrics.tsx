@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { usePerformanceStore } from "@/stores/performance/store";
@@ -234,3 +235,6 @@ export function PerformanceMetrics() {
     </Card>
   );
 }
+
+// Default export for React.lazy compatibility
+export default PerformanceMetrics;

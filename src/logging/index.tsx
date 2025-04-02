@@ -1,3 +1,4 @@
+
 // Core types
 export { LogCategory, LogLevel } from './types';
 export type { 
@@ -98,6 +99,9 @@ export {
 export {
   uiTransport
 } from './transports/ui-transport';
+
+// Export the formatLogDetails utility for use throughout the app
+export { formatLogDetails } from './utils/details-formatter';
 
 // Helper functions for working with logs
 export function getLogs() {
