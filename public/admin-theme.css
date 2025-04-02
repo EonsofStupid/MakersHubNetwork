@@ -1,4 +1,9 @@
 
+/**
+ * Impulsivity Admin Theme
+ * Core CSS variables and component styles
+ */
+
 :root {
   /* Core Impulsivity variables with cyberpunk-inspired values */
   --impulse-primary: #00F0FF;
@@ -25,10 +30,28 @@
   --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.7);
   --impulse-glow-hover: 0 0 20px rgba(0, 240, 255, 0.9);
   
-  /* Admin-specific variables */
+  /* Animation speeds */
+  --impulse-duration-fast: 150ms;
+  --impulse-duration-normal: 300ms;
+  --impulse-duration-slow: 500ms;
+  
+  /* Animation curves */
+  --impulse-curve-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --impulse-curve-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --impulse-curve-spring: cubic-bezier(0.43, 0.13, 0.23, 0.96);
+  
+  /* Component specific */
+  --impulse-panel-radius: 0.75rem;
+  --impulse-panel-padding: 1rem;
+  --impulse-button-radius: 0.5rem;
+  --impulse-button-padding: 0.5rem 1rem;
+  --impulse-tooltip-radius: 0.25rem;
+  --impulse-tooltip-padding: 0.5rem;
+  
+  /* Admin-specific variables (for backward compatibility) */
   --admin-accent: var(--impulse-primary);
   --admin-accent-2: var(--impulse-secondary);
-  --admin-border: var(--impulse-bg-card);
+  --admin-border: var(--impulse-border-normal);
   --admin-text-secondary: var(--impulse-text-secondary);
 }
 
@@ -48,7 +71,7 @@
   width: 100%;
 }
 
-/* Use impulsivity as the data attribute */
+/* Use impulsivity as the theme data attribute */
 [data-admin-theme="impulsivity"] {
   background-color: var(--impulse-bg-main);
   color: var(--impulse-text-primary);
@@ -64,11 +87,13 @@
 .admin-card {
   background-color: var(--impulse-bg-card);
   border: 1px solid var(--impulse-border-normal);
+  border-radius: var(--impulse-panel-radius);
 }
 
 /* Glowing borders */
 .glow-border {
   position: relative;
+  transition: all var(--impulse-duration-normal) var(--impulse-curve-ease);
 }
 
 .glow-border::after {
@@ -77,8 +102,9 @@
   inset: 0;
   border: 1px solid var(--impulse-primary);
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity var(--impulse-duration-normal);
   box-shadow: 0 0 8px var(--impulse-primary);
+  border-radius: inherit;
 }
 
 .glow-border:hover::after {
@@ -100,4 +126,61 @@
   background-size: 20px 20px;
   opacity: 0.1;
   pointer-events: none;
+}
+
+/* Cyberpunk button */
+.cyber-button {
+  background-color: transparent;
+  color: var(--impulse-text-accent);
+  border: 1px solid var(--impulse-border-normal);
+  border-radius: var(--impulse-button-radius);
+  padding: var(--impulse-button-padding);
+  transition: all var(--impulse-duration-fast) var(--impulse-curve-ease);
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-button:hover {
+  background-color: rgba(0, 240, 255, 0.1);
+  border-color: var(--impulse-border-hover);
+  box-shadow: var(--impulse-glow-hover);
+  transform: translateY(-2px);
+}
+
+.cyber-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg, 
+    transparent, 
+    rgba(0, 240, 255, 0.2), 
+    transparent
+  );
+  transform: translateX(-100%);
+  transition: transform var(--impulse-duration-normal);
+}
+
+.cyber-button:hover::before {
+  transform: translateX(100%);
+}
+
+/* Dark/light mode support */
+.admin-dark-mode {
+  color-scheme: dark;
+}
+
+.admin-light-mode {
+  color-scheme: light;
+  --impulse-bg-main: #F8FAFC;
+  --impulse-bg-overlay: rgba(248, 250, 252, 0.85);
+  --impulse-bg-card: rgba(255, 255, 255, 0.7);
+  --impulse-text-primary: #0F172A;
+  --impulse-text-secondary: rgba(15, 23, 42, 0.7);
+  --impulse-border-normal: rgba(203, 213, 225, 0.8);
+  --impulse-border-hover: rgba(148, 163, 184, 0.8);
+  --impulse-border-active: rgba(100, 116, 139, 0.8);
 }

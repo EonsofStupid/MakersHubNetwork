@@ -84,3 +84,11 @@ export interface ImpulseThemeVariant {
   baseTheme: string;
   overrides: Record<string, string>;
 }
+
+export type ThemeRegistry = {
+  [key: string]: {
+    name: string;
+    description: string;
+    theme: ImpulseTheme;
+  };
+};

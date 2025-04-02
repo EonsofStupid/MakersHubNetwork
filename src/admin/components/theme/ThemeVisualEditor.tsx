@@ -1,183 +1,299 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { 
-  Palette, 
-  Sliders, 
-  Box, 
-  Type, 
-  Sparkles, 
-  Save,
-  RotateCcw
-} from "lucide-react";
-import { useImpulseTheme } from '@/admin/theme/hooks/useImpulseTheme';
-import { DEFAULT_THEME_NAME } from '@/utils/themeInitializer';
-import { 
-  syncCSSToDatabase, 
-  getReadableLabel 
-} from '@/utils/themeUtils';
+import { Palette, Check, RotateCcw } from "lucide-react";
+import { useImpulsivityStore } from '@/admin/store/impulse.store';
+import { flattenTheme, getReadableLabel } from '@/admin/theme/utils/themeUtils';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/use-toast';
+import { getAllThemes } from '@/admin/theme/registry';
 
-/**
- * Theme Visual Editor
- * A component for visually editing the Impulsivity theme
- */
 export function ThemeVisualEditor() {
-  const { 
-    theme, 
-    updateThemeValue, 
-    resetTheme, 
-    saveTheme, 
-    isLoading, 
-    isSaving, 
-    isDirty 
-  } = useImpulseTheme();
-  const [syncingCSS, setSyncingCSS] = useState(false);
+  const { theme, setTheme, saveTheme, resetTheme, isDirty, isLoading } = useImpulsivityStore();
+  const [activeTab, setActiveTab] = useState("colors");
+  const [searchTerm, setSearchTerm] = useState("");
+  const availableThemes = getAllThemes();
   
-  // Handler for color input changes
-  const handleColorChange = (path: string, value: string) => {
-    updateThemeValue(path, value);
+  // Filter theme properties based on search term and active tab
+  const filteredProperties = flattenTheme(theme)
+    .filter(prop => {
+      const matchesSearch = searchTerm === "" || 
+        prop.path.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(prop.value).toLowerCase().includes(searchTerm.toLowerCase());
+        
+      const matchesTab = activeTab === "all" || prop.path.startsWith(activeTab);
+      
+      return matchesSearch && matchesTab;
+    })
+    .sort((a, b) => a.path.localeCompare(b.path));
+  
+  // Handle property value change
+  const handlePropertyChange = (path: string, value: any) => {
+    // Update the specific property
+    setTheme({ [path]: value } as any);
   };
   
-  // Handle saving theme and syncing CSS
-  const handleSaveAndSync = async () => {
-    await saveTheme();
-    setSyncingCSS(true);
-    
+  // Handle the save action
+  const handleSave = async () => {
     try {
-      // For now, this is just a placeholder since we don't have the theme ID
-      // In the future, this will be used to sync CSS to the database
-      await syncCSSToDatabase('placeholder-id');
+      await saveTheme();
+      toast({
+        title: "Theme saved",
+        description: "Your theme changes have been saved successfully.",
+        duration: 3000,
+      });
     } catch (error) {
-      console.error('Error syncing CSS:', error);
-    } finally {
-      setSyncingCSS(false);
+      toast({
+        title: "Error saving theme",
+        description: "There was an error saving your theme changes.",
+        variant: "destructive",
+        duration: 5000,
+      });
     }
   };
   
-  // This is just a foundation for the visual editor
-  // More functionality will be added in future implementations
+  // Handle reset to defaults
+  const handleReset = () => {
+    resetTheme();
+    toast({
+      title: "Theme reset",
+      description: "Theme has been reset to default values.",
+      duration: 3000,
+    });
+  };
+  
+  // Load theme on component mount
+  useEffect(() => {
+    async function loadThemeData() {
+      try {
+        await useImpulsivityStore.getState().loadTheme();
+      } catch (error) {
+        toast({
+          title: "Error loading theme",
+          description: "There was an error loading the theme data.",
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+    }
+    
+    loadThemeData();
+  }, []);
+  
   return (
-    <Card className="shadow-md border-primary/20">
-      <CardHeader className="border-b border-border/30">
-        <div className="flex justify-between items-center">
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="h-5 w-5 text-primary" />
-            {DEFAULT_THEME_NAME} Theme Editor
-          </CardTitle>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={resetTheme}
-              disabled={isLoading || isSaving}
-            >
-              <RotateCcw className="h-4 w-4 mr-1" />
-              Reset
-            </Button>
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={handleSaveAndSync}
-              disabled={isLoading || isSaving || !isDirty}
-            >
-              <Save className="h-4 w-4 mr-1" />
-              {isSaving || syncingCSS ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Palette className="text-primary w-5 h-5" />
+          <h2 className="text-xl font-semibold">Impulsivity Theme Editor</h2>
         </div>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <Tabs defaultValue="colors">
-          <TabsList className="grid grid-cols-5 mb-4">
-            <TabsTrigger value="colors">
-              <Palette className="h-4 w-4 mr-1" />
-              Colors
-            </TabsTrigger>
-            <TabsTrigger value="effects">
-              <Sparkles className="h-4 w-4 mr-1" />
-              Effects
-            </TabsTrigger>
-            <TabsTrigger value="components">
-              <Box className="h-4 w-4 mr-1" />
-              Components
-            </TabsTrigger>
-            <TabsTrigger value="typography">
-              <Type className="h-4 w-4 mr-1" />
-              Typography
-            </TabsTrigger>
-            <TabsTrigger value="animation">
-              <Sliders className="h-4 w-4 mr-1" />
-              Animation
-            </TabsTrigger>
-          </TabsList>
+        
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleReset}
+            disabled={isLoading}
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Reset
+          </Button>
           
-          <TabsContent value="colors" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Primary Color</Label>
-                <div className="flex gap-2">
-                  <div 
-                    className="w-8 h-8 rounded-md border border-border" 
-                    style={{ backgroundColor: theme.colors.primary }}
-                  />
-                  <Input 
-                    type="text" 
-                    value={theme.colors.primary} 
-                    onChange={(e) => handleColorChange('colors.primary', e.target.value)}
-                  />
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleSave}
+            disabled={!isDirty || isLoading}
+          >
+            <Check className="w-4 h-4 mr-2" />
+            Save Changes
+          </Button>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Theme Properties</CardTitle>
+              <div className="flex items-center">
+                <Input
+                  placeholder="Search properties..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="max-w-sm"
+                />
+              </div>
+            </CardHeader>
+            
+            <CardContent>
+              <Tabs defaultValue="colors" value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="mb-4">
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  <TabsTrigger value="colors">Colors</TabsTrigger>
+                  <TabsTrigger value="effects">Effects</TabsTrigger>
+                  <TabsTrigger value="animation">Animation</TabsTrigger>
+                  <TabsTrigger value="components">Components</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value={activeTab} className="space-y-4">
+                  {filteredProperties.length > 0 ? (
+                    filteredProperties.map(({ path, value, type }) => (
+                      <div key={path} className="grid grid-cols-12 gap-4 items-center py-2 border-b border-border/50 last:border-0">
+                        <div className="col-span-5 lg:col-span-4">
+                          <Label htmlFor={path}>{getReadableLabel(path)}</Label>
+                          <div className="text-xs text-muted-foreground mt-1">{path}</div>
+                        </div>
+                        
+                        <div className="col-span-7 lg:col-span-8">
+                          {type === 'color' ? (
+                            <div className="flex gap-2 items-center">
+                              <div 
+                                className="w-6 h-6 rounded-full border border-border shadow-sm"
+                                style={{ backgroundColor: value }}
+                              />
+                              <Input
+                                id={path}
+                                type="text"
+                                value={value}
+                                onChange={(e) => handlePropertyChange(path, e.target.value)}
+                              />
+                            </div>
+                          ) : type === 'number' ? (
+                            <Input
+                              id={path}
+                              type="number"
+                              value={value}
+                              onChange={(e) => handlePropertyChange(path, parseFloat(e.target.value))}
+                            />
+                          ) : (
+                            <Input
+                              id={path}
+                              type="text"
+                              value={value}
+                              onChange={(e) => handlePropertyChange(path, e.target.value)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-10">
+                      <p className="text-muted-foreground">No properties found matching your filters.</p>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="lg:col-span-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Theme Preview</CardTitle>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              <div 
+                className="rounded-lg p-4 border border-border/50"
+                style={{ 
+                  backgroundColor: theme.colors.background.main, 
+                  color: theme.colors.text.primary 
+                }}
+              >
+                <h3 
+                  className="mb-2"
+                  style={{ color: theme.colors.text.accent }}
+                >Preview Panel</h3>
+                
+                <p 
+                  className="text-sm mb-4"
+                  style={{ color: theme.colors.text.secondary }}
+                >
+                  This shows how your theme will look in the admin interface.
+                </p>
+                
+                <div 
+                  className="p-3 rounded-md mb-4"
+                  style={{ 
+                    backgroundColor: theme.colors.background.card,
+                    border: `1px solid ${theme.colors.borders.normal}`,
+                    boxShadow: theme.effects.glow.primary
+                  }}
+                >
+                  <p className="text-sm">Card with glow effect</p>
                 </div>
+                
+                <button 
+                  className="px-3 py-1.5 rounded-md text-sm transition-all duration-300"
+                  style={{ 
+                    backgroundColor: 'transparent',
+                    border: `1px solid ${theme.colors.primary}`,
+                    color: theme.colors.primary
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = `${theme.colors.primary}20`;
+                    e.currentTarget.style.boxShadow = theme.effects.glow.hover;
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  Primary Button
+                </button>
+                
+                <button 
+                  className="px-3 py-1.5 rounded-md text-sm ml-2 transition-all duration-300"
+                  style={{ 
+                    backgroundColor: 'transparent',
+                    border: `1px solid ${theme.colors.secondary}`,
+                    color: theme.colors.secondary
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = `${theme.colors.secondary}20`;
+                    e.currentTarget.style.boxShadow = theme.effects.glow.secondary;
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  Secondary Button
+                </button>
               </div>
               
-              <div className="space-y-2">
-                <Label>Secondary Color</Label>
-                <div className="flex gap-2">
-                  <div 
-                    className="w-8 h-8 rounded-md border border-border" 
-                    style={{ backgroundColor: theme.colors.secondary }}
-                  />
-                  <Input 
-                    type="text" 
-                    value={theme.colors.secondary} 
-                    onChange={(e) => handleColorChange('colors.secondary', e.target.value)}
-                  />
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Available Themes</h3>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  {availableThemes.map((preset) => (
+                    <button
+                      key={preset.id}
+                      className="text-left p-2 rounded-md border border-border/50 hover:border-primary/50 transition-colors"
+                      onClick={() => {
+                        setTheme(preset.theme);
+                        toast({
+                          title: `${preset.name} Applied`,
+                          description: "Theme changes are not saved yet.",
+                          duration: 3000,
+                        });
+                      }}
+                    >
+                      <div className="font-medium">{preset.name}</div>
+                      <div className="text-xs text-muted-foreground">{preset.description}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
-            
-            <p className="text-sm text-muted-foreground pt-4">
-              This is a foundation for the visual theme editor. More functionality will be implemented in future updates.
-            </p>
-          </TabsContent>
-          
-          <TabsContent value="effects">
-            <p className="text-sm text-muted-foreground">
-              Effects editing will be available in a future update.
-            </p>
-          </TabsContent>
-          
-          <TabsContent value="components">
-            <p className="text-sm text-muted-foreground">
-              Component style editing will be available in a future update.
-            </p>
-          </TabsContent>
-          
-          <TabsContent value="typography">
-            <p className="text-sm text-muted-foreground">
-              Typography editing will be available in a future update.
-            </p>
-          </TabsContent>
-          
-          <TabsContent value="animation">
-            <p className="text-sm text-muted-foreground">
-              Animation editing will be available in a future update.
-            </p>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
   );
 }

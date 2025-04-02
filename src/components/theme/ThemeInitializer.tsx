@@ -5,7 +5,7 @@ import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicKeyframes } from './DynamicKeyframes';
 import { SiteThemeProvider } from './SiteThemeProvider';
-import { useLogger } from '@/hooks/use-logger';
+import { useLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { isError, isValidUUID } from '@/logging/utils/type-guards';
 import { safeDetails } from '@/logging/utils/safeDetails';
@@ -15,7 +15,7 @@ interface ThemeInitializerProps {
 }
 
 // Short fallback timeout to ensure UI renders quickly
-const FALLBACK_TIMEOUT = 500; // 500ms fallback timeout for better UX
+const FALLBACK_TIMEOUT = 300; // 300ms fallback timeout for better UX
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   // State tracking for better debugging and resilience
@@ -30,12 +30,16 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
 
   // Apply default styles immediately to prevent white flash
   useEffect(() => {
-    // Apply fallback immediately 
+    // Apply fallback immediately to prevent white flash
     document.documentElement.classList.add('theme-fallback-applied');
     
-    // This forces the browser to apply default colors immediately
-    document.body.style.backgroundColor = 'var(--fallback-background)';
-    document.body.style.color = 'var(--fallback-foreground)';
+    // These force the browser to apply default colors immediately
+    document.documentElement.style.setProperty('--background', '#080F1E');
+    document.documentElement.style.setProperty('--foreground', '#F9FAFB');
+    document.documentElement.style.backgroundColor = '#080F1E';
+    document.documentElement.style.color = '#F9FAFB';
+    document.body.style.backgroundColor = '#080F1E';
+    document.body.style.color = '#F9FAFB';
     
     return () => {
       document.documentElement.classList.remove('theme-fallback-applied');
@@ -54,13 +58,13 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         })
       });
       
-      // Short fallback timer for rapid recovery
+      // Short fallback timer for rapid recovery from errors
       const timer = setTimeout(() => {
         logger.info('Forcing initialization after theme store error', { 
           details: safeDetails(themeStoreError) 
         });
         setIsInitialized(true);
-      }, 300);
+      }, 200);
       
       return () => clearTimeout(timer);
     }
@@ -113,13 +117,13 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         if (themeId && isValidUUID(themeId)) {
           logger.debug('Theme ID found, attempting to set theme', { details: { themeId }});
           
-          // Set a separate timeout just for the DB fetch
+          // Set a separate timeout just for the DB fetch to prevent UI blocking
           const fetchTimeout = setTimeout(() => {
             if (isMounted && !isInitialized) {
               logger.warn('Theme fetch timed out, continuing with fallbacks');
               setIsInitialized(true);
             }
-          }, 800);
+          }, 400);
           
           try {
             await setTheme(themeId);
