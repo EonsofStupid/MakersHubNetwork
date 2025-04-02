@@ -31,9 +31,9 @@ export function MainNav() {
       animated: 'animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(0,240,255,0.1)]'
     },
     header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30',
-    dataStream: 'relative',
-    dataStreamEffect: '',
-    glitchParticles: '',
+    dataStream: 'relative overflow-hidden',
+    dataStreamEffect: 'mainnav-data-stream',
+    glitchParticles: 'mainnav-glitch-particles',
   };
 
   useEffect(() => {
@@ -60,38 +60,53 @@ export function MainNav() {
       className="w-full"
       id="main-navigation"
       fallback={
-        <header
-          className={cn(
-            "fixed top-0 w-full z-50", 
-            "bg-background/20 backdrop-blur-xl",
-            "shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]", 
-            "border-b border-primary/30"
-          )}
-        >
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between py-4">
-              <Logo />
-              <NavigationItems />
-              <div className="flex items-center gap-4">
-                <SearchButton />
-                {isAuthenticated && hasAdminAccess && (
-                  <Link to="/admin">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="flex items-center gap-1 group text-primary hover:text-white hover:bg-primary/30 border-primary/40 relative overflow-hidden"
-                    >
-                      <Shield className="h-4 w-4 group-hover:animate-pulse" />
-                      <span>Admin</span>
-                      <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-                    </Button>
-                  </Link>
-                )}
-                <AuthSection />
+        <div className={cn(
+          styles.container.base,
+          isLoaded && styles.container.animated,
+          "mainnav-container"
+        )}>
+          <header
+            className={cn(
+              styles.header,
+              "mainnav-header glass-morphism"
+            )}
+          >
+            <div className={cn(
+              styles.dataStream, 
+              styles.dataStreamEffect,
+              "mainnav-effects-wrapper"
+            )}>
+              <div className={cn(
+                styles.glitchParticles,
+                "absolute inset-0 w-full h-full pointer-events-none"
+              )} />
+              
+              <div className="container mx-auto px-4">
+                <div className="flex items-center justify-between py-4">
+                  <Logo />
+                  <NavigationItems />
+                  <div className="flex items-center gap-4">
+                    <SearchButton />
+                    {isAuthenticated && hasAdminAccess && (
+                      <Link to="/admin">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="flex items-center gap-1 group text-primary hover:text-white hover:bg-primary/30 border-primary/40 relative overflow-hidden"
+                        >
+                          <Shield className="h-4 w-4 group-hover:animate-pulse" />
+                          <span>Admin</span>
+                          <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                        </Button>
+                      </Link>
+                    )}
+                    <AuthSection />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </header>
+          </header>
+        </div>
       }
     />
   );
