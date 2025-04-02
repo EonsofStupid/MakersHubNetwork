@@ -12,7 +12,7 @@ export { LOG_LEVEL_NAMES, isLogLevelAtLeast } from './constants/log-level';
 
 // Re-export hooks for React components
 export { useLogger } from './hooks/useLogger';
-export { usePerformanceLogger, useComponentPerformance } from './hooks/usePerformance';
+export { usePerformanceLogger, useComponentPerformance } from './hooks/usePerformance.tsx';
 export { useErrorLogger } from './hooks/useErrorLogger';
 export { useNetworkLogger } from './hooks/useNetworkLogger';
 

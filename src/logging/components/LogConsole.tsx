@@ -4,9 +4,10 @@ import { LogLevel, LogCategory, LogEntry } from '../types';
 import { LOG_LEVEL_NAMES } from '../constants';
 import { X, Filter, RefreshCw, Trash2 } from 'lucide-react';
 import { safelyRenderNode } from '../utils/react';
-import { memoryTransport } from '../transports/memory';
+import { memoryTransport } from '../transports/memory.transport';
 import { logEventEmitter } from '../events';
 import { clearLogs } from '../index';
+import { useLoggingContext } from '../context/LoggingContext';
 
 interface LogConsoleProps {
   className?: string;
@@ -14,29 +15,13 @@ interface LogConsoleProps {
 }
 
 export function LogConsole({ className = "", maxHeight = "24rem" }: LogConsoleProps) {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [visible, setVisible] = useState(false);
+  const { logs, clearLogs, showLogConsole, toggleLogConsole } = useLoggingContext();
   const [filterCategory, setFilterCategory] = useState<LogCategory | null>(null);
   const [filterMinLevel, setFilterMinLevel] = useState<LogLevel>(LogLevel.INFO);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Auto-scrolling
   const logContainerRef = useRef<HTMLDivElement>(null);
-  
-  // Initialize logs and set up event listener
-  useEffect(() => {
-    // Get initial logs
-    setLogs(memoryTransport.getLogs());
-    
-    // Subscribe to log events
-    const unsubscribe = logEventEmitter.onLog((entry) => {
-      setLogs(prev => [entry, ...prev]);
-    });
-    
-    return () => {
-      unsubscribe();
-    };
-  }, []);
   
   useEffect(() => {
     if (logContainerRef.current) {
@@ -91,17 +76,6 @@ export function LogConsole({ className = "", maxHeight = "24rem" }: LogConsolePr
     return false;
   };
   
-  // Toggle console visibility
-  const toggleConsole = () => {
-    setVisible(prev => !prev);
-  };
-  
-  // Clear all logs
-  const handleClearLogs = () => {
-    clearLogs();
-    setLogs([]);
-  };
-  
   const getLogLevelClass = (level: LogLevel) => {
     switch (level) {
       case LogLevel.ERROR:
@@ -144,10 +118,10 @@ export function LogConsole({ className = "", maxHeight = "24rem" }: LogConsolePr
   };
   
   // Don't render if not visible
-  if (!visible) {
+  if (!showLogConsole) {
     return (
       <button
-        onClick={toggleConsole}
+        onClick={toggleLogConsole}
         className="fixed bottom-4 right-4 p-2 bg-blue-500 text-white rounded-full shadow-lg"
         aria-label="Show logs"
       >
@@ -162,7 +136,7 @@ export function LogConsole({ className = "", maxHeight = "24rem" }: LogConsolePr
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
         <div className="flex items-center gap-2">
           <button
-            onClick={toggleConsole}
+            onClick={toggleLogConsole}
             className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
             aria-label="Close logs"
           >
@@ -209,7 +183,7 @@ export function LogConsole({ className = "", maxHeight = "24rem" }: LogConsolePr
           </select>
           
           <button
-            onClick={handleClearLogs}
+            onClick={clearLogs}
             className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900 text-red-500"
             aria-label="Clear logs"
           >

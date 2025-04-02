@@ -1,5 +1,5 @@
 
-import { useComponentPerformance } from '@/logging/utils/react';
+import { useComponentPerformance } from '@/logging/hooks/usePerformance.tsx';
 
 /**
  * Re-export the component performance hook from the centralized logging system
