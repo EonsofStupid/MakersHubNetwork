@@ -9,7 +9,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
 import { ThemeErrorState } from './info/ThemeErrorState';
-import { isError } from '@/logging/utils/type-guards';
+import { isError, isValidUUID } from '@/logging/utils/type-guards';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -37,9 +37,9 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         toast({
           title: 'Theme Recovery',
           description: 'Using default theme styling due to theme loading issue',
-          variant: "default", // Use default instead of "warning" to ensure valid type
+          variant: "default",
         });
-      }, 3000); // Reduced to 3 seconds from 5 seconds
+      }, 2000); // Reduced to 2 seconds
       
       return () => clearTimeout(timer);
     }
@@ -68,14 +68,14 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
               variant: "default",
             });
           }
-        }, 7000); // Reduced to 7 seconds from 10 seconds
+        }, 5000); // Reduced to 5 seconds
         
         // First, ensure the default theme exists in the database
         const themeId = await ensureDefaultTheme();
         
         if (!isMounted) return;
         
-        if (themeId) {
+        if (themeId && isValidUUID(themeId)) {
           // Then sync CSS using the ensureDefaultTheme's built-in sync capability
           try {
             await setTheme(themeId);
@@ -103,7 +103,12 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
             }
           }
         } else {
-          logger.warn('Failed to initialize theme, falling back to default styles');
+          logger.warn('Failed to initialize theme, falling back to default styles', {
+            details: { 
+              receivedThemeId: themeId,
+              isValidUUID: themeId ? isValidUUID(themeId) : false
+            }
+          });
           
           if (isMounted) {
             toast({

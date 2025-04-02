@@ -16,7 +16,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
   setTheme: async (themeId: string) => {
     // Validate UUID before attempting to fetch
-    if (!isValidUUID(themeId)) {
+    if (themeId && !isValidUUID(themeId)) {
       set({ 
         error: new Error(`Invalid theme ID format: ${themeId}`), 
         isLoading: false 
@@ -32,8 +32,14 @@ export const useThemeStore = create<ThemeState>((set) => ({
       
       const { data: themes, error } = await query;
 
-      if (error) throw error;
-      if (!themes || themes.length === 0) throw new Error("No theme found");
+      if (error) {
+        console.error("Database error fetching theme:", error);
+        throw error;
+      }
+      
+      if (!themes || themes.length === 0) {
+        throw new Error("No theme found");
+      }
 
       const rawTheme = themes[0];
       
@@ -98,7 +104,10 @@ export const useThemeStore = create<ThemeState>((set) => ({
         .select("*")
         .eq("context", "admin");
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error loading admin components:", error);
+        throw error;
+      }
 
       const components: ComponentTokens[] = data.map(comp => ({
         id: comp.id,

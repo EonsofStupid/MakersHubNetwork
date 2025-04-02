@@ -17,9 +17,11 @@ export type {
 export { 
   getLogger, 
   initializeLogger, 
-  loggerService,
-  logEventEmitter 
+  loggerService
 } from './service/logger.service';
+
+// Re-export event emitter
+export { logEventEmitter } from './events';
 
 // Context provider and hooks
 export { 
@@ -107,22 +109,6 @@ export { formatLogDetails } from './utils/details-formatter';
 // Export the safeDetails utility 
 export { safeDetails } from './utils/safeDetails';
 
-// Helper functions for working with logs
-export function getLogs() {
-  return memoryTransport.getLogs();
-}
-
-export function clearLogs() {
-  memoryTransport.clear();
-}
-
-export function onLog(callback: (entry: LogEntry) => void) {
-  return logEventEmitter.onLog(callback);
-}
-
-// Re-export event emitter
-export { logEventEmitter } from './events';
-
 // Type guards
 export {
   isError,
@@ -130,5 +116,20 @@ export {
   isString,
   isNumber,
   isBoolean,
+  isValidUUID,
+  generateUUID,
   toLogDetails
 } from './utils/type-guards';
+
+// Helper functions for working with logs
+export function getLogs() {
+  return memoryTransport.getLogs();
+}
+
+export function clearLogs() {
+  return memoryTransport.clear();
+}
+
+export function onLog(callback: (entry: LogEntry) => void) {
+  return logEventEmitter.onLog(callback);
+}

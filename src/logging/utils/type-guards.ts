@@ -40,20 +40,28 @@ export function isBoolean(value: unknown): value is boolean {
 
 /**
  * Check if a string is a valid UUID
- * More strict validation pattern to ensure correct UUID format
+ * RFC4122 compliant UUID validation
  */
-export function isValidUUID(value: string): boolean {
-  if (!value) return false;
+export function isValidUUID(value: string | unknown): boolean {
+  if (typeof value !== 'string' || !value) return false;
+  
+  // RFC4122 compliant UUID format
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(value);
 }
 
 /**
  * Generate a valid v4 UUID
- * Using a more robust implementation that properly follows RFC4122
+ * Using crypto.randomUUID() if available (for better security and performance)
+ * With fallback to RFC4122 v4 implementation
  */
 export function generateUUID(): string {
-  // Implementation based on RFC4122 version 4
+  // Use crypto.randomUUID when available (browser & modern Node.js)
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  
+  // Fallback implementation for environments without crypto.randomUUID
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
