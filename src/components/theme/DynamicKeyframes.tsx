@@ -1,6 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSiteTheme } from './SiteThemeProvider';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
 
 /**
  * Component that injects keyframe animations based on the current theme
@@ -9,21 +11,26 @@ import { useSiteTheme } from './SiteThemeProvider';
 export function DynamicKeyframes() {
   const { variables } = useSiteTheme();
   const [styleElement, setStyleElement] = useState<HTMLStyleElement | null>(null);
+  const logger = getLogger('DynamicKeyframes', LogCategory.THEME);
   
   useEffect(() => {
     // Create a style element for our keyframes if it doesn't exist
     if (!styleElement) {
+      logger.debug('Creating dynamic keyframes style element');
       const element = document.createElement('style');
       element.id = 'dynamic-keyframes';
       document.head.appendChild(element);
       setStyleElement(element);
       return () => {
-        document.head.removeChild(element);
+        if (document.head.contains(element)) {
+          document.head.removeChild(element);
+        }
       };
     }
     
     // Update keyframes with current theme colors
     if (styleElement) {
+      logger.debug('Updating keyframes with current theme colors');
       styleElement.textContent = `
         @keyframes glow-pulse {
           0%, 100% {
@@ -139,7 +146,7 @@ export function DynamicKeyframes() {
         }
       `;
     }
-  }, [styleElement, variables]);
+  }, [styleElement, variables, logger]);
   
   return null; // This component doesn't render anything visible
 }

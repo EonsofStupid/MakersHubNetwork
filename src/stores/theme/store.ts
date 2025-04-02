@@ -2,14 +2,15 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeState } from "./types";
-import { Theme, ComponentTokens } from "@/types/theme";
+import { Theme, ComponentTokens, ThemeToken } from "@/types/theme";
 import { isValidUUID } from "@/logging/utils/type-guards";
 import { getLogger } from "@/logging";
 import { safeDetails } from "@/logging/utils/safeDetails";
 import { DEFAULT_THEME_NAME } from "@/utils/themeInitializer";
+import { LogCategory } from "@/logging";
 
 // Create a logger instance for the theme store
-const logger = getLogger('ThemeStore');
+const logger = getLogger('ThemeStore', LogCategory.THEME);
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
   currentTheme: null,
@@ -59,8 +60,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         return;
       }
 
-      // Safely access theme tokens with proper type safety
-      let tokens: any[] = [];
+      // Safely fetch theme tokens with proper type safety
+      let tokens: ThemeToken[] = [];
       try {
         // Fetch component tokens
         const { data: tokensData, error: tokensError } = await supabase
@@ -71,7 +72,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         if (tokensError) {
           logger.warn(`Error fetching theme tokens, continuing with empty tokens: ${tokensError.message}`);
         } else {
-          tokens = tokensData || [];
+          tokens = (tokensData as ThemeToken[]) || [];
         }
       } catch (err) {
         logger.warn('Error processing theme tokens', {
@@ -90,7 +91,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         if (componentsError) {
           logger.warn(`Error fetching theme components, continuing with empty components: ${componentsError.message}`);
         } else {
-          components = componentsData || [];
+          components = (componentsData as ComponentTokens[]) || [];
         }
       } catch (err) {
         logger.warn('Error processing theme components', {
@@ -102,9 +103,18 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       let adminComponents: ComponentTokens[] = [];
       if (themeData.component_tokens && Array.isArray(themeData.component_tokens)) {
         try {
-          adminComponents = themeData.component_tokens.filter(
-            comp => comp && typeof comp === 'object' && comp.context === 'admin'
-          );
+          adminComponents = (themeData.component_tokens as any[])
+            .filter(comp => comp && typeof comp === 'object' && comp.context === 'admin')
+            .map(comp => ({
+              id: comp.id || `comp-${Date.now()}`,
+              component_name: comp.component_name || '',
+              styles: comp.styles || {},
+              description: comp.description || '',
+              theme_id: comp.theme_id || themeId,
+              context: 'admin',
+              created_at: comp.created_at || new Date().toISOString(),
+              updated_at: comp.updated_at || new Date().toISOString()
+            }));
         } catch (err) {
           logger.warn('Error extracting admin components from theme', {
             details: safeDetails(err)
@@ -143,9 +153,18 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       // Extract admin components from the theme
       let adminComponents: ComponentTokens[] = [];
       if (currentTheme.component_tokens && Array.isArray(currentTheme.component_tokens)) {
-        adminComponents = currentTheme.component_tokens.filter(
-          comp => comp && typeof comp === 'object' && comp.context === 'admin'
-        );
+        adminComponents = (currentTheme.component_tokens as any[])
+          .filter(comp => comp && typeof comp === 'object' && comp.context === 'admin')
+          .map(comp => ({
+            id: comp.id || `comp-${Date.now()}`,
+            component_name: comp.component_name || '',
+            styles: comp.styles || {},
+            description: comp.description || '',
+            theme_id: comp.theme_id || currentTheme.id,
+            context: 'admin',
+            created_at: comp.created_at || new Date().toISOString(),
+            updated_at: comp.updated_at || new Date().toISOString()
+          }));
       }
 
       set({ adminComponents });

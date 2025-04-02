@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 /**
@@ -28,7 +27,8 @@ export enum LogCategory {
   CHAT = 'chat',
   DATABASE = 'database',
   CONTENT = 'content',
-  GENERAL = 'general'
+  GENERAL = 'general',
+  THEME = 'theme'
 }
 
 /**

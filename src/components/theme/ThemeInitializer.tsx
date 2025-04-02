@@ -1,11 +1,11 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ensureDefaultTheme, getThemeByName, DEFAULT_THEME_NAME } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicKeyframes } from './DynamicKeyframes';
 import { SiteThemeProvider } from './SiteThemeProvider';
-import { useLogger } from '@/logging';
+import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { isError, isValidUUID } from '@/logging/utils/type-guards';
 import { safeDetails } from '@/logging/utils/safeDetails';
@@ -15,18 +15,18 @@ interface ThemeInitializerProps {
 }
 
 // Much shorter fallback timeout for better UX
-const FALLBACK_TIMEOUT = 200; // 200ms fallback timeout
+const FALLBACK_TIMEOUT = 500; // 500ms fallback timeout
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   // State tracking for better debugging and resilience
   const [isInitialized, setIsInitialized] = useState(false);
-  const [initializationAttempted, setInitializationAttempted] = useState(false);
+  const initializationAttemptedRef = useRef(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   
   const { setTheme, isLoading, error: themeStoreError } = useThemeStore();
   const { toast } = useToast();
-  const logger = useLogger('ThemeInitializer', LogCategory.SYSTEM);
-
+  const logger = getLogger('ThemeInitializer', LogCategory.THEME);
+  
   // Apply default styles immediately to prevent white flash
   useEffect(() => {
     // Apply fallback styles immediately
@@ -43,10 +43,16 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     // Apply scrollbar styling immediately
     const style = document.createElement('style');
     style.textContent = `
+      :root {
+        color-scheme: dark;
+      }
+      
       ::-webkit-scrollbar { width: 8px; height: 8px; }
       ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 3px; }
       ::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.2); border-radius: 3px; }
       ::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.4); }
+      
+      /* Immediate styling for skeletons */
       .skeleton-loader {
         background: linear-gradient(90deg, 
           rgba(255, 255, 255, 0.05) 25%, 
@@ -56,27 +62,47 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         background-size: 200% 100%;
         animation: skeleton-loading 1.5s infinite;
       }
+      
+      /* Basic animations for immediate use */
       @keyframes skeleton-loading {
         0% { background-position: 200% 0; }
         100% { background-position: -200% 0; }
+      }
+      
+      @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      .animate-fade-in {
+        animation: fade-in 0.3s ease-out forwards;
+      }
+      
+      /* Ensure text is readable during load */
+      body {
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
     `;
     document.head.appendChild(style);
     
     return () => {
       document.documentElement.classList.remove('theme-fallback-applied');
-      document.head.removeChild(style);
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
     };
   }, []);
 
   // Fallback faster when a theme store error is detected
   useEffect(() => {
-    if (themeStoreError && !isInitialized && initializationAttempted) {
+    if (themeStoreError && !isInitialized && initializationAttemptedRef.current) {
       logger.warn('Theme store error detected, forcing fallback', {
         details: safeDetails({
           errorMessage: themeStoreError.message,
           isInitialized,
-          initializationAttempted,
+          initializationAttempted: initializationAttemptedRef.current,
           attempts: failedAttempts
         })
       });
@@ -91,19 +117,19 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
       
       return () => clearTimeout(timer);
     }
-  }, [themeStoreError, isInitialized, initializationAttempted, failedAttempts, logger]);
+  }, [themeStoreError, isInitialized, failedAttempts, logger]);
 
   // Main theme initialization logic
   useEffect(() => {
     let isMounted = true;
-    let initializationTimeout: NodeJS.Timeout;
+    let initializationTimeout: NodeJS.Timeout | null = null;
     
     async function initialize() {
-      if (initializationAttempted) return;
+      if (initializationAttemptedRef.current) return;
       
       try {
         logger.info('Starting theme initialization');
-        setInitializationAttempted(true);
+        initializationAttemptedRef.current = true;
         
         // Global safety timeout - don't block the app for more than specified time
         initializationTimeout = setTimeout(() => {
@@ -198,9 +224,11 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     
     return () => {
       isMounted = false;
-      clearTimeout(initializationTimeout);
+      if (initializationTimeout) {
+        clearTimeout(initializationTimeout);
+      }
     };
-  }, [setTheme, toast, logger, initializationAttempted]);
+  }, [setTheme, toast, logger]);
 
   // Render immediately with fallback styling - no loading screens
   return (
