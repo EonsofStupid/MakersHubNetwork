@@ -12,6 +12,27 @@ export const LOG_LEVEL_NAMES: Record<LogLevel, string> = {
 };
 
 /**
+ * Maps string representation to log level
+ */
+export const STRING_TO_LOG_LEVEL: Record<string, LogLevel> = {
+  'TRACE': LogLevel.TRACE,
+  'DEBUG': LogLevel.DEBUG,
+  'INFO': LogLevel.INFO,
+  'WARN': LogLevel.WARN,
+  'WARNING': LogLevel.WARN,
+  'ERROR': LogLevel.ERROR,
+  'CRITICAL': LogLevel.CRITICAL,
+  'SUCCESS': LogLevel.SUCCESS
+};
+
+/**
+ * Get log level from string
+ */
+export function getLogLevelFromString(levelString: string): LogLevel {
+  return STRING_TO_LOG_LEVEL[levelString.toUpperCase()] || LogLevel.INFO;
+}
+
+/**
  * Check if a log level meets or exceeds a minimum threshold
  */
 export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
