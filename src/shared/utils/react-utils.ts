@@ -1,50 +1,56 @@
 
-import React from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
- * Safely renders content that might be a React node, string, or any other type
+ * Hook to check if a component is mounted
  */
-export function safelyRenderNode(content: React.ReactNode | any): React.ReactNode {
-  // If it's null, undefined, or already a valid React element, return it directly
-  if (content === null || content === undefined || React.isValidElement(content)) {
-    return content;
-  }
+export function useIsMounted() {
+  const isMounted = useRef(false);
   
-  // If it's an array, map each item (might contain React elements)
-  if (Array.isArray(content)) {
-    return content.map((item, index) => (
-      <React.Fragment key={index}>{safelyRenderNode(item)}</React.Fragment>
-    ));
-  }
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
   
-  // If it's an object but not a React element, convert to string
-  if (typeof content === 'object') {
-    try {
-      return JSON.stringify(content);
-    } catch (e) {
-      return '[Object]';
-    }
-  }
-  
-  // For primitive types, convert to string
-  return String(content);
+  return isMounted;
 }
 
 /**
- * Formats an error into a readable string
+ * Safely extract URL parameters with type safety
  */
-export function formatError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
+export function getUrlParam<T extends string | number>(
+  param: string, 
+  defaultValue?: T
+): T | undefined {
+  const urlParams = new URLSearchParams(window.location.search);
+  const value = urlParams.get(param);
+  
+  if (value === null) {
+    return defaultValue;
   }
   
-  if (typeof error === 'string') {
-    return error;
+  // Try to convert to number if T is number
+  if (typeof defaultValue === 'number') {
+    const numValue = Number(value);
+    return isNaN(numValue) ? defaultValue : numValue as T;
   }
   
-  try {
-    return JSON.stringify(error);
-  } catch (e) {
-    return 'Unknown error';
+  return value as T;
+}
+
+/**
+ * Format a date string with options
+ */
+export function formatDate(
+  date: Date | string | number,
+  options: Intl.DateTimeFormatOptions = { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
   }
+): string {
+  const dateObj = date instanceof Date ? date : new Date(date);
+  return new Intl.DateTimeFormat('en-US', options).format(dateObj);
 }
