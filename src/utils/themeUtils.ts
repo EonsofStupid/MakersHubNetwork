@@ -5,8 +5,9 @@ import { Theme, ComponentTokens } from '@/types/theme';
 import { DEFAULT_THEME_NAME } from './themeInitializer';
 import { getLogger } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
+import { LogCategory } from '@/logging';
 
-const logger = getLogger('ThemeUtils');
+const logger = getLogger('ThemeUtils', LogCategory.THEME);
 
 /**
  * Deep merge utility for objects
@@ -16,8 +17,8 @@ export function deepMerge<T extends Record<string, any>>(target: T, source: Part
   const result = { ...target };
 
   Object.keys(source).forEach(key => {
-    const sourceValue = source[key];
-    const targetValue = target[key];
+    const sourceValue = source[key as keyof typeof source] as any;
+    const targetValue = target[key as keyof typeof target] as any;
 
     if (
       sourceValue && 
@@ -27,9 +28,9 @@ export function deepMerge<T extends Record<string, any>>(target: T, source: Part
       !Array.isArray(sourceValue) && 
       !Array.isArray(targetValue)
     ) {
-      result[key] = deepMerge(targetValue, sourceValue);
+      result[key as keyof typeof result] = deepMerge(targetValue, sourceValue);
     } else if (sourceValue !== undefined) {
-      result[key] = sourceValue;
+      result[key as keyof typeof result] = sourceValue;
     }
   });
 

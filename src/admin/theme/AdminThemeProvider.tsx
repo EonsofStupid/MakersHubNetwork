@@ -4,14 +4,19 @@ import { AdminThemeProvider as AdminThemeContextProvider } from './context/Admin
 import { ThemeFallback } from './fallback/ThemeFallback';
 import { applyThemeToDocument } from './utils/themeUtils';
 import { defaultImpulseTokens } from './impulse/tokens';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
 import './impulse/impulse-admin.css';
 import './impulse/impulse-theme.css';
 import './impulse/impulse.css';
+
+const logger = getLogger('AdminThemeProvider', LogCategory.THEME);
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
   // Apply immediate fallback styling
   useEffect(() => {
     // Apply fallback immediately to prevent white flash
+    logger.debug('Applying immediate fallback styling');
     applyThemeToDocument(defaultImpulseTokens);
     
     // Add admin theme class to html element
