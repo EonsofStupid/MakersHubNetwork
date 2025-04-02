@@ -15,7 +15,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { hasAdminAccess, isLoading: adminLoading } = useAdminAccess();
-  const { isLoading: authLoading, isAuthenticated, status, initialize } = useAuth();
+  const { isLoading: authLoading, isAuthenticated, status, initialize, initialized } = useAuth();
   const [authChecked, setAuthChecked] = useState(false);
   const logger = useLogger('AdminAuthGuard', LogCategory.ADMIN);
   
