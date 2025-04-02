@@ -10,7 +10,7 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { useToast } from '@/hooks/use-toast';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { TopNavShortcuts } from '@/admin/components/navigation/TopNavShortcuts';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
+import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 import { SyncIndicator } from '@/admin/components/ui/SyncIndicator';
 
