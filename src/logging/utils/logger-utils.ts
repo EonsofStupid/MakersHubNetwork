@@ -1,5 +1,5 @@
 
-import { LogLevel, LogCategory } from '../index';
+import { LogLevel, LogCategory } from '../types';
 import { LOG_LEVEL_NAMES } from '../constants/log-level';
 import { getLogLevelFromString } from './map-log-level';
 import { LogEntry } from '../types';
@@ -13,9 +13,17 @@ export function formatLogEntry(entry: LogEntry): string {
     : new Date(entry.timestamp).toISOString();
   
   const level = LOG_LEVEL_NAMES[entry.level];
-  const message = String(entry.message);
+  let messageStr: string;
   
-  return `[${timestamp}] [${level}] [${entry.category}] ${message}`;
+  if (typeof entry.message === 'string') {
+    messageStr = entry.message;
+  } else if (typeof entry.message === 'number' || typeof entry.message === 'boolean') {
+    messageStr = String(entry.message);
+  } else {
+    messageStr = '[React Node]';
+  }
+  
+  return `[${timestamp}] [${level}] [${entry.category}] ${messageStr}`;
 }
 
 /**
@@ -65,4 +73,30 @@ export function createLogTags(
 ): string[] {
   const baseTags = [category, component];
   return [...baseTags, ...additionalTags];
+}
+
+/**
+ * Safe converter for React nodes to strings for searching
+ */
+export function nodeToSearchableString(message: string | number | boolean | React.ReactNode): string {
+  if (typeof message === 'string') {
+    return message;
+  } else if (typeof message === 'number' || typeof message === 'boolean') {
+    return String(message);
+  } else {
+    return '[React Node]';
+  }
+}
+
+/**
+ * Safely render a React node or convert primitive values to strings
+ */
+export function safelyRenderNode(message: string | number | boolean | React.ReactNode): React.ReactNode {
+  if (typeof message === 'string' || typeof message === 'number' || typeof message === 'boolean') {
+    return String(message);
+  } else if (React.isValidElement(message)) {
+    return message;
+  } else {
+    return String(message);
+  }
 }

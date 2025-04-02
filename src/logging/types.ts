@@ -12,10 +12,12 @@ export enum LogCategory {
   AUTH = 'auth',
   UI = 'ui',
   ADMIN = 'admin',
+  DATA = 'data',
+  PERFORMANCE = 'performance',
   CHAT = 'chat',
   DATABASE = 'database',
-  PERFORMANCE = 'performance',
-  CONTENT = 'content'  // Added this new category
+  CONTENT = 'content',
+  GENERAL = 'general'
 }
 
 export interface LogEntry {
@@ -24,8 +26,8 @@ export interface LogEntry {
   level: LogLevel;
   category: LogCategory;
   message: string | number | boolean | React.ReactNode;
-  details?: Record<string, unknown>;
   source?: string;
+  details?: Record<string, unknown>;
   userId?: string;
   sessionId?: string;
   duration?: number; // For performance logs
@@ -47,6 +49,9 @@ export interface LoggingConfig {
   includeUser?: boolean;
   includeSession?: boolean;
 }
+
+// Define the callback type for log events
+export type LogEventCallback = (entry: LogEntry) => void;
 
 // Re-export LogLevel for backward compatibility
 export { LogLevel } from './constants/log-level';
