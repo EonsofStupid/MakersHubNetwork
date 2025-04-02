@@ -1,5 +1,5 @@
 
-import { ImpulseTheme } from "../../types/impulse.types";
+import { ImpulseTheme, ImpulseTokenGroup } from "../../types/impulse.types";
 import { getLogger } from "@/logging";
 
 const logger = getLogger('AdminThemeUtils');
@@ -22,9 +22,9 @@ export function deepMerge<T extends Record<string, any>>(target: T, source: Part
       !Array.isArray(sourceValue) && 
       !Array.isArray(targetValue)
     ) {
-      result[key] = deepMerge(targetValue, sourceValue);
+      result[key as keyof T] = deepMerge(targetValue, sourceValue) as any;
     } else if (sourceValue !== undefined) {
-      result[key] = sourceValue;
+      result[key as keyof T] = sourceValue as any;
     }
   });
 
@@ -36,7 +36,7 @@ export function deepMerge<T extends Record<string, any>>(target: T, source: Part
  * Used by the visual theme editor to list editable properties
  */
 export function flattenTheme(
-  theme: ImpulseTheme, 
+  theme: ImpulseTheme | ImpulseTokenGroup, 
   prefix = '',
   excludePaths: string[] = []
 ): Array<{ path: string; value: any; type: string }> {
@@ -52,7 +52,7 @@ export function flattenTheme(
     
     if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
       // Recurse into nested objects
-      result.push(...flattenTheme(value as any, newPrefix, excludePaths));
+      result.push(...flattenTheme(value as ImpulseTokenGroup, newPrefix, excludePaths));
     } else {
       // Determine the type for the editor
       let type = 'text';
@@ -94,6 +94,10 @@ export function getReadableLabel(path: string): string {
  * Get a value from a nested object using a path string
  */
 export function getValueByPath(obj: any, path: string): any {
+  if (!obj || typeof obj !== 'object' || !path) {
+    return undefined;
+  }
+  
   return path.split('.').reduce((prev, curr) => {
     if (prev === undefined || prev === null) return undefined;
     return prev[curr];
@@ -104,6 +108,10 @@ export function getValueByPath(obj: any, path: string): any {
  * Set a value in a nested object using a path string
  */
 export function setValueByPath(obj: any, path: string, value: any): any {
+  if (!obj || typeof obj !== 'object' || !path) {
+    return obj;
+  }
+  
   const copy = { ...obj };
   const keys = path.split('.');
   
@@ -140,14 +148,44 @@ export function themeToCSS(theme: ImpulseTheme): string {
 
 /**
  * Apply theme to document
+ * This is the most critical function for immediate styling and preventing white flash
  */
 export function applyThemeToDocument(theme: ImpulseTheme): void {
   logger.debug("Applying Impulsivity theme to document");
   const flattenedTheme = flattenTheme(theme);
   const root = document.documentElement;
   
-  flattenedTheme.forEach(({ path, value }) => {
-    const variableName = `--impulse-${path.replace(/\./g, '-')}`;
-    root.style.setProperty(variableName, String(value));
+  // Apply the most critical CSS variables first for immediate visual feedback
+  const criticalVars = [
+    "colors.background.main",
+    "colors.text.primary",
+    "colors.primary",
+    "colors.secondary"
+  ];
+  
+  // First apply critical variables for immediate visual feedback
+  criticalVars.forEach(path => {
+    const value = getValueByPath(theme, path);
+    if (value) {
+      const variableName = `--impulse-${path.replace(/\./g, '-')}`;
+      root.style.setProperty(variableName, String(value));
+      
+      // Also set equivalent site variables for compatibility
+      if (path === "colors.background.main") root.style.setProperty('--background', String(value));
+      if (path === "colors.text.primary") root.style.setProperty('--foreground', String(value));
+      if (path === "colors.primary") root.style.setProperty('--primary', String(value));
+      if (path === "colors.secondary") root.style.setProperty('--secondary', String(value));
+    }
   });
+  
+  // Then apply all other variables
+  flattenedTheme.forEach(({ path, value }) => {
+    if (!criticalVars.includes(path)) {
+      const variableName = `--impulse-${path.replace(/\./g, '-')}`;
+      root.style.setProperty(variableName, String(value));
+    }
+  });
+  
+  // Add a class to indicate theme is applied
+  root.classList.add('impulse-theme-applied');
 }

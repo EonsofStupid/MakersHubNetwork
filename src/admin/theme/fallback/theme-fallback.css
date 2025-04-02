@@ -1,0 +1,60 @@
+
+/**
+ * Critical fallback styles for immediate application during page load
+ * These styles are applied immediately before React hydration
+ */
+
+:root {
+  /* Fallback colors - these will be immediately applied */
+  --fallback-background: #12121A;
+  --fallback-foreground: #F6F6F7;
+  --fallback-card: rgba(28, 32, 42, 0.7);
+  --fallback-card-foreground: #F6F6F7;
+  --fallback-primary: #00F0FF;
+  --fallback-primary-foreground: #F6F6F7;
+  --fallback-secondary: #FF2D6E;
+  --fallback-secondary-foreground: #F6F6F7;
+  --fallback-muted: rgba(255, 255, 255, 0.7);
+  --fallback-muted-foreground: rgba(255, 255, 255, 0.5);
+  --fallback-border: rgba(0, 240, 255, 0.2);
+  
+  /* Impulse theme fallbacks */
+  --impulse-bg-main: #12121A;
+  --impulse-text-primary: #F6F6F7;
+  --impulse-primary: #00F0FF;
+  --impulse-secondary: #FF2D6E;
+}
+
+/* Applied as soon as the HTML loads for immediate styling */
+.theme-fallback-applied {
+  background-color: var(--fallback-background);
+  color: var(--fallback-foreground);
+}
+
+/* Force immediate styling for the body */
+body {
+  background-color: var(--fallback-background, #12121A);
+  color: var(--fallback-foreground, #F6F6F7);
+}
+
+/* Base styling with fallbacks */
+html {
+  background-color: var(--fallback-background, #12121A);
+}
+
+/* Loading skeleton styles */
+.skeleton-loader {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.05) 25%, 
+    rgba(255, 255, 255, 0.1) 50%, 
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

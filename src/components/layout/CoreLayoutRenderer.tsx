@@ -44,8 +44,22 @@ export function CoreLayoutRenderer({
     }
   }, [layout, isLoading, id, fallback, logger]);
   
+  // Render a proper loading skeleton
+  if (isLoading) {
+    return (
+      <div className={`space-y-4 ${className || ''}`} data-layout-loading={id || true}>
+        <Skeleton className="h-8 w-full max-w-sm" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
+  
   // Skip rendering with minimal logging if no layout
-  if (!layout && !isLoading) {
+  if (!layout) {
     if (fallback) {
       return <div className={className} data-layout-missing={id || true}>{fallback}</div>;
     }
@@ -53,15 +67,6 @@ export function CoreLayoutRenderer({
     return null;
   }
 
-  // Render a simple skeleton for loading state
-  if (isLoading) {
-    return (
-      <div className={className} data-layout-loading={id || true}>
-        <Skeleton className="h-12 w-full" />
-      </div>
-    );
-  }
-  
   // Skip empty layouts
   if (!layout?.components?.length) {
     logger.debug('Layout has no components', { details: { layoutId: layout?.id, type: layout?.type } });
