@@ -17,6 +17,8 @@ import { useNetworkLogger } from './hooks/useNetworkLogger';
 import { LogConsole } from './components/LogConsole';
 import { LogToggleButton } from './components/LogToggleButton';
 import { LogActivityStream } from './components/LogActivityStream';
+import { LogNotification } from './components/LogNotification';
+import { InlineLogIndicator } from './components/InlineLogIndicator';
 
 // Utility functions
 import { safelyRenderNode, nodeToSearchableString } from './utils/react';
@@ -57,7 +59,9 @@ export {
   useLoggingContext,
   LogConsole,
   LogToggleButton,
-  LogActivityStream
+  LogActivityStream,
+  LogNotification,
+  InlineLogIndicator
 };
 
 // Export utility functions
@@ -99,11 +103,11 @@ export function initializeLogger(): void {
 
 // Convenience functions for working with logs
 export function getLogs() {
-  return loggerService.getLogs();
+  return memoryTransport.getLogs();
 }
 
 export function clearLogs() {
-  loggerService.clearLogs();
+  memoryTransport.clearLogs();
 }
 
 export function onLog(callback: (entry: any) => void) {

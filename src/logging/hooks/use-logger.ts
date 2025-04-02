@@ -1,12 +1,15 @@
 
-import { useLogger as useLoggerTsx } from './useLogger';
+/**
+ * Re-export the useLogger hook from the main implementation 
+ * to maintain backward compatibility
+ */
+import { useLogger as useLoggerImpl } from './useLogger';
 import { LogCategory } from '../types';
 
 /**
  * Re-export the main useLogger hook
- * @deprecated Use the useLogger from './useLogger.tsx' directly
  */
-export const useLogger = useLoggerTsx;
+export const useLogger = useLoggerImpl;
 
 /**
  * Re-export with a more specific name for clarity
