@@ -5,6 +5,7 @@ import { LogCategory } from '../types';
 import { ErrorInfo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { toLogDetails } from '../utils/type-guards';
+import { safeDetails } from '../utils/safeDetails';
 
 /**
  * Hook for logging errors from React components and error boundaries
@@ -16,7 +17,7 @@ export function useErrorLogger(source: string = 'error') {
   const logError = useCallback((error: Error, errorInfo?: ErrorInfo) => {
     logger.error(error.message, {
       category: LogCategory.SYSTEM,
-      details: toLogDetails({
+      details: safeDetails({
         error,
         componentStack: errorInfo?.componentStack
       })
@@ -33,7 +34,7 @@ export function useErrorLogger(source: string = 'error') {
   const logErrorWithContext = useCallback((error: Error, context: Record<string, unknown> = {}) => {
     logger.error(error.message, {
       category: LogCategory.SYSTEM,
-      details: toLogDetails({
+      details: safeDetails({
         error,
         context
       })
@@ -53,7 +54,7 @@ export function useErrorLogger(source: string = 'error') {
     
     logger.error(`API Error: ${endpoint}`, {
       category: LogCategory.NETWORK,
-      details: toLogDetails({
+      details: safeDetails({
         error,
         endpoint,
         params
