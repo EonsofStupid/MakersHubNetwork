@@ -5,8 +5,7 @@ import { LogLevel } from '../constants/log-level';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
 import '../styles/logging.css';
-import { nodeToSearchableString } from '@/shared/utils/render';
-import { safelyRenderNode } from '@/shared/utils/react-utils';
+import { safelyRenderNode, nodeToSearchableString } from '@/shared/utils/react-utils';
 
 interface LogDetailsProps {
   details: Record<string, any>;
