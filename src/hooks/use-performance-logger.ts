@@ -1,5 +1,5 @@
 
-import { usePerformanceLogger } from '@/logging/hooks/usePerformance';
+import { usePerformanceLogger } from '@/logging/hooks/usePerformance.tsx';
 
 /**
  * Re-export the performance logger hook from the centralized logging system

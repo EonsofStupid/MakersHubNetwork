@@ -12,6 +12,7 @@ interface LoggingContextType {
   minLevel: LogLevel;
   showLogConsole: boolean;
   setShowLogConsole: (show: boolean) => void;
+  toggleLogConsole: () => void;
   filteredLogs: (category?: string) => LogEntry[];
 }
 
@@ -55,6 +56,11 @@ export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     logger.info('Logs cleared');
   }, [logger]);
 
+  // Toggle log console visibility
+  const toggleLogConsole = useCallback(() => {
+    setShowLogConsole(prev => !prev);
+  }, []);
+
   // Get filtered logs
   const filteredLogs = useCallback((category?: string) => {
     if (!category) return logs;
@@ -68,6 +74,7 @@ export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     minLevel,
     showLogConsole,
     setShowLogConsole,
+    toggleLogConsole,
     filteredLogs
   };
 

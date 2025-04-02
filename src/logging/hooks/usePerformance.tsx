@@ -1,5 +1,5 @@
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect, useRef } from 'react';
 import { useLogger } from './useLogger';
 import { LogCategory, PerformanceMeasurementOptions } from '../types';
 import { createMeasurement } from '../utils/performance';
@@ -75,13 +75,13 @@ export function usePerformanceLogger(source: string = 'performance') {
 export function useComponentPerformance(componentName: string) {
   const { measureRender } = usePerformanceLogger();
   
-  useMemo(() => {
+  useEffect(() => {
     const startTime = performance.now();
     return () => {
       const renderTime = performance.now() - startTime;
       measureRender(componentName, renderTime);
     };
-  }, [componentName, measureRender])();
+  }, [componentName, measureRender]);
   
   return null; // No render output
 }

@@ -2,42 +2,50 @@
 import { LogEntry, LogTransport } from '../types';
 
 /**
- * Maximum number of log entries to store in memory
+ * Transport that stores logs in memory
  */
-const MAX_MEMORY_LOGS = 1000;
-
-/**
- * Transport that stores logs in memory for later retrieval
- */
-export class MemoryTransport implements LogTransport {
+class MemoryTransport implements LogTransport {
   private logs: LogEntry[] = [];
-  
+  private maxSize: number = 1000;
+
   /**
-   * Log an entry to memory storage
+   * Store a log entry in memory
    */
   public log(entry: LogEntry): void {
-    this.logs.push(entry);
+    this.logs.unshift(entry);
     
-    // Trim logs if they exceed maximum
-    if (this.logs.length > MAX_MEMORY_LOGS) {
-      this.logs = this.logs.slice(-MAX_MEMORY_LOGS);
+    // Trim if exceeds max size
+    if (this.logs.length > this.maxSize) {
+      this.logs = this.logs.slice(0, this.maxSize);
     }
   }
-  
+
   /**
-   * Retrieve all stored logs
+   * Get all stored logs
    */
   public getLogs(): LogEntry[] {
     return [...this.logs];
   }
-  
+
   /**
    * Clear all stored logs
    */
   public clear(): void {
     this.logs = [];
   }
-  
+
+  /**
+   * Set the maximum number of logs to store
+   */
+  public setMaxSize(size: number): void {
+    this.maxSize = size;
+    
+    // Trim if already exceeds new max size
+    if (this.logs.length > this.maxSize) {
+      this.logs = this.logs.slice(0, this.maxSize);
+    }
+  }
+
   /**
    * Flush implementation (no-op for memory)
    */
