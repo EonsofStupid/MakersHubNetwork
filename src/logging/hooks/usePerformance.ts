@@ -7,10 +7,10 @@ import { createSimpleMeasurement } from '../utils/performance';
 /**
  * Re-export from the newer implementation for backward compatibility
  */
-export { usePerformanceLogger, useComponentPerformance } from './usePerformance.tsx';
+export { usePerformanceLogger, useComponentPerformance } from './usePerformanceLogger';
 
 /**
- * @deprecated Use usePerformanceLogger from './usePerformance.tsx' instead
+ * @deprecated Use usePerformanceLogger from './usePerformanceLogger' instead
  */
 export function useSimplePerformanceLogger(source: string) {
   const { performance } = useLogger(source, LogCategory.PERFORMANCE);

@@ -5,17 +5,14 @@ import { LogCategory } from '../types';
 import { createSimpleMeasurement } from '../utils/performance';
 
 /**
- * Re-export from the newer implementation for backward compatibility
+ * Hook for measuring performance within React components
  * @deprecated Use usePerformanceLogger from './usePerformanceLogger' instead
+ * @param source The source/component name
+ * @returns Performance measurement utilities
  */
-export { usePerformanceLogger, useComponentPerformance } from './usePerformanceLogger';
-
-/**
- * @deprecated Use usePerformanceLogger from './usePerformanceLogger' instead
- */
-export function useSimplePerformanceLogger(source: string) {
+export function usePerformanceLogger(source: string) {
   const { performance } = useLogger(source, LogCategory.PERFORMANCE);
-  const simpleMeasurement = createSimpleMeasurement();
+  const simpleMeasurement = useRef(createSimpleMeasurement()).current;
   
   // Start measuring
   const start = useCallback((name: string) => {
@@ -68,5 +65,63 @@ export function useSimplePerformanceLogger(source: string) {
     start,
     end,
     measure
+  };
+}
+
+/**
+ * Hook for monitoring React component performance
+ * @deprecated Use useComponentPerformance from './usePerformanceLogger' instead
+ */
+export function useComponentPerformance(componentName: string) {
+  const { start, end, measure } = usePerformanceLogger(componentName);
+  const mountTimeRef = useRef<number>(0);
+  const renderCountRef = useRef<number>(0);
+  
+  // Track component mounting and updates
+  useEffect(() => {
+    if (renderCountRef.current === 0) {
+      // First render (mount)
+      mountTimeRef.current = performance.now();
+      start('mount');
+    } else {
+      // Re-render
+      start(`render-${renderCountRef.current}`);
+    }
+    
+    renderCountRef.current += 1;
+    
+    return () => {
+      if (renderCountRef.current === 1) {
+        // Component is unmounting after first render
+        end('mount', 'Component mount to unmount');
+      } else {
+        // End the render timer
+        end(`render-${renderCountRef.current - 1}`, `Component render #${renderCountRef.current - 1}`);
+      }
+    };
+  });
+  
+  // Measure time to first meaningful render
+  const markMeaningfulRender = useCallback(() => {
+    if (mountTimeRef.current > 0) {
+      const timeToMeaningful = performance.now() - mountTimeRef.current;
+      
+      end('mount', 'Time to meaningful render');
+    }
+  }, [end]);
+  
+  // Wrapper for measuring specific operations
+  const measureOperation = useCallback(<T>(
+    operationName: string,
+    fn: () => T,
+    description?: string
+  ): T => {
+    return measure(`${componentName}:${operationName}`, fn, description);
+  }, [componentName, measure]);
+  
+  return {
+    renderCount: renderCountRef.current,
+    markMeaningfulRender,
+    measureOperation
   };
 }
