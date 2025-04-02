@@ -53,7 +53,7 @@ export function createSimpleMeasurement() {
         return { result, duration };
       } catch (error) {
         const duration = performance.now() - startTime;
-        throw Object.assign(error, { duration });
+        throw Object.assign(error instanceof Error ? error : new Error(String(error)), { duration });
       }
     }
   };

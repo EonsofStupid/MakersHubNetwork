@@ -1,33 +1,6 @@
 
 import { LoggingConfig, LogCategory, LogLevel } from '../types';
-import { consoleTransport } from '../transports/console.transport';
-import { memoryTransport } from '../transports/memory.transport';
-
-/**
- * Default logging configuration
- */
-export const defaultLoggingConfig: LoggingConfig = {
-  // Default minimum log level
-  minLevel: process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG,
-  
-  // Which categories are enabled
-  enabledCategories: Object.values(LogCategory),
-  
-  // Transports to use
-  transports: [
-    consoleTransport,
-    memoryTransport,
-  ],
-  
-  // Buffer settings
-  bufferSize: 10,
-  flushInterval: 5000, // 5 seconds
-  
-  // Include extra info
-  includeSource: true,
-  includeUser: true,
-  includeSession: true
-};
+import { defaultLoggingConfig } from './default-config';
 
 /**
  * Development logging configuration
@@ -63,7 +36,7 @@ export const productionLoggingConfig: LoggingConfig = {
 export const testLoggingConfig: LoggingConfig = {
   ...defaultLoggingConfig,
   minLevel: LogLevel.ERROR, // Only log errors and above in tests
-  transports: [memoryTransport], // Only use memory transport in tests
+  transports: [defaultLoggingConfig.transports[1]], // Only use memory transport in tests
   bufferSize: 1,
   flushInterval: 0
 };
