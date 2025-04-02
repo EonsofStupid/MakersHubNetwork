@@ -28,7 +28,8 @@ export async function ensureDefaultTheme(): Promise<string | null> {
       // Validate the UUID before returning
       if (isValidUUID(existingTheme.id)) {
         // Automatically sync CSS to this theme
-        await syncCSSToDatabase(existingTheme.id);
+        const syncResult = await syncCSSToDatabase(existingTheme.id);
+        console.log('Sync result for existing theme:', syncResult);
         return existingTheme.id;
       } else {
         console.error('Found default theme but ID is invalid:', existingTheme.id);
@@ -107,7 +108,8 @@ export async function ensureDefaultTheme(): Promise<string | null> {
     
     // Sync CSS to the new theme
     if (data && data.id) {
-      await syncCSSToDatabase(data.id);
+      const syncResult = await syncCSSToDatabase(data.id);
+      console.log('Sync result for new theme:', syncResult);
     }
     
     console.log('Created default theme with ID:', data.id);
@@ -125,6 +127,12 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
   try {
     console.log('Syncing CSS to database for theme:', themeId);
     
+    // Validate UUID before proceeding
+    if (!isValidUUID(themeId)) {
+      console.error('Invalid theme ID provided to syncCSSToDatabase:', themeId);
+      return false;
+    }
+    
     // Get the current theme
     const { data: theme, error: themeError } = await supabase
       .from('themes')
@@ -132,8 +140,15 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       .eq('id', themeId)
       .single();
       
-    if (themeError) throw themeError;
-    if (!theme) throw new Error('Theme not found');
+    if (themeError) {
+      console.error('Database error fetching theme:', themeError);
+      throw themeError;
+    }
+    
+    if (!theme) {
+      console.error('Theme not found for ID:', themeId);
+      throw new Error('Theme not found');
+    }
     
     // Use our predefined keyframes
     const animationsKeyframes = keyframes;
@@ -141,7 +156,6 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
     // Extract component styles with explicit valid UUIDs
     const componentStyles = [
       {
-        id: generateUUID(),
         component_name: 'MainNav',
         styles: {
           container: {
@@ -170,7 +184,6 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: generateUUID(),
         component_name: 'Footer',
         styles: {
           container: 'fixed bottom-0 left-0 right-0 w-full z-40 transition-all ease-in-out',
@@ -186,7 +199,6 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: generateUUID(),
         component_name: 'SimpleCyberText',
         styles: {
           base: 'relative inline-block',
@@ -195,7 +207,6 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: generateUUID(),
         component_name: 'ThemeDataStream',
         styles: {
           container: 'absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none',
@@ -204,7 +215,6 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: generateUUID(),
         component_name: 'ActionButtons',
         styles: {
           buildCta: "cyber-card inline-flex h-12 items-center justify-center rounded-md bg-primary/20 px-8 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(0,240,255,0.15)] transition-all duration-300 hover:scale-105 hover:bg-primary/30 hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden",
@@ -213,7 +223,6 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: generateUUID(),
         component_name: 'PageTitle',
         styles: {
           title: "text-4xl md:text-5xl lg:text-6xl font-bold mb-6 relative",
@@ -221,7 +230,6 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: generateUUID(),
         component_name: 'SubscriptionForm',
         styles: {
           container: "subscribe-banner cyber-card p-4 md:p-6 max-w-xl mx-auto my-8 relative overflow-hidden",
@@ -229,7 +237,6 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: generateUUID(),
         component_name: 'FeaturesSection',
         styles: {
           container: "py-16 bg-background/30 backdrop-blur-sm relative",
@@ -243,7 +250,6 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: generateUUID(),
         component_name: 'BuildShowcase',
         styles: {
           container: "showcase-section py-16 relative",
@@ -295,15 +301,15 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       })
       .eq('id', themeId);
       
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('Error updating theme design tokens:', updateError);
+      throw updateError;
+    }
     
     // Update component tokens
     for (const component of componentStyles) {
-      // Ensure the component ID is a valid UUID
-      if (!isValidUUID(component.id)) {
-        console.error(`Invalid UUID for component ${component.component_name}: ${component.id}`);
-        continue;
-      }
+      // Generate a new valid UUID for each component
+      const componentId = generateUUID();
       
       // Check if component already exists
       const { data: existingComponents, error: compError } = await supabase
@@ -312,7 +318,10 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         .eq('theme_id', themeId)
         .eq('component_name', component.component_name);
         
-      if (compError) throw compError;
+      if (compError) {
+        console.error('Error fetching existing component:', compError);
+        throw compError;
+      }
       
       if (existingComponents && existingComponents.length > 0) {
         // Update existing component
@@ -323,19 +332,25 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
           })
           .eq('id', existingComponents[0].id);
           
-        if (updateCompError) throw updateCompError;
+        if (updateCompError) {
+          console.error('Error updating component:', updateCompError);
+          throw updateCompError;
+        }
       } else {
         // Insert new component
         const { error: insertCompError } = await supabase
           .from('theme_components')
           .insert({
-            id: component.id,
+            id: componentId,
             theme_id: themeId,
             component_name: component.component_name,
             styles: component.styles as Json
           });
           
-        if (insertCompError) throw insertCompError;
+        if (insertCompError) {
+          console.error('Error inserting component:', insertCompError);
+          throw insertCompError;
+        }
       }
     }
     

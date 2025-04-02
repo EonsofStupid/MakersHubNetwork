@@ -8,7 +8,6 @@ export const Icons = {
   logo: LucideIcons.Atom,
   close: LucideIcons.X,
   menu: LucideIcons.Menu,
-  settings: LucideIcons.Settings,
   billing: LucideIcons.CreditCard,
   
   // User-related icons
@@ -41,6 +40,7 @@ export const Icons = {
   gauge: LucideIcons.Gauge,
   refresh: LucideIcons.RefreshCcw,
   loader: LucideIcons.Loader,
+  settings: LucideIcons.Settings,
   
   // Make all Lucide icons available too
   ...Object.entries(LucideIcons).reduce((acc, [name, icon]) => {
