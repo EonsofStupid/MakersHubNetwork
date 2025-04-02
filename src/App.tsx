@@ -6,7 +6,7 @@ import { MainNav } from '@/components/MainNav';
 import { AuthProvider } from '@/auth/components/AuthProvider';
 import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
 import { KeyboardNavigation } from '@/components/KeyboardNavigation';
-import { getLogger, initializeLogger, LogCategory } from '@/logging';
+import { getLogger, LogCategory } from '@/logging';
 import { LoggingProvider } from '@/logging/context/LoggingContext';
 import { initializeAuthBridge } from '@/auth/bridge';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
@@ -17,15 +17,19 @@ const AdminRoutes = lazy(() => import('@/admin/routes').then(mod => ({ default: 
 const BuildRoutes = lazy(() => import('@/build/routes').then(mod => ({ default: mod.BuildRoutes })));
 const NotFoundPage = lazy(() => import('@/pages/NotFound'));
 
-export default function App() {
+interface AppProps {
+  onInitialized?: () => void;
+}
+
+export default function App({ onInitialized }: AppProps) {
   const logger = getLogger('App');
   const performance = usePerformanceLogger('App');
   
   // Initialize the application
   useEffect(() => {
-    performance.measure('app-initialization', () => {
-      // Initialize the logging system
-      initializeLogger();
+    performance.measure('app-initialization', async () => {
+      // Initialize auth bridge for event system
+      initializeAuthBridge();
       
       logger.info('Application initialized', { 
         category: LogCategory.SYSTEM,
@@ -35,8 +39,10 @@ export default function App() {
         }
       });
       
-      // Initialize auth bridge for event system
-      initializeAuthBridge();
+      // Call onInitialized callback if provided
+      if (onInitialized) {
+        await onInitialized();
+      }
     });
     
     // Return cleanup function for when the app unmounts
@@ -45,7 +51,7 @@ export default function App() {
         category: LogCategory.SYSTEM 
       });
     };
-  }, []);
+  }, [onInitialized]);
   
   return (
     <LoggingProvider>

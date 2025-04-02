@@ -37,12 +37,12 @@ export { getLogger };
 
 // Get all logs
 export function getLogs() {
-  return memoryTransport.getLogs();
+  return LoggerService.getInstance().getLogs();
 }
 
 // Clear logs
 export function clearLogs() {
-  memoryTransport.clear();
+  LoggerService.getInstance().clearLogs();
 }
 
 // Register callback for log events

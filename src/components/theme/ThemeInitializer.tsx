@@ -7,6 +7,8 @@ import { DynamicKeyframes } from './DynamicKeyframes';
 import { SiteThemeProvider } from './SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { ThemeLoadingState } from './info/ThemeLoadingState';
+import { ThemeErrorState } from './info/ThemeErrorState';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -15,6 +17,7 @@ interface ThemeInitializerProps {
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [initializationAttempted, setInitializationAttempted] = useState(false);
+  const [initError, setInitError] = useState<Error | null>(null);
   const { setTheme, isLoading } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ThemeInitializer', LogCategory.SYSTEM);
@@ -51,19 +54,23 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
               description: 'Could not find or create theme. Using default styling.',
               variant: "destructive",
             });
-            setIsInitialized(true); // Continue with default styles
+            // Continue with default styles even without a theme
+            setIsInitialized(true);
           }
         }
       } catch (error) {
-        logger.error('Error initializing theme', { details: error });
+        const err = error instanceof Error ? error : new Error('Unknown theme initialization error');
+        logger.error('Error initializing theme', { details: err });
         
         if (isMounted) {
+          setInitError(err);
           toast({
             title: 'Theme Error',
-            description: 'Failed to load theme. Using default styling.',
+            description: err.message,
             variant: "destructive",
           });
-          setIsInitialized(true); // Continue with default styles
+          // Continue with default styles even with an error
+          setIsInitialized(true);
         }
       }
     }
@@ -78,9 +85,19 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   // Instead of blocking the entire app while theme loads,
   // we'll continue rendering with a default theme
   return (
-    <SiteThemeProvider>
+    <SiteThemeProvider fallbackToDefault>
       <DynamicKeyframes />
-      {children}
+      {isInitialized ? (
+        children
+      ) : (
+        <div className="flex items-center justify-center min-h-screen">
+          {initError ? (
+            <ThemeErrorState error={initError} />
+          ) : (
+            <ThemeLoadingState />
+          )}
+        </div>
+      )}
     </SiteThemeProvider>
   );
 }

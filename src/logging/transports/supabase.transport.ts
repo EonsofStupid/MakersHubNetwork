@@ -1,117 +1,98 @@
 
-import { LogEntry, LogTransport } from '../types';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { LogLevel } from '../constants/log-level';
-import { nodeToSearchableString } from '@/shared/utils/react-utils';
+import { LogEntry, LogLevel, LogTransport } from "../types";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Transport that sends logs to Supabase for persistent storage
- * Only critical, error, and important log entries are stored
+ * Transport for sending logs to Supabase
  */
 class SupabaseTransport implements LogTransport {
-  private queue: LogEntry[] = [];
-  private isSending = false;
-  private maxRetries = 3;
+  private buffer: LogEntry[] = [];
+  private maxBufferSize: number = 20;
+  private minLevel: LogLevel = LogLevel.ERROR; // Only send errors and above to Supabase by default
   
+  constructor(options?: { 
+    maxBufferSize?: number;
+    minLevel?: LogLevel;
+  }) {
+    if (options?.maxBufferSize) {
+      this.maxBufferSize = options.maxBufferSize;
+    }
+    
+    if (options?.minLevel !== undefined) {
+      this.minLevel = options.minLevel;
+    }
+  }
+  
+  /**
+   * Log an entry
+   */
   log(entry: LogEntry): void {
-    // Only send certain log levels to the server to avoid excessive database usage
-    if (entry.level < LogLevel.ERROR && entry.category !== 'admin') {
+    // Only log if the level is high enough
+    if (entry.level < this.minLevel) {
       return;
     }
     
-    // Add to queue to handle in batch
-    this.queue.push(entry);
+    this.buffer.push(entry);
     
-    // Try to send if not already sending
-    if (!this.isSending) {
-      this.processSendQueue().catch(err => {
-        console.error('Failed to send logs to Supabase:', err);
+    // Flush if buffer gets too large or for critical errors
+    if (this.buffer.length >= this.maxBufferSize || entry.level >= LogLevel.CRITICAL) {
+      this.flush().catch(err => {
+        console.error('Error flushing logs to Supabase:', err);
       });
     }
   }
   
-  private async processSendQueue(retryCount = 0): Promise<void> {
-    if (this.queue.length === 0 || this.isSending) {
+  /**
+   * Flush logs to Supabase
+   */
+  async flush(): Promise<void> {
+    if (this.buffer.length === 0) {
       return;
     }
     
-    this.isSending = true;
+    const logsToSend = [...this.buffer];
+    this.buffer = [];
     
     try {
-      // Get the current user from the auth store
-      const userId = useAuthStore.getState().user?.id;
-      
-      // Take up to 10 items from the queue
-      const batch = this.queue.slice(0, 10);
-      
-      // Prepare entries for insertion
-      const logData = batch.map(entry => ({
-        id: entry.id,
-        timestamp: entry.timestamp,
-        level: entry.level,
-        level_name: LOG_LEVEL_NAMES[entry.level] || 'UNKNOWN',
-        category: entry.category,
-        message: nodeToSearchableString(entry.message),
-        source: entry.source || null,
-        details: entry.details ? JSON.stringify(entry.details) : null,
-        user_id: userId || entry.userId || null,
-        session_id: entry.sessionId || null,
-        tags: entry.tags || null,
-        client_info: {
-          userAgent: navigator.userAgent,
-          url: window.location.href,
-          referrer: document.referrer,
-          screenSize: `${window.innerWidth}x${window.innerHeight}`
-        }
+      // Format logs for Supabase
+      const formattedLogs = logsToSend.map(log => ({
+        level: log.level,
+        category: log.category,
+        message: typeof log.message === 'string' ? log.message : String(log.message),
+        source: log.source || null,
+        details: log.details ? JSON.stringify(log.details) : null,
+        user_id: log.userId || null,
+        session_id: log.sessionId || null,
+        created_at: log.timestamp.toISOString(),
       }));
       
-      // Insert into the logs table
-      const { error } = await supabase.from('system_logs').insert(logData);
+      // Send to Supabase
+      const { error } = await supabase
+        .from('application_logs')
+        .insert(formattedLogs);
       
       if (error) {
-        throw error;
-      }
-      
-      // Remove processed entries from queue
-      this.queue = this.queue.slice(batch.length);
-      
-      // If more entries in queue, process them
-      if (this.queue.length > 0) {
-        await this.processSendQueue();
+        console.error('Error sending logs to Supabase:', error);
+        // If there's an error, add the logs back to the buffer for retry
+        this.buffer = [...logsToSend, ...this.buffer];
+        
+        // Limit buffer size to prevent memory issues
+        if (this.buffer.length > this.maxBufferSize * 2) {
+          this.buffer = this.buffer.slice(-this.maxBufferSize * 2);
+        }
       }
     } catch (error) {
-      // Retry with exponential backoff if not exceeded max retries
-      if (retryCount < this.maxRetries) {
-        const delay = Math.pow(2, retryCount) * 1000;
-        setTimeout(() => {
-          this.processSendQueue(retryCount + 1).catch(err => {
-            console.error('Failed to retry sending logs to Supabase:', err);
-          });
-        }, delay);
-      } else {
-        // If we can't send to Supabase after retries, log to console as fallback
-        console.error('Failed to send logs to Supabase after retries:', error);
-        
-        // Clear the queue to prevent backlog
-        this.queue = [];
+      console.error('Exception sending logs to Supabase:', error);
+      // If there's an exception, add the logs back to the buffer for retry
+      this.buffer = [...logsToSend, ...this.buffer];
+      
+      // Limit buffer size to prevent memory issues
+      if (this.buffer.length > this.maxBufferSize * 2) {
+        this.buffer = this.buffer.slice(-this.maxBufferSize * 2);
       }
-    } finally {
-      this.isSending = false;
     }
-  }
-  
-  // Method to flush any pending logs
-  async flush(): Promise<void> {
-    if (this.queue.length > 0) {
-      await this.processSendQueue();
-    }
-    return Promise.resolve();
   }
 }
-
-// Import here to avoid circular dependency
-import { LOG_LEVEL_NAMES } from '../constants/log-level';
 
 // Export singleton instance
 export const supabaseTransport = new SupabaseTransport();

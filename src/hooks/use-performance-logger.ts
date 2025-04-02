@@ -1,193 +1,78 @@
 
-import { useCallback, useRef, useEffect } from 'react';
-import { getLogger } from '@/logging';
+import { useRef, useCallback } from 'react';
+import { useLogger } from './use-logger';
 import { LogCategory } from '@/logging/types';
-import { useToast } from '@/hooks/use-toast';
 
 /**
- * Threshold for slow operations in milliseconds
- */
-const SLOW_OPERATION_THRESHOLD = 300;
-
-/**
- * Hook for measuring and logging performance
+ * Hook for measuring performance within React components
+ * 
+ * @param source The source/component name
+ * @returns Performance measurement utilities
  */
 export function usePerformanceLogger(source: string) {
-  const logger = getLogger(source);
-  const timers = useRef<Record<string, number>>({});
-  const { toast } = useToast();
+  const { performance } = useLogger(source, LogCategory.PERFORMANCE);
+  const measurements = useRef<Record<string, number>>({});
   
-  // Clean up any pending timers on unmount
-  useEffect(() => {
-    return () => {
-      const pendingTimers = Object.keys(timers.current);
-      if (pendingTimers.length > 0) {
-        logger.warn(`Component unmounted with ${pendingTimers.length} uncompleted timers`, {
-          category: LogCategory.PERFORMANCE,
-          details: { pendingTimers }
-        });
-        timers.current = {};
-      }
-    };
-  }, [logger]);
-  
-  /**
-   * Start measuring performance for an operation
-   */
-  const startTimer = useCallback((operationName: string) => {
-    timers.current[operationName] = performance.now();
+  // Start measuring
+  const start = useCallback((name: string) => {
+    measurements.current[name] = window.performance.now();
   }, []);
   
-  /**
-   * End measuring and log the duration
-   */
-  const endTimer = useCallback((operationName: string, options?: {
-    details?: unknown,
-    category?: LogCategory,
-    tags?: string[],
-    alertIfSlow?: boolean
-  }) => {
-    const startTime = timers.current[operationName];
-    if (startTime) {
-      const duration = performance.now() - startTime;
-      
-      // Use the added performance method
-      logger.performance(
-        `${operationName} completed in ${duration.toFixed(2)}ms`,
-        duration,
-        {
-          ...options,
-          source,
-          category: options?.category || LogCategory.PERFORMANCE
-        }
-      );
-      
-      // Alert if the operation was slow and alertIfSlow is true
-      if (options?.alertIfSlow && duration > SLOW_OPERATION_THRESHOLD) {
-        toast({
-          title: 'Performance Alert',
-          description: `${operationName} took ${duration.toFixed(0)}ms, which is slower than expected`,
-          variant: 'warning',
-          icon: 'clock'
-        });
-      }
-      
-      delete timers.current[operationName];
-      return duration;
+  // End measuring and log
+  const end = useCallback((name: string, description?: string) => {
+    const startTime = measurements.current[name];
+    
+    if (!startTime) {
+      console.warn(`Measurement "${name}" was never started`);
+      return 0;
     }
     
-    logger.warn(`Timer "${operationName}" was never started`, {
-      source,
-      category: LogCategory.PERFORMANCE
+    const endTime = window.performance.now();
+    const duration = endTime - startTime;
+    
+    // Remove from measurements
+    delete measurements.current[name];
+    
+    // Log the performance
+    const message = description || `Completed ${name}`;
+    performance(message, duration, { 
+      details: { name, duration } 
     });
-    return -1;
-  }, [logger, source, toast]);
+    
+    return duration;
+  }, [performance]);
   
-  /**
-   * Wrap an async function with performance logging
-   */
-  const measureAsync = useCallback(async <T>(
-    operationName: string,
-    fn: () => Promise<T>,
-    options?: {
-      details?: unknown,
-      category?: LogCategory,
-      tags?: string[],
-      alertIfSlow?: boolean
-    }
+  // Measure an operation
+  const measure = useCallback(async <T>(
+    name: string,
+    operation: () => T | Promise<T>,
+    description?: string
   ): Promise<T> => {
-    startTimer(operationName);
+    start(name);
+    
     try {
-      const result = await fn();
-      endTimer(operationName, options);
+      const result = await operation();
+      end(name, description);
       return result;
     } catch (error) {
-      endTimer(operationName, {
-        ...options,
-        details: { ...(options?.details || {}), error }
-      });
-      throw error;
-    }
-  }, [startTimer, endTimer]);
-  
-  /**
-   * Wrap a synchronous function with performance logging
-   */
-  const measure = useCallback(<T>(
-    operationName: string,
-    fn: () => T,
-    options?: {
-      details?: unknown,
-      category?: LogCategory,
-      tags?: string[],
-      alertIfSlow?: boolean
-    }
-  ): T => {
-    startTimer(operationName);
-    try {
-      const result = fn();
-      endTimer(operationName, options);
-      return result;
-    } catch (error) {
-      endTimer(operationName, {
-        ...options,
-        details: { ...(options?.details || {}), error }
-      });
-      throw error;
-    }
-  }, [startTimer, endTimer]);
-  
-  /**
-   * Create a memoized callback that includes performance measurement
-   */
-  const createMeasuredCallback = useCallback(<T extends (...args: any[]) => any>(
-    operationName: string,
-    fn: T,
-    options?: {
-      details?: unknown,
-      category?: LogCategory,
-      tags?: string[],
-      alertIfSlow?: boolean
-    }
-  ): T => {
-    return ((...args: Parameters<T>): ReturnType<T> => {
-      startTimer(operationName);
-      try {
-        const result = fn(...args);
+      // Still log the duration on error
+      const startTime = measurements.current[name];
+      if (startTime) {
+        const duration = window.performance.now() - startTime;
+        delete measurements.current[name];
         
-        // Handle if result is a promise
-        if (result instanceof Promise) {
-          return result
-            .then(value => {
-              endTimer(operationName, options);
-              return value;
-            })
-            .catch(error => {
-              endTimer(operationName, {
-                ...options,
-                details: { ...(options?.details || {}), error }
-              });
-              throw error;
-            }) as ReturnType<T>;
-        }
-        
-        endTimer(operationName, options);
-        return result;
-      } catch (error) {
-        endTimer(operationName, {
-          ...options,
-          details: { ...(options?.details || {}), error }
+        performance(`Failed ${name}`, duration, { 
+          details: { name, error } 
         });
-        throw error;
       }
-    }) as T;
-  }, [startTimer, endTimer]);
+      
+      throw error;
+    }
+  }, [start, end, performance]);
   
   return {
-    startTimer,
-    endTimer,
-    measure,
-    measureAsync,
-    createMeasuredCallback
+    start,
+    end,
+    measure
   };
 }

@@ -1,82 +1,50 @@
 
+/**
+ * Utility functions for working with React nodes
+ */
+
 import React from 'react';
 
 /**
- * Converts a React node or any value to a searchable string
+ * Converts a React node to a searchable string
+ * - For strings, numbers, and booleans, returns the value as a string
+ * - For arrays, converts each item recursively and joins them
+ * - For objects with a type property (React components), returns the component name if available
+ * - For other objects, tries to convert them to a string
  */
-export function nodeToSearchableString(value: React.ReactNode | any): string {
-  if (value === null || value === undefined) {
+export function nodeToSearchableString(node: React.ReactNode): string {
+  if (node === null || node === undefined) {
     return '';
   }
-  
-  if (typeof value === 'string') {
-    return value;
-  }
-  
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-  
-  if (React.isValidElement(value)) {
-    // For React elements, we'll extract text content from simple elements
-    // or return a placeholder for complex components
-    const props = value.props as any;
-    if (props.children && typeof props.children === 'string') {
-      return props.children;
-    }
-    return `[React Component]`;
-  }
-  
-  if (Array.isArray(value)) {
-    return value.map(nodeToSearchableString).join(' ');
-  }
-  
-  if (typeof value === 'object') {
-    try {
-      return JSON.stringify(value);
-    } catch (e) {
-      return '[Object]';
-    }
-  }
-  
-  return String(value);
-}
 
-/**
- * Safely renders a React node or converts primitive values to strings
- */
-export function safelyRenderNode(value: React.ReactNode | any): React.ReactNode {
-  if (value === null || value === undefined) {
-    return '';
+  if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
+    return String(node);
   }
-  
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
+
+  if (Array.isArray(node)) {
+    return node.map(nodeToSearchableString).join(' ');
   }
-  
-  if (React.isValidElement(value)) {
-    return value;
+
+  if (React.isValidElement(node)) {
+    // Try to get component name
+    const componentName = (node.type as any)?.displayName || (node.type as any)?.name || 'Component';
+    
+    // Also process children if available
+    const childrenString = node.props.children 
+      ? nodeToSearchableString(node.props.children) 
+      : '';
+    
+    return `${componentName} ${childrenString}`.trim();
   }
-  
-  if (Array.isArray(value)) {
-    return (
-      <>
-        {value.map((item, index) => (
-          <React.Fragment key={index}>
-            {safelyRenderNode(item)}
-          </React.Fragment>
-        ))}
-      </>
-    );
-  }
-  
-  if (typeof value === 'object') {
+
+  // Handle objects that might have a toString method
+  if (typeof node === 'object') {
     try {
-      return JSON.stringify(value);
+      return String(node);
     } catch (e) {
       return '[Object]';
     }
   }
-  
-  return String(value);
+
+  return '';
 }
