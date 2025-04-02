@@ -1,14 +1,9 @@
 
-export enum LogLevel {
-  TRACE = -1,
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-  CRITICAL = 4,
-  SUCCESS = 5
-}
+import { LogLevel } from '../types';
 
+/**
+ * Mapping of log levels to their string representation
+ */
 export const LOG_LEVEL_NAMES: Record<LogLevel, string> = {
   [LogLevel.TRACE]: 'TRACE',
   [LogLevel.DEBUG]: 'DEBUG',
@@ -24,4 +19,25 @@ export const LOG_LEVEL_NAMES: Record<LogLevel, string> = {
  */
 export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
   return level >= minLevel;
+}
+
+/**
+ * Maps string representation to log level
+ */
+export const STRING_TO_LOG_LEVEL: Record<string, LogLevel> = {
+  'TRACE': LogLevel.TRACE,
+  'DEBUG': LogLevel.DEBUG,
+  'INFO': LogLevel.INFO,
+  'WARN': LogLevel.WARN,
+  'WARNING': LogLevel.WARN,
+  'ERROR': LogLevel.ERROR,
+  'CRITICAL': LogLevel.CRITICAL,
+  'SUCCESS': LogLevel.SUCCESS
+};
+
+/**
+ * Get log level from string
+ */
+export function getLogLevelFromString(levelString: string): LogLevel {
+  return STRING_TO_LOG_LEVEL[levelString.toUpperCase()] || LogLevel.INFO;
 }

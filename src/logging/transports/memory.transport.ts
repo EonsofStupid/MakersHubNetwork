@@ -1,60 +1,51 @@
 
-import { LogEntry, LogTransport } from "../types";
+import { LogEntry, LogTransport } from '../types';
 
 /**
- * In-memory transport for logs
- * Stores logs in memory for access by the UI
+ * Maximum number of logs to store in memory
+ */
+const MAX_MEMORY_LOGS = 1000;
+
+/**
+ * Transport that stores logs in memory for display in UI
  */
 class MemoryTransport implements LogTransport {
   private logs: LogEntry[] = [];
-  private maxLogs: number = 1000;
-  
-  constructor(maxLogs?: number) {
-    if (maxLogs) {
-      this.maxLogs = maxLogs;
-    }
-  }
   
   /**
-   * Log an entry
+   * Log an entry to memory
    */
-  log(entry: LogEntry): void {
-    this.logs.unshift(entry); // Add to the front for newest first
+  public log(entry: LogEntry): void {
+    this.logs.unshift(entry); // Add to start for newest first
     
-    // Trim if we exceed the max logs
-    if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(0, this.maxLogs);
+    // Limit size to prevent memory issues
+    if (this.logs.length > MAX_MEMORY_LOGS) {
+      this.logs = this.logs.slice(0, MAX_MEMORY_LOGS);
     }
   }
   
   /**
-   * Get all logs
+   * Get all stored logs
    */
-  getLogs(): LogEntry[] {
+  public getLogs(): LogEntry[] {
     return [...this.logs];
   }
   
   /**
-   * Get log count
+   * Clear all stored logs
    */
-  getLogCount(): number {
-    return this.logs.length;
-  }
-  
-  /**
-   * Clear all logs
-   */
-  clear(): void {
+  public clear(): void {
     this.logs = [];
   }
   
   /**
-   * No-op flush as memory transport doesn't need flushing
+   * No-op flush implementation (required by interface)
    */
-  flush(): Promise<void> {
+  public async flush(): Promise<void> {
+    // Memory transport doesn't need to flush
     return Promise.resolve();
   }
 }
 
-// Export a singleton instance
+// Export singleton instance
 export const memoryTransport = new MemoryTransport();
