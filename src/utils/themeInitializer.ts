@@ -8,6 +8,45 @@ import { getLogger } from '@/logging';
 const logger = getLogger('ThemeInitializer');
 
 /**
+ * Get a theme by name from the database
+ * Returns the theme ID if found, null otherwise
+ */
+export async function getThemeByName(themeName: string): Promise<string | null> {
+  try {
+    logger.info(`Attempting to find theme by name: ${themeName}`);
+    
+    // Search for the theme with case insensitive matching
+    const { data: themes, error } = await supabase
+      .from('themes')
+      .select('id')
+      .ilike('name', `%${themeName}%')
+      .limit(1);
+    
+    if (error) {
+      logger.error('Error searching for theme by name:', { details: { error, themeName } });
+      throw error;
+    }
+    
+    if (!themes || themes.length === 0) {
+      logger.warn(`No theme found with name: ${themeName}`);
+      return null;
+    }
+    
+    // Validate the UUID before returning
+    if (isValidUUID(themes[0].id)) {
+      logger.info(`Found theme by name: ${themeName}`, { details: { id: themes[0].id } });
+      return themes[0].id;
+    } else {
+      logger.error('Found theme but ID is invalid:', { details: { id: themes[0].id } });
+      return null;
+    }
+  } catch (error) {
+    logger.error(`Error getting theme by name: ${themeName}`, { details: { error } });
+    throw error;
+  }
+}
+
+/**
  * Ensures that a default theme exists in the database
  * If no default theme exists, creates one
  * Returns the theme ID regardless of authenticated state

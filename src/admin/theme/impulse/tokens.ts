@@ -67,3 +67,10 @@ export const defaultImpulseTokens: ImpulseTheme = {
     }
   }
 };
+
+// Export for use in themes database
+export const impulseTokensForDB = {
+  name: "Impulse",
+  description: "Cyberpunk-inspired admin interface with glass morphism",
+  tokens: defaultImpulseTokens
+};

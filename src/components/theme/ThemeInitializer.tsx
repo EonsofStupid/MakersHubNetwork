@@ -1,11 +1,11 @@
 
 import { useEffect, useState } from 'react';
-import { ensureDefaultTheme } from '@/utils/themeInitializer';
+import { ensureDefaultTheme, getThemeByName } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicKeyframes } from './DynamicKeyframes';
 import { SiteThemeProvider } from './SiteThemeProvider';
-import { useLogger } from '@/logging';
+import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
 import { ThemeErrorState } from './info/ThemeErrorState';
@@ -69,23 +69,32 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           }
         }, 1000); // Reduced to 1 second for faster fallback
         
-        // Try to ensure the default theme exists in the database
-        // But don't block the app if this fails
+        // First try loading the Impulse theme by name
         let themeId: string | null = null;
         
         try {
-          themeId = await ensureDefaultTheme();
+          themeId = await getThemeByName('Impulse');
+          logger.info('Attempting to load Impulse theme', { details: { themeId }});
         } catch (err) {
-          logger.warn('Error ensuring default theme, continuing with fallback', { 
+          logger.warn('Error loading Impulse theme by name, trying default theme', { 
             details: { error: isError(err) ? err.message : 'Unknown error' } 
           });
-          // Continue without a valid themeId - will trigger fallback
+          
+          // Fallback to default theme if Impulse not found
+          try {
+            themeId = await ensureDefaultTheme();
+          } catch (defaultErr) {
+            logger.warn('Error ensuring default theme, continuing with fallback', { 
+              details: { error: isError(defaultErr) ? defaultErr.message : 'Unknown error' } 
+            });
+            // Continue without a valid themeId - will trigger fallback
+          }
         }
         
         if (!isMounted) return;
         
         if (themeId && isValidUUID(themeId)) {
-          logger.debug('Default theme ensured, attempting to set theme', { details: { themeId }});
+          logger.debug('Theme ID found, attempting to set theme', { details: { themeId }});
           
           // Set a separate timeout just for the DB fetch
           const fetchTimeout = setTimeout(() => {

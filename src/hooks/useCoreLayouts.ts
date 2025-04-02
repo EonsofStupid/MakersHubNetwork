@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '@/admin/types/layout.types';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { layoutSeederService } from '@/admin/services/layoutSeeder.service';
@@ -16,6 +16,22 @@ export function useCoreLayouts() {
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
   const logger = useLogger('useCoreLayouts', LogCategory.UI);
+
+  // Utility function to safely load a layout
+  const loadLayout = useCallback(async (type: string, scope: string, setter: (layout: Layout | null) => void) => {
+    try {
+      const response = await layoutSkeletonService.getByTypeAndScope(type, scope);
+      if (response.data) {
+        const convertedLayout = layoutSkeletonService.convertToLayout(response.data);
+        setter(convertedLayout);
+        logger.debug(`Loaded ${type} layout`, { details: { id: response.data.id } });
+        return true;
+      }
+    } catch (err) {
+      logger.warn(`Error loading ${type} layout`, { details: safeDetails(err) });
+    }
+    return false;
+  }, [logger]);
 
   useEffect(() => {
     let isMounted = true;
@@ -49,52 +65,10 @@ export function useCoreLayouts() {
           // Continue despite the error
         }
 
-        // Try to load the topnav layout
-        try {
-          const topNavResponse = await layoutSkeletonService.getByTypeAndScope('topnav', 'site');
-          if (topNavResponse.data && isMounted) {
-            setTopNavLayout(layoutSkeletonService.convertToLayout(topNavResponse.data));
-            logger.info('Loaded topnav layout', {
-              details: { id: topNavResponse.data.id }
-            });
-          }
-        } catch (topNavError) {
-          logger.warn('Error loading topnav layout', {
-            details: safeDetails(topNavError)
-          });
-          // Continue with next layout
-        }
-
-        // Try to load the footer layout
-        try {
-          const footerResponse = await layoutSkeletonService.getByTypeAndScope('footer', 'site');
-          if (footerResponse.data && isMounted) {
-            setFooterLayout(layoutSkeletonService.convertToLayout(footerResponse.data));
-            logger.info('Loaded footer layout', {
-              details: { id: footerResponse.data.id }
-            });
-          }
-        } catch (footerError) {
-          logger.warn('Error loading footer layout', {
-            details: safeDetails(footerError)
-          });
-          // Continue with next layout
-        }
-
-        // Try to load the user menu layout
-        try {
-          const userMenuResponse = await layoutSkeletonService.getByTypeAndScope('usermenu', 'site');
-          if (userMenuResponse.data && isMounted) {
-            setUserMenuLayout(layoutSkeletonService.convertToLayout(userMenuResponse.data));
-            logger.info('Loaded usermenu layout', {
-              details: { id: userMenuResponse.data.id }
-            });
-          }
-        } catch (userMenuError) {
-          logger.warn('Error loading usermenu layout', {
-            details: safeDetails(userMenuError)
-          });
-        }
+        // Try to load each layout
+        const topNavSuccess = await loadLayout('topnav', 'site', setTopNavLayout);
+        const footerSuccess = await loadLayout('footer', 'site', setFooterLayout);
+        const userMenuSuccess = await loadLayout('usermenu', 'site', setUserMenuLayout);
         
         // Clear the timeout since we're done (whether successful or not)
         clearTimeout(timeoutId);
@@ -103,9 +77,9 @@ export function useCoreLayouts() {
           setIsLoading(false);
           logger.info('Core layout loading complete', {
             details: {
-              hasTopNav: !!topNavLayout,
-              hasFooter: !!footerLayout,
-              hasUserMenu: !!userMenuLayout
+              hasTopNav: topNavSuccess,
+              hasFooter: footerSuccess,
+              hasUserMenu: userMenuSuccess
             }
           });
         }
@@ -126,7 +100,7 @@ export function useCoreLayouts() {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [toast, logger]);
+  }, [loadLayout, logger, toast]);
 
   return {
     topNavLayout,

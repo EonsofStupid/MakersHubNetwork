@@ -21,13 +21,13 @@ export function MainNav() {
   const { componentStyles } = useSiteTheme();
   const { topNavLayout, isLoading: layoutsLoading } = useCoreLayouts();
 
-  // Get MainNav styles from theme
+  // Get MainNav styles from theme - with fallbacks
   const styles = componentStyles?.MainNav || {
     container: {
       base: 'fixed top-0 w-full z-50 transition-all duration-300',
-      animated: 'mainnav-morph'
+      animated: 'animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(0,240,255,0.1)]'
     },
-    header: 'mainnav-header',
+    header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30',
     dataStream: 'relative',
     dataStreamEffect: '',
     glitchParticles: '',
@@ -37,10 +37,12 @@ export function MainNav() {
     console.log("MainNav - hasAdminAccess:", hasAdminAccess);
     console.log("MainNav - isAuthenticated:", isAuthenticated);
     console.log("MainNav - componentStyles:", componentStyles);
+    console.log("MainNav - topNavLayout:", topNavLayout);
+    
     requestAnimationFrame(() => {
       setIsLoaded(true);
     });
-  }, [hasAdminAccess, componentStyles, isAuthenticated]);
+  }, [hasAdminAccess, componentStyles, isAuthenticated, topNavLayout]);
 
   // Render the layout from database if available, otherwise fall back to the hardcoded version
   return (
@@ -50,20 +52,12 @@ export function MainNav() {
       fallback={
         <header
           className={cn(
-            "mainnav-container",
-            "mainnav-header",
-            "mainnav-gradient",
-            "mainnav-morph"
+            "fixed top-0 w-full z-50", 
+            "bg-background/20 backdrop-blur-xl",
+            "shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]", 
+            "border-b border-primary/30"
           )}
         >
-          <div className="mainnav-effects-wrapper absolute inset-0 w-full h-full overflow-hidden">
-            <div className={cn(
-              "w-full h-full pointer-events-none", 
-              styles.dataStream,
-              styles.dataStreamEffect,
-              styles.glitchParticles
-            )} />
-          </div>
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between py-4">
               <Logo />

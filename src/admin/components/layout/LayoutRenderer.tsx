@@ -80,16 +80,18 @@ function ComponentRenderer({ component, hasPermission, isEditMode }: ComponentRe
           return hasPermission(permission as PermissionValue);
         } catch (e) {
           // If permission check fails, default to allowing the component in non-edit mode
+          console.warn('Permission check failed:', e);
           return !isEditMode;
         }
       });
     } catch (e) {
       // Any error in permission checking, default to true in non-edit mode
+      console.error('Error checking permissions:', e);
       return !isEditMode;
     }
   }, [component.permissions, hasPermission, isEditMode]);
   
-  // Skip rendering if no permissions
+  // Skip rendering if no permissions (unless in edit mode)
   if (!hasRequiredPermissions && !isEditMode) {
     return null;
   }
@@ -99,6 +101,7 @@ function ComponentRenderer({ component, hasPermission, isEditMode }: ComponentRe
   
   // If component not found, show a placeholder in edit mode or a minimal div
   if (!ComponentType) {
+    console.warn(`Component not found: ${component.type}`);
     if (isEditMode) {
       return (
         <div className="p-4 border border-dashed border-yellow-500 rounded-md bg-yellow-50 dark:bg-yellow-950/30">

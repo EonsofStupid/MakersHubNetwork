@@ -24,11 +24,23 @@ export function CoreLayoutRenderer({
 }: CoreLayoutRendererProps) {
   const logger = useLogger('CoreLayoutRenderer', LogCategory.UI);
   
+  useEffect(() => {
+    if (!layout && !isLoading) {
+      logger.debug('No layout provided, using fallback', { 
+        details: { 
+          id, 
+          hasFallback: !!fallback 
+        } 
+      });
+    }
+  }, [layout, isLoading, id, fallback, logger]);
+  
   // Skip rendering with minimal logging if no layout
   if (!layout && !isLoading) {
     if (fallback) {
       return <div className={className} data-layout-missing={id || true}>{fallback}</div>;
     }
+    logger.warn('No layout and no fallback provided', { details: { id } });
     return null;
   }
 
@@ -43,6 +55,7 @@ export function CoreLayoutRenderer({
   
   // Skip empty layouts
   if (!layout?.components?.length) {
+    logger.debug('Layout has no components', { details: { layoutId: layout?.id, type: layout?.type } });
     return fallback ? (
       <div className={className} data-layout-empty={id || true}>
         {fallback}
@@ -52,6 +65,7 @@ export function CoreLayoutRenderer({
   
   // Render the actual layout
   try {
+    logger.debug('Rendering layout', { details: { layoutId: layout.id, type: layout.type, componentCount: layout.components.length } });
     return (
       <div className={className} data-layout-id={layout.id} data-layout-type={layout.type}>
         <LayoutRenderer layout={layout} />
