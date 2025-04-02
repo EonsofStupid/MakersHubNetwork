@@ -1,5 +1,5 @@
 
-import { LogEntry, LogEventCallback } from '../types';
+import { LogEntry, LogEventCallback } from './types';
 
 /**
  * Event emitter for logging events

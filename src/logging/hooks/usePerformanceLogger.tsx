@@ -1,7 +1,7 @@
-// src/logging/hooks/usePerformanceLogger.tsx
+
 import { useCallback, useRef, useEffect } from 'react';
 import { useLogger } from './useLogger';
-import { LogCategory } from '../types';
+import { LogCategory, PerformanceMeasurementOptions } from '../types';
 import { createSimpleMeasurement } from '../utils/performance';
 
 export function usePerformanceLogger(source: string = 'performance') {
@@ -21,7 +21,7 @@ export function usePerformanceLogger(source: string = 'performance') {
     });
 
     return duration;
-  }, []);
+  }, [performance]);
 
   function measure<T>(
     name: string,
@@ -98,4 +98,18 @@ export function usePerformanceLogger(source: string = 'performance') {
     measureRender,
     measureEffect
   };
+}
+
+export function useComponentPerformance(componentName: string) {
+  const { measureRender } = usePerformanceLogger(`component:${componentName}`);
+  
+  useEffect(() => {
+    const startTime = performance.now();
+    return () => {
+      const renderTime = performance.now() - startTime;
+      measureRender(componentName, renderTime);
+    };
+  }, [componentName, measureRender]);
+  
+  return { name: componentName };
 }
