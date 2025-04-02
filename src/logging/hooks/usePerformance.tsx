@@ -64,10 +64,13 @@ export function usePerformanceLogger(source: string) {
     }
   }, [simpleMeasurement, logger]);
   
+  const measureAsync = measure; // Alias for clarity when using with async functions
+  
   return {
     start,
     end,
-    measure
+    measure,
+    measureAsync
   };
 }
 

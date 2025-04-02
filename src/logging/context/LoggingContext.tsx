@@ -1,8 +1,8 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { LogEntry, LogCategory, LogLevel } from '../types';
-import { onLog, clearLogs } from '../index';
-import { memoryTransport } from '../transports/memory';
+import { onLog, clearLogs } from '../';
+import { memoryTransport } from '../transports/memory.transport';
 
 interface LoggingContextValue {
   logs: LogEntry[];

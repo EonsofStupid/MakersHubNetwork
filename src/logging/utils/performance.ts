@@ -1,7 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { LogCategory, MeasurementResult } from '../types';
-import { loggerService } from '../service';
+import { loggerService } from '../service/logger.service';
 
 /**
  * Creates a measurement utility for logging performance metrics

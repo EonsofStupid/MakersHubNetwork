@@ -3,8 +3,8 @@ import React from 'react';
 import { AlertCircle, Info, AlertTriangle, XCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { LogCategory } from '../types';
-import { LogLevel } from '../constants/log-level';
-import { safelyRenderNode } from '@/shared/utils/react-utils';
+import { LogLevel } from '../types';
+import { safelyRenderNode } from '../utils/react';
 
 interface LogNotificationProps {
   level: LogLevel;

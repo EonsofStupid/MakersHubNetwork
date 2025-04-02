@@ -1,17 +1,19 @@
 
 // Core functionality
-import { loggerService, getLogger } from './service';
+import { loggerService, getLogger } from './service/logger.service';
 import { LogCategory, LogLevel } from './types';
-import { memoryTransport } from './transports/memory';
+import { memoryTransport } from './transports/memory.transport';
 import { logEventEmitter } from './events';
 
 // Re-export types and constants
 export { LogCategory, LogLevel } from './types';
-export { LOG_LEVEL_NAMES, isLogLevelAtLeast } from './constants';
+export { LOG_LEVEL_NAMES, isLogLevelAtLeast } from './constants/log-level';
 
 // Re-export hooks for React components
 export { useLogger } from './hooks/useLogger';
 export { usePerformanceLogger, useComponentPerformance } from './hooks/usePerformance';
+export { useErrorLogger } from './hooks/useErrorLogger';
+export { useNetworkLogger } from './hooks/useNetworkLogger';
 
 // Re-export utility functions
 export { safelyRenderNode, nodeToSearchableString } from './utils/react';
@@ -23,7 +25,7 @@ export {
 } from './utils/performance';
 
 // Export memory transport for direct access
-export { memoryTransport } from './transports/memory';
+export { memoryTransport } from './transports/memory.transport';
 
 // Initialize the logging system
 export function initializeLogger(): void {

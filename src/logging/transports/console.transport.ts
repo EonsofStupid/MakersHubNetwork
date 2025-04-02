@@ -1,60 +1,47 @@
 
-import { LogEntry, LogTransport, LogLevel } from '../types';
-import { LOG_LEVEL_NAMES } from '../constants/log-level';
-import { nodeToSearchableString } from '@/shared/utils/react-utils';
+import { LogEntry, LogLevel, LogTransport } from '../types';
+import { LOG_LEVEL_NAMES, isLogLevelAtLeast } from '../constants/log-level';
 
 /**
- * Transport for logging to the browser console
+ * Transport that logs to the browser console
  */
-class ConsoleTransport implements LogTransport {
+export class ConsoleTransport implements LogTransport {
   /**
    * Log an entry to the console
    */
   public log(entry: LogEntry): void {
-    const timestamp = entry.timestamp.toISOString();
-    const level = LOG_LEVEL_NAMES[entry.level];
-    const source = entry.source ? `[${entry.source}]` : '';
-    const category = entry.category ? `[${entry.category}]` : '';
-    const message = typeof entry.message === 'string' 
-      ? entry.message 
-      : nodeToSearchableString(entry.message);
+    const { level, message, timestamp, source, category, details } = entry;
     
-    // Format the prefix
-    const prefix = `${timestamp} ${level} ${category} ${source}`;
+    // Format timestamp
+    const time = timestamp.toISOString().split('T')[1].slice(0, 8);
     
-    // Select console method based on level
-    let consoleMethod: 'log' | 'debug' | 'info' | 'warn' | 'error';
+    // Prepare message elements
+    const prefix = `[${time}] [${LOG_LEVEL_NAMES[level]}] [${category}]${source ? ` [${source}]` : ''}:`;
     
-    switch (entry.level) {
+    // Log to console using appropriate method
+    switch (level) {
       case LogLevel.TRACE:
       case LogLevel.DEBUG:
-        consoleMethod = 'debug';
+        console.debug(prefix, message, details || '');
         break;
       case LogLevel.INFO:
       case LogLevel.SUCCESS:
-        consoleMethod = 'info';
+        console.info(prefix, message, details || '');
         break;
       case LogLevel.WARN:
-        consoleMethod = 'warn';
+        console.warn(prefix, message, details || '');
         break;
       case LogLevel.ERROR:
       case LogLevel.CRITICAL:
-        consoleMethod = 'error';
+        console.error(prefix, message, details || '');
         break;
       default:
-        consoleMethod = 'log';
-    }
-    
-    // Output to console
-    if (entry.details) {
-      console[consoleMethod](`${prefix} ${message}`, entry.details);
-    } else {
-      console[consoleMethod](`${prefix} ${message}`);
+        console.log(prefix, message, details || '');
     }
   }
   
   /**
-   * No-op flush implementation
+   * Flush implementation (no-op for console)
    */
   public async flush(): Promise<void> {
     return Promise.resolve();
