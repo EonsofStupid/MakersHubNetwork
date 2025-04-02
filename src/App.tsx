@@ -13,9 +13,10 @@ import { usePerformanceLogger } from '@/hooks/use-performance-logger';
 
 // Lazy load routes for better performance
 const Index = lazy(() => import('@/pages/Index'));
-const AdminRoutes = lazy(() => import('@/admin/routes').then(mod => ({ default: mod.AdminRoutes })));
-const BuildRoutes = lazy(() => import('@/build/routes').then(mod => ({ default: mod.BuildRoutes })));
-const NotFoundPage = lazy(() => import('@/pages/NotFound'));
+// Fix for missing modules
+const AdminRoutes = lazy(() => import('./admin/routes').then(mod => ({ default: mod.AdminRoutes })));
+const BuildRoutes = lazy(() => import('./routes/BuildRoutes'));
+const NotFoundPage = lazy(() => import('./pages/NotFound'));
 
 interface AppProps {
   onInitialized?: () => void;

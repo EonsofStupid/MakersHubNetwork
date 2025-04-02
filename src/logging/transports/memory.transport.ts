@@ -2,57 +2,32 @@
 import { LogEntry, LogTransport } from '../types';
 
 /**
- * Transport that stores logs in memory
+ * In-memory transport for storing logs in memory
  */
 class MemoryTransport implements LogTransport {
   private logs: LogEntry[] = [];
-  private maxSize: number = 1000;
-
-  /**
-   * Store a log entry in memory
-   */
-  public log(entry: LogEntry): void {
-    this.logs.unshift(entry);
+  private maxLogs: number;
+  
+  constructor(maxLogs: number = 1000) {
+    this.maxLogs = maxLogs;
+  }
+  
+  log(entry: LogEntry): void {
+    this.logs.push(entry);
     
-    // Trim if exceeds max size
-    if (this.logs.length > this.maxSize) {
-      this.logs = this.logs.slice(0, this.maxSize);
+    // Trim if we exceed the max logs
+    if (this.logs.length > this.maxLogs) {
+      this.logs = this.logs.slice(-this.maxLogs);
     }
   }
-
-  /**
-   * Get all stored logs
-   */
-  public getLogs(): LogEntry[] {
+  
+  getLogs(): LogEntry[] {
     return [...this.logs];
   }
-
-  /**
-   * Clear all stored logs
-   */
-  public clear(): void {
+  
+  clear(): void {
     this.logs = [];
-  }
-
-  /**
-   * Set the maximum number of logs to store
-   */
-  public setMaxSize(size: number): void {
-    this.maxSize = size;
-    
-    // Trim if already exceeds new max size
-    if (this.logs.length > this.maxSize) {
-      this.logs = this.logs.slice(0, this.maxSize);
-    }
-  }
-
-  /**
-   * Flush implementation (no-op for memory)
-   */
-  public async flush(): Promise<void> {
-    return Promise.resolve();
   }
 }
 
-// Export singleton instance
 export const memoryTransport = new MemoryTransport();

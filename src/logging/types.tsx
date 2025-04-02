@@ -38,8 +38,8 @@ export interface LoggerOptions {
   category?: LogCategory;
   details?: Record<string, unknown>;
   tags?: string[];
-  description?: string; // Added for semantic labeling of duration logs
-  source?: string;
+  description?: string; // For semantic labeling of duration logs
+  source?: string;      // Added source property to fix type errors
 }
 
 /**
