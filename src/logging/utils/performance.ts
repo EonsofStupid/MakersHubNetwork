@@ -1,17 +1,130 @@
 
+import { v4 as uuidv4 } from 'uuid';
+import { LogCategory, MeasurementResult } from '../types';
+import { loggerService } from '../service';
+
 /**
- * Performance measurement utilities that don't depend on the logging system
+ * Creates a measurement utility
+ */
+export function createMeasurement(source: string, category: LogCategory = LogCategory.PERFORMANCE) {
+  const measurements = new Map<string, number>();
+  
+  return {
+    /**
+     * Start measuring a named operation
+     */
+    start: (name: string): void => {
+      measurements.set(name, performance.now());
+    },
+    
+    /**
+     * End measuring a named operation and log the results
+     */
+    end: (name: string, description?: string, tags?: string[]): number => {
+      const startTime = measurements.get(name);
+      
+      if (!startTime) {
+        loggerService.warn(`Measurement "${name}" was never started`, {
+          source,
+          category,
+          details: { name }
+        });
+        return 0;
+      }
+      
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      
+      // Remove from measurements map
+      measurements.delete(name);
+      
+      // Log the performance measurement
+      const message = description || `Completed ${name}`;
+      loggerService.performance(message, duration, {
+        source,
+        category,
+        details: { name, duration },
+        tags: tags || ['performance', name]
+      });
+      
+      return duration;
+    },
+    
+    /**
+     * Measure an operation's execution time
+     */
+    measure: async <T>(
+      name: string,
+      operation: () => T | Promise<T>,
+      description?: string,
+      tags?: string[]
+    ): Promise<T> => {
+      measurements.set(name, performance.now());
+      
+      try {
+        const result = await operation();
+        const endTime = performance.now();
+        const duration = endTime - measurements.get(name)!;
+        
+        // Remove from measurements map
+        measurements.delete(name);
+        
+        // Log the performance measurement
+        const message = description || `Completed ${name}`;
+        loggerService.performance(message, duration, {
+          source,
+          category,
+          details: { name, duration },
+          tags: tags || ['performance', name]
+        });
+        
+        return result;
+      } catch (error) {
+        // If operation fails, still record duration
+        const endTime = performance.now();
+        const duration = endTime - measurements.get(name)!;
+        
+        // Remove from measurements map
+        measurements.delete(name);
+        
+        // Log the failed operation
+        loggerService.performance(`Failed ${name}`, duration, {
+          source,
+          category,
+          details: { name, duration, error },
+          tags: tags ? [...tags, 'error'] : ['performance', name, 'error']
+        });
+        
+        throw error;
+      }
+    }
+  };
+}
+
+/**
+ * Measures the execution time of a function and returns the result
+ */
+export async function measureExecution<T>(
+  fn: () => T | Promise<T>,
+  source: string,
+  name: string,
+  category: LogCategory = LogCategory.PERFORMANCE
+): Promise<T> {
+  const measurement = createMeasurement(source, category);
+  return measurement.measure(name, fn);
+}
+
+/**
+ * Standalone performance measurement utilities that don't depend on the logging system
  * to avoid circular dependencies
  */
 
 /**
- * Measures the execution time of a function and returns the result
- * @param fn The function to measure
- * @returns An object with the result and duration
+ * Measures the execution time of a function without logging
  */
-export async function measureExecution<T>(
+export async function measurePerformance<T>(
   fn: () => T | Promise<T>
-): Promise<{result: T; duration: number}> {
+): Promise<MeasurementResult<T>> {
   const start = performance.now();
   
   try {
@@ -31,9 +144,7 @@ export async function measureExecution<T>(
 }
 
 /**
- * Creates a simple performance measurement utility that doesn't
- * depend on the logging system to avoid circular dependencies
- * @returns A measurement utility
+ * Creates a simple performance measurement utility without logging
  */
 export function createSimpleMeasurement() {
   const measurements = new Map<string, number>();
@@ -48,7 +159,6 @@ export function createSimpleMeasurement() {
     
     /**
      * End measuring with given name
-     * @returns Duration in milliseconds
      */
     end: (name: string): number => {
       const startTime = measurements.get(name);
@@ -69,12 +179,11 @@ export function createSimpleMeasurement() {
     
     /**
      * Measure an operation from start to finish
-     * @returns Result and duration
      */
     measure: async <T>(
       name: string,
       operation: () => T | Promise<T>
-    ): Promise<{ result: T; duration: number }> => {
+    ): Promise<MeasurementResult<T>> => {
       measurements.set(name, performance.now());
       
       try {
