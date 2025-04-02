@@ -46,13 +46,13 @@ export function useCoreLayouts() {
 
         logger.info('Initializing core layouts');
         
-        // Set a timeout to prevent waiting too long for layouts
+        // Set a shorter timeout to prevent waiting too long for layouts
         timeoutId = setTimeout(() => {
           if (isMounted) {
             logger.warn('Layout loading timed out, continuing with fallbacks');
             setIsLoading(false);
           }
-        }, 2000);
+        }, 1000); // Faster timeout for better UX
         
         // Try to ensure core layouts exist without breaking the app if it fails
         try {

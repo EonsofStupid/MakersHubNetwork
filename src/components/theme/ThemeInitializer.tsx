@@ -14,8 +14,8 @@ interface ThemeInitializerProps {
   children: React.ReactNode;
 }
 
-// Short fallback timeout to ensure UI renders quickly
-const FALLBACK_TIMEOUT = 300; // 300ms fallback timeout for better UX
+// Shorter fallback timeout for better UX
+const FALLBACK_TIMEOUT = 300; // 300ms fallback timeout
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   // State tracking for better debugging and resilience
@@ -33,7 +33,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     // Apply fallback immediately to prevent white flash
     document.documentElement.classList.add('theme-fallback-applied');
     
-    // These force the browser to apply default colors immediately
+    // Force the browser to apply default colors immediately
     document.documentElement.style.setProperty('--background', '#080F1E');
     document.documentElement.style.setProperty('--foreground', '#F9FAFB');
     document.documentElement.style.backgroundColor = '#080F1E';

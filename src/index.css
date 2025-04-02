@@ -1,3 +1,4 @@
+@import './admin/theme/fallback/theme-fallback.css';
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import './components/MainNav/styles/cyber-effects.css';
@@ -9,23 +10,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Immediate fallback styles applied before React hydration */
-.theme-fallback-applied {
-  --background: var(--fallback-background, #080F1E);
-  --foreground: var(--fallback-foreground, #F9FAFB);
-  --card: var(--fallback-card, #0E172A);
-  --card-foreground: var(--fallback-card-foreground, #F9FAFB);
-  --primary: var(--fallback-primary, #00F0FF);
-  --primary-foreground: var(--fallback-primary-foreground, #F9FAFB);
-  --border: var(--fallback-border, #1E293B);
-}
-
-/* Force immediate styling for the body */
-body {
-  background-color: var(--background, #080F1E);
-  color: var(--foreground, #F9FAFB);
-}
-
+/* Base layer additions for better loading experience */
 @layer base {
   :root {
     --background: hsl(var(--site-background));

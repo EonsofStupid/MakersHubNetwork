@@ -2,9 +2,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAdminPreferences } from '@/admin/store/adminPreferences.store';
 import { getLogger } from '@/logging';
+import { defaultImpulseTokens } from '../impulse/tokens';
+import { applyThemeToDocument } from '../utils/themeUtils';
 
 const logger = getLogger('AdminTheme');
 
+// Standardized theme name
+export const DEFAULT_THEME_NAME = 'impulsivity';
 export type AdminTheme = 'impulsivity' | 'cyberpunk' | 'neon' | 'minimal' | 'dark' | 'light';
 
 interface AdminThemeContextType {
@@ -13,17 +17,16 @@ interface AdminThemeContextType {
   toggleTheme: () => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  isInitialized: boolean;
 }
 
 const AdminThemeContext = createContext<AdminThemeContextType | undefined>(undefined);
 
-// Default admin theme - standardized to lowercase "impulsivity"
-const DEFAULT_ADMIN_THEME: AdminTheme = 'impulsivity';
-
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
   const { theme: storedTheme, setTheme: storeTheme } = useAdminPreferences();
-  const [theme, setThemeState] = useState<AdminTheme>((storedTheme as AdminTheme) || DEFAULT_ADMIN_THEME);
+  const [theme, setThemeState] = useState<AdminTheme>((storedTheme as AdminTheme) || DEFAULT_THEME_NAME);
   const [isDarkMode, setIsDarkMode] = useState(true); // Admin defaults to dark mode
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Update theme in store when changed
   const setTheme = (newTheme: AdminTheme) => {
@@ -45,30 +48,40 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   
   // Toggle between impulsivity and minimal themes
   const toggleTheme = () => {
-    setTheme(theme === DEFAULT_ADMIN_THEME ? 'minimal' : DEFAULT_ADMIN_THEME);
+    setTheme(theme === DEFAULT_THEME_NAME ? 'minimal' : DEFAULT_THEME_NAME);
   };
   
-  // Initialize theme from store
+  // Initialize theme from store or apply default
   useEffect(() => {
+    // Always apply default tokens first for immediate styling
+    applyThemeToDocument(defaultImpulseTokens);
+    
+    // Then apply stored theme if available
     if (storedTheme) {
-      setThemeState(storedTheme as AdminTheme);
-      document.documentElement.setAttribute('data-admin-theme', storedTheme);
-      logger.debug(`Initialized admin theme from store: ${storedTheme}`);
+      // Normalize theme name to lowercase for consistency
+      const normalizedTheme = String(storedTheme).toLowerCase() as AdminTheme;
+      setThemeState(normalizedTheme);
+      document.documentElement.setAttribute('data-admin-theme', normalizedTheme);
+      logger.debug(`Initialized admin theme from store: ${normalizedTheme}`);
     } else {
       // If no stored theme, use default and set it in the store
-      setTheme(DEFAULT_ADMIN_THEME);
-      logger.debug(`No stored admin theme, using default: ${DEFAULT_ADMIN_THEME}`);
+      setTheme(DEFAULT_THEME_NAME);
+      logger.debug(`No stored admin theme, using default: ${DEFAULT_THEME_NAME}`);
     }
     
-    // Apply dark mode
+    // Apply dark mode by default
     document.documentElement.classList.add('admin-dark-mode');
+    
+    // Mark as initialized after a brief delay to allow DOM updates
+    const timer = setTimeout(() => setIsInitialized(true), 100);
     
     return () => {
       // Cleanup
+      clearTimeout(timer);
       document.documentElement.removeAttribute('data-admin-theme');
       document.documentElement.classList.remove('admin-dark-mode', 'admin-light-mode');
     };
-  }, [storedTheme]);
+  }, [storedTheme, setTheme]);
   
   return (
     <AdminThemeContext.Provider value={{ 
@@ -76,7 +89,8 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
       setTheme, 
       toggleTheme, 
       isDarkMode, 
-      toggleDarkMode 
+      toggleDarkMode,
+      isInitialized
     }}>
       {children}
     </AdminThemeContext.Provider>
