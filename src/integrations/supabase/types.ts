@@ -161,6 +161,36 @@ export type Database = {
         }
         Relationships: []
       }
+      application_logs: {
+        Row: {
+          category: string
+          details: Json | null
+          id: string
+          level: number
+          message: string
+          source: string | null
+          timestamp: string | null
+        }
+        Insert: {
+          category: string
+          details?: Json | null
+          id?: string
+          level: number
+          message: string
+          source?: string | null
+          timestamp?: string | null
+        }
+        Update: {
+          category?: string
+          details?: Json | null
+          id?: string
+          level?: number
+          message?: string
+          source?: string | null
+          timestamp?: string | null
+        }
+        Relationships: []
+      }
       baseline_configs: {
         Row: {
           config: Json
