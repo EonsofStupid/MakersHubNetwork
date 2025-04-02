@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ComponentTokens } from '@/types/theme';
 import { Json } from '@/integrations/supabase/types';
@@ -137,7 +138,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
     // Use our predefined keyframes
     const animationsKeyframes = keyframes;
     
-    // Extract component styles with explicit ids
+    // Extract component styles with explicit valid UUIDs
     const componentStyles = [
       {
         id: generateUUID(),
@@ -298,6 +299,12 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
     
     // Update component tokens
     for (const component of componentStyles) {
+      // Ensure the component ID is a valid UUID
+      if (!isValidUUID(component.id)) {
+        console.error(`Invalid UUID for component ${component.component_name}: ${component.id}`);
+        continue;
+      }
+      
       // Check if component already exists
       const { data: existingComponents, error: compError } = await supabase
         .from('theme_components')
