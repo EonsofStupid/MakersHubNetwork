@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { MeasurementResult, PerformanceMeasurementOptions } from '../types';
 
 /**
@@ -105,9 +106,13 @@ export function measureExecution<T>(name: string, fn: () => T): MeasurementResul
   return createMeasurement('global').measure(name, fn);
 }
 
-export function createSimpleMeasurement(source: string) {
+interface SimpleTimer {
+  end(): number;
+}
+
+export function createSimpleMeasurement(source: string = 'global') {
   return {
-    start(name: string) {
+    start(name: string): SimpleTimer {
       const startTime = performance.now();
       return {
         end() {

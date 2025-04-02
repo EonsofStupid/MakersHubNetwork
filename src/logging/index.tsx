@@ -8,7 +8,8 @@ export type {
   LoggingConfig, 
   LoggerOptions, 
   MeasurementResult,
-  PerformanceMeasurementOptions
+  PerformanceMeasurementOptions,
+  MeasurementCompletionData
 } from './types';
 
 // Core logging functionality
@@ -93,6 +94,10 @@ export {
 export { 
   consoleTransport 
 } from './transports/console.transport';
+
+export {
+  uiTransport
+} from './transports/ui-transport';
 
 // Helper functions for working with logs
 export function getLogs() {
