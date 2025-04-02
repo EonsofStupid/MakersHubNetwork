@@ -9,7 +9,8 @@ export type {
   LoggerOptions, 
   MeasurementResult,
   PerformanceMeasurementOptions,
-  MeasurementCompletionData
+  MeasurementCompletionData,
+  PerformanceMeasurement
 } from './types';
 
 // Core logging functionality
@@ -108,7 +109,7 @@ export function clearLogs() {
   memoryTransport.clear();
 }
 
-export function onLog(callback: (entry: any) => void) {
+export function onLog(callback: (entry: LogEntry) => void) {
   return logEventEmitter.onLog(callback);
 }
 

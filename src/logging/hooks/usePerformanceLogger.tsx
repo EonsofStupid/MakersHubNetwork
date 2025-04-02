@@ -49,33 +49,31 @@ export function usePerformanceLogger(source: string = 'performance') {
     }
   }, [start, end]);
 
-  const measureAsync = useCallback(<T,>(
+  const measureAsync = useCallback(async <T,>(
     name: string,
-    fn: () => Promise<T> | T,
+    fn: () => Promise<T>,
     options?: {
       category?: LogCategory;
       tags?: string[];
     }
   ): Promise<T> => {
-    const startTime = window.performance.now();
-    return Promise.resolve()
-      .then(() => fn())
-      .then((result) => {
-        const duration = window.performance.now() - startTime;
-        logPerformance(name, duration, {
-          category: options?.category || LogCategory.PERFORMANCE,
-          tags: options?.tags
-        });
-        return result;
-      })
-      .catch((error) => {
-        const duration = window.performance.now() - startTime;
-        logPerformance(`${name} failed`, duration, {
-          category: options?.category || LogCategory.PERFORMANCE,
-          details: { error }
-        });
-        throw error;
+    const startTime = performance.now();
+    try {
+      const result = await fn();
+      const duration = performance.now() - startTime;
+      logPerformance(name, duration, {
+        category: options?.category || LogCategory.PERFORMANCE,
+        tags: options?.tags
       });
+      return result;
+    } catch (error) {
+      const duration = performance.now() - startTime;
+      logPerformance(`${name} failed`, duration, {
+        category: options?.category || LogCategory.PERFORMANCE,
+        details: { error }
+      });
+      throw error;
+    }
   }, [logPerformance]);
 
   const measureRender = useCallback((componentName: string, renderTime: number) => {
@@ -83,9 +81,9 @@ export function usePerformanceLogger(source: string = 'performance') {
   }, [logPerformance]);
 
   const measureEffect = useCallback((effectName: string, fn: () => void | (() => void)) => {
-    const startTime = window.performance.now();
+    const startTime = performance.now();
     const cleanup = fn();
-    const duration = window.performance.now() - startTime;
+    const duration = performance.now() - startTime;
     logPerformance(`Effect: ${effectName}`, duration, { tags: ['effect'] });
     return cleanup;
   }, [logPerformance]);
@@ -104,9 +102,9 @@ export function useComponentPerformance(componentName: string) {
   const { measureRender } = usePerformanceLogger(`component:${componentName}`);
   
   useEffect(() => {
-    const startTime = window.performance.now();
+    const startTime = performance.now();
     return () => {
-      const renderTime = window.performance.now() - startTime;
+      const renderTime = performance.now() - startTime;
       measureRender(componentName, renderTime);
     };
   }, [componentName, measureRender]);

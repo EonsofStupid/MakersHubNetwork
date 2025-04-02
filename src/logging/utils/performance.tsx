@@ -41,12 +41,10 @@ export function createMeasurement(source: string, defaultOptions?: PerformanceMe
           });
         }
         
-        // Ensure we're returning a proper Error object with duration attached
-        const enhancedError = error instanceof Error 
-          ? Object.assign(error, { duration }) 
-          : Object.assign(new Error(String(error)), { duration, originalError: error });
-        
-        throw enhancedError;
+        throw Object.assign(
+          error instanceof Error ? error : new Error(String(error)),
+          { duration }
+        );
       }
     },
     
@@ -88,12 +86,10 @@ export function createMeasurement(source: string, defaultOptions?: PerformanceMe
           });
         }
         
-        // Ensure we're returning a proper Error object with duration attached
-        const enhancedError = error instanceof Error 
-          ? Object.assign(error, { duration }) 
-          : Object.assign(new Error(String(error)), { duration, originalError: error });
-        
-        throw enhancedError;
+        throw Object.assign(
+          error instanceof Error ? error : new Error(String(error)),
+          { duration }
+        );
       }
     }
   };
@@ -106,23 +102,39 @@ export function measureExecution<T>(name: string, fn: () => T): MeasurementResul
   return createMeasurement('global').measure(name, fn);
 }
 
-interface SimpleTimer {
-  end(): number;
-}
-
-export function createSimpleMeasurement(source: string = 'global') {
+/**
+ * Creates a simple performance measurement utility
+ * for measuring time between start and end calls
+ */
+export function createSimpleMeasurement() {
+  const timers = new Map<string, number>();
+  
   return {
-    start(name: string): SimpleTimer {
-      const startTime = performance.now();
-      return {
-        end() {
-          return performance.now() - startTime;
-        }
-      };
+    /**
+     * Start timing an operation
+     */
+    start(name: string): void {
+      timers.set(name, performance.now());
+    },
+    
+    /**
+     * End timing an operation and return the duration
+     * Returns 0 if the timer was not started
+     */
+    end(name: string): number {
+      const startTime = timers.get(name);
+      if (startTime === undefined) return 0;
+      
+      const duration = performance.now() - startTime;
+      timers.delete(name);
+      return duration;
     }
   };
 }
 
+/**
+ * Measures the average performance of a function over multiple iterations
+ */
 export function measurePerformance(fn: Function, iterations: number = 1): number {
   const startTime = performance.now();
   for (let i = 0; i < iterations; i++) {
