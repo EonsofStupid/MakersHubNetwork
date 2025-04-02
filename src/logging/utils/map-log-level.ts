@@ -1,27 +1,32 @@
 
-import { LogLevel, LOG_LEVEL_VALUES } from '../constants/log-level';
+import { LogLevel } from '../constants/log-level';
 
 /**
- * Maps LogLevel enum values to their string representation
+ * Maps log levels to their string representation
  */
 export const LOG_LEVEL_MAP: Record<LogLevel, string> = {
-  [LogLevel.DEBUG]: "DEBUG",
-  [LogLevel.TRACE]: "TRACE",
-  [LogLevel.INFO]: "INFO",
-  [LogLevel.SUCCESS]: "SUCCESS",
-  [LogLevel.WARN]: "WARN", 
-  [LogLevel.ERROR]: "ERROR",
-  [LogLevel.CRITICAL]: "CRITICAL"
+  [LogLevel.DEBUG]: 'DEBUG',
+  [LogLevel.INFO]: 'INFO',
+  [LogLevel.WARN]: 'WARN',
+  [LogLevel.ERROR]: 'ERROR',
+  [LogLevel.CRITICAL]: 'CRITICAL',
 };
 
 /**
- * Safely compares log levels
- * Uses the LOG_LEVEL_VALUES from constants
- * 
- * @param level The level to check
- * @param minLevel The minimum level required
- * @returns True if level is at least minLevel
+ * Maps string representation to log level
  */
-export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
-  return LOG_LEVEL_VALUES[level] >= LOG_LEVEL_VALUES[minLevel];
+export const STRING_TO_LOG_LEVEL: Record<string, LogLevel> = {
+  'DEBUG': LogLevel.DEBUG,
+  'INFO': LogLevel.INFO,
+  'WARN': LogLevel.WARN,
+  'WARNING': LogLevel.WARN,
+  'ERROR': LogLevel.ERROR,
+  'CRITICAL': LogLevel.CRITICAL,
+};
+
+/**
+ * Get log level from string
+ */
+export function getLogLevelFromString(levelString: string): LogLevel {
+  return STRING_TO_LOG_LEVEL[levelString.toUpperCase()] || LogLevel.INFO;
 }

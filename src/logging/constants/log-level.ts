@@ -1,33 +1,23 @@
 
-/**
- * Logging levels as a proper enum
- */
 export enum LogLevel {
-  DEBUG = 'debug',
-  TRACE = 'trace',
-  INFO = 'info',
-  SUCCESS = 'success',
-  WARN = 'warn',
-  ERROR = 'error',
-  CRITICAL = 'critical',
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+  CRITICAL = 4
 }
 
-/**
- * Define log level values for numeric comparison
- */
-export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
-  [LogLevel.DEBUG]: 0,
-  [LogLevel.TRACE]: 1,
-  [LogLevel.INFO]: 2,
-  [LogLevel.SUCCESS]: 3,
-  [LogLevel.WARN]: 4,
-  [LogLevel.ERROR]: 5,
-  [LogLevel.CRITICAL]: 6,
+export const LOG_LEVEL_NAMES = {
+  [LogLevel.DEBUG]: 'DEBUG',
+  [LogLevel.INFO]: 'INFO',
+  [LogLevel.WARN]: 'WARNING',
+  [LogLevel.ERROR]: 'ERROR',
+  [LogLevel.CRITICAL]: 'CRITICAL'
 };
 
 /**
- * Function to compare log levels
+ * Check if a log level is at least as severe as the minimum level
  */
 export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
-  return LOG_LEVEL_VALUES[level] >= LOG_LEVEL_VALUES[minLevel];
+  return level >= minLevel;
 }

@@ -1,97 +1,50 @@
 
-import React, { isValidElement, Fragment, ReactNode } from 'react';
+import React from 'react';
 
 /**
- * Type guard for renderable React nodes
+ * Safely renders content that might be a React node, string, or any other type
  */
-export function isReactRenderable(value: unknown): value is ReactNode {
-  return (
-    value == null ||
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean' ||
-    isValidElement(value) ||
-    (Array.isArray(value) && value.every(isReactRenderable))
-  );
+export function safelyRenderNode(content: React.ReactNode | any): React.ReactNode {
+  // If it's null, undefined, or already a valid React element, return it directly
+  if (content === null || content === undefined || React.isValidElement(content)) {
+    return content;
+  }
+  
+  // If it's an array, map each item (might contain React elements)
+  if (Array.isArray(content)) {
+    return content.map((item, index) => 
+      <React.Fragment key={index}>{safelyRenderNode(item)}</React.Fragment>
+    );
+  }
+  
+  // If it's an object but not a React element, convert to string
+  if (typeof content === 'object') {
+    try {
+      return JSON.stringify(content);
+    } catch (e) {
+      return '[Object]';
+    }
+  }
+  
+  // For primitive types, convert to string
+  return String(content);
 }
 
 /**
- * Safely renders unknown values into ReactNode
+ * Formats an error into a readable string
  */
-export function safelyRenderNode(value: unknown): ReactNode {
-  if (isReactRenderable(value)) return value;
-
-  if (typeof value === 'object') {
-    try {
-      const stringified = JSON.stringify(value, null, 2);
-      return React.createElement(Fragment, null, stringified);
-    } catch {
-      return React.createElement(Fragment, null, '[Unrenderable Object]');
-    }
-  }
-
-  return React.createElement(Fragment, null, String(value));
-}
-
-/**
- * Converts a React node to a searchable string representation
- */
-export function nodeToSearchableString(value: ReactNode): string {
-  if (value === null || value === undefined) {
-    return '';
+export function formatError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
   }
   
-  if (typeof value === 'string') {
-    return value;
+  if (typeof error === 'string') {
+    return error;
   }
   
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
+  try {
+    return JSON.stringify(error);
+  } catch (e) {
+    return 'Unknown error';
   }
-  
-  if (React.isValidElement(value)) {
-    try {
-      // Try to extract text content from props or children
-      const props = value.props || {};
-      if (typeof props.children === 'string') {
-        return props.children;
-      }
-      return '';
-    } catch (e) {
-      return '';
-    }
-  }
-  
-  if (Array.isArray(value)) {
-    try {
-      return value.map(item => nodeToSearchableString(item)).join(' ');
-    } catch (e) {
-      return '';
-    }
-  }
-  
-  if (typeof value === 'object') {
-    try {
-      return JSON.stringify(value);
-    } catch (e) {
-      return '';
-    }
-  }
-  
-  return String(value);
-}
-
-/**
- * @deprecated Use isReactRenderable instead for more accurate type checking
- */
-export function isReactNode(value: unknown): value is React.ReactNode {
-  return (
-    value === undefined ||
-    value === null ||
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean' ||
-    React.isValidElement(value) ||
-    Array.isArray(value)
-  );
 }

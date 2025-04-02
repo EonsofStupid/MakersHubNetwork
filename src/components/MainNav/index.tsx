@@ -10,10 +10,12 @@ import { Link } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
+import { useAuth } from "@/hooks/useAuth";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
   const { hasAdminAccess } = useAdminAccess();
+  const { isAuthenticated } = useAuth();
   const { componentStyles } = useSiteTheme();
 
   // Get MainNav styles from theme
@@ -30,11 +32,12 @@ export function MainNav() {
 
   useEffect(() => {
     console.log("MainNav - hasAdminAccess:", hasAdminAccess); // Debug admin access
+    console.log("MainNav - isAuthenticated:", isAuthenticated); // Debug authentication
     console.log("MainNav - componentStyles:", componentStyles); // Debug styles
     requestAnimationFrame(() => {
       setIsLoaded(true);
     });
-  }, [hasAdminAccess, componentStyles]);
+  }, [hasAdminAccess, componentStyles, isAuthenticated]);
 
   return (
     <header
@@ -59,7 +62,7 @@ export function MainNav() {
           <NavigationItems />
           <div className="flex items-center gap-4">
             <SearchButton />
-            {hasAdminAccess && (
+            {isAuthenticated && hasAdminAccess && (
               <Link to="/admin">
                 <Button 
                   variant="outline" 
