@@ -3,40 +3,45 @@ import { LogEntry, LogLevel, LogTransport } from '../types';
 import { LOG_LEVEL_NAMES } from '../constants/log-level';
 
 /**
- * Transport that logs to the browser console
+ * Format a log entry for console output
+ */
+function formatLogForConsole(entry: LogEntry): string {
+  const timestamp = entry.timestamp.toISOString();
+  const level = LOG_LEVEL_NAMES[entry.level];
+  const source = entry.source ? `[${entry.source}]` : '';
+  
+  return `${timestamp} ${level} ${source} ${entry.category}: ${String(entry.message)}`;
+}
+
+/**
+ * Transport that outputs logs to the browser console
  */
 class ConsoleTransport implements LogTransport {
   /**
    * Log an entry to the console
    */
   public log(entry: LogEntry): void {
-    const { level, message, timestamp, source, category, details } = entry;
+    const formattedMessage = formatLogForConsole(entry);
     
-    // Format timestamp
-    const time = timestamp.toISOString().split('T')[1].slice(0, 8);
-    
-    // Prepare message elements
-    const prefix = `[${time}] [${LOG_LEVEL_NAMES[level]}] [${category}]${source ? ` [${source}]` : ''}:`;
-    
-    // Log to console using appropriate method
-    switch (level) {
+    // Use the appropriate console method based on log level
+    switch (entry.level) {
       case LogLevel.TRACE:
       case LogLevel.DEBUG:
-        console.debug(prefix, message, details || '');
+        console.debug(formattedMessage, entry.details || '');
         break;
       case LogLevel.INFO:
       case LogLevel.SUCCESS:
-        console.info(prefix, message, details || '');
+        console.info(formattedMessage, entry.details || '');
         break;
       case LogLevel.WARN:
-        console.warn(prefix, message, details || '');
+        console.warn(formattedMessage, entry.details || '');
         break;
       case LogLevel.ERROR:
       case LogLevel.CRITICAL:
-        console.error(prefix, message, details || '');
+        console.error(formattedMessage, entry.details || '');
         break;
       default:
-        console.log(prefix, message, details || '');
+        console.log(formattedMessage, entry.details || '');
     }
   }
   

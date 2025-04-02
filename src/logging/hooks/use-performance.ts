@@ -1,11 +1,12 @@
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { useLogger } from './use-logger';
 import { LogCategory } from '../types';
 import { createSimpleMeasurement } from '../utils/performance';
 
 /**
  * Hook for measuring performance within React components
+ * @deprecated Use usePerformanceLogger from './usePerformanceLogger' instead
  * @param source The source/component name
  * @returns Performance measurement utilities
  */
@@ -73,6 +74,7 @@ export function usePerformanceLogger(source: string) {
 
 /**
  * Hook for monitoring React component performance
+ * @deprecated Use useComponentPerformance from './usePerformanceLogger' instead
  */
 export function useComponentPerformance(componentName: string) {
   const { start, end, measure } = usePerformanceLogger(componentName);
