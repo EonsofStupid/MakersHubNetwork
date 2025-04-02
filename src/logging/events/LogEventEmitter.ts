@@ -31,6 +31,11 @@ class LogEventSystem extends EventEmitter {
       this.off('log', callback);
     };
   }
+  
+  // Get the current number of listeners
+  public getListenerCount(): number {
+    return this.listenerCount('log');
+  }
 }
 
 // Export a singleton instance

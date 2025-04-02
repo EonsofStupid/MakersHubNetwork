@@ -1,6 +1,7 @@
 
 import { LogEntry, LogTransport } from "../types";
 import { LogLevel, LOG_LEVEL_NAMES } from "../constants/log-level";
+import { nodeToSearchableString } from "@/shared/utils/react-utils";
 
 /**
  * Transport for logging to the browser console
@@ -13,17 +14,8 @@ class ConsoleTransport implements LogTransport {
     const levelName = LOG_LEVEL_NAMES[entry.level] || 'UNKNOWN';
     const prefix = `[${timestamp}] [${levelName}]${category}${source}`;
     
-    // Prepare the message
-    let formattedMessage: string;
-    if (typeof entry.message === 'string') {
-      formattedMessage = entry.message;
-    } else if (typeof entry.message === 'number' || typeof entry.message === 'boolean') {
-      formattedMessage = String(entry.message);
-    } else {
-      formattedMessage = '[React Node]';
-    }
-    
-    const message = `${prefix}: ${formattedMessage}`;
+    // Convert message to string using our utility
+    const message = `${prefix}: ${nodeToSearchableString(entry.message)}`;
     
     // Log with appropriate console method based on level
     switch (entry.level) {

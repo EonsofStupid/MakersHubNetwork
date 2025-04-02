@@ -106,6 +106,92 @@ export function createMeasurement(source: string, category: LogCategory = LogCat
         
         throw error;
       }
+    },
+    
+    /**
+     * Create a decorator that can be used to measure any function
+     * @param name Base name for the measurement
+     * @param description Description template for the measurement
+     * @returns A decorator function
+     */
+    createDecorator: (name: string, description?: string) => {
+      return <T extends (...args: any[]) => any>(
+        target: any,
+        propertyKey: string,
+        descriptor: TypedPropertyDescriptor<T>
+      ): TypedPropertyDescriptor<T> => {
+        const originalMethod = descriptor.value!;
+        
+        descriptor.value = function(...args: any[]) {
+          const measurementName = `${name}.${propertyKey}`;
+          measurements.set(measurementName, performance.now());
+          
+          try {
+            const result = originalMethod.apply(this, args);
+            
+            // Handle promises
+            if (result instanceof Promise) {
+              return result.then(
+                (value) => {
+                  const endTime = performance.now();
+                  const duration = endTime - measurements.get(measurementName)!;
+                  measurements.delete(measurementName);
+                  
+                  const desc = description || `Completed ${measurementName}`;
+                  logger.performance(desc, duration, {
+                    category,
+                    details: { name: measurementName, duration },
+                    tags: ['performance', name, propertyKey]
+                  });
+                  
+                  return value;
+                },
+                (error) => {
+                  const endTime = performance.now();
+                  const duration = endTime - measurements.get(measurementName)!;
+                  measurements.delete(measurementName);
+                  
+                  logger.performance(`Failed ${measurementName}`, duration, {
+                    category,
+                    details: { name: measurementName, duration, error },
+                    tags: ['performance', name, propertyKey, 'error']
+                  });
+                  
+                  throw error;
+                }
+              );
+            }
+            
+            // Handle synchronous functions
+            const endTime = performance.now();
+            const duration = endTime - measurements.get(measurementName)!;
+            measurements.delete(measurementName);
+            
+            const desc = description || `Completed ${measurementName}`;
+            logger.performance(desc, duration, {
+              category,
+              details: { name: measurementName, duration },
+              tags: ['performance', name, propertyKey]
+            });
+            
+            return result;
+          } catch (error) {
+            const endTime = performance.now();
+            const duration = endTime - measurements.get(measurementName)!;
+            measurements.delete(measurementName);
+            
+            logger.performance(`Failed ${measurementName}`, duration, {
+              category,
+              details: { name: measurementName, duration, error },
+              tags: ['performance', name, propertyKey, 'error']
+            });
+            
+            throw error;
+          }
+        } as any;
+        
+        return descriptor;
+      };
     }
   };
 }
@@ -114,9 +200,9 @@ export function createMeasurement(source: string, category: LogCategory = LogCat
  * Measures the execution time of a function and returns the result
  * 
  * @param fn The function to measure
- * @param logger The logger to use
- * @param category The log category
+ * @param source The source/component making the measurement
  * @param name Name of the measurement
+ * @param category The log category
  * @returns The result of the function
  */
 export async function measureExecution<T>(
@@ -125,27 +211,80 @@ export async function measureExecution<T>(
   name: string,
   category: LogCategory = LogCategory.PERFORMANCE
 ): Promise<T> {
-  const logger = getLogger(source);
-  const startTime = performance.now();
+  const measurement = createMeasurement(source, category);
+  return measurement.measure(name, fn);
+}
+
+/**
+ * Creates a higher-order component that measures render time
+ * 
+ * @param Component Component to measure
+ * @param name Name for the measurement
+ * @returns Wrapped component with performance measurement
+ */
+export function withPerformanceTracking<P extends object>(
+  Component: React.ComponentType<P>,
+  name: string
+): React.FC<P> {
+  const displayName = Component.displayName || Component.name || name;
   
-  try {
-    const result = await fn();
-    const duration = performance.now() - startTime;
+  const WrappedComponent: React.FC<P> = (props) => {
+    const logger = getLogger(displayName);
+    const renderStart = performance.now();
     
-    logger.performance(`Executed ${name}`, duration, {
-      category,
-      details: { name, duration }
+    React.useEffect(() => {
+      const renderTime = performance.now() - renderStart;
+      logger.performance(`Render time for ${displayName}`, renderTime, {
+        category: LogCategory.PERFORMANCE,
+        details: { component: displayName }
+      });
     });
     
-    return result;
-  } catch (error) {
-    const duration = performance.now() - startTime;
-    
-    logger.error(`Failed to execute ${name}`, {
-      category,
-      details: { name, duration, error }
-    });
-    
-    throw error;
-  }
+    return <Component {...props} />;
+  };
+  
+  WrappedComponent.displayName = `WithPerformanceTracking(${displayName})`;
+  return WrappedComponent;
+}
+
+/**
+ * Creates a hook for measuring user interaction timing
+ * 
+ * @param source The source/component making the measurement
+ * @returns Hook for measuring interaction timing
+ */
+export function useInteractionTiming(source: string) {
+  const logger = getLogger(source);
+  
+  return {
+    measureInteraction: <T>(
+      name: string,
+      fn: (...args: any[]) => T,
+      category: LogCategory = LogCategory.UI
+    ) => {
+      return (...args: any[]): T => {
+        const start = performance.now();
+        try {
+          const result = fn(...args);
+          const duration = performance.now() - start;
+          
+          logger.performance(`Interaction: ${name}`, duration, {
+            category,
+            details: { interaction: name, args }
+          });
+          
+          return result;
+        } catch (error) {
+          const duration = performance.now() - start;
+          
+          logger.error(`Interaction failed: ${name}`, {
+            category,
+            details: { interaction: name, duration, error, args }
+          });
+          
+          throw error;
+        }
+      };
+    }
+  };
 }

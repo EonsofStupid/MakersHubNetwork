@@ -1,5 +1,5 @@
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 
@@ -11,7 +11,7 @@ import { LogCategory } from '@/logging/types';
  * @returns A logger instance with component context
  */
 export function useLogger(source: string, defaultCategory: LogCategory = LogCategory.UI) {
-  const logger = useMemo(() => getLogger(source), [source]);
+  const loggerInstance = getLogger(source);
   
   // Create memoized logging functions with default category
   const debug = useCallback((message: string, options?: { 
@@ -19,72 +19,84 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
     details?: any; 
     tags?: string[] 
   }) => {
-    logger.debug(message, { 
+    loggerInstance.debug(message, { 
       category: options?.category || defaultCategory,
       details: options?.details,
       tags: options?.tags
     });
-  }, [logger, defaultCategory]);
+  }, [loggerInstance, defaultCategory]);
   
   const info = useCallback((message: string, options?: { 
     category?: LogCategory; 
     details?: any; 
     tags?: string[] 
   }) => {
-    logger.info(message, { 
+    loggerInstance.info(message, { 
       category: options?.category || defaultCategory,
       details: options?.details,
       tags: options?.tags
     });
-  }, [logger, defaultCategory]);
+  }, [loggerInstance, defaultCategory]);
   
   const warn = useCallback((message: string, options?: { 
     category?: LogCategory; 
     details?: any; 
     tags?: string[] 
   }) => {
-    logger.warn(message, { 
+    loggerInstance.warn(message, { 
       category: options?.category || defaultCategory,
       details: options?.details,
       tags: options?.tags
     });
-  }, [logger, defaultCategory]);
+  }, [loggerInstance, defaultCategory]);
   
   const error = useCallback((message: string, options?: { 
     category?: LogCategory; 
     details?: any; 
     tags?: string[] 
   }) => {
-    logger.error(message, { 
+    loggerInstance.error(message, { 
       category: options?.category || defaultCategory,
       details: options?.details,
       tags: options?.tags
     });
-  }, [logger, defaultCategory]);
+  }, [loggerInstance, defaultCategory]);
   
   const critical = useCallback((message: string, options?: { 
     category?: LogCategory; 
     details?: any; 
     tags?: string[] 
   }) => {
-    logger.critical(message, { 
+    loggerInstance.critical(message, { 
       category: options?.category || defaultCategory,
       details: options?.details,
       tags: options?.tags
     });
-  }, [logger, defaultCategory]);
+  }, [loggerInstance, defaultCategory]);
+  
+  const success = useCallback((message: string, options?: { 
+    category?: LogCategory; 
+    details?: any; 
+    tags?: string[] 
+  }) => {
+    loggerInstance.success(message, { 
+      category: options?.category || defaultCategory,
+      details: options?.details,
+      tags: options?.tags
+    });
+  }, [loggerInstance, defaultCategory]);
   
   const performance = useCallback((message: string, duration: number, options?: { 
     category?: LogCategory; 
     details?: any; 
     tags?: string[] 
   }) => {
-    logger.performance(message, duration, { 
+    loggerInstance.performance(message, duration, { 
       category: options?.category || defaultCategory,
       details: options?.details,
       tags: options?.tags
     });
-  }, [logger, defaultCategory]);
+  }, [loggerInstance, defaultCategory]);
   
   return {
     debug,
@@ -92,6 +104,7 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
     warn,
     error,
     critical,
+    success,
     performance
   };
 }

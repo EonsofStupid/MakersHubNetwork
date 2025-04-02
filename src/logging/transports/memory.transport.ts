@@ -1,5 +1,6 @@
 
 import { LogCategory, LogEntry, LogLevel, LogTransport } from '../types';
+import { nodeToSearchableString } from '@/shared/utils/react-utils';
 
 /**
  * Options for filtering logs in memory transport
@@ -18,7 +19,7 @@ interface LogFilterOptions {
 /**
  * Memory transport stores logs in memory for display in UI components
  */
-class MemoryTransport implements LogTransport {
+export class MemoryTransport implements LogTransport {
   private logs: LogEntry[] = [];
   private maxEntries: number;
   
@@ -30,11 +31,11 @@ class MemoryTransport implements LogTransport {
    * Log an entry to memory
    */
   log(entry: LogEntry): void {
-    this.logs.push(entry); // Add to end for chronological order
+    this.logs.unshift(entry); // Add to beginning for most recent first
     
     // Trim if we exceed max entries
     if (this.logs.length > this.maxEntries) {
-      this.logs = this.logs.slice(-this.maxEntries);
+      this.logs = this.logs.slice(0, this.maxEntries);
     }
   }
   
@@ -42,7 +43,7 @@ class MemoryTransport implements LogTransport {
    * Get all logs in memory
    */
   getLogs(): LogEntry[] {
-    return [...this.logs]; // Return copy to prevent external modification
+    return [...this.logs];
   }
   
   /**
@@ -79,14 +80,8 @@ class MemoryTransport implements LogTransport {
     if (options.search) {
       const searchLower = options.search.toLowerCase();
       filteredLogs = filteredLogs.filter(log => {
-        // Convert message to searchable string safely
-        let messageStr = '';
-        if (typeof log.message === 'string') {
-          messageStr = log.message.toLowerCase();
-        } else if (typeof log.message === 'number' || typeof log.message === 'boolean') {
-          messageStr = String(log.message).toLowerCase();
-        }
-        
+        // Convert message to searchable string
+        const messageStr = nodeToSearchableString(log.message).toLowerCase();
         const sourceStr = log.source ? log.source.toLowerCase() : '';
         const categoryStr = log.category.toLowerCase();
         
@@ -118,7 +113,7 @@ class MemoryTransport implements LogTransport {
   }
   
   /**
-   * Get log count
+   * Get the number of stored logs
    */
   getLogCount(): number {
     return this.logs.length;
@@ -127,17 +122,17 @@ class MemoryTransport implements LogTransport {
   /**
    * Clear all logs from memory
    */
-  clearLogs(): void {
+  clear(): void {
     this.logs = [];
   }
   
   /**
-   * Flush implementation (no-op for memory transport)
+   * For compatibility with LogTransport interface
    */
   flush(): Promise<void> {
     return Promise.resolve();
   }
 }
 
-// Create singleton instance
+// Export singleton instance
 export const memoryTransport = new MemoryTransport();

@@ -1,205 +1,163 @@
 
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
-import { LogLevel } from '@/logging/constants/log-level';
-
-interface RequestLogOptions {
-  url: string;
-  method: string;
-  headers?: Record<string, string>;
-  body?: any;
-  tags?: string[];
-}
-
-interface ResponseLogOptions {
-  status: number;
-  statusText: string;
-  headers?: Record<string, string>;
-  body?: any;
-  duration: number;
-  tags?: string[];
-}
+import { usePerformanceLogger } from './use-performance-logger';
 
 /**
- * Hook for logging network requests and responses
+ * Hook for logging network requests
  */
-export function useNetworkLogger(source: string) {
-  const logger = getLogger();
-  const requestTimers = useRef<Record<string, number>>({});
+export function useNetworkLogger(source: string = 'API') {
+  const logger = getLogger(source);
+  const { measureAsync } = usePerformanceLogger(source);
   
   /**
-   * Generate a unique ID for tracking requests
+   * Log a fetch request
    */
-  const generateRequestId = useCallback(() => {
-    return Math.random().toString(36).substring(2, 15);
-  }, []);
-  
-  /**
-   * Log the start of a network request
-   */
-  const logRequest = useCallback((requestId: string, options: RequestLogOptions) => {
-    // Start timer
-    requestTimers.current[requestId] = performance.now();
-    
-    // Log the request
-    logger.info(`Request: ${options.method} ${options.url}`, {
-      category: LogCategory.NETWORK,
-      source,
-      details: {
-        requestId,
-        method: options.method,
-        url: options.url,
-        headers: options.headers,
-        body: options.body
-      },
-      tags: [...(options.tags || []), 'request']
-    });
-    
-    return requestId;
-  }, [logger, source]);
-  
-  /**
-   * Log the completion of a network request
-   */
-  const logResponse = useCallback((requestId: string, options: ResponseLogOptions) => {
-    // Calculate duration
-    const startTime = requestTimers.current[requestId];
-    const duration = startTime ? performance.now() - startTime : options.duration;
-    
-    // Determine log level based on status code
-    let level = LogLevel.INFO;
-    if (options.status >= 400 && options.status < 500) {
-      level = LogLevel.WARN;
-    } else if (options.status >= 500) {
-      level = LogLevel.ERROR;
+  const logFetch = useCallback(async <T>(
+    url: string, 
+    options?: RequestInit,
+    customConfig?: {
+      name?: string,
+      includeResponse?: boolean,
+      sensitiveKeys?: string[]
     }
+  ): Promise<T> => {
+    const requestName = customConfig?.name || `${options?.method || 'GET'} ${url}`;
     
-    // Log the response using the appropriate level method
-    if (level === LogLevel.WARN) {
-      logger.warn(`Response (${options.status}): ${options.duration.toFixed(0)}ms`, {
-        category: LogCategory.NETWORK,
-        source,
-        details: {
-          requestId,
-          status: options.status,
-          statusText: options.statusText,
-          headers: options.headers,
-          body: options.body,
-          duration
-        },
-        tags: [...(options.tags || []), 'response']
-      });
-    } else if (level === LogLevel.ERROR) {
-      logger.error(`Response (${options.status}): ${options.duration.toFixed(0)}ms`, {
-        category: LogCategory.NETWORK,
-        source,
-        details: {
-          requestId,
-          status: options.status,
-          statusText: options.statusText,
-          headers: options.headers,
-          body: options.body,
-          duration
-        },
-        tags: [...(options.tags || []), 'response']
-      });
-    } else {
-      logger.info(`Response (${options.status}): ${options.duration.toFixed(0)}ms`, {
-        category: LogCategory.NETWORK,
-        source,
-        details: {
-          requestId,
-          status: options.status,
-          statusText: options.statusText,
-          headers: options.headers,
-          body: options.body,
-          duration
-        },
-        tags: [...(options.tags || []), 'response']
-      });
-    }
-    
-    // Clean up timer
-    delete requestTimers.current[requestId];
-  }, [logger, source]);
-  
-  /**
-   * Log a network error
-   */
-  const logNetworkError = useCallback((requestId: string, error: Error, options: RequestLogOptions) => {
-    // Calculate duration if possible
-    const startTime = requestTimers.current[requestId];
-    const duration = startTime ? performance.now() - startTime : 0;
-    
-    // Log the error
-    logger.error(`Network Error: ${options.method} ${options.url}`, {
-      category: LogCategory.NETWORK,
-      source,
-      details: {
-        requestId,
-        error: error.message,
-        stack: error.stack,
-        method: options.method,
-        url: options.url,
-        duration
-      },
-      tags: [...(options.tags || []), 'error']
-    });
-    
-    // Clean up timer
-    delete requestTimers.current[requestId];
-  }, [logger, source]);
-  
-  /**
-   * Create a wrapped fetch function that logs requests/responses
-   */
-  const loggedFetch = useCallback(async (
-    url: string,
-    options: RequestInit = {}
-  ): Promise<Response> => {
-    const requestId = generateRequestId();
-    const method = options.method || 'GET';
-    
-    // Log the request
-    logRequest(requestId, {
-      url,
-      method,
-      headers: options.headers as Record<string, string>,
-      body: options.body
-    });
-    
-    try {
-      // Make the actual request
-      const response = await fetch(url, options);
-      
-      // Log the response
-      logResponse(requestId, {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        duration: performance.now() - requestTimers.current[requestId]
-      });
-      
-      return response;
-    } catch (error) {
-      // Log any network errors
-      if (error instanceof Error) {
-        logNetworkError(requestId, error, {
-          url,
-          method
-        });
+    // Filter out sensitive data
+    const sanitizedOptions = { ...options };
+    if (sanitizedOptions.headers && customConfig?.sensitiveKeys) {
+      const sanitizedHeaders = { ...sanitizedOptions.headers };
+      for (const key of customConfig.sensitiveKeys) {
+        if (key in sanitizedHeaders) {
+          sanitizedHeaders[key] = '[REDACTED]';
+        }
       }
-      
-      throw error;
+      sanitizedOptions.headers = sanitizedHeaders;
     }
-  }, [generateRequestId, logRequest, logResponse, logNetworkError]);
+    
+    // Log request
+    logger.info(`Request: ${requestName}`, {
+      category: LogCategory.NETWORK,
+      details: {
+        url,
+        method: options?.method || 'GET',
+        headers: sanitizedOptions.headers
+      }
+    });
+    
+    // Perform and measure the fetch request
+    return measureAsync(
+      requestName,
+      async () => {
+        try {
+          const response = await fetch(url, options);
+          const isJson = response.headers.get('content-type')?.includes('application/json');
+          
+          let responseData: any;
+          try {
+            responseData = isJson ? await response.json() : await response.text();
+          } catch (parseError) {
+            responseData = { parseError: String(parseError) };
+          }
+          
+          if (!response.ok) {
+            const error = {
+              status: response.status,
+              statusText: response.statusText,
+              data: responseData
+            };
+            
+            logger.error(`Request failed: ${requestName}`, {
+              category: LogCategory.NETWORK,
+              details: {
+                url,
+                method: options?.method || 'GET',
+                status: response.status,
+                error
+              }
+            });
+            
+            throw error;
+          }
+          
+          // Log successful response
+          logger.info(`Response: ${requestName}`, {
+            category: LogCategory.NETWORK,
+            details: customConfig?.includeResponse ? {
+              url,
+              status: response.status,
+              data: responseData
+            } : {
+              url,
+              status: response.status
+            }
+          });
+          
+          return responseData as T;
+        } catch (error) {
+          logger.error(`Request error: ${requestName}`, {
+            category: LogCategory.NETWORK,
+            details: {
+              url,
+              method: options?.method || 'GET',
+              error
+            }
+          });
+          
+          throw error;
+        }
+      },
+      {
+        category: LogCategory.NETWORK,
+        tags: ['network', 'fetch']
+      }
+    );
+  }, [logger, measureAsync]);
+  
+  /**
+   * Create a wrapper around Supabase SDK calls
+   */
+  const logSupabaseCall = useCallback(async <T>(
+    operationName: string,
+    fn: () => Promise<T>
+  ): Promise<T> => {
+    return measureAsync(
+      `Supabase: ${operationName}`,
+      async () => {
+        try {
+          logger.info(`Supabase call: ${operationName}`, {
+            category: LogCategory.DATABASE,
+            details: { operation: operationName }
+          });
+          
+          const result = await fn();
+          
+          logger.info(`Supabase success: ${operationName}`, {
+            category: LogCategory.DATABASE,
+            details: { operation: operationName }
+          });
+          
+          return result;
+        } catch (error) {
+          logger.error(`Supabase error: ${operationName}`, {
+            category: LogCategory.DATABASE,
+            details: { operation: operationName, error }
+          });
+          
+          throw error;
+        }
+      },
+      {
+        category: LogCategory.DATABASE,
+        tags: ['supabase', 'database']
+      }
+    );
+  }, [logger, measureAsync]);
   
   return {
-    logRequest,
-    logResponse,
-    logNetworkError,
-    loggedFetch,
-    generateRequestId
+    logFetch,
+    logSupabaseCall
   };
 }
