@@ -39,6 +39,26 @@ export function isBoolean(value: unknown): value is boolean {
 }
 
 /**
+ * Check if a string is a valid UUID
+ */
+export function isValidUUID(value: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(value);
+}
+
+/**
+ * Generate a valid v4 UUID
+ */
+export function generateUUID(): string {
+  // Implementation based on RFC4122 version 4
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0,
+          v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+/**
  * Safely convert any value to a details object for logging
  */
 export function toLogDetails(value: unknown): Record<string, unknown> {

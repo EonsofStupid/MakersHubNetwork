@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ThemeState } from "./types";
 import { Theme, ComponentTokens } from "@/types/theme";
 import { Json } from "@/integrations/supabase/types";
+import { isValidUUID } from "@/logging/utils/type-guards";
 
 export const useThemeStore = create<ThemeState>((set) => ({
   currentTheme: null,
@@ -14,6 +15,15 @@ export const useThemeStore = create<ThemeState>((set) => ({
   error: null,
 
   setTheme: async (themeId: string) => {
+    // Validate UUID before attempting to fetch
+    if (!isValidUUID(themeId)) {
+      set({ 
+        error: new Error(`Invalid theme ID format: ${themeId}`), 
+        isLoading: false 
+      });
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const query = themeId 

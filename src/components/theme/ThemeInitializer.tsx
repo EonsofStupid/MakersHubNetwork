@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { ensureDefaultTheme } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
@@ -8,7 +9,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
 import { ThemeErrorState } from './info/ThemeErrorState';
-import { formatLogDetails } from '@/logging/utils/details-formatter';
+import { isError } from '@/logging/utils/type-guards';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -18,12 +19,30 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [initializationAttempted, setInitializationAttempted] = useState(false);
   const [initError, setInitError] = useState<Error | null>(null);
-  const { setTheme, isLoading } = useThemeStore();
+  const { setTheme, isLoading, error: themeStoreError } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ThemeInitializer', LogCategory.SYSTEM);
 
+  // If the theme store has an error for too long, we should initialize anyway
+  useEffect(() => {
+    if (themeStoreError && !isInitialized && initializationAttempted) {
+      const timer = setTimeout(() => {
+        logger.error('Forcing initialization after theme store error', { 
+          details: { 
+            error: themeStoreError.message,
+            fallback: 'Using default theme due to persistent error'
+          } 
+        });
+        setIsInitialized(true);
+      }, 5000); // Wait 5 seconds before forcing initialization
+      
+      return () => clearTimeout(timer);
+    }
+  }, [themeStoreError, isInitialized, initializationAttempted, logger]);
+
   useEffect(() => {
     let isMounted = true;
+    let initializationTimeout: NodeJS.Timeout;
     
     async function initialize() {
       if (initializationAttempted) return;
@@ -31,6 +50,19 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
       try {
         logger.info('Starting theme initialization');
         setInitializationAttempted(true);
+        
+        // Safety timeout - don't let theme initialization block the app forever
+        initializationTimeout = setTimeout(() => {
+          if (isMounted && !isInitialized) {
+            logger.warn('Theme initialization timed out, continuing with default theme');
+            setIsInitialized(true);
+            toast({
+              title: 'Theme Warning',
+              description: 'Theme initialization timed out. Using default styling.',
+              variant: "warning",
+            });
+          }
+        }, 10000); // 10 second timeout
         
         // First, ensure the default theme exists in the database
         const themeId = await ensureDefaultTheme();
@@ -59,9 +91,13 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           }
         }
       } catch (error) {
-        const err = error instanceof Error ? error : new Error('Unknown theme initialization error');
+        const err = isError(error) ? error : new Error('Unknown theme initialization error');
         logger.error('Error initializing theme', { 
-          details: formatLogDetails(err)  
+          details: {
+            message: err.message,
+            stack: err.stack,
+            name: err.name,
+          }
         });
         
         if (isMounted) {
@@ -81,6 +117,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     
     return () => {
       isMounted = false;
+      clearTimeout(initializationTimeout);
     };
   }, [setTheme, toast, logger, initializationAttempted]);
 
