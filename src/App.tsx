@@ -1,3 +1,4 @@
+
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,11 +8,11 @@ import { LoggingProvider } from "@/logging/context/LoggingContext";
 import { LogConsole } from "@/logging/components/LogConsole";
 import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { initializeLogger, getLogger } from "@/logging";
 import { LogCategory } from "@/logging/types";
-
 import { layoutSeederService } from "@/admin/services/layoutSeeder.service";
+import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 
 // Import pages
 import Index from "./pages/Index";
@@ -44,6 +45,7 @@ initializeLogger();
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const [layoutsInitialized, setLayoutsInitialized] = useState(false);
 
   // Log route changes
   useEffect(() => {
@@ -56,27 +58,49 @@ function App() {
 
   // Initialize the layouts on app start
   useEffect(() => {
-    layoutSeederService.ensureCoreLayoutsExist()
-      .then(() => console.log("Core layouts initialized"))
-      .catch(err => console.error("Error initializing core layouts:", err));
+    const initializeLayouts = async () => {
+      try {
+        await layoutSeederService.ensureCoreLayoutsExist();
+        console.log("Core layouts initialized successfully");
+        setLayoutsInitialized(true);
+      } catch (err) {
+        console.error("Error initializing core layouts:", err);
+        // Set initialized to true anyway to prevent blocking the app
+        setLayoutsInitialized(true);
+      }
+    };
+    
+    initializeLayouts();
   }, []);
+
+  if (!layoutsInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-2xl">Initializing layouts...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
-        <AuthProvider>
-          <AdminProvider>
-            {!isAdminRoute && <MainNav />}
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/admin/*" element={<Admin />} />
-            </Routes>
-            {!isAdminRoute && <Footer />}
-            <Toaster />
-            <LoggingComponents />
-          </AdminProvider>
-        </AuthProvider>
+        <ThemeInitializer>
+          <AuthProvider>
+            <AdminProvider>
+              {!isAdminRoute && <MainNav />}
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/admin/*" element={<Admin />} />
+              </Routes>
+              {!isAdminRoute && <Footer />}
+              <Toaster />
+              <LoggingComponents />
+            </AdminProvider>
+          </AuthProvider>
+        </ThemeInitializer>
       </LoggingProvider>
     </ThemeProvider>
   );

@@ -46,6 +46,7 @@ export function CoreLayoutRenderer({
     );
   } catch (error) {
     logger.error('Error rendering layout', { details: error });
+    console.error('Layout rendering error:', error);
     return fallback ? (
       <div className={className}>{fallback}</div>
     ) : (
