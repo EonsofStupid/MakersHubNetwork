@@ -1,4 +1,3 @@
-
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -11,6 +10,8 @@ import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { useEffect } from "react";
 import { initializeLogger, getLogger } from "@/logging";
 import { LogCategory } from "@/logging/types";
+
+import { layoutSeederService } from "@/admin/services/layoutSeeder.service";
 
 // Import pages
 import Index from "./pages/Index";
@@ -52,6 +53,13 @@ function App() {
       details: { path: location.pathname }
     });
   }, [location.pathname]);
+
+  // Initialize the layouts on app start
+  useEffect(() => {
+    layoutSeederService.ensureCoreLayoutsExist()
+      .then(() => console.log("Core layouts initialized"))
+      .catch(err => console.error("Error initializing core layouts:", err));
+  }, []);
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
