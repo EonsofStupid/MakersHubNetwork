@@ -1,6 +1,9 @@
 
-import { loggingSystem } from './LoggingSystem';
+import { LoggerService, getLogger } from './logger.service';
 import { LogCategory, LogLevel } from './types';
+import { getLoggingConfig } from './config';
+import { memoryTransport } from './transports/memory.transport';
+import { logEventEmitter } from './events/LogEventEmitter';
 
 // Re-export types and constants
 export { LogCategory, LogLevel } from './types';
@@ -18,8 +21,9 @@ export * from './utils/logger-utils';
 // Initialize the logging system
 export function initializeLogger(): void {
   try {
-    loggingSystem.initialize();
-    loggingSystem.info('Logging system initialized successfully', {
+    const config = getLoggingConfig();
+    const logger = LoggerService.getInstance(config);
+    logger.info('Logging system initialized successfully', {
       category: LogCategory.SYSTEM,
       source: 'LoggingSystem'
     });
@@ -28,56 +32,20 @@ export function initializeLogger(): void {
   }
 }
 
-// Get the logger
-export function getLogger(source: string = 'App'): {
-  trace: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
-  debug: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
-  info: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
-  warn: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
-  error: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
-  critical: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
-  success: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
-  performance: (message: string, duration: number, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
-} {
-  return {
-    trace: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
-      loggingSystem.trace(message, { ...options, source });
-    },
-    debug: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
-      loggingSystem.debug(message, { ...options, source });
-    },
-    info: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
-      loggingSystem.info(message, { ...options, source });
-    },
-    warn: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
-      loggingSystem.warn(message, { ...options, source });
-    },
-    error: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
-      loggingSystem.error(message, { ...options, source });
-    },
-    critical: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
-      loggingSystem.critical(message, { ...options, source });
-    },
-    success: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
-      loggingSystem.success(message, { ...options, source });
-    },
-    performance: (message: string, duration: number, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
-      loggingSystem.performance(message, duration, { ...options, source });
-    }
-  };
-}
+// Export getLogger for convenience
+export { getLogger };
 
 // Get all logs
 export function getLogs() {
-  return loggingSystem.getLogs();
+  return memoryTransport.getLogs();
 }
 
 // Clear logs
 export function clearLogs() {
-  loggingSystem.clearLogs();
+  memoryTransport.clear();
 }
 
 // Register callback for log events
 export function onLog(callback: (entry: any) => void) {
-  return loggingSystem.registerLogEventCallback(callback);
+  return logEventEmitter.onLog(callback);
 }

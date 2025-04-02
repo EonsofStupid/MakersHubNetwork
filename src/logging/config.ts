@@ -61,6 +61,17 @@ export const productionLoggingConfig: LoggingConfig = {
 };
 
 /**
+ * Test logging configuration
+ */
+export const testLoggingConfig: LoggingConfig = {
+  ...defaultLoggingConfig,
+  minLevel: LogLevel.ERROR, // Only log errors and above in tests
+  transports: [memoryTransport], // Only use memory transport in tests
+  bufferSize: 1,
+  flushInterval: 0
+};
+
+/**
  * Get the appropriate logging configuration for the current environment
  */
 export function getLoggingConfig(): LoggingConfig {
@@ -69,8 +80,7 @@ export function getLoggingConfig(): LoggingConfig {
   }
   
   if (process.env.NODE_ENV === 'test') {
-    // Could add a test config here if needed
-    return defaultLoggingConfig;
+    return testLoggingConfig;
   }
   
   return developmentLoggingConfig;

@@ -4,6 +4,7 @@ import { LogCategory, LogEntry, LogTransport, LoggingConfig } from './types';
 import { LogLevel, isLogLevelAtLeast } from './constants/log-level';
 import { defaultLoggingConfig } from './config';
 import { isRecord } from '@/shared/utils/type-guards';
+import { logEventEmitter } from './events/LogEventEmitter';
 
 /**
  * Logger service - main class for logging management
@@ -49,6 +50,18 @@ export class LoggerService {
    */
   public setUserId(userId: string | undefined): void {
     this.userId = userId;
+  }
+  
+  /**
+   * Log a message at TRACE level
+   */
+  public trace(message: string, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
+    tags?: string[];
+  }): void {
+    this.log(LogLevel.TRACE, message, options);
   }
   
   /**
@@ -109,6 +122,18 @@ export class LoggerService {
     tags?: string[];
   }): void {
     this.log(LogLevel.CRITICAL, message, options);
+  }
+  
+  /**
+   * Log a message at SUCCESS level
+   */
+  public success(message: string, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
+    tags?: string[];
+  }): void {
+    this.log(LogLevel.SUCCESS, message, options);
   }
   
   /**
@@ -199,6 +224,13 @@ export class LoggerService {
     ) {
       this.flush();
     }
+    
+    // Emit event for real-time logging
+    try {
+      logEventEmitter.emitLogEvent(entry);
+    } catch (error) {
+      console.error('Error emitting log event:', error);
+    }
   }
   
   /**
@@ -212,7 +244,11 @@ export class LoggerService {
     // Process each log through all transports
     for (const entry of this.buffer) {
       for (const transport of this.config.transports) {
-        transport.log(entry);
+        try {
+          transport.log(entry);
+        } catch (error) {
+          console.error('Error in log transport:', error);
+        }
       }
     }
     
@@ -252,6 +288,42 @@ export class LoggerService {
 /**
  * Get the global logger instance
  */
-export function getLogger(): LoggerService {
-  return LoggerService.getInstance();
+export function getLogger(source: string = 'App'): {
+  trace: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
+  debug: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
+  info: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
+  warn: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
+  error: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
+  critical: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
+  success: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
+  performance: (message: string, duration: number, options?: { category?: LogCategory; details?: any; tags?: string[] }) => void;
+} {
+  const logger = LoggerService.getInstance();
+  
+  return {
+    trace: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
+      logger.trace(message, { ...options, source });
+    },
+    debug: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
+      logger.debug(message, { ...options, source });
+    },
+    info: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
+      logger.info(message, { ...options, source });
+    },
+    warn: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
+      logger.warn(message, { ...options, source });
+    },
+    error: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
+      logger.error(message, { ...options, source });
+    },
+    critical: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
+      logger.critical(message, { ...options, source });
+    },
+    success: (message: string, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
+      logger.success(message, { ...options, source });
+    },
+    performance: (message: string, duration: number, options?: { category?: LogCategory; details?: any; tags?: string[] }) => {
+      logger.performance(message, duration, { ...options, source });
+    }
+  };
 }

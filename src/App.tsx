@@ -6,10 +6,10 @@ import { MainNav } from '@/components/MainNav';
 import { AuthProvider } from '@/auth/components/AuthProvider';
 import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
 import { KeyboardNavigation } from '@/components/KeyboardNavigation';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { getLogger, initializeLogger, LogCategory } from '@/logging';
 import { LoggingProvider } from '@/logging/context/LoggingContext';
 import { initializeAuthBridge } from '@/auth/bridge';
+import { usePerformanceLogger } from '@/hooks/use-performance-logger';
 
 // Lazy load routes for better performance
 const Index = lazy(() => import('@/pages/Index'));
@@ -19,19 +19,25 @@ const NotFoundPage = lazy(() => import('@/pages/NotFound'));
 
 export default function App() {
   const logger = getLogger('App');
+  const performance = usePerformanceLogger('App');
   
   // Initialize the application
   useEffect(() => {
-    logger.info('Application initialized', { 
-      category: LogCategory.SYSTEM,
-      details: {
-        version: import.meta.env.VITE_APP_VERSION || 'dev',
-        environment: import.meta.env.MODE
-      }
+    performance.measure('app-initialization', () => {
+      // Initialize the logging system
+      initializeLogger();
+      
+      logger.info('Application initialized', { 
+        category: LogCategory.SYSTEM,
+        details: {
+          version: import.meta.env.VITE_APP_VERSION || 'dev',
+          environment: import.meta.env.MODE
+        }
+      });
+      
+      // Initialize auth bridge for event system
+      initializeAuthBridge();
     });
-    
-    // Initialize auth bridge for event system
-    initializeAuthBridge();
     
     // Return cleanup function for when the app unmounts
     return () => {
