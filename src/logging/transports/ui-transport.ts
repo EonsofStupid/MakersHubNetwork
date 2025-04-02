@@ -1,3 +1,4 @@
+
 import { toast } from '@/hooks/use-toast';
 import { LogEntry, LogTransport } from '../types';
 import { LogLevel } from '../constants/log-level';

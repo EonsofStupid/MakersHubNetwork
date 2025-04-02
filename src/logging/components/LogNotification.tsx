@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AlertCircle, Info, AlertTriangle, XCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -8,7 +9,7 @@ import { safelyRenderNode } from '@/shared/utils/react-utils';
 interface LogNotificationProps {
   level: LogLevel;
   category: LogCategory;
-  message: string | React.ReactNode;
+  message: string | number | boolean | React.ReactNode;
   onClose?: () => void;
 }
 
@@ -62,12 +63,15 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
     }
   };
 
+  // Pre-render the message content with type safety
+  const messageContent = safelyRenderNode(message);
+
   return (
     <Alert variant={getVariant()} className="animate-in slide-in-from-right-5">
       {getIcon()}
       <AlertTitle>{getTitle()} - {category}</AlertTitle>
       <AlertDescription>
-        {safelyRenderNode(message)}
+        {messageContent}
       </AlertDescription>
     </Alert>
   );
