@@ -5,12 +5,14 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import './index.css'
-import { registerSiteComponents } from './components/layout/SiteComponentRegistrations'
-import { initializeComponentRegistry } from '@/admin/components/layout/ComponentRegistrations'
+import { initializeLogger } from '@/logging'
+import { initializeAllComponentRegistries } from '@/components/registry/ComponentRegistryInitializer'
 
-// Initialize component registries
-registerSiteComponents();
-initializeComponentRegistry();
+// Initialize logging system first
+initializeLogger();
+
+// Initialize component registries before rendering
+initializeAllComponentRegistries();
 
 // Create a client
 const queryClient = new QueryClient({

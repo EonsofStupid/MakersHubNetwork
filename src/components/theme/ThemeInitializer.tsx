@@ -5,6 +5,8 @@ import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicKeyframes } from './DynamicKeyframes';
 import { SiteThemeProvider } from './SiteThemeProvider';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -14,19 +16,26 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const { setTheme, isLoading } = useThemeStore();
   const { toast } = useToast();
+  const logger = useLogger('ThemeInitializer', LogCategory.SYSTEM);
 
   useEffect(() => {
+    let isMounted = true;
+    
     async function initialize() {
       try {
+        logger.info('Starting theme initialization');
+        
         // First, ensure the default theme exists in the database
         const themeId = await ensureDefaultTheme();
+        
+        if (!isMounted) return;
         
         if (themeId) {
           // Then sync CSS using the ensureDefaultTheme's built-in sync capability
           await setTheme(themeId);
-          console.log('Theme initialized successfully with ID:', themeId);
+          logger.info('Theme initialized successfully', { details: { themeId } });
         } else {
-          console.warn('Failed to initialize theme, falling back to default styles');
+          logger.warn('Failed to initialize theme, falling back to default styles');
           toast({
             title: 'Theme Warning',
             description: 'Could not find or create theme. Using default styling.',
@@ -34,31 +43,31 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           });
         }
       } catch (error) {
-        console.error('Error initializing theme:', error);
-        toast({
-          title: 'Theme Error',
-          description: 'Failed to load theme. Using default styling.',
-          variant: "destructive",
-        });
+        logger.error('Error initializing theme', { details: error });
+        
+        if (isMounted) {
+          toast({
+            title: 'Theme Error',
+            description: 'Failed to load theme. Using default styling.',
+            variant: "destructive",
+          });
+        }
       } finally {
-        setIsInitialized(true);
+        if (isMounted) {
+          setIsInitialized(true);
+        }
       }
     }
     
     initialize();
-  }, [setTheme, toast]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [setTheme, toast, logger]);
 
-  // Optional: Show loading state while theme is initializing
-  if (!isInitialized || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="space-y-4 text-center">
-          <div className="text-primary animate-pulse text-2xl font-bold">Loading Theme...</div>
-        </div>
-      </div>
-    );
-  }
-
+  // Instead of blocking the entire app while theme loads,
+  // we'll continue rendering with a default theme
   return (
     <SiteThemeProvider>
       <DynamicKeyframes />

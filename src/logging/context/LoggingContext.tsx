@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { getLogger } from '../index';
 import { LogLevel, LogCategory, LogEntry } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { logEventEmitter } from '../events/LogEventEmitter';
 
 interface LoggingContextType {
   showLogConsole: boolean;
@@ -51,7 +52,7 @@ export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, [logger]);
   
-  // Listen for log events
+  // Listen for log events using our event emitter
   useEffect(() => {
     const handleLogEvent = (entry: LogEntry) => {
       setLogs(prevLogs => [...prevLogs, {
@@ -60,14 +61,10 @@ export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }]);
     };
     
-    // Add listener for log events
-    // This is a simplified version - in a real app we'd need to implement
-    // a proper event system for the logger
-    const unsubscribe = subscribeToLogEvents(handleLogEvent);
+    // Subscribe to log events
+    const unsubscribe = logEventEmitter.onLog(handleLogEvent);
     
-    return () => {
-      unsubscribe();
-    };
+    return unsubscribe;
   }, []);
   
   // Listen for key combinations to toggle log console (Ctrl+Shift+L)
@@ -97,10 +94,3 @@ export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     </LoggingContext.Provider>
   );
 };
-
-// Helper function to subscribe to log events
-// This is a placeholder - in a real app we'd implement a proper event system
-function subscribeToLogEvents(callback: (entry: LogEntry) => void): () => void {
-  // Implementation would depend on how the logging system emits events
-  return () => {};
-}

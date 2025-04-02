@@ -9,10 +9,12 @@ import { LogConsole } from "@/logging/components/LogConsole";
 import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { useEffect, useState } from "react";
-import { initializeLogger, getLogger } from "@/logging";
+import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging/types";
 import { layoutSeederService } from "@/admin/services/layoutSeeder.service";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
+import { useCoreLayouts } from "@/hooks/useCoreLayouts";
+import { CoreLayoutRenderer } from "@/components/layout/CoreLayoutRenderer";
 
 // Import pages
 import Index from "./pages/Index";
@@ -20,7 +22,6 @@ import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 
 // Import UI components
-import { MainNav } from "@/components/MainNav";
 import { Footer } from "@/components/Footer";
 
 // Import styles
@@ -40,35 +41,83 @@ function LoggingComponents() {
 }
 
 // Initialize logging system
-initializeLogger();
+const logger = getLogger();
 
-function App() {
+function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const [layoutsInitialized, setLayoutsInitialized] = useState(false);
+  const { topNavLayout, footerLayout, isLoading: layoutsLoading, error: layoutsError } = useCoreLayouts();
 
   // Log route changes
   useEffect(() => {
-    const logger = getLogger();
     logger.info(`Navigated to ${location.pathname}`, {
       category: LogCategory.SYSTEM,
       details: { path: location.pathname }
     });
   }, [location.pathname]);
 
+  // Log any layout errors
+  useEffect(() => {
+    if (layoutsError) {
+      logger.error('Error loading layouts', {
+        category: LogCategory.UI,
+        details: layoutsError
+      });
+    }
+  }, [layoutsError]);
+
+  return (
+    <>
+      {!isAdminRoute && (
+        <div className="main-nav-container">
+          <CoreLayoutRenderer 
+            layout={topNavLayout} 
+            isLoading={layoutsLoading} 
+            fallback={<div className="h-16 bg-background/80 flex items-center justify-center border-b">Navigation Loading...</div>}
+          />
+        </div>
+      )}
+      
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/admin/*" element={<Admin />} />
+      </Routes>
+      
+      {!isAdminRoute && (
+        <CoreLayoutRenderer 
+          layout={footerLayout} 
+          isLoading={layoutsLoading}
+          fallback={<Footer />}
+        />
+      )}
+      
+      <Toaster />
+      <LoggingComponents />
+    </>
+  );
+}
+
+function App() {
+  const [layoutsInitialized, setLayoutsInitialized] = useState(false);
+
   // Initialize the layouts on app start
   useEffect(() => {
-    const initializeLayouts = async () => {
+    async function initializeLayouts() {
       try {
+        logger.info('Initializing core layouts', { category: LogCategory.SYSTEM });
         await layoutSeederService.ensureCoreLayoutsExist();
-        console.log("Core layouts initialized successfully");
+        logger.info('Core layouts initialized successfully', { category: LogCategory.SYSTEM });
         setLayoutsInitialized(true);
       } catch (err) {
-        console.error("Error initializing core layouts:", err);
+        logger.error('Error initializing core layouts', { 
+          category: LogCategory.SYSTEM,
+          details: err
+        });
         // Set initialized to true anyway to prevent blocking the app
         setLayoutsInitialized(true);
       }
-    };
+    }
     
     initializeLayouts();
   }, []);
@@ -89,15 +138,7 @@ function App() {
         <ThemeInitializer>
           <AuthProvider>
             <AdminProvider>
-              {!isAdminRoute && <MainNav />}
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/admin/*" element={<Admin />} />
-              </Routes>
-              {!isAdminRoute && <Footer />}
-              <Toaster />
-              <LoggingComponents />
+              <AppContent />
             </AdminProvider>
           </AuthProvider>
         </ThemeInitializer>
