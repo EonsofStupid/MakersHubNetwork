@@ -88,21 +88,21 @@ export async function ensureDefaultTheme(): Promise<string> {
       is_default: true,
       design_tokens: {
         colors: {
-          background: '#080F1E',
-          foreground: '#F9FAFB',
-          card: '#0E172A',
-          cardForeground: '#F9FAFB',
+          background: '#12121A',
+          foreground: '#F6F6F7',
+          card: 'rgba(28, 32, 42, 0.7)',
+          cardForeground: '#F6F6F7',
           primary: '#00F0FF',
-          primaryForeground: '#F9FAFB',
+          primaryForeground: '#F6F6F7',
           secondary: '#FF2D6E',
-          secondaryForeground: '#F9FAFB',
-          muted: '#131D35',
-          mutedForeground: '#94A3B8',
+          secondaryForeground: '#F6F6F7',
+          muted: 'rgba(255, 255, 255, 0.7)',
+          mutedForeground: 'rgba(255, 255, 255, 0.5)',
           accent: '#131D35',
-          accentForeground: '#F9FAFB',
+          accentForeground: '#F6F6F7',
           destructive: '#EF4444',
-          destructiveForeground: '#F9FAFB',
-          border: '#131D35',
+          destructiveForeground: '#F6F6F7',
+          border: 'rgba(0, 240, 255, 0.2)',
           input: '#131D35',
           ring: '#1E293B',
         },
@@ -127,6 +127,28 @@ export async function ensureDefaultTheme(): Promise<string> {
             md: '0.5rem',
             lg: '0.75rem',
             full: '9999px',
+          }
+        },
+        // Add admin tokens
+        admin: {
+          colors: {
+            primary: "#00F0FF",
+            secondary: "#FF2D6E",
+            background: {
+              main: "#12121A",
+              card: "rgba(28, 32, 42, 0.7)",
+              overlay: "rgba(22, 24, 32, 0.85)"
+            },
+            text: {
+              primary: "#F6F6F7",
+              secondary: "rgba(255, 255, 255, 0.7)",
+              accent: "#00F0FF"
+            },
+            borders: {
+              normal: "rgba(0, 240, 255, 0.2)",
+              hover: "rgba(0, 240, 255, 0.4)",
+              active: "rgba(0, 240, 255, 0.6)"
+            }
           }
         }
       },

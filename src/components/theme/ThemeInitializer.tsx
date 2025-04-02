@@ -14,14 +14,13 @@ interface ThemeInitializerProps {
   children: React.ReactNode;
 }
 
-// Shorter fallback timeout for better UX
-const FALLBACK_TIMEOUT = 300; // 300ms fallback timeout
+// Much shorter fallback timeout for better UX
+const FALLBACK_TIMEOUT = 200; // 200ms fallback timeout
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   // State tracking for better debugging and resilience
   const [isInitialized, setIsInitialized] = useState(false);
   const [initializationAttempted, setInitializationAttempted] = useState(false);
-  const [initError, setInitError] = useState<Error | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
   
   const { setTheme, isLoading, error: themeStoreError } = useThemeStore();
@@ -58,13 +57,13 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         })
       });
       
-      // Short fallback timer for rapid recovery from errors
+      // Short fallback timer for rapid recovery from errors - 100ms
       const timer = setTimeout(() => {
         logger.info('Forcing initialization after theme store error', { 
           details: safeDetails(themeStoreError) 
         });
         setIsInitialized(true);
-      }, 200);
+      }, 100);
       
       return () => clearTimeout(timer);
     }
@@ -117,13 +116,13 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         if (themeId && isValidUUID(themeId)) {
           logger.debug('Theme ID found, attempting to set theme', { details: { themeId }});
           
-          // Set a separate timeout just for the DB fetch to prevent UI blocking
+          // Set a separate timeout just for the DB fetch to prevent UI blocking - 300ms
           const fetchTimeout = setTimeout(() => {
             if (isMounted && !isInitialized) {
               logger.warn('Theme fetch timed out, continuing with fallbacks');
               setIsInitialized(true);
             }
-          }, 400);
+          }, 300);
           
           try {
             await setTheme(themeId);
@@ -164,7 +163,6 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         });
         
         if (isMounted) {
-          setInitError(err);
           setFailedAttempts(prev => prev + 1);
           // Continue with default styles even with an error
           setIsInitialized(true);
