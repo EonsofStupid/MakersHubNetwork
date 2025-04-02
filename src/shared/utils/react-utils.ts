@@ -1,5 +1,6 @@
 
 import { useEffect, useRef } from 'react';
+import React from 'react';
 
 /**
  * Hook to check if a component is mounted
@@ -53,4 +54,66 @@ export function formatDate(
 ): string {
   const dateObj = date instanceof Date ? date : new Date(date);
   return new Intl.DateTimeFormat('en-US', options).format(dateObj);
+}
+
+/**
+ * Safely renders a React node or converts primitive values to strings
+ * @param value The value to render safely
+ * @returns A renderable React node
+ */
+export function safelyRenderNode(value: unknown): React.ReactNode {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  
+  if (React.isValidElement(value)) {
+    return value;
+  }
+  
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value);
+    } catch (err) {
+      return String(value);
+    }
+  }
+  
+  return String(value);
+}
+
+/**
+ * Converts a React node or other value to a searchable string representation
+ * @param value The value to convert to a searchable string
+ * @returns A string representation for searching
+ */
+export function nodeToSearchableString(value: unknown): string {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  
+  if (React.isValidElement(value)) {
+    // For React elements, we try to extract text content
+    try {
+      // For simple elements with string children
+      const props = value.props as any;
+      if (typeof props.children === 'string') {
+        return props.children;
+      }
+      
+      // Try to stringify the props
+      return JSON.stringify(props);
+    } catch (err) {
+      return '';
+    }
+  }
+  
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value);
+    } catch (err) {
+      return String(value);
+    }
+  }
+  
+  return String(value);
 }

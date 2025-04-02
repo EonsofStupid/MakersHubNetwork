@@ -10,6 +10,8 @@ export const LOG_LEVEL_MAP: Record<LogLevel, string> = {
   [LogLevel.WARN]: 'WARN',
   [LogLevel.ERROR]: 'ERROR',
   [LogLevel.CRITICAL]: 'CRITICAL',
+  [LogLevel.SUCCESS]: 'SUCCESS',
+  [LogLevel.TRACE]: 'TRACE',
 };
 
 /**
@@ -22,6 +24,8 @@ export const STRING_TO_LOG_LEVEL: Record<string, LogLevel> = {
   'WARNING': LogLevel.WARN,
   'ERROR': LogLevel.ERROR,
   'CRITICAL': LogLevel.CRITICAL,
+  'SUCCESS': LogLevel.SUCCESS,
+  'TRACE': LogLevel.TRACE,
 };
 
 /**
