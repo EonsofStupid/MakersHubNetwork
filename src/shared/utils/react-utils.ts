@@ -48,3 +48,32 @@ export function nodeToSearchableString(node: React.ReactNode): string {
 
   return '';
 }
+
+/**
+ * Safely renders a React node, converting non-renderable values to strings
+ * This helps prevent render errors when uncertain data types are passed to components
+ * 
+ * @param node The React node to safely render
+ * @returns A guaranteed renderable React node
+ */
+export function safelyRenderNode(node: React.ReactNode): React.ReactNode {
+  if (node === null || node === undefined) {
+    return '';
+  }
+
+  if (
+    typeof node === 'string' || 
+    typeof node === 'number' || 
+    typeof node === 'boolean' ||
+    React.isValidElement(node)
+  ) {
+    return node;
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(safelyRenderNode);
+  }
+
+  // Convert objects to string representation
+  return String(node);
+}

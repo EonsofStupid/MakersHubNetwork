@@ -1,6 +1,7 @@
 
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { getLogger } from '../logger.service';
+import { LogCategory } from '../types';
+import { measureExecution as measurePerformance } from '@/shared/utils/performance';
 
 /**
  * Creates a performance measurement utility
@@ -115,11 +116,11 @@ export function createMeasurement(source: string, category: LogCategory = LogCat
      * @returns A decorator function
      */
     createDecorator: (name: string, description?: string) => {
-      return <T extends (...args: any[]) => any>(
+      return function<T extends (...args: any[]) => any>(
         target: any,
         propertyKey: string,
         descriptor: TypedPropertyDescriptor<T>
-      ): TypedPropertyDescriptor<T> => {
+      ): TypedPropertyDescriptor<T> {
         const originalMethod = descriptor.value!;
         
         descriptor.value = function(...args: any[]) {
@@ -232,6 +233,7 @@ export function withPerformanceTracking<P extends object>(
     const logger = getLogger(displayName);
     const renderStart = performance.now();
     
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     React.useEffect(() => {
       const renderTime = performance.now() - renderStart;
       logger.performance(`Render time for ${displayName}`, renderTime, {
