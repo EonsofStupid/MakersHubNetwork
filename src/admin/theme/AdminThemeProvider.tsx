@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAdminPreferences } from '@/admin/store/adminPreferences.store';
 
-type Theme = 'cyberpunk' | 'neon' | 'minimal' | 'dark' | 'light';
+type Theme = 'impulse' | 'cyberpunk' | 'neon' | 'minimal' | 'dark' | 'light';
 
 interface AdminThemeContextType {
   theme: Theme;
@@ -14,7 +14,7 @@ const AdminThemeContext = createContext<AdminThemeContextType | undefined>(undef
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
   const { theme: storedTheme, setTheme: storeTheme } = useAdminPreferences();
-  const [theme, setThemeState] = useState<Theme>((storedTheme as Theme) || 'cyberpunk');
+  const [theme, setThemeState] = useState<Theme>((storedTheme as Theme) || 'impulse');
   
   // Update theme in store when changed
   const setTheme = (newTheme: Theme) => {
@@ -25,9 +25,9 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
     document.documentElement.setAttribute('data-admin-theme', newTheme);
   };
   
-  // Toggle between cyberpunk and minimal themes
+  // Toggle between impulse and minimal themes
   const toggleTheme = () => {
-    setTheme(theme === 'cyberpunk' ? 'minimal' : 'cyberpunk');
+    setTheme(theme === 'impulse' ? 'minimal' : 'impulse');
   };
   
   // Initialize theme from store

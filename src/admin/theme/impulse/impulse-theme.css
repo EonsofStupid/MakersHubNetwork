@@ -45,6 +45,16 @@
   --impulse-curve-spring: cubic-bezier(0.43, 0.13, 0.23, 0.96);
 }
 
+[data-admin-theme="impulse"],
+[data-admin-theme="cyberpunk"] {
+  /* Use the same variables for backward compatibility */
+  --impulse-primary: #00F0FF;
+  --impulse-secondary: #FF2D6E;
+  --impulse-bg-main: #121218;
+  --impulse-text-primary: #F6F6F7;
+  --impulse-border-normal: rgba(0, 240, 255, 0.2);
+}
+
 /* Admin theme root container */
 .impulse-admin-root {
   background-color: var(--impulse-bg-main);
