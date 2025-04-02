@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 /**
@@ -32,6 +31,16 @@ export enum LogCategory {
 }
 
 /**
+ * Shared options for individual log messages
+ */
+export interface LoggerOptions {
+  category?: LogCategory;
+  details?: Record<string, unknown>;
+  tags?: string[];
+  description?: string; // Added for semantic labeling of duration logs
+}
+
+/**
  * Log entry structure
  */
 export interface LogEntry {
@@ -44,8 +53,22 @@ export interface LogEntry {
   details?: Record<string, unknown>;
   userId?: string;
   sessionId?: string;
-  duration?: number; // For performance logs
+  duration?: number;
   tags?: string[];
+}
+
+/**
+ * Log payload structure (for structured calls to logger)
+ */
+export interface LogPayload {
+  level: keyof Logger;
+  message: string;
+  meta?: Record<string, unknown>;
+  time?: string;
+  category?: LogCategory;
+  tags?: string[];
+  details?: Record<string, unknown>;
+  duration?: number;
 }
 
 /**
@@ -92,21 +115,9 @@ export interface Logger {
 }
 
 /**
- * Options for individual log messages
- */
-export interface LoggerOptions {
-  category?: LogCategory;
-  details?: Record<string, unknown>;
-  tags?: string[];
-}
-
-/**
  * Performance measurement options
  */
-export interface PerformanceMeasurementOptions {
-  category?: LogCategory;
-  tags?: string[];
-}
+export type PerformanceMeasurementOptions = LoggerOptions;
 
 /**
  * Performance measurement result
@@ -121,6 +132,6 @@ export interface MeasurementResult<T> {
  */
 export interface PerformanceMeasurement {
   start: (name: string) => void;
-  end: (name: string) => number;
-  measure: <T>(name: string, fn: () => T | Promise<T>, options?: PerformanceMeasurementOptions) => Promise<T>;
+  end: (name: string, options?: LoggerOptions) => number;
+  measure: <T>(name: string, fn: () => T | Promise<T>, options?: LoggerOptions) => Promise<T>;
 }
