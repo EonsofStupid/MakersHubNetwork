@@ -57,6 +57,8 @@ export function MainNav() {
     <CoreLayoutRenderer
       layout={topNavLayout}
       isLoading={layoutsLoading}
+      className="w-full"
+      id="main-navigation"
       fallback={
         <header
           className={cn(

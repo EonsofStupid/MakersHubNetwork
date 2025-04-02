@@ -3,7 +3,6 @@ import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeState } from "./types";
 import { Theme, ComponentTokens } from "@/types/theme";
-import { Json } from "@/integrations/supabase/types";
 import { isValidUUID } from "@/logging/utils/type-guards";
 import { getLogger } from "@/logging";
 

@@ -7,19 +7,18 @@ import { DynamicKeyframes } from './DynamicKeyframes';
 import { SiteThemeProvider } from './SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { ThemeLoadingState } from './info/ThemeLoadingState';
-import { ThemeErrorState } from './info/ThemeErrorState';
 import { isError, isValidUUID } from '@/logging/utils/type-guards';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
 }
 
+// Consistent theme name used throughout the application
+const THEME_NAME = 'Impulse';
 const FALLBACK_TIMEOUT = 1000; // 1 second fallback timeout
-const THEME_NAME = 'Impulse'; // Consistent theme name
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
-  // Track state in more detail for better debugging
+  // State tracking for better debugging and resilience
   const [isInitialized, setIsInitialized] = useState(false);
   const [initializationAttempted, setInitializationAttempted] = useState(false);
   const [initError, setInitError] = useState<Error | null>(null);
@@ -41,7 +40,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         }
       });
       
-      // Very aggressive fallback timer - only 300ms
+      // Short fallback timer for rapid recovery
       const timer = setTimeout(() => {
         logger.info('Forcing initialization after theme store error', { 
           details: { error: themeStoreError.message }
@@ -53,6 +52,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     }
   }, [themeStoreError, isInitialized, initializationAttempted, failedAttempts, logger]);
 
+  // Main theme initialization logic
   useEffect(() => {
     let isMounted = true;
     let initializationTimeout: NodeJS.Timeout;
@@ -165,7 +165,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     };
   }, [setTheme, toast, logger, initializationAttempted]);
 
-  // Render the app immediately with fallback styling instead of showing a loading screen
+  // Render immediately with fallback styling - no loading screens
   return (
     <SiteThemeProvider fallbackToDefault={true}>
       <DynamicKeyframes />

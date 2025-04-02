@@ -5,8 +5,6 @@ import { LayoutRenderer } from '@/admin/components/layout/LayoutRenderer';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { safeDetails } from '@/logging/utils/safeDetails';
-import { ErrorBoundary } from 'react-error-boundary';
 
 interface CoreLayoutRendererProps {
   layout: Layout | null;
@@ -80,7 +78,13 @@ export function CoreLayoutRenderer({
       <ErrorBoundary
         FallbackComponent={ErrorFallback}
         onError={(error) => {
-          logger.error('Error rendering layout', { details: safeDetails(error) });
+          logger.error('Error rendering layout', { 
+            details: { 
+              error: error.message,
+              layoutId: layout.id,
+              type: layout.type
+            } 
+          });
         }}
         resetKeys={[layout.id]}
       >
