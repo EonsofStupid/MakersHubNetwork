@@ -14,11 +14,11 @@ class MemoryTransport implements LogTransport {
   }
   
   log(entry: LogEntry): void {
-    this.logs.unshift(entry); // Add to beginning for newest first
+    this.logs.push(entry); // Add to end for chronological order
     
     // Trim if exceeds max logs
     if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(0, this.maxLogs);
+      this.logs = this.logs.slice(this.logs.length - this.maxLogs);
     }
   }
   

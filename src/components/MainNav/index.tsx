@@ -5,7 +5,7 @@ import { Logo } from "./components/Logo";
 import { NavigationItems } from "./components/NavigationItems";
 import { SearchButton } from "./components/SearchButton";
 import { AuthSection } from "./components/AuthSection";
-import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 import { Link } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
