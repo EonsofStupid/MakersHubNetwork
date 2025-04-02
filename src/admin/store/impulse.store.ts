@@ -1,7 +1,9 @@
+
 import { create } from "zustand";
 import { ImpulseTheme } from "../types/impulse.types";
 import { defaultImpulseTokens } from "../theme/impulse/tokens";
 import { useThemeStore } from "@/stores/theme/store";
+import { DEFAULT_THEME_NAME } from "@/utils/themeInitializer";
 
 interface ImpulsivityThemeState {
   // Theme state
@@ -17,7 +19,7 @@ interface ImpulsivityThemeState {
   resetTheme: () => void;
 }
 
-// Renamed to useImpulsivityStore for consistency
+// Use "useImpulsivityStore" as the main name
 export const useImpulsivityStore = create<ImpulsivityThemeState>((set, get) => ({
   // Initial state
   theme: defaultImpulseTokens,
@@ -60,7 +62,7 @@ export const useImpulsivityStore = create<ImpulsivityThemeState>((set, get) => (
         });
       }
     } catch (error) {
-      console.error("Error loading Impulsivity theme:", error);
+      console.error(`Error loading ${DEFAULT_THEME_NAME} theme:`, error);
       set({ 
         error: error instanceof Error ? error : new Error("Failed to load theme"),
         isLoading: false
@@ -93,7 +95,7 @@ export const useImpulsivityStore = create<ImpulsivityThemeState>((set, get) => (
         throw new Error("No theme found to update");
       }
     } catch (error) {
-      console.error("Error saving Impulsivity theme:", error);
+      console.error(`Error saving ${DEFAULT_THEME_NAME} theme:`, error);
       set({ 
         error: error instanceof Error ? error : new Error("Failed to save theme"),
         isLoading: false

@@ -20,26 +20,45 @@
   --site-input: 228 47% 15%;
   --site-ring: 228 47% 20%;
 
+  /* Fallback values in hex (these will be used before HSL values are processed) */
+  --fallback-background: #0F172A;
+  --fallback-foreground: #F9FAFB;
+  --fallback-card: #131E32;
+  --fallback-card-foreground: #F9FAFB;
+  --fallback-primary: #00F0FF;
+  --fallback-primary-foreground: #F9FAFB;
+  --fallback-secondary: #FF2D6E;
+  --fallback-secondary-foreground: #F9FAFB;
+  --fallback-muted: #1E293B;
+  --fallback-muted-foreground: #A1A1AA;
+  --fallback-accent: #1E293B;
+  --fallback-accent-foreground: #F9FAFB;
+  --fallback-destructive: #EF4444;
+  --fallback-destructive-foreground: #F9FAFB;
+  --fallback-border: #1E293B;
+  --fallback-input: #1E293B;
+  --fallback-ring: #334155;
+
   /* Convert to standard variables for compatibility */
-  --background: hsl(var(--site-background));
-  --foreground: hsl(var(--site-foreground));
-  --card: hsl(var(--site-card));
-  --card-foreground: hsl(var(--site-card-foreground));
-  --popover: hsl(var(--site-card));
-  --popover-foreground: hsl(var(--site-card-foreground));
-  --primary: hsl(var(--site-primary));
-  --primary-foreground: hsl(var(--site-primary-foreground));
-  --secondary: hsl(var(--site-secondary));
-  --secondary-foreground: hsl(var(--site-secondary-foreground));
-  --muted: hsl(var(--site-muted));
-  --muted-foreground: hsl(var(--site-muted-foreground));
-  --accent: hsl(var(--site-accent));
-  --accent-foreground: hsl(var(--site-accent-foreground));
-  --destructive: hsl(var(--site-destructive));
-  --destructive-foreground: hsl(var(--site-destructive-foreground));
-  --border: hsl(var(--site-border));
-  --input: hsl(var(--site-input));
-  --ring: hsl(var(--site-ring));
+  --background: var(--fallback-background);
+  --foreground: var(--fallback-foreground);
+  --card: var(--fallback-card);
+  --card-foreground: var(--fallback-card-foreground);
+  --popover: var(--fallback-card);
+  --popover-foreground: var(--fallback-card-foreground);
+  --primary: var(--fallback-primary);
+  --primary-foreground: var(--fallback-primary-foreground);
+  --secondary: var(--fallback-secondary);
+  --secondary-foreground: var(--fallback-secondary-foreground);
+  --muted: var(--fallback-muted);
+  --muted-foreground: var(--fallback-muted-foreground);
+  --accent: var(--fallback-accent);
+  --accent-foreground: var(--fallback-accent-foreground);
+  --destructive: var(--fallback-destructive);
+  --destructive-foreground: var(--fallback-destructive-foreground);
+  --border: var(--fallback-border);
+  --input: var(--fallback-input);
+  --ring: var(--fallback-ring);
 
   /* Site-specific effect colors */
   --site-effect-color: #00F0FF;

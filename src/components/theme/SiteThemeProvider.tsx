@@ -123,7 +123,7 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
     }
   }, [currentTheme, logger]);
 
-  // Apply theme variables to CSS
+  // Apply theme variables to CSS - with immediate fallback application
   useEffect(() => {
     // Use fallback variables if theme is loading or not available
     const themeVars = fallbackToDefault && (isLoading || !currentTheme) 
@@ -133,7 +133,47 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
     const rootElement = document.documentElement;
     
     try {
-      // Apply CSS variables
+      // Apply fallback hex values first for immediate styling
+      rootElement.style.setProperty('--background', themeVars.background);
+      rootElement.style.setProperty('--foreground', themeVars.foreground);
+      rootElement.style.setProperty('--card', themeVars.card);
+      rootElement.style.setProperty('--card-foreground', themeVars.cardForeground);
+      rootElement.style.setProperty('--popover', themeVars.card);
+      rootElement.style.setProperty('--popover-foreground', themeVars.cardForeground);
+      rootElement.style.setProperty('--primary', themeVars.primary);
+      rootElement.style.setProperty('--primary-foreground', themeVars.primaryForeground);
+      rootElement.style.setProperty('--secondary', themeVars.secondary);
+      rootElement.style.setProperty('--secondary-foreground', themeVars.secondaryForeground);
+      rootElement.style.setProperty('--muted', themeVars.muted);
+      rootElement.style.setProperty('--muted-foreground', themeVars.mutedForeground);
+      rootElement.style.setProperty('--accent', themeVars.accent);
+      rootElement.style.setProperty('--accent-foreground', themeVars.accentForeground);
+      rootElement.style.setProperty('--destructive', themeVars.destructive);
+      rootElement.style.setProperty('--destructive-foreground', themeVars.destructiveForeground);
+      rootElement.style.setProperty('--border', themeVars.border);
+      rootElement.style.setProperty('--input', themeVars.input);
+      rootElement.style.setProperty('--ring', themeVars.ring);
+      
+      // Apply fallback hex values to site variables
+      rootElement.style.setProperty('--fallback-background', themeVars.background);
+      rootElement.style.setProperty('--fallback-foreground', themeVars.foreground);
+      rootElement.style.setProperty('--fallback-card', themeVars.card);
+      rootElement.style.setProperty('--fallback-card-foreground', themeVars.cardForeground);
+      rootElement.style.setProperty('--fallback-primary', themeVars.primary);
+      rootElement.style.setProperty('--fallback-primary-foreground', themeVars.primaryForeground);
+      rootElement.style.setProperty('--fallback-secondary', themeVars.secondary);
+      rootElement.style.setProperty('--fallback-secondary-foreground', themeVars.secondaryForeground);
+      rootElement.style.setProperty('--fallback-muted', themeVars.muted);
+      rootElement.style.setProperty('--fallback-muted-foreground', themeVars.mutedForeground);
+      rootElement.style.setProperty('--fallback-accent', themeVars.accent);
+      rootElement.style.setProperty('--fallback-accent-foreground', themeVars.accentForeground);
+      rootElement.style.setProperty('--fallback-destructive', themeVars.destructive);
+      rootElement.style.setProperty('--fallback-destructive-foreground', themeVars.destructiveForeground);
+      rootElement.style.setProperty('--fallback-border', themeVars.border);
+      rootElement.style.setProperty('--fallback-input', themeVars.input);
+      rootElement.style.setProperty('--fallback-ring', themeVars.ring);
+      
+      // Then apply the HSL variables if/when available
       rootElement.style.setProperty('--site-background', themeVars.background);
       rootElement.style.setProperty('--site-foreground', themeVars.foreground);
       rootElement.style.setProperty('--site-card', themeVars.card);
