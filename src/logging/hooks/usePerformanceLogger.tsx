@@ -6,14 +6,14 @@ import { createSimpleMeasurement } from '../utils/performance';
 
 export function usePerformanceLogger(source: string = 'performance') {
   const { performance: logPerformance } = useLogger(source, LogCategory.PERFORMANCE);
-  const simpleMeasurement = useRef(createSimpleMeasurement()).current;
+  const performanceMeasurement = useRef(createSimpleMeasurement()).current;
 
   const start = useCallback((name: string) => {
-    simpleMeasurement.start(name);
-  }, [simpleMeasurement]);
+    performanceMeasurement.start(name);
+  }, [performanceMeasurement]);
 
   const end = useCallback((name: string, description?: string) => {
-    const duration = simpleMeasurement.end(name);
+    const duration = performanceMeasurement.end(name);
     if (duration === 0) return 0;
 
     logPerformance(description || `Completed ${name}`, duration, {
@@ -21,7 +21,7 @@ export function usePerformanceLogger(source: string = 'performance') {
     });
 
     return duration;
-  }, [logPerformance, simpleMeasurement]);
+  }, [logPerformance, performanceMeasurement]);
 
   const measure = useCallback(<T,>(
     name: string,
@@ -31,6 +31,7 @@ export function usePerformanceLogger(source: string = 'performance') {
     try {
       start(name);
       const result = operation();
+      
       if (result instanceof Promise) {
         return result.then((r) => {
           end(name, description);

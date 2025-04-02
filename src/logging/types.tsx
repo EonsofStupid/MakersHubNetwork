@@ -32,6 +32,13 @@ export enum LogCategory {
 }
 
 /**
+ * Simple timer interface for basic performance measurements
+ */
+export interface SimpleTimer {
+  end(): number;
+}
+
+/**
  * Shared options for individual log messages
  */
 export interface LoggerOptions {
