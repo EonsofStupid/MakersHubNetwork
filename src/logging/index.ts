@@ -1,25 +1,71 @@
 
-import { LoggerService, getLogger } from './logger.service';
-import { LogLevel } from './constants/log-level';
-import { LogCategory, LogEntry, LogTransport, LoggingConfig } from './types';
-import { memoryTransport } from './transports/memory.transport';
-import { consoleTransport } from './transports/console.transport';
-import { defaultLoggingConfig } from './config';
+import { loggingSystem } from './LoggingSystem';
+import { LogCategory, LogLevel } from './types';
 
-// Initialize the logger when this module is imported
-export function initializeLogger(config?: LoggingConfig): LoggerService {
-  return LoggerService.getInstance(config);
+export { LogCategory, LogLevel } from './types';
+export { LoggingProvider, useLoggingContext } from './context/LoggingContext';
+export { LogConsole } from './components/LogConsole';
+export { LogToggleButton } from './components/LogToggleButton';
+
+// Initialize the logging system
+export function initializeLogger(): void {
+  try {
+    loggingSystem.initialize();
+    loggingSystem.info('Logging system initialized successfully', {
+      category: LogCategory.SYSTEM,
+      source: 'LoggingSystem'
+    });
+  } catch (error) {
+    console.error('Failed to initialize logging system:', error);
+  }
 }
 
-// Export everything needed for logging system
-export {
-  LoggerService,
-  getLogger,
-  LogLevel,
-  LogCategory,
-  memoryTransport,
-  consoleTransport,
-  defaultLoggingConfig
-};
+// Get the logger
+export function getLogger(source: string = 'App'): {
+  info: (message: string, options?: { category?: LogCategory; details?: any }) => void;
+  warn: (message: string, options?: { category?: LogCategory; details?: any }) => void;
+  error: (message: string, options?: { category?: LogCategory; details?: any }) => void;
+  debug: (message: string, options?: { category?: LogCategory; details?: any }) => void;
+} {
+  return {
+    info: (message: string, options?: { category?: LogCategory; details?: any }) => {
+      loggingSystem.info(message, { 
+        ...options, 
+        source 
+      });
+    },
+    warn: (message: string, options?: { category?: LogCategory; details?: any }) => {
+      loggingSystem.warn(message, { 
+        ...options, 
+        source 
+      });
+    },
+    error: (message: string, options?: { category?: LogCategory; details?: any }) => {
+      loggingSystem.error(message, { 
+        ...options, 
+        source 
+      });
+    },
+    debug: (message: string, options?: { category?: LogCategory; details?: any }) => {
+      loggingSystem.debug(message, { 
+        ...options, 
+        source
+      });
+    }
+  };
+}
 
-export type { LogEntry, LogTransport, LoggingConfig };
+// Get all logs
+export function getLogs() {
+  return loggingSystem.getLogs();
+}
+
+// Clear logs
+export function clearLogs() {
+  loggingSystem.clearLogs();
+}
+
+// Register callback for log events
+export function onLog(callback: (entry: any) => void) {
+  return loggingSystem.registerLogEventCallback(callback);
+}

@@ -9,7 +9,7 @@ import { LogCategory } from '@/logging/types';
  * This ensures that components are available when layouts are loaded
  */
 export function initializeAllComponentRegistries(): void {
-  const logger = getLogger();
+  const logger = getLogger('ComponentRegistryInitializer');
   
   try {
     logger.info('Starting component registry initialization', {
@@ -17,24 +17,40 @@ export function initializeAllComponentRegistries(): void {
     });
     
     // Initialize site components first (public components)
-    registerSiteComponents();
-    logger.info('Site components registered successfully', {
-      category: LogCategory.SYSTEM
-    });
+    try {
+      registerSiteComponents();
+      logger.info('Site components registered successfully', {
+        category: LogCategory.SYSTEM
+      });
+    } catch (error) {
+      logger.error('Failed to register site components', {
+        category: LogCategory.SYSTEM,
+        details: error
+      });
+      // Continue with admin components even if site components fail
+    }
     
     // Then initialize admin components
-    initializeComponentRegistry();
-    logger.info('Admin components registered successfully', {
-      category: LogCategory.SYSTEM
-    });
+    try {
+      initializeComponentRegistry();
+      logger.info('Admin components registered successfully', {
+        category: LogCategory.SYSTEM
+      });
+    } catch (error) {
+      logger.error('Failed to register admin components', {
+        category: LogCategory.SYSTEM,
+        details: error
+      });
+    }
     
-    logger.info('All component registries initialized successfully', {
+    logger.info('Component registry initialization completed', {
       category: LogCategory.SYSTEM
     });
   } catch (error) {
-    logger.error('Failed to initialize component registries', {
+    logger.error('Fatal error during component registry initialization', {
       category: LogCategory.SYSTEM,
       details: error
     });
+    throw error; // Re-throw to notify caller
   }
 }

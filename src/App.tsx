@@ -41,7 +41,7 @@ function LoggingComponents() {
 }
 
 // Initialize logging system
-const logger = getLogger();
+const logger = getLogger('App');
 
 function AppContent() {
   const location = useLocation();
@@ -100,10 +100,14 @@ function AppContent() {
 
 function App() {
   const [layoutsInitialized, setLayoutsInitialized] = useState(false);
+  const [initAttempted, setInitAttempted] = useState(false);
 
   // Initialize the layouts on app start
   useEffect(() => {
     async function initializeLayouts() {
+      if (initAttempted) return;
+      
+      setInitAttempted(true);
       try {
         logger.info('Initializing core layouts', { category: LogCategory.SYSTEM });
         await layoutSeederService.ensureCoreLayoutsExist();
@@ -120,13 +124,14 @@ function App() {
     }
     
     initializeLayouts();
-  }, []);
+  }, [initAttempted]);
 
   if (!layoutsInitialized) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="text-2xl">Initializing layouts...</div>
+          <div className="text-2xl">Initializing application...</div>
+          <div className="text-sm text-muted-foreground mt-2">Loading layouts and themes</div>
         </div>
       </div>
     );

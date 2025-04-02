@@ -14,6 +14,7 @@ interface ThemeInitializerProps {
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const [isInitialized, setIsInitialized] = useState(false);
+  const [initializationAttempted, setInitializationAttempted] = useState(false);
   const { setTheme, isLoading } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ThemeInitializer', LogCategory.SYSTEM);
@@ -22,8 +23,11 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     let isMounted = true;
     
     async function initialize() {
+      if (initializationAttempted) return;
+      
       try {
         logger.info('Starting theme initialization');
+        setInitializationAttempted(true);
         
         // First, ensure the default theme exists in the database
         const themeId = await ensureDefaultTheme();
@@ -34,13 +38,21 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           // Then sync CSS using the ensureDefaultTheme's built-in sync capability
           await setTheme(themeId);
           logger.info('Theme initialized successfully', { details: { themeId } });
+          
+          if (isMounted) {
+            setIsInitialized(true);
+          }
         } else {
           logger.warn('Failed to initialize theme, falling back to default styles');
-          toast({
-            title: 'Theme Warning',
-            description: 'Could not find or create theme. Using default styling.',
-            variant: "destructive",
-          });
+          
+          if (isMounted) {
+            toast({
+              title: 'Theme Warning',
+              description: 'Could not find or create theme. Using default styling.',
+              variant: "destructive",
+            });
+            setIsInitialized(true); // Continue with default styles
+          }
         }
       } catch (error) {
         logger.error('Error initializing theme', { details: error });
@@ -51,10 +63,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
             description: 'Failed to load theme. Using default styling.',
             variant: "destructive",
           });
-        }
-      } finally {
-        if (isMounted) {
-          setIsInitialized(true);
+          setIsInitialized(true); // Continue with default styles
         }
       }
     }
@@ -64,7 +73,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     return () => {
       isMounted = false;
     };
-  }, [setTheme, toast, logger]);
+  }, [setTheme, toast, logger, initializationAttempted]);
 
   // Instead of blocking the entire app while theme loads,
   // we'll continue rendering with a default theme
