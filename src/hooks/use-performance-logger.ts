@@ -1,5 +1,5 @@
 
 /**
- * Re-export the performance logger from the centralized logging system
+ * Export the performance logger from the centralized logging system
  */
-export { usePerformanceLogger } from '@/logging';
+export { usePerformanceLogger, useComponentPerformance } from '@/logging';
