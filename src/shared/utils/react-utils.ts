@@ -1,8 +1,40 @@
 
-import React from 'react';
+import React, { isValidElement, Fragment, ReactNode } from 'react';
 
 /**
- * Type guard to check if a value is a valid React node
+ * Type guard for renderable React nodes
+ */
+export function isReactRenderable(value: unknown): value is ReactNode {
+  return (
+    value == null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    isValidElement(value) ||
+    (Array.isArray(value) && value.every(isReactRenderable))
+  );
+}
+
+/**
+ * Safely renders unknown values into ReactNode
+ */
+export function safelyRenderNode(value: unknown): ReactNode {
+  if (isReactRenderable(value)) return value;
+
+  if (typeof value === 'object') {
+    try {
+      const stringified = JSON.stringify(value, null, 2);
+      return React.createElement(Fragment, null, stringified);
+    } catch {
+      return React.createElement(Fragment, null, '[Unrenderable Object]');
+    }
+  }
+
+  return React.createElement(Fragment, null, String(value));
+}
+
+/**
+ * @deprecated Use isReactRenderable instead for more accurate type checking
  */
 export function isReactNode(value: unknown): value is React.ReactNode {
   return (
@@ -14,22 +46,4 @@ export function isReactNode(value: unknown): value is React.ReactNode {
     React.isValidElement(value) ||
     Array.isArray(value)
   );
-}
-
-/**
- * Safely converts unknown values to React nodes
- * Always returns valid JSX which TypeScript recognizes as ReactNode
- */
-export function safelyRenderNode(value: unknown): React.ReactNode {
-  if (isReactNode(value)) return value;
-
-  if (typeof value === 'object') {
-    try {
-      return <>{JSON.stringify(value)}</>;
-    } catch {
-      return <>[Unrenderable Object]</>;
-    }
-  }
-
-  return <>{String(value)}</>;
 }
