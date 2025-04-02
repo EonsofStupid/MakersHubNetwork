@@ -17,9 +17,38 @@ class SupabaseTransport implements LogTransport {
   private maxRetries = 3;
   private retryDelay = 1000; // ms
   private isConnected = true;
+  private authenticationRequired = false;
   
   constructor() {
     this.setupConnectionMonitoring();
+    // Check if authentication is required for log insertion
+    this.checkAuthRequirement();
+  }
+  
+  private async checkAuthRequirement() {
+    try {
+      // Try an anonymous insert to see if it's allowed
+      const testEntry = {
+        level: LogLevel.DEBUG,
+        category: 'TEST',
+        message: 'Auth test',
+        details: {},
+        timestamp: new Date().toISOString(),
+        source: 'frontend'
+      };
+      
+      const { error } = await supabase
+        .from('application_logs')
+        .insert([testEntry]);
+      
+      if (error && error.code === '42501') { // Permission denied
+        this.authenticationRequired = true;
+        this.consoleLogger.info('Authentication required for logging to Supabase');
+      }
+    } catch (e) {
+      // Silently handle - we'll assume auth is needed if we can't test
+      this.authenticationRequired = true;
+    }
   }
   
   private setupConnectionMonitoring() {
@@ -96,6 +125,14 @@ class SupabaseTransport implements LogTransport {
       return Promise.resolve();
     }
     
+    // If authentication is required and user isn't authenticated, just buffer the logs
+    const session = await supabase.auth.getSession();
+    if (this.authenticationRequired && !session.data.session) {
+      this.buffer = [...logs, ...this.buffer];
+      this.consoleLogger.debug('User not authenticated, buffering logs until authenticated');
+      return Promise.resolve();
+    }
+    
     try {
       // Actual implementation with Supabase
       const { error } = await supabase
@@ -110,6 +147,17 @@ class SupabaseTransport implements LogTransport {
         })));
       
       if (error) {
+        // Check if access was denied due to RLS
+        if (error.code === '42501') {
+          this.authenticationRequired = true;
+          this.consoleLogger.warn('Access denied to application_logs table. Will buffer logs until authenticated.');
+          this.buffer = [...logs, ...this.buffer];
+          // Limit buffer size to prevent memory issues
+          if (this.buffer.length > this.maxBufferSize * 2) {
+            this.buffer = this.buffer.slice(0, this.maxBufferSize * 2);
+          }
+          return Promise.resolve();
+        }
         throw error;
       }
       
