@@ -1,32 +1,37 @@
 
 import React from 'react';
-import { Terminal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Bug } from 'lucide-react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { cn } from '@/lib/utils';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging/types';
 
-export const LogToggleButton: React.FC = () => {
-  const { showLogConsole, setShowLogConsole } = useLoggingContext();
+interface LogToggleButtonProps {
+  className?: string;
+}
+
+export function LogToggleButton({ className }: LogToggleButtonProps) {
+  const { toggleLogConsole, showLogConsole } = useLoggingContext();
+  const logger = useLogger('LogToggleButton', LogCategory.SYSTEM);
+  
+  const handleToggle = () => {
+    logger.debug(`Log console ${showLogConsole ? 'hidden' : 'shown'}`);
+    toggleLogConsole();
+  };
   
   return (
-    <Button
-      variant="outline"
-      size="icon"
+    <button
+      onClick={handleToggle}
       className={cn(
-        "fixed bottom-4 right-4 z-20 rounded-full w-10 h-10 border-primary/30 shadow-md",
-        "hover:bg-primary/20 hover:border-primary/50 transition-all",
-        "group backdrop-blur-sm bg-background/60",
-        showLogConsole && "bg-primary/20 border-primary/50"
+        "fixed bottom-4 right-4 p-2 rounded-full bg-background/80 backdrop-blur",
+        "border border-primary/30 hover:border-primary/50 z-50",
+        "text-primary hover:bg-primary/10 transition-colors duration-200",
+        showLogConsole && "bg-primary/20",
+        className
       )}
-      onClick={() => setShowLogConsole(!showLogConsole)}
-      title={showLogConsole ? "Hide Log Console" : "Show Log Console"}
+      title={showLogConsole ? "Hide logs" : "Show logs"}
     >
-      <Terminal 
-        className={cn(
-          "h-4 w-4 text-primary group-hover:animate-pulse",
-          showLogConsole && "animate-pulse"
-        )} 
-      />
-    </Button>
+      <Bug className="w-5 h-5" />
+    </button>
   );
-};
+}
