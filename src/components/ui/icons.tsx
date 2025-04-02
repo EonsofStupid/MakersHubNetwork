@@ -44,7 +44,6 @@ export const Icons = {
   
   // Make all Lucide icons available too
   ...Object.entries(LucideIcons).reduce((acc, [name, icon]) => {
-    // @ts-ignore - We're dynamically creating the object here
     acc[name] = icon;
     return acc;
   }, {} as Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>>)
@@ -64,12 +63,20 @@ export function DynamicIcon({
   size?: number;
   [key: string]: any;
 }) {
-  const IconComponent = Icons[name as keyof typeof Icons] || LucideIcons.HelpCircle;
+  // Ensure we have a valid icon name
+  if (!name || typeof name !== 'string') {
+    console.warn(`Invalid icon name provided: ${name}`);
+    return <LucideIcons.HelpCircle className={className} size={size} {...props} />;
+  }
+
+  // Try to find the icon component
+  const IconComponent = Icons[name as keyof typeof Icons];
   
   if (!IconComponent) {
     console.warn(`Icon "${name}" not found, using fallback`);
     return <LucideIcons.HelpCircle className={className} size={size} {...props} />;
   }
   
+  // Return the icon component with proper props
   return <IconComponent className={className} size={size} {...props} />;
 }

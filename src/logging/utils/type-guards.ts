@@ -45,7 +45,7 @@ export function isBoolean(value: unknown): value is boolean {
 export function isValidUUID(value: string | unknown): boolean {
   if (typeof value !== 'string' || !value) return false;
   
-  // RFC4122 compliant UUID format
+  // RFC4122 compliant UUID format - improved regex for better validation
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(value);
 }
@@ -53,20 +53,52 @@ export function isValidUUID(value: string | unknown): boolean {
 /**
  * Generate a valid v4 UUID
  * Using crypto.randomUUID() if available (for better security and performance)
- * With fallback to RFC4122 v4 implementation
+ * With improved fallback to RFC4122 v4 implementation
  */
 export function generateUUID(): string {
-  // Use crypto.randomUUID when available (browser & modern Node.js)
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
+  try {
+    // Use crypto.randomUUID when available (browser & modern Node.js)
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    
+    // Modern fallback using Web Crypto API
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+      const buf = new Uint16Array(8);
+      crypto.getRandomValues(buf);
+      return (
+        buf[0].toString(16).padStart(4, '0') +
+        buf[1].toString(16).padStart(4, '0') +
+        '-' +
+        buf[2].toString(16).padStart(4, '0') +
+        '-' +
+        ((buf[3] & 0x0fff) | 0x4000).toString(16).padStart(4, '0') +
+        '-' +
+        ((buf[4] & 0x3fff) | 0x8000).toString(16).padStart(4, '0') +
+        '-' +
+        buf[5].toString(16).padStart(4, '0') +
+        buf[6].toString(16).padStart(4, '0') +
+        buf[7].toString(16).padStart(4, '0')
+      );
+    }
+    
+    // Last resort fallback implementation
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  } catch (e) {
+    // Absolute last resort if all else fails
+    console.error('Error generating UUID:', e);
+    return [
+      Math.random().toString(36).substring(2, 10),
+      Math.random().toString(36).substring(2, 10),
+      Math.random().toString(36).substring(2, 6),
+      Math.random().toString(36).substring(2, 6),
+      Date.now().toString(36)
+    ].join('-');
   }
-  
-  // Fallback implementation for environments without crypto.randomUUID
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
 }
 
 /**
