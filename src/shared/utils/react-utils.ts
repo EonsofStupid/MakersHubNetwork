@@ -59,9 +59,15 @@ export function safelyRenderNode(value: React.ReactNode | any): React.ReactNode 
   }
   
   if (Array.isArray(value)) {
-    return <>{value.map((item, index) => 
-      <React.Fragment key={index}>{safelyRenderNode(item)}</React.Fragment>
-    )}</>;
+    return (
+      <>
+        {value.map((item, index) => (
+          <React.Fragment key={index}>
+            {safelyRenderNode(item)}
+          </React.Fragment>
+        ))}
+      </>
+    );
   }
   
   if (typeof value === 'object') {

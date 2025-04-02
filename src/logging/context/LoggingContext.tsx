@@ -1,96 +1,94 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getLogger } from '../index';
-import { LogLevel, LogCategory, LogEntry } from '../types';
-import { v4 as uuidv4 } from 'uuid';
-import { logEventEmitter } from '../events/LogEventEmitter';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { LogEntry, LogCategory, LogLevel } from '../types';
+import { onLog, clearLogs, getLogs } from '../index';
+import { getLogger } from '@/logging';
 
-interface LoggingContextType {
-  showLogConsole: boolean;
-  setShowLogConsole: (show: boolean) => void;
-  logSystemStartup: () => void;
+interface LoggingContextValue {
   logs: LogEntry[];
-  clearLogs: () => void;
+  showLogConsole: boolean;
   toggleLogConsole: () => void;
+  clearAllLogs: () => void;
+  filterCategory: LogCategory | null;
+  setFilterCategory: (category: LogCategory | null) => void;
+  filterMinLevel: LogLevel;
+  setFilterMinLevel: (level: LogLevel) => void;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }
 
-const LoggingContext = createContext<LoggingContextType>({
-  showLogConsole: false,
-  setShowLogConsole: () => {},
-  logSystemStartup: () => {},
-  logs: [],
-  clearLogs: () => {},
-  toggleLogConsole: () => {}
-});
+const LoggingContext = createContext<LoggingContextValue | undefined>(undefined);
 
-export const useLoggingContext = () => useContext(LoggingContext);
-
-export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [showLogConsole, setShowLogConsole] = useState(false);
+export function LoggingProvider({ children }: { children: React.ReactNode }) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const logger = getLogger();
+  const [showLogConsole, setShowLogConsole] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<LogCategory | null>(null);
+  const [filterMinLevel, setFilterMinLevel] = useState<LogLevel>(LogLevel.INFO);
+  const [searchTerm, setSearchTerm] = useState('');
   
-  // Toggle log console
+  const logger = getLogger('LoggingContext');
+
+  // Toggle console visibility
   const toggleLogConsole = useCallback(() => {
     setShowLogConsole(prev => !prev);
   }, []);
-  
-  // Clear logs
-  const clearLogs = useCallback(() => {
+
+  // Clear all logs
+  const clearAllLogs = useCallback(() => {
+    clearLogs();
     setLogs([]);
-  }, []);
-  
-  // Log system startup
-  const logSystemStartup = useCallback(() => {
-    logger.info('Application UI initialized', {
-      category: LogCategory.SYSTEM,
-      details: {
-        environment: import.meta.env.MODE,
-        timestamp: new Date().toISOString(),
-      },
-      tags: ['startup', 'initialization']
+    logger.info('Logs cleared by user', {
+      category: LogCategory.SYSTEM
     });
   }, [logger]);
-  
-  // Listen for log events using our event emitter
+
+  // Subscribe to log events
   useEffect(() => {
-    const handleLogEvent = (entry: LogEntry) => {
-      setLogs(prevLogs => [...prevLogs, {
-        ...entry,
-        id: entry.id || uuidv4()
-      }]);
-    };
-    
-    // Subscribe to log events
-    const unsubscribe = logEventEmitter.onLog(handleLogEvent);
-    
-    return unsubscribe;
-  }, []);
-  
-  // Listen for key combinations to toggle log console (Ctrl+Shift+L)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'L') {
-        toggleLogConsole();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
+    logger.debug('Setting up log event subscription', {
+      category: LogCategory.SYSTEM
+    });
+
+    const unsubscribe = onLog((entry: LogEntry) => {
+      setLogs(prev => [entry, ...prev]);
+    });
+
+    // Initial load of existing logs
+    setLogs(getLogs().reverse());
+
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      unsubscribe();
+      logger.debug('Log event subscription removed', {
+        category: LogCategory.SYSTEM
+      });
     };
-  }, [toggleLogConsole]);
-  
+  }, [logger]);
+
+  const value = {
+    logs,
+    showLogConsole,
+    toggleLogConsole,
+    clearAllLogs,
+    filterCategory,
+    setFilterCategory,
+    filterMinLevel,
+    setFilterMinLevel,
+    searchTerm,
+    setSearchTerm
+  };
+
   return (
-    <LoggingContext.Provider value={{ 
-      showLogConsole, 
-      setShowLogConsole,
-      logSystemStartup,
-      logs,
-      clearLogs,
-      toggleLogConsole
-    }}>
+    <LoggingContext.Provider value={value}>
       {children}
     </LoggingContext.Provider>
   );
-};
+}
+
+export function useLoggingContext() {
+  const context = useContext(LoggingContext);
+  
+  if (!context) {
+    throw new Error('useLoggingContext must be used within a LoggingProvider');
+  }
+  
+  return context;
+}

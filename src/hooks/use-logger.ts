@@ -1,79 +1,97 @@
 
-import { useCallback } from 'react';
-import { getLogger, LogCategory } from '@/logging';
-import { LogLevel } from '@/logging/constants/log-level';
+import { useCallback, useMemo } from 'react';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging/types';
 
 /**
- * Hook for logging from React components
+ * Hook for component-level logging
+ * 
+ * @param source - Component or module name for log attribution
+ * @param defaultCategory - Default category for all logs from this hook
+ * @returns A logger instance with component context
  */
 export function useLogger(source: string, defaultCategory: LogCategory = LogCategory.UI) {
-  const logger = getLogger();
+  const logger = useMemo(() => getLogger(source), [source]);
   
+  // Create memoized logging functions with default category
   const debug = useCallback((message: string, options?: { 
-    category?: LogCategory,
-    details?: unknown,
-    tags?: string[],
+    category?: LogCategory; 
+    details?: any; 
+    tags?: string[] 
   }) => {
-    logger.debug(message, {
-      ...options,
-      source,
+    logger.debug(message, { 
       category: options?.category || defaultCategory,
+      details: options?.details,
+      tags: options?.tags
     });
-  }, [logger, source, defaultCategory]);
+  }, [logger, defaultCategory]);
   
   const info = useCallback((message: string, options?: { 
-    category?: LogCategory,
-    details?: unknown,
-    tags?: string[],
+    category?: LogCategory; 
+    details?: any; 
+    tags?: string[] 
   }) => {
-    logger.info(message, {
-      ...options,
-      source,
+    logger.info(message, { 
       category: options?.category || defaultCategory,
+      details: options?.details,
+      tags: options?.tags
     });
-  }, [logger, source, defaultCategory]);
+  }, [logger, defaultCategory]);
   
   const warn = useCallback((message: string, options?: { 
-    category?: LogCategory,
-    details?: unknown,
-    tags?: string[],
+    category?: LogCategory; 
+    details?: any; 
+    tags?: string[] 
   }) => {
-    logger.warn(message, {
-      ...options,
-      source,
+    logger.warn(message, { 
       category: options?.category || defaultCategory,
+      details: options?.details,
+      tags: options?.tags
     });
-  }, [logger, source, defaultCategory]);
+  }, [logger, defaultCategory]);
   
   const error = useCallback((message: string, options?: { 
-    category?: LogCategory,
-    details?: unknown,
-    tags?: string[],
+    category?: LogCategory; 
+    details?: any; 
+    tags?: string[] 
   }) => {
-    logger.error(message, {
-      ...options,
-      source,
+    logger.error(message, { 
       category: options?.category || defaultCategory,
+      details: options?.details,
+      tags: options?.tags
     });
-  }, [logger, source, defaultCategory]);
+  }, [logger, defaultCategory]);
   
   const critical = useCallback((message: string, options?: { 
-    category?: LogCategory,
-    details?: unknown,
-    tags?: string[],
+    category?: LogCategory; 
+    details?: any; 
+    tags?: string[] 
   }) => {
-    logger.critical(message, {
-      ...options,
-      source,
+    logger.critical(message, { 
       category: options?.category || defaultCategory,
+      details: options?.details,
+      tags: options?.tags
     });
-  }, [logger, source, defaultCategory]);
+  }, [logger, defaultCategory]);
+  
+  const performance = useCallback((message: string, duration: number, options?: { 
+    category?: LogCategory; 
+    details?: any; 
+    tags?: string[] 
+  }) => {
+    logger.performance(message, duration, { 
+      category: options?.category || defaultCategory,
+      details: options?.details,
+      tags: options?.tags
+    });
+  }, [logger, defaultCategory]);
   
   return {
     debug,
     info,
     warn,
     error,
-    critical
+    critical,
+    performance
   };
 }

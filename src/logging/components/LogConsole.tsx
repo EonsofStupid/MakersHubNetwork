@@ -1,250 +1,345 @@
 
-import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { X, Filter, Trash2, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import { useLoggingContext } from '../context/LoggingContext';
-import { LogEntry } from '../types';
-import { LogLevel } from '../constants/log-level';
-import { motion, AnimatePresence } from 'framer-motion';
-import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
-import '../styles/logging.css';
-import { safelyRenderNode, nodeToSearchableString } from '@/shared/utils/react-utils';
-
-interface LogDetailsProps {
-  details: Record<string, unknown>;
-  className?: string;
-}
-
-const LogDetails = forwardRef<HTMLDivElement, LogDetailsProps>(({ details, className = '' }, ref) => {
-  if (!details || Object.keys(details).length === 0) {
-    return null;
-  }
-  
-  return (
-    <div ref={ref} className={`log-details mt-1 p-2 bg-gray-800 rounded text-xs font-mono ${className}`}>
-      {Object.entries(details).map(([key, value]) => {
-        const renderedValue = safelyRenderNode(value);
-        return (
-          <div key={key} className="flex">
-            <span className="text-gray-400 mr-2">{key}:</span>
-            <span className="text-gray-300">
-              {renderedValue}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-});
-
-LogDetails.displayName = 'LogDetails';
-
-interface LogItemProps {
-  log: LogEntry;
-  index: number;
-}
-
-const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
-  const [expanded, setExpanded] = useState(false);
-  const hasDetails = log.details && Object.keys(log.details as object).length > 0;
-  
-  const getLevelIcon = (level: LogLevel) => {
-    switch (level) {
-      case LogLevel.ERROR:
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case LogLevel.WARN:
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case LogLevel.INFO:
-        return <Info className="h-4 w-4 text-blue-500" />;
-      case LogLevel.SUCCESS:
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case LogLevel.DEBUG:
-        return <Bug className="h-4 w-4 text-purple-500" />;
-      case LogLevel.TRACE:
-        return <Code className="h-4 w-4 text-gray-500" />;
-      default:
-        return <Info className="h-4 w-4 text-blue-500" />;
-    }
-  };
-  
-  const getBgColorClass = (level: LogLevel) => {
-    switch (level) {
-      case LogLevel.ERROR:
-        return 'border-l-4 border-l-red-500 bg-red-900/10';
-      case LogLevel.WARN:
-        return 'border-l-4 border-l-yellow-500 bg-yellow-900/10';
-      case LogLevel.INFO:
-        return 'border-l-4 border-l-blue-500 bg-blue-900/10';
-      case LogLevel.SUCCESS:
-        return 'border-l-4 border-l-green-500 bg-green-900/10';
-      case LogLevel.DEBUG:
-        return 'border-l-4 border-l-purple-500 bg-purple-900/10';
-      case LogLevel.TRACE:
-        return 'border-l-4 border-l-gray-500 bg-gray-900/10';
-      default:
-        return 'border-l-4 border-l-blue-500 bg-blue-900/10';
-    }
-  };
-  
-  // Pre-render the message content with type safety
-  const messageContent = safelyRenderNode(log.message);
-  
-  return (
-    <div 
-      className={`log-item p-2 mb-1 rounded ${getBgColorClass(log.level)} ${index % 2 === 0 ? 'bg-opacity-50' : ''}`}
-      onClick={() => hasDetails && setExpanded(!expanded)}
-    >
-      <div className="flex items-start">
-        <div className="mr-2 mt-0.5">{getLevelIcon(log.level)}</div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center text-sm">
-            <span className="text-xs text-gray-400 mr-2">
-              {new Date(log.timestamp).toLocaleTimeString()}
-            </span>
-            <span className="font-medium">{log.category}</span>
-          </div>
-          <div className="message-content text-sm">
-            {messageContent}
-          </div>
-          
-          <AnimatePresence>
-            {expanded && hasDetails && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <LogDetails details={log.details as Record<string, unknown> || {}} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-        
-        {hasDetails && (
-          <button 
-            className="text-xs text-gray-400 hover:text-white ml-2 mt-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpanded(!expanded);
-            }}
-          >
-            {expanded ? 'Hide' : 'Show'}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
+import { LogEntry, LogCategory, LogLevel } from '../types';
+import { LOG_LEVEL_NAMES } from '../constants/log-level';
+import { cn } from '@/lib/utils';
+import { nodeToSearchableString } from '@/shared/utils/react-utils';
+import { useLogger } from '@/hooks/use-logger';
 
 export function LogConsole() {
-  const { logs, clearLogs } = useLoggingContext();
-  const [filter, setFilter] = useState<LogLevel | 'all'>('all');
-  const [search, setSearch] = useState('');
-  const [autoScroll, setAutoScroll] = useState(true);
-  const logsEndRef = useRef<HTMLDivElement>(null);
+  const {
+    logs,
+    toggleLogConsole,
+    clearAllLogs,
+    filterCategory,
+    setFilterCategory,
+    filterMinLevel,
+    setFilterMinLevel,
+    searchTerm,
+    setSearchTerm
+  } = useLoggingContext();
   
-  const filteredLogs = logs
-    .filter(log => filter === 'all' || log.level === filter)
-    .filter(log => {
-      if (search === '') return true;
-      const searchLower = search.toLowerCase();
+  const [expanded, setExpanded] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<LogEntry | null>(null);
+  const logger = useLogger('LogConsole', LogCategory.SYSTEM);
+
+  // Filter logs based on criteria
+  const filteredLogs = useMemo(() => {
+    return logs.filter(log => {
+      // Filter by category
+      if (filterCategory && log.category !== filterCategory) {
+        return false;
+      }
       
-      // Use the type-safe nodeToSearchableString function
-      const messageStr = nodeToSearchableString(log.message);
-      return messageStr.toLowerCase().includes(searchLower) || 
-             log.category.toLowerCase().includes(searchLower);
+      // Filter by minimum level
+      if (log.level < filterMinLevel) {
+        return false;
+      }
+      
+      // Filter by search term
+      if (searchTerm) {
+        const searchableLog = 
+          nodeToSearchableString(log.message) + 
+          ' ' + log.category + 
+          ' ' + LOG_LEVEL_NAMES[log.level] + 
+          ' ' + (log.source || '') +
+          ' ' + (log.tags?.join(' ') || '');
+        
+        return searchableLog.toLowerCase().includes(searchTerm.toLowerCase());
+      }
+      
+      return true;
     });
-  
-  const scrollToBottom = useCallback(() => {
-    if (autoScroll && logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  }, [logs, filterCategory, filterMinLevel, searchTerm]);
+
+  // Handle closing the console
+  const handleClose = () => {
+    logger.debug('Log console closed');
+    toggleLogConsole();
+  };
+
+  // Handle clearing logs
+  const handleClearLogs = () => {
+    logger.info('Clearing logs');
+    clearAllLogs();
+  };
+
+  // Handle expanding the console
+  const toggleExpand = () => {
+    setExpanded(prev => !prev);
+    logger.debug(`Log console ${expanded ? 'collapsed' : 'expanded'}`);
+  };
+
+  // Get log level badge color
+  const getLevelColor = useCallback((level: LogLevel): string => {
+    switch (level) {
+      case LogLevel.TRACE:
+        return 'bg-gray-500/20 text-gray-300';
+      case LogLevel.DEBUG:
+        return 'bg-blue-500/20 text-blue-300';
+      case LogLevel.INFO:
+        return 'bg-green-500/20 text-green-300';
+      case LogLevel.WARN:
+        return 'bg-yellow-500/20 text-yellow-300';
+      case LogLevel.ERROR:
+        return 'bg-red-500/20 text-red-300';
+      case LogLevel.CRITICAL:
+        return 'bg-red-700/20 text-red-400';
+      case LogLevel.SUCCESS:
+        return 'bg-emerald-500/20 text-emerald-300';
+      default:
+        return 'bg-gray-500/20 text-gray-300';
     }
-  }, [autoScroll]);
-  
-  useEffect(() => {
-    scrollToBottom();
-  }, [filteredLogs.length, scrollToBottom]);
-  
+  }, []);
+
+  // Get category badge color
+  const getCategoryColor = useCallback((category: LogCategory): string => {
+    switch (category) {
+      case LogCategory.SYSTEM:
+        return 'bg-purple-500/20 text-purple-300';
+      case LogCategory.NETWORK:
+        return 'bg-blue-500/20 text-blue-300';
+      case LogCategory.AUTH:
+        return 'bg-yellow-500/20 text-yellow-300';
+      case LogCategory.UI:
+        return 'bg-teal-500/20 text-teal-300';
+      case LogCategory.ADMIN:
+        return 'bg-red-500/20 text-red-300';
+      case LogCategory.DATA:
+        return 'bg-green-500/20 text-green-300';
+      case LogCategory.PERFORMANCE:
+        return 'bg-orange-500/20 text-orange-300';
+      default:
+        return 'bg-gray-500/20 text-gray-300';
+    }
+  }, []);
+
   return (
-    <motion.div
-      initial={{ y: '100%' }}
-      animate={{ y: 0 }}
-      exit={{ y: '100%' }}
-      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className="fixed bottom-0 left-0 right-0 z-50 h-64 bg-gray-900 text-white border-t border-gray-700 overflow-hidden flex flex-col"
+    <div 
+      className={cn(
+        "fixed z-50 bg-background/95 backdrop-blur-lg border border-primary/30",
+        "text-foreground shadow-xl",
+        expanded ? "inset-10" : "right-4 bottom-16 w-[600px] h-[400px] max-w-[calc(100vw-2rem)]"
+      )}
+      style={{ 
+        transition: 'all 0.3s ease',
+        borderRadius: '0.5rem',
+        overflow: 'hidden'
+      }}
     >
-      <div className="p-2 flex items-center justify-between border-b border-gray-700">
-        <div className="flex items-center space-x-2">
-          <h3 className="text-sm font-medium">Console Logs</h3>
-          <div className="text-xs text-gray-400">
-            {filteredLogs.length} / {logs.length} logs
-          </div>
+      {/* Header */}
+      <div className="flex items-center justify-between p-2 border-b border-primary/30 bg-background/80">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium">Log Console</h3>
+          <span className="text-xs bg-primary/20 text-primary-foreground px-2 py-0.5 rounded-full">
+            {filteredLogs.length} logs
+          </span>
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <button 
-            className="px-2 py-1 text-xs rounded hover:bg-gray-700"
-            onClick={clearLogs}
+            onClick={toggleExpand}
+            className="p-1 hover:bg-muted rounded-sm"
+            title={expanded ? "Collapse" : "Expand"}
           >
-            Clear
+            {expanded ? <ArrowDownCircle className="w-4 h-4" /> : <ArrowUpCircle className="w-4 h-4" />}
           </button>
           
-          <select
-            className="bg-gray-800 text-xs rounded px-2 py-1 border border-gray-700"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as LogLevel | 'all')}
+          <button 
+            onClick={handleClearLogs}
+            className="p-1 hover:bg-muted rounded-sm"
+            title="Clear logs"
           >
-            <option value="all">All Levels</option>
-            <option value={LogLevel.ERROR}>Errors</option>
-            <option value={LogLevel.WARN}>Warnings</option>
-            <option value={LogLevel.INFO}>Info</option>
-            <option value={LogLevel.SUCCESS}>Success</option>
-            <option value={LogLevel.DEBUG}>Debug</option>
-            <option value={LogLevel.TRACE}>Trace</option>
-          </select>
+            <Trash2 className="w-4 h-4" />
+          </button>
           
+          <button 
+            onClick={handleClose}
+            className="p-1 hover:bg-destructive/20 hover:text-destructive rounded-sm"
+            title="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+      
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2 p-2 border-b border-primary/20 bg-background/60">
+        <div className="flex items-center space-x-2">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <select
+            value={filterMinLevel}
+            onChange={(e) => setFilterMinLevel(Number(e.target.value) as LogLevel)}
+            className="text-xs bg-background border border-primary/20 rounded px-2 py-1"
+          >
+            <option value={LogLevel.TRACE}>Level: Trace+</option>
+            <option value={LogLevel.DEBUG}>Level: Debug+</option>
+            <option value={LogLevel.INFO}>Level: Info+</option>
+            <option value={LogLevel.WARN}>Level: Warning+</option>
+            <option value={LogLevel.ERROR}>Level: Error+</option>
+          </select>
+        </div>
+        
+        <div>
+          <select
+            value={filterCategory || ""}
+            onChange={(e) => setFilterCategory(e.target.value ? e.target.value as LogCategory : null)}
+            className="text-xs bg-background border border-primary/20 rounded px-2 py-1"
+          >
+            <option value="">All Categories</option>
+            {Object.values(LogCategory).map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="flex-1 min-w-[200px]">
           <input
             type="text"
             placeholder="Search logs..."
-            className="bg-gray-800 text-xs rounded px-2 py-1 border border-gray-700"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full text-xs bg-background border border-primary/20 rounded px-2 py-1"
           />
-          
-          <button 
-            className={`flex items-center text-xs px-2 py-1 rounded ${autoScroll ? 'bg-blue-600' : 'bg-gray-700'}`}
-            onClick={() => setAutoScroll(!autoScroll)}
-          >
-            <ArrowDownCircle className="h-3 w-3 mr-1" />
-            Auto-scroll
-          </button>
-          
-          <button 
-            className="px-2 py-1 text-xs rounded hover:bg-gray-700"
-            onClick={() => {
-              const { useLoggingContext } = require('../context/LoggingContext');
-              if (useLoggingContext) {
-                useLoggingContext().toggleLogConsole();
-              }
-            }}
-          >
-            Close
-          </button>
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-2">
-        {filteredLogs.length > 0 ? (
-          filteredLogs.map((log, index) => (
-            <LogItem key={log.id} log={log} index={index} />
-          ))
-        ) : (
-          <div className="text-center text-gray-500 mt-4">
-            {logs.length > 0 ? 'No logs match your filters' : 'No logs to display'}
+      {/* Log entries */}
+      <div className="overflow-auto h-[calc(100%-108px)]">
+        {filteredLogs.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            No logs to display
           </div>
+        ) : (
+          <table className="w-full text-xs">
+            <thead className="sticky top-0 bg-background/95 backdrop-blur-sm">
+              <tr className="border-b border-primary/20">
+                <th className="px-2 py-1 text-left font-medium w-28">Timestamp</th>
+                <th className="px-2 py-1 text-left font-medium w-20">Level</th>
+                <th className="px-2 py-1 text-left font-medium w-24">Category</th>
+                <th className="px-2 py-1 text-left font-medium">Message</th>
+                <th className="px-2 py-1 text-left font-medium w-28">Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLogs.map((log) => (
+                <tr 
+                  key={log.id}
+                  className="border-b border-primary/10 hover:bg-muted/20 cursor-pointer"
+                  onClick={() => setSelectedEntry(log === selectedEntry ? null : log)}
+                >
+                  <td className="px-2 py-1 whitespace-nowrap">
+                    {log.timestamp.toLocaleTimeString()}
+                  </td>
+                  <td className="px-2 py-1">
+                    <span className={cn("px-1.5 py-0.5 rounded text-xs font-medium", getLevelColor(log.level))}>
+                      {LOG_LEVEL_NAMES[log.level]}
+                    </span>
+                  </td>
+                  <td className="px-2 py-1">
+                    <span className={cn("px-1.5 py-0.5 rounded text-xs", getCategoryColor(log.category))}>
+                      {log.category}
+                    </span>
+                  </td>
+                  <td className="px-2 py-1 truncate max-w-[300px]">
+                    {nodeToSearchableString(log.message)}
+                  </td>
+                  <td className="px-2 py-1 truncate text-muted-foreground">
+                    {log.source || '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
-        <div ref={logsEndRef} />
       </div>
-    </motion.div>
+      
+      {/* Details panel for selected entry */}
+      {selectedEntry && (
+        <div className="absolute inset-0 bg-background/95 backdrop-blur-xl p-4 overflow-auto">
+          <div className="flex justify-between mb-4">
+            <h3 className="text-lg font-medium">Log Details</h3>
+            <button 
+              onClick={() => setSelectedEntry(null)}
+              className="p-1 hover:bg-destructive/20 hover:text-destructive rounded-sm"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Timestamp</p>
+              <p>{selectedEntry.timestamp.toLocaleString()}</p>
+            </div>
+            
+            <div>
+              <p className="text-sm text-muted-foreground">ID</p>
+              <p>{selectedEntry.id}</p>
+            </div>
+            
+            <div>
+              <p className="text-sm text-muted-foreground">Level</p>
+              <p className={cn("inline-block px-2 py-0.5 rounded", getLevelColor(selectedEntry.level))}>
+                {LOG_LEVEL_NAMES[selectedEntry.level]}
+              </p>
+            </div>
+            
+            <div>
+              <p className="text-sm text-muted-foreground">Category</p>
+              <p className={cn("inline-block px-2 py-0.5 rounded", getCategoryColor(selectedEntry.category))}>
+                {selectedEntry.category}
+              </p>
+            </div>
+            
+            <div>
+              <p className="text-sm text-muted-foreground">Source</p>
+              <p>{selectedEntry.source || '-'}</p>
+            </div>
+            
+            {selectedEntry.userId && (
+              <div>
+                <p className="text-sm text-muted-foreground">User ID</p>
+                <p>{selectedEntry.userId}</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground mb-1">Message</p>
+            <div className="p-2 bg-muted/20 rounded border border-primary/20">
+              {nodeToSearchableString(selectedEntry.message)}
+            </div>
+          </div>
+          
+          {selectedEntry.details && (
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground mb-1">Details</p>
+              <pre className="p-2 bg-muted/20 rounded border border-primary/20 overflow-auto max-h-60 text-xs">
+                {JSON.stringify(selectedEntry.details, null, 2)}
+              </pre>
+            </div>
+          )}
+          
+          {selectedEntry.tags && selectedEntry.tags.length > 0 && (
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Tags</p>
+              <div className="flex flex-wrap gap-1">
+                {selectedEntry.tags.map((tag, i) => (
+                  <span 
+                    key={i} 
+                    className="px-2 py-0.5 bg-muted/30 rounded-full text-xs"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
