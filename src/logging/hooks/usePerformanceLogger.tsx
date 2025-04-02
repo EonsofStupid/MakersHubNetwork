@@ -10,7 +10,7 @@ export function usePerformanceLogger(source: string = 'performance') {
 
   const start = useCallback((name: string) => {
     simpleMeasurement.start(name);
-  }, []);
+  }, [simpleMeasurement]);
 
   const end = useCallback((name: string, description?: string) => {
     const duration = simpleMeasurement.end(name);
@@ -21,13 +21,13 @@ export function usePerformanceLogger(source: string = 'performance') {
     });
 
     return duration;
-  }, [logPerformance]);
+  }, [logPerformance, simpleMeasurement]);
 
-  function measure<T>(
+  const measure = useCallback(<T,>(
     name: string,
     operation: () => T | Promise<T>,
     description?: string
-  ): Promise<T> | T {
+  ): Promise<T> | T => {
     try {
       start(name);
       const result = operation();
@@ -47,16 +47,16 @@ export function usePerformanceLogger(source: string = 'performance') {
       end(name, `Failed: ${name}`);
       throw error;
     }
-  }
+  }, [start, end]);
 
-  function measureAsync<T>(
+  const measureAsync = useCallback(<T,>(
     name: string,
     fn: () => Promise<T> | T,
     options?: {
       category?: LogCategory;
       tags?: string[];
     }
-  ): Promise<T> {
+  ): Promise<T> => {
     const startTime = window.performance.now();
     return Promise.resolve()
       .then(() => fn())
@@ -76,7 +76,7 @@ export function usePerformanceLogger(source: string = 'performance') {
         });
         throw error;
       });
-  }
+  }, [logPerformance]);
 
   const measureRender = useCallback((componentName: string, renderTime: number) => {
     logPerformance(`${componentName} render`, renderTime, { tags: ['render'] });

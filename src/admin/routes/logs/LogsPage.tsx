@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { LogsDashboard } from '@/admin/components/dashboard/LogsDashboard';
-import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
+import { LogActivityStream } from '@/logging/components/LogActivityStream';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogLevel } from '@/logging';
 import { CyberCard } from '@/admin/components/ui/CyberCard';

@@ -325,5 +325,19 @@ export function getLogger(source: string = 'App'): Logger {
   };
 }
 
+/**
+ * Initialize the logging system
+ */
+export function initializeLogger(): void {
+  try {
+    const logger = getLogger('LoggingSystem');
+    logger.info('Logging system initialized successfully', {
+      category: LogCategory.SYSTEM
+    });
+  } catch (error) {
+    console.error('Failed to initialize logging system:', error);
+  }
+}
+
 // Export for use elsewhere
-export const loggerService = loggerServiceInstance;
+export { loggerServiceInstance as loggerService };

@@ -20,7 +20,6 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 60 * 1000, // 1 minute
       retry: 1,
-      // Fix onError type issue
       meta: {
         onError: (error: Error) => {
           logger.error('Query error', { 

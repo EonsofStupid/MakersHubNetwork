@@ -1,6 +1,6 @@
 
 // Core logging functionality
-import { loggerService, getLogger } from './service/logger.service';
+import { loggerService, getLogger, initializeLogger } from './service/logger.service';
 import { LogCategory, LogLevel } from './types';
 import { LoggingProvider, useLoggingContext } from './context/LoggingContext';
 import { memoryTransport } from './transports/memory.transport';
@@ -86,20 +86,9 @@ export {
 export { 
   loggerService, 
   getLogger, 
-  logEventEmitter 
+  logEventEmitter,
+  initializeLogger
 };
-
-// Initialize logging system
-export function initializeLogger(): void {
-  try {
-    loggerService.info('Logging system initialized successfully', {
-      source: 'LoggingSystem',
-      category: LogCategory.SYSTEM
-    });
-  } catch (error) {
-    console.error('Failed to initialize logging system:', error);
-  }
-}
 
 // Convenience functions for working with logs
 export function getLogs() {
@@ -107,7 +96,7 @@ export function getLogs() {
 }
 
 export function clearLogs() {
-  memoryTransport.clearLogs();
+  memoryTransport.clear();
 }
 
 export function onLog(callback: (entry: any) => void) {

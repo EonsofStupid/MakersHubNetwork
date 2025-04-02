@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 /**
@@ -37,7 +38,8 @@ export interface LoggerOptions {
   category?: LogCategory;
   details?: Record<string, unknown>;
   tags?: string[];
-  description?: string; // Added for semantic labeling of duration logs
+  description?: string; // For semantic labeling of duration logs
+  source?: string;      // Source property for identifying the logging source
 }
 
 /**
