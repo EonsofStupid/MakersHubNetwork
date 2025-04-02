@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Theme, ComponentTokens } from '@/types/theme';
 import { Json } from '@/integrations/supabase/types';
 import { keyframes } from '@/theme/animations';
+import { generateUUID, isValidUUID } from '@/logging/utils/type-guards';
 
 /**
  * Ensures that a default theme exists in the database
@@ -23,9 +24,15 @@ export async function ensureDefaultTheme(): Promise<string | null> {
     
     // If a default theme exists, return its ID
     if (existingTheme) {
-      // Automatically sync CSS to this theme
-      await syncCSSToDatabase(existingTheme.id);
-      return existingTheme.id;
+      // Validate the UUID before returning
+      if (isValidUUID(existingTheme.id)) {
+        // Automatically sync CSS to this theme
+        await syncCSSToDatabase(existingTheme.id);
+        return existingTheme.id;
+      } else {
+        console.error('Found default theme but ID is invalid:', existingTheme.id);
+        return null;
+      }
     }
     
     // Otherwise, create a default theme
@@ -133,7 +140,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
     // Extract component styles with explicit ids
     const componentStyles = [
       {
-        id: `main-nav-${Date.now()}`,
+        id: generateUUID(),
         component_name: 'MainNav',
         styles: {
           container: {
@@ -162,7 +169,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: `footer-${Date.now()}`,
+        id: generateUUID(),
         component_name: 'Footer',
         styles: {
           container: 'fixed bottom-0 left-0 right-0 w-full z-40 transition-all ease-in-out',
@@ -178,7 +185,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: `cyber-text-${Date.now()}`,
+        id: generateUUID(),
         component_name: 'SimpleCyberText',
         styles: {
           base: 'relative inline-block',
@@ -187,7 +194,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: `data-stream-${Date.now()}`,
+        id: generateUUID(),
         component_name: 'ThemeDataStream',
         styles: {
           container: 'absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none',
@@ -196,7 +203,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: `action-btns-${Date.now()}`,
+        id: generateUUID(),
         component_name: 'ActionButtons',
         styles: {
           buildCta: "cyber-card inline-flex h-12 items-center justify-center rounded-md bg-primary/20 px-8 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(0,240,255,0.15)] transition-all duration-300 hover:scale-105 hover:bg-primary/30 hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden",
@@ -205,7 +212,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: `page-title-${Date.now()}`,
+        id: generateUUID(),
         component_name: 'PageTitle',
         styles: {
           title: "text-4xl md:text-5xl lg:text-6xl font-bold mb-6 relative",
@@ -213,7 +220,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: `sub-form-${Date.now()}`,
+        id: generateUUID(),
         component_name: 'SubscriptionForm',
         styles: {
           container: "subscribe-banner cyber-card p-4 md:p-6 max-w-xl mx-auto my-8 relative overflow-hidden",
@@ -221,7 +228,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: `features-${Date.now()}`,
+        id: generateUUID(),
         component_name: 'FeaturesSection',
         styles: {
           container: "py-16 bg-background/30 backdrop-blur-sm relative",
@@ -235,7 +242,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         }
       },
       {
-        id: `showcase-${Date.now()}`,
+        id: generateUUID(),
         component_name: 'BuildShowcase',
         styles: {
           container: "showcase-section py-16 relative",
