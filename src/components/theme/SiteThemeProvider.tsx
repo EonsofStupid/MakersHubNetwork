@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
@@ -39,285 +40,124 @@ const defaultThemeVariables: ThemeVariables = {
   radiusFull: '9999px'
 };
 
-// Helper function to convert hex to HSL
-function hexToHSL(hex: string): string | null {
-  // Remove the # if present
-  hex = hex.replace('#', '');
-  
-  // Check if the hex is valid
-  if (!/^([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-    return null;
-  }
-  
-  // Convert to RGB first
-  let r, g, b;
-  if (hex.length === 3) {
-    r = parseInt(hex[0] + hex[0], 16) / 255;
-    g = parseInt(hex[1] + hex[1], 16) / 255;
-    b = parseInt(hex[2] + hex[2], 16) / 255;
-  } else {
-    r = parseInt(hex.substring(0, 2), 16) / 255;
-    g = parseInt(hex.substring(2, 4), 16) / 255;
-    b = parseInt(hex.substring(4, 6), 16) / 255;
-  }
-  
-  // Find max and min values to determine saturation
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  
-  // Calculate lightness
-  const l = (max + min) / 2;
-  
-  // Calculate saturation
-  let s = 0;
-  if (max !== min) {
-    s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
-  }
-  
-  // Calculate hue
-  let h = 0;
-  if (max !== min) {
-    if (max === r) {
-      h = (g - b) / (max - min) + (g < b ? 6 : 0);
-    } else if (max === g) {
-      h = (b - r) / (max - min) + 2;
-    } else {
-      h = (r - g) / (max - min) + 4;
-    }
-    h /= 6;
-  }
-  
-  // Convert to the format tailwind expects
-  const hDeg = Math.round(h * 360);
-  const sPercent = Math.round(s * 100);
-  const lPercent = Math.round(l * 100);
-  
-  return `${hDeg} ${sPercent}% ${lPercent}%`;
-}
-
-const SiteThemeContext = createContext<{
+// Theme context value type
+type ThemeContextValue = {
   variables: ThemeVariables;
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-  componentStyles: Record<string, any>;
-  animations: Record<string, any>;
-}>({
+  isDark: boolean;
+};
+
+// Create context with default values
+const ThemeContext = createContext<ThemeContextValue>({
   variables: defaultThemeVariables,
-  isDarkMode: true,
-  toggleDarkMode: () => {},
-  componentStyles: {},
-  animations: {},
+  isDark: true
 });
 
-export const useSiteTheme = () => useContext(SiteThemeContext);
+// Hook to use theme context
+export const useSiteTheme = () => useContext(ThemeContext);
 
+// SiteThemeProvider props
 interface SiteThemeProviderProps {
   children: React.ReactNode;
   fallbackToDefault?: boolean;
 }
 
-export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteThemeProviderProps) {
+export function SiteThemeProvider({ 
+  children,
+  fallbackToDefault = false
+}: SiteThemeProviderProps) {
   const { currentTheme, isLoading } = useThemeStore();
-  const logger = useLogger('SiteThemeProvider', LogCategory.UI);
+  const themeVariables = useThemeVariables(currentTheme);
+  const logger = useLogger('SiteThemeProvider', LogCategory.THEME);
   
-  // Always start with default variables, then override when theme is loaded
-  const variables = useThemeVariables(currentTheme) || defaultThemeVariables;
+  // Determine if we should use fallback variables
+  const variables = useMemo(() => {
+    if (!currentTheme && fallbackToDefault) {
+      logger.debug('Using fallback theme variables');
+      return defaultThemeVariables;
+    }
+    return themeVariables;
+  }, [currentTheme, fallbackToDefault, themeVariables, logger]);
   
-  const [isDarkMode, setIsDarkMode] = React.useState<boolean>(
-    localStorage.getItem('theme-mode') === 'light' ? false : true
-  );
-  
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
-    logger.info(`Theme mode changed to ${newMode ? 'dark' : 'light'}`);
-  };
-
-  // Extract and normalize component styles from theme with fallbacks
-  const componentStyles = useMemo(() => {
-    if (!currentTheme) {
-      return {};
-    }
-
-    try {
-      // Check if component_tokens is available and is an array
-      if (!currentTheme.component_tokens || !Array.isArray(currentTheme.component_tokens)) {
-        logger.warn('Theme component_tokens missing or invalid', { 
-          details: { 
-            hasComponentTokens: Boolean(currentTheme.component_tokens),
-            type: typeof currentTheme.component_tokens
-          } 
-        });
-        return {};
-      }
-      
-      // Process component tokens into a lookup object
-      const styles: Record<string, any> = {};
-      currentTheme.component_tokens.forEach((component) => {
-        if (component && component.component_name) {
-          styles[component.component_name] = component.styles || {};
-        }
-      });
-      
-      return styles;
-    } catch (error) {
-      logger.error('Error processing component styles', { details: safeDetails(error) });
-      return {};
-    }
-  }, [currentTheme, logger]);
-  
-  // Extract animations with fallbacks
-  const animations = useMemo(() => {
-    if (!currentTheme || !currentTheme.design_tokens?.animation?.keyframes) {
-      return {};
-    }
-    
-    try {
-      return currentTheme.design_tokens.animation.keyframes || {};
-    } catch (error) {
-      logger.error('Error processing animations', { details: safeDetails(error) });
-      return {};
-    }
-  }, [currentTheme, logger]);
-
-  // Apply theme variables to CSS - with immediate fallback application
+  // Apply theme CSS variables
   useEffect(() => {
-    // Use fallback variables if theme is loading or not available
-    const themeVars = fallbackToDefault || isLoading || !currentTheme
-      ? defaultThemeVariables 
-      : variables;
-      
-    const rootElement = document.documentElement;
-    
     try {
-      // Apply fallback hex values first for immediate styling
-      rootElement.style.setProperty('--background', themeVars.background);
-      rootElement.style.setProperty('--foreground', themeVars.foreground);
-      rootElement.style.setProperty('--card', themeVars.card);
-      rootElement.style.setProperty('--card-foreground', themeVars.cardForeground);
-      rootElement.style.setProperty('--popover', themeVars.card);
-      rootElement.style.setProperty('--popover-foreground', themeVars.cardForeground);
-      rootElement.style.setProperty('--primary', themeVars.primary);
-      rootElement.style.setProperty('--primary-foreground', themeVars.primaryForeground);
-      rootElement.style.setProperty('--secondary', themeVars.secondary);
-      rootElement.style.setProperty('--secondary-foreground', themeVars.secondaryForeground);
-      rootElement.style.setProperty('--muted', themeVars.muted);
-      rootElement.style.setProperty('--muted-foreground', themeVars.mutedForeground);
-      rootElement.style.setProperty('--accent', themeVars.accent);
-      rootElement.style.setProperty('--accent-foreground', themeVars.accentForeground);
-      rootElement.style.setProperty('--destructive', themeVars.destructive);
-      rootElement.style.setProperty('--destructive-foreground', themeVars.destructiveForeground);
-      rootElement.style.setProperty('--border', themeVars.border);
-      rootElement.style.setProperty('--input', themeVars.input);
-      rootElement.style.setProperty('--ring', themeVars.ring);
+      const root = document.documentElement;
       
-      // Apply fallback hex values to site variables
-      rootElement.style.setProperty('--fallback-background', themeVars.background);
-      rootElement.style.setProperty('--fallback-foreground', themeVars.foreground);
-      rootElement.style.setProperty('--fallback-card', themeVars.card);
-      rootElement.style.setProperty('--fallback-card-foreground', themeVars.cardForeground);
-      rootElement.style.setProperty('--fallback-primary', themeVars.primary);
-      rootElement.style.setProperty('--fallback-primary-foreground', themeVars.primaryForeground);
-      rootElement.style.setProperty('--fallback-secondary', themeVars.secondary);
-      rootElement.style.setProperty('--fallback-secondary-foreground', themeVars.secondaryForeground);
-      rootElement.style.setProperty('--fallback-muted', themeVars.muted);
-      rootElement.style.setProperty('--fallback-muted-foreground', themeVars.mutedForeground);
-      rootElement.style.setProperty('--fallback-accent', themeVars.accent);
-      rootElement.style.setProperty('--fallback-accent-foreground', themeVars.accentForeground);
-      rootElement.style.setProperty('--fallback-destructive', themeVars.destructive);
-      rootElement.style.setProperty('--fallback-destructive-foreground', themeVars.destructiveForeground);
-      rootElement.style.setProperty('--fallback-border', themeVars.border);
-      rootElement.style.setProperty('--fallback-input', themeVars.input);
-      rootElement.style.setProperty('--fallback-ring', themeVars.ring);
+      // Apply basic theme
+      root.style.setProperty('--background', variables.background);
+      root.style.setProperty('--foreground', variables.foreground);
+      root.style.setProperty('--card', variables.card);
+      root.style.setProperty('--card-foreground', variables.cardForeground);
+      root.style.setProperty('--primary', variables.primary);
+      root.style.setProperty('--primary-foreground', variables.primaryForeground);
+      root.style.setProperty('--secondary', variables.secondary);
+      root.style.setProperty('--secondary-foreground', variables.secondaryForeground);
+      root.style.setProperty('--muted', variables.muted);
+      root.style.setProperty('--muted-foreground', variables.mutedForeground);
+      root.style.setProperty('--accent', variables.accent);
+      root.style.setProperty('--accent-foreground', variables.accentForeground);
+      root.style.setProperty('--destructive', variables.destructive);
+      root.style.setProperty('--destructive-foreground', variables.destructiveForeground);
+      root.style.setProperty('--border', variables.border);
+      root.style.setProperty('--input', variables.input);
+      root.style.setProperty('--ring', variables.ring);
       
-      // Also set Impulse theme variables for compatibility
-      rootElement.style.setProperty('--impulse-bg-main', themeVars.background);
-      rootElement.style.setProperty('--impulse-text-primary', themeVars.foreground);
-      rootElement.style.setProperty('--impulse-primary', themeVars.primary);
-      rootElement.style.setProperty('--impulse-secondary', themeVars.secondary);
-      rootElement.style.setProperty('--impulse-border-normal', themeVars.border);
+      // Apply effect colors
+      root.style.setProperty('--effect-color', variables.effectColor);
+      root.style.setProperty('--effect-secondary', variables.effectSecondary);
+      root.style.setProperty('--effect-tertiary', variables.effectTertiary);
       
-      // Then apply the HSL variables
-      const backgroundHSL = hexToHSL(themeVars.background);
-      const foregroundHSL = hexToHSL(themeVars.foreground);
-      const cardHSL = hexToHSL(themeVars.card);
-      const cardForegroundHSL = hexToHSL(themeVars.cardForeground);
-      const primaryHSL = hexToHSL(themeVars.primary);
-      const primaryForegroundHSL = hexToHSL(themeVars.primaryForeground);
-      const secondaryHSL = hexToHSL(themeVars.secondary);
-      const secondaryForegroundHSL = hexToHSL(themeVars.secondaryForeground);
-      const mutedHSL = hexToHSL(themeVars.muted);
-      const mutedForegroundHSL = hexToHSL(themeVars.mutedForeground);
-      const accentHSL = hexToHSL(themeVars.accent);
-      const accentForegroundHSL = hexToHSL(themeVars.accentForeground);
-      const destructiveHSL = hexToHSL(themeVars.destructive);
-      const destructiveForegroundHSL = hexToHSL(themeVars.destructiveForeground);
-      const borderHSL = hexToHSL(themeVars.border);
-      const inputHSL = hexToHSL(themeVars.input);
-      const ringHSL = hexToHSL(themeVars.ring);
+      // Apply timing variables
+      root.style.setProperty('--transition-fast', variables.transitionFast);
+      root.style.setProperty('--transition-normal', variables.transitionNormal);
+      root.style.setProperty('--transition-slow', variables.transitionSlow);
+      root.style.setProperty('--animation-fast', variables.animationFast);
+      root.style.setProperty('--animation-normal', variables.animationNormal);
+      root.style.setProperty('--animation-slow', variables.animationSlow);
       
-      if (backgroundHSL) rootElement.style.setProperty('--site-background', backgroundHSL);
-      if (foregroundHSL) rootElement.style.setProperty('--site-foreground', foregroundHSL);
-      if (cardHSL) rootElement.style.setProperty('--site-card', cardHSL);
-      if (cardForegroundHSL) rootElement.style.setProperty('--site-card-foreground', cardForegroundHSL);
-      if (primaryHSL) rootElement.style.setProperty('--site-primary', primaryHSL);
-      if (primaryForegroundHSL) rootElement.style.setProperty('--site-primary-foreground', primaryForegroundHSL);
-      if (secondaryHSL) rootElement.style.setProperty('--site-secondary', secondaryHSL);
-      if (secondaryForegroundHSL) rootElement.style.setProperty('--site-secondary-foreground', secondaryForegroundHSL);
-      if (mutedHSL) rootElement.style.setProperty('--site-muted', mutedHSL);
-      if (mutedForegroundHSL) rootElement.style.setProperty('--site-muted-foreground', mutedForegroundHSL);
-      if (accentHSL) rootElement.style.setProperty('--site-accent', accentHSL);
-      if (accentForegroundHSL) rootElement.style.setProperty('--site-accent-foreground', accentForegroundHSL);
-      if (destructiveHSL) rootElement.style.setProperty('--site-destructive', destructiveHSL);
-      if (destructiveForegroundHSL) rootElement.style.setProperty('--site-destructive-foreground', destructiveForegroundHSL);
-      if (borderHSL) rootElement.style.setProperty('--site-border', borderHSL);
-      if (inputHSL) rootElement.style.setProperty('--site-input', inputHSL);
-      if (ringHSL) rootElement.style.setProperty('--site-ring', ringHSL);
+      // Apply radius variables
+      root.style.setProperty('--radius-sm', variables.radiusSm);
+      root.style.setProperty('--radius-md', variables.radiusMd);
+      root.style.setProperty('--radius-lg', variables.radiusLg);
+      root.style.setProperty('--radius-full', variables.radiusFull);
+      root.style.setProperty('--radius', variables.radiusMd);
       
-      // Effect colors
-      rootElement.style.setProperty('--site-effect-color', themeVars.effectColor);
-      rootElement.style.setProperty('--site-effect-secondary', themeVars.effectSecondary);
-      rootElement.style.setProperty('--site-effect-tertiary', themeVars.effectTertiary);
+      // Apply site-specific variables
+      root.style.setProperty('--site-effect-color', variables.effectColor);
+      root.style.setProperty('--site-effect-secondary', variables.effectSecondary);
+      root.style.setProperty('--site-effect-tertiary', variables.effectTertiary);
       
-      // Timing values
-      rootElement.style.setProperty('--site-transition-fast', themeVars.transitionFast);
-      rootElement.style.setProperty('--site-transition-normal', themeVars.transitionNormal);
-      rootElement.style.setProperty('--site-transition-slow', themeVars.transitionSlow);
-      rootElement.style.setProperty('--site-animation-fast', themeVars.animationFast);
-      rootElement.style.setProperty('--site-animation-normal', themeVars.animationNormal);
-      rootElement.style.setProperty('--site-animation-slow', themeVars.animationSlow);
-      
-      // Radius values
-      rootElement.style.setProperty('--site-radius-sm', themeVars.radiusSm);
-      rootElement.style.setProperty('--site-radius-md', themeVars.radiusMd);
-      rootElement.style.setProperty('--site-radius-lg', themeVars.radiusLg);
-      rootElement.style.setProperty('--site-radius-full', themeVars.radiusFull);
-      
-      // Apply dark/light mode
-      if (isDarkMode) {
-        rootElement.classList.add('dark');
-        rootElement.classList.remove('light');
-      } else {
-        rootElement.classList.add('light');
-        rootElement.classList.remove('dark');
-      }
-      
-      logger.debug('Applied theme CSS variables');
+      logger.debug('Applied theme variables to document');
     } catch (error) {
-      logger.error('Error applying CSS variables', { details: safeDetails(error) });
+      logger.error('Error applying theme variables', {
+        details: safeDetails(error)
+      });
     }
-  }, [variables, isLoading, isDarkMode, fallbackToDefault, logger, currentTheme]);
+  }, [variables, logger]);
+  
+  // Check if theme is dark
+  const isDark = useMemo(() => {
+    // Basic check - we could do more sophisticated brightness analysis
+    if (variables.background.startsWith('#')) {
+      // For hex, check if first two chars after # are low values
+      const hex = variables.background.substring(1);
+      const r = parseInt(hex.length === 3 ? hex[0] + hex[0] : hex.substring(0, 2), 16);
+      const g = parseInt(hex.length === 3 ? hex[1] + hex[1] : hex.substring(2, 4), 16);
+      const b = parseInt(hex.length === 3 ? hex[2] + hex[2] : hex.substring(4, 6), 16);
+      
+      // Calculate relative luminance
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance < 0.5;
+    }
+    
+    // For RGB/A, we would need to parse it
+    // For simplicity, assume dark theme for now
+    return true;
+  }, [variables.background]);
   
   return (
-    <SiteThemeContext.Provider value={{ 
-      variables, 
-      isDarkMode, 
-      toggleDarkMode, 
-      componentStyles, 
-      animations 
-    }}>
+    <ThemeContext.Provider value={{ variables, isDark }}>
       {children}
-    </SiteThemeContext.Provider>
+    </ThemeContext.Provider>
   );
 }

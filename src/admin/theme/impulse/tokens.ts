@@ -1,7 +1,10 @@
 
 import { ImpulseTheme } from "../../types/impulse.types";
 
-// Default tokens for the Impulsivity theme in the admin interface
+/**
+ * Default tokens for the Impulsivity admin theme
+ * These are applied immediately during page load for a smooth experience
+ */
 export const defaultImpulseTokens: ImpulseTheme = {
   colors: {
     primary: "#00F0FF",
@@ -33,9 +36,9 @@ export const defaultImpulseTokens: ImpulseTheme = {
       overlay: "blur(8px)"
     },
     gradients: {
-      main: "linear-gradient(to right, #00F0FF, #FF2D6E)",
-      accent: "linear-gradient(to right, #FF2D6E, #F97316)",
-      card: "linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(0, 0, 0, 0) 50%)"
+      main: "linear-gradient(to right, rgba(0, 240, 255, 0.2), rgba(255, 45, 110, 0.2))",
+      accent: "linear-gradient(45deg, rgba(0, 240, 255, 0.6), rgba(0, 240, 255, 0.2))",
+      card: "radial-gradient(circle at top right, rgba(0, 240, 255, 0.1), transparent 70%)"
     }
   },
   animation: {
@@ -53,7 +56,7 @@ export const defaultImpulseTokens: ImpulseTheme = {
   components: {
     panel: {
       borderRadius: "0.75rem",
-      padding: "1rem"
+      padding: "1.5rem"
     },
     button: {
       borderRadius: "0.5rem",
@@ -66,56 +69,55 @@ export const defaultImpulseTokens: ImpulseTheme = {
   }
 };
 
-// Path to CSS variables mapping for the Impulsivity theme
-export const cssVariableMapping = {
-  "colors.primary": "--impulse-primary",
-  "colors.secondary": "--impulse-secondary",
-  "colors.background.main": "--impulse-bg-main",
-  "colors.background.card": "--impulse-bg-card",
-  "colors.background.overlay": "--impulse-bg-overlay",
-  "colors.text.primary": "--impulse-text-primary",
-  "colors.text.secondary": "--impulse-text-secondary",
-  "colors.text.accent": "--impulse-text-accent",
-  "colors.borders.normal": "--impulse-border-normal",
-  "colors.borders.hover": "--impulse-border-hover",
-  "colors.borders.active": "--impulse-border-active",
-  "effects.glow.primary": "--impulse-glow-primary",
-  "effects.glow.secondary": "--impulse-glow-secondary",
-  "effects.glow.hover": "--impulse-glow-hover",
-  "effects.blur.background": "--impulse-blur-bg",
-  "effects.blur.overlay": "--impulse-blur-overlay",
-  "animation.duration.fast": "--impulse-duration-fast",
-  "animation.duration.normal": "--impulse-duration-normal",
-  "animation.duration.slow": "--impulse-duration-slow",
-  "animation.curves.bounce": "--impulse-curve-bounce",
-  "animation.curves.ease": "--impulse-curve-ease",
-  "animation.curves.spring": "--impulse-curve-spring",
-  "components.panel.borderRadius": "--impulse-panel-radius",
-  "components.panel.padding": "--impulse-panel-padding",
-  "components.button.borderRadius": "--impulse-button-radius",
-  "components.button.padding": "--impulse-button-padding",
-  "components.tooltip.borderRadius": "--impulse-tooltip-radius",
-  "components.tooltip.padding": "--impulse-tooltip-padding"
+// Theme registry with preset themes
+export const themeRegistry = {
+  impulsivity: {
+    name: "Impulsivity",
+    description: "Cyberpunk with neon accents",
+    theme: defaultImpulseTokens
+  },
+  midnight: {
+    name: "Midnight",
+    description: "Dark theme with blue accents",
+    theme: {
+      ...defaultImpulseTokens,
+      colors: {
+        ...defaultImpulseTokens.colors,
+        primary: "#3B82F6",
+        secondary: "#A855F7",
+        background: {
+          main: "#0F172A",
+          card: "rgba(30, 41, 59, 0.7)",
+          overlay: "rgba(30, 41, 59, 0.85)"
+        }
+      }
+    }
+  },
+  synthwave: {
+    name: "Synthwave",
+    description: "80s inspired purple and pink",
+    theme: {
+      ...defaultImpulseTokens,
+      colors: {
+        ...defaultImpulseTokens.colors,
+        primary: "#D946EF",
+        secondary: "#8B5CF6",
+        background: {
+          main: "#18122B",
+          card: "rgba(45, 30, 75, 0.7)",
+          overlay: "rgba(45, 30, 75, 0.85)"
+        }
+      }
+    }
+  }
 };
 
-// Create CSS variables string for the Impulsivity theme
-export function generateCSSVariables(theme: ImpulseTheme): string {
-  let cssVars = ":root {\n";
-  
-  Object.entries(cssVariableMapping).forEach(([path, cssVar]) => {
-    const value = getValueByPath(theme, path);
-    if (value !== undefined) {
-      cssVars += `  ${cssVar}: ${value};\n`;
-    }
-  });
-  
-  cssVars += "}\n";
-  return cssVars;
-}
-
-// Helper function to get a value from a nested object using a path string
-function getValueByPath(obj: any, path: string): any {
-  return path.split('.').reduce((prev, curr) => {
-    return prev && prev[curr] !== undefined ? prev[curr] : undefined;
-  }, obj);
+// Utility to get all available themes
+export function getAllThemes() {
+  return Object.keys(themeRegistry).map(id => ({
+    id,
+    name: themeRegistry[id].name,
+    description: themeRegistry[id].description,
+    theme: themeRegistry[id].theme
+  }));
 }

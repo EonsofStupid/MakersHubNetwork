@@ -1,191 +1,144 @@
 
-import { ImpulseTheme, ImpulseTokenGroup } from "../../types/impulse.types";
+import { ImpulseTheme } from "../../types/impulse.types";
 import { getLogger } from "@/logging";
 
 const logger = getLogger('AdminThemeUtils');
 
 /**
- * Deep merge utility function for theme objects
+ * Applies a theme directly to the document root as CSS variables
+ * Used for immediate styling before React hydration
  */
-export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
-  const result = { ...target };
-
-  Object.keys(source).forEach(key => {
-    const sourceValue = source[key];
-    const targetValue = target[key];
-
-    if (
-      sourceValue && 
-      targetValue && 
-      typeof sourceValue === 'object' && 
-      typeof targetValue === 'object' && 
-      !Array.isArray(sourceValue) && 
-      !Array.isArray(targetValue)
-    ) {
-      result[key as keyof T] = deepMerge(targetValue, sourceValue) as any;
-    } else if (sourceValue !== undefined) {
-      result[key as keyof T] = sourceValue as any;
-    }
-  });
-
-  return result;
+export function applyThemeToDocument(theme: ImpulseTheme): void {
+  try {
+    const root = document.documentElement;
+    
+    // Apply primary colors
+    root.style.setProperty('--impulse-primary', theme.colors.primary);
+    root.style.setProperty('--impulse-secondary', theme.colors.secondary);
+    
+    // Apply background colors
+    root.style.setProperty('--impulse-bg-main', theme.colors.background.main);
+    root.style.setProperty('--impulse-bg-card', theme.colors.background.card);
+    root.style.setProperty('--impulse-bg-overlay', theme.colors.background.overlay);
+    
+    // Apply text colors
+    root.style.setProperty('--impulse-text-primary', theme.colors.text.primary);
+    root.style.setProperty('--impulse-text-secondary', theme.colors.text.secondary);
+    root.style.setProperty('--impulse-text-accent', theme.colors.text.accent);
+    
+    // Apply border colors
+    root.style.setProperty('--impulse-border-normal', theme.colors.borders.normal);
+    root.style.setProperty('--impulse-border-hover', theme.colors.borders.hover);
+    root.style.setProperty('--impulse-border-active', theme.colors.borders.active);
+    
+    // Apply effect values
+    root.style.setProperty('--impulse-glow-primary', theme.effects.glow.primary);
+    root.style.setProperty('--impulse-glow-secondary', theme.effects.glow.secondary);
+    root.style.setProperty('--impulse-glow-hover', theme.effects.glow.hover);
+    
+    // Animation timings
+    root.style.setProperty('--impulse-duration-fast', theme.animation.duration.fast);
+    root.style.setProperty('--impulse-duration-normal', theme.animation.duration.normal);
+    root.style.setProperty('--impulse-duration-slow', theme.animation.duration.slow);
+    
+    // Set body background and text color for immediate visibility
+    document.body.style.backgroundColor = theme.colors.background.main;
+    document.body.style.color = theme.colors.text.primary;
+    
+    logger.debug('Applied theme tokens to document root');
+  } catch (error) {
+    logger.error('Failed to apply theme tokens to document', { error });
+  }
 }
 
 /**
- * Flattens a nested theme object into key-value pairs
- * Used by the visual theme editor to list editable properties
+ * Flattens theme object into an array of path/value pairs
+ * Used by the theme editor UI
  */
-export function flattenTheme(
-  theme: ImpulseTheme | ImpulseTokenGroup, 
-  prefix = '',
-  excludePaths: string[] = []
-): Array<{ path: string; value: any; type: string }> {
-  const result: Array<{ path: string; value: any; type: string }> = [];
-
-  Object.entries(theme).forEach(([key, value]) => {
-    const newPrefix = prefix ? `${prefix}.${key}` : key;
-    
-    // Skip excluded paths
-    if (excludePaths.some(path => newPrefix.startsWith(path))) {
-      return;
-    }
-    
-    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      // Recurse into nested objects
-      result.push(...flattenTheme(value as ImpulseTokenGroup, newPrefix, excludePaths));
-    } else {
-      // Determine the type for the editor
-      let type = 'text';
-      if (typeof value === 'number') {
-        type = 'number';
-      } else if (
-        typeof value === 'string' && (
-          /^#([0-9A-F]{3}){1,2}$/i.test(value) || 
-          /^rgb/i.test(value) || 
-          /^rgba/i.test(value) || 
-          /^hsl/i.test(value)
-        )
-      ) {
-        type = 'color';
-      } else if (typeof value === 'boolean') {
-        type = 'boolean';
-      }
-      
-      result.push({ path: newPrefix, value, type });
-    }
-  });
+export function flattenTheme(theme: ImpulseTheme) {
+  const result: Array<{path: string, value: any, type: string}> = [];
   
+  function traverse(obj: any, currentPath: string = '') {
+    for (const key in obj) {
+      const newPath = currentPath ? `${currentPath}.${key}` : key;
+      
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        traverse(obj[key], newPath);
+      } else {
+        // Determine the type of value
+        let type = 'text';
+        if (typeof obj[key] === 'number') {
+          type = 'number';
+        } else if (typeof obj[key] === 'string') {
+          // Check if it's a color
+          if (obj[key].match(/^#([0-9A-F]{3}){1,2}$/i) || 
+              obj[key].match(/rgba?\(/) ||
+              obj[key].match(/hsla?\(/)) {
+            type = 'color';
+          }
+        }
+        
+        result.push({
+          path: newPath,
+          value: obj[key],
+          type
+        });
+      }
+    }
+  }
+  
+  traverse(theme);
   return result;
 }
 
 /**
- * Get a readable label from a theme property path
+ * Gets a readable label from a property path
  */
 export function getReadableLabel(path: string): string {
   const parts = path.split('.');
-  const lastPart = parts[parts.length - 1];
-  
-  return lastPart
+  const label = parts[parts.length - 1]
     .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, str => str.toUpperCase());
+    .toLowerCase();
+  
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 /**
- * Get a value from a nested object using a path string
+ * Helper to get a nested property from an object using a path string
  */
-export function getValueByPath(obj: any, path: string): any {
-  if (!obj || typeof obj !== 'object' || !path) {
-    return undefined;
+export function getNestedProperty(obj: any, path: string): any {
+  const parts = path.split('.');
+  let current = obj;
+  
+  for (const part of parts) {
+    if (current === undefined || current === null) {
+      return undefined;
+    }
+    current = current[part];
   }
   
-  return path.split('.').reduce((prev, curr) => {
-    if (prev === undefined || prev === null) return undefined;
-    return prev[curr];
-  }, obj);
+  return current;
 }
 
 /**
- * Set a value in a nested object using a path string
+ * Helper to set a nested property in an object using a path string
  */
-export function setValueByPath(obj: any, path: string, value: any): any {
-  if (!obj || typeof obj !== 'object' || !path) {
-    return obj;
+export function setNestedProperty(obj: any, path: string, value: any): any {
+  const parts = path.split('.');
+  const lastPart = parts.pop()!;
+  
+  let current = obj;
+  
+  // Create path if it doesn't exist
+  for (const part of parts) {
+    if (current[part] === undefined) {
+      current[part] = {};
+    }
+    current = current[part];
   }
   
-  const copy = { ...obj };
-  const keys = path.split('.');
+  // Set the value
+  current[lastPart] = value;
   
-  let current = copy;
-  for (let i = 0; i < keys.length - 1; i++) {
-    const key = keys[i];
-    if (current[key] === undefined || current[key] === null) {
-      current[key] = {};
-    } else {
-      current[key] = { ...current[key] };
-    }
-    current = current[key];
-  }
-  
-  current[keys[keys.length - 1]] = value;
-  return copy;
-}
-
-/**
- * Convert theme object to CSS variables
- */
-export function themeToCSS(theme: ImpulseTheme): string {
-  const flattenedTheme = flattenTheme(theme);
-  let css = ":root {\n";
-  
-  flattenedTheme.forEach(({ path, value }) => {
-    const variableName = `--impulse-${path.replace(/\./g, '-')}`;
-    css += `  ${variableName}: ${value};\n`;
-  });
-  
-  css += "}\n";
-  return css;
-}
-
-/**
- * Apply theme to document
- * This is the most critical function for immediate styling and preventing white flash
- */
-export function applyThemeToDocument(theme: ImpulseTheme): void {
-  logger.debug("Applying Impulsivity theme to document");
-  const flattenedTheme = flattenTheme(theme);
-  const root = document.documentElement;
-  
-  // Apply the most critical CSS variables first for immediate visual feedback
-  const criticalVars = [
-    "colors.background.main",
-    "colors.text.primary",
-    "colors.primary",
-    "colors.secondary"
-  ];
-  
-  // First apply critical variables for immediate visual feedback
-  criticalVars.forEach(path => {
-    const value = getValueByPath(theme, path);
-    if (value) {
-      const variableName = `--impulse-${path.replace(/\./g, '-')}`;
-      root.style.setProperty(variableName, String(value));
-      
-      // Also set equivalent site variables for compatibility
-      if (path === "colors.background.main") root.style.setProperty('--background', String(value));
-      if (path === "colors.text.primary") root.style.setProperty('--foreground', String(value));
-      if (path === "colors.primary") root.style.setProperty('--primary', String(value));
-      if (path === "colors.secondary") root.style.setProperty('--secondary', String(value));
-    }
-  });
-  
-  // Then apply all other variables
-  flattenedTheme.forEach(({ path, value }) => {
-    if (!criticalVars.includes(path)) {
-      const variableName = `--impulse-${path.replace(/\./g, '-')}`;
-      root.style.setProperty(variableName, String(value));
-    }
-  });
-  
-  // Add a class to indicate theme is applied
-  root.classList.add('impulse-theme-applied');
+  return obj;
 }

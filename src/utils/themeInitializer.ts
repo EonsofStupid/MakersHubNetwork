@@ -149,6 +149,48 @@ export async function ensureDefaultTheme(): Promise<string> {
               hover: "rgba(0, 240, 255, 0.4)",
               active: "rgba(0, 240, 255, 0.6)"
             }
+          },
+          effects: {
+            glow: {
+              primary: "0 0 15px rgba(0, 240, 255, 0.7)",
+              secondary: "0 0 15px rgba(255, 45, 110, 0.7)",
+              hover: "0 0 20px rgba(0, 240, 255, 0.9)"
+            },
+            blur: {
+              background: "blur(12px)",
+              overlay: "blur(8px)"
+            },
+            gradients: {
+              main: "linear-gradient(to right, rgba(0, 240, 255, 0.2), rgba(255, 45, 110, 0.2))",
+              accent: "linear-gradient(45deg, rgba(0, 240, 255, 0.6), rgba(0, 240, 255, 0.2))",
+              card: "radial-gradient(circle at top right, rgba(0, 240, 255, 0.1), transparent 70%)"
+            }
+          },
+          animation: {
+            duration: {
+              fast: "150ms",
+              normal: "300ms",
+              slow: "500ms"
+            },
+            curves: {
+              bounce: "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+              ease: "cubic-bezier(0.4, 0, 0.2, 1)",
+              spring: "cubic-bezier(0.43, 0.13, 0.23, 0.96)"
+            }
+          },
+          components: {
+            panel: {
+              borderRadius: "0.75rem",
+              padding: "1.5rem"
+            },
+            button: {
+              borderRadius: "0.5rem",
+              padding: "0.5rem 1rem"
+            },
+            tooltip: {
+              borderRadius: "0.25rem",
+              padding: "0.5rem"
+            }
           }
         }
       },
@@ -194,7 +236,7 @@ export async function validateThemeExists(themeId: string): Promise<boolean> {
       .select('id')
       .eq('id', themeId)
       .limit(1)
-      .single();
+      .maybeSingle();
       
     if (error) {
       logger.warn('Error validating theme', { details: safeDetails(error) });
