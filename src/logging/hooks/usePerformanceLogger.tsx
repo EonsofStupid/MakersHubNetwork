@@ -5,7 +5,7 @@ import { LogCategory, PerformanceMeasurementOptions } from '../types';
 import { createSimpleMeasurement } from '../utils/performance';
 
 export function usePerformanceLogger(source: string = 'performance') {
-  const { performance } = useLogger(source, LogCategory.PERFORMANCE);
+  const { performance: logPerformance } = useLogger(source, LogCategory.PERFORMANCE);
   const simpleMeasurement = useRef(createSimpleMeasurement()).current;
 
   const start = useCallback((name: string) => {
@@ -16,12 +16,12 @@ export function usePerformanceLogger(source: string = 'performance') {
     const duration = simpleMeasurement.end(name);
     if (duration === 0) return 0;
 
-    performance(description || `Completed ${name}`, duration, {
+    logPerformance(description || `Completed ${name}`, duration, {
       details: { name, duration }
     });
 
     return duration;
-  }, [performance]);
+  }, [logPerformance]);
 
   function measure<T>(
     name: string,
@@ -57,20 +57,20 @@ export function usePerformanceLogger(source: string = 'performance') {
       tags?: string[];
     }
   ): Promise<T> {
-    const startTime = performance.now();
+    const startTime = window.performance.now();
     return Promise.resolve()
       .then(() => fn())
       .then((result) => {
-        const duration = performance.now() - startTime;
-        performance(name, duration, {
+        const duration = window.performance.now() - startTime;
+        logPerformance(name, duration, {
           category: options?.category || LogCategory.PERFORMANCE,
           tags: options?.tags
         });
         return result;
       })
       .catch((error) => {
-        const duration = performance.now() - startTime;
-        performance(`${name} failed`, duration, {
+        const duration = window.performance.now() - startTime;
+        logPerformance(`${name} failed`, duration, {
           category: options?.category || LogCategory.PERFORMANCE,
           details: { error }
         });
@@ -79,16 +79,16 @@ export function usePerformanceLogger(source: string = 'performance') {
   }
 
   const measureRender = useCallback((componentName: string, renderTime: number) => {
-    performance(`${componentName} render`, renderTime, { tags: ['render'] });
-  }, [performance]);
+    logPerformance(`${componentName} render`, renderTime, { tags: ['render'] });
+  }, [logPerformance]);
 
   const measureEffect = useCallback((effectName: string, fn: () => void | (() => void)) => {
-    const startTime = performance.now();
+    const startTime = window.performance.now();
     const cleanup = fn();
-    const duration = performance.now() - startTime;
-    performance(`Effect: ${effectName}`, duration, { tags: ['effect'] });
+    const duration = window.performance.now() - startTime;
+    logPerformance(`Effect: ${effectName}`, duration, { tags: ['effect'] });
     return cleanup;
-  }, [performance]);
+  }, [logPerformance]);
 
   return {
     start,
@@ -104,9 +104,9 @@ export function useComponentPerformance(componentName: string) {
   const { measureRender } = usePerformanceLogger(`component:${componentName}`);
   
   useEffect(() => {
-    const startTime = performance.now();
+    const startTime = window.performance.now();
     return () => {
-      const renderTime = performance.now() - startTime;
+      const renderTime = window.performance.now() - startTime;
       measureRender(componentName, renderTime);
     };
   }, [componentName, measureRender]);

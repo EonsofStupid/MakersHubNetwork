@@ -20,11 +20,14 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 60 * 1000, // 1 minute
       retry: 1,
-      onError: (error) => {
-        logger.error('Query error', { 
-          category: LogCategory.DATA,
-          details: error
-        });
+      // Fix onError type issue
+      meta: {
+        onError: (error: Error) => {
+          logger.error('Query error', { 
+            category: LogCategory.DATA,
+            details: { error: error.message }
+          });
+        }
       }
     },
   },
@@ -35,16 +38,16 @@ logger.info('Mounting React application', { category: LogCategory.SYSTEM });
 
 // Initialize component registries after the app is mounted
 const initializeAllComponentRegistries = async () => {
-  const { initializeAllComponentRegistries } = await import('@/components/registry/ComponentRegistryInitializer');
-  
   try {
+    const { initializeAllComponentRegistries } = await import('@/components/registry/ComponentRegistryInitializer');
+    
     logger.info('Initializing component registries', { category: LogCategory.SYSTEM });
     initializeAllComponentRegistries();
     logger.info('Component registries initialized successfully', { category: LogCategory.SYSTEM });
   } catch (error) {
     logger.error('Failed to initialize component registries', { 
       category: LogCategory.SYSTEM,
-      details: error
+      details: { error: String(error) }
     });
   }
 };
