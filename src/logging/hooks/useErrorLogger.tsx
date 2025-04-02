@@ -4,7 +4,6 @@ import { useLogger } from './useLogger';
 import { LogCategory } from '../types';
 import { ErrorInfo } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { toLogDetails } from '../utils/type-guards';
 import { safeDetails } from '../utils/safeDetails';
 
 /**

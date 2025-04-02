@@ -1,6 +1,8 @@
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { AlertCircle } from "lucide-react";
+import { useErrorLogger } from "@/hooks/use-error-logger";
+import { safeDetails } from "@/logging/utils/safeDetails";
 
 interface Props {
   children: ReactNode;
@@ -25,7 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+    console.error("Uncaught error:", safeDetails(error), errorInfo);
     
     // Call the optional onError callback
     if (this.props.onError) {

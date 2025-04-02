@@ -2,6 +2,9 @@
 /**
  * Utility to safely convert any value to a details object for logging
  * This ensures that any value can be correctly treated as a details object for TypeScript compatibility
+ * 
+ * @param value Any value to convert to a safe details object
+ * @returns A safe object with consistent structure for logging
  */
 export function safeDetails(value: unknown): Record<string, unknown> {
   if (value === undefined || value === null) {
@@ -13,13 +16,20 @@ export function safeDetails(value: unknown): Record<string, unknown> {
     return value as Record<string, unknown>;
   }
   
-  // Convert Error objects
+  // Convert Error objects with comprehensive details
   if (value instanceof Error) {
     return {
       message: value.message,
       name: value.name,
       stack: value.stack,
-      ...(value as any) // Include any custom properties on the error
+      // Include any custom properties on the error
+      ...(Object.getOwnPropertyNames(value)
+        .filter(prop => prop !== 'name' && prop !== 'message' && prop !== 'stack')
+        .reduce((acc, prop) => {
+          // @ts-ignore - We're dynamically accessing properties
+          acc[prop] = (value as any)[prop];
+          return acc;
+        }, {} as Record<string, unknown>))
     };
   }
   

@@ -10,10 +10,11 @@ import {
 import { consoleTransport } from '../transports/console.transport';
 import { memoryTransport } from '../transports/memory.transport';
 import { logEventEmitter } from '../events';
-import { isRecord, toLogDetails } from '../utils/type-guards';
+import { isRecord } from '../utils/type-guards';
 import { defaultLoggingConfig } from '../config/default-config';
 import { safelyRenderNode } from '../utils/react';
 import { formatLogDetails } from '../utils/details-formatter';
+import { safeDetails } from '../utils/safeDetails';
 
 /**
  * Core logger service implementation
@@ -194,8 +195,8 @@ class LoggerService {
       return; // Log was filtered out
     }
     
-    // Process details to ensure they're in a consistent format
-    const processedDetails = options?.details ? formatLogDetails(options.details) : undefined;
+    // Process details to ensure they're in a consistent format using safeDetails
+    const processedDetails = options?.details ? safeDetails(options.details) : undefined;
     
     // Create the log entry
     const entry: LogEntry = {
@@ -228,7 +229,7 @@ class LoggerService {
     try {
       logEventEmitter.emitLogEvent(entry);
     } catch (error) {
-      console.error('Error emitting log event:', error);
+      console.error('Error emitting log event:', safeDetails(error));
     }
     
     // Check if we need to flush immediately
