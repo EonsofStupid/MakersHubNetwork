@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { LogsDashboard } from '@/admin/components/dashboard/LogsDashboard';
 import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogLevel, LogCategory } from '@/logging';
+import { LogLevel } from '@/logging';
 import { CyberCard } from '@/admin/components/ui/CyberCard';
 
 export function LogsPage() {

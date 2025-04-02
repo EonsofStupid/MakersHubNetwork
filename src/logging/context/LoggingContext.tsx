@@ -1,80 +1,87 @@
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { LogEntry, LogCategory, LogLevel } from '../types';
-import { onLog, clearLogs } from '../';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { LogEntry, LogLevel } from '../types';
+import { logEventEmitter } from '../events';
+import { getLogger } from '../service/logger.service';
 import { memoryTransport } from '../transports/memory.transport';
 
-interface LoggingContextValue {
+interface LoggingContextType {
   logs: LogEntry[];
+  clearLogs: () => void;
+  setMinLevel: (level: LogLevel) => void;
+  minLevel: LogLevel;
   showLogConsole: boolean;
-  toggleLogConsole: () => void;
-  clearAllLogs: () => void;
-  filterCategory: LogCategory | null;
-  setFilterCategory: (category: LogCategory | null) => void;
-  filterMinLevel: LogLevel;
-  setFilterMinLevel: (level: LogLevel) => void;
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
+  setShowLogConsole: (show: boolean) => void;
+  filteredLogs: (category?: string) => LogEntry[];
 }
 
-const LoggingContext = createContext<LoggingContextValue | undefined>(undefined);
+const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
 
-export function LoggingProvider({ children }: { children: React.ReactNode }) {
+export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [showLogConsole, setShowLogConsole] = useState(false);
-  const [filterCategory, setFilterCategory] = useState<LogCategory | null>(null);
-  const [filterMinLevel, setFilterMinLevel] = useState<LogLevel>(LogLevel.INFO);
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  // Initialize logs from memory transport
+  const [minLevel, setMinLevel] = useState<LogLevel>(LogLevel.INFO);
+  const [showLogConsole, setShowLogConsole] = useState<boolean>(false);
+  const logger = getLogger('LoggingContext');
+
+  // Initialize logs from memory
   useEffect(() => {
-    setLogs(memoryTransport.getLogs());
-    
-    // Subscribe to log events
-    const unsubscribe = onLog((entry: LogEntry) => {
-      setLogs(prev => [entry, ...prev]);
+    try {
+      setLogs(memoryTransport.getLogs());
+    } catch (error) {
+      console.error('Error initializing logs from memory:', error);
+    }
+  }, []);
+
+  // Subscribe to log events
+  useEffect(() => {
+    const unsubscribe = logEventEmitter.onLog((entry: LogEntry) => {
+      setLogs(prevLogs => [...prevLogs, entry]);
     });
-    
+
+    logger.info('Logging context initialized', {
+      details: { listenerCount: logEventEmitter.getListenerCount() }
+    });
+
     return () => {
       unsubscribe();
+      logger.info('Logging context destroyed');
     };
-  }, []);
-  
-  const toggleLogConsole = useCallback(() => {
-    setShowLogConsole(prev => !prev);
-  }, []);
-  
-  const clearAllLogs = useCallback(() => {
-    clearLogs();
+  }, [logger]);
+
+  // Clear logs
+  const clearLogs = useCallback(() => {
+    memoryTransport.clear();
     setLogs([]);
-  }, []);
-  
+    logger.info('Logs cleared');
+  }, [logger]);
+
+  // Get filtered logs
+  const filteredLogs = useCallback((category?: string) => {
+    if (!category) return logs;
+    return logs.filter(log => log.category === category);
+  }, [logs]);
+
+  const value = {
+    logs,
+    clearLogs,
+    setMinLevel,
+    minLevel,
+    showLogConsole,
+    setShowLogConsole,
+    filteredLogs
+  };
+
   return (
-    <LoggingContext.Provider
-      value={{
-        logs,
-        showLogConsole,
-        toggleLogConsole,
-        clearAllLogs,
-        filterCategory,
-        setFilterCategory,
-        filterMinLevel,
-        setFilterMinLevel,
-        searchTerm,
-        setSearchTerm
-      }}
-    >
+    <LoggingContext.Provider value={value}>
       {children}
     </LoggingContext.Provider>
   );
-}
+};
 
-export function useLoggingContext() {
+export const useLoggingContext = (): LoggingContextType => {
   const context = useContext(LoggingContext);
-  
   if (context === undefined) {
     throw new Error('useLoggingContext must be used within a LoggingProvider');
   }
-  
   return context;
-}
+};
