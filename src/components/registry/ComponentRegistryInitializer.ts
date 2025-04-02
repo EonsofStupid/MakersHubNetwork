@@ -1,8 +1,8 @@
-
 import { registerSiteComponents } from '@/components/layout/SiteComponentRegistrations';
 import { initializeComponentRegistry } from '@/admin/components/layout/ComponentRegistrations';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 /**
  * Initialize all component registries in the correct order
@@ -25,7 +25,7 @@ export function initializeAllComponentRegistries(): void {
     } catch (error) {
       logger.error('Failed to register site components', {
         category: LogCategory.SYSTEM,
-        details: error
+        details: safeDetails(error)
       });
       // Continue with admin components even if site components fail
     }
@@ -39,7 +39,7 @@ export function initializeAllComponentRegistries(): void {
     } catch (error) {
       logger.error('Failed to register admin components', {
         category: LogCategory.SYSTEM,
-        details: error
+        details: safeDetails(error)
       });
     }
     
@@ -49,7 +49,7 @@ export function initializeAllComponentRegistries(): void {
   } catch (error) {
     logger.error('Fatal error during component registry initialization', {
       category: LogCategory.SYSTEM,
-      details: error
+      details: safeDetails(error)
     });
     throw error; // Re-throw to notify caller
   }

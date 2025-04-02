@@ -1,10 +1,10 @@
-
 import React, { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { UserRole } from '@/auth/types/auth.types';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 /**
  * Primary Authentication Provider
@@ -49,13 +49,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     .eq('user_id', session.user.id);
                     
                   if (rolesError) {
-                    logger.error('Error fetching user roles', { details: rolesError });
+                    logger.error('Error fetching user roles', {
+                      category: LogCategory.AUTH,
+                      details: safeDetails(rolesError)
+                    });
                   }
                   
                   const roles = (rolesData?.map(r => r.role) as UserRole[]) || [];
                   setRoles(roles);
                 } catch (error) {
-                  logger.error('Error processing sign in', { details: error });
+                  logger.error('Error processing sign in', {
+                    category: LogCategory.AUTH,
+                    details: safeDetails(error)
+                  });
                 }
               }, 0);
             }
@@ -89,7 +95,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logger.info('Auth initialized successfully');
       })
       .catch(error => {
-        logger.error('Failed to initialize auth', { details: error });
+        logger.error('Failed to initialize auth', {
+          category: LogCategory.AUTH,
+          details: safeDetails(error)
+        });
       })
       .finally(() => {
         setInitialized(true);

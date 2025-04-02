@@ -1,10 +1,10 @@
-
 import React, { useEffect } from 'react';
 import { Layout } from '@/admin/types/layout.types';
 import { LayoutRenderer } from '@/admin/components/layout/LayoutRenderer';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 interface CoreLayoutRendererProps {
   layout: Layout | null;
@@ -67,7 +67,7 @@ export function CoreLayoutRenderer({
       </div>
     );
   } catch (error) {
-    logger.error('Error rendering layout', { details: error });
+    logger.error('Error rendering layout', { details: safeDetails(error) });
     console.error('Layout rendering error:', error);
     return fallback ? (
       <div className={className} data-layout-error={id || true}>

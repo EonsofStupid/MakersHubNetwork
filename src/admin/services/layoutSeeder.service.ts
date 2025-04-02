@@ -3,6 +3,7 @@ import { Layout } from '@/admin/types/layout.types';
 import { layoutSkeletonService } from './layoutSkeleton.service';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 class LayoutSeederService {
   private logger = getLogger('LayoutSeederService');
@@ -68,7 +69,7 @@ class LayoutSeederService {
         } else {
           this.logger.error(`Failed to create default ${type} layout`, { 
             category: LogCategory.SYSTEM,
-            details: result.error 
+            details: safeDetails(result.error) 
           });
         }
       } else {
@@ -80,7 +81,7 @@ class LayoutSeederService {
     } catch (error) {
       this.logger.error(`Error ensuring ${type} layout exists`, {
         category: LogCategory.SYSTEM,
-        details: error
+        details: safeDetails(error)
       });
     }
   }

@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthState, UserRole } from './types';
@@ -6,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { authStorage } from './middleware/persist.middleware';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 interface AuthActions {
   setUser: (user: AuthState['user']) => void;
@@ -117,7 +117,7 @@ export const useAuthStore = create<AuthStore>()(
           logger.error('Auth initialization error', {
             category: LogCategory.AUTH,
             source: 'auth/store',
-            details: err
+            details: safeDetails(err)
           });
           
           set({
@@ -163,7 +163,7 @@ export const useAuthStore = create<AuthStore>()(
           logger.error('Logout error', {
             category: LogCategory.AUTH,
             source: 'auth/store',
-            details: err
+            details: safeDetails(err)
           });
           
           set({ error: errorMessage });

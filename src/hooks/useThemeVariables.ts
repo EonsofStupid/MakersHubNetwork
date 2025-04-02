@@ -1,7 +1,7 @@
-
 import { useMemo } from 'react';
 import { Theme } from '@/types/theme';
 import { getLogger } from '@/logging';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 export interface ThemeVariables {
   // Base colors
@@ -161,7 +161,7 @@ export function useThemeVariables(theme: Theme | null): ThemeVariables {
       
       return variables;
     } catch (error) {
-      logger.error('Error extracting theme variables', { details: error });
+      logger.error('Error parsing theme variables', { details: safeDetails(error) });
       return defaultThemeVariables;
     }
   }, [theme, logger]);

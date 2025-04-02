@@ -17,7 +17,8 @@ export type {
 export { 
   getLogger, 
   initializeLogger, 
-  loggerService 
+  loggerService,
+  logEventEmitter 
 } from './service/logger.service';
 
 // Context provider and hooks
@@ -102,6 +103,9 @@ export {
 
 // Export the formatLogDetails utility for use throughout the app
 export { formatLogDetails } from './utils/details-formatter';
+
+// Export the safeDetails utility 
+export { safeDetails } from './utils/safeDetails';
 
 // Helper functions for working with logs
 export function getLogs() {
