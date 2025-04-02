@@ -1,7 +1,11 @@
 
-/* Site Theme CSS Variables */
+/* 
+ * Site Theme CSS Variables
+ * Used for the Impulsivity theme system
+ */
+
 :root {
-  /* Base site colors - these will be overridden by ThemeProvider */
+  /* Base site colors - RGB format for HSL calculations */
   --site-background: 228 47% 8%;
   --site-foreground: 210 40% 98%;
   --site-card: 228 47% 11%;
@@ -20,7 +24,11 @@
   --site-input: 228 47% 15%;
   --site-ring: 228 47% 20%;
 
-  /* Fallback values in hex (these will be used before HSL values are processed) */
+  /* 
+   * Fallback values in hex 
+   * These are applied immediately during page load before HSL values are processed
+   * This prevents white flash and ensures a smooth experience
+   */
   --fallback-background: #0F172A;
   --fallback-foreground: #F9FAFB;
   --fallback-card: #131E32;
@@ -83,7 +91,13 @@
   --radius: var(--site-radius-md);
 }
 
-/* Utility classes that use site variables */
+/* Base theme application */
+.theme-fallback-applied {
+  background-color: var(--fallback-background);
+  color: var(--fallback-foreground);
+}
+
+/* Utility classes for the Impulsivity theme */
 .site-card {
   @apply rounded-md border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] text-[hsl(var(--site-card-foreground))] shadow;
 }
@@ -109,4 +123,44 @@
 .site-border-glow:hover {
   @apply border-[hsl(var(--site-primary)/0.6)];
   box-shadow: 0 0 15px hsl(var(--site-primary)/0.3);
+}
+
+/* Impulsivity themed components */
+.impulsivity-button {
+  @apply px-4 py-2 rounded-md bg-transparent border border-[hsl(var(--site-primary)/0.5)] text-[hsl(var(--site-primary))] transition-all duration-300;
+}
+
+.impulsivity-button:hover {
+  @apply bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary)/0.8)];
+  box-shadow: 0 0 20px hsl(var(--site-primary)/0.4);
+  transform: translateY(-1px);
+}
+
+.impulsivity-card {
+  @apply rounded-lg border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card)/0.7)] backdrop-blur-sm p-6;
+  transition: all var(--site-transition-normal);
+}
+
+.impulsivity-card:hover {
+  @apply border-[hsl(var(--site-primary)/0.3)];
+  box-shadow: 0 0 20px hsl(var(--site-primary)/0.2);
+}
+
+/* Impulsivity animations */
+@keyframes impulsivity-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px hsl(var(--site-primary)/0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(var(--site-primary)/0.7);
+  }
+}
+
+@keyframes impulsivity-pulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }

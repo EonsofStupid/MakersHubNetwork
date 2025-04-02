@@ -6,6 +6,7 @@ import { useLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
 
+// Default theme variables for immediate fallback styling
 const defaultThemeVariables: ThemeVariables = {
   background: '#080F1E',
   foreground: '#F9FAFB',
@@ -38,6 +39,62 @@ const defaultThemeVariables: ThemeVariables = {
   radiusLg: '0.75rem',
   radiusFull: '9999px'
 };
+
+// Helper function to convert hex to HSL
+function hexToHSL(hex: string): string | null {
+  // Remove the # if present
+  hex = hex.replace('#', '');
+  
+  // Check if the hex is valid
+  if (!/^([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+    return null;
+  }
+  
+  // Convert to RGB first
+  let r, g, b;
+  if (hex.length === 3) {
+    r = parseInt(hex[0] + hex[0], 16) / 255;
+    g = parseInt(hex[1] + hex[1], 16) / 255;
+    b = parseInt(hex[2] + hex[2], 16) / 255;
+  } else {
+    r = parseInt(hex.substring(0, 2), 16) / 255;
+    g = parseInt(hex.substring(2, 4), 16) / 255;
+    b = parseInt(hex.substring(4, 6), 16) / 255;
+  }
+  
+  // Find max and min values to determine saturation
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  
+  // Calculate lightness
+  const l = (max + min) / 2;
+  
+  // Calculate saturation
+  let s = 0;
+  if (max !== min) {
+    s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
+  }
+  
+  // Calculate hue
+  let h = 0;
+  if (max !== min) {
+    if (max === r) {
+      h = (g - b) / (max - min) + (g < b ? 6 : 0);
+    } else if (max === g) {
+      h = (b - r) / (max - min) + 2;
+    } else {
+      h = (r - g) / (max - min) + 4;
+    }
+    h /= 6;
+  }
+  
+  // Convert to the format tailwind expects
+  const hDeg = Math.round(h * 360);
+  const sPercent = Math.round(s * 100);
+  const lPercent = Math.round(l * 100);
+  
+  return `${hDeg} ${sPercent}% ${lPercent}%`;
+}
 
 const SiteThemeContext = createContext<{
   variables: ThemeVariables;
@@ -173,24 +230,42 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
       rootElement.style.setProperty('--fallback-input', themeVars.input);
       rootElement.style.setProperty('--fallback-ring', themeVars.ring);
       
-      // Then apply the HSL variables if/when available
-      rootElement.style.setProperty('--site-background', themeVars.background);
-      rootElement.style.setProperty('--site-foreground', themeVars.foreground);
-      rootElement.style.setProperty('--site-card', themeVars.card);
-      rootElement.style.setProperty('--site-card-foreground', themeVars.cardForeground);
-      rootElement.style.setProperty('--site-primary', themeVars.primary);
-      rootElement.style.setProperty('--site-primary-foreground', themeVars.primaryForeground);
-      rootElement.style.setProperty('--site-secondary', themeVars.secondary);
-      rootElement.style.setProperty('--site-secondary-foreground', themeVars.secondaryForeground);
-      rootElement.style.setProperty('--site-muted', themeVars.muted);
-      rootElement.style.setProperty('--site-muted-foreground', themeVars.mutedForeground);
-      rootElement.style.setProperty('--site-accent', themeVars.accent);
-      rootElement.style.setProperty('--site-accent-foreground', themeVars.accentForeground);
-      rootElement.style.setProperty('--site-destructive', themeVars.destructive);
-      rootElement.style.setProperty('--site-destructive-foreground', themeVars.destructiveForeground);
-      rootElement.style.setProperty('--site-border', themeVars.border);
-      rootElement.style.setProperty('--site-input', themeVars.input);
-      rootElement.style.setProperty('--site-ring', themeVars.ring);
+      // Then apply the HSL variables
+      const backgroundHSL = hexToHSL(themeVars.background);
+      const foregroundHSL = hexToHSL(themeVars.foreground);
+      const cardHSL = hexToHSL(themeVars.card);
+      const cardForegroundHSL = hexToHSL(themeVars.cardForeground);
+      const primaryHSL = hexToHSL(themeVars.primary);
+      const primaryForegroundHSL = hexToHSL(themeVars.primaryForeground);
+      const secondaryHSL = hexToHSL(themeVars.secondary);
+      const secondaryForegroundHSL = hexToHSL(themeVars.secondaryForeground);
+      const mutedHSL = hexToHSL(themeVars.muted);
+      const mutedForegroundHSL = hexToHSL(themeVars.mutedForeground);
+      const accentHSL = hexToHSL(themeVars.accent);
+      const accentForegroundHSL = hexToHSL(themeVars.accentForeground);
+      const destructiveHSL = hexToHSL(themeVars.destructive);
+      const destructiveForegroundHSL = hexToHSL(themeVars.destructiveForeground);
+      const borderHSL = hexToHSL(themeVars.border);
+      const inputHSL = hexToHSL(themeVars.input);
+      const ringHSL = hexToHSL(themeVars.ring);
+      
+      if (backgroundHSL) rootElement.style.setProperty('--site-background', backgroundHSL);
+      if (foregroundHSL) rootElement.style.setProperty('--site-foreground', foregroundHSL);
+      if (cardHSL) rootElement.style.setProperty('--site-card', cardHSL);
+      if (cardForegroundHSL) rootElement.style.setProperty('--site-card-foreground', cardForegroundHSL);
+      if (primaryHSL) rootElement.style.setProperty('--site-primary', primaryHSL);
+      if (primaryForegroundHSL) rootElement.style.setProperty('--site-primary-foreground', primaryForegroundHSL);
+      if (secondaryHSL) rootElement.style.setProperty('--site-secondary', secondaryHSL);
+      if (secondaryForegroundHSL) rootElement.style.setProperty('--site-secondary-foreground', secondaryForegroundHSL);
+      if (mutedHSL) rootElement.style.setProperty('--site-muted', mutedHSL);
+      if (mutedForegroundHSL) rootElement.style.setProperty('--site-muted-foreground', mutedForegroundHSL);
+      if (accentHSL) rootElement.style.setProperty('--site-accent', accentHSL);
+      if (accentForegroundHSL) rootElement.style.setProperty('--site-accent-foreground', accentForegroundHSL);
+      if (destructiveHSL) rootElement.style.setProperty('--site-destructive', destructiveHSL);
+      if (destructiveForegroundHSL) rootElement.style.setProperty('--site-destructive-foreground', destructiveForegroundHSL);
+      if (borderHSL) rootElement.style.setProperty('--site-border', borderHSL);
+      if (inputHSL) rootElement.style.setProperty('--site-input', inputHSL);
+      if (ringHSL) rootElement.style.setProperty('--site-ring', ringHSL);
       
       // Effect colors
       rootElement.style.setProperty('--site-effect-color', themeVars.effectColor);
