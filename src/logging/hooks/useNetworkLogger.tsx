@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { getLogger } from '../service/logger.service';
 import { LogCategory } from '../types';
 import { usePerformanceLogger } from './usePerformanceLogger';
+import { toLogDetails } from '../utils/type-guards';
 
 export function useNetworkLogger(source: string = 'API') {
   const logger = getLogger(source);
@@ -19,6 +20,7 @@ export function useNetworkLogger(source: string = 'API') {
   ): Promise<T> {
     const requestName = customConfig?.name || `${options?.method || 'GET'} ${url}`;
 
+    // Sanitize sensitive information in headers if needed
     const sanitizedOptions = { ...options };
     if (sanitizedOptions.headers && customConfig?.sensitiveKeys) {
       const sanitizedHeaders = { ...sanitizedOptions.headers } as Record<string, string>;
@@ -60,12 +62,12 @@ export function useNetworkLogger(source: string = 'API') {
 
           logger.error(`Request failed: ${requestName}`, {
             category: LogCategory.NETWORK,
-            details: {
+            details: toLogDetails({
               url,
               method: options?.method || 'GET',
               status: response.status,
               error
-            }
+            })
           });
 
           throw error;
@@ -83,11 +85,11 @@ export function useNetworkLogger(source: string = 'API') {
         if (!(error as any).status) {
           logger.error(`Network error: ${requestName}`, {
             category: LogCategory.NETWORK,
-            details: {
+            details: toLogDetails({
               url,
               method: options?.method || 'GET',
               error
-            }
+            })
           });
         }
         throw error;

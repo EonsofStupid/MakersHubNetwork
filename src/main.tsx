@@ -5,8 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import './index.css'
-import { initializeLogger, getLogger } from '@/logging'
-import { LogCategory } from '@/logging/types'
+import { initializeLogger, getLogger, LogCategory } from '@/logging'
 
 // Initialize logging system first
 initializeLogger();
@@ -24,7 +23,7 @@ const queryClient = new QueryClient({
         onError: (error: Error) => {
           logger.error('Query error', { 
             category: LogCategory.DATA,
-            details: { error: error.message }
+            details: { error }
           });
         }
       }
@@ -46,7 +45,7 @@ const initializeAllComponentRegistries = async () => {
   } catch (error) {
     logger.error('Failed to initialize component registries', { 
       category: LogCategory.SYSTEM,
-      details: { error: String(error) }
+      details: { error }
     });
   }
 };

@@ -1,42 +1,12 @@
 
 import React from 'react';
-import { isString, isNumber, isBoolean } from './type-guards';
+import { isString, isNumber, isBoolean, isRecord } from './type-guards';
 
 /**
- * Safely render a React node or primitive value
- */
-export function safelyRenderNode(node: React.ReactNode | string | number | boolean): React.ReactNode {
-  if (React.isValidElement(node)) {
-    return node;
-  }
-  
-  if (isString(node) || isNumber(node) || isBoolean(node)) {
-    return String(node);
-  }
-  
-  return '[Complex Object]';
-}
-
-/**
- * Convert a React node to a searchable string for filtering
+ * Safely render a React node as a string for searching/filtering
  */
 export function nodeToSearchableString(node: React.ReactNode): string {
-  if (React.isValidElement(node)) {
-    // Try to extract text content from element
-    const props = node.props as Record<string, unknown>;
-    
-    if (props.children) {
-      if (isString(props.children) || isNumber(props.children) || isBoolean(props.children)) {
-        return String(props.children);
-      }
-      
-      if (Array.isArray(props.children)) {
-        return props.children
-          .map(child => nodeToSearchableString(child))
-          .join(' ');
-      }
-    }
-    
+  if (node === null || node === undefined) {
     return '';
   }
   
@@ -44,5 +14,59 @@ export function nodeToSearchableString(node: React.ReactNode): string {
     return String(node);
   }
   
+  if (React.isValidElement(node)) {
+    const props = node.props;
+    
+    // Extract text content from children
+    if (props && props.children) {
+      return nodeToSearchableString(props.children);
+    }
+    
+    return '';
+  }
+  
+  if (Array.isArray(node)) {
+    return node.map(nodeToSearchableString).join(' ');
+  }
+  
+  if (isRecord(node)) {
+    try {
+      return JSON.stringify(node);
+    } catch {
+      return '[Complex Object]';
+    }
+  }
+  
   return '';
+}
+
+/**
+ * Safely render a node for display in logs
+ */
+export function safelyRenderNode(node: React.ReactNode): React.ReactNode {
+  if (node === null || node === undefined) {
+    return '';
+  }
+  
+  if (isString(node) || isNumber(node) || isBoolean(node)) {
+    return String(node);
+  }
+  
+  if (React.isValidElement(node)) {
+    return nodeToSearchableString(node);
+  }
+  
+  if (isRecord(node)) {
+    try {
+      return JSON.stringify(node);
+    } catch {
+      return '[Complex Object]';
+    }
+  }
+  
+  if (Array.isArray(node)) {
+    return node.map(safelyRenderNode).join(', ');
+  }
+  
+  return String(node);
 }

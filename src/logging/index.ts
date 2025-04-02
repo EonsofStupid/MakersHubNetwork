@@ -1,38 +1,5 @@
 
-// Core logging functionality
-import { loggerService, getLogger, initializeLogger } from './service/logger.service';
-import { LogCategory, LogLevel } from './types';
-import { LoggingProvider, useLoggingContext } from './context/LoggingContext';
-import { memoryTransport } from './transports/memory.transport';
-import { consoleTransport } from './transports/console.transport';
-import { logEventEmitter } from './events';
-
-// React hooks for logging
-import { useLogger } from './hooks/useLogger';
-import { usePerformanceLogger, useComponentPerformance } from './hooks/usePerformanceLogger';
-import { useErrorLogger } from './hooks/useErrorLogger';
-import { useNetworkLogger } from './hooks/useNetworkLogger';
-
-// UI components
-import { LogConsole } from './components/LogConsole';
-import { LogToggleButton } from './components/LogToggleButton';
-import { LogActivityStream } from './components/LogActivityStream';
-import { LogNotification } from './components/LogNotification';
-import { InlineLogIndicator } from './components/InlineLogIndicator';
-
-// Utility functions
-import { safelyRenderNode, nodeToSearchableString } from './utils/react';
-import { 
-  createMeasurement, 
-  measureExecution, 
-  createSimpleMeasurement, 
-  measurePerformance 
-} from './utils/performance';
-
-// Constants
-import { LOG_LEVEL_NAMES, isLogLevelAtLeast } from './constants/log-level';
-
-// Export types
+// Core types
 export { LogCategory, LogLevel } from './types';
 export type { 
   LogEntry, 
@@ -44,53 +11,89 @@ export type {
   PerformanceMeasurementOptions
 } from './types';
 
-// Export hooks
+// Core logging functionality
 export { 
-  useLogger, 
+  getLogger, 
+  initializeLogger, 
+  loggerService 
+} from './service/logger.service';
+
+// Context provider and hooks
+export { 
+  LoggingProvider, 
+  useLoggingContext 
+} from './context/LoggingContext';
+
+export { 
+  useLogger 
+} from './hooks/useLogger';
+
+export { 
   usePerformanceLogger, 
-  useComponentPerformance,
-  useErrorLogger,
-  useNetworkLogger
-};
+  useComponentPerformance 
+} from './hooks/usePerformanceLogger';
 
-// Export components
 export { 
-  LoggingProvider,
-  useLoggingContext,
-  LogConsole,
-  LogToggleButton,
-  LogActivityStream,
-  LogNotification,
-  InlineLogIndicator
-};
+  useErrorLogger 
+} from './hooks/useErrorLogger';
 
-// Export utility functions
+export { 
+  useNetworkLogger 
+} from './hooks/useNetworkLogger';
+
+// UI components
+export { 
+  LogConsole 
+} from './components/LogConsole';
+
+export { 
+  LogToggleButton 
+} from './components/LogToggleButton';
+
+export { 
+  LogActivityStream 
+} from './components/LogActivityStream';
+
+export { 
+  LogNotification 
+} from './components/LogNotification';
+
+export { 
+  InlineLogIndicator 
+} from './components/InlineLogIndicator';
+
+// Utility functions
+export { 
+  safelyRenderNode, 
+  nodeToSearchableString 
+} from './utils/react';
+
 export {
-  safelyRenderNode,
-  nodeToSearchableString,
   createMeasurement,
   measureExecution,
   createSimpleMeasurement,
-  measurePerformance,
-  LOG_LEVEL_NAMES,
-  isLogLevelAtLeast
-};
+  measurePerformance
+} from './utils/performance';
 
-// Export transports
+// Constants
 export { 
-  memoryTransport, 
+  LOG_LEVEL_NAMES, 
+  isLogLevelAtLeast,
+  getLogLevelName,
+  getLogLevelColorClass,
+  getLogItemClass
+} from './constants/log-level';
+
+// Transports
+export { 
+  memoryTransport 
+} from './transports/memory.transport';
+
+export { 
   consoleTransport 
-};
+} from './transports/console.transport';
 
-// Export logger service and helpers
-export { 
-  loggerService, 
-  getLogger, 
-  logEventEmitter,
-  initializeLogger
-};
-
-// Convenience functions for working with logs
+// Helper functions for working with logs
 export function getLogs() {
   return memoryTransport.getLogs();
 }
@@ -102,3 +105,16 @@ export function clearLogs() {
 export function onLog(callback: (entry: any) => void) {
   return logEventEmitter.onLog(callback);
 }
+
+// Re-export event emitter
+export { logEventEmitter } from './events';
+
+// Type guards
+export {
+  isError,
+  isRecord,
+  isString,
+  isNumber,
+  isBoolean,
+  toLogDetails
+} from './utils/type-guards';
