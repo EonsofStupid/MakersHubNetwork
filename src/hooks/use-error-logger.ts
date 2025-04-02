@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { getLogger } from '@/logging';
+import { useLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { ErrorInfo } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -9,13 +9,12 @@ import { useToast } from '@/hooks/use-toast';
  * Hook for logging errors from React components and error boundaries
  */
 export function useErrorLogger(source: string) {
-  const logger = getLogger(source);
+  const logger = useLogger(source);
   const { toast } = useToast();
   
   const logError = useCallback((error: Error, errorInfo?: ErrorInfo) => {
     logger.error(error.message, {
       category: LogCategory.SYSTEM,
-      source,
       details: {
         errorName: error.name,
         stack: error.stack,
@@ -31,12 +30,11 @@ export function useErrorLogger(source: string) {
       variant: 'destructive',
       icon: 'alert-triangle'
     });
-  }, [logger, source, toast]);
+  }, [logger, toast]);
 
   const logErrorWithContext = useCallback((error: Error, context: Record<string, unknown> = {}) => {
     logger.error(error.message, {
       category: LogCategory.SYSTEM,
-      source,
       details: {
         errorName: error.name,
         stack: error.stack,
@@ -50,7 +48,7 @@ export function useErrorLogger(source: string) {
       variant: 'destructive',
       icon: 'alert-triangle'
     });
-  }, [logger, source, toast]);
+  }, [logger, toast]);
 
   const logApiError = useCallback((error: unknown, endpoint: string, params?: unknown) => {
     const errorMessage = error instanceof Error 
@@ -59,7 +57,6 @@ export function useErrorLogger(source: string) {
     
     logger.error(`API Error: ${endpoint}`, {
       category: LogCategory.NETWORK,
-      source,
       details: {
         error,
         endpoint,
@@ -73,7 +70,7 @@ export function useErrorLogger(source: string) {
       variant: 'destructive',
       icon: 'cloud-off'
     });
-  }, [logger, source, toast]);
+  }, [logger, toast]);
 
   return {
     logError,

@@ -1,48 +1,65 @@
 
-import { LogEntry, LogTransport } from "../types";
-import { LogLevel, LOG_LEVEL_NAMES } from "../constants/log-level";
-import { nodeToSearchableString } from "@/shared/utils/react-utils";
+import { LogEntry, LogTransport, LogLevel } from '../types';
+import { LOG_LEVEL_NAMES } from '../constants/log-level';
+import { nodeToSearchableString } from '@/shared/utils/react-utils';
 
 /**
  * Transport for logging to the browser console
  */
 class ConsoleTransport implements LogTransport {
-  log(entry: LogEntry): void {
+  /**
+   * Log an entry to the console
+   */
+  public log(entry: LogEntry): void {
     const timestamp = entry.timestamp.toISOString();
-    const source = entry.source ? ` [${entry.source}]` : '';
-    const category = entry.category ? `(${entry.category})` : '';
-    const levelName = LOG_LEVEL_NAMES[entry.level] || 'UNKNOWN';
-    const prefix = `[${timestamp}] [${levelName}]${category}${source}`;
+    const level = LOG_LEVEL_NAMES[entry.level];
+    const source = entry.source ? `[${entry.source}]` : '';
+    const category = entry.category ? `[${entry.category}]` : '';
+    const message = typeof entry.message === 'string' 
+      ? entry.message 
+      : nodeToSearchableString(entry.message);
     
-    // Convert message to string using our utility
-    const message = `${prefix}: ${nodeToSearchableString(entry.message)}`;
+    // Format the prefix
+    const prefix = `${timestamp} ${level} ${category} ${source}`;
     
-    // Log with appropriate console method based on level
+    // Select console method based on level
+    let consoleMethod: 'log' | 'debug' | 'info' | 'warn' | 'error';
+    
     switch (entry.level) {
       case LogLevel.TRACE:
       case LogLevel.DEBUG:
-        console.debug(message, entry.details || '');
+        consoleMethod = 'debug';
         break;
       case LogLevel.INFO:
       case LogLevel.SUCCESS:
-        console.info(message, entry.details || '');
+        consoleMethod = 'info';
         break;
       case LogLevel.WARN:
-        console.warn(message, entry.details || '');
+        consoleMethod = 'warn';
         break;
       case LogLevel.ERROR:
       case LogLevel.CRITICAL:
-        console.error(message, entry.details || '');
+        consoleMethod = 'error';
         break;
       default:
-        console.log(message, entry.details || '');
+        consoleMethod = 'log';
+    }
+    
+    // Output to console
+    if (entry.details) {
+      console[consoleMethod](`${prefix} ${message}`, entry.details);
+    } else {
+      console[consoleMethod](`${prefix} ${message}`);
     }
   }
   
-  flush(): Promise<void> {
+  /**
+   * No-op flush implementation
+   */
+  public async flush(): Promise<void> {
     return Promise.resolve();
   }
 }
 
-// Export a singleton instance
+// Export singleton instance
 export const consoleTransport = new ConsoleTransport();

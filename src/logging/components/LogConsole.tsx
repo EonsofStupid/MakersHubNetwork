@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogLevel, LogCategory } from '../types';
 import { LOG_LEVEL_NAMES } from '../constants/log-level';
 import { X, ArrowDown, ArrowUp, Filter, RefreshCw, Trash2 } from 'lucide-react';
-import { nodeToSearchableString } from '@/shared/utils/react-utils';
+import { nodeToSearchableString, safelyRenderLogNode } from '../utils/react-utils';
 
 export function LogConsole() {
   const { 
@@ -15,10 +15,10 @@ export function LogConsole() {
     filterMinLevel,
     setFilterMinLevel,
     searchTerm,
-    setSearchTerm 
+    setSearchTerm,
+    showLogConsole,
+    toggleLogConsole 
   } = useLoggingContext();
-  
-  const [isExpanded, setIsExpanded] = useState(false);
   
   // Auto-scrolling
   const logContainerRef = React.useRef<HTMLDivElement>(null);
@@ -28,6 +28,11 @@ export function LogConsole() {
       logContainerRef.current.scrollTop = 0;
     }
   }, [logs]);
+  
+  // Don't render if not visible
+  if (!showLogConsole) {
+    return null;
+  }
   
   const getLogLevelClass = (level: LogLevel) => {
     switch (level) {
@@ -71,133 +76,122 @@ export function LogConsole() {
   };
   
   return (
-    <div 
-      className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50 transition-all duration-300 ${
-        isExpanded ? 'h-96' : 'h-10'
-      }`}
-    >
+    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50 h-96">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={toggleLogConsole}
             className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
-            aria-label={isExpanded ? 'Collapse logs' : 'Expand logs'}
+            aria-label="Close logs"
           >
-            {isExpanded ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
+            <X size={16} />
           </button>
           <h3 className="text-sm font-medium">Application Logs ({logs.length})</h3>
         </div>
         
-        {isExpanded && (
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search logs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800"
-              />
-            </div>
-            
-            {/* Level filter */}
-            <select
-              value={filterMinLevel}
-              onChange={(e) => setFilterMinLevel(Number(e.target.value) as LogLevel)}
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800"
-            >
-              <option value={LogLevel.TRACE}>Trace+</option>
-              <option value={LogLevel.DEBUG}>Debug+</option>
-              <option value={LogLevel.INFO}>Info+</option>
-              <option value={LogLevel.WARN}>Warning+</option>
-              <option value={LogLevel.ERROR}>Error+</option>
-              <option value={LogLevel.CRITICAL}>Critical+</option>
-            </select>
-            
-            {/* Category filter */}
-            <select
-              value={filterCategory || ''}
-              onChange={(e) => setFilterCategory(e.target.value ? e.target.value as LogCategory : null)}
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800"
-            >
-              <option value="">All Categories</option>
-              {Object.values(LogCategory).map((category) => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-            
-            <button
-              onClick={clearAllLogs}
-              className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900 text-red-500"
-              aria-label="Clear logs"
-            >
-              <Trash2 size={16} />
-            </button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search logs..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800"
+            />
           </div>
-        )}
+          
+          {/* Level filter */}
+          <select
+            value={filterMinLevel}
+            onChange={(e) => setFilterMinLevel(Number(e.target.value) as LogLevel)}
+            className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800"
+          >
+            <option value={LogLevel.TRACE}>Trace+</option>
+            <option value={LogLevel.DEBUG}>Debug+</option>
+            <option value={LogLevel.INFO}>Info+</option>
+            <option value={LogLevel.WARN}>Warning+</option>
+            <option value={LogLevel.ERROR}>Error+</option>
+            <option value={LogLevel.CRITICAL}>Critical+</option>
+          </select>
+          
+          {/* Category filter */}
+          <select
+            value={filterCategory || ''}
+            onChange={(e) => setFilterCategory(e.target.value ? e.target.value as LogCategory : null)}
+            className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800"
+          >
+            <option value="">All Categories</option>
+            {Object.values(LogCategory).map((category) => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+          
+          <button
+            onClick={clearAllLogs}
+            className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900 text-red-500"
+            aria-label="Clear logs"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
       
       {/* Log content */}
-      {isExpanded && (
-        <div 
-          ref={logContainerRef}
-          className="h-[calc(100%-36px)] overflow-auto font-mono text-xs p-2"
-        >
-          {logs.length === 0 ? (
-            <p className="text-center text-gray-500 my-4">No logs to display</p>
-          ) : (
-            <table className="w-full border-collapse">
-              <thead className="sticky top-0 bg-white dark:bg-gray-900">
-                <tr>
-                  <th className="text-left p-1 border-b border-gray-200 dark:border-gray-700">Time</th>
-                  <th className="text-left p-1 border-b border-gray-200 dark:border-gray-700">Level</th>
-                  <th className="text-left p-1 border-b border-gray-200 dark:border-gray-700">Category</th>
-                  <th className="text-left p-1 border-b border-gray-200 dark:border-gray-700">Source</th>
-                  <th className="text-left p-1 border-b border-gray-200 dark:border-gray-700 w-full">Message</th>
+      <div 
+        ref={logContainerRef}
+        className="h-[calc(100%-36px)] overflow-auto font-mono text-xs p-2"
+      >
+        {logs.length === 0 ? (
+          <p className="text-center text-gray-500 my-4">No logs to display</p>
+        ) : (
+          <table className="w-full border-collapse">
+            <thead className="sticky top-0 bg-white dark:bg-gray-900">
+              <tr>
+                <th className="text-left p-1 border-b border-gray-200 dark:border-gray-700">Time</th>
+                <th className="text-left p-1 border-b border-gray-200 dark:border-gray-700">Level</th>
+                <th className="text-left p-1 border-b border-gray-200 dark:border-gray-700">Category</th>
+                <th className="text-left p-1 border-b border-gray-200 dark:border-gray-700">Source</th>
+                <th className="text-left p-1 border-b border-gray-200 dark:border-gray-700 w-full">Message</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log) => (
+                <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <td className="p-1 border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">
+                    {log.timestamp.toLocaleTimeString()}
+                  </td>
+                  <td className={`p-1 border-b border-gray-100 dark:border-gray-800 ${getLogLevelClass(log.level)}`}>
+                    {LOG_LEVEL_NAMES[log.level]}
+                  </td>
+                  <td className="p-1 border-b border-gray-100 dark:border-gray-800">
+                    <span className={`px-1.5 py-0.5 rounded-full text-xs ${getCategoryClass(log.category)}`}>
+                      {log.category}
+                    </span>
+                  </td>
+                  <td className="p-1 border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">
+                    {log.source || '-'}
+                  </td>
+                  <td className="p-1 border-b border-gray-100 dark:border-gray-800">
+                    {safelyRenderLogNode(log.message)}
+                    {log.details && (
+                      <details className="mt-1">
+                        <summary className="cursor-pointer text-blue-500 dark:text-blue-400">Details</summary>
+                        <pre className="mt-1 p-1 bg-gray-100 dark:bg-gray-800 rounded overflow-auto max-h-48">
+                          {typeof log.details === 'string' 
+                            ? log.details 
+                            : JSON.stringify(log.details, null, 2)
+                          }
+                        </pre>
+                      </details>
+                    )}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <td className="p-1 border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">
-                      {log.timestamp.toLocaleTimeString()}
-                    </td>
-                    <td className={`p-1 border-b border-gray-100 dark:border-gray-800 ${getLogLevelClass(log.level)}`}>
-                      {LOG_LEVEL_NAMES[log.level]}
-                    </td>
-                    <td className="p-1 border-b border-gray-100 dark:border-gray-800">
-                      <span className={`px-1.5 py-0.5 rounded-full text-xs ${getCategoryClass(log.category)}`}>
-                        {log.category}
-                      </span>
-                    </td>
-                    <td className="p-1 border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">
-                      {log.source || '-'}
-                    </td>
-                    <td className="p-1 border-b border-gray-100 dark:border-gray-800">
-                      {typeof log.message === 'string' 
-                        ? log.message 
-                        : nodeToSearchableString(log.message)
-                      }
-                      {log.details && (
-                        <details className="mt-1">
-                          <summary className="cursor-pointer text-blue-500 dark:text-blue-400">Details</summary>
-                          <pre className="mt-1 p-1 bg-gray-100 dark:bg-gray-800 rounded overflow-auto max-h-48">
-                            {typeof log.details === 'string' 
-                              ? log.details 
-                              : JSON.stringify(log.details, null, 2)
-                            }
-                          </pre>
-                        </details>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

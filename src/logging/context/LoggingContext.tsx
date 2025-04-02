@@ -2,8 +2,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { LogEntry, LogCategory, LogLevel } from '../types';
 import { onLog, clearLogs, getLogs } from '../index';
-import { useLogger } from '@/hooks/use-logger';
-import { nodeToSearchableString } from '@/shared/utils/react-utils';
+import { useLogger } from '../hooks/use-logger';
+import { nodeToSearchableString } from '../utils/react-utils';
 
 interface LoggingContextValue {
   logs: LogEntry[];

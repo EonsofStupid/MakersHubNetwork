@@ -29,7 +29,7 @@ export function LogToggleButton({
       onClick={() => toggleLogConsole()}
       className={`fixed ${positionClass} p-2 rounded-full shadow-lg z-50 ${
         showLogConsole 
-          ? 'bg-blue-500 text-white hover:bg-blue-600' 
+          ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
           : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
       } ${className}`}
       title={showLogConsole ? 'Hide logs' : 'Show logs'}
