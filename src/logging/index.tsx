@@ -1,4 +1,3 @@
-
 // Core types
 export { LogCategory, LogLevel } from './types';
 export type { 
