@@ -95,69 +95,28 @@ export function useNetworkLogger(source: string = 'API') {
             }
           });
           
-          return responseData as T;
+          return responseData;
         } catch (error) {
-          logger.error(`Request error: ${requestName}`, {
-            category: LogCategory.NETWORK,
-            details: {
-              url,
-              method: options?.method || 'GET',
-              error
-            }
-          });
+          // If it's not our own error object, log it
+          if (!(error as any).status) {
+            logger.error(`Network error: ${requestName}`, {
+              category: LogCategory.NETWORK,
+              details: {
+                url,
+                method: options?.method || 'GET',
+                error
+              }
+            });
+          }
           
           throw error;
         }
       },
-      {
-        category: LogCategory.NETWORK,
-        tags: ['network', 'fetch']
-      }
+      { category: LogCategory.NETWORK }
     );
   }, [logger, measureAsync]);
-  
-  /**
-   * Create a wrapper around Supabase SDK calls
-   */
-  const logSupabaseCall = useCallback(async <T>(
-    operationName: string,
-    fn: () => Promise<T>
-  ): Promise<T> => {
-    return measureAsync(
-      `Supabase: ${operationName}`,
-      async () => {
-        try {
-          logger.info(`Supabase call: ${operationName}`, {
-            category: LogCategory.DATABASE,
-            details: { operation: operationName }
-          });
-          
-          const result = await fn();
-          
-          logger.info(`Supabase success: ${operationName}`, {
-            category: LogCategory.DATABASE,
-            details: { operation: operationName }
-          });
-          
-          return result;
-        } catch (error) {
-          logger.error(`Supabase error: ${operationName}`, {
-            category: LogCategory.DATABASE,
-            details: { operation: operationName, error }
-          });
-          
-          throw error;
-        }
-      },
-      {
-        category: LogCategory.DATABASE,
-        tags: ['supabase', 'database']
-      }
-    );
-  }, [logger, measureAsync]);
-  
+
   return {
-    logFetch,
-    logSupabaseCall
+    logFetch
   };
 }

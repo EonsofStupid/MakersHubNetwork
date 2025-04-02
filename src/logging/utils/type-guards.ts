@@ -1,9 +1,13 @@
 
 /**
- * Type guard to check if a value is a record/object
+ * Type guard to check if a value is a Record/object
  */
 export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return Boolean(
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value)
+  );
 }
 
 /**
@@ -25,4 +29,11 @@ export function isNumber(value: unknown): value is number {
  */
 export function isBoolean(value: unknown): value is boolean {
   return typeof value === 'boolean';
+}
+
+/**
+ * Type guard to check if a value is a function
+ */
+export function isFunction(value: unknown): value is Function {
+  return typeof value === 'function';
 }

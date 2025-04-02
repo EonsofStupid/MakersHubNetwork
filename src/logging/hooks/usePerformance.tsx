@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { useLogger } from './useLogger';
 import { LogCategory } from '../types';
 import { createSimpleMeasurement } from '../utils/performance';

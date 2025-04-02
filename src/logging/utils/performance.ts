@@ -1,45 +1,55 @@
 
-import { LogCategory, MeasurementResult, PerformanceMeasurement, PerformanceMeasurementOptions } from '../types';
-import { getLogger } from '../service/logger.service';
+import { PerformanceMeasurementOptions, MeasurementResult } from '../types';
 
 /**
- * Create a simple measurement utility for timing operations
+ * Simple performance measurement utility
  */
 export function createSimpleMeasurement() {
-  const measurements = new Map<string, number>();
+  const measurements: Record<string, number> = {};
   
   return {
-    start: (name: string): void => {
-      measurements.set(name, performance.now());
+    /**
+     * Start measuring performance for a named operation
+     */
+    start(name: string): void {
+      measurements[name] = performance.now();
     },
     
-    end: (name: string): number => {
-      const start = measurements.get(name);
-      if (start === undefined) {
+    /**
+     * End measuring and return the duration in milliseconds
+     */
+    end(name: string): number {
+      const startTime = measurements[name];
+      
+      if (!startTime) {
         console.warn(`No measurement started for "${name}"`);
         return 0;
       }
       
-      const duration = performance.now() - start;
-      measurements.delete(name);
+      const duration = performance.now() - startTime;
+      delete measurements[name];
+      
       return duration;
     },
     
-    measure: async <T>(
-      name: string,
+    /**
+     * Measure the duration of a function execution
+     */
+    async measure<T>(
+      name: string, 
       fn: () => T | Promise<T>
-    ): Promise<MeasurementResult<T>> => {
+    ): Promise<MeasurementResult<T>> {
       const startTime = performance.now();
+      
       try {
         const result = await fn();
         const duration = performance.now() - startTime;
+        
         return { result, duration };
       } catch (error) {
         const duration = performance.now() - startTime;
-        // Attach duration to error for logging
-        if (error instanceof Error) {
-          (error as any).duration = duration;
-        }
+        (error as any).duration = duration;
+        
         throw error;
       }
     }
@@ -47,61 +57,63 @@ export function createSimpleMeasurement() {
 }
 
 /**
- * Create a performance measurement utility that logs results
+ * Enhanced performance measurement with more features
  */
-export function createMeasurement(source: string): PerformanceMeasurement {
-  const logger = getLogger(source);
-  const measurements = new Map<string, number>();
+export function createMeasurement(source?: string) {
+  const measurements: Record<string, number> = {};
   
   return {
-    start: (name: string): void => {
-      measurements.set(name, performance.now());
+    /**
+     * Start measuring performance for a named operation
+     */
+    start(name: string): void {
+      measurements[name] = performance.now();
     },
     
-    end: (name: string): number => {
-      const start = measurements.get(name);
-      if (start === undefined) {
-        logger.warn(`No measurement started for "${name}"`, {
-          category: LogCategory.PERFORMANCE
-        });
+    /**
+     * End measuring and return the duration in milliseconds
+     */
+    end(name: string): number {
+      const startTime = measurements[name];
+      
+      if (!startTime) {
+        console.warn(`[${source || 'Performance'}] No measurement started for "${name}"`);
         return 0;
       }
       
-      const duration = performance.now() - start;
-      measurements.delete(name);
-      
-      logger.performance(name, duration, {
-        category: LogCategory.PERFORMANCE
-      });
+      const duration = performance.now() - startTime;
+      delete measurements[name];
       
       return duration;
     },
     
-    measure: async <T>(
-      name: string,
+    /**
+     * Measure the duration of a function execution
+     */
+    async measure<T>(
+      name: string, 
       fn: () => T | Promise<T>,
       options?: PerformanceMeasurementOptions
-    ): Promise<T> => {
-      const start = performance.now();
+    ): Promise<T> {
+      const startTime = performance.now();
       
       try {
         const result = await fn();
-        const duration = performance.now() - start;
+        const duration = performance.now() - startTime;
         
-        logger.performance(name, duration, {
-          category: options?.category || LogCategory.PERFORMANCE,
-          tags: options?.tags
-        });
+        if (options?.tags) {
+          console.info(`[${source || 'Performance'}] ${name}: ${duration.toFixed(2)}ms`, {
+            name,
+            duration,
+            ...options
+          });
+        }
         
         return result;
       } catch (error) {
-        const duration = performance.now() - start;
-        
-        logger.error(`Error in ${name} (${duration.toFixed(2)}ms)`, {
-          category: options?.category || LogCategory.PERFORMANCE,
-          details: { error },
-          tags: options?.tags
-        });
+        const duration = performance.now() - startTime;
+        (error as any).duration = duration;
+        (error as any).measurement = { name, source };
         
         throw error;
       }
@@ -110,57 +122,26 @@ export function createMeasurement(source: string): PerformanceMeasurement {
 }
 
 /**
- * Measure the execution time of a synchronous function
+ * Measure the execution time of a function
  */
-export function measureExecution<T>(
+export async function measureExecution<T>(
   name: string,
-  fn: () => T,
-  options?: PerformanceMeasurementOptions
-): MeasurementResult<T> {
-  const start = performance.now();
-  const result = fn();
-  const duration = performance.now() - start;
-  
-  const logger = getLogger('performance');
-  logger.performance(name, duration, {
-    category: options?.category || LogCategory.PERFORMANCE,
-    tags: options?.tags
-  });
-  
-  return { result, duration };
+  fn: () => T | Promise<T>
+): Promise<MeasurementResult<T>> {
+  const measurement = createSimpleMeasurement();
+  return measurement.measure(name, fn);
 }
 
 /**
- * Measure the execution time of an asynchronous function
+ * Higher-order function to add performance measurement
  */
-export async function measurePerformance<T>(
+export function measurePerformance<T extends (...args: any[]) => any>(
   name: string,
-  fn: () => Promise<T>,
-  options?: PerformanceMeasurementOptions
-): Promise<MeasurementResult<T>> {
-  const start = performance.now();
-  
-  try {
-    const result = await fn();
-    const duration = performance.now() - start;
-    
-    const logger = getLogger('performance');
-    logger.performance(name, duration, {
-      category: options?.category || LogCategory.PERFORMANCE,
-      tags: options?.tags
-    });
-    
-    return { result, duration };
-  } catch (error) {
-    const duration = performance.now() - start;
-    
-    const logger = getLogger('performance');
-    logger.error(`Error in ${name} (${duration.toFixed(2)}ms)`, {
-      category: options?.category || LogCategory.PERFORMANCE,
-      details: { error },
-      tags: options?.tags
-    });
-    
-    throw error;
-  }
+  fn: T
+): (...args: Parameters<T>) => Promise<ReturnType<T>> {
+  return async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    const { result, duration } = await measureExecution(name, () => fn(...args));
+    console.info(`[Performance] ${name}: ${duration.toFixed(2)}ms`);
+    return result as ReturnType<T>;
+  };
 }
