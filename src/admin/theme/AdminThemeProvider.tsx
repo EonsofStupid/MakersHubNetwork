@@ -1,8 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAdminPreferences } from '@/admin/store/adminPreferences.store';
+import { DEFAULT_THEME_NAME } from '@/utils/themeInitializer';
 
-type Theme = 'impulse' | 'cyberpunk' | 'neon' | 'minimal' | 'dark' | 'light';
+type Theme = 'impulsivity' | 'cyberpunk' | 'neon' | 'minimal' | 'dark' | 'light';
 
 interface AdminThemeContextType {
   theme: Theme;
@@ -12,9 +13,12 @@ interface AdminThemeContextType {
 
 const AdminThemeContext = createContext<AdminThemeContextType | undefined>(undefined);
 
+// Use the lowercase version as the enum value
+const DEFAULT_ADMIN_THEME: Theme = 'impulsivity';
+
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
   const { theme: storedTheme, setTheme: storeTheme } = useAdminPreferences();
-  const [theme, setThemeState] = useState<Theme>((storedTheme as Theme) || 'impulse');
+  const [theme, setThemeState] = useState<Theme>((storedTheme as Theme) || DEFAULT_ADMIN_THEME);
   
   // Update theme in store when changed
   const setTheme = (newTheme: Theme) => {
@@ -25,9 +29,9 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
     document.documentElement.setAttribute('data-admin-theme', newTheme);
   };
   
-  // Toggle between impulse and minimal themes
+  // Toggle between impulsivity and minimal themes
   const toggleTheme = () => {
-    setTheme(theme === 'impulse' ? 'minimal' : 'impulse');
+    setTheme(theme === DEFAULT_ADMIN_THEME ? 'minimal' : DEFAULT_ADMIN_THEME);
   };
   
   // Initialize theme from store

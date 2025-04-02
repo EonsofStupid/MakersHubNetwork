@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { ensureDefaultTheme, getThemeByName } from '@/utils/themeInitializer';
+import { ensureDefaultTheme, getThemeByName, DEFAULT_THEME_NAME } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicKeyframes } from './DynamicKeyframes';
@@ -14,8 +14,7 @@ interface ThemeInitializerProps {
   children: React.ReactNode;
 }
 
-// Consistent theme name used throughout the application
-const THEME_NAME = 'Impulse';
+// Use the standardized theme name from the utils file
 const FALLBACK_TIMEOUT = 1000; // 1 second fallback timeout
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
@@ -73,18 +72,18 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           }
         }, FALLBACK_TIMEOUT);
         
-        // First try loading the Impulse theme by name
+        // First try loading the Impulsivity theme by name
         let themeId: string | null = null;
         
         try {
-          themeId = await getThemeByName(THEME_NAME);
-          logger.info(`Attempting to load ${THEME_NAME} theme`, { details: { themeId }});
+          themeId = await getThemeByName(DEFAULT_THEME_NAME);
+          logger.info(`Attempting to load ${DEFAULT_THEME_NAME} theme`, { details: { themeId }});
         } catch (err) {
-          logger.warn(`Error loading ${THEME_NAME} theme by name, trying default theme`, { 
+          logger.warn(`Error loading ${DEFAULT_THEME_NAME} theme by name, trying default theme`, { 
             details: safeDetails(err)
           });
           
-          // Fallback to default theme if Impulse not found
+          // Fallback to default theme if Impulsivity not found
           try {
             themeId = await ensureDefaultTheme();
           } catch (defaultErr) {
