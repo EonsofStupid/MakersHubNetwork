@@ -3,6 +3,7 @@ import { LogEntry, LogCategory, LogLevel, LogEventCallback } from './types';
 import { consoleTransport } from './transports/console.transport';
 import { memoryTransport } from './transports/memory.transport';
 import { logEventEmitter } from './events/LogEventEmitter';
+import { v4 as uuidv4 } from 'uuid';
 
 class LoggingSystem {
   private static instance: LoggingSystem;
@@ -38,6 +39,7 @@ class LoggingSystem {
     category?: LogCategory;
     source?: string;
     details?: any;
+    tags?: string[];
   }): void {
     if (!this.initialized) {
       console.warn('Logging system not initialized');
@@ -46,13 +48,14 @@ class LoggingSystem {
     
     const timestamp = new Date();
     const entry: LogEntry = {
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       timestamp,
       level,
       message,
       category: options?.category || LogCategory.GENERAL,
       source: options?.source || 'unknown',
-      details: options?.details || null
+      details: options?.details || null,
+      tags: options?.tags
     };
     
     // Send to all transports
@@ -76,6 +79,7 @@ class LoggingSystem {
     category?: LogCategory;
     source?: string;
     details?: any;
+    tags?: string[];
   }): void {
     this.log(LogLevel.INFO, message, options);
   }
@@ -84,6 +88,7 @@ class LoggingSystem {
     category?: LogCategory;
     source?: string;
     details?: any;
+    tags?: string[];
   }): void {
     this.log(LogLevel.WARN, message, options);
   }
@@ -92,6 +97,7 @@ class LoggingSystem {
     category?: LogCategory;
     source?: string;
     details?: any;
+    tags?: string[];
   }): void {
     this.log(LogLevel.ERROR, message, options);
   }
@@ -100,8 +106,57 @@ class LoggingSystem {
     category?: LogCategory;
     source?: string;
     details?: any;
+    tags?: string[];
   }): void {
     this.log(LogLevel.DEBUG, message, options);
+  }
+  
+  public critical(message: string, options?: { 
+    category?: LogCategory;
+    source?: string;
+    details?: any;
+    tags?: string[];
+  }): void {
+    this.log(LogLevel.CRITICAL, message, options);
+  }
+  
+  public success(message: string, options?: { 
+    category?: LogCategory;
+    source?: string;
+    details?: any;
+    tags?: string[];
+  }): void {
+    this.log(LogLevel.SUCCESS, message, options);
+  }
+  
+  public trace(message: string, options?: { 
+    category?: LogCategory;
+    source?: string;
+    details?: any;
+    tags?: string[];
+  }): void {
+    this.log(LogLevel.TRACE, message, options);
+  }
+  
+  public performance(message: string, duration: number, options?: {
+    category?: LogCategory;
+    source?: string;
+    details?: any;
+    tags?: string[];
+  }): void {
+    const details = typeof options?.details === 'object' ? 
+      { ...options.details, duration } : 
+      { duration };
+      
+    this.log(
+      duration > 1000 ? LogLevel.WARN : LogLevel.INFO,
+      message,
+      {
+        ...options,
+        category: options?.category || LogCategory.PERFORMANCE,
+        details
+      }
+    );
   }
   
   public registerLogEventCallback(callback: LogEventCallback): () => void {

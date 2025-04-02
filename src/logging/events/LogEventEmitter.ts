@@ -1,6 +1,6 @@
 
 import { EventEmitter } from 'events';
-import { LogEntry } from '../types';
+import { LogEntry, LogEventCallback } from '../types';
 
 // Create a singleton event emitter for log events
 class LogEventSystem extends EventEmitter {
@@ -23,7 +23,7 @@ class LogEventSystem extends EventEmitter {
     this.emit('log', entry);
   }
 
-  public onLog(callback: (entry: LogEntry) => void): () => void {
+  public onLog(callback: LogEventCallback): () => void {
     this.on('log', callback);
     
     // Return an unsubscribe function
