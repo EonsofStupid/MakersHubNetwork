@@ -1,53 +1,45 @@
 
-import { EventEmitter } from 'events';
 import { LogEntry, LogEventCallback } from './types';
 
 /**
- * Singleton event emitter for log events
+ * Event emitter for logging events
  */
-class LogEventEmitter extends EventEmitter {
-  private static instance: LogEventEmitter;
-
-  private constructor() {
-    super();
-    // Set higher limit for log event listeners
-    this.setMaxListeners(20);
-  }
-
-  public static getInstance(): LogEventEmitter {
-    if (!LogEventEmitter.instance) {
-      LogEventEmitter.instance = new LogEventEmitter();
-    }
-    return LogEventEmitter.instance;
-  }
-
-  /**
-   * Emit a log event
-   */
-  public emitLogEvent(entry: LogEntry): void {
-    this.emit('log', entry);
-  }
-
+class LogEventEmitter {
+  private subscribers: LogEventCallback[] = [];
+  
   /**
    * Subscribe to log events
-   * @returns Unsubscribe function
    */
   public onLog(callback: LogEventCallback): () => void {
-    this.on('log', callback);
+    this.subscribers.push(callback);
     
     // Return unsubscribe function
     return () => {
-      this.off('log', callback);
+      this.subscribers = this.subscribers.filter(cb => cb !== callback);
     };
+  }
+  
+  /**
+   * Emit a log event to all subscribers
+   */
+  public emitLogEvent(entry: LogEntry): void {
+    // Call each subscriber with the log entry
+    for (const subscriber of this.subscribers) {
+      try {
+        subscriber(entry);
+      } catch (error) {
+        console.error('Error in log subscriber:', error);
+      }
+    }
   }
   
   /**
    * Get current listener count
    */
   public getListenerCount(): number {
-    return this.listenerCount('log');
+    return this.subscribers.length;
   }
 }
 
 // Export singleton instance
-export const logEventEmitter = LogEventEmitter.getInstance();
+export const logEventEmitter = new LogEventEmitter();
