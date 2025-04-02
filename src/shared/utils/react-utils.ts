@@ -12,9 +12,9 @@ export function safelyRenderNode(content: React.ReactNode | any): React.ReactNod
   
   // If it's an array, map each item (might contain React elements)
   if (Array.isArray(content)) {
-    return content.map((item, index) => 
+    return content.map((item, index) => (
       <React.Fragment key={index}>{safelyRenderNode(item)}</React.Fragment>
-    );
+    ));
   }
   
   // If it's an object but not a React element, convert to string

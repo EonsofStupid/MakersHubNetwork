@@ -12,10 +12,10 @@ import { AdminPermissionValue } from '@/admin/types/permissions';
  * Uses both auth store (for user/roles) and admin store (for permissions)
  */
 export function useAdminPermissions() {
-  const { isLoading: authLoading, status } = useAuthStore();
+  const { isLoading: authLoading, status, initialized } = useAuthStore();
   const { permissions, isLoadingPermissions } = useAdminStore();
   
-  const isLoading = authLoading || isLoadingPermissions || status === 'loading';
+  const isLoading = authLoading || isLoadingPermissions || status === 'loading' || !initialized;
   const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
 
   // Memoize the hasPermission function
