@@ -11,8 +11,7 @@ export function ThemeFallback() {
     // Apply fallback immediately to prevent white flash
     const root = document.documentElement;
     
-    // Apply critical styles immediately
-    // Background and text colors (most important for UX)
+    // Apply critical fallback styles immediately
     root.style.setProperty('--background', defaultImpulseTokens.colors.background.main);
     root.style.setProperty('--foreground', defaultImpulseTokens.colors.text.primary);
     root.style.setProperty('--impulse-bg-main', defaultImpulseTokens.colors.background.main);
@@ -27,15 +26,16 @@ export function ThemeFallback() {
     // Add fallback class
     root.classList.add('theme-fallback-applied');
     
+    // Ensure that the CSS file is loaded
+    const linkElement = document.createElement('link');
+    linkElement.rel = 'stylesheet';
+    linkElement.href = '/src/admin/theme/fallback/theme-fallback.css';
+    document.head.appendChild(linkElement);
+    
     return () => {
       // Clean up inline styles when component unmounts
-      root.style.removeProperty('--background');
-      root.style.removeProperty('--foreground');
-      root.style.removeProperty('--impulse-bg-main');
-      root.style.removeProperty('--impulse-text-primary');
-      root.style.removeProperty('--impulse-primary');
-      root.style.removeProperty('--impulse-secondary');
       root.classList.remove('theme-fallback-applied');
+      document.head.removeChild(linkElement);
     };
   }, []);
   

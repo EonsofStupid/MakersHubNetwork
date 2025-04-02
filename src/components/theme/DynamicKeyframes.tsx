@@ -1,91 +1,145 @@
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSiteTheme } from './SiteThemeProvider';
 
+/**
+ * Component that injects keyframe animations based on the current theme
+ * This allows animations to use theme colors without needing to be rebuilt with CSS-in-JS
+ */
 export function DynamicKeyframes() {
-  const { animations } = useSiteTheme();
-  const [styleSheet, setStyleSheet] = useState<HTMLStyleElement | null>(null);
+  const { variables } = useSiteTheme();
+  const [styleElement, setStyleElement] = useState<HTMLStyleElement | null>(null);
   
   useEffect(() => {
-    if (!animations || Object.keys(animations).length === 0) return;
-    
-    // Check if we already have a style element for our keyframes
-    let sheet = document.getElementById('dynamic-keyframes') as HTMLStyleElement | null;
-    
-    if (!sheet) {
-      sheet = document.createElement('style');
-      sheet.id = 'dynamic-keyframes';
-      document.head.appendChild(sheet);
-      setStyleSheet(sheet);
+    // Create a style element for our keyframes if it doesn't exist
+    if (!styleElement) {
+      const element = document.createElement('style');
+      element.id = 'dynamic-keyframes';
+      document.head.appendChild(element);
+      setStyleElement(element);
+      return () => {
+        document.head.removeChild(element);
+      };
     }
     
-    // Create CSS from the keyframes data
-    let keyframesCSS = '';
-    
-    try {
-      // Convert the keyframes object to CSS
-      keyframesCSS = Object.entries(animations)
-        .map(([name, frames]) => {
-          if (!frames || typeof frames !== 'object') return '';
-          
-          // Convert the keyframes object to CSS
-          const frameCSS = Object.entries(frames as Record<string, any>)
-            .map(([percent, styles]) => {
-              if (!styles || typeof styles !== 'object') return '';
-              
-              // Convert the styles object to CSS
-              const styleCSS = Object.entries(styles as Record<string, any>)
-                .map(([prop, value]) => {
-                  // Format the property name (camelCase to kebab-case)
-                  const formattedProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
-                  return `${formattedProp}: ${value};`;
-                })
-                .join(' ');
-              
-              return `${percent} { ${styleCSS} }`;
-            })
-            .filter(Boolean) // Remove empty entries
-            .join('\n');
-          
-          return `@keyframes ${name} { ${frameCSS} }`;
-        })
-        .filter(Boolean) // Remove empty entries
-        .join('\n\n');
-      
-      // Add animation classes
-      const animationClasses = `
-        .animate-morph-header {
-          animation: morph-header 3s ease-in-out infinite alternate;
+    // Update keyframes with current theme colors
+    if (styleElement) {
+      styleElement.textContent = `
+        @keyframes glow-pulse {
+          0%, 100% {
+            box-shadow: 0 0 5px ${variables.primary};
+          }
+          50% {
+            box-shadow: 0 0 20px ${variables.primary};
+          }
         }
-        .animate-data-stream {
-          animation: data-stream 2s linear infinite;
+        
+        @keyframes text-glow {
+          0%, 100% {
+            text-shadow: 0 0 2px ${variables.primary};
+          }
+          50% {
+            text-shadow: 0 0 10px ${variables.primary};
+          }
         }
-        .animate-particles-1 {
-          animation: particles-1 6s linear infinite;
+        
+        @keyframes border-pulse {
+          0%, 100% {
+            border-color: ${variables.primary};
+          }
+          50% {
+            border-color: ${variables.secondary};
+          }
         }
-        .animate-particles-2 {
-          animation: particles-2 8s linear infinite;
+        
+        @keyframes background-shift {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+        
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+        
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.8;
+          }
+          50% {
+            opacity: 0.4;
+          }
+        }
+        
+        .animate-glow-pulse {
+          animation: glow-pulse 2s ease-in-out infinite;
+        }
+        
+        .animate-text-glow {
+          animation: text-glow 2s ease-in-out infinite;
+        }
+        
+        .animate-border-pulse {
+          animation: border-pulse 4s ease-in-out infinite;
+        }
+        
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        
+        .animate-pulse-slow {
+          animation: pulse 3s ease-in-out infinite;
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+        
+        .animate-scale-in {
+          animation: scale-in 0.3s ease-out forwards;
+        }
+        
+        .bg-gradient-animated {
+          background: linear-gradient(270deg, ${variables.primary}, ${variables.secondary});
+          background-size: 200% 200%;
+          animation: background-shift 3s ease infinite;
         }
       `;
-      
-      keyframesCSS += '\n\n' + animationClasses;
-      
-    } catch (error) {
-      console.error('Error generating keyframes CSS:', error);
     }
-    
-    if (sheet && keyframesCSS) {
-      sheet.textContent = keyframesCSS;
-      console.log('Added dynamic keyframes CSS:', keyframesCSS);
-    }
-    
-    // Cleanup on unmount
-    return () => {
-      if (styleSheet && styleSheet.parentNode) {
-        styleSheet.parentNode.removeChild(styleSheet);
-      }
-    };
-  }, [animations]);
+  }, [styleElement, variables]);
   
-  return null;
+  return null; // This component doesn't render anything visible
 }

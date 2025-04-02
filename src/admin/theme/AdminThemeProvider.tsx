@@ -4,11 +4,23 @@ import { AdminThemeProvider as AdminThemeContextProvider } from './context/Admin
 import { ThemeFallback } from './fallback/ThemeFallback';
 import { applyThemeToDocument } from './utils/themeUtils';
 import { defaultImpulseTokens } from './impulse/tokens';
+import './impulse/impulse-admin.css';
+import './impulse/impulse-theme.css';
+import './impulse/impulse.css';
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
   // Apply immediate fallback styling
   useEffect(() => {
+    // Apply fallback immediately to prevent white flash
     applyThemeToDocument(defaultImpulseTokens);
+    
+    // Add admin theme class to html element
+    document.documentElement.classList.add('impulse-admin-root');
+    
+    return () => {
+      // Clean up when component unmounts
+      document.documentElement.classList.remove('impulse-admin-root');
+    };
   }, []);
 
   return (

@@ -29,19 +29,43 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
 
   // Apply default styles immediately to prevent white flash
   useEffect(() => {
-    // Apply fallback immediately to prevent white flash
+    // Apply fallback styles immediately
     document.documentElement.classList.add('theme-fallback-applied');
     
     // Force the browser to apply default colors immediately
-    document.documentElement.style.setProperty('--background', '#080F1E');
-    document.documentElement.style.setProperty('--foreground', '#F9FAFB');
-    document.documentElement.style.backgroundColor = '#080F1E';
-    document.documentElement.style.color = '#F9FAFB';
-    document.body.style.backgroundColor = '#080F1E';
-    document.body.style.color = '#F9FAFB';
+    document.documentElement.style.setProperty('--background', '#12121A');
+    document.documentElement.style.setProperty('--foreground', '#F6F6F7');
+    document.documentElement.style.backgroundColor = '#12121A';
+    document.documentElement.style.color = '#F6F6F7';
+    document.body.style.backgroundColor = '#12121A';
+    document.body.style.color = '#F6F6F7';
+    
+    // Apply scrollbar styling immediately
+    const style = document.createElement('style');
+    style.textContent = `
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.2); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.4); }
+      .skeleton-loader {
+        background: linear-gradient(90deg, 
+          rgba(255, 255, 255, 0.05) 25%, 
+          rgba(255, 255, 255, 0.1) 50%, 
+          rgba(255, 255, 255, 0.05) 75%
+        );
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s infinite;
+      }
+      @keyframes skeleton-loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+    `;
+    document.head.appendChild(style);
     
     return () => {
       document.documentElement.classList.remove('theme-fallback-applied');
+      document.head.removeChild(style);
     };
   }, []);
 

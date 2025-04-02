@@ -1,106 +1,176 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAdminPreferences } from '@/admin/store/adminPreferences.store';
-import { getLogger } from '@/logging';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { ThemeContextValue, ThemeProviderProps } from '../../types/theme';
+import { ImpulseTheme } from '../../types/impulse.types';
+import { useImpulsivityStore } from '../../store/impulse.store';
 import { defaultImpulseTokens } from '../impulse/tokens';
 import { applyThemeToDocument } from '../utils/themeUtils';
+import { DEFAULT_THEME_NAME } from '@/utils/themeInitializer';
+import { useToast } from '@/hooks/use-toast';
+import { getLogger } from '@/logging';
 
-const logger = getLogger('AdminTheme');
+// Create context with default value
+const AdminThemeContext = createContext<ThemeContextValue>({
+  currentTheme: null,
+  isLoading: true,
+  error: null,
+  applyTheme: async () => {},
+  updateTheme: () => {},
+  saveTheme: async () => {},
+  resetTheme: () => {},
+  isDirty: false,
+  isSaving: false
+});
 
-// Standardized theme name
-export const DEFAULT_THEME_NAME = 'impulsivity';
-export type AdminTheme = 'impulsivity' | 'cyberpunk' | 'neon' | 'minimal' | 'dark' | 'light';
-
-interface AdminThemeContextType {
-  theme: AdminTheme;
-  setTheme: (theme: AdminTheme) => void;
-  toggleTheme: () => void;
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-  isInitialized: boolean;
-}
-
-const AdminThemeContext = createContext<AdminThemeContextType | undefined>(undefined);
-
-export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
-  const { theme: storedTheme, setTheme: storeTheme } = useAdminPreferences();
-  const [theme, setThemeState] = useState<AdminTheme>((storedTheme as AdminTheme) || DEFAULT_THEME_NAME);
-  const [isDarkMode, setIsDarkMode] = useState(true); // Admin defaults to dark mode
-  const [isInitialized, setIsInitialized] = useState(false);
+// Admin theme provider component
+export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderProps) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [initialized, setInitialized] = useState(false);
   
-  // Update theme in store when changed
-  const setTheme = (newTheme: AdminTheme) => {
-    logger.debug(`Setting admin theme to: ${newTheme}`);
-    setThemeState(newTheme);
-    storeTheme(newTheme);
-    
-    // Apply theme to document
-    document.documentElement.setAttribute('data-admin-theme', newTheme);
-  };
+  const impulsivityStore = useImpulsivityStore();
+  const { toast } = useToast();
+  const logger = getLogger('AdminThemeProvider');
   
-  // Toggle between dark and light mode
-  const toggleDarkMode = () => {
-    logger.debug(`Toggling admin dark mode from ${isDarkMode ? 'on' : 'off'} to ${!isDarkMode ? 'on' : 'off'}`);
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('admin-light-mode', !isDarkMode);
-    document.documentElement.classList.toggle('admin-dark-mode', isDarkMode);
-  };
+  // Prepare the theme object with admin-specific structure
+  const currentTheme = impulsivityStore.theme ? {
+    id: 'admin-impulsivity',
+    name: DEFAULT_THEME_NAME,
+    description: `Admin ${DEFAULT_THEME_NAME} Theme`,
+    design_tokens: {},
+    impulse: impulsivityStore.theme
+  } : null;
   
-  // Toggle between impulsivity and minimal themes
-  const toggleTheme = () => {
-    setTheme(theme === DEFAULT_THEME_NAME ? 'minimal' : DEFAULT_THEME_NAME);
-  };
-  
-  // Initialize theme from store or apply default
+  // Load theme when the component mounts
   useEffect(() => {
-    // Always apply default tokens first for immediate styling
-    applyThemeToDocument(defaultImpulseTokens);
-    
-    // Then apply stored theme if available
-    if (storedTheme) {
-      // Normalize theme name to lowercase for consistency
-      const normalizedTheme = String(storedTheme).toLowerCase() as AdminTheme;
-      setThemeState(normalizedTheme);
-      document.documentElement.setAttribute('data-admin-theme', normalizedTheme);
-      logger.debug(`Initialized admin theme from store: ${normalizedTheme}`);
-    } else {
-      // If no stored theme, use default and set it in the store
-      setTheme(DEFAULT_THEME_NAME);
-      logger.debug(`No stored admin theme, using default: ${DEFAULT_THEME_NAME}`);
+    async function initializeTheme() {
+      try {
+        if (!initialized) {
+          setIsLoading(true);
+          setError(null);
+          
+          // Load theme from the store
+          await impulsivityStore.loadTheme();
+          
+          // Apply the theme to the document
+          applyThemeToDocument(impulsivityStore.theme);
+          
+          setIsLoading(false);
+          setInitialized(true);
+          logger.info('Admin theme initialized successfully');
+        }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Unknown theme error');
+        setError(error);
+        setIsLoading(false);
+        
+        logger.error('Failed to initialize admin theme', { error });
+        toast({
+          title: 'Theme Error',
+          description: 'Could not load the admin theme. Using fallback styling.',
+          variant: 'destructive',
+        });
+      }
     }
     
-    // Apply dark mode by default
-    document.documentElement.classList.add('admin-dark-mode');
+    initializeTheme();
+  }, [initialized, impulsivityStore, toast, logger]);
+  
+  // Apply theme updates to the document when the theme changes
+  useEffect(() => {
+    if (impulsivityStore.theme && initialized) {
+      applyThemeToDocument(impulsivityStore.theme);
+    }
+  }, [impulsivityStore.theme, initialized]);
+  
+  // Apply theme by ID
+  const applyTheme = async (themeId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Implementation depends on where themes are stored
+      // For now, just apply the default tokens
+      applyThemeToDocument(defaultImpulseTokens);
+      
+      setIsLoading(false);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to apply theme');
+      setError(error);
+      setIsLoading(false);
+      
+      logger.error('Failed to apply theme', { error });
+      toast({
+        title: 'Theme Error',
+        description: 'Could not apply the selected theme.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  // Update theme with new values
+  const updateTheme = (updates: Partial<ImpulseTheme>) => {
+    impulsivityStore.setTheme(updates);
+  };
+  
+  // Save theme changes
+  const saveTheme = async () => {
+    try {
+      setIsSaving(true);
+      await impulsivityStore.saveTheme();
+      
+      toast({
+        title: 'Theme Saved',
+        description: 'Theme changes have been saved successfully.',
+      });
+      
+      setIsSaving(false);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to save theme');
+      setError(error);
+      setIsSaving(false);
+      
+      logger.error('Failed to save theme', { error });
+      toast({
+        title: 'Save Error',
+        description: 'Could not save theme changes.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  // Reset theme to defaults
+  const resetTheme = () => {
+    impulsivityStore.resetTheme();
+    applyThemeToDocument(defaultImpulseTokens);
     
-    // Mark as initialized after a brief delay to allow DOM updates
-    const timer = setTimeout(() => setIsInitialized(true), 100);
-    
-    return () => {
-      // Cleanup
-      clearTimeout(timer);
-      document.documentElement.removeAttribute('data-admin-theme');
-      document.documentElement.classList.remove('admin-dark-mode', 'admin-light-mode');
-    };
-  }, [storedTheme, setTheme]);
+    toast({
+      title: 'Theme Reset',
+      description: 'Theme has been reset to default values.',
+    });
+  };
+  
+  const contextValue: ThemeContextValue = {
+    currentTheme,
+    isLoading,
+    error,
+    applyTheme,
+    updateTheme,
+    saveTheme,
+    resetTheme,
+    isDirty: impulsivityStore.isDirty,
+    isSaving
+  };
   
   return (
-    <AdminThemeContext.Provider value={{ 
-      theme, 
-      setTheme, 
-      toggleTheme, 
-      isDarkMode, 
-      toggleDarkMode,
-      isInitialized
-    }}>
+    <AdminThemeContext.Provider value={contextValue}>
       {children}
     </AdminThemeContext.Provider>
   );
 }
 
+// Hook for accessing theme context
 export function useAdminTheme() {
-  const context = useContext(AdminThemeContext);
-  if (context === undefined) {
-    throw new Error('useAdminTheme must be used within an AdminThemeProvider');
-  }
-  return context;
+  return useContext(AdminThemeContext);
 }

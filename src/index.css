@@ -5,6 +5,9 @@
 @import './components/landing/styles/feature-cta.css';
 @import './components/landing/styles/build-showcase.css';
 @import './theme/site-theme.css';
+@import './admin/theme/impulse/impulse-theme.css';
+@import './admin/theme/impulse/impulse.css';
+@import './admin/theme/impulse/impulse-admin.css';
 
 @tailwind base;
 @tailwind components;
@@ -42,6 +45,10 @@
   
   body {
     @apply bg-background text-foreground min-h-screen overflow-x-hidden;
+    
+    /* Fallback colors to prevent flash of unstyled content */
+    background-color: #12121A;
+    color: #F6F6F7;
   }
   
   h1, h2, h3, h4, h5, h6 {
