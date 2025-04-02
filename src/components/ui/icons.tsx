@@ -37,7 +37,6 @@ export const Icons = {
   analytics: LucideIcons.BarChart,
   content: LucideIcons.FileText,
   database: LucideIcons.Database,
-  settings: LucideIcons.Settings,
   cpu: LucideIcons.Cpu,
   gauge: LucideIcons.Gauge,
   refresh: LucideIcons.RefreshCcw,
