@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MeasurementResult, PerformanceMeasurementOptions } from '../types';
+import { MeasurementResult, PerformanceMeasurementOptions, SimpleTimer } from '../types';
 
 /**
  * Creates a performance measurement utility
@@ -106,23 +106,34 @@ export function measureExecution<T>(name: string, fn: () => T): MeasurementResul
   return createMeasurement('global').measure(name, fn);
 }
 
-interface SimpleTimer {
-  end(): number;
-}
-
+/**
+ * Creates a simple timer for performance measurement
+ */
 export function createSimpleMeasurement(source: string = 'global') {
+  const timers: Record<string, number> = {};
+  
   return {
-    start(name: string): SimpleTimer {
-      const startTime = performance.now();
-      return {
-        end() {
-          return performance.now() - startTime;
-        }
-      };
+    start(name: string): void {
+      timers[name] = performance.now();
+    },
+    
+    end(name: string): number {
+      const startTime = timers[name];
+      if (startTime === undefined) {
+        console.warn(`No timer started for "${name}"`);
+        return 0;
+      }
+      
+      const duration = performance.now() - startTime;
+      delete timers[name]; // Clean up
+      return duration;
     }
   };
 }
 
+/**
+ * Measure average execution time of a function over multiple iterations
+ */
 export function measurePerformance(fn: Function, iterations: number = 1): number {
   const startTime = performance.now();
   for (let i = 0; i < iterations; i++) {
