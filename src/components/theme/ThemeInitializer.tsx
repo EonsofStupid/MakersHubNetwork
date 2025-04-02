@@ -16,18 +16,20 @@ interface ThemeInitializerProps {
 }
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
+  // Track state in more detail for better debugging
   const [isInitialized, setIsInitialized] = useState(false);
   const [initializationAttempted, setInitializationAttempted] = useState(false);
   const [initError, setInitError] = useState<Error | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
+  
   const { setTheme, isLoading, error: themeStoreError } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ThemeInitializer', LogCategory.SYSTEM);
 
-  // Shorter timeout for theme store error - fallback faster to default theme
+  // Fallback faster when a theme store error is detected
   useEffect(() => {
     if (themeStoreError && !isInitialized && initializationAttempted) {
-      logger.warn('Theme store error detected, preparing to fallback', {
+      logger.warn('Theme store error detected, forcing fallback', {
         details: {
           errorMessage: themeStoreError.message,
           isInitialized,
@@ -36,20 +38,13 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         }
       });
       
+      // Very aggressive fallback timer - only 300ms
       const timer = setTimeout(() => {
-        logger.error('Forcing initialization after theme store error', { 
-          details: { 
-            error: themeStoreError.message,
-            fallback: 'Using default theme due to persistent error'
-          } 
+        logger.info('Forcing initialization after theme store error', { 
+          details: { error: themeStoreError.message }
         });
         setIsInitialized(true);
-        toast({
-          title: 'Theme Recovery',
-          description: 'Using default theme styling due to theme loading issue',
-          variant: "default", // Changed to default for less alarmist message
-        });
-      }, 1000); // Reduced to 1 second for faster fallback
+      }, 300);
       
       return () => clearTimeout(timer);
     }
@@ -66,18 +61,13 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         logger.info('Starting theme initialization');
         setInitializationAttempted(true);
         
-        // Safety timeout - don't let theme initialization block the app forever
+        // Global safety timeout - don't block the app for more than 1 second
         initializationTimeout = setTimeout(() => {
           if (isMounted && !isInitialized) {
             logger.warn('Theme initialization timed out, continuing with default theme');
             setIsInitialized(true);
-            toast({
-              title: 'Theme Information',
-              description: 'Using default theme styling.',
-              variant: "default", // Changed to default
-            });
           }
-        }, 2000); // Reduced to 2 seconds for faster fallback
+        }, 1000); // Reduced to 1 second for faster fallback
         
         // Try to ensure the default theme exists in the database
         // But don't block the app if this fails
@@ -89,7 +79,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           logger.warn('Error ensuring default theme, continuing with fallback', { 
             details: { error: isError(err) ? err.message : 'Unknown error' } 
           });
-          // Continue with null themeId to trigger fallback
+          // Continue without a valid themeId - will trigger fallback
         }
         
         if (!isMounted) return;
@@ -97,15 +87,25 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         if (themeId && isValidUUID(themeId)) {
           logger.debug('Default theme ensured, attempting to set theme', { details: { themeId }});
           
-          // Then sync CSS using the ensureDefaultTheme's built-in sync capability
+          // Set a separate timeout just for the DB fetch
+          const fetchTimeout = setTimeout(() => {
+            if (isMounted && !isInitialized) {
+              logger.warn('Theme fetch timed out, continuing with fallbacks');
+              setIsInitialized(true);
+            }
+          }, 800);
+          
           try {
             await setTheme(themeId);
+            clearTimeout(fetchTimeout);
+            
             logger.info('Theme initialized successfully', { details: { themeId } });
           
             if (isMounted) {
               setIsInitialized(true);
             }
           } catch (setThemeError) {
+            clearTimeout(fetchTimeout);
             logger.error('Error setting theme', { 
               details: {
                 error: isError(setThemeError) ? setThemeError.message : 'Unknown error',
@@ -120,27 +120,20 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
             }
           }
         } else {
-          logger.warn('Failed to initialize theme, falling back to default styles', {
-            details: { 
-              receivedThemeId: themeId,
-              isValidUUID: themeId ? isValidUUID(themeId) : false
-            }
+          logger.warn('No valid theme ID received, using fallback styling', {
+            details: { receivedThemeId: themeId }
           });
           
           if (isMounted) {
             setFailedAttempts(prev => prev + 1);
-            // Continue with default styles even without a theme
+            // Continue with default styles
             setIsInitialized(true);
           }
         }
       } catch (error) {
         const err = isError(error) ? error : new Error('Unknown theme initialization error');
         logger.error('Error initializing theme', { 
-          details: {
-            message: err.message,
-            stack: err.stack,
-            name: err.name,
-          }
+          details: { message: err.message, stack: err.stack }
         });
         
         if (isMounted) {
@@ -160,22 +153,11 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     };
   }, [setTheme, toast, logger, initializationAttempted]);
 
-  // Instead of blocking the entire app while theme loads,
-  // we'll continue rendering with a default theme
+  // Render the app immediately with fallback styling instead of showing a loading screen
   return (
-    <SiteThemeProvider fallbackToDefault>
+    <SiteThemeProvider fallbackToDefault={true}>
       <DynamicKeyframes />
-      {isInitialized ? (
-        children
-      ) : (
-        <div className="flex items-center justify-center min-h-screen">
-          {initError ? (
-            <ThemeErrorState error={initError} />
-          ) : (
-            <ThemeLoadingState />
-          )}
-        </div>
-      )}
+      {children}
     </SiteThemeProvider>
   );
 }

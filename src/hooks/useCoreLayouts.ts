@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Layout } from '@/admin/types/layout.types';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
@@ -18,6 +19,7 @@ export function useCoreLayouts() {
 
   useEffect(() => {
     let isMounted = true;
+    let timeoutId: NodeJS.Timeout;
     
     async function initLayouts() {
       try {
@@ -28,61 +30,91 @@ export function useCoreLayouts() {
 
         logger.info('Initializing core layouts');
         
-        await layoutSeederService.ensureCoreLayoutsExist();
+        // Set a timeout to prevent waiting too long for layouts
+        timeoutId = setTimeout(() => {
+          if (isMounted) {
+            logger.warn('Layout loading timed out, continuing with fallbacks');
+            setIsLoading(false);
+          }
+        }, 2000);
         
-        logger.info('Core layouts ensured, loading layouts now');
-
-        const topNavResponse = await layoutSkeletonService.getByTypeAndScope('topnav', 'site');
-        logger.info('Loaded topnav layout', { details: { success: !!topNavResponse.data, id: topNavResponse.data?.id } });
-        
-        if (topNavResponse.data && isMounted) {
-          setTopNavLayout(layoutSkeletonService.convertToLayout(topNavResponse.data));
-        } else {
-          logger.warn('Topnav layout not found', { details: { error: topNavResponse.error } });
+        // Try to ensure core layouts exist without breaking the app if it fails
+        try {
+          await layoutSeederService.ensureCoreLayoutsExist();
+          logger.info('Core layouts ensured');
+        } catch (ensureError) {
+          logger.warn('Error ensuring core layouts exist, will try to load existing layouts', {
+            details: safeDetails(ensureError)
+          });
+          // Continue despite the error
         }
 
-        const footerResponse = await layoutSkeletonService.getByTypeAndScope('footer', 'site');
-        logger.info('Loaded footer layout', { details: { success: !!footerResponse.data, id: footerResponse.data?.id } });
-        
-        if (footerResponse.data && isMounted) {
-          setFooterLayout(layoutSkeletonService.convertToLayout(footerResponse.data));
-        } else {
-          logger.warn('Footer layout not found', { details: { error: footerResponse.error } });
+        // Try to load the topnav layout
+        try {
+          const topNavResponse = await layoutSkeletonService.getByTypeAndScope('topnav', 'site');
+          if (topNavResponse.data && isMounted) {
+            setTopNavLayout(layoutSkeletonService.convertToLayout(topNavResponse.data));
+            logger.info('Loaded topnav layout', {
+              details: { id: topNavResponse.data.id }
+            });
+          }
+        } catch (topNavError) {
+          logger.warn('Error loading topnav layout', {
+            details: safeDetails(topNavError)
+          });
+          // Continue with next layout
         }
 
-        const userMenuResponse = await layoutSkeletonService.getByTypeAndScope('usermenu', 'site');
-        logger.info('Loaded usermenu layout', { details: { success: !!userMenuResponse.data, id: userMenuResponse.data?.id } });
-        
-        if (userMenuResponse.data && isMounted) {
-          setUserMenuLayout(layoutSkeletonService.convertToLayout(userMenuResponse.data));
-        } else {
-          logger.warn('User menu layout not found', { details: { error: userMenuResponse.error } });
+        // Try to load the footer layout
+        try {
+          const footerResponse = await layoutSkeletonService.getByTypeAndScope('footer', 'site');
+          if (footerResponse.data && isMounted) {
+            setFooterLayout(layoutSkeletonService.convertToLayout(footerResponse.data));
+            logger.info('Loaded footer layout', {
+              details: { id: footerResponse.data.id }
+            });
+          }
+        } catch (footerError) {
+          logger.warn('Error loading footer layout', {
+            details: safeDetails(footerError)
+          });
+          // Continue with next layout
         }
+
+        // Try to load the user menu layout
+        try {
+          const userMenuResponse = await layoutSkeletonService.getByTypeAndScope('usermenu', 'site');
+          if (userMenuResponse.data && isMounted) {
+            setUserMenuLayout(layoutSkeletonService.convertToLayout(userMenuResponse.data));
+            logger.info('Loaded usermenu layout', {
+              details: { id: userMenuResponse.data.id }
+            });
+          }
+        } catch (userMenuError) {
+          logger.warn('Error loading usermenu layout', {
+            details: safeDetails(userMenuError)
+          });
+        }
+        
+        // Clear the timeout since we're done (whether successful or not)
+        clearTimeout(timeoutId);
         
         if (isMounted) {
-          logger.info('Core layouts loaded successfully', {
+          setIsLoading(false);
+          logger.info('Core layout loading complete', {
             details: {
-              hasTopNav: !!topNavResponse.data,
-              hasFooter: !!footerResponse.data,
-              hasUserMenu: !!userMenuResponse.data
+              hasTopNav: !!topNavLayout,
+              hasFooter: !!footerLayout,
+              hasUserMenu: !!userMenuLayout
             }
           });
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        logger.error('Error loading core layouts', { details: safeDetails(err) });
+        clearTimeout(timeoutId);
+        logger.error('Unexpected error loading core layouts', { details: safeDetails(err) });
         
         if (isMounted) {
           setError(err instanceof Error ? err : new Error('Failed to load core layouts'));
-          
-          toast({
-            title: "Layout loading issue",
-            description: errorMessage,
-            variant: "destructive"
-          });
-        }
-      } finally {
-        if (isMounted) {
           setIsLoading(false);
         }
       }
@@ -92,6 +124,7 @@ export function useCoreLayouts() {
     
     return () => {
       isMounted = false;
+      clearTimeout(timeoutId);
     };
   }, [toast, logger]);
 

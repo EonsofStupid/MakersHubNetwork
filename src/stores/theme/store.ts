@@ -59,62 +59,77 @@ export const useThemeStore = create<ThemeState>((set) => ({
         throw new Error(`No theme found for ID: ${themeId}`);
       }
 
+      // Simplify the theme conversion logic
       const rawTheme = themes[0];
       logger.debug("Raw theme data received", { details: { id: rawTheme.id, name: rawTheme.name } });
       
-      // Now get component tokens separately to ensure we have them even if RLS blocks direct access
-      const { data: componentTokens, error: componentError } = await supabase
-        .from("theme_components")
-        .select("*")
-        .eq("theme_id", themeId);
-
-      if (componentError) {
-        logger.warn("Error fetching component tokens, will use empty array:", { 
-          details: { error: componentError } 
-        });
+      // Initialize with default empty arrays for safety
+      const componentTokens: ComponentTokens[] = [];
+      
+      // Get component tokens in a separate query to avoid RLS issues
+      try {
+        const { data: dbComponentTokens, error: componentError } = await supabase
+          .from("theme_components")
+          .select("*")
+          .eq("theme_id", themeId);
+  
+        if (!componentError && dbComponentTokens && Array.isArray(dbComponentTokens)) {
+          // Map components to the correct structure
+          dbComponentTokens.forEach(token => {
+            if (token && token.id) {
+              componentTokens.push({
+                id: token.id,
+                component_name: token.component_name || '',
+                styles: token.styles || {},
+                theme_id: token.theme_id,
+                context: token.context,
+                created_at: token.created_at || '',
+                updated_at: token.updated_at || '',
+                description: '',
+              });
+            }
+          });
+        } else {
+          logger.warn("No component tokens found or error fetching them:", { 
+            details: { error: componentError } 
+          });
+        }
+      } catch (compErr) {
+        logger.error("Error processing component tokens:", { details: { error: compErr } });
+        // Continue without component tokens rather than failing completely
       }
       
-      // Type guard to ensure we have objects
+      // Ensure we have valid objects for the theme
       const designTokens = rawTheme.design_tokens && typeof rawTheme.design_tokens === 'object' 
         ? rawTheme.design_tokens as Record<string, any>
         : {};
-      
-      // Convert component tokens to the correct type with proper mapping
-      const mappedComponentTokens = !componentError && componentTokens && Array.isArray(componentTokens)
-        ? componentTokens.map((token): ComponentTokens => ({
-            id: token.id || '',
-            component_name: token.component_name || '',
-            styles: token.styles || {},
-            theme_id: token.theme_id || undefined,
-            context: token.context || undefined,
-            created_at: token.created_at || '',
-            updated_at: token.updated_at || '',
-            description: '', // Add default empty description
-          }))
-        : []; // Use empty array if there was an error or no components returned
-
-      // Ensure composition rules is a Record
+        
       const compositionRules = rawTheme.composition_rules && typeof rawTheme.composition_rules === 'object'
         ? rawTheme.composition_rules as Record<string, any>
         : {};
+        
+      const cachedStyles = rawTheme.cached_styles && typeof rawTheme.cached_styles === 'object'
+        ? rawTheme.cached_styles as Record<string, any>
+        : {};
 
+      // Create a theme object with safe defaults for all properties
       const theme: Theme = {
         id: rawTheme.id,
         name: rawTheme.name,
         description: rawTheme.description || '', 
         status: rawTheme.status || 'draft', 
         is_default: rawTheme.is_default || false, 
-        created_by: rawTheme.created_by || undefined,
+        created_by: rawTheme.created_by,
         created_at: rawTheme.created_at || '', 
         updated_at: rawTheme.updated_at || '', 
-        published_at: rawTheme.published_at || undefined,
+        published_at: rawTheme.published_at,
         version: rawTheme.version || 1,
-        cache_key: rawTheme.cache_key || undefined,
-        parent_theme_id: rawTheme.parent_theme_id || undefined,
+        cache_key: rawTheme.cache_key,
+        parent_theme_id: rawTheme.parent_theme_id,
         design_tokens: designTokens,
-        component_tokens: mappedComponentTokens,
+        component_tokens: componentTokens,
         composition_rules: compositionRules,
-        cached_styles: rawTheme.cached_styles as Record<string, any> || {},
+        cached_styles: cachedStyles,
       };
 
       logger.info("Theme loaded successfully", { details: { id: theme.id, name: theme.name } });
@@ -144,13 +159,14 @@ export const useThemeStore = create<ThemeState>((set) => ({
         throw error;
       }
 
+      // Map them to our expected format with safe defaults
       const components: ComponentTokens[] = data.map(comp => ({
         id: comp.id,
-        component_name: comp.component_name,
-        styles: comp.styles as Record<string, any>,
-        description: '', // Default empty description 
-        theme_id: comp.theme_id || undefined,
-        context: comp.context || undefined,
+        component_name: comp.component_name || '',
+        styles: comp.styles as Record<string, any> || {},
+        description: '', 
+        theme_id: comp.theme_id,
+        context: comp.context,
         created_at: comp.created_at || '',
         updated_at: comp.updated_at || ''
       }));

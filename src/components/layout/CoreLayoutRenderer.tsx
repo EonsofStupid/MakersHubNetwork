@@ -24,21 +24,16 @@ export function CoreLayoutRenderer({
 }: CoreLayoutRendererProps) {
   const logger = useLogger('CoreLayoutRenderer', LogCategory.UI);
   
-  // Log when layout changes
-  useEffect(() => {
-    if (layout) {
-      logger.debug('Layout loaded', { 
-        details: { 
-          id: layout.id, 
-          type: layout.type, 
-          componentsCount: layout.components?.length || 0 
-        } 
-      });
+  // Skip rendering with minimal logging if no layout
+  if (!layout && !isLoading) {
+    if (fallback) {
+      return <div className={className} data-layout-missing={id || true}>{fallback}</div>;
     }
-  }, [layout, logger]);
-  
+    return null;
+  }
+
+  // Render a simple skeleton for loading state
   if (isLoading) {
-    logger.debug('Rendering loading state', { details: { id } });
     return (
       <div className={className} data-layout-loading={id || true}>
         <Skeleton className="h-12 w-full" />
@@ -46,22 +41,17 @@ export function CoreLayoutRenderer({
     );
   }
   
-  if (!layout) {
-    logger.warn('Layout not found, using fallback', {
-      details: { hasLayout: !!layout, hasFallback: !!fallback, id }
-    });
+  // Skip empty layouts
+  if (!layout?.components?.length) {
     return fallback ? (
-      <div className={className} data-layout-missing={id || true}>
+      <div className={className} data-layout-empty={id || true}>
         {fallback}
       </div>
     ) : null;
   }
   
+  // Render the actual layout
   try {
-    logger.debug('Rendering layout', { 
-      details: { id: layout.id, type: layout.type } 
-    });
-    
     return (
       <div className={className} data-layout-id={layout.id} data-layout-type={layout.type}>
         <LayoutRenderer layout={layout} />
@@ -69,7 +59,7 @@ export function CoreLayoutRenderer({
     );
   } catch (error) {
     logger.error('Error rendering layout', { details: safeDetails(error) });
-    console.error('Layout rendering error:', error);
+    
     return fallback ? (
       <div className={className} data-layout-error={id || true}>
         {fallback}
