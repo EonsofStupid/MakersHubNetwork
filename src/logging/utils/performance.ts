@@ -1,6 +1,6 @@
 
+import { LogCategory, MeasurementResult, PerformanceMeasurement, PerformanceMeasurementOptions } from '../types';
 import { getLogger } from '../service/logger.service';
-import { LogCategory, PerformanceMeasurementOptions, MeasurementResult } from '../types';
 
 /**
  * Create a simple measurement utility for timing operations
@@ -23,6 +23,25 @@ export function createSimpleMeasurement() {
       const duration = performance.now() - start;
       measurements.delete(name);
       return duration;
+    },
+    
+    measure: async <T>(
+      name: string,
+      fn: () => T | Promise<T>
+    ): Promise<MeasurementResult<T>> => {
+      const startTime = performance.now();
+      try {
+        const result = await fn();
+        const duration = performance.now() - startTime;
+        return { result, duration };
+      } catch (error) {
+        const duration = performance.now() - startTime;
+        // Attach duration to error for logging
+        if (error instanceof Error) {
+          (error as any).duration = duration;
+        }
+        throw error;
+      }
     }
   };
 }
@@ -30,7 +49,7 @@ export function createSimpleMeasurement() {
 /**
  * Create a performance measurement utility that logs results
  */
-export function createMeasurement(source: string) {
+export function createMeasurement(source: string): PerformanceMeasurement {
   const logger = getLogger(source);
   const measurements = new Map<string, number>();
   
@@ -39,7 +58,7 @@ export function createMeasurement(source: string) {
       measurements.set(name, performance.now());
     },
     
-    end: (name: string, tags?: string[]): number => {
+    end: (name: string): number => {
       const start = measurements.get(name);
       if (start === undefined) {
         logger.warn(`No measurement started for "${name}"`, {
@@ -52,8 +71,7 @@ export function createMeasurement(source: string) {
       measurements.delete(name);
       
       logger.performance(name, duration, {
-        category: LogCategory.PERFORMANCE,
-        tags
+        category: LogCategory.PERFORMANCE
       });
       
       return duration;
@@ -61,13 +79,13 @@ export function createMeasurement(source: string) {
     
     measure: async <T>(
       name: string,
-      operation: () => T | Promise<T>,
+      fn: () => T | Promise<T>,
       options?: PerformanceMeasurementOptions
     ): Promise<T> => {
       const start = performance.now();
       
       try {
-        const result = await operation();
+        const result = await fn();
         const duration = performance.now() - start;
         
         logger.performance(name, duration, {

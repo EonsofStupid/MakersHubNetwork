@@ -1,8 +1,8 @@
 
-import { useErrorLogger } from '@/logging/hooks/useErrorLogger';
+import { useErrorLogger } from '@/logging';
 
 /**
  * Re-export the error logger hook from the centralized logging system
- * to maintain backward compatibility
+ * for backward compatibility
  */
 export { useErrorLogger };

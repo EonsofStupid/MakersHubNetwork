@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { LogEntry, LogLevel } from '../types';
+import { LogEntry, LogLevel, LogCategory } from '../types';
 import { logEventEmitter } from '../events';
 import { getLogger } from '../service/logger.service';
 import { memoryTransport } from '../transports/memory.transport';
@@ -13,7 +13,7 @@ interface LoggingContextType {
   showLogConsole: boolean;
   setShowLogConsole: (show: boolean) => void;
   toggleLogConsole: () => void;
-  filteredLogs: (category?: string) => LogEntry[];
+  filteredLogs: (category?: LogCategory) => LogEntry[];
 }
 
 const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
@@ -36,7 +36,7 @@ export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Subscribe to log events
   useEffect(() => {
     const unsubscribe = logEventEmitter.onLog((entry: LogEntry) => {
-      setLogs(prevLogs => [...prevLogs, entry]);
+      setLogs(prevLogs => [entry, ...prevLogs].slice(0, 1000));
     });
 
     logger.info('Logging context initialized', {
@@ -62,10 +62,10 @@ export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   // Get filtered logs
-  const filteredLogs = useCallback((category?: string) => {
-    if (!category) return logs;
-    return logs.filter(log => log.category === category);
-  }, [logs]);
+  const filteredLogs = useCallback((category?: LogCategory) => {
+    if (!category) return logs.filter(log => log.level >= minLevel);
+    return logs.filter(log => log.level >= minLevel && log.category === category);
+  }, [logs, minLevel]);
 
   const value = {
     logs,

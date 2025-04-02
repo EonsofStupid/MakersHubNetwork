@@ -5,7 +5,7 @@ import { LOG_LEVEL_NAMES } from '../constants/log-level';
 /**
  * Transport that logs to the browser console
  */
-export class ConsoleTransport implements LogTransport {
+class ConsoleTransport implements LogTransport {
   /**
    * Log an entry to the console
    */

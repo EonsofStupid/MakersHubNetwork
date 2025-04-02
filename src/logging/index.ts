@@ -1,37 +1,91 @@
 
-// Core functionality
+// Core logging functionality
 import { loggerService, getLogger } from './service/logger.service';
 import { LogCategory, LogLevel } from './types';
-import { memoryTransport } from './transports/memory.transport';
-import { logEventEmitter } from './events';
 import { LoggingProvider, useLoggingContext } from './context/LoggingContext';
+import { memoryTransport } from './transports/memory.transport';
+import { consoleTransport } from './transports/console.transport';
+import { logEventEmitter } from './events';
 
-// Re-export types and constants
-export { LogCategory, LogLevel } from './types';
-export { LOG_LEVEL_NAMES, isLogLevelAtLeast } from './constants/log-level';
+// React hooks for logging
+import { useLogger } from './hooks/useLogger';
+import { usePerformanceLogger, useComponentPerformance } from './hooks/usePerformanceLogger';
+import { useErrorLogger } from './hooks/useErrorLogger';
+import { useNetworkLogger } from './hooks/useNetworkLogger';
 
-// Re-export hooks for React components
-export { useLogger } from './hooks/useLogger';
-export { usePerformanceLogger, useComponentPerformance } from './hooks/usePerformance.tsx';
-export { useErrorLogger } from './hooks/useErrorLogger';
-export { useNetworkLogger } from './hooks/useNetworkLogger';
+// UI components
+import { LogConsole } from './components/LogConsole';
+import { LogToggleButton } from './components/LogToggleButton';
+import { LogActivityStream } from './components/LogActivityStream';
 
-// Re-export utility functions
-export { safelyRenderNode, nodeToSearchableString } from './utils/react';
-export { 
+// Utility functions
+import { safelyRenderNode, nodeToSearchableString } from './utils/react';
+import { 
   createMeasurement, 
   measureExecution, 
   createSimpleMeasurement, 
   measurePerformance 
 } from './utils/performance';
 
-// Export context provider
-export { LoggingProvider, useLoggingContext };
+// Constants
+import { LOG_LEVEL_NAMES, isLogLevelAtLeast } from './constants/log-level';
 
-// Export memory transport for direct access
-export { memoryTransport } from './transports/memory.transport';
+// Export types
+export { LogCategory, LogLevel } from './types';
+export type { 
+  LogEntry, 
+  Logger, 
+  LogTransport, 
+  LoggingConfig, 
+  LoggerOptions, 
+  MeasurementResult,
+  PerformanceMeasurementOptions
+} from './types';
 
-// Initialize the logging system
+// Export hooks
+export { 
+  useLogger, 
+  usePerformanceLogger, 
+  useComponentPerformance,
+  useErrorLogger,
+  useNetworkLogger
+};
+
+// Export components
+export { 
+  LoggingProvider,
+  useLoggingContext,
+  LogConsole,
+  LogToggleButton,
+  LogActivityStream
+};
+
+// Export utility functions
+export {
+  safelyRenderNode,
+  nodeToSearchableString,
+  createMeasurement,
+  measureExecution,
+  createSimpleMeasurement,
+  measurePerformance,
+  LOG_LEVEL_NAMES,
+  isLogLevelAtLeast
+};
+
+// Export transports
+export { 
+  memoryTransport, 
+  consoleTransport 
+};
+
+// Export logger service and helpers
+export { 
+  loggerService, 
+  getLogger, 
+  logEventEmitter 
+};
+
+// Initialize logging system
 export function initializeLogger(): void {
   try {
     loggerService.info('Logging system initialized successfully', {
@@ -43,20 +97,15 @@ export function initializeLogger(): void {
   }
 }
 
-// Get all logs
+// Convenience functions for working with logs
 export function getLogs() {
   return loggerService.getLogs();
 }
 
-// Clear logs
 export function clearLogs() {
   loggerService.clearLogs();
 }
 
-// Register callback for log events
 export function onLog(callback: (entry: any) => void) {
   return logEventEmitter.onLog(callback);
 }
-
-// Export getLogger for creating scoped loggers
-export { getLogger };

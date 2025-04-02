@@ -26,7 +26,7 @@ export function LogToggleButton({
   
   return (
     <button
-      onClick={() => toggleLogConsole()}
+      onClick={toggleLogConsole}
       className={`fixed ${positionClass} p-2 rounded-full shadow-lg z-50 ${
         showLogConsole 
           ? 'bg-primary text-primary-foreground hover:bg-primary/90' 

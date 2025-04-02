@@ -1,8 +1,4 @@
 
-/**
- * Core logging system type definitions
- */
-
 import React from 'react';
 
 /**
@@ -105,12 +101,11 @@ export interface LoggerOptions {
 }
 
 /**
- * Performance measurement utility interface
+ * Performance measurement options
  */
-export interface PerformanceMeasurement {
-  start: (name: string) => void;
-  end: (name: string, description?: string, tags?: string[]) => number;
-  measure: <T>(name: string, operation: () => T | Promise<T>, description?: string, tags?: string[]) => Promise<T>;
+export interface PerformanceMeasurementOptions {
+  category?: LogCategory;
+  tags?: string[];
 }
 
 /**
@@ -119,4 +114,13 @@ export interface PerformanceMeasurement {
 export interface MeasurementResult<T> {
   result: T;
   duration: number;
+}
+
+/**
+ * Performance measurement interface
+ */
+export interface PerformanceMeasurement {
+  start: (name: string) => void;
+  end: (name: string) => number;
+  measure: <T>(name: string, fn: () => T | Promise<T>, options?: PerformanceMeasurementOptions) => Promise<T>;
 }

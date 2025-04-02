@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { getLogger } from '../service/logger.service';
 import { LogCategory } from '../types';
-import { usePerformanceLogger } from './usePerformance';
+import { usePerformanceLogger } from './usePerformanceLogger';
 
 /**
  * Hook for logging network requests
