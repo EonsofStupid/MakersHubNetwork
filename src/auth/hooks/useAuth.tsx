@@ -5,7 +5,7 @@ import { LogCategory } from '@/logging';
 
 /**
  * Centralized hook for accessing authentication state
- * This is the primary hook for auth that should be used throughout the application
+ * This is the primary hook that should be used throughout the application
  */
 export function useAuth() {
   const {

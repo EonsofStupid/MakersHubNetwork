@@ -1,6 +1,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { useAuth } from '@/auth/hooks/useAuth';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { canAccessAdmin } from '@/auth/rbac/enforce';
@@ -11,7 +11,7 @@ import { canAccessAdmin } from '@/auth/rbac/enforce';
  */
 export function useAdminAccess() {
   const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
-  const { user, roles, status, isLoading } = useAuthStore();
+  const { user, roles, status, isLoading } = useAuth();
   const isAuthenticated = status === 'authenticated';
   const logger = useLogger("AdminAccess", LogCategory.AUTH);
   
