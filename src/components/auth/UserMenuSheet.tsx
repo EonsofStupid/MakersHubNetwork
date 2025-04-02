@@ -2,7 +2,7 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { Menu, User, Settings, LayoutDashboard, LogOut, Shield, Crown } from "lucide-react"
-import { UserRole } from "@/types/auth.types"
+import { UserRole } from "@/auth/types/auth.types"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"

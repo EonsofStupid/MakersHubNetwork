@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/auth/hooks/useAuth";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);

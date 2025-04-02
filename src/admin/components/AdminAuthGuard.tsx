@@ -1,11 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
-import { Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { useAuth } from '@/auth/hooks/useAuth';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
@@ -13,22 +13,23 @@ interface AdminAuthGuardProps {
 
 export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
-  const { hasAdminAccess, isLoading, isAuthenticated } = useAdminAccess();
-  const authStore = useAuthStore();
+  const { hasAdminAccess, isLoading: adminLoading } = useAdminAccess();
+  const { isLoading: authLoading, isAuthenticated, status, initialize, initialized } = useAuth();
   const [authChecked, setAuthChecked] = useState(false);
   const logger = useLogger('AdminAuthGuard', LogCategory.ADMIN);
   
+  const isLoading = authLoading || adminLoading;
+  
   useEffect(() => {
     // If auth store isn't initialized yet, initialize it
-    if (!authStore.initialized) {
+    if (!initialized) {
       logger.info('Auth store not initialized, initializing now');
-      authStore.initialize().catch(error => {
+      initialize().catch(error => {
         logger.error('Failed to initialize auth store', { details: error });
       });
     }
-  }, [authStore, logger]);
+  }, [initialize, initialized, logger]);
   
   useEffect(() => {
     // Only run this check once auth is no longer loading
@@ -37,8 +38,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
         details: { 
           isAuthenticated, 
           hasAdminAccess, 
-          status: authStore.status,
-          roles: authStore.roles
+          status
         } 
       });
       
@@ -53,9 +53,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
         });
         navigate('/login?from=/admin');
       } else if (!hasAdminAccess) {
-        logger.warn('User does not have admin access, redirecting to home page', {
-          details: { roles: authStore.roles }
-        });
+        logger.warn('User does not have admin access, redirecting to home page');
         toast({
           title: 'Access Denied',
           description: 'You do not have permission to access the admin section',
@@ -64,9 +62,9 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
         navigate('/');
       }
     }
-  }, [isLoading, isAuthenticated, hasAdminAccess, navigate, toast, logger, authChecked, authStore.status, authStore.roles]);
+  }, [isLoading, isAuthenticated, hasAdminAccess, navigate, toast, logger, authChecked, status]);
   
-  if (isLoading || !authChecked || authStore.status === 'loading') {
+  if (isLoading || !authChecked || status === 'loading') {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <div className="h-8 w-8 border-t-2 border-primary animate-spin rounded-full mb-4" />
