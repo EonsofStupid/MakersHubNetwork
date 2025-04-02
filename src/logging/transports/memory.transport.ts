@@ -1,5 +1,6 @@
 
 import { LogEntry, LogTransport } from '../types';
+import { logEventEmitter } from '../events/LogEventEmitter';
 
 /**
  * In-memory transport for storing logs
@@ -20,6 +21,9 @@ class MemoryTransport implements LogTransport {
     if (this.logs.length > this.maxLogs) {
       this.logs = this.logs.slice(this.logs.length - this.maxLogs);
     }
+    
+    // Emit event for real-time log updates
+    logEventEmitter.emitLogEvent(entry);
   }
   
   getLogs(): LogEntry[] {
