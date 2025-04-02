@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { 
   Logger, 
@@ -14,6 +13,7 @@ import { logEventEmitter } from '../events';
 import { isRecord, toLogDetails } from '../utils/type-guards';
 import { defaultLoggingConfig } from '../config/default-config';
 import { safelyRenderNode } from '../utils/react';
+import { formatLogDetails } from '../utils/details-formatter';
 
 /**
  * Core logger service implementation
@@ -195,7 +195,7 @@ class LoggerService {
     }
     
     // Process details to ensure they're in a consistent format
-    const processedDetails = options?.details ? toLogDetails(options.details) : undefined;
+    const processedDetails = options?.details ? formatLogDetails(options.details) : undefined;
     
     // Create the log entry
     const entry: LogEntry = {

@@ -1,10 +1,12 @@
-
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { LogsDashboard } from '@/admin/components/dashboard/LogsDashboard';
 import { LogActivityStream } from '@/logging/components/LogActivityStream';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogLevel } from '@/logging';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+// Avoid circular dependencies by using dynamic import
+const PerformanceMetrics = lazy(() => import('@/admin/dashboard/PerformanceMetrics'));
 
 export function LogsPage() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -81,7 +83,9 @@ export function LogsPage() {
             </CardHeader>
             <CardContent>
               <div className="mb-4">
-                <PerformanceMetrics />
+                <Suspense fallback={<div>Loading performance metrics...</div>}>
+                  <PerformanceMetrics />
+                </Suspense>
               </div>
             </CardContent>
           </Card>
@@ -90,11 +94,6 @@ export function LogsPage() {
     </div>
   );
 }
-
-// Avoid circular dependencies by using dynamic import
-const PerformanceMetrics = React.lazy(() => import('@/admin/dashboard/PerformanceMetrics').then(
-  module => ({ default: module.PerformanceMetrics })
-));
 
 // Default export for React.lazy loading
 export default LogsPage;

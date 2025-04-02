@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Gauge, RefreshCcw, Memory, Cpu } from "lucide-react";
+import { Gauge, RefreshCcw, Database, Cpu } from "lucide-react";
 
 export function PerformanceMetrics() {
   const startMonitoring = usePerformanceStore(state => state.startMonitoring);
@@ -142,7 +142,7 @@ export function PerformanceMetrics() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-muted p-3 rounded-md flex items-center space-x-3">
-                  <Memory className="h-5 w-5 text-primary" />
+                  <Database className="h-5 w-5 text-primary" />
                   <div>
                     <p className="text-xs text-muted-foreground">Heap Size</p>
                     <p className="text-lg font-semibold">{formatMemorySize(memoryMetrics.heapSize)}</p>
@@ -169,7 +169,12 @@ export function PerformanceMetrics() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis label={{ value: 'MB', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip formatter={(value) => [`${value.toFixed(2)} MB`, 'Memory Usage']} />
+                    <Tooltip formatter={(value) => {
+                      if (typeof value === 'number') {
+                        return [`${value.toFixed(2)} MB`, 'Memory Usage'];
+                      }
+                      return [value, 'Memory Usage'];
+                    }} />
                     <Bar dataKey="value" fill="var(--primary)" />
                   </BarChart>
                 </ResponsiveContainer>

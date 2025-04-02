@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { ensureDefaultTheme } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
@@ -9,6 +8,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
 import { ThemeErrorState } from './info/ThemeErrorState';
+import { formatLogDetails } from '@/logging/utils/details-formatter';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -60,7 +60,9 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         }
       } catch (error) {
         const err = error instanceof Error ? error : new Error('Unknown theme initialization error');
-        logger.error('Error initializing theme', { details: err });
+        logger.error('Error initializing theme', { 
+          details: formatLogDetails(err)  
+        });
         
         if (isMounted) {
           setInitError(err);

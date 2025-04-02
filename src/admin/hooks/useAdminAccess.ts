@@ -1,9 +1,9 @@
-
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/auth/hooks/useAuth';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { canAccessAdmin } from '@/auth/rbac/enforce';
+import { formatLogDetails } from '@/logging/utils/details-formatter';
 
 /**
  * Hook to determine if the current user has admin access
