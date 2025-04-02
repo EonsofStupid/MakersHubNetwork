@@ -17,12 +17,12 @@ export function useAuth() {
     hasRole,
     isAdmin,
     logout,
-    initialize
+    initialize,
+    isAuthenticated
   } = useAuthStore();
   
   const logger = useLogger('useAuth', LogCategory.AUTH);
   
-  const isAuthenticated = status === 'authenticated';
   const isSuperAdmin = roles.includes('super_admin');
 
   // Log wrapper for logout to capture info before state is cleared
