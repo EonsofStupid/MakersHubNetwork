@@ -1,6 +1,5 @@
-
 import { LogCategory, LogEntry, LogLevel, LogTransport } from '../types';
-import { nodeToSearchableString } from '@/shared/utils/render';
+import { nodeToSearchableString } from '@/shared/utils/react-utils';
 
 /**
  * Options for filtering logs in memory transport

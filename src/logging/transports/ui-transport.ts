@@ -1,8 +1,7 @@
-
 import { toast } from '@/hooks/use-toast';
 import { LogEntry, LogTransport } from '../types';
 import { LogLevel } from '../constants/log-level';
-import { nodeToSearchableString } from '@/shared/utils/render';
+import { nodeToSearchableString } from '@/shared/utils/react-utils';
 
 interface UITransportOptions {
   showDebug?: boolean;
