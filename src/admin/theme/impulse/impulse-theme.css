@@ -1,11 +1,11 @@
 
 /**
- * MakersImpulse Admin - Impulse Theme
+ * MakersImpulse Admin - Impulsivity Theme
  * Cyberpunk-inspired admin interface with glass morphism
  */
 
 :root {
-  /* Core Impulse variables */
+  /* Core Impulsivity variables */
   --impulse-primary: #00F0FF;
   --impulse-secondary: #FF2D6E;
   --impulse-accent: #F97316;
@@ -45,7 +45,7 @@
   --impulse-curve-spring: cubic-bezier(0.43, 0.13, 0.23, 0.96);
 }
 
-[data-admin-theme="impulse"],
+[data-admin-theme="impulsivity"],
 [data-admin-theme="cyberpunk"] {
   /* Use the same variables for backward compatibility */
   --impulse-primary: #00F0FF;

@@ -13,7 +13,7 @@ interface AdminThemeContextType {
 
 const AdminThemeContext = createContext<AdminThemeContextType | undefined>(undefined);
 
-// Use the lowercase version as the enum value
+// Use lowercase version of the standardized theme name as default
 const DEFAULT_ADMIN_THEME: Theme = 'impulsivity';
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
@@ -39,6 +39,9 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
     if (storedTheme) {
       setThemeState(storedTheme as Theme);
       document.documentElement.setAttribute('data-admin-theme', storedTheme);
+    } else {
+      // If no stored theme, use default and set it in the store
+      setTheme(DEFAULT_ADMIN_THEME);
     }
   }, [storedTheme]);
   

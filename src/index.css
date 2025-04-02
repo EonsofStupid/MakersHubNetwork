@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import './components/MainNav/styles/cyber-effects.css';
 @import './components/landing/styles/feature-cta.css';
@@ -8,27 +9,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Immediate fallback styles applied before React hydration */
+.theme-fallback-applied {
+  --background: var(--fallback-background, #080F1E);
+  --foreground: var(--fallback-foreground, #F9FAFB);
+  --card: var(--fallback-card, #0E172A);
+  --card-foreground: var(--fallback-card-foreground, #F9FAFB);
+  --primary: var(--fallback-primary, #00F0FF);
+  --primary-foreground: var(--fallback-primary-foreground, #F9FAFB);
+  --border: var(--fallback-border, #1E293B);
+}
+
+/* Force immediate styling for the body */
+body {
+  background-color: var(--background, #080F1E);
+  color: var(--foreground, #F9FAFB);
+}
+
 @layer base {
   :root {
-    --background: var(--site-background);
-    --foreground: var(--site-foreground);
-    --card: var(--site-card);
-    --card-foreground: var(--site-card-foreground);
-    --popover: var(--site-card);
-    --popover-foreground: var(--site-card-foreground);
-    --primary: var(--site-primary);
-    --primary-foreground: var(--site-primary-foreground);
-    --secondary: var(--site-secondary);
-    --secondary-foreground: var(--site-secondary-foreground);
-    --muted: var(--site-muted);
-    --muted-foreground: var(--site-muted-foreground);
-    --accent: var(--site-accent);
-    --accent-foreground: var(--site-accent-foreground);
-    --destructive: var(--site-destructive);
-    --destructive-foreground: var(--site-destructive-foreground);
-    --border: var(--site-border);
-    --input: var(--site-input);
-    --ring: var(--site-ring);
+    --background: hsl(var(--site-background));
+    --foreground: hsl(var(--site-foreground));
+    --card: hsl(var(--site-card));
+    --card-foreground: hsl(var(--site-card-foreground));
+    --popover: hsl(var(--site-card));
+    --popover-foreground: hsl(var(--site-card-foreground));
+    --primary: hsl(var(--site-primary));
+    --primary-foreground: hsl(var(--site-primary-foreground));
+    --secondary: hsl(var(--site-secondary));
+    --secondary-foreground: hsl(var(--site-secondary-foreground));
+    --muted: hsl(var(--site-muted));
+    --muted-foreground: hsl(var(--site-muted-foreground));
+    --accent: hsl(var(--site-accent));
+    --accent-foreground: hsl(var(--site-accent-foreground));
+    --destructive: hsl(var(--site-destructive));
+    --destructive-foreground: hsl(var(--site-destructive-foreground));
+    --border: hsl(var(--site-border));
+    --input: hsl(var(--site-input));
+    --ring: hsl(var(--site-ring));
     --radius: var(--site-radius-md);
     --effect-color: var(--site-effect-color);
   }

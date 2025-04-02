@@ -6,7 +6,7 @@ import { safeDetails } from '@/logging/utils/safeDetails';
 
 const logger = getLogger('ThemeInitializer');
 
-// Standardize the theme name to "Impulsivity" throughout the application
+// Standardized theme name
 export const DEFAULT_THEME_NAME = 'Impulsivity';
 
 /**

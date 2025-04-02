@@ -14,8 +14,8 @@ interface ThemeInitializerProps {
   children: React.ReactNode;
 }
 
-// Use the standardized theme name from the utils file
-const FALLBACK_TIMEOUT = 1000; // 1 second fallback timeout
+// Short fallback timeout to ensure UI renders quickly
+const FALLBACK_TIMEOUT = 500; // 500ms fallback timeout for better UX
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   // State tracking for better debugging and resilience
@@ -27,6 +27,20 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const { setTheme, isLoading, error: themeStoreError } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ThemeInitializer', LogCategory.SYSTEM);
+
+  // Apply default styles immediately to prevent white flash
+  useEffect(() => {
+    // Apply fallback immediately 
+    document.documentElement.classList.add('theme-fallback-applied');
+    
+    // This forces the browser to apply default colors immediately
+    document.body.style.backgroundColor = 'var(--fallback-background)';
+    document.body.style.color = 'var(--fallback-foreground)';
+    
+    return () => {
+      document.documentElement.classList.remove('theme-fallback-applied');
+    };
+  }, []);
 
   // Fallback faster when a theme store error is detected
   useEffect(() => {
@@ -64,10 +78,10 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         logger.info('Starting theme initialization');
         setInitializationAttempted(true);
         
-        // Global safety timeout - don't block the app for more than 1 second
+        // Global safety timeout - don't block the app for more than specified time
         initializationTimeout = setTimeout(() => {
           if (isMounted && !isInitialized) {
-            logger.warn('Theme initialization timed out, continuing with default theme');
+            logger.warn(`Theme initialization timed out after ${FALLBACK_TIMEOUT}ms, continuing with default theme`);
             setIsInitialized(true);
           }
         }, FALLBACK_TIMEOUT);

@@ -1,6 +1,6 @@
 
 :root {
-  /* Core Impulse variables with cyberpunk-inspired values */
+  /* Core Impulsivity variables with cyberpunk-inspired values */
   --impulse-primary: #00F0FF;
   --impulse-secondary: #FF2D6E;
   --impulse-accent: #F97316;
@@ -46,6 +46,12 @@
   color: var(--impulse-text-primary);
   min-height: 100vh;
   width: 100%;
+}
+
+/* Use impulsivity as the data attribute */
+[data-admin-theme="impulsivity"] {
+  background-color: var(--impulse-bg-main);
+  color: var(--impulse-text-primary);
 }
 
 /* Sidebar styling */
