@@ -1,2 +1,4 @@
 
-export { useErrorLogger } from '@/logging';
+import { useErrorLogger as useErrorLoggerOriginal } from '@/logging';
+
+export const useErrorLogger = useErrorLoggerOriginal;

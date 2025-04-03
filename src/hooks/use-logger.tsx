@@ -1,2 +1,4 @@
 
-export { useLogger } from '@/logging';
+import { useLogger as useLoggerOriginal } from '@/logging';
+
+export const useLogger = useLoggerOriginal;
