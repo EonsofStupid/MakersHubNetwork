@@ -93,7 +93,7 @@ export function usePerformanceLogger(
   /**
    * Measure the execution time of a synchronous function
    */
-  const measure = useCallback(<T>(name: string, callback: PerformanceCallback<T>): T => {
+  const measure = useCallback(function measure<T>(name: string, callback: PerformanceCallback<T>): T {
     start(name);
     try {
       const result = callback();
@@ -111,10 +111,10 @@ export function usePerformanceLogger(
   /**
    * Measure the execution time of an asynchronous function
    */
-  const measureAsync = useCallback(async <T>(
+  const measureAsync = useCallback(async function measureAsync<T>(
     name: string,
     callback: AsyncPerformanceCallback<T>
-  ): Promise<T> => {
+  ): Promise<T> {
     start(name);
     try {
       const result = await callback();

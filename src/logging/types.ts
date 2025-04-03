@@ -82,3 +82,27 @@ export interface LoggingConfig {
 export interface LogEventCallback {
   (entry: LogEntry): void;
 }
+
+// Performance measurement types
+export interface PerformanceMeasurementOptions {
+  category?: string;
+  tags?: string[];
+  threshold?: number;
+  source?: string;
+  onComplete?: (result: PerformanceMeasurementResult) => void;
+}
+
+export interface PerformanceMeasurementResult {
+  name: string;
+  duration: number;
+  success: boolean;
+  error?: any;
+  category?: string;
+  tags?: string[];
+  source?: string;
+}
+
+export interface MeasurementResult<T> {
+  result: T;
+  duration: number;
+}

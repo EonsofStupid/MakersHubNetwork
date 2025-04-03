@@ -1,49 +1,42 @@
 
 import { useCallback } from 'react';
-import { getLogger } from '@/logging';
+import { usePerformanceLogger as useOriginalPerformanceLogger, PerformanceLoggerOptions } from '@/logging/hooks/usePerformanceLogger';
 import { LogCategory } from '@/logging/types';
 
-export interface PerformanceLoggerOptions {
-  category?: string;
-  tags?: string[];
+/**
+ * Performance logger hook for measuring and logging operation durations
+ * This is a simplified interface over the core performance logger
+ */
+export function usePerformanceLogger(component: string, options: Partial<PerformanceLoggerOptions> = {}) {
+  const { measure: originalMeasure, measureAsync: originalMeasureAsync } = useOriginalPerformanceLogger(`Performance:${component}`);
+  
+  const defaultOptions: Partial<PerformanceLoggerOptions> = {
+    category: LogCategory.PERFORMANCE,
+    threshold: 50,
+    ...options
+  };
+  
+  // Wrap the measure function to include default options
+  const measure = useCallback(function measure<T>(
+    operationName: string,
+    operation: () => T
+  ): T {
+    return originalMeasure(operationName, operation, defaultOptions);
+  }, [originalMeasure, defaultOptions]);
+  
+  // Wrap the measureAsync function to include default options
+  const measureAsync = useCallback(async function measureAsync<T>(
+    operationName: string,
+    operation: () => Promise<T>
+  ): Promise<T> {
+    return originalMeasureAsync(operationName, operation, defaultOptions);
+  }, [originalMeasureAsync, defaultOptions]);
+  
+  return { 
+    measure, 
+    measureAsync 
+  };
 }
 
-export function usePerformanceLogger(source: string, options?: PerformanceLoggerOptions) {
-  const logger = getLogger(source, { 
-    category: options?.category || LogCategory.PERF as string,
-    tags: options?.tags
-  });
-  
-  const measure = useCallback(
-    <T>(label: string, fn: () => T, details?: Record<string, unknown>): T => {
-      try {
-        const start = performance.now();
-        const result = fn();
-        const end = performance.now();
-        const duration = end - start;
-        
-        logger.debug(`${label} completed in ${duration.toFixed(2)}ms`, {
-          details: { 
-            ...details,
-            duration,
-            label,
-            timestamp: new Date().toISOString()
-          }
-        });
-        
-        return result;
-      } catch (error) {
-        logger.error(`Error in ${label}`, {
-          details: {
-            ...details,
-            error: error instanceof Error ? error.message : String(error)
-          }
-        });
-        throw error;
-      }
-    },
-    [logger]
-  );
-  
-  return { measure };
-}
+// Re-export the types for external use
+export type { PerformanceLoggerOptions };
