@@ -46,11 +46,46 @@ class ThemeRegistry {
   }
 
   /**
-   * Get a theme by its ID
+   * Get a theme from the registry
    */
   getTheme(id: string): ImpulseTheme | null {
     const theme = this.themes.get(id);
-    return theme ? theme.tokens : null;
+    
+    if (!theme) {
+      this.logger.warn(`Theme not found: ${id}`);
+      
+      // Return default theme as fallback
+      return this.getDefaultTheme();
+    }
+    
+    return theme.tokens;
+  }
+
+  /**
+   * Set the active theme ID
+   */
+  setActiveTheme(id: string): void {
+    this.activeThemeId = id;
+    this.logger.debug(`Active theme set to: ${id}`);
+  }
+
+  /**
+   * Get the active theme
+   */
+  getActiveTheme(): ImpulseTheme | null {
+    if (!this.activeThemeId) {
+      this.logger.debug('No active theme set, using default');
+      return this.getDefaultTheme();
+    }
+    
+    return this.getTheme(this.activeThemeId);
+  }
+
+  /**
+   * Get the default theme
+   */
+  getDefaultTheme(): ImpulseTheme {
+    return { ...defaultImpulseTokens };
   }
 
   /**
@@ -61,54 +96,37 @@ class ThemeRegistry {
   }
 
   /**
-   * Set the active theme
+   * Check if a theme exists
    */
-  setActiveTheme(id: string): boolean {
-    if (!this.themes.has(id)) {
-      this.logger.warn(`Theme not found: ${id}`);
+  hasTheme(id: string): boolean {
+    return this.themes.has(id);
+  }
+
+  /**
+   * Delete a theme from the registry
+   */
+  deleteTheme(id: string): boolean {
+    if (id === 'default') {
+      this.logger.warn('Cannot delete default theme');
       return false;
     }
-
-    this.activeThemeId = id;
-    this.logger.debug(`Active theme set to: ${id}`);
-    return true;
-  }
-
-  /**
-   * Get the active theme ID
-   */
-  getActiveThemeId(): string | null {
-    return this.activeThemeId;
-  }
-
-  /**
-   * Get the active theme
-   */
-  getActiveTheme(): ImpulseTheme | null {
-    return this.activeThemeId ? this.getTheme(this.activeThemeId) : null;
-  }
-
-  /**
-   * Get the default theme
-   */
-  getDefaultTheme(): ImpulseTheme {
-    return this.getTheme('default') || defaultImpulseTokens;
-  }
-
-  /**
-   * Reset the registry
-   */
-  reset(): void {
-    this.themes.clear();
-    this.activeThemeId = null;
     
-    // Re-register the default theme
-    this.registerTheme('default', defaultImpulseTokens);
+    if (this.activeThemeId === id) {
+      this.logger.warn('Cannot delete active theme');
+      return false;
+    }
+    
+    const result = this.themes.delete(id);
+    
+    if (result) {
+      this.logger.debug(`Theme deleted: ${id}`);
+    } else {
+      this.logger.warn(`Theme not found for deletion: ${id}`);
+    }
+    
+    return result;
   }
 }
 
-// Create and export a singleton instance
+// Export a singleton instance
 export const themeRegistry = new ThemeRegistry();
-
-// Export the get themes function for convenience
-export const getAllThemes = () => themeRegistry.getAllThemes();

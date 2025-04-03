@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAdminTheme } from '../context/AdminThemeContext';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { getThemeProperty } from '../utils/themeUtils';
 import { hexToRgb, hexToRgbString } from '@/utils/colorUtils';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
@@ -13,7 +13,10 @@ const FALLBACKS = {
   secondary: '#FF2D6E', // Pink
   accent: '#8B5CF6', // Purple
   background: '#12121A', // Dark bg
-  foreground: '#F6F6F7' // Light text
+  foreground: '#F6F6F7', // Light text
+  success: '#10B981', // Green
+  warning: '#F59E0B', // Orange
+  error: '#EF4444'    // Red
 };
 
 /**
@@ -29,9 +32,18 @@ export function DynamicKeyframes() {
     // Create or get the style element
     if (!styleElement) {
       try {
-        const element = document.createElement('style');
-        element.id = 'admin-dynamic-keyframes';
-        document.head.appendChild(element);
+        // Check if an existing element exists before creating a new one
+        let element = document.getElementById('admin-dynamic-keyframes') as HTMLStyleElement;
+        
+        if (!element) {
+          element = document.createElement('style');
+          element.id = 'admin-dynamic-keyframes';
+          document.head.appendChild(element);
+          logger.debug('Created new admin keyframes style element');
+        } else {
+          logger.debug('Using existing admin keyframes style element');
+        }
+        
         setStyleElement(element);
       } catch (error) {
         logger.error('Failed to create admin keyframes style element', { details: { error } });
@@ -60,15 +72,22 @@ export function DynamicKeyframes() {
         const primary = getThemeProperty(theme, 'colors.primary', FALLBACKS.primary);
         const secondary = getThemeProperty(theme, 'colors.secondary', FALLBACKS.secondary);
         const accent = getThemeProperty(theme, 'colors.accent', FALLBACKS.accent);
+        const success = getThemeProperty(theme, 'colors.status.success', FALLBACKS.success);
+        const warning = getThemeProperty(theme, 'colors.status.warning', FALLBACKS.warning);
+        const error = getThemeProperty(theme, 'colors.status.error', FALLBACKS.error);
         
         // Convert to RGB format
         const primaryRgbString = hexToRgbString(primary);
         const secondaryRgbString = hexToRgbString(secondary);
+        const accentRgbString = hexToRgbString(accent);
         
         // Store as CSS variables (backup method)
         document.documentElement.style.setProperty('--admin-effect-color', primary);
         document.documentElement.style.setProperty('--admin-effect-secondary', secondary);
         document.documentElement.style.setProperty('--admin-effect-tertiary', accent);
+        document.documentElement.style.setProperty('--admin-success-color', success);
+        document.documentElement.style.setProperty('--admin-warning-color', warning);
+        document.documentElement.style.setProperty('--admin-error-color', error);
         
         // Update keyframes with current theme colors
         if (styleElement) {
@@ -139,6 +158,25 @@ export function DynamicKeyframes() {
               100% { filter: hue-rotate(0deg); }
             }
             
+            @keyframes admin-rainbow-shift {
+              0% { border-color: ${primary}; }
+              33% { border-color: ${secondary}; }
+              66% { border-color: ${accent}; }
+              100% { border-color: ${primary}; }
+            }
+            
+            @keyframes admin-highlight-flash {
+              0% { background-color: rgba(${primaryRgbString}, 0); }
+              50% { background-color: rgba(${primaryRgbString}, 0.2); }
+              100% { background-color: rgba(${primaryRgbString}, 0); }
+            }
+            
+            @keyframes admin-alert-pulse {
+              0% { background-color: rgba(${hexToRgbString(error)}, 0.1); }
+              50% { background-color: rgba(${hexToRgbString(error)}, 0.3); }
+              100% { background-color: rgba(${hexToRgbString(error)}, 0.1); }
+            }
+            
             .admin-animate-glow-pulse { animation: admin-glow-pulse 2s ease-in-out infinite; }
             .admin-animate-text-glow { animation: admin-text-glow 2s ease-in-out infinite; }
             .admin-animate-border-pulse { animation: admin-border-pulse 4s ease-in-out infinite; }
@@ -147,6 +185,9 @@ export function DynamicKeyframes() {
             .admin-animate-scale-pulse { animation: admin-scale-pulse 2s ease-in-out infinite; }
             .admin-animate-fade-in { animation: admin-fade-in 0.3s ease-out forwards; }
             .admin-animate-scale-in { animation: admin-scale-in 0.3s ease-out forwards; }
+            .admin-animate-rainbow { animation: admin-rainbow-shift 6s linear infinite; }
+            .admin-animate-highlight { animation: admin-highlight-flash 2s ease-in-out; }
+            .admin-animate-alert { animation: admin-alert-pulse 2s ease-in-out infinite; }
             
             .admin-bg-gradient-animated {
               background: linear-gradient(270deg, ${primary}, ${secondary});
@@ -188,7 +229,49 @@ export function DynamicKeyframes() {
             }
             
             .admin-hue-rotate { animation: admin-hue-rotate 10s infinite linear; }
+            
+            /* Status colors with animations */
+            .admin-status-success {
+              color: ${success};
+              animation: admin-text-glow 2s ease-in-out infinite;
+              text-shadow: 0 0 8px rgba(${hexToRgbString(success)}, 0.7);
+            }
+            
+            .admin-status-warning {
+              color: ${warning};
+              animation: admin-text-glow 2s ease-in-out infinite;
+              text-shadow: 0 0 8px rgba(${hexToRgbString(warning)}, 0.7);
+            }
+            
+            .admin-status-error {
+              color: ${error};
+              animation: admin-text-glow 2s ease-in-out infinite;
+              text-shadow: 0 0 8px rgba(${hexToRgbString(error)}, 0.7);
+            }
+            
+            /* Button effects */
+            .admin-button-hover {
+              transition: all 0.2s ease;
+            }
+            
+            .admin-button-hover:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(${primaryRgbString}, 0.3);
+            }
+            
+            /* Card effects */
+            .admin-card-glow {
+              transition: all 0.3s ease;
+              border: 1px solid rgba(${primaryRgbString}, 0.2);
+            }
+            
+            .admin-card-glow:hover {
+              border-color: rgba(${primaryRgbString}, 0.5);
+              box-shadow: 0 0 20px rgba(${primaryRgbString}, 0.3);
+            }
           `;
+          
+          logger.debug('Applied dynamic keyframes with theme colors');
         }
       } catch (error) {
         logger.error('Error updating admin dynamic keyframes', { details: { error } });
@@ -202,7 +285,14 @@ export function DynamicKeyframes() {
                 to { opacity: 1; transform: translateY(0); }
               }
               .admin-animate-fade-in { animation: admin-fade-in 0.3s ease-out forwards; }
+              
+              @keyframes admin-glow-pulse {
+                0%, 100% { box-shadow: 0 0 5px ${FALLBACKS.primary}; }
+                50% { box-shadow: 0 0 20px ${FALLBACKS.primary}; }
+              }
+              .admin-animate-glow-pulse { animation: admin-glow-pulse 2s ease-in-out infinite; }
             `;
+            logger.debug('Applied fallback keyframes after error');
           } catch (fallbackError) {
             logger.error('Even fallback admin keyframes failed', { details: { fallbackError } });
           }

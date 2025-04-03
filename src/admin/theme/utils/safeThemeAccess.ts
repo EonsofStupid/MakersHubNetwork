@@ -1,95 +1,83 @@
 
 import { getLogger } from '@/logging';
-import { ImpulseTheme } from '../../types/impulse.types';
+import { LogCategory } from '@/logging/types';
 
-const logger = getLogger('SafeThemeAccess');
+const logger = getLogger('safeThemeAccess', { category: LogCategory.THEME });
 
 /**
- * Helper function to get a deeply nested property safely from an Impulse theme
- * @param theme The theme to get the property from
- * @param path Dot-notation path to the property (e.g., 'colors.primary')
- * @param defaultValue Default value to return if property doesn't exist
- * @returns The property value or default value if not found
+ * Safely get a property from a nested object by path
+ * Prevents the dreaded "cannot read property X of undefined"
  */
-export function safeGet<T>(
-  theme: ImpulseTheme | null | undefined,
-  path: string,
-  defaultValue: T
-): T {
-  if (!theme) return defaultValue;
-  
+export function safeGet<T>(obj: any, path: string, defaultValue: T): T {
   try {
-    const segments = path.split('.');
-    let current: any = theme;
-    
-    for (const segment of segments) {
-      if (current === undefined || current === null) {
-        return defaultValue;
-      }
-      current = current[segment];
+    if (obj === null || obj === undefined) {
+      return defaultValue;
     }
     
-    return (current !== undefined && current !== null) ? current : defaultValue;
+    const keys = path.split('.');
+    let current: any = obj;
+    
+    for (const key of keys) {
+      if (current === null || current === undefined || typeof current !== 'object') {
+        return defaultValue;
+      }
+      current = current[key];
+    }
+    
+    return (current === null || current === undefined) ? defaultValue : current;
   } catch (error) {
-    logger.error('Error in safeGet', { 
-      details: { path, error: String(error) } 
+    logger.error('Error safely accessing theme property', { 
+      details: { 
+        path, 
+        error: error instanceof Error ? error.message : String(error),
+        defaultValueReturned: true
+      } 
     });
     return defaultValue;
   }
 }
 
 /**
- * Safely access color values with fallbacks for common theme colors
+ * Safely set a property on a nested object by path
+ * Creates objects along the way if they don't exist
  */
-export function safeColor(
-  theme: ImpulseTheme | null | undefined,
-  colorPath: string,
-  defaultColor: string = '#000000'
-): string {
-  // Common fallbacks for important colors
-  const colorFallbacks: Record<string, string> = {
-    'colors.primary': '#00F0FF',
-    'colors.secondary': '#FF2D6E',
-    'colors.accent': '#F97316',
-    'colors.background.main': '#12121A',
-    'colors.text.primary': '#F6F6F7'
-  };
-  
-  const fallback = colorFallbacks[colorPath] || defaultColor;
-  return safeGet(theme, colorPath, fallback);
-}
-
-/**
- * Get safe CSS variable value with proper fallbacks
- */
-export function safeCssVar(
-  theme: ImpulseTheme | null | undefined,
-  path: string,
-  cssVarName: string,
-  defaultValue: string
-): string {
-  const value = safeGet(theme, path, '');
-  if (!value) {
-    logger.debug(`Using default for CSS var ${cssVarName}`, {
-      details: { path, defaultValue }
+export function safeSet(obj: any, path: string, value: any): any {
+  try {
+    if (!obj) {
+      obj = {};
+    }
+    
+    const keys = path.split('.');
+    let current = obj;
+    
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+      if (current[key] === undefined) {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+    
+    current[keys[keys.length - 1]] = value;
+    return obj;
+  } catch (error) {
+    logger.error('Error safely setting theme property', { 
+      details: { 
+        path, 
+        error: error instanceof Error ? error.message : String(error) 
+      } 
     });
-    return `var(--${cssVarName}, ${defaultValue})`;
+    return obj;
   }
-  return `var(--${cssVarName}, ${value})`;
 }
 
 /**
- * Check if an impulse theme has expected required properties
+ * Create a simple utility to get theme properties with specified defaults
  */
-export function isValidImpulseTheme(theme: any): boolean {
-  if (!theme) return false;
-  
-  // Check minimal required properties
-  if (!theme.name) return false;
-  
-  // Check for essential color properties
-  const hasColors = theme.colors && 
-    (theme.colors.primary || theme.colors.background?.main || theme.colors.text?.primary);
-  
-  return hasColors === true;
+export function createThemeAccessor<T>(defaultValues: Record<string, T>) {
+  return (theme: any, key: keyof typeof defaultValues) => {
+    const path = String(key);
+    const defaultValue = defaultValues[key];
+    return safeGet(theme, path, defaultValue);
+  };
 }

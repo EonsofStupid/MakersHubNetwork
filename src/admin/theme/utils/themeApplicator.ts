@@ -25,6 +25,8 @@ export function applyThemeToDocument(themeOrId: ImpulseTheme | string): void {
       return;
     }
     
+    logger.info(`Applying theme: ${theme.name || 'unnamed'}`);
+    
     const root = document.documentElement;
     
     // Clear existing theme classes
@@ -71,8 +73,17 @@ export function applyThemeToDocument(themeOrId: ImpulseTheme | string): void {
     // Add RGB variables for utilities
     const primaryHex = safeGet(theme, 'colors.primary', '#00F0FF');
     const secondaryHex = safeGet(theme, 'colors.secondary', '#FF2D6E');
+    const accentHex = safeGet(theme, 'colors.accent', '#F97316');
+    const successHex = safeGet(theme, 'colors.status.success', '#10B981');
+    const warningHex = safeGet(theme, 'colors.status.warning', '#F59E0B');
+    const errorHex = safeGet(theme, 'colors.status.error', '#EF4444');
+    
     setCssVar(root, '--color-primary', hexToRgbString(primaryHex));
     setCssVar(root, '--color-secondary', hexToRgbString(secondaryHex));
+    setCssVar(root, '--color-accent', hexToRgbString(accentHex));
+    setCssVar(root, '--color-success', hexToRgbString(successHex));
+    setCssVar(root, '--color-warning', hexToRgbString(warningHex));
+    setCssVar(root, '--color-error', hexToRgbString(errorHex));
     
     // Set standard Tailwind theme variables for compatibility
     setCssVar(root, '--background', safeGet(theme, 'colors.background.main', '#12121A'));
@@ -102,6 +113,7 @@ export function applyThemeToDocument(themeOrId: ImpulseTheme | string): void {
       // Set critical site effect colors for legacy compatibility
       setCssVar(root, '--site-effect-color', safeGet(theme, 'colors.primary', '#00F0FF'));
       setCssVar(root, '--site-effect-secondary', safeGet(theme, 'colors.secondary', '#FF2D6E'));
+      setCssVar(root, '--site-effect-tertiary', safeGet(theme, 'colors.accent', '#F97316'));
     }
     
     // Apply animation variables
@@ -158,11 +170,29 @@ export function applyThemeToDocument(themeOrId: ImpulseTheme | string): void {
       setCssVar(root, '--impulse-input-background', safeGet(theme, 'components.input.background', 'rgba(0, 0, 0, 0.15)'));
     }
     
+    // Set theme application status for monitoring
+    document.documentElement.setAttribute('data-theme-status', 'applied');
+    
     logger.debug(`Theme "${theme.name}" applied to document`);
   } catch (error) {
     logger.error('Failed to apply theme', { 
       details: { error, themeId: typeof themeOrId === 'string' ? themeOrId : 'object' } 
     });
+    
+    // Try to apply essential fallbacks
+    try {
+      const root = document.documentElement;
+      setCssVar(root, '--background', '#12121A');
+      setCssVar(root, '--foreground', '#F6F6F7');
+      setCssVar(root, '--primary', '#00F0FF');
+      setCssVar(root, '--secondary', '#FF2D6E');
+      setCssVar(root, '--card', 'rgba(28, 32, 42, 0.7)');
+      setCssVar(root, '--card-foreground', '#F6F6F7');
+      
+      document.documentElement.setAttribute('data-theme-status', 'fallback');
+    } catch (fallbackError) {
+      logger.error('Even fallback theme application failed', { details: { fallbackError } });
+    }
   }
 }
 
@@ -229,4 +259,26 @@ export function hexToRgb(hex: string): { r: number, g: number, b: number } | nul
 export function hexToRgbString(hex: string): string {
   const rgb = hexToRgb(hex);
   return rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : '0, 0, 0';
+}
+
+/**
+ * Create a utility function to create a safe theme access function
+ */
+export function safeThemeAccess<T>(theme: any, path: string, defaultValue: T): T {
+  try {
+    if (!theme) return defaultValue;
+    
+    const keys = path.split('.');
+    let value: any = theme;
+    
+    for (const key of keys) {
+      if (value === undefined || value === null) return defaultValue;
+      value = value[key];
+    }
+    
+    return (value !== undefined && value !== null) ? value : defaultValue;
+  } catch (error) {
+    logger.error('Error accessing theme property', { details: { path, error } });
+    return defaultValue;
+  }
 }
