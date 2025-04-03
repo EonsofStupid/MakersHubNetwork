@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { getLogger } from '../service/logger.service';
 import { LogCategory } from '../types';
@@ -68,7 +69,8 @@ export function usePerformanceLogger(source: string = 'Performance') {
     }
   }, [logger]);
   
-  const measureAsync = useCallback(async <T>(
+  // Fix the generic type declaration to be outside the arrow function
+  const measureAsync = useCallback(<T,>(
     name: string,
     asyncFn: () => Promise<T>,
     options?: PerformanceLoggerOptions
@@ -76,16 +78,33 @@ export function usePerformanceLogger(source: string = 'Performance') {
     const start = performance.now();
     
     try {
-      const result = await asyncFn();
-      const duration = performance.now() - start;
-      
-      logger.performance(name, duration, {
-        category: options?.category || LogCategory.PERFORMANCE,
-        details: options?.details
+      return asyncFn().then(result => {
+        const duration = performance.now() - start;
+        
+        logger.performance(name, duration, {
+          category: options?.category || LogCategory.PERFORMANCE,
+          details: options?.details
+        });
+        
+        return result;
+      }).catch(error => {
+        const duration = performance.now() - start;
+        logger.error(`Error in ${name} after ${duration.toFixed(2)}ms`, {
+          category: options?.category || LogCategory.PERFORMANCE,
+          details: {
+            duration,
+            error: error instanceof Error ? {
+              message: error.message,
+              name: error.name,
+              stack: error.stack
+            } : String(error),
+            ...options?.details
+          }
+        });
+        throw error;
       });
-      
-      return result;
     } catch (error) {
+      // This catch block handles synchronous errors in the Promise creation
       const duration = performance.now() - start;
       logger.error(`Error in ${name} after ${duration.toFixed(2)}ms`, {
         category: options?.category || LogCategory.PERFORMANCE,
