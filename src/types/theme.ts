@@ -37,6 +37,8 @@ export interface DesignTokensStructure {
     fontFamilies?: Record<string, any>;
     lineHeights?: Record<string, any>;
     letterSpacing?: Record<string, any>;
+    fonts?: Record<string, any>; // For impulse theme compatibility
+    sizes?: Record<string, any>; // For impulse theme compatibility
   };
   effects?: {
     shadows?: Record<string, any>;
@@ -45,6 +47,7 @@ export interface DesignTokensStructure {
     primary?: string;
     secondary?: string;
     tertiary?: string;
+    glow?: Record<string, any>; // For impulse theme compatibility
   };
   animation?: {
     keyframes?: Record<string, any>;
@@ -52,6 +55,7 @@ export interface DesignTokensStructure {
     durations?: Record<string, any>;
   };
   admin?: Record<string, any>;
+  components?: Record<string, any>; // For impulse theme compatibility
 }
 
 export interface Theme {
