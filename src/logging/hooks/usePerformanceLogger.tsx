@@ -1,15 +1,7 @@
 
 import { useCallback } from 'react';
 import { getLogger } from '../service/logger.service';
-import { LogCategory, MeasurementCompletionData } from '../types';
-import { useComponentPerformance } from './useComponentPerformance';
-
-export interface PerformanceLoggerOptions {
-  category?: LogCategory;
-  details?: Record<string, unknown>;
-  onComplete?: (data: MeasurementCompletionData) => void;
-  threshold?: number;
-}
+import { LogCategory, MeasurementCompletionData, PerformanceLoggerOptions } from '../types';
 
 export function usePerformanceLogger(source: string = 'Performance') {
   const logger = getLogger(source);
@@ -83,7 +75,7 @@ export function usePerformanceLogger(source: string = 'Performance') {
           duration,
           success: false,
           error,
-          ...options.details
+          ...options?.details
         });
       }
       
@@ -91,8 +83,7 @@ export function usePerformanceLogger(source: string = 'Performance') {
     }
   }, [logger]);
   
-  // Fixed type declaration to be outside the arrow function
-  const measureAsync = useCallback(<T,>(
+  const measureAsync = useCallback(async <T,>(
     name: string,
     asyncFn: () => Promise<T>,
     options?: PerformanceLoggerOptions

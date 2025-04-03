@@ -16,7 +16,7 @@ export function usePerformanceLogger(component: string, options: Partial<Perform
   };
   
   // Wrap the measure function to include default options
-  const wrappedMeasure = <T extends any>(
+  const wrappedMeasure = <T,>(
     operationName: string,
     operation: () => T
   ): T => {
@@ -24,7 +24,7 @@ export function usePerformanceLogger(component: string, options: Partial<Perform
   };
   
   // Wrap the measureAsync function to include default options
-  const wrappedMeasureAsync = async <T extends any>(
+  const wrappedMeasureAsync = async <T,>(
     operationName: string,
     operation: () => Promise<T>
   ): Promise<T> => {
