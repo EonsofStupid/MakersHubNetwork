@@ -10,10 +10,11 @@ import { Paintbrush, Save, Undo, Copy, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/auth/hooks/useAuth';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { ColorPicker } from './ColorPicker';
 import { Theme } from '@/types/theme';
+import { transformThemeModel, prepareThemeForDatabase } from '@/utils/transformUtils';
 
 interface ThemeEditorProps {
   themeId?: string;
@@ -52,7 +53,13 @@ export function ThemeEditor({ themeId }: ThemeEditorProps) {
           return;
         }
         
-        setTheme(data as Theme);
+        // Transform raw database data to Theme model
+        const transformedTheme = transformThemeModel(data);
+        if (!transformedTheme) {
+          throw new Error('Failed to transform theme data');
+        }
+        
+        setTheme(transformedTheme);
         logger.info('Theme data loaded successfully');
       } catch (err) {
         logger.error('Failed to load theme data', { details: safeDetails(err) });
@@ -107,10 +114,13 @@ export function ThemeEditor({ themeId }: ThemeEditorProps) {
       setIsSaving(true);
       logger.info('Saving theme changes');
       
+      // Prepare theme for database (convert to DB format)
+      const dbTheme = prepareThemeForDatabase(theme);
+      
       const { error } = await supabase
         .from('themes')
         .update({
-          design_tokens: theme.design_tokens,
+          design_tokens: dbTheme.design_tokens,
           updated_at: new Date().toISOString(),
           version: (theme.version || 0) + 1
         })
