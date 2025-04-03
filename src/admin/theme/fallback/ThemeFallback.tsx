@@ -3,107 +3,150 @@ import React, { useEffect } from 'react';
 import { defaultImpulseTokens } from '../impulse/tokens';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { getThemeProperty } from '../utils/themeUtils';
 
 /**
- * ThemeFallback - Applies minimal CSS variables immediately to prevent FOUC
- * This component applies critical theme variables directly to prevent white flash
+ * Component that applies fallback styles for the admin theme
+ * This ensures a consistent dark theme appearance is applied immediately,
+ * preventing white flash during initial load
  */
 export function ThemeFallback() {
-  const logger = getLogger('ThemeFallback', { category: LogCategory.THEME });
+  const logger = getLogger('AdminThemeFallback', { category: LogCategory.THEME });
   
   useEffect(() => {
     try {
-      logger.debug('Applying immediate fallback styles');
+      logger.debug('Applying admin theme fallback styles');
       
-      const root = document.documentElement;
+      // Get theme properties with fallbacks
+      const bgMain = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
+      const textPrimary = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
+      const bgCard = getThemeProperty(defaultImpulseTokens, 'colors.background.card', 'rgba(28, 32, 42, 0.7)');
+      const textSecondary = getThemeProperty(defaultImpulseTokens, 'colors.text.secondary', 'rgba(255, 255, 255, 0.7)');
       
-      // Critical background/text colors to prevent flash
-      if (defaultImpulseTokens.colors.background) {
-        root.style.setProperty('--background', defaultImpulseTokens.colors.background.main);
-      }
-      if (defaultImpulseTokens.colors.text) {
-        root.style.setProperty('--foreground', defaultImpulseTokens.colors.text.primary);
-      }
-      if (defaultImpulseTokens.colors.background) {
-        root.style.setProperty('--impulse-bg-main', defaultImpulseTokens.colors.background.main);
-      }
-      if (defaultImpulseTokens.colors.text) {
-        root.style.setProperty('--impulse-text-primary', defaultImpulseTokens.colors.text.primary);
-      }
+      // Create a style element for immediate styling
+      const styleElement = document.createElement('style');
+      styleElement.id = 'admin-theme-fallback';
       
-      // Apply immediately to the body/html as well
-      const applyToDom = () => {
-        if (defaultImpulseTokens.colors.background) {
-          document.body.style.backgroundColor = defaultImpulseTokens.colors.background.main;
-          document.documentElement.style.backgroundColor = defaultImpulseTokens.colors.background.main;
+      // Set global CSS variables and basic styles
+      styleElement.textContent = `
+        :root {
+          --admin-bg-main: ${bgMain};
+          --admin-text-primary: ${textPrimary};
+          --admin-bg-card: ${bgCard};
+          --admin-text-secondary: ${textSecondary};
+          --admin-primary: ${defaultImpulseTokens.colors?.primary || '#00F0FF'};
+          --admin-secondary: ${defaultImpulseTokens.colors?.secondary || '#FF2D6E'};
+          --admin-accent: ${defaultImpulseTokens.colors?.accent || '#8B5CF6'};
+          --admin-border: ${getThemeProperty(defaultImpulseTokens, 'colors.borders.normal', 'rgba(0, 240, 255, 0.2)')};
         }
-        if (defaultImpulseTokens.colors.text) {
-          document.body.style.color = defaultImpulseTokens.colors.text.primary;
-          document.documentElement.style.color = defaultImpulseTokens.colors.text.primary;
+        
+        .impulse-admin-root {
+          background-color: var(--admin-bg-main);
+          color: var(--admin-text-primary);
+        }
+        
+        .impulse-admin-root .admin-panel {
+          background-color: var(--admin-bg-card);
+          border: 1px solid var(--admin-border);
+          border-radius: 0.5rem;
+        }
+        
+        .impulse-admin-root .admin-text-secondary {
+          color: var(--admin-text-secondary);
+        }
+        
+        .impulse-admin-root .admin-text-primary {
+          color: var(--admin-text-primary);
+        }
+        
+        .impulse-admin-root .admin-text-accent {
+          color: var(--admin-primary);
+        }
+        
+        .impulse-admin-root .admin-border {
+          border-color: var(--admin-border);
+        }
+        
+        .impulse-admin-root .admin-bg-dark {
+          background-color: var(--admin-bg-main);
+        }
+        
+        .impulse-admin-root .admin-bg-card {
+          background-color: var(--admin-bg-card);
+        }
+        
+        .impulse-admin-root .admin-text-destructive {
+          color: ${getThemeProperty(defaultImpulseTokens, 'colors.status.error', '#EF4444')};
+        }
+        
+        /* Animation durations */
+        .impulse-admin-root .admin-transition-fast {
+          transition-duration: ${getThemeProperty(defaultImpulseTokens, 'animation.duration.fast', '150ms')};
+        }
+        .impulse-admin-root .admin-transition-normal {
+          transition-duration: ${getThemeProperty(defaultImpulseTokens, 'animation.duration.normal', '300ms')};
+        }
+        .impulse-admin-root .admin-transition-slow {
+          transition-duration: ${getThemeProperty(defaultImpulseTokens, 'animation.duration.slow', '500ms')};
+        }
+        
+        /* Effect styles */
+        .impulse-admin-root .admin-glow-primary {
+          box-shadow: ${getThemeProperty(defaultImpulseTokens, 'effects.glow.primary', '0 0 15px rgba(0, 240, 255, 0.7)')};
+        }
+        .impulse-admin-root .admin-glow-secondary {
+          box-shadow: ${getThemeProperty(defaultImpulseTokens, 'effects.glow.secondary', '0 0 15px rgba(255, 45, 110, 0.7)')};
+        }
+        .impulse-admin-root .admin-glow-hover {
+          box-shadow: ${getThemeProperty(defaultImpulseTokens, 'effects.glow.hover', '0 0 20px rgba(0, 240, 255, 0.9)')};
+        }
+        
+        /* Override fonts for admin section */
+        .impulse-admin-root {
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        
+        /* Force dark theme for admin UI */
+        .impulse-admin-root * {
+          --background: ${getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A')};
+          --foreground: ${getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7')};
+          --card: ${getThemeProperty(defaultImpulseTokens, 'colors.background.card', 'rgba(28, 32, 42, 0.7)')};
+          --card-foreground: ${getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7')};
+          --popover-background: ${getThemeProperty(defaultImpulseTokens, 'colors.background.card', 'rgba(28, 32, 42, 0.95)')};
+          --popover-foreground: ${getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7')};
+          --primary: ${defaultImpulseTokens.colors?.primary || '#00F0FF'};
+          --primary-foreground: ${getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7')};
+          --secondary: ${defaultImpulseTokens.colors?.secondary || '#FF2D6E'};
+          --secondary-foreground: ${getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7')};
+          --muted: ${getThemeProperty(defaultImpulseTokens, 'colors.text.secondary', 'rgba(255, 255, 255, 0.7)')};
+          --muted-foreground: ${getThemeProperty(defaultImpulseTokens, 'colors.text.muted', 'rgba(255, 255, 255, 0.5)')};
+          --accent: ${defaultImpulseTokens.colors?.accent || '#8B5CF6'};
+          --accent-foreground: ${getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7')};
+          --destructive: ${getThemeProperty(defaultImpulseTokens, 'colors.status.error', '#EF4444')};
+          --destructive-foreground: ${getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7')};
+          --border: ${getThemeProperty(defaultImpulseTokens, 'colors.borders.normal', 'rgba(0, 240, 255, 0.2)')};
+          --input: ${getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A')};
+          --ring: ${defaultImpulseTokens.colors?.primary || '#00F0FF'};
+          --radius: 0.5rem;
+        }
+      `;
+      
+      // Add the style element to the head
+      document.head.appendChild(styleElement);
+      
+      // Return cleanup function
+      return () => {
+        if (document.head.contains(styleElement)) {
+          document.head.removeChild(styleElement);
         }
       };
-      
-      applyToDom();
-      
-      // Also set critical variables for UI components
-      if (defaultImpulseTokens.colors.background) {
-        root.style.setProperty('--card', defaultImpulseTokens.colors.background.card);
-      }
-      if (defaultImpulseTokens.colors.text) {
-        root.style.setProperty('--card-foreground', defaultImpulseTokens.colors.text.primary);
-      }
-      if (defaultImpulseTokens.colors.background) {
-        root.style.setProperty('--popover', defaultImpulseTokens.colors.background.card);
-      }
-      if (defaultImpulseTokens.colors.text) {
-        root.style.setProperty('--popover-foreground', defaultImpulseTokens.colors.text.primary);
-      }
-      
-      root.style.setProperty('--primary', defaultImpulseTokens.colors.primary);
-      if (defaultImpulseTokens.colors.text) {
-        root.style.setProperty('--primary-foreground', defaultImpulseTokens.colors.text.primary);
-      }
-      
-      root.style.setProperty('--secondary', defaultImpulseTokens.colors.secondary);
-      if (defaultImpulseTokens.colors.text) {
-        root.style.setProperty('--secondary-foreground', defaultImpulseTokens.colors.text.primary);
-      }
-      
-      if (defaultImpulseTokens.colors.status) {
-        root.style.setProperty('--destructive', defaultImpulseTokens.colors.status.error);
-      }
-      if (defaultImpulseTokens.colors.text) {
-        root.style.setProperty('--destructive-foreground', defaultImpulseTokens.colors.text.primary);
-      }
-      if (defaultImpulseTokens.colors.borders) {
-        root.style.setProperty('--border', defaultImpulseTokens.colors.borders.normal);
-      }
-      
-      // Add animation timing variables
-      if (defaultImpulseTokens.animation?.duration) {
-        root.style.setProperty('--transition-fast', defaultImpulseTokens.animation.duration.fast);
-        root.style.setProperty('--transition-normal', defaultImpulseTokens.animation.duration.normal);
-        root.style.setProperty('--transition-slow', defaultImpulseTokens.animation.duration.slow);
-      }
-      
-      // Add effect variables
-      if (defaultImpulseTokens.effects?.glow) {
-        root.style.setProperty('--glow-primary', defaultImpulseTokens.effects.glow.primary);
-        root.style.setProperty('--glow-secondary', defaultImpulseTokens.effects.glow.secondary);
-        root.style.setProperty('--glow-hover', defaultImpulseTokens.effects.glow.hover);
-      }
-      
-      // Add classes for immediate styling
-      if (defaultImpulseTokens.colors.background) {
-        root.classList.add('impulse-theme-ready');
-      }
     } catch (error) {
-      logger.error('Error applying fallback styles', {
-        details: { error: error instanceof Error ? error.message : String(error) }
+      logger.error('Error applying admin theme fallback', {
+        details: { error: error instanceof Error ? error.message : 'Unknown error' }
       });
+      return () => {};
     }
   }, [logger]);
   
-  // This is a utility component that doesn't render anything
-  return null;
+  return null; // This component doesn't render anything visible
 }

@@ -10,7 +10,7 @@ import { DEFAULT_THEME_NAME } from "@/utils/themeInitializer";
 import { LogCategory } from "@/logging";
 
 // Create a logger instance for the theme store
-const logger = getLogger('ThemeStore', LogCategory.THEME);
+const logger = getLogger('ThemeStore', { category: LogCategory.THEME });
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
   currentTheme: null,
@@ -99,22 +99,29 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         });
       }
 
-      // Extract admin components with proper type safety
+      // Extract admin components from theme data with proper type safety
       let adminComponents: ComponentTokens[] = [];
-      if (themeData.component_tokens && Array.isArray(themeData.component_tokens)) {
+      if (themeData.component_tokens) {
         try {
-          adminComponents = (themeData.component_tokens as any[])
-            .filter(comp => comp && typeof comp === 'object' && comp.context === 'admin')
-            .map(comp => ({
-              id: comp.id || `comp-${Date.now()}`,
-              component_name: comp.component_name || '',
-              styles: comp.styles || {},
-              description: comp.description || '',
-              theme_id: comp.theme_id || themeId,
-              context: 'admin',
-              created_at: comp.created_at || new Date().toISOString(),
-              updated_at: comp.updated_at || new Date().toISOString()
-            }));
+          // Try to parse the component_tokens if it's a string
+          const componentTokensData = typeof themeData.component_tokens === 'string' 
+            ? JSON.parse(themeData.component_tokens) 
+            : themeData.component_tokens;
+            
+          if (Array.isArray(componentTokensData)) {
+            adminComponents = componentTokensData
+              .filter(comp => comp && typeof comp === 'object' && comp.context === 'admin')
+              .map(comp => ({
+                id: comp.id || `comp-${Date.now()}`,
+                component_name: comp.component_name || '',
+                styles: comp.styles || {},
+                description: comp.description || '',
+                theme_id: comp.theme_id || themeId,
+                context: 'admin',
+                created_at: comp.created_at || new Date().toISOString(),
+                updated_at: comp.updated_at || new Date().toISOString()
+              }));
+          }
         } catch (err) {
           logger.warn('Error extracting admin components from theme', {
             details: safeDetails(err)
@@ -122,9 +129,43 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         }
       }
 
+      // Convert Supabase data to Theme type with proper conversion
+      const theme: Theme = {
+        id: themeData.id,
+        name: themeData.name || '',
+        description: themeData.description || '',
+        status: themeData.status || 'draft',
+        is_default: themeData.is_default || false,
+        created_by: themeData.created_by,
+        created_at: themeData.created_at || '',
+        updated_at: themeData.updated_at || '',
+        published_at: themeData.published_at,
+        version: themeData.version || 1,
+        cache_key: themeData.cache_key,
+        parent_theme_id: themeData.parent_theme_id,
+        
+        // Handle design_tokens: parse if string, otherwise use as-is
+        design_tokens: typeof themeData.design_tokens === 'string' 
+          ? JSON.parse(themeData.design_tokens) 
+          : themeData.design_tokens || {},
+          
+        // Handle component_tokens: convert to ComponentTokens[] format
+        component_tokens: adminComponents,
+        
+        // Handle composition_rules: parse if string, otherwise use as-is
+        composition_rules: typeof themeData.composition_rules === 'string' 
+          ? JSON.parse(themeData.composition_rules) 
+          : themeData.composition_rules || {},
+          
+        // Handle cached_styles: parse if string, otherwise use as-is
+        cached_styles: typeof themeData.cached_styles === 'string' 
+          ? JSON.parse(themeData.cached_styles) 
+          : themeData.cached_styles || {}
+      };
+
       // Update state with all theme data
       set({
-        currentTheme: themeData as Theme,
+        currentTheme: theme,
         themeTokens: tokens,
         themeComponents: components,
         adminComponents,
@@ -153,18 +194,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       // Extract admin components from the theme
       let adminComponents: ComponentTokens[] = [];
       if (currentTheme.component_tokens && Array.isArray(currentTheme.component_tokens)) {
-        adminComponents = (currentTheme.component_tokens as any[])
-          .filter(comp => comp && typeof comp === 'object' && comp.context === 'admin')
-          .map(comp => ({
-            id: comp.id || `comp-${Date.now()}`,
-            component_name: comp.component_name || '',
-            styles: comp.styles || {},
-            description: comp.description || '',
-            theme_id: comp.theme_id || currentTheme.id,
-            context: 'admin',
-            created_at: comp.created_at || new Date().toISOString(),
-            updated_at: comp.updated_at || new Date().toISOString()
-          }));
+        adminComponents = currentTheme.component_tokens;
       }
 
       set({ adminComponents });

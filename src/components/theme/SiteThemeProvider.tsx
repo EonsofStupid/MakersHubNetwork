@@ -8,32 +8,33 @@ import { applyThemeToDocument, hexToRgb } from '@/admin/theme/utils/themeApplica
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
+import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
 
 // Default theme variables for immediate fallback styling
 const defaultThemeVariables: ThemeVariables = {
-  background: defaultImpulseTokens.colors.background.main,
-  foreground: defaultImpulseTokens.colors.text.primary,
-  card: defaultImpulseTokens.colors.background.card,
-  cardForeground: defaultImpulseTokens.colors.text.primary,
-  primary: defaultImpulseTokens.colors.primary,
-  primaryForeground: defaultImpulseTokens.colors.text.primary,
-  secondary: defaultImpulseTokens.colors.secondary,
-  secondaryForeground: defaultImpulseTokens.colors.text.primary,
-  muted: defaultImpulseTokens.colors.text.secondary,
-  mutedForeground: defaultImpulseTokens.colors.text.muted || 'rgba(255, 255, 255, 0.5)',
-  accent: defaultImpulseTokens.colors.accent || defaultImpulseTokens.colors.secondary,
-  accentForeground: defaultImpulseTokens.colors.text.primary,
-  destructive: defaultImpulseTokens.colors.status.error,
-  destructiveForeground: defaultImpulseTokens.colors.text.primary,
-  border: defaultImpulseTokens.colors.borders.normal,
-  input: defaultImpulseTokens.colors.background.overlay,
-  ring: defaultImpulseTokens.colors.borders.focus || defaultImpulseTokens.colors.borders.hover,
-  effectColor: defaultImpulseTokens.colors.primary,
-  effectSecondary: defaultImpulseTokens.colors.secondary,
+  background: getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A'),
+  foreground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
+  card: getThemeProperty(defaultImpulseTokens, 'colors.background.card', 'rgba(28, 32, 42, 0.7)'),
+  cardForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
+  primary: defaultImpulseTokens.colors?.primary || '#00F0FF',
+  primaryForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
+  secondary: defaultImpulseTokens.colors?.secondary || '#FF2D6E',
+  secondaryForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
+  muted: getThemeProperty(defaultImpulseTokens, 'colors.text.secondary', 'rgba(255, 255, 255, 0.7)'),
+  mutedForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.muted', 'rgba(255, 255, 255, 0.5)'),
+  accent: defaultImpulseTokens.colors?.accent || defaultImpulseTokens.colors?.secondary || '#FF2D6E',
+  accentForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
+  destructive: getThemeProperty(defaultImpulseTokens, 'colors.status.error', '#EF4444'),
+  destructiveForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
+  border: getThemeProperty(defaultImpulseTokens, 'colors.borders.normal', 'rgba(0, 240, 255, 0.2)'),
+  input: getThemeProperty(defaultImpulseTokens, 'colors.background.overlay', 'rgba(22, 22, 26, 0.5)'),
+  ring: getThemeProperty(defaultImpulseTokens, 'colors.borders.hover', 'rgba(0, 240, 255, 0.4)'),
+  effectColor: defaultImpulseTokens.colors?.primary || '#00F0FF',
+  effectSecondary: defaultImpulseTokens.colors?.secondary || '#FF2D6E',
   effectTertiary: '#8B5CF6',
-  transitionFast: defaultImpulseTokens.animation.duration.fast,
-  transitionNormal: defaultImpulseTokens.animation.duration.normal,
-  transitionSlow: defaultImpulseTokens.animation.duration.slow,
+  transitionFast: getThemeProperty(defaultImpulseTokens, 'animation.duration.fast', '150ms'),
+  transitionNormal: getThemeProperty(defaultImpulseTokens, 'animation.duration.normal', '300ms'),
+  transitionSlow: getThemeProperty(defaultImpulseTokens, 'animation.duration.slow', '500ms'),
   animationFast: '1s',
   animationNormal: '2s',
   animationSlow: '3s',
@@ -71,7 +72,7 @@ export function SiteThemeProvider({
 }: SiteThemeProviderProps) {
   const { currentTheme, themeComponents, isLoading } = useThemeStore();
   const themeVariables = useThemeVariables(currentTheme);
-  const logger = getLogger('SiteThemeProvider', LogCategory.THEME);
+  const logger = getLogger('SiteThemeProvider', { category: LogCategory.THEME });
   
   // Determine if we should use fallback variables
   const variables = useMemo(() => {

@@ -13,7 +13,7 @@ import { LogCategory } from '@/logging';
 export function DynamicKeyframes() {
   const { variables } = useSiteTheme();
   const [styleElement, setStyleElement] = useState<HTMLStyleElement | null>(null);
-  const logger = getLogger('DynamicKeyframes', LogCategory.THEME);
+  const logger = getLogger('DynamicKeyframes', { category: LogCategory.THEME });
   
   useEffect(() => {
     // Create a style element for our keyframes if it doesn't exist
@@ -141,10 +141,10 @@ export function DynamicKeyframes() {
         
         @keyframes cyber-glow {
           0%, 100% {
-            box-shadow: 0 0 10px rgba(${rgbPrimary}, 0.8), 0 0 20px rgba(${rgbPrimary}, 0.5);
+            box-shadow: 0 0 10px rgba(${rgbPrimary ? `${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}` : '0, 240, 255'}, 0.8), 0 0 20px rgba(${rgbPrimary ? `${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}` : '0, 240, 255'}, 0.5);
           }
           50% {
-            box-shadow: 0 0 20px rgba(${rgbPrimary}, 0.8), 0 0 40px rgba(${rgbPrimary}, 0.5);
+            box-shadow: 0 0 20px rgba(${rgbPrimary ? `${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}` : '0, 240, 255'}, 0.8), 0 0 40px rgba(${rgbPrimary ? `${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}` : '0, 240, 255'}, 0.5);
           }
         }
         
@@ -211,9 +211,9 @@ export function DynamicKeyframes() {
         }
         
         .glass-morphism {
-          background-color: rgba(${hexToRgb(variables.card)}, 0.7);
+          background-color: rgba(${variables.card ? hexToRgb(variables.card)?.r || 28 : 28}, ${variables.card ? hexToRgb(variables.card)?.g || 32 : 32}, ${variables.card ? hexToRgb(variables.card)?.b || 42 : 42}, 0.7);
           backdrop-filter: blur(12px);
-          border: 1px solid rgba(${rgbPrimary}, 0.3);
+          border: 1px solid rgba(${rgbPrimary ? `${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}` : '0, 240, 255'}, 0.3);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         
