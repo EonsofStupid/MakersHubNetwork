@@ -1,12 +1,49 @@
 
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
-import { safeDetails } from '@/logging/utils/safeDetails';
 
 const THEME_ID_KEY = 'impulse-theme-id';
 const THEME_PREFS_KEY = 'impulse-theme-prefs';
 
-const logger = getLogger('ThemeLocalStorage', { category: LogCategory.THEME as any });
+const logger = getLogger('ThemeLocalStorage', { category: LogCategory.THEME as string });
+
+/**
+ * Safe stringify function that won't throw
+ */
+function safeStringify(obj: any): string {
+  try {
+    return JSON.stringify(obj);
+  } catch (error) {
+    logger.error('Failed to stringify object', { 
+      details: { error: error instanceof Error ? error.message : String(error) }
+    });
+    return '{}';
+  }
+}
+
+/**
+ * Safe parse function that won't throw
+ */
+function safeParse<T>(str: string, defaultValue: T): T {
+  try {
+    return JSON.parse(str) as T;
+  } catch (error) {
+    logger.error('Failed to parse JSON string', { 
+      details: { error: error instanceof Error ? error.message : String(error) }
+    });
+    return defaultValue;
+  }
+}
+
+/**
+ * Safe details formatter for logging
+ */
+function safeDetails(error: unknown): Record<string, any> {
+  if (error instanceof Error) {
+    return { message: error.message, stack: error.stack };
+  }
+  return { message: String(error) };
+}
 
 /**
  * Save theme ID to localStorage
@@ -53,7 +90,7 @@ export function clearThemeFromLocalStorage(): void {
  */
 export function saveThemePreferences(preferences: Record<string, any>): void {
   try {
-    localStorage.setItem(THEME_PREFS_KEY, JSON.stringify(preferences));
+    localStorage.setItem(THEME_PREFS_KEY, safeStringify(preferences));
     logger.debug('Theme preferences saved to localStorage');
   } catch (error) {
     logger.error('Failed to save theme preferences to localStorage', { details: safeDetails(error) });
@@ -68,7 +105,7 @@ export function getThemePreferences<T extends Record<string, any>>(defaultPrefs:
     const prefsJson = localStorage.getItem(THEME_PREFS_KEY);
     if (!prefsJson) return defaultPrefs;
     
-    return { ...defaultPrefs, ...JSON.parse(prefsJson) };
+    return { ...defaultPrefs, ...safeParse(prefsJson, {}) };
   } catch (error) {
     logger.error('Failed to get theme preferences from localStorage', { details: safeDetails(error) });
     return defaultPrefs;

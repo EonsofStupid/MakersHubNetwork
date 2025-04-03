@@ -1,201 +1,117 @@
 
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
-import { safeDetails } from '@/logging/utils/safeDetails';
+import { ImpulseTheme } from '@/admin/types/impulse.types';
 
-const logger = getLogger('ThemeUtils', { category: LogCategory.THEME as any });
+const logger = getLogger('ThemeUtils', { category: LogCategory.THEME as string });
 
 /**
- * Safely get a property from a theme object
+ * Get a property from a theme object with type safety and fallback
  */
-export function getThemeProperty<T>(theme: any, path: string, defaultValue: T): T {
+export function getThemeProperty<T extends Record<string, any>>(
+  theme: T | null | undefined, 
+  path: string, 
+  fallback: any
+): any {
+  if (!theme) return fallback;
+  
   try {
-    if (!theme || typeof theme !== 'object') {
-      return defaultValue;
-    }
-    
     const parts = path.split('.');
-    let current = theme;
+    let current: any = theme;
     
     for (const part of parts) {
-      if (current === null || current === undefined) {
-        return defaultValue;
+      if (current === undefined || current === null) {
+        return fallback;
       }
       current = current[part];
     }
     
-    return (current !== null && current !== undefined) ? current : defaultValue;
+    return current !== undefined && current !== null ? current : fallback;
   } catch (error) {
-    logger.warn('Error getting theme property', {
-      details: safeDetails({
-        path,
-        error: error instanceof Error ? error.message : String(error)
-      })
+    logger.warn(`Error getting theme property: ${path}`, {
+      details: {
+        error: error instanceof Error ? error.message : String(error),
+        fallback
+      }
     });
-    return defaultValue;
+    return fallback;
   }
 }
 
 /**
- * Deep merge theme objects in a type-safe way
- */
-export function mergeThemes<T extends Record<string, any>>(base: T, override: Partial<T>): T {
-  try {
-    if (!override || Object.keys(override).length === 0) return base;
-    if (!base || Object.keys(base).length === 0) return override as T;
-    
-    const merged = { ...base };
-    
-    for (const key in override) {
-      if (Object.prototype.hasOwnProperty.call(override, key)) {
-        const overrideVal = override[key];
-        const baseVal = base[key];
-        
-        // If both values are objects, deep merge them
-        if (
-          overrideVal && 
-          typeof overrideVal === 'object' && 
-          !Array.isArray(overrideVal) &&
-          baseVal && 
-          typeof baseVal === 'object' && 
-          !Array.isArray(baseVal)
-        ) {
-          merged[key] = mergeThemes(baseVal, overrideVal);
-        } else {
-          // For any override value that exists and isn't undefined, 
-          // explicitly cast it to the expected type
-          if (overrideVal !== undefined) {
-            merged[key] = overrideVal as any;
-          }
-        }
-      }
-    }
-    
-    return merged;
-  } catch (error) {
-    logger.error('Error merging themes', { details: safeDetails(error) });
-    return base;
-  }
-}
-
-/**
- * Validate a theme object has all required properties
- */
-export function validateThemeStructure(theme: unknown): boolean {
-  try {
-    if (!theme || typeof theme !== 'object') return false;
-    
-    const requiredProperties = [
-      'colors',
-      'typography',
-      'effects',
-      'animation'
-    ];
-    
-    const themeObj = theme as Record<string, any>;
-    
-    // Check if all required top-level properties exist
-    for (const prop of requiredProperties) {
-      if (!(prop in themeObj) || !themeObj[prop] || typeof themeObj[prop] !== 'object') {
-        return false;
-      }
-    }
-    
-    // Check for critical color properties
-    const colors = themeObj.colors as Record<string, any>;
-    if (!colors.primary || !colors.secondary) {
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    logger.error('Error validating theme structure', { details: safeDetails(error) });
-    return false;
-  }
-}
-
-/**
- * Generate utility classes from theme tokens
- */
-export function generateUtilityClasses(theme: any): Record<string, string> {
-  const utilities: Record<string, string> = {};
-  
-  try {
-    if (!theme || typeof theme !== 'object') {
-      return utilities;
-    }
-    
-    // Add color utilities
-    const colors = theme.colors || {};
-    if (colors.primary) utilities['text-primary'] = `color: ${colors.primary};`;
-    if (colors.secondary) utilities['text-secondary'] = `color: ${colors.secondary};`;
-    if (colors.accent) utilities['text-accent'] = `color: ${colors.accent};`;
-    
-    if (colors.background?.main) utilities['bg-main'] = `background-color: ${colors.background.main};`;
-    if (colors.background?.card) utilities['bg-card'] = `background-color: ${colors.background.card};`;
-    
-    // Add effect utilities
-    const effects = theme.effects || {};
-    if (effects.shadows?.sm) utilities['shadow-sm'] = `box-shadow: ${effects.shadows.sm};`;
-    if (effects.shadows?.md) utilities['shadow-md'] = `box-shadow: ${effects.shadows.md};`;
-    if (effects.shadows?.lg) utilities['shadow-lg'] = `box-shadow: ${effects.shadows.lg};`;
-    
-    if (effects.glow?.primary) utilities['glow'] = `box-shadow: ${effects.glow.primary};`;
-    if (effects.glow?.hover) utilities['hover-glow'] = `&:hover { box-shadow: ${effects.glow.hover}; }`;
-    
-    // Add typography utilities
-    const typography = theme.typography || {};
-    if (typography.fonts?.body) utilities['font-body'] = `font-family: ${typography.fonts.body};`;
-    if (typography.fonts?.heading) utilities['font-heading'] = `font-family: ${typography.fonts.heading};`;
-    if (typography.fonts?.mono) utilities['font-mono'] = `font-family: ${typography.fonts.mono};`;
-    
-    // Add sizing utilities based on typography
-    if (typography.sizes?.xs) utilities['text-xs'] = `font-size: ${typography.sizes.xs};`;
-    if (typography.sizes?.sm) utilities['text-sm'] = `font-size: ${typography.sizes.sm};`;
-    if (typography.sizes?.base) utilities['text-base'] = `font-size: ${typography.sizes.base};`;
-    if (typography.sizes?.lg) utilities['text-lg'] = `font-size: ${typography.sizes.lg};`;
-    if (typography.sizes?.xl) utilities['text-xl'] = `font-size: ${typography.sizes.xl};`;
-    
-    // Add border utilities
-    const borders = colors.borders || {};
-    if (borders.normal) utilities['border'] = `border: 1px solid ${borders.normal};`;
-    if (borders.hover) utilities['border-hover'] = `&:hover { border-color: ${borders.hover}; }`;
-    
-    // Animation utilities
-    const animation = theme.animation || {};
-    if (animation.duration?.fast) utilities['transition-fast'] = `transition-duration: ${animation.duration.fast};`;
-    if (animation.duration?.normal) utilities['transition-normal'] = `transition-duration: ${animation.duration.normal};`;
-    if (animation.duration?.slow) utilities['transition-slow'] = `transition-duration: ${animation.duration.slow};`;
-    
-  } catch (error) {
-    logger.error('Error generating utility classes', { details: safeDetails(error) });
-  }
-  
-  return utilities;
-}
-
-/**
- * Deep merge function that works for any object structure
+ * Deep merge utility for combining theme objects
  */
 export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
+  if (!source) return target;
+  
   const output = { ...target };
   
-  if (!source || typeof source !== 'object') return output;
-  
-  Object.keys(source).forEach(key => {
-    if (
-      source[key] !== null && 
-      typeof source[key] === 'object' && 
-      !Array.isArray(source[key]) &&
-      target[key] !== null && 
-      typeof target[key] === 'object' && 
-      !Array.isArray(target[key])
-    ) {
-      output[key] = deepMerge(target[key], source[key]);
-    } else if (source[key] !== undefined) {
-      output[key] = source[key] as any;
-    }
-  });
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      const k = key as Extract<keyof T, string>;
+      
+      if (isObject(source[k])) {
+        if (!(k in target)) {
+          Object.assign(output, { [k]: source[k] });
+        } else {
+          output[k] = deepMerge(target[k], source[k] as any);
+        }
+      } else {
+        Object.assign(output, { [k]: source[k] });
+      }
+    });
+  }
   
   return output;
+}
+
+/**
+ * Check if a value is an object
+ */
+function isObject(item: any): item is Record<string, any> {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+/**
+ * Get the effective shadow for a theme
+ */
+export function getThemeShadow(theme: ImpulseTheme | null, size: 'sm' | 'md' | 'lg' | 'xl' = 'md'): string {
+  if (!theme || !theme.effects || !theme.effects.shadows) {
+    return '0 4px 8px rgba(0, 0, 0, 0.1)';
+  }
+  
+  return theme.effects.shadows[size] || '0 4px 8px rgba(0, 0, 0, 0.1)';
+}
+
+/**
+ * Get theme animation duration
+ */
+export function getThemeAnimationDuration(theme: ImpulseTheme | null, speed: 'fast' | 'normal' | 'slow' = 'normal'): string {
+  if (!theme || !theme.animation || !theme.animation.duration) {
+    return speed === 'fast' ? '150ms' : speed === 'slow' ? '500ms' : '300ms';
+  }
+  
+  return theme.animation.duration[speed] || '300ms';
+}
+
+/**
+ * Get theme font family
+ */
+export function getThemeFontFamily(theme: ImpulseTheme | null, type: 'body' | 'heading' | 'mono' = 'body'): string {
+  if (!theme || !theme.typography || !theme.typography.fonts) {
+    return 'system-ui, sans-serif';
+  }
+  
+  return theme.typography.fonts[type] || 'system-ui, sans-serif';
+}
+
+/**
+ * Get theme font size
+ */
+export function getThemeFontSize(theme: ImpulseTheme | null, size: 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' = 'base'): string {
+  if (!theme || !theme.typography || !theme.typography.sizes) {
+    return '1rem';
+  }
+  
+  return theme.typography.sizes[size] || '1rem';
 }

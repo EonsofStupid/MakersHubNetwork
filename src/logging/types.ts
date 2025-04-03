@@ -26,9 +26,11 @@ export enum LogCategory {
   CONTENT = 'content'
 }
 
+export type LoggerCategoryOption = LogCategory | string;
+
 export interface LoggerOptions {
   source?: string;
-  category?: LogCategory | string;
+  category?: LoggerCategoryOption;
   details?: Record<string, unknown>;
   tags?: string[];
   timestamp?: string;
@@ -43,7 +45,7 @@ export interface LogEvent {
   message: string;
   timestamp: string;
   source: string;
-  category: string | LogCategory;
+  category: string;
   details?: Record<string, unknown>;
   tags?: string[];
   session_id?: string;
@@ -60,7 +62,7 @@ export interface LoggerInstance {
   error: (message: string | Error, options?: Partial<LoggerOptions>) => void;
   fatal: (message: string | Error, options?: Partial<LoggerOptions>) => void;
   withSource: (source: string) => LoggerInstance;
-  withCategory: (category: LogCategory | string) => LoggerInstance;
+  withCategory: (category: LoggerCategoryOption) => LoggerInstance;
   withTags: (tags: string[]) => LoggerInstance;
   measure: <T>(name: string, fn: () => T, options?: Partial<LoggerOptions>) => T;
   markStart: (name: string, options?: Partial<LoggerOptions>) => void;
@@ -75,7 +77,7 @@ export interface PerformanceMeasurement {
 }
 
 export interface PerformanceMeasurementOptions {
-  category?: LogCategory | string;
+  category?: LoggerCategoryOption;
   details?: Record<string, unknown>;
   tags?: string[];
 }

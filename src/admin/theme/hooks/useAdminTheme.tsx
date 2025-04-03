@@ -10,7 +10,7 @@ export function useAdminTheme() {
   const { currentTheme, adminComponents, loadAdminComponents } = useThemeStore();
   const [isLoading, setIsLoading] = useState(true);
   const [componentStyles, setComponentStyles] = useState<Record<string, any>>({});
-  const logger = useLogger('useAdminTheme', LogCategory.THEME as any);
+  const logger = useLogger('useAdminTheme', { category: LogCategory.THEME as string });
 
   // Convert component array to record indexed by component name
   useEffect(() => {

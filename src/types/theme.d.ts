@@ -22,8 +22,8 @@ export interface ComponentTokens {
   styles: Record<string, any>;
   description?: string;
   theme_id?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
   context?: ThemeContext;
 }
 
@@ -31,7 +31,7 @@ export interface ThemeTypography {
   fonts?: {
     body?: string;
     heading?: string;
-    mono?: string; // Note: not monospace
+    mono?: string;
   };
   sizes?: {
     xs?: string;
@@ -41,7 +41,6 @@ export interface ThemeTypography {
     xl?: string;
     '2xl'?: string;
     '3xl'?: string;
-    // No md property
   };
   weights?: {
     light?: number;
@@ -53,7 +52,6 @@ export interface ThemeTypography {
     tight?: string;
     normal?: string;
     relaxed?: string;
-    // No loose property
   };
   letterSpacing?: Record<string, string>;
 }
@@ -64,7 +62,6 @@ export interface ThemeEffects {
     md?: string;
     lg?: string;
     xl?: string;
-    // No small/medium/large/inner properties
   };
   blurs?: Record<string, string>;
   gradients?: Record<string, string>;
@@ -72,7 +69,6 @@ export interface ThemeEffects {
     primary?: string;
     secondary?: string;
     hover?: string;
-    // No tertiary property
   };
   primary?: string;
   secondary?: string;
@@ -93,30 +89,29 @@ export interface ThemeAnimation {
   };
   transitions?: Record<string, string>;
   durations?: Record<string, string>;
-  // No keyframes property
 }
 
 export interface ThemeColors {
   primary?: string;
   secondary?: string;
-  accent?: string; // Added accent
+  accent?: string;
   background?: {
     main?: string;
     overlay?: string;
     card?: string;
-    alt?: string; // Added alt
+    alt?: string;
   };
   text?: {
     primary?: string;
     secondary?: string;
     muted?: string;
-    accent?: string; // Added accent
+    accent?: string;
   };
   borders?: {
     normal?: string;
     hover?: string;
     active?: string;
-    focus?: string; // Added focus
+    focus?: string;
   };
   status?: {
     success?: string;
@@ -178,7 +173,7 @@ export interface Theme {
   cached_styles?: Record<string, any>;
   is_system?: boolean;
   is_active?: boolean;
-  context?: ThemeContext; // Added context property
+  context?: ThemeContext;
 }
 
 export interface ThemeContextType {

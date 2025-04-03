@@ -16,11 +16,11 @@ import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
 import { getThemeFromLocalStorage } from '@/stores/theme/localStorage';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
 import { hexToRgbString } from '@/admin/theme/utils/colorUtils';
-import { 
-  validateThemeVariables, 
-  applyEmergencyFallback, 
+import {
+  validateThemeVariables,
+  applyEmergencyFallback,
   logThemeState,
-  assertThemeApplied 
+  assertThemeApplied
 } from '@/utils/ThemeValidationUtils';
 
 // Much shorter fallback timeout for better UX
