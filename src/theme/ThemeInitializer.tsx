@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from 'react';
 import { ensureDefaultTheme, getThemeByName, DEFAULT_THEME_NAME } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
@@ -11,85 +12,16 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { isValidUUID } from '@/logging/utils/type-guards';
 import { safeDetails } from '@/logging/utils/safeDetails';
+import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
 import { getThemeFromLocalStorage } from '@/stores/theme/localStorage';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
-import { hexToRgbString } from '@/utils/colorUtils';
+import { hexToRgbString } from '@/admin/theme/utils/colorUtils';
 import { 
   validateThemeVariables, 
   applyEmergencyFallback, 
   logThemeState,
   assertThemeApplied 
 } from '@/utils/ThemeValidationUtils';
-
-// Utility functions to improve resilience
-const validateThemeVariables = () => {
-  try {
-    const root = document.documentElement;
-    const hasPrimary = root.style.getPropertyValue('--primary') !== '';
-    const hasBackground = root.style.getPropertyValue('--background') !== '';
-    return hasPrimary && hasBackground;
-  } catch (e) {
-    console.error('Error validating theme variables:', e);
-    return false;
-  }
-};
-
-const applyEmergencyFallback = () => {
-  try {
-    console.warn('Applying emergency theme fallback');
-    const root = document.documentElement;
-    
-    // Critical base fallback colors
-    root.style.setProperty('--background', '228 47% 8%');
-    root.style.setProperty('--foreground', '210 40% 98%');
-    root.style.setProperty('--primary', '186 100% 50%');
-    root.style.setProperty('--primary-foreground', '210 40% 98%');
-    root.style.setProperty('--secondary', '334 100% 59%');
-    
-    // Direct color references
-    root.style.setProperty('--color-primary', '0, 240, 255');
-    root.style.setProperty('--color-secondary', '255, 45, 110');
-    root.style.setProperty('--impulse-primary', '#00F0FF');
-    root.style.setProperty('--impulse-secondary', '#FF2D6E');
-    
-    document.documentElement.classList.add('impulse-theme-active');
-    document.documentElement.setAttribute('data-theme-status', 'emergency');
-    
-    document.body.style.background = '#12121A';
-    document.body.style.color = '#F6F6F7';
-  } catch (e) {
-    console.error('Critical error in emergency fallback:', e);
-  }
-};
-
-const logThemeState = () => {
-  try {
-    const root = document.documentElement;
-    console.log('Theme state:', {
-      '--background': root.style.getPropertyValue('--background'),
-      '--foreground': root.style.getPropertyValue('--foreground'),
-      '--primary': root.style.getPropertyValue('--primary'),
-      '--secondary': root.style.getPropertyValue('--secondary'),
-      '--color-primary': root.style.getPropertyValue('--color-primary'),
-      'data-theme-id': root.getAttribute('data-theme-id'),
-      'data-theme-status': root.getAttribute('data-theme-status'),
-      'classes': root.className
-    });
-  } catch (e) {
-    console.error('Error logging theme state:', e);
-  }
-};
-
-const assertThemeApplied = () => {
-  try {
-    const root = document.documentElement;
-    return root.style.getPropertyValue('--background') !== '' || 
-           root.style.getPropertyValue('--color-primary') !== '';
-  } catch (e) {
-    console.error('Error checking theme application:', e);
-    return false;
-  }
-};
 
 // Much shorter fallback timeout for better UX
 const FALLBACK_TIMEOUT = 300; // 300ms fallback timeout
@@ -107,7 +39,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   
   const { setTheme, isLoading, error: themeStoreError, hydrateTheme } = useThemeStore();
   const { toast } = useToast();
-  const logger = getLogger('ThemeInitializer', { category: LogCategory.THEME });
+  const logger = getLogger('ThemeInitializer', { category: LogCategory.THEME as any });
   const { measure } = usePerformanceLogger('ThemeInitializer');
   
   // Apply default styles immediately to prevent white flash
@@ -126,10 +58,10 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
       logger.debug('✔️ Default impulse tokens applied via applyThemeToDocument');
       
       // Force the browser to apply default colors immediately
-      const bgColor = defaultImpulseTokens.colors?.background?.main || '#12121A';
-      const textColor = defaultImpulseTokens.colors?.text?.primary || '#F6F6F7';
-      const primaryColor = defaultImpulseTokens.colors?.primary || '#00F0FF';
-      const secondaryColor = defaultImpulseTokens.colors?.secondary || '#FF2D6E';
+      const bgColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
+      const textColor = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
+      const primaryColor = getThemeProperty(defaultImpulseTokens, 'colors.primary', '#00F0FF');
+      const secondaryColor = getThemeProperty(defaultImpulseTokens, 'colors.secondary', '#FF2D6E');
       
       document.documentElement.style.backgroundColor = bgColor;
       document.documentElement.style.color = textColor;
@@ -301,59 +233,55 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
               
               // Log the theme state for debugging
               logThemeState();
-              
-              setIsInitialized(true);
-            } catch (err) {
-              logger.error('Failed to apply default theme', { 
-                details: safeDetails(err)
+            } catch (defaultErr) {
+              logger.error('Error applying default theme, using fallback styling', {
+                details: safeDetails(defaultErr)
               });
               
-              // Apply emergency fallback directly
+              // Ensure fallback is applied
               applyEmergencyFallback();
-              
-              document.documentElement.setAttribute('data-theme-status', 'final-fallback');
-              setIsInitialized(true);
+              document.documentElement.setAttribute('data-theme-status', 'default-error');
             }
-          } else {
-            // Apply emergency fallback if we couldn't get a theme ID
-            logger.error('Failed to get a valid theme ID from any source');
+          } else if (!themeId) {
+            logger.error("❌ No theme ID resolved - using fallback only");
             applyEmergencyFallback();
-            document.documentElement.setAttribute('data-theme-status', 'no-theme-id-fallback');
-            setIsInitialized(true);
+            document.documentElement.setAttribute('data-theme-status', 'no-theme-id');
           }
-        } catch (defaultErr) {
-          logger.error('Error ensuring default theme', { 
-            details: safeDetails(defaultErr)
+        } catch (fallbackErr) {
+          logger.error('All theme loading attempts failed, using hardcoded fallback', {
+            details: safeDetails(fallbackErr)
           });
           
-          // Final emergency fallback - direct application
+          // Ensure fallback is applied
           applyEmergencyFallback();
-          document.documentElement.setAttribute('data-theme-status', 'error-fallback');
+          document.documentElement.setAttribute('data-theme-status', 'all-attempts-failed');
+        }
+        
+        // If we get here, ensure the app initializes regardless
+        if (isMounted) {
+          // Verify fallback is applied before continuing
+          assertThemeApplied();
           setIsInitialized(true);
         }
-      } catch (error) {
-        // Should never happen - catch all for any setup errors
-        logger.error('Catastrophic theme initialization error', { 
-          details: safeDetails(error)
-        });
         
-        // Final emergency fallback - direct application
-        applyEmergencyFallback();
-        document.documentElement.setAttribute('data-theme-status', 'catastrophic-error');
-        setIsInitialized(true);
-        
-        // Increment failed attempts for debugging
-        setFailedAttempts(prev => prev + 1);
+      } catch (err) {
+        if (isMounted) {
+          logger.error('Unhandled error in theme initialization', { details: safeDetails(err) });
+          
+          // Ensure fallback is applied
+          applyEmergencyFallback();
+          document.documentElement.setAttribute('data-theme-status', 'unhandled-error');
+          
+          setIsInitialized(true);
+          setFailedAttempts((prev) => prev + 1);
+        }
       } finally {
-        // Clear the safety timeout if it's still running
         if (initializationTimeout) {
           clearTimeout(initializationTimeout);
-          initializationTimeout = null;
         }
       }
     };
     
-    // Start initialization process
     initialize();
     
     return () => {
@@ -362,12 +290,28 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         clearTimeout(initializationTimeout);
       }
     };
-  }, [setTheme, hydrateTheme, isInitialized, logger, measure]);
-
-  // Just render the children with SiteThemeProvider
-  // We've already set up all the fallbacks
+  }, [setTheme, hydrateTheme, toast, logger, measure]);
+  
+  // Remove fallback class only AFTER successful initialization
+  useEffect(() => {
+    if (isInitialized) {
+      // One final verification of theme application
+      const isThemeValid = validateThemeVariables();
+      
+      if (isThemeValid) {
+        logger.debug('Theme initialization completed, removing fallback class');
+        // Only remove the fallback class if we've verified theme is applied
+        document.documentElement.classList.remove('theme-fallback-applied');
+      } else {
+        logger.warn('Theme variables not fully applied, keeping fallback class');
+      }
+    }
+  }, [isInitialized, logger]);
+  
   return (
-    <SiteThemeProvider fallbackToDefault={!isInitialized}>
+    <SiteThemeProvider fallbackToDefault={!isInitialized || !!themeStoreError}>
+      {/* Add dynamic keyframes for theme-based animations */}
+      <DynamicKeyframes />
       {children}
     </SiteThemeProvider>
   );
