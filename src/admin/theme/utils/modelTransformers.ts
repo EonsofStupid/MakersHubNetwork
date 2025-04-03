@@ -117,10 +117,10 @@ export function transformDbThemeToAppTheme(rawTheme: any): Theme | null {
       version: Number(rawTheme.version || 1),
       cache_key: rawTheme.cache_key ? String(rawTheme.cache_key) : undefined,
       parent_theme_id: rawTheme.parent_theme_id ? String(rawTheme.parent_theme_id) : undefined,
-      design_tokens: rawTheme.design_tokens || {},
+      design_tokens: typeof rawTheme.design_tokens === 'object' ? rawTheme.design_tokens : {},
       component_tokens: componentTokens,
-      composition_rules: rawTheme.composition_rules || {},
-      cached_styles: rawTheme.cached_styles || {},
+      composition_rules: typeof rawTheme.composition_rules === 'object' ? rawTheme.composition_rules : {},
+      cached_styles: typeof rawTheme.cached_styles === 'object' ? rawTheme.cached_styles : {},
       is_system: Boolean(rawTheme.is_system),
       is_active: Boolean(rawTheme.is_active)
     };
