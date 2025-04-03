@@ -3,73 +3,67 @@ import { ImpulseTheme } from '../../types/impulse.types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
+import { getSafeThemeProperty } from '../validation/themeSchemas';
+import { hexToRgbString } from './colorUtils';
 
 const logger = getLogger('ThemeApplicator', LogCategory.THEME);
 
 /**
  * Applies a theme to the document by setting CSS variables
+ * Now with enhanced type safety and error handling
  */
-export function applyThemeToDocument(theme: ImpulseTheme): void {
+export function applyThemeToDocument(theme: ImpulseTheme | unknown): void {
   try {
-    if (!theme || !theme.colors) {
+    if (!theme || typeof theme !== 'object') {
       logger.warn('Invalid theme provided to applyThemeToDocument');
       return;
     }
 
     const root = document.documentElement;
     
+    // Apply basic colors with safe property access
+    const getProp = (path: string[], fallback: string): string => {
+      return getSafeThemeProperty(theme, path, fallback);
+    };
+    
     // Apply basic colors
-    root.style.setProperty('--color-primary', hexToRgbString(theme.colors.primary));
-    root.style.setProperty('--color-secondary', hexToRgbString(theme.colors.secondary));
-    root.style.setProperty('--color-accent', hexToRgbString(theme.colors.accent) || '139, 92, 246');
+    root.style.setProperty('--color-primary', hexToRgbString(getProp(['colors', 'primary'], '#00F0FF')));
+    root.style.setProperty('--color-secondary', hexToRgbString(getProp(['colors', 'secondary'], '#FF2D6E')));
+    root.style.setProperty('--color-accent', hexToRgbString(getProp(['colors', 'accent'], '#8B5CF6')));
     
     // Apply background colors
-    if (theme.colors.background) {
-      root.style.setProperty('--color-background', hexToRgbString(theme.colors.background.main));
-      root.style.setProperty('--color-card', hexToRgbString(theme.colors.background.card));
-    }
+    root.style.setProperty('--color-background', hexToRgbString(getProp(['colors', 'background', 'main'], '#12121A')));
+    root.style.setProperty('--color-card', hexToRgbString(getProp(['colors', 'background', 'card'], 'rgba(28, 32, 42, 0.7)')));
     
     // Apply text colors
-    if (theme.colors.text) {
-      root.style.setProperty('--color-text', hexToRgbString(theme.colors.text.primary));
-      root.style.setProperty('--color-text-secondary', hexToRgbString(theme.colors.text.secondary));
-    }
+    root.style.setProperty('--color-text', hexToRgbString(getProp(['colors', 'text', 'primary'], '#F6F6F7')));
+    root.style.setProperty('--color-text-secondary', hexToRgbString(getProp(['colors', 'text', 'secondary'], 'rgba(255, 255, 255, 0.7)')));
     
     // Apply border colors
-    if (theme.colors.borders) {
-      root.style.setProperty('--color-border', hexToRgbString(theme.colors.borders.normal));
-    }
+    root.style.setProperty('--color-border', hexToRgbString(getProp(['colors', 'borders', 'normal'], 'rgba(0, 240, 255, 0.2)')));
     
     // Apply status colors
-    if (theme.colors.status) {
-      root.style.setProperty('--color-success', hexToRgbString(theme.colors.status.success));
-      root.style.setProperty('--color-warning', hexToRgbString(theme.colors.status.warning));
-      root.style.setProperty('--color-error', hexToRgbString(theme.colors.status.error));
-    }
+    root.style.setProperty('--color-success', hexToRgbString(getProp(['colors', 'status', 'success'], '#10B981')));
+    root.style.setProperty('--color-warning', hexToRgbString(getProp(['colors', 'status', 'warning'], '#F59E0B')));
+    root.style.setProperty('--color-error', hexToRgbString(getProp(['colors', 'status', 'error'], '#EF4444')));
     
     // Apply radii
-    if (theme.components?.panel) {
-      root.style.setProperty('--radius-panel', theme.components.panel.radius || '0.75rem');
-    }
-    
-    if (theme.components?.button) {
-      root.style.setProperty('--radius-button', theme.components.button.radius || '0.5rem');
-    }
+    root.style.setProperty('--radius-panel', getProp(['components', 'panel', 'radius'], '0.75rem'));
+    root.style.setProperty('--radius-button', getProp(['components', 'button', 'radius'], '0.5rem'));
     
     // Apply typography if available
-    if (theme.typography?.fonts) {
-      if (theme.typography.fonts.body) {
-        root.style.setProperty('--font-body', theme.typography.fonts.body);
-      }
-      if (theme.typography.fonts.heading) {
-        root.style.setProperty('--font-heading', theme.typography.fonts.heading);
-      }
+    if (typeof getProp(['typography', 'fonts', 'body'], '') === 'string') {
+      root.style.setProperty('--font-body', getProp(['typography', 'fonts', 'body'], 'system-ui, sans-serif'));
+    }
+    
+    if (typeof getProp(['typography', 'fonts', 'heading'], '') === 'string') {
+      root.style.setProperty('--font-heading', getProp(['typography', 'fonts', 'heading'], 'system-ui, sans-serif'));
     }
     
     // Apply direct theme references for shared variables
-    root.style.setProperty('--impulse-primary', theme.colors.primary || '#00F0FF');
-    root.style.setProperty('--impulse-secondary', theme.colors.secondary || '#FF2D6E');
-    root.style.setProperty('--impulse-accent', theme.colors.accent || '#8B5CF6');
+    root.style.setProperty('--impulse-primary', getProp(['colors', 'primary'], '#00F0FF'));
+    root.style.setProperty('--impulse-secondary', getProp(['colors', 'secondary'], '#FF2D6E'));
+    root.style.setProperty('--impulse-accent', getProp(['colors', 'accent'], '#8B5CF6'));
     
     logger.info('Theme applied to document successfully');
   } catch (error) {
@@ -77,49 +71,18 @@ export function applyThemeToDocument(theme: ImpulseTheme): void {
   }
 }
 
-/**
- * Converts hex color to RGB format for CSS variables
- * With enhanced error handling to prevent crashes
- */
-export function hexToRgbString(hex?: string): string {
-  if (!hex) return '0, 0, 0';
-  
+// We've moved hexToRgbString to colorUtils.ts
+
+// Validate that a theme is properly set with basic checks
+export function validateThemeApplication(): boolean {
   try {
-    // Handle different color formats
-    if (typeof hex !== 'string') {
-      logger.warn(`Invalid hex value, expected string but got ${typeof hex}`);
-      return '0, 0, 0';
-    }
+    const root = document.documentElement;
+    const primary = root.style.getPropertyValue('--color-primary');
+    const background = root.style.getPropertyValue('--color-background');
     
-    // Handle RGB/RGBA format
-    if (hex.startsWith('rgb')) {
-      const matches = hex.match(/\d+/g);
-      if (matches && matches.length >= 3) {
-        return `${matches[0]}, ${matches[1]}, ${matches[2]}`;
-      }
-      return '0, 0, 0';
-    }
-    
-    // Handle shorthand hex
-    let color = hex.replace('#', '');
-    if (color.length === 3) {
-      color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
-    }
-    
-    // Handle standard hex
-    const r = parseInt(color.substring(0, 2), 16);
-    const g = parseInt(color.substring(2, 4), 16);
-    const b = parseInt(color.substring(4, 6), 16);
-    
-    // Handle invalid values
-    if (isNaN(r) || isNaN(g) || isNaN(b)) {
-      logger.warn(`Invalid hex color format: ${hex}`);
-      return '0, 0, 0';
-    }
-    
-    return `${r}, ${g}, ${b}`;
+    return !!(primary && background);
   } catch (error) {
-    logger.error('Error processing color', { details: safeDetails({ color: hex, error }) });
-    return '0, 0, 0';
+    logger.error('Error validating theme application', { details: safeDetails(error) });
+    return false;
   }
 }
