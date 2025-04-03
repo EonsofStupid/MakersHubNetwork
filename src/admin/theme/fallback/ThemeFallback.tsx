@@ -1,8 +1,10 @@
 
 import React, { useEffect } from 'react';
 import { defaultImpulseTokens } from '../impulse/tokens';
+import { hexToRgb } from '../utils/themeApplicator';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import './theme-fallback.css';
 
 const logger = getLogger('ThemeFallback', LogCategory.THEME);
 
@@ -37,10 +39,11 @@ export function ThemeFallback() {
     // Add fallback class
     root.classList.add('theme-fallback-applied');
     
-    // Create and add fallback CSS styles
+    // Create and add fallback CSS styles for essential components
     const styleElement = document.createElement('style');
     styleElement.id = 'theme-fallback-styles';
     styleElement.textContent = `
+      /* Essential variables */
       :root {
         --background: ${defaultImpulseTokens.colors.background.main};
         --foreground: ${defaultImpulseTokens.colors.text.primary};
@@ -54,17 +57,11 @@ export function ThemeFallback() {
         --muted-foreground: rgba(255, 255, 255, 0.5);
         --accent: #131D35;
         --accent-foreground: ${defaultImpulseTokens.colors.text.primary};
-        --destructive: #EF4444;
+        --destructive: ${defaultImpulseTokens.colors.status.error};
         --destructive-foreground: ${defaultImpulseTokens.colors.text.primary};
         --border: ${defaultImpulseTokens.colors.borders.normal};
         --input: #131D35;
         --ring: #1E293B;
-        
-        /* Glass effect variables */
-        --glass-opacity: 0.7;
-        --glass-blur: 12px;
-        --glass-border-color: rgba(${hexToRgb(defaultImpulseTokens.colors.primary)}, 0.3);
-        --glass-background: rgba(${hexToRgb(defaultImpulseTokens.colors.background.card)}, var(--glass-opacity));
         
         /* Animation timings */
         --transition-fast: ${defaultImpulseTokens.animation.duration.fast};
@@ -91,12 +88,6 @@ export function ThemeFallback() {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       }
       
-      .neo-blur {
-        backdrop-filter: blur(calc(var(--glass-blur) * 1.5));
-        background-color: rgba(0, 0, 0, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
-      
       /* Basic keyframe animations for immediate use */
       @keyframes fallback-fade-in {
         from { opacity: 0; }
@@ -117,19 +108,19 @@ export function ThemeFallback() {
         }
       }
       
-      .theme-fallback-applied .animate-fade {
+      .animate-fade {
         animation: fallback-fade-in 0.3s ease-out forwards;
       }
       
-      .theme-fallback-applied .animate-pulse {
+      .animate-pulse {
         animation: fallback-pulse 2s ease-in-out infinite;
       }
       
-      .theme-fallback-applied .animate-glow {
+      .animate-glow {
         animation: fallback-glow 2s ease-in-out infinite;
       }
       
-      /* Admin top navigation styles */
+      /* Admin top navigation fallback styles */
       .admin-topnav {
         display: flex;
         align-items: center;
@@ -157,30 +148,4 @@ export function ThemeFallback() {
   }, []);
   
   return null; // This component doesn't render anything
-}
-
-// Helper function to convert hex to rgb
-function hexToRgb(hex: string): string {
-  // Default fallback
-  if (!hex || typeof hex !== 'string') return '0, 0, 0';
-  
-  // Remove # if present
-  hex = hex.replace(/^#/, '');
-  
-  // Parse hex values
-  let r, g, b;
-  if (hex.length === 3) {
-    r = parseInt(hex.charAt(0) + hex.charAt(0), 16);
-    g = parseInt(hex.charAt(1) + hex.charAt(1), 16);
-    b = parseInt(hex.charAt(2) + hex.charAt(2), 16);
-  } else {
-    r = parseInt(hex.substring(0, 2), 16);
-    g = parseInt(hex.substring(2, 4), 16);
-    b = parseInt(hex.substring(4, 6), 16);
-  }
-  
-  // Handle invalid values
-  if (isNaN(r) || isNaN(g) || isNaN(b)) return '0, 0, 0';
-  
-  return `${r}, ${g}, ${b}`;
 }

@@ -2,35 +2,38 @@
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
-import { useLogger } from '@/logging';
+import { defaultImpulseTokens } from '@/admin/theme/impulse/tokens';
+import { themeRegistry } from '@/admin/theme/ThemeRegistry';
+import { applyThemeToDocument, hexToRgb } from '@/admin/theme/utils/themeApplicator';
+import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
 
 // Default theme variables for immediate fallback styling
 const defaultThemeVariables: ThemeVariables = {
-  background: '#12121A',
-  foreground: '#F6F6F7',
-  card: 'rgba(28, 32, 42, 0.7)',
-  cardForeground: '#F6F6F7',
-  primary: '#00F0FF',
-  primaryForeground: '#F6F6F7',
-  secondary: '#FF2D6E',
-  secondaryForeground: '#F6F6F7',
-  muted: 'rgba(255, 255, 255, 0.7)',
-  mutedForeground: 'rgba(255, 255, 255, 0.5)',
-  accent: '#131D35',
-  accentForeground: '#F6F6F7',
-  destructive: '#EF4444',
-  destructiveForeground: '#F6F6F7',
-  border: 'rgba(0, 240, 255, 0.2)',
-  input: '#131D35',
-  ring: '#1E293B',
-  effectColor: '#00F0FF',
-  effectSecondary: '#FF2D6E',
+  background: defaultImpulseTokens.colors.background.main,
+  foreground: defaultImpulseTokens.colors.text.primary,
+  card: defaultImpulseTokens.colors.background.card,
+  cardForeground: defaultImpulseTokens.colors.text.primary,
+  primary: defaultImpulseTokens.colors.primary,
+  primaryForeground: defaultImpulseTokens.colors.text.primary,
+  secondary: defaultImpulseTokens.colors.secondary,
+  secondaryForeground: defaultImpulseTokens.colors.text.primary,
+  muted: defaultImpulseTokens.colors.text.secondary,
+  mutedForeground: defaultImpulseTokens.colors.text.muted || 'rgba(255, 255, 255, 0.5)',
+  accent: defaultImpulseTokens.colors.accent || defaultImpulseTokens.colors.secondary,
+  accentForeground: defaultImpulseTokens.colors.text.primary,
+  destructive: defaultImpulseTokens.colors.status.error,
+  destructiveForeground: defaultImpulseTokens.colors.text.primary,
+  border: defaultImpulseTokens.colors.borders.normal,
+  input: defaultImpulseTokens.colors.background.overlay,
+  ring: defaultImpulseTokens.colors.borders.focus || defaultImpulseTokens.colors.borders.hover,
+  effectColor: defaultImpulseTokens.colors.primary,
+  effectSecondary: defaultImpulseTokens.colors.secondary,
   effectTertiary: '#8B5CF6',
-  transitionFast: '150ms',
-  transitionNormal: '300ms',
-  transitionSlow: '500ms',
+  transitionFast: defaultImpulseTokens.animation.duration.fast,
+  transitionNormal: defaultImpulseTokens.animation.duration.normal,
+  transitionSlow: defaultImpulseTokens.animation.duration.slow,
   animationFast: '1s',
   animationNormal: '2s',
   animationSlow: '3s',
@@ -44,6 +47,7 @@ const defaultThemeVariables: ThemeVariables = {
 type ThemeContextValue = {
   variables: ThemeVariables;
   isDark: boolean;
+  componentStyles?: Record<string, any>;
 };
 
 // Create context with default values
@@ -65,9 +69,9 @@ export function SiteThemeProvider({
   children,
   fallbackToDefault = false
 }: SiteThemeProviderProps) {
-  const { currentTheme, isLoading } = useThemeStore();
+  const { currentTheme, themeComponents, isLoading } = useThemeStore();
   const themeVariables = useThemeVariables(currentTheme);
-  const logger = useLogger('SiteThemeProvider', LogCategory.THEME);
+  const logger = getLogger('SiteThemeProvider', LogCategory.THEME);
   
   // Determine if we should use fallback variables
   const variables = useMemo(() => {
@@ -78,62 +82,20 @@ export function SiteThemeProvider({
     return themeVariables;
   }, [currentTheme, fallbackToDefault, themeVariables, logger]);
   
-  // Apply theme CSS variables
-  useEffect(() => {
-    try {
-      const root = document.documentElement;
-      
-      // Apply basic theme
-      root.style.setProperty('--background', variables.background);
-      root.style.setProperty('--foreground', variables.foreground);
-      root.style.setProperty('--card', variables.card);
-      root.style.setProperty('--card-foreground', variables.cardForeground);
-      root.style.setProperty('--primary', variables.primary);
-      root.style.setProperty('--primary-foreground', variables.primaryForeground);
-      root.style.setProperty('--secondary', variables.secondary);
-      root.style.setProperty('--secondary-foreground', variables.secondaryForeground);
-      root.style.setProperty('--muted', variables.muted);
-      root.style.setProperty('--muted-foreground', variables.mutedForeground);
-      root.style.setProperty('--accent', variables.accent);
-      root.style.setProperty('--accent-foreground', variables.accentForeground);
-      root.style.setProperty('--destructive', variables.destructive);
-      root.style.setProperty('--destructive-foreground', variables.destructiveForeground);
-      root.style.setProperty('--border', variables.border);
-      root.style.setProperty('--input', variables.input);
-      root.style.setProperty('--ring', variables.ring);
-      
-      // Apply effect colors
-      root.style.setProperty('--effect-color', variables.effectColor);
-      root.style.setProperty('--effect-secondary', variables.effectSecondary);
-      root.style.setProperty('--effect-tertiary', variables.effectTertiary);
-      
-      // Apply timing variables
-      root.style.setProperty('--transition-fast', variables.transitionFast);
-      root.style.setProperty('--transition-normal', variables.transitionNormal);
-      root.style.setProperty('--transition-slow', variables.transitionSlow);
-      root.style.setProperty('--animation-fast', variables.animationFast);
-      root.style.setProperty('--animation-normal', variables.animationNormal);
-      root.style.setProperty('--animation-slow', variables.animationSlow);
-      
-      // Apply radius variables
-      root.style.setProperty('--radius-sm', variables.radiusSm);
-      root.style.setProperty('--radius-md', variables.radiusMd);
-      root.style.setProperty('--radius-lg', variables.radiusLg);
-      root.style.setProperty('--radius-full', variables.radiusFull);
-      root.style.setProperty('--radius', variables.radiusMd);
-      
-      // Apply site-specific variables
-      root.style.setProperty('--site-effect-color', variables.effectColor);
-      root.style.setProperty('--site-effect-secondary', variables.effectSecondary);
-      root.style.setProperty('--site-effect-tertiary', variables.effectTertiary);
-      
-      logger.debug('Applied theme variables to document');
-    } catch (error) {
-      logger.error('Error applying theme variables', {
-        details: safeDetails(error)
+  // Extract component styles from theme components
+  const componentStyles = useMemo(() => {
+    const styles: Record<string, any> = {};
+    
+    if (themeComponents && themeComponents.length > 0) {
+      themeComponents.forEach((component) => {
+        if (component.component_name && component.styles) {
+          styles[component.component_name] = component.styles;
+        }
       });
     }
-  }, [variables, logger]);
+    
+    return Object.keys(styles).length > 0 ? styles : undefined;
+  }, [themeComponents]);
   
   // Check if theme is dark
   const isDark = useMemo(() => {
@@ -155,8 +117,139 @@ export function SiteThemeProvider({
     return true;
   }, [variables.background]);
   
+  // Apply theme CSS variables
+  useEffect(() => {
+    try {
+      // Convert to Impulse theme format for standardized application
+      const impulseTheme = {
+        id: 'site-theme',
+        name: currentTheme?.name || 'Site Theme',
+        colors: {
+          primary: variables.primary,
+          secondary: variables.secondary,
+          accent: variables.accent,
+          background: {
+            main: variables.background,
+            overlay: variables.muted,
+            card: variables.card,
+            alt: variables.accent
+          },
+          text: {
+            primary: variables.foreground,
+            secondary: variables.mutedForeground,
+            accent: variables.primary,
+            muted: variables.mutedForeground
+          },
+          borders: {
+            normal: variables.border,
+            hover: variables.ring,
+            active: variables.primary,
+            focus: variables.ring
+          },
+          status: {
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: variables.destructive,
+            info: '#3B82F6'
+          }
+        },
+        effects: {
+          glow: {
+            primary: `0 0 15px ${variables.primary}`,
+            secondary: `0 0 15px ${variables.secondary}`,
+            hover: `0 0 20px ${variables.primary}`
+          },
+          gradients: {
+            primary: `linear-gradient(90deg, ${variables.primary}, ${variables.effectSecondary})`,
+            secondary: `linear-gradient(90deg, ${variables.secondary}, ${variables.effectTertiary})`,
+            accent: `linear-gradient(90deg, ${variables.accent}, ${variables.effectSecondary})`
+          },
+          shadows: {
+            small: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
+            medium: '0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3)',
+            large: '0 10px 25px rgba(0, 0, 0, 0.2), 0 6px 10px rgba(0, 0, 0, 0.22)',
+            inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.15)'
+          }
+        },
+        animation: {
+          duration: {
+            fast: variables.transitionFast,
+            normal: variables.transitionNormal,
+            slow: variables.transitionSlow
+          },
+          curves: {
+            bounce: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            ease: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            spring: 'cubic-bezier(0.43, 0.13, 0.23, 0.96)',
+            linear: 'linear'
+          },
+          keyframes: {
+            fade: `
+              @keyframes fade {
+                from { opacity: 0; }
+                to { opacity: 1; }
+              }
+            `,
+            pulse: `
+              @keyframes pulse {
+                0%, 100% { opacity: 0.8; }
+                50% { opacity: 0.4; }
+              }
+            `,
+            glow: `
+              @keyframes glow {
+                0%, 100% { box-shadow: 0 0 5px ${variables.primary}; }
+                50% { box-shadow: 0 0 20px ${variables.primary}; }
+              }
+            `,
+            slide: `
+              @keyframes slide {
+                from { transform: translateY(10px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+              }
+            `
+          }
+        },
+        components: {
+          panel: {
+            radius: variables.radiusLg,
+            padding: '1.5rem',
+            background: variables.card
+          },
+          button: {
+            radius: variables.radiusMd,
+            padding: '0.5rem 1rem',
+            transition: `all ${variables.transitionNormal} ease`
+          },
+          tooltip: {
+            radius: variables.radiusSm,
+            padding: '0.5rem',
+            background: 'rgba(0, 0, 0, 0.8)'
+          },
+          input: {
+            radius: variables.radiusMd,
+            padding: '0.5rem 0.75rem',
+            background: variables.input
+          }
+        }
+      };
+      
+      // Register the theme with our registry
+      themeRegistry.registerTheme('site-theme', impulseTheme as any);
+      
+      // Apply the theme using our standardized utility
+      applyThemeToDocument('site-theme');
+      
+      logger.debug('Applied site theme variables to document');
+    } catch (error) {
+      logger.error('Error applying site theme variables', {
+        details: safeDetails(error)
+      });
+    }
+  }, [variables, currentTheme, logger]);
+  
   return (
-    <ThemeContext.Provider value={{ variables, isDark }}>
+    <ThemeContext.Provider value={{ variables, isDark, componentStyles }}>
       {children}
     </ThemeContext.Provider>
   );
