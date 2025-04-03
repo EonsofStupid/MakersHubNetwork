@@ -1,2 +1,4 @@
 
-export { useComponentPerformance } from '@/logging';
+import { useComponentPerformance as useComponentPerformanceOriginal } from '@/logging';
+
+export const useComponentPerformance = useComponentPerformanceOriginal;

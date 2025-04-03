@@ -52,7 +52,7 @@ export default function App({ onInitialized }: AppProps) {
         category: LogCategory.SYSTEM 
       });
     };
-  }, [onInitialized]);
+  }, [onInitialized, performance, logger]);
   
   return (
     <LoggingProvider>

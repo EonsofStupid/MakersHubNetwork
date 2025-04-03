@@ -17,12 +17,13 @@ import { logEventEmitter } from './events';
 export type { 
   Logger,
   LogEntry,
-  LogLevel,
-  LogCategory,
   LoggerOptions,
   LogTransport,
   LoggingConfig
 };
+
+// Export enums (as values, not just types)
+export { LogLevel, LogCategory };
 
 // Re-export utilities
 export { getLogger, initializeLogger };
