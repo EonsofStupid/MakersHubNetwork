@@ -114,9 +114,93 @@
     opacity: 0.1;
     pointer-events: none;
   }
+  
+  /* Cyberpunk text effect */
+  .cyberpunk-text {
+    position: relative;
+    display: inline-block;
+    color: var(--primary);
+    text-shadow: 0 0 5px rgba(0, 240, 255, 0.7);
+  }
+  
+  .cyberpunk-text::before {
+    content: attr(data-text);
+    position: absolute;
+    left: -2px;
+    text-shadow: 2px 0 var(--secondary);
+    top: 0;
+    color: var(--primary);
+    background: var(--background);
+    overflow: hidden;
+    clip: rect(0, 900px, 0, 0);
+    animation: cyberpunk-text-glitch 3s infinite linear alternate-reverse;
+  }
+  
+  /* Data pulse effect */
+  .data-pulse {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 8px 2px rgba(0, 240, 255, 0.3);
+    opacity: 0;
+    animation: data-pulse 2s infinite;
+  }
+  
+  /* Background grid */
+  .bg-grid-small-primary {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='8' height='8' fill='none' stroke='rgb(0,240,255)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+  }
 }
 
 @keyframes data-stream {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+@keyframes cyberpunk-text-glitch {
+  0% {
+    clip: rect(5px, 9999px, 28px, 0);
+  }
+  5% {
+    clip: rect(36px, 9999px, 56px, 0);
+  }
+  10% {
+    clip: rect(64px, 9999px, 91px, 0);
+  }
+  15% {
+    clip: rect(0, 9999px, 0, 0);
+  }
+  100% {
+    clip: rect(0, 9999px, 0, 0);
+  }
+}
+
+@keyframes data-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Slower pulse animation */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
