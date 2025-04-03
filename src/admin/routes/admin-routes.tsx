@@ -1,29 +1,41 @@
 
 import { lazy } from "react";
 import { Route } from "react-router-dom";
-import { AdminLayout } from "@/admin/components/layout/AdminLayout";
-import { AdminRoute } from "@/admin/components/auth/AdminRoute";
+import { AdminLayout } from "@/admin/components/AdminLayout";
+import { AdminThemeWrapper } from "@/admin/theme/AdminThemeWrapper";
 
-// Lazy load admin pages
-const Dashboard = lazy(() => import("@/admin/routes/Dashboard"));
-const ThemesPage = lazy(() => import("@/admin/routes/themes/ThemesPage"));
-const VisualThemeEditor = lazy(() => import("@/admin/routes/themes/VisualThemeEditor"));
-const Settings = lazy(() => import("@/admin/routes/Settings"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
+// Lazily load admin pages
+const AdminDashboard = lazy(() => import('@/admin/pages/Dashboard'));
+const AdminUsers = lazy(() => import('@/admin/pages/Users'));
+const AdminContent = lazy(() => import('@/admin/pages/Content'));
+const AdminSettings = lazy(() => import('@/admin/pages/Settings'));
+const AdminThemes = lazy(() => import('@/admin/pages/Themes'));
+const AdminAssets = lazy(() => import('@/admin/pages/Assets'));
+const AdminAPI = lazy(() => import('@/admin/pages/API'));
+const AdminCategories = lazy(() => import('@/admin/pages/Categories'));
+const AdminManufacturers = lazy(() => import('@/admin/pages/Manufacturers'));
+const AdminProfiles = lazy(() => import('@/admin/pages/Profiles'));
+const AdminRoles = lazy(() => import('@/admin/pages/Roles'));
 
 export const adminRoutes = (
-  <Route
-    path="/admin"
+  <Route 
+    path="/admin/*" 
     element={
-      <AdminRoute>
+      <AdminThemeWrapper>
         <AdminLayout />
-      </AdminRoute>
+      </AdminThemeWrapper>
     }
   >
-    <Route index element={<Dashboard />} />
-    <Route path="themes" element={<ThemesPage />} />
-    <Route path="themes/editor" element={<VisualThemeEditor />} />
-    <Route path="settings" element={<Settings />} />
-    <Route path="*" element={<NotFound />} />
+    <Route index element={<AdminDashboard />} />
+    <Route path="users" element={<AdminUsers />} />
+    <Route path="content" element={<AdminContent />} />
+    <Route path="settings" element={<AdminSettings />} />
+    <Route path="themes" element={<AdminThemes />} />
+    <Route path="assets" element={<AdminAssets />} />
+    <Route path="api" element={<AdminAPI />} />
+    <Route path="categories" element={<AdminCategories />} />
+    <Route path="manufacturers" element={<AdminManufacturers />} />
+    <Route path="profiles" element={<AdminProfiles />} />
+    <Route path="roles" element={<AdminRoles />} />
   </Route>
 );
