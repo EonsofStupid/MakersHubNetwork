@@ -7,66 +7,81 @@ const logger = getLogger('ColorUtils');
  * Convert hex color to RGB object
  */
 export function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
-  if (!hex || typeof hex !== 'string') return null;
-  
-  // Default fallback
-  const fallback = { r: 0, g: 0, b: 0 };
-  
-  // Remove any leading #
-  hex = hex.replace(/^#/, '');
-  
-  // Handle different hex formats
-  if (hex.length === 6) {
-    const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (result) {
+  try {
+    if (!hex || typeof hex !== 'string') return null;
+    
+    // Default fallback
+    const fallback = { r: 0, g: 0, b: 0 };
+    
+    // Remove any leading #
+    hex = hex.replace(/^#/, '');
+    
+    // Handle different hex formats
+    if (hex.length === 6) {
+      const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      if (result) {
+        return {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        };
+      }
+    } 
+    
+    // Handle shorthand hex format (#FFF)
+    if (hex.length === 3) {
+      const result = /^([a-f\d])([a-f\d])([a-f\d])$/i.exec(hex);
+      if (result) {
+        return {
+          r: parseInt(result[1] + result[1], 16),
+          g: parseInt(result[2] + result[2], 16),
+          b: parseInt(result[3] + result[3], 16)
+        };
+      }
+    }
+    
+    // Handle rgba() format
+    const rgbaMatch = hex.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([0-9.]+))?\s*\)/);
+    if (rgbaMatch) {
       return {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
+        r: parseInt(rgbaMatch[1], 10),
+        g: parseInt(rgbaMatch[2], 10),
+        b: parseInt(rgbaMatch[3], 10)
       };
     }
-  } 
-  
-  // Handle shorthand hex format (#FFF)
-  if (hex.length === 3) {
-    const result = /^([a-f\d])([a-f\d])([a-f\d])$/i.exec(hex);
-    if (result) {
-      return {
-        r: parseInt(result[1] + result[1], 16),
-        g: parseInt(result[2] + result[2], 16),
-        b: parseInt(result[3] + result[3], 16)
-      };
-    }
+    
+    logger.warn(`Failed to parse color: ${hex}, using fallback`);
+    return fallback;
+  } catch (error) {
+    logger.error('Error in hexToRgb', { details: { error, hex } });
+    return { r: 0, g: 0, b: 0 }; // Emergency fallback
   }
-  
-  // Handle rgba() format
-  const rgbaMatch = hex.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([0-9.]+))?\s*\)/);
-  if (rgbaMatch) {
-    return {
-      r: parseInt(rgbaMatch[1], 10),
-      g: parseInt(rgbaMatch[2], 10),
-      b: parseInt(rgbaMatch[3], 10)
-    };
-  }
-  
-  logger.warn(`Failed to parse color: ${hex}, using fallback`);
-  return fallback;
 }
 
 /**
  * Convert hex to RGB string format (e.g., "255, 255, 255")
  */
 export function hexToRgbString(hex: string): string {
-  const rgb = hexToRgb(hex);
-  return rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : '0, 0, 0';
+  try {
+    const rgb = hexToRgb(hex);
+    return rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : '0, 0, 0';
+  } catch (error) {
+    logger.error('Error in hexToRgbString', { details: { error, hex } });
+    return '0, 0, 0'; // Emergency fallback
+  }
 }
 
 /**
  * Convert hex to RGBA string
  */
 export function hexToRgba(hex: string, alpha: number): string {
-  const rgb = hexToRgb(hex);
-  return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})` : `rgba(0, 0, 0, ${alpha})`;
+  try {
+    const rgb = hexToRgb(hex);
+    return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})` : `rgba(0, 0, 0, ${alpha})`;
+  } catch (error) {
+    logger.error('Error in hexToRgba', { details: { error, hex, alpha } });
+    return `rgba(0, 0, 0, ${alpha})`; // Emergency fallback
+  }
 }
 
 /**

@@ -25,6 +25,7 @@ export function saveThemeToLocalStorage(themeId: string): void {
 export function getThemeFromLocalStorage(): string {
   try {
     const themeId = localStorage.getItem(THEME_STORAGE_KEY);
+    logger.debug('Getting theme from localStorage', { details: { themeId: themeId || 'not found' } });
     return themeId || DEFAULT_THEME_ID;
   } catch (error) {
     logger.error('Failed to get theme from localStorage', { details: { error } });
