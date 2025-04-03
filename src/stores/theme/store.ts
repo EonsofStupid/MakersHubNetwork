@@ -1,9 +1,11 @@
-
-// Fix the store.ts file to properly handle null values
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
+import { 
+  saveThemeToLocalStorage,
+  getThemeFromLocalStorage
+} from './localStorage';
 
 const logger = getLogger('themeStore');
 
@@ -44,6 +46,7 @@ export interface ThemeStore {
   updateComponent: (component: ThemeComponent) => Promise<ThemeComponent>;
   createComponent: (component: Omit<ThemeComponent, 'id' | 'created_at' | 'updated_at'>) => Promise<ThemeComponent>;
   deleteComponent: (componentId: string) => Promise<void>;
+  hydrateTheme: () => Promise<void>;
 }
 
 export const useThemeStore = create<ThemeStore>()(
@@ -55,6 +58,50 @@ export const useThemeStore = create<ThemeStore>()(
       adminComponents: [],
       isLoading: false,
       error: null,
+
+      // Hydrate theme from localStorage or use the default
+      hydrateTheme: async () => {
+        const storedThemeId = getThemeFromLocalStorage();
+        if (storedThemeId) {
+          try {
+            logger.info('Hydrating theme from localStorage', { details: { themeId: storedThemeId } });
+            await get().setTheme(storedThemeId);
+          } catch (error) {
+            logger.error('Failed to hydrate theme, using default', { details: { error } });
+            // Try to set the default theme
+            try {
+              const { data } = await supabase
+                .from('themes')
+                .select('id')
+                .eq('is_default', true)
+                .single();
+                
+              if (data?.id) {
+                await get().setTheme(data.id);
+              }
+            } catch (defaultError) {
+              logger.error('Failed to load default theme as well', { details: { defaultError } });
+              set({ error: new Error('Failed to load any theme'), isLoading: false });
+            }
+          }
+        } else {
+          logger.info('No theme in localStorage, attempting to load default');
+          try {
+            const { data } = await supabase
+              .from('themes')
+              .select('id')
+              .eq('is_default', true)
+              .single();
+              
+            if (data?.id) {
+              await get().setTheme(data.id);
+            }
+          } catch (error) {
+            logger.error('Failed to load default theme', { details: { error } });
+            set({ error: new Error('Failed to load default theme'), isLoading: false });
+          }
+        }
+      },
 
       // Actions
       loadTheme: async (themeId: string) => {
@@ -71,6 +118,10 @@ export const useThemeStore = create<ThemeStore>()(
           if (!data) throw new Error(`Theme not found: ${themeId}`);
 
           set({ currentTheme: data, isLoading: false });
+          
+          // Save successful theme to localStorage
+          saveThemeToLocalStorage(themeId);
+          
           return data;
         } catch (error: any) {
           set({ error, isLoading: false });
@@ -91,6 +142,9 @@ export const useThemeStore = create<ThemeStore>()(
             isLoading: false,
             error: null
           });
+          
+          // Save to localStorage
+          saveThemeToLocalStorage(themeId);
         } catch (error: any) {
           set({ error, isLoading: false });
           throw error;
