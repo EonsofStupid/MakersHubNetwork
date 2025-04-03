@@ -36,7 +36,10 @@ export function useThemeContext(scope: ThemeScope = 'admin') {
     const loadTheme = async () => {
       try {
         setIsLoading(true);
-        logger.info('Loading theme data', { details: { scope } });
+        logger.info('Loading theme data', { 
+          category: LogCategory.THEME,
+          details: { scope } 
+        });
         
         // Query the default theme or a specific user theme
         const { data, error } = await supabase
@@ -49,15 +52,22 @@ export function useThemeContext(scope: ThemeScope = 'admin') {
         if (error) throw error;
         
         if (!data) {
-          logger.warn('No theme data found, using defaults');
+          logger.warn('No theme data found, using defaults', {
+            category: LogCategory.THEME
+          });
           return;
         }
         
         // Process theme data
         setThemeData(data);
-        logger.info('Theme data loaded successfully');
+        logger.info('Theme data loaded successfully', {
+          category: LogCategory.THEME
+        });
       } catch (err) {
-        logger.error('Failed to load theme data', { details: safeDetails(err) });
+        logger.error('Failed to load theme data', { 
+          category: LogCategory.THEME,
+          details: safeDetails(err) 
+        });
         setError(err instanceof Error ? err : new Error('Unknown error loading theme'));
       } finally {
         setIsLoading(false);
@@ -78,7 +88,10 @@ export function useThemeContext(scope: ThemeScope = 'admin') {
       
       return themeData.design_tokens || {};
     } catch (error) {
-      logger.error('Error processing design tokens', { details: safeDetails(error) });
+      logger.error('Error processing design tokens', { 
+        category: LogCategory.THEME,
+        details: safeDetails(error) 
+      });
       return {};
     }
   };
