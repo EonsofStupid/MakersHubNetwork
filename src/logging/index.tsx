@@ -39,6 +39,7 @@ export { useLogger } from './hooks/useLogger';
 export { useErrorLogger } from './hooks/useErrorLogger';
 export { useComponentPerformance } from './hooks/useComponentPerformance';
 export { usePerformanceLogger } from './hooks/usePerformanceLogger';
+export type { PerformanceLoggerOptions } from './hooks/usePerformanceLogger';
 
 // Set default log level based on environment
 const defaultLogLevel = process.env.NODE_ENV === 'production'
