@@ -36,7 +36,7 @@ export function getLogLevelFromString(levelString: string): LogLevel {
  * Check if a log level meets or exceeds a minimum threshold
  */
 export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
-  return level >= minLevel;
+  return level <= minLevel; // Note: Lower numbers are higher priority in our enum
 }
 
 /**

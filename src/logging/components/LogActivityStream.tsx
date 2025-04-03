@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { LogCategory, LogEntry, LogLevel } from '../types';
 import { memoryTransport } from '../transports/memory.transport';
@@ -39,7 +40,7 @@ export function LogActivityStream({
       
       if (categories && categories.length > 0) {
         filteredLogs = filteredLogs.filter(log => 
-          categories.includes(log.category as LogCategory)
+          log.category && categories.includes(log.category as LogCategory)
         );
       }
       
@@ -63,7 +64,8 @@ export function LogActivityStream({
     }
   }, [logs, autoScroll]);
   
-  const formatTime = (date: Date): string => {
+  const formatTime = (timestamp: string | Date): string => {
+    const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
   

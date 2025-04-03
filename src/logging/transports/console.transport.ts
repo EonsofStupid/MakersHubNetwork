@@ -6,7 +6,10 @@ import { LOG_LEVEL_NAMES } from '../constants/log-level';
  * Format a log entry for console output
  */
 function formatLogForConsole(entry: LogEntry): string {
-  const timestamp = entry.timestamp.toISOString();
+  const timestamp = typeof entry.timestamp === 'string' 
+    ? entry.timestamp 
+    : new Date(entry.timestamp).toISOString();
+  
   const level = LOG_LEVEL_NAMES[entry.level];
   const source = entry.source ? `[${entry.source}]` : '';
   

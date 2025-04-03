@@ -1,50 +1,44 @@
 
-import { LogEntry, LogEventCallback } from './types';
+import { LogEntry } from './types';
+
+type LogCallback = (entry: LogEntry) => void;
 
 /**
- * Event emitter for logging events
+ * Event emitter for log events
  */
 class LogEventEmitter {
-  private subscribers: LogEventCallback[] = [];
-  
+  private logListeners: LogCallback[] = [];
+
   /**
-   * Subscribe to log events
+   * Register a callback for log events
    */
-  public onLog(callback: LogEventCallback): () => void {
-    this.subscribers.push(callback);
+  public onLog(callback: LogCallback): () => void {
+    this.logListeners.push(callback);
     
-    // Return unsubscribe function
+    // Return function to unsubscribe
     return () => {
-      this.subscribers = this.subscribers.filter(cb => cb !== callback);
+      this.logListeners = this.logListeners.filter(cb => cb !== callback);
     };
   }
-  
+
   /**
-   * Emit a log event to all subscribers
+   * Emit a log event to all listeners
    */
   public emitLogEvent(entry: LogEntry): void {
-    // Call each subscriber with the log entry
-    for (const subscriber of this.subscribers) {
+    for (const listener of this.logListeners) {
       try {
-        subscriber(entry);
+        listener(entry);
       } catch (error) {
-        console.error('Error in log subscriber:', error);
+        console.error('Error in log listener:', error);
       }
     }
   }
   
   /**
-   * Get current listener count
+   * Remove all listeners
    */
-  public getListenerCount(): number {
-    return this.subscribers.length;
-  }
-  
-  /**
-   * Legacy method name - alias to emitLogEvent for backward compatibility
-   */
-  public emit(entry: LogEntry): void {
-    this.emitLogEvent(entry);
+  public clearListeners(): void {
+    this.logListeners = [];
   }
 }
 

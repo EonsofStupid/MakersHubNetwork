@@ -14,6 +14,22 @@ class MemoryTransport implements LogTransport {
   }
   
   log(entry: LogEntry): void {
+    // Ensure entry has an ID
+    if (!entry.id) {
+      entry.id = crypto.randomUUID ? 
+        crypto.randomUUID() : 
+        `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+    
+    // Ensure timestamp is a proper date if it's a string
+    if (typeof entry.timestamp === 'string') {
+      try {
+        entry.timestamp = new Date(entry.timestamp).toISOString();
+      } catch (e) {
+        entry.timestamp = new Date().toISOString();
+      }
+    }
+    
     this.logs.push(entry);
     
     // Trim logs if they exceed the maximum number of entries

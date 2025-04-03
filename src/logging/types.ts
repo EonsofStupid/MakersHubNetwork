@@ -3,40 +3,24 @@
  * Log level definitions from most to least important
  */
 export enum LogLevel {
-  EMERGENCY = 'emergency',
-  ALERT = 'alert',
-  CRITICAL = 'critical',
-  ERROR = 'error',
-  WARNING = 'warning',
-  NOTICE = 'notice',
-  INFO = 'info',
-  DEBUG = 'debug',
-  TRACE = 'trace',
-  PERFORMANCE = 'performance'
+  CRITICAL = 0,  // Most severe
+  ERROR = 1,
+  WARN = 2,      // Add WARN as alias for WARNING
+  WARNING = 2,
+  INFO = 3,
+  DEBUG = 4,
+  TRACE = 5,
+  SUCCESS = 6    // Add SUCCESS level
 }
-
-/**
- * Mapping of log level to numeric value for comparisons
- */
-export const LOG_LEVEL_VALUE: Record<LogLevel, number> = {
-  [LogLevel.EMERGENCY]: 0,
-  [LogLevel.ALERT]: 1,
-  [LogLevel.CRITICAL]: 2,
-  [LogLevel.ERROR]: 3,
-  [LogLevel.WARNING]: 4,
-  [LogLevel.NOTICE]: 5,
-  [LogLevel.INFO]: 6,
-  [LogLevel.DEBUG]: 7,
-  [LogLevel.TRACE]: 8,
-  [LogLevel.PERFORMANCE]: 9,
-};
 
 /**
  * Log category for organization and filtering
  */
 export enum LogCategory {
+  SYSTEM = 'system',
   APP = 'app',
   AUTH = 'auth',
+  ADMIN = 'admin',   // Add ADMIN category
   API = 'api',
   DATABASE = 'database',
   UI = 'ui',
@@ -48,7 +32,7 @@ export enum LogCategory {
   ERROR = 'error',
   SECURITY = 'security',
   NETWORK = 'network',
-  SYSTEM = 'system',
+  GENERAL = 'general' // Add GENERAL category as default
 }
 
 /**
@@ -70,6 +54,7 @@ export interface LogMetadata {
  * Interface for a log entry
  */
 export interface LogEntry extends LogMetadata {
+  id?: string;       // Add ID field for entries
   message: string;
   formatted?: string;
 }
@@ -77,40 +62,40 @@ export interface LogEntry extends LogMetadata {
 /**
  * Logging service configuration interface
  */
-export interface LoggerConfig {
+export interface LoggingConfig {
   minLevel: LogLevel;
-  logToConsole: boolean;
-  logToServer: boolean;
-  serverEndpoint?: string;
-  includeTimestamp: boolean;
-  includeSource: boolean;
-  enableStackTrace: boolean;
-  customFormatter?: (entry: LogEntry) => string;
-  metadata?: Record<string, unknown>;
+  transports: LogTransport[];
+  bufferSize?: number;
+  flushInterval?: number;
+  includeSource?: boolean;
+  includeUser?: boolean;
+  includeSession?: boolean;
   enabledCategories?: LogCategory[];
   disabledCategories?: LogCategory[];
-  samplingRate?: number;
-  allowRemoteConfig?: boolean;
 }
 
 /**
  * Logger instance interface
  */
 export interface Logger {
-  emergency(message: string, meta?: LogMetadata | Record<string, unknown>): void;
-  alert(message: string, meta?: LogMetadata | Record<string, unknown>): void;
-  critical(message: string, meta?: LogMetadata | Record<string, unknown>): void;
-  error(message: string, meta?: LogMetadata | Record<string, unknown>): void;
-  warn(message: string, meta?: LogMetadata | Record<string, unknown>): void;
-  notice(message: string, meta?: LogMetadata | Record<string, unknown>): void;
-  info(message: string, meta?: LogMetadata | Record<string, unknown>): void;
-  debug(message: string, meta?: LogMetadata | Record<string, unknown>): void;
-  trace(message: string, meta?: LogMetadata | Record<string, unknown>): void;
-  performance(operation: string, duration: number, meta?: LogMetadata | Record<string, unknown>): void;
-  log(level: LogLevel, message: string, meta?: LogMetadata | Record<string, unknown>): void;
-  group(label: string, collapsed?: boolean): void;
-  groupEnd(): void;
-  withContext(context: Record<string, unknown>): Logger;
+  trace: (message: string, options?: LoggerOptions) => void;
+  debug: (message: string, options?: LoggerOptions) => void;
+  info: (message: string, options?: LoggerOptions) => void;
+  warn: (message: string, options?: LoggerOptions) => void;
+  error: (message: string, options?: LoggerOptions) => void;
+  critical: (message: string, options?: LoggerOptions) => void;
+  success: (message: string, options?: LoggerOptions) => void;
+  performance: (message: string, duration: number, options?: LoggerOptions) => void;
+}
+
+/**
+ * Log transport interface
+ */
+export interface LogTransport {
+  log: (entry: LogEntry) => void;
+  flush?: () => Promise<void>;
+  getLogs?: () => LogEntry[];
+  clear?: () => void;
 }
 
 /**
@@ -126,6 +111,7 @@ export interface MeasurementCompletionData {
 
 // Export LoggerOptions type for convenience
 export type LoggerOptions = Partial<{
+  source: string;
   category: LogCategory;
   details: Record<string, unknown>;
   tags: string[];
@@ -134,3 +120,13 @@ export type LoggerOptions = Partial<{
   user_id: string;
   duration: number;
 }>;
+
+/**
+ * Options for performance logging
+ */
+export interface PerformanceLoggerOptions {
+  category: LogCategory;
+  threshold: number;  // Threshold in ms for warning logs
+  details?: Record<string, unknown>;
+  silent?: boolean;
+}
