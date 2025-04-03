@@ -1,4 +1,5 @@
 
+import React from 'react';
 import {
   Logger,
   LogEntry,
@@ -13,7 +14,7 @@ import { memoryTransport } from './transports/memory.transport';
 import { logEventEmitter } from './events';
 
 // Re-export types
-export {
+export type { 
   Logger,
   LogEntry,
   LogLevel,
@@ -25,6 +26,18 @@ export {
 
 // Re-export utilities
 export { getLogger, initializeLogger };
+
+// Export memory transport
+export { memoryTransport };
+
+// Export event emitter
+export { logEventEmitter };
+
+// Export hooks
+export { useLogger } from './hooks/useLogger';
+export { useErrorLogger } from './hooks/useErrorLogger';
+export { useComponentPerformance } from './hooks/useComponentPerformance';
+export { usePerformanceLogger } from './hooks/usePerformanceLogger';
 
 // Set default log level based on environment
 const defaultLogLevel = process.env.NODE_ENV === 'production'
@@ -75,5 +88,5 @@ export function LogMonitor({ onLogEvent }: { onLogEvent?: (entry: LogEntry) => v
     }, [onLogEvent]);
   }
   
-  return null; // This component doesn't render anything
+  return null; // This component doesn't render anything visible
 }

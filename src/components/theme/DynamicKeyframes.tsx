@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useSiteTheme } from './SiteThemeProvider';
 import { themeRegistry } from '@/admin/theme/ThemeRegistry';
@@ -13,7 +12,7 @@ import { LogCategory } from '@/logging';
 export function DynamicKeyframes() {
   const { variables } = useSiteTheme();
   const [styleElement, setStyleElement] = useState<HTMLStyleElement | null>(null);
-  const logger = getLogger('DynamicKeyframes', { category: LogCategory.THEME });
+  const logger = getLogger('DynamicKeyframes');
   
   useEffect(() => {
     // Create a style element for our keyframes if it doesn't exist

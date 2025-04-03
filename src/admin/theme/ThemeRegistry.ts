@@ -1,4 +1,3 @@
-
 import { ImpulseTheme } from '../types/impulse.types';
 import { defaultImpulseTokens } from './impulse/tokens';
 import { getLogger } from '@/logging';
@@ -22,7 +21,7 @@ type ThemeRegistryMap = {
  */
 class ThemeRegistryManager {
   private themes: Map<string, ImpulseTheme> = new Map();
-  private logger = getLogger('ThemeRegistry', { category: LogCategory.THEME });
+  private logger = getLogger('ThemeRegistry');
   private activeThemeId: string | null = null;
 
   constructor() {
@@ -91,6 +90,7 @@ class ThemeRegistryManager {
       id: theme.id || 'unknown',
       name: theme.name || 'Unknown Theme',
       version: theme.version || '1.0.0',
+      description: theme.description || '',
       
       // Colors section with fallbacks
       colors: {

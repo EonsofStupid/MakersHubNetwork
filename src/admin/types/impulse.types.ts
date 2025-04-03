@@ -8,6 +8,7 @@ export interface ImpulseTheme {
   id?: string;
   name?: string;
   version?: string;
+  description?: string;
   
   // Theme component tokens
   colors: ImpulseColors;
