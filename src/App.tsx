@@ -1,9 +1,9 @@
 
 import { Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { Layout } from "@/components/layout/Layout";
+import { Layout } from "@/components/ui/layout/Layout";
 import { authRoutes } from "@/routes/auth-routes";
 import { appRoutes } from "@/routes/app-routes";
 import { adminRoutes } from "@/admin/routes/admin-routes";
