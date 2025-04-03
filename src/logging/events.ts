@@ -1,21 +1,19 @@
 
-import { LogEntry } from './types';
-
-type LogCallback = (entry: LogEntry) => void;
+import { LogEntry, LogEventCallback } from './types';
 
 /**
- * Simple event emitter for log events
+ * Event emitter for logging events
  */
 class LogEventEmitter {
-  private subscribers: LogCallback[] = [];
+  private subscribers: LogEventCallback[] = [];
   
   /**
-   * Register a callback for log events
+   * Subscribe to log events
    */
-  onLog(callback: LogCallback): () => void {
+  public onLog(callback: LogEventCallback): () => void {
     this.subscribers.push(callback);
     
-    // Return an unsubscribe function
+    // Return unsubscribe function
     return () => {
       this.subscribers = this.subscribers.filter(cb => cb !== callback);
     };
@@ -24,30 +22,31 @@ class LogEventEmitter {
   /**
    * Emit a log event to all subscribers
    */
-  emit(entry: LogEntry): void {
-    this.subscribers.forEach(callback => {
+  public emitLogEvent(entry: LogEntry): void {
+    // Call each subscriber with the log entry
+    for (const subscriber of this.subscribers) {
       try {
-        callback(entry);
+        subscriber(entry);
       } catch (error) {
-        console.error('Error in log subscriber callback:', error);
+        console.error('Error in log subscriber:', error);
       }
-    });
+    }
   }
   
   /**
-   * Get the number of active subscribers
+   * Get current listener count
    */
-  subscriberCount(): number {
+  public getListenerCount(): number {
     return this.subscribers.length;
   }
   
   /**
-   * Legacy method name for compatibility - now an alias for emit
+   * Legacy method name - alias to emitLogEvent for backward compatibility
    */
-  emitLogEvent(entry: LogEntry): void {
-    this.emit(entry);
+  public emit(entry: LogEntry): void {
+    this.emitLogEvent(entry);
   }
 }
 
-// Export a singleton instance
+// Export singleton instance
 export const logEventEmitter = new LogEventEmitter();
