@@ -1,207 +1,144 @@
-
-import { LogEntry, LogLevel, LogTransport } from '../types';
-import { getLogger } from '@/logging';
+import { LogTransport, LogEntry, LogLevel, LogCategory } from '../types';
 import { supabase } from '@/integrations/supabase/client';
-import { safeDetails } from '@/logging/utils/safeDetails';
+import { Json } from '@/integrations/supabase/types';
+
+interface BatchOptions {
+  maxSize: number;
+  interval: number;
+}
 
 /**
- * Transport that outputs logs to Supabase
- * This implementation handles actual Supabase connectivity with resilient
- * error handling and reconnection logic
+ * Supabase transport for logging to Supabase
+ * Batch-sends logs to improve performance
  */
-class SupabaseTransport implements LogTransport {
-  private buffer: LogEntry[] = [];
-  private maxBufferSize = 10;
-  private flushPromise: Promise<void> | null = null;
-  private consoleLogger = getLogger('SupabaseTransport');
-  private retryCount = 0;
-  private maxRetries = 3;
-  private retryDelay = 1000; // ms
-  private isConnected = true;
-  private authenticationRequired = false;
+export class SupabaseTransport implements LogTransport {
+  private queue: LogEntry[] = [];
+  private timeout: NodeJS.Timeout | null = null;
+  private options: BatchOptions;
+  private isFlushingNow = false;
   
-  constructor() {
-    this.setupConnectionMonitoring();
-    // Check if authentication is required for log insertion
-    this.checkAuthRequirement();
+  constructor(options?: Partial<BatchOptions>) {
+    this.options = {
+      maxSize: options?.maxSize || 10,
+      interval: options?.interval || 5000 // 5 seconds
+    };
   }
   
-  private async checkAuthRequirement() {
-    try {
-      // Try an anonymous insert to see if it's allowed
-      const testEntry = {
-        level: LogLevel.DEBUG,
-        category: 'TEST',
-        message: 'Auth test',
-        details: {},
-        timestamp: new Date().toISOString(),
-        source: 'frontend'
-      };
-      
-      const { error } = await supabase
-        .from('application_logs')
-        .insert([testEntry]);
-      
-      if (error && error.code === '42501') { // Permission denied
-        this.authenticationRequired = true;
-        this.consoleLogger.info('Authentication required for logging to Supabase');
-      }
-    } catch (e) {
-      // Silently handle - we'll assume auth is needed if we can't test
-      this.authenticationRequired = true;
-    }
-  }
-  
-  private setupConnectionMonitoring() {
-    // Add basic connectivity monitoring
-    window.addEventListener('online', () => {
-      this.isConnected = true;
-      this.consoleLogger.info('Network connection restored, flushing log buffer');
-      this.flush().catch(error => {
-        this.consoleLogger.error('Error flushing logs after reconnection:', { details: safeDetails(error) });
-      });
-    });
+  log(entry: LogEntry): void {
+    // Add to queue
+    this.queue.push(entry);
     
-    window.addEventListener('offline', () => {
-      this.isConnected = false;
-      this.consoleLogger.warn('Network connection lost, logs will be buffered');
-    });
-  }
-  
-  /**
-   * Log an entry to the Supabase buffer
-   */
-  public log(entry: LogEntry): void {
-    // Only send higher-level logs to reduce storage costs
-    if (entry.level < LogLevel.INFO) {
+    // If we've reached the max size, flush immediately
+    if (this.queue.length >= this.options.maxSize) {
+      this.flush();
       return;
     }
     
-    // Add to buffer
-    this.buffer.push(entry);
+    // Otherwise, set a timeout to flush
+    if (!this.timeout) {
+      this.timeout = setTimeout(() => this.flush(), this.options.interval);
+    }
+  }
+  
+  async flush(): Promise<void> {
+    // If we're already flushing or there's nothing to flush, return
+    if (this.isFlushingNow || this.queue.length === 0) {
+      return;
+    }
     
-    // Auto-flush when buffer is full or immediately if connected and critical log
-    if (this.buffer.length >= this.maxBufferSize || 
-        (this.isConnected && entry.level >= LogLevel.ERROR)) {
-      this.flush().catch(error => {
-        this.consoleLogger.error('Error flushing logs to Supabase:', { details: safeDetails(error) });
-      });
+    // Clear the timeout
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+    
+    this.isFlushingNow = true;
+    
+    // Take the current queue and reset it
+    const logsToSend = [...this.queue];
+    this.queue = [];
+    
+    try {
+      // Format logs for Supabase
+      const formattedLogs = logsToSend.map(log => this.formatLogForSupabase(log));
+      
+      // Send logs in batches to avoid hitting size limits
+      const batchSize = 25;
+      for (let i = 0; i < formattedLogs.length; i += batchSize) {
+        const batch = formattedLogs.slice(i, i + batchSize);
+        
+        // Send to Supabase
+        await this.sendToSupabase(batch);
+      }
+    } catch (error) {
+      console.error('Error sending logs to Supabase:', error);
+      
+      // Put the logs back in the queue
+      this.queue = [...logsToSend, ...this.queue];
+    } finally {
+      this.isFlushingNow = false;
+      
+      // If there are more logs, set a timeout to flush them
+      if (this.queue.length > 0 && !this.timeout) {
+        this.timeout = setTimeout(() => this.flush(), this.options.interval);
+      }
     }
   }
   
   /**
-   * Flush logs to Supabase
+   * Format a log entry for Supabase
    */
-  public async flush(): Promise<void> {
-    // Don't do anything if buffer is empty
-    if (this.buffer.length === 0) {
-      return Promise.resolve();
-    }
-    
-    // Don't start a new flush if one is in progress
-    if (this.flushPromise) {
-      return this.flushPromise;
-    }
-    
-    // Create a copy of the buffer and clear it
-    const logsToFlush = [...this.buffer];
-    this.buffer = [];
-    
-    // Store the promise so we can check if a flush is in progress
-    this.flushPromise = this.sendLogsToSupabase(logsToFlush).finally(() => {
-      this.flushPromise = null;
-      this.retryCount = 0; // Reset retry count on successful flush
-    });
-    
-    return this.flushPromise;
+  private formatLogForSupabase(log: LogEntry): {
+    level: number;
+    category: string;
+    message: string;
+    details: Record<string, any>;
+    timestamp: string;
+    source: string;
+  } {
+    // Format the log for Supabase
+    return {
+      level: log.level,
+      category: log.category,
+      message: String(log.message), // Ensure message is a string
+      details: log.details || {},
+      timestamp: log.timestamp.toISOString(),
+      source: log.source || 'app'
+    };
   }
   
   /**
-   * Send logs to Supabase with retry logic
+   * Send logs to Supabase
    */
-  private async sendLogsToSupabase(logs: LogEntry[]): Promise<void> {
-    if (!this.isConnected) {
-      // If offline, put logs back in buffer and resolve
-      this.buffer = [...logs, ...this.buffer];
-      return Promise.resolve();
-    }
-    
-    // If authentication is required and user isn't authenticated, just buffer the logs
-    const session = await supabase.auth.getSession();
-    if (this.authenticationRequired && !session.data.session) {
-      this.buffer = [...logs, ...this.buffer];
-      this.consoleLogger.debug('User not authenticated, buffering logs until authenticated');
-      return Promise.resolve();
+  private async sendToSupabase(logs: any[]): Promise<void> {
+    if (!supabase) {
+      console.error('Supabase client not initialized');
+      return;
     }
     
     try {
-      // Prepare logs with proper JSON serialization for Supabase
-      const sanitizedLogs = logs.map(log => ({
+      // Convert logs to the format expected by Supabase
+      const dbLogs = logs.map(log => ({
         level: log.level,
         category: log.category,
-        message: typeof log.message === 'string' ? log.message : JSON.stringify(log.message),
-        details: log.details ? safeDetails(log.details) : {},
-        timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : log.timestamp,
-        source: 'frontend'
+        message: log.message,
+        details: log.details as Json,
+        timestamp: log.timestamp,
+        source: log.source
       }));
       
-      // Actual implementation with Supabase
-      const { error } = await supabase
-        .from('application_logs')
-        .insert(sanitizedLogs);
+      // Insert the logs
+      const { error } = await supabase.from('application_logs').insert(dbLogs);
       
       if (error) {
-        // Check if access was denied due to RLS
-        if (error.code === '42501') {
-          this.authenticationRequired = true;
-          this.consoleLogger.warn('Access denied to application_logs table. Will buffer logs until authenticated.');
-          this.buffer = [...logs, ...this.buffer];
-          // Limit buffer size to prevent memory issues
-          if (this.buffer.length > this.maxBufferSize * 2) {
-            this.buffer = this.buffer.slice(0, this.maxBufferSize * 2);
-          }
-          return Promise.resolve();
-        }
-        throw error;
+        throw new Error(`Supabase log insert error: ${error.message}`);
       }
-      
-      this.consoleLogger.debug('Successfully sent logs to Supabase', { details: { count: logs.length } });
-      return Promise.resolve();
     } catch (error) {
-      this.consoleLogger.warn('Failed to send logs to Supabase', { details: safeDetails(error) });
-      
-      // Implement retry logic with backoff
-      if (this.retryCount < this.maxRetries) {
-        this.retryCount++;
-        const delay = this.retryDelay * Math.pow(2, this.retryCount - 1);
-        
-        this.consoleLogger.debug(`Retrying in ${delay}ms (attempt ${this.retryCount}/${this.maxRetries})`);
-        
-        return new Promise(resolve => {
-          setTimeout(() => {
-            // Put the logs back in the buffer and try again
-            this.buffer = [...logs, ...this.buffer];
-            // Limit buffer size to prevent memory issues
-            if (this.buffer.length > this.maxBufferSize * 2) {
-              this.buffer = this.buffer.slice(0, this.maxBufferSize * 2);
-            }
-            this.flush().then(resolve).catch(() => resolve());
-          }, delay);
-        });
-      }
-      
-      // If we've exhausted retries, put the logs back in the buffer to try again later
-      this.buffer = [...logs, ...this.buffer];
-      
-      // Limit buffer size to prevent memory issues
-      if (this.buffer.length > this.maxBufferSize * 2) {
-        this.buffer = this.buffer.slice(0, this.maxBufferSize * 2);
-      }
-      
-      return Promise.reject(error);
+      console.error('Error sending logs to Supabase:', error);
+      throw error;
     }
   }
 }
 
-// Export singleton instance
+// Export a singleton instance
 export const supabaseTransport = new SupabaseTransport();

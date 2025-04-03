@@ -1,6 +1,5 @@
 
-import { ImpulseTheme } from "../types/impulse.types";
-import { ThemeRegistry } from "../types/impulse.types";
+import { ImpulseTheme, ThemeRegistry, ThemeRegistryEntry } from "../types/impulse.types";
 import { defaultImpulseTokens } from "./impulse/tokens";
 
 // Theme registry with various presets
@@ -102,7 +101,7 @@ export const themeRegistry: ThemeRegistry = {
 };
 
 // Utility to get all available themes
-export function getAllThemes() {
+export function getAllThemes(): { id: string, name: string, description: string, theme: ImpulseTheme }[] {
   return Object.keys(themeRegistry).map(id => ({
     id,
     name: themeRegistry[id].name,

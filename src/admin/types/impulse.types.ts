@@ -169,3 +169,15 @@ export interface ImpulseTypography {
     loose: string;
   };
 }
+
+// Registry theme entry with metadata
+export interface ThemeRegistryEntry {
+  name: string;
+  description: string;
+  theme: ImpulseTheme;
+}
+
+// Theme registry interface
+export interface ThemeRegistry {
+  [key: string]: ThemeRegistryEntry;
+}

@@ -8,7 +8,7 @@ import { useImpulsivityStore } from '@/admin/store/impulse.store';
 import { flattenTheme, getReadableLabel } from '@/admin/theme/utils/themeUtils';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { getAllThemes } from '@/admin/theme/registry';
 
 export function ThemeVisualEditor() {
@@ -16,6 +16,7 @@ export function ThemeVisualEditor() {
   const [activeTab, setActiveTab] = useState("colors");
   const [searchTerm, setSearchTerm] = useState("");
   const availableThemes = getAllThemes();
+  const { toast } = useToast();
   
   // Filter theme properties based on search term and active tab
   const filteredProperties = flattenTheme(theme)
@@ -201,18 +202,18 @@ export function ThemeVisualEditor() {
               <div 
                 className="rounded-lg p-4 border border-border/50"
                 style={{ 
-                  backgroundColor: theme.colors.background.main, 
-                  color: theme.colors.text.primary 
+                  backgroundColor: theme.colors.background?.main || '#12121A', 
+                  color: theme.colors.text?.primary || '#F6F6F7' 
                 }}
               >
                 <h3 
                   className="mb-2"
-                  style={{ color: theme.colors.text.accent }}
+                  style={{ color: theme.colors.text?.accent || '#00F0FF' }}
                 >Preview Panel</h3>
                 
                 <p 
                   className="text-sm mb-4"
-                  style={{ color: theme.colors.text.secondary }}
+                  style={{ color: theme.colors.text?.secondary || 'rgba(255, 255, 255, 0.7)' }}
                 >
                   This shows how your theme will look in the admin interface.
                 </p>
@@ -220,9 +221,9 @@ export function ThemeVisualEditor() {
                 <div 
                   className="p-3 rounded-md mb-4"
                   style={{ 
-                    backgroundColor: theme.colors.background.card,
-                    border: `1px solid ${theme.colors.borders.normal}`,
-                    boxShadow: theme.effects.glow.primary
+                    backgroundColor: theme.colors.background?.card || 'rgba(28, 32, 42, 0.7)',
+                    border: `1px solid ${theme.colors.borders?.normal || 'rgba(0, 240, 255, 0.2)'}`,
+                    boxShadow: theme.effects?.glow?.primary || '0 0 15px rgba(0, 240, 255, 0.7)'
                   }}
                 >
                   <p className="text-sm">Card with glow effect</p>
@@ -232,12 +233,12 @@ export function ThemeVisualEditor() {
                   className="px-3 py-1.5 rounded-md text-sm transition-all duration-300"
                   style={{ 
                     backgroundColor: 'transparent',
-                    border: `1px solid ${theme.colors.primary}`,
-                    color: theme.colors.primary
+                    border: `1px solid ${theme.colors.primary || '#00F0FF'}`,
+                    color: theme.colors.primary || '#00F0FF'
                   }}
                   onMouseOver={(e) => {
-                    e.currentTarget.style.backgroundColor = `${theme.colors.primary}20`;
-                    e.currentTarget.style.boxShadow = theme.effects.glow.hover;
+                    e.currentTarget.style.backgroundColor = `${theme.colors.primary || '#00F0FF'}20`;
+                    e.currentTarget.style.boxShadow = theme.effects?.glow?.hover || '0 0 20px rgba(0, 240, 255, 0.9)';
                   }}
                   onMouseOut={(e) => {
                     e.currentTarget.style.backgroundColor = 'transparent';
@@ -251,12 +252,12 @@ export function ThemeVisualEditor() {
                   className="px-3 py-1.5 rounded-md text-sm ml-2 transition-all duration-300"
                   style={{ 
                     backgroundColor: 'transparent',
-                    border: `1px solid ${theme.colors.secondary}`,
-                    color: theme.colors.secondary
+                    border: `1px solid ${theme.colors.secondary || '#FF2D6E'}`,
+                    color: theme.colors.secondary || '#FF2D6E'
                   }}
                   onMouseOver={(e) => {
-                    e.currentTarget.style.backgroundColor = `${theme.colors.secondary}20`;
-                    e.currentTarget.style.boxShadow = theme.effects.glow.secondary;
+                    e.currentTarget.style.backgroundColor = `${theme.colors.secondary || '#FF2D6E'}20`;
+                    e.currentTarget.style.boxShadow = theme.effects?.glow?.secondary || '0 0 15px rgba(255, 45, 110, 0.7)';
                   }}
                   onMouseOut={(e) => {
                     e.currentTarget.style.backgroundColor = 'transparent';
