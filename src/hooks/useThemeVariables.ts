@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { Theme } from '@/types/theme';
 import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { getThemeProperty, ensureStringValue } from '@/admin/theme/utils/themeUtils';
 
@@ -86,7 +87,7 @@ const defaultThemeVariables: ThemeVariables = {
 };
 
 export function useThemeVariables(theme: Theme | null): ThemeVariables {
-  const logger = getLogger('useThemeVariables');
+  const logger = getLogger('useThemeVariables', { category: LogCategory.THEME });
   
   return useMemo(() => {
     if (!theme) {
