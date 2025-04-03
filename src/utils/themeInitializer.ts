@@ -5,7 +5,7 @@ import { safeDetails } from '@/logging/utils/safeDetails';
 import { LogCategory } from '@/logging';
 
 export const DEFAULT_THEME_NAME = 'Impulsivity';
-const logger = getLogger('ThemeInitializer', LogCategory.THEME);
+const logger = getLogger('ThemeInitializer', { category: LogCategory.THEME });
 
 /**
  * Get a theme ID by its name

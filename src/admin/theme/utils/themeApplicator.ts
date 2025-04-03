@@ -1,293 +1,224 @@
-import { ImpulseTheme } from '../../types/impulse.types';
-import { themeRegistry } from '../ThemeRegistry';
+
+import { ImpulseTheme } from "../../types/impulse.types";
+import { themeRegistry } from "../ThemeRegistry";
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { getThemeProperty } from "./themeUtils";
 
-const logger = getLogger('themeApplicator', { category: LogCategory.THEME });
+const logger = getLogger('ThemeApplicator', { category: LogCategory.THEME });
 
 /**
- * Apply theme to document by either direct object or by theme ID from registry
+ * Apply theme to document by setting CSS variables
  */
-export function applyThemeToDocument(themeOrId: ImpulseTheme | string): void {
+export function applyThemeToDocument(themeIdOrTheme: string | ImpulseTheme): void {
   try {
-    let theme: ImpulseTheme;
+    // Get the theme object
+    const theme = typeof themeIdOrTheme === 'string'
+      ? themeRegistry.getTheme(themeIdOrTheme)
+      : themeIdOrTheme;
     
-    // If a string ID is provided, get the theme from the registry
-    if (typeof themeOrId === 'string') {
-      const themeName = themeOrId;
-      logger.debug('Applying theme by ID', { 
-        themeName 
-      });
-      theme = themeRegistry.getTheme(themeOrId);
-    } else {
-      // Otherwise use the direct theme object
-      theme = themeOrId;
-    }
-    
-    // Make sure we have a valid theme
     if (!theme) {
-      logger.warn('No valid theme to apply, using default');
-      theme = themeRegistry.getDefaultTheme();
+      logger.warn('No theme provided to apply, using default', { 
+        details: { theme: typeof themeIdOrTheme === 'string' ? themeIdOrTheme : 'object' } 
+      });
+      applyThemeToDocument(themeRegistry.getDefaultTheme());
+      return;
     }
     
-    const root = document.documentElement;
+    // Set theme ID data attribute
+    const themeId = typeof themeIdOrTheme === 'string' ? themeIdOrTheme : theme.id || 'custom';
+    document.documentElement.setAttribute('data-theme', themeId);
     
-    // Apply color variables
-    if (theme.colors) {
-      // Primary colors
-      root.style.setProperty('--impulse-primary', theme.colors.primary);
-      root.style.setProperty('--impulse-secondary', theme.colors.secondary);
-      if (theme.colors.accent) {
-        root.style.setProperty('--impulse-accent', theme.colors.accent);
-      }
-      
-      // Background colors
-      if (theme.colors.background) {
-        root.style.setProperty('--impulse-bg-main', theme.colors.background.main);
-        root.style.setProperty('--impulse-bg-overlay', theme.colors.background.overlay);
-        root.style.setProperty('--impulse-bg-card', theme.colors.background.card);
-        if (theme.colors.background.alt) {
-          root.style.setProperty('--impulse-bg-alt', theme.colors.background.alt);
-        }
-      }
-      
-      // Text colors
-      if (theme.colors.text) {
-        root.style.setProperty('--impulse-text-primary', theme.colors.text.primary);
-        root.style.setProperty('--impulse-text-secondary', theme.colors.text.secondary);
-        if (theme.colors.text.accent) {
-          root.style.setProperty('--impulse-text-accent', theme.colors.text.accent);
-        }
-        if (theme.colors.text.muted) {
-          root.style.setProperty('--impulse-text-muted', theme.colors.text.muted);
-        }
-      }
-      
-      // Border colors
-      if (theme.colors.borders) {
-        root.style.setProperty('--impulse-border-normal', theme.colors.borders.normal);
-        root.style.setProperty('--impulse-border-hover', theme.colors.borders.hover);
-        root.style.setProperty('--impulse-border-active', theme.colors.borders.active);
-        if (theme.colors.borders.focus) {
-          root.style.setProperty('--impulse-border-focus', theme.colors.borders.focus);
-        }
-      }
-      
-      // Status colors
-      if (theme.colors.status) {
-        root.style.setProperty('--impulse-status-success', theme.colors.status.success);
-        root.style.setProperty('--impulse-status-warning', theme.colors.status.warning);
-        root.style.setProperty('--impulse-status-error', theme.colors.status.error);
-        root.style.setProperty('--impulse-status-info', theme.colors.status.info);
-      }
-      
-      // Glass effect variables
-      root.style.setProperty('--glass-opacity', '0.7');
-      root.style.setProperty('--glass-blur', '12px');
-      root.style.setProperty('--glass-border-color', `rgba(${hexToRgb(theme.colors.primary)}, 0.3)`);
-      if (theme.colors.background && theme.colors.background.card) {
-        root.style.setProperty('--glass-background', `rgba(${hexToRgb(theme.colors.background.card)}, var(--glass-opacity))`);
-      }
-    }
+    // Set basic colors on documentElement directly for immediate styling
+    document.documentElement.style.backgroundColor = getThemeProperty(theme, 'colors.background.main', '#000000');
+    document.documentElement.style.color = getThemeProperty(theme, 'colors.text.primary', '#ffffff');
+    document.body.style.backgroundColor = getThemeProperty(theme, 'colors.background.main', '#000000');
+    document.body.style.color = getThemeProperty(theme, 'colors.text.primary', '#ffffff');
     
-    // Apply effect variables
-    if (theme.effects) {
-      if (theme.effects.glow) {
-        root.style.setProperty('--impulse-glow-primary', theme.effects.glow.primary);
-        root.style.setProperty('--impulse-glow-secondary', theme.effects.glow.secondary);
-        root.style.setProperty('--impulse-glow-hover', theme.effects.glow.hover);
-      }
-      
-      if (theme.effects.gradients) {
-        root.style.setProperty('--impulse-gradient-primary', theme.effects.gradients.primary);
-        root.style.setProperty('--impulse-gradient-secondary', theme.effects.gradients.secondary);
-        if (theme.effects.gradients.accent) {
-          root.style.setProperty('--impulse-gradient-accent', theme.effects.gradients.accent);
-        }
-      }
-      
-      if (theme.effects.shadows) {
-        root.style.setProperty('--impulse-shadow-small', theme.effects.shadows.small);
-        root.style.setProperty('--impulse-shadow-medium', theme.effects.shadows.medium);
-        root.style.setProperty('--impulse-shadow-large', theme.effects.shadows.large);
-        if (theme.effects.shadows.inner) {
-          root.style.setProperty('--impulse-shadow-inner', theme.effects.shadows.inner);
-        }
-      }
-    }
+    // Apply all theme variables as CSS custom properties
     
-    // Apply animation variables
-    if (theme.animation) {
-      if (theme.animation.duration) {
-        root.style.setProperty('--impulse-duration-fast', theme.animation.duration.fast);
-        root.style.setProperty('--impulse-duration-normal', theme.animation.duration.normal);
-        root.style.setProperty('--impulse-duration-slow', theme.animation.duration.slow);
-      }
-      
-      if (theme.animation.curves) {
-        root.style.setProperty('--impulse-curve-bounce', theme.animation.curves.bounce);
-        root.style.setProperty('--impulse-curve-ease', theme.animation.curves.ease);
-        root.style.setProperty('--impulse-curve-spring', theme.animation.curves.spring);
-        if (theme.animation.curves.linear) {
-          root.style.setProperty('--impulse-curve-linear', theme.animation.curves.linear);
-        }
-      }
-      
-      if (theme.animation.keyframes) {
-        root.style.setProperty('--impulse-keyframes-fade', theme.animation.keyframes.fade);
-        root.style.setProperty('--impulse-keyframes-pulse', theme.animation.keyframes.pulse);
-        root.style.setProperty('--impulse-keyframes-glow', theme.animation.keyframes.glow);
-        if (theme.animation.keyframes.slide) {
-          root.style.setProperty('--impulse-keyframes-slide', theme.animation.keyframes.slide);
-        }
-      }
-    }
+    // Colors 
+    setThemeProperty('--color-bg-main', getThemeProperty(theme, 'colors.background.main', '#000000'));
+    setThemeProperty('--color-bg-card', getThemeProperty(theme, 'colors.background.card', 'rgba(17, 17, 17, 0.7)'));
+    setThemeProperty('--color-bg-overlay', getThemeProperty(theme, 'colors.background.overlay', 'rgba(0, 0, 0, 0.5)'));
+    setThemeProperty('--color-bg-alt', getThemeProperty(theme, 'colors.background.alt', '#0f0f0f'));
     
-    // Apply component specific variables
-    if (theme.components) {
-      if (theme.components.panel) {
-        root.style.setProperty('--impulse-panel-radius', theme.components.panel.radius);
-        root.style.setProperty('--impulse-panel-padding', theme.components.panel.padding);
-        if (theme.components.panel.background) {
-          root.style.setProperty('--impulse-panel-background', theme.components.panel.background);
-        }
-      }
-      
-      if (theme.components.button) {
-        root.style.setProperty('--impulse-button-radius', theme.components.button.radius);
-        root.style.setProperty('--impulse-button-padding', theme.components.button.padding);
-        if (theme.components.button.transition) {
-          root.style.setProperty('--impulse-button-transition', theme.components.button.transition);
-        }
-      }
-      
-      if (theme.components.tooltip) {
-        root.style.setProperty('--impulse-tooltip-radius', theme.components.tooltip.radius);
-        root.style.setProperty('--impulse-tooltip-padding', theme.components.tooltip.padding);
-        if (theme.components.tooltip.background) {
-          root.style.setProperty('--impulse-tooltip-background', theme.components.tooltip.background);
-        }
-      }
-      
-      if (theme.components.input) {
-        root.style.setProperty('--impulse-input-radius', theme.components.input.radius);
-        root.style.setProperty('--impulse-input-padding', theme.components.input.padding);
-        if (theme.components.input.background) {
-          root.style.setProperty('--impulse-input-background', theme.components.input.background);
-        }
-      }
-    }
+    // Text colors
+    setThemeProperty('--color-text-primary', getThemeProperty(theme, 'colors.text.primary', '#ffffff'));
+    setThemeProperty('--color-text-secondary', getThemeProperty(theme, 'colors.text.secondary', 'rgba(255, 255, 255, 0.7)'));
+    setThemeProperty('--color-text-accent', getThemeProperty(theme, 'colors.text.accent', '#00F0FF'));
+    setThemeProperty('--color-text-muted', getThemeProperty(theme, 'colors.text.muted', 'rgba(255, 255, 255, 0.5)'));
     
-    // Apply typography variables
+    // Border colors
+    setThemeProperty('--color-border-normal', getThemeProperty(theme, 'colors.borders.normal', 'rgba(255, 255, 255, 0.1)'));
+    setThemeProperty('--color-border-hover', getThemeProperty(theme, 'colors.borders.hover', 'rgba(255, 255, 255, 0.2)'));
+    setThemeProperty('--color-border-active', getThemeProperty(theme, 'colors.borders.active', 'rgba(255, 255, 255, 0.3)'));
+    setThemeProperty('--color-border-focus', getThemeProperty(theme, 'colors.borders.focus', getThemeProperty(theme, 'colors.borders.hover', 'rgba(255, 255, 255, 0.2)')));
+    
+    // Status colors
+    setThemeProperty('--color-status-success', getThemeProperty(theme, 'colors.status.success', '#10B981'));
+    setThemeProperty('--color-status-warning', getThemeProperty(theme, 'colors.status.warning', '#F59E0B'));
+    setThemeProperty('--color-status-error', getThemeProperty(theme, 'colors.status.error', '#EF4444'));
+    setThemeProperty('--color-status-info', getThemeProperty(theme, 'colors.status.info', '#3B82F6'));
+    
+    // Brand colors
+    setThemeProperty('--color-primary', getThemeProperty(theme, 'colors.primary', '#00F0FF'));
+    setThemeProperty('--color-secondary', getThemeProperty(theme, 'colors.secondary', '#FF2D6E'));
+    setThemeProperty('--color-accent', getThemeProperty(theme, 'colors.accent', '#8B5CF6'));
+    
+    // Effect styles
+    
+    // Glows
+    setThemeProperty('--effect-glow-primary', getThemeProperty(theme, 'effects.glow.primary', '0 0 10px rgba(0, 240, 255, 0.7)'));
+    setThemeProperty('--effect-glow-secondary', getThemeProperty(theme, 'effects.glow.secondary', '0 0 10px rgba(255, 45, 110, 0.7)'));
+    setThemeProperty('--effect-glow-hover', getThemeProperty(theme, 'effects.glow.hover', '0 0 15px rgba(0, 240, 255, 0.9)'));
+    
+    // Gradients
+    setThemeProperty('--effect-gradient-primary', getThemeProperty(theme, 'effects.gradients.primary', 'linear-gradient(90deg, #00F0FF, #00F0FF44)'));
+    setThemeProperty('--effect-gradient-secondary', getThemeProperty(theme, 'effects.gradients.secondary', 'linear-gradient(90deg, #FF2D6E, #FF2D6E44)'));
+    setThemeProperty('--effect-gradient-accent', getThemeProperty(theme, 'effects.gradients.accent', 'linear-gradient(90deg, #8B5CF6, #8B5CF644)'));
+    
+    // Shadows
+    setThemeProperty('--effect-shadow-small', getThemeProperty(theme, 'effects.shadows.small', '0 2px 4px rgba(0,0,0,0.1)'));
+    setThemeProperty('--effect-shadow-medium', getThemeProperty(theme, 'effects.shadows.medium', '0 4px 6px rgba(0,0,0,0.1)'));
+    setThemeProperty('--effect-shadow-large', getThemeProperty(theme, 'effects.shadows.large', '0 10px 15px rgba(0,0,0,0.1)'));
+    setThemeProperty('--effect-shadow-inner', getThemeProperty(theme, 'effects.shadows.inner', 'inset 0 2px 4px rgba(0,0,0,0.1)'));
+    
+    // Animation
+    
+    // Durations
+    setThemeProperty('--animation-duration-fast', getThemeProperty(theme, 'animation.duration.fast', '150ms'));
+    setThemeProperty('--animation-duration-normal', getThemeProperty(theme, 'animation.duration.normal', '300ms'));
+    setThemeProperty('--animation-duration-slow', getThemeProperty(theme, 'animation.duration.slow', '500ms'));
+    
+    // Curves
+    setThemeProperty('--animation-curve-bounce', getThemeProperty(theme, 'animation.curves.bounce', 'cubic-bezier(0.175, 0.885, 0.32, 1.275)'));
+    setThemeProperty('--animation-curve-ease', getThemeProperty(theme, 'animation.curves.ease', 'cubic-bezier(0.4, 0, 0.2, 1)'));
+    setThemeProperty('--animation-curve-spring', getThemeProperty(theme, 'animation.curves.spring', 'cubic-bezier(0.43, 0.13, 0.23, 0.96)'));
+    setThemeProperty('--animation-curve-linear', getThemeProperty(theme, 'animation.curves.linear', 'linear'));
+    
+    // Keyframes are handled separately in DynamicKeyframes
+    
+    // Component styles
+    
+    // Panel
+    setThemeProperty('--component-panel-radius', getThemeProperty(theme, 'components.panel.radius', '0.75rem'));
+    setThemeProperty('--component-panel-padding', getThemeProperty(theme, 'components.panel.padding', '1.5rem'));
+    setThemeProperty('--component-panel-bg', getThemeProperty(theme, 'components.panel.background', getThemeProperty(theme, 'colors.background.card', '#111111')));
+    
+    // Button
+    setThemeProperty('--component-button-radius', getThemeProperty(theme, 'components.button.radius', '0.5rem'));
+    setThemeProperty('--component-button-padding', getThemeProperty(theme, 'components.button.padding', '0.5rem 1rem'));
+    setThemeProperty('--component-button-transition', getThemeProperty(theme, 'components.button.transition', 'all 300ms ease'));
+    
+    // Tooltip
+    setThemeProperty('--component-tooltip-radius', getThemeProperty(theme, 'components.tooltip.radius', '0.25rem'));
+    setThemeProperty('--component-tooltip-padding', getThemeProperty(theme, 'components.tooltip.padding', '0.5rem'));
+    setThemeProperty('--component-tooltip-bg', getThemeProperty(theme, 'components.tooltip.background', 'rgba(0, 0, 0, 0.8)'));
+    
+    // Input
+    setThemeProperty('--component-input-radius', getThemeProperty(theme, 'components.input.radius', '0.5rem'));
+    setThemeProperty('--component-input-padding', getThemeProperty(theme, 'components.input.padding', '0.5rem 0.75rem'));
+    setThemeProperty('--component-input-bg', getThemeProperty(theme, 'components.input.background', 'rgba(0, 0, 0, 0.2)'));
+    
+    // Apply typography
     if (theme.typography) {
-      if (theme.typography.fonts) {
-        root.style.setProperty('--impulse-font-body', theme.typography.fonts.body);
-        root.style.setProperty('--impulse-font-heading', theme.typography.fonts.heading);
-        root.style.setProperty('--impulse-font-monospace', theme.typography.fonts.monospace);
-      }
+      // Fonts
+      setThemeProperty('--font-family-body', getThemeProperty(theme, 'typography.fonts.body', 'system-ui, sans-serif'));
+      setThemeProperty('--font-family-heading', getThemeProperty(theme, 'typography.fonts.heading', 'system-ui, sans-serif'));
+      setThemeProperty('--font-family-mono', getThemeProperty(theme, 'typography.fonts.monospace', 'monospace'));
       
-      if (theme.typography.sizes) {
-        root.style.setProperty('--impulse-size-xs', theme.typography.sizes.xs);
-        root.style.setProperty('--impulse-size-sm', theme.typography.sizes.sm);
-        root.style.setProperty('--impulse-size-md', theme.typography.sizes.md);
-        root.style.setProperty('--impulse-size-lg', theme.typography.sizes.lg);
-        root.style.setProperty('--impulse-size-xl', theme.typography.sizes.xl);
-        root.style.setProperty('--impulse-size-2xl', theme.typography.sizes['2xl']);
-        root.style.setProperty('--impulse-size-3xl', theme.typography.sizes['3xl']);
-      }
+      // Font sizes
+      setThemeProperty('--font-size-xs', getThemeProperty(theme, 'typography.sizes.xs', '0.75rem'));
+      setThemeProperty('--font-size-sm', getThemeProperty(theme, 'typography.sizes.sm', '0.875rem'));
+      setThemeProperty('--font-size-md', getThemeProperty(theme, 'typography.sizes.md', '1rem'));
+      setThemeProperty('--font-size-lg', getThemeProperty(theme, 'typography.sizes.lg', '1.125rem'));
+      setThemeProperty('--font-size-xl', getThemeProperty(theme, 'typography.sizes.xl', '1.25rem'));
+      setThemeProperty('--font-size-2xl', getThemeProperty(theme, 'typography.sizes.2xl', '1.5rem'));
+      setThemeProperty('--font-size-3xl', getThemeProperty(theme, 'typography.sizes.3xl', '1.875rem'));
       
-      if (theme.typography.weights) {
-        root.style.setProperty('--impulse-weight-light', theme.typography.weights.light.toString());
-        root.style.setProperty('--impulse-weight-normal', theme.typography.weights.normal.toString());
-        root.style.setProperty('--impulse-weight-medium', theme.typography.weights.medium.toString());
-        root.style.setProperty('--impulse-weight-bold', theme.typography.weights.bold.toString());
-      }
+      // Font weights
+      setThemeProperty('--font-weight-light', String(getThemeProperty(theme, 'typography.weights.light', 300)));
+      setThemeProperty('--font-weight-normal', String(getThemeProperty(theme, 'typography.weights.normal', 400)));
+      setThemeProperty('--font-weight-medium', String(getThemeProperty(theme, 'typography.weights.medium', 500)));
+      setThemeProperty('--font-weight-bold', String(getThemeProperty(theme, 'typography.weights.bold', 700)));
       
-      if (theme.typography.lineHeights) {
-        root.style.setProperty('--impulse-lineheight-tight', theme.typography.lineHeights.tight);
-        root.style.setProperty('--impulse-lineheight-normal', theme.typography.lineHeights.normal);
-        root.style.setProperty('--impulse-lineheight-loose', theme.typography.lineHeights.loose);
-      }
+      // Line heights
+      setThemeProperty('--line-height-tight', getThemeProperty(theme, 'typography.lineHeights.tight', '1.25'));
+      setThemeProperty('--line-height-normal', getThemeProperty(theme, 'typography.lineHeights.normal', '1.5'));
+      setThemeProperty('--line-height-loose', getThemeProperty(theme, 'typography.lineHeights.loose', '2'));
     }
     
-    // Apply to standard theme variables as well for compatibility
-    if (theme.colors) {
-      if (theme.colors.background) {
-        root.style.setProperty('--background', theme.colors.background.main);
-      }
-      if (theme.colors.text) {
-        root.style.setProperty('--foreground', theme.colors.text.primary);
-      }
-      if (theme.colors.background) {
-        root.style.setProperty('--card', theme.colors.background.card);
-      }
-      if (theme.colors.text) {
-        root.style.setProperty('--card-foreground', theme.colors.text.primary);
-      }
-      root.style.setProperty('--primary', theme.colors.primary);
-      if (theme.colors.text) {
-        root.style.setProperty('--primary-foreground', theme.colors.text.primary);
-      }
-      root.style.setProperty('--secondary', theme.colors.secondary);
-      if (theme.colors.text) {
-        root.style.setProperty('--secondary-foreground', theme.colors.text.primary);
-      }
-      if (theme.colors.accent) {
-        root.style.setProperty('--accent', theme.colors.accent);
-      }
-      if (theme.colors.text) {
-        root.style.setProperty('--accent-foreground', theme.colors.text.primary);
-      }
-      if (theme.colors.status && theme.colors.status.error) {
-        root.style.setProperty('--destructive', theme.colors.status.error);
-      }
-      if (theme.colors.text) {
-        root.style.setProperty('--destructive-foreground', theme.colors.text.primary);
-      }
-      if (theme.colors.borders) {
-        root.style.setProperty('--border', theme.colors.borders.normal);
-      }
-      if (theme.colors.background) {
-        root.style.setProperty('--input', theme.colors.background.overlay);
-      }
-      if (theme.colors.borders) {
-        root.style.setProperty('--ring', theme.colors.borders.focus || theme.colors.borders.hover);
-      }
-    }
+    // Apply HSL values for colors that support alpha variations
+    // Convert HEX to RGB
+    const primaryRgb = hexToRgbString(getThemeProperty(theme, 'colors.primary', '#00F0FF'));
+    const secondaryRgb = hexToRgbString(getThemeProperty(theme, 'colors.secondary', '#FF2D6E'));
+    const textRgb = hexToRgbString(getThemeProperty(theme, 'colors.text.primary', '#ffffff'));
+    const bgRgb = hexToRgbString(getThemeProperty(theme, 'colors.background.main', '#000000'));
     
-    // Mark the document as having our theme applied
-    root.classList.add('impulse-theme-applied');
+    setThemeProperty('--color-primary-rgb', primaryRgb);
+    setThemeProperty('--color-secondary-rgb', secondaryRgb);
+    setThemeProperty('--color-text-rgb', textRgb);
+    setThemeProperty('--color-bg-rgb', bgRgb);
     
     logger.debug('Theme applied successfully');
   } catch (error) {
-    logger.error('Error applying theme', { 
-      details: { error: error instanceof Error ? error.message : String(error) }
-    });
+    logger.error('Error applying theme', { details: { error } });
   }
 }
 
-// Helper function to convert hex to rgb
-export function hexToRgb(hex: string | null): string {
+/**
+ * Helper function to set CSS variable
+ */
+function setThemeProperty(name: string, value: string | number | undefined | null): void {
+  if (value === undefined || value === null) return;
+  document.documentElement.style.setProperty(name, String(value));
+}
+
+/**
+ * Convert hex to RGB
+ */
+export function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
+  if (!hex) return null;
+  
   // Default fallback
-  if (!hex || typeof hex !== 'string') return '0, 0, 0';
+  const fallback = { r: 0, g: 0, b: 0 };
   
-  // Remove # if present
-  hex = hex.replace(/^#/, '');
-  
-  // Parse hex values
-  let r, g, b;
-  if (hex.length === 3) {
-    r = parseInt(hex.charAt(0) + hex.charAt(0), 16);
-    g = parseInt(hex.charAt(1) + hex.charAt(1), 16);
-    b = parseInt(hex.charAt(2) + hex.charAt(2), 16);
-  } else {
-    r = parseInt(hex.substring(0, 2), 16);
-    g = parseInt(hex.substring(2, 4), 16);
-    b = parseInt(hex.substring(4, 6), 16);
+  // Handle different hex formats
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
+  if (result) {
+    return {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    };
   }
   
-  // Handle invalid values
-  if (isNaN(r) || isNaN(g) || isNaN(b)) return '0, 0, 0';
+  // Handle shorthand hex format (#FFF)
+  const shorthandResult = /^#?([a-f\d])([a-f\d])([a-f\d])$/i.exec(hex.trim());
+  if (shorthandResult) {
+    return {
+      r: parseInt(shorthandResult[1] + shorthandResult[1], 16),
+      g: parseInt(shorthandResult[2] + shorthandResult[2], 16),
+      b: parseInt(shorthandResult[3] + shorthandResult[3], 16)
+    };
+  }
   
-  return `${r}, ${g}, ${b}`;
+  return fallback;
+}
+
+/**
+ * Convert hex to RGB string format (e.g., "255, 255, 255")
+ */
+export function hexToRgbString(hex: string): string {
+  const rgb = hexToRgb(hex);
+  return rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : '0, 0, 0';
+}
+
+/**
+ * Convert hex to RGBA
+ */
+export function hexToRgba(hex: string, alpha: number): string {
+  const rgb = hexToRgb(hex);
+  return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})` : `rgba(0, 0, 0, ${alpha})`;
 }

@@ -12,6 +12,7 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { isError, isValidUUID } from '@/logging/utils/type-guards';
 import { safeDetails } from '@/logging/utils/safeDetails';
+import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -28,7 +29,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   
   const { setTheme, isLoading, error: themeStoreError } = useThemeStore();
   const { toast } = useToast();
-  const logger = getLogger('ThemeInitializer', LogCategory.THEME);
+  const logger = getLogger('ThemeInitializer', { category: LogCategory.THEME });
   
   // Apply default styles immediately to prevent white flash
   useEffect(() => {
@@ -42,10 +43,10 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     applyThemeToDocument('default');
     
     // Force the browser to apply default colors immediately
-    document.documentElement.style.backgroundColor = defaultImpulseTokens.colors.background.main;
-    document.documentElement.style.color = defaultImpulseTokens.colors.text.primary;
-    document.body.style.backgroundColor = defaultImpulseTokens.colors.background.main;
-    document.body.style.color = defaultImpulseTokens.colors.text.primary;
+    document.documentElement.style.backgroundColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
+    document.documentElement.style.color = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
+    document.body.style.backgroundColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
+    document.body.style.color = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
     
     logger.debug('Applied immediate fallback styling');
     

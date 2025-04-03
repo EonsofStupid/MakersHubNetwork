@@ -40,6 +40,13 @@ class LogEventEmitter {
   subscriberCount(): number {
     return this.subscribers.length;
   }
+  
+  /**
+   * Legacy method name for compatibility
+   */
+  emitLogEvent(entry: LogEntry): void {
+    this.emit(entry);
+  }
 }
 
 // Export a singleton instance

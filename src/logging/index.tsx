@@ -1,135 +1,79 @@
 
-// Core types
-export { LogCategory, LogLevel } from './types';
-export type { 
-  LogEntry, 
-  Logger, 
-  LogTransport, 
-  LoggingConfig, 
-  LoggerOptions, 
-  MeasurementResult,
-  PerformanceMeasurementOptions,
-  MeasurementCompletionData,
-  PerformanceMeasurement
+import {
+  Logger,
+  LogEntry,
+  LogLevel,
+  LogCategory,
+  LoggerOptions,
+  LogTransport,
+  LoggingConfig
 } from './types';
+import { getLogger, initializeLogger } from './service/logger.service';
+import { memoryTransport } from './transports/memory.transport';
+import { logEventEmitter } from './events';
 
-// Core logging functionality
-export { 
-  getLogger, 
-  initializeLogger, 
-  loggerService
-} from './service/logger.service';
-
-// Export event emitter
-export { logEventEmitter } from './events';
-
-// Context provider and hooks
-export { 
-  LoggingProvider, 
-  useLoggingContext 
-} from './context/LoggingContext';
-
-export { 
-  useLogger 
-} from './hooks/useLogger';
-
-export { 
-  usePerformanceLogger, 
-  useComponentPerformance 
-} from './hooks/usePerformanceLogger';
-
-export { 
-  useErrorLogger 
-} from './hooks/useErrorLogger';
-
-export { 
-  useNetworkLogger 
-} from './hooks/useNetworkLogger';
-
-// UI components
-export { 
-  LogConsole 
-} from './components/LogConsole';
-
-export { 
-  LogToggleButton 
-} from './components/LogToggleButton';
-
-export { 
-  LogActivityStream 
-} from './components/LogActivityStream';
-
-export { 
-  LogNotification 
-} from './components/LogNotification';
-
-export { 
-  InlineLogIndicator 
-} from './components/InlineLogIndicator';
-
-// Utility functions
-export { 
-  safelyRenderNode, 
-  nodeToSearchableString 
-} from './utils/react';
-
+// Re-export types
 export {
-  createMeasurement,
-  measureExecution,
-  createSimpleMeasurement,
-  measurePerformance
-} from './utils/performance';
+  Logger,
+  LogEntry,
+  LogLevel,
+  LogCategory,
+  LoggerOptions,
+  LogTransport,
+  LoggingConfig
+};
 
-// Constants
-export { 
-  LOG_LEVEL_NAMES, 
-  isLogLevelAtLeast,
-  getLogLevelName,
-  getLogLevelColorClass,
-  getLogItemClass,
-  getLogLevelFromString
-} from './constants/log-level';
+// Re-export utilities
+export { getLogger, initializeLogger };
 
-// Transports
-export { 
-  memoryTransport 
-} from './transports/memory.transport';
+// Set default log level based on environment
+const defaultLogLevel = process.env.NODE_ENV === 'production'
+  ? LogLevel.INFO
+  : LogLevel.DEBUG;
 
-export { 
-  consoleTransport 
-} from './transports/console.transport';
+// Initialize the logger with console transport by default
+initializeLogger({
+  minLevel: defaultLogLevel,
+  flushInterval: 5000, // 5 seconds
+  bufferSize: 20,
+  includeSource: true,
+  includeSession: true,
+  includeUser: true,
+  transports: [memoryTransport]
+});
 
-export {
-  uiTransport
-} from './transports/ui-transport';
-
-// Export the formatLogDetails utility for use throughout the app
-export { formatLogDetails } from './utils/details-formatter';
-
-// Export the safeDetails utility 
-export { safeDetails } from './utils/safeDetails';
-
-// Type guards
-export {
-  isError,
-  isRecord,
-  isString,
-  isNumber,
-  isBoolean,
-  isValidUUID,
-  generateUUID,
-  toLogDetails
-} from './utils/type-guards';
-
-// Helper functions for working with logs
-export function getLogs() {
+/**
+ * Get all logs from the memory transport
+ */
+export function getLogs(): LogEntry[] {
   return memoryTransport.getLogs();
 }
 
-export function clearLogs() {
-  return memoryTransport.clear();
+/**
+ * Clear logs from the memory transport
+ */
+export function clearLogs(): void {
+  memoryTransport.clear();
 }
 
-export function onLog(callback: (entry: LogEntry) => void) {
+/**
+ * Register a callback for log events
+ */
+export function onLog(callback: (entry: LogEntry) => void): () => void {
   return logEventEmitter.onLog(callback);
+}
+
+/**
+ * Create a React component to monitor logs
+ */
+export function LogMonitor({ onLogEvent }: { onLogEvent?: (entry: LogEntry) => void }) {
+  if (typeof onLogEvent === 'function') {
+    // Register log event listener on mount
+    React.useEffect(() => {
+      const unsubscribe = logEventEmitter.onLog(onLogEvent);
+      return unsubscribe;
+    }, [onLogEvent]);
+  }
+  
+  return null; // This component doesn't render anything
 }
