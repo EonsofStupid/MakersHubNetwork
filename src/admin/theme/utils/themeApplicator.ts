@@ -1,121 +1,102 @@
 
-import { ImpulseTheme } from '../../types/impulse.types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
-import { safeGet } from './safeThemeAccess';
-import { hexToRgbString } from '@/utils/colorUtils';
+import { ImpulseTheme } from '@/admin/types/impulse.types';
+import { getThemeProperty } from './themeUtils';
+import { hexToHSL, hexToRgbString } from './colorUtils';
 
 const logger = getLogger('ThemeApplicator', { category: LogCategory.THEME });
 
 /**
- * Safely get a property from a theme with fallback
+ * Apply a theme to the document by setting CSS variables
  */
-export function getSafeThemeProperty<T>(
-  theme: any,
-  path: string[],
-  fallback: T
-): T {
-  if (!theme) {
-    return fallback;
-  }
-
-  try {
-    let current: any = theme;
-    
-    for (const segment of path) {
-      if (current === undefined || current === null) {
-        return fallback;
-      }
-      current = current[segment];
-    }
-    
-    if (current === undefined || current === null) {
-      return fallback;
-    }
-    
-    return current as T;
-  } catch (error) {
-    logger.warn('Error accessing theme property', {
-      details: { path, error: error instanceof Error ? error.message : String(error) }
-    });
-    return fallback;
-  }
-}
-
-/**
- * Applies a theme to the document by setting CSS variables
- * Now with enhanced type safety and error handling
- */
-export function applyThemeToDocument(theme: ImpulseTheme | unknown): void {
+export function applyThemeToDocument(theme: ImpulseTheme): void {
   try {
     if (!theme || typeof theme !== 'object') {
-      logger.warn('Invalid theme provided to applyThemeToDocument');
+      logger.warn('Invalid theme object provided to applyThemeToDocument');
       return;
     }
-
+    
     const root = document.documentElement;
     
-    // Apply basic colors with safe property access
-    const getProp = (path: string[], fallback: string): string => {
-      return getSafeThemeProperty(theme, path, fallback);
-    };
+    // Apply background and text colors
+    const bgColor = getThemeProperty(theme, 'colors.background.main', '#12121A');
+    const textColor = getThemeProperty(theme, 'colors.text.primary', '#F6F6F7');
+    const primaryColor = getThemeProperty(theme, 'colors.primary', '#00F0FF');
+    const secondaryColor = getThemeProperty(theme, 'colors.secondary', '#FF2D6E');
     
-    // Apply basic colors
-    root.style.setProperty('--color-primary', hexToRgbString(getProp(['colors', 'primary'], '#00F0FF')));
-    root.style.setProperty('--color-secondary', hexToRgbString(getProp(['colors', 'secondary'], '#FF2D6E')));
-    root.style.setProperty('--color-accent', hexToRgbString(getProp(['colors', 'accent'], '#8B5CF6')));
-    
-    // Apply background colors
-    root.style.setProperty('--color-background', hexToRgbString(getProp(['colors', 'background', 'main'], '#12121A')));
-    root.style.setProperty('--color-card', hexToRgbString(getProp(['colors', 'background', 'card'], 'rgba(28, 32, 42, 0.7)')));
-    
-    // Apply text colors
-    root.style.setProperty('--color-text', hexToRgbString(getProp(['colors', 'text', 'primary'], '#F6F6F7')));
-    root.style.setProperty('--color-text-secondary', hexToRgbString(getProp(['colors', 'text', 'secondary'], 'rgba(255, 255, 255, 0.7)')));
-    
-    // Apply border colors
-    root.style.setProperty('--color-border', hexToRgbString(getProp(['colors', 'borders', 'normal'], 'rgba(0, 240, 255, 0.2)')));
-    
-    // Apply status colors
-    root.style.setProperty('--color-success', hexToRgbString(getProp(['colors', 'status', 'success'], '#10B981')));
-    root.style.setProperty('--color-warning', hexToRgbString(getProp(['colors', 'status', 'warning'], '#F59E0B')));
-    root.style.setProperty('--color-error', hexToRgbString(getProp(['colors', 'status', 'error'], '#EF4444')));
-    
-    // Apply radii
-    root.style.setProperty('--radius-panel', getProp(['components', 'panel', 'radius'], '0.75rem'));
-    root.style.setProperty('--radius-button', getProp(['components', 'button', 'radius'], '0.5rem'));
-    
-    // Apply typography if available
-    if (typeof getProp(['typography', 'fonts', 'body'], '') === 'string') {
-      root.style.setProperty('--font-body', getProp(['typography', 'fonts', 'body'], 'system-ui, sans-serif'));
+    try {
+      // Set Tailwind CSS variables
+      root.style.setProperty('--background', hexToHSL(bgColor));
+      root.style.setProperty('--foreground', hexToHSL(textColor));
+      root.style.setProperty('--primary', hexToHSL(primaryColor));
+      root.style.setProperty('--primary-foreground', hexToHSL('#FFFFFF'));
+      root.style.setProperty('--secondary', hexToHSL(secondaryColor));
+      root.style.setProperty('--secondary-foreground', hexToHSL('#FFFFFF'));
+    } catch (hslError) {
+      logger.error('Error setting HSL colors', { details: safeDetails(hslError) });
+      // Fallback to direct hex
+      root.style.setProperty('--background', '224 10% 9%'); // #12121A
+      root.style.setProperty('--foreground', '220 6% 97%'); // #F6F6F7
+      root.style.setProperty('--primary', '183 100% 50%'); // #00F0FF
+      root.style.setProperty('--primary-foreground', '0 0% 100%'); // #FFFFFF
+      root.style.setProperty('--secondary', '341 100% 59%'); // #FF2D6E
+      root.style.setProperty('--secondary-foreground', '0 0% 100%'); // #FFFFFF
     }
     
-    if (typeof getProp(['typography', 'fonts', 'heading'], '') === 'string') {
-      root.style.setProperty('--font-heading', getProp(['typography', 'fonts', 'heading'], 'system-ui, sans-serif'));
+    // Set RGB variables
+    try {
+      root.style.setProperty('--color-primary', hexToRgbString(primaryColor));
+      root.style.setProperty('--color-secondary', hexToRgbString(secondaryColor));
+    } catch (rgbError) {
+      logger.error('Error setting RGB colors', { details: safeDetails(rgbError) });
+      // Fallback to direct values
+      root.style.setProperty('--color-primary', '0, 240, 255');
+      root.style.setProperty('--color-secondary', '255, 45, 110');
     }
     
-    // Apply direct theme references for shared variables
-    root.style.setProperty('--impulse-primary', getProp(['colors', 'primary'], '#00F0FF'));
-    root.style.setProperty('--impulse-secondary', getProp(['colors', 'secondary'], '#FF2D6E'));
-    root.style.setProperty('--impulse-accent', getProp(['colors', 'accent'], '#8B5CF6'));
+    // Set effect colors
+    root.style.setProperty('--site-effect-color', primaryColor);
+    root.style.setProperty('--site-effect-secondary', secondaryColor);
+    root.style.setProperty('--impulse-primary', primaryColor);
+    root.style.setProperty('--impulse-secondary', secondaryColor);
     
-    logger.info('Theme applied to document successfully');
+    // Set timing variables 
+    const transitionFast = getThemeProperty(theme, 'animation.duration.fast', '150ms');
+    const transitionNormal = getThemeProperty(theme, 'animation.duration.normal', '300ms');
+    const transitionSlow = getThemeProperty(theme, 'animation.duration.slow', '500ms');
+    
+    root.style.setProperty('--transition-fast', transitionFast);
+    root.style.setProperty('--transition-normal', transitionNormal);
+    root.style.setProperty('--transition-slow', transitionSlow);
+    
+    // Set animation durations
+    root.style.setProperty('--animation-fast', '1s');
+    root.style.setProperty('--animation-normal', '2s');
+    root.style.setProperty('--animation-slow', '3s');
+    
+    // Add theme active class
+    root.classList.add('impulse-theme-active');
+    
+    // Set light/dark mode
+    const isDark = bgColor.startsWith('#0') || bgColor.startsWith('#1') || bgColor.startsWith('#2');
+    if (isDark) {
+      root.classList.add('dark');
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
+    
+    logger.debug('Applied theme to document', { 
+      details: { 
+        primaryColor, 
+        bgColor, 
+        isDark 
+      } 
+    });
   } catch (error) {
     logger.error('Error applying theme to document', { details: safeDetails(error) });
-  }
-}
-
-// Validate that a theme is properly set with basic checks
-export function validateThemeApplication(): boolean {
-  try {
-    const root = document.documentElement;
-    const primary = root.style.getPropertyValue('--color-primary');
-    const background = root.style.getPropertyValue('--color-background');
-    
-    return !!(primary && background);
-  } catch (error) {
-    logger.error('Error validating theme application', { details: safeDetails(error) });
-    return false;
   }
 }

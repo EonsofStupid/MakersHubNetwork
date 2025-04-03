@@ -15,7 +15,7 @@ import { safeDetails } from '@/logging/utils/safeDetails';
 import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
 import { getThemeFromLocalStorage } from '@/stores/theme/localStorage';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
-import { hexToRgbString } from '@/utils/colorUtils';
+import { hexToRgbString } from '@/admin/theme/utils/colorUtils';
 import { 
   validateThemeVariables, 
   applyEmergencyFallback, 
