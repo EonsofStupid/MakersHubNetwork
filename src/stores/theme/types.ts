@@ -3,7 +3,7 @@ import { Theme, ThemeToken, ComponentTokens } from "@/types/theme";
 
 export interface ThemeComponent extends ComponentTokens {
   theme_id: string;
-  context: 'site' | 'admin' | 'print';
+  context: 'site' | 'admin' | 'chat';
 }
 
 export interface ThemeState {

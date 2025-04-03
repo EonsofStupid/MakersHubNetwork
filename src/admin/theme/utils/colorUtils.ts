@@ -60,11 +60,14 @@ export function hexToHSL(hex: unknown): string {
   try {
     // Default fallback HSL value - HARDCODED
     const DEFAULT_HSL = '228 47% 8%'; // Dark background fallback
-    const DEFAULT_PRIMARY_HSL = '186 100% 50%'; // Cyan
-    const DEFAULT_SECONDARY_HSL = '334 100% 59%'; // Pink
     
     // Handle empty or invalid inputs
-    if (!hex || typeof hex !== 'string') return DEFAULT_HSL;
+    if (!hex || typeof hex !== 'string') {
+      logger.warn(`Invalid hex value for HSL conversion: ${typeof hex}`, { 
+        details: { value: hex }
+      });
+      return DEFAULT_HSL;
+    }
     
     // Color-specific fallbacks
     if (hex.toLowerCase() === '#00f0ff') return '186 100% 50%'; // Primary cyan
@@ -152,6 +155,7 @@ export function hexToHSL(hex: unknown): string {
     
     // Make sure we have a hex value
     if (!hex.startsWith('#')) {
+      logger.warn(`Invalid hex format: ${hex}`);
       return DEFAULT_HSL;
     }
     
