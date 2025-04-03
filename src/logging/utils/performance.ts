@@ -10,7 +10,7 @@ export function createMeasurement(source: string, defaultOptions?: PerformanceMe
     /**
      * Measures the execution time of a synchronous function
      */
-    measure<T>(name: string, fn: () => T, options?: PerformanceMeasurementOptions): MeasurementResult<T> {
+    measure: function measure<T>(name: string, fn: () => T, options?: PerformanceMeasurementOptions): MeasurementResult<T> {
       const mergedOptions = { ...defaultOptions, ...options };
       const startTime = performance.now();
       
@@ -51,7 +51,7 @@ export function createMeasurement(source: string, defaultOptions?: PerformanceMe
     /**
      * Measures the execution time of an asynchronous function
      */
-    async measureAsync<T>(
+    measureAsync: async function measureAsync<T>(
       name: string, 
       fn: () => Promise<T>, 
       options?: PerformanceMeasurementOptions
