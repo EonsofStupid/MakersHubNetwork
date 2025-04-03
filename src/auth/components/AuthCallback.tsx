@@ -33,8 +33,8 @@ export function AuthCallback() {
             description: "Your account was successfully linked",
           });
           
-          // Navigate back to profile
-          navigate('/profile');
+          // Navigate back to the link account page
+          navigate('/link-account');
         } else {
           // Regular auth flow - just go to homepage
           logger.info('Processing standard auth callback');
@@ -57,11 +57,21 @@ export function AuthCallback() {
   }, [navigate, logger, toast]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-pulse text-center">
-        <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto mb-4" />
-        <h2 className="text-xl font-heading text-primary mb-2">Processing Authentication</h2>
-        <p className="text-muted-foreground">Please wait while we complete the process...</p>
+    <div className="flex items-center justify-center min-h-screen bg-background/80 backdrop-blur-xl">
+      <div className="relative text-center p-8 border border-primary/20 rounded-lg shadow-[0_0_30px_rgba(0,240,255,0.15)] bg-background/50">
+        <div className="absolute inset-0 rounded-lg overflow-hidden">
+          <div className="absolute inset-0 bg-grid-small-primary/10 [mask-image:linear-gradient(to_bottom,transparent,black)]"></div>
+        </div>
+        
+        <div className="relative">
+          <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-heading text-primary mb-2">Processing Authentication</h2>
+          <p className="text-muted-foreground">Please wait while we complete the process...</p>
+          
+          <div className="h-1 w-full bg-muted/20 rounded-full mt-6 overflow-hidden">
+            <div className="h-full bg-primary rounded-full animate-pulse-slow"></div>
+          </div>
+        </div>
       </div>
     </div>
   );
