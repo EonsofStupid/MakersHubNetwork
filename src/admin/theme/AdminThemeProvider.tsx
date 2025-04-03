@@ -12,7 +12,7 @@ import './impulse/impulse-admin.css';
 import './impulse/impulse-theme.css';
 import './impulse/impulse.css';
 
-const logger = getLogger('AdminThemeProvider', LogCategory.THEME);
+const logger = getLogger('AdminThemeProvider', { category: LogCategory.THEME });
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
   const [isApplied, setIsApplied] = useState(false);
@@ -42,7 +42,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
         logger.info('Admin theme fallback applied successfully');
       } catch (error) {
         logger.error('Failed to apply admin theme fallback', {
-          error: error instanceof Error ? error.message : 'Unknown error'
+          details: { error: error instanceof Error ? error.message : 'Unknown error' }
         });
       }
     };

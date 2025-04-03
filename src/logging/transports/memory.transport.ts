@@ -2,27 +2,28 @@
 import { LogEntry, LogTransport } from '../types';
 
 /**
- * In-memory transport for storing logs in memory
+ * In-memory transport for storing logs
+ * Used for displaying logs in the UI
  */
 class MemoryTransport implements LogTransport {
   private logs: LogEntry[] = [];
-  private maxLogs: number;
+  private maxEntries: number;
   
-  constructor(maxLogs: number = 1000) {
-    this.maxLogs = maxLogs;
+  constructor(maxEntries: number = 1000) {
+    this.maxEntries = maxEntries;
   }
   
   log(entry: LogEntry): void {
     this.logs.push(entry);
     
-    // Trim if we exceed the max logs
-    if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(-this.maxLogs);
+    // Trim logs if they exceed the maximum number of entries
+    if (this.logs.length > this.maxEntries) {
+      this.logs = this.logs.slice(this.logs.length - this.maxEntries);
     }
   }
   
   getLogs(): LogEntry[] {
-    return [...this.logs];
+    return this.logs;
   }
   
   clear(): void {
@@ -30,4 +31,5 @@ class MemoryTransport implements LogTransport {
   }
 }
 
+// Export a singleton instance
 export const memoryTransport = new MemoryTransport();

@@ -10,6 +10,7 @@ import { DEFAULT_THEME_NAME } from '@/utils/themeInitializer';
 import { useToast } from '@/hooks/use-toast';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 // Create context with default value
 const AdminThemeContext = createContext<ThemeContextValue>({
@@ -33,15 +34,22 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
   
   const impulsivityStore = useImpulsivityStore();
   const { toast } = useToast();
-  const logger = getLogger('AdminThemeContext', LogCategory.THEME);
+  const logger = getLogger('AdminThemeContext', { category: LogCategory.THEME });
   
   // Prepare the theme object with admin-specific structure
-  const currentTheme = impulsivityStore.theme ? {
+  const adminTheme = impulsivityStore.theme ? {
     id: 'admin-impulsivity',
     name: DEFAULT_THEME_NAME,
     description: `Admin ${DEFAULT_THEME_NAME} Theme`,
     design_tokens: {},
-    impulse: impulsivityStore.theme
+    impulse: impulsivityStore.theme,
+    // Add required AdminTheme properties
+    status: 'published' as const,
+    is_default: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    component_tokens: [],
+    version: 1
   } : null;
   
   // Load theme when the component mounts
@@ -75,7 +83,7 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
         setIsLoading(false);
         
         logger.error('Failed to initialize admin theme', { 
-          error: error.message || 'Unknown error'
+          details: safeDetails(err)
         });
         
         toast({
@@ -120,7 +128,9 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
       setError(error);
       setIsLoading(false);
       
-      logger.error('Failed to apply theme', { error: error.message });
+      logger.error('Failed to apply theme', { 
+        details: safeDetails(err)
+      });
       
       toast({
         title: 'Theme Error',
@@ -155,7 +165,9 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
       setError(error);
       setIsSaving(false);
       
-      logger.error('Failed to save theme', { error: error.message });
+      logger.error('Failed to save theme', { 
+        details: safeDetails(err)
+      });
       
       toast({
         title: 'Save Error',
@@ -180,7 +192,7 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
   };
   
   const contextValue: ThemeContextValue = {
-    currentTheme,
+    currentTheme: adminTheme,
     isLoading,
     error,
     applyTheme,
