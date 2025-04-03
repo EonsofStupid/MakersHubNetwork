@@ -16,6 +16,12 @@ import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
 import { getThemeFromLocalStorage } from '@/stores/theme/localStorage';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
 import { hexToRgbString } from '@/utils/colorUtils';
+import { 
+  validateThemeVariables, 
+  applyEmergencyFallback, 
+  logThemeState,
+  assertThemeApplied 
+} from '@/utils/ThemeValidationUtils';
 
 // Much shorter fallback timeout for better UX
 const FALLBACK_TIMEOUT = 300; // 300ms fallback timeout
@@ -29,6 +35,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const initializationAttemptedRef = useRef(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
+  const fallbackAppliedRef = useRef(false);
   
   const { setTheme, isLoading, error: themeStoreError, hydrateTheme } = useThemeStore();
   const { toast } = useToast();
@@ -41,11 +48,14 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
       // Apply fallback styles immediately
       document.documentElement.classList.add('theme-fallback-applied');
       
+      logger.debug('✔️ Applying immediate fallback styling');
+      
       // Register the default theme with our registry
       themeRegistry.registerTheme('default', defaultImpulseTokens);
       
       // Apply the default theme immediately
       applyThemeToDocument(defaultImpulseTokens);
+      logger.debug('✔️ Default impulse tokens applied via applyThemeToDocument');
       
       // Force the browser to apply default colors immediately
       const bgColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
@@ -69,13 +79,15 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
       // Apply critical theme CSS classes
       document.documentElement.classList.add('impulse-theme-active');
       
-      logger.debug('Applied immediate fallback styling');
+      // Add data attribute for theme tracking
+      document.documentElement.setAttribute('data-theme-id', 'fallback');
+      document.documentElement.setAttribute('data-theme-status', 'initializing');
+      
+      fallbackAppliedRef.current = true;
+      logger.debug('✔️ Applied immediate fallback styling');
     });
     
-    return () => {
-      document.documentElement.classList.remove('theme-fallback-applied');
-      document.documentElement.classList.remove('impulse-theme-active');
-    };
+    // DO NOT remove the fallback class here - that will be done after initialization
   }, [logger, measure]);
 
   // Fallback faster when a theme store error is detected
@@ -95,6 +107,13 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         logger.info('Forcing initialization after theme store error', { 
           details: safeDetails(themeStoreError) 
         });
+        
+        // Verify fallback is applied before continuing
+        if (!assertThemeApplied()) {
+          applyEmergencyFallback();
+        }
+        
+        document.documentElement.setAttribute('data-theme-status', 'error-recovery');
         setIsInitialized(true);
       }, 50);
       
@@ -118,6 +137,13 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         initializationTimeout = setTimeout(() => {
           if (isMounted && !isInitialized) {
             logger.warn(`Theme initialization timed out after ${FALLBACK_TIMEOUT}ms, continuing with default theme`);
+            
+            // Verify fallback is applied before continuing
+            if (!assertThemeApplied()) {
+              applyEmergencyFallback();
+            }
+            
+            document.documentElement.setAttribute('data-theme-status', 'timeout');
             setIsInitialized(true);
           }
         }, FALLBACK_TIMEOUT);
@@ -125,11 +151,22 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         // Check localStorage first - completely decoupled from auth
         const localThemeId = getThemeFromLocalStorage();
         if (localThemeId && isValidUUID(localThemeId)) {
-          logger.info('Theme found in localStorage, attempting to load', { details: { localThemeId } });
+          logger.info('✔️ Theme found in localStorage, attempting to load', { details: { localThemeId } });
           try {
             await hydrateTheme();
             if (isMounted) {
               logger.info('Theme loaded from localStorage successfully');
+              
+              // Validate theme variables are properly set
+              const isValid = validateThemeVariables();
+              
+              // Set data attributes for theme tracking
+              document.documentElement.setAttribute('data-theme-id', localThemeId);
+              document.documentElement.setAttribute('data-theme-status', isValid ? 'localStorage-success' : 'localStorage-partial');
+              
+              // Log the theme state for debugging
+              logThemeState();
+              
               setIsInitialized(true);
               return;
             }
@@ -145,12 +182,23 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         try {
           const themeId = await getThemeByName(DEFAULT_THEME_NAME);
           if (themeId && isValidUUID(themeId)) {
-            logger.info(`Found ${DEFAULT_THEME_NAME} theme by name`, { details: { themeId }});
+            logger.info(`✔️ Found ${DEFAULT_THEME_NAME} theme by name`, { details: { themeId }});
             
             if (isMounted) {
               try {
                 await setTheme(themeId);
                 logger.info(`${DEFAULT_THEME_NAME} theme applied successfully`);
+                
+                // Validate theme variables are properly set
+                const isValid = validateThemeVariables();
+                
+                // Set data attributes for theme tracking
+                document.documentElement.setAttribute('data-theme-id', themeId);
+                document.documentElement.setAttribute('data-theme-status', isValid ? 'name-success' : 'name-partial');
+                
+                // Log the theme state for debugging
+                logThemeState();
+                
                 setIsInitialized(true);
                 return;
               } catch (err) {
@@ -175,26 +223,55 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
             try {
               await setTheme(themeId);
               logger.info('Default theme applied successfully');
+              
+              // Validate theme variables are properly set
+              const isValid = validateThemeVariables();
+              
+              // Set data attributes for theme tracking
+              document.documentElement.setAttribute('data-theme-id', themeId);
+              document.documentElement.setAttribute('data-theme-status', isValid ? 'default-success' : 'default-partial');
+              
+              // Log the theme state for debugging
+              logThemeState();
             } catch (defaultErr) {
               logger.error('Error applying default theme, using fallback styling', {
                 details: safeDetails(defaultErr)
               });
+              
+              // Ensure fallback is applied
+              applyEmergencyFallback();
+              document.documentElement.setAttribute('data-theme-status', 'default-error');
             }
+          } else if (!themeId) {
+            logger.error("❌ No theme ID resolved - using fallback only");
+            applyEmergencyFallback();
+            document.documentElement.setAttribute('data-theme-status', 'no-theme-id');
           }
         } catch (fallbackErr) {
           logger.error('All theme loading attempts failed, using hardcoded fallback', {
             details: safeDetails(fallbackErr)
           });
+          
+          // Ensure fallback is applied
+          applyEmergencyFallback();
+          document.documentElement.setAttribute('data-theme-status', 'all-attempts-failed');
         }
         
         // If we get here, ensure the app initializes regardless
         if (isMounted) {
+          // Verify fallback is applied before continuing
+          assertThemeApplied();
           setIsInitialized(true);
         }
         
       } catch (err) {
         if (isMounted) {
           logger.error('Unhandled error in theme initialization', { details: safeDetails(err) });
+          
+          // Ensure fallback is applied
+          applyEmergencyFallback();
+          document.documentElement.setAttribute('data-theme-status', 'unhandled-error');
+          
           setIsInitialized(true);
           setFailedAttempts((prev) => prev + 1);
         }
@@ -214,6 +291,22 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
       }
     };
   }, [setTheme, hydrateTheme, toast, logger, measure]);
+  
+  // Remove fallback class only AFTER successful initialization
+  useEffect(() => {
+    if (isInitialized) {
+      // One final verification of theme application
+      const isThemeValid = validateThemeVariables();
+      
+      if (isThemeValid) {
+        logger.debug('Theme initialization completed, removing fallback class');
+        // Only remove the fallback class if we've verified theme is applied
+        document.documentElement.classList.remove('theme-fallback-applied');
+      } else {
+        logger.warn('Theme variables not fully applied, keeping fallback class');
+      }
+    }
+  }, [isInitialized, logger]);
   
   return (
     <SiteThemeProvider fallbackToDefault={!isInitialized || !!themeStoreError}>
