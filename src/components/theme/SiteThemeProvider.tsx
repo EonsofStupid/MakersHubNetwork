@@ -66,6 +66,50 @@ interface SiteThemeProviderProps {
   fallbackToDefault?: boolean;
 }
 
+// Helper function to convert hex color to HSL string
+function hexToHSL(hex: string): string {
+  try {
+    // Default fallback
+    if (!hex || typeof hex !== 'string') return '228 47% 8%';
+    
+    // Convert hex to RGB
+    const rgb = hexToRgb(hex);
+    if (!rgb) return '228 47% 8%';
+    
+    // Convert RGB to HSL
+    const r = rgb.r / 255;
+    const g = rgb.g / 255;
+    const b = rgb.b / 255;
+    
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      
+      h /= 6;
+    }
+    
+    // Convert to the format needed by Tailwind HSL variables
+    h = Math.round(h * 360);
+    s = Math.round(s * 100);
+    l = Math.round(l * 100);
+    
+    return `${h} ${s}% ${l}%`;
+  } catch (error) {
+    console.error('Error converting hex to HSL:', error);
+    return '228 47% 8%'; // Fallback
+  }
+}
+
 export function SiteThemeProvider({ 
   children,
   fallbackToDefault = false
@@ -240,6 +284,70 @@ export function SiteThemeProvider({
       
       // Apply the theme using our standardized utility
       applyThemeToDocument('site-theme');
+      
+      // DIRECT CSS VARIABLE APPLICATION for important theme variables
+      // This ensures the CSS variables are correctly set for Tailwind and other utilities
+      
+      // Convert hex to HSL format for Tailwind CSS variables
+      document.documentElement.style.setProperty('--site-background', hexToHSL(variables.background));
+      document.documentElement.style.setProperty('--site-foreground', hexToHSL(variables.foreground));
+      document.documentElement.style.setProperty('--site-card', hexToHSL(variables.card));
+      document.documentElement.style.setProperty('--site-card-foreground', hexToHSL(variables.cardForeground));
+      document.documentElement.style.setProperty('--site-primary', hexToHSL(variables.primary));
+      document.documentElement.style.setProperty('--site-primary-foreground', hexToHSL(variables.primaryForeground));
+      document.documentElement.style.setProperty('--site-secondary', hexToHSL(variables.secondary));
+      document.documentElement.style.setProperty('--site-secondary-foreground', hexToHSL(variables.secondaryForeground));
+      document.documentElement.style.setProperty('--site-muted', hexToHSL(variables.muted));
+      document.documentElement.style.setProperty('--site-muted-foreground', hexToHSL(variables.mutedForeground));
+      document.documentElement.style.setProperty('--site-accent', hexToHSL(variables.accent));
+      document.documentElement.style.setProperty('--site-accent-foreground', hexToHSL(variables.accentForeground));
+      document.documentElement.style.setProperty('--site-destructive', hexToHSL(variables.destructive));
+      document.documentElement.style.setProperty('--site-destructive-foreground', hexToHSL(variables.destructiveForeground));
+      document.documentElement.style.setProperty('--site-border', hexToHSL(variables.border));
+      document.documentElement.style.setProperty('--site-input', hexToHSL(variables.input));
+      document.documentElement.style.setProperty('--site-ring', hexToHSL(variables.ring));
+      
+      // Also set the actual colors as fallback
+      document.documentElement.style.setProperty('--fallback-background', variables.background);
+      document.documentElement.style.setProperty('--fallback-foreground', variables.foreground);
+      document.documentElement.style.setProperty('--fallback-card', variables.card);
+      document.documentElement.style.setProperty('--fallback-card-foreground', variables.cardForeground);
+      document.documentElement.style.setProperty('--fallback-primary', variables.primary);
+      document.documentElement.style.setProperty('--fallback-primary-foreground', variables.primaryForeground);
+      document.documentElement.style.setProperty('--fallback-secondary', variables.secondary);
+      document.documentElement.style.setProperty('--fallback-secondary-foreground', variables.secondaryForeground);
+      document.documentElement.style.setProperty('--fallback-muted', variables.muted);
+      document.documentElement.style.setProperty('--fallback-muted-foreground', variables.mutedForeground);
+      document.documentElement.style.setProperty('--fallback-accent', variables.accent);
+      document.documentElement.style.setProperty('--fallback-accent-foreground', variables.accentForeground);
+      document.documentElement.style.setProperty('--fallback-destructive', variables.destructive);
+      document.documentElement.style.setProperty('--fallback-destructive-foreground', variables.destructiveForeground);
+      document.documentElement.style.setProperty('--fallback-border', variables.border);
+      document.documentElement.style.setProperty('--fallback-input', variables.input);
+      document.documentElement.style.setProperty('--fallback-ring', variables.ring);
+      
+      // Set site-specific effect colors
+      document.documentElement.style.setProperty('--site-effect-color', variables.primary);
+      document.documentElement.style.setProperty('--site-effect-secondary', variables.secondary);
+      document.documentElement.style.setProperty('--site-effect-tertiary', variables.effectTertiary);
+      
+      // Set transition and animation durations
+      document.documentElement.style.setProperty('--site-transition-fast', variables.transitionFast);
+      document.documentElement.style.setProperty('--site-transition-normal', variables.transitionNormal);
+      document.documentElement.style.setProperty('--site-transition-slow', variables.transitionSlow);
+      document.documentElement.style.setProperty('--site-animation-fast', variables.animationFast);
+      document.documentElement.style.setProperty('--site-animation-normal', variables.animationNormal);
+      document.documentElement.style.setProperty('--site-animation-slow', variables.animationSlow);
+      
+      // Set border radius values
+      document.documentElement.style.setProperty('--site-radius-sm', variables.radiusSm);
+      document.documentElement.style.setProperty('--site-radius-md', variables.radiusMd);
+      document.documentElement.style.setProperty('--site-radius-lg', variables.radiusLg);
+      document.documentElement.style.setProperty('--site-radius-full', variables.radiusFull);
+      document.documentElement.style.setProperty('--radius', variables.radiusMd);
+      
+      // Add a data attribute to indicate theme loaded status
+      document.documentElement.setAttribute('data-theme-loaded', 'true');
       
       logger.debug('Applied site theme variables to document');
     } catch (error) {
