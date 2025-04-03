@@ -2,6 +2,7 @@
 import { Json } from "@/integrations/supabase/types";
 
 export type ThemeStatus = 'draft' | 'published' | 'archived';
+export type ThemeContext = 'site' | 'admin' | 'chat';
 
 export interface ThemeToken {
   id: string;
@@ -23,7 +24,7 @@ export interface ComponentTokens {
   theme_id?: string;
   created_at?: string;
   updated_at?: string;
-  context?: string;
+  context?: ThemeContext;
 }
 
 export interface DesignTokensStructure {
