@@ -1,4 +1,5 @@
 
-import { usePerformanceLogger as usePerformanceLoggerOriginal } from '@/logging';
+import { usePerformanceLogger as usePerformanceLoggerOriginal, PerformanceLoggerOptions } from '@/logging';
 
 export const usePerformanceLogger = usePerformanceLoggerOriginal;
+export type { PerformanceLoggerOptions };
