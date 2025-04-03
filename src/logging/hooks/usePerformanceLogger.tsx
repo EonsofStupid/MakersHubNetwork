@@ -35,10 +35,9 @@ export function usePerformanceLogger(source: string = 'Performance') {
     return result;
   }, [logger]);
   
-  // Fix the measure method syntax
   const measure = useCallback((
     name: string,
-    callback: () => void,
+    callback: () => any,
     options?: PerformanceLoggerOptions
   ) => {
     const start = performance.now();
@@ -70,7 +69,6 @@ export function usePerformanceLogger(source: string = 'Performance') {
     }
   }, [logger]);
   
-  // Fix the measureAsync method syntax
   const measureAsync = useCallback(async <T>(
     name: string,
     asyncFn: () => Promise<T>,
