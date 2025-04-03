@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { getLogger } from '../service/logger.service';
 import { LogCategory } from '../types';
