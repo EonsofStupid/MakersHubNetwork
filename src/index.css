@@ -13,6 +13,7 @@
 
 @layer base {
   :root {
+    /* Base theme colors in HSL format for Tailwind */
     --background: 228 47% 8%;
     --foreground: 210 40% 98%;
     --card: 228 47% 11%;
@@ -33,6 +34,28 @@
     --input: 228 47% 15%;
     --ring: 228 47% 20%;
     --radius: 0.5rem;
+    
+    /* RGB color values for rgba() operations */
+    --color-primary: 0, 240, 255;
+    --color-secondary: 255, 45, 110;
+    --color-accent: 139, 92, 246;
+    --color-background: 18, 18, 26;
+    --color-foreground: 246, 246, 247;
+    
+    /* Direct hex values for fallbacks */
+    --color-primary-hex: #00F0FF;
+    --color-secondary-hex: #FF2D6E;
+    --color-accent-hex: #8B5CF6;
+    --color-background-hex: #12121A;
+    --color-foreground-hex: #F6F6F7;
+    
+    /* Animation timing */
+    --transition-fast: 150ms;
+    --transition-normal: 300ms;
+    --transition-slow: 500ms;
+    --animation-fast: 1s;
+    --animation-normal: 2s;
+    --animation-slow: 3s;
   }
 }
 
@@ -90,11 +113,11 @@
     right: 0;
     bottom: 0;
     background: linear-gradient(90deg, 
-      rgba(0, 240, 255, 0) 0%,
-      rgba(0, 240, 255, 0.05) 20%,
-      rgba(0, 240, 255, 0.1) 40%,
-      rgba(0, 240, 255, 0.05) 60%,
-      rgba(0, 240, 255, 0) 100%
+      rgba(var(--color-background), 0) 0%,
+      rgba(var(--color-primary), 0.05) 20%,
+      rgba(var(--color-primary), 0.1) 40%,
+      rgba(var(--color-primary), 0.05) 60%,
+      rgba(var(--color-background), 0) 100%
     );
     background-size: 200% 100%;
     animation: data-stream 8s linear infinite;
@@ -109,7 +132,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: radial-gradient(rgba(0, 240, 255, 0.3) 1px, transparent 1px);
+    background-image: radial-gradient(rgba(var(--color-primary), 0.3) 1px, transparent 1px);
     background-size: 40px 40px;
     opacity: 0.1;
     pointer-events: none;
@@ -119,18 +142,18 @@
   .cyberpunk-text {
     position: relative;
     display: inline-block;
-    color: var(--primary);
-    text-shadow: 0 0 5px rgba(0, 240, 255, 0.7);
+    color: var(--color-primary-hex);
+    text-shadow: 0 0 5px rgba(var(--color-primary), 0.7);
   }
   
   .cyberpunk-text::before {
     content: attr(data-text);
     position: absolute;
     left: -2px;
-    text-shadow: 2px 0 var(--secondary);
+    text-shadow: 2px 0 var(--color-secondary-hex);
     top: 0;
-    color: var(--primary);
-    background: var(--background);
+    color: var(--color-primary-hex);
+    background: var(--color-background-hex);
     overflow: hidden;
     clip: rect(0, 900px, 0, 0);
     animation: cyberpunk-text-glitch 3s infinite linear alternate-reverse;
@@ -142,8 +165,8 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: rgba(0, 240, 255, 0.5);
-    box-shadow: 0 0 8px 2px rgba(0, 240, 255, 0.3);
+    background: rgba(var(--color-primary), 0.5);
+    box-shadow: 0 0 8px 2px rgba(var(--color-primary), 0.3);
     opacity: 0;
     animation: data-pulse 2s infinite;
   }

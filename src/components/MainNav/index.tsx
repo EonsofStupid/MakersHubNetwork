@@ -24,13 +24,13 @@ export function MainNav() {
   const { topNavLayout, isLoading: layoutsLoading } = useCoreLayouts();
   const logger = useLogger('MainNav', LogCategory.UI);
 
-  // Get MainNav styles from theme - with fallbacks
+  // Get MainNav styles from theme with complete fallbacks
   const styles = componentStyles?.MainNav || {
     container: {
       base: 'fixed top-0 w-full z-50 transition-all duration-300',
-      animated: 'animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(0,240,255,0.1)]'
+      animated: 'animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(var(--color-primary),0.1)]'
     },
-    header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30',
+    header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(var(--color-primary),0.2)] border-b border-primary/30',
     dataStream: 'relative overflow-hidden',
     dataStreamEffect: 'mainnav-data-stream',
     glitchParticles: 'mainnav-glitch-particles',

@@ -9,10 +9,13 @@ import { appRoutes } from "@/routes/app-routes";
 import { adminRoutes } from "@/admin/routes/admin-routes";
 import { ThemeInitializer } from "@/theme/ui/ThemeInitializer";
 import { LoadingScreen } from "@/components/ui/loading-screen";
+import { ThemeDebugger } from "@/admin/theme/utils/ThemeDebugger";
 
 // Add lazy loaded routes
 import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
+
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 export default function App() {
   return (
@@ -31,6 +34,7 @@ export default function App() {
             </Routes>
           </Suspense>
           <Toaster />
+          {isDevelopment && <ThemeDebugger />}
         </ThemeInitializer>
       </ThemeProvider>
     </BrowserRouter>
