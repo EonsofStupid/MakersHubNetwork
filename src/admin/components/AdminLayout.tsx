@@ -34,7 +34,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const { showLogConsole } = useLoggingContext();
-  const logger = useLogger("AdminLayout", LogCategory.ADMIN);
+  const logger = useLogger("AdminLayout", { category: LogCategory.ADMIN });
   const { hasAdminAccess, isAuthenticated } = useAdminAccess();
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         permissionsCount: permissions.length,
         hasAdminAccess,
         isAuthenticated
-      },
+      }
     });
 
     // If somehow a non-admin user got here, redirect them
