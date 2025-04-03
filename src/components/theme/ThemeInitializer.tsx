@@ -13,13 +13,15 @@ import { LogCategory } from '@/logging';
 import { isError, isValidUUID } from '@/logging/utils/type-guards';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
+import { getThemeFromLocalStorage } from '@/stores/theme/localStorage';
+import { usePerformanceLogger } from '@/hooks/use-performance-logger';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
 }
 
 // Much shorter fallback timeout for better UX
-const FALLBACK_TIMEOUT = 500; // 500ms fallback timeout
+const FALLBACK_TIMEOUT = 300; // 300ms fallback timeout
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   // State tracking for better debugging and resilience
@@ -27,33 +29,36 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const initializationAttemptedRef = useRef(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   
-  const { setTheme, isLoading, error: themeStoreError } = useThemeStore();
+  const { setTheme, isLoading, error: themeStoreError, hydrateTheme } = useThemeStore();
   const { toast } = useToast();
   const logger = getLogger('ThemeInitializer', { category: LogCategory.THEME });
+  const { measure } = usePerformanceLogger('ThemeInitializer');
   
   // Apply default styles immediately to prevent white flash
   useEffect(() => {
-    // Apply fallback styles immediately
-    document.documentElement.classList.add('theme-fallback-applied');
-    
-    // Register the default theme with our registry
-    themeRegistry.registerTheme('default', defaultImpulseTokens);
-    
-    // Apply the default theme immediately
-    applyThemeToDocument('default');
-    
-    // Force the browser to apply default colors immediately
-    document.documentElement.style.backgroundColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
-    document.documentElement.style.color = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
-    document.body.style.backgroundColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
-    document.body.style.color = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
-    
-    logger.debug('Applied immediate fallback styling');
+    measure('immediate-fallback-styling', () => {
+      // Apply fallback styles immediately
+      document.documentElement.classList.add('theme-fallback-applied');
+      
+      // Register the default theme with our registry
+      themeRegistry.registerTheme('default', defaultImpulseTokens);
+      
+      // Apply the default theme immediately
+      applyThemeToDocument('default');
+      
+      // Force the browser to apply default colors immediately
+      document.documentElement.style.backgroundColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
+      document.documentElement.style.color = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
+      document.body.style.backgroundColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
+      document.body.style.color = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
+      
+      logger.debug('Applied immediate fallback styling');
+    });
     
     return () => {
       document.documentElement.classList.remove('theme-fallback-applied');
     };
-  }, [logger]);
+  }, [logger, measure]);
 
   // Fallback faster when a theme store error is detected
   useEffect(() => {
@@ -67,13 +72,13 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         })
       });
       
-      // Short fallback timer for rapid recovery from errors - 100ms
+      // Short fallback timer for rapid recovery from errors - 50ms
       const timer = setTimeout(() => {
         logger.info('Forcing initialization after theme store error', { 
           details: safeDetails(themeStoreError) 
         });
         setIsInitialized(true);
-      }, 100);
+      }, 50);
       
       return () => clearTimeout(timer);
     }
@@ -84,7 +89,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     let isMounted = true;
     let initializationTimeout: NodeJS.Timeout | null = null;
     
-    async function initialize() {
+    const initialize = async () => {
       if (initializationAttemptedRef.current) return;
       
       try {
@@ -99,93 +104,88 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           }
         }, FALLBACK_TIMEOUT);
         
-        // First try loading the Impulsivity theme by name
-        let themeId: string | null = null;
-        
-        try {
-          themeId = await getThemeByName(DEFAULT_THEME_NAME);
-          logger.info(`Attempting to load ${DEFAULT_THEME_NAME} theme`, { details: { themeId }});
-        } catch (err) {
-          logger.warn(`Error loading ${DEFAULT_THEME_NAME} theme by name, trying default theme`, { 
-            details: safeDetails(err)
-          });
-          
-          // Fallback to default theme if Impulsivity not found
+        // Check localStorage first
+        const localThemeId = getThemeFromLocalStorage();
+        if (localThemeId && isValidUUID(localThemeId)) {
+          logger.info('Theme found in localStorage, attempting to load', { details: { localThemeId } });
           try {
-            themeId = await ensureDefaultTheme();
-          } catch (defaultErr) {
-            logger.warn('Error ensuring default theme, continuing with fallback', { 
-              details: safeDetails(defaultErr)
+            await hydrateTheme();
+            if (isMounted) {
+              logger.info('Theme loaded from localStorage successfully');
+              setIsInitialized(true);
+              return;
+            }
+          } catch (localErr) {
+            logger.warn('Error loading theme from localStorage, trying other sources', { 
+              details: safeDetails(localErr)
             });
-            // Continue without a valid themeId - will trigger fallback
+            // Continue to other methods
           }
         }
         
-        if (!isMounted) return;
-        
-        if (themeId && isValidUUID(themeId)) {
-          logger.debug('Theme ID found, attempting to set theme', { details: { themeId }});
-          
-          // Set a separate timeout just for the DB fetch to prevent UI blocking - 300ms
-          const fetchTimeout = setTimeout(() => {
-            if (isMounted && !isInitialized) {
-              logger.warn('Theme fetch timed out, continuing with fallbacks');
-              setIsInitialized(true);
-            }
-          }, 300);
-          
-          try {
-            await setTheme(themeId);
-            clearTimeout(fetchTimeout);
+        // Second, try loading the Impulsivity theme by name
+        try {
+          const themeId = await getThemeByName(DEFAULT_THEME_NAME);
+          if (themeId && isValidUUID(themeId)) {
+            logger.info(`Found ${DEFAULT_THEME_NAME} theme by name`, { details: { themeId }});
             
             if (isMounted) {
-              logger.info('Theme loaded successfully, initializing UI');
-              setIsInitialized(true);
-            }
-          } catch (err) {
-            if (isMounted) {
-              setFailedAttempts((prev) => prev + 1);
-              logger.error('Error setting theme', { details: safeDetails(err) });
-              setIsInitialized(true);
-              
-              // Only show error toast for real errors, not timeouts
-              if (isError(err)) {
-                toast({
-                  title: 'Theme Error',
-                  description: 'Failed to load theme. Using default styling.',
-                  variant: 'destructive',
+              try {
+                await setTheme(themeId);
+                logger.info(`${DEFAULT_THEME_NAME} theme applied successfully`);
+                setIsInitialized(true);
+                return;
+              } catch (err) {
+                logger.warn(`Error applying ${DEFAULT_THEME_NAME} theme, trying fallback`, { 
+                  details: safeDetails(err)
                 });
+                // Continue to fallback
               }
             }
           }
-        } else {
-          // No valid theme ID, initialize with defaults
-          if (isMounted) {
-            logger.warn('No valid theme ID found, using fallback styling');
-            setIsInitialized(true);
-          }
+        } catch (nameErr) {
+          logger.warn(`Error looking up ${DEFAULT_THEME_NAME} theme by name`, { 
+            details: safeDetails(nameErr)
+          });
+          // Continue to fallback
         }
+        
+        // Final fallback - ensure a default theme exists and use it
+        try {
+          const themeId = await ensureDefaultTheme();
+          if (isMounted && themeId && isValidUUID(themeId)) {
+            try {
+              await setTheme(themeId);
+              logger.info('Default theme applied successfully');
+            } catch (defaultErr) {
+              logger.error('Error applying default theme, using fallback styling', {
+                details: safeDetails(defaultErr)
+              });
+            }
+          }
+        } catch (fallbackErr) {
+          logger.error('All theme loading attempts failed, using hardcoded fallback', {
+            details: safeDetails(fallbackErr)
+          });
+        }
+        
+        // If we get here, ensure the app initializes regardless
+        if (isMounted) {
+          setIsInitialized(true);
+        }
+        
       } catch (err) {
         if (isMounted) {
           logger.error('Unhandled error in theme initialization', { details: safeDetails(err) });
           setIsInitialized(true);
           setFailedAttempts((prev) => prev + 1);
-          
-          // Only show error toast for real errors, not timeouts
-          if (isError(err)) {
-            toast({
-              title: 'Theme Error',
-              description: 'An unexpected error occurred. Using default styling.',
-              variant: 'destructive',
-            });
-          }
         }
       } finally {
         if (initializationTimeout) {
           clearTimeout(initializationTimeout);
         }
       }
-    }
+    };
     
     initialize();
     
@@ -195,7 +195,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         clearTimeout(initializationTimeout);
       }
     };
-  }, [setTheme, toast, logger]);
+  }, [setTheme, hydrateTheme, toast, logger, measure]);
   
   return (
     <SiteThemeProvider fallbackToDefault={!isInitialized || !!themeStoreError}>
