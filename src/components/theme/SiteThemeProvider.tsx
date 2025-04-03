@@ -7,7 +7,7 @@ import { themeRegistry } from '@/admin/theme/ThemeRegistry';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
-import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
+import { getThemeProperty, ensureStringValue } from '@/admin/theme/utils/themeUtils';
 import { hexToHSL, hexToRgbString, isColorDark, ensureHexColor } from '@/admin/theme/utils/colorUtils';
 import { validateThemeSchema } from '@/admin/theme/utils/themeUtils';
 
@@ -117,6 +117,7 @@ export function SiteThemeProvider({
   // Check if theme is dark - with robust type checking to fix the error
   const isDark = useMemo(() => {
     try {
+      // Use ensureHexColor to guarantee that bgColor is a valid hex string
       const bgColor = ensureHexColor(variables.background, '#12121A');
       return isColorDark(bgColor);
     } catch (error) {
@@ -175,20 +176,20 @@ export function SiteThemeProvider({
       root.style.setProperty('--color-secondary', hexToRgbString(ensureHexColor(variables.secondary)));
       
       // Transition durations
-      root.style.setProperty('--transition-fast', variables.transitionFast);
-      root.style.setProperty('--transition-normal', variables.transitionNormal);
-      root.style.setProperty('--transition-slow', variables.transitionSlow);
+      root.style.setProperty('--transition-fast', ensureStringValue(variables.transitionFast));
+      root.style.setProperty('--transition-normal', ensureStringValue(variables.transitionNormal));
+      root.style.setProperty('--transition-slow', ensureStringValue(variables.transitionSlow));
       
       // Animation durations
-      root.style.setProperty('--animation-fast', variables.animationFast);
-      root.style.setProperty('--animation-normal', variables.animationNormal);
-      root.style.setProperty('--animation-slow', variables.animationSlow);
+      root.style.setProperty('--animation-fast', ensureStringValue(variables.animationFast));
+      root.style.setProperty('--animation-normal', ensureStringValue(variables.animationNormal));
+      root.style.setProperty('--animation-slow', ensureStringValue(variables.animationSlow));
       
       // Border radius
-      root.style.setProperty('--radius-sm', variables.radiusSm);
-      root.style.setProperty('--radius-md', variables.radiusMd);
-      root.style.setProperty('--radius-lg', variables.radiusLg);
-      root.style.setProperty('--radius-full', variables.radiusFull);
+      root.style.setProperty('--radius-sm', ensureStringValue(variables.radiusSm));
+      root.style.setProperty('--radius-md', ensureStringValue(variables.radiusMd));
+      root.style.setProperty('--radius-lg', ensureStringValue(variables.radiusLg));
+      root.style.setProperty('--radius-full', ensureStringValue(variables.radiusFull));
       
       // Apply light/dark mode
       if (isDark) {

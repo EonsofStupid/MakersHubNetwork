@@ -1,239 +1,117 @@
 
-import React, { useState } from 'react';
-import { useAdminTheme } from '../context/AdminThemeContext';
+import React, { useEffect, useState } from 'react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bug } from 'lucide-react';
-import { ensureHexColor } from './colorUtils';
-import { validateThemeSchema, logThemeState } from '@/utils/ThemeValidationUtils';
-import { getThemeProperty } from './themeUtils';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging/types';
+import { safeDetails } from '@/logging/utils/safeDetails';
+import { validateThemeSchema } from '@/admin/theme/utils/themeUtils';
+import { validateThemeVariables, logThemeState } from '@/utils/ThemeValidationUtils';
+import { useThemeStore } from '@/stores/theme/store';
 
-export function ThemeDebugger() {
-  const [open, setOpen] = useState(false);
-  const { currentTheme, componentStyles, impulseTheme } = useAdminTheme();
+const logger = getLogger('ThemeDebugger', { category: LogCategory.THEME as string });
+
+interface ThemeDebuggerProps {
+  showControls?: boolean;
+}
+
+export function ThemeDebugger({ showControls = true }: ThemeDebuggerProps) {
+  const { currentTheme } = useThemeStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const [validationIssues, setValidationIssues] = useState<string[]>([]);
+  const [cssVariablesValid, setCssVariablesValid] = useState<boolean | null>(null);
   
-  // Get CSS variables from document root
-  const getCssVariables = () => {
-    if (typeof window === 'undefined') return {};
-    
-    const styles = getComputedStyle(document.documentElement);
-    const cssVars: Record<string, string> = {};
-    
-    // Get all CSS variables starting with specific prefixes
-    ['--', '--impulse-', '--color-', '--site-', '--admin-'].forEach(prefix => {
-      for (let i = 0; i < styles.length; i++) {
-        const prop = styles[i];
-        if (prop.startsWith(prefix)) {
-          cssVars[prop] = styles.getPropertyValue(prop).trim();
-        }
+  // Perform validation when theme changes
+  useEffect(() => {
+    try {
+      // Check theme schema
+      const issues = currentTheme ? validateThemeSchema(currentTheme) : ['No theme loaded'];
+      setValidationIssues(issues);
+      
+      // Check CSS variables
+      const cssValid = validateThemeVariables();
+      setCssVariablesValid(cssValid);
+      
+      // Log current state
+      if (issues.length > 0 || !cssValid) {
+        logger.warn('Theme validation issues detected', { 
+          details: { 
+            schemaIssues: issues, 
+            cssVariablesValid: cssValid,
+            themeName: currentTheme?.name || 'none'
+          } 
+        });
+        logThemeState();
       }
-    });
-    
-    return cssVars;
-  };
+    } catch (error) {
+      logger.error('Error during theme validation', { details: safeDetails(error) });
+    }
+  }, [currentTheme]);
   
-  const cssVariables = getCssVariables();
+  // Check if there are issues
+  const hasIssues = validationIssues.length > 0 || cssVariablesValid === false;
   
-  // Validate theme structure and log issues
-  const validateCurrentTheme = () => {
-    const issues = validateThemeSchema(currentTheme || impulseTheme);
-    logThemeState();
-    return issues.length > 0 ? issues : ['✅ Theme structure is valid'];
-  };
-  
-  // Force a complete theme refresh
-  const refreshTheme = () => {
-    logThemeState();
-    window.location.reload();
-  };
-  
-  // Color preview component
-  const ColorPreview = ({ color, name }: { color: string; name: string }) => {
-    const safeColor = ensureHexColor(color, '#000000');
-    
-    return (
-      <div className="flex items-center gap-2 mb-2">
-        <div 
-          className="w-6 h-6 rounded-full border border-white/10" 
-          style={{ backgroundColor: safeColor }}
-        />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-mono truncate">{name}</p>
-        </div>
-        <div className="text-xs font-mono opacity-70">{safeColor}</div>
-      </div>
-    );
-  };
+  if (!hasIssues && !showControls) {
+    return null;
+  }
   
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="outline"
-          size="sm"
-          className="fixed bottom-4 right-4 z-50 flex items-center gap-1 opacity-70 hover:opacity-100 hover:bg-destructive/20 border-destructive/50"
-        >
-          <Bug className="h-4 w-4" />
-          <span className="text-xs">Theme Debug</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle>Theme Debugger</DialogTitle>
-          <DialogDescription>
-            Inspect theme values and CSS variables
-          </DialogDescription>
-        </DialogHeader>
-        
-        <Tabs defaultValue="validation">
-          <TabsList className="mb-4">
-            <TabsTrigger value="validation">Validation</TabsTrigger>
-            <TabsTrigger value="colors">Colors</TabsTrigger>
-            <TabsTrigger value="css-vars">CSS Variables</TabsTrigger>
-            <TabsTrigger value="components">Components</TabsTrigger>
-            <TabsTrigger value="tokens">Tokens</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="validation" className="space-y-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Theme Structure Validation</h3>
-                <div className="p-4 bg-black/20 rounded-md space-y-2">
-                  <div className="text-sm">
-                    {validateCurrentTheme().map((issue, i) => (
-                      <div 
-                        key={i} 
-                        className={`mb-1 ${issue.startsWith('✅') ? 'text-green-400' : 'text-amber-400'}`}
-                      >
-                        {issue}
-                      </div>
+    <Alert variant={hasIssues ? "destructive" : "default"} className="mb-4">
+      <AlertTitle>Theme Status</AlertTitle>
+      <AlertDescription>
+        {hasIssues ? (
+          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+            <div className="flex items-center justify-between">
+              <p>Found {validationIssues.length} issues with the current theme.</p>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" size="sm">
+                  {isOpen ? 'Hide' : 'Show'} Details
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            
+            <CollapsibleContent className="mt-2">
+              <div className="p-2 rounded bg-muted/20">
+                <p className="mb-2 font-semibold">Theme Schema Issues:</p>
+                {validationIssues.length > 0 ? (
+                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                    {validationIssues.map((issue, i) => (
+                      <li key={i}>{issue}</li>
                     ))}
-                  </div>
-                  
-                  <div className="pt-2 border-t border-white/10 mt-2">
-                    <Button 
-                      size="sm" 
-                      variant="destructive" 
-                      onClick={refreshTheme}
-                      className="mt-2"
-                    >
-                      Force Theme Refresh
-                    </Button>
-                  </div>
+                  </ul>
+                ) : (
+                  <p className="text-sm">✅ No schema issues</p>
+                )}
+                
+                <p className="mt-4 mb-2 font-semibold">CSS Variables Status:</p>
+                {cssVariablesValid === false ? (
+                  <p className="text-sm">❌ Critical CSS variables are missing</p>
+                ) : cssVariablesValid === true ? (
+                  <p className="text-sm">✅ All critical CSS variables are set</p>
+                ) : (
+                  <p className="text-sm">⏳ CSS variable validation not yet run</p>
+                )}
+                
+                <div className="mt-4 space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      logThemeState();
+                      logger.info('Theme state logged to console');
+                    }}
+                  >
+                    Log Theme State
+                  </Button>
                 </div>
               </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Current Theme Properties</h3>
-                <div className="p-4 bg-black/20 rounded-md">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="font-medium">Theme ID:</div>
-                    <div className="font-mono">{currentTheme?.id || 'N/A'}</div>
-                    
-                    <div className="font-medium">Theme Name:</div>
-                    <div className="font-mono">{currentTheme?.name || 'N/A'}</div>
-                    
-                    <div className="font-medium">Status:</div>
-                    <div className="font-mono">{currentTheme?.status || 'N/A'}</div>
-                    
-                    <div className="font-medium">Version:</div>
-                    <div className="font-mono">{currentTheme?.version?.toString() || 'N/A'}</div>
-                    
-                    <div className="font-medium">Is Default:</div>
-                    <div className="font-mono">{currentTheme?.is_default ? 'Yes' : 'No'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="colors" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Primary Colors</h3>
-                <div className="space-y-1 p-4 bg-black/20 rounded-md">
-                  <ColorPreview 
-                    color={getThemeProperty(currentTheme || impulseTheme, 'design_tokens.colors.primary', '#00F0FF')} 
-                    name="primary" 
-                  />
-                  <ColorPreview 
-                    color={getThemeProperty(currentTheme || impulseTheme, 'design_tokens.colors.secondary', '#FF2D6E')} 
-                    name="secondary" 
-                  />
-                  <ColorPreview 
-                    color={getThemeProperty(currentTheme || impulseTheme, 'design_tokens.colors.accent', '#8B5CF6')} 
-                    name="accent" 
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Background Colors</h3>
-                <div className="space-y-1 p-4 bg-black/20 rounded-md">
-                  <ColorPreview 
-                    color={getThemeProperty(currentTheme || impulseTheme, 'design_tokens.colors.background.main', '#12121A')} 
-                    name="background.main" 
-                  />
-                  <ColorPreview 
-                    color={getThemeProperty(currentTheme || impulseTheme, 'design_tokens.colors.background.card', 'rgba(28, 32, 42, 0.7)')} 
-                    name="background.card" 
-                  />
-                  <ColorPreview 
-                    color={getThemeProperty(currentTheme || impulseTheme, 'design_tokens.colors.text.primary', '#F6F6F7')} 
-                    name="text.primary" 
-                  />
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="css-vars">
-            <div className="space-y-4">
-              <div className="max-h-[50vh] overflow-auto p-4 bg-black/20 rounded-md">
-                <pre className="text-xs font-mono">
-                  {Object.entries(cssVariables).map(([name, value]) => (
-                    <div key={name} className="flex items-start mb-1">
-                      <span className="text-primary whitespace-nowrap">{name}:</span>
-                      <span className="ml-2 text-muted-foreground break-all">{value}</span>
-                    </div>
-                  ))}
-                </pre>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="components">
-            <div className="space-y-4">
-              <div className="max-h-[50vh] overflow-auto p-4 bg-black/20 rounded-md">
-                <pre className="text-xs font-mono">
-                  {Object.keys(componentStyles || {}).length > 0 ? 
-                    JSON.stringify(componentStyles, null, 2) : 
-                    "No component styles loaded"
-                  }
-                </pre>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="tokens">
-            <div className="space-y-4">
-              <div className="max-h-[50vh] overflow-auto p-4 bg-black/20 rounded-md">
-                <pre className="text-xs font-mono">
-                  {JSON.stringify(currentTheme?.design_tokens || impulseTheme, null, 2)}
-                </pre>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+            </CollapsibleContent>
+          </Collapsible>
+        ) : (
+          <p>✅ Theme is valid and correctly applied.</p>
+        )}
+      </AlertDescription>
+    </Alert>
   );
 }
