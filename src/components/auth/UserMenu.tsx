@@ -13,12 +13,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, UserCircle, Settings, LogOut, LinkIcon, Github, Mail } from "lucide-react";
+import { Shield, UserCircle, Settings, LogOut, LinkIcon, Github, Mail, PaintBrush } from "lucide-react";
 import { useAuth } from "@/auth/hooks/useAuth";
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { cn } from "@/lib/utils";
+import { useThemeContext } from "@/admin/hooks/useThemeContext";
 
 export function UserMenu() {
   const [open, setOpen] = useState(false);
@@ -26,6 +27,7 @@ export function UserMenu() {
   const { hasAdminAccess } = useAdminAccess();
   const { toast } = useToast();
   const logger = useLogger("UserMenu", LogCategory.UI);
+  const { themeValues } = useThemeContext('site');
 
   const initials = user?.email
     ? user.email
@@ -64,6 +66,11 @@ export function UserMenu() {
         <Button
           variant="ghost"
           className="group relative h-10 w-10 rounded-full border border-primary/30 p-0 hover:bg-background/40 hover:shadow-[0_0_10px_rgba(0,240,255,0.5)] transition-all duration-300"
+          style={{ 
+            // Apply theme values dynamically for better customization
+            borderColor: `${themeValues.primaryColor}30`,
+            boxShadow: open ? `0 0 10px ${themeValues.primaryColor}50` : 'none',
+          }}
         >
           <Avatar className="h-9 w-9 rounded-full overflow-hidden bg-background/30 border border-primary/20 ring-2 ring-primary/10">
             <AvatarImage src={user?.user_metadata?.avatar_url} />
@@ -112,12 +119,19 @@ export function UserMenu() {
             </Link>
           </DropdownMenuItem>
           
-          <DropdownMenuItem 
-            onClick={openLinkingFlow}
-            className="flex cursor-pointer items-center gap-2 text-foreground/90 hover:text-primary focus:text-primary"
-          >
-            <LinkIcon className="h-4 w-4" />
-            <span>Link Accounts</span>
+          <DropdownMenuItem asChild>
+            <Link to="/link-account" className="flex cursor-pointer items-center gap-2 text-foreground/90 hover:text-primary focus:text-primary">
+              <LinkIcon className="h-4 w-4" />
+              <span>Link Accounts</span>
+            </Link>
+          </DropdownMenuItem>
+
+          {/* Theme Settings Menu Item */}
+          <DropdownMenuItem asChild>
+            <Link to="/theme-settings" className="flex cursor-pointer items-center gap-2 text-foreground/90 hover:text-primary focus:text-primary">
+              <PaintBrush className="h-4 w-4" />
+              <span>Theme Settings</span>
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         
