@@ -1,46 +1,67 @@
 
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
+import { ensureStringValue } from './themeUtils';
 
 const logger = getLogger('ColorUtils', { category: LogCategory.THEME as string });
+
+/**
+ * Ensures a color is a valid hex string or returns a fallback
+ */
+export function ensureHexColor(color: any, fallback: string = '#000000'): string {
+  const validColor = ensureStringValue(color, fallback);
+  
+  // Check if it's a valid hex format
+  if (validColor.match(/^#([A-Fa-f0-9]{3}){1,2}$/) || 
+      validColor.match(/^#([A-Fa-f0-9]{4}){1,2}$/) || 
+      validColor.startsWith('rgb') || 
+      validColor.startsWith('rgba')) {
+    return validColor;
+  }
+  
+  logger.warn('Invalid color format provided', { details: { color: validColor } });
+  return fallback;
+}
 
 /**
  * Convert hex color to RGB components
  */
 export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   // Default fallback for invalid input
-  if (!hex || typeof hex !== 'string') {
-    logger.warn('Invalid hex color provided', { details: { hex } });
+  const validHex = ensureHexColor(hex);
+  
+  try {
+    // Remove hash if present
+    let cleanHex = validHex.replace(/^#/, '');
+    
+    // Handle shorthand hex
+    if (cleanHex.length === 3) {
+      cleanHex = cleanHex.split('').map(c => c + c).join('');
+    }
+    
+    // Parse hex values
+    const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(cleanHex);
+    if (!result) {
+      logger.warn('Invalid hex color format', { details: { hex: validHex } });
+      return { r: 0, g: 0, b: 0 };
+    }
+    
+    return {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    };
+  } catch (error) {
+    logger.error('Error parsing color', { details: { hex, error } });
     return { r: 0, g: 0, b: 0 };
   }
-  
-  // Remove hash if present
-  hex = hex.replace(/^#/, '');
-  
-  // Handle shorthand hex
-  if (hex.length === 3) {
-    hex = hex.split('').map(c => c + c).join('');
-  }
-  
-  // Parse hex values
-  const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) {
-    logger.warn('Invalid hex color format', { details: { hex } });
-    return { r: 0, g: 0, b: 0 };
-  }
-  
-  return {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  };
 }
 
 /**
  * Convert hex color to RGB string (e.g., "255, 0, 0")
  */
 export function hexToRgbString(hex: string): string {
-  const rgb = hexToRgb(hex);
+  const rgb = hexToRgb(ensureHexColor(hex));
   if (!rgb) return '0, 0, 0';
   return `${rgb.r}, ${rgb.g}, ${rgb.b}`;
 }
@@ -49,7 +70,8 @@ export function hexToRgbString(hex: string): string {
  * Convert hex color to HSL string for Tailwind CSS variables
  */
 export function hexToHSL(hex: string): string {
-  const rgb = hexToRgb(hex);
+  const validHex = ensureHexColor(hex);
+  const rgb = hexToRgb(validHex);
   if (!rgb) return '0 0% 0%';
   
   const r = rgb.r / 255;
@@ -93,9 +115,9 @@ export function hexToHSL(hex: string): string {
  * Check if a color is considered dark
  */
 export function isColorDark(color: string): boolean {
-  if (!color) return true;
+  const validColor = ensureHexColor(color);
   
-  const rgb = hexToRgb(color);
+  const rgb = hexToRgb(validColor);
   if (!rgb) return true;
   
   // Calculate perceived brightness using the formula:
@@ -110,8 +132,9 @@ export function isColorDark(color: string): boolean {
  * Lighten a hex color by a percentage
  */
 export function lightenColor(hex: string, percent: number): string {
-  const rgb = hexToRgb(hex);
-  if (!rgb) return hex;
+  const validHex = ensureHexColor(hex);
+  const rgb = hexToRgb(validHex);
+  if (!rgb) return validHex;
   
   const factor = 1 + percent / 100;
   
@@ -126,8 +149,9 @@ export function lightenColor(hex: string, percent: number): string {
  * Darken a hex color by a percentage
  */
 export function darkenColor(hex: string, percent: number): string {
-  const rgb = hexToRgb(hex);
-  if (!rgb) return hex;
+  const validHex = ensureHexColor(hex);
+  const rgb = hexToRgb(validHex);
+  if (!rgb) return validHex;
   
   const factor = 1 - percent / 100;
   
