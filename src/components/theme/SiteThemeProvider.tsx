@@ -208,24 +208,43 @@ export function SiteThemeProvider({
     return Object.keys(styles).length > 0 ? styles : undefined;
   }, [themeComponents]);
   
-  // Check if theme is dark
+  // Check if theme is dark - with robust type checking to fix the error
   const isDark = useMemo(() => {
-    // Basic check - we could do more sophisticated brightness analysis
-    if (variables.background.startsWith('#')) {
-      // For hex, check if first two chars after # are low values
-      const hex = variables.background.substring(1);
-      const r = parseInt(hex.length === 3 ? hex[0] + hex[0] : hex.substring(0, 2), 16);
-      const g = parseInt(hex.length === 3 ? hex[1] + hex[1] : hex.substring(2, 4), 16);
-      const b = parseInt(hex.length === 3 ? hex[2] + hex[2] : hex.substring(4, 6), 16);
+    try {
+      // Make sure background is a string and has startsWith method
+      const bgColor = typeof variables.background === 'string' ? variables.background : '#12121A';
       
-      // Calculate relative luminance
-      // Dark mode is determined by luminance < 0.5
-      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-      return luminance < 0.5;
+      // Basic check - we could do more sophisticated brightness analysis
+      if (bgColor.startsWith('#')) {
+        // For hex, check if first two chars after # are low values
+        const hex = bgColor.substring(1);
+        const r = parseInt(hex.length === 3 ? hex[0] + hex[0] : hex.substring(0, 2), 16);
+        const g = parseInt(hex.length === 3 ? hex[1] + hex[1] : hex.substring(2, 4), 16);
+        const b = parseInt(hex.length === 3 ? hex[2] + hex[2] : hex.substring(4, 6), 16);
+        
+        // Calculate relative luminance
+        // Dark mode is determined by luminance < 0.5
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance < 0.5;
+      }
+      
+      // For non-hex values (like rgba), assume dark if it contains low values
+      if (bgColor.includes('rgba') || bgColor.includes('rgb')) {
+        const rgbMatch = bgColor.match(/\d+/g);
+        if (rgbMatch && rgbMatch.length >= 3) {
+          const [r, g, b] = rgbMatch.map(Number);
+          const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+          return luminance < 0.5;
+        }
+      }
+      
+      // Default to dark if we can't determine
+      return true;
+    } catch (error) {
+      console.error('Error determining theme brightness:', error);
+      // Default to dark theme if there's any error
+      return true;
     }
-    
-    // Default to dark if we can't determine
-    return true;
   }, [variables.background]);
   
   // Set CSS variables when theme changes
@@ -235,62 +254,62 @@ export function SiteThemeProvider({
       const root = document.documentElement;
       
       // Apply background and text colors
-      root.style.setProperty('--background', hexToHSL(variables.background));
-      root.style.setProperty('--foreground', hexToHSL(variables.foreground));
+      root.style.setProperty('--background', hexToHSL(variables.background || '#12121A'));
+      root.style.setProperty('--foreground', hexToHSL(variables.foreground || '#F6F6F7'));
       
       // Card colors
-      root.style.setProperty('--card', hexToHSL(variables.card));
-      root.style.setProperty('--card-foreground', hexToHSL(variables.cardForeground));
+      root.style.setProperty('--card', hexToHSL(variables.card || 'rgba(28, 32, 42, 0.7)'));
+      root.style.setProperty('--card-foreground', hexToHSL(variables.cardForeground || '#F6F6F7'));
       
       // Primary colors
-      root.style.setProperty('--primary', hexToHSL(variables.primary));
-      root.style.setProperty('--primary-foreground', hexToHSL(variables.primaryForeground));
+      root.style.setProperty('--primary', hexToHSL(variables.primary || '#00F0FF'));
+      root.style.setProperty('--primary-foreground', hexToHSL(variables.primaryForeground || '#F6F6F7'));
       
       // Secondary colors
-      root.style.setProperty('--secondary', hexToHSL(variables.secondary));
-      root.style.setProperty('--secondary-foreground', hexToHSL(variables.secondaryForeground));
+      root.style.setProperty('--secondary', hexToHSL(variables.secondary || '#FF2D6E'));
+      root.style.setProperty('--secondary-foreground', hexToHSL(variables.secondaryForeground || '#F6F6F7'));
       
       // Muted colors
-      root.style.setProperty('--muted', hexToHSL(variables.muted));
-      root.style.setProperty('--muted-foreground', hexToHSL(variables.mutedForeground));
+      root.style.setProperty('--muted', hexToHSL(variables.muted || 'rgba(255, 255, 255, 0.7)'));
+      root.style.setProperty('--muted-foreground', hexToHSL(variables.mutedForeground || 'rgba(255, 255, 255, 0.5)'));
       
       // Accent colors
-      root.style.setProperty('--accent', hexToHSL(variables.accent));
-      root.style.setProperty('--accent-foreground', hexToHSL(variables.accentForeground));
+      root.style.setProperty('--accent', hexToHSL(variables.accent || '#8B5CF6'));
+      root.style.setProperty('--accent-foreground', hexToHSL(variables.accentForeground || '#F6F6F7'));
       
       // Destructive colors
-      root.style.setProperty('--destructive', hexToHSL(variables.destructive));
-      root.style.setProperty('--destructive-foreground', hexToHSL(variables.destructiveForeground));
+      root.style.setProperty('--destructive', hexToHSL(variables.destructive || '#EF4444'));
+      root.style.setProperty('--destructive-foreground', hexToHSL(variables.destructiveForeground || '#F6F6F7'));
       
       // Border, input, ring
-      root.style.setProperty('--border', hexToHSL(variables.border));
-      root.style.setProperty('--input', hexToHSL(variables.input));
-      root.style.setProperty('--ring', hexToHSL(variables.ring));
+      root.style.setProperty('--border', hexToHSL(variables.border || 'rgba(0, 240, 255, 0.2)'));
+      root.style.setProperty('--input', hexToHSL(variables.input || 'rgba(22, 22, 26, 0.5)'));
+      root.style.setProperty('--ring', hexToHSL(variables.ring || 'rgba(0, 240, 255, 0.4)'));
       
       // CSS variables for our effect system
-      root.style.setProperty('--site-effect-color', variables.effectColor);
-      root.style.setProperty('--site-effect-secondary', variables.effectSecondary);
+      root.style.setProperty('--site-effect-color', variables.effectColor || '#00F0FF');
+      root.style.setProperty('--site-effect-secondary', variables.effectSecondary || '#FF2D6E');
       root.style.setProperty('--site-effect-tertiary', variables.effectTertiary || '#8B5CF6');
       
       // RGB values for overlays
-      root.style.setProperty('--color-primary', hexToRgbString(variables.primary));
-      root.style.setProperty('--color-secondary', hexToRgbString(variables.secondary));
+      root.style.setProperty('--color-primary', hexToRgbString(variables.primary || '#00F0FF'));
+      root.style.setProperty('--color-secondary', hexToRgbString(variables.secondary || '#FF2D6E'));
       
       // Transition durations
-      root.style.setProperty('--transition-fast', variables.transitionFast);
-      root.style.setProperty('--transition-normal', variables.transitionNormal);
-      root.style.setProperty('--transition-slow', variables.transitionSlow);
+      root.style.setProperty('--transition-fast', variables.transitionFast || '150ms');
+      root.style.setProperty('--transition-normal', variables.transitionNormal || '300ms');
+      root.style.setProperty('--transition-slow', variables.transitionSlow || '500ms');
       
       // Animation durations
-      root.style.setProperty('--animation-fast', variables.animationFast);
-      root.style.setProperty('--animation-normal', variables.animationNormal);
-      root.style.setProperty('--animation-slow', variables.animationSlow);
+      root.style.setProperty('--animation-fast', variables.animationFast || '1s');
+      root.style.setProperty('--animation-normal', variables.animationNormal || '2s');
+      root.style.setProperty('--animation-slow', variables.animationSlow || '3s');
       
       // Border radius
-      root.style.setProperty('--radius-sm', variables.radiusSm);
-      root.style.setProperty('--radius-md', variables.radiusMd);
-      root.style.setProperty('--radius-lg', variables.radiusLg);
-      root.style.setProperty('--radius-full', variables.radiusFull);
+      root.style.setProperty('--radius-sm', variables.radiusSm || '0.25rem');
+      root.style.setProperty('--radius-md', variables.radiusMd || '0.5rem');
+      root.style.setProperty('--radius-lg', variables.radiusLg || '0.75rem');
+      root.style.setProperty('--radius-full', variables.radiusFull || '9999px');
       
       // Apply light/dark mode
       if (isDark) {
