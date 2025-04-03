@@ -2,22 +2,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-center p-4">
-      <h1 className="text-4xl font-bold mb-2">404</h1>
-      <h2 className="text-2xl font-semibold mb-4">Page Not Found</h2>
-      <p className="mb-8 text-muted-foreground max-w-md">
-        The page you are looking for doesn't exist or has been moved.
+    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
+      <div className="text-8xl font-bold text-primary">404</div>
+      <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">Page not found</h1>
+      <p className="mt-6 text-base text-muted-foreground max-w-md text-center">
+        Sorry, we couldn't find the page you're looking for. The link might be incorrect, or the page may have been moved or deleted.
       </p>
-      <Button asChild>
+      <div className="mt-10">
         <Link to="/">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
+          <Button>Go back home</Button>
         </Link>
-      </Button>
+      </div>
     </div>
   );
 }

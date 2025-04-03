@@ -30,7 +30,19 @@ export enum LogCategory {
   ADMIN = 'admin',
   IMPORT = 'import',
   ANALYTICS = 'analytics',
-  NOTIFICATIONS = 'notifications'
+  NOTIFICATIONS = 'notifications',
+  LAYOUT = 'layout',
+  COMPONENTS = 'components',
+  FORMS = 'forms',
+  VALIDATION = 'validation',
+  MODELS = 'models',
+  TRANSFORM = 'transform',
+  SECURITY = 'security',
+  ERROR = 'error',
+  CACHE = 'cache',
+  STORAGE = 'storage',
+  TYPES = 'types',
+  SESSION = 'session'
 }
 
 /**
