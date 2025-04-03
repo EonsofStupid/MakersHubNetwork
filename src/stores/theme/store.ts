@@ -2,7 +2,7 @@
 // Fix the store.ts file to properly handle null values
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
 
 const logger = getLogger('themeStore');
