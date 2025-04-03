@@ -2,6 +2,8 @@
 import { Json } from "@/integrations/supabase/types";
 
 export type ThemeStatus = 'draft' | 'published' | 'archived';
+
+// Standardized theme context enum - used everywhere
 export type ThemeContext = 'site' | 'admin' | 'chat';
 
 export interface ThemeToken {
