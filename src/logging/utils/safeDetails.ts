@@ -22,7 +22,7 @@ export function safeDetails(details: unknown): Record<string, unknown> {
       const result: Record<string, unknown> = {};
       
       // Use Object.entries to handle all types of objects safely
-      Object.entries(details).forEach(([key, value]) => {
+      Object.entries(details as Record<string, unknown>).forEach(([key, value]) => {
         result[key] = safeValue(value);
       });
       
@@ -61,7 +61,7 @@ function safeValue(value: unknown): unknown {
       // Generic object handling
       const result: Record<string, unknown> = {};
       
-      Object.entries(value).forEach(([k, v]) => {
+      Object.entries(value as Record<string, unknown>).forEach(([k, v]) => {
         // Skip functions and circular references
         if (typeof v !== 'function') {
           result[k] = safeValue(v);

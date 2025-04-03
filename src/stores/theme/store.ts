@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeState } from "./types";
@@ -10,7 +9,7 @@ import { DEFAULT_THEME_NAME } from "@/utils/themeInitializer";
 import { LogCategory } from "@/logging";
 
 // Create a logger instance for the theme store
-const logger = getLogger('ThemeStore', { category: LogCategory.THEME });
+const logger = getLogger('ThemeStore');
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
   currentTheme: null,

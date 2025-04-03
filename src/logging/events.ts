@@ -42,7 +42,7 @@ class LogEventEmitter {
   }
   
   /**
-   * Legacy method name for compatibility
+   * Legacy method name for compatibility - now an alias for emit
    */
   emitLogEvent(entry: LogEntry): void {
     this.emit(entry);
