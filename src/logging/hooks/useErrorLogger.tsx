@@ -1,75 +1,66 @@
 
-import { useCallback } from 'react';
-import { getLogger } from '../service/logger.service';
-import { LogCategory, LogLevel } from '../types';
-import { useMemo } from 'react';
+import { useEffect, useRef } from 'react';
+import { LoggerOptions } from '../types';
+import { useLogger } from './useLogger';
 
-export interface ErrorLoggerOptions {
-  silent?: boolean;
-  context?: string;
-  namespace?: string;
-  category?: LogCategory;
-  details?: Record<string, unknown>;
+interface ErrorLoggerOptions extends LoggerOptions {
+  enableGlobalHandlers?: boolean;
 }
 
-export function useErrorLogger(source: string, defaultOptions: ErrorLoggerOptions = {}) {
-  const logger = useMemo(() => getLogger(source, {
-    category: defaultOptions.category || LogCategory.ERROR
-  }), [source, defaultOptions.category]);
+/**
+ * Hook for automatic error logging in components
+ */
+export function useErrorLogger(source?: string, options: ErrorLoggerOptions = {}): void {
+  const logger = useLogger(source || 'ErrorBoundary', options);
+  const prevHandler = useRef<OnErrorEventHandler | null>(null);
   
-  const logError = useCallback((error: Error | unknown, options: ErrorLoggerOptions = {}) => {
-    const combinedOptions: ErrorLoggerOptions = {
-      ...defaultOptions,
-      ...options
+  useEffect(() => {
+    // Only set up global handlers if explicitly enabled
+    if (options.enableGlobalHandlers !== true) {
+      return;
+    }
+    
+    // Store previous handlers to restore them on cleanup
+    prevHandler.current = window.onerror;
+    
+    // Global uncaught error handler
+    window.onerror = (event, source, lineno, colno, error) => {
+      logger.error('Uncaught error', {
+        details: {
+          message: error?.message || String(event),
+          source,
+          lineno,
+          colno,
+          stack: error?.stack
+        }
+      });
+      
+      // Call previous handler if it exists
+      if (typeof prevHandler.current === 'function') {
+        return prevHandler.current(event, source, lineno, colno, error);
+      }
+      
+      // Return false to allow default browser handling
+      return false;
     };
     
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : String(error);
-    
-    const errorDetails = error instanceof Error
-      ? { 
-          name: error.name, 
-          message: error.message, 
-          stack: error.stack,
-          ...combinedOptions.details
+    // Unhandled promise rejection handler
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      logger.error('Unhandled promise rejection', {
+        details: {
+          reason: event.reason instanceof Error
+            ? { message: event.reason.message, stack: event.reason.stack }
+            : event.reason
         }
-      : { 
-          error: String(error),
-          ...combinedOptions.details
-        };
-
-    if (!combinedOptions.silent) {
-      logger.error(
-        `${combinedOptions.context ? `[${combinedOptions.context}] ` : ''}${errorMessage}`,
-        { category: combinedOptions.category || LogCategory.ERROR, details: errorDetails }
-      );
-    }
+      });
+    };
     
-    return errorMessage;
-  }, [logger, defaultOptions]);
-  
-  const captureError = useCallback((fn: () => any, options: ErrorLoggerOptions = {}) => {
-    try {
-      return fn();
-    } catch (error) {
-      logError(error, options);
-      return null;
-    }
-  }, [logError]);
-  
-  const captureErrorAsync = useCallback(async (fn: () => Promise<any>, options: ErrorLoggerOptions = {}) => {
-    try {
-      return await fn();
-    } catch (error) {
-      logError(error, options);
-      return null;
-    }
-  }, [logError]);
-  
-  return { 
-    logError,
-    captureError,
-    captureErrorAsync,
-  };
+    window.addEventListener('unhandledrejection', handleRejection);
+    
+    // Clean up
+    return () => {
+      window.onerror = prevHandler.current;
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, [logger, options.enableGlobalHandlers]);
 }

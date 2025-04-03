@@ -1,51 +1,31 @@
+import { LogTransport, LogEntry } from '../types';
 
-import { LogEntry, LogTransport } from '../types';
+// Maximum number of logs to keep in memory
+const MAX_LOGS = 1000;
+
+// Memory storage for logs
+let logs: LogEntry[] = [];
 
 /**
- * In-memory transport for storing logs
- * Used for displaying logs in the UI
+ * In-memory transport for logging
+ * Stores logs in memory for retrieval by log viewers
  */
-class MemoryTransport implements LogTransport {
-  private logs: LogEntry[] = [];
-  private maxEntries: number;
-  
-  constructor(maxEntries: number = 1000) {
-    this.maxEntries = maxEntries;
-  }
-  
+export const memoryTransport: LogTransport = {
   log(entry: LogEntry): void {
-    // Ensure entry has an ID
-    if (!entry.id) {
-      entry.id = crypto.randomUUID ? 
-        crypto.randomUUID() : 
-        `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    }
+    // Add to the beginning for newest-first order
+    logs.unshift({...entry});
     
-    // Ensure timestamp is a proper date if it's a string
-    if (typeof entry.timestamp === 'string') {
-      try {
-        entry.timestamp = new Date(entry.timestamp).toISOString();
-      } catch (e) {
-        entry.timestamp = new Date().toISOString();
-      }
+    // Trim if we exceed the maximum
+    if (logs.length > MAX_LOGS) {
+      logs = logs.slice(0, MAX_LOGS);
     }
-    
-    this.logs.push(entry);
-    
-    // Trim logs if they exceed the maximum number of entries
-    if (this.logs.length > this.maxEntries) {
-      this.logs = this.logs.slice(this.logs.length - this.maxEntries);
-    }
-  }
+  },
   
   getLogs(): LogEntry[] {
-    return this.logs;
-  }
+    return [...logs];
+  },
   
   clear(): void {
-    this.logs = [];
+    logs = [];
   }
-}
-
-// Export a singleton instance
-export const memoryTransport = new MemoryTransport();
+};
