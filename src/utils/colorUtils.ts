@@ -1,4 +1,3 @@
-
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 
@@ -10,66 +9,78 @@ const logger = getLogger('ColorUtils', { category: LogCategory.THEME });
 export function hexToRgb(hex: string): { r: number, g: number, b: number } {
   if (!hex) return { r: 0, g: 0, b: 0 };
   
-  // Remove the hash if it exists
-  hex = hex.replace(/^#/, '');
-  
-  // Handle rgba format
-  if (hex.startsWith('rgba')) {
-    const rgba = hex.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)/);
-    if (rgba) {
+  try {
+    // Remove the hash if it exists
+    hex = hex.replace(/^#/, '');
+    
+    // Handle rgba format
+    if (hex.startsWith('rgba')) {
+      const rgba = hex.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)/);
+      if (rgba) {
+        return {
+          r: parseInt(rgba[1], 10),
+          g: parseInt(rgba[2], 10),
+          b: parseInt(rgba[3], 10)
+        };
+      }
+      return { r: 0, g: 0, b: 0 };
+    }
+    
+    // Handle rgb format
+    if (hex.startsWith('rgb')) {
+      const rgb = hex.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+      if (rgb) {
+        return {
+          r: parseInt(rgb[1], 10),
+          g: parseInt(rgb[2], 10),
+          b: parseInt(rgb[3], 10)
+        };
+      }
+      return { r: 0, g: 0, b: 0 };
+    }
+    
+    // Parse hex formats
+    // Handle shorthand hex (#RGB)
+    if (hex.length === 3) {
       return {
-        r: parseInt(rgba[1], 10),
-        g: parseInt(rgba[2], 10),
-        b: parseInt(rgba[3], 10)
+        r: parseInt(hex[0] + hex[0], 16),
+        g: parseInt(hex[1] + hex[1], 16),
+        b: parseInt(hex[2] + hex[2], 16)
       };
     }
-    return { r: 0, g: 0, b: 0 };
-  }
-  
-  // Handle rgb format
-  if (hex.startsWith('rgb')) {
-    const rgb = hex.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
-    if (rgb) {
+    
+    // Handle standard hex (#RRGGBB)
+    const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (result) {
       return {
-        r: parseInt(rgb[1], 10),
-        g: parseInt(rgb[2], 10),
-        b: parseInt(rgb[3], 10)
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
       };
     }
+    
+    // Log an error and return black as fallback
+    logger.warn(`Invalid color format: ${hex}`);
+    return { r: 0, g: 0, b: 0 };
+  } catch (error) {
+    logger.error('Error parsing color', { details: { hex, error } });
     return { r: 0, g: 0, b: 0 };
   }
-  
-  // Parse hex formats
-  // Handle shorthand hex (#RGB)
-  if (hex.length === 3) {
-    return {
-      r: parseInt(hex[0] + hex[0], 16),
-      g: parseInt(hex[1] + hex[1], 16),
-      b: parseInt(hex[2] + hex[2], 16)
-    };
-  }
-  
-  // Handle standard hex (#RRGGBB)
-  const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (result) {
-    return {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    };
-  }
-  
-  // Log an error and return black as fallback
-  logger.warn(`Invalid color format: ${hex}`);
-  return { r: 0, g: 0, b: 0 };
 }
 
 /**
  * Convert hex to RGB string (format: "r, g, b")
  */
-export function hexToRgbString(hex: string): string {
-  const rgb = hexToRgb(hex);
-  return `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+export function hexToRgbString(hex: string | undefined | null): string {
+  if (!hex) return '0, 0, 0';
+  
+  try {
+    const rgb = hexToRgb(hex);
+    return `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+  } catch (error) {
+    logger.error('Error converting hex to RGB string', { details: { hex, error } });
+    return '0, 0, 0';
+  }
 }
 
 /**

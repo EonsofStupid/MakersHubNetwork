@@ -1,4 +1,3 @@
-
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';

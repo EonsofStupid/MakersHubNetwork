@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { ImpulseTheme } from '@/admin/types/impulse.types';
 import { Theme, ComponentTokens } from '@/types/theme';

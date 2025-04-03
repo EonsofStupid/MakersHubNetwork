@@ -1,9 +1,8 @@
-
-import { Theme, ThemeToken, ComponentTokens } from "@/types/theme";
+import { Theme, ThemeToken, ComponentTokens, ThemeContext } from "@/types/theme";
 
 export interface ThemeComponent extends ComponentTokens {
   theme_id: string;
-  context: 'site' | 'admin' | 'chat';
+  context: ThemeContext;
 }
 
 export interface ThemeState {

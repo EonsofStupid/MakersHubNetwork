@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
+import { ThemeContext } from '@/types/theme';
 
 // Define theme context types
 export type ThemeContextValues = {
@@ -16,7 +17,8 @@ export type ThemeContextValues = {
   borderRadius: string;
 };
 
-export type ThemeScope = 'admin' | 'site' | 'global';
+// Use the proper ThemeContext type
+export type ThemeScope = ThemeContext | 'global';
 
 const logger = getLogger('ThemeContext', LogCategory.THEME);
 
