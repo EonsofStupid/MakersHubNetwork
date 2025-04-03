@@ -1,8 +1,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/auth/hooks/useAuth';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { useLogger } from '@/logging/hooks/useLogger';
+import { LogCategory } from '@/logging/types';
 import { canAccessAdmin } from '@/auth/rbac/enforce';
 import { formatLogDetails } from '@/logging/utils/details-formatter';
 
@@ -14,7 +14,7 @@ export function useAdminAccess() {
   const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
   const { user, roles, status, isLoading } = useAuth();
   const isAuthenticated = status === 'authenticated';
-  const logger = useLogger("AdminAccess", LogCategory.AUTH);
+  const logger = useLogger("AdminAccess", { category: LogCategory.AUTH });
   
   // Initialize admin access
   const initializeAdmin = useCallback(async () => {

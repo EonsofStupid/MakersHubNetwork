@@ -4,7 +4,7 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 
-const logger = getLogger('ThemeRegistry', { category: LogCategory.THEME as string });
+const logger = getLogger('ThemeRegistry', { category: LogCategory.THEME });
 
 /**
  * ThemeRegistry provides a central storage for registering and accessing themes
@@ -138,3 +138,11 @@ class ThemeRegistry {
 
 // Export a singleton instance
 export const themeRegistry = new ThemeRegistry();
+
+/**
+ * Get all registered themes with proper typing
+ * Used by the theme editor
+ */
+export function getAllThemes(): ImpulseTheme[] {
+  return themeRegistry.getAllThemes();
+}
