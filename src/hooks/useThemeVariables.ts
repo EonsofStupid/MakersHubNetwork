@@ -90,7 +90,9 @@ export function useThemeVariables(theme: Theme | null): ThemeVariables {
   
   return useMemo(() => {
     if (!theme) {
-      logger.warn('No theme provided, using default variables');
+      logger.warn('No theme provided, using default variables', {
+        category: LogCategory.THEME
+      });
       return defaultThemeVariables;
     }
     
@@ -135,7 +137,10 @@ export function useThemeVariables(theme: Theme | null): ThemeVariables {
         radiusFull: ensureStringValue(getThemeProperty(theme, 'design_tokens.spacing.radius.full', defaultThemeVariables.radiusFull))
       };
     } catch (error) {
-      logger.error('Error extracting theme variables', { details: safeDetails(error) });
+      logger.error('Error extracting theme variables', { 
+        category: LogCategory.THEME,
+        details: safeDetails(error) 
+      });
       return defaultThemeVariables;
     }
   }, [theme, logger]);

@@ -31,7 +31,10 @@ export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteT
     if (!siteComponents || siteComponents.length === 0) {
       logger.debug('No site components loaded, fetching from API');
       loadSiteComponents().catch(err => {
-        logger.error('Error loading site components', { details: safeDetails(err) });
+        logger.error('Error loading site components', { 
+          category: LogCategory.THEME,
+          details: safeDetails(err) 
+        });
       });
     }
   }, [siteComponents, loadSiteComponents, logger]);

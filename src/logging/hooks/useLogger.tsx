@@ -16,35 +16,35 @@ export function useLogger(source?: string, options: LoggerOptions = {}): Logger 
   // Memoize the logger to prevent recreation on each render
   // However, each log method is still memoized separately to avoid closure issues
   
-  const trace = useCallback((message: string, msgOptions?: LoggerOptions) => {
+  const trace = useCallback(function trace(message: string, msgOptions?: LoggerOptions) {
     logger.trace(message, msgOptions);
   }, [logger]);
   
-  const debug = useCallback((message: string, msgOptions?: LoggerOptions) => {
+  const debug = useCallback(function debug(message: string, msgOptions?: LoggerOptions) {
     logger.debug(message, msgOptions);
   }, [logger]);
   
-  const info = useCallback((message: string, msgOptions?: LoggerOptions) => {
+  const info = useCallback(function info(message: string, msgOptions?: LoggerOptions) {
     logger.info(message, msgOptions);
   }, [logger]);
   
-  const warn = useCallback((message: string, msgOptions?: LoggerOptions) => {
+  const warn = useCallback(function warn(message: string, msgOptions?: LoggerOptions) {
     logger.warn(message, msgOptions);
   }, [logger]);
   
-  const error = useCallback((message: string, msgOptions?: LoggerOptions) => {
+  const error = useCallback(function error(message: string, msgOptions?: LoggerOptions) {
     logger.error(message, msgOptions);
   }, [logger]);
   
-  const critical = useCallback((message: string, msgOptions?: LoggerOptions) => {
+  const critical = useCallback(function critical(message: string, msgOptions?: LoggerOptions) {
     logger.critical(message, msgOptions);
   }, [logger]);
   
-  const success = useCallback((message: string, msgOptions?: LoggerOptions) => {
+  const success = useCallback(function success(message: string, msgOptions?: LoggerOptions) {
     logger.success(message, msgOptions);
   }, [logger]);
   
-  const performance = useCallback((message: string, duration: number, msgOptions?: LoggerOptions) => {
+  const performance = useCallback(function performance(message: string, duration: number, msgOptions?: LoggerOptions) {
     logger.performance(message, duration, msgOptions);
   }, [logger]);
   
