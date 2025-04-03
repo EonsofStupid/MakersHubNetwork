@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { Theme } from '@/types/theme';
 import { getLogger } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
+import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
 
 export interface ThemeVariables {
   // Base colors
@@ -94,65 +95,44 @@ export function useThemeVariables(theme: Theme | null): ThemeVariables {
     }
     
     try {
-      // Safely get design tokens or use empty object if not found
-      const designTokens = theme.design_tokens || {};
-      
-      // Helper to safely get a property with a fallback
-      const getTokenValue = (path: string, fallback: string): string => {
-        try {
-          const parts = path.split('.');
-          let value: any = designTokens;
-          
-          for (const part of parts) {
-            if (value === undefined || value === null) return fallback;
-            value = value[part];
-          }
-          
-          // Return fallback for non-string values to prevent startsWith errors
-          return typeof value === 'string' ? value : fallback;
-        } catch {
-          return fallback;
-        }
-      };
-      
-      // Get the values or use defaults
+      // Use the safe getThemeProperty utility for all theme access
       return {
-        background: getTokenValue('colors.background.main', defaultThemeVariables.background),
-        foreground: getTokenValue('colors.text.primary', defaultThemeVariables.foreground),
-        card: getTokenValue('colors.background.card', defaultThemeVariables.card),
-        cardForeground: getTokenValue('colors.text.primary', defaultThemeVariables.cardForeground),
-        primary: getTokenValue('colors.primary', defaultThemeVariables.primary),
-        primaryForeground: getTokenValue('colors.text.primary', defaultThemeVariables.primaryForeground),
-        secondary: getTokenValue('colors.secondary', defaultThemeVariables.secondary),
-        secondaryForeground: getTokenValue('colors.text.primary', defaultThemeVariables.secondaryForeground),
-        muted: getTokenValue('colors.text.secondary', defaultThemeVariables.muted),
-        mutedForeground: getTokenValue('colors.text.muted', defaultThemeVariables.mutedForeground),
-        accent: getTokenValue('colors.accent', defaultThemeVariables.accent),
-        accentForeground: getTokenValue('colors.text.primary', defaultThemeVariables.accentForeground),
-        destructive: getTokenValue('colors.status.error', defaultThemeVariables.destructive),
-        destructiveForeground: getTokenValue('colors.text.primary', defaultThemeVariables.destructiveForeground),
-        border: getTokenValue('colors.borders.normal', defaultThemeVariables.border),
-        input: getTokenValue('colors.input', defaultThemeVariables.input),
-        ring: getTokenValue('colors.ring', defaultThemeVariables.ring),
+        background: getThemeProperty(theme, 'design_tokens.colors.background.main', defaultThemeVariables.background),
+        foreground: getThemeProperty(theme, 'design_tokens.colors.text.primary', defaultThemeVariables.foreground),
+        card: getThemeProperty(theme, 'design_tokens.colors.background.card', defaultThemeVariables.card),
+        cardForeground: getThemeProperty(theme, 'design_tokens.colors.text.primary', defaultThemeVariables.cardForeground),
+        primary: getThemeProperty(theme, 'design_tokens.colors.primary', defaultThemeVariables.primary),
+        primaryForeground: getThemeProperty(theme, 'design_tokens.colors.text.primary', defaultThemeVariables.primaryForeground),
+        secondary: getThemeProperty(theme, 'design_tokens.colors.secondary', defaultThemeVariables.secondary),
+        secondaryForeground: getThemeProperty(theme, 'design_tokens.colors.text.primary', defaultThemeVariables.secondaryForeground),
+        muted: getThemeProperty(theme, 'design_tokens.colors.text.secondary', defaultThemeVariables.muted),
+        mutedForeground: getThemeProperty(theme, 'design_tokens.colors.text.muted', defaultThemeVariables.mutedForeground),
+        accent: getThemeProperty(theme, 'design_tokens.colors.accent', defaultThemeVariables.accent),
+        accentForeground: getThemeProperty(theme, 'design_tokens.colors.text.primary', defaultThemeVariables.accentForeground),
+        destructive: getThemeProperty(theme, 'design_tokens.colors.status.error', defaultThemeVariables.destructive),
+        destructiveForeground: getThemeProperty(theme, 'design_tokens.colors.text.primary', defaultThemeVariables.destructiveForeground),
+        border: getThemeProperty(theme, 'design_tokens.colors.borders.normal', defaultThemeVariables.border),
+        input: getThemeProperty(theme, 'design_tokens.colors.input', defaultThemeVariables.input),
+        ring: getThemeProperty(theme, 'design_tokens.colors.ring', defaultThemeVariables.ring),
         
         // Effect colors
-        effectColor: getTokenValue('colors.primary', defaultThemeVariables.effectColor),
-        effectSecondary: getTokenValue('colors.secondary', defaultThemeVariables.effectSecondary),
-        effectTertiary: getTokenValue('colors.accent', defaultThemeVariables.effectTertiary),
+        effectColor: getThemeProperty(theme, 'design_tokens.colors.primary', defaultThemeVariables.effectColor),
+        effectSecondary: getThemeProperty(theme, 'design_tokens.colors.secondary', defaultThemeVariables.effectSecondary),
+        effectTertiary: getThemeProperty(theme, 'design_tokens.colors.accent', defaultThemeVariables.effectTertiary),
         
         // Timing values
-        transitionFast: getTokenValue('animation.durations.fast', defaultThemeVariables.transitionFast),
-        transitionNormal: getTokenValue('animation.durations.normal', defaultThemeVariables.transitionNormal),
-        transitionSlow: getTokenValue('animation.durations.slow', defaultThemeVariables.transitionSlow),
-        animationFast: getTokenValue('animation.durations.animationFast', defaultThemeVariables.animationFast),
-        animationNormal: getTokenValue('animation.durations.animationNormal', defaultThemeVariables.animationNormal),
-        animationSlow: getTokenValue('animation.durations.animationSlow', defaultThemeVariables.animationSlow),
+        transitionFast: getThemeProperty(theme, 'design_tokens.animation.durations.fast', defaultThemeVariables.transitionFast),
+        transitionNormal: getThemeProperty(theme, 'design_tokens.animation.durations.normal', defaultThemeVariables.transitionNormal),
+        transitionSlow: getThemeProperty(theme, 'design_tokens.animation.durations.slow', defaultThemeVariables.transitionSlow),
+        animationFast: getThemeProperty(theme, 'design_tokens.animation.durations.animationFast', defaultThemeVariables.animationFast),
+        animationNormal: getThemeProperty(theme, 'design_tokens.animation.durations.animationNormal', defaultThemeVariables.animationNormal),
+        animationSlow: getThemeProperty(theme, 'design_tokens.animation.durations.animationSlow', defaultThemeVariables.animationSlow),
         
         // Radius values
-        radiusSm: getTokenValue('spacing.radius.sm', defaultThemeVariables.radiusSm),
-        radiusMd: getTokenValue('spacing.radius.md', defaultThemeVariables.radiusMd),
-        radiusLg: getTokenValue('spacing.radius.lg', defaultThemeVariables.radiusLg),
-        radiusFull: getTokenValue('spacing.radius.full', defaultThemeVariables.radiusFull)
+        radiusSm: getThemeProperty(theme, 'design_tokens.spacing.radius.sm', defaultThemeVariables.radiusSm),
+        radiusMd: getThemeProperty(theme, 'design_tokens.spacing.radius.md', defaultThemeVariables.radiusMd),
+        radiusLg: getThemeProperty(theme, 'design_tokens.spacing.radius.lg', defaultThemeVariables.radiusLg),
+        radiusFull: getThemeProperty(theme, 'design_tokens.spacing.radius.full', defaultThemeVariables.radiusFull)
       };
     } catch (error) {
       logger.error('Error extracting theme variables', { details: safeDetails(error) });

@@ -8,7 +8,8 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
-import { hexToHSL, hexToRgbString, isColorDark } from '@/admin/theme/utils/colorUtils';
+import { hexToHSL, hexToRgbString, isColorDark, ensureHexColor } from '@/admin/theme/utils/colorUtils';
+import { validateThemeSchema } from '@/admin/theme/utils/themeUtils';
 
 // Default theme variables for immediate fallback styling
 const defaultThemeVariables: ThemeVariables = {
@@ -16,21 +17,21 @@ const defaultThemeVariables: ThemeVariables = {
   foreground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
   card: getThemeProperty(defaultImpulseTokens, 'colors.background.card', 'rgba(28, 32, 42, 0.7)'),
   cardForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
-  primary: defaultImpulseTokens.colors?.primary || '#00F0FF',
+  primary: getThemeProperty(defaultImpulseTokens, 'colors.primary', '#00F0FF'),
   primaryForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
-  secondary: defaultImpulseTokens.colors?.secondary || '#FF2D6E',
+  secondary: getThemeProperty(defaultImpulseTokens, 'colors.secondary', '#FF2D6E'),
   secondaryForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
   muted: getThemeProperty(defaultImpulseTokens, 'colors.text.secondary', 'rgba(255, 255, 255, 0.7)'),
   mutedForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.muted', 'rgba(255, 255, 255, 0.5)'),
-  accent: defaultImpulseTokens.colors?.accent || defaultImpulseTokens.colors?.secondary || '#FF2D6E',
+  accent: getThemeProperty(defaultImpulseTokens, 'colors.accent', '#8B5CF6'),
   accentForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
   destructive: getThemeProperty(defaultImpulseTokens, 'colors.status.error', '#EF4444'),
   destructiveForeground: getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7'),
   border: getThemeProperty(defaultImpulseTokens, 'colors.borders.normal', 'rgba(0, 240, 255, 0.2)'),
   input: getThemeProperty(defaultImpulseTokens, 'colors.background.overlay', 'rgba(22, 22, 26, 0.5)'),
   ring: getThemeProperty(defaultImpulseTokens, 'colors.borders.hover', 'rgba(0, 240, 255, 0.4)'),
-  effectColor: defaultImpulseTokens.colors?.primary || '#00F0FF',
-  effectSecondary: defaultImpulseTokens.colors?.secondary || '#FF2D6E',
+  effectColor: getThemeProperty(defaultImpulseTokens, 'colors.primary', '#00F0FF'),
+  effectSecondary: getThemeProperty(defaultImpulseTokens, 'colors.secondary', '#FF2D6E'),
   effectTertiary: '#8B5CF6',
   transitionFast: getThemeProperty(defaultImpulseTokens, 'animation.duration.fast', '150ms'),
   transitionNormal: getThemeProperty(defaultImpulseTokens, 'animation.duration.normal', '300ms'),
@@ -72,7 +73,19 @@ export function SiteThemeProvider({
 }: SiteThemeProviderProps) {
   const { currentTheme, themeComponents, isLoading } = useThemeStore();
   const themeVariables = useThemeVariables(currentTheme);
-  const logger = getLogger('SiteThemeProvider', { category: LogCategory.THEME });
+  const logger = getLogger('SiteThemeProvider', { category: LogCategory.THEME as any });
+  
+  // Validate the theme on mount
+  useEffect(() => {
+    if (currentTheme) {
+      const issues = validateThemeSchema(currentTheme);
+      if (issues.length > 0) {
+        logger.warn('Theme validation issues detected', { details: { issues, themeName: currentTheme.name } });
+      } else {
+        logger.debug('Theme validation successful', { details: { themeName: currentTheme.name } });
+      }
+    }
+  }, [currentTheme, logger]);
   
   // Determine if we should use fallback variables
   const variables = useMemo(() => {
@@ -104,7 +117,8 @@ export function SiteThemeProvider({
   // Check if theme is dark - with robust type checking to fix the error
   const isDark = useMemo(() => {
     try {
-      return isColorDark(variables.background);
+      const bgColor = ensureHexColor(variables.background, '#12121A');
+      return isColorDark(bgColor);
     } catch (error) {
       logger.error('Error determining theme brightness:', { details: safeDetails(error) });
       // Default to dark theme if there's any error
@@ -119,46 +133,46 @@ export function SiteThemeProvider({
       const root = document.documentElement;
       
       // Apply background and text colors
-      root.style.setProperty('--background', hexToHSL(variables.background));
-      root.style.setProperty('--foreground', hexToHSL(variables.foreground));
+      root.style.setProperty('--background', hexToHSL(ensureHexColor(variables.background)));
+      root.style.setProperty('--foreground', hexToHSL(ensureHexColor(variables.foreground)));
       
       // Card colors
-      root.style.setProperty('--card', hexToHSL(variables.card));
-      root.style.setProperty('--card-foreground', hexToHSL(variables.cardForeground));
+      root.style.setProperty('--card', hexToHSL(ensureHexColor(variables.card)));
+      root.style.setProperty('--card-foreground', hexToHSL(ensureHexColor(variables.cardForeground)));
       
       // Primary colors
-      root.style.setProperty('--primary', hexToHSL(variables.primary));
-      root.style.setProperty('--primary-foreground', hexToHSL(variables.primaryForeground));
+      root.style.setProperty('--primary', hexToHSL(ensureHexColor(variables.primary)));
+      root.style.setProperty('--primary-foreground', hexToHSL(ensureHexColor(variables.primaryForeground)));
       
       // Secondary colors
-      root.style.setProperty('--secondary', hexToHSL(variables.secondary));
-      root.style.setProperty('--secondary-foreground', hexToHSL(variables.secondaryForeground));
+      root.style.setProperty('--secondary', hexToHSL(ensureHexColor(variables.secondary)));
+      root.style.setProperty('--secondary-foreground', hexToHSL(ensureHexColor(variables.secondaryForeground)));
       
       // Muted colors
-      root.style.setProperty('--muted', hexToHSL(variables.muted));
-      root.style.setProperty('--muted-foreground', hexToHSL(variables.mutedForeground));
+      root.style.setProperty('--muted', hexToHSL(ensureHexColor(variables.muted)));
+      root.style.setProperty('--muted-foreground', hexToHSL(ensureHexColor(variables.mutedForeground)));
       
       // Accent colors
-      root.style.setProperty('--accent', hexToHSL(variables.accent));
-      root.style.setProperty('--accent-foreground', hexToHSL(variables.accentForeground));
+      root.style.setProperty('--accent', hexToHSL(ensureHexColor(variables.accent)));
+      root.style.setProperty('--accent-foreground', hexToHSL(ensureHexColor(variables.accentForeground)));
       
       // Destructive colors
-      root.style.setProperty('--destructive', hexToHSL(variables.destructive));
-      root.style.setProperty('--destructive-foreground', hexToHSL(variables.destructiveForeground));
+      root.style.setProperty('--destructive', hexToHSL(ensureHexColor(variables.destructive)));
+      root.style.setProperty('--destructive-foreground', hexToHSL(ensureHexColor(variables.destructiveForeground)));
       
       // Border, input, ring
-      root.style.setProperty('--border', hexToHSL(variables.border));
-      root.style.setProperty('--input', hexToHSL(variables.input));
-      root.style.setProperty('--ring', hexToHSL(variables.ring));
+      root.style.setProperty('--border', hexToHSL(ensureHexColor(variables.border)));
+      root.style.setProperty('--input', hexToHSL(ensureHexColor(variables.input)));
+      root.style.setProperty('--ring', hexToHSL(ensureHexColor(variables.ring)));
       
       // CSS variables for our effect system
-      root.style.setProperty('--site-effect-color', variables.effectColor);
-      root.style.setProperty('--site-effect-secondary', variables.effectSecondary);
-      root.style.setProperty('--site-effect-tertiary', variables.effectTertiary);
+      root.style.setProperty('--site-effect-color', ensureHexColor(variables.effectColor));
+      root.style.setProperty('--site-effect-secondary', ensureHexColor(variables.effectSecondary));
+      root.style.setProperty('--site-effect-tertiary', ensureHexColor(variables.effectTertiary));
       
       // RGB values for overlays
-      root.style.setProperty('--color-primary', hexToRgbString(variables.primary));
-      root.style.setProperty('--color-secondary', hexToRgbString(variables.secondary));
+      root.style.setProperty('--color-primary', hexToRgbString(ensureHexColor(variables.primary)));
+      root.style.setProperty('--color-secondary', hexToRgbString(ensureHexColor(variables.secondary)));
       
       // Transition durations
       root.style.setProperty('--transition-fast', variables.transitionFast);

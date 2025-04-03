@@ -1,117 +1,133 @@
 
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
+import { safeDetails } from '@/logging/utils/safeDetails';
 import { ImpulseTheme } from '@/admin/types/impulse.types';
+import { Theme, ThemeColors, ThemeTypography, ThemeEffects } from '@/types/theme';
 
 const logger = getLogger('ThemeUtils', { category: LogCategory.THEME as string });
 
 /**
- * Get a property from a theme object with type safety and fallback
+ * Safely ensures a value is a string or returns a fallback
  */
-export function getThemeProperty<T extends Record<string, any>>(
-  theme: T | null | undefined, 
-  path: string, 
-  fallback: any
-): any {
-  if (!theme) return fallback;
+export function ensureStringValue(value: any, fallback: string = ''): string {
+  if (value === undefined || value === null) {
+    return fallback;
+  }
+  
+  if (typeof value === 'string') {
+    return value;
+  }
+  
+  // Log a warning in development
+  if (process.env.NODE_ENV === 'development') {
+    logger.warn('Expected string value in theme property but got:', { 
+      details: { value, type: typeof value } 
+    });
+  }
+  
+  return fallback;
+}
+
+/**
+ * Gets a property from a theme object safely by path
+ * @param theme Theme object
+ * @param path Dot notation path like 'colors.background.main'
+ * @param fallback Fallback value if property doesn't exist or isn't a string
+ */
+export function getThemeProperty(theme: any, path: string, fallback: string = ''): string {
+  if (!theme || typeof theme !== 'object') {
+    return fallback;
+  }
   
   try {
     const parts = path.split('.');
     let current: any = theme;
     
     for (const part of parts) {
-      if (current === undefined || current === null) {
+      if (current === undefined || current === null || typeof current !== 'object') {
         return fallback;
       }
       current = current[part];
     }
     
-    return current !== undefined && current !== null ? current : fallback;
+    return ensureStringValue(current, fallback);
   } catch (error) {
-    logger.warn(`Error getting theme property: ${path}`, {
-      details: {
-        error: error instanceof Error ? error.message : String(error),
-        fallback
-      }
+    logger.warn(`Error getting theme property: ${path}`, { 
+      details: safeDetails(error) 
     });
     return fallback;
   }
 }
 
 /**
- * Deep merge utility for combining theme objects
+ * Deep merge utility for objects
+ * Used to combine default and custom theme settings
  */
 export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
-  if (!source) return target;
-  
-  const output = { ...target };
-  
-  if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach(key => {
-      const k = key as Extract<keyof T, string>;
-      
-      if (isObject(source[k])) {
-        if (!(k in target)) {
-          Object.assign(output, { [k]: source[k] });
-        } else {
-          output[k] = deepMerge(target[k], source[k] as any);
-        }
-      } else {
-        Object.assign(output, { [k]: source[k] });
-      }
-    });
-  }
-  
-  return output;
+  const result = { ...target };
+
+  Object.keys(source).forEach(key => {
+    const sourceValue = source[key as keyof typeof source] as any;
+    const targetValue = target[key as keyof typeof target] as any;
+
+    if (
+      sourceValue && 
+      targetValue && 
+      typeof sourceValue === 'object' && 
+      typeof targetValue === 'object' && 
+      !Array.isArray(sourceValue) && 
+      !Array.isArray(targetValue)
+    ) {
+      result[key as keyof typeof result] = deepMerge(targetValue, sourceValue);
+    } else if (sourceValue !== undefined) {
+      result[key as keyof typeof result] = sourceValue;
+    }
+  });
+
+  return result;
 }
 
 /**
- * Check if a value is an object
+ * Validates a theme object has all required color properties
+ * @returns Array of missing or invalid properties
  */
-function isObject(item: any): item is Record<string, any> {
-  return (item && typeof item === 'object' && !Array.isArray(item));
+export function validateThemeSchema(theme: any): string[] {
+  const requiredProperties = [
+    'colors.primary',
+    'colors.secondary',
+    'colors.background.main',
+    'colors.text.primary'
+  ];
+  
+  const issues: string[] = [];
+  
+  for (const prop of requiredProperties) {
+    const value = getThemeProperty(theme, prop);
+    if (!value) {
+      issues.push(`Missing required theme property: ${prop}`);
+    }
+  }
+  
+  return issues;
 }
 
 /**
- * Get the effective shadow for a theme
+ * Get the CSS variable name for a theme property
  */
-export function getThemeShadow(theme: ImpulseTheme | null, size: 'sm' | 'md' | 'lg' | 'xl' = 'md'): string {
-  if (!theme || !theme.effects || !theme.effects.shadows) {
-    return '0 4px 8px rgba(0, 0, 0, 0.1)';
-  }
-  
-  return theme.effects.shadows[size] || '0 4px 8px rgba(0, 0, 0, 0.1)';
+export function getCSSVariableName(path: string): string {
+  const parts = path.split('.');
+  return `--${parts.join('-')}`;
 }
 
 /**
- * Get theme animation duration
+ * Convert a theme property path to a readable label
  */
-export function getThemeAnimationDuration(theme: ImpulseTheme | null, speed: 'fast' | 'normal' | 'slow' = 'normal'): string {
-  if (!theme || !theme.animation || !theme.animation.duration) {
-    return speed === 'fast' ? '150ms' : speed === 'slow' ? '500ms' : '300ms';
-  }
+export function getReadableLabel(path: string): string {
+  const parts = path.split('.');
+  const label = parts[parts.length - 1]
+    .replace(/([A-Z])/g, ' $1')
+    .toLowerCase();
   
-  return theme.animation.duration[speed] || '300ms';
-}
-
-/**
- * Get theme font family
- */
-export function getThemeFontFamily(theme: ImpulseTheme | null, type: 'body' | 'heading' | 'mono' = 'body'): string {
-  if (!theme || !theme.typography || !theme.typography.fonts) {
-    return 'system-ui, sans-serif';
-  }
-  
-  return theme.typography.fonts[type] || 'system-ui, sans-serif';
-}
-
-/**
- * Get theme font size
- */
-export function getThemeFontSize(theme: ImpulseTheme | null, size: 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' = 'base'): string {
-  if (!theme || !theme.typography || !theme.typography.sizes) {
-    return '1rem';
-  }
-  
-  return theme.typography.sizes[size] || '1rem';
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
