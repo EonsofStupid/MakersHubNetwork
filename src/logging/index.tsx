@@ -7,7 +7,8 @@ import {
   LogCategory,
   LoggerOptions,
   LogTransport,
-  LoggingConfig
+  LoggingConfig,
+  LogEventCallback
 } from './types';
 import { getLogger, initializeLogger } from './service/logger.service';
 import { memoryTransport } from './transports/memory.transport';
@@ -19,7 +20,8 @@ export type {
   LogEntry,
   LoggerOptions,
   LogTransport,
-  LoggingConfig
+  LoggingConfig,
+  LogEventCallback
 };
 
 // Export enums (as values, not just types)
