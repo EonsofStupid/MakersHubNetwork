@@ -1,5 +1,6 @@
 
 import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging/types';
 
 const logger = getLogger('ThemeValidation');
 
@@ -27,12 +28,15 @@ export function validateThemeVariables(): boolean {
   
   if (missingVariables.length > 0) {
     logger.warn('Missing critical theme variables', { 
+      category: LogCategory.THEME,
       details: { missingVariables } 
     });
     return false;
   }
   
-  logger.debug('Theme variables validated successfully');
+  logger.debug('Theme variables validated successfully', {
+    category: LogCategory.THEME
+  });
   return true;
 }
 
@@ -42,7 +46,9 @@ export function validateThemeVariables(): boolean {
  */
 export function applyEmergencyFallback(): void {
   try {
-    logger.info('Applying emergency theme fallback');
+    logger.info('Applying emergency theme fallback', {
+      category: LogCategory.THEME
+    });
     
     // Apply critical CSS variables directly to ensure visual stability
     const root = document.documentElement;
@@ -80,17 +86,23 @@ export function applyEmergencyFallback(): void {
     // Set data attribute
     root.setAttribute('data-theme-emergency', 'active');
     
-    logger.info('Emergency theme fallback applied successfully');
+    logger.info('Emergency theme fallback applied successfully', {
+      category: LogCategory.THEME
+    });
     return;
   } catch (error) {
-    logger.error('Failed to apply emergency theme fallback', { details: { error } });
+    logger.error('Failed to apply emergency theme fallback', { 
+      category: LogCategory.THEME,
+      details: { error } 
+    });
   }
 }
 
 /**
  * Logs current theme state for debugging
+ * @returns Object containing the current theme state or null if error
  */
-export function logThemeState(): any {
+export function logThemeState(): Record<string, any> | null {
   try {
     const rootStyle = getComputedStyle(document.documentElement);
     const themeVariables = {
@@ -104,10 +116,16 @@ export function logThemeState(): any {
       classes: document.documentElement.className
     };
     
-    logger.info('Current theme state', { details: { themeVariables } });
+    logger.info('Current theme state', { 
+      category: LogCategory.THEME,
+      details: { themeVariables } 
+    });
     return themeVariables;
   } catch (error) {
-    logger.error('Failed to log theme state', { details: { error } });
+    logger.error('Failed to log theme state', { 
+      category: LogCategory.THEME,
+      details: { error } 
+    });
     return null;
   }
 }
@@ -133,6 +151,7 @@ export function assertThemeApplied(): boolean {
     
     if (!isThemeApplied) {
       logger.warn('Theme not fully applied', {
+        category: LogCategory.THEME,
         details: {
           primaryColor,
           backgroundVar,
@@ -159,7 +178,10 @@ export function assertThemeApplied(): boolean {
     
     return isThemeApplied;
   } catch (error) {
-    logger.error('Error asserting theme application', { details: { error } });
+    logger.error('Error asserting theme application', { 
+      category: LogCategory.THEME,
+      details: { error } 
+    });
     return false;
   }
 }

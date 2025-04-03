@@ -1,5 +1,6 @@
 
 import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging/types';
 
 const THEME_STORAGE_KEY = 'site-theme-id';
 const DEFAULT_THEME_ID = 'default';
@@ -11,22 +12,37 @@ const logger = getLogger('ThemeLocalStorage');
  */
 export function saveThemeToLocalStorage(themeId: string): void {
   if (!themeId) {
-    logger.warn('Attempted to save empty theme ID to localStorage', { details: { themeId } });
+    logger.warn('Attempted to save empty theme ID to localStorage', { 
+      category: LogCategory.THEME,
+      details: { themeId } 
+    });
     return;
   }
   
   try {
     localStorage.setItem(THEME_STORAGE_KEY, themeId);
-    logger.debug('Theme saved to localStorage', { details: { themeId } });
+    logger.debug('Theme saved to localStorage', { 
+      category: LogCategory.THEME,
+      details: { themeId } 
+    });
   } catch (error) {
-    logger.error('Failed to save theme to localStorage', { details: { error } });
+    logger.error('Failed to save theme to localStorage', { 
+      category: LogCategory.THEME,
+      details: { error } 
+    });
     
     // Try using sessionStorage as fallback
     try {
       sessionStorage.setItem(THEME_STORAGE_KEY, themeId);
-      logger.debug('Theme saved to sessionStorage as fallback', { details: { themeId } });
+      logger.debug('Theme saved to sessionStorage as fallback', { 
+        category: LogCategory.THEME,
+        details: { themeId } 
+      });
     } catch (sessionError) {
-      logger.error('Failed to save theme to sessionStorage as well', { details: { sessionError } });
+      logger.error('Failed to save theme to sessionStorage as well', { 
+        category: LogCategory.THEME,
+        details: { sessionError } 
+      });
     }
   }
 }
@@ -38,14 +54,20 @@ export function saveThemeToLocalStorage(themeId: string): void {
 export function getThemeFromLocalStorage(): string {
   try {
     const themeId = localStorage.getItem(THEME_STORAGE_KEY);
-    logger.debug('Getting theme from localStorage', { details: { themeId: themeId || 'not found' } });
+    logger.debug('Getting theme from localStorage', { 
+      category: LogCategory.THEME,
+      details: { themeId: themeId || 'not found' } 
+    });
     
     if (!themeId) {
       // Try sessionStorage as backup
       try {
         const sessionThemeId = sessionStorage.getItem(THEME_STORAGE_KEY);
         if (sessionThemeId) {
-          logger.debug('Found theme in sessionStorage instead', { details: { sessionThemeId } });
+          logger.debug('Found theme in sessionStorage instead', { 
+            category: LogCategory.THEME,
+            details: { sessionThemeId } 
+          });
           return sessionThemeId;
         }
       } catch (sessionError) {
@@ -55,17 +77,26 @@ export function getThemeFromLocalStorage(): string {
     
     return themeId || DEFAULT_THEME_ID;
   } catch (error) {
-    logger.error('Failed to get theme from localStorage', { details: { error } });
+    logger.error('Failed to get theme from localStorage', { 
+      category: LogCategory.THEME,
+      details: { error } 
+    });
     
     // Try sessionStorage as fallback
     try {
       const sessionThemeId = sessionStorage.getItem(THEME_STORAGE_KEY);
       if (sessionThemeId) {
-        logger.debug('Retrieved theme from sessionStorage after localStorage failure', { details: { sessionThemeId } });
+        logger.debug('Retrieved theme from sessionStorage after localStorage failure', { 
+          category: LogCategory.THEME,
+          details: { sessionThemeId } 
+        });
         return sessionThemeId;
       }
     } catch (sessionError) {
-      logger.error('Failed to get theme from sessionStorage as well', { details: { sessionError } });
+      logger.error('Failed to get theme from sessionStorage as well', { 
+        category: LogCategory.THEME,
+        details: { sessionError } 
+      });
     }
     
     return DEFAULT_THEME_ID;
@@ -78,7 +109,9 @@ export function getThemeFromLocalStorage(): string {
 export function clearThemeFromLocalStorage(): void {
   try {
     localStorage.removeItem(THEME_STORAGE_KEY);
-    logger.debug('Theme cleared from localStorage');
+    logger.debug('Theme cleared from localStorage', {
+      category: LogCategory.THEME
+    });
     
     // Clear from sessionStorage too if present
     try {
@@ -87,7 +120,10 @@ export function clearThemeFromLocalStorage(): void {
       // Ignore sessionStorage errors
     }
   } catch (error) {
-    logger.error('Failed to clear theme from localStorage', { details: { error } });
+    logger.error('Failed to clear theme from localStorage', { 
+      category: LogCategory.THEME,
+      details: { error } 
+    });
   }
 }
 
@@ -106,13 +142,19 @@ export function hasThemeInLocalStorage(): boolean {
       return false;
     }
   } catch (error) {
-    logger.error('Failed to check if theme exists in localStorage', { details: { error } });
+    logger.error('Failed to check if theme exists in localStorage', { 
+      category: LogCategory.THEME,
+      details: { error } 
+    });
     
     // Try sessionStorage as fallback
     try {
       return !!sessionStorage.getItem(THEME_STORAGE_KEY);
     } catch (sessionError) {
-      logger.error('Failed to check if theme exists in sessionStorage as well', { details: { sessionError } });
+      logger.error('Failed to check if theme exists in sessionStorage as well', { 
+        category: LogCategory.THEME,
+        details: { sessionError } 
+      });
       return false;
     }
   }
