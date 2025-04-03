@@ -90,7 +90,7 @@ export function applyEmergencyFallback(): void {
 /**
  * Logs current theme state for debugging
  */
-export function logThemeState(): void {
+export function logThemeState(): any {
   try {
     const rootStyle = getComputedStyle(document.documentElement);
     const themeVariables = {
