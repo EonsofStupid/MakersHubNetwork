@@ -34,10 +34,15 @@ export function DynamicKeyframes() {
     const themeId = themeRegistry.getActiveThemeId() || 'site-theme';
     const activeTheme = themeId === 'site-theme' ? themeRegistry.getTheme(themeId) : themeRegistry.getDefaultTheme();
     
-    // Ensure we have valid color values - use fallbacks if needed
-    const primary = variables?.primary || '#00F0FF';
-    const secondary = variables?.secondary || '#FF2D6E'; 
-    const accent = variables?.accent || '#8B5CF6';
+    // Use defaults for missing values - HARD CODED FALLBACKS
+    const FALLBACK_PRIMARY = '#00F0FF'; // Cyan
+    const FALLBACK_SECONDARY = '#FF2D6E'; // Pink
+    const FALLBACK_ACCENT = '#8B5CF6'; // Purple
+    
+    // Ensure we have valid color values - use hard-coded fallbacks if needed
+    const primary = variables?.primary || FALLBACK_PRIMARY;
+    const secondary = variables?.secondary || FALLBACK_SECONDARY; 
+    const accent = variables?.accent || FALLBACK_ACCENT;
     
     // Safely convert colors to RGB format with fallbacks
     let rgbPrimary = hexToRgb(primary);
@@ -53,14 +58,10 @@ export function DynamicKeyframes() {
     }
     
     // Force these values as CSS variables directly (backup method)
-    if (primary && primary !== '#00F0FF') {
-      document.documentElement.style.setProperty('--effect-color', primary);
-      document.documentElement.style.setProperty('--site-effect-color', primary);
-    }
-    
-    if (secondary && secondary !== '#FF2D6E') {
-      document.documentElement.style.setProperty('--site-effect-secondary', secondary);
-    }
+    document.documentElement.style.setProperty('--effect-color', primary);
+    document.documentElement.style.setProperty('--site-effect-color', primary);
+    document.documentElement.style.setProperty('--site-effect-secondary', secondary);
+    document.documentElement.style.setProperty('--site-effect-tertiary', accent);
     
     // Update keyframes with current theme colors
     if (styleElement) {
@@ -249,11 +250,21 @@ export function DynamicKeyframes() {
       } catch (error) {
         logger.error('Error updating dynamic keyframes', { details: { error } });
         
-        // Fallback to default keyframes
+        // Fallback to default keyframes with hardcoded values
         styleElement.textContent = `
           @keyframes glow-pulse {
             0%, 100% { box-shadow: 0 0 5px #00F0FF; }
             50% { box-shadow: 0 0 20px #00F0FF; }
+          }
+          
+          @keyframes text-glow {
+            0%, 100% { text-shadow: 0 0 2px #00F0FF; }
+            50% { text-shadow: 0 0 10px #00F0FF; }
+          }
+          
+          @keyframes border-pulse {
+            0%, 100% { border-color: #00F0FF; }
+            50% { border-color: #FF2D6E; }
           }
           
           @keyframes fade-in {
