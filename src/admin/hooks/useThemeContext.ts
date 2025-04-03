@@ -3,7 +3,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useAuth } from '@/auth/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { ThemeContext } from '@/types/theme';
 
@@ -20,7 +20,7 @@ export type ThemeContextValues = {
 // Use the proper ThemeContext type
 export type ThemeScope = ThemeContext | 'global';
 
-const logger = getLogger('ThemeContext', LogCategory.THEME);
+const logger = getLogger('ThemeContext', { category: LogCategory.THEME });
 
 /**
  * Hook for accessing and managing theme context for admin interface

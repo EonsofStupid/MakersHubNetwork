@@ -1,12 +1,47 @@
 
 import { ImpulseTheme } from '../../types/impulse.types';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
-import { getSafeThemeProperty } from '../validation/themeSchemas';
-import { hexToRgbString } from './colorUtils';
+import { safeGet } from './safeThemeAccess';
+import { hexToRgbString } from '@/utils/colorUtils';
 
-const logger = getLogger('ThemeApplicator', LogCategory.THEME);
+const logger = getLogger('ThemeApplicator', { category: LogCategory.THEME });
+
+/**
+ * Safely get a property from a theme with fallback
+ */
+export function getSafeThemeProperty<T>(
+  theme: any,
+  path: string[],
+  fallback: T
+): T {
+  if (!theme) {
+    return fallback;
+  }
+
+  try {
+    let current: any = theme;
+    
+    for (const segment of path) {
+      if (current === undefined || current === null) {
+        return fallback;
+      }
+      current = current[segment];
+    }
+    
+    if (current === undefined || current === null) {
+      return fallback;
+    }
+    
+    return current as T;
+  } catch (error) {
+    logger.warn('Error accessing theme property', {
+      details: { path, error: error instanceof Error ? error.message : String(error) }
+    });
+    return fallback;
+  }
+}
 
 /**
  * Applies a theme to the document by setting CSS variables
@@ -70,8 +105,6 @@ export function applyThemeToDocument(theme: ImpulseTheme | unknown): void {
     logger.error('Error applying theme to document', { details: safeDetails(error) });
   }
 }
-
-// We've moved hexToRgbString to colorUtils.ts
 
 // Validate that a theme is properly set with basic checks
 export function validateThemeApplication(): boolean {

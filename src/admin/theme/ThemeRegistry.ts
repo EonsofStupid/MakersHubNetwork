@@ -1,132 +1,154 @@
 
-import { ImpulseTheme } from '../types/impulse.types';
-import { defaultImpulseTokens } from './impulse/tokens';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
-interface RegisteredTheme {
-  id: string;
-  name: string;
-  description?: string;
-  tokens: ImpulseTheme;
-}
+const logger = getLogger('ThemeRegistry', { category: LogCategory.THEME });
+
+type ThemeDefinition = Record<string, any>;
 
 /**
- * Theme Registry for managing registered themes
+ * Theme Registry for managing theme definitions
  */
 class ThemeRegistry {
-  private themes: Map<string, RegisteredTheme>;
-  private activeThemeId: string | null = null;
-  private logger = getLogger('ThemeRegistry', { category: LogCategory.THEME });
-
-  constructor() {
-    this.themes = new Map();
-    
-    // Register the default theme
-    this.registerTheme('default', defaultImpulseTokens);
-    this.logger.debug('Theme registry initialized with default theme');
-  }
-
+  private themes: Map<string, ThemeDefinition> = new Map();
+  private defaultTheme: string | null = null;
+  
   /**
    * Register a theme with the registry
    */
-  registerTheme(id: string, theme: ImpulseTheme): void {
-    if (this.themes.has(id)) {
-      this.logger.debug(`Updating existing theme: ${id}`);
-    } else {
-      this.logger.debug(`Registering new theme: ${id}`);
-    }
-
-    this.themes.set(id, {
-      id,
-      name: theme.name || id,
-      description: theme.description,
-      tokens: { ...theme }
-    });
-  }
-
-  /**
-   * Get a theme from the registry
-   */
-  getTheme(id: string): ImpulseTheme | null {
-    const theme = this.themes.get(id);
-    
-    if (!theme) {
-      this.logger.warn(`Theme not found: ${id}`);
+  registerTheme(key: string, theme: ThemeDefinition): void {
+    try {
+      if (!key || typeof key !== 'string') {
+        logger.warn('Invalid theme key provided to registerTheme');
+        return;
+      }
       
-      // Return default theme as fallback
-      return this.getDefaultTheme();
+      if (!theme || typeof theme !== 'object') {
+        logger.warn('Invalid theme object provided to registerTheme');
+        return;
+      }
+      
+      this.themes.set(key, theme);
+      logger.debug(`Theme "${key}" registered`);
+      
+      // Set as default if it's the first one
+      if (this.defaultTheme === null) {
+        this.defaultTheme = key;
+        logger.debug(`Theme "${key}" set as default`);
+      }
+    } catch (error) {
+      logger.error('Error registering theme', { details: safeDetails(error) });
     }
-    
-    return theme.tokens;
   }
-
+  
   /**
-   * Set the active theme ID
+   * Get a theme by key
    */
-  setActiveTheme(id: string): void {
-    this.activeThemeId = id;
-    this.logger.debug(`Active theme set to: ${id}`);
-  }
-
-  /**
-   * Get the active theme
-   */
-  getActiveTheme(): ImpulseTheme | null {
-    if (!this.activeThemeId) {
-      this.logger.debug('No active theme set, using default');
-      return this.getDefaultTheme();
+  getTheme(key: string): ThemeDefinition | null {
+    try {
+      const theme = this.themes.get(key);
+      if (!theme) {
+        logger.warn(`Theme "${key}" not found`);
+        return null;
+      }
+      return theme;
+    } catch (error) {
+      logger.error('Error getting theme', { details: safeDetails(error) });
+      return null;
     }
-    
-    return this.getTheme(this.activeThemeId);
   }
-
+  
   /**
    * Get the default theme
    */
-  getDefaultTheme(): ImpulseTheme {
-    return { ...defaultImpulseTokens };
+  getDefaultTheme(): ThemeDefinition | null {
+    try {
+      if (!this.defaultTheme) {
+        logger.warn('No default theme set');
+        return null;
+      }
+      return this.getTheme(this.defaultTheme);
+    } catch (error) {
+      logger.error('Error getting default theme', { details: safeDetails(error) });
+      return null;
+    }
   }
-
+  
+  /**
+   * Set the default theme
+   */
+  setDefaultTheme(key: string): void {
+    try {
+      if (!this.themes.has(key)) {
+        logger.warn(`Cannot set "${key}" as default theme, it's not registered`);
+        return;
+      }
+      
+      this.defaultTheme = key;
+      logger.debug(`Theme "${key}" set as default`);
+    } catch (error) {
+      logger.error('Error setting default theme', { details: safeDetails(error) });
+    }
+  }
+  
+  /**
+   * Check if a theme is registered
+   */
+  hasTheme(key: string): boolean {
+    return this.themes.has(key);
+  }
+  
   /**
    * Get all registered themes
    */
-  getAllThemes(): RegisteredTheme[] {
-    return Array.from(this.themes.values());
+  getAllThemes(): { key: string, theme: ThemeDefinition }[] {
+    return Array.from(this.themes.entries()).map(([key, theme]) => ({ key, theme }));
   }
-
+  
   /**
-   * Check if a theme exists
+   * Create CSS variables for a theme
    */
-  hasTheme(id: string): boolean {
-    return this.themes.has(id);
-  }
-
-  /**
-   * Delete a theme from the registry
-   */
-  deleteTheme(id: string): boolean {
-    if (id === 'default') {
-      this.logger.warn('Cannot delete default theme');
-      return false;
+  createCssVariables(theme: ThemeDefinition): string {
+    try {
+      if (!theme || typeof theme !== 'object') {
+        logger.warn('Invalid theme object provided to createCssVariables');
+        return '';
+      }
+      
+      let css = ':root {\n';
+      
+      // Basic colors
+      if (theme.colors?.primary) css += `  --color-primary: ${theme.colors.primary};\n`;
+      if (theme.colors?.secondary) css += `  --color-secondary: ${theme.colors.secondary};\n`;
+      if (theme.colors?.accent) css += `  --color-accent: ${theme.colors.accent};\n`;
+      
+      // Background colors
+      if (theme.colors?.background?.main) css += `  --color-background: ${theme.colors.background.main};\n`;
+      if (theme.colors?.background?.overlay) css += `  --color-overlay: ${theme.colors.background.overlay};\n`;
+      if (theme.colors?.background?.card) css += `  --color-card: ${theme.colors.background.card};\n`;
+      if (theme.colors?.background?.popup) css += `  --color-popup: ${theme.colors.background.popup};\n`;
+      
+      // Text colors
+      if (theme.colors?.text?.primary) css += `  --color-text: ${theme.colors.text.primary};\n`;
+      if (theme.colors?.text?.secondary) css += `  --color-text-secondary: ${theme.colors.text.secondary};\n`;
+      if (theme.colors?.text?.accent) css += `  --color-text-accent: ${theme.colors.text.accent};\n`;
+      if (theme.colors?.text?.muted) css += `  --color-text-muted: ${theme.colors.text.muted};\n`;
+      
+      // Status colors
+      if (theme.colors?.status?.success) css += `  --color-success: ${theme.colors.status.success};\n`;
+      if (theme.colors?.status?.warning) css += `  --color-warning: ${theme.colors.status.warning};\n`;
+      if (theme.colors?.status?.error) css += `  --color-error: ${theme.colors.status.error};\n`;
+      if (theme.colors?.status?.info) css += `  --color-info: ${theme.colors.status.info};\n`;
+      
+      css += '}\n';
+      
+      return css;
+    } catch (error) {
+      logger.error('Error creating CSS variables', { details: safeDetails(error) });
+      return '';
     }
-    
-    if (this.activeThemeId === id) {
-      this.logger.warn('Cannot delete active theme');
-      return false;
-    }
-    
-    const result = this.themes.delete(id);
-    
-    if (result) {
-      this.logger.debug(`Theme deleted: ${id}`);
-    } else {
-      this.logger.warn(`Theme not found for deletion: ${id}`);
-    }
-    
-    return result;
   }
 }
 
-// Export a singleton instance
 export const themeRegistry = new ThemeRegistry();

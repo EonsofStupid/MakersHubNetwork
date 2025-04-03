@@ -2,82 +2,119 @@
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 
-const logger = getLogger('safeThemeAccess', { category: LogCategory.THEME });
+const logger = getLogger('SafeThemeAccess', { category: LogCategory.THEME });
 
 /**
- * Safely get a property from a nested object by path
- * Prevents the dreaded "cannot read property X of undefined"
+ * Safely gets a property from an object by path with type safety
  */
 export function safeGet<T>(obj: any, path: string, defaultValue: T): T {
+  if (!obj) return defaultValue;
+  
   try {
-    if (obj === null || obj === undefined) {
+    const parts = path.split('.');
+    let current = obj;
+    
+    for (let i = 0; i < parts.length; i++) {
+      if (current === null || current === undefined) {
+        return defaultValue;
+      }
+      
+      current = current[parts[i]];
+    }
+    
+    // Handle empty strings, undefined or null
+    if (current === null || current === undefined || current === '') {
       return defaultValue;
     }
     
-    const keys = path.split('.');
-    let current: any = obj;
-    
-    for (const key of keys) {
-      if (current === null || current === undefined || typeof current !== 'object') {
-        return defaultValue;
-      }
-      current = current[key];
-    }
-    
-    return (current === null || current === undefined) ? defaultValue : current;
+    return current as T;
   } catch (error) {
-    logger.error('Error safely accessing theme property', { 
-      details: { 
-        path, 
-        error: error instanceof Error ? error.message : String(error),
-        defaultValueReturned: true
-      } 
+    logger.warn('Error accessing property by path', {
+      details: { path, error: error instanceof Error ? error.message : String(error) }
     });
     return defaultValue;
   }
 }
 
 /**
- * Safely set a property on a nested object by path
- * Creates objects along the way if they don't exist
+ * Deep merge two objects with type safety
  */
-export function safeSet(obj: any, path: string, value: any): any {
-  try {
-    if (!obj) {
-      obj = {};
-    }
-    
-    const keys = path.split('.');
-    let current = obj;
-    
-    for (let i = 0; i < keys.length - 1; i++) {
-      const key = keys[i];
-      if (current[key] === undefined) {
-        current[key] = {};
+export function deepMerge<T extends object = object>(target: T, source: any): T {
+  if (!source) return target;
+  if (!target) return source as T;
+  
+  const output = { ...target };
+  
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      if (isObject(source[key])) {
+        if (!(key in target)) {
+          Object.assign(output, { [key]: source[key] });
+        } else {
+          // @ts-ignore - this is safe due to the recursion
+          output[key] = deepMerge(target[key], source[key]);
+        }
+      } else {
+        Object.assign(output, { [key]: source[key] });
       }
-      current = current[key];
-    }
-    
-    current[keys[keys.length - 1]] = value;
-    return obj;
-  } catch (error) {
-    logger.error('Error safely setting theme property', { 
-      details: { 
-        path, 
-        error: error instanceof Error ? error.message : String(error) 
-      } 
     });
-    return obj;
+  }
+  
+  return output;
+}
+
+/**
+ * Check if a value is an object
+ */
+function isObject(item: any): boolean {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+/**
+ * Safe toString to prevent null errors
+ */
+export function safeToString(value: any): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  try {
+    return JSON.stringify(value);
+  } catch (e) {
+    return String(value);
   }
 }
 
 /**
- * Create a simple utility to get theme properties with specified defaults
+ * Flatten a theme object into key-value pairs with dot notation
  */
-export function createThemeAccessor<T>(defaultValues: Record<string, T>) {
-  return (theme: any, key: keyof typeof defaultValues) => {
-    const path = String(key);
-    const defaultValue = defaultValues[key];
-    return safeGet(theme, path, defaultValue);
-  };
+export function flattenTheme(obj: any, prefix = ''): Record<string, string> {
+  if (!obj || typeof obj !== 'object') return {};
+  
+  return Object.keys(obj).reduce((acc: Record<string, string>, key: string) => {
+    const prefixedKey = prefix ? `${prefix}.${key}` : key;
+    
+    if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+      Object.assign(acc, flattenTheme(obj[key], prefixedKey));
+    } else {
+      acc[prefixedKey] = safeToString(obj[key]);
+    }
+    
+    return acc;
+  }, {});
+}
+
+/**
+ * Generate a human-readable label from a theme path
+ */
+export function getReadableLabel(path: string): string {
+  try {
+    return path
+      .split('.')
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+      .replace(/([A-Z])/g, ' $1')
+      .trim();
+  } catch (e) {
+    return path;
+  }
 }

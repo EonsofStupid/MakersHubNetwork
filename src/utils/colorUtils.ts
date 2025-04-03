@@ -1,3 +1,4 @@
+
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 
@@ -69,6 +70,54 @@ export function hexToRgb(hex: string): { r: number, g: number, b: number } {
 }
 
 /**
+ * Convert RGB to HSL string format for CSS variables (tailwind format)
+ */
+export function hexToHSL(hex: string | undefined | null): string {
+  if (!hex) return '0 0% 0%'; // Black as fallback
+  
+  try {
+    const { r, g, b } = hexToRgb(hex);
+    
+    // Convert RGB to HSL
+    const rNorm = r / 255;
+    const gNorm = g / 255;
+    const bNorm = b / 255;
+    
+    const max = Math.max(rNorm, gNorm, bNorm);
+    const min = Math.min(rNorm, gNorm, bNorm);
+    
+    let h = 0;
+    let s = 0;
+    const l = (max + min) / 2;
+    
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      
+      switch (max) {
+        case rNorm:
+          h = (gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0);
+          break;
+        case gNorm:
+          h = (bNorm - rNorm) / d + 2;
+          break;
+        case bNorm:
+          h = (rNorm - gNorm) / d + 4;
+          break;
+      }
+      
+      h = h * 60;
+    }
+    
+    // Format as "H S% L%" for Tailwind CSS
+    return `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  } catch (error) {
+    logger.error('Error converting hex to HSL', { details: { hex, error } });
+    return '0 0% 0%'; // Black as fallback
+  }
+}
+
+/**
  * Convert hex to RGB string (format: "r, g, b")
  */
 export function hexToRgbString(hex: string | undefined | null): string {
@@ -132,14 +181,21 @@ export function rgbToHex({ r, g, b }: { r: number, g: number, b: number }): stri
  * Check if a color is dark (for determining contrasting text color)
  */
 export function isColorDark(hex: string): boolean {
-  const { r, g, b } = hexToRgb(hex);
+  if (!hex) return true; // Default to dark if no color provided
   
-  // Calculate perceived brightness according to YIQ formula
-  // This gives better results than average or simple luminance
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  
-  // Colors with brightness < 128 are considered dark
-  return brightness < 128;
+  try {
+    const { r, g, b } = hexToRgb(hex);
+    
+    // Calculate perceived brightness according to YIQ formula
+    // This gives better results than average or simple luminance
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    
+    // Colors with brightness < 128 are considered dark
+    return brightness < 128;
+  } catch (error) {
+    logger.error('Error checking if color is dark', { details: { hex, error } });
+    return true; // Default to dark if there's an error
+  }
 }
 
 /**

@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { ThemeState, ThemeStore } from './types';
@@ -6,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
+import { dbRowToTheme, dbRowsToComponentTokens, dbRowsToThemeTokens } from '@/admin/theme/utils/modelTransformers';
 
 const logger = getLogger('ThemeStore', { category: LogCategory.THEME });
 
@@ -30,7 +30,7 @@ export const useThemeStore = create<ThemeStore>()(
           logger.info('Setting theme', { details: { themeId } });
           
           // 1. Get theme details
-          const { data: theme, error: themeError } = await supabase
+          const { data: themeData, error: themeError } = await supabase
             .from('themes')
             .select('*')
             .eq('id', themeId)
@@ -38,16 +38,23 @@ export const useThemeStore = create<ThemeStore>()(
           
           if (themeError) throw themeError;
           
+          // Convert DB row to Theme type
+          const theme = dbRowToTheme(themeData);
+          if (!theme) throw new Error('Failed to transform theme data');
+          
           // 2. Get theme tokens
-          const { data: tokens, error: tokensError } = await supabase
+          const { data: tokensData, error: tokensError } = await supabase
             .from('theme_tokens')
             .select('*')
             .eq('theme_id', themeId);
           
           if (tokensError) throw tokensError;
           
+          // Convert DB rows to ThemeToken type
+          const tokens = dbRowsToThemeTokens(tokensData || []);
+          
           // 3. Get theme components for site context
-          const { data: siteComponents, error: siteComponentsError } = await supabase
+          const { data: siteComponentsData, error: siteComponentsError } = await supabase
             .from('theme_components')
             .select('*')
             .eq('theme_id', themeId)
@@ -55,8 +62,11 @@ export const useThemeStore = create<ThemeStore>()(
           
           if (siteComponentsError) throw siteComponentsError;
           
+          // Convert DB rows to ComponentTokens type
+          const siteComponents = dbRowsToComponentTokens(siteComponentsData || []);
+          
           // 4. Get theme components for admin context
-          const { data: adminComponents, error: adminComponentsError } = await supabase
+          const { data: adminComponentsData, error: adminComponentsError } = await supabase
             .from('theme_components')
             .select('*')
             .eq('theme_id', themeId)
@@ -64,19 +74,22 @@ export const useThemeStore = create<ThemeStore>()(
           
           if (adminComponentsError) throw adminComponentsError;
           
+          // Convert DB rows to ComponentTokens type
+          const adminComponents = dbRowsToComponentTokens(adminComponentsData || []);
+          
           set({
             currentTheme: theme,
-            themeTokens: tokens || [],
-            themeComponents: siteComponents || [],
-            adminComponents: adminComponents || [],
+            themeTokens: tokens,
+            themeComponents: siteComponents,
+            adminComponents: adminComponents,
             isLoading: false
           });
           
           logger.info('Theme set successfully', { details: { 
             themeId, 
-            tokenCount: tokens?.length || 0,
-            siteComponentCount: siteComponents?.length || 0,
-            adminComponentCount: adminComponents?.length || 0
+            tokenCount: tokens.length,
+            siteComponentCount: siteComponents.length,
+            adminComponentCount: adminComponents.length
           } });
           
           return;
@@ -97,7 +110,7 @@ export const useThemeStore = create<ThemeStore>()(
             return [];
           }
           
-          const { data: adminComponents, error } = await supabase
+          const { data, error } = await supabase
             .from('theme_components')
             .select('*')
             .eq('theme_id', themeId)
@@ -105,10 +118,13 @@ export const useThemeStore = create<ThemeStore>()(
           
           if (error) throw error;
           
-          set({ adminComponents: adminComponents || [] });
-          logger.info('Admin components loaded', { details: { count: adminComponents?.length || 0 } });
+          // Convert DB rows to ComponentTokens type
+          const adminComponents = dbRowsToComponentTokens(data || []);
           
-          return adminComponents || [];
+          set({ adminComponents });
+          logger.info('Admin components loaded', { details: { count: adminComponents.length } });
+          
+          return adminComponents;
         } catch (error) {
           logger.error('Error loading admin components', { details: safeDetails(error) });
           return [];
@@ -163,28 +179,46 @@ export const useThemeStore = create<ThemeStore>()(
           
           const { data, error } = await supabase
             .from('theme_components')
-            .update(component)
+            .update({
+              component_name: component.component_name,
+              styles: component.styles,
+              context: component.context,
+              theme_id: component.theme_id,
+              description: component.description
+            })
             .eq('id', component.id)
             .select()
             .single();
           
           if (error) throw error;
           
+          // Convert DB row to ComponentTokens type
+          const updatedComponent = data ? {
+            id: data.id,
+            component_name: data.component_name,
+            styles: data.styles || {},
+            context: data.context || 'site',
+            theme_id: data.theme_id || '',
+            description: data.description || '',
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+          } : component;
+          
           // Update the appropriate components array based on context
           if (component.context === 'admin') {
             set({
-              adminComponents: get().adminComponents.map(c => c.id === component.id ? data : c),
+              adminComponents: get().adminComponents.map(c => c.id === component.id ? updatedComponent : c),
               isLoading: false
             });
           } else {
             set({
-              themeComponents: get().themeComponents.map(c => c.id === component.id ? data : c),
+              themeComponents: get().themeComponents.map(c => c.id === component.id ? updatedComponent : c),
               isLoading: false
             });
           }
           
           logger.info('Component updated successfully', { details: { componentId: component.id } });
-          return data;
+          return updatedComponent;
         } catch (error) {
           logger.error('Error updating component', { details: safeDetails(error) });
           set({ error: error instanceof Error ? error : new Error('Unknown error updating component'), isLoading: false });
@@ -199,27 +233,50 @@ export const useThemeStore = create<ThemeStore>()(
           
           const { data, error } = await supabase
             .from('theme_components')
-            .insert(component)
+            .insert({
+              component_name: component.component_name,
+              styles: component.styles,
+              context: component.context,
+              theme_id: component.theme_id,
+              description: component.description || ''
+            })
             .select()
             .single();
           
           if (error) throw error;
           
+          // Convert DB row to ComponentTokens type
+          const newComponent = data ? {
+            id: data.id,
+            component_name: data.component_name,
+            styles: data.styles || {},
+            context: data.context || 'site',
+            theme_id: data.theme_id || '',
+            description: data.description || '',
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+          } : {
+            ...component,
+            id: 'temp-id',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          
           // Add to the appropriate components array based on context
           if (component.context === 'admin') {
             set({
-              adminComponents: [...get().adminComponents, data],
+              adminComponents: [...get().adminComponents, newComponent],
               isLoading: false
             });
           } else {
             set({
-              themeComponents: [...get().themeComponents, data],
+              themeComponents: [...get().themeComponents, newComponent],
               isLoading: false
             });
           }
           
-          logger.info('Component created successfully', { details: { componentId: data.id } });
-          return data;
+          logger.info('Component created successfully', { details: { componentId: newComponent.id } });
+          return newComponent;
         } catch (error) {
           logger.error('Error creating component', { details: safeDetails(error) });
           set({ error: error instanceof Error ? error : new Error('Unknown error creating component'), isLoading: false });
@@ -273,3 +330,10 @@ export const useThemeStore = create<ThemeStore>()(
     }
   )
 );
+
+// Export store selectors for better type safety
+export const selectCurrentTheme = (state: ThemeStore) => state.currentTheme;
+export const selectThemeTokens = (state: ThemeStore) => state.themeTokens;
+export const selectThemeComponents = (state: ThemeStore) => state.themeComponents;
+export const selectIsLoading = (state: ThemeStore) => state.isLoading;
+export const selectError = (state: ThemeStore) => state.error;
