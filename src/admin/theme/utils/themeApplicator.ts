@@ -22,7 +22,7 @@ export function applyThemeToDocument(theme: ImpulseTheme): void {
     const startTime = performance.now();
     const root = document.documentElement;
     
-    // Get critical theme colors with fallbacks - using safe getThemeProperty
+    // Get critical theme colors with fallbacks - using safe getThemeProperty with hex validation
     const bgColor = ensureHexColor(getThemeProperty(theme, 'colors.background.main', '#12121A'));
     const textColor = ensureHexColor(getThemeProperty(theme, 'colors.text.primary', '#F6F6F7'));
     const primaryColor = ensureHexColor(getThemeProperty(theme, 'colors.primary', '#00F0FF'));

@@ -1,91 +1,73 @@
 
-import { ReactNode } from 'react';
-
+/**
+ * Log levels for application logging
+ */
 export enum LogLevel {
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-  FATAL = 'fatal'
+  TRACE = 0,
+  DEBUG = 1,
+  INFO = 2,
+  WARN = 3,
+  ERROR = 4,
+  FATAL = 5
 }
 
-// Standardized log categories
+/**
+ * Log categories for better organization and filtering
+ */
 export enum LogCategory {
-  SYSTEM = 'system',
+  GENERAL = 'general',
   AUTH = 'auth',
-  UI = 'ui',
-  DATA = 'data',
-  API = 'api', 
-  THEME = 'theme',
-  RENDER = 'render',
-  PERF = 'perf',
+  API = 'api',
   DATABASE = 'database',
-  ROUTER = 'router',
-  NETWORK = 'network',
+  NAVIGATION = 'navigation',
+  PERFORMANCE = 'performance',
+  STATE = 'state',
+  THEME = 'theme',
+  UI = 'ui',
   USER = 'user',
-  CONTENT = 'content'
+  SYSTEM = 'system',
+  CONTENT = 'content',
+  ADMIN = 'admin',
+  IMPORT = 'import',
+  ANALYTICS = 'analytics',
+  NOTIFICATIONS = 'notifications'
 }
 
-export type LoggerCategoryOption = LogCategory | string;
-
-export interface LoggerOptions {
-  source?: string;
-  category?: LoggerCategoryOption;
-  details?: Record<string, unknown>;
-  tags?: string[];
-  timestamp?: string;
-  session_id?: string;
-  user_id?: string;
-  duration?: number;
+/**
+ * Logger configuration interface
+ */
+export interface LoggerConfig {
+  level?: LogLevel;
+  category?: string;
+  context?: Record<string, any>;
+  enableConsole?: boolean;
+  enableRemote?: boolean;
 }
 
-export interface LogEvent {
-  id: string;
+/**
+ * Log entry structure
+ */
+export interface LogEntry {
+  timestamp: string;
   level: LogLevel;
   message: string;
-  timestamp: string;
-  source: string;
   category: string;
-  details?: Record<string, unknown>;
-  tags?: string[];
-  session_id?: string;
-  user_id?: string;
-  duration?: number;
+  details?: any;
+  context?: Record<string, any>;
+  source?: string;
 }
 
-export type LogTransportFn = (event: LogEvent) => void | Promise<void>;
-
-export interface LoggerInstance {
-  debug: (message: string, options?: Partial<LoggerOptions>) => void;
-  info: (message: string, options?: Partial<LoggerOptions>) => void;
-  warn: (message: string, options?: Partial<LoggerOptions>) => void;
-  error: (message: string | Error, options?: Partial<LoggerOptions>) => void;
-  fatal: (message: string | Error, options?: Partial<LoggerOptions>) => void;
-  withSource: (source: string) => LoggerInstance;
-  withCategory: (category: LoggerCategoryOption) => LoggerInstance;
-  withTags: (tags: string[]) => LoggerInstance;
-  measure: <T>(name: string, fn: () => T, options?: Partial<LoggerOptions>) => T;
-  markStart: (name: string, options?: Partial<LoggerOptions>) => void;
-  markEnd: (name: string, options?: Partial<LoggerOptions>) => void;
+/**
+ * Logger interface
+ */
+export interface Logger {
+  trace(message: string, metadata?: Record<string, any>): void;
+  debug(message: string, metadata?: Record<string, any>): void;
+  info(message: string, metadata?: Record<string, any>): void;
+  warn(message: string, metadata?: Record<string, any>): void;
+  error(message: string, metadata?: Record<string, any>): void;
+  fatal(message: string, metadata?: Record<string, any>): void;
+  setContext(context: Record<string, any>): void;
+  getContext(): Record<string, any>;
+  withContext(context: Record<string, any>): Logger;
 }
-
-export interface PerformanceMeasurement {
-  name: string;
-  startTime: number;
-  endTime?: number;
-  duration?: number;
-}
-
-export interface PerformanceMeasurementOptions {
-  category?: LoggerCategoryOption;
-  details?: Record<string, unknown>;
-  tags?: string[];
-}
-
-export interface MeasurementResult {
-  name: string;
-  duration: number;
-  success: boolean;
-}
-
-export type LogEventCallback = (event: LogEvent) => void;
