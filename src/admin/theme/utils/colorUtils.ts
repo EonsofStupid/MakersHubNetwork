@@ -1,216 +1,151 @@
 
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
-import { safeDetails } from '@/logging/utils/safeDetails';
 
-const logger = getLogger('ColorUtils', { category: LogCategory.THEME });
+const logger = getLogger('ColorUtils', { category: LogCategory.THEME as string });
 
 /**
- * Check if a color is dark based on its luminance
+ * Convert hex color to RGB components
  */
-export function isColorDark(color: string): boolean {
-  try {
-    // Extract RGB values
-    let r: number;
-    let g: number;
-    let b: number;
-    
-    // Handle different color formats
-    if (color.startsWith('#')) {
-      // Hex format
-      const hex = color.slice(1);
-      
-      if (hex.length === 3) {
-        r = parseInt(hex[0] + hex[0], 16);
-        g = parseInt(hex[1] + hex[1], 16);
-        b = parseInt(hex[2] + hex[2], 16);
-      } else if (hex.length === 6) {
-        r = parseInt(hex.slice(0, 2), 16);
-        g = parseInt(hex.slice(2, 4), 16);
-        b = parseInt(hex.slice(4, 6), 16);
-      } else {
-        // Invalid hex, assume dark
-        return true;
-      }
-    } else if (color.startsWith('rgba')) {
-      // RGBA format
-      const match = color.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*[\d.]+\s*\)/);
-      if (match) {
-        r = parseInt(match[1], 10);
-        g = parseInt(match[2], 10);
-        b = parseInt(match[3], 10);
-      } else {
-        // Invalid rgba, assume dark
-        return true;
-      }
-    } else if (color.startsWith('rgb')) {
-      // RGB format
-      const match = color.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
-      if (match) {
-        r = parseInt(match[1], 10);
-        g = parseInt(match[2], 10);
-        b = parseInt(match[3], 10);
-      } else {
-        // Invalid rgb, assume dark
-        return true;
-      }
-    } else {
-      // Unknown format, assume dark
-      return true;
-    }
-    
-    // Calculate luminance using the formula for relative luminance
-    // https://www.w3.org/TR/WCAG20/#relativeluminancedef
-    
-    const sRGB = [r / 255, g / 255, b / 255];
-    const rgb = sRGB.map(val => {
-      if (val <= 0.03928) {
-        return val / 12.92;
-      }
-      return Math.pow((val + 0.055) / 1.055, 2.4);
-    });
-    
-    const luminance = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
-    
-    // Theme is considered dark if luminance is below 0.5
-    return luminance < 0.5;
-  } catch (error) {
-    logger.error('Error determining if color is dark', { details: safeDetails(error) });
-    // Default to dark if error
-    return true;
+export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  // Default fallback for invalid input
+  if (!hex || typeof hex !== 'string') {
+    logger.warn('Invalid hex color provided', { details: { hex } });
+    return { r: 0, g: 0, b: 0 };
   }
+  
+  // Remove hash if present
+  hex = hex.replace(/^#/, '');
+  
+  // Handle shorthand hex
+  if (hex.length === 3) {
+    hex = hex.split('').map(c => c + c).join('');
+  }
+  
+  // Parse hex values
+  const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) {
+    logger.warn('Invalid hex color format', { details: { hex } });
+    return { r: 0, g: 0, b: 0 };
+  }
+  
+  return {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  };
 }
 
 /**
- * Convert hex color to HSL string for CSS variables
- */
-export function hexToHSL(hex: string): string {
-  try {
-    // Default colors if parsing fails
-    if (!hex || typeof hex !== 'string') {
-      return 'hsl(0, 0%, 0%)';
-    }
-    
-    // Handle different formats
-    let r: number;
-    let g: number;
-    let b: number;
-    
-    if (hex.startsWith('#')) {
-      const cleanHex = hex.slice(1);
-      
-      if (cleanHex.length === 3) {
-        r = parseInt(cleanHex[0] + cleanHex[0], 16);
-        g = parseInt(cleanHex[1] + cleanHex[1], 16);
-        b = parseInt(cleanHex[2] + cleanHex[2], 16);
-      } else if (cleanHex.length === 6) {
-        r = parseInt(cleanHex.slice(0, 2), 16);
-        g = parseInt(cleanHex.slice(2, 4), 16);
-        b = parseInt(cleanHex.slice(4, 6), 16);
-      } else {
-        // Invalid hex, return black
-        return 'hsl(0, 0%, 0%)';
-      }
-    } else if (hex.startsWith('rgb')) {
-      const match = hex.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*[\d.]+)?\s*\)/);
-      if (match) {
-        r = parseInt(match[1], 10);
-        g = parseInt(match[2], 10);
-        b = parseInt(match[3], 10);
-      } else {
-        // Invalid rgb, return black
-        return 'hsl(0, 0%, 0%)';
-      }
-    } else {
-      // Unknown format, return black
-      return 'hsl(0, 0%, 0%)';
-    }
-    
-    // Convert RGB to HSL
-    r /= 255;
-    g /= 255;
-    b /= 255;
-    
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h = 0;
-    let s = 0;
-    const l = (max + min) / 2;
-    
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      
-      switch (max) {
-        case r:
-          h = (g - b) / d + (g < b ? 6 : 0);
-          break;
-        case g:
-          h = (b - r) / d + 2;
-          break;
-        case b:
-          h = (r - g) / d + 4;
-          break;
-      }
-      
-      h *= 60;
-    }
-    
-    // Round values
-    h = Math.round(h);
-    s = Math.round(s * 100);
-    const lightness = Math.round(l * 100);
-    
-    return `${h} ${s}% ${lightness}%`;
-  } catch (error) {
-    logger.error('Error converting hex to HSL', { details: safeDetails(error) });
-    return 'hsl(0, 0%, 0%)';
-  }
-}
-
-/**
- * Convert hex color to RGB string for CSS variables
+ * Convert hex color to RGB string (e.g., "255, 0, 0")
  */
 export function hexToRgbString(hex: string): string {
-  try {
-    if (!hex || typeof hex !== 'string') {
-      return '0, 0, 0';
+  const rgb = hexToRgb(hex);
+  if (!rgb) return '0, 0, 0';
+  return `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+}
+
+/**
+ * Convert hex color to HSL string for Tailwind CSS variables
+ */
+export function hexToHSL(hex: string): string {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return '0 0% 0%';
+  
+  const r = rgb.r / 255;
+  const g = rgb.g / 255;
+  const b = rgb.b / 255;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+  
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
     }
     
-    let r: number;
-    let g: number;
-    let b: number;
-    
-    if (hex.startsWith('#')) {
-      const cleanHex = hex.slice(1);
-      
-      if (cleanHex.length === 3) {
-        r = parseInt(cleanHex[0] + cleanHex[0], 16);
-        g = parseInt(cleanHex[1] + cleanHex[1], 16);
-        b = parseInt(cleanHex[2] + cleanHex[2], 16);
-      } else if (cleanHex.length === 6) {
-        r = parseInt(cleanHex.slice(0, 2), 16);
-        g = parseInt(cleanHex.slice(2, 4), 16);
-        b = parseInt(cleanHex.slice(4, 6), 16);
-      } else {
-        return '0, 0, 0';
-      }
-    } else if (hex.startsWith('rgb')) {
-      const match = hex.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*[\d.]+)?\s*\)/);
-      if (match) {
-        r = parseInt(match[1], 10);
-        g = parseInt(match[2], 10);
-        b = parseInt(match[3], 10);
-      } else {
-        return '0, 0, 0';
-      }
-    } else {
-      return '0, 0, 0';
-    }
-    
-    return `${r}, ${g}, ${b}`;
-  } catch (error) {
-    logger.error('Error converting hex to RGB string', { details: safeDetails(error) });
-    return '0, 0, 0';
+    h /= 6;
   }
+  
+  // Convert to degrees, percentage, percentage
+  h = Math.round(h * 360);
+  s = Math.round(s * 100);
+  const lightness = Math.round(l * 100);
+  
+  return `${h} ${s}% ${lightness}%`;
+}
+
+/**
+ * Check if a color is considered dark
+ */
+export function isColorDark(color: string): boolean {
+  if (!color) return true;
+  
+  const rgb = hexToRgb(color);
+  if (!rgb) return true;
+  
+  // Calculate perceived brightness using the formula:
+  // (0.299*R + 0.587*G + 0.114*B)
+  const brightness = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  
+  // Brightness < 0.5 is considered dark
+  return brightness < 0.5;
+}
+
+/**
+ * Lighten a hex color by a percentage
+ */
+export function lightenColor(hex: string, percent: number): string {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return hex;
+  
+  const factor = 1 + percent / 100;
+  
+  return rgbToHex({
+    r: Math.min(255, Math.round(rgb.r * factor)),
+    g: Math.min(255, Math.round(rgb.g * factor)),
+    b: Math.min(255, Math.round(rgb.b * factor))
+  });
+}
+
+/**
+ * Darken a hex color by a percentage
+ */
+export function darkenColor(hex: string, percent: number): string {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return hex;
+  
+  const factor = 1 - percent / 100;
+  
+  return rgbToHex({
+    r: Math.max(0, Math.round(rgb.r * factor)),
+    g: Math.max(0, Math.round(rgb.g * factor)),
+    b: Math.max(0, Math.round(rgb.b * factor))
+  });
+}
+
+/**
+ * Convert RGB components to hex color
+ */
+export function rgbToHex(rgb: { r: number; g: number; b: number }): string {
+  const toHex = (value: number) => {
+    const hex = Math.min(255, Math.max(0, value)).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
+  
+  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
 }

@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { ThemeState, ThemeStore } from './types';
+import { ThemeState, ThemeStore, ThemeComponent } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
-import { dbRowToTheme, dbRowsToComponentTokens, dbRowsToThemeTokens } from '@/admin/theme/utils/modelTransformers';
+import { dbRowToTheme, dbRowsToComponentTokens, dbRowsToThemeTokens, componentToDbFormat } from '@/admin/theme/utils/modelTransformers';
 
-const logger = getLogger('ThemeStore', { category: LogCategory.THEME });
+const logger = getLogger('ThemeStore', { category: LogCategory.THEME as string });
 
 // Initial state
 const initialState: ThemeState = {
@@ -177,32 +177,19 @@ export const useThemeStore = create<ThemeStore>()(
           set({ isLoading: true, error: null });
           logger.info('Updating theme component', { details: { componentId: component.id } });
           
+          const dbComponent = componentToDbFormat(component);
+          
           const { data, error } = await supabase
             .from('theme_components')
-            .update({
-              component_name: component.component_name,
-              styles: component.styles,
-              context: component.context,
-              theme_id: component.theme_id,
-              description: component.description
-            })
+            .update(dbComponent)
             .eq('id', component.id)
             .select()
             .single();
           
           if (error) throw error;
           
-          // Convert DB row to ComponentTokens type
-          const updatedComponent = data ? {
-            id: data.id,
-            component_name: data.component_name,
-            styles: data.styles || {},
-            context: data.context || 'site',
-            theme_id: data.theme_id || '',
-            description: data.description || '',
-            created_at: data.created_at,
-            updated_at: data.updated_at,
-          } : component;
+          // Convert DB row to ThemeComponent type
+          const updatedComponent = data ? dbRowsToComponentTokens([data])[0] : component;
           
           // Update the appropriate components array based on context
           if (component.context === 'admin') {
@@ -231,36 +218,29 @@ export const useThemeStore = create<ThemeStore>()(
           set({ isLoading: true, error: null });
           logger.info('Creating new theme component', { details: { context: component.context } });
           
+          const dbComponent = {
+            component_name: component.component_name,
+            styles: component.styles,
+            context: component.context,
+            theme_id: component.theme_id,
+            description: component.description || ''
+          };
+          
           const { data, error } = await supabase
             .from('theme_components')
-            .insert({
-              component_name: component.component_name,
-              styles: component.styles,
-              context: component.context,
-              theme_id: component.theme_id,
-              description: component.description || ''
-            })
+            .insert(dbComponent)
             .select()
             .single();
           
           if (error) throw error;
           
-          // Convert DB row to ComponentTokens type
-          const newComponent = data ? {
-            id: data.id,
-            component_name: data.component_name,
-            styles: data.styles || {},
-            context: data.context || 'site',
-            theme_id: data.theme_id || '',
-            description: data.description || '',
-            created_at: data.created_at,
-            updated_at: data.updated_at,
-          } : {
+          // Convert DB row to ThemeComponent type
+          const newComponent = data ? dbRowsToComponentTokens([data])[0] : {
             ...component,
             id: 'temp-id',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          };
+          } as ThemeComponent;
           
           // Add to the appropriate components array based on context
           if (component.context === 'admin') {

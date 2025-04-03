@@ -94,12 +94,6 @@ export const defaultImpulseTokens: ImpulseTheme = {
       animationFast: '1s',
       animationNormal: '2s',
       animationSlow: '3s',
-    },
-    keyframes: {
-      fadeIn: '@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }',
-      slideIn: '@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }',
-      pulse: '@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }',
-      glowPulse: '@keyframes glowPulse { 0% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.7); } 50% { box-shadow: 0 0 15px rgba(0, 240, 255, 0.9); } 100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.7); } }',
     }
   },
   components: {
