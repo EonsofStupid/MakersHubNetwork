@@ -1,4 +1,3 @@
-
 export interface Theme {
   id: string;
   name: string;
@@ -10,7 +9,7 @@ export interface Theme {
   context: ThemeContext;
 }
 
-export type ThemeContext = 'site' | 'admin' | 'print';
+export type ThemeContext = 'site' | 'admin' | 'chat';
 
 export interface ThemeColors {
   primary: string;
