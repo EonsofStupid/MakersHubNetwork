@@ -1,209 +1,153 @@
 
 import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging/types';
 
-const logger = getLogger('ColorUtils');
+const logger = getLogger('ColorUtils', { category: LogCategory.THEME });
 
 /**
- * Convert hex color to RGB object
+ * Convert a hex color to RGB components
  */
-export function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
-  try {
-    if (!hex || typeof hex !== 'string') return null;
-    
-    // Default fallback
-    const fallback = { r: 0, g: 0, b: 0 };
-    
-    // Remove any leading #
-    hex = hex.replace(/^#/, '');
-    
-    // Handle different hex formats
-    if (hex.length === 6) {
-      const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      if (result) {
-        return {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16)
-        };
-      }
-    } 
-    
-    // Handle shorthand hex format (#FFF)
-    if (hex.length === 3) {
-      const result = /^([a-f\d])([a-f\d])([a-f\d])$/i.exec(hex);
-      if (result) {
-        return {
-          r: parseInt(result[1] + result[1], 16),
-          g: parseInt(result[2] + result[2], 16),
-          b: parseInt(result[3] + result[3], 16)
-        };
-      }
-    }
-    
-    // Handle rgba() format
-    const rgbaMatch = hex.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([0-9.]+))?\s*\)/);
-    if (rgbaMatch) {
+export function hexToRgb(hex: string): { r: number, g: number, b: number } {
+  if (!hex) return { r: 0, g: 0, b: 0 };
+  
+  // Remove the hash if it exists
+  hex = hex.replace(/^#/, '');
+  
+  // Handle rgba format
+  if (hex.startsWith('rgba')) {
+    const rgba = hex.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)/);
+    if (rgba) {
       return {
-        r: parseInt(rgbaMatch[1], 10),
-        g: parseInt(rgbaMatch[2], 10),
-        b: parseInt(rgbaMatch[3], 10)
+        r: parseInt(rgba[1], 10),
+        g: parseInt(rgba[2], 10),
+        b: parseInt(rgba[3], 10)
       };
     }
-    
-    logger.warn(`Failed to parse color: ${hex}, using fallback`);
-    return fallback;
-  } catch (error) {
-    logger.error('Error in hexToRgb', { details: { error, hex } });
-    return { r: 0, g: 0, b: 0 }; // Emergency fallback
+    return { r: 0, g: 0, b: 0 };
   }
+  
+  // Handle rgb format
+  if (hex.startsWith('rgb')) {
+    const rgb = hex.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+    if (rgb) {
+      return {
+        r: parseInt(rgb[1], 10),
+        g: parseInt(rgb[2], 10),
+        b: parseInt(rgb[3], 10)
+      };
+    }
+    return { r: 0, g: 0, b: 0 };
+  }
+  
+  // Parse hex formats
+  // Handle shorthand hex (#RGB)
+  if (hex.length === 3) {
+    return {
+      r: parseInt(hex[0] + hex[0], 16),
+      g: parseInt(hex[1] + hex[1], 16),
+      b: parseInt(hex[2] + hex[2], 16)
+    };
+  }
+  
+  // Handle standard hex (#RRGGBB)
+  const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (result) {
+    return {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    };
+  }
+  
+  // Log an error and return black as fallback
+  logger.warn(`Invalid color format: ${hex}`);
+  return { r: 0, g: 0, b: 0 };
 }
 
 /**
- * Convert hex to RGB string format (e.g., "255, 255, 255")
+ * Convert hex to RGB string (format: "r, g, b")
  */
 export function hexToRgbString(hex: string): string {
-  try {
-    const rgb = hexToRgb(hex);
-    return rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : '0, 0, 0';
-  } catch (error) {
-    logger.error('Error in hexToRgbString', { details: { error, hex } });
-    return '0, 0, 0'; // Emergency fallback
-  }
+  const rgb = hexToRgb(hex);
+  return `${rgb.r}, ${rgb.g}, ${rgb.b}`;
 }
 
 /**
- * Convert hex to RGBA string
+ * Create a rgba color string from hex and opacity
  */
-export function hexToRgba(hex: string, alpha: number): string {
-  try {
-    const rgb = hexToRgb(hex);
-    return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})` : `rgba(0, 0, 0, ${alpha})`;
-  } catch (error) {
-    logger.error('Error in hexToRgba', { details: { error, hex, alpha } });
-    return `rgba(0, 0, 0, ${alpha})`; // Emergency fallback
-  }
+export function hexToRgba(hex: string, opacity: number): string {
+  const rgb = hexToRgb(hex);
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
 }
 
 /**
- * Convert hex color to HSL string for Tailwind CSS variables
- * Format: "228 47% 8%"
+ * Lighten a hex color by a percentage
  */
-export function hexToHSL(hex: string): string {
-  try {
-    // Default fallback HSL values
-    const FALLBACKS = {
-      DEFAULT: '228 47% 8%', // Dark background
-      PRIMARY: '186 100% 50%', // Cyan
-      SECONDARY: '334 100% 59%', // Pink
-      ACCENT: '260 86% 66%', // Purple
-      BACKGROUND: '240 18% 9%', // Dark background
-      FOREGROUND: '240 10% 96%' // Light foreground
-    };
-    
-    // Handle empty or invalid inputs
-    if (!hex || typeof hex !== 'string') return FALLBACKS.DEFAULT;
-    
-    // Handle preset color cases
-    const lowerHex = hex.toLowerCase();
-    if (lowerHex === '#00f0ff') return FALLBACKS.PRIMARY;
-    if (lowerHex === '#ff2d6e') return FALLBACKS.SECONDARY;
-    if (lowerHex === '#8b5cf6') return FALLBACKS.ACCENT;
-    if (lowerHex === '#12121a') return FALLBACKS.BACKGROUND;
-    if (lowerHex === '#f6f6f7') return FALLBACKS.FOREGROUND;
-    
-    // Parse rgba format
-    if (hex.startsWith('rgba')) {
-      const rgbaMatch = hex.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)/);
-      if (rgbaMatch) {
-        const [_, rs, gs, bs] = rgbaMatch;
-        const r = parseInt(rs) / 255;
-        const g = parseInt(gs) / 255;
-        const b = parseInt(bs) / 255;
-        
-        // Convert to HSL
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        let h = 0, s = 0, l = (max + min) / 2;
-        
-        if (max !== min) {
-          const d = max - min;
-          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-          
-          switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-          }
-          
-          h /= 6;
-        }
-        
-        // Convert to the format needed by Tailwind HSL variables
-        const hDeg = Math.round(h * 360);
-        const sPerc = Math.round(s * 100);
-        const lPerc = Math.round(l * 100);
-        
-        return `${hDeg} ${sPerc}% ${lPerc}%`;
-      }
-      
-      return FALLBACKS.DEFAULT;
-    }
-    
-    // Convert hex to RGB
-    const rgb = hexToRgb(hex);
-    if (!rgb) {
-      logger.warn(`Invalid hex color: ${hex}, using fallback`);
-      return FALLBACKS.DEFAULT;
-    }
-    
-    // Convert RGB to HSL
-    const r = rgb.r / 255;
-    const g = rgb.g / 255;
-    const b = rgb.b / 255;
-    
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
-    
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      
-      switch (max) {
-        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b - r) / d + 2; break;
-        case b: h = (r - g) / d + 4; break;
-      }
-      
-      h /= 6;
-    }
-    
-    // Convert to the format needed by Tailwind HSL variables
-    const hDeg = Math.round(h * 360);
-    const sPerc = Math.round(s * 100);
-    const lPerc = Math.round(l * 100);
-    
-    return `${hDeg} ${sPerc}% ${lPerc}%`;
-  } catch (error) {
-    logger.error('Error converting hex to HSL', { details: { error, hex } });
-    return '228 47% 8%'; // Fallback
-  }
+export function lightenColor(hex: string, percent: number): string {
+  const { r, g, b } = hexToRgb(hex);
+  
+  const amount = Math.round(2.55 * percent);
+  
+  const newR = Math.min(255, r + amount);
+  const newG = Math.min(255, g + amount);
+  const newB = Math.min(255, b + amount);
+  
+  return rgbToHex({ r: newR, g: newG, b: newB });
 }
 
 /**
- * Safely apply theme variable to CSS custom property
+ * Darken a hex color by a percentage
  */
-export function applyThemeVariable(name: string, value: string | null | undefined, fallback: string): void {
-  try {
-    document.documentElement.style.setProperty(name, value || fallback);
-  } catch (error) {
-    logger.error(`Failed to set CSS variable ${name}`, { details: { error } });
-    // Try one more time with just the fallback
-    try {
-      document.documentElement.style.setProperty(name, fallback);
-    } catch (fallbackError) {
-      // If even that fails, we can't do much more
-      logger.error(`Critical failure setting CSS variable ${name}`, { details: { fallbackError } });
-    }
-  }
+export function darkenColor(hex: string, percent: number): string {
+  const { r, g, b } = hexToRgb(hex);
+  
+  const amount = Math.round(2.55 * percent);
+  
+  const newR = Math.max(0, r - amount);
+  const newG = Math.max(0, g - amount);
+  const newB = Math.max(0, b - amount);
+  
+  return rgbToHex({ r: newR, g: newG, b: newB });
+}
+
+/**
+ * Convert RGB components to hex color
+ */
+export function rgbToHex({ r, g, b }: { r: number, g: number, b: number }): string {
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+/**
+ * Check if a color is dark (for determining contrasting text color)
+ */
+export function isColorDark(hex: string): boolean {
+  const { r, g, b } = hexToRgb(hex);
+  
+  // Calculate perceived brightness according to YIQ formula
+  // This gives better results than average or simple luminance
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  
+  // Colors with brightness < 128 are considered dark
+  return brightness < 128;
+}
+
+/**
+ * Get a contrasting text color (black or white) based on background
+ */
+export function getContrastColor(bgHex: string): string {
+  return isColorDark(bgHex) ? '#FFFFFF' : '#000000';
+}
+
+/**
+ * Convert HSL values to hex color
+ */
+export function hslToHex(h: number, s: number, l: number): string {
+  l /= 100;
+  const a = s * Math.min(l, 1 - l) / 100;
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
 }

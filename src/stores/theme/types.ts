@@ -1,19 +1,27 @@
 
 import { Theme, ThemeToken, ComponentTokens } from "@/types/theme";
 
+export interface ThemeComponent extends ComponentTokens {
+  theme_id: string;
+  context: 'site' | 'admin' | 'print';
+}
+
 export interface ThemeState {
   currentTheme: Theme | null;
   themeTokens: ThemeToken[];
-  themeComponents: ComponentTokens[];
-  adminComponents: ComponentTokens[];
+  themeComponents: ThemeComponent[];
+  adminComponents: ThemeComponent[];
   isLoading: boolean;
   error: Error | null;
 }
 
 export interface ThemeActions {
   setTheme: (themeId: string) => Promise<void>;
-  loadAdminComponents: () => Promise<void>;
+  loadAdminComponents: () => Promise<ThemeComponent[]>;
   hydrateTheme: () => Promise<void>;
+  updateComponent: (component: ThemeComponent) => Promise<ThemeComponent>;
+  createComponent: (component: Omit<ThemeComponent, 'id' | 'created_at' | 'updated_at'>) => Promise<ThemeComponent>;
+  deleteComponent: (componentId: string) => Promise<void>;
 }
 
 export type ThemeStore = ThemeState & ThemeActions;
