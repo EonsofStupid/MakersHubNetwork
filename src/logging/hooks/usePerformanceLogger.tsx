@@ -1,173 +1,137 @@
 
-import { useCallback } from 'react';
-import { getLogger } from '../service/logger.service';
-import { LogCategory, MeasurementCompletionData, PerformanceLoggerOptions } from '../types';
+import { useCallback, useRef } from 'react';
+import { LoggerOptions } from '../types';
+import { useLogger } from './useLogger';
+import { LogCategory } from '../types';
 
-export function usePerformanceLogger(source: string = 'Performance') {
-  const logger = getLogger(source);
+export interface PerformanceLoggerOptions extends LoggerOptions {
+  /**
+   * Log level threshold in milliseconds
+   * Operations below this threshold will be logged at INFO level
+   * Operations above this threshold will be logged at WARN level
+   */
+  warnThreshold?: number;
   
-  const logPerformance = useCallback((
-    label: string, 
-    fn: () => any, 
-    warnThreshold: number = 100
-  ) => {
-    const start = performance.now();
-    const result = fn();
-    const duration = performance.now() - start;
-    
-    if (duration > warnThreshold) {
-      logger.warn(`Slow operation: ${label} took ${duration.toFixed(2)}ms`, {
-        category: LogCategory.PERFORMANCE,
-        details: { duration, threshold: warnThreshold }
-      });
-    } else {
-      logger.performance(`${label}`, duration, {
-        category: LogCategory.PERFORMANCE
-      });
+  /**
+   * Whether to automatically add the duration to the log message
+   */
+  includeDuration?: boolean;
+  
+  /**
+   * Custom formatting function for the duration
+   */
+  formatDuration?: (duration: number) => string;
+}
+
+type PerformanceCallback<T> = () => T;
+type AsyncPerformanceCallback<T> = () => Promise<T>;
+
+/**
+ * Hook for measuring and logging the performance of operations
+ */
+export function usePerformanceLogger(
+  source?: string,
+  options: PerformanceLoggerOptions = {}
+) {
+  const logger = useLogger(source, {
+    ...options,
+    category: options.category || LogCategory.PERFORMANCE as string,
+  });
+  
+  const marks = useRef<Map<string, number>>(new Map());
+  const warnThreshold = options.warnThreshold || 100; // Default 100ms
+  const includeDuration = options.includeDuration !== false; // Default true
+  
+  /**
+   * Format the duration for log messages
+   */
+  const formatDuration = useCallback((duration: number): string => {
+    if (options.formatDuration) {
+      return options.formatDuration(duration);
     }
     
-    return result;
-  }, [logger]);
+    if (duration < 1) {
+      return `${duration.toFixed(3)}ms`;
+    } else if (duration < 1000) {
+      return `${duration.toFixed(2)}ms`;
+    } else {
+      return `${(duration / 1000).toFixed(2)}s`;
+    }
+  }, [options]);
   
-  const measure = useCallback((
-    name: string,
-    callback: () => any,
-    options?: PerformanceLoggerOptions
-  ) => {
-    const start = performance.now();
+  /**
+   * Start measuring performance for a named operation
+   */
+  const start = useCallback((name: string) => {
+    marks.current.set(name, performance.now());
+  }, []);
+  
+  /**
+   * End measuring and log the duration
+   */
+  const end = useCallback((name: string, message?: string) => {
+    const startTime = marks.current.get(name);
+    if (startTime === undefined) {
+      logger.warn(`Performance mark "${name}" does not exist`, {
+        details: { availableMarks: Array.from(marks.current.keys()) }
+      });
+      return 0;
+    }
+    
+    const duration = performance.now() - startTime;
+    const logMessage = message || `Operation "${name}" completed`;
+    const formattedMessage = includeDuration 
+      ? `${logMessage} in ${formatDuration(duration)}`
+      : logMessage;
+    
+    logger.performance(formattedMessage, duration);
+    marks.current.delete(name);
+    
+    return duration;
+  }, [logger, includeDuration, formatDuration]);
+  
+  /**
+   * Measure the execution time of a synchronous function
+   */
+  const measure = useCallback(<T>(name: string, callback: PerformanceCallback<T>): T => {
+    start(name);
     try {
       const result = callback();
-      const duration = performance.now() - start;
-      
-      logger.performance(name, duration, {
-        category: options?.category || LogCategory.PERFORMANCE,
-        details: options?.details
-      });
-      
-      if (options?.onComplete) {
-        options.onComplete({
-          name,
-          duration,
-          success: true,
-          ...options.details
-        });
-      }
-      
+      end(name);
       return result;
     } catch (error) {
-      const duration = performance.now() - start;
-      logger.error(`Error in ${name} after ${duration.toFixed(2)}ms`, {
-        category: options?.category || LogCategory.PERFORMANCE,
-        details: {
-          duration,
-          error: error instanceof Error ? {
-            message: error.message,
-            name: error.name,
-            stack: error.stack
-          } : String(error),
-          ...options?.details
-        }
+      const duration = end(name);
+      logger.error(`Error in measured operation "${name}" (${formatDuration(duration)})`, {
+        details: { error }
       });
-      
-      if (options?.onComplete) {
-        options.onComplete({
-          name,
-          duration,
-          success: false,
-          error,
-          ...options?.details
-        });
-      }
-      
       throw error;
     }
-  }, [logger]);
+  }, [start, end, logger, formatDuration]);
   
-  const measureAsync = useCallback(async <T,>(
+  /**
+   * Measure the execution time of an asynchronous function
+   */
+  const measureAsync = useCallback(async <T>(
     name: string,
-    asyncFn: () => Promise<T>,
-    options?: PerformanceLoggerOptions
+    callback: AsyncPerformanceCallback<T>
   ): Promise<T> => {
-    const start = performance.now();
-    
+    start(name);
     try {
-      return asyncFn().then(result => {
-        const duration = performance.now() - start;
-        
-        logger.performance(name, duration, {
-          category: options?.category || LogCategory.PERFORMANCE,
-          details: options?.details
-        });
-        
-        if (options?.onComplete) {
-          options.onComplete({
-            name,
-            duration,
-            success: true,
-            ...options?.details
-          });
-        }
-        
-        return result;
-      }).catch(error => {
-        const duration = performance.now() - start;
-        logger.error(`Error in ${name} after ${duration.toFixed(2)}ms`, {
-          category: options?.category || LogCategory.PERFORMANCE,
-          details: {
-            duration,
-            error: error instanceof Error ? {
-              message: error.message,
-              name: error.name,
-              stack: error.stack
-            } : String(error),
-            ...options?.details
-          }
-        });
-        
-        if (options?.onComplete) {
-          options.onComplete({
-            name,
-            duration,
-            success: false,
-            error,
-            ...options?.details
-          });
-        }
-        
-        throw error;
-      });
+      const result = await callback();
+      end(name);
+      return result;
     } catch (error) {
-      // This catch block handles synchronous errors in the Promise creation
-      const duration = performance.now() - start;
-      logger.error(`Error in ${name} after ${duration.toFixed(2)}ms`, {
-        category: options?.category || LogCategory.PERFORMANCE,
-        details: {
-          duration,
-          error: error instanceof Error ? {
-            message: error.message,
-            name: error.name,
-            stack: error.stack
-          } : String(error),
-          ...options?.details
-        }
+      const duration = end(name);
+      logger.error(`Error in async measured operation "${name}" (${formatDuration(duration)})`, {
+        details: { error }
       });
-      
-      if (options?.onComplete) {
-        options.onComplete({
-          name,
-          duration,
-          success: false,
-          error,
-          ...options?.details
-        });
-      }
-      
       throw error;
     }
-  }, [logger]);
+  }, [start, end, logger, formatDuration]);
   
-  return { 
-    logPerformance,
+  return {
+    start,
+    end,
     measure,
     measureAsync
   };
