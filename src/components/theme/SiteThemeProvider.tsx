@@ -1,12 +1,11 @@
-
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 import { defaultImpulseTokens } from '@/admin/theme/impulse/tokens';
 import { themeRegistry } from '@/admin/theme/ThemeRegistry';
-import { applyThemeToDocument, hexToRgb } from '@/admin/theme/utils/themeApplicator';
+import { applyThemeToDocument, hexToRgbString } from '@/admin/theme/utils/themeApplicator';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
 
@@ -330,130 +329,45 @@ export function SiteThemeProvider({
             padding: '0.5rem 0.75rem',
             background: variables.input
           }
+        },
+        typography: {
+          fonts: {
+            body: 'Inter, system-ui, sans-serif',
+            heading: 'Inter, system-ui, sans-serif',
+            monospace: 'Consolas, monospace'
+          },
+          sizes: {
+            xs: variables.radiusSm,
+            sm: variables.radiusMd,
+            base: variables.radiusLg,
+            md: variables.radiusLg, // Added md size to match usage
+            lg: '1.125rem',
+            xl: '1.25rem',
+            '2xl': '1.5rem',
+            '3xl': '1.875rem'
+          },
+          lineHeights: {
+            tight: '1.25',
+            normal: '1.5',
+            loose: '1.75'
+          }
         }
       };
       
       // Register the theme with our registry
-      themeRegistry.registerTheme('site-theme', impulseTheme as any);
+      themeRegistry.registerTheme('site-theme', impulseTheme);
       
       // Apply the theme using our standardized utility
       applyThemeToDocument('site-theme');
       
-      // DIRECT CSS VARIABLE APPLICATION for important theme variables
-      // HARD-CODED FALLBACKS throughout for maximum resilience
+      // Set additional CSS variables for Tailwind theme system
+      document.documentElement.style.setProperty('--impulse-theme-applied', 'true');
       
-      // Set CSS root variables with hardcoded fallbacks
-      const setThemeVar = (name: string, value: string, fallback: string) => {
-        document.documentElement.style.setProperty(name, value || fallback);
-      };
-      
-      // Convert hex to HSL format for Tailwind CSS variables
-      document.documentElement.style.setProperty('--site-background', hexToHSL(variables.background));
-      document.documentElement.style.setProperty('--site-foreground', hexToHSL(variables.foreground));
-      document.documentElement.style.setProperty('--site-card', hexToHSL(variables.card));
-      document.documentElement.style.setProperty('--site-card-foreground', hexToHSL(variables.cardForeground));
-      document.documentElement.style.setProperty('--site-primary', hexToHSL(variables.primary));
-      document.documentElement.style.setProperty('--site-primary-foreground', hexToHSL(variables.primaryForeground));
-      document.documentElement.style.setProperty('--site-secondary', hexToHSL(variables.secondary));
-      document.documentElement.style.setProperty('--site-secondary-foreground', hexToHSL(variables.secondaryForeground));
-      document.documentElement.style.setProperty('--site-muted', hexToHSL(variables.muted));
-      document.documentElement.style.setProperty('--site-muted-foreground', hexToHSL(variables.mutedForeground));
-      document.documentElement.style.setProperty('--site-accent', hexToHSL(variables.accent));
-      document.documentElement.style.setProperty('--site-accent-foreground', hexToHSL(variables.accentForeground));
-      document.documentElement.style.setProperty('--site-destructive', hexToHSL(variables.destructive));
-      document.documentElement.style.setProperty('--site-destructive-foreground', hexToHSL(variables.destructiveForeground));
-      document.documentElement.style.setProperty('--site-border', hexToHSL(variables.border));
-      document.documentElement.style.setProperty('--site-input', hexToHSL(variables.input));
-      document.documentElement.style.setProperty('--site-ring', hexToHSL(variables.ring));
-      
-      // Also set the actual colors as fallback - DIRECT hex values
-      setThemeVar('--fallback-background', variables.background, '#12121A');
-      setThemeVar('--fallback-foreground', variables.foreground, '#F6F6F7');
-      setThemeVar('--fallback-card', variables.card, 'rgba(28, 32, 42, 0.7)');
-      setThemeVar('--fallback-card-foreground', variables.cardForeground, '#F6F6F7');
-      setThemeVar('--fallback-primary', variables.primary, '#00F0FF');
-      setThemeVar('--fallback-primary-foreground', variables.primaryForeground, '#F6F6F7');
-      setThemeVar('--fallback-secondary', variables.secondary, '#FF2D6E');
-      setThemeVar('--fallback-secondary-foreground', variables.secondaryForeground, '#F6F6F7');
-      setThemeVar('--fallback-muted', variables.muted, 'rgba(255, 255, 255, 0.7)');
-      setThemeVar('--fallback-muted-foreground', variables.mutedForeground, 'rgba(255, 255, 255, 0.5)');
-      setThemeVar('--fallback-accent', variables.accent, '#8B5CF6');
-      setThemeVar('--fallback-accent-foreground', variables.accentForeground, '#F6F6F7');
-      setThemeVar('--fallback-destructive', variables.destructive, '#EF4444');
-      setThemeVar('--fallback-destructive-foreground', variables.destructiveForeground, '#F6F6F7');
-      setThemeVar('--fallback-border', variables.border, 'rgba(0, 240, 255, 0.2)');
-      setThemeVar('--fallback-input', variables.input, 'rgba(22, 22, 26, 0.5)');
-      setThemeVar('--fallback-ring', variables.ring, 'rgba(0, 240, 255, 0.4)');
-      
-      // Basic Tailwind compatibility variables
-      setThemeVar('--background', `hsl(var(--site-background))`, 'hsl(240 18% 9%)');
-      setThemeVar('--foreground', `hsl(var(--site-foreground))`, 'hsl(240 10% 96%)');
-      setThemeVar('--card', `hsl(var(--site-card))`, 'hsl(240 18% 14%)');
-      setThemeVar('--card-foreground', `hsl(var(--site-card-foreground))`, 'hsl(240 10% 96%)');
-      setThemeVar('--popover', `hsl(var(--site-card))`, 'hsl(240 18% 14%)');
-      setThemeVar('--popover-foreground', `hsl(var(--site-card-foreground))`, 'hsl(240 10% 96%)');
-      setThemeVar('--primary', `hsl(var(--site-primary))`, 'hsl(186 100% 50%)');
-      setThemeVar('--primary-foreground', `hsl(var(--site-primary-foreground))`, 'hsl(240 10% 96%)');
-      setThemeVar('--secondary', `hsl(var(--site-secondary))`, 'hsl(334 100% 59%)');
-      setThemeVar('--secondary-foreground', `hsl(var(--site-secondary-foreground))`, 'hsl(240 10% 96%)');
-      setThemeVar('--muted', `hsl(var(--site-muted))`, 'hsl(240 18% 14%)');
-      setThemeVar('--muted-foreground', `hsl(var(--site-muted-foreground))`, 'hsl(240 5% 65%)');
-      setThemeVar('--accent', `hsl(var(--site-accent))`, 'hsl(260 86% 66%)');
-      setThemeVar('--accent-foreground', `hsl(var(--site-accent-foreground))`, 'hsl(240 10% 96%)');
-      setThemeVar('--destructive', `hsl(var(--site-destructive))`, 'hsl(0 84% 60%)');
-      setThemeVar('--destructive-foreground', `hsl(var(--site-destructive-foreground))`, 'hsl(240 10% 96%)');
-      setThemeVar('--border', `hsl(var(--site-border))`, 'hsl(240 18% 16%)');
-      setThemeVar('--input', `hsl(var(--site-input))`, 'hsl(240 18% 14%)');
-      setThemeVar('--ring', `hsl(var(--site-ring))`, 'hsl(186 100% 50% / 0.4)');
-      
-      // Set site-specific effect colors
-      setThemeVar('--site-effect-color', variables.primary, '#00F0FF');
-      setThemeVar('--site-effect-secondary', variables.secondary, '#FF2D6E');
-      setThemeVar('--site-effect-tertiary', variables.effectTertiary, '#8B5CF6');
-      
-      // Set transition and animation durations
-      setThemeVar('--site-transition-fast', variables.transitionFast, '150ms');
-      setThemeVar('--site-transition-normal', variables.transitionNormal, '300ms');
-      setThemeVar('--site-transition-slow', variables.transitionSlow, '500ms');
-      setThemeVar('--site-animation-fast', variables.animationFast, '1s');
-      setThemeVar('--site-animation-normal', variables.animationNormal, '2s');
-      setThemeVar('--site-animation-slow', variables.animationSlow, '3s');
-      
-      // Set border radius values
-      setThemeVar('--site-radius-sm', variables.radiusSm, '0.25rem');
-      setThemeVar('--site-radius-md', variables.radiusMd, '0.5rem');
-      setThemeVar('--site-radius-lg', variables.radiusLg, '0.75rem');
-      setThemeVar('--site-radius-full', variables.radiusFull, '9999px');
-      setThemeVar('--radius', variables.radiusMd, '0.5rem');
-      
-      // Add a data attribute to indicate theme loaded status
-      document.documentElement.setAttribute('data-theme-loaded', 'true');
-      
-      logger.debug('Applied site theme variables to document');
-    } catch (error) {
-      logger.error('Error applying site theme variables', {
-        details: safeDetails(error)
+      logger.debug('Theme applied successfully from SiteThemeProvider');
+    } catch (err) {
+      logger.error('Error applying theme in SiteThemeProvider', {
+        details: safeDetails(err)
       });
-      
-      // Apply emergency fallback styles in case of theme application failure
-      const emergencyFallbacks = () => {
-        const doc = document.documentElement;
-        doc.style.setProperty('--fallback-background', '#12121A');
-        doc.style.setProperty('--fallback-foreground', '#F6F6F7');
-        doc.style.setProperty('--fallback-primary', '#00F0FF');
-        doc.style.setProperty('--fallback-secondary', '#FF2D6E');
-        doc.style.setProperty('--effect-color', '#00F0FF');
-        doc.style.setProperty('--site-effect-color', '#00F0FF');
-        doc.style.setProperty('--site-effect-secondary', '#FF2D6E');
-        
-        // Basic body styles
-        document.body.style.backgroundColor = '#12121A';
-        document.body.style.color = '#F6F6F7';
-        
-        logger.debug('Applied emergency fallback styles after error');
-      };
-      
-      emergencyFallbacks();
     }
   }, [variables, currentTheme, logger]);
   

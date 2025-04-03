@@ -1,45 +1,32 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging/types';
+import { Theme, ComponentTokens } from '@/types/theme';
 import { 
   saveThemeToLocalStorage,
   getThemeFromLocalStorage
 } from './localStorage';
 
-const logger = getLogger('themeStore');
+const logger = getLogger('themeStore', { category: LogCategory.THEME });
 
-export interface ThemeComponent {
-  id: string;
+export interface ThemeComponent extends ComponentTokens {
   theme_id: string;
-  component_name: string;
   context: 'site' | 'admin' | 'print';
-  styles: Record<string, any>;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface ThemeData {
-  id: string;
-  name: string;
-  description: string;
-  is_system: boolean;
-  is_active: boolean;
-  design_tokens: Record<string, any>;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface ThemeStore {
   // Theme state
-  currentTheme: ThemeData | null;
+  currentTheme: Theme | null;
   themeComponents: ThemeComponent[];
   adminComponents: ThemeComponent[];
   isLoading: boolean;
   error: Error | null;
 
   // Theme actions
-  loadTheme: (themeId: string) => Promise<ThemeData>;
+  loadTheme: (themeId: string) => Promise<Theme>;
   setTheme: (themeId: string) => Promise<void>;
   loadComponents: (themeId: string) => Promise<ThemeComponent[]>;
   loadAdminComponents: () => Promise<ThemeComponent[]>;
@@ -117,12 +104,34 @@ export const useThemeStore = create<ThemeStore>()(
           if (error) throw error;
           if (!data) throw new Error(`Theme not found: ${themeId}`);
 
-          set({ currentTheme: data, isLoading: false });
+          // Transform the raw data to match the Theme interface
+          const theme: Theme = {
+            id: data.id,
+            name: data.name,
+            description: data.description || '',
+            status: data.status || 'published',
+            is_default: data.is_default || false,
+            created_by: data.created_by || '',
+            created_at: data.created_at || new Date().toISOString(),
+            updated_at: data.updated_at || new Date().toISOString(),
+            published_at: data.published_at,
+            version: data.version || 1,
+            cache_key: data.cache_key,
+            parent_theme_id: data.parent_theme_id,
+            design_tokens: data.design_tokens || {},
+            component_tokens: [],
+            composition_rules: data.composition_rules || {},
+            cached_styles: data.cached_styles || {},
+            is_system: data.is_system || false,
+            is_active: data.is_active || true,
+          };
+
+          set({ currentTheme: theme, isLoading: false });
           
           // Save successful theme to localStorage
           saveThemeToLocalStorage(themeId);
           
-          return data;
+          return theme;
         } catch (error: any) {
           set({ error, isLoading: false });
           throw error;
@@ -162,8 +171,20 @@ export const useThemeStore = create<ThemeStore>()(
 
           if (error) throw error;
 
-          set({ themeComponents: data || [], isLoading: false });
-          return data || [];
+          // Transform data to match the ThemeComponent interface
+          const components: ThemeComponent[] = (data || []).map(item => ({
+            id: item.id,
+            component_name: item.component_name || '',
+            styles: item.styles || {},
+            theme_id: item.theme_id || themeId,
+            context: (item.context as 'site' | 'admin' | 'print') || 'site',
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+            description: item.description,
+          }));
+
+          set({ themeComponents: components, isLoading: false });
+          return components;
         } catch (error: any) {
           set({ error, isLoading: false });
           throw error;
@@ -187,8 +208,20 @@ export const useThemeStore = create<ThemeStore>()(
 
           if (error) throw error;
 
-          set({ adminComponents: data || [], isLoading: false });
-          return data || [];
+          // Transform data to match the ThemeComponent interface
+          const components: ThemeComponent[] = (data || []).map(item => ({
+            id: item.id,
+            component_name: item.component_name || '',
+            styles: item.styles || {},
+            theme_id: item.theme_id || currentTheme.id,
+            context: 'admin',
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+            description: item.description,
+          }));
+
+          set({ adminComponents: components, isLoading: false });
+          return components;
         } catch (error: any) {
           set({ error, isLoading: false });
           throw error;
@@ -213,18 +246,30 @@ export const useThemeStore = create<ThemeStore>()(
 
           if (error) throw error;
 
+          // Transform the returned data into a ThemeComponent
+          const updatedComponent: ThemeComponent = {
+            id: data.id,
+            component_name: data.component_name || '',
+            styles: data.styles || {},
+            theme_id: data.theme_id || component.theme_id,
+            context: (data.context as 'site' | 'admin' | 'print') || 'site',
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+            description: data.description,
+          };
+
           // Update components in state
           set(state => ({
             themeComponents: state.themeComponents.map(c => 
-              c.id === component.id ? { ...c, ...data } : c
+              c.id === component.id ? updatedComponent : c
             ),
             adminComponents: state.adminComponents.map(c =>
-              c.id === component.id ? { ...c, ...data } : c
+              c.id === component.id ? updatedComponent : c
             ),
             isLoading: false
           }));
 
-          return data;
+          return updatedComponent;
         } catch (error: any) {
           set({ error, isLoading: false });
           throw error;
@@ -248,16 +293,28 @@ export const useThemeStore = create<ThemeStore>()(
 
           if (error) throw error;
 
+          // Transform the returned data into a ThemeComponent
+          const newComponent: ThemeComponent = {
+            id: data.id,
+            component_name: data.component_name || '',
+            styles: data.styles || {},
+            theme_id: data.theme_id || component.theme_id,
+            context: (data.context as 'site' | 'admin' | 'print') || 'site',
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+            description: data.description,
+          };
+
           // Add new component to state
           set(state => ({
-            themeComponents: [...state.themeComponents, data],
+            themeComponents: [...state.themeComponents, newComponent],
             adminComponents: component.context === 'admin' 
-              ? [...state.adminComponents, data] 
+              ? [...state.adminComponents, newComponent] 
               : state.adminComponents,
             isLoading: false
           }));
 
-          return data;
+          return newComponent;
         } catch (error: any) {
           set({ error, isLoading: false });
           throw error;

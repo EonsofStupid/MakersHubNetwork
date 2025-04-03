@@ -30,23 +30,23 @@ export interface DesignTokensStructure {
   colors?: Record<string, any>;
   spacing?: Record<string, any>;
   typography?: {
-    fontSizes: Record<string, any>;
-    fontFamilies: Record<string, any>;
-    lineHeights: Record<string, any>;
-    letterSpacing: Record<string, any>;
+    fontSizes?: Record<string, any>;
+    fontFamilies?: Record<string, any>;
+    lineHeights?: Record<string, any>;
+    letterSpacing?: Record<string, any>;
   };
   effects?: {
-    shadows: Record<string, any>;
-    blurs: Record<string, any>;
-    gradients: Record<string, any>;
+    shadows?: Record<string, any>;
+    blurs?: Record<string, any>;
+    gradients?: Record<string, any>;
     primary?: string;
     secondary?: string;
     tertiary?: string;
   };
   animation?: {
-    keyframes: Record<string, any>;
-    transitions: Record<string, any>;
-    durations: Record<string, any>;
+    keyframes?: Record<string, any>;
+    transitions?: Record<string, any>;
+    durations?: Record<string, any>;
   };
   admin?: Record<string, any>;
 }
@@ -68,6 +68,8 @@ export interface Theme {
   component_tokens: ComponentTokens[];
   composition_rules?: Record<string, any>;
   cached_styles?: Record<string, any>;
+  is_system?: boolean;
+  is_active?: boolean;
 }
 
 export interface ThemeContextType {

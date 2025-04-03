@@ -148,7 +148,8 @@ export const defaultImpulseTokens: ImpulseTheme = {
     sizes: {
       xs: '0.75rem',
       sm: '0.875rem',
-      md: '1rem',
+      base: '1rem',
+      md: '1rem', // Added to match usage
       lg: '1.125rem',
       xl: '1.25rem',
       '2xl': '1.5rem',

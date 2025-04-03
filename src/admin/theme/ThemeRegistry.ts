@@ -2,7 +2,7 @@
 import { ImpulseTheme } from '../types/impulse.types';
 import { defaultImpulseTokens } from './impulse/tokens';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 
 interface RegisteredTheme {
   id: string;
@@ -17,7 +17,7 @@ interface RegisteredTheme {
 class ThemeRegistry {
   private themes: Map<string, RegisteredTheme>;
   private activeThemeId: string | null = null;
-  private logger = getLogger('ThemeRegistry');
+  private logger = getLogger('ThemeRegistry', { category: LogCategory.THEME });
 
   constructor() {
     this.themes = new Map();
@@ -109,3 +109,6 @@ class ThemeRegistry {
 
 // Create and export a singleton instance
 export const themeRegistry = new ThemeRegistry();
+
+// Export the get themes function for convenience
+export const getAllThemes = () => themeRegistry.getAllThemes();

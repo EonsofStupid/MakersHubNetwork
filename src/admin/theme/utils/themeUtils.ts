@@ -1,154 +1,133 @@
 
-import { ImpulseTheme } from "../types/impulse.types";
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
+import { ImpulseTheme } from '../../types/impulse.types';
 
-const logger = getLogger('AdminThemeUtils', { category: LogCategory.THEME });
-
-/**
- * Deep merge utility for objects
- * Used to combine default and custom theme settings
- */
-export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
-  const result = { ...target };
-
-  Object.keys(source).forEach(key => {
-    const sourceValue = source[key as keyof typeof source] as any;
-    const targetValue = target[key as keyof typeof target] as any;
-
-    if (
-      sourceValue && 
-      targetValue && 
-      typeof sourceValue === 'object' && 
-      typeof targetValue === 'object' && 
-      !Array.isArray(sourceValue) && 
-      !Array.isArray(targetValue)
-    ) {
-      result[key as keyof T] = deepMerge(targetValue, sourceValue);
-    } else if (sourceValue !== undefined) {
-      result[key as keyof T] = sourceValue;
-    }
-  });
-
-  return result;
-}
+// Initialize logger
+const logger = getLogger('ThemeUtils', { category: LogCategory.THEME });
 
 /**
- * Safely access a nested property in a theme
- * Returns undefined if any part of the path doesn't exist
+ * Deep merge utility for merging themes
  */
-export function getThemeProperty(
-  theme: Partial<ImpulseTheme> | null | undefined, 
-  path: string, 
-  defaultValue: any = undefined
-): any {
-  if (!theme) return defaultValue;
+export function deepMerge<T>(target: T, source: Partial<T>): T {
+  const output = { ...target };
   
-  const parts = path.split('.');
-  let result: any = theme;
-  
-  for (const part of parts) {
-    if (result === undefined || result === null) return defaultValue;
-    result = result[part];
-  }
-  
-  return result !== undefined ? result : defaultValue;
-}
-
-/**
- * Type for flattened theme property
- */
-export interface FlattenedThemeProperty {
-  path: string;
-  value: any;
-  type: 'color' | 'number' | 'string' | 'object';
-}
-
-/**
- * Flatten theme object into array of path/value pairs for easier manipulation
- */
-export function flattenTheme(theme: Partial<ImpulseTheme> | null | undefined): FlattenedThemeProperty[] {
-  if (!theme) return [];
-  
-  const result: FlattenedThemeProperty[] = [];
-  
-  function flatten(obj: any, prefix = '') {
-    if (!obj || typeof obj !== 'object') return;
-    
-    Object.entries(obj).forEach(([key, value]) => {
-      const path = prefix ? `${prefix}.${key}` : key;
-      
-      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-        flatten(value, path);
-      } else {
-        let type: 'color' | 'number' | 'string' | 'object' = 'string';
-        
-        if (typeof value === 'number') {
-          type = 'number';
-        } else if (typeof value === 'object') {
-          type = 'object';
-        } else if (typeof value === 'string' && 
-          (value.startsWith('#') || 
-           value.startsWith('rgb') || 
-           value.startsWith('hsl') || 
-           value.startsWith('rgba'))) {
-          type = 'color';
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      if (isObject(source[key])) {
+        if (!(key in target)) {
+          Object.assign(output, { [key]: source[key] });
+        } else {
+          output[key] = deepMerge(target[key], source[key]);
         }
-        
-        result.push({
-          path,
-          value,
-          type
-        });
+      } else {
+        Object.assign(output, { [key]: source[key] });
       }
     });
   }
   
-  flatten(theme);
-  return result;
+  return output;
 }
 
 /**
- * Convert a theme property path to a readable label
+ * Helper function to check if a value is an object
  */
-export function getReadableLabel(path: string): string {
-  if (!path) return '';
+function isObject(item: any): item is Record<string, any> {
+  return item && typeof item === 'object' && !Array.isArray(item);
+}
+
+/**
+ * Get a property from a theme object with dot notation
+ */
+export function getThemeProperty<T>(
+  theme: ImpulseTheme | null | undefined, 
+  path: string, 
+  fallback: T
+): T {
+  try {
+    if (!theme) return fallback;
+    
+    const keys = path.split('.');
+    let result: any = theme;
+    
+    for (const key of keys) {
+      if (result === undefined || result === null) return fallback;
+      result = result[key];
+    }
+    
+    return (result !== undefined && result !== null) ? result : fallback;
+  } catch (error) {
+    logger.error('Error getting theme property', { 
+      details: { path, error } 
+    });
+    return fallback;
+  }
+}
+
+/**
+ * Set a property in a theme object with dot notation
+ */
+export function setThemeProperty<T>(
+  theme: ImpulseTheme,
+  path: string,
+  value: T
+): ImpulseTheme {
+  try {
+    if (!theme) return theme;
+    
+    const keys = path.split('.');
+    const lastKey = keys.pop();
+    if (!lastKey) return theme;
+    
+    const newTheme = { ...theme };
+    let current: any = newTheme;
+    
+    for (const key of keys) {
+      // Create the object path if it doesn't exist
+      if (!current[key] || typeof current[key] !== 'object') {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+    
+    current[lastKey] = value;
+    return newTheme;
+  } catch (error) {
+    logger.error('Error setting theme property', { 
+      details: { path, error } 
+    });
+    return theme;
+  }
+}
+
+/**
+ * Create a safe copy of a theme
+ */
+export function safeThemeCopy(theme: ImpulseTheme | null): ImpulseTheme {
+  if (!theme) return { ...defaultImpulseTokens };
   
-  const parts = path.split('.');
-  const lastPart = parts[parts.length - 1];
-  
-  // Convert camelCase to Title Case
-  return lastPart
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, str => str.toUpperCase());
+  try {
+    // Create a deep copy by serializing and deserializing
+    return JSON.parse(JSON.stringify(theme));
+  } catch (error) {
+    logger.error('Error creating safe theme copy', { 
+      details: { error } 
+    });
+    return { ...defaultImpulseTokens };
+  }
 }
 
-/**
- * Safe accessor for theme colors with default fallbacks
- */
-export function getThemeColor(
-  theme: Partial<ImpulseTheme> | null | undefined,
-  colorPath: string,
-  defaultColor: string = '#000000'
-): string {
-  return getThemeProperty(theme, `colors.${colorPath}`, defaultColor);
-}
-
-/**
- * Safe accessor for effect properties
- */
-export function getThemeEffect(
-  theme: Partial<ImpulseTheme> | null | undefined,
-  effectPath: string,
-  defaultValue: string = 'none'
-): string {
-  return getThemeProperty(theme, `effects.${effectPath}`, defaultValue);
-}
-
-/**
- * Get CSS variable name for a theme property
- */
-export function getCSSVariableName(path: string): string {
-  const parts = path.split('.');
-  return `--${parts.join('-')}`;
-}
+// We need to provide default impulse tokens for the safe theme copy function
+const defaultImpulseTokens: ImpulseTheme = {
+  name: 'Default Theme',
+  colors: {
+    primary: '#00F0FF',
+    secondary: '#FF2D6E',
+    background: {
+      main: '#12121A'
+    },
+    text: {
+      primary: '#F6F6F7'
+    }
+  }
+};
