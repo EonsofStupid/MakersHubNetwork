@@ -6,6 +6,7 @@ export interface ImpulseTheme {
   id?: string;
   name: string;
   description?: string;
+  version?: string;
   colors?: {
     primary?: string;
     secondary?: string;
@@ -103,6 +104,13 @@ export interface ImpulseTheme {
       xl?: string;
       "2xl"?: string;
       "3xl"?: string;
+      md?: string; // Added md to match usage
+    };
+    weights?: {
+      light?: number;
+      normal?: number;
+      medium?: number;
+      bold?: number;
     };
     lineHeights?: {
       tight?: string;

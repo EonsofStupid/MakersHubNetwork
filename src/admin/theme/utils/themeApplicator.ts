@@ -1,224 +1,232 @@
 
-import { ImpulseTheme } from "../../types/impulse.types";
-import { themeRegistry } from "../ThemeRegistry";
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
-import { getThemeProperty } from "./themeUtils";
+import { LogCategory } from '@/logging/types';
+import { ImpulseTheme } from '../../types/impulse.types';
+import { themeRegistry } from '../ThemeRegistry';
+import { safeGet } from './safeThemeAccess';
 
+// Initialize logger
 const logger = getLogger('ThemeApplicator', { category: LogCategory.THEME });
 
 /**
- * Apply theme to document by setting CSS variables
+ * Apply a theme to the document by setting CSS variables
  */
-export function applyThemeToDocument(themeIdOrTheme: string | ImpulseTheme): void {
+export function applyThemeToDocument(themeOrId: ImpulseTheme | string): void {
   try {
-    // Get the theme object
-    const theme = typeof themeIdOrTheme === 'string'
-      ? themeRegistry.getTheme(themeIdOrTheme)
-      : themeIdOrTheme;
+    // Get the theme from the registry if an ID was provided
+    const theme = typeof themeOrId === 'string' 
+      ? themeRegistry.getTheme(themeOrId)
+      : themeOrId;
     
     if (!theme) {
-      logger.warn('No theme provided to apply, using default', { 
-        details: { theme: typeof themeIdOrTheme === 'string' ? themeIdOrTheme : 'object' } 
+      logger.warn('Theme not found, using default', { 
+        details: { themeOrId: typeof themeOrId === 'string' ? themeOrId : 'object' } 
       });
-      applyThemeToDocument(themeRegistry.getDefaultTheme());
       return;
     }
     
+    const root = document.documentElement;
+    
+    // Clear existing theme classes
+    document.documentElement.classList.remove('light-theme', 'dark-theme');
+    
+    // Add impulse theme class
+    document.documentElement.classList.add('impulse-theme-active');
+    
     // Set theme ID data attribute
-    const themeId = typeof themeIdOrTheme === 'string' ? themeIdOrTheme : theme.id || 'custom';
-    document.documentElement.setAttribute('data-theme', themeId);
+    document.documentElement.setAttribute('data-theme-id', theme.id || 'impulse');
     
-    // Set basic colors on documentElement directly for immediate styling
-    document.documentElement.style.backgroundColor = getThemeProperty(theme, 'colors.background.main', '#000000');
-    document.documentElement.style.color = getThemeProperty(theme, 'colors.text.primary', '#ffffff');
-    document.body.style.backgroundColor = getThemeProperty(theme, 'colors.background.main', '#000000');
-    document.body.style.color = getThemeProperty(theme, 'colors.text.primary', '#ffffff');
-    
-    // Apply all theme variables as CSS custom properties
-    
-    // Colors 
-    setThemeProperty('--color-bg-main', getThemeProperty(theme, 'colors.background.main', '#000000'));
-    setThemeProperty('--color-bg-card', getThemeProperty(theme, 'colors.background.card', 'rgba(17, 17, 17, 0.7)'));
-    setThemeProperty('--color-bg-overlay', getThemeProperty(theme, 'colors.background.overlay', 'rgba(0, 0, 0, 0.5)'));
-    setThemeProperty('--color-bg-alt', getThemeProperty(theme, 'colors.background.alt', '#0f0f0f'));
-    
-    // Text colors
-    setThemeProperty('--color-text-primary', getThemeProperty(theme, 'colors.text.primary', '#ffffff'));
-    setThemeProperty('--color-text-secondary', getThemeProperty(theme, 'colors.text.secondary', 'rgba(255, 255, 255, 0.7)'));
-    setThemeProperty('--color-text-accent', getThemeProperty(theme, 'colors.text.accent', '#00F0FF'));
-    setThemeProperty('--color-text-muted', getThemeProperty(theme, 'colors.text.muted', 'rgba(255, 255, 255, 0.5)'));
-    
-    // Border colors
-    setThemeProperty('--color-border-normal', getThemeProperty(theme, 'colors.borders.normal', 'rgba(255, 255, 255, 0.1)'));
-    setThemeProperty('--color-border-hover', getThemeProperty(theme, 'colors.borders.hover', 'rgba(255, 255, 255, 0.2)'));
-    setThemeProperty('--color-border-active', getThemeProperty(theme, 'colors.borders.active', 'rgba(255, 255, 255, 0.3)'));
-    setThemeProperty('--color-border-focus', getThemeProperty(theme, 'colors.borders.focus', getThemeProperty(theme, 'colors.borders.hover', 'rgba(255, 255, 255, 0.2)')));
-    
-    // Status colors
-    setThemeProperty('--color-status-success', getThemeProperty(theme, 'colors.status.success', '#10B981'));
-    setThemeProperty('--color-status-warning', getThemeProperty(theme, 'colors.status.warning', '#F59E0B'));
-    setThemeProperty('--color-status-error', getThemeProperty(theme, 'colors.status.error', '#EF4444'));
-    setThemeProperty('--color-status-info', getThemeProperty(theme, 'colors.status.info', '#3B82F6'));
-    
-    // Brand colors
-    setThemeProperty('--color-primary', getThemeProperty(theme, 'colors.primary', '#00F0FF'));
-    setThemeProperty('--color-secondary', getThemeProperty(theme, 'colors.secondary', '#FF2D6E'));
-    setThemeProperty('--color-accent', getThemeProperty(theme, 'colors.accent', '#8B5CF6'));
-    
-    // Effect styles
-    
-    // Glows
-    setThemeProperty('--effect-glow-primary', getThemeProperty(theme, 'effects.glow.primary', '0 0 10px rgba(0, 240, 255, 0.7)'));
-    setThemeProperty('--effect-glow-secondary', getThemeProperty(theme, 'effects.glow.secondary', '0 0 10px rgba(255, 45, 110, 0.7)'));
-    setThemeProperty('--effect-glow-hover', getThemeProperty(theme, 'effects.glow.hover', '0 0 15px rgba(0, 240, 255, 0.9)'));
-    
-    // Gradients
-    setThemeProperty('--effect-gradient-primary', getThemeProperty(theme, 'effects.gradients.primary', 'linear-gradient(90deg, #00F0FF, #00F0FF44)'));
-    setThemeProperty('--effect-gradient-secondary', getThemeProperty(theme, 'effects.gradients.secondary', 'linear-gradient(90deg, #FF2D6E, #FF2D6E44)'));
-    setThemeProperty('--effect-gradient-accent', getThemeProperty(theme, 'effects.gradients.accent', 'linear-gradient(90deg, #8B5CF6, #8B5CF644)'));
-    
-    // Shadows
-    setThemeProperty('--effect-shadow-small', getThemeProperty(theme, 'effects.shadows.small', '0 2px 4px rgba(0,0,0,0.1)'));
-    setThemeProperty('--effect-shadow-medium', getThemeProperty(theme, 'effects.shadows.medium', '0 4px 6px rgba(0,0,0,0.1)'));
-    setThemeProperty('--effect-shadow-large', getThemeProperty(theme, 'effects.shadows.large', '0 10px 15px rgba(0,0,0,0.1)'));
-    setThemeProperty('--effect-shadow-inner', getThemeProperty(theme, 'effects.shadows.inner', 'inset 0 2px 4px rgba(0,0,0,0.1)'));
-    
-    // Animation
-    
-    // Durations
-    setThemeProperty('--animation-duration-fast', getThemeProperty(theme, 'animation.duration.fast', '150ms'));
-    setThemeProperty('--animation-duration-normal', getThemeProperty(theme, 'animation.duration.normal', '300ms'));
-    setThemeProperty('--animation-duration-slow', getThemeProperty(theme, 'animation.duration.slow', '500ms'));
-    
-    // Curves
-    setThemeProperty('--animation-curve-bounce', getThemeProperty(theme, 'animation.curves.bounce', 'cubic-bezier(0.175, 0.885, 0.32, 1.275)'));
-    setThemeProperty('--animation-curve-ease', getThemeProperty(theme, 'animation.curves.ease', 'cubic-bezier(0.4, 0, 0.2, 1)'));
-    setThemeProperty('--animation-curve-spring', getThemeProperty(theme, 'animation.curves.spring', 'cubic-bezier(0.43, 0.13, 0.23, 0.96)'));
-    setThemeProperty('--animation-curve-linear', getThemeProperty(theme, 'animation.curves.linear', 'linear'));
-    
-    // Keyframes are handled separately in DynamicKeyframes
-    
-    // Component styles
-    
-    // Panel
-    setThemeProperty('--component-panel-radius', getThemeProperty(theme, 'components.panel.radius', '0.75rem'));
-    setThemeProperty('--component-panel-padding', getThemeProperty(theme, 'components.panel.padding', '1.5rem'));
-    setThemeProperty('--component-panel-bg', getThemeProperty(theme, 'components.panel.background', getThemeProperty(theme, 'colors.background.card', '#111111')));
-    
-    // Button
-    setThemeProperty('--component-button-radius', getThemeProperty(theme, 'components.button.radius', '0.5rem'));
-    setThemeProperty('--component-button-padding', getThemeProperty(theme, 'components.button.padding', '0.5rem 1rem'));
-    setThemeProperty('--component-button-transition', getThemeProperty(theme, 'components.button.transition', 'all 300ms ease'));
-    
-    // Tooltip
-    setThemeProperty('--component-tooltip-radius', getThemeProperty(theme, 'components.tooltip.radius', '0.25rem'));
-    setThemeProperty('--component-tooltip-padding', getThemeProperty(theme, 'components.tooltip.padding', '0.5rem'));
-    setThemeProperty('--component-tooltip-bg', getThemeProperty(theme, 'components.tooltip.background', 'rgba(0, 0, 0, 0.8)'));
-    
-    // Input
-    setThemeProperty('--component-input-radius', getThemeProperty(theme, 'components.input.radius', '0.5rem'));
-    setThemeProperty('--component-input-padding', getThemeProperty(theme, 'components.input.padding', '0.5rem 0.75rem'));
-    setThemeProperty('--component-input-bg', getThemeProperty(theme, 'components.input.background', 'rgba(0, 0, 0, 0.2)'));
-    
-    // Apply typography
-    if (theme.typography) {
-      // Fonts
-      setThemeProperty('--font-family-body', getThemeProperty(theme, 'typography.fonts.body', 'system-ui, sans-serif'));
-      setThemeProperty('--font-family-heading', getThemeProperty(theme, 'typography.fonts.heading', 'system-ui, sans-serif'));
-      setThemeProperty('--font-family-mono', getThemeProperty(theme, 'typography.fonts.monospace', 'monospace'));
+    // Apply color variables
+    if (theme.colors) {
+      // Main colors
+      setCssVar(root, '--impulse-primary', safeGet(theme, 'colors.primary', '#00F0FF'));
+      setCssVar(root, '--impulse-secondary', safeGet(theme, 'colors.secondary', '#FF2D6E'));
+      setCssVar(root, '--impulse-accent', safeGet(theme, 'colors.accent', '#F97316'));
       
-      // Font sizes
-      setThemeProperty('--font-size-xs', getThemeProperty(theme, 'typography.sizes.xs', '0.75rem'));
-      setThemeProperty('--font-size-sm', getThemeProperty(theme, 'typography.sizes.sm', '0.875rem'));
-      setThemeProperty('--font-size-md', getThemeProperty(theme, 'typography.sizes.md', '1rem'));
-      setThemeProperty('--font-size-lg', getThemeProperty(theme, 'typography.sizes.lg', '1.125rem'));
-      setThemeProperty('--font-size-xl', getThemeProperty(theme, 'typography.sizes.xl', '1.25rem'));
-      setThemeProperty('--font-size-2xl', getThemeProperty(theme, 'typography.sizes.2xl', '1.5rem'));
-      setThemeProperty('--font-size-3xl', getThemeProperty(theme, 'typography.sizes.3xl', '1.875rem'));
+      // Background colors
+      setCssVar(root, '--impulse-bg-main', safeGet(theme, 'colors.background.main', '#12121A'));
+      setCssVar(root, '--impulse-bg-overlay', safeGet(theme, 'colors.background.overlay', 'rgba(22, 24, 29, 0.85)'));
+      setCssVar(root, '--impulse-bg-card', safeGet(theme, 'colors.background.card', 'rgba(28, 32, 42, 0.7)'));
+      setCssVar(root, '--impulse-bg-alt', safeGet(theme, 'colors.background.alt', '#1A1E24'));
       
-      // Font weights
-      setThemeProperty('--font-weight-light', String(getThemeProperty(theme, 'typography.weights.light', 300)));
-      setThemeProperty('--font-weight-normal', String(getThemeProperty(theme, 'typography.weights.normal', 400)));
-      setThemeProperty('--font-weight-medium', String(getThemeProperty(theme, 'typography.weights.medium', 500)));
-      setThemeProperty('--font-weight-bold', String(getThemeProperty(theme, 'typography.weights.bold', 700)));
+      // Text colors
+      setCssVar(root, '--impulse-text-primary', safeGet(theme, 'colors.text.primary', '#F6F6F7'));
+      setCssVar(root, '--impulse-text-secondary', safeGet(theme, 'colors.text.secondary', 'rgba(255, 255, 255, 0.7)'));
+      setCssVar(root, '--impulse-text-accent', safeGet(theme, 'colors.text.accent', '#00F0FF'));
+      setCssVar(root, '--impulse-text-muted', safeGet(theme, 'colors.text.muted', 'rgba(255, 255, 255, 0.5)'));
       
-      // Line heights
-      setThemeProperty('--line-height-tight', getThemeProperty(theme, 'typography.lineHeights.tight', '1.25'));
-      setThemeProperty('--line-height-normal', getThemeProperty(theme, 'typography.lineHeights.normal', '1.5'));
-      setThemeProperty('--line-height-loose', getThemeProperty(theme, 'typography.lineHeights.loose', '2'));
+      // Border colors
+      setCssVar(root, '--impulse-border-normal', safeGet(theme, 'colors.borders.normal', 'rgba(0, 240, 255, 0.2)'));
+      setCssVar(root, '--impulse-border-hover', safeGet(theme, 'colors.borders.hover', 'rgba(0, 240, 255, 0.4)'));
+      setCssVar(root, '--impulse-border-active', safeGet(theme, 'colors.borders.active', 'rgba(0, 240, 255, 0.6)'));
+      setCssVar(root, '--impulse-border-focus', safeGet(theme, 'colors.borders.focus', 'rgba(0, 240, 255, 0.5)'));
+      
+      // Status colors
+      setCssVar(root, '--impulse-success', safeGet(theme, 'colors.status.success', '#10B981'));
+      setCssVar(root, '--impulse-warning', safeGet(theme, 'colors.status.warning', '#F59E0B'));
+      setCssVar(root, '--impulse-error', safeGet(theme, 'colors.status.error', '#EF4444'));
+      setCssVar(root, '--impulse-info', safeGet(theme, 'colors.status.info', '#3B82F6'));
     }
     
-    // Apply HSL values for colors that support alpha variations
-    // Convert HEX to RGB
-    const primaryRgb = hexToRgbString(getThemeProperty(theme, 'colors.primary', '#00F0FF'));
-    const secondaryRgb = hexToRgbString(getThemeProperty(theme, 'colors.secondary', '#FF2D6E'));
-    const textRgb = hexToRgbString(getThemeProperty(theme, 'colors.text.primary', '#ffffff'));
-    const bgRgb = hexToRgbString(getThemeProperty(theme, 'colors.background.main', '#000000'));
+    // Add RGB variables for utilities
+    const primaryHex = safeGet(theme, 'colors.primary', '#00F0FF');
+    const secondaryHex = safeGet(theme, 'colors.secondary', '#FF2D6E');
+    setCssVar(root, '--color-primary', hexToRgbString(primaryHex));
+    setCssVar(root, '--color-secondary', hexToRgbString(secondaryHex));
     
-    setThemeProperty('--color-primary-rgb', primaryRgb);
-    setThemeProperty('--color-secondary-rgb', secondaryRgb);
-    setThemeProperty('--color-text-rgb', textRgb);
-    setThemeProperty('--color-bg-rgb', bgRgb);
+    // Set standard Tailwind theme variables for compatibility
+    setCssVar(root, '--background', safeGet(theme, 'colors.background.main', '#12121A'));
+    setCssVar(root, '--foreground', safeGet(theme, 'colors.text.primary', '#F6F6F7'));
+    setCssVar(root, '--primary', safeGet(theme, 'colors.primary', '#00F0FF'));
+    setCssVar(root, '--secondary', safeGet(theme, 'colors.secondary', '#FF2D6E'));
+    setCssVar(root, '--accent', safeGet(theme, 'colors.accent', '#F97316'));
+    setCssVar(root, '--muted', safeGet(theme, 'colors.text.muted', 'rgba(255, 255, 255, 0.5)'));
+    setCssVar(root, '--card', safeGet(theme, 'colors.background.card', 'rgba(28, 32, 42, 0.7)'));
+    setCssVar(root, '--destructive', safeGet(theme, 'colors.status.error', '#EF4444'));
     
-    logger.debug('Theme applied successfully');
+    // Apply effect variables
+    if (theme.effects) {
+      setCssVar(root, '--impulse-glow-primary', safeGet(theme, 'effects.glow.primary', '0 0 15px rgba(0, 240, 255, 0.7)'));
+      setCssVar(root, '--impulse-glow-secondary', safeGet(theme, 'effects.glow.secondary', '0 0 15px rgba(255, 45, 110, 0.7)'));
+      setCssVar(root, '--impulse-glow-hover', safeGet(theme, 'effects.glow.hover', '0 0 20px rgba(0, 240, 255, 0.9)'));
+      
+      setCssVar(root, '--impulse-gradient-primary', safeGet(theme, 'effects.gradients.primary', 'linear-gradient(90deg, #00F0FF, #00B8D4)'));
+      setCssVar(root, '--impulse-gradient-secondary', safeGet(theme, 'effects.gradients.secondary', 'linear-gradient(90deg, #FF2D6E, #FF5252)'));
+      setCssVar(root, '--impulse-gradient-accent', safeGet(theme, 'effects.gradients.accent', 'linear-gradient(90deg, #F97316, #FB923C)'));
+      
+      setCssVar(root, '--impulse-shadow-small', safeGet(theme, 'effects.shadows.small', '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)'));
+      setCssVar(root, '--impulse-shadow-medium', safeGet(theme, 'effects.shadows.medium', '0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3)'));
+      setCssVar(root, '--impulse-shadow-large', safeGet(theme, 'effects.shadows.large', '0 10px 25px rgba(0, 0, 0, 0.2), 0 6px 10px rgba(0, 0, 0, 0.22)'));
+      setCssVar(root, '--impulse-shadow-inner', safeGet(theme, 'effects.shadows.inner', 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.15)'));
+      
+      // Set critical site effect colors for legacy compatibility
+      setCssVar(root, '--site-effect-color', safeGet(theme, 'colors.primary', '#00F0FF'));
+      setCssVar(root, '--site-effect-secondary', safeGet(theme, 'colors.secondary', '#FF2D6E'));
+    }
+    
+    // Apply animation variables
+    if (theme.animation) {
+      setCssVar(root, '--impulse-duration-fast', safeGet(theme, 'animation.duration.fast', '150ms'));
+      setCssVar(root, '--impulse-duration-normal', safeGet(theme, 'animation.duration.normal', '300ms'));
+      setCssVar(root, '--impulse-duration-slow', safeGet(theme, 'animation.duration.slow', '500ms'));
+      
+      setCssVar(root, '--impulse-curve-bounce', safeGet(theme, 'animation.curves.bounce', 'cubic-bezier(0.175, 0.885, 0.32, 1.275)'));
+      setCssVar(root, '--impulse-curve-ease', safeGet(theme, 'animation.curves.ease', 'cubic-bezier(0.4, 0, 0.2, 1)'));
+      setCssVar(root, '--impulse-curve-spring', safeGet(theme, 'animation.curves.spring', 'cubic-bezier(0.43, 0.13, 0.23, 0.96)'));
+      setCssVar(root, '--impulse-curve-linear', safeGet(theme, 'animation.curves.linear', 'linear'));
+    }
+    
+    // Apply typography variables
+    if (theme.typography) {
+      // Font families
+      setCssVar(root, '--impulse-font-body', safeGet(theme, 'typography.fonts.body', 'Inter, system-ui, sans-serif'));
+      setCssVar(root, '--impulse-font-heading', safeGet(theme, 'typography.fonts.heading', 'Inter, system-ui, sans-serif'));
+      setCssVar(root, '--impulse-font-mono', safeGet(theme, 'typography.fonts.monospace', 'Consolas, monospace'));
+      
+      // Font sizes
+      setCssVar(root, '--impulse-text-xs', safeGet(theme, 'typography.sizes.xs', '0.75rem'));
+      setCssVar(root, '--impulse-text-sm', safeGet(theme, 'typography.sizes.sm', '0.875rem'));
+      setCssVar(root, '--impulse-text-base', safeGet(theme, 'typography.sizes.base', '1rem'));
+      setCssVar(root, '--impulse-text-md', safeGet(theme, 'typography.sizes.md', '1rem'));
+      setCssVar(root, '--impulse-text-lg', safeGet(theme, 'typography.sizes.lg', '1.125rem'));
+      setCssVar(root, '--impulse-text-xl', safeGet(theme, 'typography.sizes.xl', '1.25rem'));
+      setCssVar(root, '--impulse-text-2xl', safeGet(theme, 'typography.sizes.2xl', '1.5rem'));
+      setCssVar(root, '--impulse-text-3xl', safeGet(theme, 'typography.sizes.3xl', '1.875rem'));
+      
+      // Line heights
+      setCssVar(root, '--impulse-leading-tight', safeGet(theme, 'typography.lineHeights.tight', '1.25'));
+      setCssVar(root, '--impulse-leading-normal', safeGet(theme, 'typography.lineHeights.normal', '1.5'));
+      setCssVar(root, '--impulse-leading-loose', safeGet(theme, 'typography.lineHeights.loose', '1.75'));
+    }
+    
+    // Apply component variables
+    if (theme.components) {
+      setCssVar(root, '--impulse-panel-radius', safeGet(theme, 'components.panel.radius', '0.75rem'));
+      setCssVar(root, '--impulse-panel-padding', safeGet(theme, 'components.panel.padding', '1.5rem'));
+      setCssVar(root, '--impulse-panel-background', safeGet(theme, 'components.panel.background', 'rgba(28, 32, 42, 0.7)'));
+      
+      setCssVar(root, '--impulse-button-radius', safeGet(theme, 'components.button.radius', '0.5rem'));
+      setCssVar(root, '--impulse-button-padding', safeGet(theme, 'components.button.padding', '0.5rem 1rem'));
+      setCssVar(root, '--impulse-button-transition', safeGet(theme, 'components.button.transition', 'all 0.2s ease'));
+      
+      setCssVar(root, '--impulse-tooltip-radius', safeGet(theme, 'components.tooltip.radius', '0.25rem'));
+      setCssVar(root, '--impulse-tooltip-padding', safeGet(theme, 'components.tooltip.padding', '0.5rem'));
+      setCssVar(root, '--impulse-tooltip-background', safeGet(theme, 'components.tooltip.background', 'rgba(0, 0, 0, 0.8)'));
+      
+      setCssVar(root, '--impulse-input-radius', safeGet(theme, 'components.input.radius', '0.375rem'));
+      setCssVar(root, '--impulse-input-padding', safeGet(theme, 'components.input.padding', '0.5rem 0.75rem'));
+      setCssVar(root, '--impulse-input-background', safeGet(theme, 'components.input.background', 'rgba(0, 0, 0, 0.15)'));
+    }
+    
+    logger.debug(`Theme "${theme.name}" applied to document`);
   } catch (error) {
-    logger.error('Error applying theme', { details: { error } });
+    logger.error('Failed to apply theme', { 
+      details: { error, themeId: typeof themeOrId === 'string' ? themeOrId : 'object' } 
+    });
   }
 }
 
 /**
- * Helper function to set CSS variable
+ * Set a CSS variable on the given element
  */
-function setThemeProperty(name: string, value: string | number | undefined | null): void {
-  if (value === undefined || value === null) return;
-  document.documentElement.style.setProperty(name, String(value));
+function setCssVar(element: HTMLElement, name: string, value: string): void {
+  element.style.setProperty(name, value);
 }
 
 /**
- * Convert hex to RGB
+ * Helper function to convert hex color to RGB components string
  */
 export function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
-  if (!hex) return null;
+  if (!hex) return { r: 0, g: 0, b: 0 };
   
-  // Default fallback
-  const fallback = { r: 0, g: 0, b: 0 };
+  // Remove the hash if it exists
+  hex = hex.replace(/^#/, '');
   
-  // Handle different hex formats
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
-  if (result) {
-    return {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    };
+  // Handle rgba format (common in our theme)
+  if (hex.startsWith('rgba')) {
+    const rgba = hex.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)/);
+    if (rgba) {
+      return {
+        r: parseInt(rgba[1], 10),
+        g: parseInt(rgba[2], 10),
+        b: parseInt(rgba[3], 10)
+      };
+    }
+    return { r: 0, g: 0, b: 0 };
   }
   
-  // Handle shorthand hex format (#FFF)
-  const shorthandResult = /^#?([a-f\d])([a-f\d])([a-f\d])$/i.exec(hex.trim());
-  if (shorthandResult) {
-    return {
-      r: parseInt(shorthandResult[1] + shorthandResult[1], 16),
-      g: parseInt(shorthandResult[2] + shorthandResult[2], 16),
-      b: parseInt(shorthandResult[3] + shorthandResult[3], 16)
-    };
+  // Handle rgb format
+  if (hex.startsWith('rgb')) {
+    const rgb = hex.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+    if (rgb) {
+      return {
+        r: parseInt(rgb[1], 10),
+        g: parseInt(rgb[2], 10),
+        b: parseInt(rgb[3], 10)
+      };
+    }
+    return { r: 0, g: 0, b: 0 };
   }
+
+  // Parse standard hex
+  const expandedHex = hex.length === 3
+    ? hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
+    : hex;
   
-  return fallback;
+  const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(expandedHex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      }
+    : { r: 0, g: 0, b: 0 };
 }
 
 /**
- * Convert hex to RGB string format (e.g., "255, 255, 255")
+ * Convert hex to RGB string (format: "r, g, b")
  */
 export function hexToRgbString(hex: string): string {
   const rgb = hexToRgb(hex);
   return rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : '0, 0, 0';
-}
-
-/**
- * Convert hex to RGBA
- */
-export function hexToRgba(hex: string, alpha: number): string {
-  const rgb = hexToRgb(hex);
-  return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})` : `rgba(0, 0, 0, ${alpha})`;
 }
