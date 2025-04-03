@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSiteTheme } from './SiteThemeProvider';
 import { themeRegistry } from '@/admin/theme/ThemeRegistry';
-import { hexToRgb } from '@/admin/theme/utils/themeApplicator';
+import { hexToRgb } from '@/utils/colorUtils';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
@@ -23,7 +23,7 @@ const FALLBACKS = {
 export function DynamicKeyframes() {
   const { variables } = useSiteTheme();
   const [styleElement, setStyleElement] = useState<HTMLStyleElement | null>(null);
-  const logger = getLogger('DynamicKeyframes');
+  const logger = getLogger('DynamicKeyframes', { category: LogCategory.THEME });
   const { measure } = usePerformanceLogger('DynamicKeyframes');
   
   useEffect(() => {
@@ -186,6 +186,51 @@ export function DynamicKeyframes() {
               background-color: rgba(0, 0, 0, 0.4);
               border: 1px solid rgba(255, 255, 255, 0.1);
             }
+            
+            /* Navigation-specific animations */
+            @keyframes nav-glow {
+              0%, 100% { 
+                box-shadow: 0 0 15px rgba(${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}, 0.3);
+                border-color: rgba(${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}, 0.5);
+              }
+              50% { 
+                box-shadow: 0 0 30px rgba(${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}, 0.6);
+                border-color: rgba(${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}, 0.8);
+              }
+            }
+            
+            .nav-animated {
+              animation: nav-glow 4s ease-in-out infinite;
+            }
+            
+            /* Footer animations */
+            @keyframes footer-float {
+              0%, 100% {
+                transform: perspective(1000px) rotateX(1deg) translateY(0);
+              }
+              50% {
+                transform: perspective(1000px) rotateX(2deg) translateY(-10px);
+              }
+            }
+            
+            @keyframes footer-pulse {
+              0%, 100% {
+                opacity: 0.8;
+                box-shadow: 0 -8px 32px 0 rgba(${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}, 0.2);
+              }
+              50% {
+                opacity: 1;
+                box-shadow: 0 -12px 48px 0 rgba(${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}, 0.3);
+              }
+            }
+            
+            .footer-animate {
+              animation: footer-pulse 4s ease-in-out infinite;
+            }
+            
+            .footer-float {
+              animation: footer-float 3s ease-in-out infinite;
+            }
           `;
         } catch (error) {
           logger.error('Error updating dynamic keyframes', { details: { error } });
@@ -205,6 +250,33 @@ export function DynamicKeyframes() {
                 backdrop-filter: blur(12px);
                 border: 1px solid rgba(0, 240, 255, 0.3);
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+              }
+              
+              /* Basic animation fallbacks */
+              .animate-glow-pulse { animation: pulse 2s ease-in-out infinite; }
+              .animate-text-glow { text-shadow: 0 0 5px #00F0FF; }
+              .animate-border-pulse { border-color: #00F0FF; }
+              .animate-float { animation: float 3s ease-in-out infinite; }
+              
+              @keyframes pulse {
+                0%, 100% { opacity: 0.8; }
+                50% { opacity: 0.4; }
+              }
+              
+              @keyframes float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+              }
+              
+              /* Navigation fallback */
+              .nav-animated {
+                box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+                border-color: rgba(0, 240, 255, 0.5);
+              }
+              
+              /* Footer fallback */
+              .footer-animate {
+                animation: pulse 4s ease-in-out infinite;
               }
             `;
           } catch (fallbackError) {

@@ -15,13 +15,14 @@ import { safeDetails } from '@/logging/utils/safeDetails';
 import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
 import { getThemeFromLocalStorage } from '@/stores/theme/localStorage';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
+import { hexToRgbString } from '@/utils/colorUtils';
+
+// Much shorter fallback timeout for better UX
+const FALLBACK_TIMEOUT = 300; // 300ms fallback timeout
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
 }
-
-// Much shorter fallback timeout for better UX
-const FALLBACK_TIMEOUT = 300; // 300ms fallback timeout
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   // State tracking for better debugging and resilience
@@ -44,19 +45,36 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
       themeRegistry.registerTheme('default', defaultImpulseTokens);
       
       // Apply the default theme immediately
-      applyThemeToDocument('default');
+      applyThemeToDocument(defaultImpulseTokens);
       
       // Force the browser to apply default colors immediately
-      document.documentElement.style.backgroundColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
-      document.documentElement.style.color = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
-      document.body.style.backgroundColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
-      document.body.style.color = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
+      const bgColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
+      const textColor = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
+      const primaryColor = getThemeProperty(defaultImpulseTokens, 'colors.primary', '#00F0FF');
+      const secondaryColor = getThemeProperty(defaultImpulseTokens, 'colors.secondary', '#FF2D6E');
+      
+      document.documentElement.style.backgroundColor = bgColor;
+      document.documentElement.style.color = textColor;
+      document.body.style.backgroundColor = bgColor;
+      document.body.style.color = textColor;
+      
+      // Set critical CSS variables for animations and effects
+      document.documentElement.style.setProperty('--site-effect-color', primaryColor);
+      document.documentElement.style.setProperty('--site-effect-secondary', secondaryColor);
+      document.documentElement.style.setProperty('--color-primary', hexToRgbString(primaryColor));
+      document.documentElement.style.setProperty('--color-secondary', hexToRgbString(secondaryColor));
+      document.documentElement.style.setProperty('--impulse-primary', primaryColor);
+      document.documentElement.style.setProperty('--impulse-secondary', secondaryColor);
+      
+      // Apply critical theme CSS classes
+      document.documentElement.classList.add('impulse-theme-active');
       
       logger.debug('Applied immediate fallback styling');
     });
     
     return () => {
       document.documentElement.classList.remove('theme-fallback-applied');
+      document.documentElement.classList.remove('impulse-theme-active');
     };
   }, [logger, measure]);
 
@@ -104,7 +122,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           }
         }, FALLBACK_TIMEOUT);
         
-        // Check localStorage first
+        // Check localStorage first - completely decoupled from auth
         const localThemeId = getThemeFromLocalStorage();
         if (localThemeId && isValidUUID(localThemeId)) {
           logger.info('Theme found in localStorage, attempting to load', { details: { localThemeId } });
