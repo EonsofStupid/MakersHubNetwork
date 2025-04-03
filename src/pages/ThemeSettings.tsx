@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { PaintBrush, ArrowLeft, Check } from "lucide-react";
+import { Settings, Palette, Paintbrush } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -142,7 +141,7 @@ export default function ThemeSettings() {
       </div>
       
       <div className="flex items-center gap-2 mb-6">
-        <PaintBrush className="h-5 w-5 text-primary" />
+        <Paintbrush className="h-5 w-5 text-primary" />
         <h1 className="text-2xl font-bold">Theme Settings</h1>
       </div>
       

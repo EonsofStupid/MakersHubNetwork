@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -13,7 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, UserCircle, Settings, LogOut, LinkIcon, Github, Mail, PaintBrush } from "lucide-react";
+import { Shield, UserCircle, Settings, LogOut, LinkIcon, Github, Mail, Paintbrush } from "lucide-react";
 import { useAuth } from "@/auth/hooks/useAuth";
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 import { useLogger } from "@/hooks/use-logger";
@@ -67,7 +66,6 @@ export function UserMenu() {
           variant="ghost"
           className="group relative h-10 w-10 rounded-full border border-primary/30 p-0 hover:bg-background/40 hover:shadow-[0_0_10px_rgba(0,240,255,0.5)] transition-all duration-300"
           style={{ 
-            // Apply theme values dynamically for better customization
             borderColor: `${themeValues.primaryColor}30`,
             boxShadow: open ? `0 0 10px ${themeValues.primaryColor}50` : 'none',
           }}
@@ -129,7 +127,7 @@ export function UserMenu() {
           {/* Theme Settings Menu Item */}
           <DropdownMenuItem asChild>
             <Link to="/theme-settings" className="flex cursor-pointer items-center gap-2 text-foreground/90 hover:text-primary focus:text-primary">
-              <PaintBrush className="h-4 w-4" />
+              <Paintbrush className="h-4 w-4" />
               <span>Theme Settings</span>
             </Link>
           </DropdownMenuItem>

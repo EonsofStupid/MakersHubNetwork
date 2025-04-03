@@ -4,14 +4,13 @@ import { useThemeStore } from '@/stores/theme/store';
 import { ThemeComponent } from '@/stores/theme/types';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { generateUtilityClasses } from '../utils/themeUtils';
-import { themeRegistry } from '../ThemeRegistry';
+import { defaultImpulseTokens } from '../impulse/tokens';
 
 export function useAdminTheme() {
   const { currentTheme, adminComponents, loadAdminComponents } = useThemeStore();
   const [isLoading, setIsLoading] = useState(true);
   const [componentStyles, setComponentStyles] = useState<Record<string, any>>({});
-  const logger = useLogger('useAdminTheme', LogCategory.THEME);
+  const logger = useLogger('useAdminTheme', LogCategory.THEME as any);
 
   // Convert component array to record indexed by component name
   useEffect(() => {
@@ -30,8 +29,8 @@ export function useAdminTheme() {
         const componentMap: Record<string, any> = {};
         
         adminComponents.forEach((component: ThemeComponent) => {
-          const componentName = component.path.split('.').pop() || '';
-          componentMap[componentName] = JSON.parse(component.value);
+          const componentName = component.component_name;
+          componentMap[componentName] = component.styles;
         });
         
         setComponentStyles(componentMap);
@@ -50,11 +49,11 @@ export function useAdminTheme() {
     processComponents();
   }, [adminComponents, loadAdminComponents, logger]);
 
-  // Get impulse theme from registry
-  const impulseTheme = themeRegistry.getActiveTheme();
+  // Get impulse theme
+  const impulseTheme = defaultImpulseTokens;
   
-  // Generate utility classes from theme
-  const utilityClasses = generateUtilityClasses(impulseTheme);
+  // Generate utility classes from theme - temporarily use empty object
+  const utilityClasses = {};
 
   return {
     currentTheme,
