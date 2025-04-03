@@ -1,148 +1,81 @@
 
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
 import { ImpulseTheme } from '../../types/impulse.types';
-import { safeGet } from './safeThemeAccess';
-
-const logger = getLogger('ThemeUtils', { category: LogCategory.THEME });
 
 /**
- * Get a property from a theme with safe fallback
+ * Gets a nested property from a theme object by path
  */
-export function getThemeProperty<T>(
-  theme: ImpulseTheme | null | undefined,
-  path: string,
-  defaultValue: T
-): T {
-  return safeGet<T>(theme, path, defaultValue);
-}
-
-/**
- * Create an RGB string from a hex color
- */
-export function hexToRgb(hex: string): { r: number, g: number, b: number } {
-  if (!hex) return { r: 0, g: 0, b: 0 };
+export function getThemeProperty(theme: any, path: string, defaultValue: any = undefined): any {
+  if (!theme) return defaultValue;
   
-  // Remove the hash if it exists
-  hex = hex.replace(/^#/, '');
+  const parts = path.split('.');
+  let current = theme;
   
-  // Handle rgb or rgba format
-  if (hex.startsWith('rgb')) {
-    const components = hex.match(/\d+/g);
-    if (components && components.length >= 3) {
-      return {
-        r: parseInt(components[0], 10),
-        g: parseInt(components[1], 10),
-        b: parseInt(components[2], 10)
-      };
+  for (const part of parts) {
+    if (current === undefined || current === null || typeof current !== 'object') {
+      return defaultValue;
     }
+    current = current[part];
   }
   
-  // Parse hex format
-  const shorthandRegex = /^([a-f\d])([a-f\d])([a-f\d])$/i;
-  hex = hex.replace(shorthandRegex, (_, r, g, b) => r + r + g + g + b + b);
+  return current !== undefined ? current : defaultValue;
+}
+
+/**
+ * Deeply merges two objects, preferring values from the second object
+ */
+export function deepMerge(target: any, source: any): any {
+  const output = { ...target };
   
-  const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  
-  if (!result) {
-    logger.warn(`Invalid hex color: ${hex}, returning black`);
-    return { r: 0, g: 0, b: 0 };
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      if (isObject(source[key])) {
+        if (!(key in target)) {
+          Object.assign(output, { [key]: source[key] });
+        } else {
+          output[key] = deepMerge(target[key], source[key]);
+        }
+      } else {
+        Object.assign(output, { [key]: source[key] });
+      }
+    });
   }
   
+  return output;
+}
+
+/**
+ * Checks if a value is an object
+ */
+function isObject(item: any): boolean {
+  return item && typeof item === 'object' && !Array.isArray(item);
+}
+
+/**
+ * Generates utility classes from theme for use in components
+ */
+export function generateUtilityClasses(theme: ImpulseTheme): Record<string, string> {
   return {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  };
-}
-
-/**
- * Create a rgba color string from hex and opacity
- */
-export function hexToRgba(hex: string, opacity: number): string {
-  const { r, g, b } = hexToRgb(hex);
-  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-}
-
-/**
- * Convert a color to RGB string format (r, g, b)
- */
-export function toRgbString(color: string): string {
-  const { r, g, b } = hexToRgb(color);
-  return `${r}, ${g}, ${b}`;
-}
-
-/**
- * Get a CSS compatible color value, supporting various formats
- */
-export function getCssColor(
-  theme: ImpulseTheme | null | undefined,
-  path: string,
-  defaultColor: string,
-  format: 'hex' | 'rgb' | 'rgba' = 'hex',
-  opacity?: number
-): string {
-  const color = getThemeProperty(theme, path, defaultColor);
-  
-  if (format === 'hex') {
-    return color;
-  } else if (format === 'rgb') {
-    const { r, g, b } = hexToRgb(color);
-    return `rgb(${r}, ${g}, ${b})`;
-  } else if (format === 'rgba' && typeof opacity === 'number') {
-    return hexToRgba(color, opacity);
-  }
-  
-  return color;
-}
-
-/**
- * Generates standardized utility classes for theme elements
- */
-export function generateUtilityClasses(
-  theme: ImpulseTheme | null | undefined
-): Record<string, string> {
-  if (!theme) return {};
-  
-  const primary = getThemeProperty(theme, 'colors.primary', '#00F0FF');
-  const secondary = getThemeProperty(theme, 'colors.secondary', '#FF2D6E');
-  
-  return {
-    button: `
-      rounded-md px-4 py-2 
-      bg-transparent border border-[${hexToRgba(primary, 0.5)}] 
-      text-[${primary}] 
-      transition-all duration-300 
-      hover:border-[${hexToRgba(primary, 0.8)}]
-      hover:bg-[${hexToRgba(primary, 0.1)}]
-      hover:shadow-[0_0_15px_${hexToRgba(primary, 0.4)}]
-      active:transform active:scale-95
-    `,
-    card: `
-      rounded-lg border border-[${hexToRgba(primary, 0.2)}]
-      bg-[rgba(28,32,42,0.7)] backdrop-blur-sm
-      transition-all duration-300
-      hover:border-[${hexToRgba(primary, 0.4)}]
-      hover:shadow-[0_0_20px_${hexToRgba(primary, 0.2)}]
-    `,
-    input: `
-      rounded-md px-3 py-2
-      bg-[rgba(0,0,0,0.2)] 
-      border border-[${hexToRgba(primary, 0.3)}]
-      text-white
-      placeholder:text-white/40
-      focus:border-[${hexToRgba(primary, 0.8)}]
-      focus:ring-1 focus:ring-[${hexToRgba(primary, 0.5)}]
-      transition-all duration-300
-    `,
-    textGradient: `
-      bg-gradient-to-r from-[${primary}] to-[${secondary}]
-      bg-clip-text text-transparent
-    `,
-    glassPanel: `
-      rounded-xl border border-white/10
-      bg-black/30 backdrop-blur-xl
-      shadow-[0_8px_32px_rgba(0,0,0,0.2)]
-    `
+    // Text colors
+    textPrimary: `text-[${theme.colors.text?.primary || '#FFFFFF'}]`,
+    textSecondary: `text-[${theme.colors.text?.secondary || 'rgba(255,255,255,0.7)'}]`,
+    textMuted: `text-[${theme.colors.text?.muted || 'rgba(255,255,255,0.5)'}]`,
+    
+    // Background colors
+    bgPrimary: `bg-[${theme.colors.primary}]`,
+    bgSecondary: `bg-[${theme.colors.secondary}]`,
+    bgMain: `bg-[${theme.colors.background?.main || '#12121A'}]`,
+    bgCard: `bg-[${theme.colors.background?.card || '#1E1E1E'}]`,
+    
+    // Border colors
+    borderPrimary: `border-[${theme.colors.primary}]`,
+    borderNormal: `border-[${theme.colors.borders?.normal || 'rgba(255,255,255,0.1)'}]`,
+    
+    // Components
+    button: `rounded-[${theme.components?.button?.radius || '0.5rem'}]`,
+    panel: `rounded-[${theme.components?.panel?.radius || '0.75rem'}]`,
+    
+    // Typography
+    fontBody: `font-[${theme.typography?.fonts?.body || 'system-ui, sans-serif'}]`,
+    fontHeading: `font-[${theme.typography?.fonts?.heading || 'system-ui, sans-serif'}]`,
   };
 }

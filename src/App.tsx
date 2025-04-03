@@ -1,92 +1,38 @@
 
-import { useEffect, lazy, Suspense } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Suspense } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { authRoutes } from "./routes/auth-routes";
-import { adminRoutes } from "./routes/admin-routes";
-import { mainRoutes } from "./routes/main-routes";
-import { useAuth } from "@/auth/hooks/useAuth";
-import { useThemeStore } from "@/stores/theme/store";
-import { getLogger } from "@/logging";
-import { LogCategory } from "@/logging";
-import { TopNavBar } from "@/components/layout/TopNavBar";
-import { MainNav } from "@/components/MainNav";
-import { Footer } from "@/components/Footer";
-import { PageLoader } from "@/components/ui/page-loader";
-import { SiteThemeProvider } from "@/components/theme/SiteThemeProvider";
-import { MakersBadge } from "@/components/brand/MakersBadge";
+import { Layout } from "@/components/layout/Layout";
+import { authRoutes } from "@/routes/auth-routes";
+import { appRoutes } from "@/routes/app-routes";
+import { adminRoutes } from "@/admin/routes/admin-routes";
+import { ThemeInitializer } from "@/theme/ThemeInitializer";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 
-// Lazy load pages
-const HomePage = lazy(() => import("@/pages/HomePage"));
-const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
+// Add lazy loaded routes
+import Home from "@/pages/Home";
+import NotFound from "@/pages/NotFound";
 
-function App() {
-  const { pathname } = useLocation();
-  const { initialized, initialize } = useAuth();
-  const { hydrateTheme } = useThemeStore();
-  const logger = getLogger("App", LogCategory.SYSTEM);
-
-  // Initialize auth and theme on app start
-  useEffect(() => {
-    const initApp = async () => {
-      logger.info("Initializing application");
-      
-      try {
-        // Initialize auth first
-        await initialize();
-        
-        // Then hydrate theme
-        await hydrateTheme();
-        
-        logger.info("Application initialized successfully");
-      } catch (error) {
-        logger.error("Failed to initialize application", {
-          details: {
-            error: error instanceof Error ? error.message : String(error),
-          },
-        });
-      }
-    };
-
-    initApp();
-  }, [initialize, hydrateTheme, logger]);
-
-  // Determine if we're in the admin section
-  const isAdminRoute = pathname.startsWith("/admin");
-
+export default function App() {
   return (
-    <SiteThemeProvider>
-      <div className="min-h-screen flex flex-col">
-        {!isAdminRoute && <MainNav />}
-      
-        <main className="flex-1">
-          <Suspense fallback={<PageLoader />}>
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
+        <ThemeInitializer>
+          <Suspense fallback={<LoadingScreen />}>
             <Routes>
-              {/* Main routes */}
-              <Route path="/" element={<HomePage />} />
-              
-              {/* Auth routes */}
-              {authRoutes}
-              
-              {/* Admin routes */}
+              <Route element={<Layout />}>
+                <Route path="/" element={<Home />} />
+                {authRoutes}
+                {appRoutes}
+                <Route path="*" element={<NotFound />} />
+              </Route>
               {adminRoutes}
-              
-              {/* Additional main routes */}
-              {mainRoutes}
-              
-              {/* 404 route */}
-              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
-        </main>
-        
-        {!isAdminRoute && <Footer />}
-        
-        <Toaster />
-        <MakersBadge />
-      </div>
-    </SiteThemeProvider>
+          <Toaster />
+        </ThemeInitializer>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
-
-export default App;
