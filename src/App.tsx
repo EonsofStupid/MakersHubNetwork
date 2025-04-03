@@ -7,7 +7,7 @@ import { Layout } from "@/components/layout/Layout";
 import { authRoutes } from "@/routes/auth-routes";
 import { appRoutes } from "@/routes/app-routes";
 import { adminRoutes } from "@/admin/routes/admin-routes";
-import { ThemeInitializer } from "@/theme/ThemeInitializer";
+import { ThemeInitializer } from "@/theme/ui/ThemeInitializer";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 
 // Add lazy loaded routes
