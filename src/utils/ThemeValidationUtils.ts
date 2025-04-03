@@ -4,6 +4,7 @@ import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { Theme } from '@/types/theme';
 import { ensureHexColor } from '@/admin/theme/utils/colorUtils';
+import { validateThemeSchema as validateThemeSchemaCore } from '@/admin/theme/utils/themeUtils';
 
 const logger = getLogger('ThemeValidationUtils', { category: LogCategory.THEME as string });
 
@@ -47,6 +48,12 @@ export function validateThemeVariables(): boolean {
     return false;
   }
 }
+
+/**
+ * Validates if a theme object has all required properties
+ * Re-export the validateThemeSchema function from themeUtils
+ */
+export const validateThemeSchema = validateThemeSchemaCore;
 
 /**
  * Validates if a theme object has all required properties

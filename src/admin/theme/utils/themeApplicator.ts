@@ -3,7 +3,7 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { ImpulseTheme } from '@/admin/types/impulse.types';
-import { getThemeProperty } from './themeUtils';
+import { getThemeProperty, ensureStringValue } from './themeUtils';
 import { hexToHSL, hexToRgbString, ensureHexColor } from './colorUtils';
 
 const logger = getLogger('ThemeApplicator', { category: LogCategory.THEME as string });
@@ -23,11 +23,11 @@ export function applyThemeToDocument(theme: ImpulseTheme): void {
     const root = document.documentElement;
     
     // Get critical theme colors with fallbacks - using safe getThemeProperty
-    const bgColor = getThemeProperty(theme, 'colors.background.main', '#12121A');
-    const textColor = getThemeProperty(theme, 'colors.text.primary', '#F6F6F7');
-    const primaryColor = getThemeProperty(theme, 'colors.primary', '#00F0FF');
-    const secondaryColor = getThemeProperty(theme, 'colors.secondary', '#FF2D6E');
-    const accentColor = getThemeProperty(theme, 'colors.accent', '#8B5CF6');
+    const bgColor = ensureStringValue(getThemeProperty(theme, 'colors.background.main', '#12121A'));
+    const textColor = ensureStringValue(getThemeProperty(theme, 'colors.text.primary', '#F6F6F7'));
+    const primaryColor = ensureStringValue(getThemeProperty(theme, 'colors.primary', '#00F0FF'));
+    const secondaryColor = ensureStringValue(getThemeProperty(theme, 'colors.secondary', '#FF2D6E'));
+    const accentColor = ensureStringValue(getThemeProperty(theme, 'colors.accent', '#8B5CF6'));
     
     // Set standardized CSS variables in multiple formats for maximum compatibility
     try {
@@ -123,9 +123,9 @@ export function applyThemeToDocument(theme: ImpulseTheme): void {
     }
     
     // Set animation timing variables
-    const transitionFast = getThemeProperty(theme, 'animation.duration.fast', '150ms');
-    const transitionNormal = getThemeProperty(theme, 'animation.duration.normal', '300ms');
-    const transitionSlow = getThemeProperty(theme, 'animation.duration.slow', '500ms');
+    const transitionFast = ensureStringValue(getThemeProperty(theme, 'animation.duration.fast', '150ms'));
+    const transitionNormal = ensureStringValue(getThemeProperty(theme, 'animation.duration.normal', '300ms'));
+    const transitionSlow = ensureStringValue(getThemeProperty(theme, 'animation.duration.slow', '500ms'));
     
     root.style.setProperty('--transition-fast', transitionFast);
     root.style.setProperty('--transition-normal', transitionNormal);
@@ -161,8 +161,8 @@ export function applyThemeToDocument(theme: ImpulseTheme): void {
     root.classList.add('impulse-theme-active');
     root.classList.add('theme-applied');
     
-    // Set light/dark mode based on background color string
-    // Safely check color starts with # followed by 0, 1, or 2
+    // Set light/dark mode based on background color - USING STRING VALIDATION
+    // safely check if color is a dark color by inspecting the hex value
     const isDark = bgColor.startsWith('#0') || bgColor.startsWith('#1') || bgColor.startsWith('#2');
     if (isDark) {
       root.classList.add('dark');

@@ -3,7 +3,7 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { ImpulseTheme } from '@/admin/types/impulse.types';
-import { Theme, ThemeColors, ThemeTypography, ThemeEffects } from '@/types/theme';
+import { Theme } from '@/types/theme';
 
 const logger = getLogger('ThemeUtils', { category: LogCategory.THEME as string });
 
