@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { getLogger } from '../service/logger.service';
-import { LogCategory } from '../types';
+import { LogCategory, LogLevel } from '../types';
 import { useMemo } from 'react';
 
 export interface ErrorLoggerOptions {

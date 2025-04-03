@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { 
   Logger, 
@@ -5,16 +6,26 @@ import {
   LogLevel, 
   LogCategory, 
   LoggerOptions, 
-  LoggingConfig
+  LoggingConfig,
+  LogTransport
 } from '../types';
 import { consoleTransport } from '../transports/console.transport';
 import { memoryTransport } from '../transports/memory.transport';
 import { logEventEmitter } from '../events';
 import { isRecord } from '../utils/type-guards';
-import { defaultLoggingConfig } from '../config/default-config';
 import { safelyRenderNode } from '../utils/react';
-import { formatLogDetails } from '../utils/details-formatter';
 import { safeDetails } from '../utils/safeDetails';
+
+// Default config
+const defaultLoggingConfig: LoggingConfig = {
+  minLevel: process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG,
+  transports: [consoleTransport, memoryTransport],
+  bufferSize: 10,
+  flushInterval: 5000, // 5 seconds
+  includeSource: true,
+  includeUser: true,
+  includeSession: true
+};
 
 /**
  * Core logger service implementation
@@ -92,7 +103,7 @@ class LoggerService {
    */
   private shouldProcessLog(level: LogLevel, category?: LogCategory): boolean {
     // Check minimum log level
-    if (level < this.config.minLevel) {
+    if (level > this.config.minLevel) { // Higher number = lower priority in our enum
       return false;
     }
     
@@ -102,6 +113,15 @@ class LoggerService {
       this.config.enabledCategories &&
       this.config.enabledCategories.length > 0 &&
       !this.config.enabledCategories.includes(category)
+    ) {
+      return false;
+    }
+    
+    // Check if category is disabled
+    if (
+      category &&
+      this.config.disabledCategories &&
+      this.config.disabledCategories.includes(category)
     ) {
       return false;
     }
@@ -201,25 +221,22 @@ class LoggerService {
     // Create the log entry
     const entry: LogEntry = {
       id: uuidv4(),
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
       level,
       category: options?.category || LogCategory.GENERAL,
       message: safelyRenderNode(message),
       details: processedDetails,
-      tags: options?.tags
+      tags: options?.tags,
+      source: options?.source || 'unknown'
     };
     
     // Add optional fields based on config
-    if (this.config.includeSource && options?.source) {
-      entry.source = options.source;
-    }
-    
     if (this.config.includeUser && this.userId) {
-      entry.userId = this.userId;
+      entry.user_id = this.userId;
     }
     
     if (this.config.includeSession) {
-      entry.sessionId = this.sessionId;
+      entry.session_id = this.sessionId;
     }
     
     // Add to buffer
@@ -234,7 +251,7 @@ class LoggerService {
     
     // Check if we need to flush immediately
     if (
-      level >= LogLevel.ERROR ||
+      level <= LogLevel.ERROR || // Critical and Error logs flush immediately
       this.buffer.length >= (this.config.bufferSize || 1)
     ) {
       this.flush();
@@ -304,31 +321,63 @@ const loggerServiceInstance = LoggerService.getInstance();
 /**
  * Get a logger for a specific source
  */
-export function getLogger(source: string = 'App'): Logger {
+export function getLogger(source: string = 'App', options: LoggerOptions = {}): Logger {
   return {
-    trace: (message: string, options?: LoggerOptions) => {
-      loggerServiceInstance.trace(message, { ...options, source });
+    trace: (message: string, msgOptions?: LoggerOptions) => {
+      loggerServiceInstance.trace(message, { 
+        source, 
+        ...options, 
+        ...msgOptions 
+      });
     },
-    debug: (message: string, options?: LoggerOptions) => {
-      loggerServiceInstance.debug(message, { ...options, source });
+    debug: (message: string, msgOptions?: LoggerOptions) => {
+      loggerServiceInstance.debug(message, { 
+        source, 
+        ...options, 
+        ...msgOptions 
+      });
     },
-    info: (message: string, options?: LoggerOptions) => {
-      loggerServiceInstance.info(message, { ...options, source });
+    info: (message: string, msgOptions?: LoggerOptions) => {
+      loggerServiceInstance.info(message, { 
+        source, 
+        ...options, 
+        ...msgOptions 
+      });
     },
-    warn: (message: string, options?: LoggerOptions) => {
-      loggerServiceInstance.warn(message, { ...options, source });
+    warn: (message: string, msgOptions?: LoggerOptions) => {
+      loggerServiceInstance.warn(message, { 
+        source, 
+        ...options, 
+        ...msgOptions 
+      });
     },
-    error: (message: string, options?: LoggerOptions) => {
-      loggerServiceInstance.error(message, { ...options, source });
+    error: (message: string, msgOptions?: LoggerOptions) => {
+      loggerServiceInstance.error(message, { 
+        source, 
+        ...options, 
+        ...msgOptions 
+      });
     },
-    critical: (message: string, options?: LoggerOptions) => {
-      loggerServiceInstance.critical(message, { ...options, source });
+    critical: (message: string, msgOptions?: LoggerOptions) => {
+      loggerServiceInstance.critical(message, { 
+        source, 
+        ...options, 
+        ...msgOptions 
+      });
     },
-    success: (message: string, options?: LoggerOptions) => {
-      loggerServiceInstance.success(message, { ...options, source });
+    success: (message: string, msgOptions?: LoggerOptions) => {
+      loggerServiceInstance.success(message, { 
+        source, 
+        ...options, 
+        ...msgOptions 
+      });
     },
-    performance: (message: string, duration: number, options?: LoggerOptions) => {
-      loggerServiceInstance.performance(message, duration, { ...options, source });
+    performance: (message: string, duration: number, msgOptions?: LoggerOptions) => {
+      loggerServiceInstance.performance(message, duration, { 
+        source, 
+        ...options, 
+        ...msgOptions 
+      });
     }
   };
 }
