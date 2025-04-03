@@ -1,179 +1,109 @@
-import { z } from 'zod';
-import { ImpulseTheme } from '@/admin/types/impulse.types';
-import { Theme, ComponentTokens } from '@/types/theme';
-import { ThemeMetadata } from '@/admin/types/impulse.types';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
-import { safeDetails } from '@/logging/utils/safeDetails';
-import { 
-  ComponentTokenSchema, 
-  ImpulseThemeSchema,
-  ThemeSchema,
-  ThemeStatusEnum,
-  ThemeContextEnum
-} from '../validation/themeSchemas';
 
-const logger = getLogger('ThemeTransformers', LogCategory.THEME);
+import { Theme, ComponentTokens, ThemeToken } from '@/types/theme';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging/types';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 /**
- * Type guard for ComponentTokens
+ * Type guard for DB component rows to ensure they match ComponentTokens
  */
-export function isComponentToken(obj: unknown): obj is ComponentTokens {
-  if (!obj || typeof obj !== 'object') return false;
-  
-  const token = obj as Partial<ComponentTokens>;
+export function isValidComponentToken(component: any): component is ComponentTokens {
   return (
-    typeof token.id === 'string' &&
-    typeof token.component_name === 'string' &&
-    token.styles !== undefined
+    component &&
+    typeof component === 'object' &&
+    'id' in component &&
+    'component_name' in component &&
+    'styles' in component
   );
 }
 
-/**
- * Safe transform for component tokens
- */
-export function transformComponentTokens(data: unknown): ComponentTokens[] {
-  if (!Array.isArray(data)) return [];
-  
-  return data
-    .filter(isComponentToken)
-    .map(item => {
-      try {
-        return ComponentTokenSchema.parse(item);
-      } catch (error) {
-        logger.warn('Invalid component token structure', { 
-          details: safeDetails({ token: item, error }) 
-        });
-        return null;
-      }
-    })
-    .filter((token): token is ComponentTokens => token !== null);
-}
+const logger = getLogger('ModelTransformers', { category: LogCategory.THEME });
 
 /**
- * Safely extract ImpulseTheme structure from design tokens
+ * Transform a database row to a Theme object with proper typing
  */
-export function extractImpulseTheme(designTokens: unknown): ImpulseTheme {
-  try {
-    if (!designTokens || typeof designTokens !== 'object') {
-      logger.warn('Invalid design tokens', { details: { type: typeof designTokens } });
-      return { name: 'Fallback Theme' };
-    }
-    
-    const themeData = {
-      name: 'Extracted Theme',
-      colors: (designTokens as any).colors || {},
-      effects: (designTokens as any).effects || {},
-      animation: (designTokens as any).animation || {},
-      components: (designTokens as any).components || {},
-      typography: (designTokens as any).typography || {}
-    };
-    
-    const parseResult = ImpulseThemeSchema.safeParse(themeData);
-    
-    if (!parseResult.success) {
-      logger.warn('Failed to parse design tokens to ImpulseTheme', { 
-        details: safeDetails(parseResult.error) 
-      });
-      return { name: 'Fallback Theme' };
-    }
-    
-    return parseResult.data;
-  } catch (error) {
-    logger.error('Error extracting impulse theme', { details: safeDetails(error) });
-    return { name: 'Fallback Theme' };
-  }
-}
-
-/**
- * Transform raw DB theme to application Theme model
- */
-export function transformDbThemeToAppTheme(rawTheme: any): Theme | null {
-  try {
-    if (!rawTheme || typeof rawTheme !== 'object') {
-      logger.warn('Invalid raw theme data', { details: { type: typeof rawTheme } });
-      return null;
-    }
-    
-    // Ensure status is valid
-    const statusResult = ThemeStatusEnum.safeParse(rawTheme.status);
-    const status = statusResult.success ? statusResult.data : 'draft';
-    
-    // Transform component tokens safely
-    const componentTokens = transformComponentTokens(rawTheme.component_tokens || []);
-    
-    // Create a validated Theme object
-    const theme: Theme = {
-      id: String(rawTheme.id),
-      name: String(rawTheme.name || 'Unnamed Theme'),
-      description: String(rawTheme.description || ''),
-      status,
-      is_default: Boolean(rawTheme.is_default),
-      created_by: rawTheme.created_by ? String(rawTheme.created_by) : undefined,
-      created_at: String(rawTheme.created_at || new Date().toISOString()),
-      updated_at: String(rawTheme.updated_at || new Date().toISOString()),
-      published_at: rawTheme.published_at ? String(rawTheme.published_at) : undefined,
-      version: Number(rawTheme.version || 1),
-      cache_key: rawTheme.cache_key ? String(rawTheme.cache_key) : undefined,
-      parent_theme_id: rawTheme.parent_theme_id ? String(rawTheme.parent_theme_id) : undefined,
-      design_tokens: typeof rawTheme.design_tokens === 'object' ? rawTheme.design_tokens : {},
-      component_tokens: componentTokens,
-      composition_rules: typeof rawTheme.composition_rules === 'object' ? rawTheme.composition_rules : {},
-      cached_styles: typeof rawTheme.cached_styles === 'object' ? rawTheme.cached_styles : {},
-      is_system: Boolean(rawTheme.is_system),
-      is_active: Boolean(rawTheme.is_active)
-    };
-    
-    logger.debug('Successfully transformed DB theme to app theme', {
-      details: { themeId: theme.id, name: theme.name }
-    });
-    
-    return theme;
-  } catch (error) {
-    logger.error('Error transforming DB theme to app theme', { details: safeDetails(error) });
-    return null;
-  }
-}
-
-/**
- * Transform theme to metadata summary
- */
-export function extractThemeMetadata(theme: Theme | null): ThemeMetadata | null {
-  if (!theme) return null;
+export function dbRowToTheme(row: any): Theme | null {
+  if (!row || typeof row !== 'object') return null;
   
   try {
+    const componentTokens = Array.isArray(row.component_tokens) 
+      ? row.component_tokens
+          .filter(isValidComponentToken)
+          .map(component => ({
+            ...component,
+            context: component.context || 'site' // Default to 'site' if missing
+          }))
+      : [];
+
     return {
-      id: theme.id,
-      name: theme.name,
-      description: theme.description,
-      preview_url: undefined,
-      created_at: theme.created_at,
-      updated_at: theme.updated_at,
-      is_system: theme.is_system,
-      is_active: theme.is_active
+      id: row.id || '',
+      name: row.name || '',
+      description: row.description || '',
+      context: row.context || 'site',
+      colors: (row.design_tokens?.colors || {}),
+      typography: (row.design_tokens?.typography || {}),
+      effects: (row.design_tokens?.effects || {}),
+      components: (row.design_tokens?.components || {}),
     };
   } catch (error) {
-    logger.error('Error extracting theme metadata', { details: safeDetails(error) });
+    logger.error('Error transforming DB row to Theme', { 
+      details: safeDetails(error)
+    });
     return null;
   }
 }
 
 /**
- * Validate theme context value from any source
+ * Transform DB component rows to ComponentTokens array with proper typing
  */
-export function validateThemeContext(context: unknown): 'site' | 'admin' | 'chat' {
+export function dbRowsToComponentTokens(rows: any[]): ComponentTokens[] {
+  if (!Array.isArray(rows)) return [];
+
   try {
-    const result = ThemeContextEnum.safeParse(context);
-    if (result.success) {
-      return result.data;
-    }
-    // Default to 'site' for invalid values
-    logger.warn('Invalid theme context value, defaulting to site', { 
-      details: { receivedValue: context } 
-    });
-    return 'site';
+    return rows
+      .filter(isValidComponentToken)
+      .map(row => ({
+        id: row.id,
+        component_name: row.component_name,
+        styles: row.styles || {},
+        context: row.context || 'site',
+        description: row.description || '',
+        theme_id: row.theme_id || '',
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      }));
   } catch (error) {
-    logger.error('Error validating theme context', { details: safeDetails(error) });
-    return 'site';
+    logger.error('Error transforming DB rows to ComponentTokens', { 
+      details: safeDetails(error)
+    });
+    return [];
+  }
+}
+
+/**
+ * Transform DB token rows to ThemeToken array with proper typing
+ */
+export function dbRowsToThemeTokens(rows: any[]): ThemeToken[] {
+  if (!Array.isArray(rows)) return [];
+
+  try {
+    return rows
+      .filter(row => row && typeof row === 'object' && 'id' in row && 'token_name' in row)
+      .map(row => ({
+        id: row.id,
+        token_name: row.token_name,
+        token_value: row.token_value || '',
+        category: row.category || '',
+        description: row.description || '',
+        fallback_value: row.fallback_value,
+        theme_id: row.theme_id || '',
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      }));
+  } catch (error) {
+    logger.error('Error transforming DB rows to ThemeTokens', { 
+      details: safeDetails(error)
+    });
+    return [];
   }
 }

@@ -1,3 +1,4 @@
+
 import { Theme, ThemeToken, ComponentTokens, ThemeContext } from "@/types/theme";
 
 export interface ThemeComponent extends ComponentTokens {

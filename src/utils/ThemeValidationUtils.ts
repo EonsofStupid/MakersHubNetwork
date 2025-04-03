@@ -1,111 +1,108 @@
 
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
-import { applyFallbackStyles } from '@/admin/theme/impulse/fallback';
+import { LogCategory } from '@/logging/types';
+import { safeDetails } from '@/logging/utils/safeDetails';
+import { hexToRgbString } from './colorUtils';
 
-const logger = getLogger('ThemeValidator', LogCategory.THEME);
+const logger = getLogger('ThemeValidationUtils', { category: LogCategory.THEME });
 
 /**
- * Checks if critical theme variables are properly set in the DOM
+ * Validate theme variables have been properly applied to the DOM
+ * @returns {boolean} - Whether the theme variables are properly set
  */
 export function validateThemeVariables(): boolean {
   try {
     const root = document.documentElement;
-    const styles = getComputedStyle(root);
+    const primary = root.style.getPropertyValue('--primary');
+    const background = root.style.getPropertyValue('--background');
+    const colorPrimary = root.style.getPropertyValue('--color-primary');
     
-    // Critical variables that must be set for the UI to render correctly
-    const criticalVariables = [
-      '--color-primary',
-      '--color-background',
-      '--background',
-      '--foreground'
-    ];
-    
-    // Check each critical variable
-    const missingVariables = criticalVariables.filter(variable => {
-      const value = styles.getPropertyValue(variable).trim();
-      return !value || value === 'none' || value === 'initial';
+    // Check multiple CSS variable formats to be thorough
+    return !!(
+      (primary || colorPrimary) && 
+      background && 
+      root.classList.contains('impulse-theme-active')
+    );
+  } catch (e) {
+    logger.error('Error validating theme variables', { 
+      details: safeDetails(e)
     });
-    
-    if (missingVariables.length > 0) {
-      logger.warn('Missing critical theme variables', { 
-        details: { missing: missingVariables } 
-      });
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    logger.error('Error validating theme variables', { details: { error } });
     return false;
   }
 }
 
 /**
- * Apply emergency fallback in case of theme loading failure
+ * Apply emergency fallback styling when theme loading fails
  */
 export function applyEmergencyFallback(): void {
-  logger.warn('Applying emergency fallback theme');
-  applyFallbackStyles();
-}
-
-/**
- * Log the current state of theme variables for debugging
- */
-export function logThemeState(): void {
   try {
+    logger.warn('Applying emergency theme fallback');
     const root = document.documentElement;
-    const styles = getComputedStyle(root);
-    const themeVariables: Record<string, string> = {};
     
-    // Key variables to log
-    const keyVariables = [
-      '--color-primary',
-      '--color-secondary',
-      '--color-background',
-      '--color-text',
-      '--background',
-      '--foreground',
-      '--primary',
-      '--secondary'
-    ];
+    // Critical base fallback colors
+    root.style.setProperty('--background', '228 47% 8%');
+    root.style.setProperty('--foreground', '210 40% 98%');
+    root.style.setProperty('--primary', '186 100% 50%');
+    root.style.setProperty('--primary-foreground', '210 40% 98%');
+    root.style.setProperty('--secondary', '334 100% 59%');
     
-    // Collect current variable values
-    keyVariables.forEach(variable => {
-      themeVariables[variable] = styles.getPropertyValue(variable).trim();
+    // Direct color references
+    root.style.setProperty('--color-primary', '0, 240, 255');
+    root.style.setProperty('--color-secondary', '255, 45, 110');
+    root.style.setProperty('--impulse-primary', '#00F0FF');
+    root.style.setProperty('--impulse-secondary', '#FF2D6E');
+    
+    document.documentElement.classList.add('impulse-theme-active');
+    document.documentElement.setAttribute('data-theme-status', 'emergency');
+    
+    document.body.style.background = '#12121A';
+    document.body.style.color = '#F6F6F7';
+    
+    logger.info('Emergency fallback applied');
+  } catch (e) {
+    logger.error('Critical error in emergency fallback', { 
+      details: safeDetails(e)
     });
-    
-    // Log theme state
-    logger.debug('Current theme state', { 
-      details: { 
-        variables: themeVariables,
-        themeId: root.getAttribute('data-theme-id') || 'unknown',
-        themeStatus: root.getAttribute('data-theme-status') || 'unknown',
-        classes: root.className
-      } 
-    });
-  } catch (error) {
-    logger.error('Error logging theme state', { details: { error } });
   }
 }
 
 /**
- * Verify theme is applied, otherwise force fallback
+ * Log current theme state to console for debugging
+ */
+export function logThemeState(): void {
+  try {
+    const root = document.documentElement;
+    logger.debug('Theme state:', {
+      details: {
+        '--background': root.style.getPropertyValue('--background'),
+        '--foreground': root.style.getPropertyValue('--foreground'),
+        '--primary': root.style.getPropertyValue('--primary'),
+        '--secondary': root.style.getPropertyValue('--secondary'),
+        '--color-primary': root.style.getPropertyValue('--color-primary'),
+        'data-theme-id': root.getAttribute('data-theme-id'),
+        'data-theme-status': root.getAttribute('data-theme-status'),
+        'classes': root.className
+      }
+    });
+  } catch (e) {
+    logger.error('Error logging theme state', { 
+      details: safeDetails(e)
+    });
+  }
+}
+
+/**
+ * Verify theme has been applied at the document level
  */
 export function assertThemeApplied(): boolean {
   try {
-    const hasTheme = validateThemeVariables();
-    
-    if (!hasTheme) {
-      logger.warn('Theme not properly applied, forcing fallback');
-      applyEmergencyFallback();
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    logger.error('Error asserting theme application', { details: { error } });
-    applyEmergencyFallback();
+    const root = document.documentElement;
+    return root.style.getPropertyValue('--background') !== '' || 
+           root.style.getPropertyValue('--color-primary') !== '';
+  } catch (e) {
+    logger.error('Error checking theme application', { 
+      details: safeDetails(e)
+    });
     return false;
   }
 }

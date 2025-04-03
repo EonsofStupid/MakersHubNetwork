@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { ensureDefaultTheme, getThemeByName, DEFAULT_THEME_NAME } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
@@ -6,16 +5,21 @@ import { useToast } from '@/hooks/use-toast';
 import { DynamicKeyframes } from '@/components/theme/DynamicKeyframes';
 import { SiteThemeProvider } from '@/components/theme/SiteThemeProvider';
 import { themeRegistry } from '@/admin/theme/ThemeRegistry';
-import { defaultImpulseTokens } from '@/admin/theme/impulse/tokens';
+import { defaultImpulseTokens } from '@/admin/types/impulse.types';
 import { applyThemeToDocument } from '@/admin/theme/utils/themeApplicator';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
-import { isError, isValidUUID } from '@/logging/utils/type-guards';
+import { isValidUUID } from '@/logging/utils/type-guards';
 import { safeDetails } from '@/logging/utils/safeDetails';
-import { getThemeProperty } from '@/admin/theme/utils/themeUtils';
 import { getThemeFromLocalStorage } from '@/stores/theme/localStorage';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
-import { hexToRgbString } from '@/admin/theme/utils/themeApplicator';
+import { hexToRgbString } from '@/utils/colorUtils';
+import { 
+  validateThemeVariables, 
+  applyEmergencyFallback, 
+  logThemeState,
+  assertThemeApplied 
+} from '@/utils/ThemeValidationUtils';
 
 // Utility functions to improve resilience
 const validateThemeVariables = () => {
@@ -122,10 +126,10 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
       logger.debug('✔️ Default impulse tokens applied via applyThemeToDocument');
       
       // Force the browser to apply default colors immediately
-      const bgColor = getThemeProperty(defaultImpulseTokens, 'colors.background.main', '#12121A');
-      const textColor = getThemeProperty(defaultImpulseTokens, 'colors.text.primary', '#F6F6F7');
-      const primaryColor = getThemeProperty(defaultImpulseTokens, 'colors.primary', '#00F0FF');
-      const secondaryColor = getThemeProperty(defaultImpulseTokens, 'colors.secondary', '#FF2D6E');
+      const bgColor = defaultImpulseTokens.colors?.background?.main || '#12121A';
+      const textColor = defaultImpulseTokens.colors?.text?.primary || '#F6F6F7';
+      const primaryColor = defaultImpulseTokens.colors?.primary || '#00F0FF';
+      const secondaryColor = defaultImpulseTokens.colors?.secondary || '#FF2D6E';
       
       document.documentElement.style.backgroundColor = bgColor;
       document.documentElement.style.color = textColor;
