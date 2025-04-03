@@ -1,5 +1,5 @@
 
-import { ImpulseTheme, defaultImpulseTokens } from '@/admin/types/impulse.types';
+import { ImpulseTheme } from '@/admin/types/impulse.types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
@@ -15,9 +15,7 @@ class ThemeRegistry {
   private activeThemeId: string | null = null;
 
   constructor() {
-    // Register default theme on initialization
-    this.registerTheme('default', defaultImpulseTokens);
-    logger.debug('ThemeRegistry initialized with default theme');
+    logger.debug('ThemeRegistry initialized');
   }
 
   /**
@@ -32,76 +30,30 @@ class ThemeRegistry {
       
       // Ensure theme has required properties
       if (!theme.colors?.primary || !theme.colors?.background?.main || !theme.colors?.text?.primary) {
-        logger.warn('Theme missing required properties', { 
-          details: { 
-            id, 
-            name: theme.name, 
-            hasPrimary: !!theme.colors?.primary,
-            hasBackground: !!theme.colors?.background?.main,
-            hasTextPrimary: !!theme.colors?.text?.primary
-          } 
-        });
+        logger.warn('Theme is missing required properties', { details: { id, themeName: theme.name } });
       }
       
-      // Clone the theme to prevent external modifications
-      const safeTheme = JSON.parse(JSON.stringify(theme)) as ImpulseTheme;
-      
-      // Store with ID
-      this.themes.set(id, safeTheme);
-      logger.debug('Theme registered successfully', { details: { id, name: theme.name } });
+      this.themes.set(id, { ...theme, id });
+      logger.debug(`Theme registered: ${theme.name}`, { details: { id } });
     } catch (error) {
       logger.error('Error registering theme', { details: safeDetails(error) });
     }
   }
 
   /**
-   * Get a theme by ID
+   * Get a theme by its ID
    */
   getTheme(id: string): ImpulseTheme | null {
     try {
       const theme = this.themes.get(id);
-      
       if (!theme) {
-        logger.warn('Theme not found', { details: { id } });
+        logger.warn(`Theme not found: ${id}`);
         return null;
       }
-      
-      // Clone the theme to prevent external modifications
-      return JSON.parse(JSON.stringify(theme)) as ImpulseTheme;
+      return theme;
     } catch (error) {
       logger.error('Error getting theme', { details: safeDetails(error) });
       return null;
-    }
-  }
-
-  /**
-   * Remove a theme from the registry
-   */
-  unregisterTheme(id: string): boolean {
-    try {
-      if (id === 'default') {
-        logger.warn('Cannot unregister default theme');
-        return false;
-      }
-      
-      const deleted = this.themes.delete(id);
-      
-      if (deleted) {
-        logger.debug('Theme unregistered successfully', { details: { id } });
-        
-        // If active theme was removed, reset to default
-        if (this.activeThemeId === id) {
-          this.activeThemeId = 'default';
-          logger.info('Active theme was unregistered, reset to default');
-        }
-      } else {
-        logger.warn('Theme not found for unregistration', { details: { id } });
-      }
-      
-      return deleted;
-    } catch (error) {
-      logger.error('Error unregistering theme', { details: safeDetails(error) });
-      return false;
     }
   }
 
@@ -111,12 +63,11 @@ class ThemeRegistry {
   setActiveTheme(id: string): boolean {
     try {
       if (!this.themes.has(id)) {
-        logger.warn('Cannot set active theme - not found in registry', { details: { id } });
+        logger.warn(`Cannot set active theme - theme not found: ${id}`);
         return false;
       }
-      
       this.activeThemeId = id;
-      logger.info('Active theme set', { details: { id } });
+      logger.debug(`Active theme set: ${id}`);
       return true;
     } catch (error) {
       logger.error('Error setting active theme', { details: safeDetails(error) });
@@ -130,46 +81,58 @@ class ThemeRegistry {
   getActiveTheme(): ImpulseTheme | null {
     try {
       if (!this.activeThemeId) {
-        logger.debug('No active theme set, returning default');
-        return this.getTheme('default');
+        logger.warn('No active theme set');
+        return null;
       }
-      
       return this.getTheme(this.activeThemeId);
     } catch (error) {
       logger.error('Error getting active theme', { details: safeDetails(error) });
-      return this.getTheme('default');
+      return null;
     }
-  }
-
-  /**
-   * Get the ID of the active theme
-   */
-  getActiveThemeId(): string {
-    return this.activeThemeId || 'default';
-  }
-
-  /**
-   * Check if a theme exists in the registry
-   */
-  hasTheme(id: string): boolean {
-    return this.themes.has(id);
-  }
-
-  /**
-   * Get all registered theme IDs
-   */
-  getAllThemeIds(): string[] {
-    return Array.from(this.themes.keys());
   }
 
   /**
    * Get all registered themes
    */
   getAllThemes(): ImpulseTheme[] {
-    return Array.from(this.themes.values()).map(theme => {
-      // Clone the theme to prevent external modifications
-      return JSON.parse(JSON.stringify(theme)) as ImpulseTheme;
-    });
+    return Array.from(this.themes.values());
+  }
+
+  /**
+   * Check if a theme is registered
+   */
+  hasTheme(id: string): boolean {
+    return this.themes.has(id);
+  }
+
+  /**
+   * Unregister a theme
+   */
+  unregisterTheme(id: string): boolean {
+    try {
+      const result = this.themes.delete(id);
+      if (result) {
+        logger.debug(`Theme unregistered: ${id}`);
+        // If we just removed the active theme, clear it
+        if (this.activeThemeId === id) {
+          this.activeThemeId = null;
+          logger.debug('Active theme cleared (was unregistered)');
+        }
+      }
+      return result;
+    } catch (error) {
+      logger.error('Error unregistering theme', { details: safeDetails(error) });
+      return false;
+    }
+  }
+
+  /**
+   * Clear all themes
+   */
+  clearAll(): void {
+    this.themes.clear();
+    this.activeThemeId = null;
+    logger.debug('All themes cleared from registry');
   }
 }
 

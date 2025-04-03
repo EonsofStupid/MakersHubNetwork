@@ -1,6 +1,6 @@
 
 import { Json } from '@/integrations/supabase/types';
-import { Theme, ComponentTokens, ThemeContext } from '@/types/theme';
+import { Theme, ComponentTokens, ThemeContext, ThemeStatus } from '@/types/theme';
 import { getLogger } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { LogCategory } from '@/logging/types';
@@ -63,7 +63,7 @@ export function transformThemeModel(rawData: any): Theme | null {
 export function prepareThemeForDatabase(theme: Theme): {
   name: string;
   description?: string;
-  status: string;
+  status: ThemeStatus;
   is_default: boolean;
   created_by?: string;
   created_at?: string;
@@ -78,6 +78,7 @@ export function prepareThemeForDatabase(theme: Theme): {
   cached_styles: Json;
   is_system?: boolean;
   is_active?: boolean;
+  context?: ThemeContext;
 } {
   try {
     // Convert ComponentTokens[] to raw JSON format
@@ -110,7 +111,8 @@ export function prepareThemeForDatabase(theme: Theme): {
       composition_rules: theme.composition_rules as Json,
       cached_styles: theme.cached_styles as Json,
       is_system: theme.is_system,
-      is_active: theme.is_active
+      is_active: theme.is_active,
+      context: 'site' as ThemeContext // Default context
     };
   } catch (error) {
     logger.error('Error preparing theme for database', { details: safeDetails(error) });
@@ -131,7 +133,7 @@ export function validateThemeContext(context: unknown): ThemeContext {
 /**
  * Safely validates theme status value
  */
-export function validateThemeStatus(status: unknown): 'draft' | 'published' | 'archived' {
+export function validateThemeStatus(status: unknown): ThemeStatus {
   if (status === 'draft' || status === 'published' || status === 'archived') {
     return status;
   }

@@ -1,21 +1,8 @@
-import { Json } from "@/integrations/supabase/types";
+
+import { Json } from '@/integrations/supabase/types';
 
 export type ThemeStatus = 'draft' | 'published' | 'archived';
-
-// Standardized theme context enum - used everywhere
 export type ThemeContext = 'site' | 'admin' | 'chat';
-
-export interface ThemeToken {
-  id: string;
-  token_name: string;
-  token_value: string;
-  category: string;
-  description?: string;
-  fallback_value?: string;
-  theme_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
 
 export interface ComponentTokens {
   id: string;
@@ -28,35 +15,6 @@ export interface ComponentTokens {
   context?: ThemeContext;
 }
 
-export interface DesignTokensStructure {
-  colors?: Record<string, any>;
-  spacing?: Record<string, any>;
-  typography?: {
-    fontSizes?: Record<string, any>;
-    fontFamilies?: Record<string, any>;
-    lineHeights?: Record<string, any>;
-    letterSpacing?: Record<string, any>;
-    fonts?: Record<string, any>; // For impulse theme compatibility
-    sizes?: Record<string, any>; // For impulse theme compatibility
-  };
-  effects?: {
-    shadows?: Record<string, any>;
-    blurs?: Record<string, any>;
-    gradients?: Record<string, any>;
-    primary?: string;
-    secondary?: string;
-    tertiary?: string;
-    glow?: Record<string, any>; // For impulse theme compatibility
-  };
-  animation?: {
-    keyframes?: Record<string, any>;
-    transitions?: Record<string, any>;
-    durations?: Record<string, any>;
-  };
-  admin?: Record<string, any>;
-  components?: Record<string, any>; // For impulse theme compatibility
-}
-
 export interface Theme {
   id: string;
   name: string;
@@ -64,25 +22,16 @@ export interface Theme {
   status: ThemeStatus;
   is_default: boolean;
   created_by?: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
   published_at?: string;
-  version: number;
+  version?: number;
   cache_key?: string;
   parent_theme_id?: string;
-  design_tokens: DesignTokensStructure;
+  design_tokens: Record<string, any>;
   component_tokens: ComponentTokens[];
-  composition_rules?: Record<string, any>;
-  cached_styles?: Record<string, any>;
+  composition_rules: Record<string, any>;
+  cached_styles: Record<string, any>;
   is_system?: boolean;
   is_active?: boolean;
-}
-
-export interface ThemeContextType {
-  currentTheme: Theme | null;
-  themeTokens: ThemeToken[];
-  themeComponents: ComponentTokens[];
-  isLoading: boolean;
-  error: Error | null;
-  setTheme: (themeId: string) => Promise<void>;
 }
