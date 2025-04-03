@@ -1,12 +1,14 @@
 
 import { useCallback } from 'react';
 import { getLogger } from '../service/logger.service';
-import { LogCategory } from '../types';
+import { LogCategory, MeasurementCompletionData } from '../types';
 import { useComponentPerformance } from './useComponentPerformance';
 
 export interface PerformanceLoggerOptions {
   category?: LogCategory;
   details?: Record<string, unknown>;
+  onComplete?: (data: MeasurementCompletionData) => void;
+  threshold?: number;
 }
 
 export function usePerformanceLogger(source: string = 'Performance') {
@@ -50,6 +52,15 @@ export function usePerformanceLogger(source: string = 'Performance') {
         details: options?.details
       });
       
+      if (options?.onComplete) {
+        options.onComplete({
+          name,
+          duration,
+          success: true,
+          ...options.details
+        });
+      }
+      
       return result;
     } catch (error) {
       const duration = performance.now() - start;
@@ -65,11 +76,22 @@ export function usePerformanceLogger(source: string = 'Performance') {
           ...options?.details
         }
       });
+      
+      if (options?.onComplete) {
+        options.onComplete({
+          name,
+          duration,
+          success: false,
+          error,
+          ...options.details
+        });
+      }
+      
       throw error;
     }
   }, [logger]);
   
-  // Fix the generic type declaration to be outside the arrow function
+  // Fixed type declaration to be outside the arrow function
   const measureAsync = useCallback(<T,>(
     name: string,
     asyncFn: () => Promise<T>,
@@ -86,6 +108,15 @@ export function usePerformanceLogger(source: string = 'Performance') {
           details: options?.details
         });
         
+        if (options?.onComplete) {
+          options.onComplete({
+            name,
+            duration,
+            success: true,
+            ...options?.details
+          });
+        }
+        
         return result;
       }).catch(error => {
         const duration = performance.now() - start;
@@ -101,6 +132,17 @@ export function usePerformanceLogger(source: string = 'Performance') {
             ...options?.details
           }
         });
+        
+        if (options?.onComplete) {
+          options.onComplete({
+            name,
+            duration,
+            success: false,
+            error,
+            ...options?.details
+          });
+        }
+        
         throw error;
       });
     } catch (error) {
@@ -118,6 +160,17 @@ export function usePerformanceLogger(source: string = 'Performance') {
           ...options?.details
         }
       });
+      
+      if (options?.onComplete) {
+        options.onComplete({
+          name,
+          duration,
+          success: false,
+          error,
+          ...options?.details
+        });
+      }
+      
       throw error;
     }
   }, [logger]);
