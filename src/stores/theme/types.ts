@@ -8,13 +8,12 @@ export interface ThemeState {
   adminComponents: ComponentTokens[];
   isLoading: boolean;
   error: Error | null;
-  setTheme: (themeId: string) => Promise<void>;
-  loadAdminComponents: () => Promise<void>;
 }
 
 export interface ThemeActions {
   setTheme: (themeId: string) => Promise<void>;
   loadAdminComponents: () => Promise<void>;
+  hydrateTheme: () => Promise<void>;
 }
 
 export type ThemeStore = ThemeState & ThemeActions;

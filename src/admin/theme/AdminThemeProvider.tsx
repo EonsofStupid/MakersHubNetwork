@@ -7,7 +7,7 @@ import { defaultImpulseTokens } from './impulse/tokens';
 import { DynamicKeyframes } from './effects/DynamicKeyframes';
 import { themeRegistry } from './ThemeRegistry';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
 import './impulse/impulse-admin.css';
 import './impulse/impulse-theme.css';

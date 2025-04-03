@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
@@ -123,6 +124,18 @@ function hexToHSL(hex: string): string {
     }
     
     // Convert hex to RGB
+    const hexToRgb = (hex: string) => {
+      const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+      const formattedHex = hex.replace(shorthandRegex, (_, r, g, b) => r + r + g + g + b + b);
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(formattedHex);
+      
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    };
+    
     const rgb = hexToRgb(hex);
     if (!rgb) {
       console.warn(`Invalid hex color: ${hex}, using fallback`);
@@ -206,173 +219,108 @@ export function SiteThemeProvider({
       const b = parseInt(hex.length === 3 ? hex[2] + hex[2] : hex.substring(4, 6), 16);
       
       // Calculate relative luminance
+      // Dark mode is determined by luminance < 0.5
       const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
       return luminance < 0.5;
     }
     
-    // For RGB/A, we would need to parse it
-    // For simplicity, assume dark theme for now
+    // Default to dark if we can't determine
     return true;
   }, [variables.background]);
   
-  // Apply theme CSS variables
+  // Set CSS variables when theme changes
   useEffect(() => {
     try {
-      // Convert to Impulse theme format for standardized application
-      const impulseTheme = {
-        id: 'site-theme',
-        name: currentTheme?.name || 'Site Theme',
-        colors: {
-          primary: variables.primary,
-          secondary: variables.secondary,
-          accent: variables.accent,
-          background: {
-            main: variables.background,
-            overlay: variables.muted,
-            card: variables.card,
-            alt: variables.accent
-          },
-          text: {
-            primary: variables.foreground,
-            secondary: variables.mutedForeground,
-            accent: variables.primary,
-            muted: variables.mutedForeground
-          },
-          borders: {
-            normal: variables.border,
-            hover: variables.ring,
-            active: variables.primary,
-            focus: variables.ring
-          },
-          status: {
-            success: '#10B981',
-            warning: '#F59E0B',
-            error: variables.destructive,
-            info: '#3B82F6'
-          }
-        },
-        effects: {
-          glow: {
-            primary: `0 0 15px ${variables.primary}`,
-            secondary: `0 0 15px ${variables.secondary}`,
-            hover: `0 0 20px ${variables.primary}`
-          },
-          gradients: {
-            primary: `linear-gradient(90deg, ${variables.primary}, ${variables.effectSecondary})`,
-            secondary: `linear-gradient(90deg, ${variables.secondary}, ${variables.effectTertiary})`,
-            accent: `linear-gradient(90deg, ${variables.accent}, ${variables.effectSecondary})`
-          },
-          shadows: {
-            small: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
-            medium: '0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3)',
-            large: '0 10px 25px rgba(0, 0, 0, 0.2), 0 6px 10px rgba(0, 0, 0, 0.22)',
-            inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.15)'
-          }
-        },
-        animation: {
-          duration: {
-            fast: variables.transitionFast,
-            normal: variables.transitionNormal,
-            slow: variables.transitionSlow
-          },
-          curves: {
-            bounce: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            ease: 'cubic-bezier(0.4, 0, 0.2, 1)',
-            spring: 'cubic-bezier(0.43, 0.13, 0.23, 0.96)',
-            linear: 'linear'
-          },
-          keyframes: {
-            fade: `
-              @keyframes fade {
-                from { opacity: 0; }
-                to { opacity: 1; }
-              }
-            `,
-            pulse: `
-              @keyframes pulse {
-                0%, 100% { opacity: 0.8; }
-                50% { opacity: 0.4; }
-              }
-            `,
-            glow: `
-              @keyframes glow {
-                0%, 100% { box-shadow: 0 0 5px ${variables.primary}; }
-                50% { box-shadow: 0 0 20px ${variables.primary}; }
-              }
-            `,
-            slide: `
-              @keyframes slide {
-                from { transform: translateY(10px); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
-              }
-            `
-          }
-        },
-        components: {
-          panel: {
-            radius: variables.radiusLg,
-            padding: '1.5rem',
-            background: variables.card
-          },
-          button: {
-            radius: variables.radiusMd,
-            padding: '0.5rem 1rem',
-            transition: `all ${variables.transitionNormal} ease`
-          },
-          tooltip: {
-            radius: variables.radiusSm,
-            padding: '0.5rem',
-            background: 'rgba(0, 0, 0, 0.8)'
-          },
-          input: {
-            radius: variables.radiusMd,
-            padding: '0.5rem 0.75rem',
-            background: variables.input
-          }
-        },
-        typography: {
-          fonts: {
-            body: 'Inter, system-ui, sans-serif',
-            heading: 'Inter, system-ui, sans-serif',
-            monospace: 'Consolas, monospace'
-          },
-          sizes: {
-            xs: variables.radiusSm,
-            sm: variables.radiusMd,
-            base: variables.radiusLg,
-            md: variables.radiusLg, // Added md size to match usage
-            lg: '1.125rem',
-            xl: '1.25rem',
-            '2xl': '1.5rem',
-            '3xl': '1.875rem'
-          },
-          lineHeights: {
-            tight: '1.25',
-            normal: '1.5',
-            loose: '1.75'
-          }
-        }
-      };
+      // Apply CSS variables for Tailwind and for custom theming needs
+      const root = document.documentElement;
       
-      // Register the theme with our registry
-      themeRegistry.registerTheme('site-theme', impulseTheme);
+      // Apply background and text colors
+      root.style.setProperty('--background', hexToHSL(variables.background));
+      root.style.setProperty('--foreground', hexToHSL(variables.foreground));
       
-      // Apply the theme using our standardized utility
-      applyThemeToDocument('site-theme');
+      // Card colors
+      root.style.setProperty('--card', hexToHSL(variables.card));
+      root.style.setProperty('--card-foreground', hexToHSL(variables.cardForeground));
       
-      // Set additional CSS variables for Tailwind theme system
-      document.documentElement.style.setProperty('--impulse-theme-applied', 'true');
+      // Primary colors
+      root.style.setProperty('--primary', hexToHSL(variables.primary));
+      root.style.setProperty('--primary-foreground', hexToHSL(variables.primaryForeground));
       
-      logger.debug('Theme applied successfully from SiteThemeProvider');
-    } catch (err) {
-      logger.error('Error applying theme in SiteThemeProvider', {
-        details: safeDetails(err)
+      // Secondary colors
+      root.style.setProperty('--secondary', hexToHSL(variables.secondary));
+      root.style.setProperty('--secondary-foreground', hexToHSL(variables.secondaryForeground));
+      
+      // Muted colors
+      root.style.setProperty('--muted', hexToHSL(variables.muted));
+      root.style.setProperty('--muted-foreground', hexToHSL(variables.mutedForeground));
+      
+      // Accent colors
+      root.style.setProperty('--accent', hexToHSL(variables.accent));
+      root.style.setProperty('--accent-foreground', hexToHSL(variables.accentForeground));
+      
+      // Destructive colors
+      root.style.setProperty('--destructive', hexToHSL(variables.destructive));
+      root.style.setProperty('--destructive-foreground', hexToHSL(variables.destructiveForeground));
+      
+      // Border, input, ring
+      root.style.setProperty('--border', hexToHSL(variables.border));
+      root.style.setProperty('--input', hexToHSL(variables.input));
+      root.style.setProperty('--ring', hexToHSL(variables.ring));
+      
+      // CSS variables for our effect system
+      root.style.setProperty('--site-effect-color', variables.effectColor);
+      root.style.setProperty('--site-effect-secondary', variables.effectSecondary);
+      root.style.setProperty('--site-effect-tertiary', variables.effectTertiary || '#8B5CF6');
+      
+      // RGB values for overlays
+      root.style.setProperty('--color-primary', hexToRgbString(variables.primary));
+      root.style.setProperty('--color-secondary', hexToRgbString(variables.secondary));
+      
+      // Transition durations
+      root.style.setProperty('--transition-fast', variables.transitionFast);
+      root.style.setProperty('--transition-normal', variables.transitionNormal);
+      root.style.setProperty('--transition-slow', variables.transitionSlow);
+      
+      // Animation durations
+      root.style.setProperty('--animation-fast', variables.animationFast);
+      root.style.setProperty('--animation-normal', variables.animationNormal);
+      root.style.setProperty('--animation-slow', variables.animationSlow);
+      
+      // Border radius
+      root.style.setProperty('--radius-sm', variables.radiusSm);
+      root.style.setProperty('--radius-md', variables.radiusMd);
+      root.style.setProperty('--radius-lg', variables.radiusLg);
+      root.style.setProperty('--radius-full', variables.radiusFull);
+      
+      // Apply light/dark mode
+      if (isDark) {
+        root.classList.add('dark');
+        root.classList.remove('light');
+      } else {
+        root.classList.add('light');
+        root.classList.remove('dark');
+      }
+      
+      logger.debug('Applied theme CSS variables', { 
+        category: LogCategory.THEME,
+        details: { isDark, themeName: currentTheme?.name || 'default' } 
+      });
+    } catch (error) {
+      logger.error('Error applying CSS variables', { 
+        category: LogCategory.THEME, 
+        details: safeDetails(error)
       });
     }
-  }, [variables, currentTheme, logger]);
+  }, [variables, isDark, currentTheme, logger]);
+  
+  const contextValue = useMemo(() => ({
+    variables,
+    isDark,
+    componentStyles
+  }), [variables, isDark, componentStyles]);
   
   return (
-    <ThemeContext.Provider value={{ variables, isDark, componentStyles }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );

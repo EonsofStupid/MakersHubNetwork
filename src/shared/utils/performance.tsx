@@ -1,6 +1,6 @@
 
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 
 const logger = getLogger('PerformanceUtils');
 

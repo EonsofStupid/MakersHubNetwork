@@ -6,7 +6,6 @@ export enum LogLevel {
   CRITICAL = 0,  // Most severe
   ERROR = 1,
   WARN = 2,      // Add WARN as alias for WARNING
-  WARNING = 2,
   INFO = 3,
   DEBUG = 4,
   TRACE = 5,
@@ -125,8 +124,10 @@ export type LoggerOptions = Partial<{
  * Options for performance logging
  */
 export interface PerformanceLoggerOptions {
-  category: LogCategory;
-  threshold: number;  // Threshold in ms for warning logs
+  category?: LogCategory;
+  threshold?: number;  // Threshold in ms for warning logs
   details?: Record<string, unknown>;
   silent?: boolean;
+  onComplete?: (data: MeasurementCompletionData) => void;
 }
+
