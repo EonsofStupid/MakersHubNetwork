@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export function AdminNavbar() {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   
   const toggleTheme = () => {
@@ -73,7 +73,7 @@ export function AdminNavbar() {
                 <Link to="/admin/settings">Settings</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()}>
+              <DropdownMenuItem onClick={() => logout()}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>

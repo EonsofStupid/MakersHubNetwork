@@ -60,7 +60,25 @@ export function transformThemeModel(rawData: any): Theme | null {
 /**
  * Convert application Theme model to database format
  */
-export function prepareThemeForDatabase(theme: Theme): Record<string, any> {
+export function prepareThemeForDatabase(theme: Theme): {
+  name: string;
+  description?: string;
+  status: string;
+  is_default: boolean;
+  created_by?: string;
+  created_at?: string;
+  updated_at?: string;
+  published_at?: string;
+  version?: number;
+  cache_key?: string;
+  parent_theme_id?: string;
+  design_tokens: Json;
+  component_tokens: Json;
+  composition_rules: Json;
+  cached_styles: Json;
+  is_system?: boolean;
+  is_active?: boolean;
+} {
   try {
     // Convert ComponentTokens[] to raw JSON format
     const rawComponentTokens = theme.component_tokens.map(token => ({
@@ -74,7 +92,7 @@ export function prepareThemeForDatabase(theme: Theme): Record<string, any> {
       context: token.context || 'site'
     }));
 
-    // Return database-ready object
+    // Return database-ready object with explicit type structure
     return {
       name: theme.name,
       description: theme.description || '',
