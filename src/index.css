@@ -1,313 +1,122 @@
-@import './admin/theme/fallback/theme-fallback.css';
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-@import './components/MainNav/styles/cyber-effects.css';
-@import './components/landing/styles/feature-cta.css';
-@import './components/landing/styles/build-showcase.css';
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
 @import './theme/site-theme.css';
-@import './admin/theme/impulse/impulse-theme.css';
+@import './theme/animations.css';
 @import './admin/theme/impulse/impulse.css';
 @import './admin/theme/impulse/impulse-admin.css';
+@import './admin/theme/impulse/impulse-theme.css';
+@import './admin/styles/impulse-admin.css';
+@import './admin/styles/cyber-effects.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Base layer additions for better loading experience */
 @layer base {
   :root {
-    --background: hsl(var(--site-background));
-    --foreground: hsl(var(--site-foreground));
-    --card: hsl(var(--site-card));
-    --card-foreground: hsl(var(--site-card-foreground));
-    --popover: hsl(var(--site-card));
-    --popover-foreground: hsl(var(--site-card-foreground));
-    --primary: hsl(var(--site-primary));
-    --primary-foreground: hsl(var(--site-primary-foreground));
-    --secondary: hsl(var(--site-secondary));
-    --secondary-foreground: hsl(var(--site-secondary-foreground));
-    --muted: hsl(var(--site-muted));
-    --muted-foreground: hsl(var(--site-muted-foreground));
-    --accent: hsl(var(--site-accent));
-    --accent-foreground: hsl(var(--site-accent-foreground));
-    --destructive: hsl(var(--site-destructive));
-    --destructive-foreground: hsl(var(--site-destructive-foreground));
-    --border: hsl(var(--site-border));
-    --input: hsl(var(--site-input));
-    --ring: hsl(var(--site-ring));
-    --radius: var(--site-radius-md);
-    --effect-color: var(--site-effect-color);
+    --background: 228 47% 8%;
+    --foreground: 210 40% 98%;
+    --card: 228 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 228 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 186 100% 50%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 334 100% 59%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 228 47% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 228 47% 15%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 228 47% 15%;
+    --input: 228 47% 15%;
+    --ring: 228 47% 20%;
+    --radius: 0.5rem;
   }
+}
 
-  * {
-    @apply border-border selection:bg-primary/20 selection:text-primary;
+@layer base {
+  html, body {
+    @apply antialiased;
+    scroll-behavior: smooth;
   }
   
   body {
-    @apply bg-background text-foreground min-h-screen overflow-x-hidden;
-    
-    /* Fallback colors to prevent flash of unstyled content */
-    background-color: #12121A;
-    color: #F6F6F7;
+    @apply bg-background text-foreground overflow-x-hidden;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
   
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/30 rounded-full border-2 border-transparent border-solid bg-clip-padding;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/50;
+  }
+  
+  /* Prevent iOS touch callout */
+  * {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
 @layer components {
-  /* Footer-specific styles - prefixed with footer- to ensure uniqueness */
-  .footer-container {
-    @apply fixed bottom-0 left-0 right-0 w-full z-40 transition-all ease-in-out;
-    animation: footer-float 3s ease-in-out infinite;
-    transition-duration: 1500ms;
-  }
-
-  .footer-base {
-    @apply bg-background/20 backdrop-blur-xl shadow-[0_-8px_32px_0_rgba(0,240,255,0.2)] border-t border-primary/30;
-  }
-
-  .footer-gradient {
-    @apply before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-100 before:transition-opacity;
-    transition-duration: 1000ms;
-  }
-
-  .footer-transform {
-    transform: perspective(1000px) rotateX(1deg);
-    clip-path: polygon(0 100%, 100% 100%, 98% 0%, 2% 0%);
-  }
-
-  @keyframes footer-float {
-    0%, 100% {
-      transform: perspective(1000px) rotateX(1deg) translateY(0);
-    }
-    50% {
-      transform: perspective(1000px) rotateX(2deg) translateY(-10px);
-    }
-  }
-
-  @keyframes footer-pulse {
-    0%, 100% {
-      opacity: 0.8;
-      box-shadow: 0 -8px 32px 0 rgba(0,240,255,0.2);
-    }
-    50% {
-      opacity: 1;
-      box-shadow: 0 -12px 48px 0 rgba(0,240,255,0.3);
-    }
-  }
-
-  .footer-animate {
-    animation: footer-pulse 4s ease-in-out infinite;
-  }
-
-  /* Simpler, more performant cyber-text effects */
-  .cyber-text {
-    @apply relative inline-block;
-  }
-
-  .mad-scientist-hover {
-    @apply relative overflow-hidden transition-all duration-300;
-  }
-
-  .mad-scientist-hover::before {
-    @apply content-[''] absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 translate-x-[-200%] animate-pulse-slow;
-  }
-
-  .mad-scientist-hover:hover::before {
-    @apply translate-x-[200%] transition-transform duration-1000;
-  }
-
-  .mad-scientist-hover:hover {
-    @apply text-primary shadow-[0_0_15px_rgba(0,240,255,0.5)] scale-105;
-  }
-
+  /* Glass morphism effect */
   .glass-morphism {
-    @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)];
+    @apply bg-background/20 backdrop-blur-xl border border-primary/20;
   }
   
-  .neo-blur {
-    @apply backdrop-blur-2xl bg-black/40 border border-white/10;
-  }
-
-  /* Enhanced CTA Styles and Effects */
-  .cyber-card {
-    @apply relative overflow-hidden rounded-lg border border-primary/20 bg-background/40 backdrop-blur-xl
-           transition-all duration-300 hover:border-primary/40
-           before:absolute before:inset-0 before:bg-gradient-to-br 
-           before:from-primary/5 before:via-secondary/5 before:to-primary/5;
-  }
-
-  .cyber-glow {
-    @apply relative
-           after:absolute after:inset-0 
-           after:bg-gradient-to-r after:from-primary/0 after:via-primary/30 after:to-primary/0
-           after:blur-xl after:opacity-0
-           hover:after:opacity-100 after:transition-opacity after:duration-500;
-  }
-
-  /* New Random CTA Effects */
-  .cyber-glitch {
-    animation: cta-glitch 0.5s ease-in-out infinite alternate;
-  }
-
-  .cyber-particles::before,
-  .cyber-particles::after {
-    content: '';
-    @apply absolute pointer-events-none;
-    width: 3px;
-    height: 3px;
-    background-color: var(--effect-color, #00F0FF);
-    box-shadow: 
-      20px 10px var(--effect-color, #00F0FF),
-      -40px 30px var(--effect-color, #00F0FF),
-      80px -20px var(--effect-color, #00F0FF),
-      -100px -40px var(--effect-color, #00F0FF);
-    animation: cta-particles 2s linear infinite;
-    opacity: 0.8;
-  }
-
-  .cyber-gradient-flow {
+  /* Data stream effect for cyber theme */
+  .mainnav-data-stream {
     position: relative;
     overflow: hidden;
   }
-
-  .cyber-gradient-flow::before {
-    content: "";
-    @apply absolute inset-0 opacity-60;
-    background: linear-gradient(90deg, transparent, var(--effect-color, #00F0FF), transparent);
-    background-size: 200% 100%;
-    animation: cta-gradient-flow 1.5s linear infinite;
-  }
-
-  .particles-effect {
-    @apply absolute inset-0 overflow-hidden;
-  }
-
-  .particles-effect::before,
-  .particles-effect::after {
+  
+  .mainnav-data-stream::before {
     content: '';
     position: absolute;
-    width: 3px;
-    height: 3px;
-    background-color: var(--effect-color, #00F0FF);
-    border-radius: 50%;
-    opacity: 0;
-    animation: particle-burst 0.8s ease-out forwards;
-  }
-
-  .particles-effect::before {
-    left: 30%;
-    top: 40%;
-  }
-
-  .particles-effect::after {
-    left: 70%;
-    top: 60%;
-  }
-
-  /* CTA Effect Animations */
-  @keyframes cta-glitch {
-    0% {
-      transform: translate(0);
-      text-shadow: 0 0 0 var(--effect-color, #00F0FF);
-    }
-    25% {
-      transform: translate(-2px, 2px);
-      text-shadow: -1px 0 2px var(--effect-color, #00F0FF);
-    }
-    50% {
-      transform: translate(0);
-      text-shadow: 0 0 0 var(--effect-color, #00F0FF);
-    }
-    75% {
-      transform: translate(2px, -2px);
-      text-shadow: 1px 0 2px var(--effect-color, #00F0FF);
-    }
-    100% {
-      transform: translate(0);
-      text-shadow: 0 0 0 var(--effect-color, #00F0FF);
-    }
-  }
-
-  @keyframes cta-particles {
-    0% { transform: translateY(0) translateX(0); }
-    25% { transform: translateY(-20px) translateX(10px); }
-    50% { transform: translateY(0) translateX(20px); }
-    75% { transform: translateY(20px) translateX(10px); }
-    100% { transform: translateY(0) translateX(0); }
-  }
-
-  @keyframes cta-gradient-flow {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  @keyframes particle-burst {
-    0% {
-      transform: scale(0);
-      opacity: 0;
-    }
-    20% {
-      opacity: 1;
-    }
-    80% {
-      transform: scale(10);
-      opacity: 0.8;
-    }
-    100% {
-      transform: scale(20);
-      opacity: 0;
-    }
-  }
-
-  .text-gradient {
-    @apply bg-gradient-to-br from-primary via-white to-secondary bg-clip-text text-transparent;
-  }
-
-  .border-glow {
-    @apply border border-primary/20 shadow-[0_0_15px_rgba(0,240,255,0.2)]
-           hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.4)]
-           transition-all duration-300;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+      rgba(0, 240, 255, 0) 0%,
+      rgba(0, 240, 255, 0.05) 20%,
+      rgba(0, 240, 255, 0.1) 40%,
+      rgba(0, 240, 255, 0.05) 60%,
+      rgba(0, 240, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: data-stream 8s linear infinite;
+    pointer-events: none;
   }
   
-  /* Safe animation definition for gradient backgrounds */
-  @keyframes gradient-flow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  
-  .animate-gradient {
-    background-size: 200% 200%;
-    animation: gradient-flow 3s ease infinite;
-  }
-}
-
-@layer utilities {
-  .animation-delay-2000 {
-    animation-delay: 2s;
-  }
-  .animation-delay-4000 {
-    animation-delay: 4s;
+  /* Particle effect for headers */
+  .mainnav-glitch-particles::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(rgba(0, 240, 255, 0.3) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.1;
+    pointer-events: none;
   }
 }
 
-/* Custom scrollbar styles */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-primary/30 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary/50;
+@keyframes data-stream {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

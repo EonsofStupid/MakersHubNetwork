@@ -1,349 +1,275 @@
 
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { ThemeState, ThemeStore } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
-import { Theme, ComponentTokens } from '@/types/theme';
-import { 
-  saveThemeToLocalStorage,
-  getThemeFromLocalStorage
-} from './localStorage';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
-const logger = getLogger('themeStore', { category: LogCategory.THEME });
+const logger = getLogger('ThemeStore', { category: LogCategory.THEME });
 
-export interface ThemeComponent extends ComponentTokens {
-  theme_id: string;
-  context: 'site' | 'admin' | 'print';
-}
-
-export interface ThemeStore {
-  // Theme state
-  currentTheme: Theme | null;
-  themeComponents: ThemeComponent[];
-  adminComponents: ThemeComponent[];
-  isLoading: boolean;
-  error: Error | null;
-
-  // Theme actions
-  loadTheme: (themeId: string) => Promise<Theme>;
-  setTheme: (themeId: string) => Promise<void>;
-  loadComponents: (themeId: string) => Promise<ThemeComponent[]>;
-  loadAdminComponents: () => Promise<ThemeComponent[]>;
-  updateComponent: (component: ThemeComponent) => Promise<ThemeComponent>;
-  createComponent: (component: Omit<ThemeComponent, 'id' | 'created_at' | 'updated_at'>) => Promise<ThemeComponent>;
-  deleteComponent: (componentId: string) => Promise<void>;
-  hydrateTheme: () => Promise<void>;
-}
+// Initial state
+const initialState: ThemeState = {
+  currentTheme: null,
+  themeTokens: [],
+  themeComponents: [],
+  adminComponents: [],
+  isLoading: false,
+  error: null
+};
 
 export const useThemeStore = create<ThemeStore>()(
-  devtools(
+  persist(
     (set, get) => ({
-      // Initial state
-      currentTheme: null,
-      themeComponents: [],
-      adminComponents: [],
-      isLoading: false,
-      error: null,
-
-      // Hydrate theme from localStorage or use the default
-      hydrateTheme: async () => {
-        const storedThemeId = getThemeFromLocalStorage();
-        if (storedThemeId) {
-          try {
-            logger.info('Hydrating theme from localStorage', { details: { themeId: storedThemeId } });
-            await get().setTheme(storedThemeId);
-          } catch (error) {
-            logger.error('Failed to hydrate theme, using default', { details: { error } });
-            // Try to set the default theme
-            try {
-              const { data } = await supabase
-                .from('themes')
-                .select('id')
-                .eq('is_default', true)
-                .single();
-                
-              if (data?.id) {
-                await get().setTheme(data.id);
-              }
-            } catch (defaultError) {
-              logger.error('Failed to load default theme as well', { details: { defaultError } });
-              set({ error: new Error('Failed to load any theme'), isLoading: false });
-            }
-          }
-        } else {
-          logger.info('No theme in localStorage, attempting to load default');
-          try {
-            const { data } = await supabase
-              .from('themes')
-              .select('id')
-              .eq('is_default', true)
-              .single();
-              
-            if (data?.id) {
-              await get().setTheme(data.id);
-            }
-          } catch (error) {
-            logger.error('Failed to load default theme', { details: { error } });
-            set({ error: new Error('Failed to load default theme'), isLoading: false });
-          }
-        }
-      },
-
-      // Actions
-      loadTheme: async (themeId: string) => {
-        set({ isLoading: true, error: null });
-        
+      ...initialState,
+      
+      setTheme: async (themeId: string) => {
         try {
-          const { data, error } = await supabase
+          set({ isLoading: true, error: null });
+          logger.info('Setting theme', { details: { themeId } });
+          
+          // 1. Get theme details
+          const { data: theme, error: themeError } = await supabase
             .from('themes')
             .select('*')
             .eq('id', themeId)
             .single();
-
-          if (error) throw error;
-          if (!data) throw new Error(`Theme not found: ${themeId}`);
-
-          // Transform the raw data to match the Theme interface
-          const theme: Theme = {
-            id: data.id,
-            name: data.name,
-            description: data.description || '',
-            status: data.status || 'published',
-            is_default: data.is_default || false,
-            created_by: data.created_by || '',
-            created_at: data.created_at || new Date().toISOString(),
-            updated_at: data.updated_at || new Date().toISOString(),
-            published_at: data.published_at,
-            version: data.version || 1,
-            cache_key: data.cache_key,
-            parent_theme_id: data.parent_theme_id,
-            design_tokens: data.design_tokens || {},
-            component_tokens: [],
-            composition_rules: data.composition_rules || {},
-            cached_styles: data.cached_styles || {},
-            is_system: data.is_system || false,
-            is_active: data.is_active || true,
-          };
-
-          set({ currentTheme: theme, isLoading: false });
           
-          // Save successful theme to localStorage
-          saveThemeToLocalStorage(themeId);
+          if (themeError) throw themeError;
           
-          return theme;
-        } catch (error: any) {
-          set({ error, isLoading: false });
-          throw error;
-        }
-      },
-
-      setTheme: async (themeId: string) => {
-        const { loadTheme, loadComponents } = get();
-        
-        try {
-          const theme = await loadTheme(themeId);
-          const components = await loadComponents(themeId);
-          
-          set({ 
-            currentTheme: theme,
-            themeComponents: components,
-            isLoading: false,
-            error: null
-          });
-          
-          // Save to localStorage
-          saveThemeToLocalStorage(themeId);
-        } catch (error: any) {
-          set({ error, isLoading: false });
-          throw error;
-        }
-      },
-
-      loadComponents: async (themeId: string) => {
-        set({ isLoading: true, error: null });
-        
-        try {
-          const { data, error } = await supabase
-            .from('theme_components')
+          // 2. Get theme tokens
+          const { data: tokens, error: tokensError } = await supabase
+            .from('theme_tokens')
             .select('*')
             .eq('theme_id', themeId);
-
-          if (error) throw error;
-
-          // Transform data to match the ThemeComponent interface
-          const components: ThemeComponent[] = (data || []).map(item => ({
-            id: item.id,
-            component_name: item.component_name || '',
-            styles: item.styles || {},
-            theme_id: item.theme_id || themeId,
-            context: (item.context as 'site' | 'admin' | 'print') || 'site',
-            created_at: item.created_at,
-            updated_at: item.updated_at,
-            description: item.description,
-          }));
-
-          set({ themeComponents: components, isLoading: false });
-          return components;
-        } catch (error: any) {
-          set({ error, isLoading: false });
-          throw error;
-        }
-      },
-
-      loadAdminComponents: async () => {
-        const { currentTheme } = get();
-        if (!currentTheme) {
-          return [];
-        }
-
-        set({ isLoading: true, error: null });
-        
-        try {
-          const { data, error } = await supabase
+          
+          if (tokensError) throw tokensError;
+          
+          // 3. Get theme components for site context
+          const { data: siteComponents, error: siteComponentsError } = await supabase
             .from('theme_components')
             .select('*')
-            .eq('theme_id', currentTheme.id)
+            .eq('theme_id', themeId)
+            .eq('context', 'site');
+          
+          if (siteComponentsError) throw siteComponentsError;
+          
+          // 4. Get theme components for admin context
+          const { data: adminComponents, error: adminComponentsError } = await supabase
+            .from('theme_components')
+            .select('*')
+            .eq('theme_id', themeId)
             .eq('context', 'admin');
-
-          if (error) throw error;
-
-          // Transform data to match the ThemeComponent interface
-          const components: ThemeComponent[] = (data || []).map(item => ({
-            id: item.id,
-            component_name: item.component_name || '',
-            styles: item.styles || {},
-            theme_id: item.theme_id || currentTheme.id,
-            context: 'admin',
-            created_at: item.created_at,
-            updated_at: item.updated_at,
-            description: item.description,
-          }));
-
-          set({ adminComponents: components, isLoading: false });
-          return components;
-        } catch (error: any) {
-          set({ error, isLoading: false });
+          
+          if (adminComponentsError) throw adminComponentsError;
+          
+          set({
+            currentTheme: theme,
+            themeTokens: tokens || [],
+            themeComponents: siteComponents || [],
+            adminComponents: adminComponents || [],
+            isLoading: false
+          });
+          
+          logger.info('Theme set successfully', { details: { 
+            themeId, 
+            tokenCount: tokens?.length || 0,
+            siteComponentCount: siteComponents?.length || 0,
+            adminComponentCount: adminComponents?.length || 0
+          } });
+          
+          return;
+        } catch (error) {
+          logger.error('Error setting theme', { details: safeDetails(error) });
+          set({ error: error instanceof Error ? error : new Error('Unknown error setting theme'), isLoading: false });
           throw error;
         }
       },
-
-      updateComponent: async (component) => {
-        set({ isLoading: true, error: null });
-        
+      
+      loadAdminComponents: async () => {
         try {
+          logger.info('Loading admin components');
+          const themeId = get().currentTheme?.id;
+          
+          if (!themeId) {
+            logger.warn('No current theme set, cannot load admin components');
+            return [];
+          }
+          
+          const { data: adminComponents, error } = await supabase
+            .from('theme_components')
+            .select('*')
+            .eq('theme_id', themeId)
+            .eq('context', 'admin');
+          
+          if (error) throw error;
+          
+          set({ adminComponents: adminComponents || [] });
+          logger.info('Admin components loaded', { details: { count: adminComponents?.length || 0 } });
+          
+          return adminComponents || [];
+        } catch (error) {
+          logger.error('Error loading admin components', { details: safeDetails(error) });
+          return [];
+        }
+      },
+      
+      hydrateTheme: async () => {
+        try {
+          logger.info('Hydrating theme from storage');
+          const currentTheme = get().currentTheme;
+          
+          if (!currentTheme?.id) {
+            // Get default theme
+            const { data: defaultTheme, error: defaultThemeError } = await supabase
+              .from('themes')
+              .select('*')
+              .eq('is_default', true)
+              .single();
+            
+            if (defaultThemeError) {
+              logger.warn('No default theme found, using first available');
+              const { data: anyTheme, error: anyThemeError } = await supabase
+                .from('themes')
+                .select('*')
+                .limit(1)
+                .single();
+              
+              if (anyThemeError) throw anyThemeError;
+              
+              if (anyTheme) {
+                await get().setTheme(anyTheme.id);
+              }
+            } else if (defaultTheme) {
+              await get().setTheme(defaultTheme.id);
+            }
+          } else {
+            // Refresh theme data
+            await get().setTheme(currentTheme.id);
+          }
+          
+          logger.info('Theme hydrated successfully');
+        } catch (error) {
+          logger.error('Error hydrating theme', { details: safeDetails(error) });
+          set({ error: error instanceof Error ? error : new Error('Unknown error hydrating theme') });
+        }
+      },
+      
+      updateComponent: async (component) => {
+        try {
+          set({ isLoading: true, error: null });
+          logger.info('Updating theme component', { details: { componentId: component.id } });
+          
           const { data, error } = await supabase
             .from('theme_components')
-            .update({
-              component_name: component.component_name || '',
-              context: component.context || 'site',
-              styles: component.styles || {},
-              updated_at: new Date().toISOString()
-            })
+            .update(component)
             .eq('id', component.id)
             .select()
             .single();
-
+          
           if (error) throw error;
-
-          // Transform the returned data into a ThemeComponent
-          const updatedComponent: ThemeComponent = {
-            id: data.id,
-            component_name: data.component_name || '',
-            styles: data.styles || {},
-            theme_id: data.theme_id || component.theme_id,
-            context: (data.context as 'site' | 'admin' | 'print') || 'site',
-            created_at: data.created_at,
-            updated_at: data.updated_at,
-            description: data.description,
-          };
-
-          // Update components in state
-          set(state => ({
-            themeComponents: state.themeComponents.map(c => 
-              c.id === component.id ? updatedComponent : c
-            ),
-            adminComponents: state.adminComponents.map(c =>
-              c.id === component.id ? updatedComponent : c
-            ),
-            isLoading: false
-          }));
-
-          return updatedComponent;
-        } catch (error: any) {
-          set({ error, isLoading: false });
+          
+          // Update the appropriate components array based on context
+          if (component.context === 'admin') {
+            set({
+              adminComponents: get().adminComponents.map(c => c.id === component.id ? data : c),
+              isLoading: false
+            });
+          } else {
+            set({
+              themeComponents: get().themeComponents.map(c => c.id === component.id ? data : c),
+              isLoading: false
+            });
+          }
+          
+          logger.info('Component updated successfully', { details: { componentId: component.id } });
+          return data;
+        } catch (error) {
+          logger.error('Error updating component', { details: safeDetails(error) });
+          set({ error: error instanceof Error ? error : new Error('Unknown error updating component'), isLoading: false });
           throw error;
         }
       },
-
+      
       createComponent: async (component) => {
-        set({ isLoading: true, error: null });
-        
         try {
+          set({ isLoading: true, error: null });
+          logger.info('Creating new theme component', { details: { context: component.context } });
+          
           const { data, error } = await supabase
             .from('theme_components')
-            .insert({
-              theme_id: component.theme_id,
-              component_name: component.component_name || '',
-              context: component.context || 'site',
-              styles: component.styles || {}
-            })
+            .insert(component)
             .select()
             .single();
-
+          
           if (error) throw error;
-
-          // Transform the returned data into a ThemeComponent
-          const newComponent: ThemeComponent = {
-            id: data.id,
-            component_name: data.component_name || '',
-            styles: data.styles || {},
-            theme_id: data.theme_id || component.theme_id,
-            context: (data.context as 'site' | 'admin' | 'print') || 'site',
-            created_at: data.created_at,
-            updated_at: data.updated_at,
-            description: data.description,
-          };
-
-          // Add new component to state
-          set(state => ({
-            themeComponents: [...state.themeComponents, newComponent],
-            adminComponents: component.context === 'admin' 
-              ? [...state.adminComponents, newComponent] 
-              : state.adminComponents,
-            isLoading: false
-          }));
-
-          return newComponent;
-        } catch (error: any) {
-          set({ error, isLoading: false });
+          
+          // Add to the appropriate components array based on context
+          if (component.context === 'admin') {
+            set({
+              adminComponents: [...get().adminComponents, data],
+              isLoading: false
+            });
+          } else {
+            set({
+              themeComponents: [...get().themeComponents, data],
+              isLoading: false
+            });
+          }
+          
+          logger.info('Component created successfully', { details: { componentId: data.id } });
+          return data;
+        } catch (error) {
+          logger.error('Error creating component', { details: safeDetails(error) });
+          set({ error: error instanceof Error ? error : new Error('Unknown error creating component'), isLoading: false });
           throw error;
         }
       },
-
-      deleteComponent: async (componentId) => {
-        set({ isLoading: true, error: null });
-        
+      
+      deleteComponent: async (componentId: string) => {
         try {
+          set({ isLoading: true, error: null });
+          logger.info('Deleting theme component', { details: { componentId } });
+          
+          // First determine if it's an admin or site component
+          const adminComponent = get().adminComponents.find(c => c.id === componentId);
+          const siteComponent = get().themeComponents.find(c => c.id === componentId);
+          
           const { error } = await supabase
             .from('theme_components')
             .delete()
             .eq('id', componentId);
-
+          
           if (error) throw error;
-
-          // Remove component from state
-          set(state => ({
-            themeComponents: state.themeComponents.filter(c => c.id !== componentId),
-            adminComponents: state.adminComponents.filter(c => c.id !== componentId),
-            isLoading: false
-          }));
-        } catch (error: any) {
-          set({ error, isLoading: false });
+          
+          // Remove from the appropriate components array
+          if (adminComponent) {
+            set({
+              adminComponents: get().adminComponents.filter(c => c.id !== componentId),
+              isLoading: false
+            });
+          } else if (siteComponent) {
+            set({
+              themeComponents: get().themeComponents.filter(c => c.id !== componentId),
+              isLoading: false
+            });
+          }
+          
+          logger.info('Component deleted successfully', { details: { componentId } });
+        } catch (error) {
+          logger.error('Error deleting component', { details: safeDetails(error) });
+          set({ error: error instanceof Error ? error : new Error('Unknown error deleting component'), isLoading: false });
           throw error;
         }
       }
     }),
-    { name: 'theme-store' }
+    {
+      name: 'theme-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        currentTheme: state.currentTheme,
+      }),
+    }
   )
 );

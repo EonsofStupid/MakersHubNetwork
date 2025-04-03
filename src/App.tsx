@@ -1,82 +1,92 @@
 
-import { useEffect, Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { Toaster } from '@/components/ui/toaster';
-import { MainNav } from '@/components/MainNav';
-import { AuthProvider } from '@/auth/components/AuthProvider';
-import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
-import { KeyboardNavigation } from '@/components/KeyboardNavigation';
-import { getLogger, LogCategory } from '@/logging';
-import { LoggingProvider } from '@/logging/context/LoggingContext';
-import { initializeAuthBridge } from '@/auth/bridge';
-import { usePerformanceLogger } from '@/hooks/use-performance-logger';
+import { useEffect, lazy, Suspense } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { authRoutes } from "./routes/auth-routes";
+import { adminRoutes } from "./routes/admin-routes";
+import { mainRoutes } from "./routes/main-routes";
+import { useAuth } from "@/auth/hooks/useAuth";
+import { useThemeStore } from "@/stores/theme/store";
+import { getLogger } from "@/logging";
+import { LogCategory } from "@/logging";
+import { TopNavBar } from "@/components/layout/TopNavBar";
+import { MainNav } from "@/components/MainNav";
+import { Footer } from "@/components/Footer";
+import { PageLoader } from "@/components/ui/page-loader";
+import { SiteThemeProvider } from "@/components/theme/SiteThemeProvider";
+import { MakersBadge } from "@/components/brand/MakersBadge";
 
-// Lazy load routes for better performance
-const Index = lazy(() => import('@/pages/Index'));
-// Fix for missing modules
-const AdminRoutes = lazy(() => import('./admin/routes').then(mod => ({ default: mod.AdminRoutes })));
-const BuildRoutes = lazy(() => import('./routes/BuildRoutes'));
-const NotFoundPage = lazy(() => import('./pages/NotFound'));
+// Lazy load pages
+const HomePage = lazy(() => import("@/pages/HomePage"));
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 
-interface AppProps {
-  onInitialized?: () => void;
-}
+function App() {
+  const { pathname } = useLocation();
+  const { initialized, initialize } = useAuth();
+  const { hydrateTheme } = useThemeStore();
+  const logger = getLogger("App", LogCategory.SYSTEM);
 
-export default function App({ onInitialized }: AppProps) {
-  const logger = getLogger('App');
-  const performance = usePerformanceLogger('App');
-  
-  // Initialize the application
+  // Initialize auth and theme on app start
   useEffect(() => {
-    performance.measure('app-initialization', async () => {
-      // Initialize auth bridge for event system
-      initializeAuthBridge();
+    const initApp = async () => {
+      logger.info("Initializing application");
       
-      logger.info('Application initialized', { 
-        category: LogCategory.SYSTEM,
-        details: {
-          version: import.meta.env.VITE_APP_VERSION || 'dev',
-          environment: import.meta.env.MODE
-        }
-      });
-      
-      // Call onInitialized callback if provided
-      if (onInitialized) {
-        await onInitialized();
+      try {
+        // Initialize auth first
+        await initialize();
+        
+        // Then hydrate theme
+        await hydrateTheme();
+        
+        logger.info("Application initialized successfully");
+      } catch (error) {
+        logger.error("Failed to initialize application", {
+          details: {
+            error: error instanceof Error ? error.message : String(error),
+          },
+        });
       }
-    });
-    
-    // Return cleanup function for when the app unmounts
-    return () => {
-      logger.info('Application shutting down', { 
-        category: LogCategory.SYSTEM 
-      });
     };
-  }, [onInitialized, performance, logger]);
-  
+
+    initApp();
+  }, [initialize, hydrateTheme, logger]);
+
+  // Determine if we're in the admin section
+  const isAdminRoute = pathname.startsWith("/admin");
+
   return (
-    <LoggingProvider>
-      <ThemeInitializer>
-        <AuthProvider>
-          <MainNav />
-          
-          <Suspense fallback={
-            <div className="flex items-center justify-center min-h-screen">
-              <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-            </div>
-          }>
+    <SiteThemeProvider>
+      <div className="min-h-screen flex flex-col">
+        {!isAdminRoute && <MainNav />}
+      
+        <main className="flex-1">
+          <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/admin/*" element={<AdminRoutes />} />
-              <Route path="/build/*" element={<BuildRoutes />} />
+              {/* Main routes */}
+              <Route path="/" element={<HomePage />} />
+              
+              {/* Auth routes */}
+              {authRoutes}
+              
+              {/* Admin routes */}
+              {adminRoutes}
+              
+              {/* Additional main routes */}
+              {mainRoutes}
+              
+              {/* 404 route */}
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
-          
-          <KeyboardNavigation options={{ enabled: true, showToasts: false }} />
-          <Toaster />
-        </AuthProvider>
-      </ThemeInitializer>
-    </LoggingProvider>
+        </main>
+        
+        {!isAdminRoute && <Footer />}
+        
+        <Toaster />
+        <MakersBadge />
+      </div>
+    </SiteThemeProvider>
   );
 }
+
+export default App;

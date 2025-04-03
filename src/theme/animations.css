@@ -1,0 +1,136 @@
+
+/* Impulsivity Theme Animations */
+
+/* Morphing and pulsing effects */
+@keyframes morphing {
+  0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-width: 2px; border-color: rgba(var(--site-primary), 0.4); }
+  50% { border-width: 3px; border-color: rgba(var(--site-primary), 0.8); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes glow {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(var(--site-primary), 0.4);
+    text-shadow: 0 0 3px rgba(var(--site-primary), 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 15px rgba(var(--site-primary), 0.7);
+    text-shadow: 0 0 8px rgba(var(--site-primary), 0.7);
+  }
+}
+
+/* Text effects */
+@keyframes text-gradient-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Scale, fade, and slide effects */
+@keyframes scale-in {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fade-in-right {
+  0% { transform: translateX(-20px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Cyberpunk data stream effect */
+@keyframes data-stream {
+  0% { background-position: 0 0; }
+  100% { background-position: 200px 0; }
+}
+
+/* Apply animations via utility classes */
+.animate-morphing {
+  animation: morphing 8s ease-in-out infinite;
+}
+
+.animate-pulse-border {
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-text-gradient {
+  background-size: 200% auto;
+  animation: text-gradient-flow 3s ease-in-out infinite;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+.animate-fade-in-right {
+  animation: fade-in-right 0.5s ease-out forwards;
+}
+
+.animate-data-stream {
+  background-image: linear-gradient(
+    90deg,
+    rgba(var(--site-primary), 0) 0%,
+    rgba(var(--site-primary), 0.1) 20%,
+    rgba(var(--site-primary), 0.2) 50%, 
+    rgba(var(--site-primary), 0.1) 80%,
+    rgba(var(--site-primary), 0) 100%
+  );
+  background-size: 200px 100%;
+  animation: data-stream 3s linear infinite;
+}
+
+/* Interactive hover animations */
+.hover-glow:hover {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.hover-float:hover {
+  animation: float 4s ease-in-out infinite;
+}
+
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-border-pulse:hover {
+  animation: pulse-border 2s ease-in-out infinite;
+}
