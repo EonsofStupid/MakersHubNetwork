@@ -1,89 +1,53 @@
 
-import { v4 as uuid } from 'uuid';
-
 /**
- * Check if a value is an Error object
+ * Check if a value is a valid UUID string
  */
-export function isError(value: unknown): value is Error {
-  return value instanceof Error;
-}
-
-/**
- * Check if a value is a record (object)
- */
-export function isRecord(value: unknown): value is Record<string, any> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-/**
- * Check if a value is a string
- */
-export function isString(value: unknown): value is string {
-  return typeof value === 'string';
-}
-
-/**
- * Check if a value is a number
- */
-export function isNumber(value: unknown): value is number {
-  return typeof value === 'number' && !isNaN(value);
-}
-
-/**
- * Check if a value is a boolean
- */
-export function isBoolean(value: unknown): value is boolean {
-  return typeof value === 'boolean';
-}
-
-/**
- * Check if a string is a valid UUID
- */
-export function isValidUUID(uuid: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(uuid);
-}
-
-/**
- * Generate a UUID
- */
-export function generateUUID(): string {
-  return uuid();
-}
-
-/**
- * Format data for the details field in logs
- */
-export function toLogDetails(data: unknown): Record<string, unknown> {
-  if (data === null || data === undefined) {
-    return {};
-  }
+export function isValidUUID(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
   
-  if (isError(data)) {
-    return {
-      message: data.message,
-      stack: data.stack,
-      name: data.name
-    };
-  }
+  // UUID v4 format regex
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(value);
+}
+
+/**
+ * Check if a value is a non-empty string
+ */
+export function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+/**
+ * Check if a value is a plain object (not null, array, etc)
+ */
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype;
+}
+
+/**
+ * Check if value is a number or numeric string
+ */
+export function isNumeric(value: unknown): boolean {
+  if (typeof value === 'number') return !isNaN(value);
+  if (typeof value !== 'string') return false;
+  return !isNaN(parseFloat(value)) && isFinite(Number(value));
+}
+
+/**
+ * Check if value is an array with items
+ */
+export function isNonEmptyArray<T>(value: unknown): value is T[] {
+  return Array.isArray(value) && value.length > 0;
+}
+
+/**
+ * Check if a value is a valid ISO date string
+ */
+export function isISODateString(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
   
-  if (isRecord(data)) {
-    // Convert any Error objects in the record
-    const result: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(data)) {
-      if (isError(value)) {
-        result[key] = {
-          message: value.message,
-          stack: value.stack,
-          name: value.name
-        };
-      } else {
-        result[key] = value;
-      }
-    }
-    return result;
-  }
+  // ISO 8601 format regex (simplified)
+  const isoDateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{1,3})?(Z|[+-]\d{2}:\d{2})?)?$/;
   
-  // For primitive values, just wrap in an object
-  return { value: data };
+  return isoDateRegex.test(value) && !isNaN(Date.parse(value));
 }

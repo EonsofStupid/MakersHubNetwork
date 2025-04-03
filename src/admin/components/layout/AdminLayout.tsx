@@ -8,12 +8,12 @@ import { useAuth } from '@/auth/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { useThemeLoader } from '@/admin/theme/useThemeLoader';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 
 export function AdminLayout() {
   const { user, isLoading: authLoading } = useAuth();
   const { isLoaded: themeLoaded } = useThemeLoader();
-  const logger = useLogger('AdminLayout', LogCategory.ADMIN);
+  const logger = useLogger('AdminLayout', { category: LogCategory.ADMIN as string });
 
   useEffect(() => {
     logger.info('Admin layout mounted');

@@ -1,133 +1,138 @@
 
+import { ImpulseTheme } from '@/admin/types/impulse.types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
-import { safeDetails } from '@/logging/utils/safeDetails';
-import { ImpulseTheme } from '@/admin/types/impulse.types';
-import { Theme } from '@/types/theme';
 
 const logger = getLogger('ThemeUtils', { category: LogCategory.THEME as string });
 
 /**
- * Safely ensures a value is a string or returns a fallback
+ * Deep merge two objects
  */
-export function ensureStringValue(value: any, fallback: string = ''): string {
-  if (value === undefined || value === null) {
-    return fallback;
-  }
+export function deepMerge<T>(target: T, source: Partial<T>): T {
+  if (!source) return target;
+  if (!target) return source as T;
   
-  if (typeof value === 'string') {
-    return value;
-  }
+  const output = { ...target };
   
-  // Log a warning in development
-  if (process.env.NODE_ENV === 'development') {
-    logger.warn('Expected string value in theme property but got:', { 
-      details: { value, type: typeof value } 
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      if (isObject(source[key])) {
+        if (!(key in target)) {
+          Object.assign(output, { [key]: source[key] });
+        } else {
+          output[key] = deepMerge(target[key], source[key]);
+        }
+      } else {
+        Object.assign(output, { [key]: source[key] });
+      }
     });
   }
   
-  return fallback;
+  return output;
 }
 
 /**
- * Gets a property from a theme object safely by path
- * @param theme Theme object
- * @param path Dot notation path like 'colors.background.main'
- * @param fallback Fallback value if property doesn't exist or isn't a string
+ * Check if value is an object
  */
-export function getThemeProperty(theme: any, path: string, fallback: string = ''): string {
-  if (!theme || typeof theme !== 'object') {
-    return fallback;
-  }
-  
+function isObject(item: any): item is Record<string, any> {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+/**
+ * Get a nested property from a theme object using a dot-notated path
+ */
+export function getThemeProperty(
+  theme: Partial<ImpulseTheme>,
+  path: string,
+  defaultValue?: any
+): any {
   try {
+    if (!theme) return defaultValue;
+    
     const parts = path.split('.');
-    let current: any = theme;
+    let value: any = theme;
     
     for (const part of parts) {
-      if (current === undefined || current === null || typeof current !== 'object') {
-        return fallback;
+      if (value === null || value === undefined || typeof value !== 'object') {
+        return defaultValue;
+      }
+      value = value[part];
+    }
+    
+    return value !== undefined ? value : defaultValue;
+  } catch (error) {
+    logger.warn(`Error getting theme property: ${path}`, { 
+      details: { 
+        error: error instanceof Error ? error.message : String(error),
+        path
+      } 
+    });
+    return defaultValue;
+  }
+}
+
+/**
+ * Set a nested property on a theme object using a dot-notated path
+ */
+export function setThemeProperty(
+  theme: Partial<ImpulseTheme>,
+  path: string,
+  value: any
+): Partial<ImpulseTheme> {
+  try {
+    if (!theme) return { ...theme };
+    
+    const result = { ...theme };
+    const parts = path.split('.');
+    let current: any = result;
+    
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i];
+      if (!current[part] || typeof current[part] !== 'object') {
+        current[part] = {};
       }
       current = current[part];
     }
     
-    return ensureStringValue(current, fallback);
+    current[parts[parts.length - 1]] = value;
+    return result;
   } catch (error) {
-    logger.warn(`Error getting theme property: ${path}`, { 
-      details: safeDetails(error) 
+    logger.warn(`Error setting theme property: ${path}`, { 
+      details: { 
+        error: error instanceof Error ? error.message : String(error),
+        path
+      } 
     });
-    return fallback;
+    return theme;
   }
 }
 
 /**
- * Deep merge utility for objects
- * Used to combine default and custom theme settings
+ * Convert theme to CSS variables object
  */
-export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
-  const result = { ...target };
-
-  Object.keys(source).forEach(key => {
-    const sourceValue = source[key as keyof typeof source] as any;
-    const targetValue = target[key as keyof typeof target] as any;
-
-    if (
-      sourceValue && 
-      targetValue && 
-      typeof sourceValue === 'object' && 
-      typeof targetValue === 'object' && 
-      !Array.isArray(sourceValue) && 
-      !Array.isArray(targetValue)
-    ) {
-      result[key as keyof typeof result] = deepMerge(targetValue, sourceValue);
-    } else if (sourceValue !== undefined) {
-      result[key as keyof typeof result] = sourceValue;
-    }
-  });
-
-  return result;
-}
-
-/**
- * Validates a theme object has all required color properties
- * @returns Array of missing or invalid properties
- */
-export function validateThemeSchema(theme: any): string[] {
-  const requiredProperties = [
-    'colors.primary',
-    'colors.secondary',
-    'colors.background.main',
-    'colors.text.primary'
-  ];
+export function themeToCssVariables(theme: Partial<ImpulseTheme>): Record<string, string> {
+  const variables: Record<string, string> = {};
   
-  const issues: string[] = [];
-  
-  for (const prop of requiredProperties) {
-    const value = getThemeProperty(theme, prop);
-    if (!value) {
-      issues.push(`Missing required theme property: ${prop}`);
-    }
+  // Recursive function to flatten nested objects
+  function process(obj: any, prefix = '--impulse-') {
+    if (!obj || typeof obj !== 'object') return;
+    
+    Object.entries(obj).forEach(([key, value]) => {
+      const varName = `${prefix}${key}`;
+      
+      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        process(value, `${varName}-`);
+      } else if (typeof value === 'string' || typeof value === 'number') {
+        variables[varName] = String(value);
+      }
+    });
   }
   
-  return issues;
-}
-
-/**
- * Get the CSS variable name for a theme property
- */
-export function getCSSVariableName(path: string): string {
-  const parts = path.split('.');
-  return `--${parts.join('-')}`;
-}
-
-/**
- * Convert a theme property path to a readable label
- */
-export function getReadableLabel(path: string): string {
-  const parts = path.split('.');
-  const label = parts[parts.length - 1]
-    .replace(/([A-Z])/g, ' $1')
-    .toLowerCase();
+  // Process theme properties
+  if (theme.colors) process(theme.colors, '--impulse-');
+  if (theme.effects) process(theme.effects, '--impulse-');
+  if (theme.typography) process(theme.typography, '--impulse-');
+  if (theme.components) process(theme.components, '--impulse-');
   
-  return label.charAt(0).toUpperCase() + label.slice(1);
+  return variables;
 }
