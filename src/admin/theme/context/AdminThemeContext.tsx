@@ -4,10 +4,12 @@ import { ThemeContextValue, ThemeProviderProps } from '../../types/theme';
 import { ImpulseTheme } from '../../types/impulse.types';
 import { useImpulsivityStore } from '../../store/impulse.store';
 import { defaultImpulseTokens } from '../impulse/tokens';
-import { applyThemeToDocument } from '../utils/themeUtils';
+import { applyThemeToDocument } from '../utils/themeApplicator';
+import { themeRegistry } from '../ThemeRegistry';
 import { DEFAULT_THEME_NAME } from '@/utils/themeInitializer';
 import { useToast } from '@/hooks/use-toast';
 import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
 
 // Create context with default value
 const AdminThemeContext = createContext<ThemeContextValue>({
@@ -31,7 +33,7 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
   
   const impulsivityStore = useImpulsivityStore();
   const { toast } = useToast();
-  const logger = getLogger('AdminThemeProvider');
+  const logger = getLogger('AdminThemeContext', LogCategory.THEME);
   
   // Prepare the theme object with admin-specific structure
   const currentTheme = impulsivityStore.theme ? {
@@ -50,11 +52,18 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
           setIsLoading(true);
           setError(null);
           
+          logger.info('Initializing admin theme');
+          
           // Load theme from the store
           await impulsivityStore.loadTheme();
           
+          // Register the theme with the registry
+          if (impulsivityStore.theme) {
+            themeRegistry.registerTheme('admin-impulsivity', impulsivityStore.theme);
+          }
+          
           // Apply the theme to the document
-          applyThemeToDocument(impulsivityStore.theme);
+          applyThemeToDocument(impulsivityStore.theme || defaultImpulseTokens);
           
           setIsLoading(false);
           setInitialized(true);
@@ -65,7 +74,10 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
         setError(error);
         setIsLoading(false);
         
-        logger.error('Failed to initialize admin theme', { error });
+        logger.error('Failed to initialize admin theme', { 
+          error: error.message || 'Unknown error'
+        });
+        
         toast({
           title: 'Theme Error',
           description: 'Could not load the admin theme. Using fallback styling.',
@@ -80,9 +92,15 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
   // Apply theme updates to the document when the theme changes
   useEffect(() => {
     if (impulsivityStore.theme && initialized) {
+      logger.debug('Theme updated, applying changes');
+      
+      // Register the updated theme
+      themeRegistry.registerTheme('admin-impulsivity', impulsivityStore.theme);
+      
+      // Apply the updated theme
       applyThemeToDocument(impulsivityStore.theme);
     }
-  }, [impulsivityStore.theme, initialized]);
+  }, [impulsivityStore.theme, initialized, logger]);
   
   // Apply theme by ID
   const applyTheme = async (themeId: string) => {
@@ -90,9 +108,11 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
       setIsLoading(true);
       setError(null);
       
+      logger.info(`Applying theme: ${themeId}`);
+      
       // Implementation depends on where themes are stored
       // For now, just apply the default tokens
-      applyThemeToDocument(defaultImpulseTokens);
+      applyThemeToDocument(themeId);
       
       setIsLoading(false);
     } catch (err) {
@@ -100,7 +120,8 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
       setError(error);
       setIsLoading(false);
       
-      logger.error('Failed to apply theme', { error });
+      logger.error('Failed to apply theme', { error: error.message });
+      
       toast({
         title: 'Theme Error',
         description: 'Could not apply the selected theme.',
@@ -111,6 +132,7 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
   
   // Update theme with new values
   const updateTheme = (updates: Partial<ImpulseTheme>) => {
+    logger.debug('Updating theme with new values');
     impulsivityStore.setTheme(updates);
   };
   
@@ -118,6 +140,8 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
   const saveTheme = async () => {
     try {
       setIsSaving(true);
+      logger.info('Saving theme changes');
+      
       await impulsivityStore.saveTheme();
       
       toast({
@@ -131,7 +155,8 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
       setError(error);
       setIsSaving(false);
       
-      logger.error('Failed to save theme', { error });
+      logger.error('Failed to save theme', { error: error.message });
+      
       toast({
         title: 'Save Error',
         description: 'Could not save theme changes.',
@@ -142,7 +167,10 @@ export function AdminThemeProvider({ children, defaultThemeId }: ThemeProviderPr
   
   // Reset theme to defaults
   const resetTheme = () => {
+    logger.info('Resetting theme to defaults');
     impulsivityStore.resetTheme();
+    
+    // Apply default theme
     applyThemeToDocument(defaultImpulseTokens);
     
     toast({

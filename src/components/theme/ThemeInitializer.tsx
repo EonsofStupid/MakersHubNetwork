@@ -5,6 +5,9 @@ import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicKeyframes } from './DynamicKeyframes';
 import { SiteThemeProvider } from './SiteThemeProvider';
+import { themeRegistry } from '@/admin/theme/ThemeRegistry';
+import { defaultImpulseTokens } from '@/admin/theme/impulse/tokens';
+import { applyThemeToDocument } from '@/admin/theme/utils/themeApplicator';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { isError, isValidUUID } from '@/logging/utils/type-guards';
@@ -32,68 +35,24 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     // Apply fallback styles immediately
     document.documentElement.classList.add('theme-fallback-applied');
     
-    // Force the browser to apply default colors immediately
-    document.documentElement.style.setProperty('--background', '#12121A');
-    document.documentElement.style.setProperty('--foreground', '#F6F6F7');
-    document.documentElement.style.backgroundColor = '#12121A';
-    document.documentElement.style.color = '#F6F6F7';
-    document.body.style.backgroundColor = '#12121A';
-    document.body.style.color = '#F6F6F7';
+    // Register the default theme with our registry
+    themeRegistry.registerTheme('default', defaultImpulseTokens);
     
-    // Apply scrollbar styling immediately
-    const style = document.createElement('style');
-    style.textContent = `
-      :root {
-        color-scheme: dark;
-      }
-      
-      ::-webkit-scrollbar { width: 8px; height: 8px; }
-      ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 3px; }
-      ::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.2); border-radius: 3px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.4); }
-      
-      /* Immediate styling for skeletons */
-      .skeleton-loader {
-        background: linear-gradient(90deg, 
-          rgba(255, 255, 255, 0.05) 25%, 
-          rgba(255, 255, 255, 0.1) 50%, 
-          rgba(255, 255, 255, 0.05) 75%
-        );
-        background-size: 200% 100%;
-        animation: skeleton-loading 1.5s infinite;
-      }
-      
-      /* Basic animations for immediate use */
-      @keyframes skeleton-loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-      }
-      
-      @keyframes fade-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      
-      .animate-fade-in {
-        animation: fade-in 0.3s ease-out forwards;
-      }
-      
-      /* Ensure text is readable during load */
-      body {
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-    `;
-    document.head.appendChild(style);
+    // Apply the default theme immediately
+    applyThemeToDocument('default');
+    
+    // Force the browser to apply default colors immediately
+    document.documentElement.style.backgroundColor = defaultImpulseTokens.colors.background.main;
+    document.documentElement.style.color = defaultImpulseTokens.colors.text.primary;
+    document.body.style.backgroundColor = defaultImpulseTokens.colors.background.main;
+    document.body.style.color = defaultImpulseTokens.colors.text.primary;
+    
+    logger.debug('Applied immediate fallback styling');
     
     return () => {
       document.documentElement.classList.remove('theme-fallback-applied');
-      if (document.head.contains(style)) {
-        document.head.removeChild(style);
-      }
     };
-  }, []);
+  }, [logger]);
 
   // Fallback faster when a theme store error is detected
   useEffect(() => {
@@ -178,44 +137,51 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
             await setTheme(themeId);
             clearTimeout(fetchTimeout);
             
-            logger.info('Theme initialized successfully', { details: { themeId } });
-          
             if (isMounted) {
+              logger.info('Theme loaded successfully, initializing UI');
               setIsInitialized(true);
             }
-          } catch (setThemeError) {
-            clearTimeout(fetchTimeout);
-            logger.error('Error setting theme', { 
-              details: safeDetails(setThemeError)
-            });
-            
+          } catch (err) {
             if (isMounted) {
-              setFailedAttempts(prev => prev + 1);
-              // Continue with default styles even with a setTheme error
+              setFailedAttempts((prev) => prev + 1);
+              logger.error('Error setting theme', { details: safeDetails(err) });
               setIsInitialized(true);
+              
+              // Only show error toast for real errors, not timeouts
+              if (isError(err)) {
+                toast({
+                  title: 'Theme Error',
+                  description: 'Failed to load theme. Using default styling.',
+                  variant: 'destructive',
+                });
+              }
             }
           }
         } else {
-          logger.warn('No valid theme ID received, using fallback styling', {
-            details: { receivedThemeId: themeId }
-          });
-          
+          // No valid theme ID, initialize with defaults
           if (isMounted) {
-            setFailedAttempts(prev => prev + 1);
-            // Continue with default styles
+            logger.warn('No valid theme ID found, using fallback styling');
             setIsInitialized(true);
           }
         }
-      } catch (error) {
-        const err = isError(error) ? error : new Error('Unknown theme initialization error');
-        logger.error('Error initializing theme', { 
-          details: safeDetails(error)
-        });
-        
+      } catch (err) {
         if (isMounted) {
-          setFailedAttempts(prev => prev + 1);
-          // Continue with default styles even with an error
+          logger.error('Unhandled error in theme initialization', { details: safeDetails(err) });
           setIsInitialized(true);
+          setFailedAttempts((prev) => prev + 1);
+          
+          // Only show error toast for real errors, not timeouts
+          if (isError(err)) {
+            toast({
+              title: 'Theme Error',
+              description: 'An unexpected error occurred. Using default styling.',
+              variant: 'destructive',
+            });
+          }
+        }
+      } finally {
+        if (initializationTimeout) {
+          clearTimeout(initializationTimeout);
         }
       }
     }
@@ -229,10 +195,10 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
       }
     };
   }, [setTheme, toast, logger]);
-
-  // Render immediately with fallback styling - no loading screens
+  
   return (
-    <SiteThemeProvider fallbackToDefault={true}>
+    <SiteThemeProvider fallbackToDefault={!isInitialized || !!themeStoreError}>
+      {/* Add dynamic keyframes for theme-based animations */}
       <DynamicKeyframes />
       {children}
     </SiteThemeProvider>

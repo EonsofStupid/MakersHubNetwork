@@ -1,6 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAdminTheme } from '../context/AdminThemeContext';
+import { themeRegistry } from '../ThemeRegistry';
+import { hexToRgb } from '../utils/themeApplicator';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 
@@ -28,9 +30,15 @@ export function DynamicKeyframes() {
       };
     }
     
+    // Get the current active theme
+    const themeId = themeRegistry.getActiveThemeId() || 'default';
+    const activeTheme = themeRegistry.getTheme(themeId);
+    
     // Get the theme colors from the current theme or use fallbacks
-    const primary = currentTheme?.impulse?.colors?.primary || 'var(--impulse-primary, #00F0FF)';
-    const secondary = currentTheme?.impulse?.colors?.secondary || 'var(--impulse-secondary, #FF2D6E)';
+    const primary = activeTheme?.colors?.primary || 'var(--impulse-primary, #00F0FF)';
+    const secondary = activeTheme?.colors?.secondary || 'var(--impulse-secondary, #FF2D6E)';
+    const rgbPrimary = hexToRgb(primary);
+    const rgbSecondary = hexToRgb(secondary);
     
     // Update keyframes with current theme colors
     if (styleElement) {
@@ -149,6 +157,29 @@ export function DynamicKeyframes() {
           80% { transform: translate(1px, 1px); clip-path: polygon(0 2%, 100% 0, 96% 100%, 4% 97%); }
         }
         
+        @keyframes cyber-glow {
+          0%, 100% {
+            box-shadow: 0 0 10px rgba(${rgbPrimary}, 0.8), 0 0 20px rgba(${rgbPrimary}, 0.5);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(${rgbPrimary}, 0.8), 0 0 40px rgba(${rgbPrimary}, 0.5);
+          }
+        }
+        
+        @keyframes data-stream {
+          0% { background-position: 0% 0%; }
+          100% { background-position: 200% 0%; }
+        }
+        
+        @keyframes morph-header {
+          0% { 
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); 
+          }
+          100% { 
+            clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%); 
+          }
+        }
+        
         .admin-animate-glow-pulse {
           animation: admin-glow-pulse 2s ease-in-out infinite;
         }
@@ -185,6 +216,39 @@ export function DynamicKeyframes() {
         
         .pulse-glow {
           animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        .cyber-glow {
+          animation: cyber-glow 3s ease-in-out infinite;
+        }
+        
+        .mainnav-data-stream::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          background-image: linear-gradient(90deg, 
+            rgba(16, 20, 24, 0) 0%,
+            ${primary} 20%,
+            ${secondary} 40%,
+            ${primary} 60%,
+            ${secondary} 80%,
+            rgba(16, 20, 24, 0) 100%
+          );
+          background-size: 200% 100%;
+          animation: data-stream 8s linear infinite;
+          opacity: 0.3;
+        }
+        
+        .animate-morph-header {
+          animation: morph-header 3s ease-in-out alternate infinite;
+        }
+        
+        .glass-morphism {
+          background-color: rgba(${hexToRgb('var(--impulse-bg-card)')}, 0.7);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(${rgbPrimary}, 0.3);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
       `;
     }
