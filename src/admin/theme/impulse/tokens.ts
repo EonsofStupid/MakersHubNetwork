@@ -8,7 +8,7 @@ import { ImpulseTheme } from "@/admin/types/impulse.types";
 export const defaultImpulseTokens: ImpulseTheme = {
   id: 'default',
   name: 'Default Impulse Theme',
-  version: '1.0.0',
+  version: 1, // Changed from string to number
   description: 'Default theme for Impulse Admin',
   colors: {
     primary: '#00F0FF',

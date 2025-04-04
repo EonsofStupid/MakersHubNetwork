@@ -126,7 +126,7 @@ export interface ImpulseTheme {
   effects: ImpulseThemeEffects;
   animation: ImpulseThemeAnimation;
   components: ImpulseThemeComponents;
-  version: number;
+  version: number;  // Changed from string to number
   description?: string;
   metadata?: Record<string, any>;
 }
@@ -137,7 +137,7 @@ export interface ImpulseTheme {
 export const defaultImpulseTokens: ImpulseTheme = {
   id: 'default',
   name: 'Default',
-  version: 1,
+  version: 1,  // Changed from '1.0.0' to 1
   colors: {
     primary: '#00F0FF',
     secondary: '#FF2D6E',

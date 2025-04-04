@@ -70,11 +70,11 @@ export type LayoutScope = 'admin' | 'site' | 'public' | 'user';
 /**
  * Convert a layout to JSON format for storage
  */
-export function layoutToJson(data: { components: Component[], version: number }): LayoutJsonData {
+export function layoutToJson(data: { components: Component[], version: number, meta?: Record<string, any> }): LayoutJsonData {
   return {
     components: data.components || [],
     version: data.version || 1,
-    meta: data.meta
+    meta: data.meta || {}
   };
 }
 
@@ -112,4 +112,27 @@ export function createDefaultLayout(type: string, scope: string): Partial<Layout
     is_active: true,
     is_locked: false
   };
+}
+
+/**
+ * Parse layout JSON from database result
+ */
+export function parseLayoutJson(data: any): LayoutJsonData {
+  if (!data) {
+    return { components: [], version: 1 };
+  }
+  
+  try {
+    // Handle already parsed JSON or string
+    const jsonData = typeof data === 'string' ? JSON.parse(data) : data;
+    
+    return {
+      components: Array.isArray(jsonData.components) ? jsonData.components : [],
+      version: typeof jsonData.version === 'number' ? jsonData.version : 1,
+      meta: jsonData.meta || {}
+    };
+  } catch (err) {
+    console.error('Error parsing layout JSON', err);
+    return { components: [], version: 1 };
+  }
 }

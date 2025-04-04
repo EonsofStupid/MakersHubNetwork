@@ -34,3 +34,18 @@ export interface ThemeRegistry {
   unregisterTheme: (id: string) => boolean;
   clearAll: () => void;
 }
+
+/**
+ * Theme record format that can be used for partial theme definitions
+ */
+export interface ThemeRecord {
+  id?: string;
+  name?: string;
+  colors?: Partial<ImpulseTheme['colors']>;
+  typography?: Partial<ImpulseTheme['typography']>;
+  effects?: Partial<ImpulseTheme['effects']>;
+  animation?: Partial<ImpulseTheme['animation']>;
+  components?: Partial<ImpulseTheme['components']>;
+  version?: number;
+  metadata?: Record<string, any>;
+}
