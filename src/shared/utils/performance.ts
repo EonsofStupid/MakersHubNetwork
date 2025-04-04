@@ -1,6 +1,6 @@
 
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { LogCategory, LogLevel } from '@/logging/types';
 
 const logger = getLogger('PerformanceUtils');
 
@@ -18,8 +18,9 @@ export function measureExecution<T>(fn: () => T, label: string, warnThreshold = 
       details: { duration, threshold: warnThreshold }
     });
   } else {
-    logger.performance(label, duration, {
-      category: LogCategory.PERFORMANCE
+    logger.info(label, {
+      category: LogCategory.PERFORMANCE,
+      details: { duration, success: true }
     });
   }
   
@@ -47,8 +48,9 @@ export function createMeasurement(label: string, warnThreshold = 100) {
           details: { duration, threshold: warnThreshold }
         });
       } else {
-        logger.performance(label, duration, {
-          category: LogCategory.PERFORMANCE
+        logger.info(label, {
+          category: LogCategory.PERFORMANCE,
+          details: { duration, success: true }
         });
       }
       
@@ -65,8 +67,9 @@ export function createSimpleMeasurement(label: string) {
   
   return () => {
     const duration = performance.now() - startTime;
-    logger.performance(label, duration, {
-      category: LogCategory.PERFORMANCE
+    logger.info(label, {
+      category: LogCategory.PERFORMANCE,
+      details: { duration, success: true }
     });
     return duration;
   };
@@ -92,8 +95,9 @@ export async function measurePerformance<T>(
         details: { duration, threshold: warnThreshold }
       });
     } else {
-      logger.performance(label, duration, {
-        category: LogCategory.PERFORMANCE
+      logger.info(label, {
+        category: LogCategory.PERFORMANCE,
+        details: { duration, success: true }
       });
     }
     

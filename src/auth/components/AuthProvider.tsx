@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useAuth } from '@/auth/hooks/useAuth';
 import { AuthStatus } from '@/auth/types/auth.types';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/constants/logLevel';
+import { LogCategory } from '@/logging/types';
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -12,7 +12,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children, onInitialized }: AuthProviderProps) {
   const { user, isLoading, status, initialized, initialize } = useAuth();
-  const logger = useLogger('AuthProvider', { category: LogCategory.AUTH });
+  const logger = useLogger('AuthProvider', { category: LogCategory.AUTHENTICATION });
   
   useEffect(() => {
     logger.info('Auth provider mounted');

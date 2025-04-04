@@ -63,7 +63,11 @@ export function LogsDashboard() {
   
   // Calculate some statistics
   const totalLogs = logs.length;
-  const errorCount = logs.filter(log => log.level === LogLevel.ERROR || log.level === LogLevel.FATAL || log.level === LogLevel.CRITICAL).length;
+  const errorCount = logs.filter(log => 
+    log.level === LogLevel.ERROR || 
+    log.level === LogLevel.FATAL || 
+    log.level === LogLevel.CRITICAL
+  ).length;
   const warningCount = logs.filter(log => log.level === LogLevel.WARN).length;
   const errorPercentage = totalLogs ? ((errorCount / totalLogs) * 100).toFixed(1) : '0';
   

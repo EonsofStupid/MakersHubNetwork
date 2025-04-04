@@ -4,7 +4,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/constants/logLevel';
+import { LogCategory } from '@/logging/types';
 import { useAuth } from '@/auth/hooks/useAuth';
 import { AuthStatus } from '@/auth/types/auth.types';
 

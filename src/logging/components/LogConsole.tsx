@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { LogEntry } from '../types';
+import { LogEntry, LogLevel, LogCategory } from '../types';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LOG_LEVEL_NAMES, isLogLevelAtLeast } from '../constants/log-level';
 import { safelyRenderNode } from '../utils/react';
 import { X, Minimize2, Maximize2, Download, Trash } from 'lucide-react';
-import { LogLevel, LogCategory } from '@/constants/logLevel';
 
 interface LogConsoleProps {
   minLevel?: LogLevel;
@@ -155,7 +154,7 @@ export function LogConsole({
             
             <select 
               value={selectedLevel} 
-              onChange={e => setSelectedLevel(e.target.value as LogLevel)}
+              onChange={e => setSelectedLevel(Number(e.target.value) as LogLevel)}
               className="px-2 py-1 text-xs rounded border bg-background"
             >
               {Object.entries(LOG_LEVEL_NAMES).map(([level, name]) => (
@@ -212,7 +211,7 @@ export function LogConsole({
                         className="border-b hover:bg-muted/20"
                       >
                         <td className="px-2 py-1 whitespace-nowrap text-xs text-muted-foreground">
-                          {new Date(log.timestamp).toLocaleTimeString()}
+                          {new Date(log.timestamp instanceof Date ? log.timestamp : log.timestamp).toLocaleTimeString()}
                         </td>
                         <td className="px-2 py-1 whitespace-nowrap text-xs">
                           <span className={getLevelColorClass(log.level)}>
@@ -258,15 +257,15 @@ function getLevelColorClass(level: LogLevel): string {
     case LogLevel.DEBUG:
       return 'text-gray-400';
     case LogLevel.INFO:
+    case LogLevel.SUCCESS:
       return 'text-blue-400';
     case LogLevel.WARN:
       return 'text-yellow-400';
     case LogLevel.ERROR:
       return 'text-red-400';
     case LogLevel.CRITICAL:
+    case LogLevel.FATAL:
       return 'text-red-600 font-bold';
-    case LogLevel.SUCCESS:
-      return 'text-green-400';
     default:
       return 'text-gray-400';
   }

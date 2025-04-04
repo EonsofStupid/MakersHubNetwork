@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { 
   Logger, 
@@ -103,7 +104,7 @@ class LoggerService {
    */
   private shouldProcessLog(level: LogLevel, category?: LogCategory): boolean {
     // Check minimum log level
-    if (!isLogLevelAtLeast(level, this.config.minLevel)) {
+    if (!this.isLogLevelAtLeast(level, this.config.minLevel)) {
       return false;
     }
     
@@ -127,6 +128,13 @@ class LoggerService {
     }
     
     return true;
+  }
+  
+  /**
+   * Helper to compare log levels
+   */
+  private isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
+    return level >= minLevel;
   }
   
   /**
@@ -220,7 +228,7 @@ class LoggerService {
     message: string, 
     options?: LoggerOptions
   ): void {
-    if (!this.shouldProcessLog(level, options?.category as LogCategory)) {
+    if (!this.shouldProcessLog(level, options?.category)) {
       return; // Log was filtered out
     }
     
@@ -232,7 +240,7 @@ class LoggerService {
       id: uuidv4(),
       timestamp: new Date().toISOString(),
       level,
-      category: (options?.category as LogCategory) || LogCategory.GENERAL,
+      category: options?.category || LogCategory.GENERAL,
       message: safelyRenderNode(message),
       details: processedDetails,
       tags: options?.tags || [],
@@ -260,9 +268,7 @@ class LoggerService {
     
     // Check if we need to flush immediately
     if (
-      level === LogLevel.ERROR || 
-      level === LogLevel.FATAL ||
-      level === LogLevel.CRITICAL ||
+      level >= LogLevel.ERROR || 
       this.buffer.length >= (this.config.bufferSize || 1)
     ) {
       this.flush();
@@ -329,21 +335,6 @@ class LoggerService {
     }
     this.flush();
   }
-}
-
-// Helper function to check if a log level meets minimum threshold
-function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
-  const levels: Record<LogLevel, number> = {
-    [LogLevel.TRACE]: 0,
-    [LogLevel.DEBUG]: 1,
-    [LogLevel.INFO]: 2,
-    [LogLevel.SUCCESS]: 2, // SUCCESS is same priority as INFO
-    [LogLevel.WARN]: 3,
-    [LogLevel.ERROR]: 4,
-    [LogLevel.FATAL]: 5,
-    [LogLevel.CRITICAL]: 5 // CRITICAL is same priority as FATAL
-  };
-  return levels[level] >= levels[minLevel];
 }
 
 // Initialize the logger service

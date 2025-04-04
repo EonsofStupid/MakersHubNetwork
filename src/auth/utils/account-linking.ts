@@ -4,7 +4,7 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 
-const logger = getLogger('AccountLinking', { category: LogCategory.AUTH });
+const logger = getLogger('AccountLinking', { category: LogCategory.AUTHENTICATION });
 
 /**
  * Get all linked providers for the current user

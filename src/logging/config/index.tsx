@@ -1,6 +1,5 @@
 
-import { LoggingConfig } from '../types';
-import { LogCategory, LogLevel } from '@/constants/logLevel';
+import { LoggingConfig, LogCategory, LogLevel } from '../types';
 import { defaultLoggingConfig } from './default-config';
 
 /**
@@ -21,7 +20,7 @@ export const productionLoggingConfig: LoggingConfig = {
   minLevel: LogLevel.INFO,
   enabledCategories: [
     LogCategory.SYSTEM,
-    LogCategory.AUTH,
+    LogCategory.AUTHENTICATION,
     LogCategory.ADMIN,
     LogCategory.DATA,
     LogCategory.NETWORK,

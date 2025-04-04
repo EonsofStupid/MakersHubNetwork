@@ -1,36 +1,47 @@
 
-import { Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { ThemeProvider } from "@/components/ui/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
-import { Layout } from "@/components/ui/layout/Layout";
-import { AuthRoutes } from "@/routes/auth-routes";
-import { AppRoutes } from "@/routes/app-routes";
-import { AdminRoutes } from "@/admin/routes";
-import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
-import { LoadingScreen } from "@/components/ui/loading-screen";
-import { ThemeDebugger } from "@/admin/theme/utils/ThemeDebugger";
+import React, { useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
+import { DashboardLayout } from './layouts/DashboardLayout';
+import Dashboard from './pages/Dashboard';
+import { Toaster } from '@/components/ui/toaster';
+import { LoggingProvider } from './logging/context/LoggingContext';
+import { useToast } from './hooks/use-toast';
+import { AuthProvider } from './auth/components/AuthProvider';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+// Define App props interface
+interface AppProps {
+  onInitialized?: () => Promise<void>;
+}
 
-export default function App() {
+function App({ onInitialized }: AppProps) {
+  const { toast } = useToast();
+
+  // Log application initialization
+  useEffect(() => {
+    // Notify user that the application has loaded
+    toast({
+      title: 'Welcome to MakersImpulse',
+      description: 'Your 3D printing community hub',
+    });
+  }, [toast]);
+
   return (
-    <BrowserRouter>
-      <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
-        <ThemeInitializer>
-          <Suspense fallback={<LoadingScreen />}>
+    <LoggingProvider>
+      <AuthProvider onInitialized={onInitialized}>
+        <ThemeProvider>
+          <div className="min-h-screen bg-background">
             <Routes>
-              <Route element={<Layout />}>
-                <Route path="/*" element={<AppRoutes />} />
-                <Route path="/auth/*" element={<AuthRoutes />} />
+              <Route path="/" element={<DashboardLayout />}>
+                <Route index element={<Dashboard />} />
               </Route>
-              <Route path="/admin/*" element={<AdminRoutes />} />
             </Routes>
-          </Suspense>
+          </div>
           <Toaster />
-          {isDevelopment && <ThemeDebugger />}
-        </ThemeInitializer>
-      </ThemeProvider>
-    </BrowserRouter>
+        </ThemeProvider>
+      </AuthProvider>
+    </LoggingProvider>
   );
 }
+
+export default App;

@@ -1,4 +1,3 @@
-
 import { Json } from '@/integrations/supabase/types';
 import { Theme, ComponentTokens, ThemeContext, ThemeStatus } from '@/types/theme';
 import { getLogger } from '@/logging';
@@ -7,14 +6,10 @@ import { LogCategory } from '@/logging/types';
 
 const logger = getLogger('TransformUtils', { category: LogCategory.THEME });
 
-/**
- * Convert database row to application Theme model
- */
 export function transformThemeModel(rawData: any): Theme | null {
   try {
     if (!rawData) return null;
 
-    // Transform component_tokens from Json to ComponentTokens[]
     const componentTokens: ComponentTokens[] = Array.isArray(rawData.component_tokens)
       ? rawData.component_tokens.map((token: any) => ({
           id: String(token.id || ''),
@@ -28,7 +23,6 @@ export function transformThemeModel(rawData: any): Theme | null {
         }))
       : [];
 
-    // Transform to Theme object
     const transformedTheme: Theme = {
       id: String(rawData.id || ''),
       name: String(rawData.name || 'Unnamed Theme'),
@@ -57,9 +51,6 @@ export function transformThemeModel(rawData: any): Theme | null {
   }
 }
 
-/**
- * Convert application Theme model to database format
- */
 export function prepareThemeForDatabase(theme: Theme): {
   name: string;
   description?: string;
@@ -81,7 +72,6 @@ export function prepareThemeForDatabase(theme: Theme): {
   context?: ThemeContext;
 } {
   try {
-    // Convert ComponentTokens[] to raw JSON format
     const rawComponentTokens = theme.component_tokens.map(token => ({
       id: token.id,
       component_name: token.component_name,
@@ -93,7 +83,6 @@ export function prepareThemeForDatabase(theme: Theme): {
       context: token.context || 'site'
     }));
 
-    // Return database-ready object with explicit type structure
     return {
       name: theme.name,
       description: theme.description || '',
@@ -112,7 +101,7 @@ export function prepareThemeForDatabase(theme: Theme): {
       cached_styles: theme.cached_styles as Json,
       is_system: theme.is_system,
       is_active: theme.is_active,
-      context: 'site' as ThemeContext // Default context
+      context: 'site' as ThemeContext
     };
   } catch (error) {
     logger.error('Error preparing theme for database', { details: safeDetails(error) });
@@ -120,29 +109,20 @@ export function prepareThemeForDatabase(theme: Theme): {
   }
 }
 
-/**
- * Safely validates theme context value
- */
 export function validateThemeContext(context: unknown): ThemeContext {
   if (context === 'site' || context === 'admin' || context === 'chat') {
     return context;
   }
-  return 'site'; // Default fallback
+  return 'site';
 }
 
-/**
- * Safely validates theme status value
- */
 export function validateThemeStatus(status: unknown): ThemeStatus {
   if (status === 'draft' || status === 'published' || status === 'archived') {
     return status;
   }
-  return 'draft'; // Default fallback
+  return 'draft';
 }
 
-/**
- * Convert a single theme component from database to application model
- */
 export function transformComponentToken(component: any): ComponentTokens | null {
   try {
     if (!component || typeof component !== 'object') {
@@ -165,9 +145,6 @@ export function transformComponentToken(component: any): ComponentTokens | null 
   }
 }
 
-/**
- * Transform array of raw theme components to ComponentTokens[]
- */
 export function transformComponentTokens(components: any[]): ComponentTokens[] {
   if (!Array.isArray(components)) return [];
   
@@ -176,25 +153,17 @@ export function transformComponentTokens(components: any[]): ComponentTokens[] {
     .filter((token): token is ComponentTokens => token !== null);
 }
 
-import { LogCategory } from '@/logging/types';
-
-/**
- * Function to safely convert string to LogCategory
- * 
- * @param category String value that should be converted to LogCategory
- * @returns Valid LogCategory or undefined
- */
 export function stringToLogCategory(category?: string): LogCategory | undefined {
   if (!category) return undefined;
   
-  // Check if the string is a valid LogCategory
   const validCategories = Object.values(LogCategory);
   
-  if (validCategories.includes(category as LogCategory)) {
-    return category as LogCategory;
+  for (const validCategory of validCategories) {
+    if (String(validCategory) === category) {
+      return validCategory;
+    }
   }
   
-  // Try uppercase versions for case-insensitive matching
   const uppercaseCategory = category.toUpperCase();
   for (const validCategory of validCategories) {
     if (String(validCategory).toUpperCase() === uppercaseCategory) {
@@ -202,10 +171,5 @@ export function stringToLogCategory(category?: string): LogCategory | undefined 
     }
   }
   
-  // Return undefined if no match
   return undefined;
 }
-
-/**
- * Additional utility functions for transforming data can be added here
- */

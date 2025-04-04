@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { useToast } from '@/hooks/use-toast';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { Loader2 } from 'lucide-react';
@@ -10,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 export function AuthCallback() {
   const [isProcessing, setIsProcessing] = useState(true);
   const navigate = useNavigate();
-  const logger = useLogger('AuthCallback', { category: LogCategory.AUTH });
+  const logger = useLogger('AuthCallback', { category: LogCategory.AUTHENTICATION });
   const { toast } = useToast();
 
   useEffect(() => {
