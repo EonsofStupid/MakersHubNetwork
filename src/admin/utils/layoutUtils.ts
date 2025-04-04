@@ -1,401 +1,265 @@
-import { Layout, LayoutComponent, createEmptyLayout, layoutToJson } from '@/admin/types/layout.types';
-import { v4 as uuidv4 } from 'uuid';
+import { Layout, LayoutComponent } from '../types/layout.types';
+import { createEmptyLayout } from '@/admin/types/layout.types';
 
-/**
- * Convert a database layout to a default Dashboard layout
- */
-export function createDefaultDashboardLayout(id: string): Layout {
-  return {
-    id,
-    name: 'Default Dashboard',
-    type: 'dashboard',
+// Create a default panel layout for admin dashboards
+export function createDefaultPanelLayout(): Layout {
+  const now = new Date().toISOString();
+  const layout = {
+    id: crypto.randomUUID(),
+    name: 'Default Panel Layout',
+    type: 'panel',
     scope: 'admin',
     components: [
       {
-        id: 'dashboard-root',
-        type: 'AdminSection',
+        id: crypto.randomUUID(),
+        type: 'Panel',
         children: [
           {
-            id: 'dashboard-header',
-            type: 'div',
+            id: crypto.randomUUID(),
+            type: 'PanelHeader',
             props: {
-              className: 'flex items-center gap-2 mb-6'
+              className: 'flex justify-between items-center'
             },
             children: [
               {
-                id: 'dashboard-title',
-                type: 'heading',
+                id: crypto.randomUUID(),
+                type: 'PanelTitle',
                 props: {
-                  level: 1,
-                  className: 'text-2xl font-bold',
-                  children: 'Admin Dashboard'
+                  className: 'text-xl font-semibold'
                 }
               }
             ]
           },
           {
-            id: 'admin-topnav',
-            type: 'AdminTopNav',
+            id: crypto.randomUUID(),
+            type: 'PanelBody',
             props: {
-              title: 'Admin Dashboard'
+              className: 'p-4'
             }
           },
           {
-            id: 'admin-layout',
-            type: 'div',
+            id: crypto.randomUUID(),
+            type: 'PanelFooter',
             props: {
-              className: 'flex w-full'
-            },
-            children: [
-              {
-                id: 'admin-sidebar',
-                type: 'AdminSidebar'
-              },
-              {
-                id: 'admin-content',
-                type: 'div',
-                props: {
-                  className: 'flex-1 p-6'
-                },
-                children: [
-                  {
-                    id: 'shortcuts-section',
-                    type: 'DashboardShortcuts',
-                  },
-                  {
-                    id: 'stats-grid',
-                    type: 'AdminGrid',
-                    props: {
-                      cols: 2,
-                    },
-                    children: [
-                      {
-                        id: 'build-approval-section',
-                        type: 'BuildApprovalWidget',
-                        props: {
-                          className: 'md:col-span-1',
-                        }
-                      },
-                      {
-                        id: 'stats-section',
-                        type: 'StatsCards',
-                        props: {
-                          className: 'md:col-span-1',
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    id: 'features-section',
-                    type: 'AdminFeatureSection',
-                    props: {
-                      className: 'mt-6',
-                    }
-                  }
-                ]
-              }
-            ]
+              className: 'flex justify-end gap-2 p-4 border-t'
+            }
           }
-        ],
-      },
+        ]
+      }
     ],
     version: 1,
+    created_at: now,
+    updated_at: now,
+    is_active: true,
+    is_locked: false
+  };
+  
+  return layout;
+}
+
+// Create a default page layout with a header and a content area
+export function createDefaultPageLayout(): Layout {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    name: 'Default Page Layout',
+    type: 'page',
+    scope: 'global',
+    components: [
+      {
+        id: crypto.randomUUID(),
+        type: 'PageHeader',
+        props: {
+          title: 'Page Title',
+          description: 'Page Description'
+        }
+      },
+      {
+        id: crypto.randomUUID(),
+        type: 'PageContent',
+        props: {
+          className: 'p-4'
+        }
+      }
+    ],
+    version: 1,
+    created_at: now,
+    updated_at: now,
+    is_active: true,
+    is_locked: false
   };
 }
 
-/**
- * Create a default sidebar layout
- */
-export function createDefaultSidebarLayout(id: string): Layout {
+// Find a component by ID in a layout
+export function findComponentById(layout: Layout | null, componentId: string): LayoutComponent | null {
+  if (!layout || !layout.components || layout.components.length === 0) {
+    return null;
+  }
+
+  return findComponentInTree(layout.components, componentId);
+}
+
+// Find a component in a nested tree of components
+export function findComponentInTree(components: LayoutComponent[], componentId: string): LayoutComponent | null {
+  for (const component of components) {
+    if (component.id === componentId) {
+      return component;
+    }
+
+    if (component.children && component.children.length > 0) {
+      const found = findComponentInTree(component.children, componentId);
+      if (found) {
+        return found;
+      }
+    }
+  }
+
+  return null;
+}
+
+// Create an accordion layout with expandable sections
+export function createAccordionLayout(): Layout {
+  const now = new Date().toISOString();
   return {
-    id,
-    name: 'Default Sidebar',
-    type: 'sidebar',
+    id: crypto.randomUUID(),
+    name: 'Accordion Layout',
+    type: 'accordion',
     scope: 'admin',
     components: [
       {
-        id: 'sidebar-root',
-        type: 'AdminSidebar',
+        id: crypto.randomUUID(),
+        type: 'Accordion',
         props: {
           expanded: true
         }
       }
     ],
-    version: 1
+    version: 1,
+    created_at: now,
+    updated_at: now,
+    is_active: true,
+    is_locked: false
   };
 }
 
-/**
- * Create a default top navigation layout
- */
-export function createDefaultTopNavLayout(id: string): Layout {
+// Create a settings layout with basic configuration options
+export function createSettingsLayout(): Layout {
+  const now = new Date().toISOString();
   return {
-    id,
-    name: 'Default TopNav',
-    type: 'topnav',
+    id: crypto.randomUUID(),
+    name: 'Settings Layout',
+    type: 'settings',
     scope: 'admin',
     components: [
       {
-        id: 'topnav-root',
-        type: 'AdminTopNav',
+        id: crypto.randomUUID(),
+        type: 'SettingsPanel',
         props: {
-          title: 'Admin Dashboard'
+          title: 'General Settings'
         }
       }
     ],
-    version: 1
+    version: 1,
+    created_at: now,
+    updated_at: now,
+    is_active: true,
+    is_locked: false
   };
 }
 
-/**
- * Create a dashboard layout
- */
-export function createDashboardLayout(): Layout {
-  return createEmptyLayout({
+// Create a tabbed layout with multiple tab panels
+export function createTabbedLayout(): Layout {
+  const now = new Date().toISOString();
+  return {
     id: crypto.randomUUID(),
-    name: 'Dashboard',
-    type: 'dashboard',
+    name: 'Tabbed Layout',
+    type: 'tabs',
     scope: 'admin',
-    components: [{
-      id: crypto.randomUUID(),
-      type: 'AdminDashboard',
-      children: [
-        {
-          id: 'dashboard-root',
-          type: 'AdminSection',
-          children: [
-            {
-              id: 'dashboard-header',
-              type: 'div',
-              props: {
-                className: 'flex items-center gap-2 mb-6'
-              },
-              children: [
-                {
-                  id: 'dashboard-title',
-                  type: 'heading',
-                  props: {
-                    level: 1,
-                    className: 'text-2xl font-bold',
-                    children: 'Admin Dashboard'
-                  }
-                }
-              ]
-            },
-            {
-              id: 'admin-topnav',
-              type: 'AdminTopNav',
-              props: {
-                title: 'Admin Dashboard'
-              }
-            },
-            {
-              id: 'admin-layout',
-              type: 'div',
-              props: {
-                className: 'flex w-full'
-              },
-              children: [
-                {
-                  id: 'admin-sidebar',
-                  type: 'AdminSidebar'
-                },
-                {
-                  id: 'admin-content',
-                  type: 'div',
-                  props: {
-                    className: 'flex-1 p-6'
-                  },
-                  children: [
-                    {
-                      id: 'shortcuts-section',
-                      type: 'DashboardShortcuts',
-                    },
-                    {
-                      id: 'stats-grid',
-                      type: 'AdminGrid',
-                      props: {
-                        cols: 2,
-                      },
-                      children: [
-                        {
-                          id: 'build-approval-section',
-                          type: 'BuildApprovalWidget',
-                          props: {
-                            className: 'md:col-span-1',
-                          }
-                        },
-                        {
-                          id: 'stats-section',
-                          type: 'StatsCards',
-                          props: {
-                            className: 'md:col-span-1',
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      id: 'features-section',
-                      type: 'AdminFeatureSection',
-                      props: {
-                        className: 'mt-6',
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ],
-        },
-      ],
-    }],
+    components: [
+      {
+        id: crypto.randomUUID(),
+        type: 'Tabs',
+        props: {
+          defaultValue: 'tab1'
+        }
+      }
+    ],
     version: 1,
+    created_at: now,
+    updated_at: now,
+    is_active: true,
+    is_locked: false
+  };
+}
+
+// Function to create a copy of components tree
+export function cloneComponents(components: LayoutComponent[]): LayoutComponent[] {
+  if (!components) return [];
+  
+  return components.map(component => {
+    const { children, ...rest } = component;
+    return {
+      ...rest,
+      children: children ? cloneComponents(children) : []
+    };
   });
 }
 
-/**
- * Find a component in a tree by its ID
- */
-export function findComponentById(components: LayoutComponent[], id: string): LayoutComponent | null {
-  if (!components || components.length === 0) return null;
-  
-  for (const component of components) {
-    if (component.id === id) return component;
-    
+// Function to make a deep copy of a layout
+export function cloneLayout(layout: Layout): Layout {
+  if (!layout) return createEmptyLayout();
+
+  return {
+    ...layout,
+    components: cloneComponents(layout.components || [])
+  };
+}
+
+// Transform a component tree by applying a transformation function
+export function transformComponentTree(
+  components: LayoutComponent[] | undefined, 
+  transformFn: (component: LayoutComponent) => LayoutComponent
+): LayoutComponent[] {
+  if (!components || components.length === 0) {
+    return [];
+  }
+
+  return components.map(component => {
+    // Apply the transformation to the current component
+    const transformedComponent = transformFn({ ...component });
+
+    // Recursively transform children if they exist
+    if (transformedComponent.children && transformedComponent.children.length > 0) {
+      return {
+        ...transformedComponent,
+        children: transformComponentTree(transformedComponent.children, transformFn)
+      };
+    }
+
+    return transformedComponent;
+  });
+}
+
+// Remove a component from a component tree
+export function removeComponentFromTree(
+  components: LayoutComponent[] | undefined,
+  componentId: string
+): LayoutComponent[] {
+  if (!components || components.length === 0) {
+    return [];
+  }
+
+  // Filter out the component with the matching ID
+  const filteredComponents = components.filter(c => c.id !== componentId);
+
+  // Recursively process children of the remaining components
+  return filteredComponents.map(component => {
     if (component.children && component.children.length > 0) {
-      const found = findComponentById(component.children, id);
-      if (found) return found;
-    }
-  }
-  
-  return null;
-}
-
-/**
- * Update a component in a tree
- */
-export function updateComponentInTree(
-  components: LayoutComponent[],
-  id: string,
-  updater: (component: LayoutComponent) => LayoutComponent
-): LayoutComponent[] {
-  return components.map(component => {
-    if (component.id === id) {
-      return updater(component);
-    }
-    
-    if (component.children) {
       return {
         ...component,
-        children: updateComponentInTree(component.children, id, updater),
+        children: removeComponentFromTree(component.children, componentId)
       };
     }
-    
     return component;
   });
-}
-
-/**
- * Add a component as a child to another component
- */
-export function addComponentToParent(
-  components: LayoutComponent[],
-  parentId: string,
-  newComponent: LayoutComponent
-): LayoutComponent[] {
-  return components.map(component => {
-    if (component.id === parentId) {
-      return {
-        ...component,
-        children: [...(component.children || []), newComponent]
-      };
-    }
-    
-    if (component.children) {
-      return {
-        ...component,
-        children: addComponentToParent(component.children, parentId, newComponent)
-      };
-    }
-    
-    return component;
-  });
-}
-
-/**
- * Remove a component from a tree
- */
-export function removeComponentFromTree(components: LayoutComponent[], id: string): LayoutComponent[] {
-  return components
-    .filter(component => component.id !== id)
-    .map(component => {
-      if (component.children) {
-        return {
-          ...component,
-          children: removeComponentFromTree(component.children, id),
-        };
-      }
-      
-      return component;
-    });
-}
-
-/**
- * Move a component up in the tree (swap with previous sibling)
- */
-export function moveComponentUp(components: LayoutComponent[], id: string): LayoutComponent[] {
-  // Find the component to move
-  for (let i = 0; i < components.length; i++) {
-    if (components[i].id === id) {
-      if (i > 0) {
-        // Swap with previous sibling
-        const newComponents = [...components];
-        [newComponents[i - 1], newComponents[i]] = [newComponents[i], newComponents[i - 1]];
-        return newComponents;
-      }
-      return components; // Already at the top
-    }
-    
-    // Check children
-    if (components[i].children) {
-      const newChildren = moveComponentUp(components[i].children, id);
-      if (newChildren !== components[i].children) {
-        const newComponents = [...components];
-        newComponents[i] = { ...components[i], children: newChildren };
-        return newComponents;
-      }
-    }
-  }
-  
-  return components;
-}
-
-/**
- * Move a component down in the tree (swap with next sibling)
- */
-export function moveComponentDown(components: LayoutComponent[], id: string): LayoutComponent[] {
-  // Find the component to move
-  for (let i = 0; i < components.length; i++) {
-    if (components[i].id === id) {
-      if (i < components.length - 1) {
-        // Swap with next sibling
-        const newComponents = [...components];
-        [newComponents[i], newComponents[i + 1]] = [newComponents[i + 1], newComponents[i]];
-        return newComponents;
-      }
-      return components; // Already at the bottom
-    }
-    
-    // Check children
-    if (components[i].children) {
-      const newChildren = moveComponentDown(components[i].children, id);
-      if (newChildren !== components[i].children) {
-        const newComponents = [...components];
-        newComponents[i] = { ...components[i], children: newChildren };
-        return newComponents;
-      }
-    }
-  }
-  
-  return components;
 }
