@@ -1,118 +1,142 @@
 
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
-
-const logger = getLogger('PerformanceUtils');
+import { LogLevel, LogCategory, MeasurementResult } from '@/logging/types';
 
 /**
- * Measure execution time of a function
+ * Simple function to measure performance of a synchronous operation
  */
-export function measureExecution<T>(fn: () => T, label: string, warnThreshold = 100): T {
-  const start = performance.now();
-  const result = fn();
-  const duration = performance.now() - start;
-  
-  if (duration > warnThreshold) {
-    logger.warn(`Slow operation: ${label} took ${duration.toFixed(2)}ms`, {
-      category: LogCategory.PERFORMANCE,
-      details: { duration, threshold: warnThreshold }
-    });
-  } else {
-    logger.performance(label, duration, {
-      category: LogCategory.PERFORMANCE
-    });
-  }
-  
-  return result;
-}
-
-/**
- * Create a performance measurement that can be started and stopped
- */
-export function createMeasurement(label: string, warnThreshold = 100) {
-  let startTime = 0;
-  
-  return {
-    start() {
-      startTime = performance.now();
-      return startTime;
-    },
-    
-    stop() {
-      const duration = performance.now() - startTime;
-      
-      if (duration > warnThreshold) {
-        logger.warn(`Slow operation: ${label} took ${duration.toFixed(2)}ms`, {
-          category: LogCategory.PERFORMANCE,
-          details: { duration, threshold: warnThreshold }
-        });
-      } else {
-        logger.performance(label, duration, {
-          category: LogCategory.PERFORMANCE
-        });
-      }
-      
-      return duration;
-    }
-  };
-}
-
-/**
- * Create a simple one-time measurement
- */
-export function createSimpleMeasurement(label: string) {
+export function measurePerformance<T>(name: string, fn: () => T, options?: {
+  category?: LogCategory;
+  warnThreshold?: number;
+  onComplete?: (result: MeasurementResult) => void;
+  tags?: string[];
+  details?: Record<string, any>;
+}): T {
   const startTime = performance.now();
-  
-  return () => {
-    const duration = performance.now() - startTime;
-    logger.performance(label, duration, {
-      category: LogCategory.PERFORMANCE
-    });
-    return duration;
-  };
-}
-
-/**
- * Measure performance of any function, async or sync
- */
-export async function measurePerformance<T>(
-  fn: () => T | Promise<T>, 
-  label: string, 
-  warnThreshold = 100
-): Promise<T> {
-  const start = performance.now();
-  
   try {
-    const result = await fn();
-    const duration = performance.now() - start;
+    const result = fn();
+    const endTime = performance.now();
+    const duration = endTime - startTime;
     
-    if (duration > warnThreshold) {
-      logger.warn(`Slow operation: ${label} took ${duration.toFixed(2)}ms`, {
-        category: LogCategory.PERFORMANCE,
-        details: { duration, threshold: warnThreshold }
-      });
-    } else {
-      logger.performance(label, duration, {
-        category: LogCategory.PERFORMANCE
+    // Call onComplete callback with successful measurement
+    if (options?.onComplete) {
+      options.onComplete({
+        name,
+        duration,
+        success: true,
+        timestamp: Date.now()
       });
     }
     
     return result;
   } catch (error) {
-    const duration = performance.now() - start;
+    const endTime = performance.now();
+    const duration = endTime - startTime;
     
-    logger.error(`Error in ${label} after ${duration.toFixed(2)}ms`, {
-      category: LogCategory.PERFORMANCE,
-      details: {
+    // Call onComplete callback with error information
+    if (options?.onComplete) {
+      options.onComplete({
+        name,
         duration,
-        error: error instanceof Error ? {
-          message: error.message,
-          name: error.name,
-          stack: error.stack
-        } : String(error)
-      }
-    });
+        success: false,
+        timestamp: Date.now(),
+        error: error as Error
+      });
+    }
     
     throw error;
   }
+}
+
+/**
+ * Measure performance of an asynchronous operation
+ */
+export async function measureAsyncPerformance<T>(name: string, fn: () => Promise<T>, options?: {
+  category?: LogCategory;
+  warnThreshold?: number;
+  onComplete?: (result: MeasurementResult) => void;
+  tags?: string[];
+  details?: Record<string, any>;
+}): Promise<T> {
+  const startTime = performance.now();
+  try {
+    const result = await fn();
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    
+    // Call onComplete callback with successful measurement
+    if (options?.onComplete) {
+      options.onComplete({
+        name,
+        duration,
+        success: true,
+        timestamp: Date.now()
+      });
+    }
+    
+    return result;
+  } catch (error) {
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    
+    // Call onComplete callback with error information
+    if (options?.onComplete) {
+      options.onComplete({
+        name,
+        duration,
+        success: false,
+        timestamp: Date.now(),
+        error: error as Error
+      });
+    }
+    
+    throw error;
+  }
+}
+
+/**
+ * Create a measurement handler for component performance
+ */
+export function createMeasurementHandler(
+  logger: {
+    debug: (message: string, options?: any) => void;
+    warn: (message: string, options?: any) => void;
+  },
+  componentName: string,
+  options?: {
+    category?: LogCategory;
+    warnThreshold?: number;
+    tags?: string[];
+    baseDetails?: Record<string, any>;
+  }
+) {
+  return (result: MeasurementResult) => {
+    const { name, duration, success } = result;
+    const warnThreshold = options?.warnThreshold || 100; // Default warn threshold: 100ms
+    
+    const message = success
+      ? `${componentName} » ${name}: ${duration.toFixed(2)}ms`
+      : `${componentName} » ${name} failed: ${duration.toFixed(2)}ms`;
+    
+    const details = {
+      ...(options?.baseDetails || {}),
+      duration,
+      success,
+      component: componentName,
+      ...(result.error ? { error: result.error.message } : {})
+    };
+    
+    if (duration > warnThreshold) {
+      logger.warn(message, {
+        category: options?.category || LogCategory.PERFORMANCE,
+        tags: [...(options?.tags || []), 'performance', 'slow'],
+        details
+      });
+    } else {
+      logger.debug(message, {
+        category: options?.category || LogCategory.PERFORMANCE,
+        tags: [...(options?.tags || []), 'performance'],
+        details
+      });
+    }
+  };
 }

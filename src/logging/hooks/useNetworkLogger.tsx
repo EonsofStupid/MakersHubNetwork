@@ -94,7 +94,7 @@ export function useNetworkLogger(source: string = 'API') {
         }
         throw error;
       }
-    }, { category: LogCategory.NETWORK });
+    });
   }, [logger, measureAsync]);
 
   return { logFetch };
