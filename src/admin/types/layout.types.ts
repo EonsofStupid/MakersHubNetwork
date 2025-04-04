@@ -1,5 +1,6 @@
 
 import { Json } from '@/types/json';
+import { toSafeJson } from '@/utils/jsonUtils';
 
 export interface LayoutComponent {
   id: string;
@@ -51,3 +52,36 @@ export interface LayoutSkeleton {
 
 // Alias Component to LayoutComponent for backward compatibility
 export type Component = LayoutComponent;
+
+/**
+ * Convert a layout object to a safe JSON representation for database storage
+ */
+export function layoutToJson(layout: Partial<Layout>): Json {
+  const { components, version } = layout;
+  return toSafeJson({
+    components: components || [],
+    version: version || 1
+  });
+}
+
+/**
+ * Create a basic layout with required fields initialized
+ */
+export function createEmptyLayout(partial: Partial<Layout> = {}): Layout {
+  const now = new Date().toISOString();
+  return {
+    id: partial.id || crypto.randomUUID(),
+    name: partial.name || 'New Layout',
+    type: partial.type || 'page',
+    description: partial.description,
+    components: partial.components || [],
+    version: partial.version || 1,
+    scope: partial.scope || 'global',
+    created_at: partial.created_at || now,
+    updated_at: partial.updated_at || now,
+    created_by: partial.created_by,
+    is_active: partial.is_active !== undefined ? partial.is_active : true,
+    is_locked: partial.is_locked !== undefined ? partial.is_locked : false,
+    meta: partial.meta || {}
+  };
+}

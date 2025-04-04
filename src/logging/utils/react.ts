@@ -45,3 +45,15 @@ export function nodeToSearchableString(node: ReactNode): string {
 export function getPlainText(node: ReactNode): string {
   return nodeToSearchableString(node).replace(/\s+/g, ' ').trim();
 }
+
+/**
+ * Safely render React node with error handling
+ */
+export function safelyRenderNode(node: ReactNode): ReactNode {
+  try {
+    return node;
+  } catch (error) {
+    console.error('Error rendering React node:', error);
+    return `[Render Error: ${error instanceof Error ? error.message : 'Unknown error'}]`;
+  }
+}

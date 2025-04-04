@@ -1,7 +1,7 @@
 import { PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutSkeleton, Layout } from "@/admin/types/layout.types";
-import { safeJsonParse } from "@/types/json";
+import { LayoutSkeleton, Layout, layoutToJson } from "@/admin/types/layout.types";
+import { safeJsonParse } from "@/utils/jsonUtils";
 
 interface LayoutResponse {
   data: LayoutSkeleton | null;
