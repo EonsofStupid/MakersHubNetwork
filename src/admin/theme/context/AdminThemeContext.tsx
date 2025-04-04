@@ -39,7 +39,14 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (currentTheme) {
       try {
+        logger.debug('Creating admin theme from current theme', {
+          details: { themeId: currentTheme.id }
+        });
+        
+        // Use the fixed themeToImpulseTheme function to convert the theme
         const impulseTheme = themeToImpulseTheme(currentTheme);
+        
+        // Set the admin theme state
         setAdminTheme(impulseTheme);
         
         // Apply theme to document

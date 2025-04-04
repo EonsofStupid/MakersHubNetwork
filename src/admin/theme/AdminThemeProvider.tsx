@@ -8,7 +8,7 @@ import {
   applyEmergencyTheme,
   verifyThemeApplication
 } from './utils/themeApplicator';
-import { defaultImpulseTokens } from './impulse/tokens';
+import { defaultImpulseTokens } from '@/admin/types/impulse.types';
 import { DynamicKeyframes } from './effects/DynamicKeyframes';
 import { themeRegistry } from './ThemeRegistry';
 import { getLogger } from '@/logging';
@@ -34,6 +34,10 @@ const FALLBACKS = {
   error: '#EF4444'
 };
 
+/**
+ * The main AdminThemeProvider that handles application of theme values
+ * to the document and provides theme context to child components.
+ */
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
   const [isApplied, setIsApplied] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
@@ -41,7 +45,6 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   const { currentTheme, hydrateTheme } = useThemeStore();
 
   // Apply emergency theme IMMEDIATELY before any other operations
-  // This ensures critical styling is applied even before the useEffect runs
   useEffect(() => {
     // Create and inject fallback styles first thing - these will apply
     // even if JS fails later
@@ -107,7 +110,6 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
           document.documentElement.setAttribute('data-admin-theme', 'impulsivity');
           
           // Set CSS variables directly for immediate effect
-          // These are simplified versions that should be safe from type errors
           document.documentElement.style.setProperty('--color-primary', FALLBACKS.primary);
           document.documentElement.style.setProperty('--color-secondary', FALLBACKS.secondary);
           document.documentElement.style.setProperty('--color-accent', FALLBACKS.accent);
@@ -126,7 +128,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
           document.documentElement.style.setProperty('--color-secondary-rgb', '255, 45, 110');
           document.documentElement.style.setProperty('--color-accent-rgb', '139, 92, 246');
           
-          // Add keyframes for essential animations
+          // Add essential keyframes
           addEssentialKeyframes();
           
           setIsApplied(true);

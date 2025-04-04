@@ -22,7 +22,7 @@ const EMERGENCY_COLORS = {
 /**
  * Check if current theme has all critical variables set correctly
  */
-export function validateThemeApplication(): boolean {
+export function verifyThemeApplication(): boolean {
   try {
     const root = document.documentElement;
     const criticalVars = [
@@ -98,7 +98,7 @@ export function applyThemeToDocument(theme: Partial<ImpulseTheme>): void {
     // Apply typography with validation
     applyStringVariable(root, '--font-family-body', getThemeProperty(theme, 'typography.fonts.body', 'Inter, system-ui, sans-serif'));
     applyStringVariable(root, '--font-family-heading', getThemeProperty(theme, 'typography.fonts.heading', 'Inter, system-ui, sans-serif'));
-    applyStringVariable(root, '--font-family-mono', getThemeProperty(theme, 'typography.fonts.monospace', 'Consolas, monospace'));
+    applyStringVariable(root, '--font-family-mono', getThemeProperty(theme, 'typography.fonts.mono', 'Consolas, monospace'));
     
     // Apply component styles with validation
     applyStringVariable(root, '--border-radius-sm', getThemeProperty(theme, 'components.input.radius', '0.375rem'));
@@ -117,7 +117,7 @@ export function applyThemeToDocument(theme: Partial<ImpulseTheme>): void {
     root.classList.add('theme-applied');
     
     // Verify critical variables were applied
-    if (!validateThemeApplication()) {
+    if (!verifyThemeApplication()) {
       logger.warn('Critical theme variables not applied correctly, applying emergency fallbacks');
       // Apply emergency styles for critical variables only
       applyEmergencyCriticalStyles();
@@ -208,11 +208,10 @@ function applyColorVariable(element: HTMLElement, varName: string, color: any): 
 
 /**
  * Apply RGB components of a color as a CSS variable for alpha channel usage
- * with improved error handling and validation
  */
 function applyRgbVariable(element: HTMLElement, varName: string, color: any): void {
   try {
-    // First ensure it's a string value 
+    // First ensure it's a string value
     const safeColor = ensureStringValue(color, '');
     
     // Only process if we have a valid value
@@ -247,7 +246,7 @@ function applyRgbVariable(element: HTMLElement, varName: string, color: any): vo
       }
       
       // Verify the RGB string is valid
-      if (!rgbString || rgbString === '0, 0, 0' && varName !== '--color-black') {
+      if (!rgbString || (rgbString === '0, 0, 0' && varName !== '--color-black')) {
         logger.debug(`Using fallback RGB for ${varName}`);
         element.style.setProperty(`${varName}-rgb`, getDefaultRgb(varName));
       }
@@ -372,7 +371,6 @@ export function createFallbackStyles(): void {
 
 /**
  * Apply emergency theme directly to HTML element to ensure critical styling
- * before any JS executes
  */
 export function applyEmergencyTheme(): void {
   try {
@@ -414,35 +412,5 @@ export function applyEmergencyTheme(): void {
   } catch (error) {
     // At this point there's nothing else we can do
     console.error('Critical theme failure:', error);
-  }
-}
-
-/**
- * Verify theme application and log failures
- */
-export function verifyThemeApplication(): boolean {
-  try {
-    const root = document.documentElement;
-    const criticalVars = [
-      { name: '--color-primary', value: getComputedStyle(root).getPropertyValue('--color-primary').trim() },
-      { name: '--color-background', value: getComputedStyle(root).getPropertyValue('--color-background').trim() },
-      { name: '--color-foreground', value: getComputedStyle(root).getPropertyValue('--color-foreground').trim() }
-    ];
-    
-    const missingVars = criticalVars.filter(v => !v.value);
-    
-    if (missingVars.length > 0) {
-      logger.warn('Critical theme variables missing:', { 
-        details: { missingVars: missingVars.map(v => v.name) } 
-      });
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    logger.error('Error verifying theme application', {
-      details: { error: error instanceof Error ? error.message : 'Unknown error' }
-    });
-    return false;
   }
 }
