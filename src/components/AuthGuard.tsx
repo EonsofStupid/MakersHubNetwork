@@ -18,7 +18,7 @@ export const AuthGuard = ({ children, requiredRoles, adminOnly }: AuthGuardProps
   const navigate = useNavigate()
   const location = useLocation()
   const { toast } = useToast()
-  const logger = useLogger("AuthGuard", LogCategory.AUTH)
+  const logger = useLogger("AuthGuard", { category: LogCategory.AUTH })
   
   // Use centralized auth
   const { isLoading, status, roles, user } = useAuth()

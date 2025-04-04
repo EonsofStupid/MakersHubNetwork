@@ -5,12 +5,19 @@ import { LogActivityStream } from '@/logging/components/LogActivityStream';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogLevel } from '@/logging';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging/types';
 
 // Avoid circular dependencies by using dynamic import
 const PerformanceMetrics = lazy(() => import('@/admin/dashboard/PerformanceMetrics'));
 
 export function LogsPage() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const logger = useLogger('LogsPage', { category: LogCategory.ADMIN });
+  
+  React.useEffect(() => {
+    logger.info('Logs page accessed');
+  }, [logger]);
 
   return (
     <div className="space-y-6">

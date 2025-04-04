@@ -7,19 +7,25 @@ import { LogCategory, LogLevel, memoryTransport } from '@/logging';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Trash } from 'lucide-react';
+import { useLogger } from '@/hooks/use-logger';
 
 export function LogsDashboard() {
-  const [logs, setLogs] = useState(memoryTransport.getLogs());
+  const [logs, setLogs] = useState(memoryTransport.getLogs?.() || []);
   const [activeTab, setActiveTab] = useState<string>('level');
+  const logger = useLogger('LogsDashboard', { category: LogCategory.ADMIN });
   
   // Refresh logs periodically
   useEffect(() => {
+    logger.info('LogsDashboard mounted');
+    
     const interval = setInterval(() => {
-      setLogs(memoryTransport.getLogs());
+      if (memoryTransport.getLogs) {
+        setLogs(memoryTransport.getLogs());
+      }
     }, 5000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [logger]);
   
   // Process log data for charts
   const levelData = React.useMemo(() => {
@@ -50,8 +56,11 @@ export function LogsDashboard() {
   }, [logs]);
   
   const clearAllLogs = () => {
-    memoryTransport.clear();
-    setLogs([]);
+    if (memoryTransport.clear) {
+      memoryTransport.clear();
+      setLogs([]);
+      logger.info('All logs cleared');
+    }
   };
   
   // Calculate some statistics

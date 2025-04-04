@@ -2,6 +2,7 @@
 import { subscribeToAuthEvents } from '@/auth/bridge';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 // Module state type
 interface ModuleState {
@@ -23,11 +24,8 @@ export function initializeAdminModule(): void {
     return;
   }
 
-  const logger = getLogger();
-  logger.info('Initializing admin module', {
-    category: LogCategory.ADMIN,
-    source: 'ModuleRegistry'
-  });
+  const logger = getLogger('ModuleRegistry', { category: LogCategory.ADMIN });
+  logger.info('Initializing admin module');
 
   // Register event handlers if not already done
   if (!moduleState.eventHandlersRegistered) {
@@ -42,24 +40,28 @@ export function initializeAdminModule(): void {
  * Register event handlers for admin module
  */
 function registerEventHandlers(): void {
-  const logger = getLogger();
+  const logger = getLogger('ModuleRegistry', { category: LogCategory.ADMIN });
   
-  // Subscribe to auth events
-  subscribeToAuthEvents((event) => {
-    logger.info(`Admin module received auth event: ${event.type}`, {
-      category: LogCategory.ADMIN,
-      source: 'ModuleRegistry',
-      details: { eventType: event.type }
-    });
+  try {
+    // Subscribe to auth events
+    subscribeToAuthEvents((event) => {
+      logger.info(`Admin module received auth event: ${event.type}`, {
+        details: { eventType: event.type }
+      });
 
-    // Handle auth events specific to admin functionality
-    switch (event.type) {
-      case 'AUTH_SIGNED_IN':
-        // Handle sign in if needed
-        break;
-      case 'AUTH_SIGNED_OUT':
-        // Handle sign out if needed
-        break;
-    }
-  });
+      // Handle auth events specific to admin functionality
+      switch (event.type) {
+        case 'AUTH_SIGNED_IN':
+          // Handle sign in if needed
+          break;
+        case 'AUTH_SIGNED_OUT':
+          // Handle sign out if needed
+          break;
+      }
+    });
+  } catch (error) {
+    logger.error('Error registering event handlers', {
+      details: safeDetails(error)
+    });
+  }
 }

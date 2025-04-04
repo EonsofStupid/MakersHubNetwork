@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { LoggerOptions } from '../types';
 import { useLogger } from './useLogger';
+import { safeDetails } from '../utils/safeDetails';
 
 interface ErrorLoggerOptions extends LoggerOptions {
   enableGlobalHandlers?: boolean;
@@ -26,13 +27,13 @@ export function useErrorLogger(source?: string, options: ErrorLoggerOptions = {}
     // Global uncaught error handler
     window.onerror = (event, source, lineno, colno, error) => {
       logger.error('Uncaught error', {
-        details: {
+        details: safeDetails({
           message: error?.message || String(event),
           source,
           lineno,
           colno,
           stack: error?.stack
-        }
+        })
       });
       
       // Call previous handler if it exists
@@ -47,11 +48,7 @@ export function useErrorLogger(source?: string, options: ErrorLoggerOptions = {}
     // Unhandled promise rejection handler
     const handleRejection = (event: PromiseRejectionEvent) => {
       logger.error('Unhandled promise rejection', {
-        details: {
-          reason: event.reason instanceof Error
-            ? { message: event.reason.message, stack: event.reason.stack }
-            : event.reason
-        }
+        details: safeDetails(event.reason)
       });
     };
     
