@@ -1,7 +1,8 @@
+
 import { useState, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
-import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
+import { Layout, LayoutSkeleton, layoutToJson } from '@/admin/types/layout.types';
 import { toast } from 'sonner';
 
 interface UseLayoutSkeletonResult {
@@ -60,27 +61,6 @@ interface UseLayoutSkeletonResult {
     isPending: boolean;
   };
 }
-
-/**
- * Convert a layout to a layout skeleton for database storage
- */
-const layoutToLayoutSkeleton = (layout: Layout): Partial<LayoutSkeleton> => {
-  return {
-    id: layout.id,
-    name: layout.name,
-    type: layout.type,
-    scope: layout.scope,
-    description: layout.description,
-    is_active: layout.is_active,
-    is_locked: layout.is_locked,
-    layout_json: layoutToJson({
-      components: layout.components,
-      version: layout.version
-    }),
-    version: layout.version,
-    meta: layout.meta
-  };
-};
 
 export const useLayoutSkeleton = (): UseLayoutSkeletonResult => {
   const queryClient = useQueryClient();
@@ -184,34 +164,41 @@ export const useLayoutSkeleton = (): UseLayoutSkeletonResult => {
 
   // Hook to create a new layout
   const useCreateLayout = () => {
-    const mutation = useMutation(
-      async (layout: Partial<LayoutSkeleton>) => {
+    const mutation = useMutation({
+      mutationFn: async (layout: Partial<LayoutSkeleton>) => {
         const result = await layoutSkeletonService.create(layout);
         if (!result.success) {
           throw new Error(result.error || 'Failed to create layout');
         }
         return result.data;
       },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['layouts'] });
-        },
-        onError: (error: any) => {
-          toast.error(error.message || 'Failed to create layout');
-        },
-      }
-    );
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['layouts'] });
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to create layout');
+      },
+    });
 
     return {
-      mutate: mutation.mutate,
+      mutate: (layout: Partial<LayoutSkeleton>, options?: { onSuccess?: (data: any) => void, onError?: (error: any) => void }) => {
+        mutation.mutate(layout, {
+          onSuccess: (data) => {
+            options?.onSuccess?.(data);
+          },
+          onError: (error) => {
+            options?.onError?.(error);
+          },
+        });
+      },
       isPending: mutation.isPending,
     };
   };
 
   // Hook to update an existing layout
   const useUpdateLayout = () => {
-    const mutation = useMutation(
-      async (layout: Partial<LayoutSkeleton>) => {
+    const mutation = useMutation({
+      mutationFn: async (layout: Partial<LayoutSkeleton>) => {
         if (!layout.id) {
           throw new Error('Layout ID is required for updating');
         }
@@ -221,96 +208,124 @@ export const useLayoutSkeleton = (): UseLayoutSkeletonResult => {
         }
         return result.data;
       },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['layouts'] });
-        },
-        onError: (error: any) => {
-          toast.error(error.message || 'Failed to update layout');
-        },
-      }
-    );
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['layouts'] });
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update layout');
+      },
+    });
 
     return {
-      mutate: mutation.mutate,
+      mutate: (layout: Partial<LayoutSkeleton>, options?: { onSuccess?: (data: any) => void, onError?: (error: any) => void }) => {
+        mutation.mutate(layout, {
+          onSuccess: (data) => {
+            options?.onSuccess?.(data);
+          },
+          onError: (error) => {
+            options?.onError?.(error);
+          },
+        });
+      },
       isPending: mutation.isPending,
     };
   };
 
   // Hook to delete a layout
   const useDeleteLayout = () => {
-    const mutation = useMutation(
-      async (id: string) => {
+    const mutation = useMutation({
+      mutationFn: async (id: string) => {
         const result = await layoutSkeletonService.delete(id);
         if (!result.success) {
           throw new Error(result.error || 'Failed to delete layout');
         }
         return result.success;
       },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['layouts'] });
-        },
-        onError: (error: any) => {
-          toast.error(error.message || 'Failed to delete layout');
-        },
-      }
-    );
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['layouts'] });
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to delete layout');
+      },
+    });
 
     return {
-      mutate: mutation.mutate,
+      mutate: (id: string, options?: { onSuccess?: (data: any) => void, onError?: (error: any) => void }) => {
+        mutation.mutate(id, {
+          onSuccess: (data) => {
+            options?.onSuccess?.(data);
+          },
+          onError: (error) => {
+            options?.onError?.(error);
+          },
+        });
+      },
       isPending: mutation.isPending,
     };
   };
 
   // Hook to save a layout (create or update)
   const useSaveLayout = () => {
-    const mutation = useMutation(
-      async (layout: Partial<LayoutSkeleton>) => {
+    const mutation = useMutation({
+      mutationFn: async (layout: Partial<LayoutSkeleton>) => {
         const result = await layoutSkeletonService.saveLayout(layout);
         if (!result.success) {
           throw new Error(result.error || 'Failed to save layout');
         }
         return result;
       },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['layouts'] });
-        },
-        onError: (error: any) => {
-          toast.error(error.message || 'Failed to save layout');
-        },
-      }
-    );
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['layouts'] });
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to save layout');
+      },
+    });
 
     return {
-      mutate: mutation.mutate,
+      mutate: (layout: Partial<LayoutSkeleton>, options?: { onSuccess?: (data: any) => void, onError?: (error: any) => void }) => {
+        mutation.mutate(layout, {
+          onSuccess: (data) => {
+            options?.onSuccess?.(data);
+          },
+          onError: (error) => {
+            options?.onError?.(error);
+          },
+        });
+      },
       isPending: mutation.isPending,
     };
   };
 
   // Hook to delete a layout by ID
   const useDeleteLayoutById = () => {
-    const mutation = useMutation(
-      async (id: string) => {
+    const mutation = useMutation({
+      mutationFn: async (id: string) => {
         const result = await layoutSkeletonService.deleteLayout(id);
         if (!result.success) {
           throw new Error(result.error || 'Failed to delete layout');
         }
         return result.success;
       },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['layouts'] });
-        },
-        onError: (error: any) => {
-          toast.error(error.message || 'Failed to delete layout');
-        },
-      }
-    );
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['layouts'] });
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to delete layout');
+      },
+    });
 
     return {
-      mutate: mutation.mutate,
+      mutate: (id: string, options?: { onSuccess?: (data: any) => void, onError?: (error: any) => void }) => {
+        mutation.mutate(id, {
+          onSuccess: (data) => {
+            options?.onSuccess?.(data);
+          },
+          onError: (error) => {
+            options?.onError?.(error);
+          },
+        });
+      },
       isPending: mutation.isPending,
     };
   };

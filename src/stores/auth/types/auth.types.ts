@@ -40,3 +40,6 @@ export interface AdminAccess {
 export interface WithAdminAccess {
   hasAdminAccess: boolean;
 }
+
+// Re-export AuthStatus for internal use
+export { AuthStatus };

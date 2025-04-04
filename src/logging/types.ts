@@ -34,6 +34,9 @@ export interface LoggerOptions {
   source?: string;
 }
 
+// Re-export LogLevel and LogCategory for broader usage
+export { LogLevel, LogCategory };
+
 /**
  * Options for individual log entries
  */

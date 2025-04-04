@@ -65,3 +65,13 @@ export interface CreateLayoutResponse {
 // Helper types
 export type LayoutType = 'admin' | 'site' | 'dashboard' | 'page' | 'section';
 export type LayoutScope = 'admin' | 'site' | 'public' | 'user';
+
+/**
+ * Convert a layout to JSON format for storage
+ */
+export function layoutToJson(data: { components: Component[], version: number }): LayoutJsonData {
+  return {
+    components: data.components || [],
+    version: data.version || 1
+  };
+}
