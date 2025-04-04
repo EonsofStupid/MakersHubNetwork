@@ -64,7 +64,7 @@ export interface LogEntry {
   id: string;
   level: LogLevel;
   category?: LogCategory;
-  message: string;
+  message: string | React.ReactNode;
   timestamp: string | Date;
   details?: Record<string, any>;
   tags?: string[];
@@ -73,6 +73,10 @@ export interface LogEntry {
   correlationId?: string;
   success?: boolean;
   source?: string;
+  user_id?: string;
+  session_id?: string;
+  app_version?: string;
+  trace?: string;
 }
 
 // Transport interface for consistent log handling
@@ -96,5 +100,61 @@ export interface PerformanceMeasurementOptions {
   details?: Record<string, any>;
 }
 
-// Re-export the enums for broader usage
-export { LogLevel, LogCategory };
+// Performance measurement result
+export interface MeasurementResult {
+  name: string;
+  duration: number;
+  success: boolean;
+  timestamp: number;
+  error?: Error;
+}
+
+// Logging configuration
+export interface LoggingConfig {
+  minLevel: LogLevel;
+  enabled?: boolean;
+  transports: LogTransport[];
+  categoryLevels?: Partial<Record<LogCategory, LogLevel>>;
+  enabledCategories?: LogCategory[];
+  disabledCategories?: LogCategory[];
+  bufferSize?: number;
+  flushInterval?: number;
+  includeSource?: boolean;
+  includeUser?: boolean;
+  includeSession?: boolean;
+}
+
+// Log event callback
+export type LogEventCallback = (entry: LogEntry) => void;
+
+// Logging context type for the React provider
+export interface LoggingContextType {
+  logs: LogEntry[];
+  clearLogs: () => void;
+  showLogConsole: boolean;
+  setShowLogConsole: (show: boolean) => void;
+  toggleLogConsole: () => void;
+  minLogLevel: LogLevel;
+  setMinLogLevel: (level: LogLevel) => void;
+}
+
+// Log options
+export interface LogOptions {
+  level?: LogLevel;
+  category?: LogCategory;
+  tags?: string[];
+  details?: any;
+  includeTrace?: boolean;
+  timestamp?: Date;
+  report?: boolean;
+  source?: string;
+}
+
+// Performance logger options
+export interface PerformanceLoggerOptions {
+  category?: LogCategory;
+  source?: string;
+  autoStart?: boolean;
+  warnThreshold?: number;
+  includeInTimeline?: boolean;
+}

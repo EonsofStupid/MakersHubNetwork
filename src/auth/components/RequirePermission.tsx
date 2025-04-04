@@ -5,7 +5,7 @@ import { useAuthState } from '../hooks/useAuthState';
 import { hasPermission } from '../rbac/enforce';
 import { PermissionValue } from '../permissions';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 
 interface RequirePermissionProps {
   children: React.ReactNode;
@@ -41,7 +41,7 @@ export function RequirePermission({
   
   // Log permission check
   logger.info(`Permission check for ${permission}`, {
-    category: LogCategory.AUTH,
+    category: LogCategory.AUTHENTICATION,
     source: "RequirePermission",
     details: { 
       permission,

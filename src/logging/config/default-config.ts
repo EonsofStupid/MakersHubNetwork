@@ -1,6 +1,5 @@
 
-import { LoggingConfig } from '../types';
-import { LogCategory, LogLevel } from '@/constants/logLevel';
+import { LoggingConfig, LogCategory, LogLevel } from '../types';
 import { memoryTransport } from '../transports/memory.transport';
 
 /**
@@ -18,7 +17,7 @@ export const defaultLoggingConfig: LoggingConfig = {
   enabledCategories: [
     LogCategory.SYSTEM,
     LogCategory.ERROR,
-    LogCategory.AUTH,
+    LogCategory.AUTHENTICATION,
     LogCategory.API,
     LogCategory.THEME,
     LogCategory.ADMIN,

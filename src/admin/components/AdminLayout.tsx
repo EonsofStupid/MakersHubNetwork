@@ -12,7 +12,7 @@ import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { LogConsole } from "@/logging/components/LogConsole";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/constants/logLevel";
+import { LogCategory } from "@/logging/types";
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
 
