@@ -53,10 +53,8 @@ const initializeAllComponentRegistries = async () => {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <App onInitialized={initializeAllComponentRegistries} />
-      </QueryClientProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <App onInitialized={initializeAllComponentRegistries} />
+    </QueryClientProvider>
   </React.StrictMode>,
 );

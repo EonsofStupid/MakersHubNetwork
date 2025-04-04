@@ -1,13 +1,13 @@
 
 import React, { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
-import { DashboardLayout } from './layouts/DashboardLayout';
-import Dashboard from './pages/Dashboard';
 import { Toaster } from '@/components/ui/toaster';
 import { LoggingProvider } from './logging/context/LoggingContext';
 import { useToast } from './hooks/use-toast';
 import { AuthProvider } from './auth/components/AuthProvider';
+import { Layout } from './components/ui/layout/Layout';
+import { AppRoutes } from './routes/app-routes';
 
 // Define App props interface
 interface AppProps {
@@ -24,18 +24,23 @@ function App({ onInitialized }: AppProps) {
       title: 'Welcome to MakersImpulse',
       description: 'Your 3D printing community hub',
     });
-  }, [toast]);
+    
+    // Call the onInitialized callback if provided
+    if (onInitialized) {
+      onInitialized();
+    }
+  }, [toast, onInitialized]);
 
   return (
     <LoggingProvider>
       <AuthProvider onInitialized={onInitialized}>
         <ThemeProvider>
           <div className="min-h-screen bg-background">
-            <Routes>
-              <Route path="/" element={<DashboardLayout />}>
-                <Route index element={<Dashboard />} />
-              </Route>
-            </Routes>
+            <Router>
+              <Layout>
+                <AppRoutes />
+              </Layout>
+            </Router>
           </div>
           <Toaster />
         </ThemeProvider>
