@@ -224,7 +224,7 @@ export function LogConsole({
                             <details className="mt-1">
                               <summary className="cursor-pointer text-xs text-muted-foreground">Details</summary>
                               <pre className="text-xs bg-muted/20 p-2 rounded mt-1 overflow-auto max-h-[200px]">
-                                {formatLogDetails(log.details)}
+                                {JSON.stringify(log.details, null, 2)}
                               </pre>
                             </details>
                           )}
@@ -273,23 +273,3 @@ function renderMessage(message: any): React.ReactNode {
     return '[Complex Object]';
   }
 }
-
-const formatLogDetails = (details: any) => {
-  if (!details) return null;
-  
-  const isErrorObject = (obj: any): obj is Error => {
-    return obj && typeof obj === 'object' && 'message' in obj;
-  };
-  
-  if (typeof details === 'string') {
-    return details;
-  } else if (isErrorObject(details)) {
-    return details.message;
-  } else if (Array.isArray(details)) {
-    return <pre>{JSON.stringify(details, null, 2)}</pre>;
-  } else if (typeof details === 'object') {
-    return <pre>{JSON.stringify(details, null, 2)}</pre>;
-  }
-  
-  return String(details);
-};

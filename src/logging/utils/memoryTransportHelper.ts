@@ -51,7 +51,9 @@ export function getLogsByCategory(category: string, limit?: number): LogEntry[] 
 export function getErrorLogs(limit?: number): LogEntry[] {
   return safeGetLogs(limit, (log) => {
     // Fix type comparison using explicit enum values
-    return log.level >= LogLevel.ERROR;
+    return log.level === LogLevel.ERROR || 
+           log.level === LogLevel.FATAL || 
+           log.level === LogLevel.CRITICAL;
   });
 }
 

@@ -16,7 +16,6 @@ export enum LogCategory {
   SYSTEM = 'system',
   APPLICATION = 'application',
   AUTHENTICATION = 'auth',
-  AUTH = 'auth', // Add auth alias for backward compatibility
   DATABASE = 'database',
   NETWORK = 'network',
   UI = 'ui',
