@@ -1,77 +1,142 @@
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging/constants/log-level';
-import { useAtom } from 'jotai';
-import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
+import { LogCategory } from '@/logging/types';
 
-interface UseDragDropOptions {
+interface DragDropOptions {
   containerId: string;
   itemId: string;
-  onReorder?: (items: string[]) => void;
   dragOnlyInEditMode?: boolean;
+  onDragStart?: (event: DragEvent, id: string) => void;
+  onDragEnd?: (event: DragEvent, id: string) => void;
+  onDrop?: (event: DragEvent, id: string, containerId: string) => void;
+}
+
+interface DragDropResult {
+  isDragging: boolean;
+  makeDraggable: (element: HTMLElement) => () => void;
 }
 
 /**
- * Hook for implementing drag and drop functionality
- * on DOM elements directly
+ * Custom hook for implementing drag and drop functionality
  */
-export const useDragDrop = ({
+export function useDragDrop({
   containerId,
   itemId,
-  onReorder,
-  dragOnlyInEditMode = false
-}: UseDragDropOptions) => {
+  dragOnlyInEditMode = false,
+  onDragStart,
+  onDragEnd,
+  onDrop
+}: DragDropOptions): DragDropResult {
+  const [isDragging, setIsDragging] = useState(false);
   const logger = useLogger('useDragDrop', { category: LogCategory.ADMIN });
-  const [isEditMode] = useAtom(adminEditModeAtom);
-  const isDraggingRef = useRef(false);
-  
-  // Make the element draggable
+  const cleanupRef = useRef<(() => void) | null>(null);
+
   const makeDraggable = useCallback((element: HTMLElement) => {
-    if (!element) return;
-    
-    // Skip if not in edit mode and dragOnlyInEditMode is true
-    if (dragOnlyInEditMode && !isEditMode) return;
-    
-    // Set up draggable attributes
+    // Clean up previous event listeners if they exist
+    if (cleanupRef.current) {
+      cleanupRef.current();
+      cleanupRef.current = null;
+    }
+
+    // Set draggable attribute
     element.setAttribute('draggable', 'true');
     
-    // Clean up function to remove event listeners
-    const cleanup = () => {
-      element.removeAttribute('draggable');
-      element.removeEventListener('dragstart', handleDragStart);
-      element.removeEventListener('dragend', handleDragEnd);
-    };
-    
-    // Drag start handler
-    const handleDragStart = (e: DragEvent) => {
-      isDraggingRef.current = true;
-      e.dataTransfer?.setData('text/plain', itemId);
+    // Handler functions
+    const handleDragStart = (event: DragEvent) => {
+      if (!event.dataTransfer) return;
       
-      // Add dragging class
+      setIsDragging(true);
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', itemId);
+      
+      // Add a class for styling
       element.classList.add('dragging');
       
-      logger.debug('Drag started', { details: { itemId, containerId } });
+      // Call the optional callback
+      if (onDragStart) {
+        onDragStart(event, itemId);
+      }
+      
+      logger.debug(`Drag started for item: ${itemId}`, { 
+        details: { containerId, itemId } 
+      });
     };
     
-    // Drag end handler
-    const handleDragEnd = () => {
-      isDraggingRef.current = false;
-      
-      // Remove dragging class
+    const handleDragEnd = (event: DragEvent) => {
+      setIsDragging(false);
       element.classList.remove('dragging');
       
-      logger.debug('Drag ended', { details: { itemId, containerId } });
+      // Call the optional callback
+      if (onDragEnd) {
+        onDragEnd(event, itemId);
+      }
+      
+      logger.debug(`Drag ended for item: ${itemId}`);
     };
     
-    // Add event listeners
-    element.addEventListener('dragstart', handleDragStart);
-    element.addEventListener('dragend', handleDragEnd);
+    const handleDragOver = (event: DragEvent) => {
+      // Prevent default to allow drop
+      event.preventDefault();
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = 'move';
+      }
+    };
+    
+    const handleDrop = (event: DragEvent) => {
+      event.preventDefault();
+      // Call the optional callback
+      if (onDrop) {
+        onDrop(event, itemId, containerId);
+      }
+      
+      logger.debug(`Drop event on container: ${containerId}`, { 
+        details: { 
+          containerId, 
+          itemId,
+          dataTransfer: event.dataTransfer?.getData('text/plain')
+        }
+      });
+    };
+    
+    // Attach event listeners
+    element.addEventListener('dragstart', handleDragStart as EventListener);
+    element.addEventListener('dragend', handleDragEnd as EventListener);
+    
+    // Find the container and add drop zone event listeners
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.addEventListener('dragover', handleDragOver as EventListener);
+      container.addEventListener('drop', handleDrop as EventListener);
+      
+      logger.debug(`Drop zone initialized for container: ${containerId}`);
+    } else {
+      logger.warn(`Container not found: ${containerId}`);
+    }
+    
+    // Return cleanup function
+    const cleanup = () => {
+      element.removeAttribute('draggable');
+      element.classList.remove('dragging');
+      element.removeEventListener('dragstart', handleDragStart as EventListener);
+      element.removeEventListener('dragend', handleDragEnd as EventListener);
+      
+      if (container) {
+        container.removeEventListener('dragover', handleDragOver as EventListener);
+        container.removeEventListener('drop', handleDrop as EventListener);
+      }
+      
+      logger.debug(`Cleaned up drag-drop for item: ${itemId}`);
+    };
+    
+    // Store cleanup function in ref
+    cleanupRef.current = cleanup;
     
     return cleanup;
-  }, [itemId, containerId, logger, isEditMode, dragOnlyInEditMode]);
-  
+  }, [containerId, itemId, onDragStart, onDragEnd, onDrop, logger]);
+
   return {
+    isDragging,
     makeDraggable
   };
-};
+}

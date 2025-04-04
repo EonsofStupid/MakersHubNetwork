@@ -1,4 +1,6 @@
 
+import { Json } from '@/types/json';
+
 export interface LayoutComponent {
   id: string;
   type: string;
@@ -43,10 +45,11 @@ export interface LayoutSkeleton {
   created_by?: string;
   is_active: boolean;
   is_locked: boolean;
-  layout_json: {
+  layout_json: Json | {
     components: LayoutComponent[];
     version: number;
   };
+  meta?: Record<string, any>;
 }
 
 // Alias Component to LayoutComponent for backward compatibility

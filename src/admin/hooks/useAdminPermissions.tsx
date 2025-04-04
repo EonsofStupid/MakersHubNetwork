@@ -1,45 +1,67 @@
-
-import { useMemo } from 'react';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { PERMISSIONS } from '@/auth/permissions';
+import { useAdmin } from '@/admin/hooks/useAdmin';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { AdminPermissionValue } from '@/admin/types/permissions';
+import { LogCategory } from '@/logging/types';
+import { PermissionValue } from '@/auth/permissions';
 
 /**
- * Hook for accessing and checking admin permissions
- * Uses both auth store (for user/roles) and admin store (for permissions)
+ * Hook for checking admin permissions
  */
 export function useAdminPermissions() {
-  const { isLoading: authLoading, status, initialized } = useAuthStore();
-  const { permissions, isLoadingPermissions } = useAdminStore();
-  
-  const isLoading = authLoading || isLoadingPermissions || status === 'loading' || !initialized;
+  const { roles, hasRole, hasAnyRole } = useAdmin();
   const logger = useLogger('useAdminPermissions', { category: LogCategory.ADMIN });
-
-  // Memoize the hasPermission function
-  const hasPermission = useMemo(() => {
-    return (permission: AdminPermissionValue): boolean => {
-      // Super admin permission grants access to everything
-      if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) {
-        return true;
+  
+  /**
+   * Check if the user has a specific permission
+   */
+  const hasPermission = (permission: PermissionValue): boolean => {
+    try {
+      // Special case: if no permission is required, allow access
+      if (!permission) return true;
+      
+      // If permission is a role check
+      if (permission.startsWith('role:')) {
+        const role = permission.replace('role:', '');
+        return hasRole(role);
       }
       
-      return permissions.includes(permission);
-    };
-  }, [permissions]);
-
-  logger.debug('Admin permissions computed', { 
-    details: { 
-      permissionsCount: permissions.length,
-      isLoading
-    } 
-  });
-
+      // For permissions like "admin:*"
+      if (permission.endsWith(':*')) {
+        const prefix = permission.split(':')[0];
+        // Super admin and admin have access to all prefixed permissions
+        if (hasAnyRole(['superadmin', 'admin'])) {
+          return true;
+        }
+        
+        // Check if user has any role with this prefix
+        const prefixedRoles = roles.filter(role => role.startsWith(prefix));
+        return prefixedRoles.length > 0;
+      }
+      
+      // For specific feature permissions (to be implemented)
+      // This is placeholder logic for now
+      if (permission.includes(':')) {
+        // If user is superadmin or admin, grant access
+        if (hasAnyRole(['superadmin', 'admin'])) {
+          return true;
+        }
+        
+        // Other role-based permission checks could go here
+        return false;
+      }
+      
+      // Default deny for unknown permission formats
+      logger.warn(`Unknown permission format: ${permission}`);
+      return false;
+      
+    } catch (error) {
+      logger.error('Error checking permission', { 
+        details: { permission, error } 
+      });
+      return false;
+    }
+  };
+  
   return {
-    permissions,
-    hasPermission,
-    isLoading
+    hasPermission
   };
 }

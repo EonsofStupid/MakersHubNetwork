@@ -28,6 +28,6 @@ export interface Logger {
 }
 
 /**
- * Re-export LogCategory for easier access
+ * Re-export LogCategory and LogLevel for easier access
  */
-export { LogCategory };
+export { LogCategory, LogLevel };
