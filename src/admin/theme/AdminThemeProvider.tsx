@@ -2,13 +2,20 @@
 import React, { useEffect, useState } from 'react';
 import { AdminThemeProvider as AdminThemeContextProvider } from './context/AdminThemeContext';
 import { ThemeFallback } from './fallback/ThemeFallback';
-import { applyThemeToDocument, createFallbackStyles, applyEmergencyTheme } from './utils/themeApplicator';
+import { 
+  applyThemeToDocument, 
+  createFallbackStyles, 
+  applyEmergencyTheme,
+  verifyThemeApplication
+} from './utils/themeApplicator';
 import { defaultImpulseTokens } from './impulse/tokens';
 import { DynamicKeyframes } from './effects/DynamicKeyframes';
 import { themeRegistry } from './ThemeRegistry';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
+import { useThemeStore } from '@/stores/theme/store';
+import { safeDetails } from '@/logging/utils/safeDetails';
 import './impulse/impulse-admin.css';
 import './impulse/impulse-theme.css';
 import './impulse/impulse.css';
@@ -31,6 +38,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   const [isApplied, setIsApplied] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const { measure } = usePerformanceLogger('AdminThemeProvider');
+  const { currentTheme, hydrateTheme } = useThemeStore();
 
   // Apply emergency theme IMMEDIATELY before any other operations
   // This ensures critical styling is applied even before the useEffect runs
@@ -56,28 +64,43 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
           
           // Register default theme if not already registered
           if (!isRegistered) {
-            // Safety check - ensure the defaultImpulseTokens has the expected structure
-            const hasValidStructure = defaultImpulseTokens && 
-              typeof defaultImpulseTokens === 'object' &&
-              defaultImpulseTokens.colors &&
-              typeof defaultImpulseTokens.colors === 'object';
-              
-            if (!hasValidStructure) {
-              logger.error('Default theme tokens have invalid structure', { 
-                details: { tokens: defaultImpulseTokens } 
+            try {
+              // Safety check - ensure the defaultImpulseTokens has the expected structure
+              const hasValidStructure = defaultImpulseTokens && 
+                typeof defaultImpulseTokens === 'object' &&
+                defaultImpulseTokens.colors &&
+                typeof defaultImpulseTokens.colors === 'object';
+                
+              if (!hasValidStructure) {
+                logger.error('Default theme tokens have invalid structure', { 
+                  details: { tokens: defaultImpulseTokens } 
+                });
+                // Apply emergency theme if tokens are invalid
+                applyEmergencyTheme();
+              } else {
+                // Register theme properly
+                themeRegistry.registerTheme('default', defaultImpulseTokens);
+                setIsRegistered(true);
+                logger.debug('Default theme registered with registry');
+              }
+            } catch (registerError) {
+              logger.error('Failed to register default theme', { 
+                details: safeDetails(registerError) 
               });
-              // Apply emergency theme if tokens are invalid
               applyEmergencyTheme();
-            } else {
-              // Register theme properly
-              themeRegistry.registerTheme('default', defaultImpulseTokens);
-              setIsRegistered(true);
-              logger.debug('Default theme registered with registry');
             }
           }
           
           // Apply the default theme immediately
-          applyThemeToDocument(defaultImpulseTokens);
+          try {
+            applyThemeToDocument(defaultImpulseTokens);
+            logger.debug('Default theme applied via applyThemeToDocument');
+          } catch (applyError) {
+            logger.error('Failed to apply default theme', { 
+              details: safeDetails(applyError) 
+            });
+            applyEmergencyTheme();
+          }
           
           // Add admin theme class to html element
           document.documentElement.classList.add('impulse-admin-root');
@@ -108,6 +131,12 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
           
           setIsApplied(true);
           logger.info('Admin theme fallback applied successfully');
+          
+          // Verify theme was applied correctly
+          if (!verifyThemeApplication()) {
+            logger.warn('Theme verification failed, applying emergency theme');
+            applyEmergencyTheme();
+          }
         } catch (error) {
           logger.error('Failed to apply admin theme fallback', {
             details: { error: error instanceof Error ? error.message : 'Unknown error' }
@@ -129,17 +158,37 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
     // Execute immediately
     registerAndApplyTheme();
     
+    // Also ensure theme is hydrated from the store
+    if (!currentTheme) {
+      try {
+        hydrateTheme().catch(err => {
+          logger.error('Failed to hydrate theme from store', { 
+            details: safeDetails(err) 
+          });
+        });
+      } catch (hydrateError) {
+        logger.error('Unhandled error hydrating theme', { 
+          details: safeDetails(hydrateError) 
+        });
+      }
+    }
+    
     return () => {
       // Clean up when component unmounts
       document.documentElement.classList.remove('impulse-admin-root');
       document.documentElement.removeAttribute('data-admin-theme');
       logger.debug('Admin theme cleanup on unmount');
     };
-  }, [isRegistered, measure]);
+  }, [isRegistered, measure, currentTheme, hydrateTheme]);
 
   // Add essential keyframes for basic animations before the DynamicKeyframes component loads
   const addEssentialKeyframes = () => {
     try {
+      // Check if essential keyframes already exist
+      if (document.getElementById('essential-admin-keyframes')) {
+        return;
+      }
+      
       const style = document.createElement('style');
       style.id = 'essential-admin-keyframes';
       style.textContent = `
@@ -165,7 +214,9 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
       document.head.appendChild(style);
       logger.debug('Essential admin keyframes added');
     } catch (error) {
-      logger.error('Failed to add essential keyframes', { details: { error } });
+      logger.error('Failed to add essential keyframes', { 
+        details: safeDetails(error) 
+      });
     }
   };
 

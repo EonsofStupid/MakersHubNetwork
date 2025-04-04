@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { ThemeState, ThemeStore, ThemeComponent } from './types';
@@ -5,7 +6,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
-import { dbRowToTheme, dbRowsToComponentTokens, dbRowsToThemeTokens, componentToDbFormat } from '@/admin/theme/utils/modelTransformers';
+import { 
+  dbRowToTheme, 
+  dbRowsToComponentTokens, 
+  dbRowsToThemeTokens, 
+  componentToDbFormat,
+  themeToImpulseTheme
+} from '@/admin/theme/utils/modelTransformers';
+import { defaultImpulseTokens } from '@/admin/types/impulse.types';
+import { applyThemeToDocument } from '@/admin/theme/utils/themeApplicator';
+import { Theme } from '@/types/theme';
 
 const logger = getLogger('ThemeStore', { category: LogCategory.THEME as string });
 
@@ -15,8 +25,10 @@ const initialState: ThemeState = {
   themeTokens: [],
   themeComponents: [],
   adminComponents: [],
+  siteComponents: [],
   isLoading: false,
-  error: null
+  error: null,
+  lastFetchTimestamp: null
 };
 
 export const useThemeStore = create<ThemeStore>()(
@@ -77,12 +89,29 @@ export const useThemeStore = create<ThemeStore>()(
           // Convert DB rows to ComponentTokens type
           const adminComponents = dbRowsToComponentTokens(adminComponentsData || []);
           
+          // Apply theme to document
+          try {
+            // Create Impulse theme from the DB theme for immediate application
+            const impulseTheme = themeToImpulseTheme(theme);
+            applyThemeToDocument(impulseTheme);
+            logger.debug('Theme applied to document', { 
+              details: { themeId: theme.id, themeName: theme.name } 
+            });
+          } catch (applyError) {
+            logger.error('Failed to apply theme to document', { 
+              details: safeDetails(applyError)
+            });
+            // Continue with setting state, we'll rely on emergency fallbacks
+          }
+          
           set({
             currentTheme: theme,
             themeTokens: tokens,
-            themeComponents: siteComponents,
+            themeComponents: [...siteComponents, ...adminComponents],
             adminComponents: adminComponents,
-            isLoading: false
+            siteComponents: siteComponents,
+            isLoading: false,
+            lastFetchTimestamp: new Date().toISOString()
           });
           
           logger.info('Theme set successfully', { details: { 
@@ -92,7 +121,7 @@ export const useThemeStore = create<ThemeStore>()(
             adminComponentCount: adminComponents.length
           } });
           
-          return;
+          return theme;
         } catch (error) {
           logger.error('Error setting theme', { details: safeDetails(error) });
           set({ error: error instanceof Error ? error : new Error('Unknown error setting theme'), isLoading: false });
@@ -100,35 +129,71 @@ export const useThemeStore = create<ThemeStore>()(
         }
       },
       
-      loadAdminComponents: async () => {
+      // Load components by context
+      loadComponentsByContext: async (context: 'site' | 'admin' | 'all' = 'all') => {
         try {
-          logger.info('Loading admin components');
+          logger.info(`Loading ${context} components`);
           const themeId = get().currentTheme?.id;
           
           if (!themeId) {
-            logger.warn('No current theme set, cannot load admin components');
+            logger.warn('No current theme set, cannot load components');
             return [];
           }
           
-          const { data, error } = await supabase
+          let query = supabase
             .from('theme_components')
             .select('*')
-            .eq('theme_id', themeId)
-            .eq('context', 'admin');
+            .eq('theme_id', themeId);
+          
+          if (context !== 'all') {
+            query = query.eq('context', context);
+          }
+          
+          const { data, error } = await query;
           
           if (error) throw error;
           
           // Convert DB rows to ComponentTokens type
-          const adminComponents = dbRowsToComponentTokens(data || []);
+          const components = dbRowsToComponentTokens(data || []);
           
-          set({ adminComponents });
-          logger.info('Admin components loaded', { details: { count: adminComponents.length } });
+          // Update the appropriate state
+          if (context === 'admin' || context === 'all') {
+            const adminComponents = context === 'all' 
+              ? components.filter(c => c.context === 'admin')
+              : components;
+            
+            set({ adminComponents });
+            logger.info('Admin components loaded', { 
+              details: { count: adminComponents.length } 
+            });
+          }
           
-          return adminComponents;
+          if (context === 'site' || context === 'all') {
+            const siteComponents = context === 'all' 
+              ? components.filter(c => c.context === 'site')
+              : components;
+            
+            set({ siteComponents });
+            logger.info('Site components loaded', { 
+              details: { count: siteComponents.length } 
+            });
+          }
+          
+          return components;
         } catch (error) {
-          logger.error('Error loading admin components', { details: safeDetails(error) });
+          logger.error(`Error loading ${context} components`, { 
+            details: safeDetails(error) 
+          });
           return [];
         }
+      },
+      
+      loadAdminComponents: async () => {
+        return get().loadComponentsByContext('admin');
+      },
+      
+      loadSiteComponents: async () => {
+        return get().loadComponentsByContext('site');
       },
       
       hydrateTheme: async () => {
@@ -165,10 +230,34 @@ export const useThemeStore = create<ThemeStore>()(
             await get().setTheme(currentTheme.id);
           }
           
+          // Apply theme to document
+          const updatedTheme = get().currentTheme;
+          if (updatedTheme) {
+            try {
+              const impulseTheme = themeToImpulseTheme(updatedTheme);
+              applyThemeToDocument(impulseTheme);
+              logger.debug('Theme applied to document during hydration', { 
+                details: { themeId: updatedTheme.id, themeName: updatedTheme.name } 
+              });
+            } catch (applyError) {
+              logger.error('Failed to apply theme to document during hydration', { 
+                details: safeDetails(applyError)
+              });
+              // Continue with setting state, we'll rely on emergency fallbacks
+              applyThemeToDocument(defaultImpulseTokens);
+            }
+          } else {
+            // Apply default theme if no theme was loaded
+            applyThemeToDocument(defaultImpulseTokens);
+          }
+          
           logger.info('Theme hydrated successfully');
         } catch (error) {
           logger.error('Error hydrating theme', { details: safeDetails(error) });
           set({ error: error instanceof Error ? error : new Error('Unknown error hydrating theme') });
+          
+          // Apply default theme on error
+          applyThemeToDocument(defaultImpulseTokens);
         }
       },
       
@@ -191,14 +280,16 @@ export const useThemeStore = create<ThemeStore>()(
           // Convert DB row to ThemeComponent type
           const updatedComponent = data ? dbRowsToComponentTokens([data])[0] : component;
           
-          // Update the appropriate components array based on context
+          // Update the appropriate components arrays based on context
           if (component.context === 'admin') {
             set({
               adminComponents: get().adminComponents.map(c => c.id === component.id ? updatedComponent : c),
+              themeComponents: get().themeComponents.map(c => c.id === component.id ? updatedComponent : c),
               isLoading: false
             });
           } else {
             set({
+              siteComponents: get().siteComponents.map(c => c.id === component.id ? updatedComponent : c),
               themeComponents: get().themeComponents.map(c => c.id === component.id ? updatedComponent : c),
               isLoading: false
             });
@@ -242,14 +333,16 @@ export const useThemeStore = create<ThemeStore>()(
             updated_at: new Date().toISOString(),
           } as ThemeComponent;
           
-          // Add to the appropriate components array based on context
+          // Add to the appropriate components arrays based on context
           if (component.context === 'admin') {
             set({
               adminComponents: [...get().adminComponents, newComponent],
+              themeComponents: [...get().themeComponents, newComponent],
               isLoading: false
             });
           } else {
             set({
+              siteComponents: [...get().siteComponents, newComponent],
               themeComponents: [...get().themeComponents, newComponent],
               isLoading: false
             });
@@ -271,7 +364,7 @@ export const useThemeStore = create<ThemeStore>()(
           
           // First determine if it's an admin or site component
           const adminComponent = get().adminComponents.find(c => c.id === componentId);
-          const siteComponent = get().themeComponents.find(c => c.id === componentId);
+          const siteComponent = get().siteComponents.find(c => c.id === componentId);
           
           const { error } = await supabase
             .from('theme_components')
@@ -280,14 +373,16 @@ export const useThemeStore = create<ThemeStore>()(
           
           if (error) throw error;
           
-          // Remove from the appropriate components array
+          // Remove from all components arrays
           if (adminComponent) {
             set({
               adminComponents: get().adminComponents.filter(c => c.id !== componentId),
+              themeComponents: get().themeComponents.filter(c => c.id !== componentId),
               isLoading: false
             });
           } else if (siteComponent) {
             set({
+              siteComponents: get().siteComponents.filter(c => c.id !== componentId),
               themeComponents: get().themeComponents.filter(c => c.id !== componentId),
               isLoading: false
             });
@@ -299,6 +394,34 @@ export const useThemeStore = create<ThemeStore>()(
           set({ error: error instanceof Error ? error : new Error('Unknown error deleting component'), isLoading: false });
           throw error;
         }
+      },
+      
+      // Update the current theme with new properties without fetching from API
+      updateCurrentTheme: (updatedTheme: Partial<Theme>) => {
+        const currentTheme = get().currentTheme;
+        if (!currentTheme) {
+          logger.warn('Cannot update current theme: no theme set');
+          return;
+        }
+        
+        const newTheme = { ...currentTheme, ...updatedTheme };
+        set({ currentTheme: newTheme });
+        
+        // Apply theme to document
+        try {
+          const impulseTheme = themeToImpulseTheme(newTheme);
+          applyThemeToDocument(impulseTheme);
+        } catch (error) {
+          logger.error('Failed to apply updated theme to document', { details: safeDetails(error) });
+        }
+        
+        logger.info('Current theme updated', { details: { themeId: currentTheme.id } });
+      },
+      
+      // Apply default theme in case of emergency
+      applyDefaultTheme: () => {
+        applyThemeToDocument(defaultImpulseTokens);
+        logger.info('Applied default theme to document');
       }
     }),
     {
@@ -306,6 +429,7 @@ export const useThemeStore = create<ThemeStore>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         currentTheme: state.currentTheme,
+        lastFetchTimestamp: state.lastFetchTimestamp
       }),
     }
   )
@@ -314,6 +438,30 @@ export const useThemeStore = create<ThemeStore>()(
 // Export store selectors for better type safety
 export const selectCurrentTheme = (state: ThemeStore) => state.currentTheme;
 export const selectThemeTokens = (state: ThemeStore) => state.themeTokens;
+export const selectSiteComponents = (state: ThemeStore) => state.siteComponents;
+export const selectAdminComponents = (state: ThemeStore) => state.adminComponents;
 export const selectThemeComponents = (state: ThemeStore) => state.themeComponents;
 export const selectIsLoading = (state: ThemeStore) => state.isLoading;
 export const selectError = (state: ThemeStore) => state.error;
+export const selectLastFetchTimestamp = (state: ThemeStore) => state.lastFetchTimestamp;
+
+// Helper to get the current theme's property with proper type safety
+export function selectThemeProperty<T>(property: string, defaultValue: T) {
+  return (state: ThemeStore): T => {
+    if (!state.currentTheme) return defaultValue;
+    
+    try {
+      const parts = property.split('.');
+      let value: any = state.currentTheme;
+      
+      for (const part of parts) {
+        if (value === undefined || value === null) return defaultValue;
+        value = value[part];
+      }
+      
+      return (value !== undefined && value !== null) ? value : defaultValue;
+    } catch (error) {
+      return defaultValue;
+    }
+  };
+}
