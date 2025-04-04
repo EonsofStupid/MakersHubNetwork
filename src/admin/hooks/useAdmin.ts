@@ -10,8 +10,8 @@ import { LogCategory } from '@/logging/types';
  * Combines permissions, roles, and other admin-specific functionality
  */
 export function useAdmin() {
-  const { isLoading: storeLoading, dashboardData, theme } = useAdminStore();
-  const { hasPermission, permissions, isLoading: permissionsLoading } = useAdminPermissions();
+  const { sidebarExpanded, dashboardCollapsed, permissions, isLoadingPermissions } = useAdminStore();
+  const { hasPermission } = useAdminPermissions();
   const { isAdmin, isSuperAdmin } = useAdminRoles();
   const logger = useLogger('useAdmin', { category: LogCategory.ADMIN });
   
@@ -22,7 +22,7 @@ export function useAdmin() {
     details: {
       isAdmin,
       isSuperAdmin,
-      permissionsCount: permissions.length,
+      permissionsCount: permissions?.length || 0,
       isDevMode
     }
   });
@@ -31,10 +31,10 @@ export function useAdmin() {
     isAdmin,
     isSuperAdmin,
     hasPermission,
-    permissions,
-    isLoading: storeLoading || permissionsLoading,
-    dashboardData,
-    theme,
+    permissions: permissions || [],
+    isLoading: isLoadingPermissions,
+    dashboardData: null, // Placeholder until we implement dashboard data
+    theme: null, // Placeholder until we implement theme
     isDevMode
   };
 }

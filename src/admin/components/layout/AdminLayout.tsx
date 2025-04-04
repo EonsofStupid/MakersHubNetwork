@@ -13,7 +13,7 @@ import { LogCategory } from '@/logging/types';
 export function AdminLayout() {
   const { user, isLoading: authLoading } = useAuth();
   const { isLoaded: themeLoaded } = useThemeLoader();
-  const logger = useLogger('AdminLayout', { category: LogCategory.ADMIN as string });
+  const logger = useLogger('AdminLayout', { category: LogCategory.ADMIN });
 
   useEffect(() => {
     logger.info('Admin layout mounted');
