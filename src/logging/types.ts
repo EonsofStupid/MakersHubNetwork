@@ -101,8 +101,8 @@ export interface Logger {
   warn(message: string, options?: LogOptions): void;
   error(message: string, options?: LogOptions): void;
   fatal(message: string, options?: LogOptions): void;
-  success?(message: string, options?: LogOptions): void;
-  critical?(message: string, options?: LogOptions): void;
+  success(message: string, options?: LogOptions): void;
+  critical(message: string, options?: LogOptions): void;
   performance?(message: string, duration: number, options?: LogOptions): void;
 }
 
@@ -149,6 +149,3 @@ export interface LoggingConfig {
  * Log event callback
  */
 export type LogEventCallback = (entry: LogEntry) => void;
-
-// Re-export LogLevel and LogCategory for convenience
-export { LogLevel, LogCategory };

@@ -30,7 +30,11 @@ export function FallbackLayoutDisplay({ type, scope, children }: FallbackLayoutD
           type,
           scope,
           components: [],
-          version: 1
+          version: 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_active: true,
+          is_locked: false
         };
     
     // Save the layout to the database
