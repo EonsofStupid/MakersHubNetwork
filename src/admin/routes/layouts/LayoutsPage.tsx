@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { LayoutSkeleton } from '@/admin/types/layout.types';
-import { safeJsonParse } from '@/types/json';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
 import { ImpulseAdminLayout } from '@/admin/components/layout/ImpulseAdminLayout';
 import { Button } from '@/components/ui/button';
-import { Layout } from '@/admin/types/layout.types';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { LayoutEditor } from '@/admin/components/layout/LayoutEditor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, FileText, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, FileText, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { RequirePermission } from '@/admin/components/auth/RequirePermission';
 import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
@@ -32,21 +30,38 @@ function LayoutsPage() {
     description: '',
   });
   
+  const logger = useLogger('LayoutsPage', { category: LogCategory.ADMIN });
+  
   const { data: layouts, isLoading, refetch } = useQuery({
     queryKey: ['layouts'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('layout_skeletons')
-        .select('*')
-        .order('updated_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('layout_skeletons')
+          .select('*')
+          .order('updated_at', { ascending: false });
+          
+        if (error) {
+          logger.error('Error fetching layouts', { details: error });
+          throw error;
+        }
         
-      if (error) {
-        console.error('Error fetching layouts:', error);
+        return (data || []).map(item => {
+          const layoutJson = item.layout_json || { components: [], version: 1 };
+          return {
+            ...item,
+            layout_json: {
+              components: layoutJson.components || [],
+              version: layoutJson.version || 1,
+              meta: layoutJson.meta
+            }
+          } as LayoutSkeleton;
+        });
+      } catch (error) {
+        logger.error('Failed to fetch layouts', { details: error });
         return [];
       }
-      
-      return data as LayoutSkeleton[];
-    },
+    }
   });
   
   const { data: selectedLayout, isLoading: isLoadingSelected } = useQuery({
@@ -54,10 +69,20 @@ function LayoutsPage() {
     queryFn: async () => {
       if (!selectedLayoutId) return null;
       
-      const response = await layoutSkeletonService.getById(selectedLayoutId);
-      if (!response.data) return null;
-      
-      return layoutSkeletonService.convertToLayout(response.data);
+      try {
+        const response = await layoutSkeletonService.getById(selectedLayoutId);
+        if (!response.data) {
+          logger.error('Failed to get layout by ID', { 
+            details: { id: selectedLayoutId, error: response.error }
+          });
+          return null;
+        }
+        
+        return layoutSkeletonService.convertToLayout(response.data);
+      } catch (error) {
+        logger.error('Error fetching layout', { details: { error, id: selectedLayoutId } });
+        return null;
+      }
     },
     enabled: !!selectedLayoutId,
   });
@@ -72,7 +97,7 @@ function LayoutsPage() {
       name: newLayout.name,
       type: newLayout.type,
       scope: newLayout.scope,
-      description: newLayout.description,
+      description: newLayout.description || null,
       is_active: true,
       is_locked: false,
       layout_json: {

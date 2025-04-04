@@ -1,31 +1,32 @@
-
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/auth/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useAuthStore } from '@/stores/auth/store';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/constants/logLevel';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { useProfileStore } from '@/stores/profile/store';
 
-export default function ProfilePage() {
-  const { user, roles } = useAuth();
+export default function Profile() {
+  const { user } = useAuthStore();
   const { toast } = useToast();
-  const logger = useLogger('ProfilePage', { category: 'AUTH' });
-  
-  const [isLoading, setIsLoading] = useState(false);
+  const { profile, updateProfile, isLoading } = useProfileStore();
   const [displayName, setDisplayName] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [bio, setBio] = useState('');
+  
+  const logger = useLogger('ProfilePage', { category: LogCategory.AUTH });
   
   useEffect(() => {
     if (user) {
-      setDisplayName(user.user_metadata?.display_name || '');
-      setAvatarUrl(user.user_metadata?.avatar_url || '');
+      setDisplayName(profile?.display_name || '');
+      setBio(profile?.bio || '');
     }
-  }, [user]);
+  }, [user, profile]);
   
   const handleUpdateProfile = async () => {
     if (!user) return;
@@ -39,7 +40,7 @@ export default function ProfilePage() {
       const { error } = await supabase.auth.updateUser({
         data: {
           display_name: displayName,
-          avatar_url: avatarUrl
+          bio: bio
         }
       });
       
@@ -83,7 +84,7 @@ export default function ProfilePage() {
           <Card>
             <CardHeader className="flex flex-row items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={avatarUrl || user?.user_metadata?.avatar_url} alt={displayName || user?.email || ''} />
+                <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url} alt={displayName || user?.email || ''} />
                 <AvatarFallback>{(displayName || user?.email || '').charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
@@ -110,12 +111,12 @@ export default function ProfilePage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="avatar-url">Avatar URL</Label>
+                  <Label htmlFor="bio">Bio</Label>
                   <Input 
-                    id="avatar-url" 
-                    value={avatarUrl} 
-                    onChange={(e) => setAvatarUrl(e.target.value)} 
-                    placeholder="https://example.com/your-avatar.jpg"
+                    id="bio" 
+                    value={bio} 
+                    onChange={(e) => setBio(e.target.value)} 
+                    placeholder="Your bio"
                   />
                 </div>
               </div>

@@ -1,8 +1,16 @@
 
-import { Theme, ThemeToken, ComponentTokens, ThemeContext } from "@/types/theme";
+import { Theme, ThemeToken } from "@/types/theme";
 
-export interface ThemeComponent extends ComponentTokens {
+export type ThemeContext = 'site' | 'admin' | 'chat';
+
+export interface ThemeComponent {
+  id: string;
   theme_id: string;
+  component_name: string;
+  styles: Record<string, any>;
+  description?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
   context: ThemeContext;
 }
 
@@ -43,4 +51,28 @@ export function isThemeComponent(obj: any): obj is ThemeComponent {
     typeof obj.context === 'string' &&
     obj.styles !== undefined
   );
+}
+
+/**
+ * Converts a component from the database to a strongly typed ThemeComponent
+ */
+export function convertToThemeComponent(component: any): ThemeComponent {
+  return {
+    id: component.id,
+    theme_id: component.theme_id || '',
+    component_name: component.component_name,
+    styles: component.styles || {},
+    description: component.description,
+    created_at: component.created_at,
+    updated_at: component.updated_at,
+    context: component.context || 'site'
+  };
+}
+
+/**
+ * Safely transform an array of components from the database to ThemeComponent[]
+ */
+export function convertComponents(components: any[]): ThemeComponent[] {
+  if (!Array.isArray(components)) return [];
+  return components.map(convertToThemeComponent);
 }

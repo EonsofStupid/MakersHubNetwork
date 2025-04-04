@@ -42,14 +42,14 @@ export interface LayoutSkeleton {
   name: string;
   type: string;
   scope: string;
-  description?: string;
+  description?: string | null;
   is_active: boolean;
   is_locked: boolean;
   layout_json: LayoutJsonData;
   version: number;
   created_at: string;
   updated_at: string;
-  created_by?: string;
+  created_by?: string | null;
   meta?: Record<string, any>;
   parent_id?: string;
   tags?: string[];
@@ -60,6 +60,7 @@ export interface CreateLayoutResponse {
   success: boolean;
   data?: LayoutSkeleton;
   error?: string;
+  id?: string;
 }
 
 // Helper types

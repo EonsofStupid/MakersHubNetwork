@@ -1,29 +1,13 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { UserRole, AuthStatus } from '@/auth/types/auth.types';
-import { AuthState } from './types';
+import { AuthStatus, UserRole } from '@/auth/types/auth.types';
+import { AuthState, AuthStore } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { authStorage } from './middleware/persist.middleware';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/constants/logLevel';
 import { safeDetails } from '@/logging/utils/safeDetails';
-
-interface AuthActions {
-  setUser: (user: AuthState['user']) => void;
-  setSession: (session: AuthState['session']) => void;
-  setRoles: (roles: UserRole[]) => void;
-  setError: (error: string | null) => void;
-  setLoading: (isLoading: boolean) => void;
-  setInitialized: (initialized: boolean) => void;
-  setStatus: (status: AuthStatus) => void; 
-  hasRole: (role: UserRole) => boolean;
-  isAdmin: () => boolean;
-  initialize: () => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-export type AuthStore = AuthState & AuthActions;
 
 export const useAuthStore = create<AuthStore>()(
   persist(

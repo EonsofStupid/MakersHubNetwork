@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { LogCategory } from '@/constants/logLevel';
 import { safeDetails } from '@/logging/utils/safeDetails';
 
 interface SiteThemeContextProps {
@@ -24,7 +24,7 @@ interface SiteThemeProviderProps {
 
 export function SiteThemeProvider({ children, fallbackToDefault = false }: SiteThemeProviderProps) {
   const { currentTheme, siteComponents, isLoading, error, loadSiteComponents } = useThemeStore();
-  const logger = getLogger('SiteThemeProvider', { category: LogCategory.THEME as string });
+  const logger = getLogger('SiteThemeProvider', { category: LogCategory.THEME });
   
   // Load site components if not already loaded
   useEffect(() => {

@@ -7,7 +7,6 @@ interface AdminThemeWrapperProps {
 }
 
 export function AdminThemeWrapper({ children }: AdminThemeWrapperProps) {
-  // Removed the isDevMode usage since it was causing errors
   return (
     <AdminThemeProvider>
       <div className="impulse-admin-root">

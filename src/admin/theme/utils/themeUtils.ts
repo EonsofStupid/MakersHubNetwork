@@ -1,94 +1,84 @@
 
-import { ImpulseTheme } from '@/admin/types/impulse.types';
+import { ImpulseTheme } from "@/admin/types/impulse.types";
 
 /**
- * Deep merge utility for theme objects
- * Merges source into target, handling nested objects properly
+ * Gets a property from a theme object by following a dot-notation path
+ * 
+ * @param theme The theme object to get a property from
+ * @param path Path to the property using dot notation (e.g., "colors.primary")
+ * @param defaultValue Default value to return if property doesn't exist
  */
-export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
-  if (!source) return target;
-  
-  const output = { ...target };
-  
-  Object.keys(source).forEach(key => {
-    const targetValue = output[key as keyof T];
-    const sourceValue = source[key as keyof T];
-    
-    if (
-      targetValue && 
-      sourceValue && 
-      typeof targetValue === 'object' && 
-      typeof sourceValue === 'object' &&
-      !Array.isArray(targetValue) && 
-      !Array.isArray(sourceValue)
-    ) {
-      // Recursively merge objects
-      output[key as keyof T] = deepMerge(
-        targetValue as unknown as object, 
-        sourceValue as unknown as object
-      ) as any;
-    } else {
-      // Replace value directly
-      output[key as keyof T] = sourceValue !== undefined ? sourceValue : targetValue;
-    }
-  });
-  
-  return output;
-}
-
-/**
- * Safe theme access - get value or default without throwing errors
- */
-export function safeThemeAccess<T>(
-  theme: ImpulseTheme | null | undefined,
-  path: string,
+export function getThemeProperty<T>(
+  theme: ImpulseTheme | null | undefined, 
+  path: string, 
   defaultValue: T
 ): T {
   if (!theme) return defaultValue;
   
-  try {
-    const parts = path.split('.');
-    let current: any = theme;
-    
-    for (const part of parts) {
-      if (current === undefined || current === null) {
-        return defaultValue;
-      }
-      current = current[part];
+  const parts = path.split('.');
+  let current: any = theme;
+  
+  for (const part of parts) {
+    if (current === undefined || current === null) {
+      return defaultValue;
     }
     
-    return current !== undefined && current !== null ? current : defaultValue;
-  } catch (err) {
-    return defaultValue;
+    current = current[part];
   }
-}
-
-/**
- * Generate a CSS variable name from a theme property path
- */
-export function themePathToCssVar(path: string): string {
-  return '--' + path.replace(/\./g, '-');
-}
-
-/**
- * Check if a theme is a valid ImpulseTheme
- */
-export function isValidImpulseTheme(theme: unknown): theme is ImpulseTheme {
-  if (!theme || typeof theme !== 'object') return false;
   
-  const requiredProps = ['name', 'colors', 'typography', 'effects', 'animation', 'components'];
-  const t = theme as Partial<ImpulseTheme>;
-  
-  return requiredProps.every(prop => prop in t);
+  return current !== undefined && current !== null ? current : defaultValue;
 }
 
 /**
- * Create a theme id from a theme name
+ * Ensures a value is a valid string, using default if not
  */
-export function generateThemeId(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+export function ensureStringValue(value: any, defaultValue: string): string {
+  if (typeof value === 'string' && value.trim() !== '') {
+    return value;
+  }
+  return defaultValue;
+}
+
+/**
+ * Gets a color value from theme or returns fallback
+ */
+export function getThemeColorValue(
+  theme: ImpulseTheme | null | undefined,
+  path: string,
+  fallback: string
+): string {
+  return ensureStringValue(getThemeProperty(theme, path, fallback), fallback);
+}
+
+/**
+ * Check if a theme object is valid and has minimum required properties
+ */
+export function isValidTheme(theme: any): boolean {
+  return !!(
+    theme &&
+    typeof theme === 'object' &&
+    theme.colors &&
+    theme.typography &&
+    theme.effects &&
+    theme.animation &&
+    theme.components
+  );
+}
+
+/**
+ * Safely merge an update into a theme object
+ */
+export function mergeThemeUpdate(
+  currentTheme: ImpulseTheme,
+  update: Partial<ImpulseTheme>
+): ImpulseTheme {
+  return {
+    ...currentTheme,
+    ...update,
+    colors: { ...currentTheme.colors, ...update.colors },
+    typography: { ...currentTheme.typography, ...update.typography },
+    effects: { ...currentTheme.effects, ...update.effects },
+    animation: { ...currentTheme.animation, ...update.animation },
+    components: { ...currentTheme.components, ...update.components }
+  };
 }
