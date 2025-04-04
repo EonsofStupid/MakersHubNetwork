@@ -1,11 +1,16 @@
 
 /**
- * Consolidated theme type definitions
+ * Consolidated theme type definitions - Single source of truth
+ * This file defines the core theme types used throughout the application
  */
 
-export type ThemeStatus = 'draft' | 'published' | 'archived';
+// Theme context and status enums
 export type ThemeContext = 'site' | 'admin' | 'chat';
+export type ThemeStatus = 'draft' | 'published' | 'archived';
 
+/**
+ * Core Theme Token structure
+ */
 export interface ThemeToken {
   id: string;
   token_name: string;
@@ -18,6 +23,9 @@ export interface ThemeToken {
   updated_at?: string;
 }
 
+/**
+ * Component Tokens structure
+ */
 export interface ComponentTokens {
   id: string;
   component_name: string;
@@ -29,134 +37,153 @@ export interface ComponentTokens {
   context?: ThemeContext;
 }
 
+/**
+ * Typography definition - core type for both site and admin
+ */
 export interface ThemeTypography {
-  fonts?: {
-    body?: string;
-    heading?: string;
-    mono?: string;
+  fonts: {
+    body: string;
+    heading: string;
+    mono: string;
   };
-  sizes?: {
-    xs?: string;
-    sm?: string;
-    base?: string;
-    md?: string; // Added missing 'md' property
-    lg?: string;
-    xl?: string;
-    '2xl'?: string;
-    '3xl'?: string;
+  sizes: {
+    xs: string;
+    sm: string;
+    base: string;
+    md: string; 
+    lg: string;
+    xl: string;
+    '2xl': string;
+    '3xl': string;
   };
-  weights?: {
-    light?: number;
-    normal?: number;
-    medium?: number;
-    bold?: number;
+  weights: {
+    light: number;
+    normal: number;
+    medium: number;
+    bold: number;
   };
-  lineHeights?: {
-    tight?: string;
-    normal?: string;
-    relaxed?: string;
+  lineHeights: {
+    tight: string;
+    normal: string;
+    relaxed: string;
   };
   letterSpacing?: Record<string, string>;
 }
 
+/**
+ * Theme Effects definition
+ */
 export interface ThemeEffects {
-  shadows?: {
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
+  shadows: {
+    sm: string;
+    md: string;
+    lg: string;
+    xl: string;
   };
   blurs?: Record<string, string>;
   gradients?: Record<string, string>;
-  glow?: {
-    primary?: string;
-    secondary?: string;
-    hover?: string;
+  glow: {
+    primary: string;
+    secondary: string;
+    hover: string;
   };
-  primary?: string;
-  secondary?: string;
-  tertiary?: string;
 }
 
+/**
+ * Animation definition
+ */
 export interface ThemeAnimation {
-  duration?: {
-    fast?: string;
-    normal?: string;
-    slow?: string;
+  duration: {
+    fast: string;
+    normal: string;
+    slow: string;
   };
-  curves?: {
-    bounce?: string;
-    ease?: string;
-    spring?: string;
-    linear?: string;
+  curves: {
+    bounce: string;
+    ease: string;
+    spring: string;
+    linear: string;
   };
   transitions?: Record<string, string>;
-  durations?: Record<string, string>;
+  keyframes?: Record<string, string>;
 }
 
+/**
+ * Core colors definition
+ */
 export interface ThemeColors {
-  primary?: string;
-  secondary?: string;
-  accent?: string;
-  background?: {
-    main?: string;
-    overlay?: string;
-    card?: string;
-    alt?: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: {
+    main: string;
+    overlay: string;
+    card: string;
+    alt: string;
   };
-  text?: {
-    primary?: string;
-    secondary?: string;
-    muted?: string;
-    accent?: string;
+  text: {
+    primary: string;
+    secondary: string;
+    muted: string;
+    accent: string;
   };
-  borders?: {
-    normal?: string;
-    hover?: string;
-    active?: string;
-    focus?: string;
+  borders: {
+    normal: string;
+    hover: string;
+    active: string;
+    focus: string;
   };
-  status?: {
-    success?: string;
-    warning?: string;
-    error?: string;
-    info?: string;
+  status: {
+    success: string;
+    warning: string;
+    error: string;
+    info: string;
   };
 }
 
+/**
+ * Component theme properties
+ */
 export interface ThemeComponents {
-  panel?: {
-    radius?: string;
-    padding?: string;
-    background?: string;
+  panel: {
+    radius: string;
+    padding: string;
+    background: string;
   };
-  button?: {
-    radius?: string;
-    padding?: string;
-    transition?: string;
+  button: {
+    radius: string;
+    padding: string;
+    transition: string;
   };
-  tooltip?: {
-    radius?: string;
-    padding?: string;
-    background?: string;
+  tooltip: {
+    radius: string;
+    padding: string;
+    background: string;
   };
-  input?: {
-    radius?: string;
-    padding?: string;
-    background?: string;
+  input: {
+    radius: string;
+    padding: string;
+    background: string;
   };
 }
 
+/**
+ * Consolidated Design Tokens Structure - the core of all theme types
+ */
 export interface DesignTokensStructure {
-  colors?: ThemeColors;
-  spacing?: Record<string, any>;
-  typography?: ThemeTypography;
-  effects?: ThemeEffects;
-  animation?: ThemeAnimation;
+  colors: ThemeColors;
+  spacing?: Record<string, string>;
+  typography: ThemeTypography;
+  effects: ThemeEffects;
+  animation: ThemeAnimation;
+  components: ThemeComponents;
+  // For backward compatibility, allow admin-specific tokens
   admin?: Record<string, any>;
-  components?: ThemeComponents;
 }
 
+/**
+ * Base Theme interface - Core theme structure from the database
+ */
 export interface Theme {
   id: string;
   name: string;
@@ -179,6 +206,9 @@ export interface Theme {
   context?: ThemeContext;
 }
 
+/**
+ * ThemeContext for React components
+ */
 export interface ThemeContextType {
   currentTheme: Theme | null;
   themeTokens: ThemeToken[];
@@ -186,4 +216,43 @@ export interface ThemeContextType {
   isLoading: boolean;
   error: Error | null;
   setTheme: (themeId: string) => Promise<void>;
+}
+
+// Type guard for ThemeToken
+export function isThemeToken(obj: any): obj is ThemeToken {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    typeof obj.id === 'string' &&
+    typeof obj.token_name === 'string' &&
+    typeof obj.token_value === 'string' &&
+    typeof obj.category === 'string'
+  );
+}
+
+// Type guard for ComponentToken
+export function isComponentToken(obj: any): obj is ComponentTokens {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    typeof obj.id === 'string' &&
+    typeof obj.component_name === 'string' &&
+    obj.styles !== undefined
+  );
+}
+
+// Type guard for Theme
+export function isTheme(obj: any): obj is Theme {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    typeof obj.id === 'string' &&
+    typeof obj.name === 'string' &&
+    typeof obj.status === 'string' &&
+    typeof obj.is_default === 'boolean' &&
+    typeof obj.created_at === 'string' &&
+    typeof obj.updated_at === 'string' &&
+    typeof obj.version === 'number' &&
+    obj.design_tokens !== undefined
+  );
 }

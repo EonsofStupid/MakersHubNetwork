@@ -1,147 +1,28 @@
 
 /**
  * ImpulseTheme type definition - the standard theme structure for the admin section
+ * This extends the core theme structure defined in @/types/theme.ts
  */
+import { 
+  ThemeColors, 
+  ThemeTypography, 
+  ThemeEffects, 
+  ThemeAnimation, 
+  ThemeComponents 
+} from '@/types/theme';
+
 export interface ImpulseTheme {
   id: string;
   name: string;
   version: string;
   description?: string;
-
-  colors: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    
-    background: {
-      main: string;
-      overlay: string;
-      card: string;
-      alt: string;
-    };
-    
-    text: {
-      primary: string;
-      secondary: string;
-      accent: string;
-      muted: string;
-    };
-    
-    borders: {
-      normal: string;
-      hover: string;
-      active: string;
-      focus: string;
-    };
-    
-    status: {
-      success: string;
-      warning: string;
-      error: string;
-      info: string;
-    };
-  };
   
-  effects: {
-    glow: {
-      primary: string;
-      secondary: string;
-      hover: string;
-    };
-    
-    gradients: {
-      primary: string;
-      secondary: string;
-      accent: string;
-    };
-    
-    shadows: {
-      small: string;
-      medium: string;
-      large: string;
-      inner: string;
-    };
-  };
-  
-  animation: {
-    duration: {
-      fast: string;
-      normal: string;
-      slow: string;
-    };
-    
-    curves: {
-      bounce: string;
-      ease: string;
-      spring: string;
-      linear: string;
-    };
-    
-    keyframes: {
-      fade: string;
-      pulse: string;
-      glow: string;
-      slide: string;
-    };
-  };
-  
-  components: {
-    panel: {
-      radius: string;
-      padding: string;
-      background: string;
-    };
-    
-    button: {
-      radius: string;
-      padding: string;
-      transition: string;
-    };
-    
-    tooltip: {
-      radius: string;
-      padding: string;
-      background: string;
-    };
-    
-    input: {
-      radius: string;
-      padding: string;
-      background: string;
-    };
-  };
-  
-  typography: {
-    fonts: {
-      body: string;
-      heading: string;
-      monospace: string;
-    };
-    
-    sizes: {
-      xs: string;
-      sm: string;
-      base: string;
-      md: string;
-      lg: string;
-      xl: string;
-      '2xl': string;
-      '3xl': string;
-    };
-    
-    weights: {
-      light: number;
-      normal: number;
-      medium: number;
-      bold: number;
-    };
-    
-    lineHeights: {
-      tight: string;
-      normal: string;
-      loose: string;
-    };
-  };
+  // These all match the core Theme types
+  colors: ThemeColors;
+  effects: ThemeEffects;
+  animation: ThemeAnimation;
+  components: ThemeComponents;
+  typography: ThemeTypography;
 }
 
 /**
@@ -244,7 +125,7 @@ export const defaultImpulseTheme: ImpulseTheme = {
     fonts: {
       body: 'Inter, system-ui, sans-serif',
       heading: 'Inter, system-ui, sans-serif',
-      monospace: 'Consolas, monospace'
+      mono: 'Consolas, monospace'
     },
     sizes: {
       xs: '0.75rem',
@@ -272,3 +153,40 @@ export const defaultImpulseTheme: ImpulseTheme = {
 
 // Re-export for backward compatibility
 export const defaultImpulseTokens = defaultImpulseTheme;
+
+// Type guard for ImpulseTheme
+export function isImpulseTheme(obj: any): obj is ImpulseTheme {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    typeof obj.id === 'string' &&
+    typeof obj.name === 'string' &&
+    typeof obj.version === 'string' &&
+    obj.colors !== undefined &&
+    obj.effects !== undefined &&
+    obj.animation !== undefined &&
+    obj.components !== undefined &&
+    obj.typography !== undefined
+  );
+}
+
+// Helper to safely access ImpulseTheme properties
+export function getImpulseThemeProperty<T>(theme: Partial<ImpulseTheme> | null, path: string, defaultValue: T): T {
+  if (!theme) return defaultValue;
+  
+  try {
+    const parts = path.split('.');
+    let current: any = theme;
+    
+    for (const part of parts) {
+      if (current === undefined || current === null) {
+        return defaultValue;
+      }
+      current = current[part];
+    }
+    
+    return (current !== undefined && current !== null) ? current as T : defaultValue;
+  } catch (error) {
+    return defaultValue;
+  }
+}
