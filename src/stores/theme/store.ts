@@ -1,10 +1,9 @@
-
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { ThemeState, ThemeStore, ThemeComponent } from './types';
+import { ThemeState, ThemeStore } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { LogCategory } from '@/constants/logLevel';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { 
   dbRowToTheme, 
@@ -15,9 +14,9 @@ import {
 } from '@/admin/theme/utils/modelTransformers';
 import { defaultImpulseTokens } from '@/admin/types/impulse.types';
 import { applyThemeToDocument } from '@/admin/theme/utils/themeApplicator';
-import { Theme } from '@/types/theme';
+import { Theme, ThemeComponent, ComponentTokens, convertToThemeComponents } from '@/types/theme';
 
-const logger = getLogger('ThemeStore', { category: LogCategory.THEME as string });
+const logger = getLogger('ThemeStore', { category: LogCategory.THEME });
 
 // Initial state
 const initialState: ThemeState = {
@@ -75,7 +74,9 @@ export const useThemeStore = create<ThemeStore>()(
           if (siteComponentsError) throw siteComponentsError;
           
           // Convert DB rows to ComponentTokens type
-          const siteComponents = dbRowsToComponentTokens(siteComponentsData || []);
+          const siteComponentTokens = dbRowsToComponentTokens(siteComponentsData || []);
+          // Convert to ThemeComponents for type safety
+          const siteComponents = convertToThemeComponents(siteComponentTokens);
           
           // 4. Get theme components for admin context
           const { data: adminComponentsData, error: adminComponentsError } = await supabase
@@ -87,7 +88,9 @@ export const useThemeStore = create<ThemeStore>()(
           if (adminComponentsError) throw adminComponentsError;
           
           // Convert DB rows to ComponentTokens type
-          const adminComponents = dbRowsToComponentTokens(adminComponentsData || []);
+          const adminComponentTokens = dbRowsToComponentTokens(adminComponentsData || []);
+          // Convert to ThemeComponents for type safety
+          const adminComponents = convertToThemeComponents(adminComponentTokens);
           
           // Apply theme to document
           try {
@@ -154,7 +157,9 @@ export const useThemeStore = create<ThemeStore>()(
           if (error) throw error;
           
           // Convert DB rows to ComponentTokens type
-          const components = dbRowsToComponentTokens(data || []);
+          const componentTokens = dbRowsToComponentTokens(data || []);
+          // Convert to ThemeComponents for type safety
+          const components = convertToThemeComponents(componentTokens);
           
           // Update the appropriate state
           if (context === 'admin' || context === 'all') {
@@ -261,7 +266,7 @@ export const useThemeStore = create<ThemeStore>()(
         }
       },
       
-      updateComponent: async (component) => {
+      updateComponent: async (component: ThemeComponent) => {
         try {
           set({ isLoading: true, error: null });
           logger.info('Updating theme component', { details: { componentId: component.id } });
@@ -278,7 +283,11 @@ export const useThemeStore = create<ThemeStore>()(
           if (error) throw error;
           
           // Convert DB row to ThemeComponent type
-          const updatedComponent = data ? dbRowsToComponentTokens([data])[0] : component;
+          const componentTokens = data ? dbRowsToComponentTokens([data])[0] : component;
+          const updatedComponent = {
+            ...componentTokens,
+            theme_id: componentTokens.theme_id || component.theme_id
+          };
           
           // Update the appropriate components arrays based on context
           if (component.context === 'admin') {
@@ -296,7 +305,7 @@ export const useThemeStore = create<ThemeStore>()(
           }
           
           logger.info('Component updated successfully', { details: { componentId: component.id } });
-          return updatedComponent;
+          return updatedComponent as ThemeComponent;
         } catch (error) {
           logger.error('Error updating component', { details: safeDetails(error) });
           set({ error: error instanceof Error ? error : new Error('Unknown error updating component'), isLoading: false });
@@ -304,7 +313,7 @@ export const useThemeStore = create<ThemeStore>()(
         }
       },
       
-      createComponent: async (component) => {
+      createComponent: async (component: Omit<ThemeComponent, "id" | "created_at" | "updated_at">) => {
         try {
           set({ isLoading: true, error: null });
           logger.info('Creating new theme component', { details: { context: component.context } });
@@ -325,13 +334,18 @@ export const useThemeStore = create<ThemeStore>()(
           
           if (error) throw error;
           
-          // Convert DB row to ThemeComponent type
-          const newComponent = data ? dbRowsToComponentTokens([data])[0] : {
+          // Convert DB row to ThemeComponent type - ensuring theme_id is always set
+          const componentToken = data ? dbRowsToComponentTokens([data])[0] : {
             ...component,
             id: 'temp-id',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          } as ThemeComponent;
+          };
+          
+          const newComponent: ThemeComponent = {
+            ...componentToken,
+            theme_id: componentToken.theme_id || component.theme_id
+          };
           
           // Add to the appropriate components arrays based on context
           if (component.context === 'admin') {

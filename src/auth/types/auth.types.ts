@@ -1,7 +1,7 @@
 
 import { User as SupabaseUser, Session as SupabaseSession } from '@supabase/supabase-js';
 
-// Auth status enum as const
+// Auth status as const object with derived type
 export const AuthStatus = {
   AUTHENTICATED: 'AUTHENTICATED',
   UNAUTHENTICATED: 'UNAUTHENTICATED',
@@ -24,7 +24,7 @@ export type User = SupabaseUser & {
 // Export Session for broader usage
 export type Session = SupabaseSession;
 
-// User roles
+// User roles as const object with derived type
 export const UserRole = {
   SUPER_ADMIN: 'super_admin',
   ADMIN: 'admin',
@@ -33,7 +33,7 @@ export const UserRole = {
   USER: 'user'
 } as const;
 
-export type UserRole = typeof UserRole[keyof typeof UserRole] | string;
+export type UserRole = typeof UserRole[keyof typeof UserRole];
 
 // Auth store state interface
 export interface AuthState {

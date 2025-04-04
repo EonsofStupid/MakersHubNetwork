@@ -11,7 +11,7 @@ import { LogCategory, LogLevel } from '@/constants/logLevel';
  * @param options Additional options for the logger
  */
 export function useLogger(source?: string, options?: LoggerOptions) {
-  return useLoggerOriginal(source, { category: options?.category as LogCategory, ...options });
+  return useLoggerOriginal(source, { category: options?.category, ...options });
 }
 
 /**

@@ -40,6 +40,11 @@ export function componentTokenToThemeComponent(token: ComponentTokens): ThemeCom
   };
 }
 
+// Helper function to convert ComponentTokens[] to ThemeComponent[]
+export function convertToThemeComponents(components: ComponentTokens[]): ThemeComponent[] {
+  return components.map(componentTokenToThemeComponent);
+}
+
 /**
  * Theme Token structure
  */

@@ -13,6 +13,7 @@ export const LogLevel = {
   CRITICAL: 'CRITICAL'
 } as const;
 
+// Type derived from const object
 export type LogLevel = typeof LogLevel[keyof typeof LogLevel];
 
 /**
@@ -35,4 +36,5 @@ export const LogCategory = {
   ERROR: 'error'
 } as const;
 
+// Type derived from const object
 export type LogCategory = typeof LogCategory[keyof typeof LogCategory];
