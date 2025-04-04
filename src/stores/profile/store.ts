@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
@@ -88,3 +87,26 @@ export const useProfileStore = create<ProfileState>((set, get) => {
     }
   };
 });
+
+const transformDbProfileToProfile = (dbProfile: any): Profile => {
+  return {
+    id: dbProfile.id,
+    user_id: dbProfile.user_id,
+    display_name: dbProfile.display_name || undefined,
+    username: dbProfile.username,
+    bio: dbProfile.bio || undefined,
+    avatar_url: dbProfile.avatar_url || undefined,
+    website: dbProfile.website || undefined,
+    social_links: dbProfile.social_links || {},
+    preferences: dbProfile.preferences || {},
+    settings: dbProfile.settings || {},
+    created_at: dbProfile.created_at,
+    updated_at: dbProfile.updated_at,
+    is_active: dbProfile.is_active ?? true,
+    admin_override_active: dbProfile.admin_override_active || false,
+    custom_styles: dbProfile.custom_styles || {},
+    profile_meta: dbProfile.profile_meta || {},
+    display_title: dbProfile.display_title || undefined,
+    badges: dbProfile.badges || []
+  };
+};
