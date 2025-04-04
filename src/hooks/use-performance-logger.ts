@@ -3,7 +3,8 @@ import { useCallback } from 'react';
 import { usePerformanceLogger as useOriginalPerformanceLogger } from '@/logging/hooks/usePerformanceLogger';
 import { LogCategory } from '@/logging/types';
 
-export interface PerformanceLogOptions {
+// Interface definition - renamed to avoid conflict
+export interface PerformanceLoggerOptions {
   category?: string;
   warnThreshold?: number;
   onComplete?: (result: { name: string; duration: number; success: boolean }) => void;
@@ -15,10 +16,10 @@ export interface PerformanceLogOptions {
  * Performance logger hook for measuring and logging operation durations
  * This is a simplified interface over the core performance logger
  */
-export function usePerformanceLogger(component: string, options: Partial<PerformanceLogOptions> = {}) {
+export function usePerformanceLogger(component: string, options: Partial<PerformanceLoggerOptions> = {}) {
   const { measure: originalMeasure, measureAsync: originalMeasureAsync } = useOriginalPerformanceLogger(`Performance:${component}`);
   
-  const defaultOptions: Partial<PerformanceLogOptions> = {
+  const defaultOptions: Partial<PerformanceLoggerOptions> = {
     category: LogCategory.PERFORMANCE,
     warnThreshold: 50,
     ...options
@@ -47,4 +48,4 @@ export function usePerformanceLogger(component: string, options: Partial<Perform
 }
 
 // Re-export the types for external use
-export type { PerformanceLogOptions };
+export type { PerformanceLoggerOptions };

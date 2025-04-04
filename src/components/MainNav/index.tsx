@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./components/Logo";
@@ -18,6 +19,7 @@ import { LogCategory } from "@/logging";
 export const MainNav = () => {
   const { isAuthenticated } = useAuth();
   const [isExpandedOnMobile, setIsExpandedOnMobile] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false); // Added missing state
   const { hasAdminAccess } = useAdminAccess();
   const { componentStyles } = useSiteTheme();
   const { topNavLayout, isLoading: layoutsLoading } = useCoreLayouts();

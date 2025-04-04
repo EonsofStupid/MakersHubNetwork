@@ -53,13 +53,14 @@ export interface LogEntry {
   level: LogLevel;
   category?: LogCategory;
   message: string;
-  timestamp: string;
+  timestamp: string | Date;
   details?: Record<string, any>;
   tags?: string[];
   userId?: string;
   component?: string;
   correlationId?: string;
   success?: boolean;
+  source?: string;
 }
 
 // Transport interface for consistent log handling

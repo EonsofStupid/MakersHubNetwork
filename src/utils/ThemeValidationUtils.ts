@@ -1,31 +1,39 @@
 
+/**
+ * Utility functions for validating and applying themes
+ */
+import { defaultImpulseTokens } from '@/admin/types/impulse.types';
+import { applyThemeToDocument } from '@/admin/theme/utils/themeApplicator';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/constants/logLevel';
-import { EMERGENCY_COLORS } from '@/admin/theme/constants';
-import { applyEmergencyTheme } from '@/admin/theme/utils/themeApplicator';
+import { LogCategory } from '@/logging/types';
 
-const logger = getLogger('ThemeValidationUtils', { category: LogCategory.THEME });
+const logger = getLogger('ThemeValidation', { category: LogCategory.THEME });
 
 /**
- * Validates that critical theme CSS variables are properly set
+ * Validate that required theme variables are present on the document
  */
 export function validateThemeVariables(): boolean {
-  const root = document.documentElement;
+  const style = getComputedStyle(document.documentElement);
   
-  const criticalVars = [
+  // Define critical CSS variables that should be present
+  const criticalVariables = [
+    '--background',
+    '--foreground',
+    '--primary',
+    '--secondary',
     '--impulse-primary',
-    '--impulse-bg-main',
-    '--impulse-text-primary'
+    '--color-primary',
   ];
   
-  const missingVars = criticalVars.filter(varName => {
-    const value = getComputedStyle(root).getPropertyValue(varName).trim();
+  // Check if all critical variables are defined
+  const missingVariables = criticalVariables.filter(varName => {
+    const value = style.getPropertyValue(varName).trim();
     return !value;
   });
   
-  if (missingVars.length > 0) {
-    logger.warn('Missing critical theme variables', {
-      details: { missingVars }
+  if (missingVariables.length > 0) {
+    logger.warn('Missing critical theme variables', { 
+      details: { missingVariables } 
     });
     return false;
   }
@@ -34,100 +42,60 @@ export function validateThemeVariables(): boolean {
 }
 
 /**
- * Assert that theme is properly applied, apply emergency theme if not
+ * Apply emergency fallback styling when theme fails to load
  */
-export function assertThemeApplied(): boolean {
-  const root = document.documentElement;
+export function applyEmergencyFallback(): void {
+  logger.info('🚨 Applying emergency fallback theme');
   
-  // Check for essential theme variables
-  const bgColor = getComputedStyle(root).getPropertyValue('--impulse-bg-main').trim();
-  const textColor = getComputedStyle(root).getPropertyValue('--impulse-text-primary').trim();
-  const primaryColor = getComputedStyle(root).getPropertyValue('--impulse-primary').trim();
+  applyThemeToDocument(defaultImpulseTokens);
   
-  // Check if theme is properly applied
-  const isApplied = !!bgColor && !!textColor && !!primaryColor;
+  document.documentElement.classList.add('theme-fallback-applied');
+  document.documentElement.classList.add('impulse-theme-active');
   
-  if (!isApplied) {
-    logger.warn('Theme not properly applied - forcing emergency theme', {
-      details: { bgColor, textColor, primaryColor }
-    });
-    applyEmergencyTheme();
-    return false;
-  }
+  document.documentElement.setAttribute('data-theme-id', 'emergency-fallback');
+  document.documentElement.setAttribute('data-theme-status', 'emergency-fallback');
   
-  logger.debug('Theme properly applied', {
-    details: { bgColor, textColor, primaryColor }
-  });
-  
-  return true;
+  logger.info('✔️ Emergency fallback theme applied');
 }
 
 /**
  * Log the current theme state for debugging
  */
-export function logThemeState(): void {
-  const root = document.documentElement;
+export function logThemeState(): any {
+  const style = getComputedStyle(document.documentElement);
+  const classes = document.documentElement.className.split(' ');
+  const dataThemeId = document.documentElement.getAttribute('data-theme-id');
+  const dataThemeStatus = document.documentElement.getAttribute('data-theme-status');
   
-  try {
-    const compStyles = getComputedStyle(root);
-    const bgColor = compStyles.getPropertyValue('--impulse-bg-main').trim();
-    const textColor = compStyles.getPropertyValue('--impulse-text-primary').trim();
-    const primaryColor = compStyles.getPropertyValue('--impulse-primary').trim();
-    const secondaryColor = compStyles.getPropertyValue('--impulse-secondary').trim();
-    const themeId = root.getAttribute('data-theme-id') || 'unknown';
-    const themeStatus = root.getAttribute('data-theme-status') || 'unknown';
-    const hasThemeClass = root.classList.contains('impulse-theme-applied');
-    const hasFallbackClass = root.classList.contains('theme-fallback-applied');
-    const hasEmergencyClass = root.classList.contains('theme-emergency-applied');
-    
-    logger.debug('Theme state', {
-      details: {
-        themeId,
-        themeStatus,
-        hasThemeClass,
-        hasFallbackClass,
-        hasEmergencyClass,
-        cssVars: {
-          bgColor,
-          textColor,
-          primaryColor,
-          secondaryColor,
-        }
-      }
-    });
-  } catch (error) {
-    logger.error('Error logging theme state', {
-      details: { error }
-    });
-  }
+  const themeState = {
+    dataThemeId,
+    dataThemeStatus,
+    classes,
+    hasEmergencyFallback: classes.includes('theme-fallback-applied'),
+    hasActiveTheme: classes.includes('impulse-theme-active'),
+    variables: {
+      background: style.getPropertyValue('--background').trim(),
+      foreground: style.getPropertyValue('--foreground').trim(),
+      primary: style.getPropertyValue('--primary').trim(),
+      secondary: style.getPropertyValue('--secondary').trim(),
+      accent: style.getPropertyValue('--accent').trim(),
+    }
+  };
+  
+  logger.debug('Current theme state', { details: themeState });
+  
+  return themeState;
 }
 
 /**
- * Apply emergency fallback for critical failures
+ * Assert that theme is properly applied, returns true if valid
  */
-export function applyEmergencyFallback(): void {
-  const root = document.documentElement;
+export function assertThemeApplied(): boolean {
+  const isValid = validateThemeVariables();
   
-  try {
-    // Apply critical background/text colors for visibility
-    root.style.backgroundColor = EMERGENCY_COLORS.background;
-    root.style.color = EMERGENCY_COLORS.foreground;
-    document.body.style.backgroundColor = EMERGENCY_COLORS.background;
-    document.body.style.color = EMERGENCY_COLORS.foreground;
-    
-    // Set critical CSS variables
-    root.style.setProperty('--impulse-primary', EMERGENCY_COLORS.primary);
-    root.style.setProperty('--impulse-secondary', EMERGENCY_COLORS.secondary);
-    root.style.setProperty('--impulse-bg-main', EMERGENCY_COLORS.background);
-    root.style.setProperty('--impulse-text-primary', EMERGENCY_COLORS.foreground);
-    
-    // Add classes for CSS targeting
-    root.classList.add('theme-emergency-applied');
-    
-    logger.warn('Emergency fallback styles applied due to critical theme failure');
-  } catch (error) {
-    logger.error('Error applying emergency fallback styles', {
-      details: { error }
-    });
+  if (!isValid) {
+    logger.warn('Theme validation failed, theme is not properly applied');
   }
+  
+  return isValid;
 }

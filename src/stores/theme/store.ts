@@ -3,14 +3,15 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { ThemeState, ThemeStore } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/constants/logLevel';
+import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { 
   dbRowToTheme, 
   dbRowsToComponentTokens, 
   dbRowsToThemeTokens, 
   componentToDbFormat,
-  themeToImpulseTheme
+  themeToImpulseTheme,
+  ensureThemeComponentContext
 } from '@/admin/theme/utils/modelTransformers';
 import { defaultImpulseTokens } from '@/admin/types/impulse.types';
 import { applyThemeToDocument } from '@/admin/theme/utils/themeApplicator';
@@ -75,8 +76,8 @@ export const useThemeStore = create<ThemeStore>()(
           
           // Convert DB rows to ComponentTokens type
           const siteComponentTokens = dbRowsToComponentTokens(siteComponentsData || []);
-          // Convert to ThemeComponents for type safety
-          const siteComponents = convertToThemeComponents(siteComponentTokens);
+          // Convert to ThemeComponents and ensure context is set
+          const siteComponents = ensureThemeComponentContext(convertToThemeComponents(siteComponentTokens));
           
           // 4. Get theme components for admin context
           const { data: adminComponentsData, error: adminComponentsError } = await supabase
@@ -89,8 +90,8 @@ export const useThemeStore = create<ThemeStore>()(
           
           // Convert DB rows to ComponentTokens type
           const adminComponentTokens = dbRowsToComponentTokens(adminComponentsData || []);
-          // Convert to ThemeComponents for type safety
-          const adminComponents = convertToThemeComponents(adminComponentTokens);
+          // Convert to ThemeComponents and ensure context is set
+          const adminComponents = ensureThemeComponentContext(convertToThemeComponents(adminComponentTokens));
           
           // Apply theme to document
           try {

@@ -20,7 +20,7 @@ interface LoginProps {
   onSuccess?: () => void;
 }
 
-export default function Login() {
+export default function Login({ onSuccess }: LoginProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -33,7 +33,7 @@ export default function Login() {
   useEffect(() => {
     if (isAuthenticated) {
       logger.info("User authenticated, redirecting", { details: { redirectTo: from } });
-      onSuccess?.();
+      if (onSuccess) onSuccess();
       
       // Check if user was trying to access admin section or has admin access
       const goingToAdmin = from.includes("/admin");

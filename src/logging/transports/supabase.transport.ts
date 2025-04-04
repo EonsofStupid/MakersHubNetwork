@@ -1,3 +1,4 @@
+
 import { LogTransport, LogEntry, LogLevel, LogCategory } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
@@ -99,10 +100,10 @@ export class SupabaseTransport implements LogTransport {
     // Format the log for Supabase
     return {
       level: log.level,
-      category: log.category,
+      category: log.category || 'general', // Provide default category
       message: String(log.message), // Ensure message is a string
       details: log.details || {},
-      timestamp: log.timestamp.toISOString(),
+      timestamp: typeof log.timestamp === 'string' ? log.timestamp : log.timestamp.toISOString(),
       source: log.source || 'app'
     };
   }
