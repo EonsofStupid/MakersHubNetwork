@@ -1,19 +1,29 @@
 
-import { lazy } from "react";
-import { Route } from "react-router-dom";
-import { AuthCallback } from "@/auth/components/AuthCallback";
+import React from 'react';
+import { Route, Routes } from 'react-router-dom';
+import { useAuth } from '@/auth/hooks/useAuth';
+import LoginPage from '@/pages/Login';
+import RegisterPage from '@/pages/Register';
+import ResetPasswordPage from '@/pages/ResetPassword';
+import LinkAccountPage from '@/pages/LinkAccount';
+import { Navigate } from 'react-router-dom';
 
-const Login = lazy(() => import("@/pages/Login"));
-const Register = lazy(() => import("@/pages/Register"));
-const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
-const LinkAccount = lazy(() => import("@/pages/LinkAccount"));
+export function AuthRoutes() {
+  const { isAuthenticated } = useAuth();
+  
+  // Redirect to home if already authenticated
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/link-account" element={<LinkAccountPage />} />
+    </Routes>
+  );
+}
 
-export const authRoutes = (
-  <>
-    <Route path="/login" element={<Login />} />
-    <Route path="/register" element={<Register />} />
-    <Route path="/reset-password" element={<ResetPassword />} />
-    <Route path="/link-account" element={<LinkAccount />} />
-    <Route path="/auth/callback" element={<AuthCallback />} />
-  </>
-);
+export default AuthRoutes;

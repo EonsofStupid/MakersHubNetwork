@@ -15,7 +15,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-export function AdminHeader() {
+interface AdminHeaderProps {
+  title?: string;
+}
+
+export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
   const { user, signOut } = useAuth();
   const { setTheme, theme } = useTheme();
   const { toggleSidebar } = useAdminStore();
@@ -47,7 +51,7 @@ export function AdminHeader() {
             <path d="M9 3v18" />
           </svg>
         </Button>
-        <h1 className="text-lg font-semibold ml-4 text-foreground">Admin Dashboard</h1>
+        <h1 className="text-lg font-semibold ml-4 text-foreground">{title}</h1>
       </div>
       
       <div className="flex items-center space-x-4">
