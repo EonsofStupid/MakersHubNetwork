@@ -1,9 +1,5 @@
 
-import { ReactNode } from 'react';
-
-/**
- * Define log levels for the entire application
- */
+// Define log levels for the entire application
 export enum LogLevel {
   TRACE = 0,
   DEBUG = 1,
@@ -15,13 +11,11 @@ export enum LogLevel {
   CRITICAL = 5  // Same level as FATAL
 }
 
-/**
- * Define log categories for easier filtering
- */
+// Define log categories for easier filtering
 export enum LogCategory {
   SYSTEM = 'system',
   APPLICATION = 'application',
-  AUTH = 'auth',
+  AUTHENTICATION = 'auth',
   DATABASE = 'database',
   NETWORK = 'network',
   UI = 'ui',
@@ -29,184 +23,72 @@ export enum LogCategory {
   THEME = 'theme',
   ANALYTICS = 'analytics',
   USER_ACTION = 'user-action',
-  GENERAL = 'general',
-  ERROR = 'error',
-  API = 'api',
-  FEATURE = 'feature',
-  ADMIN = 'admin'
+  GENERAL = 'general'
 }
 
-/**
- * Logger options
- */
+// Base logger options
 export interface LoggerOptions {
-  /** Log category */
-  category?: LogCategory;
-  
-  /** Additional fixed tags for all logs */
-  tags?: string[];
-  
-  /** Minimum log level for this logger */
-  minLevel?: LogLevel;
-  
-  /** If true, errors will be sent to error reporting service */
-  reportErrors?: boolean;
-  
-  /** Additional context to include with all logs */
-  context?: Record<string, any>;
-  
-  /** If true, the logger will include stack traces for all logs */
-  includeTraces?: boolean;
-  
-  /** If this logger is disabled */
-  disabled?: boolean;
-
-  /** Additional details to include with the log */
-  details?: any;
-  
-  /** Source of the log (usually component name) */
-  source?: string;
-}
-
-/**
- * Options for individual log entries
- */
-export interface LogOptions {
-  /** Log level for this specific log */
   level?: LogLevel;
-  
-  /** Log category */
   category?: LogCategory;
-  
-  /** Tags for filtering/grouping */
+  details?: Record<string, any>;
   tags?: string[];
-  
-  /** Additional details (will be JSON stringified) */
-  details?: any;
-  
-  /** Whether to include stack trace */
-  includeTrace?: boolean;
-  
-  /** Custom timestamp (defaults to now) */
-  timestamp?: Date;
-  
-  /** If true, this log will be reported to error service even if it's not an error */
-  report?: boolean;
-  
-  /** Source of the log (usually component name) */
+  userId?: string;
+  component?: string;
+  timestamp?: string;
+  correlationId?: string;
   source?: string;
 }
 
-/**
- * Log entry structure
- */
+// Logger interface for consistent logging across the app
+export interface Logger {
+  trace: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
+  debug: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
+  info: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
+  warn: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
+  error: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
+  fatal: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
+  success: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
+  critical: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
+  log: (level: LogLevel, message: string, additionalOptions?: Partial<LoggerOptions>) => void;
+  performance: (name: string, durationMs: number, success: boolean, additionalOptions?: Partial<LoggerOptions>) => void;
+}
+
+// Log entry structure
 export interface LogEntry {
   id: string;
-  timestamp: string | Date;
   level: LogLevel;
-  source: string;
-  message: string | ReactNode;
-  category: LogCategory;
-  tags: string[];
-  details?: any;
-  trace?: string;
-  user_id?: string;
-  session_id?: string;
-  app_version?: string;
+  category?: LogCategory;
+  message: string;
+  timestamp: string | Date;
+  details?: Record<string, any>;
+  tags?: string[];
+  userId?: string;
+  component?: string;
+  correlationId?: string;
+  success?: boolean;
+  source?: string;
 }
 
-/**
- * Transport interface for log destinations
- */
+// Transport interface for consistent log handling
 export interface LogTransport {
-  log(entry: LogEntry): void;
-  getLogs?(): LogEntry[];
-  getLogs?(limit?: number, filterFn?: (entry: LogEntry) => boolean): LogEntry[];
-  clear?(): void;
-  flush?(): Promise<void>;
-  subscribe?(callback: (entry: LogEntry) => void): () => void;
+  initialize?: () => Promise<void>;
+  log: (entry: LogEntry) => void;
+  filter?: (entry: LogEntry) => boolean;
+  flush?: () => Promise<void>;
+  getLogs?: (limit?: number, filterFn?: (entry: LogEntry) => boolean) => LogEntry[];
+  clear?: () => void;
+  subscribe?: (callback: (entry: LogEntry) => void) => () => void;
 }
 
-/**
- * Logger interface
- */
-export interface Logger {
-  trace(message: string, options?: LogOptions): void;
-  debug(message: string, options?: LogOptions): void;
-  info(message: string, options?: LogOptions): void;
-  warn(message: string, options?: LogOptions): void;
-  error(message: string, options?: LogOptions): void;
-  fatal(message: string, options?: LogOptions): void;
-  success(message: string, options?: LogOptions): void;
-  critical(message: string, options?: LogOptions): void;
-  log(level: LogLevel, message: string, options?: LogOptions): void;
-  performance(name: string, durationMs: number, success: boolean, options?: LogOptions): void;
-}
-
-/**
- * Performance measurement result
- */
-export interface MeasurementResult {
-  name: string;
-  duration: number;
-  success: boolean;
-  timestamp: number;
-  error?: Error;
-}
-
-/**
- * Performance measurement options
- */
+// Performance measurement options
 export interface PerformanceMeasurementOptions {
   category?: LogCategory;
   warnThreshold?: number;
-  onComplete?: (result: MeasurementResult) => void;
+  onComplete?: (result: { name: string; duration: number; success: boolean }) => void;
+  source?: string;
   tags?: string[];
   details?: Record<string, any>;
 }
 
-/**
- * Performance logger options
- */
-export interface PerformanceLoggerOptions {
-  category?: LogCategory;
-  source?: string;
-  autoStart?: boolean;
-  warnThreshold?: number;
-  includeInTimeline?: boolean;
-}
-
-/**
- * Logging configuration
- */
-export interface LoggingConfig {
-  minLevel: LogLevel;
-  enabled?: boolean;
-  transports: LogTransport[];
-  categoryLevels?: Partial<Record<LogCategory, LogLevel>>;
-  enabledCategories?: LogCategory[];
-  disabledCategories?: LogCategory[];
-  bufferSize?: number;
-  flushInterval?: number;
-  includeSource?: boolean;
-  includeUser?: boolean;
-  includeSession?: boolean;
-}
-
-/**
- * Log event callback
- */
-export type LogEventCallback = (entry: LogEntry) => void;
-
-/**
- * Logging context type for the React provider
- */
-export interface LoggingContextType {
-  logs: LogEntry[];
-  clearLogs: () => void;
-  showLogConsole: boolean;
-  setShowLogConsole: (show: boolean) => void;
-  toggleLogConsole: () => void;
-  minLogLevel: LogLevel;
-  setMinLogLevel: (level: LogLevel) => void;
-}
+// Re-export the enums for broader usage
+export { LogLevel, LogCategory };
