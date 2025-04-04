@@ -1,93 +1,91 @@
 
-import { LogLevel, LogCategory } from '../types';
+/**
+ * Log levels
+ */
+export enum LogLevel {
+  TRACE = 'trace',
+  DEBUG = 'debug',
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
+  CRITICAL = 'critical',
+  NONE = 'none'
+}
 
-// Export log level and category enums from a central location
-export { LogLevel, LogCategory };
-
-// Additional utility exports
-export const LOG_LEVEL_NAMES: Record<LogLevel, string> = {
-  [LogLevel.TRACE]: 'TRACE',
-  [LogLevel.DEBUG]: 'DEBUG',
-  [LogLevel.INFO]: 'INFO',
-  [LogLevel.WARN]: 'WARN',
-  [LogLevel.ERROR]: 'ERROR',
-  [LogLevel.CRITICAL]: 'CRITICAL',
-  [LogLevel.SUCCESS]: 'SUCCESS'
+/**
+ * Log level numbers for comparisons
+ */
+export const LogLevelValue = {
+  [LogLevel.TRACE]: 0,
+  [LogLevel.DEBUG]: 1,
+  [LogLevel.INFO]: 2,
+  [LogLevel.WARN]: 3,
+  [LogLevel.ERROR]: 4,
+  [LogLevel.CRITICAL]: 5,
+  [LogLevel.NONE]: 6
 };
 
 /**
- * Maps string representation to log level
+ * Log categories for better organization
  */
-export const STRING_TO_LOG_LEVEL: Record<string, LogLevel> = {
-  'TRACE': LogLevel.TRACE,
-  'DEBUG': LogLevel.DEBUG,
-  'INFO': LogLevel.INFO,
-  'WARN': LogLevel.WARN,
-  'WARNING': LogLevel.WARN,
-  'ERROR': LogLevel.ERROR,
-  'CRITICAL': LogLevel.CRITICAL,
-  'SUCCESS': LogLevel.SUCCESS
+export enum LogCategory {
+  APP = 'APP',
+  UI = 'UI',
+  API = 'API',
+  AUTH = 'AUTH',
+  DATA = 'DATA',
+  THEME = 'THEME',
+  ADMIN = 'ADMIN',
+  CONTENT = 'CONTENT',
+  LAYOUT = 'LAYOUT',
+  PERFORMANCE = 'PERFORMANCE',
+  ERROR = 'ERROR',
+  USER = 'USER',
+  SYSTEM = 'SYSTEM'
+}
+
+/**
+ * Default log level if none is specified
+ */
+export const DEFAULT_LOG_LEVEL = LogLevel.INFO;
+
+/**
+ * Color mapping for log levels in console output
+ */
+export const LogLevelColors = {
+  [LogLevel.TRACE]: '#6b7280', // Gray
+  [LogLevel.DEBUG]: '#60a5fa', // Blue
+  [LogLevel.INFO]: '#10b981', // Green
+  [LogLevel.WARN]: '#f59e0b', // Yellow
+  [LogLevel.ERROR]: '#ef4444', // Red
+  [LogLevel.CRITICAL]: '#7f1d1d' // Dark Red
 };
 
 /**
- * Get log level from string
+ * Convert a string log level to enum value
  */
-export function getLogLevelFromString(levelString: string): LogLevel {
-  return STRING_TO_LOG_LEVEL[levelString.toUpperCase()] || LogLevel.INFO;
-}
-
-/**
- * Check if a log level meets or exceeds a minimum threshold
- */
-export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
-  return level <= minLevel; // Lower numbers are higher priority in our enum
-}
-
-/**
- * Get a display name for a log level
- */
-export function getLogLevelName(level: LogLevel): string {
-  return LOG_LEVEL_NAMES[level] || 'UNKNOWN';
-}
-
-/**
- * Get appropriate styling classes for a log level
- */
-export function getLogLevelColorClass(level: LogLevel): string {
-  switch (level) {
-    case LogLevel.TRACE:
-      return 'text-gray-500';
-    case LogLevel.DEBUG:
-      return 'text-gray-400';
-    case LogLevel.INFO:
-      return 'text-blue-400';
-    case LogLevel.WARN:
-      return 'text-yellow-400';
-    case LogLevel.ERROR:
-      return 'text-red-400';
-    case LogLevel.CRITICAL:
-      return 'text-red-600 font-bold';
-    case LogLevel.SUCCESS:
-      return 'text-green-400';
+export function parseLogLevel(level: string): LogLevel {
+  const normalizedLevel = level.toLowerCase();
+  
+  switch (normalizedLevel) {
+    case 'trace':
+      return LogLevel.TRACE;
+    case 'debug':
+      return LogLevel.DEBUG;
+    case 'info':
+      return LogLevel.INFO;
+    case 'warn':
+    case 'warning':
+      return LogLevel.WARN;
+    case 'error':
+      return LogLevel.ERROR;
+    case 'critical':
+    case 'fatal':
+      return LogLevel.CRITICAL;
+    case 'none':
+    case 'off':
+      return LogLevel.NONE;
     default:
-      return 'text-gray-400';
-  }
-}
-
-/**
- * Get the CSS class for log item borders based on level
- */
-export function getLogItemClass(level: LogLevel): string {
-  switch (level) {
-    case LogLevel.WARN:
-      return 'border-l-2 border-l-yellow-500';
-    case LogLevel.ERROR:
-      return 'border-l-2 border-l-red-500';
-    case LogLevel.CRITICAL:
-      return 'border-l-2 border-l-red-600 bg-red-950/20';
-    case LogLevel.SUCCESS:
-      return 'border-l-2 border-l-green-500';
-    default:
-      return '';
+      return DEFAULT_LOG_LEVEL;
   }
 }
