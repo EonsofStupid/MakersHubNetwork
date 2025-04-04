@@ -13,7 +13,7 @@ export const LogLevel = {
   CRITICAL: 'CRITICAL'
 } as const;
 
-export type LogLevel = keyof typeof LogLevel;
+export type LogLevel = typeof LogLevel[keyof typeof LogLevel];
 
 /**
  * Log categories as const enum pattern
@@ -35,4 +35,4 @@ export const LogCategory = {
   ERROR: 'error'
 } as const;
 
-export type LogCategory = keyof typeof LogCategory;
+export type LogCategory = typeof LogCategory[keyof typeof LogCategory];

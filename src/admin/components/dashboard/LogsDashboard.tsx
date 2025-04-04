@@ -3,17 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogCategory, LogLevel } from '@/logging/types';
-import { safeGetLogs, safeClearLogs } from '@/logging/utils/memoryTransportHelper';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Trash } from 'lucide-react';
 import { useLogger } from '@/hooks/use-logger';
+import { safeGetLogs, safeClearLogs } from '@/logging/utils/memoryTransportHelper';
+import { LogCategory, LogLevel } from '@/constants/logLevel';
 
 export function LogsDashboard() {
   const [logs, setLogs] = useState(safeGetLogs());
   const [activeTab, setActiveTab] = useState<string>('level');
-  const logger = useLogger('LogsDashboard', { category: LogCategory.ADMIN });
+  const logger = useLogger('LogsDashboard', LogCategory.ADMIN);
   
   // Refresh logs periodically
   useEffect(() => {
@@ -31,7 +31,7 @@ export function LogsDashboard() {
     const countsByLevel: Record<string, number> = {};
     
     logs.forEach(log => {
-      const levelName = LogLevel[log.level] || 'UNKNOWN';
+      const levelName = log.level;
       countsByLevel[levelName] = (countsByLevel[levelName] || 0) + 1;
     });
     
@@ -63,8 +63,8 @@ export function LogsDashboard() {
   
   // Calculate some statistics
   const totalLogs = logs.length;
-  const errorCount = logs.filter(log => log.level >= LogLevel.ERROR).length;
-  const warningCount = logs.filter(log => log.level === LogLevel.WARN).length;
+  const errorCount = logs.filter(log => log.level === 'ERROR' || log.level === 'FATAL' || log.level === 'CRITICAL').length;
+  const warningCount = logs.filter(log => log.level === 'WARN').length;
   const errorPercentage = totalLogs ? ((errorCount / totalLogs) * 100).toFixed(1) : '0';
   
   return (

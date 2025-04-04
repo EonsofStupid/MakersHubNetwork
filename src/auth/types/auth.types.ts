@@ -3,13 +3,13 @@ import { User as SupabaseUser, Session as SupabaseSession } from '@supabase/supa
 
 // Auth status enum as const
 export const AuthStatus = {
-  AUTHENTICATED: 'authenticated',
-  UNAUTHENTICATED: 'unauthenticated',
-  LOADING: 'loading',
-  ERROR: 'error'
+  AUTHENTICATED: 'AUTHENTICATED',
+  UNAUTHENTICATED: 'UNAUTHENTICATED',
+  LOADING: 'LOADING',
+  ERROR: 'ERROR'
 } as const;
 
-export type AuthStatus = keyof typeof AuthStatus;
+export type AuthStatus = typeof AuthStatus[keyof typeof AuthStatus];
 
 // Extend the User type from Supabase
 export type User = SupabaseUser & {
