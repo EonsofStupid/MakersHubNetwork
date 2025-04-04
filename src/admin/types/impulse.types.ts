@@ -264,6 +264,15 @@ export function createEmptyImpulseTheme(): ImpulseTheme {
   };
 }
 
+// Safe Type guard for empty or partial themes
+export function createSafeImpulseTheme(partialTheme: Partial<ImpulseTheme> = {}): ImpulseTheme {
+  return {
+    ...defaultImpulseTokens,
+    ...partialTheme,
+    name: partialTheme.name || "Safe Theme",
+  };
+}
+
 export function validateImpulseTheme(theme: Partial<ImpulseTheme>): theme is ImpulseTheme {
   return !!(
     theme &&
@@ -276,3 +285,21 @@ export function validateImpulseTheme(theme: Partial<ImpulseTheme>): theme is Imp
     theme.components?.button?.radius
   );
 }
+
+// Merge partial theme with default
+export function mergeWithDefaultTheme(partialTheme: Partial<ImpulseTheme>): ImpulseTheme {
+  if (!partialTheme || typeof partialTheme !== 'object') {
+    return { ...defaultImpulseTokens };
+  }
+  
+  const merged: ImpulseTheme = {
+    ...defaultImpulseTokens,
+    ...partialTheme,
+    name: partialTheme.name || defaultImpulseTokens.name
+  };
+  
+  return merged;
+}
+
+// Export index to allow importing by other modules
+export * from './impulse.types';

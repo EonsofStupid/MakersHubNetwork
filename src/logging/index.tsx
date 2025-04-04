@@ -3,12 +3,13 @@ import React from 'react';
 import {
   Logger,
   LogEntry,
-  LogLevel,
-  LogCategory,
   LoggerOptions,
   LogTransport,
   LoggingConfig,
-  LogEventCallback
+  LogEventCallback,
+  // Import directly from constants
+  LogLevel,
+  LogCategory
 } from './types';
 import { getLogger, initializeLogger } from './service/logger.service';
 import { memoryTransport } from './transports/memory.transport';
@@ -24,7 +25,7 @@ export type {
   LogEventCallback
 };
 
-// Export enums (as values, not just types)
+// Export enums (as values and types)
 export { LogLevel, LogCategory };
 
 // Re-export utilities
@@ -41,7 +42,7 @@ export { useLogger } from './hooks/useLogger';
 export { useErrorLogger } from './hooks/useErrorLogger';
 export { useComponentPerformance } from './hooks/useComponentPerformance';
 export { usePerformanceLogger } from './hooks/usePerformanceLogger';
-export type { PerformanceLoggerOptions } from './hooks/usePerformanceLogger';
+export type { PerformanceMeasurementOptions } from './hooks/usePerformanceLogger';
 
 // Set default log level based on environment
 const defaultLogLevel = process.env.NODE_ENV === 'production'
@@ -63,14 +64,14 @@ initializeLogger({
  * Get all logs from the memory transport
  */
 export function getLogs(): LogEntry[] {
-  return memoryTransport.getLogs();
+  return memoryTransport.getLogs?.() || [];
 }
 
 /**
  * Clear logs from the memory transport
  */
 export function clearLogs(): void {
-  memoryTransport.clear();
+  memoryTransport.clear?.();
 }
 
 /**

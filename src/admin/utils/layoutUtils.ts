@@ -1,10 +1,11 @@
+
 import { Layout, LayoutComponent } from '../types/layout.types';
 import { createEmptyLayout } from '@/admin/types/layout.types';
 
 // Create a default panel layout for admin dashboards
 export function createDefaultPanelLayout(): Layout {
   const now = new Date().toISOString();
-  const layout = {
+  const layout: Layout = {
     id: crypto.randomUUID(),
     name: 'Default Panel Layout',
     type: 'panel',
@@ -13,6 +14,9 @@ export function createDefaultPanelLayout(): Layout {
       {
         id: crypto.randomUUID(),
         type: 'Panel',
+        props: {
+          className: 'w-full'
+        },
         children: [
           {
             id: crypto.randomUUID(),
@@ -90,6 +94,45 @@ export function createDefaultPageLayout(): Layout {
   };
 }
 
+// Create a default dashboard layout for admin
+export function createDefaultDashboardLayout(): Layout {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    name: 'Default Dashboard Layout',
+    type: 'dashboard',
+    scope: 'admin',
+    components: [
+      {
+        id: crypto.randomUUID(),
+        type: 'div',
+        props: {
+          className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'
+        },
+        children: [
+          {
+            id: crypto.randomUUID(),
+            type: 'StatsCards'
+          },
+          {
+            id: crypto.randomUUID(),
+            type: 'BuildApprovalWidget'
+          },
+          {
+            id: crypto.randomUUID(),
+            type: 'AdminFeatureSection'
+          }
+        ]
+      }
+    ],
+    version: 1,
+    created_at: now,
+    updated_at: now,
+    is_active: true,
+    is_locked: false
+  };
+}
+
 // Find a component by ID in a layout
 export function findComponentById(layout: Layout | null, componentId: string): LayoutComponent | null {
   if (!layout || !layout.components || layout.components.length === 0) {
@@ -113,153 +156,26 @@ export function findComponentInTree(components: LayoutComponent[], componentId: 
       }
     }
   }
-
+  
   return null;
 }
 
-// Create an accordion layout with expandable sections
-export function createAccordionLayout(): Layout {
-  const now = new Date().toISOString();
-  return {
-    id: crypto.randomUUID(),
-    name: 'Accordion Layout',
-    type: 'accordion',
-    scope: 'admin',
-    components: [
-      {
-        id: crypto.randomUUID(),
-        type: 'Accordion',
-        props: {
-          expanded: true
-        }
-      }
-    ],
-    version: 1,
-    created_at: now,
-    updated_at: now,
-    is_active: true,
-    is_locked: false
-  };
-}
-
-// Create a settings layout with basic configuration options
-export function createSettingsLayout(): Layout {
-  const now = new Date().toISOString();
-  return {
-    id: crypto.randomUUID(),
-    name: 'Settings Layout',
-    type: 'settings',
-    scope: 'admin',
-    components: [
-      {
-        id: crypto.randomUUID(),
-        type: 'SettingsPanel',
-        props: {
-          title: 'General Settings'
-        }
-      }
-    ],
-    version: 1,
-    created_at: now,
-    updated_at: now,
-    is_active: true,
-    is_locked: false
-  };
-}
-
-// Create a tabbed layout with multiple tab panels
-export function createTabbedLayout(): Layout {
-  const now = new Date().toISOString();
-  return {
-    id: crypto.randomUUID(),
-    name: 'Tabbed Layout',
-    type: 'tabs',
-    scope: 'admin',
-    components: [
-      {
-        id: crypto.randomUUID(),
-        type: 'Tabs',
-        props: {
-          defaultValue: 'tab1'
-        }
-      }
-    ],
-    version: 1,
-    created_at: now,
-    updated_at: now,
-    is_active: true,
-    is_locked: false
-  };
-}
-
-// Function to create a copy of components tree
-export function cloneComponents(components: LayoutComponent[]): LayoutComponent[] {
-  if (!components) return [];
+// Add a component to a parent component in the layout
+export function addComponentToParent(
+  layout: Layout, 
+  parentId: string, 
+  newComponent: LayoutComponent
+): Layout {
+  const updatedLayout = { ...layout };
+  const parentComponent = findComponentById(updatedLayout, parentId);
   
-  return components.map(component => {
-    const { children, ...rest } = component;
-    return {
-      ...rest,
-      children: children ? cloneComponents(children) : []
-    };
-  });
-}
-
-// Function to make a deep copy of a layout
-export function cloneLayout(layout: Layout): Layout {
-  if (!layout) return createEmptyLayout();
-
-  return {
-    ...layout,
-    components: cloneComponents(layout.components || [])
-  };
-}
-
-// Transform a component tree by applying a transformation function
-export function transformComponentTree(
-  components: LayoutComponent[] | undefined, 
-  transformFn: (component: LayoutComponent) => LayoutComponent
-): LayoutComponent[] {
-  if (!components || components.length === 0) {
-    return [];
-  }
-
-  return components.map(component => {
-    // Apply the transformation to the current component
-    const transformedComponent = transformFn({ ...component });
-
-    // Recursively transform children if they exist
-    if (transformedComponent.children && transformedComponent.children.length > 0) {
-      return {
-        ...transformedComponent,
-        children: transformComponentTree(transformedComponent.children, transformFn)
-      };
+  if (parentComponent) {
+    if (!parentComponent.children) {
+      parentComponent.children = [];
     }
-
-    return transformedComponent;
-  });
-}
-
-// Remove a component from a component tree
-export function removeComponentFromTree(
-  components: LayoutComponent[] | undefined,
-  componentId: string
-): LayoutComponent[] {
-  if (!components || components.length === 0) {
-    return [];
+    
+    parentComponent.children.push(newComponent);
   }
-
-  // Filter out the component with the matching ID
-  const filteredComponents = components.filter(c => c.id !== componentId);
-
-  // Recursively process children of the remaining components
-  return filteredComponents.map(component => {
-    if (component.children && component.children.length > 0) {
-      return {
-        ...component,
-        children: removeComponentFromTree(component.children, componentId)
-      };
-    }
-    return component;
-  });
+  
+  return updatedLayout;
 }

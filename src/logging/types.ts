@@ -114,6 +114,7 @@ export interface MeasurementResult {
   duration: number;
   success: boolean;
   timestamp: number;
+  error?: Error; // Added to support error case
 }
 
 /**
@@ -148,3 +149,6 @@ export interface LoggingConfig {
  * Log event callback
  */
 export type LogEventCallback = (entry: LogEntry) => void;
+
+// Re-export LogLevel and LogCategory types from constants
+export { LogLevel, LogCategory };

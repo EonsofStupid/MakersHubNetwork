@@ -105,3 +105,6 @@ export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean 
 export function getLogLevelFromString(levelString: string): LogLevel {
   return STRING_TO_LOG_LEVEL[levelString.toUpperCase()] || LogLevel.INFO;
 }
+
+// Re-export these types for convenience
+export { LogLevel, LogCategory };
