@@ -1,145 +1,143 @@
 
-import React from 'react';
-import { MeasurementResult, PerformanceMeasurementOptions } from '../types';
+import { LogLevel, LogCategory } from '@/constants/logLevel';
+import { MeasurementResult } from '../types';
 
 /**
- * Creates a performance measurement utility
+ * Simple function to measure performance of a synchronous operation
  */
-export function createMeasurement(source: string, defaultOptions?: PerformanceMeasurementOptions) {
-  return {
-    /**
-     * Measures the execution time of a synchronous function
-     */
-    measure: function measure<T>(name: string, fn: () => T, options?: PerformanceMeasurementOptions): MeasurementResult<T> {
-      const mergedOptions = { ...defaultOptions, ...options };
-      const startTime = performance.now();
-      
-      try {
-        const result = fn();
-        const duration = performance.now() - startTime;
-        
-        if (mergedOptions?.onComplete) {
-          mergedOptions.onComplete({
-            name,
-            duration,
-            success: true,
-            ...mergedOptions
-          });
-        }
-        
-        return { result, duration };
-      } catch (error) {
-        const duration = performance.now() - startTime;
-        
-        if (mergedOptions?.onComplete) {
-          mergedOptions.onComplete({
-            name,
-            duration,
-            success: false,
-            error,
-            ...mergedOptions
-          });
-        }
-        
-        throw Object.assign(
-          error instanceof Error ? error : new Error(String(error)),
-          { duration }
-        );
-      }
-    },
-    
-    /**
-     * Measures the execution time of an asynchronous function
-     */
-    measureAsync: async function measureAsync<T>(
-      name: string, 
-      fn: () => Promise<T>, 
-      options?: PerformanceMeasurementOptions
-    ): Promise<MeasurementResult<T>> {
-      const mergedOptions = { ...defaultOptions, ...options };
-      const startTime = performance.now();
-      
-      try {
-        const result = await fn();
-        const duration = performance.now() - startTime;
-        
-        if (mergedOptions?.onComplete) {
-          mergedOptions.onComplete({
-            name,
-            duration,
-            success: true,
-            ...mergedOptions
-          });
-        }
-        
-        return { result, duration };
-      } catch (error) {
-        const duration = performance.now() - startTime;
-        
-        if (mergedOptions?.onComplete) {
-          mergedOptions.onComplete({
-            name,
-            duration,
-            success: false,
-            error,
-            ...mergedOptions
-          });
-        }
-        
-        throw Object.assign(
-          error instanceof Error ? error : new Error(String(error)),
-          { duration }
-        );
-      }
-    }
-  };
-}
-
-/**
- * Simplified measurement utility functions
- */
-export function measureExecution<T>(name: string, fn: () => T): MeasurementResult<T> {
-  return createMeasurement('global').measure(name, fn);
-}
-
-/**
- * Creates a simple performance measurement utility
- * for measuring time between start and end calls
- */
-export function createSimpleMeasurement() {
-  const timers = new Map<string, number>();
-  
-  return {
-    /**
-     * Start timing an operation
-     */
-    start(name: string): void {
-      timers.set(name, performance.now());
-    },
-    
-    /**
-     * End timing an operation and return the duration
-     * Returns 0 if the timer was not started
-     */
-    end(name: string): number {
-      const startTime = timers.get(name);
-      if (startTime === undefined) return 0;
-      
-      const duration = performance.now() - startTime;
-      timers.delete(name);
-      return duration;
-    }
-  };
-}
-
-/**
- * Measures the average performance of a function over multiple iterations
- */
-export function measurePerformance(fn: Function, iterations: number = 1): number {
+export function measurePerformance<T>(name: string, fn: () => T, options?: {
+  category?: LogCategory;
+  warnThreshold?: number;
+  onComplete?: (result: MeasurementResult) => void;
+  tags?: string[];
+  details?: Record<string, any>;
+}): T {
   const startTime = performance.now();
-  for (let i = 0; i < iterations; i++) {
-    fn();
+  try {
+    const result = fn();
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    
+    // Call onComplete callback with successful measurement
+    if (options?.onComplete) {
+      options.onComplete({
+        name,
+        duration,
+        success: true,
+        timestamp: Date.now()
+      });
+    }
+    
+    return result;
+  } catch (error) {
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    
+    // Call onComplete callback with error information
+    if (options?.onComplete) {
+      options.onComplete({
+        name,
+        duration,
+        success: false,
+        timestamp: Date.now(),
+        error: error as Error
+      });
+    }
+    
+    throw error;
   }
-  const endTime = performance.now();
-  return (endTime - startTime) / iterations;
+}
+
+/**
+ * Measure performance of an asynchronous operation
+ */
+export async function measureAsyncPerformance<T>(name: string, fn: () => Promise<T>, options?: {
+  category?: LogCategory;
+  warnThreshold?: number;
+  onComplete?: (result: MeasurementResult) => void;
+  tags?: string[];
+  details?: Record<string, any>;
+}): Promise<T> {
+  const startTime = performance.now();
+  try {
+    const result = await fn();
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    
+    // Call onComplete callback with successful measurement
+    if (options?.onComplete) {
+      options.onComplete({
+        name,
+        duration,
+        success: true,
+        timestamp: Date.now()
+      });
+    }
+    
+    return result;
+  } catch (error) {
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    
+    // Call onComplete callback with error information
+    if (options?.onComplete) {
+      options.onComplete({
+        name,
+        duration,
+        success: false,
+        timestamp: Date.now(),
+        error: error as Error
+      });
+    }
+    
+    throw error;
+  }
+}
+
+/**
+ * Create a measurement handler for component performance
+ */
+export function createMeasurementHandler(
+  logger: {
+    debug: (message: string, options?: any) => void;
+    warn: (message: string, options?: any) => void;
+  },
+  componentName: string,
+  options?: {
+    category?: LogCategory;
+    warnThreshold?: number;
+    tags?: string[];
+    baseDetails?: Record<string, any>;
+  }
+) {
+  return (result: MeasurementResult) => {
+    const { name, duration, success } = result;
+    const warnThreshold = options?.warnThreshold || 100; // Default warn threshold: 100ms
+    
+    const message = success
+      ? `${componentName} » ${name}: ${duration.toFixed(2)}ms`
+      : `${componentName} » ${name} failed: ${duration.toFixed(2)}ms`;
+    
+    const details = {
+      ...(options?.baseDetails || {}),
+      duration,
+      success,
+      component: componentName,
+      ...(result.error ? { error: result.error.message } : {})
+    };
+    
+    if (duration > warnThreshold) {
+      logger.warn(message, {
+        category: options?.category || LogCategory.PERFORMANCE,
+        tags: [...(options?.tags || []), 'performance', 'slow'],
+        details
+      });
+    } else {
+      logger.debug(message, {
+        category: options?.category || LogCategory.PERFORMANCE,
+        tags: [...(options?.tags || []), 'performance'],
+        details
+      });
+    }
+  };
 }
