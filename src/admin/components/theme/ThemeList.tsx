@@ -12,7 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/auth/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging/types';
+import { LogCategory } from '@/logging/constants/log-level';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { ThemeEditor } from './ThemeEditor';
 import { Theme } from '@/types/theme';
@@ -25,7 +25,7 @@ export function ThemeList() {
   const [isCreating, setIsCreating] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
   const { user } = useAuth();
-  const logger = useLogger('ThemeList', LogCategory.THEME);
+  const logger = useLogger('ThemeList', { category: LogCategory.THEME });
 
   useEffect(() => {
     const fetchThemes = async () => {
