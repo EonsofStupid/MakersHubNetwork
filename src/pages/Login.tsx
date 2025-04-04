@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,13 +20,13 @@ interface LoginProps {
   onSuccess?: () => void;
 }
 
-const Login = ({ onSuccess }: LoginProps) => {
+export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const { hasAdminAccess } = useAdminAccess();
-  const logger = useLogger("LoginPage", LogCategory.AUTH);
+  const logger = useLogger('Login', { category: LogCategory.AUTH });
   
   const from = new URLSearchParams(location.search).get("from") || "/";
 
@@ -128,5 +127,3 @@ const Login = ({ onSuccess }: LoginProps) => {
     </div>
   );
 };
-
-export default Login;

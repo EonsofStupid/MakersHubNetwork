@@ -7,7 +7,7 @@ import { LogLevel, LogCategory } from '@/constants/logLevel';
  */
 export interface LoggerOptions {
   /** Log category */
-  category?: LogCategory | string;
+  category?: LogCategory;
   
   /** Additional fixed tags for all logs */
   tags?: string[];
@@ -42,7 +42,7 @@ export interface LogOptions {
   level?: LogLevel;
   
   /** Log category */
-  category?: LogCategory | string;
+  category?: LogCategory;
   
   /** Tags for filtering/grouping */
   tags?: string[];
@@ -72,7 +72,7 @@ export interface LogEntry {
   level: LogLevel;
   source: string;
   message: string | ReactNode;
-  category: LogCategory | string;
+  category: LogCategory;
   tags: string[];
   details?: any;
   trace?: string;
@@ -114,14 +114,14 @@ export interface MeasurementResult {
   duration: number;
   success: boolean;
   timestamp: number;
-  error?: Error; // Added to support error case
+  error?: Error;
 }
 
 /**
  * Performance measurement options
  */
 export interface PerformanceMeasurementOptions {
-  category?: LogCategory | string;
+  category?: LogCategory;
   warnThreshold?: number;
   onComplete?: (result: MeasurementResult) => void;
   tags?: string[];
@@ -135,9 +135,9 @@ export interface LoggingConfig {
   minLevel: LogLevel;
   enabled?: boolean;
   transports: LogTransport[];
-  categoryLevels?: Partial<Record<LogCategory | string, LogLevel>>;
-  enabledCategories?: (LogCategory | string)[];
-  disabledCategories?: (LogCategory | string)[];
+  categoryLevels?: Partial<Record<LogCategory, LogLevel>>;
+  enabledCategories?: LogCategory[];
+  disabledCategories?: LogCategory[];
   bufferSize?: number;
   flushInterval?: number;
   includeSource?: boolean;
@@ -150,5 +150,5 @@ export interface LoggingConfig {
  */
 export type LogEventCallback = (entry: LogEntry) => void;
 
-// Re-export LogLevel and LogCategory types from constants
+// Re-export LogLevel and LogCategory for convenience
 export { LogLevel, LogCategory };

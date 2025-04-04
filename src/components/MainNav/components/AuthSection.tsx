@@ -4,12 +4,12 @@ import { UserMenu } from "@/components/auth/UserMenu";
 import { LoginSheet } from "./LoginSheet";
 import { useAuth } from "@/auth/hooks/useAuth";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging";
+import { LogCategory } from "@/constants/logLevel";
 
 export const AuthSection = () => {
   const { isAuthenticated } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const logger = useLogger('AuthSection', LogCategory.UI);
+  const logger = useLogger('AuthSection', { category: LogCategory.UI });
   
   logger.debug('Rendering AuthSection', { details: { isAuthenticated } });
 

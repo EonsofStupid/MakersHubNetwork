@@ -1,53 +1,81 @@
-
 import { useEffect } from 'react';
-import { AccountLinking } from '@/components/auth/AccountLinking';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { ChevronLeft, LinkIcon } from 'lucide-react';
+import { useRouter } from 'next/router';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/auth/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/constants/logLevel';
 
 export default function LinkAccount() {
-  const logger = useLogger('LinkAccountPage', LogCategory.AUTH);
-  const { user, isLoading } = useAuth();
+  const { linkExternalAccount, isLoading, error, user } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const provider = searchParams.get('provider');
+  const { toast } = useToast();
+  const logger = useLogger('LinkAccount', { category: LogCategory.AUTH });
 
   useEffect(() => {
-    logger.info('Link account page loaded');
-  }, [logger]);
+    if (!provider) {
+      logger.warn('Provider missing from query parameters');
+      toast({
+        title: 'Provider Missing',
+        description: 'No provider was specified in the URL.',
+        variant: 'destructive',
+      });
+      router.push('/settings/profile');
+      return;
+    }
 
-  // Redirect to login if not authenticated
-  if (!isLoading && !user) {
-    return <Navigate to="/login" />;
-  }
+    const linkAccount = async () => {
+      logger.info(`Attempting to link account with provider: ${provider}`);
+      const success = await linkExternalAccount(provider);
+
+      if (success) {
+        logger.success(`Successfully linked account with provider: ${provider}`);
+        toast({
+          title: 'Account Linked',
+          description: `Successfully linked your account with ${provider}.`,
+        });
+      } else if (error) {
+        logger.error(`Failed to link account with provider: ${provider}`, { details: error });
+        toast({
+          title: 'Link Failed',
+          description: `Failed to link account with ${provider}: ${error}`,
+          variant: 'destructive',
+        });
+      } else {
+        logger.warn(`Link account attempt with provider ${provider} did not return success or error.`);
+      }
+      router.push('/settings/profile');
+    };
+
+    if (user) {
+      linkAccount();
+    } else {
+      logger.warn('User not authenticated, redirecting to home page.');
+      router.push('/');
+    }
+  }, [provider, linkExternalAccount, router, toast, user, error, logger]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background/80 backdrop-blur-sm relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid-small-primary/10 [mask-image:linear-gradient(to_bottom,transparent,black)]"></div>
-      
-      <div className="w-full max-w-md flex flex-col gap-6 relative z-10">
-        <div className="flex justify-between items-center">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/profile" className="flex items-center gap-2">
-              <ChevronLeft className="h-4 w-4" />
-              Back to Profile
-            </Link>
-          </Button>
-        </div>
-        
-        <div className="flex flex-col items-center justify-center mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <LinkIcon className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight">Link Accounts</h1>
-          </div>
-          <p className="text-muted-foreground text-center">
-            Connect multiple accounts to enable seamless sign-in
-          </p>
-        </div>
-        
-        <AccountLinking />
-      </div>
+    <div className="flex justify-center items-center h-screen">
+      <Card className="w-[400px]">
+        <CardHeader>
+          <CardTitle>Linking Account...</CardTitle>
+          <CardDescription>Please wait while we link your account.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center">
+          {isLoading ? (
+            <span className="loading loading-dots loading-lg"></span>
+          ) : (
+            <Button variant="outline" disabled>
+              Redirecting...
+            </Button>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

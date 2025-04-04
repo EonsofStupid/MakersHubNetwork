@@ -26,7 +26,7 @@ export default function ThemeSettings() {
   const [userPreference, setUserPreference] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-  const logger = useLogger('ThemeSettings', LogCategory.THEME);
+  const logger = useLogger('ThemeSettings', { category: LogCategory.THEME });
 
   // Load user's theme preference
   useEffect(() => {

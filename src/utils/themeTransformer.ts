@@ -1,10 +1,9 @@
-
 import { Theme, ComponentTokens, ThemeContext, ThemeToken } from '@/types/theme';
-import { getLogger } from '@/logging';
+import { useLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
 
-const logger = getLogger('ThemeTransformer', LogCategory.THEME);
+const logger = useLogger('themeTransformer', { category: LogCategory.THEME });
 
 /**
  * Safely transforms raw Supabase data into a Theme object

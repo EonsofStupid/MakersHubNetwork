@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./components/Logo";
@@ -16,13 +15,13 @@ import { CoreLayoutRenderer } from "@/components/layout/CoreLayoutRenderer";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 
-export function MainNav() {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const { hasAdminAccess } = useAdminAccess();
+export const MainNav = () => {
   const { isAuthenticated } = useAuth();
+  const [isExpandedOnMobile, setIsExpandedOnMobile] = useState(false);
+  const { hasAdminAccess } = useAdminAccess();
   const { componentStyles } = useSiteTheme();
   const { topNavLayout, isLoading: layoutsLoading } = useCoreLayouts();
-  const logger = useLogger('MainNav', LogCategory.UI);
+  const logger = useLogger('MainNav', { category: LogCategory.UI });
 
   // Get MainNav styles from theme with complete fallbacks
   const styles = componentStyles?.MainNav || {
