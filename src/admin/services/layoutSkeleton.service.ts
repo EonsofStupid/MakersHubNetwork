@@ -1,6 +1,7 @@
+
 import { PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutSkeleton, Layout, layoutToJson } from "@/admin/types/layout.types";
+import { LayoutSkeleton, Layout, layoutToJson, LayoutJsonData } from "@/admin/types/layout.types";
 import { safeJsonParse } from "@/utils/jsonUtils";
 
 interface LayoutResponse {
@@ -161,7 +162,7 @@ class LayoutSkeletonService {
 
       const { data, error } = await supabase
         .from('layout_skeletons')
-        .insert([layoutToInsert])
+        .insert(layoutToInsert)
         .select()
         .single();
 
@@ -295,7 +296,6 @@ class LayoutSkeletonService {
       version: skeleton.version,
       created_at: skeleton.created_at,
       updated_at: skeleton.updated_at,
-      created_by: skeleton.created_by,
       is_active: skeleton.is_active,
       is_locked: skeleton.is_locked,
       meta: skeleton.meta || {}

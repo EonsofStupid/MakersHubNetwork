@@ -51,10 +51,10 @@ export const defaultImpulseTokens: ImpulseTheme = {
       accent: 'linear-gradient(90deg, #8B5CF6, #A78BFA)'
     },
     shadows: {
-      small: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
-      medium: '0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3)',
-      large: '0 10px 25px rgba(0, 0, 0, 0.2), 0 6px 10px rgba(0, 0, 0, 0.22)',
-      inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.15)'
+      sm: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
+      md: '0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3)',
+      lg: '0 10px 25px rgba(0, 0, 0, 0.2), 0 6px 10px rgba(0, 0, 0, 0.22)',
+      xl: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.15)'
     }
   },
   animation: {
@@ -123,7 +123,7 @@ export const defaultImpulseTokens: ImpulseTheme = {
     lineHeights: {
       tight: '1.25',
       normal: '1.5',
-      loose: '1.75'
+      relaxed: '1.75'
     }
   }
 };

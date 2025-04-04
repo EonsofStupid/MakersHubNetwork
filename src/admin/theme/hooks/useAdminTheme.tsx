@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { ThemeComponent } from '@/stores/theme/types';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { defaultImpulseTokens } from '../impulse/tokens';
 import { usePerformanceLogger } from '@/hooks/use-performance-logger';
 import { safeDetails } from '@/logging/utils/safeDetails';
@@ -12,7 +12,7 @@ export function useAdminTheme() {
   const { currentTheme, adminComponents, loadAdminComponents } = useThemeStore();
   const [isLoading, setIsLoading] = useState(true);
   const [componentStyles, setComponentStyles] = useState<Record<string, any>>({});
-  const logger = useLogger('useAdminTheme', { category: LogCategory.THEME as string });
+  const logger = useLogger('useAdminTheme', { category: LogCategory.THEME });
   const { measure } = usePerformanceLogger('useAdminTheme', { category: LogCategory.THEME });
 
   // Convert component array to record indexed by component name

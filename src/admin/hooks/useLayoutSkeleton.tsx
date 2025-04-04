@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LayoutSkeleton, Layout, layoutToJson } from '@/admin/types/layout.types';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/constants/logLevel';
+import { LogCategory } from '@/logging/types';
 
 /**
  * Hook for working with layout skeletons

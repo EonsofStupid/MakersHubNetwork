@@ -1,7 +1,7 @@
 
 import { useLogger as useLoggerOriginal } from '@/logging/hooks/useLogger';
 import { LoggerOptions } from '@/logging/types';
-import { LogCategory, LogLevel } from '@/constants/logLevel';
+import { LogCategory, LogLevel } from '@/logging/types';
 
 /**
  * Re-export the useLogger hook from the logging module
