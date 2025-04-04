@@ -1,7 +1,6 @@
-
-import { LogEntry, LogTransport } from '../types';
-import { LogLevel } from '@/constants/logLevel';
-import { getLogLevelColorClass } from '../constants/log-level';
+import { LogEntry, LogLevel, LogCategory } from '../types';
+import { isLogLevelAtLeast, LOG_LEVEL_NAMES } from '../constants/logLevel';
+import { safelyRenderNode } from '../utils/react';
 
 /**
  * Console Transport for logging

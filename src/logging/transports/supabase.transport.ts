@@ -1,138 +1,139 @@
 
 import { LogEntry, LogTransport } from '../types';
-import { batchify } from '../utils/batch';
+import { supabase } from '@/integrations/supabase/client';
 import { safeDetails } from '../utils/safeDetails';
 
-interface SupabaseTransportOptions {
+/**
+ * Configuration for the Supabase transport
+ */
+interface SupabaseTransportConfig {
+  /** Table name in Supabase */
   tableName: string;
-  supabaseClient: any;
+  
+  /** Whether to include the stack trace for error logs */
+  includeStackTraces?: boolean;
+  
+  /** Maximum retry attempts */
+  maxRetries?: number;
+  
+  /** Batch size for flushing logs */
   batchSize?: number;
-  autoFlush?: boolean;
-  flushInterval?: number;
 }
 
 /**
- * Transport for sending logs to Supabase
+ * Default configuration values
+ */
+const DEFAULT_CONFIG: SupabaseTransportConfig = {
+  tableName: 'logs',
+  includeStackTraces: true,
+  maxRetries: 3,
+  batchSize: 20
+};
+
+/**
+ * SupabaseTransport to send logs to Supabase database
  */
 class SupabaseTransport implements LogTransport {
-  private options: SupabaseTransportOptions;
+  private config: SupabaseTransportConfig;
   private buffer: LogEntry[] = [];
-  private flushInterval: number;
-  private flushIntervalId: NodeJS.Timeout | null = null;
-  private flushing = false;
+  private flushPromise: Promise<void> | null = null;
   
-  constructor(options: SupabaseTransportOptions) {
-    this.options = {
-      tableName: 'logs',
-      batchSize: 10,
-      autoFlush: true,
-      flushInterval: 5000, // 5 seconds
-      ...options
-    };
-    
-    this.flushInterval = this.options.flushInterval || 5000;
-    
-    // Set up automatic flush interval
-    if (this.options.autoFlush) {
-      this.startFlushInterval();
-    }
+  constructor(config: Partial<SupabaseTransportConfig> = {}) {
+    this.config = { ...DEFAULT_CONFIG, ...config };
   }
   
+  /**
+   * Log entry to Supabase
+   */
   log(entry: LogEntry): void {
-    // Clone the entry to avoid mutations
-    const entryToStore: any = { ...entry };
-    
-    // Ensure timestamp is a string
-    if (entryToStore.timestamp) {
-      // Fix timestamp handling
-      entryToStore.timestamp = typeof entryToStore.timestamp === 'string' 
-        ? entryToStore.timestamp 
-        : (entryToStore.timestamp instanceof Date 
-            ? entryToStore.timestamp.toISOString()
-            : new Date().toISOString());
-    }
-    
-    // JSON stringify any object properties for Supabase compatibility
-    if (typeof entryToStore.details === 'object' && entryToStore.details !== null) {
-      entryToStore.details = JSON.stringify(entryToStore.details);
-    }
-    
-    // Add to buffer
-    this.buffer.push(entryToStore);
-    
-    // Auto-flush if needed
-    if (this.options.autoFlush && this.buffer.length >= (this.options.batchSize || 10)) {
-      this.flush().catch(console.error);
+    try {
+      this.buffer.push(this.prepareEntry(entry));
+      
+      if (this.buffer.length >= (this.config.batchSize || 1)) {
+        this.flush().catch(console.error);
+      }
+    } catch (error) {
+      console.error('Error logging to Supabase:', error);
     }
   }
   
-  async flush(): Promise<void> {
-    if (this.flushing || this.buffer.length === 0) {
-      return;
+  /**
+   * Prepare entry for storage in Supabase
+   */
+  private prepareEntry(entry: LogEntry): LogEntry {
+    const preparedEntry = { ...entry };
+    
+    // Convert timestamps to ISO string if needed
+    if (entry.timestamp && typeof entry.timestamp !== 'string') {
+      if ((entry.timestamp as Date).toISOString) {
+        preparedEntry.timestamp = (entry.timestamp as Date).toISOString();
+      }
     }
+    
+    // Stringify objects in details
+    if (entry.details && typeof entry.details === 'object') {
+      try {
+        preparedEntry.details = JSON.stringify(entry.details);
+      } catch (e) {
+        preparedEntry.details = safeDetails(entry.details);
+      }
+    }
+    
+    return preparedEntry;
+  }
+  
+  /**
+   * Flush logs to Supabase
+   */
+  async flush(): Promise<void> {
+    // If already flushing, wait for current flush to complete
+    if (this.flushPromise) {
+      return this.flushPromise;
+    }
+    
+    // Nothing to flush
+    if (this.buffer.length === 0) {
+      return Promise.resolve();
+    }
+    
+    const entriesToFlush = [...this.buffer];
+    this.buffer = [];
+    
+    this.flushPromise = this.sendToSupabase(entriesToFlush);
     
     try {
-      this.flushing = true;
-      
-      // Get logs to send
-      const logsToSend = [...this.buffer];
-      this.buffer = [];
-      
-      // Split into batches to avoid hitting request size limits
-      const batches = batchify(logsToSend, this.options.batchSize || 10);
-      
-      // Send each batch
-      await Promise.all(batches.map(async (batch) => {
-        try {
-          const { error } = await this.options.supabaseClient
-            .from(this.options.tableName)
-            .insert(batch);
-          
-          if (error) {
-            throw error;
-          }
-        } catch (err) {
-          console.error('Error sending logs to Supabase:', safeDetails(err));
-          
-          // Put logs back in the buffer for retry
-          this.buffer = [...batch, ...this.buffer];
-        }
-      }));
+      await this.flushPromise;
     } finally {
-      this.flushing = false;
+      this.flushPromise = null;
     }
   }
   
-  private startFlushInterval(): void {
-    this.stopFlushInterval();
-    
-    this.flushIntervalId = setInterval(() => {
-      this.flush().catch(console.error);
-    }, this.flushInterval);
-  }
-  
-  private stopFlushInterval(): void {
-    if (this.flushIntervalId) {
-      clearInterval(this.flushIntervalId);
-      this.flushIntervalId = null;
-    }
-  }
-}
-
-// Create a type-safe batch helper function if not defined elsewhere
-function createSupabaseBatchHelper() {
-  return {
-    batchify<T>(items: T[], batchSize: number): T[][] {
-      const batches: T[][] = [];
-      for (let i = 0; i < items.length; i += batchSize) {
-        batches.push(items.slice(i, i + batchSize));
+  /**
+   * Send logs to Supabase with retry logic
+   */
+  private async sendToSupabase(entries: LogEntry[], attempt = 0): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from(this.config.tableName)
+        .insert(entries);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error sending logs to Supabase:', error);
+      
+      // Retry logic
+      if (attempt < (this.config.maxRetries || 0)) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+        return this.sendToSupabase(entries, attempt + 1);
       }
-      return batches;
+      
+      // Maximum retries reached, re-add to buffer if possible
+      if (this.buffer.length + entries.length <= (this.config.batchSize || 20) * 2) {
+        this.buffer = [...entries, ...this.buffer];
+      }
     }
-  };
+  }
 }
 
-// Export the transport
-export const createSupabaseTransport = (options: SupabaseTransportOptions): LogTransport => {
-  return new SupabaseTransport(options);
-};
+// Create and export a singleton instance
+export const supabaseTransport = new SupabaseTransport();
