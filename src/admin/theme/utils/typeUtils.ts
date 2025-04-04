@@ -1,108 +1,86 @@
 
-import { getLogger } from '@/logging';
+import { logger } from '@/logging/service/logger.service';
+import { ImpulseTheme, Theme } from '../types';
 import { LogCategory } from '@/logging';
-import { safeDetails } from '@/logging/utils/safeDetails';
-
-const logger = getLogger('TypeUtils', LogCategory.THEME);
 
 /**
- * Safely access nested properties with fallback
+ * Type guard for ImpulseTheme
  */
-export function getNestedProperty<T>(
-  obj: unknown,
-  path: string[],
-  fallback: T
-): T {
+export function isImpulseTheme(theme: any): theme is ImpulseTheme {
   try {
-    if (obj === null || obj === undefined || typeof obj !== 'object') {
-      return fallback;
+    if (!theme) return false;
+    
+    // Check required properties
+    if (!theme.id || !theme.name || !theme.version) {
+      logger.debug('Not an ImpulseTheme - missing required properties', { 
+        category: LogCategory.THEME 
+      });
+      return false;
     }
     
-    let current: any = obj;
-    
-    for (const key of path) {
-      if (current === null || current === undefined) {
-        return fallback;
-      }
-      current = current[key];
+    // Check for essential structure
+    if (!theme.text || !theme.bg || !theme.border) {
+      logger.debug('Not an ImpulseTheme - missing color structure', { 
+        category: LogCategory.THEME 
+      });
+      return false;
     }
     
-    return (current !== null && current !== undefined) ? current : fallback;
+    return true;
   } catch (error) {
-    logger.warn('Error accessing nested property', { 
-      details: safeDetails({ path: path.join('.'), error }) 
+    logger.error('Error in isImpulseTheme', { 
+      category: LogCategory.THEME,
+      details: error 
     });
-    return fallback;
+    return false;
   }
 }
 
 /**
- * Type guard for string values
+ * Type guard for Theme
  */
-export function isString(value: unknown): value is string {
-  return typeof value === 'string';
-}
-
-/**
- * Type guard for number values
- */
-export function isNumber(value: unknown): value is number {
-  return typeof value === 'number' && !isNaN(value);
-}
-
-/**
- * Type guard for boolean values
- */
-export function isBoolean(value: unknown): value is boolean {
-  return typeof value === 'boolean';
-}
-
-/**
- * Type guard for array values
- */
-export function isArray(value: unknown): value is Array<unknown> {
-  return Array.isArray(value);
-}
-
-/**
- * Type guard for object values
- */
-export function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/**
- * Safely parse JSON with fallback
- */
-export function safeJsonParse<T>(value: string, fallback: T): T {
+export function isTheme(theme: any): theme is Theme {
   try {
-    return JSON.parse(value) as T;
-  } catch (error) {
-    logger.warn('Failed to parse JSON', { details: safeDetails(error) });
-    return fallback;
-  }
-}
-
-/**
- * Safely stringify JSON with fallback
- */
-export function safeJsonStringify(value: unknown, fallback: string = '{}'): string {
-  try {
-    return JSON.stringify(value);
-  } catch (error) {
-    logger.warn('Failed to stringify JSON', { details: safeDetails(error) });
-    return fallback;
-  }
-}
-
-/**
- * Extract defined values from an object, excluding undefined/null
- */
-export function extractDefinedValues<T extends object>(obj: T): Partial<T> {
-  return Object.entries(obj).reduce((acc, [key, value]) => {
-    if (value !== undefined && value !== null) {
-      acc[key as keyof T] = value;
+    if (!theme) return false;
+    
+    // Check required properties
+    if (!theme.id || !theme.name) {
+      logger.debug('Not a Theme - missing required properties', { 
+        category: LogCategory.THEME 
+      });
+      return false;
     }
-    return acc;
-  }, {} as Partial<T>);
+    
+    // The Theme interface is less strict than ImpulseTheme
+    return true;
+  } catch (error) {
+    logger.error('Error in isTheme', { 
+      category: LogCategory.THEME,
+      details: error 
+    });
+    return false;
+  }
+}
+
+/**
+ * Check if a value is a valid theme (either ImpulseTheme or Theme)
+ */
+export function isValidTheme(theme: any): boolean {
+  return isImpulseTheme(theme) || isTheme(theme);
+}
+
+/**
+ * Create a defensive copy of a theme
+ * Prevents accidental mutation of theme objects
+ */
+export function cloneTheme<T extends ImpulseTheme | Theme>(theme: T): T {
+  try {
+    return JSON.parse(JSON.stringify(theme));
+  } catch (error) {
+    logger.error('Error cloning theme', { 
+      category: LogCategory.THEME,
+      details: error 
+    });
+    return theme; // Return original as fallback
+  }
 }

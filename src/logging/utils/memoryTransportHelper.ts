@@ -1,42 +1,93 @@
 
 import { LogEntry } from '../types';
 import { memoryTransport } from '../transports/memory.transport';
-import { getLogger } from '../service/logger.service';
 
 /**
- * Safely retrieve logs from memory transport
- * Returns empty array if memoryTransport doesn't have getLogs method
+ * Safely get logs from the memory transport
+ * Handles the case where getLogs is undefined
  */
 export function safeGetLogs(): LogEntry[] {
-  try {
-    if (typeof memoryTransport.getLogs === 'function') {
-      return memoryTransport.getLogs();
-    } else {
-      getLogger('memoryTransportHelper').warn('memoryTransport.getLogs is not a function');
-      return [];
-    }
-  } catch (error) {
-    getLogger('memoryTransportHelper').error('Error calling memoryTransport.getLogs', {
-      details: { error }
-    });
-    return [];
+  if (typeof memoryTransport.getLogs === 'function') {
+    return memoryTransport.getLogs();
+  }
+  return [];
+}
+
+/**
+ * Safely clear logs from the memory transport
+ * Handles the case where clear is undefined
+ */
+export function safeClearLogs(): void {
+  if (typeof memoryTransport.clear === 'function') {
+    memoryTransport.clear();
   }
 }
 
 /**
- * Safely clear logs from memory transport
- * No-op if memoryTransport doesn't have clear method
+ * Get the most recent log entries
+ * @param count Number of entries to return
  */
-export function safeClearLogs(): void {
-  try {
-    if (typeof memoryTransport.clear === 'function') {
-      memoryTransport.clear();
-    } else {
-      getLogger('memoryTransportHelper').warn('memoryTransport.clear is not a function');
+export function getRecentLogs(count: number = 10): LogEntry[] {
+  const logs = safeGetLogs();
+  return logs.slice(0, count);
+}
+
+/**
+ * Get logs filtered by level
+ * @param level Minimum log level to include
+ */
+export function getLogsByLevel(level: number): LogEntry[] {
+  const logs = safeGetLogs();
+  return logs.filter(log => log.level >= level);
+}
+
+/**
+ * Get logs filtered by category
+ * @param category Category to filter by
+ */
+export function getLogsByCategory(category: string): LogEntry[] {
+  const logs = safeGetLogs();
+  return logs.filter(log => log.category === category);
+}
+
+/**
+ * Search logs by text content
+ * @param searchText Text to search for in log messages
+ */
+export function searchLogs(searchText: string): LogEntry[] {
+  if (!searchText) return safeGetLogs();
+  
+  const search = searchText.toLowerCase();
+  const logs = safeGetLogs();
+  
+  return logs.filter(log => {
+    // Search in message
+    if (log.message && log.message.toLowerCase().includes(search)) {
+      return true;
     }
-  } catch (error) {
-    getLogger('memoryTransportHelper').error('Error calling memoryTransport.clear', {
-      details: { error }
-    });
-  }
+    
+    // Search in category
+    if (log.category && log.category.toLowerCase().includes(search)) {
+      return true;
+    }
+    
+    // Search in source
+    if (log.source && log.source.toLowerCase().includes(search)) {
+      return true;
+    }
+    
+    // Search in details if it's a string
+    if (log.details && typeof log.details === 'object') {
+      try {
+        const detailsStr = JSON.stringify(log.details).toLowerCase();
+        if (detailsStr.includes(search)) {
+          return true;
+        }
+      } catch (e) {
+        // Ignore stringify errors
+      }
+    }
+    
+    return false;
+  });
 }

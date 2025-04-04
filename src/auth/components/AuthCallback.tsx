@@ -10,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 export function AuthCallback() {
   const [isProcessing, setIsProcessing] = useState(true);
   const navigate = useNavigate();
-  const logger = useLogger('AuthCallback', LogCategory.AUTH);
+  const logger = useLogger('AuthCallback', { category: LogCategory.AUTH });
   const { toast } = useToast();
 
   useEffect(() => {

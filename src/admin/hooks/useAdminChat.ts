@@ -1,66 +1,75 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { formatLogDetails } from '@/logging/utils/details-formatter';
 
-// Simple interface for chat messages
-interface ChatMessage {
+// Types
+export interface AdminChatMessage {
   id: string;
-  text: string;
-  sender: 'admin' | 'user' | 'system';
+  content: string;
+  sender: 'user' | 'admin' | 'system';
   timestamp: Date;
 }
 
+/**
+ * Hook for admin chat functionality
+ */
 export function useAdminChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const logger = useLogger('AdminChat', LogCategory.ADMIN);
+  const [messages, setMessages] = useState<AdminChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const logger = useLogger('useAdminChat', { category: LogCategory.ADMIN });
   
-  const sendMessage = useCallback((text: string) => {
-    const newMessage: ChatMessage = {
-      id: Math.random().toString(36).substring(2, 9),
-      text,
-      sender: 'admin',
+  // Initialize chat
+  const initializeChat = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      logger.info('Initializing admin chat');
+      
+      // Simulated API call - replace with actual backend call
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Set initial welcome message
+      setMessages([
+        {
+          id: 'system-welcome',
+          content: 'Welcome to the admin chat. How can I help you today?',
+          sender: 'system',
+          timestamp: new Date()
+        }
+      ]);
+      
+      logger.info('Admin chat initialized successfully');
+    } catch (error) {
+      logger.error('Error initializing admin chat', {
+        details: formatLogDetails(error)
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [logger]);
+  
+  // Send a message
+  const sendMessage = useCallback((content: string) => {
+    if (!content.trim()) return;
+    
+    const newMessage: AdminChatMessage = {
+      id: `user-${Date.now()}`,
+      content,
+      sender: 'user',
       timestamp: new Date()
     };
     
     setMessages(prev => [...prev, newMessage]);
-    logger.info('Admin sent message', { details: { messageId: newMessage.id }});
+    logger.debug('User message sent', { details: { messageId: newMessage.id } });
     
-    // Simulate a response
-    setTimeout(() => {
-      const response: ChatMessage = {
-        id: Math.random().toString(36).substring(2, 9),
-        text: `Response to: ${text}`,
-        sender: 'system',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, response]);
-    }, 1000);
-    
-    return newMessage.id;
+    // Here you would typically send the message to a backend
   }, [logger]);
   
   return {
     messages,
-    sendMessage,
-    isConnecting
-  };
-}
-
-export function useAdminChatListener(callback: (message: any) => void) {
-  const logger = useLogger('AdminChatListener', LogCategory.ADMIN);
-  
-  useEffect(() => {
-    logger.info('Admin chat listener initialized');
-    
-    // Cleanup function
-    return () => {
-      logger.info('Admin chat listener removed');
-    };
-  }, [logger]);
-  
-  return {
-    isActive: true
+    isLoading,
+    initializeChat,
+    sendMessage
   };
 }

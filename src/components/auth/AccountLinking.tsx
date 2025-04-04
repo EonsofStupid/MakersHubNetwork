@@ -1,37 +1,74 @@
 
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Github, Mail, UserCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/auth/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { safeDetails } from '@/logging/utils/safeDetails';
+import { formatLogDetails } from '@/logging/utils/details-formatter';
+import { useAuth } from '@/auth/hooks/useAuth';
+import { Github, Mail, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * Component for linking multiple authentication methods to a user account
+ */
 export function AccountLinking() {
-  const [isGithubLinking, setIsGithubLinking] = useState(false);
-  const [isGoogleLinking, setIsGoogleLinking] = useState(false);
-  const { user } = useAuth();
+  const [linkedProviders, setLinkedProviders] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const logger = useLogger('AccountLinking', LogCategory.AUTH);
+  const { user } = useAuth();
+  const logger = useLogger('AccountLinking', { category: LogCategory.AUTH });
 
-  // Get current auth provider for the user
-  const currentProvider = user?.app_metadata?.provider;
-  
-  // Check if user already has linked accounts
-  const hasGithubLink = user?.identities?.some(identity => identity.provider === 'github');
-  const hasGoogleLink = user?.identities?.some(identity => identity.provider === 'google');
+  // Fetch linked providers on mount
+  useEffect(() => {
+    const fetchLinkedProviders = async () => {
+      if (!user) return;
 
-  const handleLinkGithub = async () => {
+      try {
+        setIsLoading(true);
+        logger.info('Fetching linked providers');
+
+        // This is a mock implementation - in a real app, you would fetch from your backend
+        const { data, error } = await supabase
+          .from('user_identities')
+          .select('provider')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        // Extract provider names from the results
+        const providers = data.map(identity => identity.provider);
+        setLinkedProviders(providers);
+        
+        logger.info('Linked providers fetched successfully', {
+          details: { providers }
+        });
+      } catch (error) {
+        logger.error('Error fetching linked providers', {
+          details: formatLogDetails(error)
+        });
+        
+        toast({
+          title: "Error",
+          description: "Failed to load linked accounts",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLinkedProviders();
+  }, [user, toast, logger]);
+
+  // Handle linking a new provider
+  const handleLinkProvider = async (provider: string) => {
     try {
-      setIsGithubLinking(true);
-      logger.info('Starting GitHub account linking');
+      logger.info(`Initiating account linking for ${provider}`);
       
-      // Use linking=true in the query to handle linking flow in callback
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
+        provider: provider as any,
         options: {
           redirectTo: `${window.location.origin}/auth/callback?linking=true`,
         }
@@ -39,119 +76,94 @@ export function AccountLinking() {
       
       if (error) throw error;
       
-      // Redirect to auth provider
-      if (data.url) {
-        logger.info('Redirecting to GitHub OAuth');
-        window.location.href = data.url;
-      }
+      // The user will be redirected to the OAuth provider
+      logger.info('Redirecting to provider for authentication');
     } catch (error) {
-      logger.error('Error linking GitHub account', { details: safeDetails(error) });
+      logger.error(`Error linking ${provider} account`, {
+        details: formatLogDetails(error)
+      });
+      
       toast({
-        title: "Account linking failed",
-        description: "Could not initiate GitHub account linking",
+        title: "Error",
+        description: `Failed to link ${provider} account`,
         variant: "destructive"
       });
-    } finally {
-      setIsGithubLinking(false);
     }
   };
 
-  const handleLinkGoogle = async () => {
-    try {
-      setIsGoogleLinking(true);
-      logger.info('Starting Google account linking');
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?linking=true`,
-        }
-      });
-      
-      if (error) throw error;
-      
-      // Redirect to auth provider
-      if (data.url) {
-        logger.info('Redirecting to Google OAuth');
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      logger.error('Error linking Google account', { details: safeDetails(error) });
-      toast({
-        title: "Account linking failed",
-        description: "Could not initiate Google account linking",
-        variant: "destructive"
-      });
-    } finally {
-      setIsGoogleLinking(false);
-    }
+  // Check if a provider is already linked
+  const isProviderLinked = (provider: string): boolean => {
+    return linkedProviders.includes(provider);
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl">Link Accounts</CardTitle>
+          <CardDescription>
+            Connect multiple accounts to enable seamless sign-in
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center py-10">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="max-w-md w-full border-primary/20 bg-card/80 backdrop-blur-sm shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
-          <UserCircle2 className="w-5 h-5 text-primary" />
-          <span>Account Linking</span>
-        </CardTitle>
+    <Card>
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl">Link Accounts</CardTitle>
         <CardDescription>
-          Link multiple authentication methods to your account for easier access
+          Connect multiple accounts to enable seamless sign-in
         </CardDescription>
       </CardHeader>
-      
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between p-3 border border-border rounded-md">
-          <div className="flex items-center gap-3">
-            <Github className="w-5 h-5 text-muted-foreground" />
-            <div>
-              <p className="font-medium">GitHub</p>
-              <p className="text-xs text-muted-foreground">
-                {hasGithubLink 
-                  ? "GitHub account linked" 
-                  : "Connect your GitHub account"
-                }
-              </p>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <Mail className="h-5 w-5" />
+              <span>Email & Password</span>
             </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={true}
+            >
+              Primary
+            </Button>
           </div>
           
-          <Button 
-            variant={hasGithubLink ? "outline" : "default"} 
-            size="sm"
-            onClick={handleLinkGithub}
-            disabled={isGithubLinking || hasGithubLink || currentProvider === 'github'}
-          >
-            {hasGithubLink ? "Linked" : "Link"}
-          </Button>
-        </div>
-        
-        <div className="flex items-center justify-between p-3 border border-border rounded-md">
-          <div className="flex items-center gap-3">
-            <Mail className="w-5 h-5 text-muted-foreground" />
-            <div>
-              <p className="font-medium">Google</p>
-              <p className="text-xs text-muted-foreground">
-                {hasGoogleLink 
-                  ? "Google account linked" 
-                  : "Connect your Google account"
-                }
-              </p>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <Github className="h-5 w-5" />
+              <span>GitHub</span>
             </div>
+            {isProviderLinked('github') ? (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                disabled={true}
+              >
+                Linked
+              </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleLinkProvider('github')}
+              >
+                Link
+              </Button>
+            )}
           </div>
-          
-          <Button 
-            variant={hasGoogleLink ? "outline" : "default"} 
-            size="sm"
-            onClick={handleLinkGoogle}
-            disabled={isGoogleLinking || hasGoogleLink || currentProvider === 'google'}
-          >
-            {hasGoogleLink ? "Linked" : "Link"}
-          </Button>
         </div>
       </CardContent>
-      
-      <CardFooter className="flex justify-between">
+      <CardFooter>
         <p className="text-xs text-muted-foreground">
-          Currently signed in with: <span className="font-medium">{currentProvider || 'email'}</span>
+          Linking accounts allows you to sign in using any of your connected providers.
         </p>
       </CardFooter>
     </Card>

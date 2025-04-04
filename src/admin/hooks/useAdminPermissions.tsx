@@ -16,7 +16,7 @@ export function useAdminPermissions() {
   const { permissions, isLoadingPermissions } = useAdminStore();
   
   const isLoading = authLoading || isLoadingPermissions || status === 'loading' || !initialized;
-  const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
+  const logger = useLogger('useAdminPermissions', { category: LogCategory.ADMIN });
 
   // Memoize the hasPermission function
   const hasPermission = useMemo(() => {

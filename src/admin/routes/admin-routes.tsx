@@ -1,7 +1,7 @@
 
 import { lazy, Suspense } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
-import { AdminLayout } from "@/components/admin/layouts/AdminLayout";
+import { AdminLayout } from "@/admin/components/layout/AdminLayout";
 import { AdminThemeWrapper } from "@/admin/theme/AdminThemeWrapper";
 
 // Placeholder component for missing pages

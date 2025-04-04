@@ -32,7 +32,7 @@ export function AdminLayout({
   const { toast } = useToast();
   const navigate = useNavigate();
   const { showLogConsole } = useLoggingContext();
-  const logger = useLogger("AdminLayout", LogCategory.ADMIN);
+  const logger = useLogger("AdminLayout", { category: LogCategory.ADMIN });
   const { hasAdminAccess, isAuthenticated } = useAdminAccess();
 
   useEffect(() => {
@@ -84,4 +84,3 @@ export function AdminLayout({
     </div>
   );
 }
-
