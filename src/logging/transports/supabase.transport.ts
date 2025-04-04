@@ -1,82 +1,138 @@
+
 import { LogEntry, LogTransport } from '../types';
-import { createClient } from '@supabase/supabase-js';
+import { batchify } from '../utils/batch';
+import { safeDetails } from '../utils/safeDetails';
 
-// Get Supabase URL and key from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || '';
-
-// Create Supabase client
-const supabase = createClient(supabaseUrl, supabaseKey);
+interface SupabaseTransportOptions {
+  tableName: string;
+  supabaseClient: any;
+  batchSize?: number;
+  autoFlush?: boolean;
+  flushInterval?: number;
+}
 
 /**
- * Supabase transport for logging
+ * Transport for sending logs to Supabase
  */
-export const supabaseTransport: LogTransport = {
-  log: async (entry: LogEntry) => {
-    try {
-      // Process log entry before sending to Supabase
-      const logData = processLogEntry(entry);
-      
-      // Insert log entry into Supabase
-      const { error } = await supabase
-        .from('logs')
-        .insert([logData]);
-      
-      if (error) {
-        console.error('Failed to send log to Supabase:', error);
-      }
-    } catch (error) {
-      console.error('Error sending log to Supabase:', error);
+class SupabaseTransport implements LogTransport {
+  private options: SupabaseTransportOptions;
+  private buffer: LogEntry[] = [];
+  private flushInterval: number;
+  private flushIntervalId: NodeJS.Timeout | null = null;
+  private flushing = false;
+  
+  constructor(options: SupabaseTransportOptions) {
+    this.options = {
+      tableName: 'logs',
+      batchSize: 10,
+      autoFlush: true,
+      flushInterval: 5000, // 5 seconds
+      ...options
+    };
+    
+    this.flushInterval = this.options.flushInterval || 5000;
+    
+    // Set up automatic flush interval
+    if (this.options.autoFlush) {
+      this.startFlushInterval();
     }
   }
-};
-
-/**
- * Process log entry before sending to Supabase
- */
-function processLogEntry(entry: LogEntry): any {
-  // Create a copy of the entry to avoid direct modification
-  const { id, message, details, tags, ...rest } = entry;
   
-  // Format timestamp properly
-  let timestamp = entry.timestamp;
-  if (timestamp) {
+  log(entry: LogEntry): void {
+    // Clone the entry to avoid mutations
+    const entryToStore: any = { ...entry };
+    
     // Ensure timestamp is a string
-    if (typeof timestamp !== 'string') {
-      try {
-        // If it's a Date object, convert to ISO string
-        if (timestamp instanceof Date) {
-          timestamp = timestamp.toISOString();
-        } else {
-          // If it's another object, convert to string
-          timestamp = String(timestamp);
-        }
-      } catch {
-        // Fallback to current time if conversion fails
-        timestamp = new Date().toISOString();
-      }
+    if (entryToStore.timestamp) {
+      // Fix timestamp handling
+      entryToStore.timestamp = typeof entryToStore.timestamp === 'string' 
+        ? entryToStore.timestamp 
+        : (entryToStore.timestamp instanceof Date 
+            ? entryToStore.timestamp.toISOString()
+            : new Date().toISOString());
     }
-  } else {
-    // Set default timestamp if missing
-    timestamp = new Date().toISOString();
+    
+    // JSON stringify any object properties for Supabase compatibility
+    if (typeof entryToStore.details === 'object' && entryToStore.details !== null) {
+      entryToStore.details = JSON.stringify(entryToStore.details);
+    }
+    
+    // Add to buffer
+    this.buffer.push(entryToStore);
+    
+    // Auto-flush if needed
+    if (this.options.autoFlush && this.buffer.length >= (this.options.batchSize || 10)) {
+      this.flush().catch(console.error);
+    }
   }
   
-  // Format message
-  const messageText = typeof message === 'string' ? message : JSON.stringify(message);
+  async flush(): Promise<void> {
+    if (this.flushing || this.buffer.length === 0) {
+      return;
+    }
+    
+    try {
+      this.flushing = true;
+      
+      // Get logs to send
+      const logsToSend = [...this.buffer];
+      this.buffer = [];
+      
+      // Split into batches to avoid hitting request size limits
+      const batches = batchify(logsToSend, this.options.batchSize || 10);
+      
+      // Send each batch
+      await Promise.all(batches.map(async (batch) => {
+        try {
+          const { error } = await this.options.supabaseClient
+            .from(this.options.tableName)
+            .insert(batch);
+          
+          if (error) {
+            throw error;
+          }
+        } catch (err) {
+          console.error('Error sending logs to Supabase:', safeDetails(err));
+          
+          // Put logs back in the buffer for retry
+          this.buffer = [...batch, ...this.buffer];
+        }
+      }));
+    } finally {
+      this.flushing = false;
+    }
+  }
   
-  // Process details
-  const detailsJson = details ? JSON.stringify(details) : null;
+  private startFlushInterval(): void {
+    this.stopFlushInterval();
+    
+    this.flushIntervalId = setInterval(() => {
+      this.flush().catch(console.error);
+    }, this.flushInterval);
+  }
   
-  // Process tags
-  const tagsArray = Array.isArray(tags) ? tags : [];
-  const tagsString = tagsArray.join(',');
-  
-  // Return formatted data
+  private stopFlushInterval(): void {
+    if (this.flushIntervalId) {
+      clearInterval(this.flushIntervalId);
+      this.flushIntervalId = null;
+    }
+  }
+}
+
+// Create a type-safe batch helper function if not defined elsewhere
+function createSupabaseBatchHelper() {
   return {
-    ...rest,
-    timestamp,
-    message: messageText,
-    details: detailsJson,
-    tags: tagsString
+    batchify<T>(items: T[], batchSize: number): T[][] {
+      const batches: T[][] = [];
+      for (let i = 0; i < items.length; i += batchSize) {
+        batches.push(items.slice(i, i + batchSize));
+      }
+      return batches;
+    }
   };
 }
+
+// Export the transport
+export const createSupabaseTransport = (options: SupabaseTransportOptions): LogTransport => {
+  return new SupabaseTransport(options);
+};

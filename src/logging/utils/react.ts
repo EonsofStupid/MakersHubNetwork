@@ -1,43 +1,59 @@
 
-import React from 'react';
+import { ReactNode } from 'react';
 
 /**
- * Safely renders a node by converting it to a string if needed
- * This handles ReactNode and other values safely
- * 
- * @param node The node to render, can be a ReactNode or any value
- * @returns A safe representation of the node
+ * Safely render a React node as a string for logging
  */
-export function safelyRenderNode(node: unknown): React.ReactNode {
-  // Handle null and undefined
+export function safelyRenderNode(node: ReactNode): string {
   if (node === null || node === undefined) {
     return '';
   }
-
-  // If it's already a valid React node, return it
-  if (
-    React.isValidElement(node) ||
-    typeof node === 'string' ||
-    typeof node === 'number' ||
-    typeof node === 'boolean'
-  ) {
-    return node;
+  
+  if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
+    return String(node);
   }
-
+  
+  if (Array.isArray(node)) {
+    try {
+      return JSON.stringify(node);
+    } catch {
+      return '[Array]';
+    }
+  }
+  
   // Handle Error objects
   if (node instanceof Error) {
     return node.message;
   }
   
-  // Handle arrays
-  if (Array.isArray(node)) {
-    return JSON.stringify(node);
+  if (typeof node === 'object') {
+    try {
+      if ('message' in node && typeof node.message === 'string') {
+        return node.message;
+      }
+      return JSON.stringify(node);
+    } catch {
+      return '[Complex Object]';
+    }
   }
+  
+  return '[React Node]';
+}
 
-  // Handle objects and everything else
-  try {
-    return typeof node === 'object' ? JSON.stringify(node) : String(node);
-  } catch (e) {
-    return '[Complex Object]';
-  }
+/**
+ * Convert a React Node to a searchable string for filtering logs
+ */
+export function nodeToSearchableString(node: ReactNode): string {
+  return safelyRenderNode(node).toLowerCase();
+}
+
+/**
+ * Check if a value is an Error
+ */
+export function isError(value: unknown): value is Error {
+  return value instanceof Error || 
+    (typeof value === 'object' && 
+     value !== null && 
+     'message' in value && 
+     typeof (value as any).message === 'string');
 }

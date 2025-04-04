@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { GithubIcon, GoogleIcon, TwitterIcon } from 'lucide-react';
-import { useAuthStore } from '@/stores/auth/store';
+import { Github, Mail } from 'lucide-react';
+import { useAuthStore } from '@/auth/store/auth.store';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/hooks/use-logger';
@@ -59,7 +58,10 @@ export function AccountLinking() {
     logger.info(`Unlinking ${provider} account`);
     
     try {
-      const { error } = await supabase.auth.unlinkIdentity(provider);
+      const { error } = await supabase.auth.unlinkIdentity({
+        provider: provider as 'github' | 'google',
+        id: user.id
+      });
       
       if (error) throw error;
       
@@ -96,7 +98,7 @@ export function AccountLinking() {
           {/* GitHub */}
           <div className="flex items-center justify-between p-4 border rounded-md">
             <div className="flex items-center gap-3">
-              <GithubIcon className="h-6 w-6" />
+              <Github className="h-6 w-6" />
               <span>GitHub</span>
             </div>
             <Button
@@ -115,7 +117,7 @@ export function AccountLinking() {
           {/* Google */}
           <div className="flex items-center justify-between p-4 border rounded-md">
             <div className="flex items-center gap-3">
-              <GoogleIcon className="h-6 w-6" />
+              <Mail className="h-6 w-6" />
               <span>Google</span>
             </div>
             <Button
