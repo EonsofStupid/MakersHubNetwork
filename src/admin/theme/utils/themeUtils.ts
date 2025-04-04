@@ -1,28 +1,23 @@
 
 import { ImpulseTheme } from '@/admin/types/impulse.types';
 import { Theme } from '@/types/theme';
-import { logger } from '@/logging/service/logger.service';
-import { LogCategory } from '@/logging';
 
 /**
- * Deep merge utility for theme objects
+ * Deep merge two objects
  */
-export function deepMerge<T>(target: T, source: Partial<T>): T {
+export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
   const output = { ...target };
   
   if (isObject(target) && isObject(source)) {
     Object.keys(source).forEach(key => {
-      if (isObject(source[key as keyof typeof source])) {
+      if (isObject(source[key])) {
         if (!(key in target)) {
-          Object.assign(output, { [key]: source[key as keyof typeof source] });
+          Object.assign(output, { [key]: source[key] });
         } else {
-          (output as any)[key] = deepMerge(
-            (target as any)[key],
-            source[key as keyof typeof source] as any
-          );
+          output[key] = deepMerge(target[key], source[key]);
         }
       } else {
-        Object.assign(output, { [key]: source[key as keyof typeof source] });
+        Object.assign(output, { [key]: source[key] });
       }
     });
   }
@@ -34,111 +29,49 @@ export function deepMerge<T>(target: T, source: Partial<T>): T {
  * Check if value is an object
  */
 function isObject(item: any): boolean {
-  return item && typeof item === 'object' && !Array.isArray(item);
+  return (item && typeof item === 'object' && !Array.isArray(item));
 }
 
 /**
- * Get a property from a theme object with fallback
- */
-export function getThemeProperty<T>(
-  theme: Partial<ImpulseTheme> | Theme | null | undefined, 
-  path: string, 
-  fallback: T
-): T {
-  if (!theme) return fallback;
-  
-  try {
-    const parts = path.split('.');
-    let current: any = theme;
-    
-    for (const part of parts) {
-      if (current === undefined || current === null) {
-        return fallback;
-      }
-      current = current[part];
-    }
-    
-    return (current !== undefined && current !== null) ? current : fallback;
-  } catch (error) {
-    logger.error('Error accessing theme property', { 
-      category: LogCategory.THEME,
-      details: { path, error } 
-    });
-    return fallback;
-  }
-}
-
-/**
- * Flatten a theme object into a list of path/value pairs
- * Useful for theme editors and debugging
- */
-export function flattenTheme(theme: any): Array<{ path: string; value: any; type: string }> {
-  const result: Array<{ path: string; value: any; type: string }> = [];
-  
-  function flatten(obj: any, currentPath: string = '') {
-    if (!obj || typeof obj !== 'object') return;
-    
-    Object.entries(obj).forEach(([key, value]) => {
-      const path = currentPath ? `${currentPath}.${key}` : key;
-      
-      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-        flatten(value, path);
-      } else {
-        const type = getValueType(value);
-        result.push({ path, value, type });
-      }
-    });
-  }
-  
-  flatten(theme);
-  return result;
-}
-
-/**
- * Get the type of a value for editor purposes
- */
-function getValueType(value: any): string {
-  if (value === null || value === undefined) return 'empty';
-  if (typeof value === 'number') return 'number';
-  if (typeof value === 'boolean') return 'boolean';
-  if (typeof value === 'string') {
-    if (value.startsWith('#') || value.startsWith('rgb') || value.startsWith('hsl')) {
-      return 'color';
-    }
-    return 'string';
-  }
-  if (Array.isArray(value)) return 'array';
-  return 'object';
-}
-
-/**
- * Convert camelCase or snake_case to readable label
- */
-export function getReadableLabel(path: string): string {
-  const parts = path.split('.');
-  const lastPart = parts[parts.length - 1];
-  
-  // Convert camelCase or snake_case to space-separated words
-  return lastPart
-    .replace(/([A-Z])/g, ' $1') // camelCase to space-separated
-    .replace(/_/g, ' ') // snake_case to space-separated
-    .replace(/^\w/, c => c.toUpperCase()); // Capitalize first letter
-}
-
-/**
- * Validate theme schema
+ * Validate a theme against the required schema
  */
 export function validateThemeSchema(theme: any): boolean {
   if (!theme) return false;
   
-  // Check required top-level properties
-  const requiredProps = ['id', 'name', 'colors', 'effects'];
-  for (const prop of requiredProps) {
-    if (!theme[prop]) return false;
+  // Basic schema validation
+  const requiredRootKeys = ['colors', 'typography', 'effects', 'animation'];
+  const hasRequiredKeys = requiredRootKeys.every(key => key in theme);
+  
+  if (!hasRequiredKeys) return false;
+  
+  // Validate colors
+  if (!theme.colors.primary || !theme.colors.secondary) {
+    return false;
   }
   
-  // Check required color properties
-  if (!theme.colors.primary || !theme.colors.secondary) return false;
-  
   return true;
+}
+
+/**
+ * Convert any theme format to ImpulseTheme
+ */
+export function convertToImpulseTheme(theme: Theme | Partial<ImpulseTheme>): ImpulseTheme {
+  // This is a simplified version - in a real app you would have more conversion logic
+  if ('design_tokens' in theme) {
+    // Convert from Theme format
+    const impulse: Partial<ImpulseTheme> = {
+      id: theme.id,
+      name: theme.name,
+      colors: theme.design_tokens?.colors || {},
+      typography: theme.design_tokens?.typography || {},
+      effects: theme.design_tokens?.effects || {},
+      animation: theme.design_tokens?.animation || {},
+      components: theme.design_tokens?.components || {}
+    };
+    
+    return impulse as ImpulseTheme;
+  }
+  
+  // Already in ImpulseTheme format
+  return theme as ImpulseTheme;
 }

@@ -11,7 +11,7 @@ import { useAdminRoles } from './useAdminRoles';
  */
 export function useThemeContext() {
   const { user, signOut } = useAuth();
-  const { isAdmin } = useAdminRoles();
+  const { hasRole } = useAdminRoles();
   const [activeTheme, setActiveTheme] = useState<string>('default');
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const { toast } = useToast();
@@ -20,8 +20,8 @@ export function useThemeContext() {
   // Set theme editing permissions
   useEffect(() => {
     // Only admins can edit themes
-    setCanEdit(!!user && isAdmin);
-  }, [user, isAdmin]);
+    setCanEdit(!!user && hasRole('admin'));
+  }, [user, hasRole]);
   
   // Handle theme change
   const changeTheme = (themeId: string) => {

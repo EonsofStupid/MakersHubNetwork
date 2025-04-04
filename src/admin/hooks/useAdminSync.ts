@@ -1,25 +1,30 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { formatLogDetails } from '@/logging/utils/details-formatter';
+import { useToast } from '@/hooks/use-toast';
 
 /**
- * Hook for synchronizing admin data and settings
+ * Hook for syncing admin data
  */
 export function useAdminSync() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const logger = useLogger('useAdminSync', { category: LogCategory.ADMIN });
+  const { toast } = useToast();
   
-  // Sync admin data from remote source
+  /**
+   * Sync admin data from the server
+   */
   const syncAdminData = useCallback(async () => {
+    if (isSyncing) return false;
+    
     try {
       setIsSyncing(true);
       logger.info('Starting admin data sync');
       
-      // Simulated sync delay - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Simulate network request
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Update last sync time
       const now = new Date();
@@ -29,21 +34,28 @@ export function useAdminSync() {
         details: { timestamp: now.toISOString() }
       });
       
+      toast({
+        title: 'Sync completed',
+        description: 'Admin data has been synchronized',
+      });
+      
       return true;
     } catch (error) {
-      logger.error('Error syncing admin data', {
-        details: formatLogDetails(error)
+      logger.error('Admin data sync failed', {
+        details: { error }
       });
+      
+      toast({
+        title: 'Sync failed',
+        description: 'There was an error synchronizing admin data',
+        variant: 'destructive',
+      });
+      
       return false;
     } finally {
       setIsSyncing(false);
     }
-  }, [logger]);
-  
-  // Initial sync on mount
-  useEffect(() => {
-    syncAdminData();
-  }, [syncAdminData]);
+  }, [isSyncing, logger, toast]);
   
   return {
     isSyncing,

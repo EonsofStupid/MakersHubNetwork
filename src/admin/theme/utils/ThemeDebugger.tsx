@@ -1,117 +1,70 @@
 
-import React, { useEffect, useState } from 'react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
-import { safeDetails } from '@/logging/utils/safeDetails';
-import { validateThemeSchema } from '@/admin/theme/utils/themeUtils';
-import { validateThemeVariables, logThemeState } from '@/utils/ThemeValidationUtils';
-import { useThemeStore } from '@/stores/theme/store';
+import React, { useState } from 'react';
+import { themeRegistry } from '../ThemeRegistry';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
+import { defaultImpulseTokens } from '../impulse/tokens';
 
-const logger = getLogger('ThemeDebugger', { category: LogCategory.THEME as string });
-
-interface ThemeDebuggerProps {
-  showControls?: boolean;
-}
-
-export function ThemeDebugger({ showControls = true }: ThemeDebuggerProps) {
-  const { currentTheme } = useThemeStore();
-  const [isOpen, setIsOpen] = useState(false);
-  const [validationIssues, setValidationIssues] = useState<string[]>([]);
-  const [cssVariablesValid, setCssVariablesValid] = useState<boolean | null>(null);
+export function ThemeDebugger() {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const logger = useLogger('ThemeDebugger', { category: LogCategory.THEME });
   
-  // Perform validation when theme changes
-  useEffect(() => {
-    try {
-      // Check theme schema
-      const issues = currentTheme ? validateThemeSchema(currentTheme) : ['No theme loaded'];
-      setValidationIssues(issues);
-      
-      // Check CSS variables
-      const cssValid = validateThemeVariables();
-      setCssVariablesValid(cssValid);
-      
-      // Log current state
-      if (issues.length > 0 || !cssValid) {
-        logger.warn('Theme validation issues detected', { 
-          details: { 
-            schemaIssues: issues, 
-            cssVariablesValid: cssValid,
-            themeName: currentTheme?.name || 'none'
-          } 
-        });
-        logThemeState();
-      }
-    } catch (error) {
-      logger.error('Error during theme validation', { details: safeDetails(error) });
-    }
-  }, [currentTheme]);
+  const activeTheme = themeRegistry.getActiveTheme() || defaultImpulseTokens;
   
-  // Check if there are issues
-  const hasIssues = validationIssues.length > 0 || cssVariablesValid === false;
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+    logger.debug('Theme debugger toggled', { details: { expanded: !isExpanded } });
+  };
   
-  if (!hasIssues && !showControls) {
+  if (!process.env.NODE_ENV || process.env.NODE_ENV === 'production') {
     return null;
   }
   
   return (
-    <Alert variant={hasIssues ? "destructive" : "default"} className="mb-4">
-      <AlertTitle>Theme Status</AlertTitle>
-      <AlertDescription>
-        {hasIssues ? (
-          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-            <div className="flex items-center justify-between">
-              <p>Found {validationIssues.length} issues with the current theme.</p>
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" size="sm">
-                  {isOpen ? 'Hide' : 'Show'} Details
-                </Button>
-              </CollapsibleTrigger>
+    <div 
+      className="fixed bottom-4 right-4 z-50 bg-black/80 text-white p-3 rounded-lg shadow-lg text-xs"
+      style={{ maxWidth: isExpanded ? '500px' : '200px', maxHeight: isExpanded ? '80vh' : '40px', overflow: 'auto' }}
+    >
+      <div className="flex justify-between items-center cursor-pointer" onClick={toggleExpanded}>
+        <h4 className="font-mono">Theme Debug</h4>
+        <span>{isExpanded ? '▼' : '▲'}</span>
+      </div>
+      
+      {isExpanded && (
+        <div className="mt-2 space-y-2">
+          <div>
+            <div className="text-gray-400">Active Theme:</div>
+            <div>{activeTheme.name || 'Unnamed'}</div>
+          </div>
+          
+          <div>
+            <div className="text-gray-400">Primary Color:</div>
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-4 h-4 rounded-full" 
+                style={{ backgroundColor: activeTheme.colors.primary }}
+              ></div>
+              <span>{activeTheme.colors.primary}</span>
             </div>
-            
-            <CollapsibleContent className="mt-2">
-              <div className="p-2 rounded bg-muted/20">
-                <p className="mb-2 font-semibold">Theme Schema Issues:</p>
-                {validationIssues.length > 0 ? (
-                  <ul className="list-disc pl-5 space-y-1 text-sm">
-                    {validationIssues.map((issue, i) => (
-                      <li key={i}>{issue}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm">✅ No schema issues</p>
-                )}
-                
-                <p className="mt-4 mb-2 font-semibold">CSS Variables Status:</p>
-                {cssVariablesValid === false ? (
-                  <p className="text-sm">❌ Critical CSS variables are missing</p>
-                ) : cssVariablesValid === true ? (
-                  <p className="text-sm">✅ All critical CSS variables are set</p>
-                ) : (
-                  <p className="text-sm">⏳ CSS variable validation not yet run</p>
-                )}
-                
-                <div className="mt-4 space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      logThemeState();
-                      logger.info('Theme state logged to console');
-                    }}
-                  >
-                    Log Theme State
-                  </Button>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        ) : (
-          <p>✅ Theme is valid and correctly applied.</p>
-        )}
-      </AlertDescription>
-    </Alert>
+          </div>
+          
+          <div>
+            <div className="text-gray-400">Secondary Color:</div>
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-4 h-4 rounded-full" 
+                style={{ backgroundColor: activeTheme.colors.secondary }}
+              ></div>
+              <span>{activeTheme.colors.secondary}</span>
+            </div>
+          </div>
+          
+          <div>
+            <div className="text-gray-400">Registered Themes:</div>
+            <div>{themeRegistry.getAllThemes().length}</div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
