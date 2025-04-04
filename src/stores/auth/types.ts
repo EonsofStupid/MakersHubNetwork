@@ -1,9 +1,5 @@
 
-import { User, Session } from "@supabase/supabase-js";
-import { Database } from "@/integrations/supabase/types";
-import { AuthStatus } from "@/auth/types/auth.types";
-
-export type UserRole = Database["public"]["Enums"]["user_role"];
+import { User, Session, AuthStatus, UserRole } from "@/auth/types/auth.types";
 
 export interface AuthState {
   user: User | null;
@@ -23,6 +19,7 @@ export interface AuthActions {
   setError: (error: string | null) => void;
   setLoading: (isLoading: boolean) => void;
   setInitialized: (initialized: boolean) => void;
+  setStatus: (status: AuthStatus) => void;
   hasRole: (role: UserRole) => boolean;
   isAdmin: () => boolean;
   initialize: () => Promise<void>;
@@ -39,3 +36,6 @@ export interface AdminAccess {
 export interface WithAdminAccess {
   hasAdminAccess: boolean;
 }
+
+// Re-export for consistency
+export { AuthStatus, UserRole };

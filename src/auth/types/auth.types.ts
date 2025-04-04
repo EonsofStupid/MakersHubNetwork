@@ -26,11 +26,14 @@ export type Session = SupabaseSession;
 
 // User roles as const object with derived type
 export const UserRole = {
-  SUPER_ADMIN: 'super_admin',
   ADMIN: 'admin',
-  MODERATOR: 'moderator',
+  SUPER_ADMIN: 'super_admin',
   EDITOR: 'editor',
-  USER: 'user'
+  MAKER: 'maker',
+  BUILDER: 'builder',
+  VIEWER: 'viewer',
+  USER: 'user',
+  MODERATOR: 'moderator'
 } as const;
 
 export type UserRole = typeof UserRole[keyof typeof UserRole];

@@ -1,6 +1,6 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { LayoutSkeleton, Layout, layoutToJson } from '@/admin/types/layout.types';
+import { LayoutSkeleton, Layout, layoutToJson, CreateLayoutResponse } from '@/admin/types/layout.types';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
@@ -18,12 +18,13 @@ export function useLayoutSkeleton() {
       queryKey: ['layout', id],
       queryFn: async () => {
         if (!id) return null;
-        const { data, error } = await layoutSkeletonService.getById(id);
-        if (error) {
-          logger.error('Error fetching layout', { details: { id, error } });
-          throw error;
+        const result = await layoutSkeletonService.getById(id);
+        if (!result.data) {
+          const errorMsg = result.error || 'Failed to fetch layout';
+          logger.error('Error fetching layout', { details: { id, error: errorMsg } });
+          throw new Error(errorMsg);
         }
-        return data;
+        return result.data;
       },
       enabled: !!id
     });
@@ -38,12 +39,13 @@ export function useLayoutSkeleton() {
     return useQuery({
       queryKey: ['layouts', options],
       queryFn: async () => {
-        const { data, error } = await layoutSkeletonService.getAll(options);
-        if (error) {
-          logger.error('Error fetching layouts', { details: { options, error } });
-          throw error;
+        const result = await layoutSkeletonService.getAll(options);
+        if (!result.data) {
+          const errorMsg = result.error || 'Failed to fetch layouts';
+          logger.error('Error fetching layouts', { details: { options, error: errorMsg } });
+          throw new Error(errorMsg);
         }
-        return data || [];
+        return result.data || [];
       }
     });
   };
@@ -53,14 +55,15 @@ export function useLayoutSkeleton() {
     return useQuery({
       queryKey: ['layout', type, scope],
       queryFn: async () => {
-        const { data, error } = await layoutSkeletonService.getByTypeAndScope(type, scope);
-        if (error) {
+        const result = await layoutSkeletonService.getByTypeAndScope(type, scope);
+        if (!result.data) {
+          const errorMsg = result.error || 'Failed to fetch layout by type and scope';
           logger.error('Error fetching layout by type and scope', { 
-            details: { type, scope, error } 
+            details: { type, scope, error: errorMsg } 
           });
-          throw error;
+          throw new Error(errorMsg);
         }
-        return data;
+        return result.data;
       }
     });
   };

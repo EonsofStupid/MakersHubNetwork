@@ -106,7 +106,6 @@ export interface Logger {
   fatal(message: string, options?: LogOptions): void;
   success(message: string, options?: LogOptions): void;
   critical(message: string, options?: LogOptions): void;
-  performance?(message: string, duration: number, options?: LogOptions): void;
 }
 
 /**
@@ -132,6 +131,17 @@ export interface PerformanceMeasurementOptions {
 }
 
 /**
+ * Performance logger options
+ */
+export interface PerformanceLoggerOptions {
+  category?: LogCategory;
+  source?: string;
+  autoStart?: boolean;
+  warnThreshold?: number;
+  includeInTimeline?: boolean;
+}
+
+/**
  * Logging configuration
  */
 export interface LoggingConfig {
@@ -152,3 +162,16 @@ export interface LoggingConfig {
  * Log event callback
  */
 export type LogEventCallback = (entry: LogEntry) => void;
+
+/**
+ * Logging context type for the React provider
+ */
+export interface LoggingContextType {
+  logs: LogEntry[];
+  clearLogs: () => void;
+  showLogConsole: boolean;
+  setShowLogConsole: (show: boolean) => void;
+  toggleLogConsole: () => void;
+  minLogLevel: LogLevel;
+  setMinLogLevel: (level: LogLevel) => void;
+}

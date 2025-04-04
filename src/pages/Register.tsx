@@ -1,165 +1,118 @@
-
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { supabase } from '@/integrations/supabase/client';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/constants/logLevel';
+import { useAuthStore } from '@/stores/auth/store';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-export default function RegisterPage() {
+const registerSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
+});
+
+type RegisterSchemaType = z.infer<typeof registerSchema>;
+
+export default function Register() {
+  const logger = useLogger('RegisterPage', { category: LogCategory.AUTH });
   const navigate = useNavigate();
   const { toast } = useToast();
-  const logger = useLogger('RegisterPage', { category: 'AUTH' });
-  
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: 'Missing Fields',
-        description: 'Please fill in all required fields.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      toast({
-        title: 'Passwords Do Not Match',
-        description: 'Please make sure your passwords match.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-    
+  const { isAuthenticated } = useAuthStore();
+
+  const { register, handleSubmit, formState: { errors } } = useForm<RegisterSchemaType>({
+    resolver: zodResolver(registerSchema)
+  });
+
+  const onSubmit = async (data: RegisterSchemaType) => {
     try {
-      logger.info('Attempting to register new user', {
-        details: { email }
-      });
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
         options: {
-          emailRedirectTo: window.location.origin + '/login',
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-      
-      if (error) throw error;
-      
-      logger.info('Registration successful, confirmation email sent', {
-        details: { userId: data.user?.id }
-      });
-      
+
+      if (error) {
+        logger.error('Registration failed', { details: error });
+        toast({
+          title: 'Registration failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        logger.info('Registration successful, check your email to confirm');
+        toast({
+          title: 'Registration successful',
+          description: 'Check your email to confirm your account.',
+        });
+        navigate('/verify-registration');
+      }
+    } catch (error) {
+      logger.error('An unexpected error occurred during registration', { details: error });
       toast({
-        title: 'Registration Successful',
-        description: 'Please check your email to confirm your account.',
-      });
-      
-      // Redirect to login page after successful registration
-      navigate('/login');
-    } catch (error: any) {
-      logger.error('Registration failed', {
-        details: { error: error.message }
-      });
-      
-      toast({
-        title: 'Registration Failed',
-        description: error.message || 'There was an error registering your account. Please try again.',
+        title: 'An unexpected error occurred',
+        description: 'Please try again later.',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
-  
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
   return (
-    <div className="container flex items-center justify-center min-h-screen py-10">
-      <div className="w-full max-w-md">
-        <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Register</CardTitle>
-            <CardDescription className="text-center">
-              Create a new account to get started
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Create a password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Registering...' : 'Register'}
-              </Button>
-            </form>
-          </CardContent>
-          
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="text-sm text-center text-muted-foreground">
-              By registering, you agree to our{' '}
-              <Link to="/terms" className="text-primary underline hover:text-primary/80">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link to="/privacy" className="text-primary underline hover:text-primary/80">
-                Privacy Policy
-              </Link>
-            </div>
-            
-            <div className="text-sm text-center">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary underline hover:text-primary/80">
-                Sign in
-              </Link>
-            </div>
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
+    <AuthLayout>
+      <Card>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl">Create an account</CardTitle>
+          <CardDescription>
+            Enter your email and create a password to register
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              placeholder="m@example.com"
+              type="email"
+              autoComplete="email"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-sm text-red-500">{errors.email.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              {...register("password")}
+            />
+            {errors.password && (
+              <p className="text-sm text-red-500">{errors.password.message}</p>
+            )}
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button className="w-full" onClick={handleSubmit(onSubmit)}>
+            Create account
+          </Button>
+        </CardFooter>
+      </Card>
+    </AuthLayout>
   );
 }
