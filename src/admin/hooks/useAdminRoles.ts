@@ -1,41 +1,51 @@
 
-import { useEffect } from 'react';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import { useCallback, useMemo } from 'react';
+import { useAuth } from '@/auth/hooks/useAuth';
+import { UserRole } from '@/auth/types/auth.types';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
 /**
- * Maps user roles to admin permissions
- * This hook bridges the auth store with the admin store
+ * Hook for working with admin roles
+ * Provides helper functions to check if the current user has specific roles
  */
 export function useAdminRoles() {
-  const { user, roles, status } = useAuthStore();
-  const { loadPermissions, permissions } = useAdminStore();
-  const logger = useLogger('useAdminRoles', LogCategory.ADMIN);
+  const { roles } = useAuth();
+  const logger = useLogger('useAdminRoles', { category: LogCategory.ADMIN });
   
-  useEffect(() => {
-    // Only load permissions when user is authenticated and roles are loaded
-    if (status === 'authenticated' && roles && roles.length > 0) {
-      logger.info('Loading admin permissions for user roles', {
-        details: { 
-          userId: user?.id,
-          roles 
-        }
-      });
-      
-      loadPermissions().catch(error => {
-        logger.error('Error loading admin permissions', {
-          details: { error }
-        });
-      });
-    }
-  }, [status, roles, loadPermissions, user, logger]);
+  // Check if user has admin role
+  const isAdmin = useMemo(() => {
+    const hasAdminRole = roles.includes('admin');
+    logger.debug('Admin role check', { details: { hasRole: hasAdminRole } });
+    return hasAdminRole;
+  }, [roles, logger]);
+  
+  // Check if user has super admin role
+  const isSuperAdmin = useMemo(() => {
+    const hasSuperAdminRole = roles.includes('super_admin');
+    logger.debug('Super Admin role check', { details: { hasRole: hasSuperAdminRole } });
+    return hasSuperAdminRole;
+  }, [roles, logger]);
+  
+  // Check if user has a specific role
+  const hasRole = useCallback((role: UserRole): boolean => {
+    return roles.includes(role);
+  }, [roles]);
+  
+  // Get the highest priority role
+  const highestRole = useMemo(() => {
+    if (roles.includes('super_admin')) return 'super_admin';
+    if (roles.includes('admin')) return 'admin';
+    if (roles.includes('moderator')) return 'moderator';
+    if (roles.includes('editor')) return 'editor';
+    return 'user';
+  }, [roles]);
   
   return {
-    isAdmin: Boolean(roles?.includes('admin') || roles?.includes('super_admin')),
-    isSuperAdmin: Boolean(roles?.includes('super_admin')),
-    permissions
+    roles,
+    isAdmin,
+    isSuperAdmin,
+    hasRole,
+    highestRole
   };
 }

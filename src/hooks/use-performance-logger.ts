@@ -1,7 +1,15 @@
 
 import { useCallback } from 'react';
-import { usePerformanceLogger as useOriginalPerformanceLogger, PerformanceLoggerOptions } from '@/logging/hooks/usePerformanceLogger';
+import { usePerformanceLogger as useOriginalPerformanceLogger } from '@/logging/hooks/usePerformanceLogger';
 import { LogCategory } from '@/logging/types';
+
+export interface PerformanceLoggerOptions {
+  category?: string;
+  warnThreshold?: number;
+  onComplete?: (result: { name: string; duration: number; success: boolean }) => void;
+  source?: string;
+  tags?: string[];
+}
 
 /**
  * Performance logger hook for measuring and logging operation durations
@@ -21,16 +29,16 @@ export function usePerformanceLogger(component: string, options: Partial<Perform
     operationName: string,
     operation: () => T
   ): T {
-    return originalMeasure(operationName, operation, defaultOptions);
-  }, [originalMeasure, defaultOptions]);
+    return originalMeasure(operationName, operation);
+  }, [originalMeasure]);
   
   // Wrap the measureAsync function to include default options
   const measureAsync = useCallback(async function measureAsync<T>(
     operationName: string,
     operation: () => Promise<T>
   ): Promise<T> {
-    return originalMeasureAsync(operationName, operation, defaultOptions);
-  }, [originalMeasureAsync, defaultOptions]);
+    return originalMeasureAsync(operationName, operation);
+  }, [originalMeasureAsync]);
   
   return { 
     measure, 

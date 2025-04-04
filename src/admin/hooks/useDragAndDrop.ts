@@ -1,79 +1,106 @@
 
-import { useCallback } from 'react';
-import { useAtom } from 'jotai';
-import { PanInfo } from 'framer-motion';
-import {
-  dragSourceIdAtom,
-  dragTargetIdAtom,
-  isDraggingAtom,
-  dropIndicatorPositionAtom,
-  adminEditModeAtom
-} from '@/admin/atoms/tools.atoms';
+import { useState, useCallback } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
-interface DragAndDropOptions {
-  items: string[];
-  onReorder?: (newItems: string[]) => void;
-  onDrop?: (item: string, target: string) => void;
-  containerId?: string;
-  dragOnlyInEditMode?: boolean;
-  acceptExternalItems?: boolean;
+interface DraggableItem {
+  id: string;
+  type: string;
+  [key: string]: any;
 }
 
-export function useDragAndDrop({
-  items,
-  onReorder,
-  onDrop,
-  containerId,
-  dragOnlyInEditMode = false,
-  acceptExternalItems = false
-}: DragAndDropOptions) {
-  const [dragSourceId, setDragSourceId] = useAtom(dragSourceIdAtom);
-  const [dragTargetId, setDragTargetId] = useAtom(dragTargetIdAtom);
-  const [isDragging, setIsDragging] = useAtom(isDraggingAtom);
-  const [dropPosition, setDropPosition] = useAtom(dropIndicatorPositionAtom);
-  const [isEditMode] = useAtom(adminEditModeAtom);
+interface DragState<T extends DraggableItem> {
+  isDragging: boolean;
+  draggedItem: T | null;
+  sourceIndex: number | null;
+  targetIndex: number | null;
+}
+
+/**
+ * Hook for drag and drop functionality in admin components
+ */
+export function useDragAndDrop<T extends DraggableItem>(items: T[]) {
+  const [dragState, setDragState] = useState<DragState<T>>({
+    isDragging: false,
+    draggedItem: null,
+    sourceIndex: null,
+    targetIndex: null
+  });
   
-  const logger = useLogger('DragAndDrop', LogCategory.ADMIN);
+  const [orderedItems, setOrderedItems] = useState<T[]>(items);
+  const logger = useLogger('useDragAndDrop', { category: LogCategory.ADMIN });
   
-  // Handle drag start using Framer Motion
-  const handleDragStart = useCallback((info: PanInfo, itemId: string) => {
-    if (dragOnlyInEditMode && !isEditMode) {
-      return;
+  // Update items when props change
+  if (items !== orderedItems && !dragState.isDragging) {
+    setOrderedItems(items);
+  }
+  
+  // Start dragging
+  const handleDragStart = useCallback((item: T, index: number) => {
+    logger.debug('Drag started', { details: { item, index } });
+    setDragState({
+      isDragging: true,
+      draggedItem: item,
+      sourceIndex: index,
+      targetIndex: null
+    });
+  }, [logger]);
+  
+  // Update target position during drag
+  const handleDragOver = useCallback((index: number) => {
+    if (dragState.targetIndex !== index) {
+      setDragState(prev => ({
+        ...prev,
+        targetIndex: index
+      }));
+    }
+  }, [dragState.targetIndex]);
+  
+  // Complete drag operation
+  const handleDrop = useCallback(() => {
+    if (dragState.draggedItem && dragState.sourceIndex !== null && dragState.targetIndex !== null) {
+      logger.debug('Item dropped', {
+        details: {
+          item: dragState.draggedItem,
+          fromIndex: dragState.sourceIndex,
+          toIndex: dragState.targetIndex
+        }
+      });
+      
+      // Reorder items
+      const newItems = [...orderedItems];
+      const [movedItem] = newItems.splice(dragState.sourceIndex, 1);
+      newItems.splice(dragState.targetIndex, 0, movedItem);
+      
+      setOrderedItems(newItems);
     }
     
-    setDragSourceId(itemId);
-    setIsDragging(true);
-    logger.debug(`Drag started: ${itemId}`);
-  }, [setDragSourceId, setIsDragging, logger, dragOnlyInEditMode, isEditMode]);
+    // Reset drag state
+    setDragState({
+      isDragging: false,
+      draggedItem: null,
+      sourceIndex: null,
+      targetIndex: null
+    });
+  }, [dragState, orderedItems, logger]);
   
-  // Handle drag end using Framer Motion
-  const handleDragEnd = useCallback((info: PanInfo) => {
-    setIsDragging(false);
-    setDragSourceId(null);
-    setDragTargetId(null);
-    setDropPosition(null);
-  }, [setIsDragging, setDragSourceId, setDragTargetId, setDropPosition]);
-  
-  // Function to make an element draggable with Framer Motion
-  const makeDraggable = useCallback((element: HTMLElement, itemId: string) => {
-    // We can't fully implement this here as Framer Motion requires component-level props
-    // This is more of a connector function to be used with framer-motion components
-    
-    // Return cleanup function
-    return () => {
-      // Cleanup logic if needed
-    };
-  }, []);
+  // Cancel drag operation
+  const handleDragCancel = useCallback(() => {
+    logger.debug('Drag cancelled');
+    setDragState({
+      isDragging: false,
+      draggedItem: null,
+      sourceIndex: null,
+      targetIndex: null
+    });
+  }, [logger]);
   
   return {
-    isDragging,
-    dragSourceId,
-    dragTargetId,
-    dropPosition,
-    makeDraggable,
+    items: orderedItems,
+    dragState,
     handleDragStart,
-    handleDragEnd
+    handleDragOver,
+    handleDrop,
+    handleDragCancel
   };
 }

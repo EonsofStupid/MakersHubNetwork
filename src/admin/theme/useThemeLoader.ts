@@ -1,132 +1,110 @@
 
-import { useEffect, useState } from 'react';
-import { themeRegistry } from './ThemeRegistry';
-import { ImpulseTheme } from '../types/impulse.types';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getLogger } from '@/logging';
+import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { safeDetails } from '@/logging/utils/safeDetails';
-import { useAuth } from '@/auth/hooks/useAuth';
-import { applyThemeToDocument } from './utils/themeApplicator';
-import { defaultImpulseTokens } from './impulse/tokens';
-
-const logger = getLogger('ThemeLoader', LogCategory.THEME);
+import { formatLogDetails } from '@/logging/utils/details-formatter';
+import { createThemeFromRecord, defaultImpulseTheme } from './utils/modelTransformers';
+import { ImpulseTheme, ThemeRecord } from './types';
 
 /**
- * Hook for loading and applying themes during application initialization
+ * Hook for loading themes from the database
  */
-export function useThemeLoader() {
+export function useThemeLoader(themeId?: string) {
+  const [activeTheme, setActiveTheme] = useState<ImpulseTheme | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [activeThemeId, setActiveThemeId] = useState<string | null>(null);
-  const { user } = useAuth();
+  const logger = useLogger('ThemeLoader', { category: LogCategory.THEME });
 
   useEffect(() => {
-    let isMounted = true;
-    
-    // Register the default theme immediately to avoid flash of unstyled content
-    if (!themeRegistry.hasTheme('default')) {
-      themeRegistry.registerTheme('default', defaultImpulseTokens);
-      logger.debug('Default theme registered');
-      
-      // Apply default theme immediately
-      applyThemeToDocument(defaultImpulseTokens);
-    }
-    
-    const loadUserTheme = async () => {
+    const loadTheme = async () => {
       try {
-        setIsLoading(true);
+        logger.info('Loading theme', { details: { themeId: themeId || 'default' } });
         
-        // Query for the default theme or user preference
-        const query = supabase
-          .from('themes')
-          .select('*')
-          .eq('status', 'published')
-          .eq('is_default', true)
-          .limit(1);
-        
-        const { data, error } = await query;
-        
-        if (error) throw error;
-        
-        if (!data || data.length === 0) {
-          logger.warn('No published themes found');
-          if (isMounted) {
-            setIsLoaded(true);
-            setIsLoading(false);
-          }
+        // Use the default theme if no ID is provided
+        if (!themeId) {
+          logger.info('No theme ID provided, using default theme');
+          setActiveTheme(defaultImpulseTheme);
+          setIsLoaded(true);
           return;
         }
         
-        const theme = data[0];
+        // Query the database for the requested theme
+        const { data, error } = await supabase
+          .from('themes')
+          .select('*')
+          .eq('id', themeId)
+          .single();
         
-        // Transform database theme to ImpulseTheme format
-        try {
-          // Extract relevant data to build a proper theme structure
-          const impulseTheme: Partial<ImpulseTheme> = {
-            id: theme.id,
-            name: theme.name,
-            version: theme.version?.toString() || '1.0.0',
-            description: theme.description || '',
-            // Map other theme properties as needed
-            colors: theme.design_tokens?.colors || defaultImpulseTokens.colors,
-            effects: theme.design_tokens?.effects || defaultImpulseTokens.effects,
-            animation: theme.design_tokens?.animation || defaultImpulseTokens.animation,
-            components: theme.design_tokens?.components || defaultImpulseTokens.components,
-            typography: theme.design_tokens?.typography || defaultImpulseTokens.typography
-          };
-          
-          // Register the theme in the registry
-          themeRegistry.registerTheme(theme.id, impulseTheme as ImpulseTheme);
-          
-          // Apply the theme to the document
-          applyThemeToDocument(impulseTheme as ImpulseTheme);
-          
-          if (isMounted) {
-            setActiveThemeId(theme.id);
-            logger.info('Theme loaded and applied successfully', { 
-              details: { themeId: theme.id, themeName: theme.name } 
-            });
-          }
-        } catch (parseError) {
-          logger.error('Failed to parse theme data', { 
-            details: safeDetails(parseError) 
-          });
-          
-          // Fallback to default theme if parsing fails
-          applyThemeToDocument(defaultImpulseTokens);
+        if (error) {
+          throw error;
         }
         
-        if (isMounted) {
+        if (!data) {
+          logger.warn('Theme not found, using default', { details: { themeId } });
+          setActiveTheme(defaultImpulseTheme);
           setIsLoaded(true);
-          setIsLoading(false);
+          return;
         }
+        
+        // Process the database record into a theme object
+        const themeRecord = data as ThemeRecord;
+        
+        // Safely access json properties
+        const themeData = themeRecord.theme_data;
+        let colors = null;
+        let effects = null;
+        let animation = null;
+        let components = null;
+        let typography = null;
+        
+        // Parse theme data from JSON structure if it exists
+        if (themeData && typeof themeData === 'object') {
+          colors = themeData.colors;
+          effects = themeData.effects;
+          animation = themeData.animation;
+          components = themeData.components;
+          typography = themeData.typography;
+        }
+        
+        // Create the theme from the record
+        const theme = createThemeFromRecord(
+          themeRecord,
+          colors,
+          effects,
+          animation,
+          components,
+          typography
+        );
+        
+        logger.info('Theme loaded successfully', { 
+          details: { 
+            themeName: theme.name,
+            themeId: theme.id
+          } 
+        });
+        
+        setActiveTheme(theme);
+        setIsLoaded(true);
       } catch (err) {
-        logger.error('Error loading theme', { details: safeDetails(err) });
-        
-        if (isMounted) {
-          setError(err instanceof Error ? err : new Error('Unknown error loading theme'));
-          setIsLoading(false);
-          setIsLoaded(true); // Still mark as loaded so app continues
-        }
-        
-        // Ensure default theme is applied on error
-        applyThemeToDocument(defaultImpulseTokens);
+        const error = err as Error;
+        logger.error('Error loading theme', { 
+          details: formatLogDetails(error)
+        });
+        setError(error);
+        // Fall back to default theme
+        setActiveTheme(defaultImpulseTheme);
+        setIsLoaded(true);
       }
     };
     
-    loadUserTheme();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.id]);
-
+    loadTheme();
+  }, [themeId, logger]);
+  
   return {
+    activeTheme,
     isLoaded,
-    isLoading,
     error,
-    activeThemeId
+    setActiveTheme
   };
 }
