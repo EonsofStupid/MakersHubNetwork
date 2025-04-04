@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,11 +5,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/constants/logLevel';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { useProfileStore } from '@/stores/profile/store';
 
 export default function Profile() {
@@ -32,6 +31,7 @@ export default function Profile() {
   const handleUpdateProfile = async () => {
     if (!user) return;
     
+    setIsLoading(true);
     try {
       logger.info('Updating user profile', {
         details: { userId: user.id }
@@ -62,6 +62,8 @@ export default function Profile() {
         description: 'There was an error updating your profile. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -72,9 +74,6 @@ export default function Profile() {
       </div>
     );
   }
-
-  // Extract user roles from profile or set empty array if undefined
-  const userRoles = profile?.roles || [];
   
   return (
     <div className="container mx-auto py-10">
@@ -163,8 +162,8 @@ export default function Profile() {
                 <div>
                   <Label className="text-sm text-muted-foreground">Roles</Label>
                   <p className="text-sm">
-                    {userRoles.length > 0 
-                      ? userRoles.join(', ') 
+                    {roles.length > 0 
+                      ? roles.join(', ') 
                       : 'No roles assigned'}
                   </p>
                 </div>
