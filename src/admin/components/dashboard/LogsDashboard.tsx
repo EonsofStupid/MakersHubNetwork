@@ -13,7 +13,7 @@ import { LogCategory, LogLevel } from '@/constants/logLevel';
 export function LogsDashboard() {
   const [logs, setLogs] = useState(safeGetLogs());
   const [activeTab, setActiveTab] = useState<string>('level');
-  const logger = useLogger('LogsDashboard', LogCategory.ADMIN);
+  const logger = useLogger('LogsDashboard', { category: LogCategory.ADMIN });
   
   // Refresh logs periodically
   useEffect(() => {
@@ -63,8 +63,8 @@ export function LogsDashboard() {
   
   // Calculate some statistics
   const totalLogs = logs.length;
-  const errorCount = logs.filter(log => log.level === 'ERROR' || log.level === 'FATAL' || log.level === 'CRITICAL').length;
-  const warningCount = logs.filter(log => log.level === 'WARN').length;
+  const errorCount = logs.filter(log => log.level === LogLevel.ERROR || log.level === LogLevel.FATAL || log.level === LogLevel.CRITICAL).length;
+  const warningCount = logs.filter(log => log.level === LogLevel.WARN).length;
   const errorPercentage = totalLogs ? ((errorCount / totalLogs) * 100).toFixed(1) : '0';
   
   return (

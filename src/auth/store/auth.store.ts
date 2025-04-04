@@ -1,10 +1,11 @@
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { AuthState, AuthStatus, UserRole } from "../types/auth.types";
 import { AuthUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { getLogger } from "@/logging";
-import { LogCategory } from "@/logging";
+import { LogCategory } from "@/constants/logLevel";
 import { safeDetails } from '@/logging/utils/safeDetails';
 
 interface AuthStore extends AuthState {
@@ -33,7 +34,7 @@ export const useAuthStore = create<AuthStore>()(
       user: null,
       session: null,
       roles: [],
-      status: "idle" as AuthStatus,
+      status: AuthStatus.LOADING,
       error: null,
       isLoading: false,
       initialized: false,
@@ -49,7 +50,7 @@ export const useAuthStore = create<AuthStore>()(
         set({
           session,
           user: session?.user ?? null,
-          status: session ? "authenticated" : "unauthenticated",
+          status: session ? AuthStatus.AUTHENTICATED : AuthStatus.UNAUTHENTICATED,
           isAuthenticated: !!session
         });
       },
@@ -58,7 +59,6 @@ export const useAuthStore = create<AuthStore>()(
         const logger = getLogger();
         logger.debug("Setting roles in auth store", { 
           category: LogCategory.AUTH,
-          source: "authStore",
           details: { roles }
         });
         set({ roles });
@@ -77,11 +77,10 @@ export const useAuthStore = create<AuthStore>()(
       initialize: async () => {
         const logger = getLogger();
         try {
-          set({ isLoading: true, error: null, status: "loading" });
+          set({ isLoading: true, error: null, status: AuthStatus.LOADING });
           
           logger.info("Initializing auth store", { 
-            category: LogCategory.AUTH,
-            source: "authStore"
+            category: LogCategory.AUTH
           });
           
           const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -100,7 +99,6 @@ export const useAuthStore = create<AuthStore>()(
 
             logger.info("User authenticated", { 
               category: LogCategory.AUTH,
-              source: "authStore",
               details: { 
                 userId: session.user.id,
                 rolesCount: roles.length 
@@ -111,21 +109,20 @@ export const useAuthStore = create<AuthStore>()(
               user: session.user,
               session,
               roles,
-              status: "authenticated",
+              status: AuthStatus.AUTHENTICATED,
               error: null,
               isAuthenticated: true
             });
           } else {
             logger.info("No user session found", { 
-              category: LogCategory.AUTH,
-              source: "authStore" 
+              category: LogCategory.AUTH 
             });
             
             set({
               user: null,
               session: null,
               roles: [],
-              status: "unauthenticated",
+              status: AuthStatus.UNAUTHENTICATED,
               error: null,
               isAuthenticated: false
             });
@@ -134,7 +131,6 @@ export const useAuthStore = create<AuthStore>()(
           const errorMessage = err instanceof Error ? err.message : "Unknown error";
           logger.error('Auth initialization error', {
             category: LogCategory.AUTH,
-            source: 'auth/store',
             details: safeDetails(err)
           });
           
@@ -143,7 +139,7 @@ export const useAuthStore = create<AuthStore>()(
             user: null,
             session: null,
             roles: [],
-            status: "unauthenticated",
+            status: AuthStatus.UNAUTHENTICATED,
             isAuthenticated: false
           });
         } finally {
@@ -157,8 +153,7 @@ export const useAuthStore = create<AuthStore>()(
           set({ isLoading: true, error: null });
           
           logger.info("User logging out", { 
-            category: LogCategory.AUTH,
-            source: "authStore" 
+            category: LogCategory.AUTH
           });
           
           await supabase.auth.signOut();
@@ -167,20 +162,18 @@ export const useAuthStore = create<AuthStore>()(
             user: null,
             session: null,
             roles: [],
-            status: "unauthenticated",
+            status: AuthStatus.UNAUTHENTICATED,
             error: null,
             isAuthenticated: false
           });
           
           logger.info("User logged out successfully", { 
-            category: LogCategory.AUTH,
-            source: "authStore" 
+            category: LogCategory.AUTH
           });
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : "Unknown error";
           logger.error('Logout error', {
             category: LogCategory.AUTH,
-            source: 'auth/store',
             details: safeDetails(err)
           });
           

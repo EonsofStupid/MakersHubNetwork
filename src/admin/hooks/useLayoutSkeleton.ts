@@ -1,224 +1,328 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useCallback } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
+
+interface UseLayoutSkeletonResult {
+  useGetLayout: (id: string) => {
+    data: Layout | null;
+    isLoading: boolean;
+    error: Error | null;
+  };
+  useGetLayoutByTypeAndScope: (type: string, scope: string) => {
+    data: Layout | null;
+    isLoading: boolean;
+    error: Error | null;
+  };
+  useGetAllLayouts: (options?: {
+    type?: string;
+    scope?: string;
+    isActive?: boolean;
+  }) => {
+    data: LayoutSkeleton[] | null;
+    isLoading: boolean;
+    error: Error | null;
+  };
+  useCreateLayout: () => {
+    mutate: (layout: Partial<LayoutSkeleton>, options?: {
+      onSuccess?: (data: any) => void;
+      onError?: (error: any) => void;
+    }) => void;
+    isPending: boolean;
+  };
+  useUpdateLayout: () => {
+    mutate: (layout: Partial<LayoutSkeleton>, options?: {
+      onSuccess?: (data: any) => void;
+      onError?: (error: any) => void;
+    }) => void;
+    isPending: boolean;
+  };
+  useDeleteLayout: () => {
+    mutate: (id: string, options?: {
+      onSuccess?: (data: any) => void;
+      onError?: (error: any) => void;
+    }) => void;
+    isPending: boolean;
+  };
+  useSaveLayout: () => {
+    mutate: (layout: Partial<LayoutSkeleton>, options?: {
+      onSuccess?: (data: any) => void;
+      onError?: (error: any) => void;
+    }) => void;
+    isPending: boolean;
+  };
+  useDeleteLayoutById: () => {
+    mutate: (id: string, options?: {
+      onSuccess?: (data: any) => void;
+      onError?: (error: any) => void;
+    }) => void;
+    isPending: boolean;
+  };
+}
 
 /**
- * Hook for fetching and managing layout skeletons from the database
+ * Convert a layout to a layout skeleton for database storage
  */
-export function useLayoutSkeleton() {
+const layoutToLayoutSkeleton = (layout: Layout): Partial<LayoutSkeleton> => {
+  return {
+    id: layout.id,
+    name: layout.name,
+    type: layout.type,
+    scope: layout.scope,
+    description: layout.description,
+    is_active: layout.is_active,
+    is_locked: layout.is_locked,
+    layout_json: layoutToJson({
+      components: layout.components,
+      version: layout.version
+    }),
+    version: layout.version,
+    meta: layout.meta
+  };
+};
+
+export const useLayoutSkeleton = (): UseLayoutSkeletonResult => {
   const queryClient = useQueryClient();
 
-  /**
-   * Get all layouts
-   */
-  const useAllLayouts = () => {
-    return useQuery({
-      queryKey: ['layouts', 'all'],
-      queryFn: async () => {
-        return await layoutSkeletonService.getAll();
-      },
-    });
-  };
+  // Hook to get a single layout by ID
+  const useGetLayout = useCallback((id: string) => {
+    const [data, setData] = useState<Layout | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
 
-  /**
-   * Load a specific layout by ID
-   */
-  const useLayoutById = (id?: string) => {
-    return useQuery({
-      queryKey: ['layout', id],
-      queryFn: async () => {
-        if (!id) return null;
-        const skeleton = await layoutSkeletonService.getById(id);
-        if (!skeleton?.data) return null;
-        return skeleton.data;
-      },
-      enabled: !!id,
-    });
-  };
-
-  /**
-   * Load active layout by type and scope
-   */
-  const useActiveLayout = (type: string, scope: string) => {
-    return useQuery({
-      queryKey: ['layout', type, scope, 'active'],
-      queryFn: async () => {
-        const response = await layoutSkeletonService.getByTypeAndScope(type, scope);
-        if (!response?.data) return null;
-        return response.data;
-      },
-    });
-  };
-
-  /**
-   * Create a default layout if none exists
-   */
-  const useCreateDefaultLayout = () => {
-    return useMutation({
-      mutationFn: async ({ type, scope }: { type: string, scope: string }) => {
-        // Check if a layout already exists
-        const existingLayout = await layoutSkeletonService.getByTypeAndScope(type, scope);
-        if (existingLayout?.data) return { success: false, error: 'Layout already exists' };
-        
-        // Create a default layout based on type
-        const now = new Date().toISOString();
-        let defaultLayout: Layout = {
-          id: uuidv4(),
-          name: `Default ${type}`,
-          type,
-          scope,
-          components: [],
-          version: 1,
-          created_at: now,
-          updated_at: now,
-          is_active: true,
-          is_locked: false
-        };
-        
-        if (type === 'dashboard') {
-          defaultLayout.components = [
-            {
-              id: 'root',
-              type: 'AdminSection',
-              children: [
-                {
-                  id: 'title',
-                  type: 'heading',
-                  props: {
-                    level: 1,
-                    className: 'text-2xl font-bold',
-                    children: 'Dashboard'
-                  }
-                }
-              ]
-            }
-          ];
-        } else if (type === 'sidebar') {
-          defaultLayout.components = [
-            {
-              id: 'root',
-              type: 'AdminSidebar',
-              children: [
-                {
-                  id: 'title',
-                  type: 'heading',
-                  props: {
-                    level: 2,
-                    className: 'text-xl font-bold',
-                    children: 'Admin'
-                  }
-                }
-              ]
-            }
-          ];
-        } else if (type === 'topnav') {
-          defaultLayout.components = [
-            {
-              id: 'root',
-              type: 'AdminTopNav',
-              children: [
-                {
-                  id: 'title',
-                  type: 'heading',
-                  props: {
-                    level: 2,
-                    className: 'text-xl font-bold',
-                    children: 'MakersImpulse'
-                  }
-                }
-              ]
-            }
-          ];
+    useState(() => {
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          const result = await layoutSkeletonService.getById(id);
+          if (result.data) {
+            setData(layoutSkeletonService.convertToLayout(result.data));
+            setError(null);
+          } else {
+            setData(null);
+            setError(result.error instanceof Error ? result.error : new Error(result.error?.message || 'Failed to fetch layout'));
+          }
+        } catch (err) {
+          setError(err instanceof Error ? err : new Error('Failed to fetch layout'));
+        } finally {
+          setIsLoading(false);
         }
-        
-        // Save to database
-        return await layoutSkeletonService.create({
-          name: defaultLayout.name,
-          type: defaultLayout.type,
-          scope: defaultLayout.scope,
-          layout_json: layoutToJson({
-            components: defaultLayout.components || [],
-            version: defaultLayout.version || 1
-          }),
-          is_active: true,
-          is_locked: false,
-          version: 1
-        });
-      },
-      onSuccess: (data, variables) => {
-        if (data.success) {
-          queryClient.invalidateQueries({ queryKey: ['layout', variables.type, variables.scope] });
-          toast.success('Default layout created successfully');
-        } else if (data.error !== 'Layout already exists') {
-          toast.error('Failed to create default layout', { description: data.error });
+      };
+
+      fetchData();
+    }, [id]);
+
+    return { data, isLoading, error };
+  }, []);
+
+  // Hook to get a layout by type and scope
+  const useGetLayoutByTypeAndScope = useCallback((type: string, scope: string) => {
+    const [data, setData] = useState<Layout | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+
+    useState(() => {
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          const result = await layoutSkeletonService.getByTypeAndScope(type, scope);
+          if (result.data) {
+            setData(layoutSkeletonService.convertToLayout(result.data));
+            setError(null);
+          } else {
+            setData(null);
+            setError(result.error instanceof Error ? result.error : new Error(result.error?.message || 'Failed to fetch layout'));
+          }
+        } catch (err) {
+          setError(err instanceof Error ? err : new Error('Failed to fetch layout'));
+        } finally {
+          setIsLoading(false);
         }
+      };
+
+      fetchData();
+    }, [type, scope]);
+
+    return { data, isLoading, error };
+  }, []);
+
+  // Hook to get all layouts with optional filtering
+  const useGetAllLayouts = useCallback((options?: {
+    type?: string;
+    scope?: string;
+    isActive?: boolean;
+  }) => {
+    const [data, setData] = useState<LayoutSkeleton[] | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+
+    useState(() => {
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          const result = await layoutSkeletonService.getAll(options);
+          if (result.data) {
+            setData(result.data);
+            setError(null);
+          } else {
+            setData(null);
+            setError(result.error instanceof Error ? result.error : new Error(result.error?.message || 'Failed to fetch layouts'));
+          }
+        } catch (err) {
+          setError(err instanceof Error ? err : new Error('Failed to fetch layouts'));
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchData();
+    }, [options]);
+
+    return { data, isLoading, error };
+  }, []);
+
+  // Hook to create a new layout
+  const useCreateLayout = () => {
+    const mutation = useMutation(
+      async (layout: Partial<LayoutSkeleton>) => {
+        const result = await layoutSkeletonService.create(layout);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to create layout');
+        }
+        return result.data;
       },
-      onError: (error: any) => {
-        toast.error('Error creating default layout', { description: error.message });
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['layouts'] });
+        },
+        onError: (error: any) => {
+          toast.error(error.message || 'Failed to create layout');
+        },
       }
-    });
+    );
+
+    return {
+      mutate: mutation.mutate,
+      isPending: mutation.isPending,
+    };
   };
 
-  /**
-   * Save a layout mutation
-   */
-  const useSaveLayout = () => {
-    return useMutation({
-      mutationFn: async (layout: Partial<LayoutSkeleton>) => {
-        if (layout.id) {
-          return await layoutSkeletonService.update(layout.id, layout);
-        } else {
-          return await layoutSkeletonService.create(layout);
+  // Hook to update an existing layout
+  const useUpdateLayout = () => {
+    const mutation = useMutation(
+      async (layout: Partial<LayoutSkeleton>) => {
+        if (!layout.id) {
+          throw new Error('Layout ID is required for updating');
         }
-      },
-      onSuccess: (data, variables) => {
-        // Invalidate relevant queries
-        queryClient.invalidateQueries({ queryKey: ['layout'] });
-        
-        if (data.success) {
-          toast.success('Layout saved successfully');
-        } else {
-          toast.error('Failed to save layout', { description: data.error });
+        const result = await layoutSkeletonService.update(layout.id, layout);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to update layout');
         }
+        return result.data;
       },
-      onError: (error: any) => {
-        toast.error('Error saving layout', { description: error.message });
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['layouts'] });
+        },
+        onError: (error: any) => {
+          toast.error(error.message || 'Failed to update layout');
+        },
       }
-    });
+    );
+
+    return {
+      mutate: mutation.mutate,
+      isPending: mutation.isPending,
+    };
   };
 
-  /**
-   * Delete a layout mutation
-   */
+  // Hook to delete a layout
   const useDeleteLayout = () => {
-    return useMutation({
-      mutationFn: async (id: string) => {
-        return await layoutSkeletonService.delete(id);
-      },
-      onSuccess: (data, variables) => {
-        // Invalidate relevant queries
-        queryClient.invalidateQueries({ queryKey: ['layout'] });
-        
-        if (data.success) {
-          toast.success('Layout deleted successfully');
-        } else {
-          toast.error('Failed to delete layout', { description: data.error });
+    const mutation = useMutation(
+      async (id: string) => {
+        const result = await layoutSkeletonService.delete(id);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to delete layout');
         }
+        return result.success;
       },
-      onError: (error: any) => {
-        toast.error('Error deleting layout', { description: error.message });
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['layouts'] });
+        },
+        onError: (error: any) => {
+          toast.error(error.message || 'Failed to delete layout');
+        },
       }
-    });
+    );
+
+    return {
+      mutate: mutation.mutate,
+      isPending: mutation.isPending,
+    };
+  };
+
+  // Hook to save a layout (create or update)
+  const useSaveLayout = () => {
+    const mutation = useMutation(
+      async (layout: Partial<LayoutSkeleton>) => {
+        const result = await layoutSkeletonService.saveLayout(layout);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to save layout');
+        }
+        return result;
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['layouts'] });
+        },
+        onError: (error: any) => {
+          toast.error(error.message || 'Failed to save layout');
+        },
+      }
+    );
+
+    return {
+      mutate: mutation.mutate,
+      isPending: mutation.isPending,
+    };
+  };
+
+  // Hook to delete a layout by ID
+  const useDeleteLayoutById = () => {
+    const mutation = useMutation(
+      async (id: string) => {
+        const result = await layoutSkeletonService.deleteLayout(id);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to delete layout');
+        }
+        return result.success;
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['layouts'] });
+        },
+        onError: (error: any) => {
+          toast.error(error.message || 'Failed to delete layout');
+        },
+      }
+    );
+
+    return {
+      mutate: mutation.mutate,
+      isPending: mutation.isPending,
+    };
   };
 
   return {
-    useAllLayouts,
-    useLayoutById,
-    useActiveLayout,
-    useCreateDefaultLayout,
+    useGetLayout,
+    useGetLayoutByTypeAndScope,
+    useGetAllLayouts,
+    useCreateLayout,
+    useUpdateLayout,
+    useDeleteLayout,
     useSaveLayout,
-    useDeleteLayout
+    useDeleteLayoutById
   };
-}
+};
