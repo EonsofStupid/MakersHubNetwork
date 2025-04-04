@@ -537,25 +537,3 @@ const themeContext: ThemeContextType = {
   theme: 'default',
   setTheme: () => {}
 };
-
-// Update the convertToThemeComponent function to convert nulls to undefined and handle context properly
-const convertToThemeComponent = (component: any): ThemeComponent => {
-  return {
-    id: component.id,
-    theme_id: component.theme_id || '',
-    component_name: component.component_name || '',
-    styles: component.styles || {},
-    description: component.description || undefined, // Convert null to undefined
-    created_at: component.created_at,
-    updated_at: component.updated_at,
-    context: component.context || 'site' // Default to 'site' if context is null
-  };
-};
-
-// Fix applyTheme function to use defaultImpulseTokens
-// In the updateCurrentTheme function, import defaultImpulseTokens properly
-
-// Fix the applyDefaultTheme function using defaultImpulseTokens
-const applyDefaultTheme = () => {
-  applyThemeToDocument(defaultImpulseTokens);
-};
