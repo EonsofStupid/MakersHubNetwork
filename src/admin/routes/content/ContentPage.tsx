@@ -1,14 +1,9 @@
+import React from 'react';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging/types';
 
-import React from "react";
-import { FileText, FolderOpen, Image, FilePlus, FileX } from "lucide-react";
-import { PlaceholderPage } from "@/admin/routes/PlaceholderPage";
-import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
-import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging/types";
-
-export default function ContentPage() {
-  const logger = useLogger('ContentPage', LogCategory.CONTENT);
+export function ContentPage() {
+  const logger = useLogger('ContentPage', { category: LogCategory.CONTENT });
   
   // Log page access
   React.useEffect(() => {

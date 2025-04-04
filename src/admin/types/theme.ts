@@ -13,13 +13,8 @@ export interface ThemeContextValue {
   error: Error | null;
   applyTheme: (themeId: string) => Promise<void>;
   updateTheme: (updates: Partial<ImpulseTheme>) => void;
-  saveTheme: () => Promise<void>;
-  resetTheme: () => void;
-  isDirty: boolean;
-  isSaving: boolean;
-}
-
-export interface ThemeProviderProps {
-  children: React.ReactNode;
-  defaultThemeId?: string;
+  saveTheme: (theme: Partial<AdminTheme>) => Promise<boolean>;
+  themeComponents: any[];
+  themeTokens: any[];
+  themeValues: Record<string, string>;
 }

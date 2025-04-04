@@ -1,7 +1,7 @@
-
 import { PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { LayoutSkeleton, Layout } from "@/admin/types/layout.types";
+import { safeJsonParse } from "@/types/json";
 
 interface LayoutResponse {
   data: LayoutSkeleton | null;
@@ -279,15 +279,25 @@ class LayoutSkeletonService {
   convertToLayout(skeleton: LayoutSkeleton | null): Layout | null {
     if (!skeleton) return null;
     
+    const layoutJson = typeof skeleton.layout_json === 'string' 
+      ? JSON.parse(skeleton.layout_json) 
+      : skeleton.layout_json;
+      
     return {
       id: skeleton.id,
       name: skeleton.name,
       type: skeleton.type,
       scope: skeleton.scope,
-      components: Array.isArray(skeleton.layout_json?.components) 
-        ? skeleton.layout_json.components 
+      description: skeleton.description,
+      components: Array.isArray(layoutJson?.components) 
+        ? layoutJson.components 
         : [],
       version: skeleton.version,
+      created_at: skeleton.created_at,
+      updated_at: skeleton.updated_at,
+      created_by: skeleton.created_by,
+      is_active: skeleton.is_active,
+      is_locked: skeleton.is_locked,
       meta: skeleton.meta || {}
     };
   }
@@ -307,7 +317,7 @@ class LayoutSkeletonService {
       created_at: data.created_at,
       updated_at: data.updated_at,
       created_by: data.created_by,
-      layout_json: data.layout_json || { components: [] },
+      layout_json: safeJsonParse(data.layout_json, { components: [], version: 1 }),
       version: data.version || 1,
       meta: data.meta || {}
     };

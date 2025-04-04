@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { LayoutEditor } from '@/admin/components/layout/LayoutEditor';
 import { RequirePermission } from '@/admin/components/auth/RequirePermission';
 import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import { safeJsonParse } from '@/types/json';
 
 export function LayoutManager() {
   const [selectedType, setSelectedType] = useState<string>('dashboard');
@@ -47,7 +49,13 @@ export function LayoutManager() {
         return [];
       }
       
-      return data as LayoutSkeleton[];
+      // Safely convert the raw DB data to LayoutSkeleton type
+      return (data || []).map(item => {
+        return {
+          ...item,
+          layout_json: safeJsonParse(item.layout_json, { components: [], version: 1 })
+        } as LayoutSkeleton;
+      });
     },
   });
   
