@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
@@ -54,9 +55,9 @@ export const useProfileStore = create<ProfileState>((set, get) => {
           
         if (error) throw error;
         
-        const profile = convertDbProfileToProfile(data);
-        set({ profile, isLoading: false });
-        logger.debug('Profile fetched successfully', { details: { profile }});
+        const profileData = convertDbProfileToProfile(data);
+        set({ profile: profileData, isLoading: false });
+        logger.debug('Profile fetched successfully', { details: { profile: profileData }});
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
         set({ error: err, isLoading: false });
@@ -83,8 +84,8 @@ export const useProfileStore = create<ProfileState>((set, get) => {
           
         if (error) throw error;
         
-        const profile = convertDbProfileToProfile(data);
-        set({ profile, isLoading: false });
+        const updatedProfile = convertDbProfileToProfile(data);
+        set({ profile: updatedProfile, isLoading: false });
         logger.debug('Profile updated successfully');
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));

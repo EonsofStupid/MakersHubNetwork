@@ -1,4 +1,3 @@
-
 import { ImpulseTheme, defaultImpulseTokens } from '@/admin/types/impulse.types';
 import { ThemeRecord } from '../types';
 import { Theme, ComponentTokens, ThemeComponent, ThemeToken } from '@/types/theme';
@@ -64,21 +63,94 @@ export function impulseThemeToTheme(impulseTheme: ImpulseTheme): Theme {
     is_default: impulseTheme.id === 'default',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    version: impulseTheme.version,
+    version: impulseTheme.version || 1,
     design_tokens: {
       colors: {
         primary: impulseTheme.colors.primary,
         secondary: impulseTheme.colors.secondary,
-        accent: impulseTheme.colors.accent || impulseTheme.colors.primary, // Ensure accent is always defined
+        accent: impulseTheme.colors.accent || impulseTheme.colors.primary,
         background: impulseTheme.colors.background,
         text: impulseTheme.colors.text,
-        borders: impulseTheme.colors.borders,
-        status: impulseTheme.colors.status
+        borders: impulseTheme.colors.borders || { normal: '#333', hover: '#444', active: '#555', focus: '#666' },
+        status: impulseTheme.colors.status || { success: '#10B981', warning: '#F59E0B', error: '#EF4444', info: '#3B82F6' }
       },
-      typography: impulseTheme.typography,
-      effects: impulseTheme.effects,
-      animation: impulseTheme.animation,
-      components: impulseTheme.components
+      typography: {
+        fonts: impulseTheme.typography.fontFamily || {
+          body: "'Inter', sans-serif",
+          heading: "'Inter', sans-serif",
+          mono: "'JetBrains Mono', monospace"
+        },
+        sizes: impulseTheme.typography.fontSizes || {
+          xs: '0.75rem',
+          sm: '0.875rem',
+          base: '1rem',
+          md: '1.125rem',
+          lg: '1.25rem',
+          xl: '1.5rem',
+          '2xl': '1.875rem',
+          '3xl': '2.25rem'
+        },
+        weights: impulseTheme.typography.fontWeights || {
+          light: 300,
+          normal: 400,
+          medium: 500,
+          bold: 700
+        },
+        lineHeights: {
+          tight: '1.25',
+          normal: '1.5',
+          relaxed: '1.75'
+        }
+      },
+      effects: {
+        shadows: {
+          sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
+          md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+          xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+        },
+        glow: {
+          primary: '0 0 10px rgba(var(--color-primary-rgb), 0.7)',
+          secondary: '0 0 10px rgba(var(--color-secondary-rgb), 0.7)',
+          hover: '0 0 15px rgba(var(--color-primary-rgb), 0.9)'
+        }
+      },
+      animation: {
+        duration: impulseTheme.animation.duration || {
+          fast: '150ms',
+          normal: '300ms',
+          slow: '500ms'
+        },
+        curves: impulseTheme.animation.curves || {
+          bounce: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          ease: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          spring: 'cubic-bezier(0.43, 0.13, 0.23, 0.96)',
+          linear: 'linear'
+        },
+        transitions: impulseTheme.animation.keyframes || {}
+      },
+      components: {
+        panel: {
+          radius: '0.5rem',
+          padding: '1rem',
+          background: 'var(--background-card)'
+        },
+        button: {
+          radius: '0.375rem',
+          padding: '0.5rem 1rem',
+          transition: 'all 150ms ease'
+        },
+        tooltip: {
+          radius: '0.25rem',
+          padding: '0.5rem',
+          background: 'rgba(0,0,0,0.8)'
+        },
+        input: {
+          radius: '0.375rem',
+          padding: '0.5rem',
+          background: 'var(--background-alt)'
+        }
+      }
     },
     component_tokens: [],
     is_system: true,
@@ -91,17 +163,18 @@ export function impulseThemeToTheme(impulseTheme: ImpulseTheme): Theme {
  */
 export function themeToImpulseTheme(theme: Theme): ImpulseTheme {
   // Extract design tokens from Theme and map to ImpulseTheme structure
+  const defaultTokens = defaultImpulseTokens;
+  
   return {
     id: theme.id,
     name: theme.name,
     description: theme.description,
     version: theme.version,
-    
-    colors: theme.design_tokens?.colors || defaultImpulseTokens.colors,
-    typography: theme.design_tokens?.typography || defaultImpulseTokens.typography,
-    effects: theme.design_tokens?.effects || defaultImpulseTokens.effects,
-    animation: theme.design_tokens?.animation || defaultImpulseTokens.animation,
-    components: theme.design_tokens?.components || defaultImpulseTokens.components
+    colors: theme.design_tokens?.colors || defaultTokens.colors,
+    typography: theme.design_tokens?.typography || defaultTokens.typography,
+    effects: theme.design_tokens?.effects || defaultTokens.effects,
+    animation: theme.design_tokens?.animation || defaultTokens.animation,
+    components: theme.design_tokens?.components || defaultTokens.components
   };
 }
 

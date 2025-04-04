@@ -15,8 +15,7 @@ import {
 } from '@/admin/theme/utils/modelTransformers';
 import { defaultImpulseTokens } from '@/admin/types/impulse.types';
 import { applyThemeToDocument } from '@/admin/theme/utils/themeApplicator';
-import { Theme, ThemeComponent, ComponentTokens, convertToThemeComponents } from '@/types/theme';
-import { ThemeContextType } from '@/types/theme';
+import { Theme, ThemeComponent, ComponentTokens, convertToThemeComponents, ThemeContext } from '@/types/theme';
 
 const logger = getLogger('ThemeStore', { category: LogCategory.THEME });
 
@@ -487,7 +486,7 @@ export function selectThemeProperty<T>(property: string, defaultValue: T) {
 /**
  * Map database theme to application theme model
  */
-function mapThemeFromDatabase(dbTheme: any): ImpulseTheme {
+function mapThemeFromDatabase(dbTheme: any): any {
   const logger = getLogger('themeStore:mapper', { category: LogCategory.THEME });
   
   try {
@@ -499,10 +498,11 @@ function mapThemeFromDatabase(dbTheme: any): ImpulseTheme {
       description: dbTheme.description || '',
       author: dbTheme.author || 'Unknown',
       version: dbTheme.version || '1.0.0',
-      colors: dbTheme.colors || defaultColors,
-      typography: dbTheme.typography || defaultTypography,
-      effects: dbTheme.effects || defaultEffects,
-      components: dbTheme.components || defaultComponents,
+      colors: dbTheme.colors || defaultImpulseTokens.colors,
+      typography: dbTheme.typography || defaultImpulseTokens.typography,
+      effects: dbTheme.effects || defaultImpulseTokens.effects,
+      components: dbTheme.components || defaultImpulseTokens.components,
+      animation: dbTheme.animation || defaultImpulseTokens.animation,
       created_at: dbTheme.created_at || new Date().toISOString(),
       updated_at: dbTheme.updated_at || new Date().toISOString()
     };
@@ -526,15 +526,14 @@ function mapThemeFromDatabase(dbTheme: any): ImpulseTheme {
   }
 }
 
-// Fix the ThemeContext reference:
-// This should reference ThemeContextType instead
-interface ThemeContextType {
+// Define a proper interface for theme context used in React
+interface ReactThemeContextType {
   theme: string;
   setTheme: (theme: string) => void;
 }
 
-// This would be used in other parts of the code instead of ThemeContext
-const themeContext: ThemeContextType = {
+// This would be used in other parts of the code
+const themeContext: ReactThemeContextType = {
   theme: 'default',
   setTheme: () => {}
 };

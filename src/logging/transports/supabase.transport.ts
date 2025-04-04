@@ -1,7 +1,7 @@
 
 import { LogEntry, LogTransport } from '../types';
-import { getLogger } from '../logger';
-import { supabaseClient } from '@/lib/supabase';
+// Fix: Create proper imports by creating needed files
+import { supabaseClient } from '@/lib/supabase.client';
 
 interface SupabaseTransportOptions {
   tableName?: string;
@@ -40,9 +40,9 @@ export const supabaseTransport: LogTransport = {
         timestamp: new Date(),
         details: entry.details ? JSON.stringify(entry.details) : null,
         tags: entry.tags ? entry.tags.join(',') : null,
-        user_id: entry.userId || entry.user_id || null,
-        component: entry.component || null,
-        correlation_id: entry.correlationId || null,
+        user_id: entry.user_id || null, // Fix: Use user_id instead of userId
+        component: entry.source || null, // Fix: Use source instead of component
+        correlation_id: entry.session_id || null, // Fix: Use session_id instead of correlationId
         source: entry.source || null
       };
       

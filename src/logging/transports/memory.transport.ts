@@ -1,63 +1,76 @@
 
-import { LogTransport, LogEntry } from '../types';
+import { LogEntry, LogTransport } from '../types';
 
-// Maximum number of logs to keep in memory
-const MAX_LOGS = 1000;
+interface MemoryTransportOptions {
+  maxSize?: number;
+}
 
-// Memory storage for logs
+// Default options
+const DEFAULT_MAX_SIZE = 1000;
+
+// Store logs in memory
 let logs: LogEntry[] = [];
-const subscribers = new Set<(entry: LogEntry) => void>();
+const subscriptions: Set<(entry: LogEntry) => void> = new Set();
 
 /**
- * In-memory transport for logging
- * Stores logs in memory for retrieval by log viewers
+ * Transport that stores logs in memory
  */
 export const memoryTransport: LogTransport = {
-  log(entry: LogEntry): void {
-    // Add to the beginning for newest-first order
-    logs.unshift({...entry});
+  log(entry: LogEntry) {
+    // Add log to memory
+    logs.push(entry);
     
-    // Trim if we exceed the maximum
-    if (logs.length > MAX_LOGS) {
-      logs = logs.slice(0, MAX_LOGS);
+    // Enforce max size
+    if (logs.length > DEFAULT_MAX_SIZE) {
+      logs = logs.slice(-DEFAULT_MAX_SIZE);
     }
     
     // Notify subscribers
-    subscribers.forEach(callback => {
+    subscriptions.forEach(callback => {
       try {
         callback(entry);
       } catch (error) {
-        console.error('Error in log subscriber:', error);
+        console.error('Error in memory transport subscriber:', error);
       }
     });
   },
-  
-  getLogs(limit?: number, filterFn?: (entry: LogEntry) => boolean): LogEntry[] {
-    let result = [...logs];
+
+  getLogs(limit?: number, filterFn?: (entry: LogEntry) => boolean) {
+    let result = logs;
     
-    // Apply filter if provided
     if (filterFn) {
       result = result.filter(filterFn);
     }
     
-    // Apply limit if provided
-    if (typeof limit === 'number' && limit > 0) {
-      result = result.slice(0, limit);
+    if (limit && limit > 0) {
+      result = result.slice(-limit);
     }
     
     return result;
   },
-  
-  clear(): void {
+
+  clear() {
     logs = [];
   },
-  
-  subscribe(callback: (entry: LogEntry) => void): () => void {
-    subscribers.add(callback);
+
+  subscribe(callback: (entry: LogEntry) => void) {
+    subscriptions.add(callback);
     
     // Return unsubscribe function
     return () => {
-      subscribers.delete(callback);
+      subscriptions.delete(callback);
     };
   }
 };
+
+/**
+ * Initialize the memory transport with options
+ */
+export function initMemoryTransport(options: MemoryTransportOptions = {}) {
+  const maxSize = options.maxSize || DEFAULT_MAX_SIZE;
+  
+  // Trim logs if needed
+  if (logs.length > maxSize) {
+    logs = logs.slice(-maxSize);
+  }
+}
