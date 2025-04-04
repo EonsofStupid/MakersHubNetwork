@@ -1,148 +1,115 @@
 
-import { ImpulseTheme } from '@/admin/types/impulse.types';
+import { ImpulseTheme } from '../types/impulse.types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
-import { safeDetails } from '@/logging/utils/safeDetails';
 
-const logger = getLogger('ThemeRegistry', { category: LogCategory.THEME });
+interface ThemeRegistryItem {
+  id: string;
+  name: string;
+  description?: string;
+  theme: Partial<ImpulseTheme>;
+}
 
 /**
- * ThemeRegistry provides a central storage for registering and accessing themes
- * throughout the application
+ * Registry for theme management
  */
 class ThemeRegistry {
-  private themes: Map<string, ImpulseTheme> = new Map();
-  private activeThemeId: string | null = null;
-
+  private themes: Map<string, ThemeRegistryItem>;
+  private logger = getLogger('ThemeRegistry', { category: LogCategory.THEME });
+  
   constructor() {
-    logger.debug('ThemeRegistry initialized');
+    this.themes = new Map();
+    this.logger.debug('ThemeRegistry initialized');
   }
-
+  
   /**
-   * Register a theme with the registry
+   * Register a theme in the registry
    */
-  registerTheme(id: string, theme: ImpulseTheme): void {
+  registerTheme(id: string, theme: Partial<ImpulseTheme>, name?: string, description?: string): void {
     try {
-      if (!theme || typeof theme !== 'object') {
-        logger.warn('Invalid theme object provided for registration', { details: { id } });
-        return;
-      }
+      this.themes.set(id, {
+        id,
+        name: name || id,
+        description,
+        theme
+      });
       
-      // Ensure theme has required properties
-      if (!theme.colors?.primary || !theme.colors?.background?.main || !theme.colors?.text?.primary) {
-        logger.warn('Theme is missing required properties', { details: { id, themeName: theme.name } });
-      }
-      
-      this.themes.set(id, { ...theme, id });
-      logger.debug(`Theme registered: ${theme.name}`, { details: { id } });
+      this.logger.debug(`Theme registered: ${id}`);
     } catch (error) {
-      logger.error('Error registering theme', { details: safeDetails(error) });
+      this.logger.error(`Error registering theme: ${id}`, {
+        details: { error }
+      });
     }
   }
-
+  
   /**
-   * Get a theme by its ID
+   * Get a theme from the registry
    */
-  getTheme(id: string): ImpulseTheme | null {
+  getTheme(id: string): Partial<ImpulseTheme> | null {
     try {
-      const theme = this.themes.get(id);
-      if (!theme) {
-        logger.warn(`Theme not found: ${id}`);
-        return null;
-      }
-      return theme;
+      const themeItem = this.themes.get(id);
+      return themeItem ? themeItem.theme : null;
     } catch (error) {
-      logger.error('Error getting theme', { details: safeDetails(error) });
+      this.logger.error(`Error getting theme: ${id}`, {
+        details: { error }
+      });
       return null;
     }
   }
-
-  /**
-   * Set the active theme
-   */
-  setActiveTheme(id: string): boolean {
-    try {
-      if (!this.themes.has(id)) {
-        logger.warn(`Cannot set active theme - theme not found: ${id}`);
-        return false;
-      }
-      this.activeThemeId = id;
-      logger.debug(`Active theme set: ${id}`);
-      return true;
-    } catch (error) {
-      logger.error('Error setting active theme', { details: safeDetails(error) });
-      return false;
-    }
-  }
-
-  /**
-   * Get the active theme
-   */
-  getActiveTheme(): ImpulseTheme | null {
-    try {
-      if (!this.activeThemeId) {
-        logger.warn('No active theme set');
-        return null;
-      }
-      return this.getTheme(this.activeThemeId);
-    } catch (error) {
-      logger.error('Error getting active theme', { details: safeDetails(error) });
-      return null;
-    }
-  }
-
+  
   /**
    * Get all registered themes
    */
-  getAllThemes(): ImpulseTheme[] {
+  getAllThemes(): ThemeRegistryItem[] {
     return Array.from(this.themes.values());
   }
-
+  
   /**
-   * Check if a theme is registered
+   * Remove a theme from the registry
+   */
+  removeTheme(id: string): boolean {
+    try {
+      const result = this.themes.delete(id);
+      
+      if (result) {
+        this.logger.debug(`Theme removed: ${id}`);
+      } else {
+        this.logger.warn(`Theme not found for removal: ${id}`);
+      }
+      
+      return result;
+    } catch (error) {
+      this.logger.error(`Error removing theme: ${id}`, {
+        details: { error }
+      });
+      return false;
+    }
+  }
+  
+  /**
+   * Check if a theme exists in the registry
    */
   hasTheme(id: string): boolean {
     return this.themes.has(id);
   }
-
+  
   /**
-   * Unregister a theme
+   * Clear all themes from the registry
    */
-  unregisterTheme(id: string): boolean {
+  clearThemes(): void {
     try {
-      const result = this.themes.delete(id);
-      if (result) {
-        logger.debug(`Theme unregistered: ${id}`);
-        // If we just removed the active theme, clear it
-        if (this.activeThemeId === id) {
-          this.activeThemeId = null;
-          logger.debug('Active theme cleared (was unregistered)');
-        }
-      }
-      return result;
+      this.themes.clear();
+      this.logger.debug('All themes cleared from registry');
     } catch (error) {
-      logger.error('Error unregistering theme', { details: safeDetails(error) });
-      return false;
+      this.logger.error('Error clearing themes', {
+        details: { error }
+      });
     }
   }
-
-  /**
-   * Clear all themes
-   */
-  clearAll(): void {
-    this.themes.clear();
-    this.activeThemeId = null;
-    logger.debug('All themes cleared from registry');
-  }
 }
 
-// Export a singleton instance
+// Singleton instance
 export const themeRegistry = new ThemeRegistry();
 
-/**
- * Get all registered themes with proper typing
- * Used by the theme editor
- */
-export function getAllThemes(): ImpulseTheme[] {
-  return themeRegistry.getAllThemes();
-}
+// For backwards compatibility, maintain the old export name
+export const getAllThemes = () => themeRegistry.getAllThemes();

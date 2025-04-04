@@ -1,77 +1,76 @@
 
-import React from 'react';
+import { isRecord } from './type-guards';
 
 /**
  * Safely render a React node to a string for logging
+ * Handles rendering React components in a safe way
  */
-export function safelyRenderNode(node: React.ReactNode): string {
+export function safelyRenderNode(node: any): string {
   try {
-    if (node === null || node === undefined) {
-      return '';
-    }
-    
-    if (typeof node === 'string') {
-      return node;
-    }
-    
-    if (typeof node === 'number' || typeof node === 'boolean') {
+    // If it's a simple value, just return it
+    if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
       return String(node);
     }
     
-    if (React.isValidElement(node)) {
-      return `<${getComponentName(node)} />`;
+    // If it's null or undefined
+    if (node == null) {
+      return '';
     }
     
+    // If it's a React element
+    if (isReactElement(node)) {
+      return `<${getComponentName(node.type) || 'Component'} />`;
+    }
+    
+    // If it's an array, join the safely rendered elements
     if (Array.isArray(node)) {
-      return '[React.Fragment]';
+      return node.map(safelyRenderNode).join('');
     }
     
+    // For other objects, convert to string
+    if (isRecord(node)) {
+      return '[Object]';
+    }
+    
+    // For functions
+    if (typeof node === 'function') {
+      return '[Function]';
+    }
+    
+    // Default fall through
     return String(node);
   } catch (error) {
-    console.error('Error rendering React node to string:', error);
     return '[Error rendering node]';
   }
 }
 
 /**
- * Get component name from a React element
+ * Check if value is a React element
  */
-function getComponentName(element: React.ReactElement): string {
-  if (typeof element.type === 'string') {
-    return element.type;
-  }
-  
-  if (typeof element.type === 'function') {
-    return element.type.displayName || element.type.name || 'Component';
-  }
-  
-  return 'Unknown';
+function isReactElement(value: any): boolean {
+  return isRecord(value) && 
+    '$$typeof' in value && 
+    value.$$typeof === Symbol.for('react.element');
 }
 
 /**
- * Safely get props as string from a React element
+ * Get component name from a React component type
  */
-export function propsToString(props: Record<string, any>): string {
-  try {
-    const entries = Object.entries(props).filter(([key]) => key !== 'children');
-    
-    if (entries.length === 0) {
-      return '';
-    }
-    
-    return entries
-      .map(([key, value]) => {
-        if (typeof value === 'string') {
-          return `${key}="${value}"`;
-        } else if (typeof value === 'number' || typeof value === 'boolean') {
-          return `${key}={${value}}`;
-        } else {
-          return `${key}={...}`;
-        }
-      })
-      .join(' ');
-  } catch (error) {
-    console.error('Error converting props to string:', error);
-    return '';
+function getComponentName(type: any): string {
+  // Function component or class component
+  if (typeof type === 'function') {
+    return type.displayName || type.name || 'Unknown';
   }
+  
+  // Host component (string) or fragment
+  if (typeof type === 'string') {
+    return type;
+  }
+  
+  // For other types (e.g., context, provider, etc.)
+  if (isRecord(type)) {
+    return type.displayName || 'Object';
+  }
+  
+  return 'Unknown';
 }
