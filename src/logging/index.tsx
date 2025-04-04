@@ -7,9 +7,9 @@ import {
   LogTransport,
   LoggingConfig,
   LogEventCallback,
-  // Import directly from constants
   LogLevel,
-  LogCategory
+  LogCategory,
+  PerformanceMeasurementOptions
 } from './types';
 import { getLogger, initializeLogger } from './service/logger.service';
 import { memoryTransport } from './transports/memory.transport';
@@ -22,7 +22,8 @@ export type {
   LoggerOptions,
   LogTransport,
   LoggingConfig,
-  LogEventCallback
+  LogEventCallback,
+  PerformanceMeasurementOptions
 };
 
 // Export enums (as values and types)
@@ -42,7 +43,6 @@ export { useLogger } from './hooks/useLogger';
 export { useErrorLogger } from './hooks/useErrorLogger';
 export { useComponentPerformance } from './hooks/useComponentPerformance';
 export { usePerformanceLogger } from './hooks/usePerformanceLogger';
-export type { PerformanceMeasurementOptions } from './hooks/usePerformanceLogger';
 
 // Set default log level based on environment
 const defaultLogLevel = process.env.NODE_ENV === 'production'

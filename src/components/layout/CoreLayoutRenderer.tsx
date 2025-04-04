@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Layout } from '@/admin/types/layout.types';
 import { LayoutRenderer } from '@/admin/components/layout/LayoutRenderer';
@@ -31,7 +30,7 @@ export function CoreLayoutRenderer({
   className,
   id
 }: CoreLayoutRendererProps) {
-  const logger = useLogger('CoreLayoutRenderer', LogCategory.UI);
+  const logger = useLogger('CoreLayoutRenderer', { category: LogCategory.UI });
   
   // Render a proper loading skeleton
   if (isLoading) {

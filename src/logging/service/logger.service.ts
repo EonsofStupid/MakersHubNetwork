@@ -3,12 +3,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { 
   Logger, 
   LogEntry, 
-  LogLevel, 
-  LogCategory, 
+  LogOptions,
   LoggerOptions, 
   LoggingConfig,
   LogTransport
 } from '../types';
+import { LogLevel, LogCategory } from '@/constants/logLevel';
 import { consoleTransport } from '../transports/console.transport';
 import { memoryTransport } from '../transports/memory.transport';
 import { logEventEmitter } from '../events';
@@ -103,7 +103,7 @@ class LoggerService {
    */
   private shouldProcessLog(level: LogLevel, category?: LogCategory): boolean {
     // Check minimum log level
-    if (level > this.config.minLevel) { // Higher number = lower priority in our enum
+    if (!isLogLevelAtLeast(level, this.config.minLevel)) {
       return false;
     }
     
@@ -172,6 +172,13 @@ class LoggerService {
   }
   
   /**
+   * Log a message at FATAL level
+   */
+  public fatal(message: string, options?: LoggerOptions): void {
+    this.log(LogLevel.FATAL, message, options);
+  }
+  
+  /**
    * Log a message at SUCCESS level
    */
   public success(message: string, options?: LoggerOptions): void {
@@ -211,7 +218,7 @@ class LoggerService {
     message: string, 
     options?: LoggerOptions
   ): void {
-    if (!this.shouldProcessLog(level, options?.category)) {
+    if (!this.shouldProcessLog(level, options?.category as LogCategory)) {
       return; // Log was filtered out
     }
     
@@ -223,10 +230,10 @@ class LoggerService {
       id: uuidv4(),
       timestamp: new Date().toISOString(),
       level,
-      category: options?.category || LogCategory.GENERAL,
+      category: (options?.category as LogCategory) || LogCategory.GENERAL,
       message: safelyRenderNode(message),
       details: processedDetails,
-      tags: options?.tags,
+      tags: options?.tags || [],
       source: options?.source || 'unknown'
     };
     
@@ -251,7 +258,9 @@ class LoggerService {
     
     // Check if we need to flush immediately
     if (
-      level <= LogLevel.ERROR || // Critical and Error logs flush immediately
+      level === LogLevel.ERROR || 
+      level === LogLevel.FATAL ||
+      level === LogLevel.CRITICAL ||
       this.buffer.length >= (this.config.bufferSize || 1)
     ) {
       this.flush();
@@ -278,7 +287,7 @@ class LoggerService {
         }
         
         // Call transport.flush() if available
-        if (typeof transport.flush === 'function') {
+        if (transport.flush) {
           transport.flush().catch(error => {
             console.error('Error flushing transport:', error);
           });
@@ -293,14 +302,19 @@ class LoggerService {
    * Get all logs from memory transport
    */
   public getLogs(): LogEntry[] {
-    return memoryTransport.getLogs();
+    if (memoryTransport.getLogs) {
+      return memoryTransport.getLogs();
+    }
+    return [];
   }
   
   /**
    * Clear logs from memory transport
    */
   public clearLogs(): void {
-    memoryTransport.clear();
+    if (memoryTransport.clear) {
+      memoryTransport.clear();
+    }
   }
   
   /**
@@ -315,6 +329,21 @@ class LoggerService {
   }
 }
 
+// Helper function to check if a log level meets minimum threshold
+function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
+  const levels: Record<LogLevel, number> = {
+    TRACE: 0,
+    DEBUG: 1,
+    INFO: 2,
+    WARN: 3,
+    ERROR: 4,
+    FATAL: 5,
+    CRITICAL: 6,
+    SUCCESS: 2 // SUCCESS is same priority as INFO
+  };
+  return levels[level] >= levels[minLevel];
+}
+
 // Initialize the logger service
 const loggerServiceInstance = LoggerService.getInstance();
 
@@ -323,56 +352,63 @@ const loggerServiceInstance = LoggerService.getInstance();
  */
 export function getLogger(source: string = 'App', options: LoggerOptions = {}): Logger {
   return {
-    trace: (message: string, msgOptions?: LoggerOptions) => {
+    trace: (message: string, msgOptions?: LogOptions) => {
       loggerServiceInstance.trace(message, { 
         source, 
         ...options, 
         ...msgOptions 
       });
     },
-    debug: (message: string, msgOptions?: LoggerOptions) => {
+    debug: (message: string, msgOptions?: LogOptions) => {
       loggerServiceInstance.debug(message, { 
         source, 
         ...options, 
         ...msgOptions 
       });
     },
-    info: (message: string, msgOptions?: LoggerOptions) => {
+    info: (message: string, msgOptions?: LogOptions) => {
       loggerServiceInstance.info(message, { 
         source, 
         ...options, 
         ...msgOptions 
       });
     },
-    warn: (message: string, msgOptions?: LoggerOptions) => {
+    warn: (message: string, msgOptions?: LogOptions) => {
       loggerServiceInstance.warn(message, { 
         source, 
         ...options, 
         ...msgOptions 
       });
     },
-    error: (message: string, msgOptions?: LoggerOptions) => {
+    error: (message: string, msgOptions?: LogOptions) => {
       loggerServiceInstance.error(message, { 
         source, 
         ...options, 
         ...msgOptions 
       });
     },
-    critical: (message: string, msgOptions?: LoggerOptions) => {
+    fatal: (message: string, msgOptions?: LogOptions) => {
+      loggerServiceInstance.fatal(message, { 
+        source, 
+        ...options, 
+        ...msgOptions 
+      });
+    },
+    critical: (message: string, msgOptions?: LogOptions) => {
       loggerServiceInstance.critical(message, { 
         source, 
         ...options, 
         ...msgOptions 
       });
     },
-    success: (message: string, msgOptions?: LoggerOptions) => {
+    success: (message: string, msgOptions?: LogOptions) => {
       loggerServiceInstance.success(message, { 
         source, 
         ...options, 
         ...msgOptions 
       });
     },
-    performance: (message: string, duration: number, msgOptions?: LoggerOptions) => {
+    performance: (message: string, duration: number, msgOptions?: LogOptions) => {
       loggerServiceInstance.performance(message, duration, { 
         source, 
         ...options, 

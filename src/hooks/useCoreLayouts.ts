@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '@/admin/types/layout.types';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
@@ -15,9 +14,8 @@ export function useCoreLayouts() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
-  const logger = useLogger('useCoreLayouts', LogCategory.UI);
+  const logger = useLogger('useCoreLayouts', { category: LogCategory.UI });
 
-  // Utility function to safely load a layout
   const loadLayout = useCallback(async (type: string, scope: string, setter: (layout: Layout | null) => void) => {
     try {
       const response = await layoutSkeletonService.getByTypeAndScope(type, scope);
@@ -46,15 +44,13 @@ export function useCoreLayouts() {
 
         logger.info('Initializing core layouts');
         
-        // Set a shorter timeout to prevent waiting too long for layouts
         timeoutId = setTimeout(() => {
           if (isMounted) {
             logger.warn('Layout loading timed out, continuing with fallbacks');
             setIsLoading(false);
           }
-        }, 1000); // Faster timeout for better UX
+        }, 1000);
         
-        // Try to ensure core layouts exist without breaking the app if it fails
         try {
           await layoutSeederService.ensureCoreLayoutsExist();
           logger.info('Core layouts ensured');
@@ -62,15 +58,12 @@ export function useCoreLayouts() {
           logger.warn('Error ensuring core layouts exist, will try to load existing layouts', {
             details: safeDetails(ensureError)
           });
-          // Continue despite the error
         }
 
-        // Try to load each layout
         const topNavSuccess = await loadLayout('topnav', 'site', setTopNavLayout);
         const footerSuccess = await loadLayout('footer', 'site', setFooterLayout);
         const userMenuSuccess = await loadLayout('usermenu', 'site', setUserMenuLayout);
         
-        // Clear the timeout since we're done (whether successful or not)
         clearTimeout(timeoutId);
         
         if (isMounted) {
