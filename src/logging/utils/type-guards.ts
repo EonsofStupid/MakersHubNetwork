@@ -1,19 +1,23 @@
 
 /**
- * Type guard for checking if a value is a record (object)
+ * Generate a UUID (v4)
  */
-export function isRecord(value: unknown): value is Record<string, any> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+export function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 }
 
 /**
- * Type guard for checking if a value is an Error
+ * Type guard to check if value is an Error
  */
 export function isError(value: unknown): value is Error {
   return value instanceof Error || (
     typeof value === 'object' && 
     value !== null && 
-    'message' in value && 
+    'message' in value &&
     typeof (value as any).message === 'string'
   );
 }
@@ -21,56 +25,62 @@ export function isError(value: unknown): value is Error {
 /**
  * Check if a string is a valid UUID
  */
-export function isValidUUID(str: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(str);
+export function isValidUUID(id: string): boolean {
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidPattern.test(id);
 }
 
 /**
- * Type guard for checking if a value is a string
+ * Convert anything to safe log details
+ * This prevents sensitive information from being logged and ensures
+ * objects can be serialized
  */
-export function isString(value: unknown): value is string {
-  return typeof value === 'string';
-}
-
-/**
- * Type guard for checking if a value is a number
- */
-export function isNumber(value: unknown): value is number {
-  return typeof value === 'number' && !isNaN(value);
-}
-
-/**
- * Type guard for checking if a value is a boolean
- */
-export function isBoolean(value: unknown): value is boolean {
-  return typeof value === 'boolean';
-}
-
-/**
- * Type guard for checking if a value is a function
- */
-export function isFunction(value: unknown): value is Function {
-  return typeof value === 'function';
-}
-
-/**
- * Type guard for checking if a value is an array
- */
-export function isArray(value: unknown): value is any[] {
-  return Array.isArray(value);
-}
-
-/**
- * Type guard for checking if a value is undefined or null
- */
-export function isNil(value: unknown): value is null | undefined {
-  return value === undefined || value === null;
-}
-
-/**
- * Type guard for checking if a value is defined (not undefined or null)
- */
-export function isDefined<T>(value: T | null | undefined): value is T {
-  return value !== undefined && value !== null;
+export function toLogDetails(details: unknown): Record<string, unknown> {
+  try {
+    if (!details) return {};
+    
+    // If already an object, sanitize it
+    if (typeof details === 'object' && details !== null) {
+      const sanitized: Record<string, unknown> = {};
+      
+      // Convert to record with sanitized values
+      Object.entries(details as Record<string, unknown>).forEach(([key, value]) => {
+        // Skip password fields
+        if (key.toLowerCase().includes('password') || 
+            key.toLowerCase().includes('secret') || 
+            key.toLowerCase().includes('token')) {
+          sanitized[key] = '[REDACTED]';
+          return;
+        }
+        
+        // Handle Error objects
+        if (isError(value)) {
+          sanitized[key] = {
+            name: value.name,
+            message: value.message,
+            stack: value.stack,
+          };
+          return;
+        }
+        
+        // Handle other values
+        try {
+          // Test if serializable
+          JSON.stringify(value);
+          sanitized[key] = value;
+        } catch (e) {
+          // If can't be serialized, convert to string
+          sanitized[key] = String(value);
+        }
+      });
+      
+      return sanitized;
+    }
+    
+    // Convert primitive to object
+    return { value: String(details) };
+  } catch (e) {
+    // Fallback for any unexpected issues
+    return { error: 'Failed to convert to log details', originalType: typeof details };
+  }
 }

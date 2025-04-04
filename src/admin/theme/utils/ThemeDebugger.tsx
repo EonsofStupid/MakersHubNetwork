@@ -1,70 +1,39 @@
 
-import React, { useState } from 'react';
-import { themeRegistry } from '../ThemeRegistry';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { defaultImpulseTokens } from '../impulse/tokens';
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { themeRegistry } from '@/admin/theme/ThemeRegistry';
+import { useThemeStore } from '@/stores/theme/store';
 
+/**
+ * Theme debugger component that shows current theme information
+ * Only visible in development mode
+ */
 export function ThemeDebugger() {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const logger = useLogger('ThemeDebugger', { category: LogCategory.THEME });
-  
-  const activeTheme = themeRegistry.getActiveTheme() || defaultImpulseTokens;
-  
-  const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
-    logger.debug('Theme debugger toggled', { details: { expanded: !isExpanded } });
-  };
-  
-  if (!process.env.NODE_ENV || process.env.NODE_ENV === 'production') {
-    return null;
-  }
-  
+  const { currentTheme } = useThemeStore();
+  const registryTheme = React.useMemo(() => {
+    // We need to use getTheme instead of getActiveTheme
+    const activeThemeId = currentTheme?.id;
+    return activeThemeId ? themeRegistry.getTheme(activeThemeId) : null;
+  }, [currentTheme]);
+
+  if (!currentTheme) return null;
+
   return (
-    <div 
-      className="fixed bottom-4 right-4 z-50 bg-black/80 text-white p-3 rounded-lg shadow-lg text-xs"
-      style={{ maxWidth: isExpanded ? '500px' : '200px', maxHeight: isExpanded ? '80vh' : '40px', overflow: 'auto' }}
-    >
-      <div className="flex justify-between items-center cursor-pointer" onClick={toggleExpanded}>
-        <h4 className="font-mono">Theme Debug</h4>
-        <span>{isExpanded ? '▼' : '▲'}</span>
-      </div>
-      
-      {isExpanded && (
-        <div className="mt-2 space-y-2">
-          <div>
-            <div className="text-gray-400">Active Theme:</div>
-            <div>{activeTheme.name || 'Unnamed'}</div>
-          </div>
-          
-          <div>
-            <div className="text-gray-400">Primary Color:</div>
-            <div className="flex items-center gap-2">
-              <div 
-                className="w-4 h-4 rounded-full" 
-                style={{ backgroundColor: activeTheme.colors.primary }}
-              ></div>
-              <span>{activeTheme.colors.primary}</span>
-            </div>
-          </div>
-          
-          <div>
-            <div className="text-gray-400">Secondary Color:</div>
-            <div className="flex items-center gap-2">
-              <div 
-                className="w-4 h-4 rounded-full" 
-                style={{ backgroundColor: activeTheme.colors.secondary }}
-              ></div>
-              <span>{activeTheme.colors.secondary}</span>
-            </div>
-          </div>
-          
-          <div>
-            <div className="text-gray-400">Registered Themes:</div>
-            <div>{themeRegistry.getAllThemes().length}</div>
-          </div>
+    <div className="fixed bottom-4 right-4 p-3 bg-black/80 backdrop-blur-sm text-white text-xs rounded-md max-w-xs z-50">
+      <div className="font-mono">
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-bold">Theme Debug</span>
+          <Badge variant="outline" className="text-[10px]">DEV</Badge>
         </div>
-      )}
+        
+        <div className="space-y-1">
+          <p>ID: <span className="text-primary">{currentTheme.id.substring(0, 8)}...</span></p>
+          <p>Name: <span className="text-primary">{currentTheme.name}</span></p>
+          <p>Registry: <span className={registryTheme ? 'text-green-400' : 'text-red-400'}>
+            {registryTheme ? '✅ Loaded' : '❌ Missing'}
+          </span></p>
+        </div>
+      </div>
     </div>
   );
 }

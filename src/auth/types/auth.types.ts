@@ -1,15 +1,39 @@
 
-import { AuthUser, Session } from "@supabase/supabase-js";
+import { User as SupabaseUser, Session as SupabaseSession } from '@supabase/supabase-js';
 
-// User roles in the system
-export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor';
+// Auth status enum
+export enum AuthStatus {
+  AUTHENTICATED = 'authenticated',
+  UNAUTHENTICATED = 'unauthenticated',
+  LOADING = 'loading',
+  ERROR = 'error'
+}
 
-// Authentication status
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
+// Extend the User type from Supabase
+export type User = SupabaseUser & {
+  profile?: {
+    username?: string;
+    display_name?: string;
+    avatar_url?: string;
+    bio?: string;
+  }
+};
 
-// Authentication state
+// Export Session for broader usage
+export type Session = SupabaseSession;
+
+// User roles
+export type UserRole = 
+  | 'super_admin'
+  | 'admin'
+  | 'moderator'
+  | 'editor'
+  | 'user'
+  | string;
+
+// Auth store state interface
 export interface AuthState {
-  user: AuthUser | null;
+  user: User | null;
   session: Session | null;
   roles: UserRole[];
   status: AuthStatus;
@@ -19,24 +43,12 @@ export interface AuthState {
   initialized: boolean;
 }
 
-// User profile data
-export interface UserProfile {
-  id: string;
-  username?: string;
-  full_name?: string;
-  avatar_url?: string;
-  website?: string;
-  roles?: UserRole[];
-  email?: string;
-  created_at?: string;
-  updated_at?: string;
+// Auth store methods interface
+export interface AuthMethods {
+  signIn: (email: string, password: string) => Promise<boolean>;
+  signOut: () => Promise<boolean>;
+  initialize: () => Promise<void>;
 }
 
-// Permission type
-export type Permission = string;
-
-// Role with associated permissions
-export interface RoleWithPermissions {
-  role: UserRole;
-  permissions: Permission[];
-}
+// Complete auth store type
+export type AuthStore = AuthState & AuthMethods;

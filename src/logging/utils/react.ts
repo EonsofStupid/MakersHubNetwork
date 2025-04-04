@@ -1,76 +1,47 @@
 
-import { isRecord } from './type-guards';
+import { ReactNode } from 'react';
 
 /**
- * Safely render a React node to a string for logging
- * Handles rendering React components in a safe way
+ * Converts React nodes to searchable string representation
+ * Used for filtering and searching in logs
  */
-export function safelyRenderNode(node: any): string {
-  try {
-    // If it's a simple value, just return it
-    if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
-      return String(node);
-    }
-    
-    // If it's null or undefined
-    if (node == null) {
-      return '';
-    }
-    
-    // If it's a React element
-    if (isReactElement(node)) {
-      return `<${getComponentName(node.type) || 'Component'} />`;
-    }
-    
-    // If it's an array, join the safely rendered elements
-    if (Array.isArray(node)) {
-      return node.map(safelyRenderNode).join('');
-    }
-    
-    // For other objects, convert to string
-    if (isRecord(node)) {
-      return '[Object]';
-    }
-    
-    // For functions
-    if (typeof node === 'function') {
-      return '[Function]';
-    }
-    
-    // Default fall through
+export function nodeToSearchableString(node: ReactNode): string {
+  if (node === null || node === undefined) {
+    return '';
+  }
+  
+  if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
     return String(node);
-  } catch (error) {
-    return '[Error rendering node]';
   }
+  
+  if (Array.isArray(node)) {
+    return node.map(nodeToSearchableString).join(' ');
+  }
+  
+  if (typeof node === 'object') {
+    // Handle React element
+    if ('props' in node && node.props) {
+      // Extract children text
+      const children = node.props.children;
+      if (children) {
+        return nodeToSearchableString(children);
+      }
+    }
+    
+    // Try to stringify other objects
+    try {
+      return JSON.stringify(node);
+    } catch (e) {
+      return '[Complex Object]';
+    }
+  }
+  
+  return '';
 }
 
 /**
- * Check if value is a React element
+ * Gets plain text from a React node
  */
-function isReactElement(value: any): boolean {
-  return isRecord(value) && 
-    '$$typeof' in value && 
-    value.$$typeof === Symbol.for('react.element');
-}
-
-/**
- * Get component name from a React component type
- */
-function getComponentName(type: any): string {
-  // Function component or class component
-  if (typeof type === 'function') {
-    return type.displayName || type.name || 'Unknown';
-  }
-  
-  // Host component (string) or fragment
-  if (typeof type === 'string') {
-    return type;
-  }
-  
-  // For other types (e.g., context, provider, etc.)
-  if (isRecord(type)) {
-    return type.displayName || 'Object';
-  }
-  
-  return 'Unknown';
+export function getPlainText(node: ReactNode): string {
+  return nodeToSearchableString(node).replace(/\s+/g, ' ').trim();
 }

@@ -45,10 +45,7 @@ export interface LayoutSkeleton {
   created_by?: string;
   is_active: boolean;
   is_locked: boolean;
-  layout_json: Json | {
-    components: LayoutComponent[];
-    version: number;
-  };
+  layout_json: Json;
   meta?: Record<string, any>;
 }
 
