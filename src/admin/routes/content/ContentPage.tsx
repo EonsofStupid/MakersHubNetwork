@@ -1,6 +1,10 @@
+
 import React from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
+import { Card } from '@/components/ui/card';
+import { motion } from 'framer-motion';
+import { FileText, Image as ImageIcon, FolderOpen, FilePlus, FileX } from 'lucide-react';
 
 export function ContentPage() {
   const logger = useLogger('ContentPage', { category: LogCategory.CONTENT });
@@ -43,7 +47,7 @@ export function ContentPage() {
         <Card className="p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Image className="text-primary h-5 w-5" />
+              <ImageIcon className="text-primary h-5 w-5" />
             </div>
             <h3 className="font-semibold">Media Library</h3>
           </div>
@@ -89,7 +93,7 @@ export function ContentPage() {
               category: LogCategory.ADMIN
             })}
           >
-            <Image className="h-4 w-4" />
+            <ImageIcon className="h-4 w-4" />
             Upload media
           </button>
           <button 
