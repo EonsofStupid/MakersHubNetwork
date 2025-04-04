@@ -77,3 +77,33 @@ export function extractJsonValues<T extends Record<string, any>>(obj: T): Record
   
   return result;
 }
+
+/**
+ * Utility function for deep merging of objects
+ */
+export function deepMerge<T extends object = object, U extends object = T>(target: T, source: U): T & U {
+  const output = { ...target } as T & U;
+  
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      if (isObject(source[key as keyof U])) {
+        if (!(key in target)) {
+          Object.assign(output, { [key]: source[key as keyof U] });
+        } else {
+          output[key as keyof (T & U)] = deepMerge(
+            target[key as keyof T] as object,
+            source[key as keyof U] as object
+          ) as any;
+        }
+      } else {
+        Object.assign(output, { [key]: source[key as keyof U] });
+      }
+    });
+  }
+  
+  return output;
+}
+
+function isObject(item: any): item is object {
+  return item && typeof item === 'object' && !Array.isArray(item);
+}

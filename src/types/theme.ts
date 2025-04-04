@@ -1,15 +1,47 @@
 
 /**
- * Consolidated theme type definitions - Single source of truth
- * This file defines the core theme types used throughout the application
+ * Core theme type definitions - Single source of truth
  */
 
 // Theme context and status enums
 export type ThemeContext = 'site' | 'admin' | 'chat';
 export type ThemeStatus = 'draft' | 'published' | 'archived';
 
+// Base theme component interface
+export interface BaseThemeComponent {
+  id: string;
+  component_name: string;
+  styles: Record<string, any>;
+  description?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+  context?: ThemeContext;
+}
+
 /**
- * Core Theme Token structure
+ * Component Tokens structure - may have optional theme_id
+ */
+export interface ComponentTokens extends BaseThemeComponent {
+  theme_id?: string;
+}
+
+/**
+ * Theme Component structure - requires theme_id
+ */
+export interface ThemeComponent extends BaseThemeComponent {
+  theme_id: string; // Required here
+}
+
+// Transform utility
+export function componentTokenToThemeComponent(token: ComponentTokens): ThemeComponent {
+  return {
+    ...token,
+    theme_id: token.theme_id || ''
+  };
+}
+
+/**
+ * Theme Token structure
  */
 export interface ThemeToken {
   id: string;
@@ -21,20 +53,6 @@ export interface ThemeToken {
   theme_id?: string;
   created_at?: string;
   updated_at?: string;
-}
-
-/**
- * Component Tokens structure
- */
-export interface ComponentTokens {
-  id: string;
-  component_name: string;
-  styles: Record<string, any>;
-  description?: string;
-  theme_id?: string;
-  created_at?: string | null;
-  updated_at?: string | null;
-  context?: ThemeContext;
 }
 
 /**
@@ -179,6 +197,7 @@ export interface DesignTokensStructure {
   components: ThemeComponents;
   // For backward compatibility, allow admin-specific tokens
   admin?: Record<string, any>;
+  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 /**

@@ -141,6 +141,7 @@ export interface ImpulseTheme {
   components: ImpulseThemeComponents;
   typography: ImpulseThemeTypography;
   spacing?: Record<string, string>;
+  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 // Default Impulse Theme - serves as fallback
@@ -253,3 +254,25 @@ export const defaultImpulseTokens: ImpulseTheme = {
     }
   }
 };
+
+// Utility functions for impulseTheme
+export function createEmptyImpulseTheme(): ImpulseTheme {
+  return {
+    ...defaultImpulseTokens,
+    id: crypto.randomUUID(),
+    name: "New Theme"
+  };
+}
+
+export function validateImpulseTheme(theme: Partial<ImpulseTheme>): theme is ImpulseTheme {
+  return !!(
+    theme &&
+    theme.name &&
+    theme.colors?.primary &&
+    theme.colors?.background?.main &&
+    theme.typography?.fonts?.body &&
+    theme.effects?.shadows?.md &&
+    theme.animation?.duration?.normal &&
+    theme.components?.button?.radius
+  );
+}
