@@ -1,141 +1,112 @@
 
-import { LogEntry, LogTransport } from '../types';
-import { LogLevel } from '@/constants/logLevel';
-import { getLogLevelColorClass } from '../constants/log-level';
+import { LogEntry, LogLevel, LogTransport } from '../types';
+
+// Color mapping for log levels
+const LOG_LEVEL_COLORS = {
+  [LogLevel.TRACE]: '#6B7280', // gray-500
+  [LogLevel.DEBUG]: '#3B82F6', // blue-500
+  [LogLevel.INFO]: '#10B981',  // green-500
+  [LogLevel.WARN]: '#F59E0B',  // amber-500
+  [LogLevel.ERROR]: '#EF4444', // red-500
+  [LogLevel.FATAL]: '#7C3AED', // purple-600
+  [LogLevel.SUCCESS]: '#10B981', // green-500
+  [LogLevel.CRITICAL]: '#DC2626', // red-600
+};
+
+// Name mapping for log levels
+const LOG_LEVEL_NAMES = {
+  [LogLevel.TRACE]: 'TRACE',
+  [LogLevel.DEBUG]: 'DEBUG',
+  [LogLevel.INFO]: 'INFO',
+  [LogLevel.WARN]: 'WARN',
+  [LogLevel.ERROR]: 'ERROR',
+  [LogLevel.FATAL]: 'FATAL',
+  [LogLevel.SUCCESS]: 'SUCCESS',
+  [LogLevel.CRITICAL]: 'CRITICAL'
+};
 
 /**
- * Console Transport for logging
- * Outputs log messages to browser console with formatting
+ * Console transport for logging to the browser console
  */
-export class ConsoleTransport implements LogTransport {
-  constructor(private options: {
-    minLevel?: LogLevel;
-    includeTimestamp?: boolean;
-    includeSource?: boolean;
-    colorize?: boolean;
-  } = {}) {}
-
-  log(entry: LogEntry): void {
-    const { level, message, source, details, category, timestamp, trace } = entry;
+export const consoleTransport: LogTransport = {
+  log(entry: LogEntry) {
+    const { level, message, source, category, details, timestamp } = entry;
     
-    // Skip logs below minimum level
-    if (this.options.minLevel && this.isLevelHigherThan(this.options.minLevel, level)) {
-      return;
-    }
-    
-    // Format the message
-    let formattedMessage = this.formatMessage(entry);
-    const logObject: any = {};
-    
-    // Add metadata to the log object
-    if (source) {
-      logObject.source = source;
-    }
-    
-    if (category) {
-      logObject.category = category;
-    }
-    
-    if (details) {
-      logObject.details = details;
-    }
-    
-    if (trace) {
-      logObject.trace = trace;
-    }
-    
-    // Choose console method based on log level
-    let consoleMethod: 'log' | 'info' | 'warn' | 'error' | 'debug' | 'trace' = 'log';
-    
+    // Get the appropriate console method based on log level
+    let method: 'log' | 'info' | 'debug' | 'warn' | 'error' = 'log';
     switch (level) {
       case LogLevel.TRACE:
-        consoleMethod = 'trace';
-        break;
       case LogLevel.DEBUG:
-        consoleMethod = 'debug';
+        method = 'debug';
         break;
       case LogLevel.INFO:
       case LogLevel.SUCCESS:
-        consoleMethod = 'info';
+        method = 'info';
         break;
       case LogLevel.WARN:
-        consoleMethod = 'warn';
+        method = 'warn';
         break;
       case LogLevel.ERROR:
       case LogLevel.FATAL:
       case LogLevel.CRITICAL:
-        consoleMethod = 'error';
+        method = 'error';
         break;
     }
     
-    // Log to console with appropriate method
-    if (Object.keys(logObject).length === 0) {
-      console[consoleMethod](formattedMessage);
+    // Format timestamp
+    const time = typeof timestamp === 'string' 
+      ? new Date(timestamp).toLocaleTimeString() 
+      : timestamp.toLocaleTimeString();
+    
+    // Message title with proper styling
+    const color = LOG_LEVEL_COLORS[level] || '#3B82F6';
+    const levelName = LOG_LEVEL_NAMES[level] || 'LOG';
+    
+    // Build the title
+    const parts = [
+      `%c${time}`,
+      `%c${levelName}`,
+      `%c${category || 'general'}${source ? ' › ' + source : ''}`
+    ];
+    
+    const styles = [
+      'color: #888; font-weight: normal;',
+      `color: ${color}; font-weight: bold;`,
+      'color: #333; font-weight: bold;'
+    ];
+    
+    // Handle browser vs server environment
+    if (typeof window !== 'undefined') {
+      // Browser environment - pretty formatting
+      console.groupCollapsed(`${parts.join(' ')}${message ? ' › ' + message : ''}`, ...styles);
+      
+      if (details) {
+        console.log('Details:', details);
+      }
+      
+      if (entry.tags?.length) {
+        console.log('Tags:', entry.tags);
+      }
+      
+      if (entry.trace) {
+        console.log('Trace:', entry.trace);
+      }
+      
+      console.groupEnd();
     } else {
-      console[consoleMethod](formattedMessage, logObject);
+      // Server environment - simpler formatting
+      console[method](`[${levelName}] [${category}] ${source ? source + ': ' : ''}${message}`);
+      if (details) console[method]('Details:', details);
     }
   }
-  
-  private formatMessage(entry: LogEntry): string {
-    let formatted = '';
-    
-    // Add timestamp if enabled
-    if (this.options.includeTimestamp && entry.timestamp) {
-      formatted += `[${new Date(entry.timestamp).toLocaleTimeString()}] `;
-    }
-    
-    // Add log level
-    formatted += `[${entry.level}]`;
-    
-    // Add source if enabled and available
-    if (this.options.includeSource && entry.source) {
-      formatted += ` (${entry.source})`;
-    }
-    
-    // Add the actual message
-    const stringMessage = typeof entry.message === 'string' 
-      ? entry.message 
-      : '[React Component]'; // Handle ReactNode case
-    
-    formatted += `: ${stringMessage}`;
-    
-    return formatted;
-  }
-  
-  private isLevelHigherThan(baseLevel: LogLevel, checkLevel: LogLevel): boolean {
-    const levels: Record<LogLevel, number> = {
-      [LogLevel.TRACE]: 0,
-      [LogLevel.DEBUG]: 1,
-      [LogLevel.INFO]: 2,
-      [LogLevel.WARN]: 3,
-      [LogLevel.ERROR]: 4,
-      [LogLevel.FATAL]: 5,
-      [LogLevel.CRITICAL]: 6,
-      [LogLevel.SUCCESS]: 2 // SUCCESS is same level as INFO
-    };
-    
-    return levels[checkLevel] < levels[baseLevel];
-  }
-  
-  // Method to get logs (not available in console transport)
-  getLogs(): LogEntry[] {
-    return []; // Console doesn't store logs
-  }
-  
-  // Method to clear logs (not available in console transport)
-  clear(): void {
-    console.clear();
-  }
-  
-  // Method to flush logs (not needed for console)
-  async flush(): Promise<void> {
-    // No-op for console
-  }
-}
+};
 
-// Export an instance of the console transport for convenience
-export const consoleTransport = new ConsoleTransport({
-  includeTimestamp: true,
-  includeSource: true,
-  colorize: true
-});
+/**
+ * Extended console transport with additional options
+ */
+export function createConsoleTransport(options = {}) {
+  return {
+    ...consoleTransport,
+    options,
+  };
+}

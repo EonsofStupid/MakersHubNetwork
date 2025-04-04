@@ -50,7 +50,7 @@ export function getLogsByCategory(category: string, limit?: number): LogEntry[] 
  */
 export function getErrorLogs(limit?: number): LogEntry[] {
   return safeGetLogs(limit, (log) => {
-    // Use numerical values for comparison
+    // Fix: Use correct comparison for LogLevel values
     return (
       log.level === LogLevel.ERROR || 
       log.level === LogLevel.FATAL || 

@@ -1,13 +1,14 @@
 
 import { useCallback } from 'react';
 import { useLogger } from './useLogger';
-import { LogLevel } from '../types';
+import { LogLevel, LogCategory } from '../types';
 
 /**
  * Hook to provide network request and response logging
  */
 export const useNetworkLogger = () => {
-  const logger = useLogger('NetworkLogger', { category: 'network' });
+  // Fix: Correctly use LogCategory.NETWORK enum value
+  const logger = useLogger('NetworkLogger', { category: LogCategory.NETWORK });
   
   /**
    * Sanitize headers to avoid logging sensitive info
@@ -63,7 +64,6 @@ export const useNetworkLogger = () => {
         data: shouldLogBody(url) ? data : '[REDACTED]',
       };
       
-      // Fix: Remove the third parameter from logger.debug call
       logger.debug(`API Request: ${method?.toUpperCase() || 'GET'} ${url}`, { details: logData });
       
       return config;
@@ -89,7 +89,7 @@ export const useNetworkLogger = () => {
         data: shouldLogBody(url) ? data : '[REDACTED]',
       };
       
-      // Fix: use response.status to determine log level and remove third parameter
+      // Fix: use response.status to determine log level
       const level = response.status >= 400 ? LogLevel.WARN : LogLevel.DEBUG;
       const message = `API Response: ${status} ${statusText} for ${method?.toUpperCase() || 'GET'} ${url}`;
       
