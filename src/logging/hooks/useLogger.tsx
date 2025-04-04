@@ -37,11 +37,7 @@ export function useLogger(source?: string, options: LoggerOptions = {}): Logger 
   }, [logger]);
   
   const fatal = useCallback(function fatal(message: string, msgOptions?: LogOptions) {
-    if (logger.fatal) {
-      logger.fatal(message, msgOptions);
-    } else {
-      logger.error(`FATAL: ${message}`, msgOptions);
-    }
+    logger.fatal(message, msgOptions);
   }, [logger]);
   
   const success = useCallback(function success(message: string, msgOptions?: LogOptions) {

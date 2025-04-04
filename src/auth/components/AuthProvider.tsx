@@ -1,115 +1,59 @@
-import React, { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { UserRole } from '@/auth/types/auth.types';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { safeDetails } from '@/logging/utils/safeDetails';
 
-/**
- * Primary Authentication Provider
- * Initializes authentication state and sets up auth event listeners
- */
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { 
-    setUser, 
-    setSession, 
-    setRoles, 
-    initialize, 
-    setStatus,
-    setInitialized
-  } = useAuthStore();
+import { useEffect } from 'react';
+import { useAuth } from '@/auth/hooks/useAuth';
+import { AuthStatus } from '@/auth/types/auth.types';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/constants/logLevel';
+
+interface AuthProviderProps {
+  children: React.ReactNode;
+  onInitialized?: () => Promise<void>;
+}
+
+export function AuthProvider({ children, onInitialized }: AuthProviderProps) {
+  const { user, isLoading, status, initialized, initialize } = useAuth();
+  const logger = useLogger('AuthProvider', { category: LogCategory.AUTH });
   
-  const logger = useLogger('AuthProvider', LogCategory.AUTH);
-  
-  // Initialize auth state on mount
   useEffect(() => {
-    // Set loading state while initializing
-    setStatus('loading');
+    logger.info('Auth provider mounted');
     
-    logger.info('Setting up auth state change listener');
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        logger.info(`Auth state changed: ${event}`, { details: { event } });
+    const initAuth = async () => {
+      try {
+        logger.info('Initializing auth state');
+        await initialize();
         
-        switch (event) {
-          case 'SIGNED_IN':
-            if (session?.user) {
-              setUser(session.user);
-              setSession(session);
-              setStatus('authenticated');
-              
-              // Get user roles with setTimeout to avoid potential deadlocks
-              setTimeout(async () => {
-                try {
-                  const { data: rolesData, error: rolesError } = await supabase
-                    .from('user_roles')
-                    .select('role')
-                    .eq('user_id', session.user.id);
-                    
-                  if (rolesError) {
-                    logger.error('Error fetching user roles', {
-                      category: LogCategory.AUTH,
-                      details: safeDetails(rolesError)
-                    });
-                  }
-                  
-                  const roles = (rolesData?.map(r => r.role) as UserRole[]) || [];
-                  setRoles(roles);
-                } catch (error) {
-                  logger.error('Error processing sign in', {
-                    category: LogCategory.AUTH,
-                    details: safeDetails(error)
-                  });
-                }
-              }, 0);
-            }
-            break;
-            
-          case 'SIGNED_OUT':
-            setUser(null);
-            setSession(null);
-            setRoles([]);
-            setStatus('unauthenticated');
-            break;
-            
-          case 'USER_UPDATED':
-            if (session?.user) {
-              setUser(session.user);
-            }
-            break;
-            
-          case 'TOKEN_REFRESHED':
-            if (session) {
-              setSession(session);
-            }
-            break;
+        if (onInitialized) {
+          await onInitialized();
         }
+        
+        logger.info('Auth state initialized');
+      } catch (error) {
+        logger.error('Failed to initialize auth state', { details: error });
       }
-    );
-    
-    // CRITICAL CHANGE: Initialize auth in background but don't block rendering
-    initialize()
-      .then(() => {
-        logger.info('Auth initialized successfully');
-      })
-      .catch(error => {
-        logger.error('Failed to initialize auth', {
-          category: LogCategory.AUTH,
-          details: safeDetails(error)
-        });
-      })
-      .finally(() => {
-        setInitialized(true);
-      });
-    
-    return () => {
-      logger.info('Cleaning up auth provider');
-      subscription.unsubscribe();
     };
-  }, [logger, setUser, setSession, setRoles, setStatus, initialize, setInitialized]);
+    
+    if (!initialized && !isLoading) {
+      initAuth();
+    } else if (status === AuthStatus.AUTHENTICATED) {
+      logger.info('User is already authenticated', { 
+        details: { userId: user?.id } 
+      });
+    } else if (status === AuthStatus.UNAUTHENTICATED) {
+      logger.info('User is not authenticated');
+    }
+  }, [initialize, initialized, isLoading, logger, onInitialized, status, user]);
   
-  // We no longer block rendering with a loading indicator
+  if (isLoading && !initialized) {
+    // Initial loading state
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4">Loading authentication state...</p>
+        </div>
+      </div>
+    );
+  }
+  
   return <>{children}</>;
 }

@@ -19,15 +19,15 @@ export const LOG_LEVEL_NAMES: Record<LogLevel, string> = {
  * Maps string representation to log level
  */
 export const STRING_TO_LOG_LEVEL: Record<string, LogLevel> = {
-  'TRACE': 'TRACE',
-  'DEBUG': 'DEBUG',
-  'INFO': 'INFO',
-  'WARN': 'WARN',
-  'WARNING': 'WARN',
-  'ERROR': 'ERROR',
-  'CRITICAL': 'CRITICAL',
-  'SUCCESS': 'SUCCESS',
-  'FATAL': 'FATAL'
+  'TRACE': LogLevel.TRACE,
+  'DEBUG': LogLevel.DEBUG,
+  'INFO': LogLevel.INFO,
+  'WARN': LogLevel.WARN,
+  'WARNING': LogLevel.WARN,
+  'ERROR': LogLevel.ERROR,
+  'CRITICAL': LogLevel.CRITICAL,
+  'SUCCESS': LogLevel.SUCCESS,
+  'FATAL': LogLevel.FATAL
 };
 
 /**
@@ -35,21 +35,21 @@ export const STRING_TO_LOG_LEVEL: Record<string, LogLevel> = {
  */
 export function getLogLevelColorClass(level: LogLevel): string {
   switch (level) {
-    case 'TRACE':
+    case LogLevel.TRACE:
       return 'text-slate-400';
-    case 'DEBUG':
+    case LogLevel.DEBUG:
       return 'text-blue-400';
-    case 'INFO':
+    case LogLevel.INFO:
       return 'text-green-400';
-    case 'WARN':
+    case LogLevel.WARN:
       return 'text-amber-400';
-    case 'ERROR':
+    case LogLevel.ERROR:
       return 'text-red-500';
-    case 'FATAL':
+    case LogLevel.FATAL:
       return 'text-red-600 font-bold';
-    case 'CRITICAL':
+    case LogLevel.CRITICAL:
       return 'text-red-600 font-bold';
-    case 'SUCCESS':
+    case LogLevel.SUCCESS:
       return 'text-green-500';
     default:
       return 'text-slate-400';
@@ -68,14 +68,14 @@ export function getLogLevelName(level: LogLevel): string {
  */
 export function getLogItemClass(level: LogLevel): string {
   switch (level) {
-    case 'WARN':
+    case LogLevel.WARN:
       return 'border-l-2 border-l-yellow-500';
-    case 'ERROR':
+    case LogLevel.ERROR:
       return 'border-l-2 border-l-red-500';
-    case 'FATAL':
-    case 'CRITICAL':
+    case LogLevel.FATAL:
+    case LogLevel.CRITICAL:
       return 'border-l-2 border-l-red-600 bg-red-950/20';
-    case 'SUCCESS':
+    case LogLevel.SUCCESS:
       return 'border-l-2 border-l-green-500';
     default:
       return '';
@@ -103,5 +103,5 @@ export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean 
  * Get log level from string
  */
 export function getLogLevelFromString(levelString: string): LogLevel {
-  return STRING_TO_LOG_LEVEL[levelString.toUpperCase()] || 'INFO';
+  return STRING_TO_LOG_LEVEL[levelString.toUpperCase()] || LogLevel.INFO;
 }

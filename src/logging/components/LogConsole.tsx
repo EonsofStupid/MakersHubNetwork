@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { LogEntry, LogLevel, LogCategory } from '../types';
+import { LogEntry } from '../types';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LOG_LEVEL_NAMES, isLogLevelAtLeast } from '../constants/log-level';
 import { safelyRenderNode } from '../utils/react';
 import { X, Minimize2, Maximize2, Download, Trash } from 'lucide-react';
+import { LogLevel, LogCategory } from '@/constants/logLevel';
 
 interface LogConsoleProps {
   minLevel?: LogLevel;
@@ -14,6 +15,8 @@ interface LogConsoleProps {
   showSource?: boolean;
   autoScroll?: boolean;
   categories?: LogCategory[];
+  hideIfEmpty?: boolean;
+  maxHeight?: string;
 }
 
 export function LogConsole({
@@ -23,7 +26,9 @@ export function LogConsole({
   position = 'bottom-right',
   showSource = true,
   autoScroll = true,
-  categories
+  categories,
+  hideIfEmpty = false,
+  maxHeight
 }: LogConsoleProps) {
   const { logs, clearLogs, showLogConsole, setShowLogConsole } = useLoggingContext();
   const [filter, setFilter] = useState('');
@@ -38,6 +43,22 @@ export function LogConsole({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [logs, autoScroll, isMinimized]);
+
+  // Filter logs by level, category, and text
+  const filteredLogs = logs
+    .filter(log => isLogLevelAtLeast(log.level, selectedLevel))
+    .filter(log => selectedCategory === 'all' || log.category === selectedCategory)
+    .filter(log => {
+      if (!filter) return true;
+      const message = typeof log.message === 'string' ? log.message : JSON.stringify(log.message);
+      return message.toLowerCase().includes(filter.toLowerCase()) ||
+        (log.source && log.source.toLowerCase().includes(filter.toLowerCase()));
+    });
+  
+  // Hide if empty and hideIfEmpty is true
+  if (hideIfEmpty && filteredLogs.length === 0 && !showLogConsole) {
+    return null;
+  }
   
   if (!showLogConsole) {
     return null;
@@ -50,17 +71,6 @@ export function LogConsole({
     'top-right': 'top-4 right-4',
     'top-left': 'top-4 left-4'
   }[position];
-  
-  // Filter logs by level, category, and text
-  const filteredLogs = logs
-    .filter(log => isLogLevelAtLeast(log.level, selectedLevel))
-    .filter(log => selectedCategory === 'all' || log.category === selectedCategory)
-    .filter(log => {
-      if (!filter) return true;
-      const message = typeof log.message === 'string' ? log.message : JSON.stringify(log.message);
-      return message.toLowerCase().includes(filter.toLowerCase()) ||
-        (log.source && log.source.toLowerCase().includes(filter.toLowerCase()));
-    });
   
   // Collect unique categories for filter
   const uniqueCategories = Array.from(
@@ -86,8 +96,8 @@ export function LogConsole({
       style={{
         width: isMinimized ? '300px' : width,
         height: isMinimized ? '40px' : height,
-        maxWidth: '100vw',
-        maxHeight: '80vh'
+        maxHeight: maxHeight || '80vh',
+        maxWidth: '100vw'
       }}
     >
       {/* Header */}
@@ -145,7 +155,7 @@ export function LogConsole({
             
             <select 
               value={selectedLevel} 
-              onChange={e => setSelectedLevel(Number(e.target.value) as LogLevel)}
+              onChange={e => setSelectedLevel(e.target.value as LogLevel)}
               className="px-2 py-1 text-xs rounded border bg-background"
             >
               {Object.entries(LOG_LEVEL_NAMES).map(([level, name]) => (

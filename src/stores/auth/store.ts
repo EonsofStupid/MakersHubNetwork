@@ -1,10 +1,12 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AuthState, UserRole } from './types';
+import { UserRole, AuthStatus } from '@/auth/types/auth.types';
+import { AuthState } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { authStorage } from './middleware/persist.middleware';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/constants/logLevel';
 import { safeDetails } from '@/logging/utils/safeDetails';
 
 interface AuthActions {
@@ -14,6 +16,7 @@ interface AuthActions {
   setError: (error: string | null) => void;
   setLoading: (isLoading: boolean) => void;
   setInitialized: (initialized: boolean) => void;
+  setStatus: (status: AuthStatus) => void; 
   hasRole: (role: UserRole) => boolean;
   isAdmin: () => boolean;
   initialize: () => Promise<void>;
@@ -31,24 +34,30 @@ export const useAuthStore = create<AuthStore>()(
       roles: [],
       isLoading: true,
       error: null,
-      status: 'idle',
+      status: AuthStatus.LOADING,
       initialized: false,
+      isAuthenticated: false,
       
       // Methods
       setUser: (user) => set({ user }),
       setSession: (session) => set({ 
         session,
         user: session?.user ?? null,
-        status: session ? 'authenticated' : 'unauthenticated'
+        status: session ? AuthStatus.AUTHENTICATED : AuthStatus.UNAUTHENTICATED,
+        isAuthenticated: !!session
       }),
       setRoles: (roles) => set({ roles }),
       setError: (error) => set({ error }),
       setLoading: (isLoading) => set({ isLoading }),
       setInitialized: (initialized) => set({ initialized }),
+      setStatus: (status) => set({ 
+        status,
+        isAuthenticated: status === AuthStatus.AUTHENTICATED
+      }),
       
       // Role checking
       hasRole: (role) => get().roles.includes(role),
-      isAdmin: () => get().roles.includes('admin') || get().roles.includes('super_admin'),
+      isAdmin: () => get().roles.includes(UserRole.ADMIN) || get().roles.includes(UserRole.SUPER_ADMIN),
       
       // Initialize authentication
       initialize: async () => {
@@ -85,7 +94,8 @@ export const useAuthStore = create<AuthStore>()(
               user: session.user,
               session,
               roles,
-              status: 'authenticated',
+              status: AuthStatus.AUTHENTICATED,
+              isAuthenticated: true,
               error: null
             });
             
@@ -102,7 +112,8 @@ export const useAuthStore = create<AuthStore>()(
               user: null,
               session: null,
               roles: [],
-              status: 'unauthenticated',
+              status: AuthStatus.UNAUTHENTICATED,
+              isAuthenticated: false,
               error: null
             });
             
@@ -122,7 +133,8 @@ export const useAuthStore = create<AuthStore>()(
           
           set({
             error: errorMessage,
-            status: 'unauthenticated'
+            status: AuthStatus.ERROR,
+            isAuthenticated: false
           });
         } finally {
           set({ 
@@ -149,7 +161,8 @@ export const useAuthStore = create<AuthStore>()(
             user: null,
             session: null,
             roles: [],
-            status: 'unauthenticated',
+            status: AuthStatus.UNAUTHENTICATED,
+            isAuthenticated: false,
             error: null
           });
           
@@ -180,7 +193,8 @@ export const useAuthStore = create<AuthStore>()(
         user: state.user,
         session: state.session,
         roles: state.roles,
-        status: state.status
+        status: state.status,
+        isAuthenticated: state.isAuthenticated
       })
     }
   )
