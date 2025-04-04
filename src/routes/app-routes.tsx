@@ -2,8 +2,8 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import HomePage from '@/pages/Home';
-import AboutPage from '@/pages/About';
-import ContactPage from '@/pages/Contact';
+import AboutPage from '@/pages/company/about/Index';
+import ContactPage from '@/pages/company/contact/Index';
 import ProfilePage from '@/pages/Profile';
 import SettingsPage from '@/pages/Settings';
 import NotFoundPage from '@/pages/NotFound';
