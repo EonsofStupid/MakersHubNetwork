@@ -28,6 +28,9 @@ export interface LoggerOptions {
   
   /** If this logger is disabled */
   disabled?: boolean;
+
+  /** Additional details to include with the log */
+  details?: any;
 }
 
 /**
@@ -84,6 +87,7 @@ export interface LogTransport {
   log(entry: LogEntry): void;
   getLogs?(): LogEntry[];
   clear?(): void;
+  flush?(): Promise<void>;
 }
 
 /**
@@ -95,7 +99,7 @@ export interface Logger {
   info(message: string, options?: LogOptions): void;
   warn(message: string, options?: LogOptions): void;
   error(message: string, options?: LogOptions): void;
-  fatal(message: string, options?: LogOptions): void;
+  fatal?(message: string, options?: LogOptions): void;
   success?(message: string, options?: LogOptions): void;
   critical?(message: string, options?: LogOptions): void;
   performance?(message: string, duration: number, options?: LogOptions): void;
@@ -127,9 +131,16 @@ export interface PerformanceMeasurementOptions {
  */
 export interface LoggingConfig {
   minLevel: LogLevel;
-  enabled: boolean;
+  enabled?: boolean;
   transports: LogTransport[];
   categoryLevels?: Partial<Record<LogCategory | string, LogLevel>>;
+  enabledCategories?: (LogCategory | string)[];
+  disabledCategories?: (LogCategory | string)[];
+  bufferSize?: number;
+  flushInterval?: number;
+  includeSource?: boolean;
+  includeUser?: boolean;
+  includeSession?: boolean;
 }
 
 /**

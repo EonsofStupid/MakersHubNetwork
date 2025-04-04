@@ -33,3 +33,8 @@ export function isJson(value: unknown): value is Json {
   }
   return false;
 }
+
+/**
+ * Re-export the utility functions from jsonUtils.ts for broader usage
+ */
+export { toSafeJson, safeJsonParse, isSafeJson } from '@/utils/jsonUtils';

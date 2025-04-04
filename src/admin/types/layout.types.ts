@@ -14,7 +14,7 @@ export interface LayoutComponent {
   };
   styles?: Record<string, any>;
   className?: string;
-  permissions?: string[]; // Added to match what's used in LayoutRenderer
+  permissions?: string[];
 }
 
 export interface Layout {
@@ -84,4 +84,19 @@ export function createEmptyLayout(partial: Partial<Layout> = {}): Layout {
     is_locked: partial.is_locked !== undefined ? partial.is_locked : false,
     meta: partial.meta || {}
   };
+}
+
+/**
+ * Convert a raw component to a safe JSON representation
+ * This ensures all components can be safely stored in the database
+ */
+export function componentToJson(component: LayoutComponent): Json {
+  return toSafeJson(component);
+}
+
+/**
+ * Convert components array to safe JSON
+ */
+export function componentsToJson(components: LayoutComponent[]): Json {
+  return toSafeJson(components);
 }

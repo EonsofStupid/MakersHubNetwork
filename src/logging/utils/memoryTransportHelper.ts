@@ -1,90 +1,109 @@
 
-import { LogEntry } from '../types';
+import { LogEntry, LogLevel } from '../types';
 import { memoryTransport } from '../transports/memory.transport';
 
 /**
- * Safely get logs from the memory transport
- * Handles the case where getLogs is undefined
+ * Safely get logs from memory transport with error handling
  */
 export function safeGetLogs(): LogEntry[] {
-  if (typeof memoryTransport.getLogs === 'function') {
-    return memoryTransport.getLogs();
-  }
-  return [];
-}
-
-/**
- * Safely clear logs from the memory transport
- * Handles the case where clear is undefined
- */
-export function safeClearLogs(): void {
-  if (typeof memoryTransport.clear === 'function') {
-    memoryTransport.clear();
+  try {
+    if (typeof memoryTransport.getLogs === 'function') {
+      return memoryTransport.getLogs();
+    }
+    return [];
+  } catch (error) {
+    console.error('Error getting logs from memory transport:', error);
+    return [];
   }
 }
 
 /**
- * Get the most recent log entries
- * @param count Number of entries to return
+ * Safely clear logs from memory transport with error handling
  */
-export function getRecentLogs(count: number = 10): LogEntry[] {
-  const logs = safeGetLogs();
-  return logs.slice(0, count);
+export function safeClearLogs(): boolean {
+  try {
+    if (typeof memoryTransport.clear === 'function') {
+      memoryTransport.clear();
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error clearing logs from memory transport:', error);
+    return false;
+  }
 }
 
 /**
- * Get logs filtered by level
- * @param level Minimum log level to include
+ * Filter logs by level
  */
-export function getLogsByLevel(level: number): LogEntry[] {
-  const logs = safeGetLogs();
-  return logs.filter(log => log.level >= level);
+export function filterLogsByLevel(logs: LogEntry[], minLevel: LogLevel): LogEntry[] {
+  try {
+    const levels: Record<LogLevel, number> = {
+      TRACE: 0,
+      DEBUG: 1,
+      INFO: 2,
+      WARN: 3,
+      ERROR: 4,
+      FATAL: 5,
+      CRITICAL: 6,
+      SUCCESS: 2
+    };
+    
+    return logs.filter(log => {
+      const logLevelValue = levels[log.level];
+      const minLevelValue = levels[minLevel];
+      return logLevelValue >= minLevelValue;
+    });
+  } catch (error) {
+    console.error('Error filtering logs by level:', error);
+    return logs;
+  }
 }
 
 /**
- * Get logs filtered by category
- * @param category Category to filter by
+ * Filter logs by category
  */
-export function getLogsByCategory(category: string): LogEntry[] {
-  const logs = safeGetLogs();
+export function filterLogsByCategory(logs: LogEntry[], category: string): LogEntry[] {
   return logs.filter(log => log.category === category);
 }
 
 /**
- * Search logs by text content
- * @param searchText Text to search for in log messages
+ * Filter logs by tag
  */
-export function searchLogs(searchText: string): LogEntry[] {
-  if (!searchText) return safeGetLogs();
+export function filterLogsByTag(logs: LogEntry[], tag: string): LogEntry[] {
+  return logs.filter(log => log.tags && log.tags.includes(tag));
+}
+
+/**
+ * Search logs by text
+ */
+export function searchLogs(logs: LogEntry[], searchText: string): LogEntry[] {
+  if (!searchText) return logs;
   
-  const search = searchText.toLowerCase();
-  const logs = safeGetLogs();
+  const lowerSearchText = searchText.toLowerCase();
   
   return logs.filter(log => {
     // Search in message
-    if (log.message && log.message.toLowerCase().includes(search)) {
-      return true;
-    }
-    
-    // Search in category
-    if (log.category && log.category.toLowerCase().includes(search)) {
+    if (log.message && typeof log.message === 'string' && 
+        log.message.toLowerCase().includes(lowerSearchText)) {
       return true;
     }
     
     // Search in source
-    if (log.source && log.source.toLowerCase().includes(search)) {
+    if (log.source && typeof log.source === 'string' && 
+        log.source.toLowerCase().includes(lowerSearchText)) {
       return true;
     }
     
-    // Search in details if it's a string
-    if (log.details && typeof log.details === 'object') {
+    // Search in details if it's stringifiable
+    if (log.details) {
       try {
         const detailsStr = JSON.stringify(log.details).toLowerCase();
-        if (detailsStr.includes(search)) {
+        if (detailsStr.includes(lowerSearchText)) {
           return true;
         }
-      } catch (e) {
-        // Ignore stringify errors
+      } catch {
+        // Ignore error if details can't be stringified
       }
     }
     
