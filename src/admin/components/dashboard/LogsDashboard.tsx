@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Trash } from 'lucide-react';
 import { useLogger } from '@/hooks/use-logger';
 import { safeGetLogs, safeClearLogs } from '@/logging/utils/memoryTransportHelper';
-import { LogCategory, LogLevel } from '@/constants/logLevel';
+import { LogCategory, LogLevel } from '@/logging/types';
 
 export function LogsDashboard() {
   const [logs, setLogs] = useState(safeGetLogs());
@@ -31,7 +31,7 @@ export function LogsDashboard() {
     const countsByLevel: Record<string, number> = {};
     
     logs.forEach(log => {
-      const levelName = log.level;
+      const levelName = LogLevel[log.level];
       countsByLevel[levelName] = (countsByLevel[levelName] || 0) + 1;
     });
     

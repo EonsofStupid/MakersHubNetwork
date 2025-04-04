@@ -2,7 +2,7 @@
 import React from 'react';
 import { LogsDashboard } from '@/admin/components/dashboard/LogsDashboard';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/constants/logLevel';
+import { LogCategory } from '@/logging/types';
 import { AdminPageHeader } from '@/admin/components/ui/AdminPageHeader';
 import { LogConsole } from '@/logging/components/LogConsole';
 
