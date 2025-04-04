@@ -15,6 +15,7 @@ export interface LayoutComponent {
   styles?: Record<string, any>;
   className?: string;
   permissions?: string[];
+  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 // Making LayoutComponent serializable as Json

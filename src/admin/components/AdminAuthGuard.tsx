@@ -6,6 +6,7 @@ import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/constants/logLevel';
 import { useAuth } from '@/auth/hooks/useAuth';
+import { AuthStatus } from '@/auth/types/auth.types';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
