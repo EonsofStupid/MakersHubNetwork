@@ -20,9 +20,6 @@ export interface LoggerOptions {
   /** Additional context to include with all logs */
   context?: Record<string, any>;
   
-  /** Source of the log (usually component name) */
-  source?: string;
-  
   /** If true, the logger will include stack traces for all logs */
   includeTraces?: boolean;
   
@@ -31,6 +28,9 @@ export interface LoggerOptions {
 
   /** Additional details to include with the log */
   details?: any;
+  
+  /** Source of the log (usually component name) */
+  source?: string;
 }
 
 /**
@@ -49,9 +49,6 @@ export interface LogOptions {
   /** Additional details (will be JSON stringified) */
   details?: any;
   
-  /** Source of the log (usually component name) */
-  source?: string;
-  
   /** Whether to include stack trace */
   includeTrace?: boolean;
   
@@ -60,6 +57,9 @@ export interface LogOptions {
   
   /** If true, this log will be reported to error service even if it's not an error */
   report?: boolean;
+  
+  /** Source of the log (usually component name) */
+  source?: string;
 }
 
 /**

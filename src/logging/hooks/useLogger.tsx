@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { Logger, LoggerOptions } from '../types';
+import { Logger, LoggerOptions, LogOptions } from '../types';
 import { getLogger } from '../service/logger.service';
 
 /**
@@ -16,36 +16,56 @@ export function useLogger(source?: string, options: LoggerOptions = {}): Logger 
   // Memoize the logger to prevent recreation on each render
   // However, each log method is still memoized separately to avoid closure issues
   
-  const trace = useCallback(function trace(message: string, msgOptions?: LoggerOptions) {
+  const trace = useCallback(function trace(message: string, msgOptions?: LogOptions) {
     logger.trace(message, msgOptions);
   }, [logger]);
   
-  const debug = useCallback(function debug(message: string, msgOptions?: LoggerOptions) {
+  const debug = useCallback(function debug(message: string, msgOptions?: LogOptions) {
     logger.debug(message, msgOptions);
   }, [logger]);
   
-  const info = useCallback(function info(message: string, msgOptions?: LoggerOptions) {
+  const info = useCallback(function info(message: string, msgOptions?: LogOptions) {
     logger.info(message, msgOptions);
   }, [logger]);
   
-  const warn = useCallback(function warn(message: string, msgOptions?: LoggerOptions) {
+  const warn = useCallback(function warn(message: string, msgOptions?: LogOptions) {
     logger.warn(message, msgOptions);
   }, [logger]);
   
-  const error = useCallback(function error(message: string, msgOptions?: LoggerOptions) {
+  const error = useCallback(function error(message: string, msgOptions?: LogOptions) {
     logger.error(message, msgOptions);
   }, [logger]);
   
-  const critical = useCallback(function critical(message: string, msgOptions?: LoggerOptions) {
-    logger.critical(message, msgOptions);
+  const fatal = useCallback(function fatal(message: string, msgOptions?: LogOptions) {
+    if (logger.fatal) {
+      logger.fatal(message, msgOptions);
+    } else {
+      logger.error(`FATAL: ${message}`, msgOptions);
+    }
   }, [logger]);
   
-  const success = useCallback(function success(message: string, msgOptions?: LoggerOptions) {
-    logger.success(message, msgOptions);
+  const success = useCallback(function success(message: string, msgOptions?: LogOptions) {
+    if (logger.success) {
+      logger.success(message, msgOptions);
+    } else {
+      logger.info(`SUCCESS: ${message}`, msgOptions);
+    }
   }, [logger]);
   
-  const performance = useCallback(function performance(message: string, duration: number, msgOptions?: LoggerOptions) {
-    logger.performance(message, duration, msgOptions);
+  const critical = useCallback(function critical(message: string, msgOptions?: LogOptions) {
+    if (logger.critical) {
+      logger.critical(message, msgOptions);
+    } else {
+      logger.error(`CRITICAL: ${message}`, msgOptions);
+    }
+  }, [logger]);
+  
+  const performance = useCallback(function performance(message: string, duration: number, msgOptions?: LogOptions) {
+    if (logger.performance) {
+      logger.performance(message, duration, msgOptions);
+    } else {
+      logger.info(`PERFORMANCE: ${message} (${duration}ms)`, msgOptions);
+    }
   }, [logger]);
   
   return {
@@ -54,8 +74,9 @@ export function useLogger(source?: string, options: LoggerOptions = {}): Logger 
     info,
     warn,
     error,
-    critical,
+    fatal,
     success,
+    critical,
     performance
   };
 }

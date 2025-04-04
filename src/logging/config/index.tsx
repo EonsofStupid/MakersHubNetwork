@@ -1,5 +1,6 @@
 
-import { LoggingConfig, LogCategory, LogLevel } from '../types';
+import { LoggingConfig } from '../types';
+import { LogCategory, LogLevel } from '@/constants/logLevel';
 import { defaultLoggingConfig } from './default-config';
 
 /**
@@ -7,7 +8,7 @@ import { defaultLoggingConfig } from './default-config';
  */
 export const developmentLoggingConfig: LoggingConfig = {
   ...defaultLoggingConfig,
-  minLevel: 'DEBUG',
+  minLevel: LogLevel.DEBUG,
   bufferSize: 1, // Flush immediately in development
   flushInterval: 1000, // 1 second
 };
@@ -17,7 +18,7 @@ export const developmentLoggingConfig: LoggingConfig = {
  */
 export const productionLoggingConfig: LoggingConfig = {
   ...defaultLoggingConfig,
-  minLevel: 'INFO',
+  minLevel: LogLevel.INFO,
   enabledCategories: [
     LogCategory.SYSTEM,
     LogCategory.AUTH,
@@ -35,8 +36,8 @@ export const productionLoggingConfig: LoggingConfig = {
  */
 export const testLoggingConfig: LoggingConfig = {
   ...defaultLoggingConfig,
-  minLevel: 'ERROR', // Only log errors and above in tests
-  transports: [defaultLoggingConfig.transports[1]], // Only use memory transport in tests
+  minLevel: LogLevel.ERROR, // Only log errors and above in tests
+  transports: [defaultLoggingConfig.transports[0]], // Only use memory transport in tests
   bufferSize: 1,
   flushInterval: 0
 };

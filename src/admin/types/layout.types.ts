@@ -17,6 +17,11 @@ export interface LayoutComponent {
   permissions?: string[];
 }
 
+// Making LayoutComponent serializable as Json
+export type JsonSafeLayoutComponent = Omit<LayoutComponent, 'children'> & {
+  children?: JsonSafeLayoutComponent[];
+};
+
 export interface Layout {
   id: string;
   name: string;
@@ -58,8 +63,9 @@ export type Component = LayoutComponent;
  */
 export function layoutToJson(layout: Partial<Layout>): Json {
   const { components, version } = layout;
+  const jsonSafeComponents = components ? makeComponentsJsonSafe(components) : [];
   return toSafeJson({
-    components: components || [],
+    components: jsonSafeComponents,
     version: version || 1
   });
 }
@@ -91,12 +97,37 @@ export function createEmptyLayout(partial: Partial<Layout> = {}): Layout {
  * This ensures all components can be safely stored in the database
  */
 export function componentToJson(component: LayoutComponent): Json {
-  return toSafeJson(component);
+  const jsonSafeComponent = makeComponentJsonSafe(component);
+  return toSafeJson(jsonSafeComponent);
 }
 
 /**
  * Convert components array to safe JSON
  */
 export function componentsToJson(components: LayoutComponent[]): Json {
-  return toSafeJson(components);
+  const jsonSafeComponents = makeComponentsJsonSafe(components);
+  return toSafeJson(jsonSafeComponents);
+}
+
+/**
+ * Helper function to make a component JSON-safe recursively
+ */
+function makeComponentJsonSafe(component: LayoutComponent): JsonSafeLayoutComponent {
+  const { children, ...rest } = component;
+  
+  if (!children || children.length === 0) {
+    return rest;
+  }
+  
+  return {
+    ...rest,
+    children: children.map(makeComponentJsonSafe)
+  };
+}
+
+/**
+ * Helper function to make an array of components JSON-safe
+ */
+function makeComponentsJsonSafe(components: LayoutComponent[]): JsonSafeLayoutComponent[] {
+  return components.map(makeComponentJsonSafe);
 }
