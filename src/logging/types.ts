@@ -1,108 +1,112 @@
-export enum LogLevel {
-  TRACE = 0,
-  DEBUG = 1,
-  INFO = 2,
-  WARN = 3,
-  ERROR = 4,
-  CRITICAL = 5,
-  SUCCESS = 6
-}
 
+/**
+ * Log levels from lowest to highest priority
+ */
+export type LogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
+
+/**
+ * Log categories for organizing logs
+ */
 export enum LogCategory {
-  AUTH = 'AUTH',
-  UI = 'UI',
-  API = 'API',
-  THEME = 'THEME',
-  ROUTER = 'ROUTER',
-  STATE = 'STATE',
-  STORAGE = 'STORAGE',
-  ERROR = 'ERROR',
-  PERFORMANCE = 'PERFORMANCE',
-  ADMIN = 'ADMIN',
-  LIFECYCLE = 'LIFECYCLE',
-  NETWORK = 'NETWORK',
-  SYSTEM = 'SYSTEM',
-  DATA = 'DATA',
-  GENERAL = 'GENERAL',
-  MISC = 'MISC',
-  CONTENT = 'CONTENT'
+  GENERAL = 'general',
+  UI = 'ui',
+  AUTH = 'auth',
+  API = 'api',
+  DATABASE = 'database',
+  FEATURE = 'feature',
+  THEME = 'theme',
+  ADMIN = 'admin',
+  CONTENT = 'content',
+  SYSTEM = 'system',
+  PERFORMANCE = 'performance'
 }
 
-export type LoggerOptions = {
-  category?: string;
-  source?: string;
-  useConsole?: boolean;
-  details?: Record<string, any>;
+/**
+ * Logger options
+ */
+export interface LoggerOptions {
+  category?: LogCategory | string;
+  
+  /** Additional fixed tags for all logs from this logger */
   tags?: string[];
-};
+  
+  /** Minimum log level for this logger */
+  minLevel?: LogLevel;
+  
+  /** If true, errors will be sent to error reporting service */
+  reportErrors?: boolean;
+  
+  /** Additional context to include with all logs */
+  context?: Record<string, any>;
+  
+  /** If true, the logger will include stack traces for all logs */
+  includeTraces?: boolean;
+  
+  /** If this logger is disabled */
+  disabled?: boolean;
+}
 
+/**
+ * Options for individual log entries
+ */
+export interface LogOptions {
+  /** Log level for this specific log */
+  level?: LogLevel;
+  
+  /** Log category */
+  category?: LogCategory | string;
+  
+  /** Tags for filtering/grouping */
+  tags?: string[];
+  
+  /** Additional details (will be JSON stringified) */
+  details?: any;
+  
+  /** Whether to include stack trace */
+  includeTrace?: boolean;
+  
+  /** Custom timestamp (defaults to now) */
+  timestamp?: Date;
+  
+  /** If true, this log will be reported to error service even if it's not an error */
+  report?: boolean;
+}
+
+/**
+ * Log entry structure
+ */
 export interface LogEntry {
-  id?: string;
+  id: string;
   timestamp: string;
   level: LogLevel;
+  source: string;
   message: string;
-  source?: string;
-  category?: string;
-  details?: Record<string, any>;
-  tags?: string[];
+  category: LogCategory | string;
+  tags: string[];
+  details?: any;
+  trace?: string;
   user_id?: string;
   session_id?: string;
+  app_version?: string;
 }
 
-export interface Logger {
-  trace: (message: string, options?: LoggerOptions) => void;
-  debug: (message: string, options?: LoggerOptions) => void;
-  info: (message: string, options?: LoggerOptions) => void;
-  warn: (message: string, options?: LoggerOptions) => void;
-  error: (message: string, options?: LoggerOptions) => void;
-  critical: (message: string, options?: LoggerOptions) => void;
-  success: (message: string, options?: LoggerOptions) => void;
-  performance: (message: string, duration: number, options?: LoggerOptions) => void;
-}
-
+/**
+ * Transport interface for log destinations
+ */
 export interface LogTransport {
-  log: (entry: LogEntry) => void;
-  flush?: () => Promise<void>;
-  getLogs?: () => LogEntry[];
-  clear?: () => void;
+  log(entry: LogEntry): void;
+  getLogs?(): LogEntry[];
+  clear?(): void;
 }
 
-export interface LoggingConfig {
-  minLevel: LogLevel;
-  transports: LogTransport[];
-  enabledCategories?: string[];
-  disabledCategories?: string[];
-  bufferSize?: number;
-  flushInterval?: number;
-  includeSource?: boolean;
-  includeUser?: boolean;
-  includeSession?: boolean;
-}
-
-export interface LogEventCallback {
-  (entry: LogEntry): void;
-}
-
-// Performance measurement types
-export interface PerformanceMeasurementOptions {
-  category?: string;
-  tags?: string[];
-  threshold?: number;
-  source?: string;
-  onComplete?: (result: PerformanceMeasurementResult) => void;
-}
-
-export interface PerformanceMeasurementResult {
-  name: string;
-  duration: number;
-  success: boolean;
-  error?: any;
-  category?: string;
-  tags?: string[];
-  source?: string;
-}
-
-export interface MeasurementResult<T> {
-  result: T;
-  duration: number;
+/**
+ * Logger interface
+ */
+export interface Logger {
+  trace(message: string, options?: LogOptions): void;
+  debug(message: string, options?: LogOptions): void;
+  info(message: string, options?: LogOptions): void;
+  warn(message: string, options?: LogOptions): void;
+  error(message: string, options?: LogOptions): void;
+  fatal(message: string, options?: LogOptions): void;
 }

@@ -19,3 +19,18 @@ export interface ThemeProviderContext {
   isLoading: boolean;
   error: Error | null;
 }
+
+/**
+ * ThemeRegistry interface
+ */
+export interface ThemeRegistry {
+  registerTheme: (id: string, theme: ImpulseTheme) => void;
+  getTheme: (id: string) => ImpulseTheme | null;
+  setActiveTheme: (id: string) => boolean;
+  getActiveTheme: () => ImpulseTheme | null;
+  getDefaultTheme: () => ImpulseTheme | null;
+  getAllThemes: () => ImpulseTheme[];
+  hasTheme: (id: string) => boolean;
+  unregisterTheme: (id: string) => boolean;
+  clearAll: () => void;
+}

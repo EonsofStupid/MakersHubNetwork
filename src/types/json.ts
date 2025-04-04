@@ -1,29 +1,35 @@
 
 /**
- * Utility type for handling JSON values from the database
+ * JSON type that matches what Supabase expects for JSON columns
  */
-export type Json = 
+export type Json =
   | string
   | number
   | boolean
   | null
-  | { [key: string]: Json }
-  | Json[];
+  | { [key: string]: Json | undefined }
+  | Json[]
+  
+/**
+ * Utility function to safely convert any value to a valid JSON type
+ */
+export function toJson<T>(value: T): Json {
+  return JSON.parse(JSON.stringify(value)) as Json;
+}
 
 /**
- * Safely convert a database JSON field to a specific type
- * @param json The JSON value from the database
- * @param defaultValue Optional default value if conversion fails
- * @returns The converted value or default value
+ * Type guard to check if a value is a valid JSON
  */
-export function safeJsonParse<T>(json: Json, defaultValue: T): T {
-  try {
-    if (typeof json === 'string') {
-      return JSON.parse(json) as T;
+export function isJson(value: unknown): value is Json {
+  if (value === null) return true;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return true;
+  if (Array.isArray(value)) return value.every(isJson);
+  if (typeof value === 'object') {
+    for (const key in value) {
+      // @ts-ignore - we're checking if it's an object with properties
+      if (!isJson(value[key])) return false;
     }
-    return json as unknown as T;
-  } catch (error) {
-    console.error('Error parsing JSON:', error);
-    return defaultValue;
+    return true;
   }
+  return false;
 }
