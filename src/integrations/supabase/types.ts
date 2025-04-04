@@ -1275,6 +1275,50 @@ export type Database = {
           },
         ]
       }
+      theme_tokens: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          fallback_value: string | null
+          id: string
+          theme_id: string | null
+          token_name: string
+          token_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          fallback_value?: string | null
+          id?: string
+          theme_id?: string | null
+          token_name: string
+          token_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          fallback_value?: string | null
+          id?: string
+          theme_id?: string | null
+          token_name?: string
+          token_value?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_tokens_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       theme_versions: {
         Row: {
           component_tokens: Json | null

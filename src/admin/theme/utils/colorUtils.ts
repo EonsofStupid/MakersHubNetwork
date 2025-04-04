@@ -1,171 +1,181 @@
 
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
+import { ensureStringValue } from './themeUtils';
 
-const logger = getLogger('colorUtils', { category: LogCategory.THEME });
+const logger = getLogger('ColorUtils', { category: LogCategory.THEME });
+
+/**
+ * Safely extract an RGB color from any value including string, objects, etc.
+ * @param color A color in any format
+ * @returns RGB color string or fallback
+ */
+export function getRgbColor(color: any, fallback: string = 'rgb(0, 0, 0)'): string {
+  try {
+    // Handle the case where color might be an object with r,g,b properties
+    if (color && typeof color === 'object' && 'r' in color && 'g' in color && 'b' in color) {
+      return `rgb(${color.r}, ${color.g}, ${color.b})`;
+    }
+    
+    // Convert to string safely
+    const colorStr = ensureStringValue(color);
+    if (!colorStr) return fallback;
+    
+    // If already in rgb format, return as is
+    if (colorStr.startsWith('rgb')) {
+      return colorStr;
+    }
+    
+    // Convert hex to rgb
+    if (colorStr.startsWith('#')) {
+      return hexToRgb(colorStr) || fallback;
+    }
+    
+    // Handle named colors by setting on a test element and reading computed style
+    const testEl = document.createElement('div');
+    testEl.style.color = colorStr;
+    document.body.appendChild(testEl);
+    const computedColor = getComputedStyle(testEl).color || fallback;
+    document.body.removeChild(testEl);
+    
+    return computedColor;
+  } catch (e) {
+    logger.warn('Failed to get RGB color', {
+      details: { input: color, error: e instanceof Error ? e.message : 'Unknown error' }
+    });
+    return fallback;
+  }
+}
 
 /**
  * Convert hex color to RGB format
- * @param hex Hex color (e.g. #FF0000)
- * @returns RGB string (e.g. "255, 0, 0")
  */
-export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+export function hexToRgb(hex: string): string | null {
   try {
-    // Default fallback
-    if (!hex || typeof hex !== 'string') {
-      return { r: 0, g: 240, b: 255 }; // Default cyan
+    const sanitizedHex = ensureStringValue(hex);
+    if (!sanitizedHex.startsWith('#')) {
+      return null;
     }
     
-    // Handle different hex formats
-    let cleanHex = hex.startsWith('#') ? hex.slice(1) : hex;
+    let r = 0, g = 0, b = 0;
     
-    // Handle shorthand hex (#RGB)
-    if (cleanHex.length === 3) {
-      cleanHex = cleanHex
-        .split('')
-        .map(char => char + char)
-        .join('');
+    // 3 digits
+    if (sanitizedHex.length === 4) {
+      r = parseInt(sanitizedHex[1] + sanitizedHex[1], 16);
+      g = parseInt(sanitizedHex[2] + sanitizedHex[2], 16);
+      b = parseInt(sanitizedHex[3] + sanitizedHex[3], 16);
+    }
+    // 6 digits
+    else if (sanitizedHex.length === 7) {
+      r = parseInt(sanitizedHex.substring(1, 3), 16);
+      g = parseInt(sanitizedHex.substring(3, 5), 16);
+      b = parseInt(sanitizedHex.substring(5, 7), 16);
+    } else {
+      return null;
     }
     
-    // Convert to RGB
-    const r = parseInt(cleanHex.substring(0, 2), 16);
-    const g = parseInt(cleanHex.substring(2, 4), 16);
-    const b = parseInt(cleanHex.substring(4, 6), 16);
-    
-    if (isNaN(r) || isNaN(g) || isNaN(b)) {
-      logger.warn(`Invalid hex color: ${hex}, using fallback`);
-      return { r: 0, g: 240, b: 255 }; // Default cyan
-    }
-    
-    return { r, g, b };
-  } catch (error) {
-    logger.error(`Error converting hex to RGB: ${hex}`, {
-      details: { error }
+    return `rgb(${r}, ${g}, ${b})`;
+  } catch (e) {
+    logger.warn('Failed to convert hex to RGB', {
+      details: { hex, error: e instanceof Error ? e.message : 'Unknown error' }
     });
-    return { r: 0, g: 240, b: 255 }; // Default cyan on error
+    return null;
   }
 }
 
 /**
- * Convert hex color to RGB string format for CSS variables
- * @param hex Hex color (e.g. #FF0000)
- * @returns RGB string (e.g. "255, 0, 0")
+ * Convert hex to RGB string format for CSS variables
  */
 export function hexToRgbString(hex: string): string {
-  const rgb = hexToRgb(hex);
-  return rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : '0, 240, 255'; // Default cyan on error
-}
-
-/**
- * Get contrasting text color (black or white) for a background color
- * @param hexColor Background color in hex
- * @returns '#FFFFFF' or '#000000' depending on contrast
- */
-export function getContrastColor(hexColor: string): string {
-  const rgb = hexToRgb(hexColor);
-  
-  if (!rgb) return '#FFFFFF'; // Default to white on error
-  
-  // Calculate perceived brightness using the formula:
-  // (R * 0.299 + G * 0.587 + B * 0.114)
-  // If value > 186, use black text; otherwise, use white
-  const brightness = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114);
-  
-  return brightness > 186 ? '#000000' : '#FFFFFF';
-}
-
-/**
- * Adjust color lightness
- * @param hex Hex color
- * @param percent Percentage to lighten (positive) or darken (negative)
- * @returns Modified hex color
- */
-export function adjustColorLightness(hex: string, percent: number): string {
   try {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return hex;
-    
-    // Convert to HSL
-    const r = rgb.r / 255;
-    const g = rgb.g / 255;
-    const b = rgb.b / 255;
-    
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h = 0;
-    let s = 0;
-    const l = (max + min) / 2;
-    
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      
-      switch (max) {
-        case r:
-          h = (g - b) / d + (g < b ? 6 : 0);
-          break;
-        case g:
-          h = (b - r) / d + 2;
-          break;
-        case b:
-          h = (r - g) / d + 4;
-          break;
-      }
-      
-      h /= 6;
+    const color = ensureStringValue(hex);
+    if (!color || !color.startsWith('#')) {
+      return '0, 0, 0';
     }
     
-    h = Math.round(h * 360);
-    s = Math.round(s * 100);
-    const lightness = Math.round(l * 100);
+    let r = 0, g = 0, b = 0;
     
-    // Adjust lightness
-    const newLightness = Math.max(0, Math.min(100, lightness + percent));
+    // 3 digits
+    if (color.length === 4) {
+      r = parseInt(color[1] + color[1], 16);
+      g = parseInt(color[2] + color[2], 16);
+      b = parseInt(color[3] + color[3], 16);
+    }
+    // 6 digits
+    else if (color.length === 7) {
+      r = parseInt(color.substring(1, 3), 16);
+      g = parseInt(color.substring(3, 5), 16);
+      b = parseInt(color.substring(5, 7), 16);
+    } else {
+      return '0, 0, 0';
+    }
     
-    // Convert back to RGB and then to hex
-    return hslToHex(h, s, newLightness);
-  } catch (error) {
-    logger.error(`Error adjusting color lightness: ${hex}`, {
-      details: { error, percent }
+    return `${r}, ${g}, ${b}`;
+  } catch (e) {
+    logger.warn('Failed to convert hex to RGB string', {
+      details: { hex, error: e instanceof Error ? e.message : 'Unknown error' }
     });
-    return hex; // Return original color on error
+    return '0, 0, 0';
   }
 }
 
 /**
- * Convert HSL to hex
+ * Convert RGB color to hex format
  */
-function hslToHex(h: number, s: number, l: number): string {
-  h /= 360;
-  s /= 100;
-  l /= 100;
-  
-  let r, g, b;
-  
-  if (s === 0) {
-    r = g = b = l;
-  } else {
-    const hue2rgb = (p: number, q: number, t: number) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1/6) return p + (q - p) * 6 * t;
-      if (t < 1/2) return q;
-      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-      return p;
-    };
+export function rgbToHex(rgb: string): string {
+  try {
+    const colorStr = ensureStringValue(rgb);
+    if (!colorStr.startsWith('rgb')) {
+      return '#000000';
+    }
     
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
+    // Extract RGB values using regex
+    const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+    if (!match) return '#000000';
     
-    r = hue2rgb(p, q, h + 1/3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1/3);
+    const r = parseInt(match[1]);
+    const g = parseInt(match[2]);
+    const b = parseInt(match[3]);
+    
+    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+  } catch (e) {
+    logger.warn('Failed to convert RGB to hex', {
+      details: { rgb, error: e instanceof Error ? e.message : 'Unknown error' }
+    });
+    return '#000000';
   }
-  
-  const toHex = (x: number) => {
-    const hex = Math.round(x * 255).toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
-  };
-  
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+/**
+ * Check if a color is light or dark
+ */
+export function isLightColor(color: string): boolean {
+  try {
+    const colorStr = ensureStringValue(color);
+    
+    // Create a temporary element to compute the color
+    const el = document.createElement('div');
+    el.style.color = colorStr;
+    document.body.appendChild(el);
+    const computedColor = getComputedStyle(el).color;
+    document.body.removeChild(el);
+    
+    // Extract RGB values using regex
+    const match = computedColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+    if (!match) return false;
+    
+    const r = parseInt(match[1]);
+    const g = parseInt(match[2]);
+    const b = parseInt(match[3]);
+    
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    return luminance > 0.5;
+  } catch (e) {
+    logger.warn('Failed to determine if color is light', {
+      details: { color, error: e instanceof Error ? e.message : 'Unknown error' }
+    });
+    return false;
+  }
 }

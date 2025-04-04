@@ -2,152 +2,164 @@
 import { ImpulseTheme } from '@/admin/types/impulse.types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
+import { getThemeProperty, ensureStringValue } from './themeUtils';
 import { hexToRgbString } from './colorUtils';
 
-const logger = getLogger('ThemeApplicator', { category: LogCategory.THEME as string });
+const logger = getLogger('ThemeApplicator', { category: LogCategory.THEME });
 
 /**
- * Applies a theme to the document by setting CSS variables
+ * Apply theme tokens to the document as CSS variables
  */
 export function applyThemeToDocument(theme: Partial<ImpulseTheme>): void {
   try {
-    if (!theme || !theme.colors) {
-      logger.warn('Invalid theme provided to applyThemeToDocument');
-      return;
-    }
-    
+    logger.debug('Applying theme to document');
     const root = document.documentElement;
     
-    // Apply color variables
-    if (theme.colors) {
-      // Primary colors
-      if (theme.colors.primary) {
-        root.style.setProperty('--impulse-primary', theme.colors.primary);
-        root.style.setProperty('--color-primary', hexToRgbString(theme.colors.primary));
-      }
-      
-      if (theme.colors.secondary) {
-        root.style.setProperty('--impulse-secondary', theme.colors.secondary);
-        root.style.setProperty('--color-secondary', hexToRgbString(theme.colors.secondary));
-      }
-      
-      if (theme.colors.accent) {
-        root.style.setProperty('--impulse-accent', theme.colors.accent);
-        root.style.setProperty('--color-accent', hexToRgbString(theme.colors.accent));
-      }
-      
-      // Background colors
-      if (theme.colors.background?.main) {
-        root.style.setProperty('--impulse-bg-main', theme.colors.background.main);
-      }
-      
-      if (theme.colors.background?.card) {
-        root.style.setProperty('--impulse-bg-card', theme.colors.background.card);
-      }
-      
-      if (theme.colors.background?.overlay) {
-        root.style.setProperty('--impulse-bg-overlay', theme.colors.background.overlay);
-      }
-      
-      if (theme.colors.background?.alt) {
-        root.style.setProperty('--impulse-bg-alt', theme.colors.background.alt);
-      }
-      
-      // Text colors
-      if (theme.colors.text?.primary) {
-        root.style.setProperty('--impulse-text-primary', theme.colors.text.primary);
-      }
-      
-      if (theme.colors.text?.secondary) {
-        root.style.setProperty('--impulse-text-secondary', theme.colors.text.secondary);
-      }
-      
-      if (theme.colors.text?.muted) {
-        root.style.setProperty('--impulse-text-muted', theme.colors.text.muted);
-      }
-      
-      // Status colors
-      if (theme.colors.status?.success) {
-        root.style.setProperty('--impulse-success', theme.colors.status.success);
-      }
-      
-      if (theme.colors.status?.error) {
-        root.style.setProperty('--impulse-error', theme.colors.status.error);
-      }
-      
-      if (theme.colors.status?.warning) {
-        root.style.setProperty('--impulse-warning', theme.colors.status.warning);
-      }
-      
-      if (theme.colors.status?.info) {
-        root.style.setProperty('--impulse-info', theme.colors.status.info);
-      }
-    }
+    // Set base colors
+    applyColorVariable(root, '--color-primary', theme?.colors?.primary);
+    applyColorVariable(root, '--color-secondary', theme?.colors?.secondary);
+    applyColorVariable(root, '--color-accent', theme?.colors?.accent);
+    applyColorVariable(root, '--color-background', getThemeProperty(theme, 'colors.background.main', '#12121A'));
+    applyColorVariable(root, '--color-foreground', getThemeProperty(theme, 'colors.text.primary', '#F6F6F7'));
     
-    // Apply effect variables
-    if (theme.effects) {
-      if (theme.effects.shadows?.small) {
-        root.style.setProperty('--impulse-shadow-sm', theme.effects.shadows.small);
-      }
-      
-      if (theme.effects.shadows?.medium) {
-        root.style.setProperty('--impulse-shadow-md', theme.effects.shadows.medium);
-      }
-      
-      if (theme.effects.shadows?.large) {
-        root.style.setProperty('--impulse-shadow-lg', theme.effects.shadows.large);
-      }
-      
-      if (theme.effects.glow?.primary) {
-        root.style.setProperty('--impulse-glow-primary', theme.effects.glow.primary);
-      }
-      
-      if (theme.effects.glow?.secondary) {
-        root.style.setProperty('--impulse-glow-secondary', theme.effects.glow.secondary);
-      }
-    }
+    // Apply background colors
+    applyColorVariable(root, '--color-bg-main', getThemeProperty(theme, 'colors.background.main', '#12121A'));
+    applyColorVariable(root, '--color-bg-card', getThemeProperty(theme, 'colors.background.card', 'rgba(28, 32, 42, 0.7)'));
+    applyColorVariable(root, '--color-bg-alt', getThemeProperty(theme, 'colors.background.alt', '#1A1E24'));
+    applyColorVariable(root, '--color-bg-overlay', getThemeProperty(theme, 'colors.background.overlay', 'rgba(22, 24, 29, 0.85)'));
     
-    // Apply typography variables
-    if (theme.typography) {
-      if (theme.typography.fonts?.body) {
-        root.style.setProperty('--impulse-font-body', theme.typography.fonts.body);
-      }
-      
-      if (theme.typography.fonts?.heading) {
-        root.style.setProperty('--impulse-font-heading', theme.typography.fonts.heading);
-      }
-      
-      if (theme.typography.fonts?.monospace) {
-        root.style.setProperty('--impulse-font-mono', theme.typography.fonts.monospace);
-      }
-    }
+    // Apply text colors
+    applyColorVariable(root, '--color-text-primary', getThemeProperty(theme, 'colors.text.primary', '#F6F6F7'));
+    applyColorVariable(root, '--color-text-secondary', getThemeProperty(theme, 'colors.text.secondary', 'rgba(255, 255, 255, 0.7)'));
+    applyColorVariable(root, '--color-text-muted', getThemeProperty(theme, 'colors.text.muted', 'rgba(255, 255, 255, 0.5)'));
+    applyColorVariable(root, '--color-text-accent', getThemeProperty(theme, 'colors.text.accent', theme?.colors?.primary || '#00F0FF'));
     
-    // Apply component variables
-    if (theme.components) {
-      if (theme.components.panel?.radius) {
-        root.style.setProperty('--impulse-panel-radius', theme.components.panel.radius);
-      }
-      
-      if (theme.components.button?.radius) {
-        root.style.setProperty('--impulse-button-radius', theme.components.button.radius);
-      }
-    }
+    // Apply status colors
+    applyColorVariable(root, '--color-success', getThemeProperty(theme, 'colors.status.success', '#10B981'));
+    applyColorVariable(root, '--color-warning', getThemeProperty(theme, 'colors.status.warning', '#F59E0B'));
+    applyColorVariable(root, '--color-error', getThemeProperty(theme, 'colors.status.error', '#EF4444'));
+    applyColorVariable(root, '--color-info', getThemeProperty(theme, 'colors.status.info', '#3B82F6'));
     
-    // Add a class to show theme is applied
-    root.classList.add('impulse-theme-applied');
+    // Apply border colors
+    applyColorVariable(root, '--color-border', getThemeProperty(theme, 'colors.borders.normal', 'rgba(0, 240, 255, 0.2)'));
+    applyColorVariable(root, '--color-border-hover', getThemeProperty(theme, 'colors.borders.hover', 'rgba(0, 240, 255, 0.4)'));
     
-    logger.debug('Theme applied to document', { 
-      details: { 
-        themeName: theme.name || 'Unknown theme',
-        themeId: theme.id || 'Unknown ID'
-      } 
-    });
+    // Apply RGB versions for alpha channel usage
+    applyRgbVariable(root, '--color-primary', theme?.colors?.primary);
+    applyRgbVariable(root, '--color-secondary', theme?.colors?.secondary);
+    applyRgbVariable(root, '--color-accent', theme?.colors?.accent);
+    
+    // Apply animation durations
+    root.style.setProperty('--animation-duration-fast', getThemeProperty(theme, 'animation.duration.fast', '150ms'));
+    root.style.setProperty('--animation-duration-normal', getThemeProperty(theme, 'animation.duration.normal', '300ms'));
+    root.style.setProperty('--animation-duration-slow', getThemeProperty(theme, 'animation.duration.slow', '500ms'));
+    
+    // Apply typography
+    root.style.setProperty('--font-family-body', getThemeProperty(theme, 'typography.fonts.body', 'Inter, system-ui, sans-serif'));
+    root.style.setProperty('--font-family-heading', getThemeProperty(theme, 'typography.fonts.heading', 'Inter, system-ui, sans-serif'));
+    root.style.setProperty('--font-family-mono', getThemeProperty(theme, 'typography.fonts.monospace', 'Consolas, monospace'));
+    
+    // Apply component styles
+    root.style.setProperty('--border-radius-sm', getThemeProperty(theme, 'components.input.radius', '0.375rem'));
+    root.style.setProperty('--border-radius-md', getThemeProperty(theme, 'components.button.radius', '0.5rem'));
+    root.style.setProperty('--border-radius-lg', getThemeProperty(theme, 'components.panel.radius', '0.75rem'));
+    
+    // Apply CSS class for the theme
+    root.classList.add('theme-applied');
+    
+    logger.debug('Theme applied successfully');
   } catch (error) {
-    logger.error('Failed to apply theme to document', { 
-      details: { 
-        error: error instanceof Error ? error.message : String(error),
-        theme: theme ? theme.name : 'undefined theme'
-      } 
+    logger.error('Failed to apply theme to document', {
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
+    });
+    
+    // Apply emergency fallback colors
+    try {
+      const root = document.documentElement;
+      root.style.setProperty('--color-primary', '#00F0FF');
+      root.style.setProperty('--color-secondary', '#FF2D6E');
+      root.style.setProperty('--color-background', '#12121A');
+      root.style.setProperty('--color-foreground', '#F6F6F7');
+    } catch (fallbackError) {
+      // Last resort, log but continue
+      logger.error('Emergency fallback colors failed to apply', {
+        details: { error: fallbackError instanceof Error ? fallbackError.message : 'Unknown error' }
+      });
+    }
+  }
+}
+
+/**
+ * Safely apply a color variable to the root element
+ */
+function applyColorVariable(element: HTMLElement, varName: string, color: any): void {
+  try {
+    const safeColor = ensureStringValue(color, '');
+    if (safeColor) {
+      element.style.setProperty(varName, safeColor);
+    }
+  } catch (error) {
+    logger.warn(`Failed to apply color variable ${varName}`, {
+      details: { color, error: error instanceof Error ? error.message : 'Unknown error' }
+    });
+  }
+}
+
+/**
+ * Apply RGB components of a color as a CSS variable for alpha channel usage
+ */
+function applyRgbVariable(element: HTMLElement, varName: string, color: any): void {
+  try {
+    const safeColor = ensureStringValue(color, '');
+    if (safeColor && safeColor.startsWith('#')) {
+      const rgbString = hexToRgbString(safeColor);
+      element.style.setProperty(`${varName}-rgb`, rgbString);
+    }
+  } catch (error) {
+    logger.warn(`Failed to apply RGB variable ${varName}-rgb`, {
+      details: { color, error: error instanceof Error ? error.message : 'Unknown error' }
+    });
+  }
+}
+
+/**
+ * Create an emergency CSS style element for critical fallback
+ */
+export function createFallbackStyles(): void {
+  try {
+    // Check if fallback styles already exist
+    if (document.getElementById('theme-fallback-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'theme-fallback-styles';
+    style.textContent = `
+      :root {
+        --color-primary: #00F0FF;
+        --color-secondary: #FF2D6E;
+        --color-accent: #8B5CF6;
+        --color-background: #12121A;
+        --color-foreground: #F6F6F7;
+        --color-bg-main: #12121A;
+        --color-bg-card: rgba(28, 32, 42, 0.7);
+        --color-bg-alt: #1A1E24;
+        --color-text-primary: #F6F6F7;
+        --color-text-secondary: rgba(255, 255, 255, 0.7);
+        --color-text-muted: rgba(255, 255, 255, 0.5);
+        --color-success: #10B981;
+        --color-warning: #F59E0B;
+        --color-error: #EF4444;
+        --color-info: #3B82F6;
+        --color-primary-rgb: 0, 240, 255;
+        --color-secondary-rgb: 255, 45, 110;
+        --color-accent-rgb: 139, 92, 246;
+      }
+    `;
+    
+    document.head.appendChild(style);
+    logger.info('Emergency fallback styles created');
+  } catch (error) {
+    logger.error('Failed to create fallback styles', {
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
     });
   }
 }
