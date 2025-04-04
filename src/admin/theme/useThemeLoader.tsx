@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { defaultImpulseTokens, ImpulseTheme } from '@/admin/types/impulse.types';
-import { createThemeFromRecord, defaultImpulseTheme } from './utils/modelTransformers';
+import { ImpulseTheme, defaultImpulseTokens } from '@/admin/types/impulse.types';
 import { ThemeLoaderOptions } from './types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/constants/logLevel';
