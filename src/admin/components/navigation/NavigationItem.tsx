@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
-import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
+import { useDragDrop } from '@/admin/hooks/useDragDrop';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { GripVertical } from 'lucide-react';
 
@@ -35,16 +35,17 @@ export function NavigationItem({
   const [isEditMode] = useAtom(adminEditModeAtom);
   
   // Set up drag and drop
-  const { makeDraggable } = useDragAndDrop({
-    items: [id],
+  const { makeDraggable } = useDragDrop({
     containerId: 'navigation-items',
-    dragOnlyInEditMode: true,
+    itemId: id,
+    dragOnlyInEditMode: true
   });
   
   // Make item draggable if in edit mode
   useEffect(() => {
     if (itemRef.current) {
-      return makeDraggable(itemRef.current, id);
+      const cleanup = makeDraggable(itemRef.current);
+      return cleanup;
     }
   }, [id, makeDraggable, isEditMode]);
   

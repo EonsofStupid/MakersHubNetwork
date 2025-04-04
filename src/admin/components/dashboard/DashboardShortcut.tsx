@@ -3,7 +3,7 @@ import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
+import { useDragDrop } from '@/admin/hooks/useDragDrop';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { LucideIcon } from 'lucide-react';
 
@@ -29,16 +29,17 @@ export function DashboardShortcut({
   const itemRef = useRef<HTMLDivElement>(null);
   
   // Set up drag and drop
-  const { makeDraggable } = useDragAndDrop({
-    items: [id],
+  const { makeDraggable } = useDragDrop({
     containerId: 'dashboard-shortcuts',
-    dragOnlyInEditMode: true,
+    itemId: id,
+    dragOnlyInEditMode: true
   });
   
   // Make item draggable if in edit mode
   useEffect(() => {
     if (itemRef.current && isEditMode) {
-      return makeDraggable(itemRef.current, id);
+      const cleanup = makeDraggable(itemRef.current);
+      return cleanup;
     }
   }, [id, makeDraggable, isEditMode]);
   

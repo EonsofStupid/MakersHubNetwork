@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,7 +9,7 @@ import { Paintbrush, Save, Undo, Copy, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/auth/hooks/useAuth';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging/types';
+import { LogCategory } from '@/logging/constants/log-level';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { ColorPicker } from './ColorPicker';
 import { Theme } from '@/types/theme';
@@ -27,7 +26,7 @@ export function ThemeEditor({ themeId }: ThemeEditorProps) {
   const [activeTab, setActiveTab] = useState('colors');
   const { toast } = useToast();
   const { user } = useAuth();
-  const logger = useLogger('ThemeEditor', LogCategory.THEME);
+  const logger = useLogger('ThemeEditor', { category: LogCategory.THEME });
 
   useEffect(() => {
     const loadTheme = async () => {
@@ -53,7 +52,6 @@ export function ThemeEditor({ themeId }: ThemeEditorProps) {
           return;
         }
         
-        // Transform raw database data to Theme model
         const transformedTheme = transformThemeModel(data);
         if (!transformedTheme) {
           throw new Error('Failed to transform theme data');
@@ -82,14 +80,11 @@ export function ThemeEditor({ themeId }: ThemeEditorProps) {
     setTheme(prevTheme => {
       if (!prevTheme) return null;
       
-      // Create a deep copy of the design tokens
       const updatedTokens = { ...prevTheme.design_tokens };
       
-      // Parse the path and update the value
       const parts = path.split('.');
       let current: any = updatedTokens;
       
-      // Navigate to the nested property
       for (let i = 0; i < parts.length - 1; i++) {
         if (!current[parts[i]]) {
           current[parts[i]] = {};
@@ -97,7 +92,6 @@ export function ThemeEditor({ themeId }: ThemeEditorProps) {
         current = current[parts[i]];
       }
       
-      // Set the value
       current[parts[parts.length - 1]] = color;
       
       return {
@@ -114,7 +108,6 @@ export function ThemeEditor({ themeId }: ThemeEditorProps) {
       setIsSaving(true);
       logger.info('Saving theme changes');
       
-      // Prepare theme for database (convert to DB format)
       const dbTheme = prepareThemeForDatabase(theme);
       
       const { error } = await supabase
@@ -147,7 +140,6 @@ export function ThemeEditor({ themeId }: ThemeEditorProps) {
   };
 
   const createPreview = () => {
-    // Open a preview in a new window
     const previewWindow = window.open('', '_blank');
     if (!previewWindow) return;
     
@@ -395,11 +387,11 @@ export function ThemeEditor({ themeId }: ThemeEditorProps) {
                 />
               </div>
               <div>
-                <Label htmlFor="size-md">Medium</Label>
+                <Label htmlFor="size-base">Medium</Label>
                 <Input 
-                  id="size-md" 
-                  value={theme.design_tokens?.typography?.sizes?.md || '1rem'}
-                  onChange={(e) => handleColorChange('typography.sizes.md', e.target.value)}
+                  id="size-base" 
+                  value={theme.design_tokens?.typography?.sizes?.base || '1rem'}
+                  onChange={(e) => handleColorChange('typography.sizes.base', e.target.value)}
                 />
               </div>
               <div>

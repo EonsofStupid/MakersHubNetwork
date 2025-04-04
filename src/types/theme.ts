@@ -39,6 +39,7 @@ export interface ThemeTypography {
     xs?: string;
     sm?: string;
     base?: string;
+    md?: string; // Added missing 'md' property
     lg?: string;
     xl?: string;
     '2xl'?: string;
