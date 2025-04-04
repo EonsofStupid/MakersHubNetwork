@@ -6,9 +6,11 @@ export interface ImpulseTheme {
   id: string;
   name: string;
   description?: string;
+  version?: number;
   colors: Record<string, any>;
   typography: Record<string, any>;
   effects: Record<string, any>;
+  animation: Record<string, any>;
   components: Record<string, any>;
 }
 
@@ -19,6 +21,7 @@ export const defaultImpulseTokens: ImpulseTheme = {
   id: 'default',
   name: 'Default Impulse',
   description: 'Default theme for Impulse',
+  version: 1,
   colors: {
     background: {
       main: '#12121A',
@@ -76,6 +79,24 @@ export const defaultImpulseTokens: ImpulseTheme = {
     animations: {
       glow: 'glow 2s ease-in-out infinite alternate',
       pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+    }
+  },
+  animation: {
+    duration: {
+      fast: '150ms',
+      normal: '300ms',
+      slow: '500ms'
+    },
+    curves: {
+      bounce: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+      ease: 'cubic-bezier(0.4, 0, 0.2, 1)',
+      spring: 'cubic-bezier(0.43, 0.13, 0.23, 0.96)',
+      linear: 'linear'
+    },
+    keyframes: {
+      fade: '@keyframes fade { from { opacity: 0; } to { opacity: 1; } }',
+      pulse: '@keyframes pulse { 0%, 100% { opacity: 0.8; } 50% { opacity: 0.4; } }',
+      glow: '@keyframes glow { 0%, 100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.5); } 50% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.7); } }'
     }
   },
   components: {
