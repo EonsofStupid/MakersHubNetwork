@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { AdminThemeProvider as AdminThemeContextProvider } from './context/AdminThemeContext';
 import { ThemeFallback } from './fallback/ThemeFallback';
-import { applyThemeToDocument } from './utils/themeApplicator';
+import { applyThemeToDocument, createFallbackStyles, applyEmergencyTheme } from './utils/themeApplicator';
 import { defaultImpulseTokens } from './impulse/tokens';
 import { DynamicKeyframes } from './effects/DynamicKeyframes';
 import { themeRegistry } from './ThemeRegistry';
@@ -32,6 +32,14 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   const [isRegistered, setIsRegistered] = useState(false);
   const { measure } = usePerformanceLogger('AdminThemeProvider');
 
+  // Apply emergency theme IMMEDIATELY before any other operations
+  // This ensures critical styling is applied even before the useEffect runs
+  useEffect(() => {
+    // Create and inject fallback styles first thing - these will apply
+    // even if JS fails later
+    createFallbackStyles();
+  }, []);
+
   // Apply immediate fallback styling and register the theme
   useEffect(() => {
     const registerAndApplyTheme = () => {
@@ -48,9 +56,24 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
           
           // Register default theme if not already registered
           if (!isRegistered) {
-            themeRegistry.registerTheme('default', defaultImpulseTokens);
-            setIsRegistered(true);
-            logger.debug('Default theme registered with registry');
+            // Safety check - ensure the defaultImpulseTokens has the expected structure
+            const hasValidStructure = defaultImpulseTokens && 
+              typeof defaultImpulseTokens === 'object' &&
+              defaultImpulseTokens.colors &&
+              typeof defaultImpulseTokens.colors === 'object';
+              
+            if (!hasValidStructure) {
+              logger.error('Default theme tokens have invalid structure', { 
+                details: { tokens: defaultImpulseTokens } 
+              });
+              // Apply emergency theme if tokens are invalid
+              applyEmergencyTheme();
+            } else {
+              // Register theme properly
+              themeRegistry.registerTheme('default', defaultImpulseTokens);
+              setIsRegistered(true);
+              logger.debug('Default theme registered with registry');
+            }
           }
           
           // Apply the default theme immediately
@@ -61,18 +84,24 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
           document.documentElement.setAttribute('data-admin-theme', 'impulsivity');
           
           // Set CSS variables directly for immediate effect
-          document.documentElement.style.setProperty('--color-primary', '0, 240, 255');
-          document.documentElement.style.setProperty('--color-secondary', '255, 45, 110');
-          document.documentElement.style.setProperty('--color-accent', '139, 92, 246');
-          document.documentElement.style.setProperty('--color-success', '16, 185, 129');
-          document.documentElement.style.setProperty('--color-warning', '245, 158, 11');
-          document.documentElement.style.setProperty('--color-error', '239, 68, 68');
+          // These are simplified versions that should be safe from type errors
+          document.documentElement.style.setProperty('--color-primary', FALLBACKS.primary);
+          document.documentElement.style.setProperty('--color-secondary', FALLBACKS.secondary);
+          document.documentElement.style.setProperty('--color-accent', FALLBACKS.accent);
+          document.documentElement.style.setProperty('--color-success', FALLBACKS.success);
+          document.documentElement.style.setProperty('--color-warning', FALLBACKS.warning);
+          document.documentElement.style.setProperty('--color-error', FALLBACKS.error);
           document.documentElement.style.setProperty('--impulse-primary', FALLBACKS.primary);
           document.documentElement.style.setProperty('--impulse-secondary', FALLBACKS.secondary);
           document.documentElement.style.setProperty('--impulse-accent', FALLBACKS.accent);
           document.documentElement.style.setProperty('--impulse-success', FALLBACKS.success);
           document.documentElement.style.setProperty('--impulse-warning', FALLBACKS.warning);
           document.documentElement.style.setProperty('--impulse-error', FALLBACKS.error);
+          
+          // Add RGB versions
+          document.documentElement.style.setProperty('--color-primary-rgb', '0, 240, 255');
+          document.documentElement.style.setProperty('--color-secondary-rgb', '255, 45, 110');
+          document.documentElement.style.setProperty('--color-accent-rgb', '139, 92, 246');
           
           // Add keyframes for essential animations
           addEssentialKeyframes();
@@ -86,10 +115,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
           
           // Emergency fallback on critical error
           try {
-            document.documentElement.style.backgroundColor = FALLBACKS.background;
-            document.documentElement.style.color = FALLBACKS.foreground;
-            document.documentElement.classList.add('impulse-admin-root');
-            document.documentElement.setAttribute('data-admin-theme', 'fallback');
+            applyEmergencyTheme();
           } catch (emergencyError) {
             // We've done all we can at this point
             logger.error('Critical theme fallback error', { 
