@@ -1,146 +1,128 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/auth/hooks/useAuth';
+import { removeSocialLink, getSocialLinks } from '@/auth/services/authService';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Github, Mail } from 'lucide-react';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging/types';
+import { LogCategory } from '@/constants/logLevel';
+import { Loader2 } from 'lucide-react';
 
-export function AccountLinking() {
-  const { user } = useAuthStore();
-  const [linkedAccounts, setLinkedAccounts] = useState<string[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const navigate = useNavigate();
-  const logger = useLogger('AccountLinking', { category: LogCategory.AUTHENTICATION });
-  
+// Fixed types for provider identities
+interface UserIdentity {
+  provider: 'github' | 'google';
+  id: string;
+  user_id?: string;
+  identity_id?: string;
+}
+
+export const AccountLinking: React.FC = () => {
+  const { user } = useAuth();
+  const [linkedAccounts, setLinkedAccounts] = useState<UserIdentity[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const logger = useLogger('AccountLinking', { category: LogCategory.AUTH });
+
   useEffect(() => {
-    // Load linked accounts when the component mounts
-    async function loadLinkedAccounts() {
-      if (!user) return;
-      
+    const fetchLinkedAccounts = async () => {
+      setIsLoading(true);
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        const identities = user.identities || [];
-        const providerNames = identities.map(identity => identity.provider);
-        
-        setLinkedAccounts(providerNames);
-      } catch (error) {
-        logger.error('Error loading linked accounts', { details: error });
+        if (!user?.id) {
+          logger.warn('No user ID available to fetch linked accounts.');
+          return;
+        }
+        const accounts = await getSocialLinks(user.id);
+        setLinkedAccounts(accounts);
+        logger.debug('Linked accounts fetched successfully.', { details: { count: accounts.length } });
+      } catch (error: any) {
+        logger.error('Failed to fetch linked accounts.', { details: { error: error.message } });
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to load linked accounts.',
+        });
+      } finally {
+        setIsLoading(false);
       }
-    }
-    
-    loadLinkedAccounts();
-  }, [user, logger]);
-  
-  const handleLinkProvider = async (provider: string) => {
-    if (!user) return;
-    
-    setLoading(true);
-    logger.info(`Initiating account linking with ${provider}`);
+    };
+
+    fetchLinkedAccounts();
+  }, [user?.id, toast, logger]);
+
+  const removeIdentity = async (identity: UserIdentity) => {
+    setIsLoading(true);
     
     try {
-      // Redirect to auth flow with provider
-      navigate(`/link-account?provider=${provider}`);
-    } catch (error) {
-      logger.error(`Error linking ${provider} account`, { details: error });
-      setLoading(false);
-    }
-  };
-  
-  const handleUnlinkProvider = async (provider: string) => {
-    if (!user) return;
-    
-    setLoading(true);
-    logger.info(`Unlinking ${provider} account`);
-    
-    try {
-      const { error } = await supabase.auth.unlinkIdentity({
-        provider: provider as 'github' | 'google',
-        id: user.id
+      // Add the required properties to satisfy the UserIdentity type
+      const fullIdentity: UserIdentity = {
+        ...identity,
+        user_id: user?.id || '',
+        identity_id: identity.id
+      };
+      
+      // Now pass the compliant identity object
+      const result = await removeSocialLink(fullIdentity);
+      
+      if (result.success) {
+        setLinkedAccounts(prev => prev.filter(account => account.id !== identity.id));
+        toast({
+          title: 'Account Unlinked',
+          description: `Successfully unlinked your ${identity.provider} account.`,
+        });
+        logger.info('Account unlinked successfully.', { details: { provider: identity.provider } });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: `Failed to unlink your ${identity.provider} account.`,
+        });
+        logger.error('Failed to unlink account.', {
+          details: { provider: identity.provider, error: result.error },
+        });
+      }
+    } catch (error: any) {
+      logger.error('Error during account unlinking.', {
+        details: { provider: identity.provider, error: error.message },
       });
-      
-      if (error) throw error;
-      
-      // Update linked accounts list
-      setLinkedAccounts(current => current.filter(p => p !== provider));
-      logger.info(`Successfully unlinked ${provider} account`);
-    } catch (error) {
-      logger.error(`Error unlinking ${provider} account`, { details: error });
+      toast({
+        variant: 'destructive',
+        title: 'Unexpected Error',
+        description: `An unexpected error occurred while unlinking your ${identity.provider} account.`,
+      });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-  
-  if (!user) {
+
+  if (isLoading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-center text-sm text-muted-foreground">
-            Please log in to manage your linked accounts
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Loading linked accounts...
+      </div>
     );
   }
-  
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Linked Accounts</CardTitle>
-        <CardDescription>Connect your accounts for easier login</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-4">
-          {/* GitHub */}
-          <div className="flex items-center justify-between p-4 border rounded-md">
-            <div className="flex items-center gap-3">
-              <Github className="h-6 w-6" />
-              <span>GitHub</span>
-            </div>
-            <Button
-              variant={linkedAccounts.includes('github') ? 'destructive' : 'outline'}
-              size="sm"
-              disabled={loading}
-              onClick={() => linkedAccounts.includes('github') 
-                ? handleUnlinkProvider('github')
-                : handleLinkProvider('github')
-              }
-            >
-              {linkedAccounts.includes('github') ? 'Unlink' : 'Link'}
-            </Button>
-          </div>
-          
-          {/* Google */}
-          <div className="flex items-center justify-between p-4 border rounded-md">
-            <div className="flex items-center gap-3">
-              <Mail className="h-6 w-6" />
-              <span>Google</span>
-            </div>
-            <Button
-              variant={linkedAccounts.includes('google') ? 'destructive' : 'outline'}
-              size="sm"
-              disabled={loading}
-              onClick={() => linkedAccounts.includes('google')
-                ? handleUnlinkProvider('google')
-                : handleLinkProvider('google')
-              }
-            >
-              {linkedAccounts.includes('google') ? 'Unlink' : 'Link'}
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <p className="text-sm text-muted-foreground">
-          {linkedAccounts.length > 0
-            ? `You have ${linkedAccounts.length} linked account(s)`
-            : 'No accounts linked yet'}
-        </p>
-      </CardFooter>
-    </Card>
+    <div>
+      <h3 className="text-lg font-semibold mb-4">Linked Accounts</h3>
+      {linkedAccounts.length === 0 ? (
+        <p className="text-muted-foreground">No linked accounts found.</p>
+      ) : (
+        <ul className="space-y-2">
+          {linkedAccounts.map(account => (
+            <li key={account.id} className="flex items-center justify-between p-2 border rounded-md">
+              <span className="font-medium">{account.provider}</span>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => removeIdentity(account)}
+                disabled={isLoading}
+              >
+                Unlink
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
-}
+};

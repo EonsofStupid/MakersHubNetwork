@@ -16,6 +16,7 @@ import {
 import { defaultImpulseTokens } from '@/admin/types/impulse.types';
 import { applyThemeToDocument } from '@/admin/theme/utils/themeApplicator';
 import { Theme, ThemeComponent, ComponentTokens, convertToThemeComponents } from '@/types/theme';
+import { ThemeContextType } from '@/types/theme';
 
 const logger = getLogger('ThemeStore', { category: LogCategory.THEME });
 
@@ -355,7 +356,7 @@ export const useThemeStore = create<ThemeStore>()(
             description: data.description,
             created_at: data.created_at,
             updated_at: data.updated_at,
-            context: data.context as ThemeContext
+            context: data.context as ThemeContextType
           };
           
           // Add to the appropriate components arrays based on context

@@ -224,7 +224,7 @@ export function LogConsole({
                             <details className="mt-1">
                               <summary className="cursor-pointer text-xs text-muted-foreground">Details</summary>
                               <pre className="text-xs bg-muted/20 p-2 rounded mt-1 overflow-auto max-h-[200px]">
-                                {JSON.stringify(log.details, null, 2)}
+                                {formatErrorDetails(log.details)}
                               </pre>
                             </details>
                           )}
@@ -273,3 +273,19 @@ function renderMessage(message: any): React.ReactNode {
     return '[Complex Object]';
   }
 }
+
+const formatErrorDetails = (details: any): string => {
+  if (!details) return '';
+  
+  if (details.message && details.name) {
+    return `${details.name}: ${details.message}${details.stack ? '\n' + details.stack : ''}`;
+  } else if (typeof details === 'object') {
+    try {
+      return JSON.stringify(details, null, 2);
+    } catch (e) {
+      return String(details);
+    }
+  }
+  
+  return String(details);
+};
