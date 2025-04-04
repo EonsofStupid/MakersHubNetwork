@@ -103,7 +103,7 @@ export class SupabaseTransport implements LogTransport {
       category: log.category || 'general', // Provide default category
       message: String(log.message), // Ensure message is a string
       details: log.details || {},
-      timestamp: typeof log.timestamp === 'string' ? log.timestamp : log.timestamp.toISOString(),
+      timestamp: typeof log.timestamp === 'string' ? log.timestamp : new Date(log.timestamp).toISOString(),
       source: log.source || 'app'
     };
   }

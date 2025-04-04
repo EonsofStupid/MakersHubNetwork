@@ -4,7 +4,7 @@ import { getLogger } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { LogCategory } from '@/logging/types';
 
-const logger = getLogger('TransformUtils', { category: LogCategory.THEME as string });
+const logger = getLogger('TransformUtils', { category: LogCategory.THEME });
 
 /**
  * Convert database row to application Theme model
