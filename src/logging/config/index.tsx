@@ -58,8 +58,10 @@ export function getLoggingConfig(): LoggingConfig {
 
 // Add Production Supabase transport conditionally
 if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
-  import('../transports/supabase.transport').then(({ supabaseTransport }) => {
-    productionLoggingConfig.transports.push(supabaseTransport);
+  import('../transports/supabase.transport').then((module) => {
+    if (module && module.supabaseTransport) {
+      productionLoggingConfig.transports.push(module.supabaseTransport);
+    }
   }).catch(error => {
     console.error('Failed to load Supabase transport:', error);
   });

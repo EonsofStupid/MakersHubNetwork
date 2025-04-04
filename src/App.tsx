@@ -37,9 +37,8 @@ function App({ onInitialized }: AppProps) {
         <ThemeProvider>
           <div className="min-h-screen bg-background">
             <Router>
-              <Layout>
-                <AppRoutes />
-              </Layout>
+              <Layout />
+              <AppRoutes />
             </Router>
           </div>
           <Toaster />

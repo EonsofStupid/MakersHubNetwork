@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/constants/logLevel';
+import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
 
 interface SiteThemeContextProps {
