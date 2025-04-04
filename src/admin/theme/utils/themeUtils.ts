@@ -1,102 +1,77 @@
 
-import { get } from 'lodash-es';
+import { ImpulseTheme } from '@/admin/types/impulse.types';
+import get from 'lodash-es/get';
+import { validateColor } from './colorUtils';
 
 /**
- * Safely gets a property from a theme using a path string
- * @param theme Theme object to extract property from
- * @param path Path to property (e.g., 'colors.primary')
+ * Get a property from a theme object using lodash's get for safe access
+ * @param theme The theme object
+ * @param path Dot notation path to the property
  * @param defaultValue Default value if property doesn't exist
  */
-export function getThemeProperty(theme: any, path: string, defaultValue?: any): any {
-  if (!theme) {
-    return defaultValue;
-  }
-  const value = get(theme, path);
+export function getThemeProperty<T>(
+  theme: Partial<ImpulseTheme> | undefined | null, 
+  path: string, 
+  defaultValue: T
+): T {
+  if (!theme) return defaultValue;
+  
+  const value = get(theme, path, defaultValue);
   return value !== undefined ? value : defaultValue;
 }
 
 /**
- * Deep merges two objects
- * @param target The target object to merge into
- * @param source The source object to merge from
- * @returns A new merged object
+ * Get a color value from the theme with validation
+ * @param theme The theme object
+ * @param path Dot notation path to the property
+ * @param defaultValue Default value if property doesn't exist or is invalid
  */
-export function deepMerge(target: any, source: any): any {
-  const output = { ...target };
+export function getThemeColorValue(
+  theme: Partial<ImpulseTheme> | undefined | null,
+  path: string,
+  defaultValue: string
+): string {
+  const colorValue = getThemeProperty(theme, path, defaultValue);
   
-  if (!source || typeof source !== 'object') {
-    return output;
+  // Validate color format
+  if (typeof colorValue === 'string' && validateColor(colorValue)) {
+    return colorValue;
   }
   
-  Object.keys(source).forEach((key) => {
-    const targetValue = target[key];
-    const sourceValue = source[key];
-    
-    if (
-      targetValue && 
-      typeof targetValue === 'object' && 
-      sourceValue && 
-      typeof sourceValue === 'object' && 
-      !Array.isArray(targetValue) && 
-      !Array.isArray(sourceValue)
-    ) {
-      output[key] = deepMerge(targetValue, sourceValue);
-    } else if (sourceValue !== undefined) {
-      output[key] = sourceValue;
-    }
-  });
-  
-  return output;
+  return defaultValue;
 }
 
 /**
- * Ensures a value is converted to a string
- * @param value Any value
- * @returns String representation of value
+ * Ensure a theme value is a valid string
  */
-export function ensureStringValue(value: any): string {
-  if (value === undefined || value === null) {
-    return '';
+export function ensureStringValue(value: unknown, defaultValue: string): string {
+  if (typeof value === 'string' && value.trim() !== '') {
+    return value;
   }
-  return String(value);
-}
-
-/**
- * Converts a color hex code to RGB format
- * @param hex Hex color code
- * @returns RGB color object or null if invalid
- */
-export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-  const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-  const formattedHex = hex.replace(shorthandRegex, (_, r, g, b) => {
-    return r + r + g + g + b + b;
-  });
   
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(formattedHex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
+  if (typeof value === 'number') {
+    return value.toString();
+  }
+  
+  return defaultValue;
 }
 
 /**
- * Checks if a theme has all required properties
- * @param theme Theme to validate
- * @returns Boolean indicating if theme is valid
+ * Create a lookup function that safely accesses the theme
  */
-export function validateTheme(theme: any): boolean {
+export function createThemeLookup(theme: Partial<ImpulseTheme> | null | undefined) {
+  return function lookup<T>(path: string, defaultValue: T): T {
+    return getThemeProperty(theme, path, defaultValue);
+  };
+}
+
+/**
+ * Check if a theme contains a specific feature
+ */
+export function hasThemeFeature(
+  theme: Partial<ImpulseTheme> | null | undefined,
+  featurePath: string
+): boolean {
   if (!theme) return false;
-  
-  const requiredProps = [
-    'colors.primary',
-    'colors.secondary',
-    'colors.background.main',
-    'colors.text.primary'
-  ];
-  
-  return requiredProps.every((prop) => {
-    const value = getThemeProperty(theme, prop, null);
-    return value !== null && value !== undefined;
-  });
+  return get(theme, featurePath) !== undefined;
 }

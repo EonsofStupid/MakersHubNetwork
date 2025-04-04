@@ -4,7 +4,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/constants/logLevel';
 import { useAuth } from '@/auth/hooks/useAuth';
 
 interface AdminAuthGuardProps {
@@ -62,7 +62,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
     }
   }, [isLoading, isAuthenticated, hasAdminAccess, navigate, toast, logger, authChecked, status]);
   
-  if (isLoading || !authChecked || status === 'loading') {
+  if (isLoading || !authChecked || status === AuthStatus.LOADING) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <div className="h-8 w-8 border-t-2 border-primary animate-spin rounded-full mb-4" />

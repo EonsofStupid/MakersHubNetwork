@@ -1,12 +1,13 @@
 
-import { LoggingConfig, LogCategory, LogLevel } from '../types';
+import { LoggingConfig } from '../types';
+import { LogCategory, LogLevel } from '@/constants/logLevel';
 import { memoryTransport } from '../transports/memory.transport';
 
 /**
  * Default logging configuration
  */
 export const defaultLoggingConfig: LoggingConfig = {
-  minLevel: 'INFO',
+  minLevel: LogLevel.INFO,
   enabled: true,
   transports: [memoryTransport],
   bufferSize: 10,
