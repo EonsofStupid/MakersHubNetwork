@@ -1,8 +1,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { getLogger } from '@/logging';
-import { LogCategory, LogLevel } from '@/constants/logLevel';
-import type { LoggerOptions } from '@/logging/types';
+import { LogCategory, LogLevel, LoggerOptions } from '@/logging/types';
 
 /**
  * Hook for accessing logger functionality within React components
@@ -45,8 +44,16 @@ export function useLogger(source?: string, options?: Partial<LoggerOptions>) {
     logger.success(message, additionalOptions);
   }, [logger]);
   
+  const critical = useCallback((message: string, additionalOptions?: Partial<LoggerOptions>) => {
+    logger.critical(message, additionalOptions);
+  }, [logger]);
+  
   const log = useCallback((level: LogLevel, message: string, additionalOptions?: Partial<LoggerOptions>) => {
     logger.log(level, message, additionalOptions);
+  }, [logger]);
+  
+  const performance = useCallback((name: string, durationMs: number, success: boolean, additionalOptions?: Partial<LoggerOptions>) => {
+    logger.performance(name, durationMs, success, additionalOptions);
   }, [logger]);
   
   return {
@@ -57,6 +64,8 @@ export function useLogger(source?: string, options?: Partial<LoggerOptions>) {
     error,
     fatal,
     success,
-    log
+    critical,
+    log,
+    performance
   };
 }

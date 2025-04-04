@@ -74,10 +74,12 @@ export const useThemeStore = create<ThemeStore>()(
           
           if (siteComponentsError) throw siteComponentsError;
           
-          // Convert DB rows to ComponentTokens type
+          // Convert DB rows to ComponentTokens type and ensure they have proper context
           const siteComponentTokens = dbRowsToComponentTokens(siteComponentsData || []);
-          // Convert to ThemeComponents and ensure context is set
-          const siteComponents = ensureThemeComponentContext(convertToThemeComponents(siteComponentTokens));
+          // First convert to ThemeComponents and then ensure the context is set
+          const siteComponents = ensureThemeComponentContext(
+            convertToThemeComponents(siteComponentTokens)
+          );
           
           // 4. Get theme components for admin context
           const { data: adminComponentsData, error: adminComponentsError } = await supabase
@@ -88,10 +90,12 @@ export const useThemeStore = create<ThemeStore>()(
           
           if (adminComponentsError) throw adminComponentsError;
           
-          // Convert DB rows to ComponentTokens type
+          // Convert DB rows to ComponentTokens type and ensure they have proper context
           const adminComponentTokens = dbRowsToComponentTokens(adminComponentsData || []);
-          // Convert to ThemeComponents and ensure context is set
-          const adminComponents = ensureThemeComponentContext(convertToThemeComponents(adminComponentTokens));
+          // First convert to ThemeComponents and then ensure the context is set
+          const adminComponents = ensureThemeComponentContext(
+            convertToThemeComponents(adminComponentTokens)
+          );
           
           // Apply theme to document
           try {
@@ -133,7 +137,6 @@ export const useThemeStore = create<ThemeStore>()(
         }
       },
       
-      // Load components by context
       loadComponentsByContext: async (context: 'site' | 'admin' | 'all' = 'all') => {
         try {
           logger.info(`Loading ${context} components`);
@@ -285,9 +288,17 @@ export const useThemeStore = create<ThemeStore>()(
           
           // Convert DB row to ThemeComponent type
           const componentTokens = data ? dbRowsToComponentTokens([data])[0] : component;
-          const updatedComponent = {
-            ...componentTokens,
-            theme_id: componentTokens.theme_id || component.theme_id
+          
+          // Create a properly typed ThemeComponent
+          const updatedComponent: ThemeComponent = {
+            id: componentTokens.id,
+            theme_id: componentTokens.theme_id || component.theme_id,
+            component_name: componentTokens.component_name,
+            styles: componentTokens.styles,
+            description: componentTokens.description,
+            created_at: componentTokens.created_at,
+            updated_at: componentTokens.updated_at,
+            context: componentTokens.context || component.context
           };
           
           // Update the appropriate components arrays based on context
@@ -306,7 +317,7 @@ export const useThemeStore = create<ThemeStore>()(
           }
           
           logger.info('Component updated successfully', { details: { componentId: component.id } });
-          return updatedComponent as ThemeComponent;
+          return updatedComponent;
         } catch (error) {
           logger.error('Error updating component', { details: safeDetails(error) });
           set({ error: error instanceof Error ? error : new Error('Unknown error updating component'), isLoading: false });
@@ -335,17 +346,16 @@ export const useThemeStore = create<ThemeStore>()(
           
           if (error) throw error;
           
-          // Convert DB row to ThemeComponent type - ensuring theme_id is always set
-          const componentToken = data ? dbRowsToComponentTokens([data])[0] : {
-            ...component,
-            id: 'temp-id',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          
+          // Create a properly typed ThemeComponent
           const newComponent: ThemeComponent = {
-            ...componentToken,
-            theme_id: componentToken.theme_id || component.theme_id
+            id: data.id,
+            theme_id: data.theme_id,
+            component_name: data.component_name,
+            styles: data.styles,
+            description: data.description,
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+            context: data.context as ThemeContext
           };
           
           // Add to the appropriate components arrays based on context
@@ -411,7 +421,6 @@ export const useThemeStore = create<ThemeStore>()(
         }
       },
       
-      // Update the current theme with new properties without fetching from API
       updateCurrentTheme: (updatedTheme: Partial<Theme>) => {
         const currentTheme = get().currentTheme;
         if (!currentTheme) {
@@ -433,7 +442,6 @@ export const useThemeStore = create<ThemeStore>()(
         logger.info('Current theme updated', { details: { themeId: currentTheme.id } });
       },
       
-      // Apply default theme in case of emergency
       applyDefaultTheme: () => {
         applyThemeToDocument(defaultImpulseTokens);
         logger.info('Applied default theme to document');
@@ -441,16 +449,11 @@ export const useThemeStore = create<ThemeStore>()(
     }),
     {
       name: 'theme-storage',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        currentTheme: state.currentTheme,
-        lastFetchTimestamp: state.lastFetchTimestamp
-      }),
+      storage: createJSONStorage(() => localStorage)
     }
   )
 );
 
-// Export store selectors for better type safety
 export const selectCurrentTheme = (state: ThemeStore) => state.currentTheme;
 export const selectThemeTokens = (state: ThemeStore) => state.themeTokens;
 export const selectSiteComponents = (state: ThemeStore) => state.siteComponents;
@@ -460,7 +463,6 @@ export const selectIsLoading = (state: ThemeStore) => state.isLoading;
 export const selectError = (state: ThemeStore) => state.error;
 export const selectLastFetchTimestamp = (state: ThemeStore) => state.lastFetchTimestamp;
 
-// Helper to get the current theme's property with proper type safety
 export function selectThemeProperty<T>(property: string, defaultValue: T) {
   return (state: ThemeStore): T => {
     if (!state.currentTheme) return defaultValue;

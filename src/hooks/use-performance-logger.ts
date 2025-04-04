@@ -4,8 +4,8 @@ import { usePerformanceLogger as useOriginalPerformanceLogger } from '@/logging/
 import { LogCategory } from '@/logging/types';
 
 // Interface definition - renamed to avoid conflict
-export interface PerformanceLoggerOptions {
-  category?: string;
+export interface PerformanceLoggerHookOptions {
+  category?: LogCategory;
   warnThreshold?: number;
   onComplete?: (result: { name: string; duration: number; success: boolean }) => void;
   source?: string;
@@ -16,10 +16,10 @@ export interface PerformanceLoggerOptions {
  * Performance logger hook for measuring and logging operation durations
  * This is a simplified interface over the core performance logger
  */
-export function usePerformanceLogger(component: string, options: Partial<PerformanceLoggerOptions> = {}) {
+export function usePerformanceLogger(component: string, options: Partial<PerformanceLoggerHookOptions> = {}) {
   const { measure: originalMeasure, measureAsync: originalMeasureAsync } = useOriginalPerformanceLogger(`Performance:${component}`);
   
-  const defaultOptions: Partial<PerformanceLoggerOptions> = {
+  const defaultOptions: Partial<PerformanceLoggerHookOptions> = {
     category: LogCategory.PERFORMANCE,
     warnThreshold: 50,
     ...options
@@ -47,5 +47,4 @@ export function usePerformanceLogger(component: string, options: Partial<Perform
   };
 }
 
-// Re-export the types for external use
-export type { PerformanceLoggerOptions };
+// No conflicting re-export

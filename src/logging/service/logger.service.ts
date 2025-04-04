@@ -6,9 +6,10 @@ import {
   LogOptions,
   LoggerOptions, 
   LoggingConfig,
-  LogTransport
+  LogTransport,
+  LogLevel,
+  LogCategory
 } from '../types';
-import { LogLevel, LogCategory } from '@/constants/logLevel';
 import { consoleTransport } from '../transports/console.transport';
 import { memoryTransport } from '../transports/memory.transport';
 import { logEventEmitter } from '../events';
@@ -191,12 +192,14 @@ class LoggerService {
   public performance(
     message: string, 
     duration: number, 
+    success: boolean,
     options?: LoggerOptions
   ): void {
     const category = options?.category || LogCategory.PERFORMANCE;
     const details = { 
       ...(isRecord(options?.details) ? options.details : {}), 
-      duration 
+      duration,
+      success
     };
     
     this.log(
@@ -213,7 +216,7 @@ class LoggerService {
   /**
    * Core log method
    */
-  private log(
+  public log(
     level: LogLevel, 
     message: string, 
     options?: LoggerOptions
@@ -239,11 +242,11 @@ class LoggerService {
     
     // Add optional fields based on config
     if (this.config.includeUser && this.userId) {
-      entry.user_id = this.userId;
+      entry.userId = this.userId;
     }
     
     if (this.config.includeSession) {
-      entry.session_id = this.sessionId;
+      entry.correlationId = this.sessionId;
     }
     
     // Add to buffer
@@ -332,14 +335,14 @@ class LoggerService {
 // Helper function to check if a log level meets minimum threshold
 function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
   const levels: Record<LogLevel, number> = {
-    TRACE: 0,
-    DEBUG: 1,
-    INFO: 2,
-    WARN: 3,
-    ERROR: 4,
-    FATAL: 5,
-    CRITICAL: 6,
-    SUCCESS: 2 // SUCCESS is same priority as INFO
+    [LogLevel.TRACE]: 0,
+    [LogLevel.DEBUG]: 1,
+    [LogLevel.INFO]: 2,
+    [LogLevel.SUCCESS]: 2, // SUCCESS is same priority as INFO
+    [LogLevel.WARN]: 3,
+    [LogLevel.ERROR]: 4,
+    [LogLevel.FATAL]: 5,
+    [LogLevel.CRITICAL]: 5 // CRITICAL is same priority as FATAL
   };
   return levels[level] >= levels[minLevel];
 }
@@ -394,13 +397,6 @@ export function getLogger(source: string = 'App', options: LoggerOptions = {}): 
         ...msgOptions 
       });
     },
-    critical: (message: string, msgOptions?: LogOptions) => {
-      loggerServiceInstance.critical(message, { 
-        source, 
-        ...options, 
-        ...msgOptions 
-      });
-    },
     success: (message: string, msgOptions?: LogOptions) => {
       loggerServiceInstance.success(message, { 
         source, 
@@ -408,8 +404,22 @@ export function getLogger(source: string = 'App', options: LoggerOptions = {}): 
         ...msgOptions 
       });
     },
-    performance: (message: string, duration: number, msgOptions?: LogOptions) => {
-      loggerServiceInstance.performance(message, duration, { 
+    critical: (message: string, msgOptions?: LogOptions) => {
+      loggerServiceInstance.critical(message, { 
+        source, 
+        ...options, 
+        ...msgOptions 
+      });
+    },
+    log: (level: LogLevel, message: string, msgOptions?: LogOptions) => {
+      loggerServiceInstance.log(level, message, { 
+        source, 
+        ...options, 
+        ...msgOptions 
+      });
+    },
+    performance: (name: string, durationMs: number, success: boolean, msgOptions?: LogOptions) => {
+      loggerServiceInstance.performance(name, durationMs, success, { 
         source, 
         ...options, 
         ...msgOptions 
@@ -438,3 +448,4 @@ export function initializeLogger(config?: LoggingConfig): void {
 
 // Export for use elsewhere
 export { loggerServiceInstance as loggerService };
+export { memoryTransport };

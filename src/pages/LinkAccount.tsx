@@ -1,11 +1,13 @@
-import { useEffect } from 'react';
+
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/auth/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/constants/logLevel';
+import { LogCategory } from '@/logging/types';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function LinkAccount() {
   const auth = useAuth();
@@ -14,7 +16,8 @@ export default function LinkAccount() {
   const searchParams = new URLSearchParams(location.search);
   const provider = searchParams.get('provider');
   const { toast } = useToast();
-  const logger = useLogger('LinkAccount', { category: LogCategory.AUTH });
+  const logger = useLogger('LinkAccount', { category: LogCategory.AUTHENTICATION });
+  const [isLoading, setIsLoading] = useState(true);
 
   const linkExternalAccount = async (provider: string) => {
     try {
@@ -51,6 +54,7 @@ export default function LinkAccount() {
 
     const linkAccount = async () => {
       logger.info(`Attempting to link account with provider: ${provider}`);
+      setIsLoading(true);
       const success = await linkExternalAccount(provider);
 
       if (success) {
@@ -67,6 +71,7 @@ export default function LinkAccount() {
           variant: 'destructive',
         });
       }
+      setIsLoading(false);
       navigate('/settings/profile');
     };
 

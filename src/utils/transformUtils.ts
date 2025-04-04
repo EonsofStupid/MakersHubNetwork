@@ -1,4 +1,3 @@
-
 import { Json } from '@/integrations/supabase/types';
 import { Theme, ComponentTokens, ThemeContext, ThemeStatus } from '@/types/theme';
 import { getLogger } from '@/logging';
@@ -175,3 +174,37 @@ export function transformComponentTokens(components: any[]): ComponentTokens[] {
     .map(transformComponentToken)
     .filter((token): token is ComponentTokens => token !== null);
 }
+
+import { LogCategory } from '@/logging/types';
+
+/**
+ * Function to safely convert string to LogCategory
+ * 
+ * @param category String value that should be converted to LogCategory
+ * @returns Valid LogCategory or undefined
+ */
+export function stringToLogCategory(category?: string): LogCategory | undefined {
+  if (!category) return undefined;
+  
+  // Check if the string is a valid LogCategory
+  const validCategories = Object.values(LogCategory);
+  
+  if (validCategories.includes(category as LogCategory)) {
+    return category as LogCategory;
+  }
+  
+  // Try uppercase versions for case-insensitive matching
+  const uppercaseCategory = category.toUpperCase();
+  for (const validCategory of validCategories) {
+    if (validCategory.toUpperCase() === uppercaseCategory) {
+      return validCategory;
+    }
+  }
+  
+  // Return undefined if no match
+  return undefined;
+}
+
+/**
+ * Additional utility functions for transforming data can be added here
+ */
