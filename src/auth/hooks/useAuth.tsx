@@ -14,6 +14,7 @@ export function useAuth(): {
   initialized: AuthState['initialized'];
   initialize: () => Promise<void>;
   logout: () => Promise<void>;
+  signOut: () => Promise<void>; // Alias for logout for backward compatibility
 } {
   const {
     user,
@@ -28,8 +29,10 @@ export function useAuth(): {
     logout
   } = useAuthStore();
 
-  // Authentication checks
-  const isUserAuthenticated = status === AuthStatus.AUTHENTICATED;
+  // Create an alias for logout as signOut for backward compatibility
+  const signOut = useCallback(() => {
+    return logout();
+  }, [logout]);
 
   return {
     user,
@@ -38,9 +41,10 @@ export function useAuth(): {
     status,
     error,
     isLoading,
-    isAuthenticated: isUserAuthenticated,
+    isAuthenticated,
     initialized,
     initialize,
-    logout
+    logout,
+    signOut
   };
 }

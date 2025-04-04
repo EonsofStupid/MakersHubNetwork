@@ -25,13 +25,15 @@ export type User = SupabaseUser & {
 export type Session = SupabaseSession;
 
 // User roles
-export type UserRole = 
-  | 'super_admin'
-  | 'admin'
-  | 'moderator'
-  | 'editor'
-  | 'user'
-  | string;
+export const UserRole = {
+  SUPER_ADMIN: 'super_admin',
+  ADMIN: 'admin',
+  MODERATOR: 'moderator',
+  EDITOR: 'editor',
+  USER: 'user'
+} as const;
+
+export type UserRole = typeof UserRole[keyof typeof UserRole] | string;
 
 // Auth store state interface
 export interface AuthState {
@@ -47,8 +49,9 @@ export interface AuthState {
 
 // Auth store methods interface
 export interface AuthMethods {
-  signIn: (email: string, password: string) => Promise<boolean>;
-  signOut: () => Promise<boolean>;
+  signIn?: (email: string, password: string) => Promise<boolean>;
+  signOut?: () => Promise<boolean>;
+  logout: () => Promise<void>;
   initialize: () => Promise<void>;
 }
 

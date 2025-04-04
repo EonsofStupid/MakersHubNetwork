@@ -1,33 +1,15 @@
 
-/**
- * Log levels from lowest to highest priority
- */
-export type LogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
-
-/**
- * Log categories for organizing logs
- */
-export enum LogCategory {
-  GENERAL = 'general',
-  UI = 'ui',
-  AUTH = 'auth',
-  API = 'api',
-  DATABASE = 'database',
-  FEATURE = 'feature',
-  THEME = 'theme',
-  ADMIN = 'admin',
-  CONTENT = 'content',
-  SYSTEM = 'system',
-  PERFORMANCE = 'performance'
-}
+import { ReactNode } from 'react';
+import { LogLevel, LogCategory } from '@/constants/logLevel';
 
 /**
  * Logger options
  */
 export interface LoggerOptions {
+  /** Log category */
   category?: LogCategory | string;
   
-  /** Additional fixed tags for all logs from this logger */
+  /** Additional fixed tags for all logs */
   tags?: string[];
   
   /** Minimum log level for this logger */
@@ -44,6 +26,12 @@ export interface LoggerOptions {
   
   /** If this logger is disabled */
   disabled?: boolean;
+
+  /** Additional details to include with the log */
+  details?: any;
+  
+  /** Source of the log (usually component name) */
+  source?: string;
 }
 
 /**
@@ -70,6 +58,9 @@ export interface LogOptions {
   
   /** If true, this log will be reported to error service even if it's not an error */
   report?: boolean;
+  
+  /** Source of the log (usually component name) */
+  source?: string;
 }
 
 /**
@@ -80,7 +71,7 @@ export interface LogEntry {
   timestamp: string;
   level: LogLevel;
   source: string;
-  message: string;
+  message: string | ReactNode;
   category: LogCategory | string;
   tags: string[];
   details?: any;
@@ -97,6 +88,7 @@ export interface LogTransport {
   log(entry: LogEntry): void;
   getLogs?(): LogEntry[];
   clear?(): void;
+  flush?(): Promise<void>;
 }
 
 /**
@@ -109,4 +101,50 @@ export interface Logger {
   warn(message: string, options?: LogOptions): void;
   error(message: string, options?: LogOptions): void;
   fatal(message: string, options?: LogOptions): void;
+  success?(message: string, options?: LogOptions): void;
+  critical?(message: string, options?: LogOptions): void;
+  performance?(message: string, duration: number, options?: LogOptions): void;
 }
+
+/**
+ * Performance measurement result
+ */
+export interface MeasurementResult {
+  name: string;
+  duration: number;
+  success: boolean;
+  timestamp: number;
+}
+
+/**
+ * Performance measurement options
+ */
+export interface PerformanceMeasurementOptions {
+  category?: LogCategory | string;
+  warnThreshold?: number;
+  onComplete?: (result: MeasurementResult) => void;
+  tags?: string[];
+  details?: Record<string, any>;
+}
+
+/**
+ * Logging configuration
+ */
+export interface LoggingConfig {
+  minLevel: LogLevel;
+  enabled?: boolean;
+  transports: LogTransport[];
+  categoryLevels?: Partial<Record<LogCategory | string, LogLevel>>;
+  enabledCategories?: (LogCategory | string)[];
+  disabledCategories?: (LogCategory | string)[];
+  bufferSize?: number;
+  flushInterval?: number;
+  includeSource?: boolean;
+  includeUser?: boolean;
+  includeSession?: boolean;
+}
+
+/**
+ * Log event callback
+ */
+export type LogEventCallback = (entry: LogEntry) => void;

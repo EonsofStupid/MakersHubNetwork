@@ -10,8 +10,8 @@ import { LogCategory, LogLevel } from '@/constants/logLevel';
  * @param source The name of the component or source
  * @param options Additional options for the logger
  */
-export function useLogger(source?: string, options?: LoggerOptions): ReturnType<typeof useLoggerOriginal> {
-  return useLoggerOriginal(source, options);
+export function useLogger(source?: string, options?: LoggerOptions) {
+  return useLoggerOriginal(source, { category: options?.category as LogCategory, ...options });
 }
 
 /**
