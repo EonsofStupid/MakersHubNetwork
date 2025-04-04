@@ -1,13 +1,7 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
 import { toast } from 'sonner';
-import { 
-  createDefaultDashboardLayout, 
-  createDefaultSidebarLayout,
-  createDefaultTopNavLayout
-} from '@/admin/utils/layoutUtils';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -69,39 +63,74 @@ export function useLayoutSkeleton() {
         if (existingLayout?.data) return { success: false, error: 'Layout already exists' };
         
         // Create a default layout based on type
-        let defaultLayout: Layout;
+        const now = new Date().toISOString();
+        let defaultLayout: Layout = {
+          id: uuidv4(),
+          name: `Default ${type}`,
+          type,
+          scope,
+          components: [],
+          version: 1,
+          created_at: now,
+          updated_at: now,
+          is_active: true,
+          is_locked: false
+        };
         
         if (type === 'dashboard') {
-          defaultLayout = createDefaultDashboardLayout(uuidv4());
-        } else if (type === 'sidebar') {
-          defaultLayout = createDefaultSidebarLayout(uuidv4());
-        } else if (type === 'topnav') {
-          defaultLayout = createDefaultTopNavLayout(uuidv4());
-        } else {
-          defaultLayout = {
-            id: uuidv4(),
-            name: `Default ${type}`,
-            type,
-            scope,
-            components: [
-              {
-                id: 'root',
-                type: 'AdminSection',
-                children: [
-                  {
-                    id: 'title',
-                    type: 'heading',
-                    props: {
-                      level: 1,
-                      className: 'text-2xl font-bold',
-                      children: `${type} Layout`
-                    }
+          defaultLayout.components = [
+            {
+              id: 'root',
+              type: 'AdminSection',
+              children: [
+                {
+                  id: 'title',
+                  type: 'heading',
+                  props: {
+                    level: 1,
+                    className: 'text-2xl font-bold',
+                    children: 'Dashboard'
                   }
-                ]
-              }
-            ],
-            version: 1
-          };
+                }
+              ]
+            }
+          ];
+        } else if (type === 'sidebar') {
+          defaultLayout.components = [
+            {
+              id: 'root',
+              type: 'AdminSidebar',
+              children: [
+                {
+                  id: 'title',
+                  type: 'heading',
+                  props: {
+                    level: 2,
+                    className: 'text-xl font-bold',
+                    children: 'Admin'
+                  }
+                }
+              ]
+            }
+          ];
+        } else if (type === 'topnav') {
+          defaultLayout.components = [
+            {
+              id: 'root',
+              type: 'AdminTopNav',
+              children: [
+                {
+                  id: 'title',
+                  type: 'heading',
+                  props: {
+                    level: 2,
+                    className: 'text-xl font-bold',
+                    children: 'MakersImpulse'
+                  }
+                }
+              ]
+            }
+          ];
         }
         
         // Save to database
@@ -114,6 +143,7 @@ export function useLayoutSkeleton() {
             version: 1
           },
           is_active: true,
+          is_locked: false,
           version: 1
         });
       },

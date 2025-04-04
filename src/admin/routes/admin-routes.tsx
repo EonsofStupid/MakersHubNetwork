@@ -1,41 +1,109 @@
 
-import { lazy } from "react";
-import { Route } from "react-router-dom";
-import { AdminLayout } from "@/admin/components/AdminLayout";
+import { lazy, Suspense } from "react";
+import { Route, Routes, Navigate } from "react-router-dom";
+import { AdminLayout } from "@/components/admin/layouts/AdminLayout";
 import { AdminThemeWrapper } from "@/admin/theme/AdminThemeWrapper";
 
-// Lazily load admin pages
-const AdminDashboard = lazy(() => import('@/admin/pages/Dashboard'));
-const AdminUsers = lazy(() => import('@/admin/pages/Users'));
-const AdminContent = lazy(() => import('@/admin/pages/Content'));
-const AdminSettings = lazy(() => import('@/admin/pages/Settings'));
-const AdminThemes = lazy(() => import('@/admin/pages/Themes'));
-const AdminAssets = lazy(() => import('@/admin/pages/Assets'));
-const AdminAPI = lazy(() => import('@/admin/pages/API'));
-const AdminCategories = lazy(() => import('@/admin/pages/Categories'));
-const AdminManufacturers = lazy(() => import('@/admin/pages/Manufacturers'));
-const AdminProfiles = lazy(() => import('@/admin/pages/Profiles'));
-const AdminRoles = lazy(() => import('@/admin/pages/Roles'));
-
-export const adminRoutes = (
-  <Route 
-    path="/admin/*" 
-    element={
-      <AdminThemeWrapper>
-        <AdminLayout />
-      </AdminThemeWrapper>
-    }
-  >
-    <Route index element={<AdminDashboard />} />
-    <Route path="users" element={<AdminUsers />} />
-    <Route path="content" element={<AdminContent />} />
-    <Route path="settings" element={<AdminSettings />} />
-    <Route path="themes" element={<AdminThemes />} />
-    <Route path="assets" element={<AdminAssets />} />
-    <Route path="api" element={<AdminAPI />} />
-    <Route path="categories" element={<AdminCategories />} />
-    <Route path="manufacturers" element={<AdminManufacturers />} />
-    <Route path="profiles" element={<AdminProfiles />} />
-    <Route path="roles" element={<AdminRoles />} />
-  </Route>
+// Placeholder component for missing pages
+const PlaceholderPage = ({ title }: { title: string }) => (
+  <div className="flex flex-col items-center justify-center min-h-[60vh]">
+    <h1 className="text-2xl font-bold mb-4">{title}</h1>
+    <p className="text-muted-foreground mb-6">This page is under construction.</p>
+    <div className="flex items-center gap-2 p-4 bg-card rounded-lg border">
+      <div className="h-4 w-4 rounded-full bg-primary animate-pulse"></div>
+      <span className="text-sm">Coming soon...</span>
+    </div>
+  </div>
 );
+
+// Define placeholders for missing pages
+const AdminDashboard = () => <PlaceholderPage title="Dashboard" />;
+const AdminUsers = () => <PlaceholderPage title="Users" />;
+const AdminContent = () => <PlaceholderPage title="Content" />;
+const AdminSettings = () => <PlaceholderPage title="Settings" />;
+const AdminThemes = () => <PlaceholderPage title="Themes" />;
+const AdminAssets = () => <PlaceholderPage title="Assets" />;
+const AdminAPI = () => <PlaceholderPage title="API" />;
+const AdminCategories = () => <PlaceholderPage title="Categories" />;
+const AdminManufacturers = () => <PlaceholderPage title="Manufacturers" />;
+const AdminProfiles = () => <PlaceholderPage title="Profiles" />;
+const AdminRoles = () => <PlaceholderPage title="Roles" />;
+
+// Loading component
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+  </div>
+);
+
+export function AdminRoutes() {
+  return (
+    <Routes>
+      <Route 
+        path="/*" 
+        element={
+          <AdminThemeWrapper>
+            <AdminLayout />
+          </AdminThemeWrapper>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminDashboard />
+          </Suspense>
+        } />
+        <Route path="users" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminUsers />
+          </Suspense>
+        } />
+        <Route path="content" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminContent />
+          </Suspense>
+        } />
+        <Route path="settings" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminSettings />
+          </Suspense>
+        } />
+        <Route path="themes" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminThemes />
+          </Suspense>
+        } />
+        <Route path="assets" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminAssets />
+          </Suspense>
+        } />
+        <Route path="api" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminAPI />
+          </Suspense>
+        } />
+        <Route path="categories" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminCategories />
+          </Suspense>
+        } />
+        <Route path="manufacturers" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminManufacturers />
+          </Suspense>
+        } />
+        <Route path="profiles" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminProfiles />
+          </Suspense>
+        } />
+        <Route path="roles" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminRoles />
+          </Suspense>
+        } />
+      </Route>
+    </Routes>
+  );
+}
