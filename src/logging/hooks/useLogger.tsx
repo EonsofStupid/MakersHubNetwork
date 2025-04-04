@@ -1,67 +1,52 @@
 
-import { useCallback } from 'react';
-import { Logger, LoggerOptions, LogOptions } from '../types';
-import { getLogger } from '../service/logger.service';
+import { useCallback, useMemo } from 'react';
+import { getLogger } from '@/logging';
+import { LogCategory, LogLevel } from '@/constants/logLevel';
+import type { LoggerOptions } from '@/logging/types';
 
 /**
- * React hook for accessing the logger
- * @param source The source name (typically component name)
- * @param options Additional logger options
+ * Hook for accessing logger functionality within React components
+ * 
+ * @param source The name of the component or source
+ * @param options Additional options for the logger
  */
-export function useLogger(source?: string, options: LoggerOptions = {}): Logger {
-  const componentName = source || 'Component';
+export function useLogger(source?: string, options?: Partial<LoggerOptions>) {
+  const category = options?.category as LogCategory | undefined;
   
-  const logger = getLogger(componentName, options);
+  const logger = useMemo(() => {
+    return getLogger(source, { category, ...options });
+  }, [source, category, options]);
   
-  // Memoize the logger to prevent recreation on each render
-  // However, each log method is still memoized separately to avoid closure issues
-  
-  const trace = useCallback(function trace(message: string, msgOptions?: LogOptions) {
-    logger.trace(message, msgOptions);
+  const trace = useCallback((message: string, additionalOptions?: Partial<LoggerOptions>) => {
+    logger.trace(message, additionalOptions);
   }, [logger]);
   
-  const debug = useCallback(function debug(message: string, msgOptions?: LogOptions) {
-    logger.debug(message, msgOptions);
+  const debug = useCallback((message: string, additionalOptions?: Partial<LoggerOptions>) => {
+    logger.debug(message, additionalOptions);
   }, [logger]);
   
-  const info = useCallback(function info(message: string, msgOptions?: LogOptions) {
-    logger.info(message, msgOptions);
+  const info = useCallback((message: string, additionalOptions?: Partial<LoggerOptions>) => {
+    logger.info(message, additionalOptions);
   }, [logger]);
   
-  const warn = useCallback(function warn(message: string, msgOptions?: LogOptions) {
-    logger.warn(message, msgOptions);
+  const warn = useCallback((message: string, additionalOptions?: Partial<LoggerOptions>) => {
+    logger.warn(message, additionalOptions);
   }, [logger]);
   
-  const error = useCallback(function error(message: string, msgOptions?: LogOptions) {
-    logger.error(message, msgOptions);
+  const error = useCallback((message: string, additionalOptions?: Partial<LoggerOptions>) => {
+    logger.error(message, additionalOptions);
   }, [logger]);
   
-  const fatal = useCallback(function fatal(message: string, msgOptions?: LogOptions) {
-    logger.fatal(message, msgOptions);
+  const fatal = useCallback((message: string, additionalOptions?: Partial<LoggerOptions>) => {
+    logger.fatal(message, additionalOptions);
   }, [logger]);
   
-  const success = useCallback(function success(message: string, msgOptions?: LogOptions) {
-    if (logger.success) {
-      logger.success(message, msgOptions);
-    } else {
-      logger.info(`SUCCESS: ${message}`, msgOptions);
-    }
+  const success = useCallback((message: string, additionalOptions?: Partial<LoggerOptions>) => {
+    logger.success(message, additionalOptions);
   }, [logger]);
   
-  const critical = useCallback(function critical(message: string, msgOptions?: LogOptions) {
-    if (logger.critical) {
-      logger.critical(message, msgOptions);
-    } else {
-      logger.error(`CRITICAL: ${message}`, msgOptions);
-    }
-  }, [logger]);
-  
-  const performance = useCallback(function performance(message: string, duration: number, msgOptions?: LogOptions) {
-    if (logger.performance) {
-      logger.performance(message, duration, msgOptions);
-    } else {
-      logger.info(`PERFORMANCE: ${message} (${duration}ms)`, msgOptions);
-    }
+  const log = useCallback((level: LogLevel, message: string, additionalOptions?: Partial<LoggerOptions>) => {
+    logger.log(level, message, additionalOptions);
   }, [logger]);
   
   return {
@@ -72,7 +57,6 @@ export function useLogger(source?: string, options: LoggerOptions = {}): Logger 
     error,
     fatal,
     success,
-    critical,
-    performance
+    log
   };
 }

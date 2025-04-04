@@ -1,6 +1,6 @@
 
 /**
- * Layout Type Definitions
+ * Layout Type Definitions - Single Source of Truth
  */
 
 // Component definition
@@ -73,6 +73,43 @@ export type LayoutScope = 'admin' | 'site' | 'public' | 'user';
 export function layoutToJson(data: { components: Component[], version: number }): LayoutJsonData {
   return {
     components: data.components || [],
-    version: data.version || 1
+    version: data.version || 1,
+    meta: data.meta
+  };
+}
+
+/**
+ * Create a default layout skeleton for initialization
+ */
+export function createDefaultLayoutSkeleton(type: string, scope: string): Partial<LayoutSkeleton> {
+  return {
+    name: `Default ${type} Layout`,
+    type,
+    scope,
+    is_active: true,
+    is_locked: false,
+    layout_json: {
+      components: [],
+      version: 1
+    },
+    version: 1
+  };
+}
+
+/**
+ * Create a default layout for initialization
+ */
+export function createDefaultLayout(type: string, scope: string): Partial<Layout> {
+  const now = new Date().toISOString();
+  return {
+    name: `Default ${type} Layout`,
+    type,
+    scope,
+    components: [],
+    version: 1,
+    created_at: now,
+    updated_at: now,
+    is_active: true,
+    is_locked: false
   };
 }

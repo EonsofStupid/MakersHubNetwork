@@ -1,41 +1,30 @@
 
 /**
- * Impulse Theme Types
- * This file defines the types for the Impulse theme system
+ * Basic Impulse theme type definitions
  */
 
-// Core theme token structure
 export interface ImpulseThemeColors {
-  // Base colors
   primary: string;
   secondary: string;
-  accent?: string;
-  
-  // Background colors
+  accent: string;
   background: {
     main: string;
     overlay: string;
     card: string;
     alt: string;
   };
-  
-  // Text colors
   text: {
     primary: string;
     secondary: string;
     muted: string;
     accent: string;
   };
-  
-  // Border colors
   borders: {
     normal: string;
     hover: string;
     active: string;
     focus: string;
   };
-  
-  // Status colors
   status: {
     success: string;
     warning: string;
@@ -129,69 +118,70 @@ export interface ImpulseThemeComponents {
   };
 }
 
-// Main Impulse Theme interface
 export interface ImpulseTheme {
-  id?: string;
+  id: string;
   name: string;
-  description?: string;
-  version?: string | number;
   colors: ImpulseThemeColors;
+  typography: ImpulseThemeTypography;
   effects: ImpulseThemeEffects;
   animation: ImpulseThemeAnimation;
   components: ImpulseThemeComponents;
-  typography: ImpulseThemeTypography;
-  spacing?: Record<string, string>;
-  [key: string]: any; // Add index signature for JSON compatibility
+  version: number;
+  description?: string;
+  metadata?: Record<string, any>;
 }
 
-// Default Impulse Theme - serves as fallback
+/**
+ * Default/fallback theme tokens - bare minimum defaults
+ */
 export const defaultImpulseTokens: ImpulseTheme = {
-  name: "Default Impulse Theme",
-  description: "Default theme for MakersImpulse Admin",
+  id: 'default',
+  name: 'Default',
+  version: 1,
   colors: {
-    primary: "#00F0FF",
-    secondary: "#FF2D6E",
-    accent: "#8B5CF6",
+    primary: '#00F0FF',
+    secondary: '#FF2D6E',
+    accent: '#8B5CF6',
     background: {
-      main: "#12121A",
-      overlay: "rgba(22, 24, 29, 0.85)",
-      card: "rgba(28, 32, 42, 0.7)",
-      alt: "#1A1E24"
+      main: '#12121A',
+      overlay: 'rgba(22, 24, 29, 0.85)',
+      card: 'rgba(28, 32, 42, 0.7)',
+      alt: '#1A1E24'
     },
     text: {
-      primary: "#F6F6F7",
-      secondary: "rgba(255, 255, 255, 0.7)",
-      muted: "rgba(255, 255, 255, 0.5)",
-      accent: "#00F0FF"
+      primary: '#F6F6F7',
+      secondary: 'rgba(255, 255, 255, 0.7)',
+      muted: 'rgba(255, 255, 255, 0.5)',
+      accent: '#00F0FF'
     },
     borders: {
-      normal: "rgba(0, 240, 255, 0.2)",
-      hover: "rgba(0, 240, 255, 0.4)",
-      active: "rgba(0, 240, 255, 0.6)",
-      focus: "rgba(0, 240, 255, 0.5)"
+      normal: 'rgba(0, 240, 255, 0.2)',
+      hover: 'rgba(0, 240, 255, 0.4)',
+      active: 'rgba(0, 240, 255, 0.6)',
+      focus: 'rgba(0, 240, 255, 0.5)'
     },
     status: {
-      success: "#10B981",
-      warning: "#F59E0B",
-      error: "#EF4444",
-      info: "#3B82F6"
+      success: '#10B981',
+      warning: '#F59E0B',
+      error: '#EF4444',
+      info: '#3B82F6'
     }
   },
   typography: {
     fonts: {
-      body: "Inter, system-ui, sans-serif",
-      heading: "Inter, system-ui, sans-serif",
-      mono: "Consolas, Monaco, monospace"
+      body: 'Inter, system-ui, sans-serif',
+      heading: 'Inter, system-ui, sans-serif',
+      mono: 'Consolas, monospace'
     },
     sizes: {
-      xs: "0.75rem",
-      sm: "0.875rem",
-      base: "1rem",
-      md: "1.1rem",
-      lg: "1.25rem",
-      xl: "1.5rem",
-      "2xl": "2rem",
-      "3xl": "2.5rem"
+      xs: '0.75rem',
+      sm: '0.875rem',
+      base: '1rem',
+      md: '1.125rem',
+      lg: '1.25rem',
+      xl: '1.5rem',
+      '2xl': '2rem',
+      '3xl': '2.5rem'
     },
     weights: {
       light: 300,
@@ -200,106 +190,57 @@ export const defaultImpulseTokens: ImpulseTheme = {
       bold: 700
     },
     lineHeights: {
-      tight: "1.1",
-      normal: "1.5",
-      relaxed: "1.8"
+      tight: '1.2',
+      normal: '1.5',
+      relaxed: '1.75'
     }
   },
   effects: {
     shadows: {
-      sm: "0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)",
-      md: "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)",
-      lg: "0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.05)",
-      xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+      sm: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
+      md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
     },
     glow: {
-      primary: "0 0 15px rgba(0, 240, 255, 0.5)",
-      secondary: "0 0 15px rgba(255, 45, 110, 0.5)",
-      hover: "0 0 20px rgba(0, 240, 255, 0.7)"
+      primary: '0 0 15px rgba(0, 240, 255, 0.7)',
+      secondary: '0 0 15px rgba(255, 45, 110, 0.7)',
+      hover: '0 0 25px rgba(0, 240, 255, 0.9)'
     }
   },
   animation: {
     duration: {
-      fast: "150ms",
-      normal: "300ms",
-      slow: "500ms"
+      fast: '150ms',
+      normal: '300ms',
+      slow: '500ms'
     },
     curves: {
-      bounce: "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-      ease: "cubic-bezier(0.4, 0, 0.2, 1)",
-      spring: "cubic-bezier(0.155, 1.105, 0.295, 1.12)",
-      linear: "linear"
+      bounce: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+      ease: 'cubic-bezier(0.4, 0, 0.2, 1)',
+      spring: 'cubic-bezier(0.155, 1.105, 0.295, 1.12)',
+      linear: 'linear'
     }
   },
   components: {
     panel: {
-      radius: "0.5rem",
-      padding: "1.5rem",
-      background: "rgba(28, 32, 42, 0.7)"
+      radius: '0.75rem',
+      padding: '1.5rem',
+      background: 'rgba(28, 32, 42, 0.7)'
     },
     button: {
-      radius: "0.375rem",
-      padding: "0.5rem 1rem",
-      transition: "all 0.2s ease"
+      radius: '0.375rem',
+      padding: '0.5rem 1rem',
+      transition: '150ms ease-in-out'
     },
     tooltip: {
-      radius: "0.25rem",
-      padding: "0.5rem",
-      background: "rgba(0, 0, 0, 0.8)"
+      radius: '0.375rem',
+      padding: '0.5rem',
+      background: 'rgba(0, 0, 0, 0.8)'
     },
     input: {
-      radius: "0.375rem",
-      padding: "0.5rem",
-      background: "rgba(28, 32, 42, 0.7)"
+      radius: '0.375rem',
+      padding: '0.5rem',
+      background: 'rgba(255, 255, 255, 0.05)'
     }
   }
 };
-
-// Utility functions for impulseTheme
-export function createEmptyImpulseTheme(): ImpulseTheme {
-  return {
-    ...defaultImpulseTokens,
-    id: crypto.randomUUID(),
-    name: "New Theme"
-  };
-}
-
-// Safe Type guard for empty or partial themes
-export function createSafeImpulseTheme(partialTheme: Partial<ImpulseTheme> = {}): ImpulseTheme {
-  return {
-    ...defaultImpulseTokens,
-    ...partialTheme,
-    name: partialTheme.name || "Safe Theme",
-  };
-}
-
-export function validateImpulseTheme(theme: Partial<ImpulseTheme>): theme is ImpulseTheme {
-  return !!(
-    theme &&
-    theme.name &&
-    theme.colors?.primary &&
-    theme.colors?.background?.main &&
-    theme.typography?.fonts?.body &&
-    theme.effects?.shadows?.md &&
-    theme.animation?.duration?.normal &&
-    theme.components?.button?.radius
-  );
-}
-
-// Merge partial theme with default
-export function mergeWithDefaultTheme(partialTheme: Partial<ImpulseTheme>): ImpulseTheme {
-  if (!partialTheme || typeof partialTheme !== 'object') {
-    return { ...defaultImpulseTokens };
-  }
-  
-  const merged: ImpulseTheme = {
-    ...defaultImpulseTokens,
-    ...partialTheme,
-    name: partialTheme.name || defaultImpulseTokens.name
-  };
-  
-  return merged;
-}
-
-// Export index to allow importing by other modules
-export * from './impulse.types';

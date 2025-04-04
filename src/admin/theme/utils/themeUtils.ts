@@ -1,84 +1,70 @@
 
-import { ImpulseTheme } from "@/admin/types/impulse.types";
+import { get } from 'lodash';
+import { ImpulseTheme } from '@/admin/types/impulse.types';
 
 /**
- * Gets a property from a theme object by following a dot-notation path
- * 
- * @param theme The theme object to get a property from
- * @param path Path to the property using dot notation (e.g., "colors.primary")
- * @param defaultValue Default value to return if property doesn't exist
+ * Gets a theme property using dot notation path, with fallback value
  */
-export function getThemeProperty<T>(
-  theme: ImpulseTheme | null | undefined, 
-  path: string, 
-  defaultValue: T
-): T {
-  if (!theme) return defaultValue;
-  
-  const parts = path.split('.');
-  let current: any = theme;
-  
-  for (const part of parts) {
-    if (current === undefined || current === null) {
-      return defaultValue;
-    }
-    
-    current = current[part];
-  }
-  
-  return current !== undefined && current !== null ? current : defaultValue;
+export function getThemeProperty(theme: ImpulseTheme, path: string, fallback: any): any {
+  return get(theme, path, fallback);
 }
 
 /**
- * Ensures a value is a valid string, using default if not
+ * Ensures a value is a string and provides fallback if not
  */
-export function ensureStringValue(value: any, defaultValue: string): string {
-  if (typeof value === 'string' && value.trim() !== '') {
+export function ensureStringValue(value: any, fallback: string): string {
+  if (typeof value === 'string') {
     return value;
   }
-  return defaultValue;
+  return fallback;
 }
 
 /**
  * Gets a color value from theme or returns fallback
  */
-export function getThemeColorValue(
-  theme: ImpulseTheme | null | undefined,
-  path: string,
-  fallback: string
-): string {
-  return ensureStringValue(getThemeProperty(theme, path, fallback), fallback);
+export function getThemeColorValue(theme: ImpulseTheme, path: string, fallback: string): string {
+  const color = getThemeProperty(theme, path, null);
+  return ensureStringValue(color, fallback);
 }
 
 /**
- * Check if a theme object is valid and has minimum required properties
+ * Deep merge utility for theme objects
  */
-export function isValidTheme(theme: any): boolean {
-  return !!(
-    theme &&
-    typeof theme === 'object' &&
-    theme.colors &&
-    theme.typography &&
-    theme.effects &&
-    theme.animation &&
-    theme.components
-  );
+export function deepMerge<T>(target: T, source: Partial<T>): T {
+  const output = { ...target };
+  
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      if (isObject(source[key])) {
+        if (!(key in target)) {
+          Object.assign(output, { [key]: source[key] });
+        } else {
+          output[key] = deepMerge(target[key], source[key]);
+        }
+      } else {
+        Object.assign(output, { [key]: source[key] });
+      }
+    });
+  }
+  
+  return output;
+}
+
+function isObject(item: any): boolean {
+  return item && typeof item === 'object' && !Array.isArray(item);
 }
 
 /**
- * Safely merge an update into a theme object
+ * Validates if a theme has all required properties
  */
-export function mergeThemeUpdate(
-  currentTheme: ImpulseTheme,
-  update: Partial<ImpulseTheme>
-): ImpulseTheme {
-  return {
-    ...currentTheme,
-    ...update,
-    colors: { ...currentTheme.colors, ...update.colors },
-    typography: { ...currentTheme.typography, ...update.typography },
-    effects: { ...currentTheme.effects, ...update.effects },
-    animation: { ...currentTheme.animation, ...update.animation },
-    components: { ...currentTheme.components, ...update.components }
-  };
+export function validateTheme(theme: Partial<ImpulseTheme>): boolean {
+  if (!theme) return false;
+  
+  const requiredProperties = ['colors', 'typography', 'effects', 'animation', 'components'];
+  
+  for (const prop of requiredProperties) {
+    if (!theme[prop]) return false;
+  }
+  
+  return true;
 }

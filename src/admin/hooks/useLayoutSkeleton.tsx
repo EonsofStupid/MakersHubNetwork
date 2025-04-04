@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LayoutSkeleton, Layout, layoutToJson, CreateLayoutResponse } from '@/admin/types/layout.types';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging/types';
+import { LogCategory } from '@/constants/logLevel';
 
 /**
  * Hook for working with layout skeletons
@@ -74,7 +74,8 @@ export function useLayoutSkeleton() {
       mutationFn: async (layout: Partial<LayoutSkeleton>) => {
         const result = await layoutSkeletonService.saveLayout(layout);
         if (!result.success) {
-          throw new Error(result.error || 'Failed to save layout');
+          const errorMsg = typeof result.error === 'string' ? result.error : 'Failed to save layout';
+          throw new Error(errorMsg);
         }
         return result;
       },
@@ -84,8 +85,8 @@ export function useLayoutSkeleton() {
           queryClient.invalidateQueries({ queryKey: ['layout', data.id] });
         }
       },
-      onError: (error: Error) => {
-        logger.error('Error saving layout', { details: { error: error.message } });
+      onError: (error) => {
+        logger.error('Error saving layout', { details: { error: error instanceof Error ? error.message : String(error) } });
       }
     });
   };
@@ -94,9 +95,10 @@ export function useLayoutSkeleton() {
   const useDeleteLayout = () => {
     return useMutation({
       mutationFn: async (id: string) => {
-        const result = await layoutSkeletonService.deleteLayout(id);
+        const result = await layoutSkeletonService.delete(id);
         if (!result.success) {
-          throw new Error(result.error || 'Failed to delete layout');
+          const errorMsg = typeof result.error === 'string' ? result.error : 'Failed to delete layout';
+          throw new Error(errorMsg);
         }
         return result;
       },
@@ -104,8 +106,8 @@ export function useLayoutSkeleton() {
         queryClient.invalidateQueries({ queryKey: ['layouts'] });
         queryClient.invalidateQueries({ queryKey: ['layout', id] });
       },
-      onError: (error: Error) => {
-        logger.error('Error deleting layout', { details: { error: error.message } });
+      onError: (error) => {
+        logger.error('Error deleting layout', { details: { error: error instanceof Error ? error.message : String(error) } });
       }
     });
   };

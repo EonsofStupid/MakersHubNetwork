@@ -1,5 +1,5 @@
 
-import { User, Session, AuthStatus, UserRole } from "@/auth/types/auth.types";
+import { User, Session, AuthStatus, UserRole, AuthStore as BaseAuthStore } from "@/auth/types/auth.types";
 
 export interface AuthState {
   user: User | null;
