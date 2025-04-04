@@ -81,7 +81,9 @@ export const useLayoutSkeleton = (): UseLayoutSkeletonResult => {
             setError(null);
           } else {
             setData(null);
-            setError(result.error instanceof Error ? result.error : new Error(result.error?.message || 'Failed to fetch layout'));
+            // Fix error handling
+            const errorMessage = typeof result.error === 'string' ? result.error : 'Failed to fetch layout';
+            setError(new Error(errorMessage));
           }
         } catch (err) {
           setError(err instanceof Error ? err : new Error('Failed to fetch layout'));
@@ -91,7 +93,7 @@ export const useLayoutSkeleton = (): UseLayoutSkeletonResult => {
       };
 
       fetchData();
-    }, [id]);
+    });
 
     return { data, isLoading, error };
   }, []);
@@ -112,7 +114,9 @@ export const useLayoutSkeleton = (): UseLayoutSkeletonResult => {
             setError(null);
           } else {
             setData(null);
-            setError(result.error instanceof Error ? result.error : new Error(result.error?.message || 'Failed to fetch layout'));
+            // Fix error handling
+            const errorMessage = typeof result.error === 'string' ? result.error : 'Failed to fetch layout';
+            setError(new Error(errorMessage));
           }
         } catch (err) {
           setError(err instanceof Error ? err : new Error('Failed to fetch layout'));
@@ -122,7 +126,7 @@ export const useLayoutSkeleton = (): UseLayoutSkeletonResult => {
       };
 
       fetchData();
-    }, [type, scope]);
+    });
 
     return { data, isLoading, error };
   }, []);
@@ -147,7 +151,9 @@ export const useLayoutSkeleton = (): UseLayoutSkeletonResult => {
             setError(null);
           } else {
             setData(null);
-            setError(result.error instanceof Error ? result.error : new Error(result.error?.message || 'Failed to fetch layouts'));
+            // Fix error handling
+            const errorMessage = typeof result.error === 'string' ? result.error : 'Failed to fetch layouts';
+            setError(new Error(errorMessage));
           }
         } catch (err) {
           setError(err instanceof Error ? err : new Error('Failed to fetch layouts'));
@@ -157,7 +163,7 @@ export const useLayoutSkeleton = (): UseLayoutSkeletonResult => {
       };
 
       fetchData();
-    }, [options]);
+    });
 
     return { data, isLoading, error };
   }, []);
@@ -301,7 +307,7 @@ export const useLayoutSkeleton = (): UseLayoutSkeletonResult => {
   const useDeleteLayoutById = () => {
     const mutation = useMutation({
       mutationFn: async (id: string) => {
-        const result = await layoutSkeletonService.deleteLayout(id);
+        const result = await layoutSkeletonService.delete(id);
         if (!result.success) {
           throw new Error(result.error || 'Failed to delete layout');
         }

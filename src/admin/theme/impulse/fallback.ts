@@ -8,7 +8,7 @@ import { ImpulseTheme } from '@/admin/types/impulse.types';
 export const fallbackImpulseTheme: ImpulseTheme = {
   id: 'fallback-theme',
   name: 'Emergency Fallback',
-  version: '1.0.0',
+  version: 1, // Changed from string to number
   colors: {
     primary: '#00F0FF',
     secondary: '#FF2D6E',
@@ -39,21 +39,21 @@ export const fallbackImpulseTheme: ImpulseTheme = {
     }
   },
   effects: {
-    glow: {
-      primary: '0 0 15px rgba(0, 240, 255, 0.7)',
-      secondary: '0 0 15px rgba(255, 45, 110, 0.7)',
-      hover: '0 0 20px rgba(0, 240, 255, 0.9)'
-    },
     gradients: {
       primary: 'linear-gradient(90deg, #00F0FF, #00B8D4)',
       secondary: 'linear-gradient(90deg, #FF2D6E, #FF5252)',
       accent: 'linear-gradient(90deg, #8B5CF6, #7C3AED)'
     },
+    glow: {
+      primary: '0 0 15px rgba(0, 240, 255, 0.7)',
+      secondary: '0 0 15px rgba(255, 45, 110, 0.7)',
+      hover: '0 0 20px rgba(0, 240, 255, 0.9)'
+    },
     shadows: {
-      small: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
-      medium: '0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3)',
-      large: '0 10px 25px rgba(0, 0, 0, 0.2), 0 6px 10px rgba(0, 0, 0, 0.22)',
-      inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.15)'
+      sm: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
+      md: '0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3)',
+      lg: '0 10px 25px rgba(0, 0, 0, 0.2), 0 6px 10px rgba(0, 0, 0, 0.22)',
+      xl: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.15)'
     }
   },
   animation: {
@@ -79,7 +79,7 @@ export const fallbackImpulseTheme: ImpulseTheme = {
     fonts: {
       body: 'system-ui, sans-serif',
       heading: 'system-ui, sans-serif',
-      monospace: 'Consolas, monospace'
+      mono: 'Consolas, monospace' // Changed from 'monospace' to 'mono'
     },
     sizes: {
       xs: '0.75rem',
@@ -100,7 +100,7 @@ export const fallbackImpulseTheme: ImpulseTheme = {
     lineHeights: {
       tight: '1.25',
       normal: '1.5',
-      loose: '1.75'
+      relaxed: '1.75' // Changed from 'loose' to 'relaxed'
     }
   },
   components: {

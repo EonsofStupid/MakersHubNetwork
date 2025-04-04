@@ -3,6 +3,8 @@ import { ImpulseTheme } from '@/admin/types/impulse.types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
+import { defaultImpulseTokens } from '@/admin/types/impulse.types';
+import { validateTheme } from './utils/themeUtils';
 
 const logger = getLogger('ThemeRegistry', { category: LogCategory.THEME });
 
@@ -16,6 +18,8 @@ class ThemeRegistry {
 
   constructor() {
     logger.debug('ThemeRegistry initialized');
+    // Register default theme immediately for safety
+    this.registerTheme('default', defaultImpulseTokens);
   }
 
   /**
@@ -33,7 +37,14 @@ class ThemeRegistry {
         logger.warn('Theme is missing required properties', { details: { id, themeName: theme.name } });
       }
       
-      this.themes.set(id, { ...theme, id });
+      // Ensure the theme has all required properties
+      const validatedTheme: ImpulseTheme = {
+        ...defaultImpulseTokens, // Start with a complete default theme
+        ...theme, // Overwrite with provided theme values
+        id // Ensure ID is set correctly
+      };
+      
+      this.themes.set(id, validatedTheme);
       logger.debug(`Theme registered: ${theme.name}`, { details: { id } });
     } catch (error) {
       logger.error('Error registering theme', { details: safeDetails(error) });
@@ -41,13 +52,13 @@ class ThemeRegistry {
   }
 
   /**
-   * Get a theme by its ID
+   * Get a theme by ID
    */
   getTheme(id: string): ImpulseTheme | null {
     try {
       const theme = this.themes.get(id);
       if (!theme) {
-        logger.warn(`Theme not found: ${id}`);
+        logger.warn(`Theme ${id} not found, using default`);
         return null;
       }
       return theme;
@@ -146,6 +157,8 @@ class ThemeRegistry {
   clearAll(): void {
     this.themes.clear();
     this.activeThemeId = null;
+    // Always ensure default theme is available after clearing
+    this.registerTheme('default', defaultImpulseTokens);
     logger.debug('All themes cleared from registry');
   }
 }

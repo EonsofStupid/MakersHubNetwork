@@ -30,7 +30,7 @@ export function getThemeColorValue(theme: ImpulseTheme, path: string, fallback: 
 /**
  * Deep merge utility for theme objects
  */
-export function deepMerge<T>(target: T, source: Partial<T>): T {
+export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
   const output = { ...target };
   
   if (isObject(target) && isObject(source)) {

@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from 'react';
 import { ensureDefaultTheme, getThemeByName, DEFAULT_THEME_NAME } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
@@ -36,7 +37,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   
   const { setTheme, isLoading, error: themeStoreError, hydrateTheme } = useThemeStore();
   const { toast } = useToast();
-  const logger = getLogger('ThemeInitializer', { category: LogCategory.THEME as string });
+  const logger = getLogger('ThemeInitializer', { category: LogCategory.THEME });
   const { measure } = usePerformanceLogger('ThemeInitializer');
   
   useEffect(() => {
@@ -154,7 +155,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           }
         }
         
-        const themeId = await getThemeByName(DEFAULT_THEME_NAME);
+        let themeId = await getThemeByName(DEFAULT_THEME_NAME);
         if (themeId && isValidUUID(themeId)) {
           logger.info(`✔️ Found ${DEFAULT_THEME_NAME} theme by name`, { details: { themeId }});
           
@@ -180,7 +181,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           }
         }
         
-        const themeId = await ensureDefaultTheme();
+        themeId = await ensureDefaultTheme();
         if (isMounted && themeId && isValidUUID(themeId)) {
           try {
             await setTheme(themeId);
