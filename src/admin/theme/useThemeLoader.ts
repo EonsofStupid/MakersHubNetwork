@@ -5,7 +5,8 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { formatLogDetails } from '@/logging/utils/details-formatter';
 import { createThemeFromRecord, defaultImpulseTheme } from './utils/modelTransformers';
-import { ImpulseTheme, ThemeRecord } from './types';
+import { ImpulseTheme } from '@/admin/types/impulse.types';
+import { ThemeRecord } from './types';
 
 /**
  * Hook for loading themes from the database
@@ -50,32 +51,18 @@ export function useThemeLoader(themeId?: string) {
         // Process the database record into a theme object
         const themeRecord = data as ThemeRecord;
         
-        // Safely access json properties
-        const themeData = themeRecord.theme_data;
-        let colors = null;
-        let effects = null;
-        let animation = null;
-        let components = null;
-        let typography = null;
+        // Safely access json properties from theme_data field
+        const themeData = themeRecord.theme_data || {};
         
         // Parse theme data from JSON structure if it exists
-        if (themeData && typeof themeData === 'object') {
-          colors = themeData.colors;
-          effects = themeData.effects;
-          animation = themeData.animation;
-          components = themeData.components;
-          typography = themeData.typography;
-        }
+        const colors = themeData.colors || null;
+        const effects = themeData.effects || null;
+        const animation = themeData.animation || null;
+        const components = themeData.components || null;
+        const typography = themeData.typography || null;
         
         // Create the theme from the record
-        const theme = createThemeFromRecord(
-          themeRecord,
-          colors,
-          effects,
-          animation,
-          components,
-          typography
-        );
+        const theme = createThemeFromRecord(themeRecord);
         
         logger.info('Theme loaded successfully', { 
           details: { 

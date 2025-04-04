@@ -36,16 +36,18 @@ export interface ThemeRegistry {
 }
 
 /**
- * Theme record format that can be used for partial theme definitions
+ * Theme record format with theme_data field for database records
  */
 export interface ThemeRecord {
   id?: string;
   name?: string;
-  colors?: Partial<ImpulseTheme['colors']>;
-  typography?: Partial<ImpulseTheme['typography']>;
-  effects?: Partial<ImpulseTheme['effects']>;
-  animation?: Partial<ImpulseTheme['animation']>;
-  components?: Partial<ImpulseTheme['components']>;
+  theme_data?: {
+    colors?: Partial<ImpulseTheme['colors']>;
+    typography?: Partial<ImpulseTheme['typography']>;
+    effects?: Partial<ImpulseTheme['effects']>;
+    animation?: Partial<ImpulseTheme['animation']>;
+    components?: Partial<ImpulseTheme['components']>;
+  };
   version?: number;
   metadata?: Record<string, any>;
 }

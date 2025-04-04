@@ -1,17 +1,15 @@
 
-import { Theme, ThemeToken } from "@/types/theme";
+import { Theme, ThemeToken, ThemeContext, ThemeComponent as BaseThemeComponent } from "@/types/theme";
 
-export type ThemeContext = 'site' | 'admin' | 'chat';
-
-export interface ThemeComponent {
-  id: string;
+// Make our local ThemeComponent extend the base one but with required context
+export interface ThemeComponent extends Omit<BaseThemeComponent, 'context'> {
   theme_id: string;
   component_name: string;
   styles: Record<string, any>;
   description?: string;
   created_at?: string | null;
   updated_at?: string | null;
-  context: ThemeContext;
+  context: ThemeContext; // Required
 }
 
 export interface ThemeState {

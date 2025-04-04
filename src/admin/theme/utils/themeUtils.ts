@@ -5,8 +5,8 @@ import { ImpulseTheme } from '@/admin/types/impulse.types';
 /**
  * Gets a theme property using dot notation path, with fallback value
  */
-export function getThemeProperty(theme: ImpulseTheme, path: string, fallback: any): any {
-  return get(theme, path, fallback);
+export function getThemeProperty<T>(obj: any, path: string, fallback: T): T {
+  return get(obj, path, fallback);
 }
 
 /**
