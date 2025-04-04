@@ -30,13 +30,15 @@ export interface ComponentTokens extends BaseThemeComponent {
  */
 export interface ThemeComponent extends BaseThemeComponent {
   theme_id: string; // Required here
+  context: ThemeContext; // Make required
 }
 
 // Transform utility
 export function componentTokenToThemeComponent(token: ComponentTokens): ThemeComponent {
   return {
     ...token,
-    theme_id: token.theme_id || ''
+    theme_id: token.theme_id || '',
+    context: token.context || 'site'
   };
 }
 

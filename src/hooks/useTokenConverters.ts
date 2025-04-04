@@ -1,105 +1,74 @@
 
-import { useState, useMemo } from 'react';
-import { ThemeToken, Theme, ComponentTokens } from '@/types/theme';
-import { useLogger } from './use-logger';
-import { LogCategory } from '@/logging/types';
+import { useMemo } from 'react';
+import { ThemeToken, ComponentTokens, DesignTokensStructure } from '@/types/theme';
 
 /**
- * Hook for converting between theme data structures
+ * Hook that provides utilities for converting theme tokens between formats
  */
 export function useTokenConverters() {
-  const logger = useLogger('useTokenConverters', { category: LogCategory.THEME });
   
-  /**
-   * Convert nested design tokens to a flat array format
-   */
-  const convertDesignTokensToArray = useMemo(() => {
-    return (designTokens?: Record<string, any>): ThemeToken[] => {
-      if (!designTokens) {
-        return [];
-      }
+  // Convert design tokens object to array of ThemeToken objects
+  const convertDesignTokensToArray = (tokens?: DesignTokensStructure): ThemeToken[] => {
+    if (!tokens) return [];
+    
+    const result: ThemeToken[] = [];
+    
+    // Helper to recursively process nested objects
+    const processObject = (obj: any, path: string[] = [], category: string = 'general') => {
+      if (!obj || typeof obj !== 'object') return;
       
-      try {
-        const tokens: ThemeToken[] = [];
+      Object.entries(obj).forEach(([key, value]) => {
+        const currentPath = [...path, key];
         
-        const flattenTokens = (
-          obj: Record<string, any>, 
-          parentKey: string = '',
-          category: string = ''
-        ) => {
-          if (typeof obj !== 'object' || obj === null) return;
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          // Recursively process nested objects
+          processObject(value, currentPath, category);
+        } else {
+          // Add leaf node as token
+          const tokenPath = currentPath.join('.');
           
-          Object.entries(obj).forEach(([key, value]) => {
-            const currentKey = parentKey ? `${parentKey}.${key}` : key;
-            const currentCategory = category || key;
-            
-            if (typeof value === 'object' && value !== null) {
-              flattenTokens(value, currentKey, currentCategory);
-            } else {
-              tokens.push({
-                id: `token-${currentKey.replace(/\./g, '-')}`,
-                token_name: currentKey,
-                token_value: String(value),
-                category: currentCategory,
-                description: '',
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
-            }
+          result.push({
+            id: tokenPath,
+            token_name: tokenPath,
+            token_value: String(value),
+            category: getTokenCategory(currentPath),
+            description: '',
           });
-        };
-        
-        flattenTokens(designTokens);
-        return tokens;
-      } catch (error) {
-        logger.error('Error converting design tokens to array', {
-          details: { error }
-        });
-        return [];
-      }
+        }
+      });
     };
-  }, [logger]);
-  
-  /**
-   * Convert component tokens to an array format
-   */
-  const convertComponentTokensToArray = useMemo(() => {
-    return (componentTokens?: ComponentTokens[]): ThemeToken[] => {
-      if (!componentTokens || !Array.isArray(componentTokens)) {
-        return [];
-      }
+    
+    // Determine token category from path
+    const getTokenCategory = (path: string[]): string => {
+      const firstSegment = path[0] || '';
       
-      try {
-        const tokens: ThemeToken[] = [];
-        
-        componentTokens.forEach(component => {
-          if (typeof component.styles === 'object' && component.styles !== null) {
-            Object.entries(component.styles).forEach(([key, value]) => {
-              tokens.push({
-                id: `comp-token-${component.id}-${key}`,
-                token_name: `${component.component_name}.${key}`,
-                token_value: String(value),
-                category: 'components',
-                description: `Style for ${component.component_name}`,
-                created_at: component.created_at || new Date().toISOString(),
-                updated_at: component.updated_at || new Date().toISOString()
-              });
-            });
-          }
-        });
-        
-        return tokens;
-      } catch (error) {
-        logger.error('Error converting component tokens to array', {
-          details: { error }
-        });
-        return [];
-      }
+      if (firstSegment === 'colors') return 'color';
+      if (firstSegment === 'typography') return 'typography';
+      if (firstSegment === 'effects') return 'effect';
+      if (firstSegment === 'animation') return 'animation';
+      if (firstSegment === 'components') return 'component';
+      if (firstSegment === 'spacing') return 'spacing';
+      
+      return 'general';
     };
-  }, [logger]);
+    
+    // Process all top-level categories
+    Object.entries(tokens).forEach(([category, values]) => {
+      processObject(values, [category], category);
+    });
+    
+    return result;
+  };
   
-  return {
+  // Convert component tokens to array format
+  const convertComponentTokensToArray = (components?: ComponentTokens[]): ComponentTokens[] => {
+    if (!components || !Array.isArray(components)) return [];
+    return components;
+  };
+  
+  // Return the converter functions
+  return useMemo(() => ({
     convertDesignTokensToArray,
     convertComponentTokensToArray
-  };
+  }), []);
 }
