@@ -1,3 +1,5 @@
+
+import React from 'react';
 import { useAdmin } from '@/admin/hooks/useAdmin';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
@@ -9,6 +11,12 @@ import { PermissionValue } from '@/auth/permissions';
 export function useAdminPermissions() {
   const { roles, hasRole, hasAnyRole } = useAdmin();
   const logger = useLogger('useAdminPermissions', { category: LogCategory.ADMIN });
+  const [isLoading, setIsLoading] = React.useState(false);
+  
+  // Derived permissions list based on roles
+  const permissions = React.useMemo(() => {
+    return roles.map(role => `role:${role}`) as PermissionValue[];
+  }, [roles]);
   
   /**
    * Check if the user has a specific permission
@@ -62,6 +70,8 @@ export function useAdminPermissions() {
   };
   
   return {
-    hasPermission
+    hasPermission,
+    permissions,
+    isLoading
   };
 }
