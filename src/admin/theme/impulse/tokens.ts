@@ -1,14 +1,15 @@
 
-import { ImpulseTheme } from '@/admin/types/impulse.types';
+import { ImpulseTheme } from "@/admin/types/impulse.types";
 
 /**
- * Default tokens for the Impulse admin theme
+ * Default Impulse Theme Tokens
+ * These are used as fallbacks when theme values are missing
  */
 export const defaultImpulseTokens: ImpulseTheme = {
-  id: 'default-impulse',
-  name: 'Impulsivity Admin',
+  id: 'default',
+  name: 'Default Impulse Theme',
   version: '1.0.0',
-  description: 'Default admin theme for the Impulse interface',
+  description: 'Default theme for Impulse Admin',
   colors: {
     primary: '#00F0FF',
     secondary: '#FF2D6E',
@@ -16,7 +17,7 @@ export const defaultImpulseTokens: ImpulseTheme = {
     background: {
       main: '#12121A',
       overlay: 'rgba(22, 24, 29, 0.85)',
-      card: 'rgba(28, 32, 42, 0.7)',
+      card: 'rgba(28, 32, 42, 0.7)', 
       alt: '#1A1E24'
     },
     text: {
@@ -101,7 +102,7 @@ export const defaultImpulseTokens: ImpulseTheme = {
     fonts: {
       body: 'Inter, system-ui, sans-serif',
       heading: 'Inter, system-ui, sans-serif',
-      monospace: 'Consolas, monospace'
+      mono: 'Consolas, monospace'
     },
     sizes: {
       xs: '0.75rem',

@@ -1,5 +1,5 @@
 
-import { get, merge } from 'lodash';
+import { get } from 'lodash';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 
@@ -25,7 +25,7 @@ export function getThemeProperty<T>(obj: any, path: string, defaultValue: T): T 
       return defaultValue;
     }
 
-    // Use lodash get with stronger typing
+    // Use lodash get for safe property access
     const value = get(obj, path);
     
     // Explicit check for undefined and null
@@ -92,13 +92,6 @@ export function ensureStringValue(value: any, defaultValue: string = ''): string
     });
     return defaultValue;
   }
-}
-
-/**
- * Deep merge two objects with type safety
- */
-export function deepMerge<T>(target: T, source: Partial<T>): T {
-  return merge({}, target, source);
 }
 
 /**
@@ -217,55 +210,16 @@ export function getReadableLabel(path: string): string {
   
   try {
     const parts = path.split('.');
-    const label = parts[parts.length - 1]
-      .replace(/([A-Z])/g, ' $1')
-      .toLowerCase();
+    const lastPart = parts[parts.length - 1];
     
-    return label.charAt(0).toUpperCase() + label.slice(1);
+    // Convert camelCase to Title Case
+    return lastPart
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase());
   } catch (error) {
-    logger.warn('Error creating readable label', {
+    logger.warn('Error converting path to readable label', {
       details: { path, error: error instanceof Error ? error.message : 'Unknown error' }
     });
-    return path; // Return original path as fallback
-  }
-}
-
-/**
- * Check if an object has the specified nested property
- */
-export function hasNestedProperty(obj: any, path: string): boolean {
-  if (!obj || typeof obj !== 'object' || !path) {
-    return false;
-  }
-  
-  try {
-    const value = get(obj, path);
-    return value !== undefined;
-  } catch (error) {
-    return false;
-  }
-}
-
-/**
- * Safely gets a value from a nested object with proper typing
- */
-export function safeGet<T>(obj: any, path: string[], defaultValue: T): T {
-  if (!obj || !Array.isArray(path) || path.length === 0) {
-    return defaultValue;
-  }
-  
-  try {
-    let current: any = obj;
-    
-    for (const key of path) {
-      if (current === undefined || current === null || typeof current !== 'object') {
-        return defaultValue;
-      }
-      current = current[key];
-    }
-    
-    return (current !== undefined && current !== null) ? current as T : defaultValue;
-  } catch (error) {
-    return defaultValue;
+    return path;
   }
 }

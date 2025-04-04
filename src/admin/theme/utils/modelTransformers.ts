@@ -1,7 +1,7 @@
+
 import { Theme, ThemeToken, ComponentTokens, ThemeContext } from '@/types/theme';
 import { ImpulseTheme, defaultImpulseTokens } from '@/admin/types/impulse.types';
 import { ThemeComponent } from '@/stores/theme/types';
-import { getThemeProperty } from './themeUtils';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
@@ -124,153 +124,293 @@ export function componentToDbFormat(component: ThemeComponent): any {
 
 /**
  * Convert a Theme to ImpulseTheme format
+ * Fixed implementation that correctly handles the theme structure
  */
 export function themeToImpulseTheme(theme: Theme): ImpulseTheme {
   if (!theme) {
+    logger.warn('No theme provided to themeToImpulseTheme, returning default tokens');
     return defaultImpulseTokens;
   }
   
   try {
-    // Extract impulse properties from design_tokens
-    const dt = theme.design_tokens || {};
-    const adminTokens = dt.admin || {};
+    logger.debug('Converting Theme to ImpulseTheme', { 
+      details: { themeId: theme.id, themeName: theme.name }
+    });
     
-    // Check if there are explicit admin tokens
-    if (Object.keys(adminTokens).length > 0) {
-      // If we have explicit admin tokens, use those with fallbacks to default
-      return {
+    // If theme already contains admin-specific tokens, use those directly
+    if (theme.design_tokens?.admin && typeof theme.design_tokens.admin === 'object') {
+      // Extract all admin-specific properties
+      const adminTokens = theme.design_tokens.admin;
+      
+      // Create a base ImpulseTheme with required fields
+      const impulseTheme: ImpulseTheme = {
         id: theme.id,
         name: theme.name,
         version: String(theme.version || '1.0.0'),
-        description: theme.description,
-        
-        // Colors with fallbacks
+        description: theme.description || 'Admin Theme',
         colors: {
-          primary: getThemeProperty(adminTokens, 'colors.primary', defaultImpulseTokens.colors.primary),
-          secondary: getThemeProperty(adminTokens, 'colors.secondary', defaultImpulseTokens.colors.secondary),
-          accent: getThemeProperty(adminTokens, 'colors.accent', defaultImpulseTokens.colors.accent),
-          
+          primary: adminTokens.colors?.primary || defaultImpulseTokens.colors.primary,
+          secondary: adminTokens.colors?.secondary || defaultImpulseTokens.colors.secondary,
+          accent: adminTokens.colors?.accent || defaultImpulseTokens.colors.accent,
           background: {
-            main: getThemeProperty(adminTokens, 'colors.background.main', defaultImpulseTokens.colors.background.main),
-            overlay: getThemeProperty(adminTokens, 'colors.background.overlay', defaultImpulseTokens.colors.background.overlay),
-            card: getThemeProperty(adminTokens, 'colors.background.card', defaultImpulseTokens.colors.background.card),
-            alt: getThemeProperty(adminTokens, 'colors.background.alt', defaultImpulseTokens.colors.background.alt)
+            main: adminTokens.colors?.background?.main || defaultImpulseTokens.colors.background.main,
+            overlay: adminTokens.colors?.background?.overlay || defaultImpulseTokens.colors.background.overlay,
+            card: adminTokens.colors?.background?.card || defaultImpulseTokens.colors.background.card,
+            alt: adminTokens.colors?.background?.alt || defaultImpulseTokens.colors.background.alt,
           },
-          
           text: {
-            primary: getThemeProperty(adminTokens, 'colors.text.primary', defaultImpulseTokens.colors.text.primary),
-            secondary: getThemeProperty(adminTokens, 'colors.text.secondary', defaultImpulseTokens.colors.text.secondary),
-            accent: getThemeProperty(adminTokens, 'colors.text.accent', defaultImpulseTokens.colors.text.accent),
-            muted: getThemeProperty(adminTokens, 'colors.text.muted', defaultImpulseTokens.colors.text.muted)
+            primary: adminTokens.colors?.text?.primary || defaultImpulseTokens.colors.text.primary,
+            secondary: adminTokens.colors?.text?.secondary || defaultImpulseTokens.colors.text.secondary,
+            accent: adminTokens.colors?.text?.accent || defaultImpulseTokens.colors.text.accent,
+            muted: adminTokens.colors?.text?.muted || defaultImpulseTokens.colors.text.muted,
           },
-          
           borders: {
-            normal: getThemeProperty(adminTokens, 'colors.borders.normal', defaultImpulseTokens.colors.borders.normal),
-            hover: getThemeProperty(adminTokens, 'colors.borders.hover', defaultImpulseTokens.colors.borders.hover),
-            active: getThemeProperty(adminTokens, 'colors.borders.active', defaultImpulseTokens.colors.borders.active),
-            focus: getThemeProperty(adminTokens, 'colors.borders.focus', defaultImpulseTokens.colors.borders.focus)
+            normal: adminTokens.colors?.borders?.normal || defaultImpulseTokens.colors.borders.normal,
+            hover: adminTokens.colors?.borders?.hover || defaultImpulseTokens.colors.borders.hover,
+            active: adminTokens.colors?.borders?.active || defaultImpulseTokens.colors.borders.active,
+            focus: adminTokens.colors?.borders?.focus || defaultImpulseTokens.colors.borders.focus,
           },
-          
           status: {
-            success: getThemeProperty(adminTokens, 'colors.status.success', defaultImpulseTokens.colors.status.success),
-            warning: getThemeProperty(adminTokens, 'colors.status.warning', defaultImpulseTokens.colors.status.warning),
-            error: getThemeProperty(adminTokens, 'colors.status.error', defaultImpulseTokens.colors.status.error),
-            info: getThemeProperty(adminTokens, 'colors.status.info', defaultImpulseTokens.colors.status.info)
+            success: adminTokens.colors?.status?.success || defaultImpulseTokens.colors.status.success,
+            warning: adminTokens.colors?.status?.warning || defaultImpulseTokens.colors.status.warning,
+            error: adminTokens.colors?.status?.error || defaultImpulseTokens.colors.status.error,
+            info: adminTokens.colors?.status?.info || defaultImpulseTokens.colors.status.info,
           }
         },
-        
-        // Other theme properties with fallbacks
         effects: {
           glow: {
-            primary: getThemeProperty(adminTokens, 'effects.glow.primary', defaultImpulseTokens.effects.glow.primary),
-            secondary: getThemeProperty(adminTokens, 'effects.glow.secondary', defaultImpulseTokens.effects.glow.secondary),
-            hover: getThemeProperty(adminTokens, 'effects.glow.hover', defaultImpulseTokens.effects.glow.hover)
+            primary: adminTokens.effects?.glow?.primary || defaultImpulseTokens.effects.glow.primary,
+            secondary: adminTokens.effects?.glow?.secondary || defaultImpulseTokens.effects.glow.secondary,
+            hover: adminTokens.effects?.glow?.hover || defaultImpulseTokens.effects.glow.hover,
           },
           gradients: {
-            primary: getThemeProperty(adminTokens, 'effects.gradients.primary', defaultImpulseTokens.effects.gradients.primary),
-            secondary: getThemeProperty(adminTokens, 'effects.gradients.secondary', defaultImpulseTokens.effects.gradients.secondary),
-            accent: getThemeProperty(adminTokens, 'effects.gradients.accent', defaultImpulseTokens.effects.gradients.accent)
+            primary: adminTokens.effects?.gradients?.primary || defaultImpulseTokens.effects.gradients.primary,
+            secondary: adminTokens.effects?.gradients?.secondary || defaultImpulseTokens.effects.gradients.secondary,
+            accent: adminTokens.effects?.gradients?.accent || defaultImpulseTokens.effects.gradients.accent,
           },
           shadows: {
-            small: getThemeProperty(adminTokens, 'effects.shadows.small', defaultImpulseTokens.effects.shadows.small),
-            medium: getThemeProperty(adminTokens, 'effects.shadows.medium', defaultImpulseTokens.effects.shadows.medium),
-            large: getThemeProperty(adminTokens, 'effects.shadows.large', defaultImpulseTokens.effects.shadows.large),
-            inner: getThemeProperty(adminTokens, 'effects.shadows.inner', defaultImpulseTokens.effects.shadows.inner)
+            small: adminTokens.effects?.shadows?.small || defaultImpulseTokens.effects.shadows.small,
+            medium: adminTokens.effects?.shadows?.medium || defaultImpulseTokens.effects.shadows.medium,
+            large: adminTokens.effects?.shadows?.large || defaultImpulseTokens.effects.shadows.large,
+            inner: adminTokens.effects?.shadows?.inner || defaultImpulseTokens.effects.shadows.inner,
           }
         },
-        
         animation: {
           duration: {
-            fast: getThemeProperty(adminTokens, 'animation.duration.fast', defaultImpulseTokens.animation.duration.fast),
-            normal: getThemeProperty(adminTokens, 'animation.duration.normal', defaultImpulseTokens.animation.duration.normal),
-            slow: getThemeProperty(adminTokens, 'animation.duration.slow', defaultImpulseTokens.animation.duration.slow)
+            fast: adminTokens.animation?.duration?.fast || defaultImpulseTokens.animation.duration.fast,
+            normal: adminTokens.animation?.duration?.normal || defaultImpulseTokens.animation.duration.normal,
+            slow: adminTokens.animation?.duration?.slow || defaultImpulseTokens.animation.duration.slow,
           },
           curves: {
-            bounce: getThemeProperty(adminTokens, 'animation.curves.bounce', defaultImpulseTokens.animation.curves.bounce),
-            ease: getThemeProperty(adminTokens, 'animation.curves.ease', defaultImpulseTokens.animation.curves.ease),
-            spring: getThemeProperty(adminTokens, 'animation.curves.spring', defaultImpulseTokens.animation.curves.spring),
-            linear: getThemeProperty(adminTokens, 'animation.curves.linear', defaultImpulseTokens.animation.curves.linear)
+            bounce: adminTokens.animation?.curves?.bounce || defaultImpulseTokens.animation.curves.bounce,
+            ease: adminTokens.animation?.curves?.ease || defaultImpulseTokens.animation.curves.ease,
+            spring: adminTokens.animation?.curves?.spring || defaultImpulseTokens.animation.curves.spring,
+            linear: adminTokens.animation?.curves?.linear || defaultImpulseTokens.animation.curves.linear,
           },
-          keyframes: getThemeProperty(adminTokens, 'animation.keyframes', defaultImpulseTokens.animation.keyframes)
+          keyframes: adminTokens.animation?.keyframes || defaultImpulseTokens.animation.keyframes
         },
-        
         components: {
           panel: {
-            radius: getThemeProperty(adminTokens, 'components.panel.radius', defaultImpulseTokens.components.panel.radius),
-            padding: getThemeProperty(adminTokens, 'components.panel.padding', defaultImpulseTokens.components.panel.padding),
-            background: getThemeProperty(adminTokens, 'components.panel.background', defaultImpulseTokens.components.panel.background)
+            radius: adminTokens.components?.panel?.radius || defaultImpulseTokens.components.panel.radius,
+            padding: adminTokens.components?.panel?.padding || defaultImpulseTokens.components.panel.padding,
+            background: adminTokens.components?.panel?.background || defaultImpulseTokens.components.panel.background,
           },
           button: {
-            radius: getThemeProperty(adminTokens, 'components.button.radius', defaultImpulseTokens.components.button.radius),
-            padding: getThemeProperty(adminTokens, 'components.button.padding', defaultImpulseTokens.components.button.padding),
-            transition: getThemeProperty(adminTokens, 'components.button.transition', defaultImpulseTokens.components.button.transition)
+            radius: adminTokens.components?.button?.radius || defaultImpulseTokens.components.button.radius,
+            padding: adminTokens.components?.button?.padding || defaultImpulseTokens.components.button.padding,
+            transition: adminTokens.components?.button?.transition || defaultImpulseTokens.components.button.transition,
           },
           tooltip: {
-            radius: getThemeProperty(adminTokens, 'components.tooltip.radius', defaultImpulseTokens.components.tooltip.radius),
-            padding: getThemeProperty(adminTokens, 'components.tooltip.padding', defaultImpulseTokens.components.tooltip.padding),
-            background: getThemeProperty(adminTokens, 'components.tooltip.background', defaultImpulseTokens.components.tooltip.background)
+            radius: adminTokens.components?.tooltip?.radius || defaultImpulseTokens.components.tooltip.radius,
+            padding: adminTokens.components?.tooltip?.padding || defaultImpulseTokens.components.tooltip.padding,
+            background: adminTokens.components?.tooltip?.background || defaultImpulseTokens.components.tooltip.background,
           },
           input: {
-            radius: getThemeProperty(adminTokens, 'components.input.radius', defaultImpulseTokens.components.input.radius),
-            padding: getThemeProperty(adminTokens, 'components.input.padding', defaultImpulseTokens.components.input.padding),
-            background: getThemeProperty(adminTokens, 'components.input.background', defaultImpulseTokens.components.input.background)
+            radius: adminTokens.components?.input?.radius || defaultImpulseTokens.components.input.radius,
+            padding: adminTokens.components?.input?.padding || defaultImpulseTokens.components.input.padding,
+            background: adminTokens.components?.input?.background || defaultImpulseTokens.components.input.background,
           }
         },
-        
         typography: {
           fonts: {
-            body: getThemeProperty(adminTokens, 'typography.fonts.body', defaultImpulseTokens.typography.fonts.body),
-            heading: getThemeProperty(adminTokens, 'typography.fonts.heading', defaultImpulseTokens.typography.fonts.heading),
-            mono: getThemeProperty(adminTokens, 'typography.fonts.monospace', defaultImpulseTokens.typography.fonts.mono)
+            body: adminTokens.typography?.fonts?.body || defaultImpulseTokens.typography.fonts.body,
+            heading: adminTokens.typography?.fonts?.heading || defaultImpulseTokens.typography.fonts.heading,
+            mono: adminTokens.typography?.fonts?.mono || defaultImpulseTokens.typography.fonts.mono,
           },
           sizes: {
-            xs: getThemeProperty(adminTokens, 'typography.sizes.xs', defaultImpulseTokens.typography.sizes.xs),
-            sm: getThemeProperty(adminTokens, 'typography.sizes.sm', defaultImpulseTokens.typography.sizes.sm),
-            base: getThemeProperty(adminTokens, 'typography.sizes.base', defaultImpulseTokens.typography.sizes.base),
-            md: getThemeProperty(adminTokens, 'typography.sizes.md', defaultImpulseTokens.typography.sizes.md),
-            lg: getThemeProperty(adminTokens, 'typography.sizes.lg', defaultImpulseTokens.typography.sizes.lg),
-            xl: getThemeProperty(adminTokens, 'typography.sizes.xl', defaultImpulseTokens.typography.sizes.xl),
-            '2xl': getThemeProperty(adminTokens, 'typography.sizes.2xl', defaultImpulseTokens.typography.sizes['2xl']),
-            '3xl': getThemeProperty(adminTokens, 'typography.sizes.3xl', defaultImpulseTokens.typography.sizes['3xl'])
+            xs: adminTokens.typography?.sizes?.xs || defaultImpulseTokens.typography.sizes.xs,
+            sm: adminTokens.typography?.sizes?.sm || defaultImpulseTokens.typography.sizes.sm,
+            base: adminTokens.typography?.sizes?.base || defaultImpulseTokens.typography.sizes.base,
+            md: adminTokens.typography?.sizes?.md || defaultImpulseTokens.typography.sizes.md,
+            lg: adminTokens.typography?.sizes?.lg || defaultImpulseTokens.typography.sizes.lg,
+            xl: adminTokens.typography?.sizes?.xl || defaultImpulseTokens.typography.sizes.xl,
+            '2xl': adminTokens.typography?.sizes?.['2xl'] || defaultImpulseTokens.typography.sizes['2xl'],
+            '3xl': adminTokens.typography?.sizes?.['3xl'] || defaultImpulseTokens.typography.sizes['3xl'],
           },
           weights: {
-            light: getThemeProperty(adminTokens, 'typography.weights.light', defaultImpulseTokens.typography.weights.light),
-            normal: getThemeProperty(adminTokens, 'typography.weights.normal', defaultImpulseTokens.typography.weights.normal),
-            medium: getThemeProperty(adminTokens, 'typography.weights.medium', defaultImpulseTokens.typography.weights.medium),
-            bold: getThemeProperty(adminTokens, 'typography.weights.bold', defaultImpulseTokens.typography.weights.bold)
+            light: adminTokens.typography?.weights?.light || defaultImpulseTokens.typography.weights.light,
+            normal: adminTokens.typography?.weights?.normal || defaultImpulseTokens.typography.weights.normal,
+            medium: adminTokens.typography?.weights?.medium || defaultImpulseTokens.typography.weights.medium,
+            bold: adminTokens.typography?.weights?.bold || defaultImpulseTokens.typography.weights.bold,
           },
           lineHeights: {
-            tight: getThemeProperty(adminTokens, 'typography.lineHeights.tight', defaultImpulseTokens.typography.lineHeights.tight),
-            normal: getThemeProperty(adminTokens, 'typography.lineHeights.normal', defaultImpulseTokens.typography.lineHeights.normal),
-            loose: getThemeProperty(adminTokens, 'typography.lineHeights.loose', defaultImpulseTokens.typography.lineHeights.loose)
+            tight: adminTokens.typography?.lineHeights?.tight || defaultImpulseTokens.typography.lineHeights.tight,
+            normal: adminTokens.typography?.lineHeights?.normal || defaultImpulseTokens.typography.lineHeights.normal,
+            loose: adminTokens.typography?.lineHeights?.loose || defaultImpulseTokens.typography.lineHeights.loose,
           }
         }
       };
+      
+      logger.debug('Created ImpulseTheme from admin tokens', { 
+        details: { themeId: impulseTheme.id } 
+      });
+      
+      return impulseTheme;
     }
+    
+    // If no admin tokens, map from design_tokens directly
+    const dt = theme.design_tokens || {};
+    
+    // Create impulse theme by mapping from core design tokens
+    const impulseTheme: ImpulseTheme = {
+      id: theme.id,
+      name: theme.name,
+      version: String(theme.version || '1.0.0'),
+      description: theme.description || 'Admin Theme',
+      
+      // Map colors from core design tokens
+      colors: {
+        primary: dt.colors?.primary || defaultImpulseTokens.colors.primary,
+        secondary: dt.colors?.secondary || defaultImpulseTokens.colors.secondary,
+        accent: dt.colors?.accent || defaultImpulseTokens.colors.accent,
+        background: {
+          main: dt.colors?.background?.main || defaultImpulseTokens.colors.background.main,
+          overlay: dt.colors?.background?.overlay || defaultImpulseTokens.colors.background.overlay,
+          card: dt.colors?.background?.card || defaultImpulseTokens.colors.background.card,
+          alt: dt.colors?.background?.alt || defaultImpulseTokens.colors.background.alt,
+        },
+        text: {
+          primary: dt.colors?.text?.primary || defaultImpulseTokens.colors.text.primary,
+          secondary: dt.colors?.text?.secondary || defaultImpulseTokens.colors.text.secondary,
+          accent: dt.colors?.text?.accent || defaultImpulseTokens.colors.text.accent,
+          muted: dt.colors?.text?.muted || defaultImpulseTokens.colors.text.muted,
+        },
+        borders: {
+          normal: dt.colors?.borders?.normal || defaultImpulseTokens.colors.borders.normal,
+          hover: dt.colors?.borders?.hover || defaultImpulseTokens.colors.borders.hover,
+          active: dt.colors?.borders?.active || defaultImpulseTokens.colors.borders.active,
+          focus: dt.colors?.borders?.focus || defaultImpulseTokens.colors.borders.focus,
+        },
+        status: {
+          success: dt.colors?.status?.success || defaultImpulseTokens.colors.status.success,
+          warning: dt.colors?.status?.warning || defaultImpulseTokens.colors.status.warning,
+          error: dt.colors?.status?.error || defaultImpulseTokens.colors.status.error,
+          info: dt.colors?.status?.info || defaultImpulseTokens.colors.status.info,
+        }
+      },
+      
+      // Map effects from core design tokens
+      effects: {
+        glow: {
+          primary: dt.effects?.glow?.primary || defaultImpulseTokens.effects.glow.primary,
+          secondary: dt.effects?.glow?.secondary || defaultImpulseTokens.effects.glow.secondary,
+          hover: dt.effects?.glow?.hover || defaultImpulseTokens.effects.glow.hover,
+        },
+        gradients: {
+          primary: dt.effects?.gradients?.primary || defaultImpulseTokens.effects.gradients.primary,
+          secondary: dt.effects?.gradients?.secondary || defaultImpulseTokens.effects.gradients.secondary,
+          accent: dt.effects?.gradients?.accent || defaultImpulseTokens.effects.gradients.accent,
+        },
+        shadows: {
+          small: dt.effects?.shadows?.small || defaultImpulseTokens.effects.shadows.small,
+          medium: dt.effects?.shadows?.medium || defaultImpulseTokens.effects.shadows.medium,
+          large: dt.effects?.shadows?.large || defaultImpulseTokens.effects.shadows.large,
+          inner: dt.effects?.shadows?.inner || defaultImpulseTokens.effects.shadows.inner,
+        }
+      },
+      
+      // Map animation properties
+      animation: {
+        duration: {
+          fast: dt.animation?.duration?.fast || defaultImpulseTokens.animation.duration.fast,
+          normal: dt.animation?.duration?.normal || defaultImpulseTokens.animation.duration.normal,
+          slow: dt.animation?.duration?.slow || defaultImpulseTokens.animation.duration.slow,
+        },
+        curves: {
+          bounce: dt.animation?.curves?.bounce || defaultImpulseTokens.animation.curves.bounce,
+          ease: dt.animation?.curves?.ease || defaultImpulseTokens.animation.curves.ease,
+          spring: dt.animation?.curves?.spring || defaultImpulseTokens.animation.curves.spring,
+          linear: dt.animation?.curves?.linear || defaultImpulseTokens.animation.curves.linear,
+        },
+        keyframes: dt.animation?.keyframes || defaultImpulseTokens.animation.keyframes
+      },
+      
+      // Map component styles
+      components: {
+        panel: {
+          radius: dt.components?.panel?.radius || defaultImpulseTokens.components.panel.radius,
+          padding: dt.components?.panel?.padding || defaultImpulseTokens.components.panel.padding,
+          background: dt.components?.panel?.background || defaultImpulseTokens.components.panel.background,
+        },
+        button: {
+          radius: dt.components?.button?.radius || defaultImpulseTokens.components.button.radius,
+          padding: dt.components?.button?.padding || defaultImpulseTokens.components.button.padding,
+          transition: dt.components?.button?.transition || defaultImpulseTokens.components.button.transition,
+        },
+        tooltip: {
+          radius: dt.components?.tooltip?.radius || defaultImpulseTokens.components.tooltip.radius,
+          padding: dt.components?.tooltip?.padding || defaultImpulseTokens.components.tooltip.padding,
+          background: dt.components?.tooltip?.background || defaultImpulseTokens.components.tooltip.background,
+        },
+        input: {
+          radius: dt.components?.input?.radius || defaultImpulseTokens.components.input.radius,
+          padding: dt.components?.input?.padding || defaultImpulseTokens.components.input.padding,
+          background: dt.components?.input?.background || defaultImpulseTokens.components.input.background,
+        }
+      },
+      
+      // Map typography styles
+      typography: {
+        fonts: {
+          body: dt.typography?.fonts?.body || defaultImpulseTokens.typography.fonts.body,
+          heading: dt.typography?.fonts?.heading || defaultImpulseTokens.typography.fonts.heading,
+          mono: dt.typography?.fonts?.mono || defaultImpulseTokens.typography.fonts.mono,
+        },
+        sizes: {
+          xs: dt.typography?.sizes?.xs || defaultImpulseTokens.typography.sizes.xs,
+          sm: dt.typography?.sizes?.sm || defaultImpulseTokens.typography.sizes.sm,
+          base: dt.typography?.sizes?.base || defaultImpulseTokens.typography.sizes.base,
+          md: dt.typography?.sizes?.md || defaultImpulseTokens.typography.sizes.md,
+          lg: dt.typography?.sizes?.lg || defaultImpulseTokens.typography.sizes.lg,
+          xl: dt.typography?.sizes?.xl || defaultImpulseTokens.typography.sizes.xl,
+          '2xl': dt.typography?.sizes?.['2xl'] || defaultImpulseTokens.typography.sizes['2xl'],
+          '3xl': dt.typography?.sizes?.['3xl'] || defaultImpulseTokens.typography.sizes['3xl'],
+        },
+        weights: {
+          light: dt.typography?.weights?.light || defaultImpulseTokens.typography.weights.light,
+          normal: dt.typography?.weights?.normal || defaultImpulseTokens.typography.weights.normal,
+          medium: dt.typography?.weights?.medium || defaultImpulseTokens.typography.weights.medium,
+          bold: dt.typography?.weights?.bold || defaultImpulseTokens.typography.weights.bold,
+        },
+        lineHeights: {
+          tight: dt.typography?.lineHeights?.tight || defaultImpulseTokens.typography.lineHeights.tight,
+          normal: dt.typography?.lineHeights?.normal || defaultImpulseTokens.typography.lineHeights.normal,
+          loose: dt.typography?.lineHeights?.loose || defaultImpulseTokens.typography.lineHeights.loose,
+        }
+      }
+    };
+    
+    logger.debug('Created ImpulseTheme from design tokens', { 
+      details: { themeId: impulseTheme.id } 
+    });
+    
+    return impulseTheme;
   } catch (error) {
     logger.error('Error converting Theme to ImpulseTheme', {
       details: safeDetails(error)
     });
+    
+    // Return default tokens on error
     return defaultImpulseTokens;
   }
 }
