@@ -1,21 +1,52 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { LayoutSkeleton, Layout, LayoutJsonData, CreateLayoutResponse } from '@/admin/types/layout.types';
+import { LayoutSkeleton, Layout, LayoutJsonData, CreateLayoutResponse, Component } from '@/admin/types/layout.types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/constants/logLevel';
-import { PostgrestResponse } from '@supabase/supabase-js';
 
 const logger = getLogger('layoutSkeletonService', { category: LogCategory.ADMIN });
 
 /**
- * Convert layout JSON to a format that Supabase can store
+ * Safely process layout JSON data to ensure compatibility with PostgreSQL JSON type
  */
-function convertLayoutJsonForStorage(layoutJson: LayoutJsonData) {
-  return {
-    components: layoutJson.components || [],
-    version: layoutJson.version || 1,
-    meta: layoutJson.meta || {}
-  };
+function processLayoutJson(layoutJson: LayoutJsonData): any {
+  try {
+    return {
+      components: layoutJson.components || [],
+      version: layoutJson.version || 1,
+      meta: layoutJson.meta || {}
+    };
+  } catch (err) {
+    logger.error('Error processing layout JSON', { details: { error: err } });
+    return {
+      components: [],
+      version: 1,
+      meta: {}
+    };
+  }
+}
+
+/**
+ * Parse layout JSON from database result
+ */
+function parseLayoutJson(data: any): LayoutJsonData {
+  if (!data) {
+    return { components: [], version: 1 };
+  }
+  
+  try {
+    // Handle already parsed JSON or string
+    const jsonData = typeof data === 'string' ? JSON.parse(data) : data;
+    
+    return {
+      components: Array.isArray(jsonData.components) ? jsonData.components : [],
+      version: typeof jsonData.version === 'number' ? jsonData.version : 1,
+      meta: jsonData.meta || {}
+    };
+  } catch (err) {
+    logger.error('Error parsing layout JSON', { details: { error: err } });
+    return { components: [], version: 1 };
+  }
 }
 
 /**
@@ -39,11 +70,7 @@ async function getById(id: string) {
     // Ensure the layout_json has expected structure
     const result: LayoutSkeleton = {
       ...data,
-      layout_json: {
-        components: data.layout_json?.components || [],
-        version: data.layout_json?.version || 1,
-        meta: data.layout_json?.meta
-      }
+      layout_json: parseLayoutJson(data.layout_json)
     };
     
     return { data: result, error: null };
@@ -91,11 +118,7 @@ async function getAll(options?: {
     // Ensure each layout_json has expected structure
     const results: LayoutSkeleton[] = data.map(item => ({
       ...item,
-      layout_json: {
-        components: item.layout_json?.components || [],
-        version: item.layout_json?.version || 1,
-        meta: item.layout_json?.meta
-      }
+      layout_json: parseLayoutJson(item.layout_json)
     }));
     
     return { data: results, error: null };
@@ -133,11 +156,7 @@ async function getByTypeAndScope(type: string, scope: string) {
     // Ensure the layout_json has expected structure
     const result: LayoutSkeleton = {
       ...data,
-      layout_json: {
-        components: data.layout_json?.components || [],
-        version: data.layout_json?.version || 1,
-        meta: data.layout_json?.meta
-      }
+      layout_json: parseLayoutJson(data.layout_json)
     };
     
     return { data: result, error: null };
@@ -166,7 +185,7 @@ async function create(layout: Partial<LayoutSkeleton>): Promise<CreateLayoutResp
       description: layout.description || null,
       is_active: layout.is_active !== undefined ? layout.is_active : true,
       is_locked: layout.is_locked !== undefined ? layout.is_locked : false,
-      layout_json: convertLayoutJsonForStorage(layout.layout_json || { components: [], version: 1 }),
+      layout_json: processLayoutJson(layout.layout_json || { components: [], version: 1 }),
       version: layout.version || 1
     };
     
@@ -186,11 +205,7 @@ async function create(layout: Partial<LayoutSkeleton>): Promise<CreateLayoutResp
     // Ensure the layout_json has expected structure
     const result: LayoutSkeleton = {
       ...data,
-      layout_json: {
-        components: data.layout_json?.components || [],
-        version: data.layout_json?.version || 1,
-        meta: data.layout_json?.meta
-      }
+      layout_json: parseLayoutJson(data.layout_json)
     };
     
     return { success: true, data: result, id: result.id };
@@ -218,7 +233,7 @@ async function update(id: string, layout: Partial<LayoutSkeleton>): Promise<Crea
     if (layout.is_locked !== undefined) updateData.is_locked = layout.is_locked;
     if (layout.version) updateData.version = layout.version;
     if (layout.layout_json) {
-      updateData.layout_json = convertLayoutJsonForStorage(layout.layout_json);
+      updateData.layout_json = processLayoutJson(layout.layout_json);
     }
     
     const { data, error } = await supabase
@@ -238,11 +253,7 @@ async function update(id: string, layout: Partial<LayoutSkeleton>): Promise<Crea
     // Ensure the layout_json has expected structure
     const result: LayoutSkeleton = {
       ...data,
-      layout_json: {
-        components: data.layout_json?.components || [],
-        version: data.layout_json?.version || 1,
-        meta: data.layout_json?.meta
-      }
+      layout_json: parseLayoutJson(data.layout_json)
     };
     
     return { success: true, data: result, id };
