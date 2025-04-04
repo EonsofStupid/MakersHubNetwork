@@ -34,11 +34,14 @@ export function UserMenu() {
   
   const userInitials = getInitials(user.email || 'User');
   
+  // Extract avatar URL from user profile or use directly if available
+  const avatarUrl = user.profile?.avatar_url || '';
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="focus:outline-none">
         <Avatar className="h-8 w-8 cursor-pointer hover:opacity-80 transition-opacity">
-          <AvatarImage src={user.avatarUrl || ''} alt={user.email || 'User'} />
+          <AvatarImage src={avatarUrl} alt={user.email || 'User'} />
           <AvatarFallback className="bg-primary text-primary-foreground">
             {userInitials}
           </AvatarFallback>

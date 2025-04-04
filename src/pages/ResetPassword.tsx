@@ -4,10 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@supabase/supabase-js';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging/types';
+import { LogCategory } from '@/constants/logLevel';
 import { Link } from 'react-router-dom';
+
+// Get Supabase URL and key from environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || '';
+
+// Create Supabase client
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Simple layout since AuthLayout is not available
 const SimpleLayout = ({ children }: { children: React.ReactNode }) => (
@@ -21,7 +28,7 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
-  const logger = useLogger('ResetPassword', { category: LogCategory.AUTHENTICATION });
+  const logger = useLogger('ResetPassword', { category: LogCategory.AUTH });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +46,7 @@ export default function ResetPassword() {
       setIsLoading(true);
       logger.info('Reset password request initiated', { details: { email } });
       
-      // Use updateUser method from Supabase Auth
+      // Use resetPasswordForEmail method from Supabase Auth
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + '/update-password',
       });

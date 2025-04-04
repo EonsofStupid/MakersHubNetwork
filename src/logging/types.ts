@@ -34,7 +34,7 @@ export interface LoggerOptions {
   source?: string;
 }
 
-// Re-export LogLevel and LogCategory for broader usage
+// Export LogLevel and LogCategory from the canonical source
 export { LogLevel, LogCategory };
 
 /**
@@ -90,8 +90,10 @@ export interface LogEntry {
 export interface LogTransport {
   log(entry: LogEntry): void;
   getLogs?(): LogEntry[];
+  getLogs?(limit?: number, filterFn?: (entry: LogEntry) => boolean): LogEntry[];
   clear?(): void;
   flush?(): Promise<void>;
+  subscribe?(callback: (entry: LogEntry) => void): () => void;
 }
 
 /**
@@ -106,6 +108,8 @@ export interface Logger {
   fatal(message: string, options?: LogOptions): void;
   success(message: string, options?: LogOptions): void;
   critical(message: string, options?: LogOptions): void;
+  log(level: LogLevel, message: string, options?: LogOptions): void;
+  performance(name: string, durationMs: number, success: boolean, options?: LogOptions): void;
 }
 
 /**

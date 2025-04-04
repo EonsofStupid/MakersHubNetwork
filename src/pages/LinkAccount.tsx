@@ -6,8 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging/types';
-import { supabase } from '@/integrations/supabase/client';
+import { LogCategory } from '@/constants/logLevel';
+import { createClient } from '@supabase/supabase-js';
+
+// Get Supabase URL and key from environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || '';
+
+// Create Supabase client
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function LinkAccount() {
   const auth = useAuth();
@@ -16,7 +23,7 @@ export default function LinkAccount() {
   const searchParams = new URLSearchParams(location.search);
   const provider = searchParams.get('provider');
   const { toast } = useToast();
-  const logger = useLogger('LinkAccount', { category: LogCategory.AUTHENTICATION });
+  const logger = useLogger('LinkAccount', { category: LogCategory.AUTH });
   const [isLoading, setIsLoading] = useState(true);
 
   const linkExternalAccount = async (provider: string) => {
