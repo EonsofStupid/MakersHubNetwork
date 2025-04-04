@@ -3,14 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogCategory, LogLevel, memoryTransport } from '@/logging';
+import { LogCategory, LogLevel } from '@/logging/types';
+import { safeGetLogs, safeClearLogs } from '@/logging/utils/memoryTransportHelper';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Trash } from 'lucide-react';
 import { useLogger } from '@/hooks/use-logger';
 
 export function LogsDashboard() {
-  const [logs, setLogs] = useState(memoryTransport.getLogs?.() || []);
+  const [logs, setLogs] = useState(safeGetLogs());
   const [activeTab, setActiveTab] = useState<string>('level');
   const logger = useLogger('LogsDashboard', { category: LogCategory.ADMIN });
   
@@ -19,9 +20,7 @@ export function LogsDashboard() {
     logger.info('LogsDashboard mounted');
     
     const interval = setInterval(() => {
-      if (memoryTransport.getLogs) {
-        setLogs(memoryTransport.getLogs());
-      }
+      setLogs(safeGetLogs());
     }, 5000);
     
     return () => clearInterval(interval);
@@ -32,7 +31,7 @@ export function LogsDashboard() {
     const countsByLevel: Record<string, number> = {};
     
     logs.forEach(log => {
-      const levelName = LogLevel[log.level];
+      const levelName = LogLevel[log.level] || 'UNKNOWN';
       countsByLevel[levelName] = (countsByLevel[levelName] || 0) + 1;
     });
     
@@ -46,7 +45,8 @@ export function LogsDashboard() {
     const countsByCategory: Record<string, number> = {};
     
     logs.forEach(log => {
-      countsByCategory[log.category] = (countsByCategory[log.category] || 0) + 1;
+      const category = log.category || 'UNCATEGORIZED';
+      countsByCategory[category] = (countsByCategory[category] || 0) + 1;
     });
     
     return Object.entries(countsByCategory).map(([category, count]) => ({
@@ -56,11 +56,9 @@ export function LogsDashboard() {
   }, [logs]);
   
   const clearAllLogs = () => {
-    if (memoryTransport.clear) {
-      memoryTransport.clear();
-      setLogs([]);
-      logger.info('All logs cleared');
-    }
+    safeClearLogs();
+    setLogs([]);
+    logger.info('All logs cleared');
   };
   
   // Calculate some statistics

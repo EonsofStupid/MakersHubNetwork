@@ -33,27 +33,27 @@ export function safeDetails(
   details: unknown, 
   depth: number = 0, 
   visited: Set<unknown> = new Set()
-): unknown {
+): Record<string, any> | undefined {
   if (details === null || details === undefined) {
-    return details;
+    return undefined;
   }
 
   // Handle primitive types
   if (typeof details !== 'object') {
-    return details;
+    return { value: details };
   }
 
   // Prevent circular references
   if (visited.has(details)) {
-    return '[Circular Reference]';
+    return { circularReference: true };
   }
 
   // Limit recursion depth
   if (depth >= MAX_DEPTH) {
     if (Array.isArray(details)) {
-      return `[Array(${details.length})]`;
+      return { arrayType: `Array(${details.length})` };
     }
-    return '[Object]';
+    return { objectType: details.constructor?.name || 'Object' };
   }
 
   // Track this object in our visited set
@@ -70,7 +70,9 @@ export function safeDetails(
 
   // Handle arrays
   if (Array.isArray(details)) {
-    return details.map(item => safeDetails(item, depth + 1, visited));
+    return {
+      data: details.map(item => safeDetails(item, depth + 1, visited))
+    };
   }
 
   // Handle objects
@@ -96,5 +98,5 @@ export function safeDetails(
   }
 
   // Fallback for other object types
-  return `[${details.constructor?.name || 'Unknown'}]`;
+  return { type: details.constructor?.name || 'Unknown' };
 }

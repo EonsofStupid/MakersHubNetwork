@@ -12,7 +12,7 @@ export function usePerformanceLogger(component: string, options: Partial<Perform
   
   const defaultOptions: Partial<PerformanceLoggerOptions> = {
     category: LogCategory.PERFORMANCE,
-    threshold: 50,
+    warnThreshold: 50,
     ...options
   };
   

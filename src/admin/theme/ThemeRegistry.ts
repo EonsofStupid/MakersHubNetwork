@@ -2,6 +2,7 @@
 import { ImpulseTheme } from '../types/impulse.types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 interface ThemeRegistryItem {
   id: string;
@@ -37,7 +38,7 @@ class ThemeRegistry {
       this.logger.debug(`Theme registered: ${id}`);
     } catch (error) {
       this.logger.error(`Error registering theme: ${id}`, {
-        details: { error }
+        details: safeDetails(error)
       });
     }
   }
@@ -51,7 +52,7 @@ class ThemeRegistry {
       return themeItem ? themeItem.theme : null;
     } catch (error) {
       this.logger.error(`Error getting theme: ${id}`, {
-        details: { error }
+        details: safeDetails(error)
       });
       return null;
     }
@@ -80,7 +81,7 @@ class ThemeRegistry {
       return result;
     } catch (error) {
       this.logger.error(`Error removing theme: ${id}`, {
-        details: { error }
+        details: safeDetails(error)
       });
       return false;
     }
@@ -102,7 +103,7 @@ class ThemeRegistry {
       this.logger.debug('All themes cleared from registry');
     } catch (error) {
       this.logger.error('Error clearing themes', {
-        details: { error }
+        details: safeDetails(error)
       });
     }
   }
