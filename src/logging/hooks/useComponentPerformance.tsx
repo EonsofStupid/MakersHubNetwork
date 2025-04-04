@@ -1,7 +1,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useLogger } from './useLogger';
-import { LogCategory } from '../types';
+import { LogCategory } from '@/constants/logLevel';
 
 interface ComponentPerformanceOptions {
   /**
@@ -36,7 +36,7 @@ export function useComponentPerformance(options: ComponentPerformanceOptions = {
     verbose = false
   } = options;
   
-  const logger = useLogger(name, { category: LogCategory.PERFORMANCE as string });
+  const logger = useLogger(name, { category: LogCategory.PERFORMANCE });
   const mountedAt = useRef<number>(0);
   const renderCount = useRef<number>(0);
   const lastRenderAt = useRef<number>(0);

@@ -56,7 +56,9 @@ export function usePerformanceLogger(source: string, options: Partial<Performanc
           defaultOptions.onComplete({
             name: operationName,
             duration,
-            success
+            success,
+            timestamp: Date.now(),
+            error: error
           });
         }
       }
@@ -103,7 +105,9 @@ export function usePerformanceLogger(source: string, options: Partial<Performanc
           defaultOptions.onComplete({
             name: operationName,
             duration,
-            success
+            success,
+            timestamp: Date.now(),
+            error: error
           });
         }
       }

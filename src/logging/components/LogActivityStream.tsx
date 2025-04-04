@@ -38,7 +38,7 @@ export const LogActivityStream: React.FC<LogActivityStreamProps> = ({
         return true;
       });
       
-      setLogs(initialLogs);
+      setLogs(initialLogs || []);
     }
     
     // Subscribe to new logs

@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { 
   Logger, 
@@ -242,11 +241,11 @@ class LoggerService {
     
     // Add optional fields based on config
     if (this.config.includeUser && this.userId) {
-      entry.userId = this.userId;
+      entry.user_id = this.userId;
     }
     
     if (this.config.includeSession) {
-      entry.correlationId = this.sessionId;
+      entry.session_id = this.sessionId;
     }
     
     // Add to buffer

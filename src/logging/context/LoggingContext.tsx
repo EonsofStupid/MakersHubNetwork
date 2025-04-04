@@ -1,8 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { LogEntry, LoggingContextType, LogLevel } from '../types';
-import { getLogger, memoryTransport } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/constants/logLevel';
+import { memoryTransport } from '../transports/memory.transport';
 
 // Create the context with a default value
 const LoggingContext = createContext<LoggingContextType>({
