@@ -3,7 +3,7 @@ import { defaultImpulseTokens } from './impulse/tokens';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { ImpulseTheme } from '../types/impulse.types';
-import { getThemeProperty } from './utils/themeUtils';
+import { getThemeProperty, validateTheme } from './utils/themeUtils';
 
 // Interface for theme registry entries
 interface ThemeRegistryEntry {
@@ -39,6 +39,10 @@ class ThemeRegistry {
       this.logger.warn(`Theme ${id} already exists, overwriting`);
     }
 
+    // Ensure theme has required ID
+    theme.id = id;
+    
+    // Always validate/ensure complete theme objects
     const validatedTheme = this.validateTheme(theme);
     this.themes.set(id, validatedTheme);
     this.logger.debug(`Theme ${id} registered successfully`);
@@ -93,13 +97,15 @@ class ThemeRegistry {
   /**
    * Validate a theme object and ensure it has all required properties
    */
-  private validateTheme(theme: Partial<ImpulseTheme>): ImpulseTheme {
+  private validateTheme(theme: ImpulseTheme): ImpulseTheme {
     const defaultTheme = this.getDefaultTheme();
+    
+    // Create a complete theme with all required properties
     const validatedTheme: ImpulseTheme = {
       // Basic theme properties
-      id: theme.id || 'unknown',
+      id: theme.id,
       name: theme.name || 'Unknown Theme',
-      version: theme.version || '1.0.0',
+      version: theme.version || 1,
       description: theme.description || '',
       
       // Colors with fallbacks to ensure there are no undefined values
@@ -109,135 +115,127 @@ class ThemeRegistry {
         accent: theme.colors?.accent || defaultTheme.colors.accent || '#F97316',
         
         background: {
-          main: getThemeProperty(theme, 'colors.background.main', defaultTheme.colors.background?.main || '#121212'),
-          overlay: getThemeProperty(theme, 'colors.background.overlay', defaultTheme.colors.background?.overlay || 'rgba(0,0,0,0.7)'),
-          card: getThemeProperty(theme, 'colors.background.card', defaultTheme.colors.background?.card || '#1E1E1E'),
-          alt: getThemeProperty(theme, 'colors.background.alt', defaultTheme.colors.background?.alt || '#2D2D2D')
+          main: theme.colors?.background?.main || defaultTheme.colors.background.main,
+          overlay: theme.colors?.background?.overlay || defaultTheme.colors.background.overlay,
+          card: theme.colors?.background?.card || defaultTheme.colors.background.card,
+          alt: theme.colors?.background?.alt || defaultTheme.colors.background.alt
         },
         
         text: {
-          primary: getThemeProperty(theme, 'colors.text.primary', defaultTheme.colors.text?.primary || '#FFFFFF'),
-          secondary: getThemeProperty(theme, 'colors.text.secondary', defaultTheme.colors.text?.secondary || 'rgba(255,255,255,0.7)'),
-          accent: getThemeProperty(theme, 'colors.text.accent', defaultTheme.colors.text?.accent || '#00F0FF'),
-          muted: getThemeProperty(theme, 'colors.text.muted', defaultTheme.colors.text?.muted || 'rgba(255,255,255,0.5)')
+          primary: theme.colors?.text?.primary || defaultTheme.colors.text.primary,
+          secondary: theme.colors?.text?.secondary || defaultTheme.colors.text.secondary,
+          accent: theme.colors?.text?.accent || defaultTheme.colors.text.accent,
+          muted: theme.colors?.text?.muted || defaultTheme.colors.text.muted
         },
         
         borders: {
-          normal: getThemeProperty(theme, 'colors.borders.normal', defaultTheme.colors.borders?.normal || 'rgba(255,255,255,0.1)'),
-          hover: getThemeProperty(theme, 'colors.borders.hover', defaultTheme.colors.borders?.hover || 'rgba(255,255,255,0.2)'),
-          active: getThemeProperty(theme, 'colors.borders.active', defaultTheme.colors.borders?.active || 'rgba(255,255,255,0.3)'),
-          focus: getThemeProperty(theme, 'colors.borders.focus', defaultTheme.colors.borders?.focus || 'rgba(255,255,255,0.25)')
+          normal: theme.colors?.borders?.normal || defaultTheme.colors.borders.normal,
+          hover: theme.colors?.borders?.hover || defaultTheme.colors.borders.hover,
+          active: theme.colors?.borders?.active || defaultTheme.colors.borders.active,
+          focus: theme.colors?.borders?.focus || defaultTheme.colors.borders.focus
         },
         
         status: {
-          success: getThemeProperty(theme, 'colors.status.success', defaultTheme.colors.status?.success || '#10B981'),
-          warning: getThemeProperty(theme, 'colors.status.warning', defaultTheme.colors.status?.warning || '#F59E0B'),
-          error: getThemeProperty(theme, 'colors.status.error', defaultTheme.colors.status?.error || '#EF4444'),
-          info: getThemeProperty(theme, 'colors.status.info', defaultTheme.colors.status?.info || '#3B82F6')
+          success: theme.colors?.status?.success || defaultTheme.colors.status.success,
+          warning: theme.colors?.status?.warning || defaultTheme.colors.status.warning,
+          error: theme.colors?.status?.error || defaultTheme.colors.status.error,
+          info: theme.colors?.status?.info || defaultTheme.colors.status.info
         }
       },
       
       // Effects with fallbacks
       effects: {
         glow: {
-          primary: getThemeProperty(theme, 'effects.glow.primary', defaultTheme.effects?.glow?.primary || '0 0 10px rgba(0,240,255,0.7)'),
-          secondary: getThemeProperty(theme, 'effects.glow.secondary', defaultTheme.effects?.glow?.secondary || '0 0 10px rgba(255,45,110,0.7)'),
-          hover: getThemeProperty(theme, 'effects.glow.hover', defaultTheme.effects?.glow?.hover || '0 0 15px rgba(0,240,255,0.9)')
+          primary: theme.effects?.glow?.primary || defaultTheme.effects.glow.primary,
+          secondary: theme.effects?.glow?.secondary || defaultTheme.effects.glow.secondary,
+          hover: theme.effects?.glow?.hover || defaultTheme.effects.glow.hover
         },
         
-        gradients: {
-          primary: getThemeProperty(theme, 'effects.gradients.primary', defaultTheme.effects?.gradients?.primary || 'linear-gradient(90deg, #00F0FF, #00F0FF44)'),
-          secondary: getThemeProperty(theme, 'effects.gradients.secondary', defaultTheme.effects?.gradients?.secondary || 'linear-gradient(90deg, #FF2D6E, #FF2D6E44)'),
-          accent: getThemeProperty(theme, 'effects.gradients.accent', defaultTheme.effects?.gradients?.accent || 'linear-gradient(90deg, #8B5CF6, #8B5CF644)')
-        },
+        gradients: theme.effects?.gradients || defaultTheme.effects.gradients,
         
         shadows: {
-          small: getThemeProperty(theme, 'effects.shadows.small', defaultTheme.effects?.shadows?.small || '0 2px 4px rgba(0,0,0,0.1)'),
-          medium: getThemeProperty(theme, 'effects.shadows.medium', defaultTheme.effects?.shadows?.medium || '0 4px 6px rgba(0,0,0,0.1)'),
-          large: getThemeProperty(theme, 'effects.shadows.large', defaultTheme.effects?.shadows?.large || '0 10px 15px rgba(0,0,0,0.1)'),
-          inner: getThemeProperty(theme, 'effects.shadows.inner', defaultTheme.effects?.shadows?.inner || 'inset 0 2px 4px rgba(0,0,0,0.1)')
+          sm: theme.effects?.shadows?.sm || defaultTheme.effects.shadows.sm,
+          md: theme.effects?.shadows?.md || defaultTheme.effects.shadows.md,
+          lg: theme.effects?.shadows?.lg || defaultTheme.effects.shadows.lg,
+          xl: theme.effects?.shadows?.xl || defaultTheme.effects.shadows.xl
         }
       },
       
       // Animation with fallbacks
       animation: {
         duration: {
-          fast: getThemeProperty(theme, 'animation.duration.fast', defaultTheme.animation?.duration?.fast || '150ms'),
-          normal: getThemeProperty(theme, 'animation.duration.normal', defaultTheme.animation?.duration?.normal || '300ms'),
-          slow: getThemeProperty(theme, 'animation.duration.slow', defaultTheme.animation?.duration?.slow || '500ms')
+          fast: theme.animation?.duration?.fast || defaultTheme.animation.duration.fast,
+          normal: theme.animation?.duration?.normal || defaultTheme.animation.duration.normal,
+          slow: theme.animation?.duration?.slow || defaultTheme.animation.duration.slow
         },
         
         curves: {
-          bounce: getThemeProperty(theme, 'animation.curves.bounce', defaultTheme.animation?.curves?.bounce || 'cubic-bezier(0.175, 0.885, 0.32, 1.275)'),
-          ease: getThemeProperty(theme, 'animation.curves.ease', defaultTheme.animation?.curves?.ease || 'cubic-bezier(0.4, 0, 0.2, 1)'),
-          spring: getThemeProperty(theme, 'animation.curves.spring', defaultTheme.animation?.curves?.spring || 'cubic-bezier(0.43, 0.13, 0.23, 0.96)'),
-          linear: getThemeProperty(theme, 'animation.curves.linear', defaultTheme.animation?.curves?.linear || 'linear')
+          bounce: theme.animation?.curves?.bounce || defaultTheme.animation.curves.bounce,
+          ease: theme.animation?.curves?.ease || defaultTheme.animation.curves.ease,
+          spring: theme.animation?.curves?.spring || defaultTheme.animation.curves.spring,
+          linear: theme.animation?.curves?.linear || defaultTheme.animation.curves.linear
         },
         
-        keyframes: {
-          fade: getThemeProperty(theme, 'animation.keyframes.fade', defaultTheme.animation?.keyframes?.fade || ''),
-          pulse: getThemeProperty(theme, 'animation.keyframes.pulse', defaultTheme.animation?.keyframes?.pulse || ''),
-          glow: getThemeProperty(theme, 'animation.keyframes.glow', defaultTheme.animation?.keyframes?.glow || ''),
-          slide: getThemeProperty(theme, 'animation.keyframes.slide', defaultTheme.animation?.keyframes?.slide || '')
-        }
+        keyframes: theme.animation?.keyframes || defaultTheme.animation.keyframes
       },
       
       // Component styling
       components: {
         panel: {
-          radius: getThemeProperty(theme, 'components.panel.radius', defaultTheme.components?.panel?.radius || '0.75rem'),
-          padding: getThemeProperty(theme, 'components.panel.padding', defaultTheme.components?.panel?.padding || '1.5rem'),
-          background: getThemeProperty(theme, 'components.panel.background', defaultTheme.components?.panel?.background || 'rgba(30, 41, 59, 0.7)')
+          radius: theme.components?.panel?.radius || defaultTheme.components.panel.radius,
+          padding: theme.components?.panel?.padding || defaultTheme.components.panel.padding,
+          background: theme.components?.panel?.background || defaultTheme.components.panel.background
         },
         
         button: {
-          radius: getThemeProperty(theme, 'components.button.radius', defaultTheme.components?.button?.radius || '0.5rem'),
-          padding: getThemeProperty(theme, 'components.button.padding', defaultTheme.components?.button?.padding || '0.5rem 1rem'),
-          transition: getThemeProperty(theme, 'components.button.transition', defaultTheme.components?.button?.transition || 'all 300ms ease')
+          radius: theme.components?.button?.radius || defaultTheme.components.button.radius,
+          padding: theme.components?.button?.padding || defaultTheme.components.button.padding,
+          transition: theme.components?.button?.transition || defaultTheme.components.button.transition
         },
         
         tooltip: {
-          radius: getThemeProperty(theme, 'components.tooltip.radius', defaultTheme.components?.tooltip?.radius || '0.25rem'),
-          padding: getThemeProperty(theme, 'components.tooltip.padding', defaultTheme.components?.tooltip?.padding || '0.5rem'),
-          background: getThemeProperty(theme, 'components.tooltip.background', defaultTheme.components?.tooltip?.background || 'rgba(0, 0, 0, 0.8)')
+          radius: theme.components?.tooltip?.radius || defaultTheme.components.tooltip.radius,
+          padding: theme.components?.tooltip?.padding || defaultTheme.components.tooltip.padding,
+          background: theme.components?.tooltip?.background || defaultTheme.components.tooltip.background
         },
         
         input: {
-          radius: getThemeProperty(theme, 'components.input.radius', defaultTheme.components?.input?.radius || '0.5rem'),
-          padding: getThemeProperty(theme, 'components.input.padding', defaultTheme.components?.input?.padding || '0.5rem 0.75rem'),
-          background: getThemeProperty(theme, 'components.input.background', defaultTheme.components?.input?.background || 'rgba(0, 0, 0, 0.2)')
+          radius: theme.components?.input?.radius || defaultTheme.components.input.radius,
+          padding: theme.components?.input?.padding || defaultTheme.components.input.padding,
+          background: theme.components?.input?.background || defaultTheme.components.input.background
         }
       },
       
       // Typography
       typography: {
         fonts: {
-          body: getThemeProperty(theme, 'typography.fonts.body', defaultTheme.typography?.fonts?.body || 'system-ui, sans-serif'),
-          heading: getThemeProperty(theme, 'typography.fonts.heading', defaultTheme.typography?.fonts?.heading || 'system-ui, sans-serif'),
-          monospace: getThemeProperty(theme, 'typography.fonts.monospace', defaultTheme.typography?.fonts?.monospace || 'monospace')
+          body: theme.typography?.fonts?.body || defaultTheme.typography.fonts.body,
+          heading: theme.typography?.fonts?.heading || defaultTheme.typography.fonts.heading,
+          mono: theme.typography?.fonts?.mono || defaultTheme.typography.fonts.mono
         },
         
         sizes: {
-          xs: getThemeProperty(theme, 'typography.sizes.xs', defaultTheme.typography?.sizes?.xs || '0.75rem'),
-          sm: getThemeProperty(theme, 'typography.sizes.sm', defaultTheme.typography?.sizes?.sm || '0.875rem'),
-          md: getThemeProperty(theme, 'typography.sizes.md', defaultTheme.typography?.sizes?.md || '1rem'),
-          lg: getThemeProperty(theme, 'typography.sizes.lg', defaultTheme.typography?.sizes?.lg || '1.125rem'),
-          xl: getThemeProperty(theme, 'typography.sizes.xl', defaultTheme.typography?.sizes?.xl || '1.25rem'),
-          '2xl': getThemeProperty(theme, 'typography.sizes.2xl', defaultTheme.typography?.sizes?.['2xl'] || '1.5rem'),
-          '3xl': getThemeProperty(theme, 'typography.sizes.3xl', defaultTheme.typography?.sizes?.['3xl'] || '1.875rem')
+          xs: theme.typography?.sizes?.xs || defaultTheme.typography.sizes.xs,
+          sm: theme.typography?.sizes?.sm || defaultTheme.typography.sizes.sm,
+          base: theme.typography?.sizes?.base || defaultTheme.typography.sizes.base,
+          md: theme.typography?.sizes?.md || defaultTheme.typography.sizes.md,
+          lg: theme.typography?.sizes?.lg || defaultTheme.typography.sizes.lg,
+          xl: theme.typography?.sizes?.xl || defaultTheme.typography.sizes.xl,
+          '2xl': theme.typography?.sizes?.['2xl'] || defaultTheme.typography.sizes['2xl'],
+          '3xl': theme.typography?.sizes?.['3xl'] || defaultTheme.typography.sizes['3xl']
         },
         
         weights: {
-          light: Number(getThemeProperty(theme, 'typography.weights.light', defaultTheme.typography?.weights?.light || 300)),
-          normal: Number(getThemeProperty(theme, 'typography.weights.normal', defaultTheme.typography?.weights?.normal || 400)),
-          medium: Number(getThemeProperty(theme, 'typography.weights.medium', defaultTheme.typography?.weights?.medium || 500)),
-          bold: Number(getThemeProperty(theme, 'typography.weights.bold', defaultTheme.typography?.weights?.bold || 700))
+          light: theme.typography?.weights?.light || defaultTheme.typography.weights.light,
+          normal: theme.typography?.weights?.normal || defaultTheme.typography.weights.normal,
+          medium: theme.typography?.weights?.medium || defaultTheme.typography.weights.medium,
+          bold: theme.typography?.weights?.bold || defaultTheme.typography.weights.bold
         },
         
         lineHeights: {
-          tight: getThemeProperty(theme, 'typography.lineHeights.tight', defaultTheme.typography?.lineHeights?.tight || '1.25'),
-          normal: getThemeProperty(theme, 'typography.lineHeights.normal', defaultTheme.typography?.lineHeights?.normal || '1.5'),
-          loose: getThemeProperty(theme, 'typography.lineHeights.loose', defaultTheme.typography?.lineHeights?.loose || '2')
+          tight: theme.typography?.lineHeights?.tight || defaultTheme.typography.lineHeights.tight,
+          normal: theme.typography?.lineHeights?.normal || defaultTheme.typography.lineHeights.normal,
+          relaxed: theme.typography?.lineHeights?.relaxed || defaultTheme.typography.lineHeights.relaxed
         }
       }
     };

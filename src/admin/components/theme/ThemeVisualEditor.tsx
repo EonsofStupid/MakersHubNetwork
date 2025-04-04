@@ -16,10 +16,13 @@ export function ThemeVisualEditor({ themeId }: ThemeVisualEditorProps) {
     
     // Fallback to default theme
     return themeRegistry.getDefaultTheme() || {
+      id: 'fallback',
       name: "Default Theme",
+      version: 1,
       colors: {
         primary: '#00F0FF',
         secondary: '#FF2D6E',
+        accent: '#8B5CF6',
         background: { 
           main: '#12121A',
           overlay: 'rgba(22, 24, 29, 0.85)',

@@ -35,14 +35,23 @@ export function deepMerge<T extends Record<string, any>>(target: T, source: Part
   
   if (isObject(target) && isObject(source)) {
     Object.keys(source).forEach(key => {
-      if (isObject(source[key])) {
+      const sourceValue = source[key as keyof typeof source];
+      
+      if (isObject(sourceValue)) {
         if (!(key in target)) {
-          Object.assign(output, { [key]: source[key] });
+          Object.assign(output, { [key]: sourceValue });
         } else {
-          output[key] = deepMerge(target[key], source[key]);
+          // Safe type casting with specific types
+          const targetValue = target[key as keyof typeof target];
+          if (isObject(targetValue)) {
+            output[key as keyof T] = deepMerge(
+              targetValue as Record<string, any>, 
+              sourceValue as Record<string, any>
+            ) as any;
+          }
         }
       } else {
-        Object.assign(output, { [key]: source[key] });
+        Object.assign(output, { [key]: sourceValue });
       }
     });
   }
@@ -63,7 +72,7 @@ export function validateTheme(theme: Partial<ImpulseTheme>): boolean {
   const requiredProperties = ['colors', 'typography', 'effects', 'animation', 'components'];
   
   for (const prop of requiredProperties) {
-    if (!theme[prop]) return false;
+    if (!theme[prop as keyof ImpulseTheme]) return false;
   }
   
   return true;

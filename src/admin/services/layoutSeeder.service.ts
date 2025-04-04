@@ -90,6 +90,7 @@ class LayoutSeederService {
    * Create the default main topnav layout
    */
   private createMainTopNavLayout(): Layout {
+    const now = new Date().toISOString();
     return {
       id: crypto.randomUUID(),
       name: 'Main TopNav',
@@ -165,7 +166,11 @@ class LayoutSeederService {
           ]
         }
       ],
-      version: 1
+      version: 1,
+      created_at: now,
+      updated_at: now,
+      is_active: true,
+      is_locked: false
     };
   }
   
@@ -173,6 +178,7 @@ class LayoutSeederService {
    * Create the default main footer layout
    */
   private createMainFooterLayout(): Layout {
+    const now = new Date().toISOString();
     return {
       id: crypto.randomUUID(),
       name: 'Main Footer',
@@ -395,7 +401,11 @@ class LayoutSeederService {
           ]
         }
       ],
-      version: 1
+      version: 1,
+      created_at: now,
+      updated_at: now,
+      is_active: true,
+      is_locked: false
     };
   }
   
@@ -403,6 +413,7 @@ class LayoutSeederService {
    * Create the default user menu layout
    */
   private createUserMenuLayout(): Layout {
+    const now = new Date().toISOString();
     return {
       id: crypto.randomUUID(),
       name: 'User Menu',
@@ -423,7 +434,11 @@ class LayoutSeederService {
           ]
         }
       ],
-      version: 1
+      version: 1,
+      created_at: now,
+      updated_at: now,
+      is_active: true,
+      is_locked: false
     };
   }
 }
