@@ -1,4 +1,3 @@
-
 /**
  * Core theme type definitions - Single source of truth
  */
@@ -30,7 +29,7 @@ export interface ComponentTokens extends BaseThemeComponent {
  */
 export interface ThemeComponent extends BaseThemeComponent {
   theme_id: string; // Required here
-  context: ThemeContext; // Make required
+  context: ThemeContext; // Required here
 }
 
 // Transform utility
@@ -139,7 +138,7 @@ export interface ThemeAnimation {
 export interface ThemeColors {
   primary: string;
   secondary: string;
-  accent: string;
+  accent: string; // Made non-optional
   background: {
     main: string;
     overlay: string;

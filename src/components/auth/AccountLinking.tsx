@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,16 +28,15 @@ export function AccountLinking() {
         setIsLoading(true);
         logger.info('Fetching linked providers');
 
-        // This is a mock implementation - in a real app, you would fetch from your backend
-        const { data, error } = await supabase
-          .from('user_identities')
-          .select('provider')
-          .eq('user_id', user.id);
+        // Using auth.identities instead of the non-existent user_identities table
+        const { data, error } = await supabase.auth.getUser();
 
         if (error) throw error;
 
-        // Extract provider names from the results
-        const providers = data.map(identity => identity.provider);
+        // Extract provider names from the identities array
+        const identities = data.user?.identities || [];
+        const providers = identities.map(identity => identity.provider);
+        
         setLinkedProviders(providers);
         
         logger.info('Linked providers fetched successfully', {

@@ -1,40 +1,88 @@
 
-export const THEME_LOCAL_STORAGE_KEY = 'makers-impulse-theme';
-
 /**
- * Save theme ID to localStorage
+ * Helper functions for theme localStorage persistence
  */
-export function saveThemeToLocalStorage(themeId: string) {
-  try {
-    localStorage.setItem(THEME_LOCAL_STORAGE_KEY, themeId);
-    return true;
-  } catch (error) {
-    console.error('Failed to save theme to localStorage:', error);
-    return false;
-  }
-}
+
+const THEME_STORAGE_KEY = 'theme-storage';
 
 /**
- * Get theme ID from localStorage
+ * Get the theme ID from localStorage
  */
 export function getThemeFromLocalStorage(): string | null {
   try {
-    return localStorage.getItem(THEME_LOCAL_STORAGE_KEY);
+    const storage = localStorage.getItem(THEME_STORAGE_KEY);
+    if (!storage) return null;
+    
+    const data = JSON.parse(storage);
+    return data?.state?.currentTheme?.id || null;
   } catch (error) {
-    console.error('Failed to get theme from localStorage:', error);
+    console.error('Error reading theme from localStorage:', error);
     return null;
   }
 }
 
 /**
- * Remove theme ID from localStorage
+ * Get complete theme storage information for debugging
  */
-export function removeThemeFromLocalStorage(): boolean {
+export function getThemeStorageInfo(): any {
   try {
-    localStorage.removeItem(THEME_LOCAL_STORAGE_KEY);
-    return true;
+    const storage = localStorage.getItem(THEME_STORAGE_KEY);
+    if (!storage) return { exists: false };
+    
+    const data = JSON.parse(storage);
+    return {
+      exists: true,
+      themeId: data?.state?.currentTheme?.id || null,
+      lastFetchTimestamp: data?.state?.lastFetchTimestamp || null,
+      size: storage.length,
+      ...data
+    };
   } catch (error) {
-    console.error('Failed to remove theme from localStorage:', error);
-    return false;
+    console.error('Error reading theme storage info:', error);
+    return { exists: false, error: String(error) };
+  }
+}
+
+/**
+ * Remove theme from localStorage
+ */
+export function clearThemeFromLocalStorage(): void {
+  try {
+    localStorage.removeItem(THEME_STORAGE_KEY);
+  } catch (error) {
+    console.error('Error clearing theme from localStorage:', error);
+  }
+}
+
+/**
+ * Set theme ID in localStorage directly (emergency override)
+ */
+export function setThemeInLocalStorage(themeId: string): void {
+  try {
+    const storage = localStorage.getItem(THEME_STORAGE_KEY);
+    if (!storage) {
+      // Create new storage
+      const newData = {
+        state: {
+          currentTheme: { id: themeId },
+          lastFetchTimestamp: new Date().toISOString()
+        },
+        version: 0
+      };
+      localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(newData));
+      return;
+    }
+    
+    // Update existing storage
+    const data = JSON.parse(storage);
+    if (!data.state) data.state = {};
+    if (!data.state.currentTheme) data.state.currentTheme = {};
+    
+    data.state.currentTheme.id = themeId;
+    data.state.lastFetchTimestamp = new Date().toISOString();
+    
+    localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error('Error setting theme in localStorage:', error);
   }
 }

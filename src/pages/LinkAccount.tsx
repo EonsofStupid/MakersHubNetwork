@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { useSearchParams } from 'next/navigation';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/auth/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,12 +8,34 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/constants/logLevel';
 
 export default function LinkAccount() {
-  const { linkExternalAccount, isLoading, error, user } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const auth = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
   const provider = searchParams.get('provider');
   const { toast } = useToast();
   const logger = useLogger('LinkAccount', { category: LogCategory.AUTH });
+
+  const linkExternalAccount = async (provider: string) => {
+    try {
+      logger.info(`Linking account with ${provider}`);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: provider as any,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?linking=true`,
+        }
+      });
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      logger.error(`Failed to link account with ${provider}`, { 
+        details: error 
+      });
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (!provider) {
@@ -24,7 +45,7 @@ export default function LinkAccount() {
         description: 'No provider was specified in the URL.',
         variant: 'destructive',
       });
-      router.push('/settings/profile');
+      navigate('/settings/profile');
       return;
     }
 
@@ -33,31 +54,29 @@ export default function LinkAccount() {
       const success = await linkExternalAccount(provider);
 
       if (success) {
-        logger.success(`Successfully linked account with provider: ${provider}`);
+        logger.info(`Successfully linked account with provider: ${provider}`);
         toast({
           title: 'Account Linked',
           description: `Successfully linked your account with ${provider}.`,
         });
-      } else if (error) {
-        logger.error(`Failed to link account with provider: ${provider}`, { details: error });
+      } else {
+        logger.error(`Failed to link account with provider: ${provider}`);
         toast({
           title: 'Link Failed',
-          description: `Failed to link account with ${provider}: ${error}`,
+          description: `Failed to link account with ${provider}`,
           variant: 'destructive',
         });
-      } else {
-        logger.warn(`Link account attempt with provider ${provider} did not return success or error.`);
       }
-      router.push('/settings/profile');
+      navigate('/settings/profile');
     };
 
-    if (user) {
+    if (auth.user) {
       linkAccount();
     } else {
       logger.warn('User not authenticated, redirecting to home page.');
-      router.push('/');
+      navigate('/');
     }
-  }, [provider, linkExternalAccount, router, toast, user, error, logger]);
+  }, [provider, navigate, toast, auth.user, logger]);
 
   return (
     <div className="flex justify-center items-center h-screen">

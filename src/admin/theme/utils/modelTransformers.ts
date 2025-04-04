@@ -66,7 +66,15 @@ export function impulseThemeToTheme(impulseTheme: ImpulseTheme): Theme {
     updated_at: new Date().toISOString(),
     version: impulseTheme.version,
     design_tokens: {
-      colors: impulseTheme.colors,
+      colors: {
+        primary: impulseTheme.colors.primary,
+        secondary: impulseTheme.colors.secondary,
+        accent: impulseTheme.colors.accent || impulseTheme.colors.primary, // Ensure accent is always defined
+        background: impulseTheme.colors.background,
+        text: impulseTheme.colors.text,
+        borders: impulseTheme.colors.borders,
+        status: impulseTheme.colors.status
+      },
       typography: impulseTheme.typography,
       effects: impulseTheme.effects,
       animation: impulseTheme.animation,

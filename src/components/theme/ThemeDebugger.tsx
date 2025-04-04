@@ -1,23 +1,39 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSiteTheme } from './SiteThemeProvider';
-import { logThemeState, validateThemeVariables } from '@/utils/ThemeValidationUtils';
-import { getThemeStorageInfo } from '@/stores/theme/localStorage';
+import { validateThemeVariables } from '@/utils/ThemeValidationUtils';
 import { useThemeStore } from '@/stores/theme/store';
+
+// Simple function to get theme storage info from localStorage
+const getThemeStorageInfo = () => {
+  try {
+    const themeData = localStorage.getItem('theme-storage');
+    return themeData ? JSON.parse(themeData) : null;
+  } catch (e) {
+    return { error: 'Failed to parse theme storage data' };
+  }
+};
 
 /**
  * Debug component for theme testing
  * You can add this to any page to see current theme state
  */
 export function ThemeDebugger() {
-  const { variables, isDark } = useSiteTheme();
+  const { componentStyles, isLoading, error } = useSiteTheme();
   const [themeState, setThemeState] = useState<any>(null);
   const [cssVars, setCssVars] = useState<Record<string, string>>({});
   const { currentTheme } = useThemeStore();
   
+  // Derived state
+  const isDark = document.documentElement.classList.contains('dark');
+  
   useEffect(() => {
     // Log theme state
-    const state = logThemeState();
+    const state = {
+      currentThemeId: currentTheme?.id || 'none',
+      isDark,
+      componentStylesAvailable: !!componentStyles
+    };
     setThemeState(state);
     
     // Get all CSS variables starting with --
@@ -35,7 +51,7 @@ export function ThemeDebugger() {
     }
     
     setCssVars(varObject);
-  }, [variables]);
+  }, [componentStyles, currentTheme]);
   
   const themeValid = validateThemeVariables();
   const storageInfo = getThemeStorageInfo();
