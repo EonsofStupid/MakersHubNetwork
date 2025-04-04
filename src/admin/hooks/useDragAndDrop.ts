@@ -95,12 +95,26 @@ export function useDragAndDrop<T extends DraggableItem>(items: T[]) {
     });
   }, [logger]);
   
+  // Make an element draggable
+  const makeDraggable = useCallback((props: { items: T[] }) => {
+    return props.items.map((item, index) => ({
+      ...item,
+      onDragStart: () => handleDragStart(item, index),
+      onDragOver: () => handleDragOver(index),
+      onDragEnd: handleDrop,
+      onDragCancel: handleDragCancel,
+      isDragging: dragState.draggedItem?.id === item.id,
+      isDropTarget: dragState.targetIndex === index && dragState.draggedItem?.id !== item.id
+    }));
+  }, [dragState, handleDragStart, handleDragOver, handleDrop, handleDragCancel]);
+  
   return {
     items: orderedItems,
     dragState,
     handleDragStart,
     handleDragOver,
     handleDrop,
-    handleDragCancel
+    handleDragCancel,
+    makeDraggable
   };
 }
