@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,7 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useAuth } from "@/auth/hooks/useAuth";
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging";
+import { LogCategory } from "@/logging/types";
 
 interface LoginProps {
   onSuccess?: () => void;
@@ -26,7 +27,7 @@ export default function Login({ onSuccess }: LoginProps = {}) {
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const { hasAdminAccess } = useAdminAccess();
-  const logger = useLogger('Login', { category: LogCategory.AUTH });
+  const logger = useLogger('Login', { category: LogCategory.AUTHENTICATION });
   
   const from = new URLSearchParams(location.search).get("from") || "/";
 

@@ -1,152 +1,123 @@
-
 import React, { useState, useEffect } from 'react';
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Trash } from 'lucide-react';
+import { safeGetLogs, getLogsByLevel, getLogsByCategory, getErrorLogs } from '@/logging/utils/memoryTransportHelper';
+import { LogLevel, LogCategory } from '@/logging/types';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLogger } from '@/hooks/use-logger';
-import { safeGetLogs, safeClearLogs } from '@/logging/utils/memoryTransportHelper';
-import { LogCategory, LogLevel } from '@/logging/types';
 
+/**
+ * Dashboard widget for displaying recent logs
+ */
 export function LogsDashboard() {
-  const [logs, setLogs] = useState(safeGetLogs());
-  const [activeTab, setActiveTab] = useState<string>('level');
-  const logger = useLogger('LogsDashboard', { category: LogCategory.ADMIN });
+  const [totalLogs, setTotalLogs] = useState(0);
+  const [traceLogs, setTraceLogs] = useState(0);
+  const [debugLogs, setDebugLogs] = useState(0);
+  const [infoLogs, setInfoLogs] = useState(0);
+  const [warnLogs, setWarnLogs] = useState(0);
+  const [errorLogs, setErrorLogs] = useState(0);
+  const [fatalLogs, setFatalLogs] = useState(0);
+  const [systemLogs, setSystemLogs] = useState(0);
+  const [authLogs, setAuthLogs] = useState(0);
+  const [adminLogs, setAdminLogs] = useState(0);
+  const [errorCategoryLogs, setErrorCategoryLogs] = useState(0);
   
-  // Refresh logs periodically
+  const logger = useLogger('LogsDashboard');
+  
   useEffect(() => {
-    logger.info('LogsDashboard mounted');
+    // Fetch log counts from memory transport
+    const allLogs = safeGetLogs();
+    setTotalLogs(allLogs.length);
+    setTraceLogs(getLogsByLevel(LogLevel.TRACE).length);
+    setDebugLogs(getLogsByLevel(LogLevel.DEBUG).length);
+    setInfoLogs(getLogsByLevel(LogLevel.INFO).length);
+    setWarnLogs(getLogsByLevel(LogLevel.WARN).length);
+    setErrorLogs(getLogsByLevel(LogLevel.ERROR).length);
+    setFatalLogs(getLogsByLevel(LogLevel.FATAL).length);
+    setSystemLogs(getLogsByCategory(LogCategory.SYSTEM).length);
+    setAuthLogs(getLogsByCategory(LogCategory.AUTHENTICATION).length);
+    setAdminLogs(getLogsByCategory(LogCategory.ADMIN).length);
+    setErrorCategoryLogs(getErrorLogs().length);
     
-    const interval = setInterval(() => {
-      setLogs(safeGetLogs());
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, [logger]);
-  
-  // Process log data for charts
-  const levelData = React.useMemo(() => {
-    const countsByLevel: Record<string, number> = {};
-    
-    logs.forEach(log => {
-      const levelName = LogLevel[log.level];
-      countsByLevel[levelName] = (countsByLevel[levelName] || 0) + 1;
-    });
-    
-    return Object.entries(countsByLevel).map(([level, count]) => ({
-      level,
-      count
-    }));
-  }, [logs]);
-  
-  const categoryData = React.useMemo(() => {
-    const countsByCategory: Record<string, number> = {};
-    
-    logs.forEach(log => {
-      const category = log.category || 'UNCATEGORIZED';
-      countsByCategory[category] = (countsByCategory[category] || 0) + 1;
-    });
-    
-    return Object.entries(countsByCategory).map(([category, count]) => ({
-      category,
-      count
-    }));
-  }, [logs]);
-  
-  const clearAllLogs = () => {
-    safeClearLogs();
-    setLogs([]);
-    logger.info('All logs cleared');
-  };
-  
-  // Calculate some statistics
-  const totalLogs = logs.length;
-  const errorCount = logs.filter(log => 
-    log.level === LogLevel.ERROR || 
-    log.level === LogLevel.FATAL || 
-    log.level === LogLevel.CRITICAL
-  ).length;
-  const warningCount = logs.filter(log => log.level === LogLevel.WARN).length;
-  const errorPercentage = totalLogs ? ((errorCount / totalLogs) * 100).toFixed(1) : '0';
+    logger.debug('Log counts updated');
+  }, []);
   
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Logging Dashboard</h2>
-          <p className="text-[var(--impulse-text-secondary)]">
-            Total Logs: {totalLogs} | Errors: {errorCount} ({errorPercentage}%) | Warnings: {warningCount}
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Select defaultValue="hour">
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Time Range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="hour">Last Hour</SelectItem>
-              <SelectItem value="day">Last Day</SelectItem>
-              <SelectItem value="week">Last Week</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={clearAllLogs}
-            title="Clear all logs"
-          >
-            <Trash className="mr-2 h-4 w-4" />
-            Clear
-          </Button>
-        </div>
-      </div>
-      
-      <Tabs
-        defaultValue="level"
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="w-full"
-      >
-        <TabsList className="mb-4">
-          <TabsTrigger value="level">By Level</TabsTrigger>
-          <TabsTrigger value="category">By Category</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="level" className="space-y-4">
-          <Card className="p-4">
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={levelData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="level" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" name="Count" fill="var(--primary)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="category" className="space-y-4">
-          <Card className="p-4">
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="category" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" name="Count" fill="var(--primary)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+    <Card className="col-span-4">
+      <CardHeader>
+        <CardTitle>Recent Logs</CardTitle>
+      </CardHeader>
+      <CardContent className="pl-2 pb-4">
+        <ScrollArea className="h-[300px] w-full pr-2">
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between">
+              <span>Total Logs:</span>
+              <Badge variant="secondary">{totalLogs}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Trace Logs:</span>
+              <Badge className={getLogSeverityClass(LogLevel.TRACE)}>{traceLogs}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Debug Logs:</span>
+              <Badge className={getLogSeverityClass(LogLevel.DEBUG)}>{debugLogs}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Info Logs:</span>
+              <Badge className={getLogSeverityClass(LogLevel.INFO)}>{infoLogs}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Warn Logs:</span>
+              <Badge className={getLogSeverityClass(LogLevel.WARN)}>{warnLogs}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Error Logs:</span>
+              <Badge className={getLogSeverityClass(LogLevel.ERROR)}>{errorLogs}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Fatal/Critical Logs:</span>
+              <Badge className={getLogSeverityClass(LogLevel.FATAL)}>{fatalLogs}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>System Logs:</span>
+              <Badge variant="outline">{systemLogs}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Auth Logs:</span>
+              <Badge variant="outline">{authLogs}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Admin Logs:</span>
+              <Badge variant="outline">{adminLogs}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Error Category Logs:</span>
+              <Badge variant="destructive">{errorCategoryLogs}</Badge>
+            </div>
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
+}
+
+/**
+ * Helper function to determine log severity class
+ */
+function getLogSeverityClass(level: LogLevel): string {
+  if (level === LogLevel.TRACE) {
+    return 'bg-gray-100 text-gray-800';
+  } else if (level === LogLevel.DEBUG) {
+    return 'bg-gray-200 text-gray-800';
+  } else if (level === LogLevel.INFO) {
+    return 'bg-blue-100 text-blue-800';
+  } else if (level === LogLevel.WARN) {
+    return 'bg-yellow-100 text-yellow-800';
+  } else if (level === LogLevel.ERROR) {
+    return 'bg-red-100 text-red-800';
+  } else if (level === LogLevel.FATAL || level === LogLevel.CRITICAL) {
+    return 'bg-red-200 text-red-900 font-bold';
+  } else {
+    return 'bg-gray-100 text-gray-800';
+  }
 }

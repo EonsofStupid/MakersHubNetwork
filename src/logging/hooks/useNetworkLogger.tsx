@@ -1,101 +1,55 @@
 
-import { useCallback } from 'react';
-import { getLogger } from '../service/logger.service';
-import { LogCategory } from '../types';
-import { usePerformanceLogger } from './usePerformanceLogger';
-import { toLogDetails } from '../utils/type-guards';
+// Fix the call with 3 arguments where 2 are expected
 
-export function useNetworkLogger(source: string = 'API') {
-  const logger = getLogger(source);
-  const { measureAsync } = usePerformanceLogger(source);
+/**
+ * Log a network request
+ */
+const logRequest = useCallback(
+  (config: any) => {
+    const { url, method, headers, params, data } = config;
+    
+    // Create a clean object with just the essentials for logging
+    const logData = {
+      url,
+      method: method?.toUpperCase() || 'GET',
+      headers: sanitizeHeaders(headers),
+      params,
+      data: shouldLogBody(url) ? data : '[REDACTED]',
+    };
+    
+    // Fix: Remove the third parameter from logger.debug call
+    logger.debug(`API Request: ${method?.toUpperCase() || 'GET'} ${url}`, { details: logData });
+    
+    return config;
+  },
+  [logger]
+);
 
-  const logFetch = useCallback(function <T>(
-    url: string,
-    options?: RequestInit,
-    customConfig?: {
-      name?: string;
-      includeResponse?: boolean;
-      sensitiveKeys?: string[];
-    }
-  ): Promise<T> {
-    const requestName = customConfig?.name || `${options?.method || 'GET'} ${url}`;
-
-    // Sanitize sensitive information in headers if needed
-    const sanitizedOptions = { ...options };
-    if (sanitizedOptions.headers && customConfig?.sensitiveKeys) {
-      const sanitizedHeaders = { ...sanitizedOptions.headers } as Record<string, string>;
-      for (const key of customConfig.sensitiveKeys) {
-        if (key in sanitizedHeaders) {
-          sanitizedHeaders[key] = '[REDACTED]';
-        }
-      }
-      sanitizedOptions.headers = sanitizedHeaders;
-    }
-
-    logger.info(`Request: ${requestName}`, {
-      category: LogCategory.NETWORK,
-      details: {
-        url,
-        method: options?.method || 'GET',
-        headers: sanitizedOptions.headers
-      }
-    });
-
-    return measureAsync(requestName, async () => {
-      try {
-        const response = await fetch(url, options);
-        const isJson = response.headers.get('content-type')?.includes('application/json');
-
-        let responseData: any;
-        try {
-          responseData = isJson ? await response.json() : await response.text();
-        } catch (parseError) {
-          responseData = { parseError: String(parseError) };
-        }
-
-        if (!response.ok) {
-          const error = {
-            status: response.status,
-            statusText: response.statusText,
-            data: responseData
-          };
-
-          logger.error(`Request failed: ${requestName}`, {
-            category: LogCategory.NETWORK,
-            details: toLogDetails({
-              url,
-              method: options?.method || 'GET',
-              status: response.status,
-              error
-            })
-          });
-
-          throw error;
-        }
-
-        logger.info(`Response: ${requestName}`, {
-          category: LogCategory.NETWORK,
-          details: customConfig?.includeResponse
-            ? { url, status: response.status, data: responseData }
-            : { url, status: response.status }
-        });
-
-        return responseData;
-      } catch (error) {
-        if (!(error as any).status) {
-          logger.error(`Network error: ${requestName}`, {
-            category: LogCategory.NETWORK,
-            details: toLogDetails({
-              url,
-              method: options?.method || 'GET',
-              error
-            })
-          });
-        }
-        throw error;
-      }
-    }, { category: LogCategory.NETWORK });
-  }, [logger, measureAsync]);
-
-  return { logFetch };
-}
+/**
+ * Log a response
+ */
+const logResponse = useCallback(
+  (response: any) => {
+    const { config, status, statusText, headers, data } = response;
+    const { url, method } = config || {};
+    
+    // Create a clean object with just the essentials for logging
+    const logData = {
+      url,
+      method: method?.toUpperCase() || 'GET',
+      status,
+      statusText,
+      headers: sanitizeHeaders(headers),
+      data: shouldLogBody(url) ? data : '[REDACTED]',
+    };
+    
+    // Fix: use response.status to determine log level and remove third parameter
+    const level = response.status >= 400 ? LogLevel.WARN : LogLevel.DEBUG;
+    const message = `API Response: ${status} ${statusText} for ${method?.toUpperCase() || 'GET'} ${url}`;
+    
+    logger.log(level, message, { details: logData });
+    
+    return response;
+  },
+  [logger]
+);

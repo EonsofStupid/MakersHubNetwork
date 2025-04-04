@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,11 +6,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/constants/logLevel';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { LogCategory } from '@/logging/types';
 import { useProfileStore } from '@/stores/profile/store';
 
 export default function Profile() {
@@ -18,20 +19,22 @@ export default function Profile() {
   const { profile, updateProfile, isLoading } = useProfileStore();
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
+  const [roles, setRoles] = useState<string[]>([]);
   
-  const logger = useLogger('ProfilePage', { category: LogCategory.AUTH });
+  const logger = useLogger('ProfilePage', { category: LogCategory.AUTHENTICATION });
   
   useEffect(() => {
     if (user) {
       setDisplayName(profile?.display_name || '');
       setBio(profile?.bio || '');
+      // Example of fetching roles - would come from your auth system
+      setRoles(user.user_metadata?.roles || []);
     }
   }, [user, profile]);
   
   const handleUpdateProfile = async () => {
     if (!user) return;
     
-    setIsLoading(true);
     try {
       logger.info('Updating user profile', {
         details: { userId: user.id }
@@ -62,8 +65,6 @@ export default function Profile() {
         description: 'There was an error updating your profile. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
   

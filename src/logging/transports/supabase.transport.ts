@@ -1,145 +1,82 @@
+import { LogEntry, LogTransport } from '../types';
+import { createClient } from '@supabase/supabase-js';
 
-import { LogTransport, LogEntry, LogLevel, LogCategory } from '../types';
-import { supabase } from '@/integrations/supabase/client';
-import { Json } from '@/integrations/supabase/types';
+// Get Supabase URL and key from environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || '';
 
-interface BatchOptions {
-  maxSize: number;
-  interval: number;
-}
+// Create Supabase client
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
- * Supabase transport for logging to Supabase
- * Batch-sends logs to improve performance
+ * Supabase transport for logging
  */
-export class SupabaseTransport implements LogTransport {
-  private queue: LogEntry[] = [];
-  private timeout: NodeJS.Timeout | null = null;
-  private options: BatchOptions;
-  private isFlushingNow = false;
-  
-  constructor(options?: Partial<BatchOptions>) {
-    this.options = {
-      maxSize: options?.maxSize || 10,
-      interval: options?.interval || 5000 // 5 seconds
-    };
-  }
-  
-  log(entry: LogEntry): void {
-    // Add to queue
-    this.queue.push(entry);
-    
-    // If we've reached the max size, flush immediately
-    if (this.queue.length >= this.options.maxSize) {
-      this.flush();
-      return;
-    }
-    
-    // Otherwise, set a timeout to flush
-    if (!this.timeout) {
-      this.timeout = setTimeout(() => this.flush(), this.options.interval);
-    }
-  }
-  
-  async flush(): Promise<void> {
-    // If we're already flushing or there's nothing to flush, return
-    if (this.isFlushingNow || this.queue.length === 0) {
-      return;
-    }
-    
-    // Clear the timeout
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-      this.timeout = null;
-    }
-    
-    this.isFlushingNow = true;
-    
-    // Take the current queue and reset it
-    const logsToSend = [...this.queue];
-    this.queue = [];
-    
+export const supabaseTransport: LogTransport = {
+  log: async (entry: LogEntry) => {
     try {
-      // Format logs for Supabase
-      const formattedLogs = logsToSend.map(log => this.formatLogForSupabase(log));
+      // Process log entry before sending to Supabase
+      const logData = processLogEntry(entry);
       
-      // Send logs in batches to avoid hitting size limits
-      const batchSize = 25;
-      for (let i = 0; i < formattedLogs.length; i += batchSize) {
-        const batch = formattedLogs.slice(i, i + batchSize);
-        
-        // Send to Supabase
-        await this.sendToSupabase(batch);
-      }
-    } catch (error) {
-      console.error('Error sending logs to Supabase:', error);
-      
-      // Put the logs back in the queue
-      this.queue = [...logsToSend, ...this.queue];
-    } finally {
-      this.isFlushingNow = false;
-      
-      // If there are more logs, set a timeout to flush them
-      if (this.queue.length > 0 && !this.timeout) {
-        this.timeout = setTimeout(() => this.flush(), this.options.interval);
-      }
-    }
-  }
-  
-  /**
-   * Format a log entry for Supabase
-   */
-  private formatLogForSupabase(log: LogEntry): {
-    level: number;
-    category: string;
-    message: string;
-    details: Record<string, any>;
-    timestamp: string;
-    source: string;
-  } {
-    // Format the log for Supabase
-    return {
-      level: log.level,
-      category: log.category || 'general', // Provide default category
-      message: String(log.message), // Ensure message is a string
-      details: log.details || {},
-      timestamp: typeof log.timestamp === 'string' ? log.timestamp : log.timestamp.toISOString(),
-      source: log.source || 'app'
-    };
-  }
-  
-  /**
-   * Send logs to Supabase
-   */
-  private async sendToSupabase(logs: any[]): Promise<void> {
-    if (!supabase) {
-      console.error('Supabase client not initialized');
-      return;
-    }
-    
-    try {
-      // Convert logs to the format expected by Supabase
-      const dbLogs = logs.map(log => ({
-        level: log.level,
-        category: log.category,
-        message: log.message,
-        details: log.details as Json,
-        timestamp: log.timestamp,
-        source: log.source
-      }));
-      
-      // Insert the logs
-      const { error } = await supabase.from('application_logs').insert(dbLogs);
+      // Insert log entry into Supabase
+      const { error } = await supabase
+        .from('logs')
+        .insert([logData]);
       
       if (error) {
-        throw new Error(`Supabase log insert error: ${error.message}`);
+        console.error('Failed to send log to Supabase:', error);
       }
     } catch (error) {
-      console.error('Error sending logs to Supabase:', error);
-      throw error;
+      console.error('Error sending log to Supabase:', error);
     }
   }
-}
+};
 
-// Export a singleton instance
-export const supabaseTransport = new SupabaseTransport();
+/**
+ * Process log entry before sending to Supabase
+ */
+function processLogEntry(entry: LogEntry): any {
+  // Create a copy of the entry to avoid direct modification
+  const { id, message, details, tags, ...rest } = entry;
+  
+  // Format timestamp properly
+  let timestamp = entry.timestamp;
+  if (timestamp) {
+    // Ensure timestamp is a string
+    if (typeof timestamp !== 'string') {
+      try {
+        // If it's a Date object, convert to ISO string
+        if (timestamp instanceof Date) {
+          timestamp = timestamp.toISOString();
+        } else {
+          // If it's another object, convert to string
+          timestamp = String(timestamp);
+        }
+      } catch {
+        // Fallback to current time if conversion fails
+        timestamp = new Date().toISOString();
+      }
+    }
+  } else {
+    // Set default timestamp if missing
+    timestamp = new Date().toISOString();
+  }
+  
+  // Format message
+  const messageText = typeof message === 'string' ? message : JSON.stringify(message);
+  
+  // Process details
+  const detailsJson = details ? JSON.stringify(details) : null;
+  
+  // Process tags
+  const tagsArray = Array.isArray(tags) ? tags : [];
+  const tagsString = tagsArray.join(',');
+  
+  // Return formatted data
+  return {
+    ...rest,
+    timestamp,
+    message: messageText,
+    details: detailsJson,
+    tags: tagsString
+  };
+}
