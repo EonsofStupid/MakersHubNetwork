@@ -482,3 +482,58 @@ export function selectThemeProperty<T>(property: string, defaultValue: T) {
     }
   };
 }
+
+/**
+ * Map database theme to application theme model
+ */
+function mapThemeFromDatabase(dbTheme: any): ImpulseTheme {
+  const logger = getLogger('themeStore:mapper', { category: LogCategory.THEME });
+  
+  try {
+    // Handle potentially null values with safe defaults
+    return {
+      id: dbTheme.id || '',
+      name: dbTheme.name || 'Unnamed Theme',
+      slug: dbTheme.slug || 'unnamed-theme',
+      description: dbTheme.description || '',
+      author: dbTheme.author || 'Unknown',
+      version: dbTheme.version || '1.0.0',
+      colors: dbTheme.colors || defaultColors,
+      typography: dbTheme.typography || defaultTypography,
+      effects: dbTheme.effects || defaultEffects,
+      components: dbTheme.components || defaultComponents,
+      created_at: dbTheme.created_at || new Date().toISOString(),
+      updated_at: dbTheme.updated_at || new Date().toISOString()
+    };
+  } catch (error) {
+    logger.error('Error mapping theme from database', { 
+      details: { error, theme: dbTheme } 
+    });
+    
+    // Return default theme on error
+    return {
+      ...defaultImpulseTokens,
+      id: dbTheme?.id || '',
+      name: dbTheme?.name || 'Error Theme',
+      slug: 'error-theme',
+      description: 'Theme created due to mapping error',
+      author: 'System',
+      version: '1.0.0',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+  }
+}
+
+// Fix the ThemeContext reference:
+// This should reference ThemeContextType instead
+interface ThemeContextType {
+  theme: string;
+  setTheme: (theme: string) => void;
+}
+
+// This would be used in other parts of the code instead of ThemeContext
+const themeContext: ThemeContextType = {
+  theme: 'default',
+  setTheme: () => {}
+};

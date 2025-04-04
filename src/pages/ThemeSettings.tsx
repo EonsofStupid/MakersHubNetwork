@@ -1,4 +1,3 @@
-
 // Import necessary components
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +20,8 @@ export default function ThemeSettings() {
     error,
     setTheme,
     loadComponentsByContext,
-    hydrateTheme
+    hydrateTheme,
+    loadSiteComponents
   } = useThemeStore();
   
   const logger = useLogger('ThemeSettings', { category: LogCategory.THEME });
@@ -75,6 +75,34 @@ export default function ThemeSettings() {
       </div>
     );
   }
+
+  /**
+   * Select theme handler
+   */
+  const handleSelectTheme = async (themeId: string) => {
+    try {
+      setIsLoading(true);
+      logger.info(`Selecting theme: ${themeId}`);
+      
+      // Fix: Pass required argument to loadSiteComponents
+      await loadSiteComponents(themeId);
+      
+      logger.info('Theme components loaded successfully');
+      toast({
+        title: 'Theme Updated',
+        description: 'Your theme has been updated successfully',
+      });
+    } catch (error) {
+      logger.error('Error loading theme components', { details: error });
+      toast({
+        title: 'Theme Update Failed',
+        description: 'There was an error updating your theme',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="container mx-auto py-8">

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { LogEntry, LogLevel, LogCategory } from '../types';
 import { useLoggingContext } from '../context/LoggingContext';
@@ -203,7 +202,7 @@ export function LogConsole({
                 <tbody>
                   {filteredLogs.map(log => {
                     // Pre-render the message with type safety
-                    const messageContent = safelyRenderNode(log.message);
+                    const messageContent = renderMessage(log.message);
                     
                     return (
                       <tr 
@@ -268,5 +267,38 @@ function getLevelColorClass(level: LogLevel): string {
       return 'text-red-600 font-bold';
     default:
       return 'text-gray-400';
+  }
+}
+
+function renderMessage(message: any): React.ReactNode {
+  if (message === null || message === undefined) {
+    return '';
+  }
+  
+  if (typeof message === 'string' || typeof message === 'number' || typeof message === 'boolean') {
+    return String(message);
+  }
+  
+  if (React.isValidElement(message)) {
+    return message;
+  }
+  
+  // Fix the instanceof Error check
+  if (message && typeof message === 'object' && 'message' in message && typeof message.message === 'string') {
+    return message.message;
+  }
+  
+  if (Array.isArray(message)) {
+    try {
+      return JSON.stringify(message);
+    } catch {
+      return '[Array]';
+    }
+  }
+  
+  try {
+    return typeof message === 'object' ? JSON.stringify(message) : String(message);
+  } catch {
+    return '[Complex Object]';
   }
 }

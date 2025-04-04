@@ -49,11 +49,11 @@ export function getLogsByCategory(category: string, limit?: number): LogEntry[] 
  * Get error logs (ERROR, FATAL, CRITICAL)
  */
 export function getErrorLogs(limit?: number): LogEntry[] {
-  return safeGetLogs(limit, (log) => 
-    log.level === LogLevel.ERROR || 
-    log.level === LogLevel.FATAL ||
-    log.level === LogLevel.CRITICAL
-  );
+  return safeGetLogs(limit, (log) => {
+    return log.level === LogLevel.ERROR || 
+           log.level === LogLevel.FATAL || 
+           log.level === LogLevel.CRITICAL;
+  });
 }
 
 /**
