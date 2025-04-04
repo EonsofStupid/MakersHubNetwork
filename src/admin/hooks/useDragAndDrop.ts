@@ -95,9 +95,9 @@ export function useDragAndDrop<T extends DraggableItem>(items: T[]) {
     });
   }, [logger]);
   
-  // Make an element draggable
-  const makeDraggable = useCallback((props: { items: T[] }) => {
-    return props.items.map((item, index) => ({
+  // Make an element draggable - this was the missing method
+  const makeDraggable = useCallback((items: T[]) => {
+    return items.map((item, index) => ({
       ...item,
       onDragStart: () => handleDragStart(item, index),
       onDragOver: () => handleDragOver(index),

@@ -3,12 +3,13 @@ import { ImpulseTheme } from '../types/impulse.types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { safeDetails } from '@/logging/utils/safeDetails';
+import { defaultImpulseTokens } from './impulse/tokens';
 
 interface ThemeRegistryItem {
   id: string;
   name: string;
   description?: string;
-  theme: Partial<ImpulseTheme>;
+  theme: ImpulseTheme;
 }
 
 /**
@@ -16,6 +17,7 @@ interface ThemeRegistryItem {
  */
 class ThemeRegistry {
   private themes: Map<string, ThemeRegistryItem>;
+  private activeThemeId: string | null = null;
   private logger = getLogger('ThemeRegistry', { category: LogCategory.THEME });
   
   constructor() {
@@ -26,13 +28,19 @@ class ThemeRegistry {
   /**
    * Register a theme in the registry
    */
-  registerTheme(id: string, theme: Partial<ImpulseTheme>, name?: string, description?: string): void {
+  registerTheme(id: string, theme: ImpulseTheme, name?: string, description?: string): void {
     try {
+      // Ensure the theme has an id property that matches the registry id
+      const themeWithId: ImpulseTheme = {
+        ...theme,
+        id
+      };
+      
       this.themes.set(id, {
         id,
         name: name || id,
         description,
-        theme
+        theme: themeWithId
       });
       
       this.logger.debug(`Theme registered: ${id}`);
@@ -46,7 +54,7 @@ class ThemeRegistry {
   /**
    * Get a theme from the registry
    */
-  getTheme(id: string): Partial<ImpulseTheme> | null {
+  getTheme(id: string): ImpulseTheme | null {
     try {
       const themeItem = this.themes.get(id);
       return themeItem ? themeItem.theme : null;
@@ -56,6 +64,34 @@ class ThemeRegistry {
       });
       return null;
     }
+  }
+  
+  /**
+   * Set active theme
+   */
+  setActiveTheme(id: string): boolean {
+    if (this.themes.has(id)) {
+      this.activeThemeId = id;
+      return true;
+    }
+    return false;
+  }
+  
+  /**
+   * Get the active theme
+   */
+  getActiveTheme(): ImpulseTheme | null {
+    if (this.activeThemeId) {
+      return this.getTheme(this.activeThemeId);
+    }
+    return null;
+  }
+  
+  /**
+   * Get the default theme
+   */
+  getDefaultTheme(): ImpulseTheme {
+    return defaultImpulseTokens;
   }
   
   /**
@@ -74,6 +110,11 @@ class ThemeRegistry {
       
       if (result) {
         this.logger.debug(`Theme removed: ${id}`);
+        
+        // If we removed the active theme, reset to null
+        if (this.activeThemeId === id) {
+          this.activeThemeId = null;
+        }
       } else {
         this.logger.warn(`Theme not found for removal: ${id}`);
       }
@@ -100,6 +141,7 @@ class ThemeRegistry {
   clearThemes(): void {
     try {
       this.themes.clear();
+      this.activeThemeId = null;
       this.logger.debug('All themes cleared from registry');
     } catch (error) {
       this.logger.error('Error clearing themes', {
