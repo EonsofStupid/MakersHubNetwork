@@ -1,6 +1,6 @@
 
 import { ReactNode } from 'react';
-import { LogLevel, LogCategory } from '@/constants/logLevel';
+import { LogLevel, LogCategory } from './types/index';
 
 /**
  * Logger options

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { LogEntry, LogLevel } from '../types';
+import { LogEntry, LogLevel } from '@/logging/types';
 import { memoryTransport } from '../transports/memory.transport';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -78,9 +78,8 @@ export const LogActivityStream: React.FC<LogActivityStreamProps> = ({
       case LogLevel.WARN:
         return 'text-amber-500';
       case LogLevel.INFO:
-        return 'text-blue-500';
       case LogLevel.SUCCESS:
-        return 'text-green-500';
+        return 'text-blue-500';
       default:
         return 'text-gray-500';
     }
@@ -126,4 +125,4 @@ export const LogActivityStream: React.FC<LogActivityStreamProps> = ({
       </ul>
     </div>
   );
-};
+}

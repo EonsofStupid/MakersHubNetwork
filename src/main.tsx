@@ -5,7 +5,8 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import './index.css'
-import { initializeLogger, getLogger, LogCategory } from '@/logging'
+import { initializeLogger, getLogger } from '@/logging'
+import { LogCategory } from '@/logging/types'
 
 // Initialize logging system first
 initializeLogger();

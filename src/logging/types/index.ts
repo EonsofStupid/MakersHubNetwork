@@ -23,7 +23,13 @@ export enum LogCategory {
   THEME = 'theme',
   ANALYTICS = 'analytics',
   USER_ACTION = 'user-action',
-  GENERAL = 'general'
+  GENERAL = 'general',
+  ADMIN = 'admin',
+  CONTENT = 'content',
+  DATA = 'data',
+  ERROR = 'error',
+  API = 'api',
+  FEATURE = 'feature'
 }
 
 // Base logger options

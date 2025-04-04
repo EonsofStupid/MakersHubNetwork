@@ -1,10 +1,11 @@
+
 import { Json } from '@/integrations/supabase/types';
 import { Theme, ComponentTokens, ThemeContext, ThemeStatus } from '@/types/theme';
 import { getLogger } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
 import { LogCategory } from '@/logging/types';
 
-const logger = getLogger('TransformUtils', { category: LogCategory.THEME as string });
+const logger = getLogger('TransformUtils', { category: LogCategory.THEME });
 
 /**
  * Convert database row to application Theme model
@@ -196,7 +197,7 @@ export function stringToLogCategory(category?: string): LogCategory | undefined 
   // Try uppercase versions for case-insensitive matching
   const uppercaseCategory = category.toUpperCase();
   for (const validCategory of validCategories) {
-    if (validCategory.toUpperCase() === uppercaseCategory) {
+    if (String(validCategory).toUpperCase() === uppercaseCategory) {
       return validCategory;
     }
   }
