@@ -4,7 +4,7 @@ import { UserMenu } from "@/components/auth/UserMenu";
 import { LoginSheet } from "./LoginSheet";
 import { useAuth } from "@/auth/hooks/useAuth";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/constants/logLevel";
+import { LogCategory } from "@/logging/types";
 
 export const AuthSection = () => {
   const { isAuthenticated } = useAuth();
