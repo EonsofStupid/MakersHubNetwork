@@ -138,10 +138,10 @@ export function useLayoutSkeleton() {
           name: defaultLayout.name,
           type: defaultLayout.type,
           scope: defaultLayout.scope,
-          layout_json: {
-            components: defaultLayout.components,
-            version: 1
-          },
+          layout_json: layoutToJson({
+            components: defaultLayout.components || [],
+            version: defaultLayout.version || 1
+          }),
           is_active: true,
           is_locked: false,
           version: 1

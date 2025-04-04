@@ -1,86 +1,82 @@
 
 /**
- * Generate a UUID (v4)
+ * Type guard utilities for logging module
  */
-export function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+
+/**
+ * Check if value is a Record object
+ */
+export function isRecord(value: unknown): value is Record<string, any> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
- * Type guard to check if value is an Error
+ * Check if value is a string
+ */
+export function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+/**
+ * Check if value is a number
+ */
+export function isNumber(value: unknown): value is number {
+  return typeof value === 'number' && !isNaN(value);
+}
+
+/**
+ * Check if value is a boolean
+ */
+export function isBoolean(value: unknown): value is boolean {
+  return typeof value === 'boolean';
+}
+
+/**
+ * Check if value is an Error object
  */
 export function isError(value: unknown): value is Error {
-  return value instanceof Error || (
-    typeof value === 'object' && 
-    value !== null && 
-    'message' in value &&
-    typeof (value as any).message === 'string'
-  );
+  return value instanceof Error;
 }
 
 /**
- * Check if a string is a valid UUID
+ * Check if string is a valid UUID
  */
-export function isValidUUID(id: string): boolean {
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return uuidPattern.test(id);
+export function isValidUUID(value: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(value);
 }
 
 /**
- * Convert anything to safe log details
- * This prevents sensitive information from being logged and ensures
- * objects can be serialized
+ * Generate a UUID
  */
-export function toLogDetails(details: unknown): Record<string, unknown> {
-  try {
-    if (!details) return {};
-    
-    // If already an object, sanitize it
-    if (typeof details === 'object' && details !== null) {
-      const sanitized: Record<string, unknown> = {};
-      
-      // Convert to record with sanitized values
-      Object.entries(details as Record<string, unknown>).forEach(([key, value]) => {
-        // Skip password fields
-        if (key.toLowerCase().includes('password') || 
-            key.toLowerCase().includes('secret') || 
-            key.toLowerCase().includes('token')) {
-          sanitized[key] = '[REDACTED]';
-          return;
-        }
-        
-        // Handle Error objects
-        if (isError(value)) {
-          sanitized[key] = {
-            name: value.name,
-            message: value.message,
-            stack: value.stack,
-          };
-          return;
-        }
-        
-        // Handle other values
-        try {
-          // Test if serializable
-          JSON.stringify(value);
-          sanitized[key] = value;
-        } catch (e) {
-          // If can't be serialized, convert to string
-          sanitized[key] = String(value);
-        }
-      });
-      
-      return sanitized;
-    }
-    
-    // Convert primitive to object
-    return { value: String(details) };
-  } catch (e) {
-    // Fallback for any unexpected issues
-    return { error: 'Failed to convert to log details', originalType: typeof details };
+export function generateUUID(): string {
+  return crypto.randomUUID();
+}
+
+/**
+ * Convert any value to safe log details
+ */
+export function toLogDetails(value: any): Record<string, any> {
+  if (value === undefined || value === null) return {};
+  
+  if (isError(value)) {
+    return {
+      message: value.message,
+      name: value.name,
+      stack: value.stack
+    };
   }
+
+  if (isRecord(value)) {
+    return value;
+  }
+
+  return { value };
+}
+
+/**
+ * Safe utility to check object properties
+ */
+export function hasProperty<T extends object>(obj: T, key: PropertyKey): key is keyof T {
+  return Object.prototype.hasOwnProperty.call(obj, key);
 }

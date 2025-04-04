@@ -1,5 +1,4 @@
-
-import { Layout, Component } from '@/admin/types/layout.types';
+import { Layout, LayoutComponent, createEmptyLayout, layoutToJson } from '@/admin/types/layout.types';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -149,19 +148,123 @@ export function createDefaultTopNavLayout(id: string): Layout {
 }
 
 /**
+ * Create a dashboard layout
+ */
+export function createDashboardLayout(): Layout {
+  return createEmptyLayout({
+    id: crypto.randomUUID(),
+    name: 'Dashboard',
+    type: 'dashboard',
+    scope: 'admin',
+    components: [{
+      id: crypto.randomUUID(),
+      type: 'AdminDashboard',
+      children: [
+        {
+          id: 'dashboard-root',
+          type: 'AdminSection',
+          children: [
+            {
+              id: 'dashboard-header',
+              type: 'div',
+              props: {
+                className: 'flex items-center gap-2 mb-6'
+              },
+              children: [
+                {
+                  id: 'dashboard-title',
+                  type: 'heading',
+                  props: {
+                    level: 1,
+                    className: 'text-2xl font-bold',
+                    children: 'Admin Dashboard'
+                  }
+                }
+              ]
+            },
+            {
+              id: 'admin-topnav',
+              type: 'AdminTopNav',
+              props: {
+                title: 'Admin Dashboard'
+              }
+            },
+            {
+              id: 'admin-layout',
+              type: 'div',
+              props: {
+                className: 'flex w-full'
+              },
+              children: [
+                {
+                  id: 'admin-sidebar',
+                  type: 'AdminSidebar'
+                },
+                {
+                  id: 'admin-content',
+                  type: 'div',
+                  props: {
+                    className: 'flex-1 p-6'
+                  },
+                  children: [
+                    {
+                      id: 'shortcuts-section',
+                      type: 'DashboardShortcuts',
+                    },
+                    {
+                      id: 'stats-grid',
+                      type: 'AdminGrid',
+                      props: {
+                        cols: 2,
+                      },
+                      children: [
+                        {
+                          id: 'build-approval-section',
+                          type: 'BuildApprovalWidget',
+                          props: {
+                            className: 'md:col-span-1',
+                          }
+                        },
+                        {
+                          id: 'stats-section',
+                          type: 'StatsCards',
+                          props: {
+                            className: 'md:col-span-1',
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      id: 'features-section',
+                      type: 'AdminFeatureSection',
+                      props: {
+                        className: 'mt-6',
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+        },
+      ],
+    }],
+    version: 1,
+  });
+}
+
+/**
  * Find a component in a tree by its ID
  */
-export function findComponentById(components: Component[], id: string): Component | null {
+export function findComponentById(components: LayoutComponent[], id: string): LayoutComponent | null {
+  if (!components || components.length === 0) return null;
+  
   for (const component of components) {
-    if (component.id === id) {
-      return component;
-    }
+    if (component.id === id) return component;
     
-    if (component.children) {
+    if (component.children && component.children.length > 0) {
       const found = findComponentById(component.children, id);
-      if (found) {
-        return found;
-      }
+      if (found) return found;
     }
   }
   
@@ -172,10 +275,10 @@ export function findComponentById(components: Component[], id: string): Componen
  * Update a component in a tree
  */
 export function updateComponentInTree(
-  components: Component[],
+  components: LayoutComponent[],
   id: string,
-  updater: (component: Component) => Component
-): Component[] {
+  updater: (component: LayoutComponent) => LayoutComponent
+): LayoutComponent[] {
   return components.map(component => {
     if (component.id === id) {
       return updater(component);
@@ -196,10 +299,10 @@ export function updateComponentInTree(
  * Add a component as a child to another component
  */
 export function addComponentToParent(
-  components: Component[],
+  components: LayoutComponent[],
   parentId: string,
-  newComponent: Component
-): Component[] {
+  newComponent: LayoutComponent
+): LayoutComponent[] {
   return components.map(component => {
     if (component.id === parentId) {
       return {
@@ -222,7 +325,7 @@ export function addComponentToParent(
 /**
  * Remove a component from a tree
  */
-export function removeComponentFromTree(components: Component[], id: string): Component[] {
+export function removeComponentFromTree(components: LayoutComponent[], id: string): LayoutComponent[] {
   return components
     .filter(component => component.id !== id)
     .map(component => {
@@ -240,7 +343,7 @@ export function removeComponentFromTree(components: Component[], id: string): Co
 /**
  * Move a component up in the tree (swap with previous sibling)
  */
-export function moveComponentUp(components: Component[], id: string): Component[] {
+export function moveComponentUp(components: LayoutComponent[], id: string): LayoutComponent[] {
   // Find the component to move
   for (let i = 0; i < components.length; i++) {
     if (components[i].id === id) {
@@ -270,7 +373,7 @@ export function moveComponentUp(components: Component[], id: string): Component[
 /**
  * Move a component down in the tree (swap with next sibling)
  */
-export function moveComponentDown(components: Component[], id: string): Component[] {
+export function moveComponentDown(components: LayoutComponent[], id: string): LayoutComponent[] {
   // Find the component to move
   for (let i = 0; i < components.length; i++) {
     if (components[i].id === id) {

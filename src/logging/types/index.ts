@@ -1,33 +1,143 @@
 
-import { LogLevel, LogCategory } from '../constants/log-level';
+import { LogLevel, LogCategory } from '@/constants/logLevel';
 
 /**
- * Options for configuring a logger
+ * Logger options
  */
 export interface LoggerOptions {
-  level?: LogLevel;
+  /** Log category */
   category?: LogCategory | string;
-  details?: Record<string, any>;
+  
+  /** Additional fixed tags for all logs from this logger */
   tags?: string[];
-  metadata?: Record<string, any>;
+  
+  /** Minimum log level for this logger */
+  minLevel?: LogLevel;
+  
+  /** If true, errors will be sent to error reporting service */
+  reportErrors?: boolean;
+  
+  /** Additional context to include with all logs */
   context?: Record<string, any>;
+  
+  /** Source of the log (usually component name) */
+  source?: string;
+  
+  /** If true, the logger will include stack traces for all logs */
+  includeTraces?: boolean;
+  
+  /** If this logger is disabled */
+  disabled?: boolean;
+}
+
+/**
+ * Options for individual log entries
+ */
+export interface LogOptions {
+  /** Log level for this specific log */
+  level?: LogLevel;
+  
+  /** Log category */
+  category?: LogCategory | string;
+  
+  /** Tags for filtering/grouping */
+  tags?: string[];
+  
+  /** Additional details (will be JSON stringified) */
+  details?: any;
+  
+  /** Source of the log (usually component name) */
+  source?: string;
+  
+  /** Whether to include stack trace */
+  includeTrace?: boolean;
+  
+  /** Custom timestamp (defaults to now) */
+  timestamp?: Date;
+  
+  /** If true, this log will be reported to error service even if it's not an error */
+  report?: boolean;
+}
+
+/**
+ * Log entry structure
+ */
+export interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: LogLevel;
+  source: string;
+  message: string;
+  category: LogCategory | string;
+  tags: string[];
+  details?: any;
+  trace?: string;
+  user_id?: string;
+  session_id?: string;
+  app_version?: string;
+}
+
+/**
+ * Transport interface for log destinations
+ */
+export interface LogTransport {
+  log(entry: LogEntry): void;
+  getLogs?(): LogEntry[];
+  clear?(): void;
 }
 
 /**
  * Logger interface
  */
 export interface Logger {
-  trace: (message: string, options?: LoggerOptions) => void;
-  debug: (message: string, options?: LoggerOptions) => void;
-  info: (message: string, options?: LoggerOptions) => void;
-  warn: (message: string, options?: LoggerOptions) => void;
-  error: (message: string, options?: LoggerOptions) => void;
-  critical: (message: string, options?: LoggerOptions) => void;
-  success?: (message: string, options?: LoggerOptions) => void;
-  performance?: (message: string, duration: number, options?: LoggerOptions) => void;
+  trace(message: string, options?: LogOptions): void;
+  debug(message: string, options?: LogOptions): void;
+  info(message: string, options?: LogOptions): void;
+  warn(message: string, options?: LogOptions): void;
+  error(message: string, options?: LogOptions): void;
+  fatal(message: string, options?: LogOptions): void;
+  success?(message: string, options?: LogOptions): void;
+  critical?(message: string, options?: LogOptions): void;
+  performance?(message: string, duration: number, options?: LogOptions): void;
 }
 
 /**
- * Re-export LogCategory and LogLevel for easier access
+ * Performance measurement result
  */
-export { LogCategory, LogLevel };
+export interface MeasurementResult {
+  name: string;
+  duration: number;
+  success: boolean;
+  timestamp: number;
+}
+
+/**
+ * Performance measurement options
+ */
+export interface PerformanceMeasurementOptions {
+  category?: LogCategory | string;
+  warnThreshold?: number;
+  onComplete?: (result: MeasurementResult) => void;
+  tags?: string[];
+  details?: Record<string, any>;
+}
+
+/**
+ * Logging configuration
+ */
+export interface LoggingConfig {
+  minLevel: LogLevel;
+  enabled: boolean;
+  transports: LogTransport[];
+  categoryLevels?: Partial<Record<LogCategory | string, LogLevel>>;
+}
+
+/**
+ * Log event callback
+ */
+export type LogEventCallback = (entry: LogEntry) => void;
+
+/**
+ * Re-export LogLevel and LogCategory types
+ */
+export { LogLevel, LogCategory };

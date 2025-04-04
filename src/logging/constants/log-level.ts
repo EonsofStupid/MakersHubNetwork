@@ -1,5 +1,5 @@
 
-import { LogLevel } from '../types';
+import { LogLevel, LogCategory } from '@/constants/logLevel';
 
 /**
  * Names for log levels
@@ -11,6 +11,23 @@ export const LOG_LEVEL_NAMES: Record<LogLevel, string> = {
   WARN: 'WARN',
   ERROR: 'ERROR',
   FATAL: 'FATAL',
+  SUCCESS: 'SUCCESS',
+  CRITICAL: 'CRITICAL'
+};
+
+/**
+ * Maps string representation to log level
+ */
+export const STRING_TO_LOG_LEVEL: Record<string, LogLevel> = {
+  'TRACE': 'TRACE',
+  'DEBUG': 'DEBUG',
+  'INFO': 'INFO',
+  'WARN': 'WARN',
+  'WARNING': 'WARN',
+  'ERROR': 'ERROR',
+  'CRITICAL': 'CRITICAL',
+  'SUCCESS': 'SUCCESS',
+  'FATAL': 'FATAL'
 };
 
 /**
@@ -30,6 +47,10 @@ export function getLogLevelColorClass(level: LogLevel): string {
       return 'text-red-500';
     case 'FATAL':
       return 'text-red-600 font-bold';
+    case 'CRITICAL':
+      return 'text-red-600 font-bold';
+    case 'SUCCESS':
+      return 'text-green-500';
     default:
       return 'text-slate-400';
   }
@@ -46,7 +67,19 @@ export function getLogLevelName(level: LogLevel): string {
  * Returns CSS classes for log item based on level
  */
 export function getLogItemClass(level: LogLevel): string {
-  return `log-item log-level-${level.toLowerCase()} ${getLogLevelColorClass(level)}`;
+  switch (level) {
+    case 'WARN':
+      return 'border-l-2 border-l-yellow-500';
+    case 'ERROR':
+      return 'border-l-2 border-l-red-500';
+    case 'FATAL':
+    case 'CRITICAL':
+      return 'border-l-2 border-l-red-600 bg-red-950/20';
+    case 'SUCCESS':
+      return 'border-l-2 border-l-green-500';
+    default:
+      return '';
+  }
 }
 
 /**
@@ -60,6 +93,15 @@ export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean 
     WARN: 3,
     ERROR: 4,
     FATAL: 5,
+    CRITICAL: 6,
+    SUCCESS: 2 // SUCCESS is same priority as INFO
   };
   return levels[level] >= levels[minLevel];
+}
+
+/**
+ * Get log level from string
+ */
+export function getLogLevelFromString(levelString: string): LogLevel {
+  return STRING_TO_LOG_LEVEL[levelString.toUpperCase()] || 'INFO';
 }
