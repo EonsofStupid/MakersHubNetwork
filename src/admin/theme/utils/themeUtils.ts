@@ -15,6 +15,10 @@ const logger = getLogger('ThemeUtils', { category: LogCategory.THEME });
  */
 export function getThemeProperty<T>(obj: any, path: string, defaultValue: T): T {
   try {
+    if (!obj || typeof obj !== 'object') {
+      return defaultValue;
+    }
+
     const value = get(obj, path);
     return value !== undefined ? value : defaultValue;
   } catch (error) {
@@ -32,21 +36,35 @@ export function getThemeProperty<T>(obj: any, path: string, defaultValue: T): T 
  * @returns A guaranteed string
  */
 export function ensureStringValue(value: any, defaultValue: string = ''): string {
+  // Handle simple cases first
   if (typeof value === 'string') {
     return value;
   }
   
-  // Handle common cases gracefully
+  // Handle null/undefined
   if (value === null || value === undefined) {
     return defaultValue;
   }
   
-  // If it's an object with toString method, use it
-  if (typeof value === 'object' && value !== null) {
+  // Handle numbers, booleans and other primitive types
+  if (typeof value !== 'object') {
+    return String(value);
+  }
+  
+  // Special case: nested object that might be a color object
+  if (typeof value === 'object') {
     try {
+      // If it's a color background object with a main property
+      if (value.main && typeof value.main === 'string') {
+        return value.main;
+      }
+      
       // For color objects that might have a toString()
       if ('toString' in value && typeof value.toString === 'function') {
-        return value.toString();
+        const result = value.toString();
+        if (result !== '[object Object]') {
+          return result;
+        }
       }
       
       // If it's a color object with an "r" property, assume it's RGB
@@ -64,8 +82,8 @@ export function ensureStringValue(value: any, defaultValue: string = ''): string
     }
   }
   
-  // For numbers and other primitives
-  return String(value);
+  // Final fallback
+  return defaultValue;
 }
 
 /**
@@ -93,4 +111,84 @@ export function isValidColor(color: string): boolean {
   testEl.style.color = color;
   
   return !!testEl.style.color;
+}
+
+/**
+ * Safely accesses a nested theme property that should be a color string
+ * and handles cases where it might be an object with a main property
+ */
+export function getThemeColorValue(theme: any, path: string, defaultColor: string = '#000000'): string {
+  const value = getThemeProperty(theme, path, null);
+  
+  // Handle direct string value
+  if (typeof value === 'string') {
+    return value;
+  }
+  
+  // Handle nested color object with main property
+  if (value && typeof value === 'object' && 'main' in value && typeof value.main === 'string') {
+    return value.main;
+  }
+  
+  // Handle background object special case
+  if (path === 'colors.background' && value && typeof value === 'object' && 'main' in value) {
+    return ensureStringValue(value.main, defaultColor);
+  }
+  
+  // Return default if nothing worked
+  return defaultColor;
+}
+
+/**
+ * Flatten a nested theme object into key-value pairs
+ * @param obj The theme object to flatten
+ * @param prefix Current path prefix
+ * @returns A flat object with paths as keys
+ */
+export function flattenTheme(obj: any, prefix: string = ''): Array<{path: string, value: any, type: string}> {
+  if (!obj || typeof obj !== 'object') {
+    return [];
+  }
+  
+  let result: Array<{path: string, value: any, type: string}> = [];
+  
+  Object.entries(obj).forEach(([key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      result = result.concat(flattenTheme(value, path));
+    } else {
+      // Determine type for UI purposes
+      let type = 'text';
+      if (typeof value === 'number') {
+        type = 'number';
+      } else if (typeof value === 'string') {
+        // Check if it looks like a color
+        if (value.startsWith('#') || value.startsWith('rgb') || value.startsWith('hsl')) {
+          type = 'color';
+        }
+      }
+      
+      result.push({
+        path,
+        value,
+        type
+      });
+    }
+  });
+  
+  return result;
+}
+
+/**
+ * Convert a theme property path to a readable label
+ * Used by the visual theme editor
+ */
+export function getReadableLabel(path: string): string {
+  const parts = path.split('.');
+  const label = parts[parts.length - 1]
+    .replace(/([A-Z])/g, ' $1')
+    .toLowerCase();
+  
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }

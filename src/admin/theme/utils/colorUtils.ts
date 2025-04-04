@@ -17,6 +17,11 @@ export function getRgbColor(color: any, fallback: string = 'rgb(0, 0, 0)'): stri
       return `rgb(${color.r}, ${color.g}, ${color.b})`;
     }
     
+    // Handle the case where color might be a background object
+    if (color && typeof color === 'object' && 'main' in color && typeof color.main === 'string') {
+      return getRgbColor(color.main, fallback);
+    }
+    
     // Convert to string safely
     const colorStr = ensureStringValue(color);
     if (!colorStr) return fallback;
@@ -85,10 +90,36 @@ export function hexToRgb(hex: string): string | null {
 
 /**
  * Convert hex to RGB string format for CSS variables
+ * This function now has improved type handling to prevent the background.startsWith error
  */
-export function hexToRgbString(hex: string): string {
+export function hexToRgbString(hex: any): string {
   try {
-    const color = ensureStringValue(hex);
+    // Safely handle non-string and null/undefined inputs
+    if (hex === null || hex === undefined) {
+      return '0, 0, 0';
+    }
+    
+    // Special case for background object
+    if (typeof hex === 'object' && hex !== null) {
+      // If it's a color object with main property, use that
+      if ('main' in hex && typeof hex.main === 'string') {
+        return hexToRgbString(hex.main);
+      }
+      
+      // If it's an RGB object
+      if ('r' in hex && 'g' in hex && 'b' in hex) {
+        return `${hex.r}, ${hex.g}, ${hex.b}`;
+      }
+      
+      // Cannot convert object to RGB string
+      logger.warn('Cannot convert object to RGB string', { details: { hex } });
+      return '0, 0, 0';
+    }
+    
+    // Now we know hex is not an object, convert to string safely
+    const color = String(hex);
+    
+    // Return early if not a valid hex color
     if (!color || !color.startsWith('#')) {
       return '0, 0, 0';
     }

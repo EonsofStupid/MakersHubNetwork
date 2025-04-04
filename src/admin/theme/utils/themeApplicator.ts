@@ -2,7 +2,7 @@
 import { ImpulseTheme } from '@/admin/types/impulse.types';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
-import { getThemeProperty, ensureStringValue } from './themeUtils';
+import { getThemeProperty, ensureStringValue, getThemeColorValue } from './themeUtils';
 import { hexToRgbString } from './colorUtils';
 
 const logger = getLogger('ThemeApplicator', { category: LogCategory.THEME });
@@ -15,10 +15,12 @@ export function applyThemeToDocument(theme: Partial<ImpulseTheme>): void {
     logger.debug('Applying theme to document');
     const root = document.documentElement;
     
-    // Set base colors
-    applyColorVariable(root, '--color-primary', theme?.colors?.primary);
-    applyColorVariable(root, '--color-secondary', theme?.colors?.secondary);
-    applyColorVariable(root, '--color-accent', theme?.colors?.accent);
+    // Set base colors using the getThemeColorValue helper to safely handle nested objects
+    applyColorVariable(root, '--color-primary', getThemeColorValue(theme, 'colors.primary', '#00F0FF'));
+    applyColorVariable(root, '--color-secondary', getThemeColorValue(theme, 'colors.secondary', '#FF2D6E'));
+    applyColorVariable(root, '--color-accent', getThemeColorValue(theme, 'colors.accent', '#8B5CF6'));
+    
+    // Apply background colors - use getThemeProperty for nested paths
     applyColorVariable(root, '--color-background', getThemeProperty(theme, 'colors.background.main', '#12121A'));
     applyColorVariable(root, '--color-foreground', getThemeProperty(theme, 'colors.text.primary', '#F6F6F7'));
     
@@ -32,7 +34,7 @@ export function applyThemeToDocument(theme: Partial<ImpulseTheme>): void {
     applyColorVariable(root, '--color-text-primary', getThemeProperty(theme, 'colors.text.primary', '#F6F6F7'));
     applyColorVariable(root, '--color-text-secondary', getThemeProperty(theme, 'colors.text.secondary', 'rgba(255, 255, 255, 0.7)'));
     applyColorVariable(root, '--color-text-muted', getThemeProperty(theme, 'colors.text.muted', 'rgba(255, 255, 255, 0.5)'));
-    applyColorVariable(root, '--color-text-accent', getThemeProperty(theme, 'colors.text.accent', theme?.colors?.primary || '#00F0FF'));
+    applyColorVariable(root, '--color-text-accent', getThemeProperty(theme, 'colors.text.accent', '#00F0FF'));
     
     // Apply status colors
     applyColorVariable(root, '--color-success', getThemeProperty(theme, 'colors.status.success', '#10B981'));
@@ -44,10 +46,10 @@ export function applyThemeToDocument(theme: Partial<ImpulseTheme>): void {
     applyColorVariable(root, '--color-border', getThemeProperty(theme, 'colors.borders.normal', 'rgba(0, 240, 255, 0.2)'));
     applyColorVariable(root, '--color-border-hover', getThemeProperty(theme, 'colors.borders.hover', 'rgba(0, 240, 255, 0.4)'));
     
-    // Apply RGB versions for alpha channel usage
-    applyRgbVariable(root, '--color-primary', theme?.colors?.primary);
-    applyRgbVariable(root, '--color-secondary', theme?.colors?.secondary);
-    applyRgbVariable(root, '--color-accent', theme?.colors?.accent);
+    // Apply RGB versions for alpha channel usage - use getThemeColorValue to ensure we get strings
+    applyRgbVariable(root, '--color-primary', getThemeColorValue(theme, 'colors.primary', '#00F0FF'));
+    applyRgbVariable(root, '--color-secondary', getThemeColorValue(theme, 'colors.secondary', '#FF2D6E'));
+    applyRgbVariable(root, '--color-accent', getThemeColorValue(theme, 'colors.accent', '#8B5CF6'));
     
     // Apply animation durations
     root.style.setProperty('--animation-duration-fast', getThemeProperty(theme, 'animation.duration.fast', '150ms'));
@@ -80,6 +82,11 @@ export function applyThemeToDocument(theme: Partial<ImpulseTheme>): void {
       root.style.setProperty('--color-secondary', '#FF2D6E');
       root.style.setProperty('--color-background', '#12121A');
       root.style.setProperty('--color-foreground', '#F6F6F7');
+      
+      // Apply RGB versions for emergency fallback
+      root.style.setProperty('--color-primary-rgb', '0, 240, 255');
+      root.style.setProperty('--color-secondary-rgb', '255, 45, 110');
+      root.style.setProperty('--color-background-rgb', '18, 18, 26');
     } catch (fallbackError) {
       // Last resort, log but continue
       logger.error('Emergency fallback colors failed to apply', {
@@ -110,15 +117,49 @@ function applyColorVariable(element: HTMLElement, varName: string, color: any): 
  */
 function applyRgbVariable(element: HTMLElement, varName: string, color: any): void {
   try {
+    // First ensure it's a string value 
     const safeColor = ensureStringValue(color, '');
-    if (safeColor && safeColor.startsWith('#')) {
-      const rgbString = hexToRgbString(safeColor);
-      element.style.setProperty(`${varName}-rgb`, rgbString);
+    
+    // Only process if we have a valid value
+    if (safeColor) {
+      // For hex colors, convert to RGB
+      if (safeColor.startsWith('#')) {
+        const rgbString = hexToRgbString(safeColor);
+        element.style.setProperty(`${varName}-rgb`, rgbString);
+      } 
+      // For rgb/rgba colors, extract the RGB components
+      else if (safeColor.startsWith('rgb')) {
+        const match = safeColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+        if (match) {
+          const rgbString = `${match[1]}, ${match[2]}, ${match[3]}`;
+          element.style.setProperty(`${varName}-rgb`, rgbString);
+        }
+      }
+      // For other values, try hexToRgbString as a fallback
+      else {
+        try {
+          const rgbString = hexToRgbString(safeColor);
+          element.style.setProperty(`${varName}-rgb`, rgbString);
+        } catch (err) {
+          // If all else fails, log and set a default
+          logger.debug(`Could not extract RGB from ${safeColor}`, {
+            details: { error: err instanceof Error ? err.message : 'Unknown error' }
+          });
+          element.style.setProperty(`${varName}-rgb`, '0, 0, 0');
+        }
+      }
     }
   } catch (error) {
     logger.warn(`Failed to apply RGB variable ${varName}-rgb`, {
       details: { color, error: error instanceof Error ? error.message : 'Unknown error' }
     });
+    
+    // Set a default value to prevent further errors
+    try {
+      element.style.setProperty(`${varName}-rgb`, '0, 0, 0');
+    } catch (e) {
+      // Nothing left to do at this point
+    }
   }
 }
 
@@ -153,13 +194,61 @@ export function createFallbackStyles(): void {
         --color-secondary-rgb: 255, 45, 110;
         --color-accent-rgb: 139, 92, 246;
       }
+      
+      /* Immediate application of critical colors to important elements */
+      html, body {
+        background-color: #12121A;
+        color: #F6F6F7;
+      }
+      
+      /* Additional safety styles */
+      .theme-fallback-active .bg-background {
+        background-color: #12121A !important;
+      }
+      
+      .theme-fallback-active .text-primary {
+        color: #00F0FF !important;
+      }
     `;
     
     document.head.appendChild(style);
     logger.info('Emergency fallback styles created');
+    
+    // Add class to document to indicate fallback is active
+    document.documentElement.classList.add('theme-fallback-active');
   } catch (error) {
     logger.error('Failed to create fallback styles', {
       details: { error: error instanceof Error ? error.message : 'Unknown error' }
     });
+  }
+}
+
+/**
+ * Apply emergency theme directly to HTML element to ensure critical styling
+ * before any JS executes
+ */
+export function applyEmergencyTheme(): void {
+  try {
+    const root = document.documentElement;
+    
+    // Direct style application
+    root.style.backgroundColor = '#12121A';
+    root.style.color = '#F6F6F7';
+    
+    // Critical CSS variables
+    root.style.setProperty('--color-primary', '#00F0FF');
+    root.style.setProperty('--color-secondary', '#FF2D6E');
+    root.style.setProperty('--color-accent', '#8B5CF6');
+    root.style.setProperty('--color-background', '#12121A');
+    root.style.setProperty('--color-foreground', '#F6F6F7');
+    root.style.setProperty('--color-primary-rgb', '0, 240, 255');
+    
+    // Add indicator class
+    root.classList.add('emergency-theme-applied');
+    
+    logger.info('Emergency theme applied directly');
+  } catch (error) {
+    // At this point there's nothing else we can do
+    console.error('Critical theme failure:', error);
   }
 }
