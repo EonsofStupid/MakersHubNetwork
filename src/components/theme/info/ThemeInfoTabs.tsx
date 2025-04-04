@@ -68,4 +68,4 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
       </AnimatePresence>
     </Tabs>
   );
-} 
+}
