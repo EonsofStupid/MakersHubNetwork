@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { formatLogDetails } from '@/logging/utils/details-formatter';
@@ -71,5 +71,53 @@ export function useAdminChat() {
     isLoading,
     initializeChat,
     sendMessage
+  };
+}
+
+/**
+ * Hook for listening to admin chat events
+ */
+export function useAdminChatListener(
+  onNewMessage?: (message: AdminChatMessage) => void,
+  onStatusChange?: (isOnline: boolean) => void
+) {
+  const [isOnline, setIsOnline] = useState<boolean>(false);
+  const logger = useLogger('useAdminChatListener', { category: LogCategory.ADMIN });
+
+  // Set up chat listeners
+  useEffect(() => {
+    logger.debug('Setting up admin chat listeners');
+    
+    // Simulate connection established after a delay
+    const connectionTimer = setTimeout(() => {
+      setIsOnline(true);
+      onStatusChange?.(true);
+      logger.info('Admin chat connection established');
+    }, 1500);
+    
+    // Simulate receiving messages periodically
+    const messageTimer = setInterval(() => {
+      if (Math.random() > 0.8 && isOnline) {
+        const systemMessage: AdminChatMessage = {
+          id: `system-${Date.now()}`,
+          content: 'Is there anything else you need help with?',
+          sender: 'system',
+          timestamp: new Date()
+        };
+        
+        onNewMessage?.(systemMessage);
+        logger.debug('Received system message', { details: { messageId: systemMessage.id } });
+      }
+    }, 30000); // Check every 30 seconds with low probability
+    
+    return () => {
+      clearTimeout(connectionTimer);
+      clearInterval(messageTimer);
+      logger.debug('Cleaned up admin chat listeners');
+    };
+  }, [isOnline, onNewMessage, onStatusChange, logger]);
+  
+  return {
+    isOnline
   };
 }

@@ -1,86 +1,72 @@
 
-import { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { defaultImpulseTokens } from '../impulse/tokens';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 import { themeRegistry } from '../ThemeRegistry';
 
 export function DynamicKeyframes() {
   const { currentTheme } = useThemeStore();
-  const logger = getLogger('DynamicKeyframes', { category: LogCategory.THEME });
+  const [keyframesStyles, setKeyframesStyles] = useState('');
+  const logger = useLogger('DynamicKeyframes', { category: LogCategory.THEME });
 
   useEffect(() => {
     try {
-      const theme = currentTheme ? themeRegistry.getTheme(currentTheme.id) : themeRegistry.getDefaultTheme();
+      // Get theme - first from registry, then currentTheme, fall back to default tokens
+      const activeTheme = themeRegistry.getActiveTheme() || 
+                         (currentTheme?.design_tokens?.admin as any) || 
+                         defaultImpulseTokens;
       
-      if (!theme) return;
+      const primaryColor = activeTheme?.colors?.primary || defaultImpulseTokens.colors.primary;
+      const secondaryColor = activeTheme?.colors?.secondary || defaultImpulseTokens.colors.secondary;
       
-      // Get colors for animations
-      const primaryColor = theme?.colors?.primary || '#00F0FF';
-      const secondaryColor = theme?.colors?.secondary || '#FF2D6E';
-      
-      // Generate keyframes for the admin theme
-      const styleTag = document.createElement('style');
-      styleTag.id = 'dynamic-admin-keyframes';
-      
-      styleTag.textContent = `
+      // Define keyframes
+      const styles = `
         @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 5px ${primaryColor}50; }
-          50% { box-shadow: 0 0 15px ${primaryColor}80; }
+          0%, 100% { box-shadow: 0 0 5px ${primaryColor}40; }
+          50% { box-shadow: 0 0 20px ${primaryColor}80; }
         }
         
-        @keyframes text-shimmer {
-          0% { color: ${primaryColor}; text-shadow: 0 0 4px ${primaryColor}80; }
-          50% { color: ${secondaryColor}; text-shadow: 0 0 4px ${secondaryColor}80; }
-          100% { color: ${primaryColor}; text-shadow: 0 0 4px ${primaryColor}80; }
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 0.8; }
+          50% { opacity: 1; }
         }
         
-        @keyframes border-pulse {
-          0%, 100% { border-color: ${primaryColor}40; }
-          50% { border-color: ${primaryColor}80; }
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
         }
         
-        @keyframes morph-header {
-          0%, 100% { border-bottom-color: ${primaryColor}30; }
-          50% { border-bottom-color: ${secondaryColor}30; }
+        @keyframes scan-line {
+          0% { background-position: 0% 0%; }
+          100% { background-position: 0% 100%; }
         }
         
-        @keyframes morph-slow {
-          0% { border-radius: 50%; }
-          25% { border-radius: 55% 45% 55% 45%; }
-          50% { border-radius: 45% 55% 45% 55%; }
-          75% { border-radius: 55% 45% 55% 45%; }
-          100% { border-radius: 50%; }
+        @keyframes primary-glow {
+          0%, 100% { text-shadow: 0 0 10px ${primaryColor}80; }
+          50% { text-shadow: 0 0 20px ${primaryColor}, 0 0 30px ${primaryColor}80; }
         }
         
-        .animate-pulse-glow { animation: pulse-glow 2.5s infinite ease-in-out; }
-        .animate-text-shimmer { animation: text-shimmer 3s infinite ease-in-out; }
-        .animate-border-pulse { animation: border-pulse 2s infinite ease-in-out; }
-        .animate-morph-header { animation: morph-header 5s infinite ease-in-out; }
-        .animate-morph-slow { animation: morph-slow 4s infinite ease-in-out; }
+        @keyframes secondary-glow {
+          0%, 100% { text-shadow: 0 0 10px ${secondaryColor}80; }
+          50% { text-shadow: 0 0 20px ${secondaryColor}, 0 0 30px ${secondaryColor}80; }
+        }
       `;
       
-      // Remove any existing keyframes
-      const existingStyle = document.getElementById('dynamic-admin-keyframes');
-      if (existingStyle) {
-        existingStyle.remove();
-      }
-      
-      // Add the new keyframes
-      document.head.appendChild(styleTag);
-      
-      logger.debug('Dynamic keyframes added to document');
-      
-      return () => {
-        styleTag.remove();
-        logger.debug('Dynamic keyframes removed from document');
-      };
+      setKeyframesStyles(styles);
+      logger.debug('Dynamic keyframes generated');
     } catch (error) {
-      logger.error('Error setting up dynamic keyframes', { 
-        details: { error: error instanceof Error ? error.message : String(error) } 
+      logger.error('Failed to generate dynamic keyframes', { 
+        details: { error: String(error) } 
       });
     }
   }, [currentTheme, logger]);
 
-  return null;
+  // Add the keyframes to the document
+  return (
+    <style id="dynamic-keyframes">
+      {keyframesStyles}
+    </style>
+  );
 }

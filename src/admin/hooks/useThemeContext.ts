@@ -1,121 +1,76 @@
 
-import { useState, useEffect, useContext } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/auth/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
-import { safeDetails } from '@/logging/utils/safeDetails';
-import { ThemeContext } from '@/types/theme';
-
-// Define theme context types
-export type ThemeContextValues = {
-  primaryColor: string;
-  secondaryColor: string;
-  backgroundColor: string;
-  foregroundColor: string;
-  fontFamily: string;
-  borderRadius: string;
-};
-
-// Use the proper ThemeContext type
-export type ThemeScope = ThemeContext | 'global';
-
-const logger = getLogger('ThemeContext', { category: LogCategory.THEME });
+import { useToast } from '@/hooks/use-toast';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
+import { useAdminRoles } from './useAdminRoles';
 
 /**
- * Hook for accessing and managing theme context for admin interface
+ * Hook for managing theme context in the admin panel
  */
-export function useThemeContext(scope: ThemeScope = 'admin') {
-  const [themeData, setThemeData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const { user, isAdmin } = useAuth();
-
-  // Load theme data from database
+export function useThemeContext() {
+  const { user, signOut } = useAuth();
+  const { isAdmin } = useAdminRoles();
+  const [activeTheme, setActiveTheme] = useState<string>('default');
+  const [canEdit, setCanEdit] = useState<boolean>(false);
+  const { toast } = useToast();
+  const logger = useLogger('useThemeContext', { category: LogCategory.THEME });
+  
+  // Set theme editing permissions
   useEffect(() => {
-    const loadTheme = async () => {
-      try {
-        setIsLoading(true);
-        logger.info('Loading theme data', { 
-          category: LogCategory.THEME,
-          details: { scope } 
-        });
-        
-        // Query the default theme or a specific user theme
-        const { data, error } = await supabase
-          .from('themes')
-          .select('*')
-          .eq('is_default', true)
-          .limit(1)
-          .single();
-        
-        if (error) throw error;
-        
-        if (!data) {
-          logger.warn('No theme data found, using defaults', {
-            category: LogCategory.THEME
-          });
-          return;
-        }
-        
-        // Process theme data
-        setThemeData(data);
-        logger.info('Theme data loaded successfully', {
-          category: LogCategory.THEME
-        });
-      } catch (err) {
-        logger.error('Failed to load theme data', { 
-          category: LogCategory.THEME,
-          details: safeDetails(err) 
-        });
-        setError(err instanceof Error ? err : new Error('Unknown error loading theme'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadTheme();
-  }, [scope, user?.id]);
-
-  // Apply theme override for admin scope if user is admin
-  const getDesignTokens = () => {
-    if (!themeData) return {};
-    
+    // Only admins can edit themes
+    setCanEdit(!!user && isAdmin);
+  }, [user, isAdmin]);
+  
+  // Handle theme change
+  const changeTheme = (themeId: string) => {
     try {
-      if (scope === 'admin' && themeData.design_tokens?.admin) {
-        return themeData.design_tokens.admin;
-      }
+      setActiveTheme(themeId);
+      logger.info(`Changed active theme to: ${themeId}`);
       
-      return themeData.design_tokens || {};
-    } catch (error) {
-      logger.error('Error processing design tokens', { 
-        category: LogCategory.THEME,
-        details: safeDetails(error) 
+      // You could persist the theme change to a database here
+      
+      toast({
+        title: "Theme changed",
+        description: `Theme has been changed to ${themeId}`,
       });
-      return {};
+    } catch (error) {
+      logger.error('Error changing theme', {
+        details: { error, themeId }
+      });
+      
+      toast({
+        title: "Error changing theme",
+        description: "There was an error changing the theme",
+        variant: "destructive",
+      });
     }
   };
-
-  // Extract theme values for current scope
-  const getThemeValues = (): ThemeContextValues => {
-    const tokens = getDesignTokens();
-    
-    // Extract values with fallbacks
-    return {
-      primaryColor: tokens?.colors?.primary || '#00F0FF',
-      secondaryColor: tokens?.colors?.secondary || '#FF2D6E',
-      backgroundColor: tokens?.colors?.background?.main || '#12121A',
-      foregroundColor: tokens?.colors?.text?.primary || '#F6F6F7',
-      fontFamily: tokens?.typography?.fonts?.body || 'system-ui, sans-serif',
-      borderRadius: tokens?.components?.panel?.radius || '0.5rem',
-    };
+  
+  // Log out user
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      logger.info('User logged out from theme context');
+    } catch (error) {
+      logger.error('Error logging out', {
+        details: { error }
+      });
+      
+      toast({
+        title: "Error logging out",
+        description: "There was an error logging out",
+        variant: "destructive",
+      });
+    }
   };
-
+  
   return {
-    themeData,
-    isLoading,
-    error,
-    themeValues: getThemeValues(),
-    scope,
+    activeTheme,
+    canEdit,
+    user,
+    changeTheme,
+    logout: handleLogout
   };
 }

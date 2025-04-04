@@ -1,119 +1,86 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { LogOut, Sun, Moon, User, Bell } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { AdminTooltip } from './ui/AdminTooltip';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/auth/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { LogOut, Settings, User, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/components/ui/theme-provider';
-import { useToast } from '@/hooks/use-toast';
+import { useAdminStore } from '@/admin/store/admin.store';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface AdminHeaderProps {
-  title?: string;
-}
-
-export function AdminHeader({ title = 'Dashboard' }: AdminHeaderProps) {
-  const { user, logout } = useAuth();
+export function AdminHeader() {
+  const { user, signOut } = useAuth();
   const { setTheme, theme } = useTheme();
-  const { toast } = useToast();
+  const { toggleSidebar } = useAdminStore();
   const navigate = useNavigate();
   
   const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-      toast({
-        title: 'Logged out',
-        description: 'You have been logged out successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to log out. Please try again.',
-        variant: 'destructive',
-      });
-    }
+    await signOut();
+    navigate('/');
   };
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-  
-  const displayName = user?.user_metadata?.name || user?.email || 'User';
-  const initials = displayName
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
 
   return (
-    <header className={cn(
-      "h-16 border-b border-[var(--impulse-border-normal)]",
-      "bg-[var(--impulse-bg-header)] px-4 flex items-center justify-between"
-    )}>
-      {/* Title */}
-      <h1 className="text-xl font-heading text-[var(--impulse-text-primary)]">
-        {title}
-      </h1>
-      
-      {/* Actions */}
-      <div className="flex items-center space-x-1">
-        {/* Theme toggle */}
-        <AdminTooltip content={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
-          <button
-            onClick={toggleTheme}
-            className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-[var(--impulse-bg-hover)]"
+    <header className="flex justify-between items-center p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/50">
+      <div className="flex items-center">
+        <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+          <span className="sr-only">Toggle sidebar</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5"
           >
-            {theme === 'dark' ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </button>
-        </AdminTooltip>
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+            <path d="M9 3v18" />
+          </svg>
+        </Button>
+        <h1 className="text-lg font-semibold ml-4 text-foreground">Admin Dashboard</h1>
+      </div>
+      
+      <div className="flex items-center space-x-4">
+        <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+          {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          <span className="sr-only">Toggle theme</span>
+        </Button>
         
-        {/* Notifications */}
-        <AdminTooltip content="Notifications">
-          <button className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-[var(--impulse-bg-hover)]">
-            <Bell className="h-5 w-5" />
-          </button>
-        </AdminTooltip>
-        
-        {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center space-x-2 rounded-full hover:bg-[var(--impulse-bg-hover)] p-1">
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.user_metadata?.avatar_url} />
-                <AvatarFallback>{initials}</AvatarFallback>
+                <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email || ''} />
+                <AvatarFallback>{user?.email?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
-            </button>
+            </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>
-              <div className="flex flex-col space-y-1">
-                <span className="font-normal text-sm">{displayName}</span>
-                <span className="text-xs font-normal text-muted-foreground">{user?.email}</span>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuItem className="flex flex-col items-start">
+              <div className="text-sm font-medium">{user?.email}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {user?.user_metadata?.role || 'Administrator'}
               </div>
-            </DropdownMenuLabel>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => navigate('/profile')}>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => navigate('/admin/profile')}>
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/admin/settings')}>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />

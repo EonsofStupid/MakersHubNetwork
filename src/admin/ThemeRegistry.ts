@@ -92,6 +92,20 @@ class ThemeRegistry {
   }
 
   /**
+   * Get the default theme for fallback purposes
+   */
+  getDefaultTheme(): ImpulseTheme | null {
+    const defaultTheme = this.themes.get('default');
+    if (!defaultTheme) {
+      logger.warn('Default theme not found');
+      // Return first available theme as fallback
+      const firstTheme = this.themes.values().next().value;
+      return firstTheme || null;
+    }
+    return defaultTheme;
+  }
+
+  /**
    * Get all registered themes
    */
   getAllThemes(): ImpulseTheme[] {

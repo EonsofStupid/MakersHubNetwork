@@ -1,4 +1,3 @@
-
 export enum LogLevel {
   TRACE = 0,
   DEBUG = 1,
@@ -25,7 +24,8 @@ export enum LogCategory {
   SYSTEM = 'SYSTEM',
   DATA = 'DATA',
   GENERAL = 'GENERAL',
-  MISC = 'MISC'
+  MISC = 'MISC',
+  CONTENT = 'CONTENT'
 }
 
 export type LoggerOptions = {

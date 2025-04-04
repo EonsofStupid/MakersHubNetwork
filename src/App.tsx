@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Layout } from "@/components/ui/layout/Layout";
 import { authRoutes } from "@/routes/auth-routes";
 import { appRoutes } from "@/routes/app-routes";
-import { adminRoutes } from "@/admin/routes/admin-routes";
+import { AdminRoutes } from "@/admin/routes"; // Fixed import
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import { ThemeDebugger } from "@/admin/theme/utils/ThemeDebugger";
@@ -30,7 +30,7 @@ export default function App() {
                 {appRoutes}
                 <Route path="*" element={<NotFound />} />
               </Route>
-              {adminRoutes}
+              <Route path="/admin/*" element={<AdminRoutes />} />
             </Routes>
           </Suspense>
           <Toaster />
