@@ -5,7 +5,7 @@ import { AuthState, AuthStatus, UserRole } from "../types/auth.types";
 import { AuthUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { getLogger } from "@/logging";
-import { LogCategory } from "@/constants/logLevel";
+import { LogCategory } from "@/logging/types";
 import { safeDetails } from '@/logging/utils/safeDetails';
 
 interface AuthStore extends AuthState {

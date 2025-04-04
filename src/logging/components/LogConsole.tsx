@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LogEntry, LogLevel, LogCategory } from '../types';
 import { useLoggingContext } from '../context/LoggingContext';
-import { LOG_LEVEL_NAMES, isLogLevelAtLeast } from '../constants/log-level';
+import { LOG_LEVEL_NAMES, isLogLevelAtLeast, getLogLevelColorClass } from '../constants/logLevel';
 import { safelyRenderNode } from '../utils/react';
 import { X, Minimize2, Maximize2, Download, Trash } from 'lucide-react';
 
@@ -35,14 +35,12 @@ export function LogConsole({
   const [isMinimized, setIsMinimized] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
     if (autoScroll && scrollRef.current && !isMinimized) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [logs, autoScroll, isMinimized]);
 
-  // Filter logs by level, category, and text
   const filteredLogs = logs
     .filter(log => isLogLevelAtLeast(log.level, selectedLevel))
     .filter(log => selectedCategory === 'all' || log.category === selectedCategory)
@@ -53,7 +51,6 @@ export function LogConsole({
         (log.source && log.source.toLowerCase().includes(filter.toLowerCase()));
     });
   
-  // Hide if empty and hideIfEmpty is true
   if (hideIfEmpty && filteredLogs.length === 0 && !showLogConsole) {
     return null;
   }
@@ -62,7 +59,6 @@ export function LogConsole({
     return null;
   }
   
-  // Position classes
   const positionClass = {
     'bottom-right': 'bottom-4 right-4',
     'bottom-left': 'bottom-4 left-4',
@@ -70,7 +66,6 @@ export function LogConsole({
     'top-left': 'top-4 left-4'
   }[position];
   
-  // Collect unique categories for filter
   const uniqueCategories = Array.from(
     new Set(logs.map(log => log.category))
   ).sort() as LogCategory[];
@@ -98,7 +93,6 @@ export function LogConsole({
         maxWidth: '100vw'
       }}
     >
-      {/* Header */}
       <div className="flex items-center justify-between p-2 bg-muted/50 border-b">
         <div className="text-sm font-medium flex items-center gap-2">
           {isMinimized ? 'Logs' : `Logs (${filteredLogs.length})`}
@@ -141,7 +135,6 @@ export function LogConsole({
       
       {!isMinimized && (
         <>
-          {/* Filter bar */}
           <div className="flex items-center p-2 border-b gap-2 flex-wrap">
             <input
               type="text"
@@ -177,7 +170,6 @@ export function LogConsole({
             </select>
           </div>
           
-          {/* Log list */}
           <div 
             ref={scrollRef}
             className="overflow-auto h-full font-mono text-xs p-0"
@@ -201,7 +193,6 @@ export function LogConsole({
                 </thead>
                 <tbody>
                   {filteredLogs.map(log => {
-                    // Pre-render the message with type safety
                     const messageContent = renderMessage(log.message);
                     
                     return (
@@ -213,7 +204,7 @@ export function LogConsole({
                           {new Date(log.timestamp instanceof Date ? log.timestamp : log.timestamp).toLocaleTimeString()}
                         </td>
                         <td className="px-2 py-1 whitespace-nowrap text-xs">
-                          <span className={getLevelColorClass(log.level)}>
+                          <span className={getLogLevelColorClass(log.level)}>
                             {LOG_LEVEL_NAMES[log.level]}
                           </span>
                         </td>
@@ -251,25 +242,6 @@ export function LogConsole({
   );
 }
 
-function getLevelColorClass(level: LogLevel): string {
-  switch (level) {
-    case LogLevel.DEBUG:
-      return 'text-gray-400';
-    case LogLevel.INFO:
-    case LogLevel.SUCCESS:
-      return 'text-blue-400';
-    case LogLevel.WARN:
-      return 'text-yellow-400';
-    case LogLevel.ERROR:
-      return 'text-red-400';
-    case LogLevel.CRITICAL:
-    case LogLevel.FATAL:
-      return 'text-red-600 font-bold';
-    default:
-      return 'text-gray-400';
-  }
-}
-
 function renderMessage(message: any): React.ReactNode {
   if (message === null || message === undefined) {
     return '';
@@ -283,8 +255,7 @@ function renderMessage(message: any): React.ReactNode {
     return message;
   }
   
-  // Fix the instanceof Error check
-  if (message && typeof message === 'object' && 'message' in message && typeof message.message === 'string') {
+  if (typeof message === 'object' && message !== null && 'message' in message && typeof message.message === 'string') {
     return message.message;
   }
   
