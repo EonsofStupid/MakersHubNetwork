@@ -5,6 +5,7 @@ import { useAdminSync } from '@/admin/hooks/useAdminSync';
 import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { safeDetails } from '@/logging/utils/safeDetails';
 
 // Create context
 interface AdminContextValue {
@@ -19,18 +20,24 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const { permissions, isLoading } = useAdminPermissions();
   const { isSyncing } = useAdminSync();
   const [initialized, setInitialized] = React.useState(false);
-  const logger = useLogger('AdminContext', LogCategory.ADMIN);
+  const logger = useLogger('AdminContext', { category: LogCategory.ADMIN });
   
   // Initialize admin context
   useEffect(() => {
     if (!isLoading && !isSyncing && !initialized) {
-      logger.info('Initializing admin context', {
-        details: { permissions }
-      });
-      
-      // Update permissions in store
-      setPermissions(permissions);
-      setInitialized(true);
+      try {
+        logger.info('Initializing admin context', {
+          details: { permissions }
+        });
+        
+        // Update permissions in store
+        setPermissions(permissions);
+        setInitialized(true);
+      } catch (error) {
+        logger.error('Failed to initialize admin context', {
+          details: safeDetails(error)
+        });
+      }
     }
   }, [isLoading, isSyncing, initialized, setPermissions, permissions, logger]);
   
