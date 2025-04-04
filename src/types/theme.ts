@@ -46,6 +46,14 @@ export function convertToThemeComponents(components: ComponentTokens[]): ThemeCo
   return components.map(componentTokenToThemeComponent);
 }
 
+// Ensure component context is set correctly for ThemeComponents
+export function ensureThemeComponentContext(components: ThemeComponent[]): ThemeComponent[] {
+  return components.map(comp => ({
+    ...comp,
+    context: comp.context || 'site' // Ensure context is never undefined
+  }));
+}
+
 /**
  * Theme Token structure
  */

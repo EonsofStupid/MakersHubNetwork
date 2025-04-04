@@ -6,13 +6,11 @@ import {
   LoggerOptions,
   LogTransport,
   LoggingConfig,
-  LogEventCallback,
-  LogLevel,
   LogCategory,
+  LogLevel,
   PerformanceMeasurementOptions
 } from './types';
-import { getLogger, initializeLogger } from './service/logger.service';
-import { memoryTransport } from './transports/memory.transport';
+import { getLogger, initializeLogger, loggerService, memoryTransport } from './service/logger.service';
 import { logEventEmitter } from './events';
 
 // Re-export types
@@ -22,18 +20,17 @@ export type {
   LoggerOptions,
   LogTransport,
   LoggingConfig,
-  LogEventCallback,
   PerformanceMeasurementOptions
 };
 
 // Export enums (as values and types)
 export { LogLevel, LogCategory };
 
-// Re-export utilities
+// Re-export core functions
 export { getLogger, initializeLogger };
 
-// Export memory transport
-export { memoryTransport };
+// Re-export services and transports
+export { loggerService, memoryTransport };
 
 // Export event emitter
 export { logEventEmitter };
@@ -64,14 +61,16 @@ initializeLogger({
  * Get all logs from the memory transport
  */
 export function getLogs(): LogEntry[] {
-  return memoryTransport.getLogs?.() || [];
+  return memoryTransport.getLogs ? memoryTransport.getLogs() : [];
 }
 
 /**
  * Clear logs from the memory transport
  */
 export function clearLogs(): void {
-  memoryTransport.clear?.();
+  if (memoryTransport.clear) {
+    memoryTransport.clear();
+  }
 }
 
 /**

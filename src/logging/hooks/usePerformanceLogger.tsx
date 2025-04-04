@@ -1,137 +1,117 @@
 
 import { useCallback, useRef } from 'react';
-import { LoggerOptions } from '../types';
-import { useLogger } from './useLogger';
-import { LogCategory } from '../types';
-
-export interface PerformanceLoggerOptions extends LoggerOptions {
-  /**
-   * Log level threshold in milliseconds
-   * Operations below this threshold will be logged at INFO level
-   * Operations above this threshold will be logged at WARN level
-   */
-  warnThreshold?: number;
-  
-  /**
-   * Whether to automatically add the duration to the log message
-   */
-  includeDuration?: boolean;
-  
-  /**
-   * Custom formatting function for the duration
-   */
-  formatDuration?: (duration: number) => string;
-}
-
-type PerformanceCallback<T> = () => T;
-type AsyncPerformanceCallback<T> = () => Promise<T>;
+import { getLogger } from '@/logging';
+import { LogCategory, PerformanceMeasurementOptions } from '@/logging/types';
 
 /**
- * Hook for measuring and logging the performance of operations
+ * Hook for measuring and logging operation durations
  */
-export function usePerformanceLogger(
-  source?: string,
-  options: PerformanceLoggerOptions = {}
-) {
-  const logger = useLogger(source, {
-    ...options,
-    category: options.category || LogCategory.PERFORMANCE as string,
-  });
+export function usePerformanceLogger(source: string, options: Partial<PerformanceMeasurementOptions> = {}) {
+  const logger = getLogger(source);
+  const defaultOptions: PerformanceMeasurementOptions = {
+    category: LogCategory.PERFORMANCE,
+    warnThreshold: 100,
+    ...options
+  };
   
-  const marks = useRef<Map<string, number>>(new Map());
-  const warnThreshold = options.warnThreshold || 100; // Default 100ms
-  const includeDuration = options.includeDuration !== false; // Default true
+  const activeTimers = useRef<Record<string, { start: number; operationName: string }>>({});
   
-  /**
-   * Format the duration for log messages
-   */
-  const formatDuration = useCallback((duration: number): string => {
-    if (options.formatDuration) {
-      return options.formatDuration(duration);
-    }
-    
-    if (duration < 1) {
-      return `${duration.toFixed(3)}ms`;
-    } else if (duration < 1000) {
-      return `${duration.toFixed(2)}ms`;
-    } else {
-      return `${(duration / 1000).toFixed(2)}s`;
-    }
-  }, [options]);
+  // Measure synchronous operations
+  const measure = useCallback(
+    function measure<T>(operationName: string, operation: () => T): T {
+      const start = performance.now();
+      let result: T;
+      let success = false;
+      let error: any;
+      
+      try {
+        result = operation();
+        success = true;
+        return result;
+      } catch (e) {
+        error = e;
+        throw e;
+      } finally {
+        const end = performance.now();
+        const duration = Math.round(end - start);
+        
+        logger.performance(
+          `${operationName} ${success ? 'completed' : 'failed'} in ${duration}ms`,
+          duration,
+          success,
+          {
+            category: defaultOptions.category,
+            details: {
+              operationName,
+              duration,
+              success,
+              error: error ? String(error) : undefined,
+              ...options.details
+            },
+            tags: [...(defaultOptions.tags || []), 'performance', success ? 'success' : 'error']
+          }
+        );
+        
+        if (defaultOptions.onComplete) {
+          defaultOptions.onComplete({
+            name: operationName,
+            duration,
+            success
+          });
+        }
+      }
+    },
+    [logger, defaultOptions]
+  );
   
-  /**
-   * Start measuring performance for a named operation
-   */
-  const start = useCallback((name: string) => {
-    marks.current.set(name, performance.now());
-  }, []);
-  
-  /**
-   * End measuring and log the duration
-   */
-  const end = useCallback((name: string, message?: string) => {
-    const startTime = marks.current.get(name);
-    if (startTime === undefined) {
-      logger.warn(`Performance mark "${name}" does not exist`, {
-        details: { availableMarks: Array.from(marks.current.keys()) }
-      });
-      return 0;
-    }
-    
-    const duration = performance.now() - startTime;
-    const logMessage = message || `Operation "${name}" completed`;
-    const formattedMessage = includeDuration 
-      ? `${logMessage} in ${formatDuration(duration)}`
-      : logMessage;
-    
-    logger.performance(formattedMessage, duration);
-    marks.current.delete(name);
-    
-    return duration;
-  }, [logger, includeDuration, formatDuration]);
-  
-  /**
-   * Measure the execution time of a synchronous function
-   */
-  const measure = useCallback(function measure<T>(name: string, callback: PerformanceCallback<T>): T {
-    start(name);
-    try {
-      const result = callback();
-      end(name);
-      return result;
-    } catch (error) {
-      const duration = end(name);
-      logger.error(`Error in measured operation "${name}" (${formatDuration(duration)})`, {
-        details: { error }
-      });
-      throw error;
-    }
-  }, [start, end, logger, formatDuration]);
-  
-  /**
-   * Measure the execution time of an asynchronous function
-   */
-  const measureAsync = useCallback(async function measureAsync<T>(
-    name: string,
-    callback: AsyncPerformanceCallback<T>
-  ): Promise<T> {
-    start(name);
-    try {
-      const result = await callback();
-      end(name);
-      return result;
-    } catch (error) {
-      const duration = end(name);
-      logger.error(`Error in async measured operation "${name}" (${formatDuration(duration)})`, {
-        details: { error }
-      });
-      throw error;
-    }
-  }, [start, end, logger, formatDuration]);
+  // Measure asynchronous operations
+  const measureAsync = useCallback(
+    async function measureAsync<T>(operationName: string, operation: () => Promise<T>): Promise<T> {
+      const start = performance.now();
+      let success = false;
+      let error: any;
+      
+      try {
+        const result = await operation();
+        success = true;
+        return result;
+      } catch (e) {
+        error = e;
+        throw e;
+      } finally {
+        const end = performance.now();
+        const duration = Math.round(end - start);
+        
+        logger.performance(
+          `${operationName} ${success ? 'completed' : 'failed'} in ${duration}ms`,
+          duration,
+          success,
+          {
+            category: defaultOptions.category,
+            details: {
+              operationName,
+              duration,
+              success,
+              error: error ? String(error) : undefined,
+              ...options.details
+            },
+            tags: [...(defaultOptions.tags || []), 'performance', 'async', success ? 'success' : 'error']
+          }
+        );
+        
+        if (defaultOptions.onComplete) {
+          defaultOptions.onComplete({
+            name: operationName,
+            duration,
+            success
+          });
+        }
+      }
+    },
+    [logger, defaultOptions]
+  );
   
   return {
-    start,
-    end,
     measure,
     measureAsync
   };

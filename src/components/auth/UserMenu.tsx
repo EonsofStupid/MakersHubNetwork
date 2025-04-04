@@ -1,58 +1,57 @@
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/auth/hooks/useAuth";
-import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
-import { LogCategory } from "@/constants/logLevel";
-import { useLogger } from "@/hooks/use-logger";
 
-export const UserMenu = () => {
-  const { user, roles, logout } = useAuth();
-  const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeTheme, setActiveTheme] = useState('');
-  const { hasAdminAccess } = useAdminAccess();
-  const logger = useLogger('UserMenu', { category: LogCategory.UI });
+import React from 'react';
+import { useNavigate } from 'react-router-dom'; 
+import { useAuth } from '@/auth/hooks/useAuth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getInitials } from '@/utils/stringUtils';
 
-  const handleLogout = async () => {
-    logger.info('User initiated logout');
-    await logout();
-    router.push('/login');
+export function UserMenu() {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
-
-  const displayName = user?.profile?.display_name || user?.email || 'User';
-  const avatarUrl = user?.profile?.avatar_url || user?.user_metadata?.avatar_url || '';
-
+  
+  const goToProfile = () => {
+    navigate('/profile');
+  };
+  
+  const goToSettings = () => {
+    navigate('/settings');
+  };
+  
+  if (!user) return null;
+  
+  const userInitials = getInitials(user.email || 'User');
+  
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <button className="rounded-full h-9 w-9 flex items-center justify-center relative">
-          <Avatar className="h-9 w-9">
-            {avatarUrl ? (
-              <AvatarImage src={avatarUrl} alt={displayName} />
-            ) : (
-              <AvatarFallback>{displayName ? displayName[0].toUpperCase() : 'U'}</AvatarFallback>
-            )}
-          </Avatar>
-        </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger className="focus:outline-none">
+        <Avatar className="h-8 w-8 cursor-pointer hover:opacity-80 transition-opacity">
+          <AvatarImage src={user.avatarUrl || ''} alt={user.email || 'User'} />
+          <AvatarFallback className="bg-primary text-primary-foreground">
+            {userInitials}
+          </AvatarFallback>
+        </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48 mr-2" align="end" forceMount>
+      <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => router.push('/profile')}>
-          Profile
-        </DropdownMenuItem>
-        {hasAdminAccess && (
-          <DropdownMenuItem onSelect={() => router.push('/admin')}>
-            Admin Dashboard
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem onClick={goToProfile}>Profile</DropdownMenuItem>
+        <DropdownMenuItem onClick={goToSettings}>Settings</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={handleLogout}>
-          Log out
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
+}

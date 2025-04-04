@@ -6,7 +6,9 @@ export enum LogLevel {
   INFO = 2,
   WARN = 3,
   ERROR = 4,
-  FATAL = 5
+  FATAL = 5,
+  SUCCESS = 2, // Same level as INFO
+  CRITICAL = 5  // Same level as FATAL
 }
 
 // Define log categories for easier filtering
@@ -20,7 +22,8 @@ export enum LogCategory {
   PERFORMANCE = 'performance',
   THEME = 'theme',
   ANALYTICS = 'analytics',
-  USER_ACTION = 'user-action'
+  USER_ACTION = 'user-action',
+  GENERAL = 'general'
 }
 
 // Base logger options
@@ -33,6 +36,7 @@ export interface LoggerOptions {
   component?: string;
   timestamp?: string;
   correlationId?: string;
+  source?: string;
 }
 
 // Logger interface for consistent logging across the app
@@ -43,6 +47,8 @@ export interface Logger {
   warn: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
   error: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
   fatal: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
+  success: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
+  critical: (message: string, additionalOptions?: Partial<LoggerOptions>) => void;
   log: (level: LogLevel, message: string, additionalOptions?: Partial<LoggerOptions>) => void;
   performance: (name: string, durationMs: number, success: boolean, additionalOptions?: Partial<LoggerOptions>) => void;
 }
@@ -70,5 +76,19 @@ export interface LogTransport {
   filter?: (entry: LogEntry) => boolean;
   flush?: () => Promise<void>;
   getLogs?: (limit?: number, filterFn?: (entry: LogEntry) => boolean) => LogEntry[];
+  clear?: () => void;
   subscribe?: (callback: (entry: LogEntry) => void) => () => void;
 }
+
+// Performance measurement options
+export interface PerformanceMeasurementOptions {
+  category?: LogCategory;
+  warnThreshold?: number;
+  onComplete?: (result: { name: string; duration: number; success: boolean }) => void;
+  source?: string;
+  tags?: string[];
+  details?: Record<string, any>;
+}
+
+// Re-export the enums for broader usage
+export { LogLevel, LogCategory };

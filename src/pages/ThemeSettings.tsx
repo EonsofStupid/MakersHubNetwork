@@ -1,243 +1,212 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Settings, Palette, Paintbrush } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/auth/hooks/useAuth';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { safeDetails } from '@/logging/utils/safeDetails';
 
-// Theme options available to users
-const themeOptions = [
-  { id: 'cyberpunk', name: 'Cyberpunk', description: 'Neon lights and digital-age aesthetic', colors: ['#00F0FF', '#FF2D6E', '#8B5CF6'] },
-  { id: 'minimal', name: 'Minimal', description: 'Clean, simple, and focused design', colors: ['#6366F1', '#EC4899', '#8B5CF6'] },
-  { id: 'dark', name: 'Dark Matter', description: 'Deep space inspired dark theme', colors: ['#10B981', '#3B82F6', '#8B5CF6'] },
-  { id: 'light', name: 'Light Mode', description: 'Bright and accessible interface', colors: ['#3B82F6', '#EC4899', '#10B981'] },
-];
+// Import necessary components
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useThemeStore } from '@/stores/theme/store';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging/types';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ThemeSettings() {
-  const [selectedTheme, setSelectedTheme] = useState('cyberpunk');
-  const [isLoading, setIsLoading] = useState(false);
-  const [userPreference, setUserPreference] = useState<string | null>(null);
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const [isLoaded, setIsLoaded] = useState(false);
+  
+  const {
+    currentTheme,
+    themeTokens,
+    themeComponents,
+    isLoading,
+    error,
+    setTheme,
+    loadComponentsByContext,
+    hydrateTheme
+  } = useThemeStore();
+  
   const logger = useLogger('ThemeSettings', { category: LogCategory.THEME });
 
-  // Load user's theme preference
+  // Load theme data
   useEffect(() => {
-    const loadUserPreference = async () => {
-      if (!user?.id) return;
-      
+    const loadThemeData = async () => {
       try {
-        logger.info('Loading user theme preference');
+        logger.info('Loading theme data');
         
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('theme_preference')
-          .eq('id', user.id)
-          .single();
-        
-        if (error) throw error;
-        
-        if (data?.theme_preference) {
-          setSelectedTheme(data.theme_preference);
-          setUserPreference(data.theme_preference);
-          logger.debug('User theme preference loaded', { 
-            details: { preference: data.theme_preference } 
-          });
+        if (!currentTheme) {
+          await hydrateTheme();
         }
+        
+        await loadComponentsByContext();
+        
+        setIsLoaded(true);
+        logger.info('Theme data loaded successfully');
       } catch (err) {
-        logger.error('Error loading user theme preference', { 
-          details: safeDetails(err) 
+        logger.error('Failed to load theme data', { details: err });
+        toast({
+          title: 'Theme Load Error',
+          description: 'Failed to load theme settings',
+          variant: 'destructive'
         });
       }
     };
     
-    loadUserPreference();
-  }, [user?.id, logger]);
+    loadThemeData();
+  }, [hydrateTheme, loadComponentsByContext, currentTheme, logger, toast]);
 
-  // Save user's theme preference
-  const saveThemePreference = async () => {
-    if (!user?.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to save your theme preferences",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      logger.info('Saving user theme preference', { 
-        details: { theme: selectedTheme } 
-      });
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          theme_preference: selectedTheme,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-      
-      if (error) throw error;
-      
-      setUserPreference(selectedTheme);
-      
-      toast({
-        title: "Theme updated",
-        description: "Your theme preference has been saved",
-      });
-      
-      logger.info('Theme preference saved successfully');
-      
-      // Reload the page to apply the new theme
-      // In a more sophisticated implementation, we would use a theme context
-      // to apply the theme without a page reload
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } catch (err) {
-      logger.error('Error saving theme preference', { 
-        details: safeDetails(err) 
-      });
-      
-      toast({
-        title: "Update failed",
-        description: "Failed to save your theme preference",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (isLoading || !isLoaded) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Loading Theme Settings</h2>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold mb-2 text-destructive">Error Loading Theme</h2>
+          <p className="mb-4 text-muted-foreground">{error.message}</p>
+          <Button onClick={() => hydrateTheme()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container py-10 max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/profile" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-        </div>
-        
-        <div className="flex gap-2">
-          <Button
-            onClick={saveThemePreference}
-            disabled={isLoading || selectedTheme === userPreference}
-          >
-            {isLoading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2 mb-6">
-        <Paintbrush className="h-5 w-5 text-primary" />
+    <div className="container mx-auto py-8">
+      <div className="flex items-center mb-8">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/settings')}
+          className="mr-2"
+        >
+          <ArrowLeftIcon className="h-4 w-4 mr-2" />
+          Back
+        </Button>
         <h1 className="text-2xl font-bold">Theme Settings</h1>
       </div>
-      
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Choose a Theme</CardTitle>
-          <CardDescription>
-            Select a visual theme for your MakersImpulse experience
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RadioGroup 
-            value={selectedTheme} 
-            onValueChange={setSelectedTheme}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4"
-          >
-            {themeOptions.map((theme) => (
-              <div 
-                key={theme.id}
-                className={`
-                  relative rounded-lg border p-4 cursor-pointer transition-all duration-200 
-                  ${selectedTheme === theme.id 
-                    ? 'border-primary bg-primary/5 shadow-[0_0_10px_rgba(0,240,255,0.2)]' 
-                    : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                  }
-                `}
-              >
-                <RadioGroupItem 
-                  value={theme.id} 
-                  id={theme.id} 
-                  className="absolute right-4 top-4 opacity-0"
-                />
-                
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-medium text-foreground">{theme.name}</h3>
-                    {selectedTheme === theme.id && (
-                      <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Check className="h-3 w-3 text-primary" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {theme.description}
-                  </p>
-                  
-                  <div className="flex gap-2 mt-1">
-                    {theme.colors.map((color, i) => (
-                      <div 
-                        key={`${theme.id}-color-${i}`}
-                        className="w-6 h-6 rounded-full border border-border"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="md:col-span-3 space-y-6">
+          <div className="bg-card rounded-lg shadow p-4">
+            <h2 className="font-semibold mb-4">Current Theme</h2>
+            {currentTheme ? (
+              <div>
+                <p className="text-lg font-medium">{currentTheme.name}</p>
+                <p className="text-muted-foreground text-sm">{currentTheme.description}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Status: <span className="capitalize">{currentTheme.status}</span>
+                </p>
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No theme selected</p>
+            )}
+          </div>
+          
+          {/* Theme selector will go here */}
+        </div>
+        
+        <div className="md:col-span-9 space-y-6">
+          <div className="bg-card rounded-lg shadow p-4">
+            <h2 className="font-semibold mb-4">Theme Preview</h2>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <ColorSwatch name="Primary" value={currentTheme?.design_tokens?.colors?.primary} />
+                <ColorSwatch name="Secondary" value={currentTheme?.design_tokens?.colors?.secondary} />
+                <ColorSwatch name="Accent" value={currentTheme?.design_tokens?.colors?.accent} />
+                <ColorSwatch name="Background" value={currentTheme?.design_tokens?.colors?.background?.main} />
+              </div>
+              
+              <div className="mt-8">
+                <h3 className="text-sm font-medium mb-2">Typography</h3>
+                <div className="space-y-2">
+                  <p className="text-3xl">Heading Example</p>
+                  <p className="text-base">Regular text example</p>
+                  <p className="text-sm">Small text example</p>
                 </div>
               </div>
-            ))}
-          </RadioGroup>
-        </CardContent>
-      </Card>
-      
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Animation Settings</CardTitle>
-          <CardDescription>
-            Configure motion and animation preferences
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="reduce-motion"
-                className="h-4 w-4 rounded border-primary text-primary focus:ring-primary"
-              />
-              <Label htmlFor="reduce-motion">
-                Reduce motion (reduces animations throughout the interface)
-              </Label>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="disable-effects"
-                className="h-4 w-4 rounded border-primary text-primary focus:ring-primary"
-              />
-              <Label htmlFor="disable-effects">
-                Disable glow effects
-              </Label>
+              
+              <div className="mt-8">
+                <h3 className="text-sm font-medium mb-2">Components</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="default">Primary Button</Button>
+                  <Button variant="secondary">Secondary Button</Button>
+                  <Button variant="outline">Outline Button</Button>
+                  <Button variant="ghost">Ghost Button</Button>
+                </div>
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          
+          <div className="bg-card rounded-lg shadow p-4">
+            <h2 className="font-semibold mb-4">Theme Components</h2>
+            <p className="text-muted-foreground mb-4">
+              {themeComponents.length} components loaded ({themeComponents.filter(c => c.context === 'site').length} site, {themeComponents.filter(c => c.context === 'admin').length} admin)
+            </p>
+            
+            <div className="overflow-auto max-h-[300px] border rounded-md">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="text-left p-2 text-sm font-medium">Name</th>
+                    <th className="text-left p-2 text-sm font-medium">Context</th>
+                    <th className="text-left p-2 text-sm font-medium">Properties</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {themeComponents.slice(0, 10).map((comp) => (
+                    <tr key={comp.id}>
+                      <td className="p-2">{comp.component_name}</td>
+                      <td className="p-2">{comp.context}</td>
+                      <td className="p-2 text-xs">{Object.keys(comp.styles).length} props</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function ColorSwatch({ name, value }: { name: string; value?: string }) {
+  return (
+    <div>
+      <div 
+        className="h-12 rounded-md border border-border mb-1"
+        style={{ backgroundColor: value || 'transparent' }}
+      ></div>
+      <div className="flex justify-between items-center">
+        <span className="text-sm">{name}</span>
+        <span className="text-xs text-muted-foreground">{value || 'Not set'}</span>
+      </div>
+    </div>
+  );
+}
+
+// ArrowLeftIcon component
+function ArrowLeftIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m12 19-7-7 7-7"/>
+      <path d="M19 12H5"/>
+    </svg>
   );
 }
