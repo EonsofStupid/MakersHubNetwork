@@ -1,104 +1,86 @@
 
-import React, { useEffect } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
+import { useAuthStore } from '@/stores/auth/store';
+import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { UserRole } from '@/auth/types/auth.types';
+import { AuthContext } from '../context/AuthContext';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
 
-/**
- * Primary Authentication Provider
- * Initializes authentication state and sets up auth event listeners
- */
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { 
-    setUser, 
-    setSession, 
-    setRoles, 
-    initialize, 
-    setStatus,
-    initialized
-  } = useAuthStore();
-  
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const { user, session, initialized, initialize } = useAuthStore();
+  const [isPreLoaded, setIsPreLoaded] = useState(false);
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
+  const { isLoaded: themeIsLoaded } = useSiteTheme();
   
-  // Initialize auth state on mount
+  // Initialize auth on mount
   useEffect(() => {
-    initialize();
-  }, [initialize]);
+    if (!initialized) {
+      logger.info('Initializing authentication');
+      initialize().then(() => {
+        setIsPreLoaded(true);
+        logger.info('Authentication initialized');
+      }).catch(err => {
+        setIsPreLoaded(true);
+        logger.error('Error initializing auth', { details: err });
+      });
+    }
+  }, [initialized, initialize, logger]);
   
-  // Set up auth state change listener
+  // Handle auth state changes
   useEffect(() => {
-    logger.info('Setting up auth state change listener');
-    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        logger.info(`Auth state changed: ${event}`, { details: { event } });
-        
-        switch (event) {
-          case 'SIGNED_IN':
-            if (session?.user) {
-              setUser(session.user);
-              setSession(session);
-              setStatus('authenticated');
-              
-              // Get user roles with setTimeout to avoid potential deadlocks
-              setTimeout(async () => {
-                try {
-                  const { data: rolesData, error: rolesError } = await supabase
-                    .from('user_roles')
-                    .select('role')
-                    .eq('user_id', session.user.id);
-                    
-                  if (rolesError) {
-                    logger.error('Error fetching user roles', { details: rolesError });
-                  }
-                  
-                  const roles = (rolesData?.map(r => r.role) as UserRole[]) || [];
-                  setRoles(roles);
-                } catch (error) {
-                  logger.error('Error processing sign in', { details: error });
-                }
-              }, 0);
-            }
-            break;
-            
-          case 'SIGNED_OUT':
-            setUser(null);
-            setSession(null);
-            setRoles([]);
-            setStatus('unauthenticated');
-            break;
-            
-          case 'USER_UPDATED':
-            if (session?.user) {
-              setUser(session.user);
-            }
-            break;
-            
-          case 'TOKEN_REFRESHED':
-            if (session) {
-              setSession(session);
-            }
-            break;
+      (event, currentSession) => {
+        logger.info(`Auth state change: ${event}`, {
+          details: { 
+            event,
+            userId: currentSession?.user?.id 
+          }
+        });
+
+        // Update Zustand store with the new session
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          useAuthStore.getState().setSession(currentSession);
+          
+          // Don't include this in the auth state change callback
+          // to prevent potential infinite loops
+          setTimeout(() => {
+            initialize().catch(err => {
+              logger.error('Error reinitializing after sign in', { details: err });
+            });
+          }, 0);
+        } else if (event === 'SIGNED_OUT') {
+          useAuthStore.getState().setSession(null);
         }
       }
     );
     
     return () => {
-      logger.info('Cleaning up auth provider');
       subscription.unsubscribe();
     };
-  }, [logger, setUser, setSession, setRoles, setStatus]);
+  }, [logger, initialize]);
   
-  // If not initialized, show loading indicator
-  if (!initialized) {
+  // Wait for auth and theme to initialize
+  if (!isPreLoaded || !themeIsLoaded) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="h-6 w-6 border-t-2 border-primary animate-spin rounded-full" />
+      <div className="flex items-center justify-center h-screen w-screen">
+        <div className="animate-pulse text-center">
+          <div className="inline-block w-8 h-8 border-4 rounded-full border-primary/30 border-t-primary animate-spin"></div>
+          <p className="mt-4 text-primary text-sm">Loading...</p>
+        </div>
       </div>
     );
   }
   
-  return <>{children}</>;
+  // Provide auth context
+  return (
+    <AuthContext.Provider value={{ user, session: session as Session | null }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
