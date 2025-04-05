@@ -30,6 +30,9 @@ export const effectsPaletteVisibleAtom = atom<boolean>(false);
 export const selectedEffectAtom = atom<string | null>(null);
 export const hoveredIconAtom = atom<string | null>(null);
 
+// Key state for special interactions
+export const altKeyPressedAtom = atom<boolean>(false);
+
 // Dragged item state
 export const adminDraggedItemAtom = atom<any>(null);
 export const adminDropTargetAtom = atom<string | null>(null);
