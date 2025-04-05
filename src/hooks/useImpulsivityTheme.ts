@@ -1,22 +1,20 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
-import { useAdminStore } from '@/admin/store/admin.store';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { Theme, DesignTokensStructure } from '@/types/theme';
-import { z } from 'zod';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
  */
 export function useImpulsivityTheme() {
-  const { currentTheme, setTheme } = useThemeStore();
-  const adminStore = useAdminStore();
+  const { currentTheme, setTheme, isLoading } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ImpulsivityTheme', LogCategory.UI);
+  const [syncInProgress, setSyncInProgress] = useState(false);
   
   // Apply the Impulsivity theme to the main site
   const applyToMainSite = async () => {
@@ -56,6 +54,9 @@ export function useImpulsivityTheme() {
           ...currentTheme,
           design_tokens: updatedDesignTokens
         };
+        
+        // Log what we're trying to do
+        logger.info('Updating theme design tokens with Impulsivity colors');
         
         // Use the setTheme function from the store to update the theme
         if (currentTheme.id) {
@@ -97,12 +98,15 @@ export function useImpulsivityTheme() {
           --impulse-glow-primary: 0 0 15px rgba(0, 240, 255, 0.7);
           --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.7);
         `);
+        
+        logger.info('Applied Impulsivity theme to admin panel', {
+          details: { success: true }
+        });
+        return true;
+      } else {
+        logger.warn('Admin panel root element not found, skipping theme application');
+        return true; // Not a critical failure
       }
-      
-      logger.info('Applied Impulsivity theme to admin panel', {
-        details: { success: true }
-      });
-      return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Error applying Impulsivity theme to admin panel', { 
@@ -115,6 +119,9 @@ export function useImpulsivityTheme() {
   // Sync theme to database
   const syncToDatabase = async () => {
     try {
+      setSyncInProgress(true);
+      logger.info('Starting theme sync to database');
+      
       const result = await syncImpulsivityTheme();
       
       if (result) {
@@ -127,18 +134,28 @@ export function useImpulsivityTheme() {
         });
       }
       
+      setSyncInProgress(false);
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Error syncing Impulsivity theme to database', { 
         details: { errorMessage }
       });
+      
+      setSyncInProgress(false);
       return false;
     }
   };
   
   // Apply theme everywhere
   const applyTheme = async () => {
+    if (syncInProgress) {
+      logger.warn('Theme sync already in progress, skipping');
+      return false;
+    }
+    
+    logger.info('Beginning full Impulsivity theme application');
+    
     const mainSiteResult = await applyToMainSite();
     const adminResult = await applyToAdmin();
     const dbResult = await syncToDatabase();
@@ -148,13 +165,27 @@ export function useImpulsivityTheme() {
         title: "Impulsivity Theme Applied",
         description: "The theme has been successfully applied across the entire application.",
       });
+      logger.info('Impulsivity theme fully applied', {
+        details: { mainSite: mainSiteResult, admin: adminResult, database: dbResult }
+      });
       return true;
     } else {
+      // Show toast with partial success message
+      const failedComponents = [];
+      if (!mainSiteResult) failedComponents.push('main site');
+      if (!adminResult) failedComponents.push('admin panel');
+      if (!dbResult) failedComponents.push('database');
+      
       toast({
         title: "Theme Application Incomplete",
-        description: "Some parts of the theme could not be applied.",
+        description: `Could not apply theme to: ${failedComponents.join(', ')}`,
         variant: "destructive",
       });
+      
+      logger.warn('Impulsivity theme partially applied', {
+        details: { mainSite: mainSiteResult, admin: adminResult, database: dbResult }
+      });
+      
       return false;
     }
   };
@@ -164,5 +195,7 @@ export function useImpulsivityTheme() {
     applyToMainSite,
     applyToAdmin,
     syncToDatabase,
+    isSyncing: syncInProgress,
+    isLoading
   };
 }

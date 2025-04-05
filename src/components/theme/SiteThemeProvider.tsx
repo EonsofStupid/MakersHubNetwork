@@ -34,7 +34,7 @@ interface SiteThemeProviderProps {
 export function SiteThemeProvider({ children, isInitializing = false }: SiteThemeProviderProps) {
   const { currentTheme, isLoading } = useThemeStore();
   const variables = useThemeVariables(currentTheme);
-  const logger = useLogger('ThemeProvider', LogCategory.UI);
+  const logger = useLogger('SiteThemeProvider', LogCategory.UI);
   const [isLoaded, setIsLoaded] = useState(false);
   
   // Get UI theme mode from localStorage or default to dark
@@ -52,32 +52,47 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   // Get component styles from theme
   const componentStyles = useMemo(() => {
     if (!currentTheme || !Array.isArray(currentTheme.component_tokens)) {
+      logger.debug('No component styles found in theme');
       return {};
     }
 
-    const styles: Record<string, any> = {};
-    
-    // Convert component tokens array to a map of component name -> styles
-    currentTheme.component_tokens.forEach((component) => {
-      if (component && typeof component.component_name === 'string' && component.styles) {
-        styles[component.component_name] = component.styles;
-      }
-    });
-    
-    return styles;
-  }, [currentTheme]);
+    try {
+      const styles: Record<string, any> = {};
+      
+      // Convert component tokens array to a map of component name -> styles
+      currentTheme.component_tokens.forEach((component) => {
+        if (component && typeof component.component_name === 'string' && component.styles) {
+          styles[component.component_name] = component.styles;
+        }
+      });
+      
+      return styles;
+    } catch (error) {
+      logger.error('Error processing component styles', { 
+        details: error instanceof Error ? error.message : String(error) 
+      });
+      return {};
+    }
+  }, [currentTheme, logger]);
   
   // Get animations from theme
   const animations = useMemo(() => {
     const defaultAnimations = {}; // Safe fallback
     
-    if (!currentTheme || !currentTheme.design_tokens?.animation?.keyframes) {
+    if (!currentTheme?.design_tokens?.animation?.keyframes) {
       return defaultAnimations;
     }
     
-    const themeAnimations = currentTheme.design_tokens.animation.keyframes;
-    return themeAnimations ? themeAnimations : defaultAnimations;
-  }, [currentTheme]);
+    try {
+      const themeAnimations = currentTheme.design_tokens.animation.keyframes;
+      return themeAnimations || defaultAnimations;
+    } catch (error) {
+      logger.error('Error processing animations', { 
+        details: error instanceof Error ? error.message : String(error) 
+      });
+      return defaultAnimations;
+    }
+  }, [currentTheme, logger]);
 
   // Mark theme as loaded when everything is ready
   useEffect(() => {
@@ -104,54 +119,63 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     // This ensures the UI always has some styles
     const rootElement = document.documentElement;
     
-    // Apply the CSS variables
-    rootElement.style.setProperty('--site-background', variables.background);
-    rootElement.style.setProperty('--site-foreground', variables.foreground);
-    rootElement.style.setProperty('--site-card', variables.card);
-    rootElement.style.setProperty('--site-card-foreground', variables.cardForeground);
-    rootElement.style.setProperty('--site-primary', variables.primary);
-    rootElement.style.setProperty('--site-primary-foreground', variables.primaryForeground);
-    rootElement.style.setProperty('--site-secondary', variables.secondary);
-    rootElement.style.setProperty('--site-secondary-foreground', variables.secondaryForeground);
-    rootElement.style.setProperty('--site-muted', variables.muted);
-    rootElement.style.setProperty('--site-muted-foreground', variables.mutedForeground);
-    rootElement.style.setProperty('--site-accent', variables.accent);
-    rootElement.style.setProperty('--site-accent-foreground', variables.accentForeground);
-    rootElement.style.setProperty('--site-destructive', variables.destructive);
-    rootElement.style.setProperty('--site-destructive-foreground', variables.destructiveForeground);
-    rootElement.style.setProperty('--site-border', variables.border);
-    rootElement.style.setProperty('--site-input', variables.input);
-    rootElement.style.setProperty('--site-ring', variables.ring);
-    
-    // Apply effect colors
-    rootElement.style.setProperty('--site-effect-color', variables.effectColor);
-    rootElement.style.setProperty('--site-effect-secondary', variables.effectSecondary);
-    rootElement.style.setProperty('--site-effect-tertiary', variables.effectTertiary);
-    
-    // Apply timing values
-    rootElement.style.setProperty('--site-transition-fast', variables.transitionFast);
-    rootElement.style.setProperty('--site-transition-normal', variables.transitionNormal);
-    rootElement.style.setProperty('--site-transition-slow', variables.transitionSlow);
-    rootElement.style.setProperty('--site-animation-fast', variables.animationFast);
-    rootElement.style.setProperty('--site-animation-normal', variables.animationNormal);
-    rootElement.style.setProperty('--site-animation-slow', variables.animationSlow);
-    
-    // Apply radius values
-    rootElement.style.setProperty('--site-radius-sm', variables.radiusSm);
-    rootElement.style.setProperty('--site-radius-md', variables.radiusMd);
-    rootElement.style.setProperty('--site-radius-lg', variables.radiusLg);
-    rootElement.style.setProperty('--site-radius-full', variables.radiusFull);
-    
-    // Apply dark/light mode class
-    if (isDarkMode) {
-      rootElement.classList.add('dark');
-      rootElement.classList.remove('light');
-    } else {
-      rootElement.classList.add('light');
-      rootElement.classList.remove('dark');
+    try {
+      // Apply the CSS variables
+      rootElement.style.setProperty('--site-background', variables.background);
+      rootElement.style.setProperty('--site-foreground', variables.foreground);
+      rootElement.style.setProperty('--site-card', variables.card);
+      rootElement.style.setProperty('--site-card-foreground', variables.cardForeground);
+      rootElement.style.setProperty('--site-primary', variables.primary);
+      rootElement.style.setProperty('--site-primary-foreground', variables.primaryForeground);
+      rootElement.style.setProperty('--site-secondary', variables.secondary);
+      rootElement.style.setProperty('--site-secondary-foreground', variables.secondaryForeground);
+      rootElement.style.setProperty('--site-muted', variables.muted);
+      rootElement.style.setProperty('--site-muted-foreground', variables.mutedForeground);
+      rootElement.style.setProperty('--site-accent', variables.accent);
+      rootElement.style.setProperty('--site-accent-foreground', variables.accentForeground);
+      rootElement.style.setProperty('--site-destructive', variables.destructive);
+      rootElement.style.setProperty('--site-destructive-foreground', variables.destructiveForeground);
+      rootElement.style.setProperty('--site-border', variables.border);
+      rootElement.style.setProperty('--site-input', variables.input);
+      rootElement.style.setProperty('--site-ring', variables.ring);
+      
+      // Apply effect colors
+      rootElement.style.setProperty('--site-effect-color', variables.effectColor);
+      rootElement.style.setProperty('--site-effect-secondary', variables.effectSecondary);
+      rootElement.style.setProperty('--site-effect-tertiary', variables.effectTertiary);
+      
+      // Apply timing values
+      rootElement.style.setProperty('--site-transition-fast', variables.transitionFast);
+      rootElement.style.setProperty('--site-transition-normal', variables.transitionNormal);
+      rootElement.style.setProperty('--site-transition-slow', variables.transitionSlow);
+      rootElement.style.setProperty('--site-animation-fast', variables.animationFast);
+      rootElement.style.setProperty('--site-animation-normal', variables.animationNormal);
+      rootElement.style.setProperty('--site-animation-slow', variables.animationSlow);
+      
+      // Apply radius values
+      rootElement.style.setProperty('--site-radius-sm', variables.radiusSm);
+      rootElement.style.setProperty('--site-radius-md', variables.radiusMd);
+      rootElement.style.setProperty('--site-radius-lg', variables.radiusLg);
+      rootElement.style.setProperty('--site-radius-full', variables.radiusFull);
+      
+      // Apply dark/light mode class
+      if (isDarkMode) {
+        rootElement.classList.add('dark');
+        rootElement.classList.remove('light');
+      } else {
+        rootElement.classList.add('light');
+        rootElement.classList.remove('dark');
+      }
+      
+      logger.debug('Applied theme CSS variables', {
+        details: { themeName: currentTheme?.name || 'default' }
+      });
+    } catch (error) {
+      logger.error('Failed to apply CSS variables', {
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
-    
-  }, [variables, isDarkMode]);
+  }, [variables, isDarkMode, currentTheme, logger]);
   
   // Create the theme context value
   const contextValue = {

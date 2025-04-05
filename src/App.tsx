@@ -8,7 +8,7 @@ import { LoggingProvider } from "@/logging/context/LoggingContext";
 import { LogConsole } from "@/logging/components/LogConsole";
 import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { initializeLogger, getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
@@ -60,6 +60,7 @@ function App() {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const logger = getLogger();
   const routeLoggedRef = useRef<boolean>(false);
+  const [appReady, setAppReady] = useState(false);
 
   // Log route changes - with ref guard to prevent duplicate logs
   useEffect(() => {
@@ -74,22 +75,35 @@ function App() {
     }
   }, [location.pathname, logger]);
 
+  // Set app as ready after a short timeout to ensure all providers are initialized
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppReady(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Enforced component initialization order to prevent infinite loops:
+  // 1. ThemeProvider (shadcn)
+  // 2. LoggingProvider
+  // 3. ThemeInitializer (site theme)
+  // 4. AuthProvider
+  // 5. AppInitializer
+  // 6. AdminProvider
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
-        <ThemeInitializer>
-          {/* Load auth after theme has initialized */}
+        <ThemeInitializer defaultTheme="Impulsivity">
           <AuthProvider>
-            {/* App initializer comes after auth provider */}
             <AppInitializer>
               <AdminProvider>
-                {!isAdminRoute && <MainNav />}
+                {!isAdminRoute && appReady && <MainNav />}
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/admin/*" element={<Admin />} />
                 </Routes>
-                {!isAdminRoute && <Footer />}
+                {!isAdminRoute && appReady && <Footer />}
                 <Toaster />
                 <LoggingComponents />
               </AdminProvider>

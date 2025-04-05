@@ -2,6 +2,20 @@
 import { supabase } from '@/integrations/supabase/client';
 import { keyframes, animation } from '@/theme/animations';
 import { Json } from '@/integrations/supabase/types';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
+
+const logger = useLogger('ThemeSync', LogCategory.SYSTEM);
+
+/**
+ * Safely update design tokens with new values
+ */
+function safeUpdateDesignTokens(existingTokens: Record<string, any> = {}, newValues: Record<string, any> = {}) {
+  return {
+    ...existingTokens,
+    ...newValues,
+  };
+}
 
 /**
  * Extracts all animations from CSS files and formats them for the database
@@ -15,18 +29,26 @@ function extractAnimationsFromCSS() {
   const formattedKeyframes: Record<string, any> = {};
   const formattedAnimations: Record<string, any> = {};
   
-  Object.entries(keyframesObj).forEach(([name, value]) => {
-    formattedKeyframes[name] = value;
-  });
-  
-  Object.entries(animationsObj).forEach(([name, value]) => {
-    formattedAnimations[name] = value;
-  });
-  
-  return {
-    keyframes: formattedKeyframes,
-    animations: formattedAnimations
-  };
+  try {
+    Object.entries(keyframesObj).forEach(([name, value]) => {
+      formattedKeyframes[name] = value;
+    });
+    
+    Object.entries(animationsObj).forEach(([name, value]) => {
+      formattedAnimations[name] = value;
+    });
+    
+    return {
+      keyframes: formattedKeyframes,
+      animations: formattedAnimations
+    };
+  } catch (error) {
+    logger.error('Error extracting animations', { details: error });
+    return {
+      keyframes: {},
+      animations: {}
+    };
+  }
 }
 
 /**
@@ -52,7 +74,8 @@ function extractComponentStyles() {
         navItemActive: 'text-primary',
         navItemActiveIndicator: 'absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-center',
         mobileToggle: 'block md:hidden'
-      }
+      },
+      context: 'site'
     },
     {
       component_name: 'Logo',
@@ -63,7 +86,8 @@ function extractComponentStyles() {
         letterActive: 'inline-block transition-all relative text-primary',
         glow: 'absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-all duration-[1500ms] rounded-full scale-150',
         hoverEffect: 'transform-gpu transition-all duration-500'
-      }
+      },
+      context: 'site'
     },
     {
       component_name: 'Footer',
@@ -78,7 +102,24 @@ function extractComponentStyles() {
         linkItem: 'text-xs text-muted-foreground hover:text-primary transition-colors duration-200',
         copyrightSection: 'mt-8 pt-4 border-t border-primary/20 text-xs text-muted-foreground',
         socialIcons: 'flex mt-2 space-x-4'
-      }
+      },
+      context: 'site'
+    },
+    {
+      component_name: 'AdminNav',
+      styles: {
+        container: 'fixed top-0 left-0 w-64 h-screen bg-background/90 border-r border-primary/20 backdrop-blur-md z-50 transition-all duration-300',
+        header: 'h-16 flex items-center justify-between px-4 border-b border-primary/20',
+        logo: 'text-xl font-bold text-primary',
+        navSection: 'py-4 px-2',
+        navTitle: 'text-xs uppercase tracking-wider text-muted-foreground px-3 mb-2',
+        navItem: 'flex items-center gap-3 text-sm text-foreground/80 hover:text-primary hover:bg-primary/5 rounded-md px-3 py-2 my-1 transition-colors',
+        navItemActive: 'text-primary bg-primary/10 font-medium',
+        iconWrapper: 'flex items-center justify-center w-5 h-5',
+        collapsedContainer: 'w-16',
+        collapsedNavItem: 'flex items-center justify-center'
+      },
+      context: 'admin'
     }
   ];
 }
@@ -88,7 +129,7 @@ function extractComponentStyles() {
  */
 export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
   try {
-    console.log('Syncing CSS to database for theme:', themeId);
+    logger.info('Syncing CSS to database for theme', { details: { themeId } });
     
     // Get the current theme
     const { data: theme, error: themeError } = await supabase
@@ -97,8 +138,15 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       .eq('id', themeId)
       .single();
       
-    if (themeError) throw themeError;
-    if (!theme) throw new Error('Theme not found');
+    if (themeError) {
+      logger.error('Error fetching theme', { details: themeError });
+      throw themeError;
+    }
+    
+    if (!theme) {
+      logger.error('Theme not found', { details: { themeId } });
+      throw new Error('Theme not found');
+    }
     
     // Extract animations from CSS files
     const { keyframes: animationsKeyframes, animations: animationsDefs } = extractAnimationsFromCSS();
@@ -107,10 +155,9 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
     const componentStyles = extractComponentStyles();
     
     // Update design tokens with animations
-    const designTokens = theme.design_tokens as Record<string, any>;
+    const designTokens = theme.design_tokens as Record<string, any> || {};
     
-    const updatedDesignTokens = {
-      ...designTokens,
+    const updatedDesignTokens = safeUpdateDesignTokens(designTokens, {
       colors: {
         ...(designTokens?.colors || {}),
         primary: '#00F0FF',
@@ -197,7 +244,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
           full: '9999px'
         }
       }
-    };
+    });
     
     // Update the theme with the new design tokens
     const { error: updateError } = await supabase
@@ -209,48 +256,167 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       })
       .eq('id', themeId);
       
-    if (updateError) throw updateError;
+    if (updateError) {
+      logger.error('Error updating theme design tokens', { details: updateError });
+      throw updateError;
+    }
+    
+    logger.info('Updated theme design tokens successfully', { details: { themeId } });
     
     // Update component tokens
     for (const component of componentStyles) {
-      // Check if component already exists
-      const { data: existingComponents, error: compError } = await supabase
-        .from('theme_components')
-        .select('id')
-        .eq('theme_id', themeId)
-        .eq('component_name', component.component_name);
-        
-      if (compError) throw compError;
-      
-      if (existingComponents && existingComponents.length > 0) {
-        // Update existing component
-        const { error: updateCompError } = await supabase
+      try {
+        // Check if component already exists
+        const { data: existingComponents, error: compError } = await supabase
           .from('theme_components')
-          .update({
-            styles: component.styles as Json
-          })
-          .eq('id', existingComponents[0].id);
+          .select('id')
+          .eq('theme_id', themeId)
+          .eq('component_name', component.component_name);
           
-        if (updateCompError) throw updateCompError;
-      } else {
-        // Insert new component
-        const { error: insertCompError } = await supabase
-          .from('theme_components')
-          .insert({
-            theme_id: themeId,
-            component_name: component.component_name,
-            styles: component.styles as Json
+        if (compError) {
+          logger.error('Error checking theme component existence', { 
+            details: { error: compError, component: component.component_name }
           });
+          throw compError;
+        }
+        
+        if (existingComponents && existingComponents.length > 0) {
+          // Update existing component
+          const { error: updateCompError } = await supabase
+            .from('theme_components')
+            .update({
+              styles: component.styles as Json,
+              context: component.context || 'site'
+            })
+            .eq('id', existingComponents[0].id);
+            
+          if (updateCompError) {
+            logger.error('Error updating theme component', { 
+              details: { error: updateCompError, component: component.component_name }
+            });
+            throw updateCompError;
+          }
           
-        if (insertCompError) throw insertCompError;
+          logger.info('Updated theme component', { 
+            details: { component: component.component_name }
+          });
+        } else {
+          // Insert new component
+          const { error: insertCompError } = await supabase
+            .from('theme_components')
+            .insert({
+              theme_id: themeId,
+              component_name: component.component_name,
+              styles: component.styles as Json,
+              context: component.context || 'site'
+            });
+            
+          if (insertCompError) {
+            logger.error('Error inserting theme component', { 
+              details: { error: insertCompError, component: component.component_name }
+            });
+            throw insertCompError;
+          }
+          
+          logger.info('Inserted new theme component', { 
+            details: { component: component.component_name }
+          });
+        }
+      } catch (componentError) {
+        // Log error but continue with other components
+        logger.error('Error processing theme component', {
+          details: {
+            component: component.component_name,
+            error: componentError instanceof Error ? componentError.message : String(componentError)
+          }
+        });
       }
     }
     
-    console.log('CSS successfully synced to database');
+    logger.info('CSS successfully synced to database', { details: { themeId } });
     return true;
   } catch (error) {
-    console.error('Error syncing CSS to database:', error);
+    logger.error('Error syncing CSS to database', { 
+      details: error instanceof Error ? error.message : String(error) 
+    });
     return false;
+  }
+}
+
+/**
+ * Ensure Impulsivity theme exists or create it
+ */
+async function ensureImpulsivityTheme(): Promise<string | null> {
+  try {
+    logger.info('Ensuring Impulsivity theme exists');
+    
+    // First check if the Impulsivity theme exists
+    const { data: existingThemes, error: queryError } = await supabase
+      .from('themes')
+      .select('id')
+      .eq('name', 'Impulsivity');
+      
+    if (queryError) {
+      logger.error('Error checking theme existence', { details: queryError });
+      throw queryError;
+    }
+    
+    let themeId: string;
+    
+    if (existingThemes && existingThemes.length > 0) {
+      // Use existing theme
+      themeId = existingThemes[0].id;
+      logger.info('Found existing Impulsivity theme', { details: { themeId } });
+    } else {
+      // Create new theme with required structure
+      const { data: newTheme, error: createError } = await supabase
+        .from('themes')
+        .insert({
+          name: 'Impulsivity',
+          description: 'A cyberpunk-inspired theme with neon effects and vivid colors',
+          status: 'published',
+          is_default: true,
+          is_public: true,
+          version: 1,
+          design_tokens: {
+            colors: {
+              primary: '#00F0FF',
+              secondary: '#FF2D6E'
+            },
+            effects: {
+              shadows: {},
+              blurs: {},
+              gradients: {},
+              primary: '#00F0FF',
+              secondary: '#FF2D6E',
+              tertiary: '#8B5CF6'
+            }
+          } as Json,
+          component_tokens: [] as Json
+        })
+        .select('id')
+        .single();
+        
+      if (createError) {
+        logger.error('Failed to create Impulsivity theme', { details: createError });
+        throw createError;
+      }
+      
+      if (!newTheme) {
+        logger.error('Failed to create new theme - no data returned');
+        throw new Error('Failed to create new theme');
+      }
+      
+      themeId = newTheme.id;
+      logger.info('Created new Impulsivity theme', { details: { themeId } });
+    }
+    
+    return themeId;
+  } catch (error) {
+    logger.error('Error ensuring Impulsivity theme', { 
+      details: error instanceof Error ? error.message : String(error) 
+    });
+    return null;
   }
 }
 
@@ -259,47 +425,45 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
  */
 export async function syncImpulsivityTheme(): Promise<boolean> {
   try {
-    // First check if the Impulsivity theme exists
-    const { data: existingThemes, error: queryError } = await supabase
-      .from('themes')
-      .select('id')
-      .eq('name', 'Impulsivity');
-      
-    if (queryError) throw queryError;
+    // Get or create the Impulsivity theme ID
+    const themeId = await ensureImpulsivityTheme();
     
-    let themeId: string;
-    
-    if (existingThemes && existingThemes.length > 0) {
-      // Update existing theme
-      themeId = existingThemes[0].id;
-    } else {
-      // Create new theme
-      const { data: newTheme, error: createError } = await supabase
-        .from('themes')
-        .insert({
-          name: 'Impulsivity',
-          description: 'A cyberpunk-inspired theme with neon effects and vivid colors',
-          is_public: true,
-          design_tokens: {
-            colors: {
-              primary: '#00F0FF',
-              secondary: '#FF2D6E'
-            }
-          } as Json
-        })
-        .select('id')
-        .single();
-        
-      if (createError) throw createError;
-      if (!newTheme) throw new Error('Failed to create new theme');
-      
-      themeId = newTheme.id;
+    if (!themeId) {
+      logger.error('Failed to get or create Impulsivity theme');
+      return false;
     }
     
     // Sync CSS to the database
     return await syncCSSToDatabase(themeId);
   } catch (error) {
-    console.error('Error syncing Impulsivity theme:', error);
+    logger.error('Error syncing Impulsivity theme', { 
+      details: error instanceof Error ? error.message : String(error) 
+    });
     return false;
+  }
+}
+
+/**
+ * Get the Impulsivity theme ID from the database
+ */
+export async function getImpulsivityThemeId(): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('themes')
+      .select('id')
+      .eq('name', 'Impulsivity')
+      .single();
+      
+    if (error) {
+      logger.error('Error fetching Impulsivity theme ID', { details: error });
+      return null;
+    }
+    
+    return data?.id || null;
+  } catch (error) {
+    logger.error('Error getting Impulsivity theme ID', { 
+      details: error instanceof Error ? error.message : String(error) 
+    });
+    return null;
   }
 }
