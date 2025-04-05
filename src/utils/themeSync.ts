@@ -1,13 +1,14 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { keyframes, animation } from '@/theme/animations';
 import { Json } from '@/integrations/supabase/types';
-import { useLogger } from '@/hooks/use-logger';
+import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { ThemeContext, ThemeLogDetails } from '@/types/theme';
 import { PostgrestError } from '@supabase/supabase-js';
 
-// Create a logger instance
-const logger = useLogger('ThemeSync', LogCategory.SYSTEM);
+// Create a logger instance - use regular function not hook
+const logger = getLogger();
 
 /**
  * Convert PostgrestError to a proper ThemeLogDetails object
@@ -59,7 +60,8 @@ function extractAnimationsFromCSS(): { keyframes: Record<string, any>, animation
     };
   } catch (error) {
     const errorDetails: ThemeLogDetails = { 
-      error: error instanceof Error ? error.message : String(error)
+      error: true,
+      errorMessage: error instanceof Error ? error.message : String(error)
     };
     logger.error('Error extracting animations', errorDetails);
     return {
@@ -169,9 +171,9 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
     
     if (!theme) {
       const notFoundDetails: ThemeLogDetails = { 
-        themeId,
         error: true,
-        reason: 'Theme not found'
+        reason: 'Theme not found',
+        themeId
       };
       logger.error('Theme not found', notFoundDetails);
       throw new Error('Theme not found');
@@ -308,8 +310,9 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
           
         if (compError) {
           const componentErrorDetails: ThemeLogDetails = {
-            error: formatPostgrestError(compError),
-            component: component.component_name
+            error: true,
+            component: component.component_name,
+            errorMessage: compError.message 
           };
           logger.error('Error checking theme component existence', componentErrorDetails);
           throw compError;
@@ -327,14 +330,16 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
             
           if (updateCompError) {
             const componentUpdateErrorDetails: ThemeLogDetails = {
-              error: formatPostgrestError(updateCompError),
-              component: component.component_name
+              error: true,
+              component: component.component_name,
+              errorMessage: updateCompError.message
             };
             logger.error('Error updating theme component', componentUpdateErrorDetails);
             throw updateCompError;
           }
           
           const componentUpdateDetails: ThemeLogDetails = { 
+            success: true,
             component: component.component_name 
           };
           logger.info('Updated theme component', componentUpdateDetails);
@@ -351,14 +356,16 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
             
           if (insertCompError) {
             const componentInsertErrorDetails: ThemeLogDetails = {
-              error: formatPostgrestError(insertCompError),
-              component: component.component_name
+              error: true,
+              component: component.component_name,
+              errorMessage: insertCompError.message
             };
             logger.error('Error inserting theme component', componentInsertErrorDetails);
             throw insertCompError;
           }
           
           const componentInsertDetails: ThemeLogDetails = { 
+            success: true,
             component: component.component_name 
           };
           logger.info('Inserted new theme component', componentInsertDetails);
@@ -366,8 +373,9 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       } catch (componentError) {
         // Log error but continue with other components
         const componentErrorDetails: ThemeLogDetails = {
+          error: true,
           component: component.component_name,
-          error: componentError instanceof Error ? componentError.message : String(componentError)
+          errorMessage: componentError instanceof Error ? componentError.message : String(componentError)
         };
         logger.error('Error processing theme component', componentErrorDetails);
       }

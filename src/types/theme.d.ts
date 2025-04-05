@@ -66,7 +66,7 @@ export interface ThemeToken {
   theme_id: string;
 }
 
-// Add ThemeLogDetails interface to ensure consistency across files
+// Updated ThemeLogDetails interface for consistent typing
 export interface ThemeLogDetails {
   // Status indicators
   success?: boolean;

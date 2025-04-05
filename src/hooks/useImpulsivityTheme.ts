@@ -69,7 +69,10 @@ export function useImpulsivityTheme() {
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorLogDetails: ThemeLogDetails = { errorMessage };
+      const errorLogDetails: ThemeLogDetails = { 
+        error: true, 
+        errorMessage 
+      };
       logger.error('Error applying Impulsivity theme to main site', errorLogDetails);
       return false;
     }
@@ -106,7 +109,10 @@ export function useImpulsivityTheme() {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorLogDetails: ThemeLogDetails = { errorMessage };
+      const errorLogDetails: ThemeLogDetails = { 
+        error: true, 
+        errorMessage 
+      };
       logger.error('Error applying Impulsivity theme to admin panel', errorLogDetails);
       return false;
     }
@@ -124,7 +130,10 @@ export function useImpulsivityTheme() {
         const successLogDetails: ThemeLogDetails = { success: true };
         logger.info('Successfully synced Impulsivity theme to database', successLogDetails);
       } else {
-        const errorLogDetails: ThemeLogDetails = { success: false, error: true };
+        const errorLogDetails: ThemeLogDetails = { 
+          error: true, 
+          success: false 
+        };
         logger.error('Failed to sync Impulsivity theme to database', errorLogDetails);
       }
       
@@ -132,7 +141,10 @@ export function useImpulsivityTheme() {
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorLogDetails: ThemeLogDetails = { errorMessage };
+      const errorLogDetails: ThemeLogDetails = { 
+        error: true, 
+        errorMessage 
+      };
       logger.error('Error syncing Impulsivity theme to database', errorLogDetails);
       
       setSyncInProgress(false);
