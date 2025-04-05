@@ -2,7 +2,7 @@
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 /**
  * Hook for accessing authentication state
@@ -10,6 +10,9 @@ import { useEffect, useState } from 'react';
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const [isInitializing, setIsInitializing] = useState(false);
+  
+  // Track if initialization has been attempted
+  const initAttemptedRef = useRef(false);
   
   // Use a selector to extract only what we need from the store
   const {
@@ -40,31 +43,29 @@ export function useAuth() {
     initialized: state.initialized
   }));
   
-  // Auto-initialize auth if needed
+  // Auto-initialize auth if needed - with guard against infinite loops
   useEffect(() => {
-    let isMounted = true;
+    // Prevent multiple initialization attempts
+    if (initAttemptedRef.current) {
+      return;
+    }
     
-    const initAuth = async () => {
-      if (status === 'idle' && !initialized && !isInitializing) {
-        setIsInitializing(true);
-        
+    // Only initialize if needed and not already initializing
+    if (status === 'idle' && !initialized && !isInitializing) {
+      initAttemptedRef.current = true;
+      setIsInitializing(true);
+      
+      // Use an IIFE to handle async initialization
+      (async () => {
         try {
           await initialize();
         } catch (err) {
           logger.error('Failed to initialize auth', { details: err });
         } finally {
-          if (isMounted) {
-            setIsInitializing(false);
-          }
+          setIsInitializing(false);
         }
-      }
-    };
-    
-    initAuth();
-    
-    return () => {
-      isMounted = false;
-    };
+      })();
+    }
   }, [status, initialize, initialized, logger, isInitializing]);
 
   const isSuperAdmin = roles.includes('super_admin');
