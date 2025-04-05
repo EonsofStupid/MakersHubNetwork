@@ -16,7 +16,7 @@ import { LogCategory } from "@/logging";
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
   const { hasAdminAccess } = useAdminAccess();
-  const { componentStyles, animations, variables } = useSiteTheme();
+  const { componentStyles, animations, variables, isLoaded: themeIsLoaded } = useSiteTheme();
   const logger = useLogger("MainNav", LogCategory.UI);
   
   // Get MainNav styles from theme
@@ -32,18 +32,10 @@ export function MainNav() {
   };
 
   useEffect(() => {
-    logger.info("MainNav mounting", { 
-      details: { 
-        hasAdminAccess, 
-        componentStyles: Boolean(componentStyles),
-        animationsLoaded: Boolean(animations),
-        hasVariables: Boolean(variables),
-        effectColor: variables?.effectColor
-      }
-    });
+    logger.info("MainNav mounting");
     
     // Apply animations after component mounts
-    requestAnimationFrame(() => {
+    const timer = setTimeout(() => {
       setIsLoaded(true);
       
       // Apply any dynamic animation styles
@@ -57,8 +49,10 @@ export function MainNav() {
       if (glitchElement) {
         glitchElement.classList.add('animate-particles-1');
       }
-    });
-  }, [hasAdminAccess, componentStyles, animations, variables, logger]);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [logger, variables]);
 
   return (
     <header
