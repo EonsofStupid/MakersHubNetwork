@@ -1,171 +1,69 @@
 
-import { ImpulseTheme } from '../../types/impulse.types';
+import { ImpulseTheme } from "../../types/impulse.types";
 
 /**
- * Default Impulse Theme Tokens
- * This is the fallback theme used when no theme is loaded from the database
+ * Default tokens for the Impulse admin theme
  */
 export const defaultImpulseTokens: ImpulseTheme = {
-  id: 'default-impulse',
-  name: 'Impulsivity',
-  version: '1.0.0',
-  
-  // Color tokens
   colors: {
-    primary: '#00F0FF',
-    secondary: '#FF2D6E',
-    accent: '#F97316',
-    
+    primary: "#00F0FF",
+    secondary: "#FF2D6E",
     background: {
-      main: '#12121A',
-      overlay: 'rgba(22, 24, 29, 0.85)',
-      card: 'rgba(28, 32, 42, 0.7)',
-      alt: '#1A1E24',
+      main: "rgba(15, 15, 20, 0.95)",
+      card: "rgba(16, 20, 24, 0.7)",
+      overlay: "rgba(25, 25, 30, 0.85)"
     },
-    
     text: {
-      primary: '#F6F6F7',
-      secondary: 'rgba(255, 255, 255, 0.7)',
-      accent: '#00F0FF',
-      muted: 'rgba(255, 255, 255, 0.5)',
+      primary: "#FFFFFF",
+      secondary: "rgba(255, 255, 255, 0.7)",
+      accent: "#00F0FF"
     },
-    
     borders: {
-      normal: 'rgba(0, 240, 255, 0.2)',
-      hover: 'rgba(0, 240, 255, 0.4)',
-      active: 'rgba(0, 240, 255, 0.6)',
-      focus: 'rgba(0, 240, 255, 0.5)',
-    },
-    
-    status: {
-      success: '#10B981',
-      warning: '#F59E0B',
-      error: '#EF4444',
-      info: '#3B82F6',
-    },
+      normal: "rgba(0, 240, 255, 0.2)",
+      hover: "rgba(0, 240, 255, 0.4)",
+      active: "rgba(0, 240, 255, 0.6)"
+    }
   },
-  
-  // Effect tokens
   effects: {
     glow: {
-      primary: '0 0 15px rgba(0, 240, 255, 0.7)',
-      secondary: '0 0 15px rgba(255, 45, 110, 0.7)',
-      hover: '0 0 20px rgba(0, 240, 255, 0.9)',
+      primary: "0 0 15px rgba(0, 240, 255, 0.7)",
+      secondary: "0 0 15px rgba(255, 45, 110, 0.7)",
+      hover: "0 0 20px rgba(0, 240, 255, 0.9)"
     },
-    
+    blur: {
+      background: "blur(12px)",
+      overlay: "blur(8px)"
+    },
     gradients: {
-      primary: 'linear-gradient(90deg, #00F0FF, #00B8D4)',
-      secondary: 'linear-gradient(90deg, #FF2D6E, #FF5252)',
-      accent: 'linear-gradient(90deg, #F97316, #FB923C)',
-    },
-    
-    shadows: {
-      small: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
-      medium: '0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3)',
-      large: '0 10px 25px rgba(0, 0, 0, 0.2), 0 6px 10px rgba(0, 0, 0, 0.22)',
-      inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.15)',
-    },
+      main: "linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(255, 45, 110, 0.3))",
+      accent: "linear-gradient(135deg, rgba(0, 240, 255, 0.8), rgba(0, 240, 255, 0.2))",
+      card: "radial-gradient(circle at top right, rgba(0, 240, 255, 0.2), transparent 70%)"
+    }
   },
-  
-  // Animation tokens
   animation: {
     duration: {
-      fast: '150ms',
-      normal: '300ms',
-      slow: '500ms',
+      fast: "150ms",
+      normal: "300ms",
+      slow: "500ms"
     },
-    
     curves: {
-      bounce: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-      ease: 'cubic-bezier(0.4, 0, 0.2, 1)',
-      spring: 'cubic-bezier(0.43, 0.13, 0.23, 0.96)',
-      linear: 'linear',
-    },
-    
-    keyframes: {
-      fade: `
-        @keyframes fade {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `,
-      pulse: `
-        @keyframes pulse {
-          0%, 100% { opacity: 0.8; }
-          50% { opacity: 0.4; }
-        }
-      `,
-      glow: `
-        @keyframes glow {
-          0%, 100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.5); }
-          50% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.7); }
-        }
-      `,
-      slide: `
-        @keyframes slide {
-          from { transform: translateY(10px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-      `,
-    },
+      bounce: "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+      ease: "cubic-bezier(0.4, 0, 0.2, 1)",
+      spring: "cubic-bezier(0.43, 0.13, 0.23, 0.96)"
+    }
   },
-  
-  // Component tokens
   components: {
     panel: {
-      radius: '0.75rem',
-      padding: '1.5rem',
-      background: 'rgba(28, 32, 42, 0.7)',
+      borderRadius: "0.75rem",
+      padding: "1.5rem"
     },
-    
     button: {
-      radius: '0.5rem',
-      padding: '0.5rem 1rem',
-      transition: 'all 0.2s ease',
+      borderRadius: "0.5rem",
+      padding: "0.5rem 1rem"
     },
-    
     tooltip: {
-      radius: '0.25rem',
-      padding: '0.5rem',
-      background: 'rgba(0, 0, 0, 0.8)',
-    },
-    
-    input: {
-      radius: '0.375rem',
-      padding: '0.5rem 0.75rem',
-      background: 'rgba(0, 0, 0, 0.15)',
-    },
-  },
-  
-  // Typography tokens
-  typography: {
-    fonts: {
-      body: 'Inter, system-ui, sans-serif',
-      heading: 'Inter, system-ui, sans-serif',
-      monospace: 'Consolas, monospace',
-    },
-    
-    sizes: {
-      xs: '0.75rem',
-      sm: '0.875rem',
-      md: '1rem',
-      lg: '1.125rem',
-      xl: '1.25rem',
-      '2xl': '1.5rem',
-      '3xl': '1.875rem',
-    },
-    
-    weights: {
-      light: 300,
-      normal: 400,
-      medium: 500,
-      bold: 700,
-    },
-    
-    lineHeights: {
-      tight: '1.25',
-      normal: '1.5',
-      loose: '1.75',
-    },
-  },
+      borderRadius: "0.25rem",
+      padding: "0.5rem"
+    }
+  }
 };

@@ -1,20 +1,11 @@
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { AlertCircle } from "lucide-react";
-import { useErrorLogger } from "@/hooks/use-error-logger";
-import { safeDetails } from "@/logging/utils/safeDetails";
-
-interface FallbackProps {
-  error: Error;
-  resetErrorBoundary: () => void;
-}
 
 interface Props {
   children: ReactNode;
-  FallbackComponent?: React.ComponentType<FallbackProps>;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  resetKeys?: Array<any>;
 }
 
 interface State {
@@ -34,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", safeDetails(error), errorInfo);
+    console.error("Uncaught error:", error, errorInfo);
     
     // Call the optional onError callback
     if (this.props.onError) {
@@ -42,31 +33,8 @@ export class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  public componentDidUpdate(prevProps: Props) {
-    // Check if any resetKeys have changed
-    if (this.props.resetKeys && 
-        prevProps.resetKeys && 
-        this.state.hasError &&
-        this.props.resetKeys.some((key, idx) => key !== prevProps.resetKeys?.[idx])) {
-      this.resetErrorBoundary();
-    }
-  }
-
-  private resetErrorBoundary = () => {
-    this.setState({ hasError: false, error: null });
-  };
-
   public render() {
     if (this.state.hasError) {
-      if (this.props.FallbackComponent && this.state.error) {
-        return (
-          <this.props.FallbackComponent 
-            error={this.state.error} 
-            resetErrorBoundary={this.resetErrorBoundary} 
-          />
-        );
-      }
-      
       if (this.props.fallback) {
         return this.props.fallback;
       }

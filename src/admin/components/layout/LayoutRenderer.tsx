@@ -26,16 +26,19 @@ export function LayoutRenderer({ layout, isLoading, fallback, error }: LayoutRen
         <Skeleton className="h-8 w-full max-w-sm" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
         </div>
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
   
   // Show error state
   if (error) {
-    console.error('Layout error:', error);
     return (
       <div className="p-6 border border-destructive/30 bg-destructive/10 rounded-lg">
+        <h3 className="text-lg font-medium text-destructive mb-2">Layout Error</h3>
         <p className="text-sm">{error.message}</p>
       </div>
     );
@@ -68,30 +71,16 @@ interface ComponentRendererProps {
 }
 
 function ComponentRenderer({ component, hasPermission, isEditMode }: ComponentRendererProps) {
-  // Make permission check more resilient - defaults to true for anonymous users or if no permissions
+  // Check permissions if required
   const hasRequiredPermissions = useMemo(() => {
-    try {
-      if (!component.permissions || component.permissions.length === 0) {
-        return true;
-      }
-      
-      return component.permissions.some(permission => {
-        try {
-          return hasPermission(permission as PermissionValue);
-        } catch (e) {
-          // If permission check fails, default to allowing the component in non-edit mode
-          console.warn('Permission check failed:', e);
-          return !isEditMode;
-        }
-      });
-    } catch (e) {
-      // Any error in permission checking, default to true in non-edit mode
-      console.error('Error checking permissions:', e);
-      return !isEditMode;
+    if (!component.permissions || component.permissions.length === 0) {
+      return true;
     }
-  }, [component.permissions, hasPermission, isEditMode]);
+    
+    return component.permissions.some(permission => hasPermission(permission as PermissionValue));
+  }, [component.permissions, hasPermission]);
   
-  // Skip rendering if no permissions (unless in edit mode)
+  // Skip rendering if no permissions
   if (!hasRequiredPermissions && !isEditMode) {
     return null;
   }
@@ -99,9 +88,8 @@ function ComponentRenderer({ component, hasPermission, isEditMode }: ComponentRe
   // Get the component from registry
   const ComponentType = componentRegistry.getComponent(component.type);
   
-  // If component not found, show a placeholder in edit mode or a minimal div
+  // If component not found, show a placeholder in edit mode or nothing
   if (!ComponentType) {
-    console.warn(`Component not found: ${component.type}`);
     if (isEditMode) {
       return (
         <div className="p-4 border border-dashed border-yellow-500 rounded-md bg-yellow-50 dark:bg-yellow-950/30">
@@ -111,9 +99,7 @@ function ComponentRenderer({ component, hasPermission, isEditMode }: ComponentRe
         </div>
       );
     }
-    
-    // For production, fall back to an empty div
-    return <div data-component-missing={component.type}></div>;
+    return null;
   }
   
   // Create a wrapper with edit mode indicators if needed
@@ -121,46 +107,33 @@ function ComponentRenderer({ component, hasPermission, isEditMode }: ComponentRe
     ? "relative border border-dashed border-primary/30 rounded-md p-1 hover:border-primary transition-colors duration-200"
     : "";
   
-  // Warning for missing permissions in edit mode
+  // Render missing permissions warning in edit mode
   const missingPermissions = isEditMode && !hasRequiredPermissions;
-  
-  // Safely render the component with error handling
-  try {  
-    return (
-      <div className={wrapperClassName} data-component-id={component.id} data-component-type={component.type}>
-        {isEditMode && (
-          <div className="absolute -top-3 -right-1 bg-background border border-border px-2 py-0.5 rounded-full text-xs">
-            {component.type}
-          </div>
-        )}
-        
-        {missingPermissions && (
-          <div className="absolute -top-3 left-2 bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full text-xs">
-            Missing permissions
-          </div>
-        )}
-        
-        <ComponentType {...(component.props || {})}>
-          {component.children && component.children.map((child, index) => (
-            <ComponentRenderer 
-              key={child.id || index} 
-              component={child} 
-              hasPermission={hasPermission}
-              isEditMode={isEditMode}
-            />
-          ))}
-        </ComponentType>
-      </div>
-    );
-  } catch (error) {
-    console.error(`Error rendering component ${component.type}:`, error);
     
-    return (
-      <div className="p-2 border border-destructive/30 bg-destructive/10 rounded-md">
-        <p className="text-xs text-destructive">
-          Error rendering {component.type}
-        </p>
-      </div>
-    );
-  }
+  return (
+    <div className={wrapperClassName} data-component-id={component.id} data-component-type={component.type}>
+      {isEditMode && (
+        <div className="absolute -top-3 -right-1 bg-background border border-border px-2 py-0.5 rounded-full text-xs">
+          {component.type}
+        </div>
+      )}
+      
+      {missingPermissions && (
+        <div className="absolute -top-3 left-2 bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full text-xs">
+          Missing permissions
+        </div>
+      )}
+      
+      <ComponentType {...(component.props || {})}>
+        {component.children && component.children.map((child, index) => (
+          <ComponentRenderer 
+            key={child.id || index} 
+            component={child} 
+            hasPermission={hasPermission}
+            isEditMode={isEditMode}
+          />
+        ))}
+      </ComponentType>
+    </div>
+  );
 }

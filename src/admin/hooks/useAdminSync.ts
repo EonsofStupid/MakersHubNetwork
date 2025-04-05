@@ -1,7 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { formatLogDetails } from '@/logging/utils/details-formatter';
 
 /**
  * Hook to sync admin data with backend
@@ -30,9 +30,7 @@ export function useAdminSync() {
           logger.info('Admin data synced successfully');
         }
       } catch (error) {
-        logger.error('Error syncing admin data', { 
-          details: formatLogDetails(error)
-        });
+        logger.error('Error syncing admin data', { details: error });
       } finally {
         if (isMounted) {
           setIsSyncing(false);

@@ -1,82 +1,77 @@
 
-import { useEffect, Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { Toaster } from '@/components/ui/toaster';
-import { MainNav } from '@/components/MainNav';
-import { AuthProvider } from '@/auth/components/AuthProvider';
-import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
-import { KeyboardNavigation } from '@/components/KeyboardNavigation';
-import { getLogger, LogCategory } from '@/logging';
-import { LoggingProvider } from '@/logging/context/LoggingContext';
-import { initializeAuthBridge } from '@/auth/bridge';
-import { usePerformanceLogger } from '@/hooks/use-performance-logger';
+import { Routes, Route, useLocation } from "react-router-dom";
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/auth/components/AuthProvider";
+import { AdminProvider } from "@/admin/context/AdminContext";
+import { LoggingProvider } from "@/logging/context/LoggingContext";
+import { LogConsole } from "@/logging/components/LogConsole";
+import { LogToggleButton } from "@/logging/components/LogToggleButton";
+import { useLoggingContext } from "@/logging/context/LoggingContext";
+import { useEffect } from "react";
+import { initializeLogger, getLogger } from "@/logging";
+import { LogCategory } from "@/logging/types";
 
-// Lazy load routes for better performance
-const Index = lazy(() => import('@/pages/Index'));
-// Fix for missing modules
-const AdminRoutes = lazy(() => import('./admin/routes').then(mod => ({ default: mod.AdminRoutes })));
-const BuildRoutes = lazy(() => import('./routes/BuildRoutes'));
-const NotFoundPage = lazy(() => import('./pages/NotFound'));
+// Import pages
+import Index from "./pages/Index";
+import Admin from "./pages/Admin";
+import Login from "./pages/Login";
 
-interface AppProps {
-  onInitialized?: () => void;
-}
+// Import UI components
+import { MainNav } from "@/components/MainNav";
+import { Footer } from "@/components/Footer";
 
-export default function App({ onInitialized }: AppProps) {
-  const logger = getLogger('App');
-  const performance = usePerformanceLogger('App');
-  
-  // Initialize the application
-  useEffect(() => {
-    performance.measure('app-initialization', async () => {
-      // Initialize auth bridge for event system
-      initializeAuthBridge();
-      
-      logger.info('Application initialized', { 
-        category: LogCategory.SYSTEM,
-        details: {
-          version: import.meta.env.VITE_APP_VERSION || 'dev',
-          environment: import.meta.env.MODE
-        }
-      });
-      
-      // Call onInitialized callback if provided
-      if (onInitialized) {
-        await onInitialized();
-      }
-    });
-    
-    // Return cleanup function for when the app unmounts
-    return () => {
-      logger.info('Application shutting down', { 
-        category: LogCategory.SYSTEM 
-      });
-    };
-  }, [onInitialized, performance, logger]);
+// Import styles
+import "./App.css";
+import "@/logging/styles/logging.css";
+
+// LoggingComponents wrapper to avoid context issues
+function LoggingComponents() {
+  const { showLogConsole } = useLoggingContext();
   
   return (
-    <LoggingProvider>
-      <ThemeInitializer>
-        <AuthProvider>
-          <MainNav />
-          
-          <Suspense fallback={
-            <div className="flex items-center justify-center min-h-screen">
-              <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-            </div>
-          }>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/admin/*" element={<AdminRoutes />} />
-              <Route path="/build/*" element={<BuildRoutes />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-          
-          <KeyboardNavigation options={{ enabled: true, showToasts: false }} />
-          <Toaster />
-        </AuthProvider>
-      </ThemeInitializer>
-    </LoggingProvider>
+    <>
+      {showLogConsole && <LogConsole />}
+      <LogToggleButton />
+    </>
   );
 }
+
+// Initialize logging system
+initializeLogger();
+
+function App() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Log route changes
+  useEffect(() => {
+    const logger = getLogger();
+    logger.info(`Navigated to ${location.pathname}`, {
+      category: LogCategory.SYSTEM,
+      details: { path: location.pathname }
+    });
+  }, [location.pathname]);
+
+  return (
+    <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
+      <LoggingProvider>
+        <AuthProvider>
+          <AdminProvider>
+            {!isAdminRoute && <MainNav />}
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/admin/*" element={<Admin />} />
+            </Routes>
+            {!isAdminRoute && <Footer />}
+            <Toaster />
+            <LoggingComponents />
+          </AdminProvider>
+        </AuthProvider>
+      </LoggingProvider>
+    </ThemeProvider>
+  );
+}
+
+export default App;

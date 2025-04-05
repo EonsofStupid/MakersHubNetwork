@@ -2,48 +2,13 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 import { Theme, ComponentTokens } from '@/types/theme';
-import { DEFAULT_THEME_NAME } from './themeInitializer';
-import { getLogger } from '@/logging';
-import { safeDetails } from '@/logging/utils/safeDetails';
-import { LogCategory } from '@/logging';
-
-const logger = getLogger('ThemeUtils', LogCategory.THEME);
-
-/**
- * Deep merge utility for objects
- * Used to combine default and custom theme settings
- */
-export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
-  const result = { ...target };
-
-  Object.keys(source).forEach(key => {
-    const sourceValue = source[key as keyof typeof source] as any;
-    const targetValue = target[key as keyof typeof target] as any;
-
-    if (
-      sourceValue && 
-      targetValue && 
-      typeof sourceValue === 'object' && 
-      typeof targetValue === 'object' && 
-      !Array.isArray(sourceValue) && 
-      !Array.isArray(targetValue)
-    ) {
-      result[key as keyof typeof result] = deepMerge(targetValue, sourceValue);
-    } else if (sourceValue !== undefined) {
-      result[key as keyof typeof result] = sourceValue;
-    }
-  });
-
-  return result;
-}
 
 /**
  * Sync CSS styles to the database for a given theme
- * This function is crucial for the visual theme editor
  */
 export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
   try {
-    logger.info('Syncing CSS to database for theme', { details: { themeId } });
+    console.log('Syncing CSS to database for theme:', themeId);
     
     // Get the current theme
     const { data: theme, error: themeError } = await supabase
@@ -52,15 +17,8 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       .eq('id', themeId)
       .single();
       
-    if (themeError) {
-      logger.error('Error getting theme', { details: safeDetails(themeError) });
-      throw themeError;
-    }
-    
-    if (!theme) {
-      logger.error('Theme not found');
-      throw new Error('Theme not found');
-    }
+    if (themeError) throw themeError;
+    if (!theme) throw new Error('Theme not found');
     
     // Extract animations from CSS files
     const animationsKeyframes = {
@@ -84,25 +42,10 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         '0%': { opacity: '0.4' },
         '50%': { opacity: '0.1' },
         '100%': { opacity: '0.4' }
-      },
-      'morph-header': {
-        '0%': { 
-          'clip-path': 'polygon(0% 0%, 100% 0%, 100% 75%, 75% 75%, 75% 100%, 50% 75%, 0% 75%)' 
-        },
-        '50%': { 
-          'clip-path': 'polygon(0% 0%, 100% 0%, 100% 80%, 85% 80%, 85% 100%, 60% 80%, 0% 80%)' 
-        },
-        '100%': { 
-          'clip-path': 'polygon(0% 0%, 100% 0%, 100% 75%, 75% 75%, 75% 100%, 50% 75%, 0% 75%)' 
-        }
-      },
-      'data-stream': {
-        '0%': { transform: 'translateX(0)' },
-        '100%': { transform: 'translateX(-50%)' }
       }
     };
     
-    // Extract component styles for the Impulsivity theme
+    // Extract component styles
     const componentStyles = [
       {
         component_name: 'MainNav',
@@ -133,28 +76,6 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
           copyrightSection: 'mt-8 pt-4 border-t border-primary/20 text-xs text-muted-foreground',
           socialIcons: 'flex mt-2 space-x-4'
         }
-      },
-      {
-        component_name: 'Card',
-        styles: {
-          base: 'bg-card/80 backdrop-blur-md border border-border/50 rounded-lg overflow-hidden transition-all duration-300',
-          hoverEffect: 'hover:border-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.1)]',
-          header: 'p-4 border-b border-border/30',
-          title: 'text-lg font-medium text-primary',
-          content: 'p-4',
-          footer: 'p-4 border-t border-border/30 bg-muted/30'
-        }
-      },
-      {
-        component_name: 'Button',
-        styles: {
-          base: 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50',
-          primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
-          secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/90',
-          ghost: 'hover:bg-accent hover:text-accent-foreground',
-          outline: 'border border-input hover:bg-accent hover:text-accent-foreground',
-          glow: 'hover:shadow-[0_0_10px_rgba(0,240,255,0.5)]'
-        }
       }
     ];
     
@@ -184,14 +105,10 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       .from('themes')
       .update({
         design_tokens: updatedDesignTokens as Json,
-        name: DEFAULT_THEME_NAME // Ensure name is correct
       })
       .eq('id', themeId);
       
-    if (updateError) {
-      logger.error('Error updating theme', { details: safeDetails(updateError) });
-      throw updateError;
-    }
+    if (updateError) throw updateError;
     
     // Update component tokens
     for (const component of componentStyles) {
@@ -202,12 +119,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
         .eq('theme_id', themeId)
         .eq('component_name', component.component_name);
         
-      if (compError) {
-        logger.error('Error checking for existing component', { 
-          details: safeDetails(compError) 
-        });
-        throw compError;
-      }
+      if (compError) throw compError;
       
       if (existingComponents && existingComponents.length > 0) {
         // Update existing component
@@ -218,12 +130,7 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
           })
           .eq('id', existingComponents[0].id);
           
-        if (updateCompError) {
-          logger.error('Error updating component', { 
-            details: safeDetails(updateCompError) 
-          });
-          throw updateCompError;
-        }
+        if (updateCompError) throw updateCompError;
       } else {
         // Insert new component
         const { error: insertCompError } = await supabase
@@ -234,57 +141,14 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
             styles: component.styles as Json
           });
           
-        if (insertCompError) {
-          logger.error('Error inserting component', { 
-            details: safeDetails(insertCompError) 
-          });
-          throw insertCompError;
-        }
+        if (insertCompError) throw insertCompError;
       }
     }
     
-    logger.info('CSS successfully synced to database');
+    console.log('CSS successfully synced to database');
     return true;
   } catch (error) {
-    logger.error('Error syncing CSS to database', { details: safeDetails(error) });
+    console.error('Error syncing CSS to database:', error);
     return false;
   }
-}
-
-/**
- * Get the CSS variable name for a theme property
- * Used by the visual theme editor
- */
-export function getCSSVariableName(path: string): string {
-  const parts = path.split('.');
-  return `--${parts.join('-')}`;
-}
-
-/**
- * Convert a theme property path to a readable label
- * Used by the visual theme editor
- */
-export function getReadableLabel(path: string): string {
-  const parts = path.split('.');
-  const label = parts[parts.length - 1]
-    .replace(/([A-Z])/g, ' $1')
-    .toLowerCase();
-  
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
-/**
- * Get a theme property by path
- * Used by the visual theme editor
- */
-export function getThemeProperty(theme: any, path: string): any {
-  const parts = path.split('.');
-  let result = theme;
-  
-  for (const part of parts) {
-    if (result === undefined || result === null) return undefined;
-    result = result[part];
-  }
-  
-  return result;
 }

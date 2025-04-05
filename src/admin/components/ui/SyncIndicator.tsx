@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useAdminSync } from '@/admin/hooks/useAdminSync';
-import { Icons } from '@/components/ui/icons';
+import { Loader } from 'lucide-react';
 import { AdminTooltip } from './AdminTooltip';
 
 export function SyncIndicator() {
@@ -37,7 +36,7 @@ export function SyncIndicator() {
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           >
-            <Icons.loader className="w-4 h-4 text-[var(--impulse-primary)]" />
+            <Loader className="w-4 h-4 text-[var(--impulse-primary)]" />
           </motion.div>
         ) : (
           <motion.div
