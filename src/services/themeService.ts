@@ -13,6 +13,67 @@ const logger = {
 };
 
 /**
+ * Default fallback theme used when theme service fails
+ */
+const fallbackTheme: Theme = {
+  id: "fallback-theme",
+  name: "Fallback Theme",
+  description: "Emergency fallback theme used when theme service is unavailable",
+  status: "published",
+  is_default: true,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  version: 1,
+  design_tokens: {
+    colors: {
+      background: "#080F1E",
+      foreground: "#F9FAFB",
+      card: "#0E172A",
+      cardForeground: "#F9FAFB",
+      primary: "#00F0FF",
+      primaryForeground: "#F9FAFB",
+      secondary: "#FF2D6E",
+      secondaryForeground: "#F9FAFB",
+      muted: "#131D35",
+      mutedForeground: "#94A3B8",
+      accent: "#131D35",
+      accentForeground: "#F9FAFB",
+      destructive: "#EF4444",
+      destructiveForeground: "#F9FAFB",
+      border: "#131D35",
+      input: "#131D35",
+      ring: "#1E293B",
+    },
+    effects: {
+      primary: "#00F0FF",
+      secondary: "#FF2D6E",
+      tertiary: "#8B5CF6",
+    },
+    animation: {
+      durations: {
+        fast: "150ms",
+        normal: "300ms",
+        slow: "500ms",
+        animationFast: "1s",
+        animationNormal: "2s",
+        animationSlow: "3s",
+      }
+    },
+    spacing: {
+      radius: {
+        sm: "0.25rem",
+        md: "0.5rem",
+        lg: "0.75rem",
+        full: "9999px",
+      }
+    }
+  },
+  component_tokens: [],
+  composition_rules: {},
+  cached_styles: {}
+};
+
+/**
  * Fetches a theme via the service role function
  */
 export async function getTheme(themeId?: string): Promise<{theme: Theme, isFallback: boolean}> {
@@ -30,12 +91,12 @@ export async function getTheme(themeId?: string): Promise<{theme: Theme, isFallb
     
     if (error) {
       logger.error('Error fetching theme', { error });
-      throw error;
+      return { theme: fallbackTheme, isFallback: true };
     }
     
     if (!data || !data.theme) {
       logger.error('No theme data returned', { data });
-      throw new Error('No theme data returned from service');
+      return { theme: fallbackTheme, isFallback: true };
     }
     
     logger.info('Theme fetched successfully', { 
@@ -44,13 +105,45 @@ export async function getTheme(themeId?: string): Promise<{theme: Theme, isFallb
     });
     
     return {
-      theme: data.theme as Theme,
+      theme: validateTheme(data.theme),
       isFallback: !!data.isFallback
     };
   } catch (error) {
     logger.error('Failed to fetch theme', { error });
-    throw error;
+    return { theme: fallbackTheme, isFallback: true };
   }
+}
+
+/**
+ * Validates and normalizes a theme to ensure it has all required properties
+ */
+function validateTheme(theme: any): Theme {
+  // Ensure we have a valid theme object
+  if (!theme || typeof theme !== 'object') {
+    logger.error('Invalid theme object', { theme });
+    return fallbackTheme;
+  }
+
+  // Ensure required properties exist
+  if (!theme.id || !theme.name || !theme.status) {
+    logger.warn('Theme missing required properties, using defaults', { theme });
+  }
+
+  // Ensure design_tokens exist
+  if (!theme.design_tokens || typeof theme.design_tokens !== 'object') {
+    logger.warn('Theme missing design_tokens, using defaults', { theme });
+    theme.design_tokens = fallbackTheme.design_tokens;
+  }
+
+  // Normalize component_tokens to ensure it's always an array
+  if (!Array.isArray(theme.component_tokens)) {
+    logger.warn('Theme component_tokens is not an array, normalizing', { 
+      componentTokensType: typeof theme.component_tokens 
+    });
+    theme.component_tokens = [];
+  }
+
+  return theme as Theme;
 }
 
 /**
@@ -87,7 +180,7 @@ export async function updateTheme(themeId: string, theme: Partial<Theme>): Promi
     }
     
     logger.info('Theme updated successfully', { themeId: data.theme.id });
-    return data.theme as Theme;
+    return validateTheme(data.theme);
   } catch (error) {
     logger.error('Failed to update theme', { error });
     throw error;
@@ -127,7 +220,7 @@ export async function createTheme(theme: Partial<Theme>): Promise<Theme> {
     }
     
     logger.info('Theme created successfully', { themeId: data.theme.id });
-    return data.theme as Theme;
+    return validateTheme(data.theme);
   } catch (error) {
     logger.error('Failed to create theme', { error });
     throw error;

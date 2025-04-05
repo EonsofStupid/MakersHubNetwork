@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { Theme } from '@/types/theme';
 
@@ -43,10 +44,17 @@ export interface ThemeVariables {
 
 /**
  * Convert hex color to HSL string (h s% l%)
+ * With strict type checking and fallback to black if invalid
  */
-export function hexToHSL(hex: string): string {
+export function hexToHSL(input: unknown): string {
+  // Guard: ensure input is a string and valid hex color
+  if (typeof input !== 'string' || !/^#([0-9a-fA-F]{3}){1,2}$/.test(input)) {
+    console.warn('[Theme] Invalid hex color passed to hexToHSL:', input);
+    return '0 0% 0%'; // safe fallback: black
+  }
+  
   // Remove the hash if it exists
-  hex = hex.replace('#', '');
+  const hex = input.replace('#', '');
   
   // Convert hex to RGB
   let r = parseInt(hex.substring(0, 2), 16) / 255;
@@ -88,7 +96,25 @@ export function hexToHSL(hex: string): string {
 }
 
 /**
- * Extract theme variables from a theme object
+ * Safely access a nested property from an object with a fallback value
+ */
+function safelyGetNestedValue<T>(obj: Record<string, any> | undefined | null, path: string[], fallback: T): T {
+  if (!obj) return fallback;
+  
+  let current = obj;
+  
+  for (const key of path) {
+    if (current === null || current === undefined || typeof current !== 'object') {
+      return fallback;
+    }
+    current = current[key];
+  }
+  
+  return (current === undefined || current === null) ? fallback : current as T;
+}
+
+/**
+ * Extract theme variables from a theme object with strict type safety
  */
 export function useThemeVariables(theme: Theme | null): ThemeVariables {
   return useMemo(() => {
@@ -133,53 +159,76 @@ export function useThemeVariables(theme: Theme | null): ThemeVariables {
     try {
       const { colors, effects, animation, spacing } = theme.design_tokens;
       
-      // Extract colors
-      if (colors) {
-        if (colors.background) defaults.background = hexToHSL(colors.background as string);
-        if (colors.foreground) defaults.foreground = hexToHSL(colors.foreground as string);
-        if (colors.card) defaults.card = hexToHSL(colors.card as string);
-        if (colors.cardForeground) defaults.cardForeground = hexToHSL(colors.cardForeground as string);
-        if (colors.primary) defaults.primary = hexToHSL(colors.primary as string);
-        if (colors.primaryForeground) defaults.primaryForeground = hexToHSL(colors.primaryForeground as string);
-        if (colors.secondary) defaults.secondary = hexToHSL(colors.secondary as string);
-        if (colors.secondaryForeground) defaults.secondaryForeground = hexToHSL(colors.secondaryForeground as string);
-        if (colors.muted) defaults.muted = hexToHSL(colors.muted as string);
-        if (colors.mutedForeground) defaults.mutedForeground = hexToHSL(colors.mutedForeground as string);
-        if (colors.accent) defaults.accent = hexToHSL(colors.accent as string);
-        if (colors.accentForeground) defaults.accentForeground = hexToHSL(colors.accentForeground as string);
-        if (colors.destructive) defaults.destructive = hexToHSL(colors.destructive as string);
-        if (colors.destructiveForeground) defaults.destructiveForeground = hexToHSL(colors.destructiveForeground as string);
-        if (colors.border) defaults.border = hexToHSL(colors.border as string);
-        if (colors.input) defaults.input = hexToHSL(colors.input as string);
-        if (colors.ring) defaults.ring = hexToHSL(colors.ring as string);
+      // Extract colors with strict type checking
+      if (colors && typeof colors === 'object') {
+        // Use type safe getter for all values
+        const getColor = (key: string): string | undefined => {
+          const value = safelyGetNestedValue(colors, [key], undefined);
+          return typeof value === 'string' ? value : undefined;
+        };
+        
+        if (getColor('background')) defaults.background = hexToHSL(getColor('background'));
+        if (getColor('foreground')) defaults.foreground = hexToHSL(getColor('foreground'));
+        if (getColor('card')) defaults.card = hexToHSL(getColor('card'));
+        if (getColor('cardForeground')) defaults.cardForeground = hexToHSL(getColor('cardForeground'));
+        if (getColor('primary')) defaults.primary = hexToHSL(getColor('primary'));
+        if (getColor('primaryForeground')) defaults.primaryForeground = hexToHSL(getColor('primaryForeground'));
+        if (getColor('secondary')) defaults.secondary = hexToHSL(getColor('secondary'));
+        if (getColor('secondaryForeground')) defaults.secondaryForeground = hexToHSL(getColor('secondaryForeground'));
+        if (getColor('muted')) defaults.muted = hexToHSL(getColor('muted'));
+        if (getColor('mutedForeground')) defaults.mutedForeground = hexToHSL(getColor('mutedForeground'));
+        if (getColor('accent')) defaults.accent = hexToHSL(getColor('accent'));
+        if (getColor('accentForeground')) defaults.accentForeground = hexToHSL(getColor('accentForeground'));
+        if (getColor('destructive')) defaults.destructive = hexToHSL(getColor('destructive'));
+        if (getColor('destructiveForeground')) defaults.destructiveForeground = hexToHSL(getColor('destructiveForeground'));
+        if (getColor('border')) defaults.border = hexToHSL(getColor('border'));
+        if (getColor('input')) defaults.input = hexToHSL(getColor('input'));
+        if (getColor('ring')) defaults.ring = hexToHSL(getColor('ring'));
       }
       
       // Extract effect colors
-      if (effects) {
-        if (effects.primary) defaults.effectColor = effects.primary as string;
-        if (effects.secondary) defaults.effectSecondary = effects.secondary as string;
-        if (effects.tertiary) defaults.effectTertiary = effects.tertiary as string;
+      if (effects && typeof effects === 'object') {
+        const getEffect = (key: string): string | undefined => {
+          const value = safelyGetNestedValue(effects, [key], undefined);
+          return typeof value === 'string' ? value : undefined;
+        };
+        
+        if (getEffect('primary')) defaults.effectColor = getEffect('primary') as string;
+        if (getEffect('secondary')) defaults.effectSecondary = getEffect('secondary') as string;
+        if (getEffect('tertiary')) defaults.effectTertiary = getEffect('tertiary') as string;
       }
       
       // Extract animation times
-      if (animation && animation.durations) {
-        const durations = animation.durations as Record<string, any>;
-        if (durations.fast) defaults.transitionFast = durations.fast as string;
-        if (durations.normal) defaults.transitionNormal = durations.normal as string;
-        if (durations.slow) defaults.transitionSlow = durations.slow as string;
+      if (animation && typeof animation === 'object' && animation.durations && typeof animation.durations === 'object') {
+        const durations = animation.durations as Record<string, unknown>;
         
-        if (durations.animationFast) defaults.animationFast = durations.animationFast as string;
-        if (durations.animationNormal) defaults.animationNormal = durations.animationNormal as string;
-        if (durations.animationSlow) defaults.animationSlow = durations.animationSlow as string;
+        const getDuration = (key: string): string | undefined => {
+          const value = safelyGetNestedValue(durations, [key], undefined);
+          return typeof value === 'string' ? value : undefined;
+        };
+        
+        if (getDuration('fast')) defaults.transitionFast = getDuration('fast') as string;
+        if (getDuration('normal')) defaults.transitionNormal = getDuration('normal') as string;
+        if (getDuration('slow')) defaults.transitionSlow = getDuration('slow') as string;
+        
+        if (getDuration('animationFast')) defaults.animationFast = getDuration('animationFast') as string;
+        if (getDuration('animationNormal')) defaults.animationNormal = getDuration('animationNormal') as string;
+        if (getDuration('animationSlow')) defaults.animationSlow = getDuration('animationSlow') as string;
       }
       
       // Extract radius
-      if (spacing && spacing.radius) {
-        const radius = spacing.radius as Record<string, any>;
-        if (radius.sm) defaults.radiusSm = radius.sm as string;
-        if (radius.md) defaults.radiusMd = radius.md as string;
-        if (radius.lg) defaults.radiusLg = radius.lg as string;
-        if (radius.full) defaults.radiusFull = radius.full as string;
+      if (spacing && typeof spacing === 'object' && spacing.radius && typeof spacing.radius === 'object') {
+        const radius = spacing.radius as Record<string, unknown>;
+        
+        const getRadius = (key: string): string | undefined => {
+          const value = safelyGetNestedValue(radius, [key], undefined);
+          return typeof value === 'string' ? value : undefined;
+        };
+        
+        if (getRadius('sm')) defaults.radiusSm = getRadius('sm') as string;
+        if (getRadius('md')) defaults.radiusMd = getRadius('md') as string;
+        if (getRadius('lg')) defaults.radiusLg = getRadius('lg') as string;
+        if (getRadius('full')) defaults.radiusFull = getRadius('full') as string;
       }
     } catch (error) {
       console.error('Error parsing theme tokens:', error);
