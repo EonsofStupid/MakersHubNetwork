@@ -4,6 +4,61 @@ import { Json } from '@/integrations/supabase/types';
 import { Theme, ComponentTokens } from '@/types/theme';
 
 /**
+ * Safely validate a hex color string
+ * @param color String to validate as a hex color
+ * @returns boolean - true if valid hex color
+ */
+export function isValidHexColor(color: unknown): boolean {
+  if (typeof color !== 'string') {
+    return false;
+  }
+  
+  return /^#([0-9A-F]{3}){1,2}$/i.test(color);
+}
+
+/**
+ * Convert hex color to RGB values
+ * @param hex Valid hex color string
+ * @returns RGB object or null if invalid
+ */
+export function hexToRGB(hex: string): { r: number; g: number; b: number } | null {
+  if (!isValidHexColor(hex)) {
+    console.warn('[Theme] Invalid hex color in hexToRGB:', hex);
+    return null;
+  }
+  
+  // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+  let fullHex = hex.replace(/^#/, '');
+  if (fullHex.length === 3) {
+    fullHex = fullHex[0] + fullHex[0] + fullHex[1] + fullHex[1] + fullHex[2] + fullHex[2];
+  }
+
+  const r = parseInt(fullHex.substring(0, 2), 16);
+  const g = parseInt(fullHex.substring(2, 4), 16);
+  const b = parseInt(fullHex.substring(4, 6), 16);
+  
+  return { r, g, b };
+}
+
+/**
+ * Safely access a nested property from an object with a fallback value
+ */
+export function safelyGetNestedValue<T>(obj: Record<string, any> | undefined | null, path: string[], fallback: T): T {
+  if (!obj) return fallback;
+  
+  let current = obj;
+  
+  for (const key of path) {
+    if (current === null || current === undefined || typeof current !== 'object') {
+      return fallback;
+    }
+    current = current[key];
+  }
+  
+  return (current === undefined || current === null) ? fallback : current as T;
+}
+
+/**
  * Sync CSS styles to the database for a given theme
  */
 export async function syncCSSToDatabase(themeId: string): Promise<boolean> {

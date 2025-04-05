@@ -1,4 +1,3 @@
-
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry } from '../types';
@@ -96,7 +95,6 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             <span className="font-medium">{log.category}</span>
           </div>
           <div className="message-content text-sm">
-            {/* Render message safely as a React node */}
             {renderUnknownAsNode(log.message)}
           </div>
           
@@ -109,8 +107,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                {/* Explicitly passing only Record<string, unknown> */}
-                <LogDetails details={log.details && typeof log.details === 'object' ? log.details as Record<string, unknown> : {}} />
+                <LogDetails details={log.details as Record<string, unknown>} />
               </motion.div>
             )}
           </AnimatePresence>

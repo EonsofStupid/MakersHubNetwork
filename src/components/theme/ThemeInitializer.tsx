@@ -9,7 +9,6 @@ import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
 import { ThemeErrorState } from './info/ThemeErrorState';
 import { getTheme, ensureDefaultTheme } from '@/services/themeService';
-import { Theme } from '@/types/theme';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -38,7 +37,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         try {
           const { theme, isFallback } = await getTheme();
           
-          if (theme) {
+          if (theme && theme.id) {
             // Use the theme returned from the service (could be actual or fallback)
             await setTheme(theme.id);
             
@@ -71,8 +70,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           
           if (themeId) {
             // Then set the theme using the ID via the store (which will now use our service)
-            const { theme } = await getTheme(themeId);
-            await setTheme(theme.id);
+            await setTheme(themeId);
             logger.info('Theme initialized successfully with ID:', { details: { themeId } });
           } else {
             // Use the fallback theme as last resort

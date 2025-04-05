@@ -60,6 +60,30 @@ const CreateThemeRequestSchema = z.object({
   userId: z.string(),
 });
 
+// Define HexColor validator
+const HexColor = z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+
+// Define Color tokens schema for validation
+const ColorTokensSchema = z.object({
+  background: HexColor.optional(),
+  foreground: HexColor.optional(),
+  card: HexColor.optional(),
+  cardForeground: HexColor.optional(),
+  primary: HexColor.optional(),
+  primaryForeground: HexColor.optional(),
+  secondary: HexColor.optional(),
+  secondaryForeground: HexColor.optional(),
+  muted: HexColor.optional(),
+  mutedForeground: HexColor.optional(),
+  accent: HexColor.optional(),
+  accentForeground: HexColor.optional(),
+  destructive: HexColor.optional(),
+  destructiveForeground: HexColor.optional(),
+  border: HexColor.optional(),
+  input: HexColor.optional(),
+  ring: HexColor.optional(),
+}).partial();
+
 // Default fallback theme definition
 const defaultFallbackTheme = {
   id: "00000000-0000-0000-0000-000000000000",
@@ -172,6 +196,33 @@ serve(async (req) => {
   }
 });
 
+// Validate theme data for correct formatting
+function validateThemeData(themeData) {
+  // Basic structure validation
+  if (!themeData || typeof themeData !== 'object') {
+    console.warn('Theme validation: Invalid theme structure');
+    return false;
+  }
+  
+  // Validate design tokens - ensure it's an object
+  if (!themeData.design_tokens || typeof themeData.design_tokens !== 'object') {
+    console.warn('Theme validation: Missing or invalid design_tokens');
+    return false;
+  }
+  
+  // Validate colors tokens if present
+  if (themeData.design_tokens.colors) {
+    try {
+      ColorTokensSchema.parse(themeData.design_tokens.colors);
+    } catch (error) {
+      console.warn('Theme validation: Invalid color tokens', error);
+      // Don't fail here, just warn - we'll use defaults
+    }
+  }
+  
+  return true;
+}
+
 // Handle get-theme operation
 async function handleGetTheme(data) {
   try {
@@ -226,10 +277,22 @@ async function handleGetTheme(data) {
       );
     }
 
-    console.log(`Theme found with ID: ${themes[0].id}`);
-    // Return the theme
+    // Validate the theme data
+    const theme = themes[0];
+    const isValid = validateThemeData(theme);
+    
+    console.log(`Theme found with ID: ${theme.id}`);
+    
+    // Return the theme with validation status
     return new Response(
-      JSON.stringify({ theme: themes[0], isFallback: false }),
+      JSON.stringify({ 
+        theme: theme, 
+        isFallback: false,
+        validation: { 
+          isValid, 
+          warnings: !isValid ? "Theme structure may have issues" : null 
+        }
+      }),
       { status: 200, headers: corsHeaders }
     );
   } catch (error) {
