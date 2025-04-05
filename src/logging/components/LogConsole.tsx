@@ -1,3 +1,4 @@
+
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry } from '../types';
@@ -212,15 +213,7 @@ export function LogConsole() {
           
           <button 
             className="px-2 py-1 text-xs rounded hover:bg-gray-700"
-            onClick={() => {
-              const { useLoggingContext } = require('../context/LoggingContext');
-              if (useLoggingContext) {
-                const ctx = useLoggingContext();
-                if (ctx && ctx.toggleLogConsole) {
-                  ctx.toggleLogConsole();
-                }
-              }
-            }}
+            onClick={toggleLogConsole}
           >
             Close
           </button>
