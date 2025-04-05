@@ -1,12 +1,14 @@
+
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 interface ThemeErrorStateProps {
   error: Error;
+  onRetry?: () => void;
   onClose?: () => void;
 }
 
-export function ThemeErrorState({ error, onClose }: ThemeErrorStateProps) {
+export function ThemeErrorState({ error, onRetry, onClose }: ThemeErrorStateProps) {
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -15,11 +17,18 @@ export function ThemeErrorState({ error, onClose }: ThemeErrorStateProps) {
       className="p-6 text-center bg-background/20 backdrop-blur-xl border border-destructive/20 rounded-lg shadow-lg"
     >
       <p className="text-destructive">Error loading theme: {error.message}</p>
-      {onClose && (
-        <Button onClick={onClose} variant="ghost" className="mt-4">
-          Close
-        </Button>
-      )}
+      <div className="mt-4 flex space-x-2 justify-center">
+        {onRetry && (
+          <Button onClick={onRetry} variant="outline" className="border-primary/30">
+            Retry
+          </Button>
+        )}
+        {onClose && (
+          <Button onClick={onClose} variant="ghost">
+            Close
+          </Button>
+        )}
+      </div>
     </motion.div>
   );
-} 
+}

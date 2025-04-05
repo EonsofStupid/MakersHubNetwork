@@ -1,5 +1,8 @@
 
 project_id = "kxeffcclfvecdvqpljbh"
 
+[functions.theme-service]
+verify_jwt = false
+
 [functions.manage-api-key]
 verify_jwt = true

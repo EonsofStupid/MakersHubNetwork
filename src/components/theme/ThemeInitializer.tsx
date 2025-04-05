@@ -1,6 +1,5 @@
 
 import { useEffect, useState, useRef } from 'react';
-import { ensureDefaultTheme } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicKeyframes } from './DynamicKeyframes';
@@ -8,6 +7,7 @@ import { SiteThemeProvider } from './SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
+import { getTheme, ensureDefaultTheme } from '@/services/themeService';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -31,17 +31,47 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         initAttemptedRef.current = true;
         logger.info('Initializing theme');
         
-        // First, ensure the default theme exists in the database
+        // First attempt to get the default theme directly using the service role
+        try {
+          const { theme, isFallback } = await getTheme();
+          
+          if (theme) {
+            // Use the theme returned from the service (could be actual or fallback)
+            await setTheme(theme);
+            
+            if (isFallback) {
+              logger.info('Using fallback theme');
+              toast({
+                title: 'Theme Notice',
+                description: 'Using fallback theme. Some styles may be limited.',
+                variant: "default",
+              });
+              
+              // Try to ensure a real default theme exists in the background
+              ensureDefaultTheme().catch(err => {
+                logger.error('Error ensuring default theme', { details: err });
+              });
+            } else {
+              logger.info('Theme initialized successfully with ID:', { details: { themeId: theme.id } });
+            }
+            
+            return;
+          }
+        } catch (error) {
+          logger.error('Error from theme service:', { details: error });
+        }
+        
+        // Fallback: If the above fails, try to ensure a default theme exists
         const themeId = await ensureDefaultTheme();
         
         if (themeId) {
-          // Then set the theme using the ID
+          // Then set the theme using the ID via the store (which will now use our service)
           await setTheme(themeId);
           logger.info('Theme initialized successfully with ID:', { details: { themeId } });
         } else {
-          // Use the 'default' keyword to get the default theme
+          // Use the 'default' keyword to get the default theme (will use fallback)
           await setTheme('default');
-          logger.info('Using default theme after failed initialization');
+          logger.info('Using fallback theme after failed initialization');
           toast({
             title: 'Theme Notice',
             description: 'Using fallback theme. Some styles may be limited.',

@@ -96,7 +96,8 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             <span className="font-medium">{log.category}</span>
           </div>
           <div className="message-content text-sm">
-            {renderUnknownAsNode(log.message)}
+            {/* Fixed type error: Ensuring message is always a ReactNode */}
+            {typeof log.message === 'string' ? log.message : renderUnknownAsNode(log.message)}
           </div>
           
           <AnimatePresence>
@@ -108,7 +109,8 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <LogDetails details={log.details as Record<string, unknown> || {}} />
+                {/* Fixed type error: Explicitly passing only Record<string, unknown> */}
+                <LogDetails details={(log.details as Record<string, unknown>) || {}} />
               </motion.div>
             )}
           </AnimatePresence>
