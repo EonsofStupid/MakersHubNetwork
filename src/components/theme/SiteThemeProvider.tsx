@@ -40,7 +40,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   
   // Get UI theme mode from localStorage or default to dark
   const [isDarkMode, setIsDarkMode] = useState<boolean>(
-    localStorage.getItem('theme-mode') === 'light' ? false : true
+    localStorage.getItem('theme-mode') !== 'light'
   );
   
   // Toggle dark mode
@@ -53,7 +53,10 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   // Get component styles from theme
   const componentStyles = useMemo(() => {
     if (!currentTheme || !Array.isArray(currentTheme.component_tokens)) {
-      const logDetails: ThemeLogDetails = { reason: 'No component tokens found in theme' };
+      const logDetails: ThemeLogDetails = { 
+        error: true,
+        reason: 'No component tokens found in theme' 
+      };
       logger.debug('No component styles found in theme', logDetails);
       return {};
     }
@@ -71,7 +74,8 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       return styles;
     } catch (error) {
       const logDetails: ThemeLogDetails = { 
-        error: error instanceof Error ? error.message : String(error) 
+        error: true,
+        errorMessage: error instanceof Error ? error.message : String(error) 
       };
       logger.error('Error processing component styles', logDetails);
       return {};
@@ -91,7 +95,8 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       return themeAnimations || defaultAnimations;
     } catch (error) {
       const logDetails: ThemeLogDetails = { 
-        error: error instanceof Error ? error.message : String(error) 
+        error: true,
+        errorMessage: error instanceof Error ? error.message : String(error) 
       };
       logger.error('Error processing animations', logDetails);
       return defaultAnimations;
@@ -105,6 +110,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       const timer = setTimeout(() => {
         setIsLoaded(true);
         const logDetails: ThemeLogDetails = { 
+          success: true,
           themeName: currentTheme.name,
           hasAnimations: Boolean(animations && Object.keys(animations).length > 0),
           hasComponentStyles: Boolean(componentStyles && Object.keys(componentStyles).length > 0)
@@ -171,12 +177,14 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       }
       
       const logDetails: ThemeLogDetails = { 
+        success: true,
         themeName: currentTheme?.name || 'default' 
       };
       logger.debug('Applied theme CSS variables', logDetails);
     } catch (error) {
       const logDetails: ThemeLogDetails = { 
-        error: error instanceof Error ? error.message : String(error) 
+        error: true,
+        errorMessage: error instanceof Error ? error.message : String(error) 
       };
       logger.error('Failed to apply CSS variables', logDetails);
     }

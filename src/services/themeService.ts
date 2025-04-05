@@ -618,9 +618,10 @@ function safeUpdateDesignTokens(existingTokens: Record<string, any> = {}, newVal
  */
 function formatPostgrestError(error: PostgrestError): ThemeLogDetails {
   return {
-    message: error.message,
-    code: error.code,
-    details: error.details,
-    hint: error.hint
+    error: true,
+    errorMessage: error.message,
+    errorCode: error.code,
+    errorDetails: error.details,
+    errorHint: error.hint
   };
 }
