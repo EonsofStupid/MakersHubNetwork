@@ -70,7 +70,7 @@ export function renderUnknownAsNode(value: unknown): ReactNode {
     return '';
   }
   
-  if (React.isValidElement(value)) {
+  if (isValidReactNode(value)) {
     return value;
   }
   

@@ -6,7 +6,7 @@ import { LogLevel } from '../constants/log-level';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
 import '../styles/logging.css';
-import { renderUnknownAsNode, nodeToSearchableString, isValidReactNode } from '@/shared/utils/render';
+import { renderUnknownAsNode, isValidReactNode } from '@/shared/utils/render';
 
 interface LogDetailsProps {
   details: Record<string, unknown>;
@@ -96,9 +96,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             <span className="font-medium">{log.category}</span>
           </div>
           <div className="message-content text-sm">
-            {typeof log.message === 'string' 
-              ? log.message 
-              : renderUnknownAsNode(log.message)}
+            {renderUnknownAsNode(log.message)}
           </div>
           
           <AnimatePresence>
@@ -133,7 +131,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
 };
 
 export function LogConsole() {
-  const { logs, clearLogs, toggleLogConsole, showLogConsole } = useLoggingContext();
+  const { logs, clearLogs, toggleLogConsole } = useLoggingContext();
   const [filter, setFilter] = useState<LogLevel | 'all'>('all');
   const [search, setSearch] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);

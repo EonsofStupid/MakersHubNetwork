@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from './ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/auth/store/auth.store';
 
 interface AppInitializerProps {
   children: React.ReactNode;
@@ -13,12 +13,17 @@ interface AppInitializerProps {
 export function AppInitializer({ children }: AppInitializerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
-  const { status, isLoading: authLoading, error, initialized } = useAuth();
   const { toast } = useToast();
+  
+  // Only access the status and error from auth store, do not trigger initialization here
+  const { status, error } = useAuthStore(state => ({
+    status: state.status,
+    error: state.error,
+  }));
   
   useEffect(() => {
     logger.info('App initializing, auth status:', { 
-      details: { status, authLoading, initialized } 
+      details: { status } 
     });
     
     // Initialize app with small timeout to allow other processes to complete
@@ -32,13 +37,12 @@ export function AppInitializer({ children }: AppInitializerProps) {
         });
       }
       
-      // Allow app to initialize even if auth isn't fully initialized
-      // This ensures the UI loads regardless of authentication status
+      // Always allow app to initialize regardless of auth state
       setIsLoading(false);
     }, 500);
     
     return () => clearTimeout(timer);
-  }, [logger, status, authLoading, initialized, error, toast]);
+  }, [logger, status, error, toast]);
   
   // Show minimal loading state while app is initializing
   if (isLoading) {
