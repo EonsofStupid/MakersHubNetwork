@@ -1,5 +1,5 @@
 
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,16 +12,16 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { user, session, initialized, setSession } = useAuthStore(state => ({
+  const { user, session, setSession } = useAuthStore(state => ({
     user: state.user,
     session: state.session,
-    initialized: state.initialized,
     setSession: state.setSession
   }));
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   
   // Set up auth state change listener
   useEffect(() => {
+    // Don't perform other auth actions inside this subscription callback
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         logger.info(`Auth state change: ${event}`, {
@@ -31,7 +31,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         });
 
-        // Update Zustand store with the new session
+        // Only update session state, avoid triggering other effects
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           setSession(currentSession);
         } else if (event === 'SIGNED_OUT') {
@@ -45,8 +45,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [logger, setSession]);
   
-  // Don't wait for auth to initialize to render the app
-  // Just provide the current auth state (even if null/loading)
+  // Only provide the current auth state, don't trigger actions here
   return (
     <AuthContext.Provider value={{ user, session: session as Session | null }}>
       {children}

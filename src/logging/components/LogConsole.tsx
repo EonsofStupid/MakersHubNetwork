@@ -1,4 +1,3 @@
-
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry } from '../types';
@@ -98,9 +97,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             <span className="font-medium">{log.category}</span>
           </div>
           <div className="message-content text-sm">
-            {typeof log.message === 'string' || typeof log.message === 'number' || typeof log.message === 'boolean'
-              ? String(log.message)
-              : renderUnknownAsNode(log.message)}
+            {renderUnknownAsNode(log.message)}
           </div>
           
           <AnimatePresence>
