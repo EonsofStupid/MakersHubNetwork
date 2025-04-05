@@ -11,6 +11,7 @@ import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { useEffect } from "react";
 import { initializeLogger, getLogger } from "@/logging";
 import { LogCategory } from "@/logging/types";
+import { Spinner } from "@/components/ui/spinner";
 
 // Import pages
 import Index from "./pages/Index";
@@ -43,15 +44,15 @@ initializeLogger();
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const logger = getLogger();
 
   // Log route changes
   useEffect(() => {
-    const logger = getLogger();
     logger.info(`Navigated to ${location.pathname}`, {
       category: LogCategory.SYSTEM,
       details: { path: location.pathname }
     });
-  }, [location.pathname]);
+  }, [location.pathname, logger]);
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">

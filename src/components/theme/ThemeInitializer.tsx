@@ -5,15 +5,18 @@ import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicKeyframes } from './DynamicKeyframes';
 import { SiteThemeProvider } from './SiteThemeProvider';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
 }
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const { setTheme, isLoading } = useThemeStore();
   const { toast } = useToast();
+  const logger = useLogger('ThemeInitializer', LogCategory.UI);
 
   useEffect(() => {
     async function initialize() {
@@ -24,9 +27,9 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         if (themeId) {
           // Then sync CSS using the ensureDefaultTheme's built-in sync capability
           await setTheme(themeId);
-          console.log('Theme initialized successfully with ID:', themeId);
+          logger.info('Theme initialized successfully with ID:', { details: { themeId } });
         } else {
-          console.warn('Failed to initialize theme, falling back to default styles');
+          logger.warn('Failed to initialize theme, falling back to default styles');
           toast({
             title: 'Theme Warning',
             description: 'Could not find or create theme. Using default styling.',
@@ -34,33 +37,28 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           });
         }
       } catch (error) {
-        console.error('Error initializing theme:', error);
+        logger.error('Error initializing theme:', { details: error });
         toast({
           title: 'Theme Error',
           description: 'Failed to load theme. Using default styling.',
           variant: "destructive",
         });
       } finally {
-        setIsInitialized(true);
+        setIsInitializing(false);
       }
     }
     
-    initialize();
-  }, [setTheme, toast]);
+    // Use a small timeout to prevent blocking the initial render
+    const timer = setTimeout(() => {
+      initialize();
+    }, 10);
+    
+    return () => clearTimeout(timer);
+  }, [setTheme, toast, logger]);
 
-  // Optional: Show loading state while theme is initializing
-  if (!isInitialized || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="space-y-4 text-center">
-          <div className="text-primary animate-pulse text-2xl font-bold">Loading Theme...</div>
-        </div>
-      </div>
-    );
-  }
-
+  // Always render the app - the SiteThemeProvider will handle showing loading states if needed
   return (
-    <SiteThemeProvider>
+    <SiteThemeProvider isInitializing={isInitializing || isLoading}>
       <DynamicKeyframes />
       {children}
     </SiteThemeProvider>

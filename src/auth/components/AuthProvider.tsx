@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuthContext } from '../context/AuthContext';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -16,22 +15,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const { user, session, initialized, setSession, initialize } = useAuthStore();
   const [isPreLoaded, setIsPreLoaded] = useState(false);
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
-  const { isLoaded: themeIsLoaded } = useSiteTheme();
   
-  // Initialize auth on mount
+  // Initialize auth on mount with a timeout to prevent blocking the UI
   useEffect(() => {
-    if (!initialized) {
-      logger.info('Initializing authentication');
-      initialize().then(() => {
+    const initAuth = async () => {
+      if (!initialized) {
+        logger.info('Initializing authentication');
+        try {
+          await initialize();
+          logger.info('Authentication initialized');
+        } catch (err) {
+          logger.error('Error initializing auth', { details: err });
+        } finally {
+          setIsPreLoaded(true);
+        }
+      } else {
         setIsPreLoaded(true);
-        logger.info('Authentication initialized');
-      }).catch(err => {
-        setIsPreLoaded(true);
-        logger.error('Error initializing auth', { details: err });
-      });
-    } else {
-      setIsPreLoaded(true);
-    }
+      }
+    };
+
+    // Use a small timeout to prevent blocking the initial render
+    const timer = setTimeout(initAuth, 10);
+    return () => clearTimeout(timer);
   }, [initialized, initialize, logger]);
   
   // Handle auth state changes
@@ -55,7 +60,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             initialize().catch(err => {
               logger.error('Error reinitializing after sign in', { details: err });
             });
-          }, 0);
+          }, 10);
         } else if (event === 'SIGNED_OUT') {
           setSession(null);
         }
@@ -67,19 +72,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [logger, initialize, setSession]);
   
-  // Wait for auth and theme to initialize
-  if (!isPreLoaded || !themeIsLoaded) {
-    return (
-      <div className="flex items-center justify-center h-screen w-screen bg-background/80 backdrop-blur-sm">
-        <div className="animate-pulse text-center">
-          <div className="inline-block w-8 h-8 border-4 rounded-full border-primary/30 border-t-primary animate-spin"></div>
-          <p className="mt-4 text-primary text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // Provide auth context
+  // Don't wait for auth to initialize to render the app
+  // Just provide the current auth state (even if null/loading)
   return (
     <AuthContext.Provider value={{ user, session: session as Session | null }}>
       {children}

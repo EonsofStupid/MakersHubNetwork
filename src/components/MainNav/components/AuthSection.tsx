@@ -1,13 +1,26 @@
+
 import { useState } from "react";
-import { useAuthStore } from "@/stores/auth/store";
+import { useAuthStore } from "@/auth/store/auth.store";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { LoginSheet } from "./LoginSheet";
+import { Spinner } from "@/components/ui/spinner";
 
 export const AuthSection = () => {
-  const status = useAuthStore((state) => state.status);
+  const { status, isLoading } = useAuthStore((state) => ({
+    status: state.status,
+    isLoading: state.isLoading
+  }));
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const isAuthenticated = status === "authenticated";
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-8">
+        <Spinner size="sm" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-4">

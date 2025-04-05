@@ -5,6 +5,7 @@ import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 import { DynamicKeyframes } from './DynamicKeyframes';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { ThemeLoadingState } from './info/ThemeLoadingState';
 
 // Create context
 const SiteThemeContext = createContext<{
@@ -28,9 +29,10 @@ export const useSiteTheme = () => useContext(SiteThemeContext);
 
 interface SiteThemeProviderProps {
   children: React.ReactNode;
+  isInitializing?: boolean;
 }
 
-export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
+export function SiteThemeProvider({ children, isInitializing = false }: SiteThemeProviderProps) {
   const { currentTheme, isLoading, setTheme } = useThemeStore();
   const variables = useThemeVariables(currentTheme);
   const logger = useLogger('ThemeProvider', LogCategory.UI);
@@ -43,13 +45,13 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
   
   // Load theme on mount
   useEffect(() => {
-    if (!currentTheme && !isLoading) {
+    if (!currentTheme && !isLoading && !isInitializing) {
       logger.info('Loading default theme');
       setTheme('default').catch(err => {
         logger.error('Failed to load default theme', { details: err });
       });
     }
-  }, [currentTheme, isLoading, setTheme, logger]);
+  }, [currentTheme, isLoading, isInitializing, setTheme, logger]);
   
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -101,7 +103,7 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
 
   // Apply CSS variables when the theme changes
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || !currentTheme) return;
     
     const rootElement = document.documentElement;
     
@@ -163,10 +165,10 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
     animations,
     isLoaded
   };
-  
+
+  // Always render the children; let individual components handle loading states
   return (
     <SiteThemeContext.Provider value={contextValue}>
-      <DynamicKeyframes />
       {children}
     </SiteThemeContext.Provider>
   );

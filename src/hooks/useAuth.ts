@@ -2,6 +2,7 @@
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { useEffect } from 'react';
 
 /**
  * Hook for accessing authentication state
@@ -23,6 +24,15 @@ export function useAuth() {
   
   const logger = useLogger('useAuth', LogCategory.AUTH);
   
+  // Auto-initialize auth if needed
+  useEffect(() => {
+    if (status === 'idle') {
+      initialize().catch(err => {
+        logger.error('Failed to initialize auth', { details: err });
+      });
+    }
+  }, [status, initialize, logger]);
+
   const isSuperAdmin = roles.includes('super_admin');
 
   // Log wrapper for logout to capture info before state is cleared
