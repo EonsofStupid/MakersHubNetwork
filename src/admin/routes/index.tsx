@@ -13,7 +13,7 @@ const ThemesPage = React.lazy(() => import('./themes/ThemesPage'));
 const ContentPage = React.lazy(() => import('./content/ContentPage'));
 const SettingsPage = React.lazy(() => import('./settings/SettingsPage'));
 const PermissionsPage = React.lazy(() => import('./permissions/PermissionsPage'));
-const LogsPage = React.lazy(() => import('./logs/LogsPage'));
+const LogsPage = React.lazy(() => import('@/admin/pages/LogsPage'));
 const UnauthorizedPage = React.lazy(() => import('./UnauthorizedPage'));
 const NotFoundPage = React.lazy(() => import('./NotFoundPage'));
 
