@@ -2,6 +2,32 @@
 import React from 'react';
 
 /**
+ * Convert an error object to a plain object for logging
+ */
+export function errorToObject(error: unknown): Record<string, unknown> {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      ...(error as any), // Capture any custom properties
+    };
+  }
+  
+  if (typeof error === 'object' && error !== null) {
+    try {
+      // Try to spread the error object safely
+      return { ...error as object };
+    } catch (e) {
+      // Fallback if spreading fails
+      return { value: String(error) };
+    }
+  }
+  
+  return { value: error };
+}
+
+/**
  * Safely renders any unknown value as a React node
  */
 export function renderUnknownAsNode(value: unknown): React.ReactNode {

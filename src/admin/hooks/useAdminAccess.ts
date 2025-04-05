@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { errorToObject } from '@/shared/utils/render';
 
 export function useAdminAccess() {
   const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
@@ -32,7 +33,7 @@ export function useAdminAccess() {
       
       setHasAdminAccess(adminRoles.length > 0);
     } catch (error) {
-      logger.error("Error initializing admin access:", { details: error });
+      logger.error("Error initializing admin access:", { details: errorToObject(error) });
       setHasAdminAccess(false);
     }
   }, [logger, user, roles]);
