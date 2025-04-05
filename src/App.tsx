@@ -1,3 +1,4 @@
+
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -73,14 +74,20 @@ function App() {
     }
   }, [location.pathname, logger]);
 
-  // Fixed component initialization order to prevent infinite loops
+  // Enforced component initialization order to prevent infinite loops:
+  // 1. ThemeProvider (shadcn)
+  // 2. LoggingProvider
+  // 3. ThemeInitializer (site theme)
+  // 4. AuthProvider
+  // 5. AppInitializer
+  // 6. AdminProvider
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
         <ThemeInitializer>
-          {/* Load auth after theme to avoid update loops */}
+          {/* Load auth after theme has initialized */}
           <AuthProvider>
-            {/* App initializer should be AFTER auth provider, not inside it */}
+            {/* App initializer comes after auth provider */}
             <AppInitializer>
               <AdminProvider>
                 {!isAdminRoute && <MainNav />}

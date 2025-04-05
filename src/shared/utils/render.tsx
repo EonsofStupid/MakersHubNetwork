@@ -9,31 +9,33 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
     return null;
   }
   
+  // Handle React elements directly
   if (React.isValidElement(value)) {
     return value;
   }
   
+  // Handle primitive types
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
     return String(value);
   }
   
+  // Handle arrays by mapping each item through renderUnknownAsNode
+  if (Array.isArray(value)) {
+    return (
+      <span className="array-value">
+        {value.map((item, index) => (
+          <React.Fragment key={index}>
+            {renderUnknownAsNode(item)}
+            {index < value.length - 1 && ', '}
+          </React.Fragment>
+        ))}
+      </span>
+    );
+  }
+  
+  // Handle objects with safe stringification
   if (typeof value === 'object') {
     try {
-      // Handle arrays specifically
-      if (Array.isArray(value)) {
-        return (
-          <span className="array-value">
-            {value.map((item, index) => (
-              <React.Fragment key={index}>
-                {renderUnknownAsNode(item)}
-                {index < value.length - 1 && ', '}
-              </React.Fragment>
-            ))}
-          </span>
-        );
-      }
-      
-      // Safe stringify for objects
       return JSON.stringify(value);
     } catch (e) {
       return '[Object]';
@@ -48,31 +50,34 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
  * Converts any value to a searchable string
  */
 export function nodeToSearchableString(value: unknown): string {
-  if (React.isValidElement(value)) {
-    // Extract text from React elements - simplified approach
-    return 'React Element';
-  }
-  
   if (value === null || value === undefined) {
     return '';
   }
   
+  // Handle React elements
+  if (React.isValidElement(value)) {
+    return 'React Element';
+  }
+  
+  // Handle primitive types
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
     return String(value);
   }
   
+  // Handle arrays
+  if (Array.isArray(value)) {
+    return value.map(nodeToSearchableString).join(', ');
+  }
+  
+  // Handle objects
   if (typeof value === 'object') {
     try {
-      // Handle arrays specifically
-      if (Array.isArray(value)) {
-        return value.map(nodeToSearchableString).join(', ');
-      }
-      
       return JSON.stringify(value);
     } catch (e) {
       return '[Object]';
     }
   }
   
+  // Default fallback
   return String(value);
 }

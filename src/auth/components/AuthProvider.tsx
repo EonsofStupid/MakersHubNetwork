@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuthContext } from '../context/AuthContext';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -26,6 +27,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const initAttemptedRef = useRef<boolean>(false);
   const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
   const authTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cycleCountRef = useRef<number>(0);
+  
+  // Get theme loading status to ensure correct initialization order
+  const { isLoaded: themeLoaded } = useSiteTheme();
   
   // Setup auth state change listener only once
   useEffect(() => {
@@ -71,8 +76,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, []); // Removed dependencies to ensure it runs only once
   
-  // Initialize auth only once
+  // Initialize auth only once after theme is loaded
   useEffect(() => {
+    // Detect potential infinite initialization loops
+    cycleCountRef.current += 1;
+    if (cycleCountRef.current > 10) {
+      logger.warn('Possible auth initialization cycle detected', {
+        details: { cycleCount: cycleCountRef.current, initialized, themeLoaded }
+      });
+      return; // Prevent further execution to break potential loops
+    }
+    
+    // Wait for theme to be loaded first
+    if (!themeLoaded) {
+      return;
+    }
+    
     // Prevent multiple initialization attempts with ref guard
     if (initAttemptedRef.current || initialized) {
       return;
@@ -95,7 +114,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       initializeAuth();
     }, 0);
-  }, [initialize, initialized]); // Keep only necessary dependencies
+  }, [initialize, initialized, logger, themeLoaded]); 
   
   // Provide the current auth state, whether authenticated or not
   return (

@@ -1,6 +1,7 @@
 
 import { useCallback } from 'react';
-import { getLogger, LogCategory } from '@/logging';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
 import { LogLevel } from '@/logging/constants/log-level';
 
 /**
@@ -11,7 +12,7 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
   
   const debug = useCallback((message: string, options?: { 
     category?: LogCategory,
-    details?: unknown,
+    details?: Record<string, unknown>,
     tags?: string[],
   }) => {
     logger.debug(message, {
@@ -23,7 +24,7 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
   
   const info = useCallback((message: string, options?: { 
     category?: LogCategory,
-    details?: unknown,
+    details?: Record<string, unknown>,
     tags?: string[],
   }) => {
     logger.info(message, {
@@ -35,7 +36,7 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
   
   const warn = useCallback((message: string, options?: { 
     category?: LogCategory,
-    details?: unknown,
+    details?: Record<string, unknown>,
     tags?: string[],
   }) => {
     logger.warn(message, {
@@ -47,7 +48,7 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
   
   const error = useCallback((message: string, options?: { 
     category?: LogCategory,
-    details?: unknown,
+    details?: Record<string, unknown>,
     tags?: string[],
   }) => {
     logger.error(message, {
@@ -59,7 +60,7 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
   
   const critical = useCallback((message: string, options?: { 
     category?: LogCategory,
-    details?: unknown,
+    details?: Record<string, unknown>,
     tags?: string[],
   }) => {
     logger.critical(message, {

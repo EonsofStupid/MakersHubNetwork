@@ -24,7 +24,7 @@ export interface LogEntry {
   level: LogLevel;
   category: LogCategory;
   message: string | React.ReactNode;
-  details?: unknown;
+  details?: Record<string, unknown>;
   source?: string;
   userId?: string;
   sessionId?: string;
