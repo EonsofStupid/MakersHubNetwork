@@ -1,10 +1,10 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { useAdminSync } from '@/admin/hooks/useAdminSync';
-import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { useAuthState } from '@/auth/hooks/useAuthState';
 
 // Create context
 interface AdminContextValue {
@@ -16,23 +16,43 @@ const AdminContext = createContext<AdminContextValue | undefined>(undefined);
 // Provider component
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const { setPermissions } = useAdminStore();
-  const { permissions, isLoading } = useAdminPermissions();
   const { isSyncing } = useAdminSync();
-  const [initialized, setInitialized] = React.useState(false);
+  const [initialized, setInitialized] = useState(false);
+  const initAttemptedRef = useRef<boolean>(false);
   const logger = useLogger('AdminContext', LogCategory.ADMIN);
   
-  // Initialize admin context
+  // Get permissions directly from auth state to avoid circular dependencies
+  const { roles } = useAuthState();
+  
+  // Initialize admin context only once
   useEffect(() => {
-    if (!isLoading && !isSyncing && !initialized) {
+    // Guard against multiple initialization attempts
+    if (initAttemptedRef.current || initialized) {
+      return;
+    }
+    
+    // Mark initialization as attempted immediately to prevent multiple attempts
+    initAttemptedRef.current = true;
+    
+    try {
       logger.info('Initializing admin context', {
-        details: { permissions }
+        details: { userRoles: roles }
       });
       
+      // Map roles to permissions (simple mapping to avoid dependency on useAdminPermissions)
+      const adminPermissions = roles.includes('admin') || roles.includes('super_admin') 
+        ? ['admin:access'] 
+        : [];
+      
       // Update permissions in store
-      setPermissions(permissions);
+      setPermissions(adminPermissions);
       setInitialized(true);
+    } catch (error) {
+      logger.error('Failed to initialize admin context', {
+        details: { error }
+      });
     }
-  }, [isLoading, isSyncing, initialized, setPermissions, permissions, logger]);
+  }, [logger, roles, initialized, setPermissions]);
   
   const value = { initialized };
   

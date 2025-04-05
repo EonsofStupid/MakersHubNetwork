@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { AdminHeader } from "../AdminHeader";
 import { AdminSidebar } from "../AdminSidebar";
@@ -34,31 +34,36 @@ export function AdminLayout({
   const { showLogConsole } = useLoggingContext();
   const logger = useLogger("AdminLayout", LogCategory.ADMIN);
   const { hasAdminAccess, isAuthenticated } = useAdminAccess();
+  const redirectAttemptedRef = useRef<boolean>(false);
 
   useEffect(() => {
-    // Log the admin layout initialization
+    // Log the admin layout initialization - only once
     logger.info("Admin layout rendered", {
       details: { 
         isEditMode, 
-        permissions,
+        permissionsCount: permissions.length,
         hasAdminAccess,
         isAuthenticated
       },
     });
 
-    // If somehow a non-admin user got here, redirect them
-    if (!hasAdminAccess && isAuthenticated) {
+    // If somehow a non-admin user got here, redirect them - but only once
+    if (!hasAdminAccess && isAuthenticated && !redirectAttemptedRef.current) {
+      redirectAttemptedRef.current = true;
+      
       logger.warn("Non-admin user attempted to access admin layout", {
         details: { permissions }
       });
+      
       toast({
         title: "Access Denied",
         description: "You don't have permission to access the admin panel",
         variant: "destructive"
       });
+      
       navigate("/");
     }
-  }, [isEditMode, permissions, toast, logger, hasAdminAccess, isAuthenticated, navigate]);
+  }, [isAuthenticated, hasAdminAccess]); // Reduced dependencies to prevent excessive re-renders
 
   // If user is not authenticated or doesn't have admin access, don't render the layout
   if (!isAuthenticated || !hasAdminAccess) {
@@ -84,4 +89,3 @@ export function AdminLayout({
     </div>
   );
 }
-

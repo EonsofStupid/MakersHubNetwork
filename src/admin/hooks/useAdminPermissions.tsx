@@ -1,6 +1,6 @@
 
-import { useMemo } from 'react';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { PERMISSIONS } from '@/auth/permissions';
 import { useLogger } from '@/hooks/use-logger';
@@ -12,13 +12,16 @@ import { AdminPermissionValue } from '@/admin/types/permissions';
  * Uses both auth store (for user/roles) and admin store (for permissions)
  */
 export function useAdminPermissions() {
-  const { isLoading: authLoading, status } = useAuthStore();
-  const { permissions, isLoadingPermissions } = useAdminStore();
+  const { status, roles } = useAuthState();
+  const adminStore = useAdminStore();
+  const permissions = adminStore.permissions;
+  const isLoadingPermissions = adminStore.isLoadingPermissions;
   
-  const isLoading = authLoading || isLoadingPermissions || status === 'loading';
+  const isLoading = status === 'loading' || isLoadingPermissions;
   const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
-
-  // Memoize the hasPermission function
+  const permissionsLoadedRef = useRef(false);
+  
+  // Memoize the hasPermission function to prevent recreating on each render
   const hasPermission = useMemo(() => {
     return (permission: AdminPermissionValue): boolean => {
       // Super admin permission grants access to everything
@@ -29,13 +32,20 @@ export function useAdminPermissions() {
       return permissions.includes(permission);
     };
   }, [permissions]);
-
-  logger.debug('Admin permissions computed', { 
-    details: { 
-      permissionsCount: permissions.length,
-      isLoading
-    } 
-  });
+  
+  // Log permissions calculation only once
+  useEffect(() => {
+    if (!permissionsLoadedRef.current && !isLoading) {
+      permissionsLoadedRef.current = true;
+      
+      logger.debug('Admin permissions computed', { 
+        details: { 
+          permissionsCount: permissions.length,
+          userRoles: roles
+        } 
+      });
+    }
+  }, [isLoading, permissions, roles, logger]);
 
   return {
     permissions,
