@@ -46,6 +46,22 @@ export function nodeToSearchableString(node: unknown): string {
 }
 
 /**
+ * Type guard to check if a value is a valid React node
+ */
+export function isValidReactNode(value: unknown): value is ReactNode {
+  return (
+    value === undefined ||
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    React.isValidElement(value) ||
+    Array.isArray(value) ||
+    typeof value === 'function'
+  );
+}
+
+/**
  * Safely renders any value as a React node
  * Ensures that the output is always a valid ReactNode type
  */

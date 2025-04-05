@@ -85,6 +85,7 @@ export function useAuth() {
     isSuperAdmin,
     hasRole,
     logout: handleLogout,
-    initialize
+    initialize,
+    initialized
   };
 }

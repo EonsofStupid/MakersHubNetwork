@@ -79,8 +79,9 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
         <AuthProvider>
-          <AdminProvider>
-            <ThemeInitializer>
+          {/* ThemeInitializer comes before AdminProvider to ensure theme loads regardless of auth */}
+          <ThemeInitializer>
+            <AdminProvider>
               <AppInitializer>
                 {!isAdminRoute && <MainNav />}
                 <Routes>
@@ -92,8 +93,8 @@ function App() {
                 <Toaster />
                 <LoggingComponents />
               </AppInitializer>
-            </ThemeInitializer>
-          </AdminProvider>
+            </AdminProvider>
+          </ThemeInitializer>
         </AuthProvider>
       </LoggingProvider>
     </ThemeProvider>
