@@ -9,8 +9,8 @@ const LOG_LEVEL_COLORS: Record<LogLevel, string> = {
   [LogLevel.WARN]: '#F59E0B',  // amber-500
   [LogLevel.ERROR]: '#EF4444', // red-500
   [LogLevel.FATAL]: '#7C3AED', // purple-600
-  [LogLevel.SUCCESS]: '#10B981', // green-500 (same as INFO)
-  [LogLevel.CRITICAL]: '#DC2626' // red-600 (darker than ERROR)
+  [LogLevel.SUCCESS]: '#10B981', // green-500
+  [LogLevel.CRITICAL]: '#DC2626' // red-600
 };
 
 // Name mapping for log levels
@@ -56,7 +56,7 @@ export const consoleTransport: LogTransport = {
     // Format timestamp
     const time = typeof timestamp === 'string' 
       ? new Date(timestamp).toLocaleTimeString() 
-      : (timestamp instanceof Date ? timestamp.toLocaleTimeString() : new Date().toLocaleTimeString());
+      : (timestamp && timestamp instanceof Date ? timestamp.toLocaleTimeString() : new Date().toLocaleTimeString());
     
     // Message title with proper styling
     const color = LOG_LEVEL_COLORS[level] || '#3B82F6';

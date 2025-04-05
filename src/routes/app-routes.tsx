@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
-import HomePage from '@/pages/Home';
+import IndexPage from '@/pages/Index';
 import ProfilePage from '@/pages/Profile';
 import SettingsPage from '@/pages/Settings';
 import NotFoundPage from '@/pages/NotFound';
@@ -10,7 +10,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<IndexPage />} />
       
       {/* Protected Routes */}
       <Route path="/profile" element={
