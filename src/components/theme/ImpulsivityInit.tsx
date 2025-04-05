@@ -28,7 +28,7 @@ export function ImpulsivityInit({ autoApply = true, children }: ImpulsivityInitP
             : 'Unknown error initializing theme';
           
           logger.error('Failed to initialize Impulsivity theme', { 
-            details: errorMessage
+            details: { errorMessage } 
           });
         }
       };

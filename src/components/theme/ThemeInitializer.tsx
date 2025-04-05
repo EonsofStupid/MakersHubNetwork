@@ -22,13 +22,18 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
   useEffect(() => {
     const initializeTheme = async () => {
       try {
-        logger.info('Initializing theme system');
+        logger.info('Initializing theme system', {
+          details: { defaultTheme }
+        });
         await setTheme(defaultTheme);
         setIsInitialized(true);
-        logger.info('Theme system initialized successfully');
+        logger.info('Theme system initialized successfully', {
+          details: { success: true }
+        });
       } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
         logger.error('Failed to initialize theme system', { 
-          details: e instanceof Error ? e.message : String(e)
+          details: { errorMessage }
         });
       }
     };
@@ -41,12 +46,15 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
   // Load the Impulsivity theme by default - its animations override when needed
   const handleRetry = async () => {
     try {
-      logger.info('Retrying theme initialization');
+      logger.info('Retrying theme initialization', {
+        details: { defaultTheme }
+      });
       await setTheme(defaultTheme);
       setIsInitialized(true);
     } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
       logger.error('Failed to retry theme initialization', {
-        details: e instanceof Error ? e.message : String(e)
+        details: { errorMessage }
       });
     }
   };

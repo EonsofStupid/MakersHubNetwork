@@ -6,7 +6,8 @@ import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { Theme } from '@/types/theme';
+import { Theme, DesignTokensStructure } from '@/types/theme';
+import { z } from 'zod';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -33,7 +34,7 @@ export function useImpulsivityTheme() {
       // Update the theme in the store if needed
       if (currentTheme) {
         // Create updated design tokens
-        const updatedDesignTokens = {
+        const updatedDesignTokens: DesignTokensStructure = {
           ...(currentTheme.design_tokens || {}),
           colors: {
             ...(currentTheme.design_tokens?.colors || {}),
@@ -41,7 +42,9 @@ export function useImpulsivityTheme() {
             secondary: '#FF2D6E',
           },
           effects: {
-            ...(currentTheme.design_tokens?.effects || {}),
+            shadows: currentTheme.design_tokens?.effects?.shadows || {},
+            blurs: currentTheme.design_tokens?.effects?.blurs || {},
+            gradients: currentTheme.design_tokens?.effects?.gradients || {},
             primary: '#00F0FF',
             secondary: '#FF2D6E',
             tertiary: '#8B5CF6',
@@ -60,11 +63,14 @@ export function useImpulsivityTheme() {
         }
       }
       
-      logger.info('Applied Impulsivity theme to main site');
+      logger.info('Applied Impulsivity theme to main site', {
+        details: { success: true }
+      });
       return true;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Error applying Impulsivity theme to main site', { 
-        details: error instanceof Error ? error.message : String(error)
+        details: { errorMessage } 
       });
       return false;
     }
@@ -93,11 +99,14 @@ export function useImpulsivityTheme() {
         `);
       }
       
-      logger.info('Applied Impulsivity theme to admin panel');
+      logger.info('Applied Impulsivity theme to admin panel', {
+        details: { success: true }
+      });
       return true;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Error applying Impulsivity theme to admin panel', { 
-        details: error instanceof Error ? error.message : String(error)
+        details: { errorMessage }
       });
       return false;
     }
@@ -109,15 +118,20 @@ export function useImpulsivityTheme() {
       const result = await syncImpulsivityTheme();
       
       if (result) {
-        logger.info('Successfully synced Impulsivity theme to database');
+        logger.info('Successfully synced Impulsivity theme to database', {
+          details: { success: true }
+        });
       } else {
-        logger.error('Failed to sync Impulsivity theme to database');
+        logger.error('Failed to sync Impulsivity theme to database', {
+          details: { success: false }
+        });
       }
       
       return result;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Error syncing Impulsivity theme to database', { 
-        details: error instanceof Error ? error.message : String(error)
+        details: { errorMessage }
       });
       return false;
     }
