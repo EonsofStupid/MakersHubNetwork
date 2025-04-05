@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { keyframes, animation } from '@/theme/animations';
 import { Json } from '@/integrations/supabase/types';
@@ -463,7 +464,10 @@ async function ensureImpulsivityTheme(): Promise<string | null> {
       }
       
       if (!newTheme) {
-        const noDataErrorDetails: ThemeLogDetails = { error: 'No data returned' };
+        const noDataErrorDetails: ThemeLogDetails = { 
+          error: true,
+          errorMessage: 'No data returned' 
+        };
         logger.error('Failed to create new theme - no data returned', noDataErrorDetails);
         throw new Error('Failed to create new theme');
       }
@@ -485,58 +489,25 @@ async function ensureImpulsivityTheme(): Promise<string | null> {
 }
 
 /**
- * Sync the Impulsivity theme to the database
+ * Synchronize the Impulsivity theme to the database
  */
 export async function syncImpulsivityTheme(): Promise<boolean> {
   try {
-    // Get or create the Impulsivity theme ID
+    // First ensure the theme exists
     const themeId = await ensureImpulsivityTheme();
     
     if (!themeId) {
-      const noThemeIdDetails: ThemeLogDetails = {
-        error: true,
-        reason: 'Failed to get or create Impulsivity theme'
-      };
-      logger.error('Failed to get or create Impulsivity theme', noThemeIdDetails);
-      return false;
+      throw new Error('Failed to get or create Impulsivity theme');
     }
     
-    // Sync CSS to the database
+    // Then sync the CSS styles
     return await syncCSSToDatabase(themeId);
   } catch (error) {
-    const errorDetails: ThemeLogDetails = {
+    const syncErrorDetails: ThemeLogDetails = {
       error: true,
       errorMessage: error instanceof Error ? error.message : String(error)
     };
-    logger.error('Error syncing Impulsivity theme', errorDetails);
+    logger.error('Error syncing Impulsivity theme', syncErrorDetails);
     return false;
-  }
-}
-
-/**
- * Get the Impulsivity theme ID from the database
- */
-export async function getImpulsivityThemeId(): Promise<string | null> {
-  try {
-    const { data, error } = await supabase
-      .from('themes')
-      .select('id')
-      .eq('name', 'Impulsivity')
-      .single();
-      
-    if (error) {
-      const errorDetails = formatPostgrestError(error);
-      logger.error('Error fetching Impulsivity theme ID', errorDetails);
-      return null;
-    }
-    
-    return data?.id || null;
-  } catch (error) {
-    const errorDetails: ThemeLogDetails = {
-      error: true,
-      errorMessage: error instanceof Error ? error.message : String(error)
-    };
-    logger.error('Error getting Impulsivity theme ID', errorDetails);
-    return null;
   }
 }

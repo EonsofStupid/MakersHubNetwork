@@ -26,28 +26,28 @@ const supabaseAdmin = createClient(
 
 // Define common schemas
 const ThemeStatusSchema = z.enum(['draft', 'published', 'archived']);
-const ThemeContextSchema = z.enum(['site', 'admin']);
+const ThemeContextSchema = z.enum(['site', 'admin', 'chat']);
 
 // Define color token schema
-const HexColorSchema = z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+const HexColorSchema = z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional();
 const ColorTokensSchema = z.object({
-  background: HexColorSchema.optional(),
-  foreground: HexColorSchema.optional(),
-  card: HexColorSchema.optional(),
-  cardForeground: HexColorSchema.optional(),
-  primary: HexColorSchema.optional(),
-  primaryForeground: HexColorSchema.optional(),
-  secondary: HexColorSchema.optional(),
-  secondaryForeground: HexColorSchema.optional(),
-  muted: HexColorSchema.optional(),
-  mutedForeground: HexColorSchema.optional(),
-  accent: HexColorSchema.optional(),
-  accentForeground: HexColorSchema.optional(),
-  destructive: HexColorSchema.optional(),
-  destructiveForeground: HexColorSchema.optional(),
-  border: HexColorSchema.optional(),
-  input: HexColorSchema.optional(),
-  ring: HexColorSchema.optional(),
+  background: HexColorSchema,
+  foreground: HexColorSchema,
+  card: HexColorSchema,
+  cardForeground: HexColorSchema,
+  primary: HexColorSchema,
+  primaryForeground: HexColorSchema,
+  secondary: HexColorSchema,
+  secondaryForeground: HexColorSchema,
+  muted: HexColorSchema,
+  mutedForeground: HexColorSchema,
+  accent: HexColorSchema,
+  accentForeground: HexColorSchema,
+  destructive: HexColorSchema,
+  destructiveForeground: HexColorSchema,
+  border: HexColorSchema,
+  input: HexColorSchema,
+  ring: HexColorSchema,
 }).partial();
 
 // Define effects schema
@@ -55,9 +55,9 @@ const EffectsSchema = z.object({
   shadows: z.record(z.unknown()).optional(),
   blurs: z.record(z.unknown()).optional(),
   gradients: z.record(z.unknown()).optional(),
-  primary: HexColorSchema.optional(),
-  secondary: HexColorSchema.optional(),
-  tertiary: HexColorSchema.optional(),
+  primary: HexColorSchema,
+  secondary: HexColorSchema,
+  tertiary: HexColorSchema,
 }).partial();
 
 // Define animation schema
@@ -100,6 +100,7 @@ const BaseThemeSchema = z.object({
 const GetThemeRequestSchema = z.object({
   operation: z.literal('get-theme'),
   themeId: z.string().optional(),
+  themeName: z.string().optional(),
   isDefault: z.boolean().optional(),
   context: ThemeContextSchema.optional(),
 });
@@ -290,21 +291,33 @@ async function handleGetTheme(data: unknown) {
       );
     }
 
-    const { themeId, isDefault = true, context = 'site' } = validationResult.data;
-    console.log(`Looking for theme with ID: ${themeId || 'default'}, isDefault: ${isDefault}, context: ${context}`);
+    const { themeId, themeName, isDefault = true, context = 'site' } = validationResult.data;
+    console.log(`Looking for theme with ID: ${themeId || 'N/A'}, Name: ${themeName || 'N/A'}, isDefault: ${isDefault}, context: ${context}`);
 
     // Query for the theme
     let query = supabaseAdmin.from('themes').select('*');
     
     // Apply filters based on parameters
-    if (themeId) {
-      query = query.eq('id', themeId);
+    if (themeId && themeId !== 'Impulsivity' && themeId !== 'fallback-theme') {
+      // If it looks like a UUID, use it as an ID
+      if (themeId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        console.log("Using ID filter:", themeId);
+        query = query.eq('id', themeId);
+      } else {
+        console.log("Using name filter (from themeId field):", themeId);
+        query = query.eq('name', themeId);
+      }
+    } else if (themeName) {
+      console.log("Using name filter:", themeName);
+      query = query.eq('name', themeName);
     } else if (isDefault) {
+      console.log("Using is_default filter");
       query = query.eq('is_default', true);
     }
 
     // Apply context filter - optional for backward compatibility
     if (context) {
+      console.log("Applying context filter:", context);
       query = query.eq('context', context);
     }
     
@@ -323,6 +336,61 @@ async function handleGetTheme(data: unknown) {
     // Handle no theme found
     if (!themes || themes.length === 0) {
       console.warn('No theme found, returning fallback theme');
+      
+      // Special case for Impulsivity: create it if it doesn't exist
+      if (themeName === 'Impulsivity' || themeId === 'Impulsivity') {
+        console.log("Creating Impulsivity theme since it was requested but doesn't exist");
+        
+        const impulsivityTheme = {
+          name: 'Impulsivity',
+          description: 'A cyberpunk-inspired theme with neon effects and vivid colors',
+          status: 'published',
+          is_default: true,
+          version: 1,
+          context: 'site',
+          design_tokens: {
+            colors: {
+              primary: '#00F0FF',
+              secondary: '#FF2D6E',
+              background: '#121218',
+              foreground: '#F6F6F7' 
+            },
+            effects: {
+              shadows: {},
+              blurs: {},
+              gradients: {},
+              primary: '#00F0FF',
+              secondary: '#FF2D6E',
+              tertiary: '#8B5CF6'
+            }
+          },
+          component_tokens: []
+        };
+        
+        try {
+          const { data: newTheme, error: createError } = await supabaseAdmin
+            .from('themes')
+            .insert(impulsivityTheme)
+            .select()
+            .single();
+            
+          if (createError) {
+            throw createError;
+          }
+          
+          if (newTheme) {
+            console.log(`Created Impulsivity theme with ID: ${newTheme.id}`);
+            return new Response(
+              JSON.stringify({ theme: newTheme, isFallback: false }),
+              { status: 200, headers: corsHeaders }
+            );
+          }
+        } catch (createError) {
+          console.error('Error creating Impulsivity theme:', createError);
+          // Fall through to return fallback theme
+        }
+      }
+      
       return new Response(
         JSON.stringify({ theme: defaultFallbackTheme, isFallback: true }),
         { status: 200, headers: corsHeaders }
@@ -437,7 +505,7 @@ async function handleCreateTheme(data: unknown) {
       version: 1,
       status: theme.status || 'draft',
       // Add missing context field with default value for backward compatibility
-      context: 'site'
+      context: 'site' as const
     };
     
     // Insert the new theme

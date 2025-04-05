@@ -1,8 +1,14 @@
 
 project_id = "kxeffcclfvecdvqpljbh"
 
+[api]
+enabled = true
+
+[api.cors]
+enabled = true
+origins = ["*"]
+
+[functions]
+
 [functions.theme-service]
 verify_jwt = false
-
-[functions.manage-api-key]
-verify_jwt = true
