@@ -11,32 +11,60 @@ export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const [isInitializing, setIsInitializing] = useState(false);
   
+  // Use a selector to extract only what we need from the store
   const {
     user,
     session,
     roles,
     status,
     isLoading,
-    isAuthenticated,
     error,
     hasRole,
+    isAuthenticated,
     isAdmin,
     logout,
     initialize,
     initialized
-  } = useAuthStore(state => state);
+  } = useAuthStore(state => ({
+    user: state.user,
+    session: state.session,
+    roles: state.roles,
+    status: state.status,
+    isLoading: state.isLoading,
+    error: state.error,
+    hasRole: state.hasRole,
+    isAuthenticated: state.isAuthenticated,
+    isAdmin: state.isAdmin,
+    logout: state.logout,
+    initialize: state.initialize,
+    initialized: state.initialized
+  }));
   
   // Auto-initialize auth if needed
   useEffect(() => {
-    if (status === 'idle' && !initialized && !isInitializing) {
-      setIsInitializing(true);
-      
-      initialize().catch(err => {
-        logger.error('Failed to initialize auth', { details: err });
-      }).finally(() => {
-        setIsInitializing(false);
-      });
-    }
+    let isMounted = true;
+    
+    const initAuth = async () => {
+      if (status === 'idle' && !initialized && !isInitializing) {
+        setIsInitializing(true);
+        
+        try {
+          await initialize();
+        } catch (err) {
+          logger.error('Failed to initialize auth', { details: err });
+        } finally {
+          if (isMounted) {
+            setIsInitializing(false);
+          }
+        }
+      }
+    };
+    
+    initAuth();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [status, initialize, initialized, logger, isInitializing]);
 
   const isSuperAdmin = roles.includes('super_admin');

@@ -24,7 +24,10 @@ import { Footer } from "@/components/Footer";
 
 // Import styles
 import "./App.css";
+import "@/theme/site-theme.css";
+import "@/components/MainNav/styles/cyber-effects.css";
 import "@/logging/styles/logging.css";
+import "@/admin/styles/cyber-effects.css";
 
 // LoggingComponents wrapper to avoid context issues
 function LoggingComponents() {
