@@ -8,6 +8,7 @@ import { SiteThemeProvider } from './SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -18,11 +19,17 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const { setTheme, isLoading } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ThemeInitializer', LogCategory.UI);
-  const initAttemptedRef = useRef(false);
+  const initAttemptedRef = useRef<boolean>(false);
+  const { status: authStatus } = useAuth(); 
 
   useEffect(() => {
     // Prevent multiple initialization attempts
     if (initAttemptedRef.current) {
+      return;
+    }
+    
+    // Only initialize theme after auth is ready
+    if (authStatus === 'idle' || authStatus === 'loading') {
       return;
     }
     
@@ -64,7 +71,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     }, 100);
     
     return () => clearTimeout(timer);
-  }, [setTheme, toast, logger]);
+  }, [authStatus, setTheme, toast, logger]);
 
   // Render content or loading state
   const showLoadingState = isInitializing || isLoading;

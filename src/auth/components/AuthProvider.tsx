@@ -19,7 +19,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setSession: state.setSession
   }));
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
-  const initAttemptedRef = useRef(false);
+  const initAttemptedRef = useRef<boolean>(false);
   
   // Set up auth state change listener
   useEffect(() => {

@@ -13,11 +13,13 @@ interface AppInitializerProps {
 export function AppInitializer({ children }: AppInitializerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
-  const { status, isLoading: authLoading, error } = useAuth();
+  const { status, isLoading: authLoading, error, initialized } = useAuth();
   const { toast } = useToast();
   
   useEffect(() => {
-    logger.info('App initializing, auth status:', { details: { status, authLoading } });
+    logger.info('App initializing, auth status:', { 
+      details: { status, authLoading, initialized } 
+    });
     
     // Initialize app with small timeout to allow other processes to complete
     const timer = setTimeout(() => {
@@ -29,14 +31,18 @@ export function AppInitializer({ children }: AppInitializerProps) {
           variant: 'destructive',
         });
       }
-      setIsLoading(false);
+      
+      // Only complete loading when auth is fully initialized
+      if (!authLoading && initialized) {
+        setIsLoading(false);
+      }
     }, 500);
     
     return () => clearTimeout(timer);
-  }, [logger, status, authLoading, error, toast]);
+  }, [logger, status, authLoading, initialized, error, toast]);
   
   // Show minimal loading state while app is initializing
-  if (isLoading || authLoading) {
+  if (isLoading || authLoading || !initialized) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <div className="w-full max-w-2xl px-4">
