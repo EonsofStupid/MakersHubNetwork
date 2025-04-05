@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Theme, ComponentTokens, DesignTokensStructure } from "@/types/theme";
 import { getLogger } from "@/logging";
@@ -6,7 +5,7 @@ import { LogCategory } from "@/logging";
 import { z } from "zod";
 
 // Create a type-safe logger for the theme service
-const logger = getLogger('ThemeService');
+const logger = getLogger();
 
 // Define Zod schemas for theme validation
 const designTokensSchema = z.object({
@@ -362,6 +361,24 @@ export async function getTheme(themeId?: string): Promise<{theme: Theme, isFallb
     
     // Validate the theme data
     const validatedTheme = validateTheme(data.theme);
+    
+    // Ensure is_default is always a boolean, not undefined
+    if (validatedTheme.is_default === undefined) {
+      validatedTheme.is_default = false;
+    }
+    
+    // Ensure effects has all required properties 
+    if (!validatedTheme.design_tokens.effects) {
+      validatedTheme.design_tokens.effects = {
+        shadows: {},
+        blurs: {},
+        gradients: {}
+      };
+    } else {
+      validatedTheme.design_tokens.effects.shadows = validatedTheme.design_tokens.effects.shadows || {};
+      validatedTheme.design_tokens.effects.blurs = validatedTheme.design_tokens.effects.blurs || {};
+      validatedTheme.design_tokens.effects.gradients = validatedTheme.design_tokens.effects.gradients || {};
+    }
     
     logger.info('Theme fetched successfully', { 
       details: { 

@@ -1,4 +1,3 @@
-
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -58,7 +57,7 @@ initLogging();
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const logger = getLogger('App');
+  const logger = getLogger();
   const routeLoggedRef = useRef<boolean>(false);
 
   // Log route changes - with ref guard to prevent duplicate logs
