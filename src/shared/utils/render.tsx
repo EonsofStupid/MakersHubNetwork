@@ -62,9 +62,21 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
   // Handle objects with safe stringification
   if (typeof value === 'object') {
     try {
-      return JSON.stringify(value);
+      // Use a replacer function to handle circular references
+      const seen = new WeakSet();
+      const safeString = JSON.stringify(value, (key, val) => {
+        if (typeof val === 'object' && val !== null) {
+          if (seen.has(val)) {
+            return '[Circular]';
+          }
+          seen.add(val);
+        }
+        return val;
+      }, 2);
+      
+      return safeString;
     } catch (e) {
-      return '[Object]';
+      return '[Complex Object]';
     }
   }
   
@@ -98,9 +110,19 @@ export function nodeToSearchableString(value: unknown): string {
   // Handle objects
   if (typeof value === 'object') {
     try {
-      return JSON.stringify(value);
+      // Use a replacer function to handle circular references
+      const seen = new WeakSet();
+      return JSON.stringify(value, (key, val) => {
+        if (typeof val === 'object' && val !== null) {
+          if (seen.has(val)) {
+            return '[Circular]';
+          }
+          seen.add(val);
+        }
+        return val;
+      });
     } catch (e) {
-      return '[Object]';
+      return '[Complex Object]';
     }
   }
   

@@ -4,7 +4,6 @@ import { useToast } from "@/hooks/use-toast"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
 import { UserMenuSheet } from "@/components/auth/UserMenuSheet"
 import { useAuth } from "@/hooks/useAuth"
-import { useAdminAccess } from "@/admin/hooks/useAdminAccess"
 import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/logging"
 import { errorToObject } from "@/shared/utils/render"
@@ -18,10 +17,7 @@ export const UserMenu = memo(() => {
   const logger = useLogger("UserMenu", LogCategory.AUTH)
   
   // Get auth data from centralized hook
-  const { user, roles, logout } = useAuth()
-  
-  // Get admin access status
-  const { hasAdminAccess } = useAdminAccess()
+  const { user, roles, logout, isAdmin } = useAuth()
   
   // Log user status
   const userEmail = user?.email
@@ -72,7 +68,7 @@ export const UserMenu = memo(() => {
     isLoadingLogout: isLoading,
     onShowProfile: handleOpenProfileDialog,
     onLogout: handleLogout,
-    hasAdminAccess: hasAdminAccess,
+    hasAdminAccess: isAdmin,
     roles: roles
   }), [
     isSheetOpen, 
@@ -80,7 +76,7 @@ export const UserMenu = memo(() => {
     isLoading, 
     handleOpenProfileDialog, 
     handleLogout, 
-    hasAdminAccess, 
+    isAdmin, 
     roles
   ])
   
