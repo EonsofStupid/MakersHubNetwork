@@ -32,4 +32,37 @@ export async function unlinkAccount(provider: string): Promise<boolean> {
   }
 }
 
+/**
+ * Get all social links for a user
+ */
+export async function getSocialLinks(userId: string): Promise<any[]> {
+  try {
+    logger.debug(`Getting social links for user: ${userId}`);
+    // Implement actual logic here when needed
+    return [];
+  } catch (error) {
+    logger.error(`Error getting social links for user: ${userId}`, { details: error });
+    return [];
+  }
+}
+
+/**
+ * Remove a social link from a user
+ */
+export interface RemoveSocialLinkResult {
+  success: boolean;
+  error?: any;
+}
+
+export async function removeSocialLink(identity: any): Promise<RemoveSocialLinkResult> {
+  try {
+    logger.debug(`Removing social link`, { details: { provider: identity.provider, id: identity.id } });
+    // Implement actual removal logic here when needed
+    return { success: true };
+  } catch (error) {
+    logger.error(`Error removing social link`, { details: error });
+    return { success: false, error };
+  }
+}
+
 // Add more auth service functions as needed

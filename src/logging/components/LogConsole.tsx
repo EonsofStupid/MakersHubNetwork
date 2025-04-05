@@ -277,7 +277,7 @@ function renderMessage(message: any): React.ReactNode {
 const formatErrorDetails = (details: any): string => {
   if (!details) return '';
   
-  if (details.message && details.name) {
+  if (details.message && details.name && typeof details === 'object') {
     return `${details.name}: ${details.message}${details.stack ? '\n' + details.stack : ''}`;
   } else if (typeof details === 'object') {
     try {

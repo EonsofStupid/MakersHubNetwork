@@ -349,13 +349,13 @@ export const useThemeStore = create<ThemeStore>()(
           // Create a properly typed ThemeComponent
           const newComponent: ThemeComponent = {
             id: data.id,
-            theme_id: data.theme_id,
+            theme_id: data.theme_id || '',
             component_name: data.component_name,
-            styles: data.styles,
-            description: data.description,
+            styles: data.styles || {},
+            description: data.description || '',
             created_at: data.created_at,
             updated_at: data.updated_at,
-            context: data.context as ThemeContextType
+            context: (data.context || 'site') as ThemeContext
           };
           
           // Add to the appropriate components arrays based on context
