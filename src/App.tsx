@@ -5,7 +5,8 @@ import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { Toaster } from '@/components/ui/toaster';
 import { LoggingProvider } from './logging/context/LoggingContext';
 import { AuthProvider } from './auth/components/AuthProvider';
-import { Layout } from './components/ui/layout/Layout';
+import { MainNav } from './components/MainNav';
+import { Footer } from './components/Footer';
 import { AppRoutes } from './routes/app-routes';
 
 // Define App props interface
@@ -20,8 +21,9 @@ function App({ onInitialized }: AppProps) {
         <ThemeProvider>
           <div className="min-h-screen bg-background">
             <Router>
-              <Layout />
+              <MainNav />
               <AppRoutes />
+              <Footer />
             </Router>
           </div>
           <Toaster />

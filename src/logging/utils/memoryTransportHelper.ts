@@ -1,3 +1,4 @@
+
 import { LogEntry, LogLevel } from '../types';
 
 export interface MemoryTransportOptions {
@@ -37,6 +38,38 @@ export function addToBuffer(buffer: LogBuffer, entry: LogEntry): void {
   if (buffer.entries.length > buffer.maxSize) {
     buffer.entries = buffer.entries.slice(-buffer.maxSize);
   }
+}
+
+/**
+ * Safely get logs from the buffer
+ */
+export function safeGetLogs(buffer: LogBuffer): LogEntry[] {
+  return buffer?.entries || [];
+}
+
+/**
+ * Get logs filtered by level
+ */
+export function getLogsByLevel(buffer: LogBuffer, level: LogLevel): LogEntry[] {
+  return buffer?.entries.filter(entry => entry.level === level) || [];
+}
+
+/**
+ * Get logs filtered by category
+ */
+export function getLogsByCategory(buffer: LogBuffer, category: string): LogEntry[] {
+  return buffer?.entries.filter(entry => entry.category === category) || [];
+}
+
+/**
+ * Get error logs (ERROR, FATAL, CRITICAL levels)
+ */
+export function getErrorLogs(buffer: LogBuffer): LogEntry[] {
+  return buffer?.entries.filter(entry => 
+    entry.level === LogLevel.ERROR || 
+    entry.level === LogLevel.FATAL ||
+    entry.level === LogLevel.CRITICAL
+  ) || [];
 }
 
 /**
@@ -95,9 +128,9 @@ export function filterEntries(
   if (options.search) {
     const searchLower = options.search.toLowerCase();
     results = results.filter((entry) => {
-      const message = (entry.message || '').toLowerCase();
-      const source = (entry.source || '').toLowerCase();
-      const category = (entry.category || '').toLowerCase();
+      const message = String(entry.message || '').toLowerCase();
+      const source = String(entry.source || '').toLowerCase();
+      const category = String(entry.category || '').toLowerCase();
       
       return message.includes(searchLower) || 
              source.includes(searchLower) || 

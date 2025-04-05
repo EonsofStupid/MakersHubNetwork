@@ -1,123 +1,149 @@
-import React, { useState, useEffect } from 'react';
-import { safeGetLogs, getLogsByLevel, getLogsByCategory, getErrorLogs } from '@/logging/utils/memoryTransportHelper';
-import { LogLevel, LogCategory } from '@/logging/types';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useLogger } from '@/hooks/use-logger';
 
-/**
- * Dashboard widget for displaying recent logs
- */
-export function LogsDashboard() {
-  const [totalLogs, setTotalLogs] = useState(0);
-  const [traceLogs, setTraceLogs] = useState(0);
-  const [debugLogs, setDebugLogs] = useState(0);
-  const [infoLogs, setInfoLogs] = useState(0);
-  const [warnLogs, setWarnLogs] = useState(0);
-  const [errorLogs, setErrorLogs] = useState(0);
-  const [fatalLogs, setFatalLogs] = useState(0);
-  const [systemLogs, setSystemLogs] = useState(0);
-  const [authLogs, setAuthLogs] = useState(0);
-  const [adminLogs, setAdminLogs] = useState(0);
-  const [errorCategoryLogs, setErrorCategoryLogs] = useState(0);
-  
-  const logger = useLogger('LogsDashboard');
-  
+import React, { useState, useEffect } from "react";
+import { safeGetLogs, getLogsByLevel, getLogsByCategory, getErrorLogs, filterEntries } from "@/logging/utils/memoryTransportHelper";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LogLevel } from "@/logging/types";
+import { getLogger } from "@/logging";
+
+const LogsDashboard = () => {
+  const logger = getLogger("LogsDashboard");
+  const [logEntries, setLogEntries] = useState([]);
+  const [activeTab, setActiveTab] = useState("all");
+
+  // This is a placeholder - in a real implementation, you'd connect to your actual log storage
   useEffect(() => {
-    // Fetch log counts from memory transport
-    const allLogs = safeGetLogs();
-    setTotalLogs(allLogs.length);
-    setTraceLogs(getLogsByLevel(LogLevel.TRACE).length);
-    setDebugLogs(getLogsByLevel(LogLevel.DEBUG).length);
-    setInfoLogs(getLogsByLevel(LogLevel.INFO).length);
-    setWarnLogs(getLogsByLevel(LogLevel.WARN).length);
-    setErrorLogs(getLogsByLevel(LogLevel.ERROR).length);
-    setFatalLogs(getLogsByLevel(LogLevel.FATAL).length);
-    setSystemLogs(getLogsByCategory(LogCategory.SYSTEM).length);
-    setAuthLogs(getLogsByCategory(LogCategory.AUTHENTICATION).length);
-    setAdminLogs(getLogsByCategory(LogCategory.ADMIN).length);
-    setErrorCategoryLogs(getErrorLogs().length);
+    // Sample log for demonstration
+    logger.info("Logs dashboard initialized");
+    logger.debug("Debug information", { details: { someValue: 123 } });
     
-    logger.debug('Log counts updated');
-  }, []);
-  
-  return (
-    <Card className="col-span-4">
-      <CardHeader>
-        <CardTitle>Recent Logs</CardTitle>
-      </CardHeader>
-      <CardContent className="pl-2 pb-4">
-        <ScrollArea className="h-[300px] w-full pr-2">
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <span>Total Logs:</span>
-              <Badge variant="secondary">{totalLogs}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Trace Logs:</span>
-              <Badge className={getLogSeverityClass(LogLevel.TRACE)}>{traceLogs}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Debug Logs:</span>
-              <Badge className={getLogSeverityClass(LogLevel.DEBUG)}>{debugLogs}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Info Logs:</span>
-              <Badge className={getLogSeverityClass(LogLevel.INFO)}>{infoLogs}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Warn Logs:</span>
-              <Badge className={getLogSeverityClass(LogLevel.WARN)}>{warnLogs}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Error Logs:</span>
-              <Badge className={getLogSeverityClass(LogLevel.ERROR)}>{errorLogs}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Fatal/Critical Logs:</span>
-              <Badge className={getLogSeverityClass(LogLevel.FATAL)}>{fatalLogs}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>System Logs:</span>
-              <Badge variant="outline">{systemLogs}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Auth Logs:</span>
-              <Badge variant="outline">{authLogs}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Admin Logs:</span>
-              <Badge variant="outline">{adminLogs}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Error Category Logs:</span>
-              <Badge variant="destructive">{errorCategoryLogs}</Badge>
-            </div>
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
-  );
-}
+    // Get logs would come from your actual log storage
+    // setLogEntries(getLogEntries());
+  }, [logger]);
 
-/**
- * Helper function to determine log severity class
- */
-function getLogSeverityClass(level: LogLevel): string {
-  if (level === LogLevel.TRACE) {
-    return 'bg-gray-100 text-gray-800';
-  } else if (level === LogLevel.DEBUG) {
-    return 'bg-gray-200 text-gray-800';
-  } else if (level === LogLevel.INFO) {
-    return 'bg-blue-100 text-blue-800';
-  } else if (level === LogLevel.WARN) {
-    return 'bg-yellow-100 text-yellow-800';
-  } else if (level === LogLevel.ERROR) {
-    return 'bg-red-100 text-red-800';
-  } else if (level === LogLevel.FATAL || level === LogLevel.CRITICAL) {
-    return 'bg-red-200 text-red-900 font-bold';
-  } else {
-    return 'bg-gray-100 text-gray-800';
-  }
-}
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">System Logs</h2>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">Refresh</Button>
+          <Button variant="outline" size="sm">Export</Button>
+        </div>
+      </div>
+
+      <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-5 mb-4">
+          <TabsTrigger value="all">All Logs</TabsTrigger>
+          <TabsTrigger value="errors">Errors</TabsTrigger>
+          <TabsTrigger value="warnings">Warnings</TabsTrigger>
+          <TabsTrigger value="info">Info</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="all" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>All System Logs</CardTitle>
+              <CardDescription>
+                Showing all system logs across all components and services
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="h-[400px] overflow-auto p-4 border border-border/50 rounded-md bg-black/10 font-mono text-sm">
+                <div className="space-y-1">
+                  {/* This would be populated with actual logs */}
+                  <div className="text-green-500">[INFO] System started successfully</div>
+                  <div className="text-blue-500">[DEBUG] Loading user preferences</div>
+                  <div className="text-yellow-500">[WARN] Resource usage above 80%</div>
+                  <div className="text-red-500">[ERROR] Failed to connect to database</div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <div className="text-sm text-muted-foreground">
+                Showing most recent logs first
+              </div>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="errors" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Error Logs</CardTitle>
+              <CardDescription>
+                Critical errors and exceptions that require attention
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="h-[400px] overflow-auto p-4 border border-border/50 rounded-md bg-black/10 font-mono text-sm">
+                <div className="space-y-1">
+                  {/* This would be populated with actual error logs */}
+                  <div className="text-red-500">[ERROR] Failed to connect to database</div>
+                  <div className="text-red-500">[ERROR] Authentication service unavailable</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="warnings" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Warning Logs</CardTitle>
+              <CardDescription>
+                Potential issues that might require attention
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px] overflow-auto p-4 border border-border/50 rounded-md bg-black/10 font-mono text-sm">
+                <div className="space-y-1">
+                  {/* This would be populated with actual warning logs */}
+                  <div className="text-yellow-500">[WARN] Resource usage above 80%</div>
+                  <div className="text-yellow-500">[WARN] Slow API response time</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="info" className="space-y-4">
+          {/* Info logs content */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Info Logs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px] overflow-auto p-4 border border-border/50 rounded-md bg-black/10 font-mono text-sm">
+                <div className="space-y-1">
+                  <div className="text-green-500">[INFO] System started successfully</div>
+                  <div className="text-green-500">[INFO] User login: admin</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="performance" className="space-y-4">
+          {/* Performance logs content */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Performance Logs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px] overflow-auto p-4 border border-border/50 rounded-md bg-black/10 font-mono text-sm">
+                <div className="space-y-1">
+                  <div className="text-blue-500">[PERF] Page load: 320ms</div>
+                  <div className="text-blue-500">[PERF] API request: 150ms</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default LogsDashboard;
