@@ -16,7 +16,7 @@ export function nodeToSearchableString(node: unknown): string {
   if (typeof node === 'object') {
     if (React.isValidElement(node)) {
       // Handle React elements by getting their text content
-      const props = node.props as any;
+      const props = node.props as Record<string, unknown>;
       
       if (props.children) {
         if (typeof props.children === 'string') {

@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react';
  */
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
-  const initAttemptedRef = useRef(false);
+  const initAttemptedRef = useRef<boolean>(false);
   
   // Use a selector to extract only what we need from the store
   const {

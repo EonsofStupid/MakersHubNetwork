@@ -1,4 +1,3 @@
-
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry } from '../types';
@@ -9,7 +8,7 @@ import '../styles/logging.css';
 import { renderUnknownAsNode, nodeToSearchableString } from '@/shared/utils/render';
 
 interface LogDetailsProps {
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   className?: string;
 }
 
@@ -24,9 +23,7 @@ const LogDetails = forwardRef<HTMLDivElement, LogDetailsProps>(({ details, class
         <div key={key} className="flex">
           <span className="text-gray-400 mr-2">{key}:</span>
           <span className="text-gray-300">
-            {typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' 
-              ? String(value) 
-              : renderUnknownAsNode(value)}
+            {renderUnknownAsNode(value)}
           </span>
         </div>
       ))}
@@ -112,7 +109,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <LogDetails details={log.details as Record<string, any> || {}} />
+                <LogDetails details={log.details as Record<string, unknown> || {}} />
               </motion.div>
             )}
           </AnimatePresence>
