@@ -3,7 +3,7 @@ import { useState, memo, useCallback, useMemo } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
 import { UserMenuSheet } from "@/components/auth/UserMenuSheet"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuthState } from "@/auth/hooks/useAuthState"
 import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/logging"
 import { errorToObject } from "@/shared/utils/render"
@@ -17,10 +17,8 @@ export const UserMenu = memo(() => {
   const logger = useLogger("UserMenu", LogCategory.AUTH)
   
   // Get auth data from centralized hook
-  const { user, roles, logout, isAdmin } = useAuth()
-  
-  // Log user status
-  const userEmail = user?.email
+  // Important: Using useAuthState to avoid initialization cycles
+  const { user, roles, logout, isAdmin } = useAuthState()
   
   // Memoize handlers to prevent recreating functions on each render
   const handleOpenSheet = useCallback(() => {
@@ -64,15 +62,15 @@ export const UserMenu = memo(() => {
   const sheetProps = useMemo(() => ({
     isOpen: isSheetOpen,
     onOpenChange: setSheetOpen,
-    userEmail: userEmail,
+    userEmail: user?.email,
     isLoadingLogout: isLoading,
     onShowProfile: handleOpenProfileDialog,
     onLogout: handleLogout,
-    hasAdminAccess: isAdmin,
+    hasAdminAccess: isAdmin(),
     roles: roles
   }), [
     isSheetOpen, 
-    userEmail, 
+    user?.email, 
     isLoading, 
     handleOpenProfileDialog, 
     handleLogout, 

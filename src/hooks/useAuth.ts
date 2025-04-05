@@ -14,20 +14,7 @@ export function useAuth() {
   const initAttemptedRef = useRef<boolean>(false);
   
   // Extract only what we need from the store to prevent unnecessary re-renders
-  const {
-    user,
-    session,
-    roles,
-    status,
-    isLoading,
-    error,
-    hasRole,
-    isAuthenticated,
-    isAdmin,
-    logout,
-    initialize,
-    initialized
-  } = useAuthStore(state => ({
+  const authState = useAuthStore(state => ({
     user: state.user,
     session: state.session,
     roles: state.roles,
@@ -35,7 +22,7 @@ export function useAuth() {
     isLoading: state.isLoading,
     error: state.error,
     hasRole: state.hasRole,
-    isAuthenticated: state.isAuthenticated,
+    isAuthenticated: state.status === 'authenticated',
     isAdmin: state.isAdmin,
     logout: state.logout,
     initialize: state.initialize,
@@ -50,44 +37,36 @@ export function useAuth() {
     }
     
     // Only initialize if needed
-    if (!initialized && status === 'idle') {
+    if (!authState.initialized && authState.status === 'idle') {
       logger.info('Auto-initializing auth from useAuth hook');
       initAttemptedRef.current = true;
       
+      // Use a timeout to break potential circular dependencies
       setTimeout(() => {
-        initialize().catch(err => {
+        authState.initialize().catch(err => {
           logger.error('Failed to initialize auth', { details: errorToObject(err) });
         });
       }, 50);
     }
-  }, [status, initialized]); // We deliberately omit initialize and logger
+  }, [authState.status, authState.initialized]); // We deliberately omit initialize and logger
   
   // Derived state
-  const isSuperAdmin = roles.includes('super_admin');
+  const isSuperAdmin = authState.roles.includes('super_admin');
 
   // Log wrapper for logout to capture info before state is cleared
   const handleLogout = async () => {
-    if (user) {
+    if (authState.user) {
       logger.info('User logging out', { 
-        details: { userId: user.id }
+        details: { userId: authState.user.id }
       });
     }
-    return logout();
+    return authState.logout();
   };
 
   return {
-    user,
-    session,
-    roles,
-    status,
-    isLoading,
-    error,
-    isAuthenticated,
-    isAdmin: isAdmin(),
+    ...authState,
+    isAdmin: authState.isAdmin(),
     isSuperAdmin,
-    hasRole,
-    logout: handleLogout,
-    initialize,
-    initialized
+    logout: handleLogout
   };
 }

@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { Skeleton } from './ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 
@@ -14,27 +13,14 @@ interface AppInitializerProps {
 export function AppInitializer({ children }: AppInitializerProps) {
   const [isAppReady, setIsAppReady] = useState(false);
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
-  const { toast } = useToast();
   const initMessageShownRef = useRef<boolean>(false);
-  const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const maxWaitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cycleCountRef = useRef<number>(0);
   
-  // Get theme loading status
+  // Get theme and auth loading status
   const { isLoaded: themeLoaded } = useSiteTheme();
-  
-  // Get auth state directly from auth store
   const { initialized: authInitialized, status: authStatus } = useAuthState();
   
   useEffect(() => {
-    // Detect potential infinite initialization loops
-    cycleCountRef.current += 1;
-    if (cycleCountRef.current > 10) {
-      logger.warn('Possible initialization cycle detected', {
-        details: { cycleCount: cycleCountRef.current, themeLoaded, authStatus, authInitialized }
-      });
-    }
-    
     // Log status changes, but only once per render to avoid loops
     if (!initMessageShownRef.current) {
       logger.info('App initializing, auth status:', { 
@@ -44,10 +30,6 @@ export function AppInitializer({ children }: AppInitializerProps) {
     }
     
     // Clear any existing timeouts
-    if (initTimeoutRef.current) {
-      clearTimeout(initTimeoutRef.current);
-    }
-    
     if (maxWaitTimeoutRef.current) {
       clearTimeout(maxWaitTimeoutRef.current);
     }
@@ -59,25 +41,16 @@ export function AppInitializer({ children }: AppInitializerProps) {
       return;
     }
     
-    // If theme is loaded but auth isn't initialized yet, wait a bit longer
-    if (themeLoaded && !authInitialized) {
-      initTimeoutRef.current = setTimeout(() => {
-        logger.info('Auth initialization still in progress...');
-      }, 500);
-      
-      // Set a maximum wait time for auth initialization
-      maxWaitTimeoutRef.current = setTimeout(() => {
-        logger.warn('Rendering app with incomplete initialization', {
-          details: { themeLoaded, authStatus, authInitialized }
-        });
-        setIsAppReady(true);
-      }, 3000); // Max wait time increased to 3s
-    }
+    // Set a maximum wait time for initialization
+    // This prevents app from being stuck in loading state forever
+    maxWaitTimeoutRef.current = setTimeout(() => {
+      logger.warn('Rendering app with incomplete initialization', {
+        details: { themeLoaded, authStatus, authInitialized }
+      });
+      setIsAppReady(true);
+    }, 2000); // Max wait time
     
     return () => {
-      if (initTimeoutRef.current) {
-        clearTimeout(initTimeoutRef.current);
-      }
       if (maxWaitTimeoutRef.current) {
         clearTimeout(maxWaitTimeoutRef.current);
       }
