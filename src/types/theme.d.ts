@@ -66,7 +66,6 @@ export interface ThemeToken {
   theme_id: string;
 }
 
-// Updated ThemeLogDetails interface for consistent typing
 export interface ThemeLogDetails {
   // Status indicators
   success?: boolean;
@@ -104,3 +103,23 @@ export interface ThemeLogDetails {
 
 // Define ThemeContext type to ensure consistent usage
 export type ThemeContext = 'site' | 'admin' | 'chat';
+
+// Animation effect types
+export interface ThemeAnimation {
+  name: string;
+  duration: string | number;
+  timingFunction: string;
+  delay?: string | number;
+  iterationCount?: string | number;
+  direction?: string;
+  fillMode?: string;
+  keyframes: Record<string, any>;
+}
+
+// Effect types for components
+export interface ThemeEffect {
+  id: string;
+  type: 'glitch' | 'gradient' | 'cyber' | 'pulse' | 'particle' | 'morph';
+  enabled: boolean;
+  [key: string]: any; // Allow for type-specific properties
+}

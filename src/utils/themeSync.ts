@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { keyframes, animation } from '@/theme/animations';
 import { Json } from '@/integrations/supabase/types';
