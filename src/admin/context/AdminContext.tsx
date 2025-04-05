@@ -5,6 +5,9 @@ import { useAdminSync } from '@/admin/hooks/useAdminSync';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { useAuthState } from '@/auth/hooks/useAuthState';
+import { PERMISSIONS } from '@/auth/permissions';
+import { AdminPermissionValue } from '@/admin/types/permissions';
+import { mapRolesToPermissions } from '@/auth/rbac/roles';
 
 // Create context
 interface AdminContextValue {
@@ -22,12 +25,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const logger = useLogger('AdminContext', LogCategory.ADMIN);
   
   // Get permissions directly from auth state to avoid circular dependencies
-  const { roles } = useAuthState();
+  const { roles, status } = useAuthState();
   
   // Initialize admin context only once
   useEffect(() => {
-    // Guard against multiple initialization attempts
-    if (initAttemptedRef.current || initialized) {
+    // Guard against multiple initialization attempts and wait until auth is ready
+    if (initAttemptedRef.current || initialized || status === 'loading') {
       return;
     }
     
@@ -36,23 +39,26 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     
     try {
       logger.info('Initializing admin context', {
-        details: { userRoles: roles }
+        details: { userRoles: roles, authStatus: status }
       });
       
-      // Map roles to permissions (simple mapping to avoid dependency on useAdminPermissions)
-      const adminPermissions = roles.includes('admin') || roles.includes('super_admin') 
-        ? ['admin:access'] 
-        : [];
+      // Use the proper role mapping function to get typed permissions
+      const adminPermissions: AdminPermissionValue[] = 
+        mapRolesToPermissions(roles);
       
       // Update permissions in store
       setPermissions(adminPermissions);
       setInitialized(true);
+      
+      logger.info('Admin context initialized successfully', {
+        details: { permissionsCount: adminPermissions.length }
+      });
     } catch (error) {
       logger.error('Failed to initialize admin context', {
         details: { error }
       });
     }
-  }, [logger, roles, initialized, setPermissions]);
+  }, [logger, roles, initialized, setPermissions, status]);
   
   const value = { initialized };
   

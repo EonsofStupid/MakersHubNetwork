@@ -35,17 +35,21 @@ export function AdminLayout({
   const logger = useLogger("AdminLayout", LogCategory.ADMIN);
   const { hasAdminAccess, isAuthenticated } = useAdminAccess();
   const redirectAttemptedRef = useRef<boolean>(false);
+  const loggedInitRef = useRef<boolean>(false);
 
   useEffect(() => {
     // Log the admin layout initialization - only once
-    logger.info("Admin layout rendered", {
-      details: { 
-        isEditMode, 
-        permissionsCount: permissions.length,
-        hasAdminAccess,
-        isAuthenticated
-      },
-    });
+    if (!loggedInitRef.current) {
+      loggedInitRef.current = true;
+      logger.info("Admin layout rendered", {
+        details: { 
+          isEditMode, 
+          permissionsCount: permissions.length,
+          hasAdminAccess,
+          isAuthenticated
+        },
+      });
+    }
 
     // If somehow a non-admin user got here, redirect them - but only once
     if (!hasAdminAccess && isAuthenticated && !redirectAttemptedRef.current) {
