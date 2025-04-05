@@ -26,40 +26,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
   
   // Setup auth state change listener only once
   useEffect(() => {
-    // Set up auth state listener FIRST, but only once
-    if (!authSubscriptionRef.current) {
-      logger.info('Setting up auth state change listener');
-      
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (event, currentSession) => {
-          logger.info(`Auth state change: ${event}`, {
-            details: { 
-              event,
-              userId: currentSession?.user?.id 
-            }
-          });
-
-          // Only update session state, avoid triggering other effects
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            setSession(currentSession);
-          } else if (event === 'SIGNED_OUT') {
-            setSession(null);
-          }
-        }
-      );
-      
-      // Store subscription to avoid creating multiple listeners
-      authSubscriptionRef.current = subscription;
-      
-      // Clean up subscription on unmount
-      return () => {
-        if (authSubscriptionRef.current) {
-          authSubscriptionRef.current.unsubscribe();
-          authSubscriptionRef.current = null;
-        }
-      };
+    // Only run once 
+    if (authSubscriptionRef.current !== null) {
+      return;
     }
-  }, [logger, setSession]);
+
+    logger.info('Setting up auth state change listener');
+      
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        logger.info(`Auth state change: ${event}`, {
+          details: { 
+            event,
+            userId: currentSession?.user?.id 
+          }
+        });
+
+        // Only update session state, avoid triggering other effects
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSession(currentSession);
+        } else if (event === 'SIGNED_OUT') {
+          setSession(null);
+        }
+      }
+    );
+      
+    // Store subscription to avoid creating multiple listeners
+    authSubscriptionRef.current = subscription;
+      
+    // Clean up subscription on unmount
+    return () => {
+      if (authSubscriptionRef.current) {
+        authSubscriptionRef.current.unsubscribe();
+        authSubscriptionRef.current = null;
+      }
+    };
+  }, []); // Removed dependencies to ensure it runs only once
   
   // Initialize auth only once
   useEffect(() => {
@@ -74,6 +76,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Initialize auth state asynchronously
     const initializeAuth = async () => {
       try {
+        logger.info('Initializing auth state');
         await initialize();
       } catch (err) {
         logger.error('Failed to initialize auth', { details: err });
@@ -82,7 +85,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     // Use setTimeout to break potential circular dependencies
     setTimeout(initializeAuth, 0);
-  }, [initialize, initialized, logger]);
+  }, [initialize, initialized]); // Keep only necessary dependencies
   
   // Provide the current auth state, whether authenticated or not
   return (

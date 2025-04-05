@@ -1,10 +1,10 @@
+
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry, LogLevel } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
 import '../styles/logging.css';
-import { renderUnknownAsNode, nodeToSearchableString } from '@/shared/utils/render';
 
 interface LogDetailsProps {
   details: Record<string, unknown>;
@@ -152,7 +152,7 @@ export function LogConsole() {
       const searchLower = search.toLowerCase();
       const messageStr = typeof log.message === 'string' 
         ? log.message.toLowerCase() 
-        : nodeToSearchableString(log.message).toLowerCase();
+        : String(log.message).toLowerCase();
       return messageStr.includes(searchLower) || 
              (log.category && log.category.toLowerCase().includes(searchLower));
     });

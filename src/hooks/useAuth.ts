@@ -60,7 +60,8 @@ export function useAuth() {
         });
       }, 0);
     }
-  }, [status, initialize, initialized, logger]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, initialized]); // We deliberately omit initialize and logger to prevent re-runs
 
   // Derived state
   const isSuperAdmin = roles.includes('super_admin');
