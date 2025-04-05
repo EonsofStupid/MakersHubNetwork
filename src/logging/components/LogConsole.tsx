@@ -23,7 +23,7 @@ const LogDetails = forwardRef<HTMLDivElement, LogDetailsProps>(({ details, class
         <div key={key} className="flex">
           <span className="text-gray-400 mr-2">{key}:</span>
           <span className="text-gray-300">
-            {typeof value === 'string' ? value : renderUnknownAsNode(value)}
+            {renderUnknownAsNode(value)}
           </span>
         </div>
       ))}

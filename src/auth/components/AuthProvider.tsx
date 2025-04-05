@@ -52,15 +52,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     );
     
-    // Then initialize auth if needed
+    // Then initialize auth if needed - but only once
     if (!initialized) {
-      // Defer initialization to break potential circular dependencies
-      setTimeout(() => {
-        initialize().catch(err => {
-          logger.error('Failed to initialize auth', { details: err });
-          // Don't block the app on auth errors - just log them
-        });
-      }, 0);
+      // Use a flag to break potential circular dependencies
+      const initializationPromise = initialize();
+      
+      // Don't block rendering on the initialization promise
+      initializationPromise.catch(err => {
+        logger.error('Failed to initialize auth', { details: err });
+      });
     }
     
     return () => {

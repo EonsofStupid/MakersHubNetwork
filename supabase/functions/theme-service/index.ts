@@ -24,26 +24,98 @@ const supabaseAdmin = createClient(
   }
 );
 
-// Define request schema validation using Zod
+// Define common schemas
+const ThemeStatusSchema = z.enum(['draft', 'published', 'archived']);
+const ThemeContextSchema = z.enum(['site', 'admin']);
+
+// Define color token schema
+const HexColorSchema = z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+const ColorTokensSchema = z.object({
+  background: HexColorSchema.optional(),
+  foreground: HexColorSchema.optional(),
+  card: HexColorSchema.optional(),
+  cardForeground: HexColorSchema.optional(),
+  primary: HexColorSchema.optional(),
+  primaryForeground: HexColorSchema.optional(),
+  secondary: HexColorSchema.optional(),
+  secondaryForeground: HexColorSchema.optional(),
+  muted: HexColorSchema.optional(),
+  mutedForeground: HexColorSchema.optional(),
+  accent: HexColorSchema.optional(),
+  accentForeground: HexColorSchema.optional(),
+  destructive: HexColorSchema.optional(),
+  destructiveForeground: HexColorSchema.optional(),
+  border: HexColorSchema.optional(),
+  input: HexColorSchema.optional(),
+  ring: HexColorSchema.optional(),
+}).partial();
+
+// Define effects schema
+const EffectsSchema = z.object({
+  shadows: z.record(z.unknown()).optional(),
+  blurs: z.record(z.unknown()).optional(),
+  gradients: z.record(z.unknown()).optional(),
+  primary: HexColorSchema.optional(),
+  secondary: HexColorSchema.optional(),
+  tertiary: HexColorSchema.optional(),
+}).partial();
+
+// Define animation schema
+const AnimationSchema = z.object({
+  keyframes: z.record(z.unknown()).optional(),
+  transitions: z.record(z.unknown()).optional(),
+  durations: z.record(z.string()).optional(),
+}).partial();
+
+// Define design tokens schema
+const DesignTokensSchema = z.object({
+  colors: ColorTokensSchema.optional(),
+  effects: EffectsSchema.optional(),
+  animation: AnimationSchema.optional(),
+  spacing: z.record(z.unknown()).optional(),
+  typography: z.record(z.unknown()).optional(),
+}).partial();
+
+// Define theme schema for validation
+const BaseThemeSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string(),
+  description: z.string().optional(),
+  status: ThemeStatusSchema,
+  is_default: z.boolean().optional(),
+  created_by: z.string().uuid().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  published_at: z.string().optional(),
+  version: z.number().optional(),
+  cache_key: z.string().optional(),
+  parent_theme_id: z.string().uuid().optional(),
+  design_tokens: DesignTokensSchema,
+  component_tokens: z.array(z.unknown()).optional(),
+  composition_rules: z.record(z.unknown()).optional(),
+  cached_styles: z.record(z.unknown()).optional(),
+}).partial();
+
+// Define request schemas using Zod
 const GetThemeRequestSchema = z.object({
   operation: z.literal('get-theme'),
   themeId: z.string().optional(),
   isDefault: z.boolean().optional(),
-  context: z.enum(['site', 'admin']).optional(),
+  context: ThemeContextSchema.optional(),
 });
 
 const UpdateThemeRequestSchema = z.object({
   operation: z.literal('update-theme'),
-  themeId: z.string(),
+  themeId: z.string().uuid(),
   theme: z.object({
     name: z.string().optional(),
     description: z.string().optional(),
-    design_tokens: z.record(z.any()).optional(),
-    component_tokens: z.array(z.any()).optional(),
-    composition_rules: z.record(z.any()).optional(),
+    design_tokens: DesignTokensSchema.optional(),
+    component_tokens: z.array(z.unknown()).optional(),
+    composition_rules: z.record(z.unknown()).optional(),
     is_default: z.boolean().optional(),
   }).strict(),
-  userId: z.string(),
+  userId: z.string().uuid(),
 });
 
 const CreateThemeRequestSchema = z.object({
@@ -51,44 +123,20 @@ const CreateThemeRequestSchema = z.object({
   theme: z.object({
     name: z.string(),
     description: z.string().optional(),
-    status: z.string(),
+    status: ThemeStatusSchema,
     is_default: z.boolean().optional(),
-    design_tokens: z.record(z.any()),
-    component_tokens: z.array(z.any()).optional(),
-    composition_rules: z.record(z.any()).optional(),
+    design_tokens: DesignTokensSchema,
+    component_tokens: z.array(z.unknown()).optional(),
+    composition_rules: z.record(z.unknown()).optional(),
   }),
-  userId: z.string(),
+  userId: z.string().uuid(),
 });
-
-// Define HexColor validator
-const HexColor = z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
-
-// Define Color tokens schema for validation
-const ColorTokensSchema = z.object({
-  background: HexColor.optional(),
-  foreground: HexColor.optional(),
-  card: HexColor.optional(),
-  cardForeground: HexColor.optional(),
-  primary: HexColor.optional(),
-  primaryForeground: HexColor.optional(),
-  secondary: HexColor.optional(),
-  secondaryForeground: HexColor.optional(),
-  muted: HexColor.optional(),
-  mutedForeground: HexColor.optional(),
-  accent: HexColor.optional(),
-  accentForeground: HexColor.optional(),
-  destructive: HexColor.optional(),
-  destructiveForeground: HexColor.optional(),
-  border: HexColor.optional(),
-  input: HexColor.optional(),
-  ring: HexColor.optional(),
-}).partial();
 
 // Default fallback theme definition
 const defaultFallbackTheme = {
   id: "00000000-0000-0000-0000-000000000000",
   name: "Fallback Theme",
-  description: "Emergency fallback theme used when no themes are available",
+  description: "Emergency fallback theme used when theme service is unavailable",
   status: "published",
   is_default: true,
   created_at: new Date().toISOString(),
@@ -115,11 +163,16 @@ const defaultFallbackTheme = {
       ring: "#1E293B",
     },
     effects: {
+      shadows: {},
+      blurs: {},
+      gradients: {},
       primary: "#00F0FF",
       secondary: "#FF2D6E",
       tertiary: "#8B5CF6",
     },
     animation: {
+      keyframes: {},
+      transitions: {},
       durations: {
         fast: "150ms",
         normal: "300ms",
@@ -189,7 +242,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        details: error.message 
+        details: error instanceof Error ? error.message : String(error) 
       }),
       { status: 500, headers: corsHeaders }
     );
@@ -197,34 +250,33 @@ serve(async (req) => {
 });
 
 // Validate theme data for correct formatting
-function validateThemeData(themeData) {
+function validateThemeData(themeData: unknown): { isValid: boolean, warnings: string[] } {
+  const warnings: string[] = [];
+  
   // Basic structure validation
   if (!themeData || typeof themeData !== 'object') {
-    console.warn('Theme validation: Invalid theme structure');
-    return false;
+    warnings.push('Invalid theme structure');
+    return { isValid: false, warnings };
   }
   
-  // Validate design tokens - ensure it's an object
-  if (!themeData.design_tokens || typeof themeData.design_tokens !== 'object') {
-    console.warn('Theme validation: Missing or invalid design_tokens');
-    return false;
-  }
-  
-  // Validate colors tokens if present
-  if (themeData.design_tokens.colors) {
-    try {
-      ColorTokensSchema.parse(themeData.design_tokens.colors);
-    } catch (error) {
-      console.warn('Theme validation: Invalid color tokens', error);
-      // Don't fail here, just warn - we'll use defaults
+  try {
+    // Use the BaseThemeSchema to validate the core theme structure
+    const parseResult = BaseThemeSchema.safeParse(themeData);
+    if (!parseResult.success) {
+      const issues = parseResult.error.issues;
+      warnings.push(...issues.map(issue => `${issue.path.join('.')}: ${issue.message}`));
+      return { isValid: false, warnings };
     }
+    
+    return { isValid: true, warnings };
+  } catch (error) {
+    warnings.push(`Validation error: ${error instanceof Error ? error.message : String(error)}`);
+    return { isValid: false, warnings };
   }
-  
-  return true;
 }
 
 // Handle get-theme operation
-async function handleGetTheme(data) {
+async function handleGetTheme(data: unknown) {
   try {
     console.log("Handling get-theme operation with data:", JSON.stringify(data));
     
@@ -279,7 +331,7 @@ async function handleGetTheme(data) {
 
     // Validate the theme data
     const theme = themes[0];
-    const isValid = validateThemeData(theme);
+    const validation = validateThemeData(theme);
     
     console.log(`Theme found with ID: ${theme.id}`);
     
@@ -288,24 +340,21 @@ async function handleGetTheme(data) {
       JSON.stringify({ 
         theme: theme, 
         isFallback: false,
-        validation: { 
-          isValid, 
-          warnings: !isValid ? "Theme structure may have issues" : null 
-        }
+        validation
       }),
       { status: 200, headers: corsHeaders }
     );
   } catch (error) {
     console.error('Error in handleGetTheme:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to retrieve theme', details: error.message }),
+      JSON.stringify({ error: 'Failed to retrieve theme', details: error instanceof Error ? error.message : String(error) }),
       { status: 500, headers: corsHeaders }
     );
   }
 }
 
 // Handle update-theme operation
-async function handleUpdateTheme(data) {
+async function handleUpdateTheme(data: unknown) {
   try {
     // Validate request data
     const validationResult = UpdateThemeRequestSchema.safeParse(data);
@@ -359,14 +408,14 @@ async function handleUpdateTheme(data) {
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: 'Failed to update theme', details: error.message }),
+      JSON.stringify({ error: 'Failed to update theme', details: error instanceof Error ? error.message : String(error) }),
       { status: 500, headers: corsHeaders }
     );
   }
 }
 
 // Handle create-theme operation 
-async function handleCreateTheme(data) {
+async function handleCreateTheme(data: unknown) {
   try {
     // Validate request data
     const validationResult = CreateThemeRequestSchema.safeParse(data);
@@ -411,7 +460,7 @@ async function handleCreateTheme(data) {
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: 'Failed to create theme', details: error.message }),
+      JSON.stringify({ error: 'Failed to create theme', details: error instanceof Error ? error.message : String(error) }),
       { status: 500, headers: corsHeaders }
     );
   }
