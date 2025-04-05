@@ -1,7 +1,11 @@
 
 import { Json } from "@/integrations/supabase/types";
 
+// Define the theme status type
 export type ThemeStatus = 'draft' | 'published' | 'archived';
+
+// Define the theme context type to ensure consistent usage
+export type ThemeContext = 'site' | 'admin' | 'chat';
 
 export interface ThemeToken {
   id: string;
@@ -23,7 +27,7 @@ export interface ComponentTokens {
   theme_id?: string;
   created_at?: string;
   updated_at?: string;
-  context?: string;
+  context?: ThemeContext;
 }
 
 export interface DesignTokensStructure {
@@ -68,6 +72,11 @@ export interface Theme {
   component_tokens: ComponentTokens[];
   composition_rules?: Record<string, any>;
   cached_styles?: Record<string, any>;
+}
+
+// Logger types for proper error handling
+export interface ThemeLogDetails {
+  [key: string]: unknown;
 }
 
 export interface ThemeContextType {

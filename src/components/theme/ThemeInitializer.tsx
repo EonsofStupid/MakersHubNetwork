@@ -7,6 +7,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
 import { ThemeErrorState } from './info/ThemeErrorState';
+import { ThemeLogDetails } from '@/types/theme';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -23,9 +24,8 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
   useEffect(() => {
     const initializeTheme = async () => {
       try {
-        logger.info('Initializing theme system', {
-          details: { defaultTheme }
-        });
+        const logDetails: ThemeLogDetails = { defaultTheme };
+        logger.info('Initializing theme system', logDetails);
         
         // Clear any previous errors
         setInitError(null);
@@ -36,34 +36,35 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
         // Mark as initialized only if successful
         setIsInitialized(true);
         
-        logger.info('Theme system initialized successfully', {
-          details: { 
-            success: true,
-            theme: defaultTheme 
-          }
-        });
+        const successLogDetails: ThemeLogDetails = {
+          success: true,
+          theme: defaultTheme
+        };
+        logger.info('Theme system initialized successfully', successLogDetails);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
+        const errorObj = e instanceof Error ? e : new Error(errorMessage);
         
-        setInitError(e instanceof Error ? e : new Error(errorMessage));
+        setInitError(errorObj);
         
-        logger.error('Failed to initialize theme system', { 
-          details: { 
-            errorMessage,
-            themeId: defaultTheme
-          }
-        });
+        const errorLogDetails: ThemeLogDetails = {
+          errorMessage,
+          themeId: defaultTheme
+        };
+        logger.error('Failed to initialize theme system', errorLogDetails);
         
         // Try to load a fallback theme silently
         try {
           await setTheme('fallback-theme');
-          logger.warn('Using fallback theme after initialization error', {
-            details: { originalTheme: defaultTheme }
-          });
+          const fallbackLogDetails: ThemeLogDetails = { 
+            originalTheme: defaultTheme 
+          };
+          logger.warn('Using fallback theme after initialization error', fallbackLogDetails);
         } catch (fallbackError) {
-          logger.error('Fallback theme also failed', {
-            details: { errorMessage: String(fallbackError) }
-          });
+          const fallbackErrorDetails: ThemeLogDetails = {
+            errorMessage: String(fallbackError)
+          };
+          logger.error('Fallback theme also failed', fallbackErrorDetails);
         }
       }
     };
@@ -76,26 +77,24 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
   // Handle retry logic
   const handleRetry = async () => {
     try {
-      logger.info('Retrying theme initialization', {
-        details: { defaultTheme }
-      });
+      const logDetails: ThemeLogDetails = { defaultTheme };
+      logger.info('Retrying theme initialization', logDetails);
       
       await setTheme(defaultTheme);
       
       setIsInitialized(true);
       setInitError(null);
       
-      logger.info('Theme system successfully initialized on retry', {
-        details: { theme: defaultTheme }
-      });
+      const successLogDetails: ThemeLogDetails = { theme: defaultTheme };
+      logger.info('Theme system successfully initialized on retry', successLogDetails);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : String(e);
+      const errorObj = e instanceof Error ? e : new Error(errorMessage);
       
-      setInitError(e instanceof Error ? e : new Error(errorMessage));
+      setInitError(errorObj);
       
-      logger.error('Failed to retry theme initialization', {
-        details: { errorMessage }
-      });
+      const errorLogDetails: ThemeLogDetails = { errorMessage };
+      logger.error('Failed to retry theme initialization', errorLogDetails);
     }
   };
   
@@ -103,7 +102,7 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
   if (initError || error) {
     return (
       <ThemeErrorState 
-        error={initError || error} 
+        error={initError || error || new Error('Unknown theme initialization error')}
         onRetry={handleRetry}
       />
     );
