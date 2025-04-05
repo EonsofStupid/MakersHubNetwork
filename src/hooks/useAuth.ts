@@ -2,16 +2,13 @@
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * Hook for accessing authentication state
  */
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
-  const [isInitializing, setIsInitializing] = useState(false);
-  
-  // Track if initialization has been attempted
   const initAttemptedRef = useRef(false);
   
   // Use a selector to extract only what we need from the store
@@ -50,23 +47,19 @@ export function useAuth() {
       return;
     }
     
-    // Only initialize if needed and not already initializing
-    if (status === 'idle' && !initialized && !isInitializing) {
+    // Only initialize if needed
+    if (!initialized && status === 'idle') {
+      logger.info('Auto-initializing auth from useAuth hook');
       initAttemptedRef.current = true;
-      setIsInitializing(true);
       
-      // Use an IIFE to handle async initialization
-      (async () => {
-        try {
-          await initialize();
-        } catch (err) {
+      // Use setTimeout to break potential sync issues
+      setTimeout(() => {
+        initialize().catch(err => {
           logger.error('Failed to initialize auth', { details: err });
-        } finally {
-          setIsInitializing(false);
-        }
-      })();
+        });
+      }, 0);
     }
-  }, [status, initialize, initialized, logger, isInitializing]);
+  }, [status, initialize, initialized, logger]);
 
   const isSuperAdmin = roles.includes('super_admin');
 
@@ -85,7 +78,7 @@ export function useAuth() {
     session,
     roles,
     status,
-    isLoading: isLoading || isInitializing,
+    isLoading,
     error,
     isAuthenticated,
     isAdmin: isAdmin(),
