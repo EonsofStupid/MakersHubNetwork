@@ -93,6 +93,9 @@ export function DynamicKeyframes() {
           animation: particles-2 8s linear infinite;
         }
         .mainnav-data-stream::before {
+          content: '';
+          position: absolute;
+          inset: 0;
           background-image: linear-gradient(90deg, 
             rgba(16, 20, 24, 0) 0%,
             rgba(0, 240, 255, 0.5) 20%,
@@ -105,6 +108,8 @@ export function DynamicKeyframes() {
           animation: mainnav-stream 8s linear infinite;
         }
         .mainnav-glitch-particles::before {
+          content: '';
+          position: absolute;
           opacity: 0.5;
           width: 3px;
           height: 3px;
@@ -124,6 +129,8 @@ export function DynamicKeyframes() {
           animation: mainnav-particles-1 6s linear infinite;
         }
         .mainnav-glitch-particles::after {
+          content: '';
+          position: absolute;
           opacity: 0.3;
           width: 4px;
           height: 4px;

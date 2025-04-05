@@ -22,7 +22,7 @@ export interface DesignTokensStructure {
   colors?: Record<string, string>;
   spacing?: Record<string, any>;
   typography?: TypographyTokens;
-  effects?: {
+  effects: {
     shadows: Record<string, any>;
     blurs: Record<string, any>;
     gradients: Record<string, any>;
