@@ -1,16 +1,17 @@
 
 import { createContext } from 'react';
-import { AuthUser } from '../types/auth.types';
-import { Session } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
+import { AuthStatus } from '../store/auth.store';
 
-export interface AuthContextValue {
-  user: AuthUser | null;
+export interface AuthContextState {
+  user: User | null;
   session: Session | null;
+  status: AuthStatus;
 }
 
-// Create the context with default values
-export const AuthContext = createContext<AuthContextValue>({
+// Default context value
+export const AuthContext = createContext<AuthContextState>({
   user: null,
-  session: null
+  session: null,
+  status: 'idle',
 });
-

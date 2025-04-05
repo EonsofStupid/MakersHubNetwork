@@ -1,9 +1,10 @@
+
 import { ReactNode, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { UserRole } from "@/types/auth.types"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/hooks/useAuth"
-import { useAdminAccess } from "@/admin/hooks/useAdminAccess"
+import { useAuthState } from "@/auth/hooks/useAuthState"
+import { useAdminAccess } from "@/hooks/useAdminAccess"
 import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/logging"
 
@@ -19,8 +20,8 @@ export const AuthGuard = ({ children, requiredRoles, adminOnly }: AuthGuardProps
   const { toast } = useToast()
   const logger = useLogger("AuthGuard", LogCategory.AUTH)
   
-  // Use centralized auth
-  const { isLoading, status, roles, user } = useAuth()
+  // Use centralized auth state - avoid initialization loops
+  const { isLoading, status, roles, user } = useAuthState()
   const { hasAdminAccess } = useAdminAccess()
 
   const isAuthenticated = status === "authenticated" && !!user?.id

@@ -1,19 +1,29 @@
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { errorToObject } from '@/shared/utils/render';
 
+/**
+ * Hook to check if the current user has admin access
+ * This version uses the centralized auth state and avoids circular dependencies
+ */
 export function useAdminAccess() {
   const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
   const { user, roles, isLoading, status, initialized } = useAuthState();
   const isAuthenticated = status === 'authenticated';
   const logger = useLogger("AdminAccess", LogCategory.AUTH);
+  const initAttemptedRef = useRef<boolean>(false);
   
   // Initialize admin data
   const initializeAdmin = useCallback(async () => {
     try {
+      if (initAttemptedRef.current) {
+        return;
+      }
+      
+      initAttemptedRef.current = true;
       logger.info("Initializing admin access check...");
       
       if (!user) {
@@ -40,9 +50,15 @@ export function useAdminAccess() {
 
   // Check admin access on mount and when auth state changes
   useEffect(() => {
+    // Reset initialization flag when dependencies change
+    initAttemptedRef.current = false;
+    
     // Only initialize if auth is initialized
-    if (initialized) {
+    if (initialized && user) {
       initializeAdmin();
+    } else if (initialized && !user) {
+      // If auth is initialized but no user, set admin access to false
+      setHasAdminAccess(false);
     }
   }, [initializeAdmin, initialized, user, roles]);
 

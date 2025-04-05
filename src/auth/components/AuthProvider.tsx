@@ -14,14 +14,12 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const authStore = useAuthStore();
-  const { user, session, setSession, initialize, initialized } = authStore;
+  const { user, session, setSession, initialize, initialized, status } = useAuthStore();
   
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
-  const initAttemptedRef = useRef<boolean>(false);
   const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
   const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cycleCountRef = useRef<number>(0);
+  const initAttemptedRef = useRef<boolean>(false);
   
   // Get theme loading status to ensure correct initialization order
   const { isLoaded: themeLoaded } = useSiteTheme();
@@ -68,15 +66,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   
   // Initialize auth only once after theme is loaded
   useEffect(() => {
-    // Detect potential infinite initialization loops
-    cycleCountRef.current += 1;
-    if (cycleCountRef.current > 5) {
-      logger.warn('Possible auth initialization cycle detected', {
-        details: { cycleCount: cycleCountRef.current, initialized, themeLoaded }
-      });
-      return; // Prevent further execution to break potential loops
-    }
-    
     // Wait for theme to be loaded first
     if (!themeLoaded) {
       return;
@@ -104,7 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   
   // Provide the current auth state, whether authenticated or not
   return (
-    <AuthContext.Provider value={{ user, session: session as Session | null }}>
+    <AuthContext.Provider value={{ user, session: session as Session | null, status }}>
       {children}
     </AuthContext.Provider>
   );
