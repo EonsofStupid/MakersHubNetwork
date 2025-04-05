@@ -1,8 +1,8 @@
 
-import React, { useCallback, memo } from "react";
+import React, { useCallback, memo, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthState } from "@/auth/hooks/useAuthState";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -13,12 +13,18 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Settings, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAdminAccess } from "@/hooks/useAdminAccess";
+
+// IMPORTANT: Use useAuthState instead of useAuth to prevent circular dependencies
+// and useAdminAccess is replaced with a simpler check to avoid circular dependencies
 
 // Memoize the component to prevent unnecessary rerenders
 export const AuthSection = memo(() => {
-  const { user, logout } = useAuth();
-  const { hasAdminAccess } = useAdminAccess();
+  const { user, roles, logout, status } = useAuthState();
+  
+  // Determine admin access directly without the hook to avoid circular dependencies
+  const hasAdminAccess = useMemo(() => {
+    return roles.includes('admin') || roles.includes('super_admin');
+  }, [roles]);
   
   // Handle avatar click with animation and effects
   // Using useCallback to prevent recreating this function on each render

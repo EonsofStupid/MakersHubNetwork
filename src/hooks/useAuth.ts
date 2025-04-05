@@ -7,13 +7,14 @@ import { errorToObject } from '@/shared/utils/render';
 
 /**
  * Hook for accessing authentication state
- * Handles initialization of auth when needed
+ * Uses ref to track initialization to prevent infinite loops
  */
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
   
   // Extract only what we need from the store to prevent unnecessary re-renders
+  // Use selector function pattern for better performance
   const authState = useAuthStore(state => ({
     user: state.user,
     session: state.session,
@@ -22,7 +23,6 @@ export function useAuth() {
     isLoading: state.isLoading,
     error: state.error,
     hasRole: state.hasRole,
-    isAuthenticated: state.status === 'authenticated',
     isAdmin: state.isAdmin,
     logout: state.logout,
     initialize: state.initialize,
@@ -41,12 +41,14 @@ export function useAuth() {
       logger.info('Auto-initializing auth from useAuth hook');
       initAttemptedRef.current = true;
       
-      // Use a timeout to break potential circular dependencies
-      setTimeout(() => {
+      // Use setTimeout to break potential circular dependencies
+      const timeoutId = setTimeout(() => {
         authState.initialize().catch(err => {
           logger.error('Failed to initialize auth', { details: errorToObject(err) });
         });
       }, 50);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [authState.status, authState.initialized]); // We deliberately omit initialize and logger
   

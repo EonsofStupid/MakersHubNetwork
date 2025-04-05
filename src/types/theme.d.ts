@@ -4,7 +4,7 @@ export interface Theme {
   name: string;
   description?: string;
   status: 'draft' | 'published' | 'archived';
-  is_default: boolean;  // Must be a boolean, not optional
+  is_default: boolean;
   created_by?: string;
   created_at: string;
   updated_at: string;
@@ -86,6 +86,11 @@ export interface ThemeLogDetails {
   admin?: boolean;
   database?: boolean;
   details?: Record<string, unknown>;
+  // Added for the TypeScript errors
+  errorName?: string;
+  reason?: string;
+  source?: string;
+  component?: string;
 }
 
 export type ThemeContext = 'site' | 'admin' | 'chat';
