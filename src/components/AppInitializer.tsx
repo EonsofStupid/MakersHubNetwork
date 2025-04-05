@@ -4,7 +4,6 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { Skeleton } from './ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { useAuthStore } from '@/auth/store/auth.store';
 
 interface AppInitializerProps {
   children: React.ReactNode;
@@ -15,47 +14,53 @@ export function AppInitializer({ children }: AppInitializerProps) {
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
   const { toast } = useToast();
   const initMessageShownRef = useRef<boolean>(false);
+  const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
-  // Only access the status and error from auth store, do not trigger initialization here
-  const { status, error, initialized } = useAuthStore(state => ({
-    status: state.status,
-    error: state.error,
-    initialized: state.initialized,
-  }));
+  // Get auth state directly from localStorage to avoid circular dependencies
+  const authStatus = localStorage.getItem('auth-storage') 
+    ? JSON.parse(localStorage.getItem('auth-storage') || '{}')?.state?.status || 'idle'
+    : 'idle';
   
+  const initialized = localStorage.getItem('auth-storage') 
+    ? JSON.parse(localStorage.getItem('auth-storage') || '{}')?.state?.initialized || false
+    : false;
+    
   useEffect(() => {
     // Log auth status change, but only once per render to avoid loops
     if (!initMessageShownRef.current) {
       logger.info('App initializing, auth status:', { 
-        details: { status } 
+        details: { status: authStatus } 
       });
       initMessageShownRef.current = true;
     }
     
     // Initialize app with small timeout to allow other processes to complete
-    const timer = setTimeout(() => {
-      if (error) {
-        logger.error('Auth initialization error:', { details: error });
-        toast({
-          title: 'Authentication Error',
-          description: 'There was a problem loading your authentication state.',
-          variant: 'destructive',
-        });
-      }
-      
-      // Don't set loading to false until auth is initialized
-      if (initialized || status !== 'idle') {
+    // Use ref for timeout to properly clean up
+    initTimeoutRef.current = setTimeout(() => {
+      // Only set loading to false once we have some information on auth state
+      if (initialized || authStatus !== 'idle') {
         setIsLoading(false);
+      } else {
+        // If auth is still initializing after a timeout, render app anyway
+        const renderTimeout = setTimeout(() => {
+          setIsLoading(false);
+        }, 2000); // Max wait time for auth
+        
+        return () => clearTimeout(renderTimeout);
       }
     }, 500);
     
-    return () => clearTimeout(timer);
-  }, [logger, status, error, toast, initialized]);
+    return () => {
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+      }
+    };
+  }, [logger, authStatus, initialized]);
   
   // Reset the flag when dependencies change
   useEffect(() => {
     initMessageShownRef.current = false;
-  }, [status, error, initialized]);
+  }, [authStatus, initialized]);
   
   // Show minimal loading state while app is initializing
   if (isLoading) {
