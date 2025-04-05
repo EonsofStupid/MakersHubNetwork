@@ -1,61 +1,72 @@
 
 import React from 'react';
+import { Check, Info, AlertCircle, AlertTriangle } from 'lucide-react';
 import { LogLevel } from '../constants/log-level';
-import { renderUnknownAsNode } from '@/shared/utils/render';
-import { AlertCircle, Check, Info, WarningTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface InlineLogIndicatorProps {
-  level: LogLevel;
+export interface InlineLogIndicatorProps {
+  level?: LogLevel;
   message: string | React.ReactNode;
-  compact?: boolean;
+  variant?: 'default' | 'compact';
   className?: string;
+  onClick?: () => void;
 }
 
 export function InlineLogIndicator({
-  level,
+  level = LogLevel.INFO,
   message,
-  compact = false,
-  className = '',
+  variant = 'default',
+  className,
+  onClick
 }: InlineLogIndicatorProps) {
-  // Get icon and color based on log level
-  const getIconAndColor = () => {
+  // Determine icon based on log level
+  const getIcon = () => {
     switch (level) {
       case LogLevel.ERROR:
       case LogLevel.CRITICAL:
-        return {
-          icon: <AlertCircle className={compact ? "h-3 w-3" : "h-4 w-4"} />,
-          textColor: 'text-destructive',
-          bgColor: 'bg-destructive/10'
-        };
+        return <AlertCircle className="h-4 w-4 text-destructive" />;
       case LogLevel.WARN:
-        return {
-          icon: <WarningTriangle className={compact ? "h-3 w-3" : "h-4 w-4"} />,
-          textColor: 'text-amber-500',
-          bgColor: 'bg-amber-500/10'
-        };
+        return <AlertTriangle className="h-4 w-4 text-amber-500" />;
       case LogLevel.SUCCESS:
-        return {
-          icon: <Check className={compact ? "h-3 w-3" : "h-4 w-4"} />,
-          textColor: 'text-green-500',
-          bgColor: 'bg-green-500/10'
-        };
+        return <Check className="h-4 w-4 text-green-500" />;
       case LogLevel.INFO:
       default:
-        return {
-          icon: <Info className={compact ? "h-3 w-3" : "h-4 w-4"} />,
-          textColor: 'text-blue-500',
-          bgColor: 'bg-blue-500/10'
-        };
+        return <Info className="h-4 w-4 text-blue-500" />;
     }
   };
 
-  const { icon, textColor, bgColor } = getIconAndColor();
+  // Get background color based on log level
+  const getBgColor = () => {
+    switch (level) {
+      case LogLevel.ERROR:
+      case LogLevel.CRITICAL:
+        return 'bg-destructive/10';
+      case LogLevel.WARN:
+        return 'bg-amber-500/10';
+      case LogLevel.SUCCESS:
+        return 'bg-green-500/10';
+      case LogLevel.INFO:
+      default:
+        return 'bg-blue-500/10';
+    }
+  };
+
+  const isCompact = variant === 'compact';
 
   return (
-    <div className={`inline-flex items-center gap-1.5 ${bgColor} ${textColor} rounded-md px-2 py-0.5 text-xs font-medium ${className}`}>
-      {icon}
-      <span className="max-w-[150px] truncate">
-        {typeof message === 'string' ? message : renderUnknownAsNode(message)}
+    <div
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-2 rounded-md text-xs p-1',
+        getBgColor(),
+        onClick && 'cursor-pointer hover:opacity-80',
+        isCompact ? 'px-1.5' : 'px-2 py-1',
+        className
+      )}
+    >
+      {getIcon()}
+      <span className={isCompact ? 'line-clamp-1' : ''}>
+        {message}
       </span>
     </div>
   );

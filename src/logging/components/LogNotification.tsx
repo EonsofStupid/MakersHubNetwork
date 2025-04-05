@@ -1,106 +1,94 @@
 
 import React from 'react';
 import { LogLevel } from '../constants/log-level';
-import { LogCategory } from '../types';
-import { renderUnknownAsNode } from '@/shared/utils/render';
-import { AlertCircle, Check, Info, WarningTriangle, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Check, Info, AlertCircle, AlertTriangle } from 'lucide-react';
 
 interface LogNotificationProps {
   level: LogLevel;
   message: string | React.ReactNode;
-  category?: LogCategory;
   timestamp?: Date;
-  onDismiss?: () => void;
+  onClose?: () => void;
   className?: string;
-  duration?: number;
 }
 
 export function LogNotification({
   level,
   message,
-  category,
-  timestamp = new Date(),
-  onDismiss,
-  className = '',
-  duration,
+  timestamp,
+  onClose,
+  className
 }: LogNotificationProps) {
-  // Get icon and classes based on log level
-  const getIconAndClasses = () => {
+  // Get icon based on log level
+  const getIcon = () => {
     switch (level) {
       case LogLevel.ERROR:
       case LogLevel.CRITICAL:
-        return {
-          icon: <AlertCircle className="h-5 w-5" />,
-          bgColor: 'bg-destructive/15',
-          borderColor: 'border-destructive'
-        };
+        return <AlertCircle className="h-4 w-4 text-destructive" />;
       case LogLevel.WARN:
-        return {
-          icon: <WarningTriangle className="h-5 w-5" />,
-          bgColor: 'bg-amber-500/15',
-          borderColor: 'border-amber-500'
-        };
+        return <AlertTriangle className="h-4 w-4 text-amber-500" />;
       case LogLevel.SUCCESS:
-        return {
-          icon: <Check className="h-5 w-5" />,
-          bgColor: 'bg-green-500/15',
-          borderColor: 'border-green-500'
-        };
+        return <Check className="h-4 w-4 text-green-500" />;
       case LogLevel.INFO:
       default:
-        return {
-          icon: <Info className="h-5 w-5" />,
-          bgColor: 'bg-blue-500/15',
-          borderColor: 'border-blue-500'
-        };
+        return <Info className="h-4 w-4 text-blue-500" />;
     }
   };
 
-  const { icon, bgColor, borderColor } = getIconAndClasses();
-  
-  // Auto-dismiss notification after duration
-  React.useEffect(() => {
-    if (duration && onDismiss) {
-      const timer = setTimeout(onDismiss, duration);
-      return () => clearTimeout(timer);
+  // Get border color based on log level
+  const getBorderColor = () => {
+    switch (level) {
+      case LogLevel.ERROR:
+      case LogLevel.CRITICAL:
+        return 'border-destructive';
+      case LogLevel.WARN:
+        return 'border-amber-500';
+      case LogLevel.SUCCESS:
+        return 'border-green-500';
+      case LogLevel.INFO:
+      default:
+        return 'border-blue-500';
     }
-  }, [duration, onDismiss]);
+  };
 
   return (
-    <div 
-      className={`${bgColor} ${borderColor} border rounded-lg shadow-lg p-4 max-w-md ${className}`}
-      role="alert"
+    <div
+      className={cn(
+        'rounded-md shadow-sm border-l-2 bg-background px-4 py-3',
+        getBorderColor(),
+        className
+      )}
     >
-      <div className="flex">
-        <div className="flex-shrink-0">
-          {icon}
-        </div>
-        <div className="ml-3 flex-1">
-          <p className="text-sm font-medium">
-            {typeof message === 'string' ? message : renderUnknownAsNode(message)}
-          </p>
-          <div className="mt-1 flex justify-between items-center text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              {category && (
-                <span className="font-medium">{category}</span>
-              )}
-              <time dateTime={timestamp.toISOString()}>
-                {timestamp.toLocaleTimeString()}
-              </time>
-            </div>
-            {onDismiss && (
-              <button 
-                type="button"
-                onClick={onDismiss}
-                className="ml-auto -my-1.5 -mr-1.5 rounded-md p-1.5 hover:bg-muted/50 focus:ring-2 focus:outline-none"
-              >
-                <span className="sr-only">Dismiss</span>
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
+      <div className="flex items-center">
+        <div className="flex-shrink-0 mr-3">{getIcon()}</div>
+        <div className="flex-1 text-sm">{message}</div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="ml-auto flex-shrink-0 text-muted-foreground hover:text-foreground"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        )}
       </div>
+      {timestamp && (
+        <div className="mt-1 text-xs text-muted-foreground">
+          {timestamp.toLocaleTimeString()}
+        </div>
+      )}
     </div>
   );
 }

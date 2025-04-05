@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/Home";
 import AboutPage from "./pages/About";
 import LoginPage from "./pages/Login";
-import AdminLayout from "./admin/components/layouts/AdminLayout";
+import { AdminLayout } from "./admin/components/layouts/AdminLayout";
 import AdminDashboard from "./admin/pages/Dashboard";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { DebugProvider } from "@/admin/providers/DebugProvider";

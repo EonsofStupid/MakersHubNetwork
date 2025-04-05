@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
  * A hook that debounces a value, only updating after a delay has passed
@@ -37,7 +37,8 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
   fn: T,
   delay: number
 ): (...args: Parameters<T>) => void {
-  const timerRef = useState<ReturnType<typeof setTimeout> | null>(null)[0] as React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
+  // Create a ref to store the timeout ID
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Clear the timeout when component unmounts
   useEffect(() => {
@@ -46,7 +47,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
         clearTimeout(timerRef.current);
       }
     };
-  }, [timerRef]);
+  }, []);
 
   return useCallback(
     (...args: Parameters<T>) => {
@@ -58,6 +59,6 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
         fn(...args);
       }, delay);
     },
-    [fn, delay, timerRef]
+    [fn, delay]
   );
 }
