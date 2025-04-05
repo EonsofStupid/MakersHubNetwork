@@ -7,7 +7,9 @@ import { SiteThemeProvider } from './SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
+import { ThemeErrorState } from './info/ThemeErrorState';
 import { getTheme, ensureDefaultTheme } from '@/services/themeService';
+import { Theme } from '@/types/theme';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -15,7 +17,8 @@ interface ThemeInitializerProps {
 
 export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const [isInitializing, setIsInitializing] = useState(true);
-  const { setTheme, isLoading } = useThemeStore();
+  const [error, setError] = useState<Error | null>(null);
+  const { setTheme, isLoading, currentTheme } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ThemeInitializer', LogCategory.UI);
   const initAttemptedRef = useRef<boolean>(false);
@@ -59,27 +62,42 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           }
         } catch (error) {
           logger.error('Error from theme service:', { details: error });
+          setError(error instanceof Error ? error : new Error(String(error)));
         }
         
         // Fallback: If the above fails, try to ensure a default theme exists
-        const themeId = await ensureDefaultTheme();
-        
-        if (themeId) {
-          // Then set the theme using the ID via the store (which will now use our service)
-          await setTheme(themeId);
-          logger.info('Theme initialized successfully with ID:', { details: { themeId } });
-        } else {
-          // Use the 'default' keyword to get the default theme (will use fallback)
-          await setTheme('default');
-          logger.info('Using fallback theme after failed initialization');
+        try {
+          const themeId = await ensureDefaultTheme();
+          
+          if (themeId) {
+            // Then set the theme using the ID via the store (which will now use our service)
+            const { theme } = await getTheme(themeId);
+            await setTheme(theme);
+            logger.info('Theme initialized successfully with ID:', { details: { themeId } });
+          } else {
+            // Use the fallback theme as last resort
+            await setTheme((await getTheme()).theme);
+            logger.info('Using fallback theme after failed initialization');
+            toast({
+              title: 'Theme Notice',
+              description: 'Using fallback theme. Some styles may be limited.',
+              variant: "default",
+            });
+          }
+        } catch (secondError) {
+          logger.error('Failed in fallback initialization:', { details: secondError });
+          setError(secondError instanceof Error ? secondError : new Error(String(secondError)));
+          
           toast({
-            title: 'Theme Notice',
-            description: 'Using fallback theme. Some styles may be limited.',
-            variant: "default",
+            title: 'Theme Error',
+            description: 'Failed to load theme. Using default styling.',
+            variant: "destructive",
           });
         }
-      } catch (error) {
-        logger.error('Error initializing theme:', { details: error });
+      } catch (finalError) {
+        logger.error('Error initializing theme:', { details: finalError });
+        setError(finalError instanceof Error ? finalError : new Error(String(finalError)));
+        
         // Despite errors, don't block the app - use basic styling
         toast({
           title: 'Theme Error',
@@ -102,11 +120,22 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   // Render content or loading state
   const showLoadingState = isInitializing || isLoading;
   
+  // Handle retry
+  const handleRetry = () => {
+    setError(null);
+    setIsInitializing(true);
+    initAttemptedRef.current = false;
+  };
+  
   // Always render the app - the SiteThemeProvider will handle showing loading states if needed
   return (
     <SiteThemeProvider isInitializing={showLoadingState}>
       <DynamicKeyframes />
-      {showLoadingState ? (
+      {error ? (
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <ThemeErrorState error={error} onRetry={handleRetry} />
+        </div>
+      ) : showLoadingState ? (
         <div className="flex min-h-[60vh] items-center justify-center">
           <ThemeLoadingState />
         </div>

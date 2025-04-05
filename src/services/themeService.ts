@@ -1,8 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Theme } from "@/types/theme";
-import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging";
 
 // Create a logger for the theme service
 const logger = {
@@ -26,12 +24,18 @@ export async function getTheme(themeId?: string): Promise<{theme: Theme, isFallb
         operation: 'get-theme',
         themeId,
         isDefault: !themeId,
+        context: 'site',
       },
     });
     
     if (error) {
       logger.error('Error fetching theme', { error });
       throw error;
+    }
+    
+    if (!data || !data.theme) {
+      logger.error('No theme data returned', { data });
+      throw new Error('No theme data returned from service');
     }
     
     logger.info('Theme fetched successfully', { 
@@ -41,7 +45,7 @@ export async function getTheme(themeId?: string): Promise<{theme: Theme, isFallb
     
     return {
       theme: data.theme as Theme,
-      isFallback: data.isFallback
+      isFallback: !!data.isFallback
     };
   } catch (error) {
     logger.error('Failed to fetch theme', { error });
@@ -75,6 +79,11 @@ export async function updateTheme(themeId: string, theme: Partial<Theme>): Promi
     if (error) {
       logger.error('Error updating theme', { error });
       throw error;
+    }
+    
+    if (!data || !data.theme) {
+      logger.error('No theme data returned after update', { data });
+      throw new Error('No theme data returned from service');
     }
     
     logger.info('Theme updated successfully', { themeId: data.theme.id });
@@ -112,6 +121,11 @@ export async function createTheme(theme: Partial<Theme>): Promise<Theme> {
       throw error;
     }
     
+    if (!data || !data.theme) {
+      logger.error('No theme data returned after creation', { data });
+      throw new Error('No theme data returned from service');
+    }
+    
     logger.info('Theme created successfully', { themeId: data.theme.id });
     return data.theme as Theme;
   } catch (error) {
@@ -131,7 +145,7 @@ export async function ensureDefaultTheme(): Promise<string | null> {
     const { theme, isFallback } = await getTheme();
     
     // If we got a real theme (not the fallback), return its ID
-    if (!isFallback) {
+    if (!isFallback && theme.id) {
       logger.info('Found existing default theme', { id: theme.id });
       return theme.id;
     }
@@ -151,7 +165,7 @@ export async function ensureDefaultTheme(): Promise<string | null> {
       status: 'published',
       is_default: true,
       version: 1,
-      design_tokens: theme.design_tokens, // Use the fallback theme's tokens
+      design_tokens: theme.design_tokens,
       component_tokens: [],
       composition_rules: {},
       cached_styles: {}

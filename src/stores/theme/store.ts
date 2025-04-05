@@ -2,7 +2,6 @@
 import { create } from "zustand";
 import { ThemeState } from "./types";
 import { Theme, ComponentTokens } from "@/types/theme";
-import { Json } from "@/integrations/supabase/types";
 import { getTheme } from "@/services/themeService";
 
 export const useThemeStore = create<ThemeState>((set) => ({
@@ -43,7 +42,13 @@ export const useThemeStore = create<ThemeState>((set) => ({
         : [];
 
       // Set the theme in the store
-      set({ currentTheme: { ...theme, component_tokens: componentTokens }, isLoading: false });
+      set({ 
+        currentTheme: { 
+          ...theme, 
+          component_tokens: componentTokens 
+        }, 
+        isLoading: false 
+      });
     } catch (error) {
       console.error("Error fetching theme:", error);
       set({ 
