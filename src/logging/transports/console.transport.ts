@@ -2,7 +2,7 @@
 import { LogEntry, LogLevel, LogTransport } from '../types';
 
 // Color mapping for log levels
-const LOG_LEVEL_COLORS = {
+const LOG_LEVEL_COLORS: Record<LogLevel, string> = {
   [LogLevel.TRACE]: '#6B7280', // gray-500
   [LogLevel.DEBUG]: '#3B82F6', // blue-500
   [LogLevel.INFO]: '#10B981',  // green-500
@@ -14,7 +14,7 @@ const LOG_LEVEL_COLORS = {
 };
 
 // Name mapping for log levels
-const LOG_LEVEL_NAMES = {
+const LOG_LEVEL_NAMES: Record<LogLevel, string> = {
   [LogLevel.TRACE]: 'TRACE',
   [LogLevel.DEBUG]: 'DEBUG',
   [LogLevel.INFO]: 'INFO',

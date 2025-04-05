@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { Button } from '@/components/ui/button';
@@ -123,7 +124,7 @@ export function ThemeSettings() {
                     checked={currentTheme.context === 'dark'} 
                     onCheckedChange={(checked) => 
                       updateCurrentTheme({ 
-                        context: checked ? 'site' : 'admin' 
+                        context: checked ? 'dark' : 'light' 
                       })
                     }
                   />
