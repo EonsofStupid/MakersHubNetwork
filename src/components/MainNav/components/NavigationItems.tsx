@@ -1,90 +1,74 @@
-import { Link } from "react-router-dom";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
+
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
+import { motion } from "framer-motion";
+
+interface NavItem {
+  name: string;
+  href: string;
+}
 
 export const NavigationItems = () => {
+  const { pathname } = useLocation();
+  const { componentStyles } = useSiteTheme();
+  
+  const styles = componentStyles?.MainNav || {
+    nav: 'flex items-center gap-1 md:gap-2',
+    navItem: 'px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors relative group',
+    navItemActive: 'text-primary',
+    navItemActiveIndicator: 'absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-center'
+  };
+  
+  // Mock nav items - these could come from a configuration or database
+  const navItems: NavItem[] = [
+    { name: "Home", href: "/" },
+    { name: "Features", href: "/features" },
+    { name: "Pricing", href: "/pricing" },
+    { name: "About", href: "/about" },
+    { name: "Blog", href: "/blog" },
+    { name: "Contact", href: "/contact" },
+  ];
+  
   return (
-    <NavigationMenu>
-      <NavigationMenuList>
-        <NavigationMenuItem>
-          <NavigationMenuTrigger className="mad-scientist-hover">Builder</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2">
-              <li className="row-span-3">
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/builder"
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md"
-                  >
-                    <div className="mb-2 mt-4 text-lg font-medium text-white">
-                      Start Building
-                    </div>
-                    <p className="text-sm leading-tight text-white/90">
-                      Create your custom 3D printer build with our interactive builder
-                    </p>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/guides"
-                    className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                  >
-                    Build Guides
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
-
-        <NavigationMenuItem>
-          <NavigationMenuTrigger className="mad-scientist-hover">Printer Parts</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid w-[400px] gap-3 p-4 md:w-[600px] md:grid-cols-2">
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/parts/extrusion"
-                    className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                  >
-                    Aluminum Extrusion
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/parts/sensors"
-                    className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                  >
-                    ABL Sensors
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
-
-        <NavigationMenuItem>
-          <Link to="/builds" className="mad-scientist-hover group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
-            Completed Builds
+    <nav className={cn("hidden md:flex", styles.nav)}>
+      {navItems.map((item) => {
+        const isActive = pathname === item.href;
+        
+        return (
+          <Link
+            key={item.name}
+            to={item.href}
+            className={cn(
+              styles.navItem,
+              isActive && styles.navItemActive,
+              "group"
+            )}
+          >
+            {item.name}
+            
+            {/* Animated underline indicator */}
+            {isActive && (
+              <motion.span
+                className={cn(styles.navItemActiveIndicator, "bg-primary")}
+                layoutId="navigation-underline"
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 30,
+                }}
+              />
+            )}
+            
+            {/* Hover effect */}
+            <span className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-md" />
+            
+            {/* Bottom border on hover */}
+            <span className="absolute bottom-0 left-0 w-full h-[1px] bg-primary/30 scale-x-0 group-hover:scale-x-100 transition-transform origin-center" />
           </Link>
-        </NavigationMenuItem>
-
-        <NavigationMenuItem>
-          <Link to="/membership" className="mad-scientist-hover group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
-            Site Membership
-          </Link>
-        </NavigationMenuItem>
-      </NavigationMenuList>
-    </NavigationMenu>
+        );
+      })}
+    </nav>
   );
 };

@@ -7,7 +7,7 @@ import { SearchButton } from "./components/SearchButton";
 import { AuthSection } from "./components/AuthSection";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Link } from "react-router-dom";
-import { Shield, Settings } from "lucide-react";
+import { Shield, Wrench, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { useLogger } from "@/hooks/use-logger";
@@ -26,12 +26,17 @@ export function MainNav() {
   const styles = componentStyles?.MainNav || {
     container: {
       base: 'fixed top-0 w-full z-50 transition-all duration-300',
-      animated: 'mainnav-morph'
+      animated: 'animate-morph-header'
     },
-    header: 'mainnav-header',
+    header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30',
     dataStream: 'relative',
     dataStreamEffect: 'mainnav-data-stream',
     glitchParticles: 'mainnav-glitch-particles',
+    nav: 'flex items-center gap-1 md:gap-2',
+    navItem: 'px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors relative group',
+    navItemActive: 'text-primary',
+    navItemActiveIndicator: 'absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-center',
+    mobileToggle: 'block md:hidden'
   };
 
   // Handle scroll position to apply trapezoid shape
@@ -88,7 +93,7 @@ export function MainNav() {
         "mainnav-container",
         "mainnav-header",
         "mainnav-gradient",
-        isLoaded && (styles.container?.animated || "mainnav-morph"),
+        isLoaded && (styles.container?.animated || "animate-morph-header"),
         isScrolled && "mainnav-scrolled transform-gpu"
       )}
       style={{
@@ -102,29 +107,33 @@ export function MainNav() {
         <div className="absolute inset-0 bg-black/40"></div>
       </div>
       
+      {/* Background effects container - positioned to cover the entire TopNav */}
       <div className="mainnav-effects-wrapper absolute inset-0 w-full h-full overflow-hidden">
         <div 
           ref={dataStreamRef}
           className={cn(
-            "w-full h-full pointer-events-none", 
-            styles.dataStream,
+            "absolute inset-0 w-full h-full pointer-events-none", 
             styles.dataStreamEffect || "mainnav-data-stream"
           )} 
         />
         <div 
           ref={glitchParticlesRef}
           className={cn(
-            "w-full h-full pointer-events-none",
+            "absolute inset-0 w-full h-full pointer-events-none",
             styles.glitchParticles || "mainnav-glitch-particles"
           )} 
         />
       </div>
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="flex items-center justify-between py-4">
+      
+      {/* Main navigation content - properly centered */}
+      <div className="container mx-auto flex items-center justify-between h-16 px-4 relative z-10">
+        <div className="flex items-center justify-between w-full">
           <Logo />
           <NavigationItems />
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <SearchButton />
+            
+            {/* Admin access button with wrench icon */}
             {hasAdminAccess && (
               <Link to="/admin">
                 <Button 
@@ -132,22 +141,13 @@ export function MainNav() {
                   size="sm"
                   className="flex items-center gap-1 group text-primary hover:text-white hover:bg-primary/30 border-primary/40 relative overflow-hidden"
                 >
-                  <Shield className="h-4 w-4 group-hover:animate-pulse" />
+                  <Wrench className="h-4 w-4 group-hover:animate-pulse" />
                   <span>Admin</span>
                   <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
                 </Button>
               </Link>
             )}
-            {hasAdminAccess && (
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="text-primary hover:text-white hover:bg-primary/30 relative"
-              >
-                <Settings className="h-5 w-5 animate-spin-slow" />
-                <span className="absolute inset-0 rounded-full border border-primary/50 scale-0 group-hover:scale-100 transition-transform duration-300 opacity-0 group-hover:opacity-100"></span>
-              </Button>
-            )}
+            
             <AuthSection />
           </div>
         </div>

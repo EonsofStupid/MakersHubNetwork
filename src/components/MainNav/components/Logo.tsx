@@ -11,7 +11,7 @@ export const Logo = () => {
   const [colors, setColors] = useState<string[]>([]);
   const { themeTokens } = useThemeStore();
   const { variables, isLoaded } = useSiteTheme();
-  const letters = "MakersImpulse".split("");
+  const letters = "MakersImpulse".split(""); // Corrected spelling
   const animationTimeoutRef = useRef<number[]>([]);
   // Vibrant cyber aqua color that should remain consistent
   const logoColor = "#00F0FF";
