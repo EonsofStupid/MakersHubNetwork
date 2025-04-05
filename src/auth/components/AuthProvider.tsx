@@ -12,8 +12,12 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { user, session, initialized, setSession } = useAuthStore();
-  const [isInitializing, setIsInitializing] = useState(false);
+  const { user, session, initialized, setSession } = useAuthStore(state => ({
+    user: state.user,
+    session: state.session,
+    initialized: state.initialized,
+    setSession: state.setSession
+  }));
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   
   // Set up auth state change listener

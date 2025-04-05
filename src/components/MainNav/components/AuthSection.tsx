@@ -9,6 +9,7 @@ export const AuthSection = () => {
   const { status, isLoading } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
+  // Static check for authentication status instead of a derived state
   const isAuthenticated = status === "authenticated";
 
   if (isLoading) {
