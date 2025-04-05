@@ -1,20 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
 import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 import { RequirePermission } from '@/admin/components/auth/RequirePermission';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
 
 export default function DashboardPage() {
-  const logger = useLogger("DashboardPage", { category: LogCategory.ADMIN });
-  
-  useEffect(() => {
-    logger.info("Admin dashboard page initialized");
-  }, [logger]);
-  
   return (
     <RequirePermission permission={ADMIN_PERMISSIONS.ADMIN_VIEW}>
       <div className="container mx-auto p-4 space-y-6">
@@ -107,3 +99,4 @@ export default function DashboardPage() {
     </RequirePermission>
   );
 }
+

@@ -1,46 +1,15 @@
 
-import { User as SupabaseUser, Session as SupabaseSession } from '@supabase/supabase-js';
+import { AuthUser, Session } from "@supabase/supabase-js";
 
-// Auth status as const object with derived type
-export const AuthStatus = {
-  AUTHENTICATED: 'AUTHENTICATED',
-  UNAUTHENTICATED: 'UNAUTHENTICATED',
-  LOADING: 'LOADING',
-  ERROR: 'ERROR'
-} as const;
+// User roles in the system
+export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor';
 
-export type AuthStatus = typeof AuthStatus[keyof typeof AuthStatus];
+// Authentication status
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 
-// Extend the User type from Supabase
-export type User = SupabaseUser & {
-  profile?: {
-    username?: string;
-    display_name?: string;
-    avatar_url?: string;
-    bio?: string;
-  }
-};
-
-// Export Session for broader usage
-export type Session = SupabaseSession;
-
-// User roles as const object with derived type
-export const UserRole = {
-  ADMIN: 'admin',
-  SUPER_ADMIN: 'super_admin',
-  EDITOR: 'editor',
-  MAKER: 'maker',
-  BUILDER: 'builder',
-  VIEWER: 'viewer',
-  USER: 'user',
-  MODERATOR: 'moderator'
-} as const;
-
-export type UserRole = typeof UserRole[keyof typeof UserRole];
-
-// Auth store state interface
+// Authentication state
 export interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
   session: Session | null;
   roles: UserRole[];
   status: AuthStatus;
@@ -50,30 +19,24 @@ export interface AuthState {
   initialized: boolean;
 }
 
-// Admin access types
-export interface AdminAccess {
-  isAdmin: boolean;
-  hasAdminAccess: boolean;
+// User profile data
+export interface UserProfile {
+  id: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+  website?: string;
+  roles?: UserRole[];
+  email?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface WithAdminAccess {
-  hasAdminAccess: boolean;
-}
+// Permission type
+export type Permission = string;
 
-// Auth store methods interface
-export interface AuthMethods {
-  setUser: (user: User | null) => void;
-  setSession: (session: Session | null) => void;
-  setRoles: (roles: UserRole[]) => void;
-  setError: (error: string | null) => void;
-  setLoading: (isLoading: boolean) => void;
-  setInitialized: (initialized: boolean) => void;
-  setStatus: (status: AuthStatus) => void;
-  hasRole: (role: UserRole) => boolean;
-  isAdmin: () => boolean;
-  initialize: () => Promise<void>;
-  logout: () => Promise<void>;
+// Role with associated permissions
+export interface RoleWithPermissions {
+  role: UserRole;
+  permissions: Permission[];
 }
-
-// Complete auth store type
-export type AuthStore = AuthState & AuthMethods;

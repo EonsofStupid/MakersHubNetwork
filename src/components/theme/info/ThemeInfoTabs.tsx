@@ -1,4 +1,3 @@
-
 import { Info, Palette, Box, Zap } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,10 +30,6 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
     onTabChange(value);
   };
 
-  // Prepare tokens for display, ensuring they match expected types
-  const designTokens = convertDesignTokensToArray(currentTheme?.design_tokens);
-  const componentTokens = convertComponentTokensToArray(currentTheme?.component_tokens);
-
   return (
     <Tabs defaultValue="info" className="w-full relative z-10" onValueChange={handleTabChange}>
       <TabsList className="w-full justify-start mb-6 bg-background/40 border border-primary/20">
@@ -59,11 +54,11 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
           </TabsContent>
 
           <TabsContent value="colors" className="space-y-4">
-            <ThemeColorSystem tokens={designTokens} />
+            <ThemeColorSystem tokens={convertDesignTokensToArray(currentTheme?.design_tokens)} />
           </TabsContent>
 
           <TabsContent value="components" className="space-y-4">
-            <ThemeComponentPreview componentTokens={componentTokens} />
+            <ThemeComponentPreview componentTokens={convertComponentTokensToArray(currentTheme?.component_tokens)} />
           </TabsContent>
 
           <TabsContent value="effects" className="space-y-4">
@@ -73,4 +68,4 @@ export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps)
       </AnimatePresence>
     </Tabs>
   );
-}
+} 

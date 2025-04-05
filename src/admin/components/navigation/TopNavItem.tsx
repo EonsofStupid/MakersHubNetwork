@@ -3,7 +3,7 @@ import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useDragDrop } from '@/admin/hooks/useDragDrop';
+import { useDragAndDrop } from '@/admin/hooks/useDragAndDrop';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { LucideIcon } from 'lucide-react';
 
@@ -29,17 +29,16 @@ export function TopNavItem({
   const itemRef = useRef<HTMLDivElement>(null);
   
   // Set up drag and drop
-  const { makeDraggable } = useDragDrop({
+  const { makeDraggable } = useDragAndDrop({
+    items: [id],
     containerId: 'top-nav-items',
-    itemId: id,
-    dragOnlyInEditMode: true
+    dragOnlyInEditMode: true,
   });
   
   // Make item draggable if in edit mode
   useEffect(() => {
     if (itemRef.current && isEditMode) {
-      const cleanup = makeDraggable(itemRef.current);
-      return cleanup;
+      return makeDraggable(itemRef.current, id);
     }
   }, [id, makeDraggable, isEditMode]);
   

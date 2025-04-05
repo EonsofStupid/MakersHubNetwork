@@ -16,7 +16,7 @@ import { InlineLogIndicator } from "@/logging/components/InlineLogIndicator";
 export default function Dashboard() {
   const navigate = useNavigate();
   const [isEditMode] = useAtom(adminEditModeAtom);
-  const logger = useLogger('Dashboard', { category: LogCategory.ADMIN });
+  const logger = useLogger('Dashboard', LogCategory.ADMIN);
   
   // Log dashboard access on mount
   useEffect(() => {

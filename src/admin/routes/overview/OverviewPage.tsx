@@ -2,15 +2,13 @@
 import React, { useEffect } from "react";
 import { AdminLayout } from "@/admin/components/AdminLayout";
 import { AdminDashboard } from "@/admin/components/dashboard/AdminDashboard";
-import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging";
 
 export default function OverviewPage() {
-  const logger = useLogger("OverviewPage", { category: LogCategory.ADMIN });
+  console.log("Rendering OverviewPage");
   
   useEffect(() => {
-    logger.info("OverviewPage mounted");
-  }, [logger]);
+    console.log("OverviewPage mounted");
+  }, []);
   
   return (
     <AdminLayout title="Admin Dashboard">

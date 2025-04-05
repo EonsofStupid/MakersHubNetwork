@@ -2,7 +2,8 @@
 import React from 'react';
 import { AlertCircle, Info, AlertTriangle, XCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { LogCategory, LogLevel } from '@/logging/types';
+import { LogCategory } from '../types';
+import { LogLevel } from '../types';
 import { safelyRenderNode } from '../utils/react';
 
 interface LogNotificationProps {
@@ -31,7 +32,6 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
       case LogLevel.ERROR:
         return <AlertCircle className="h-4 w-4" />;
       case LogLevel.CRITICAL:
-      case LogLevel.FATAL:
         return <XCircle className="h-4 w-4" />;
       case LogLevel.SUCCESS:
         return <CheckCircle className="h-4 w-4" />;
@@ -44,7 +44,6 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
     switch (level) {
       case LogLevel.ERROR:
       case LogLevel.CRITICAL:
-      case LogLevel.FATAL:
         return "destructive";
       default:
         return "default";
@@ -61,7 +60,6 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
         return 'Warning';
       case LogLevel.ERROR:
         return 'Error';
-      case LogLevel.FATAL:
       case LogLevel.CRITICAL:
         return 'Critical Error';
       case LogLevel.SUCCESS:

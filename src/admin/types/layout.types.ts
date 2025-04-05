@@ -1,138 +1,65 @@
 
-/**
- * Layout Type Definitions - Single Source of Truth
- */
+import { z } from 'zod';
 
-// Component definition
-export interface Component {
-  id: string;
-  type: string;
-  props?: Record<string, any>;
-  children?: Component[];
+// Component properties schema
+export const ComponentPropsSchema = z.record(z.any());
+
+// Component schema
+export const ComponentSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  props: ComponentPropsSchema.optional(),
+  children: z.lazy(() => z.array(ComponentSchema).optional()),
+  layout: z.record(z.any()).optional(),
+  permissions: z.array(z.string()).optional(),
+  meta: z.record(z.any()).optional(),
+});
+
+// Layout schema
+export const LayoutSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.string(),
+  scope: z.string(),
+  components: z.array(ComponentSchema),
+  version: z.number().optional(),
+  meta: z.record(z.any()).optional(),
+});
+
+// Layout skeleton from database
+export const LayoutSkeletonSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  type: z.string(),
+  scope: z.string(),
+  layout_json: z.record(z.any()),
+  version: z.number(),
+  is_active: z.boolean(),
+  is_locked: z.boolean(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  description: z.string().optional(),
+  created_by: z.string().uuid().optional(),
+  meta: z.record(z.any()).optional(),
+});
+
+// Zod types
+export type Component = z.infer<typeof ComponentSchema>;
+export type Layout = z.infer<typeof LayoutSchema>;
+export type LayoutSkeleton = z.infer<typeof LayoutSkeletonSchema>;
+
+// Additional types
+export interface ComponentRegistration {
+  component: React.ComponentType<any>;
+  defaultProps?: Record<string, any>;
   permissions?: string[];
   meta?: Record<string, any>;
 }
 
-// Layout JSON data for database storage
-export interface LayoutJsonData {
-  components: Component[];
-  version: number;
-  meta?: Record<string, any>;
-}
-
-// Layout structure
-export interface Layout {
-  id: string;
-  name: string;
-  type: string;
-  scope: string;
-  components: Component[];
-  version: number;
-  created_at: string;
-  updated_at: string;
-  is_active: boolean;
-  is_locked: boolean;
-  meta?: Record<string, any>;
-  description?: string;
-}
-
-// Layout skeleton from database
-export interface LayoutSkeleton {
-  id: string;
-  name: string;
-  type: string;
-  scope: string;
-  description?: string | null;
-  is_active: boolean;
-  is_locked: boolean;
-  layout_json: LayoutJsonData;
-  version: number;
-  created_at: string;
-  updated_at: string;
-  created_by?: string | null;
-  meta?: Record<string, any>;
-  parent_id?: string;
-  tags?: string[];
-}
-
-// Layout API response types
-export interface CreateLayoutResponse {
-  success: boolean;
-  data?: LayoutSkeleton;
-  error?: string;
-  id?: string;
-}
-
-// Helper types
-export type LayoutType = 'admin' | 'site' | 'dashboard' | 'page' | 'section';
-export type LayoutScope = 'admin' | 'site' | 'public' | 'user';
-
-/**
- * Convert a layout to JSON format for storage
- */
-export function layoutToJson(data: { components: Component[], version: number, meta?: Record<string, any> }): LayoutJsonData {
-  return {
-    components: data.components || [],
-    version: data.version || 1,
-    meta: data.meta || {}
-  };
-}
-
-/**
- * Create a default layout skeleton for initialization
- */
-export function createDefaultLayoutSkeleton(type: string, scope: string): Partial<LayoutSkeleton> {
-  return {
-    name: `Default ${type} Layout`,
-    type,
-    scope,
-    is_active: true,
-    is_locked: false,
-    layout_json: {
-      components: [],
-      version: 1
-    },
-    version: 1
-  };
-}
-
-/**
- * Create a default layout for initialization
- */
-export function createDefaultLayout(type: string, scope: string): Partial<Layout> {
-  const now = new Date().toISOString();
-  return {
-    name: `Default ${type} Layout`,
-    type,
-    scope,
-    components: [],
-    version: 1,
-    created_at: now,
-    updated_at: now,
-    is_active: true,
-    is_locked: false
-  };
-}
-
-/**
- * Parse layout JSON from database result
- */
-export function parseLayoutJson(data: any): LayoutJsonData {
-  if (!data) {
-    return { components: [], version: 1 };
-  }
-  
-  try {
-    // Handle already parsed JSON or string
-    const jsonData = typeof data === 'string' ? JSON.parse(data) : data;
-    
-    return {
-      components: Array.isArray(jsonData.components) ? jsonData.components : [],
-      version: typeof jsonData.version === 'number' ? jsonData.version : 1,
-      meta: jsonData.meta || {}
-    };
-  } catch (err) {
-    console.error('Error parsing layout JSON', err);
-    return { components: [], version: 1 };
-  }
+export interface LayoutEngineOptions {
+  fallbackLayout?: Layout;
+  onLayoutError?: (error: Error) => void;
+  layoutPermissionCheck?: (permissions: string[]) => boolean;
+  layoutCache?: boolean;
+  editMode?: boolean;
 }

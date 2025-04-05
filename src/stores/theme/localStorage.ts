@@ -1,88 +1,142 @@
 
-/**
- * Helper functions for theme localStorage persistence
- */
+import { getLogger } from '@/logging';
 
-const THEME_STORAGE_KEY = 'theme-storage';
+const THEME_STORAGE_KEY = 'site-theme-id';
+const DEFAULT_THEME_ID = 'default';
+
+const logger = getLogger('ThemeLocalStorage');
 
 /**
- * Get the theme ID from localStorage
+ * Save theme ID to localStorage
  */
-export function getThemeFromLocalStorage(): string | null {
+export function saveThemeToLocalStorage(themeId: string): void {
+  if (!themeId) {
+    logger.warn('Attempted to save empty theme ID to localStorage', { details: { themeId } });
+    return;
+  }
+  
   try {
-    const storage = localStorage.getItem(THEME_STORAGE_KEY);
-    if (!storage) return null;
-    
-    const data = JSON.parse(storage);
-    return data?.state?.currentTheme?.id || null;
+    localStorage.setItem(THEME_STORAGE_KEY, themeId);
+    logger.debug('Theme saved to localStorage', { details: { themeId } });
   } catch (error) {
-    console.error('Error reading theme from localStorage:', error);
-    return null;
+    logger.error('Failed to save theme to localStorage', { details: { error } });
+    
+    // Try using sessionStorage as fallback
+    try {
+      sessionStorage.setItem(THEME_STORAGE_KEY, themeId);
+      logger.debug('Theme saved to sessionStorage as fallback', { details: { themeId } });
+    } catch (sessionError) {
+      logger.error('Failed to save theme to sessionStorage as well', { details: { sessionError } });
+    }
   }
 }
 
 /**
- * Get complete theme storage information for debugging
+ * Get theme ID from localStorage
+ * Returns the stored theme ID or DEFAULT_THEME_ID if none is stored
  */
-export function getThemeStorageInfo(): any {
+export function getThemeFromLocalStorage(): string {
   try {
-    const storage = localStorage.getItem(THEME_STORAGE_KEY);
-    if (!storage) return { exists: false };
+    const themeId = localStorage.getItem(THEME_STORAGE_KEY);
+    logger.debug('Getting theme from localStorage', { details: { themeId: themeId || 'not found' } });
     
-    const data = JSON.parse(storage);
-    return {
-      exists: true,
-      themeId: data?.state?.currentTheme?.id || null,
-      lastFetchTimestamp: data?.state?.lastFetchTimestamp || null,
-      size: storage.length,
-      ...data
-    };
+    if (!themeId) {
+      // Try sessionStorage as backup
+      try {
+        const sessionThemeId = sessionStorage.getItem(THEME_STORAGE_KEY);
+        if (sessionThemeId) {
+          logger.debug('Found theme in sessionStorage instead', { details: { sessionThemeId } });
+          return sessionThemeId;
+        }
+      } catch (sessionError) {
+        // Ignore sessionStorage errors
+      }
+    }
+    
+    return themeId || DEFAULT_THEME_ID;
   } catch (error) {
-    console.error('Error reading theme storage info:', error);
-    return { exists: false, error: String(error) };
+    logger.error('Failed to get theme from localStorage', { details: { error } });
+    
+    // Try sessionStorage as fallback
+    try {
+      const sessionThemeId = sessionStorage.getItem(THEME_STORAGE_KEY);
+      if (sessionThemeId) {
+        logger.debug('Retrieved theme from sessionStorage after localStorage failure', { details: { sessionThemeId } });
+        return sessionThemeId;
+      }
+    } catch (sessionError) {
+      logger.error('Failed to get theme from sessionStorage as well', { details: { sessionError } });
+    }
+    
+    return DEFAULT_THEME_ID;
   }
 }
 
 /**
- * Remove theme from localStorage
+ * Remove theme ID from localStorage
  */
 export function clearThemeFromLocalStorage(): void {
   try {
     localStorage.removeItem(THEME_STORAGE_KEY);
+    logger.debug('Theme cleared from localStorage');
+    
+    // Clear from sessionStorage too if present
+    try {
+      sessionStorage.removeItem(THEME_STORAGE_KEY);
+    } catch (sessionError) {
+      // Ignore sessionStorage errors
+    }
   } catch (error) {
-    console.error('Error clearing theme from localStorage:', error);
+    logger.error('Failed to clear theme from localStorage', { details: { error } });
   }
 }
 
 /**
- * Set theme ID in localStorage directly (emergency override)
+ * Check if theme exists in localStorage
  */
-export function setThemeInLocalStorage(themeId: string): void {
+export function hasThemeInLocalStorage(): boolean {
   try {
-    const storage = localStorage.getItem(THEME_STORAGE_KEY);
-    if (!storage) {
-      // Create new storage
-      const newData = {
-        state: {
-          currentTheme: { id: themeId },
-          lastFetchTimestamp: new Date().toISOString()
-        },
-        version: 0
-      };
-      localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(newData));
-      return;
+    const hasLocalTheme = !!localStorage.getItem(THEME_STORAGE_KEY);
+    if (hasLocalTheme) return true;
+    
+    // Check sessionStorage as backup
+    try {
+      return !!sessionStorage.getItem(THEME_STORAGE_KEY);
+    } catch (sessionError) {
+      return false;
     }
-    
-    // Update existing storage
-    const data = JSON.parse(storage);
-    if (!data.state) data.state = {};
-    if (!data.state.currentTheme) data.state.currentTheme = {};
-    
-    data.state.currentTheme.id = themeId;
-    data.state.lastFetchTimestamp = new Date().toISOString();
-    
-    localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error('Error setting theme in localStorage:', error);
+    logger.error('Failed to check if theme exists in localStorage', { details: { error } });
+    
+    // Try sessionStorage as fallback
+    try {
+      return !!sessionStorage.getItem(THEME_STORAGE_KEY);
+    } catch (sessionError) {
+      logger.error('Failed to check if theme exists in sessionStorage as well', { details: { sessionError } });
+      return false;
+    }
+  }
+}
+
+/**
+ * Get theme debug info for troubleshooting
+ */
+export function getThemeStorageInfo(): Record<string, any> {
+  try {
+    const localValue = localStorage.getItem(THEME_STORAGE_KEY);
+    const sessionValue = sessionStorage.getItem(THEME_STORAGE_KEY);
+    
+    return {
+      hasLocalStorage: !!localValue,
+      hasSessionStorage: !!sessionValue,
+      localStorageValue: localValue,
+      sessionStorageValue: sessionValue,
+      storageAvailable: true
+    };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : String(error),
+      storageAvailable: false
+    };
   }
 }

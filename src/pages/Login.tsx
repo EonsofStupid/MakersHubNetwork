@@ -15,26 +15,26 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useAuth } from "@/auth/hooks/useAuth";
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging/types";
+import { LogCategory } from "@/logging";
 
 interface LoginProps {
   onSuccess?: () => void;
 }
 
-export default function Login({ onSuccess }: LoginProps = {}) {
+const Login = ({ onSuccess }: LoginProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const { hasAdminAccess } = useAdminAccess();
-  const logger = useLogger('Login', { category: LogCategory.AUTHENTICATION });
+  const logger = useLogger("LoginPage", LogCategory.AUTH);
   
   const from = new URLSearchParams(location.search).get("from") || "/";
 
   useEffect(() => {
     if (isAuthenticated) {
       logger.info("User authenticated, redirecting", { details: { redirectTo: from } });
-      if (onSuccess) onSuccess();
+      onSuccess?.();
       
       // Check if user was trying to access admin section or has admin access
       const goingToAdmin = from.includes("/admin");
@@ -128,3 +128,5 @@ export default function Login({ onSuccess }: LoginProps = {}) {
     </div>
   );
 };
+
+export default Login;

@@ -1,5 +1,10 @@
 
-import { User, Session, AuthStatus, UserRole, AuthStore as BaseAuthStore } from "@/auth/types/auth.types";
+import { User, Session } from "@supabase/supabase-js";
+import { Database } from "@/integrations/supabase/types";
+
+export type UserRole = Database["public"]["Enums"]["user_role"];
+
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 
 export interface AuthState {
   user: User | null;
@@ -9,7 +14,6 @@ export interface AuthState {
   error: string | null;
   status: AuthStatus;
   initialized: boolean;
-  isAuthenticated: boolean;
 }
 
 export interface AuthActions {
@@ -19,7 +23,6 @@ export interface AuthActions {
   setError: (error: string | null) => void;
   setLoading: (isLoading: boolean) => void;
   setInitialized: (initialized: boolean) => void;
-  setStatus: (status: AuthStatus) => void;
   hasRole: (role: UserRole) => boolean;
   isAdmin: () => boolean;
   initialize: () => Promise<void>;
@@ -36,6 +39,3 @@ export interface AdminAccess {
 export interface WithAdminAccess {
   hasAdminAccess: boolean;
 }
-
-// Re-export for consistency
-export { AuthStatus, UserRole };

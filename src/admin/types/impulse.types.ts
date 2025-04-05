@@ -1,132 +1,132 @@
 
 /**
- * Standard theme token structure
+ * Interface for the Impulse theme system
  */
 export interface ImpulseTheme {
-  id: string;
+  id?: string;
   name: string;
   description?: string;
-  version?: number;
-  colors: Record<string, any>;
-  typography: Record<string, any>;
-  effects: Record<string, any>;
-  animation: Record<string, any>;
-  components: Record<string, any>;
+  colors?: {
+    primary?: string;
+    secondary?: string;
+    accent?: string;
+    background?: {
+      main?: string;
+      overlay?: string;
+      card?: string;
+      alt?: string;
+    };
+    text?: {
+      primary?: string;
+      secondary?: string;
+      accent?: string;
+      muted?: string;
+    };
+    borders?: {
+      normal?: string;
+      hover?: string;
+      active?: string;
+      focus?: string;
+    };
+    status?: {
+      success?: string;
+      warning?: string;
+      error?: string;
+      info?: string;
+    };
+  };
+  effects?: {
+    glow?: {
+      primary?: string;
+      secondary?: string;
+      hover?: string;
+    };
+    gradients?: {
+      primary?: string;
+      secondary?: string;
+      accent?: string;
+    };
+    shadows?: {
+      small?: string;
+      medium?: string;
+      large?: string;
+      inner?: string;
+    };
+  };
+  animation?: {
+    duration?: {
+      fast?: string;
+      normal?: string;
+      slow?: string;
+    };
+    curves?: {
+      bounce?: string;
+      ease?: string;
+      spring?: string;
+      linear?: string;
+    };
+    keyframes?: Record<string, string>;
+  };
+  components?: {
+    panel?: {
+      radius?: string;
+      padding?: string;
+      background?: string;
+    };
+    button?: {
+      radius?: string;
+      padding?: string;
+      transition?: string;
+    };
+    tooltip?: {
+      radius?: string;
+      padding?: string;
+      background?: string;
+    };
+    input?: {
+      radius?: string;
+      padding?: string;
+      background?: string;
+    };
+  };
+  typography?: {
+    fonts?: {
+      body?: string;
+      heading?: string;
+      monospace?: string;
+    };
+    sizes?: {
+      xs?: string;
+      sm?: string;
+      base?: string;
+      lg?: string;
+      xl?: string;
+      "2xl"?: string;
+      "3xl"?: string;
+    };
+    lineHeights?: {
+      tight?: string;
+      normal?: string;
+      loose?: string;
+    };
+  };
 }
 
 /**
- * Default theme tokens
+ * Partial theme tokens for theme updates
  */
-export const defaultImpulseTokens: ImpulseTheme = {
-  id: 'default',
-  name: 'Default Impulse',
-  description: 'Default theme for Impulse',
-  version: 1,
-  colors: {
-    background: {
-      main: '#12121A',
-      alt: '#1A1F2C',
-      elevated: '#242939'
-    },
-    text: {
-      primary: '#F6F6F7',
-      secondary: '#C8C8C9',
-      muted: '#8A898C'
-    },
-    primary: '#00F0FF',
-    secondary: '#FF2D6E',
-    accent: '#9B87F5',
-    border: '#403E43',
-    card: '#1A1F2C'
-  },
-  typography: {
-    fontFamily: {
-      base: "'Inter', sans-serif",
-      headings: "'Inter', sans-serif",
-      code: "'JetBrains Mono', monospace"
-    },
-    fontSizes: {
-      xs: '0.75rem',
-      sm: '0.875rem', 
-      base: '1rem',
-      lg: '1.125rem',
-      xl: '1.25rem',
-      '2xl': '1.5rem',
-      '3xl': '1.875rem',
-      '4xl': '2.25rem'
-    },
-    fontWeights: {
-      light: 300,
-      normal: 400,
-      medium: 500,
-      semibold: 600,
-      bold: 700
-    }
-  },
-  effects: {
-    borderRadius: {
-      sm: '0.25rem',
-      md: '0.375rem',
-      lg: '0.5rem',
-      xl: '1rem',
-      full: '9999px'
-    },
-    boxShadow: {
-      sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
-      md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-    },
-    animations: {
-      glow: 'glow 2s ease-in-out infinite alternate',
-      pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-    }
-  },
-  animation: {
-    duration: {
-      fast: '150ms',
-      normal: '300ms',
-      slow: '500ms'
-    },
-    curves: {
-      bounce: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-      ease: 'cubic-bezier(0.4, 0, 0.2, 1)',
-      spring: 'cubic-bezier(0.43, 0.13, 0.23, 0.96)',
-      linear: 'linear'
-    },
-    keyframes: {
-      fade: '@keyframes fade { from { opacity: 0; } to { opacity: 1; } }',
-      pulse: '@keyframes pulse { 0%, 100% { opacity: 0.8; } 50% { opacity: 0.4; } }',
-      glow: '@keyframes glow { 0%, 100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.5); } 50% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.7); } }'
-    }
-  },
-  components: {
-    button: {
-      borderRadius: '0.375rem',
-      paddingX: '1rem',
-      paddingY: '0.5rem',
-      variants: {
-        primary: {
-          bg: '#00F0FF',
-          text: '#000000',
-          hover: {
-            bg: '#00D9E8',
-            text: '#000000'
-          }
-        },
-        secondary: {
-          bg: '#FF2D6E',
-          text: '#FFFFFF',
-          hover: {
-            bg: '#E91E63',
-            text: '#FFFFFF'
-          }
-        }
-      }
-    }
-  }
-};
+export type PartialImpulseTheme = Partial<ImpulseTheme>;
 
-export const defaultColors = defaultImpulseTokens.colors;
-export const defaultTypography = defaultImpulseTokens.typography;
-export const defaultEffects = defaultImpulseTokens.effects;
-export const defaultComponents = defaultImpulseTokens.components;
+/**
+ * Metadata for themes
+ */
+export interface ThemeMetadata {
+  id: string;
+  name: string;
+  description?: string;
+  preview_url?: string;
+  created_at?: string;
+  updated_at?: string;
+  is_system?: boolean;
+  is_active?: boolean;
+}

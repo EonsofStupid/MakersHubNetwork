@@ -1,36 +1,82 @@
 
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { ThemeProvider } from '@/components/theme/ThemeProvider';
+import { useEffect, Suspense, lazy } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
-import { LoggingProvider } from './logging/context/LoggingContext';
-import { AuthProvider } from './auth/components/AuthProvider';
-import { MainNav } from './components/MainNav';
-import { Footer } from './components/Footer';
-import { AppRoutes } from './routes/app-routes';
+import { MainNav } from '@/components/MainNav';
+import { AuthProvider } from '@/auth/components/AuthProvider';
+import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
+import { KeyboardNavigation } from '@/components/KeyboardNavigation';
+import { getLogger, LogCategory } from '@/logging';
+import { LoggingProvider } from '@/logging/context/LoggingContext';
+import { initializeAuthBridge } from '@/auth/bridge';
+import { usePerformanceLogger } from '@/hooks/use-performance-logger';
 
-// Define App props interface
+// Lazy load routes for better performance
+const Index = lazy(() => import('@/pages/Index'));
+// Fix for missing modules
+const AdminRoutes = lazy(() => import('./admin/routes').then(mod => ({ default: mod.AdminRoutes })));
+const BuildRoutes = lazy(() => import('./routes/BuildRoutes'));
+const NotFoundPage = lazy(() => import('./pages/NotFound'));
+
 interface AppProps {
-  onInitialized?: () => Promise<void>;
+  onInitialized?: () => void;
 }
 
-function App({ onInitialized }: AppProps) {
+export default function App({ onInitialized }: AppProps) {
+  const logger = getLogger('App');
+  const performance = usePerformanceLogger('App');
+  
+  // Initialize the application
+  useEffect(() => {
+    performance.measure('app-initialization', async () => {
+      // Initialize auth bridge for event system
+      initializeAuthBridge();
+      
+      logger.info('Application initialized', { 
+        category: LogCategory.SYSTEM,
+        details: {
+          version: import.meta.env.VITE_APP_VERSION || 'dev',
+          environment: import.meta.env.MODE
+        }
+      });
+      
+      // Call onInitialized callback if provided
+      if (onInitialized) {
+        await onInitialized();
+      }
+    });
+    
+    // Return cleanup function for when the app unmounts
+    return () => {
+      logger.info('Application shutting down', { 
+        category: LogCategory.SYSTEM 
+      });
+    };
+  }, [onInitialized, performance, logger]);
+  
   return (
     <LoggingProvider>
-      <ThemeProvider>
-        <Router>
-          <AuthProvider onInitialized={onInitialized}>
-            <div className="min-h-screen bg-background">
-              <MainNav />
-              <AppRoutes />
-              <Footer />
+      <ThemeInitializer>
+        <AuthProvider>
+          <MainNav />
+          
+          <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
             </div>
-            <Toaster />
-          </AuthProvider>
-        </Router>
-      </ThemeProvider>
+          }>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/admin/*" element={<AdminRoutes />} />
+              <Route path="/build/*" element={<BuildRoutes />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+          
+          <KeyboardNavigation options={{ enabled: true, showToasts: false }} />
+          <Toaster />
+        </AuthProvider>
+      </ThemeInitializer>
     </LoggingProvider>
   );
 }
-
-export default App;
