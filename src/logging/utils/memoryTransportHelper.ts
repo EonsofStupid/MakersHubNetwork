@@ -1,70 +1,121 @@
-
 import { LogEntry, LogLevel } from '../types';
-import { memoryTransport } from '../transports/memory.transport';
+
+export interface MemoryTransportOptions {
+  maxEntries?: number;
+  minimumLevel?: LogLevel;
+  filterByCategory?: string[];
+}
+
+interface LogBuffer {
+  entries: LogEntry[];
+  maxSize: number;
+}
+
+const DEFAULT_OPTIONS: MemoryTransportOptions = {
+  maxEntries: 1000,
+  minimumLevel: LogLevel.DEBUG,
+};
 
 /**
- * Safe wrapper to get logs from memory transport
- * Returns empty array if memory transport is not available
+ * Creates a buffer for storing log entries in memory
  */
-export function safeGetLogs(limit?: number, filterFn?: (entry: LogEntry) => boolean): LogEntry[] {
-  try {
-    if (memoryTransport.getLogs) {
-      return memoryTransport.getLogs(limit, filterFn);
+export function createMemoryBuffer(options: MemoryTransportOptions = {}): LogBuffer {
+  const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
+  return {
+    entries: [],
+    maxSize: mergedOptions.maxEntries || 1000,
+  };
+}
+
+/**
+ * Adds a log entry to the buffer, maintaining size constraints
+ */
+export function addToBuffer(buffer: LogBuffer, entry: LogEntry): void {
+  buffer.entries.push(entry);
+  
+  // Keep the buffer size within the limits
+  if (buffer.entries.length > buffer.maxSize) {
+    buffer.entries = buffer.entries.slice(-buffer.maxSize);
+  }
+}
+
+/**
+ * Filters log entries in a buffer based on provided criteria
+ */
+export function filterEntries(
+  buffer: LogBuffer,
+  options: {
+    level?: LogLevel;
+    category?: string | string[];
+    search?: string;
+    limit?: number;
+  } = {}
+): LogEntry[] {
+  let results = [...buffer.entries];
+  
+  // Filter by level
+  if (options.level !== undefined) {
+    results = results.filter((entry) => {
+      const entryLevel = entry.level;
+      
+      // Special handling for level filtering
+      switch (options.level) {
+        case LogLevel.TRACE:
+          return true; // Show all logs
+        case LogLevel.DEBUG:
+          return entryLevel !== LogLevel.TRACE;
+        case LogLevel.INFO:
+        case LogLevel.SUCCESS:
+          return entryLevel !== LogLevel.TRACE && entryLevel !== LogLevel.DEBUG;
+        case LogLevel.WARN:
+          return entryLevel !== LogLevel.TRACE && entryLevel !== LogLevel.DEBUG && 
+                 entryLevel !== LogLevel.INFO && entryLevel !== LogLevel.SUCCESS;
+        case LogLevel.ERROR:
+        case LogLevel.CRITICAL:
+          return entryLevel === LogLevel.ERROR || entryLevel === LogLevel.CRITICAL || entryLevel === LogLevel.FATAL;
+        case LogLevel.FATAL:
+          return entryLevel === LogLevel.FATAL;
+        default:
+          return true;
+      }
+    });
+  }
+  
+  // Filter by category
+  if (options.category) {
+    const categories = Array.isArray(options.category) ? options.category : [options.category];
+    if (categories.length > 0) {
+      results = results.filter((entry) => 
+        categories.includes(entry.category || 'general')
+      );
     }
-    return [];
-  } catch (error) {
-    console.error('Error getting logs from memory transport:', error);
-    return [];
   }
-}
-
-/**
- * Safe wrapper to clear logs from memory transport
- */
-export function safeClearLogs(): void {
-  try {
-    if (memoryTransport.clear) {
-      memoryTransport.clear();
-    }
-  } catch (error) {
-    console.error('Error clearing logs from memory transport:', error);
+  
+  // Filter by search term
+  if (options.search) {
+    const searchLower = options.search.toLowerCase();
+    results = results.filter((entry) => {
+      const message = (entry.message || '').toLowerCase();
+      const source = (entry.source || '').toLowerCase();
+      const category = (entry.category || '').toLowerCase();
+      
+      return message.includes(searchLower) || 
+             source.includes(searchLower) || 
+             category.includes(searchLower);
+    });
   }
-}
-
-/**
- * Get logs of a specific level
- */
-export function getLogsByLevel(level: LogLevel, limit?: number): LogEntry[] {
-  return safeGetLogs(limit, (log) => log.level === level);
-}
-
-/**
- * Get logs of a specific category
- */
-export function getLogsByCategory(category: string, limit?: number): LogEntry[] {
-  return safeGetLogs(limit, (log) => log.category === category);
-}
-
-/**
- * Get error logs (ERROR, FATAL, CRITICAL)
- */
-export function getErrorLogs(limit?: number): LogEntry[] {
-  return safeGetLogs(limit, (log) => {
-    // Fix: Use correct comparison for LogLevel values
-    return (
-      log.level === LogLevel.ERROR || 
-      log.level === LogLevel.FATAL || 
-      log.level === LogLevel.CRITICAL
-    );
-  });
-}
-
-/**
- * Subscribe to new logs
- */
-export function subscribeToLogs(callback: (log: LogEntry) => void): () => void {
-  if (memoryTransport.subscribe) {
-    return memoryTransport.subscribe(callback);
+  
+  // Apply limit
+  if (options.limit && options.limit > 0) {
+    results = results.slice(-options.limit);
   }
-  return () => {}; // Empty unsubscribe function
+  
+  return results;
+}
+
+/**
+ * Clears all entries from the buffer
+ */
+export function clearBuffer(buffer: LogBuffer): void {
+  buffer.entries = [];
 }
