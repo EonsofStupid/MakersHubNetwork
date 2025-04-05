@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 export const AuthSection = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const { hasAdminAccess } = useAdminAccess();
   
   // Handle avatar click with animation and effects
@@ -89,7 +89,7 @@ export const AuthSection = () => {
           
           <DropdownMenuItem 
             className="cursor-pointer text-destructive focus:text-destructive flex items-center gap-2"
-            onClick={() => signOut()}
+            onClick={() => logout()}
           >
             <LogOut className="w-4 h-4" />
             <span>Log out</span>

@@ -73,7 +73,7 @@ const themeSchema = z.object({
 });
 
 // Create a type-safe logger for the theme store
-const logger = getLogger();
+const logger = getLogger('ThemeStore', LogCategory.UI);
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
   currentTheme: null,
@@ -83,13 +83,17 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  setTheme: async (themeId: string) => {
+  setTheme: async (themeIdOrName: string) => {
     set({ isLoading: true, error: null });
     try {
-      logger.info('Setting theme', { details: { themeId }});
+      logger.info('Setting theme', { details: { themeIdOrName }});
       
-      // We receive a theme ID, fetch the theme
-      const { theme: fetchedTheme, isFallback } = await getTheme(themeId);
+      // We receive a theme ID or name, fetch the theme
+      const { theme: fetchedTheme, isFallback } = await getTheme({
+        id: themeIdOrName,
+        name: themeIdOrName,
+        enableFallback: true
+      });
       
       if (!fetchedTheme || typeof fetchedTheme !== 'object') {
         throw new Error('Invalid theme data received');
@@ -103,7 +107,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         logger.warn('Theme validation failed', { 
           details: { 
             errors: validationResult.error.format(),
-            themeId 
+            themeId: themeIdOrName 
           } 
         });
         
