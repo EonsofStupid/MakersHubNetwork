@@ -1,3 +1,4 @@
+
 import { LogCategory, LogEntry, LogLevel, LogTransport } from '../types';
 import { nodeToSearchableString } from '@/shared/utils/render';
 import { isLogLevelAtLeast } from '../utils/map-log-level';
