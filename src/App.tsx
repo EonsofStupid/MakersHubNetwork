@@ -74,13 +74,6 @@ function App() {
     }
   }, [location.pathname, logger]);
 
-  // Enforced component initialization order to prevent infinite loops:
-  // 1. ThemeProvider (shadcn)
-  // 2. LoggingProvider
-  // 3. ThemeInitializer (site theme)
-  // 4. AuthProvider
-  // 5. AppInitializer
-  // 6. AdminProvider
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>

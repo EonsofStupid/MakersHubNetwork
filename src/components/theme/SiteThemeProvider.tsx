@@ -4,6 +4,7 @@ import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { DynamicKeyframes } from './DynamicKeyframes';
 
 // Create context
 const SiteThemeContext = createContext<{
@@ -165,6 +166,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   // Always render the children; let individual components handle loading states
   return (
     <SiteThemeContext.Provider value={contextValue}>
+      <DynamicKeyframes />
       {children}
     </SiteThemeContext.Provider>
   );
