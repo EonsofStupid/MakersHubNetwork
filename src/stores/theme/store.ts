@@ -1,9 +1,9 @@
 
 import { create } from "zustand";
-import { supabase } from "@/integrations/supabase/client";
 import { ThemeState } from "./types";
 import { Theme, ComponentTokens } from "@/types/theme";
 import { Json } from "@/integrations/supabase/types";
+import { getTheme } from "@/services/themeService";
 
 export const useThemeStore = create<ThemeState>((set) => ({
   currentTheme: null,
@@ -13,29 +13,24 @@ export const useThemeStore = create<ThemeState>((set) => ({
   isLoading: false,
   error: null,
 
-  setTheme: async (themeId: string) => {
+  setTheme: async (themeIdOrTheme: string | Theme) => {
     set({ isLoading: true, error: null });
     try {
-      // Build query based on whether we're looking for a specific theme by ID or the default theme
-      const query = themeId !== 'default' 
-        ? supabase.from("themes").select("*").eq("id", themeId).limit(1)
-        : supabase.from("themes").select("*").eq("is_default", true).limit(1);
+      let theme: Theme;
       
-      const { data: themes, error } = await query;
+      // Check if we received a theme object or a theme ID
+      if (typeof themeIdOrTheme === 'string') {
+        // We received a theme ID, fetch the theme
+        const { theme: fetchedTheme } = await getTheme(themeIdOrTheme);
+        theme = fetchedTheme;
+      } else {
+        // We received a theme object directly
+        theme = themeIdOrTheme;
+      }
 
-      if (error) throw error;
-      if (!themes || themes.length === 0) throw new Error("No theme found");
-
-      const rawTheme = themes[0];
-      
-      // Type guard to ensure we have objects
-      const designTokens = rawTheme.design_tokens && typeof rawTheme.design_tokens === 'object' 
-        ? rawTheme.design_tokens as Record<string, any>
-        : {};
-      
-      // Convert component tokens to the correct type with proper mapping
-      const componentTokens = rawTheme.component_tokens && Array.isArray(rawTheme.component_tokens)
-        ? (rawTheme.component_tokens as Json[]).map((token): ComponentTokens => ({
+      // Ensure componentTokens has the correct type with proper mapping
+      const componentTokens = theme.component_tokens && Array.isArray(theme.component_tokens)
+        ? theme.component_tokens.map((token): ComponentTokens => ({
             id: (token as any).id || '',
             component_name: (token as any).component_name || '',
             styles: (token as any).styles || {},
@@ -43,35 +38,12 @@ export const useThemeStore = create<ThemeState>((set) => ({
             context: (token as any).context || undefined,
             created_at: (token as any).created_at || '',
             updated_at: (token as any).updated_at || '',
-            description: '', // Add default empty description
+            description: (token as any).description || '',
           }))
         : [];
 
-      // Ensure composition rules is a Record
-      const compositionRules = rawTheme.composition_rules && typeof rawTheme.composition_rules === 'object'
-        ? rawTheme.composition_rules as Record<string, any>
-        : {};
-
-      const theme: Theme = {
-        id: rawTheme.id,
-        name: rawTheme.name,
-        description: rawTheme.description || '', 
-        status: rawTheme.status || 'draft', 
-        is_default: rawTheme.is_default || false, 
-        created_by: rawTheme.created_by || undefined,
-        created_at: rawTheme.created_at || '', 
-        updated_at: rawTheme.updated_at || '', 
-        published_at: rawTheme.published_at || undefined,
-        version: rawTheme.version || 1,
-        cache_key: rawTheme.cache_key || undefined,
-        parent_theme_id: rawTheme.parent_theme_id || undefined,
-        design_tokens: designTokens,
-        component_tokens: componentTokens,
-        composition_rules: compositionRules,
-        cached_styles: rawTheme.cached_styles as Record<string, any> || {},
-      };
-
-      set({ currentTheme: theme, isLoading: false });
+      // Set the theme in the store
+      set({ currentTheme: { ...theme, component_tokens: componentTokens }, isLoading: false });
     } catch (error) {
       console.error("Error fetching theme:", error);
       set({ 
@@ -84,22 +56,23 @@ export const useThemeStore = create<ThemeState>((set) => ({
   loadAdminComponents: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data, error } = await supabase
-        .from("theme_components")
-        .select("*")
-        .eq("context", "admin");
-
-      if (error) throw error;
-
-      const components: ComponentTokens[] = data.map(comp => ({
-        id: comp.id,
-        component_name: comp.component_name,
-        styles: comp.styles as Record<string, any>,
-        description: '', // Default empty description 
-        theme_id: comp.theme_id || undefined,
-        context: comp.context || undefined,
-        created_at: comp.created_at || '',
-        updated_at: comp.updated_at || ''
+      // Use the theme service to get admin components
+      const { theme: adminTheme } = await getTheme();
+      
+      // Filter for admin components
+      const adminComponents = adminTheme.component_tokens.filter(
+        comp => (comp as any).context === 'admin'
+      );
+      
+      const components: ComponentTokens[] = adminComponents.map(comp => ({
+        id: (comp as any).id,
+        component_name: (comp as any).component_name,
+        styles: (comp as any).styles as Record<string, any>,
+        description: (comp as any).description || '', 
+        theme_id: (comp as any).theme_id || undefined,
+        context: (comp as any).context || undefined,
+        created_at: (comp as any).created_at || '',
+        updated_at: (comp as any).updated_at || ''
       }));
 
       set({ adminComponents: components, isLoading: false });
