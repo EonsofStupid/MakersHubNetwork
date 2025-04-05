@@ -200,8 +200,10 @@ async function handleGetTheme(data) {
       query = query.eq('is_default', true);
     }
 
-    // Apply context filter
-    query = query.eq('context', context);
+    // Apply context filter - optional for backward compatibility
+    if (context) {
+      query = query.eq('context', context);
+    }
     
     // Execute the query
     const { data: themes, error } = await query.limit(1);
@@ -322,6 +324,8 @@ async function handleCreateTheme(data) {
       created_by: userId,
       version: 1,
       status: theme.status || 'draft',
+      // Add missing context field with default value for backward compatibility
+      context: 'site'
     };
     
     // Insert the new theme

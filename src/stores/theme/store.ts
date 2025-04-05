@@ -12,20 +12,12 @@ export const useThemeStore = create<ThemeState>((set) => ({
   isLoading: false,
   error: null,
 
-  setTheme: async (themeIdOrTheme: string | Theme) => {
+  setTheme: async (themeIdOrTheme: string) => {
     set({ isLoading: true, error: null });
     try {
-      let theme: Theme;
-      
-      // Check if we received a theme object or a theme ID
-      if (typeof themeIdOrTheme === 'string') {
-        // We received a theme ID, fetch the theme
-        const { theme: fetchedTheme } = await getTheme(themeIdOrTheme);
-        theme = fetchedTheme;
-      } else {
-        // We received a theme object directly
-        theme = themeIdOrTheme;
-      }
+      // We receive a theme ID, fetch the theme
+      const { theme: fetchedTheme } = await getTheme(themeIdOrTheme);
+      const theme = fetchedTheme;
 
       // Ensure componentTokens has the correct type with proper mapping
       const componentTokens = theme.component_tokens && Array.isArray(theme.component_tokens)

@@ -22,7 +22,7 @@ export async function getTheme(themeId?: string): Promise<{theme: Theme, isFallb
     const { data, error } = await supabase.functions.invoke('theme-service', {
       body: {
         operation: 'get-theme',
-        themeId,
+        themeId: themeId || undefined,
         isDefault: !themeId,
         context: 'site',
       },

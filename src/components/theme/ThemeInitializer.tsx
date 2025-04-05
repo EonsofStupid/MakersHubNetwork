@@ -40,7 +40,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           
           if (theme) {
             // Use the theme returned from the service (could be actual or fallback)
-            await setTheme(theme);
+            await setTheme(theme.id);
             
             if (isFallback) {
               logger.info('Using fallback theme');
@@ -72,11 +72,12 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           if (themeId) {
             // Then set the theme using the ID via the store (which will now use our service)
             const { theme } = await getTheme(themeId);
-            await setTheme(theme);
+            await setTheme(theme.id);
             logger.info('Theme initialized successfully with ID:', { details: { themeId } });
           } else {
             // Use the fallback theme as last resort
-            await setTheme((await getTheme()).theme);
+            const { theme } = await getTheme();
+            await setTheme(theme.id);
             logger.info('Using fallback theme after failed initialization');
             toast({
               title: 'Theme Notice',

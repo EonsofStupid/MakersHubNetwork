@@ -11,10 +11,3 @@ export interface ThemeState {
   setTheme: (themeId: string) => Promise<void>;
   loadAdminComponents: () => Promise<void>;
 }
-
-export interface ThemeActions {
-  setTheme: (themeId: string) => Promise<void>;
-  loadAdminComponents: () => Promise<void>;
-}
-
-export type ThemeStore = ThemeState & ThemeActions;
