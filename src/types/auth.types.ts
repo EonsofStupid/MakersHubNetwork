@@ -2,7 +2,7 @@
 import { Database } from "@/integrations/supabase/types"
 import { UserRole as BaseUserRole } from "@/auth/types/roles"
 
-// Base role type from roles.ts
+// Base role type from database
 export type UserRole = BaseUserRole
 
 // Authentication-specific interfaces

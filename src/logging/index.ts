@@ -1,21 +1,33 @@
 
-export enum LogCategory {
-  AUTH = 'auth',
-  ADMIN = 'admin',
-  UI = 'ui',
-  API = 'api',
-  DATA = 'data',
-  SYSTEM = 'system',
-  PERFORMANCE = 'performance',
-  USER = 'user'
+import { LoggerService, getLogger } from './logger.service';
+import { LogCategory, LogEntry, LogTransport } from './types';
+import { LogLevel } from './constants/log-level';
+import { getLoggingConfig, memoryTransport } from './config';
+
+// Initialize the logger with appropriate config
+export function initializeLogger(): void {
+  const config = getLoggingConfig();
+  LoggerService.getInstance(config);
+  
+  // Log initialization
+  const logger = getLogger();
+  logger.info('Logging system initialized', {
+    category: LogCategory.SYSTEM,
+    details: { config },
+    source: 'logging/index.ts'
+  });
 }
 
-export function getLogger() {
-  // Simple logger implementation
-  return {
-    info: (message: string, details?: any) => console.info(`[INFO] ${message}`, details ?? ''),
-    warn: (message: string, details?: any) => console.warn(`[WARN] ${message}`, details ?? ''),
-    error: (message: string, details?: any) => console.error(`[ERROR] ${message}`, details ?? ''),
-    debug: (message: string, details?: any) => console.debug(`[DEBUG] ${message}`, details ?? '')
-  };
-}
+// Export everything needed for the logging system
+export {
+  LoggerService,
+  getLogger,
+  LogLevel,
+  LogCategory,
+  memoryTransport
+};
+
+export type {
+  LogEntry,
+  LogTransport
+};
