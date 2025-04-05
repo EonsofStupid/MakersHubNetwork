@@ -1,11 +1,10 @@
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useRef } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { DynamicKeyframes } from './DynamicKeyframes';
-import { ThemeLogDetails } from '@/types/theme';
 
 // Create context
 const SiteThemeContext = createContext<{
@@ -37,6 +36,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   const variables = useThemeVariables(currentTheme);
   const logger = useLogger('SiteThemeProvider', LogCategory.UI);
   const [isLoaded, setIsLoaded] = useState(false);
+  const cssVarsApplied = useRef(false);
   
   // Get UI theme mode from localStorage or default to dark
   const [isDarkMode, setIsDarkMode] = useState<boolean>(
@@ -50,14 +50,13 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
   };
 
-  // Get component styles from theme
+  // Get component styles from theme - memoized to prevent unnecessary recalculations
   const componentStyles = useMemo(() => {
     if (!currentTheme || !Array.isArray(currentTheme.component_tokens)) {
-      const logDetails: ThemeLogDetails = { 
+      logger.debug('No component styles found in theme', { 
         error: true,
         reason: 'No component tokens found in theme' 
-      };
-      logger.debug('No component styles found in theme', logDetails);
+      });
       return {};
     }
 
@@ -73,16 +72,15 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       
       return styles;
     } catch (error) {
-      const logDetails: ThemeLogDetails = { 
+      logger.error('Error processing component styles', { 
         error: true,
         errorMessage: error instanceof Error ? error.message : String(error) 
-      };
-      logger.error('Error processing component styles', logDetails);
+      });
       return {};
     }
   }, [currentTheme, logger]);
   
-  // Get animations from theme
+  // Get animations from theme - memoized to prevent unnecessary recalculations
   const animations = useMemo(() => {
     const defaultAnimations = {}; // Safe fallback
     
@@ -94,36 +92,36 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       const themeAnimations = currentTheme.design_tokens.animation.keyframes;
       return themeAnimations || defaultAnimations;
     } catch (error) {
-      const logDetails: ThemeLogDetails = { 
+      logger.error('Error processing animations', { 
         error: true,
         errorMessage: error instanceof Error ? error.message : String(error) 
-      };
-      logger.error('Error processing animations', logDetails);
+      });
       return defaultAnimations;
     }
   }, [currentTheme, logger]);
 
   // Mark theme as loaded when everything is ready
   useEffect(() => {
-    if (!isLoading && currentTheme && !isInitializing) {
+    if (!isLoading && currentTheme && !isInitializing && !isLoaded) {
       // Small delay to ensure CSS variables are applied
       const timer = setTimeout(() => {
         setIsLoaded(true);
-        const logDetails: ThemeLogDetails = { 
+        logger.info('Theme loaded successfully', { 
           success: true,
           themeName: currentTheme.name,
           hasAnimations: Boolean(animations && Object.keys(animations).length > 0),
           hasComponentStyles: Boolean(componentStyles && Object.keys(componentStyles).length > 0)
-        };
-        logger.info('Theme loaded successfully', logDetails);
+        });
       }, 100);
       
       return () => clearTimeout(timer);
     }
-  }, [isLoading, currentTheme, animations, componentStyles, logger, isInitializing]);
+  }, [isLoading, currentTheme, animations, componentStyles, logger, isInitializing, isLoaded]);
 
-  // Apply CSS variables when the theme changes
+  // Apply CSS variables when the theme changes - using refs to prevent multiple applications
   useEffect(() => {
+    if (cssVarsApplied.current) return;
+    
     // Always apply our CSS variables even if theme is loading or missing
     // This ensures the UI always has some styles
     const rootElement = document.documentElement;
@@ -167,38 +165,42 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       rootElement.style.setProperty('--site-radius-lg', variables.radiusLg);
       rootElement.style.setProperty('--site-radius-full', variables.radiusFull);
       
-      // Apply dark/light mode class
-      if (isDarkMode) {
-        rootElement.classList.add('dark');
-        rootElement.classList.remove('light');
-      } else {
-        rootElement.classList.add('light');
-        rootElement.classList.remove('dark');
-      }
+      cssVarsApplied.current = true;
       
-      const logDetails: ThemeLogDetails = { 
+      logger.debug('Applied theme CSS variables', { 
         success: true,
         themeName: currentTheme?.name || 'default' 
-      };
-      logger.debug('Applied theme CSS variables', logDetails);
+      });
     } catch (error) {
-      const logDetails: ThemeLogDetails = { 
+      logger.error('Failed to apply CSS variables', { 
         error: true,
         errorMessage: error instanceof Error ? error.message : String(error) 
-      };
-      logger.error('Failed to apply CSS variables', logDetails);
+      });
     }
-  }, [variables, isDarkMode, currentTheme, logger]);
+  }, [variables, currentTheme, logger]);
   
-  // Create the theme context value
-  const contextValue = {
+  // Apply dark/light mode class - separate effect to prevent unnecessary re-renders
+  useEffect(() => {
+    const rootElement = document.documentElement;
+    
+    if (isDarkMode) {
+      rootElement.classList.add('dark');
+      rootElement.classList.remove('light');
+    } else {
+      rootElement.classList.add('light');
+      rootElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+  
+  // Create the theme context value - memoized to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
     variables, 
     isDarkMode, 
     toggleDarkMode, 
     componentStyles, 
     animations,
     isLoaded
-  };
+  }), [variables, isDarkMode, componentStyles, animations, isLoaded]);
 
   // Always render the children; let individual components handle loading states
   return (
