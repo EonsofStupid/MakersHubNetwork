@@ -1,65 +1,65 @@
-
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useToast } from '@/hooks/use-toast';
+import { formatLogDetails } from '@/logging/utils/details-formatter';
 
 /**
- * Hook for syncing admin data
+ * Hook to sync admin data with backend
  */
 export function useAdminSync() {
   const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
-  const logger = useLogger('useAdminSync', { category: LogCategory.ADMIN });
-  const { toast } = useToast();
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
+  const logger = useLogger('useAdminSync', LogCategory.ADMIN);
   
-  /**
-   * Sync admin data from the server
-   */
-  const syncAdminData = useCallback(async () => {
-    if (isSyncing) return false;
+  // Sync data periodically
+  useEffect(() => {
+    let isMounted = true;
     
-    try {
-      setIsSyncing(true);
-      logger.info('Starting admin data sync');
+    const syncData = async () => {
+      if (!isMounted) return;
       
-      // Simulate network request
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Update last sync time
-      const now = new Date();
-      setLastSyncTime(now);
-      
-      logger.info('Admin data sync completed', {
-        details: { timestamp: now.toISOString() }
-      });
-      
-      toast({
-        title: 'Sync completed',
-        description: 'Admin data has been synchronized',
-      });
-      
-      return true;
-    } catch (error) {
-      logger.error('Admin data sync failed', {
-        details: { error }
-      });
-      
-      toast({
-        title: 'Sync failed',
-        description: 'There was an error synchronizing admin data',
-        variant: 'destructive',
-      });
-      
-      return false;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isSyncing, logger, toast]);
+      try {
+        setIsSyncing(true);
+        logger.info('Syncing admin data...');
+        
+        // Simulate sync with backend
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        if (isMounted) {
+          setLastSynced(new Date());
+          logger.info('Admin data synced successfully');
+        }
+      } catch (error) {
+        logger.error('Error syncing admin data', { 
+          details: formatLogDetails(error)
+        });
+      } finally {
+        if (isMounted) {
+          setIsSyncing(false);
+        }
+      }
+    };
+    
+    // Initial sync
+    syncData();
+    
+    // Periodic sync every 5 minutes
+    const interval = setInterval(syncData, 5 * 60 * 1000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [logger]);
   
   return {
     isSyncing,
-    lastSyncTime,
-    syncAdminData
+    lastSynced,
+    sync: async () => {
+      setIsSyncing(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setLastSynced(new Date());
+      setIsSyncing(false);
+    }
   };
 }

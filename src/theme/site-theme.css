@@ -72,10 +72,6 @@
   --site-effect-color: #00F0FF;
   --site-effect-secondary: #FF2D6E;
   --site-effect-tertiary: #8B5CF6;
-  --site-success-color: #10B981;  /* Green */
-  --site-warning-color: #F59E0B;  /* Amber */
-  --site-error-color: #EF4444;    /* Red */
-  --site-info-color: #3B82F6;     /* Blue */
   
   /* Site transition durations */
   --site-transition-fast: 150ms;
@@ -129,23 +125,6 @@
   box-shadow: 0 0 15px hsl(var(--site-primary)/0.3);
 }
 
-/* Status colors */
-.site-status-success {
-  color: var(--site-success-color);
-}
-
-.site-status-warning {
-  color: var(--site-warning-color);
-}
-
-.site-status-error {
-  color: var(--site-error-color);
-}
-
-.site-status-info {
-  color: var(--site-info-color);
-}
-
 /* Impulsivity themed components */
 .impulsivity-button {
   @apply px-4 py-2 rounded-md bg-transparent border border-[hsl(var(--site-primary)/0.5)] text-[hsl(var(--site-primary))] transition-all duration-300;
@@ -184,88 +163,4 @@
   50% {
     opacity: 0.4;
   }
-}
-
-@keyframes impulsivity-float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-@keyframes impulsivity-border-pulse {
-  0%, 100% {
-    border-color: hsl(var(--site-primary)/0.3);
-  }
-  50% {
-    border-color: hsl(var(--site-primary)/0.8);
-  }
-}
-
-@keyframes impulsivity-text-glow {
-  0%, 100% {
-    text-shadow: 0 0 5px hsl(var(--site-primary)/0.5);
-  }
-  50% {
-    text-shadow: 0 0 15px hsl(var(--site-primary)/0.8);
-  }
-}
-
-.animate-impulsivity-glow {
-  animation: impulsivity-glow 2s ease-in-out infinite;
-}
-
-.animate-impulsivity-pulse {
-  animation: impulsivity-pulse 3s ease-in-out infinite;
-}
-
-.animate-impulsivity-float {
-  animation: impulsivity-float 3s ease-in-out infinite;
-}
-
-.animate-impulsivity-border {
-  animation: impulsivity-border-pulse 4s ease-in-out infinite;
-}
-
-.animate-impulsivity-text {
-  animation: impulsivity-text-glow 2s ease-in-out infinite;
-}
-
-/* Hover variants */
-.hover-impulsivity-glow:hover {
-  animation: impulsivity-glow 2s ease-in-out infinite;
-}
-
-.hover-impulsivity-float:hover {
-  animation: impulsivity-float 3s ease-in-out infinite;
-}
-
-.hover-scale {
-  transition: transform 0.3s ease;
-}
-
-.hover-scale:hover {
-  transform: scale(1.05);
-}
-
-/* Additional animation keyframes for site components */
-@keyframes site-shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.animate-site-shimmer {
-  background: linear-gradient(90deg,
-    hsl(var(--site-background)),
-    hsl(var(--site-primary)/0.3),
-    hsl(var(--site-background))
-  );
-  background-size: 200% 100%;
-  animation: site-shimmer 3s infinite;
 }

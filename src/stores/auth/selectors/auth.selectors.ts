@@ -1,38 +1,25 @@
+import { AuthStore } from "../types/auth.types"
+import { UserRole } from "@/types/auth.types"
 
-import { AuthState } from "../types";
-import { AuthStatus } from "@/auth/types/auth.types";
+// Basic selectors
+export const selectUser = (state: AuthStore) => state.user
+export const selectSession = (state: AuthStore) => state.session
+export const selectRoles = (state: AuthStore) => state.roles
+export const selectStatus = (state: AuthStore) => state.status
+export const selectError = (state: AuthStore) => state.error
+export const selectIsLoading = (state: AuthStore) => state.isLoading
+export const selectIsInitialized = (state: AuthStore) => state.initialized
 
-// Select the entire auth state
-export const selectAuthState = (state: AuthState) => state;
+// Derived selectors
+export const selectIsAuthenticated = (state: AuthStore) =>
+  state.status === "authenticated"
 
-// Select authentication status
-export const selectIsAuthenticated = (state: AuthState) => state.isAuthenticated;
+export const selectUserId = (state: AuthStore) => state.user?.id
 
-// Select if auth is still loading
-export const selectIsAuthLoading = (state: AuthState) => state.isLoading;
+export const selectIsAdmin = (state: AuthStore) =>
+  state.roles.includes("admin") || state.roles.includes("super_admin")
 
-// Select if auth is initialized
-export const selectIsAuthInitialized = (state: AuthState) => state.initialized;
-
-// Select current auth status
-export const selectAuthStatus = (state: AuthState) => state.status;
-
-// Select if auth has an error
-export const selectAuthError = (state: AuthState) => state.error;
-
-// Select the user if authenticated
-export const selectUser = (state: AuthState) => state.user;
-
-// Select the user's ID
-export const selectUserId = (state: AuthState) => state.user?.id;
-
-// Select user roles
-export const selectUserRoles = (state: AuthState) => state.roles;
-
-// Check if user has a specific role
-export const selectHasRole = (role: string) => (state: AuthState) => 
-  state.roles.includes(role as any);
-
-// Check if user is an admin
-export const selectIsAdmin = (state: AuthState) =>
-  state.roles.some(role => role === 'admin' || role === 'super_admin');
+export const selectHasRole =
+  (role: UserRole) =>
+  (state: AuthStore) =>
+    state.roles.includes(role)

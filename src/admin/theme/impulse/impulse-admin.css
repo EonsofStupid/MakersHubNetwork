@@ -1,89 +1,222 @@
 
 /**
- * Base admin styles for the Impulse Admin interface
+ * Impulse Admin Theme - Core CSS
+ * Cyberpunk/Mad Scientist aesthetic with glass morphism
  */
+
 .impulse-admin-root {
-  --admin-bg: var(--color-background, #12121A);
-  --admin-fg: var(--color-foreground, #F6F6F7);
-  --admin-primary: var(--color-primary, #00F0FF);
-  --admin-secondary: var(--color-secondary, #FF2D6E);
-  --admin-accent: var(--color-accent, #8B5CF6);
+  /* Base colors with fallbacks */
+  --impulse-primary: var(--impulse-primary, #00F0FF);
+  --impulse-secondary: var(--impulse-secondary, #FF2D6E);
+  --impulse-bg-main: var(--impulse-bg-main, rgba(15, 15, 20, 0.95));
+  --impulse-bg-card: var(--impulse-bg-card, rgba(20, 25, 35, 0.8));
+  --impulse-bg-overlay: var(--impulse-bg-overlay, rgba(18, 22, 30, 0.8));
   
-  background-color: var(--admin-bg);
-  color: var(--admin-fg);
+  /* Text colors */
+  --impulse-text-primary: var(--impulse-text-primary, #FFFFFF);
+  --impulse-text-secondary: var(--impulse-text-secondary, rgba(255, 255, 255, 0.7));
+  --impulse-text-accent: var(--impulse-text-accent, #00F0FF);
+  
+  /* Borders */
+  --impulse-border-normal: var(--impulse-border-normal, rgba(0, 240, 255, 0.2));
+  --impulse-border-hover: var(--impulse-border-hover, rgba(0, 240, 255, 0.4));
+  --impulse-border-active: var(--impulse-border-active, rgba(0, 240, 255, 0.6));
+  
+  /* Effects */
+  --impulse-glow-primary: var(--impulse-glow-primary, 0 0 15px rgba(0, 240, 255, 0.7));
+  --impulse-glow-secondary: var(--impulse-glow-secondary, 0 0 15px rgba(255, 45, 110, 0.7));
+  --impulse-blur-bg: var(--impulse-blur-bg, blur(12px));
+  
+  /* Animation speeds */
+  --impulse-duration-fast: var(--impulse-duration-fast, 150ms);
+  --impulse-duration-normal: var(--impulse-duration-normal, 300ms);
+  --impulse-duration-slow: var(--impulse-duration-slow, 500ms);
+  
+  /* Animation curves */
+  --impulse-curve-bounce: var(--impulse-curve-bounce, cubic-bezier(0.175, 0.885, 0.32, 1.275));
+  --impulse-curve-ease: var(--impulse-curve-ease, cubic-bezier(0.4, 0, 0.2, 1));
+  --impulse-curve-spring: var(--impulse-curve-spring, cubic-bezier(0.43, 0.13, 0.23, 0.96));
+  
+  /* Base styling */
+  background-color: var(--impulse-bg-main);
+  color: var(--impulse-text-primary);
 }
 
-/* Admin layout containers */
-.admin-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+/* Glass panels with subtle glow effects */
+.impulse-panel {
+  background-color: var(--impulse-bg-card);
+  backdrop-filter: var(--impulse-blur-bg);
+  border: 1px solid var(--impulse-border-normal);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: all var(--impulse-duration-normal) var(--impulse-curve-ease);
 }
 
-/* Admin panels */
-.admin-panel {
-  background: var(--color-bg-card, rgba(28, 32, 42, 0.7));
-  border-radius: var(--border-radius-lg, 0.75rem);
-  padding: var(--spacing-md, 1rem);
-  border: 1px solid var(--color-border, rgba(0, 240, 255, 0.2));
+.impulse-panel:hover {
+  border-color: var(--impulse-border-hover);
+  box-shadow: var(--impulse-glow-primary);
 }
 
-/* Admin card */
-.admin-card {
-  background: var(--color-bg-card, rgba(28, 32, 42, 0.7));
-  border-radius: var(--border-radius-md, 0.5rem);
-  padding: var(--spacing-md, 1rem);
-  border: 1px solid var(--color-border, rgba(0, 240, 255, 0.2));
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-}
-
-.admin-card:hover {
-  box-shadow: var(--impulse-glow, 0 0 15px rgba(0, 240, 255, 0.3));
-}
-
-/* Admin form elements */
-.admin-input {
-  background: var(--color-bg-alt, #1A1E24);
-  border: 1px solid var(--color-border, rgba(0, 240, 255, 0.2));
-  border-radius: var(--border-radius-sm, 0.375rem);
-  color: var(--color-foreground, #F6F6F7);
-  padding: 0.5rem 0.75rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.admin-input:focus {
-  border-color: var(--color-primary, #00F0FF);
-  box-shadow: 0 0 0 2px var(--color-primary-rgb, 0, 240, 255, 0.2);
-  outline: none;
-}
-
-/* Admin buttons */
-.admin-btn {
-  background: transparent;
-  border: 1px solid var(--color-primary, #00F0FF);
-  border-radius: var(--border-radius-md, 0.5rem);
-  color: var(--color-primary, #00F0FF);
-  cursor: pointer;
-  font-weight: 500;
+/* Button styling */
+.impulse-button {
+  background: rgba(0, 240, 255, 0.1);
+  color: var(--impulse-primary);
+  border: 1px solid var(--impulse-border-normal);
+  border-radius: 0.5rem;
   padding: 0.5rem 1rem;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.1s ease;
+  transition: all var(--impulse-duration-fast) var(--impulse-curve-ease);
 }
 
-.admin-btn:hover {
-  background: var(--color-primary, #00F0FF);
-  color: var(--admin-bg, #12121A);
+.impulse-button:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: var(--impulse-border-hover);
+  box-shadow: var(--impulse-glow-primary);
+  transform: translateY(-2px);
 }
 
-.admin-btn:active {
-  transform: translateY(1px);
+/* Pulse effects for active elements */
+.impulse-pulse {
+  position: relative;
 }
 
-.admin-btn-secondary {
-  border-color: var(--color-secondary, #FF2D6E);
-  color: var(--color-secondary, #FF2D6E);
+.impulse-pulse::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px var(--impulse-primary);
+  animation: impulse-pulse 2s infinite;
+  opacity: 0;
 }
 
-.admin-btn-secondary:hover {
-  background: var(--color-secondary, #FF2D6E);
-  color: var(--admin-bg, #12121A);
+@keyframes impulse-pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.05);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+/* Mad scientist effects */
+.impulse-beaker {
+  position: relative;
+  overflow: hidden;
+}
+
+.impulse-beaker::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(to top, 
+    rgba(0, 240, 255, 0.3),
+    rgba(0, 240, 255, 0.1)
+  );
+  border-radius: 0 0 inherit inherit;
+  animation: impulse-bubble 3s ease-in-out infinite;
+}
+
+@keyframes impulse-bubble {
+  0%, 100% {
+    opacity: 0.7;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(-5px) scale(1.02);
+  }
+}
+
+/* Scrollbar styling */
+.impulse-admin-root ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.impulse-admin-root ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.impulse-admin-root ::-webkit-scrollbar-thumb {
+  background: var(--impulse-border-normal);
+  border-radius: 3px;
+}
+
+.impulse-admin-root ::-webkit-scrollbar-thumb:hover {
+  background: var(--impulse-border-hover);
+}
+
+/* Angled corners for cyberpunk aesthetic */
+.impulse-edge-cut {
+  position: relative;
+}
+
+.impulse-edge-cut::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-style: solid;
+  border-width: 0 20px 20px 0;
+  border-color: transparent var(--impulse-primary) transparent transparent;
+  opacity: 0.5;
+}
+
+/* Cyber card */
+.cyber-card {
+  position: relative;
+  background: var(--impulse-bg-card);
+  border: 1px solid var(--impulse-border-normal);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border-radius: 0.75rem;
+  backdrop-filter: var(--impulse-blur-bg);
+  overflow: hidden;
+}
+
+.cyber-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to right, var(--impulse-primary), var(--impulse-secondary));
+  opacity: 0.7;
+}
+
+.cyber-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, 
+    rgba(0, 240, 255, 0.1),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* Dashboard grid layout */
+.impulse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .impulse-grid {
+    grid-template-columns: 1fr;
+  }
 }

@@ -5,9 +5,9 @@ import { Theme, ComponentTokens } from '@/types/theme';
 import { DEFAULT_THEME_NAME } from './themeInitializer';
 import { getLogger } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
-import { LogCategory } from '@/logging/types';
+import { LogCategory } from '@/logging';
 
-const logger = getLogger('ThemeUtils', { category: LogCategory.THEME });
+const logger = getLogger('ThemeUtils', LogCategory.THEME);
 
 /**
  * Deep merge utility for objects
@@ -285,88 +285,6 @@ export function getThemeProperty(theme: any, path: string): any {
     if (result === undefined || result === null) return undefined;
     result = result[part];
   }
-  
-  return result;
-}
-
-/**
- * Ensures a value is a string or provides a fallback
- * @param value The value to ensure is a string
- * @param fallback Optional fallback value if not a string
- * @returns A string value
- */
-export function ensureStringValue(value: unknown, fallback: string = ''): string {
-  if (typeof value === 'string') {
-    return value;
-  }
-  
-  if (value === null || value === undefined) {
-    return fallback;
-  }
-  
-  // Handle non-string primitives by converting to string
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-  
-  // For objects, try to use toString() if available
-  if (typeof value === 'object') {
-    try {
-      const str = String(value);
-      if (str !== '[object Object]') {
-        return str;
-      }
-    } catch (e) {
-      // If toString throws, fall back to the default
-    }
-  }
-  
-  return fallback;
-}
-
-/**
- * Flattens a nested theme object into an array of path/value pairs
- * Used by the theme editor
- * @param theme The theme object to flatten
- * @param prefix Optional prefix for the path
- * @returns Array of flattened theme properties with path, value and type
- */
-export function flattenTheme(theme: any, prefix: string = ''): Array<{path: string, value: any, type: string}> {
-  if (!theme || typeof theme !== 'object') {
-    return [];
-  }
-  
-  let result: Array<{path: string, value: any, type: string}> = [];
-  
-  Object.entries(theme).forEach(([key, value]) => {
-    const path = prefix ? `${prefix}.${key}` : key;
-    
-    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      // Recurse for nested objects
-      result = [...result, ...flattenTheme(value, path)];
-    } else {
-      // Determine the type of the value
-      let type = 'string';
-      if (typeof value === 'number') {
-        type = 'number';
-      } else if (typeof value === 'boolean') {
-        type = 'boolean';
-      } else if (typeof value === 'string') {
-        // Check if it's a color (simple check for hex, rgb, rgba, hsl)
-        if (/^#([A-Fa-f0-9]{3,8})$/.test(value) || 
-            /^rgba?\(/.test(value) || 
-            /^hsla?\(/.test(value)) {
-          type = 'color';
-        }
-      }
-      
-      result.push({
-        path,
-        value,
-        type
-      });
-    }
-  });
   
   return result;
 }

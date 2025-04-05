@@ -20,7 +20,7 @@ export const productionLoggingConfig: LoggingConfig = {
   minLevel: LogLevel.INFO,
   enabledCategories: [
     LogCategory.SYSTEM,
-    LogCategory.AUTHENTICATION,
+    LogCategory.AUTH,
     LogCategory.ADMIN,
     LogCategory.DATA,
     LogCategory.NETWORK,
@@ -36,7 +36,7 @@ export const productionLoggingConfig: LoggingConfig = {
 export const testLoggingConfig: LoggingConfig = {
   ...defaultLoggingConfig,
   minLevel: LogLevel.ERROR, // Only log errors and above in tests
-  transports: [defaultLoggingConfig.transports[0]], // Only use memory transport in tests
+  transports: [defaultLoggingConfig.transports[1]], // Only use memory transport in tests
   bufferSize: 1,
   flushInterval: 0
 };
@@ -58,10 +58,8 @@ export function getLoggingConfig(): LoggingConfig {
 
 // Add Production Supabase transport conditionally
 if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
-  import('../transports/supabase.transport').then((module) => {
-    if (module && module.supabaseTransport) {
-      productionLoggingConfig.transports.push(module.supabaseTransport);
-    }
+  import('../transports/supabase.transport').then(({ supabaseTransport }) => {
+    productionLoggingConfig.transports.push(supabaseTransport);
   }).catch(error => {
     console.error('Failed to load Supabase transport:', error);
   });

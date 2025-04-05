@@ -1237,9 +1237,8 @@ export type Database = {
       theme_components: {
         Row: {
           component_name: string
-          context: Database["public"]["Enums"]["theme_context"]
+          context: string | null
           created_at: string | null
-          description: string | null
           id: string
           styles: Json
           theme_id: string | null
@@ -1247,9 +1246,8 @@ export type Database = {
         }
         Insert: {
           component_name: string
-          context?: Database["public"]["Enums"]["theme_context"]
+          context?: string | null
           created_at?: string | null
-          description?: string | null
           id?: string
           styles: Json
           theme_id?: string | null
@@ -1257,9 +1255,8 @@ export type Database = {
         }
         Update: {
           component_name?: string
-          context?: Database["public"]["Enums"]["theme_context"]
+          context?: string | null
           created_at?: string | null
-          description?: string | null
           id?: string
           styles?: Json
           theme_id?: string | null
@@ -1319,34 +1316,63 @@ export type Database = {
           },
         ]
       }
+      theme_variants: {
+        Row: {
+          created_at: string | null
+          id: string
+          styles: Json | null
+          theme_id: string | null
+          updated_at: string | null
+          variant_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          styles?: Json | null
+          theme_id?: string | null
+          updated_at?: string | null
+          variant_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          styles?: Json | null
+          theme_id?: string | null
+          updated_at?: string | null
+          variant_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_variants_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       theme_versions: {
         Row: {
-          component_tokens: Json | null
+          changes: Json
           created_at: string | null
           created_by: string | null
-          design_tokens: Json
           id: string
-          metadata: Json | null
           theme_id: string | null
           version: number
         }
         Insert: {
-          component_tokens?: Json | null
+          changes: Json
           created_at?: string | null
           created_by?: string | null
-          design_tokens: Json
           id?: string
-          metadata?: Json | null
           theme_id?: string | null
           version: number
         }
         Update: {
-          component_tokens?: Json | null
+          changes?: Json
           created_at?: string | null
           created_by?: string | null
-          design_tokens?: Json
           id?: string
-          metadata?: Json | null
           theme_id?: string | null
           version?: number
         }
@@ -1366,19 +1392,16 @@ export type Database = {
           cached_styles: Json | null
           component_tokens: Json | null
           composition_rules: Json | null
-          context: Database["public"]["Enums"]["theme_context"]
           created_at: string | null
           created_by: string | null
           description: string | null
-          design_tokens: Json
+          design_tokens: Json | null
           id: string
           is_default: boolean | null
-          is_system: boolean | null
           name: string
           parent_theme_id: string | null
-          preview_url: string | null
           published_at: string | null
-          status: Database["public"]["Enums"]["theme_status"]
+          status: Database["public"]["Enums"]["theme_status"] | null
           updated_at: string | null
           version: number | null
         }
@@ -1387,19 +1410,16 @@ export type Database = {
           cached_styles?: Json | null
           component_tokens?: Json | null
           composition_rules?: Json | null
-          context?: Database["public"]["Enums"]["theme_context"]
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          design_tokens: Json
+          design_tokens?: Json | null
           id?: string
           is_default?: boolean | null
-          is_system?: boolean | null
           name: string
           parent_theme_id?: string | null
-          preview_url?: string | null
           published_at?: string | null
-          status?: Database["public"]["Enums"]["theme_status"]
+          status?: Database["public"]["Enums"]["theme_status"] | null
           updated_at?: string | null
           version?: number | null
         }
@@ -1408,19 +1428,16 @@ export type Database = {
           cached_styles?: Json | null
           component_tokens?: Json | null
           composition_rules?: Json | null
-          context?: Database["public"]["Enums"]["theme_context"]
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          design_tokens?: Json
+          design_tokens?: Json | null
           id?: string
           is_default?: boolean | null
-          is_system?: boolean | null
           name?: string
           parent_theme_id?: string | null
-          preview_url?: string | null
           published_at?: string | null
-          status?: Database["public"]["Enums"]["theme_status"]
+          status?: Database["public"]["Enums"]["theme_status"] | null
           updated_at?: string | null
           version?: number | null
         }
@@ -1537,12 +1554,6 @@ export type Database = {
         }
         Returns: Json
       }
-      get_effective_theme: {
-        Args: {
-          theme_id: string
-        }
-        Returns: Json
-      }
       get_theme_inheritance_chain: {
         Args: {
           theme_id: string
@@ -1598,7 +1609,6 @@ export type Database = {
       content_status: "draft" | "review" | "published" | "archived"
       content_type: "guide" | "tutorial" | "part-desc" | "build-log"
       part_status: "draft" | "published" | "archived"
-      theme_context: "site" | "admin" | "chat"
       theme_status: "draft" | "published" | "archived"
       user_role: "super_admin" | "admin" | "maker" | "builder"
       workflow_field_type:

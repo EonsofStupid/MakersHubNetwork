@@ -1,74 +1,105 @@
-
 import { useMemo } from 'react';
-import { ThemeToken, ComponentTokens, DesignTokensStructure } from '@/types/theme';
+import { DesignTokensStructure, ThemeToken, ComponentTokens } from '@/types/theme';
 
-/**
- * Hook that provides utilities for converting theme tokens between formats
- */
 export function useTokenConverters() {
-  
-  // Convert design tokens object to array of ThemeToken objects
-  const convertDesignTokensToArray = (tokens?: DesignTokensStructure): ThemeToken[] => {
-    if (!tokens) return [];
+  /**
+   * Converts design tokens object structure to array of tokens
+   */
+  const convertDesignTokensToArray = useMemo(() => (designTokens?: DesignTokensStructure): ThemeToken[] => {
+    if (!designTokens) return [];
     
-    const result: ThemeToken[] = [];
+    const tokens: ThemeToken[] = [];
     
-    // Helper to recursively process nested objects
-    const processObject = (obj: any, path: string[] = [], category: string = 'general') => {
-      if (!obj || typeof obj !== 'object') return;
-      
-      Object.entries(obj).forEach(([key, value]) => {
-        const currentPath = [...path, key];
-        
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
-          // Recursively process nested objects
-          processObject(value, currentPath, category);
-        } else {
-          // Add leaf node as token
-          const tokenPath = currentPath.join('.');
-          
-          result.push({
-            id: tokenPath,
-            token_name: tokenPath,
-            token_value: String(value),
-            category: getTokenCategory(currentPath),
-            description: '',
-          });
-        }
+    // Process colors
+    if (designTokens.colors) {
+      Object.entries(designTokens.colors).forEach(([name, value]) => {
+        tokens.push({
+          id: `color-${name}`,
+          token_name: name,
+          token_value: value as string,
+          category: 'colors'
+        });
       });
-    };
+    }
     
-    // Determine token category from path
-    const getTokenCategory = (path: string[]): string => {
-      const firstSegment = path[0] || '';
+    // Process typography
+    if (designTokens.typography) {
+      // Font sizes
+      if (designTokens.typography.fontSizes) {
+        Object.entries(designTokens.typography.fontSizes).forEach(([name, value]) => {
+          tokens.push({
+            id: `font-size-${name}`,
+            token_name: `fontSize.${name}`,
+            token_value: value as string,
+            category: 'typography.fontSizes'
+          });
+        });
+      }
       
-      if (firstSegment === 'colors') return 'color';
-      if (firstSegment === 'typography') return 'typography';
-      if (firstSegment === 'effects') return 'effect';
-      if (firstSegment === 'animation') return 'animation';
-      if (firstSegment === 'components') return 'component';
-      if (firstSegment === 'spacing') return 'spacing';
-      
-      return 'general';
-    };
+      // Font families
+      if (designTokens.typography.fontFamilies) {
+        Object.entries(designTokens.typography.fontFamilies).forEach(([name, value]) => {
+          tokens.push({
+            id: `font-family-${name}`,
+            token_name: `fontFamily.${name}`,
+            token_value: value as string,
+            category: 'typography.fontFamilies'
+          });
+        });
+      }
+    }
     
-    // Process all top-level categories
-    Object.entries(tokens).forEach(([category, values]) => {
-      processObject(values, [category], category);
-    });
+    // Process effects
+    if (designTokens.effects) {
+      // Shadows
+      if (designTokens.effects.shadows) {
+        Object.entries(designTokens.effects.shadows).forEach(([name, value]) => {
+          tokens.push({
+            id: `shadow-${name}`,
+            token_name: `shadow.${name}`,
+            token_value: value as string,
+            category: 'effects.shadows'
+          });
+        });
+      }
+    }
+    
+    return tokens;
+  }, []);
+  
+  /**
+   * Converts component tokens to array format
+   */
+  const convertComponentTokensToArray = useMemo(() => (componentTokens?: ComponentTokens[]): ComponentTokens[] => {
+    if (!componentTokens) return [];
+    
+    // If componentTokens is already an array, return it
+    if (Array.isArray(componentTokens)) {
+      return componentTokens;
+    }
+    
+    // Otherwise convert from object format
+    const result: ComponentTokens[] = [];
+    
+    try {
+      if (typeof componentTokens === 'object') {
+        Object.entries(componentTokens).forEach(([name, styles]) => {
+          result.push({
+            id: `component-${name}`,
+            component_name: name,
+            styles: styles as Record<string, any>,
+          });
+        });
+      }
+    } catch (error) {
+      console.error("Error converting component tokens:", error);
+    }
     
     return result;
-  };
+  }, []);
   
-  // Convert component tokens to array format
-  const convertComponentTokensToArray = (components?: ComponentTokens[]): ComponentTokens[] => {
-    if (!components || !Array.isArray(components)) return [];
-    return components;
-  };
-  
-  // Return the converter functions
-  return useMemo(() => ({
+  return {
     convertDesignTokensToArray,
     convertComponentTokensToArray
-  }), []);
+  };
 }

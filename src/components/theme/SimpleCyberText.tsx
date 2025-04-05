@@ -1,39 +1,47 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface SimpleCyberTextProps {
   text: string;
   className?: string;
-  glitchEffect?: boolean;
-  glowEffect?: boolean;
-  scanlineEffect?: boolean;
+  glitch?: boolean;
 }
 
-export function SimpleCyberText({
-  text,
-  className,
-  glitchEffect = true,
-  glowEffect = true,
-  scanlineEffect = false
-}: SimpleCyberTextProps) {
+export function SimpleCyberText({ text, className = '', glitch = false }: SimpleCyberTextProps) {
+  const letters = text.split('');
+
+  if (glitch) {
+    return (
+      <motion.span 
+        className={`inline-block relative ${className}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {letters.map((letter, index) => (
+          <motion.span
+            key={index}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05, duration: 0.3 }}
+            className="inline-block"
+            style={{ 
+              textShadow: '0 0 2px rgba(0, 240, 255, 0.5), 0 0 5px rgba(0, 240, 255, 0.3)'
+            }}
+          >
+            {letter === ' ' ? '\u00A0' : letter}
+          </motion.span>
+        ))}
+      </motion.span>
+    );
+  }
+
   return (
-    <span
-      className={cn(
-        'relative inline-block',
-        glitchEffect && 'cyber-glitch',
-        glowEffect && 'cyber-glow',
-        scanlineEffect && 'cyber-scanlines',
-        className
-      )}
-      data-text={text}
-    >
+    <span className={className} style={{ 
+      textShadow: '0 0 2px rgba(0, 240, 255, 0.5), 0 0 5px rgba(0, 240, 255, 0.3)'
+    }}>
       {text}
-      {scanlineEffect && (
-        <span className="absolute inset-0 overflow-hidden pointer-events-none">
-          <span className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/10 to-transparent opacity-30 animate-scan-line" />
-        </span>
-      )}
     </span>
   );
 }

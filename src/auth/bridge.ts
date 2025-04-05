@@ -1,7 +1,6 @@
-
 import { useAuthStore } from './store/auth.store';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { LogCategory } from '@/logging';
 import { safeDetails } from '@/logging/utils/safeDetails';
 
 // Define the event types
@@ -46,7 +45,7 @@ export function subscribeToAuthEvents(handler: AuthEventHandler): () => void {
 export function publishAuthEvent(event: AuthEvent): void {
   const logger = getLogger();
   logger.info('Auth event occurred', {
-    category: LogCategory.AUTHENTICATION,
+    category: LogCategory.AUTH,
     details: safeDetails(event)
   });
   
@@ -55,7 +54,7 @@ export function publishAuthEvent(event: AuthEvent): void {
       handler(event);
     } catch (error) {
       logger.error('Error in auth event handler', {
-        category: LogCategory.AUTHENTICATION,
+        category: LogCategory.AUTH,
         details: { error, eventType: event.type }
       });
     }
@@ -68,7 +67,7 @@ export function publishAuthEvent(event: AuthEvent): void {
 export function initializeAuthBridge(): void {
   const logger = getLogger();
   logger.info('Initializing auth bridge', {
-    category: LogCategory.AUTHENTICATION,
+    category: LogCategory.AUTH,
     source: 'auth/bridge'
   });
   

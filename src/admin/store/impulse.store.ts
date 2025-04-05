@@ -6,11 +6,8 @@ import { useThemeStore } from "@/stores/theme/store";
 import { getLogger } from "@/logging";
 import { safeDetails } from "@/logging/utils/safeDetails";
 import { DEFAULT_THEME_NAME } from "@/utils/themeInitializer";
-import { themeToImpulseTheme } from "@/admin/theme/utils/modelTransformers";
-import { applyThemeToDocument } from "@/admin/theme/utils/themeApplicator";
-import { LogCategory } from "@/logging/types";
 
-const logger = getLogger('ImpulsivityStore', { category: LogCategory.THEME });
+const logger = getLogger('ImpulsivityStore');
 
 interface ImpulsivityThemeState {
   // Theme state
@@ -36,34 +33,10 @@ export const useImpulsivityStore = create<ImpulsivityThemeState>((set, get) => (
   
   // Actions
   setTheme: (themeUpdates) => {
-    try {
-      // Get current theme
-      const currentTheme = get().theme;
-      
-      // Create merged theme with updates
-      const updatedTheme = { 
-        ...currentTheme, 
-        ...themeUpdates 
-      } as ImpulseTheme;
-      
-      // Apply theme to document immediately
-      applyThemeToDocument(updatedTheme);
-      
-      set({
-        theme: updatedTheme,
-        isDirty: true
-      });
-      
-      logger.debug('Theme updated locally', {
-        details: { updatedProperties: Object.keys(themeUpdates).join(', ') }
-      });
-    } catch (error) {
-      logger.error('Error updating theme', {
-        details: safeDetails(error)
-      });
-      
-      // Don't change state on error
-    }
+    set((state) => ({
+      theme: { ...state.theme, ...themeUpdates },
+      isDirty: true
+    }));
   },
   
   loadTheme: async () => {
@@ -72,42 +45,28 @@ export const useImpulsivityStore = create<ImpulsivityThemeState>((set, get) => (
       logger.info(`Loading ${DEFAULT_THEME_NAME} theme`);
       
       const themeStore = useThemeStore.getState();
-      
-      // First try to use existing theme from the main store
-      let { currentTheme } = themeStore;
-      
-      // If no theme in the store, try to hydrate it
-      if (!currentTheme) {
-        logger.debug('No current theme in store, hydrating');
-        await themeStore.hydrateTheme();
-        currentTheme = themeStore.currentTheme;
-      }
+      const { currentTheme } = themeStore;
       
       if (currentTheme) {
-        // Convert to ImpulseTheme format
-        const impulseTheme = themeToImpulseTheme(currentTheme);
+        // Extract admin-specific tokens
+        const adminTokens = currentTheme.design_tokens?.admin || {};
         
-        // Apply theme to document
-        applyThemeToDocument(impulseTheme);
-        
+        // Merge with defaults
         set({
-          theme: impulseTheme,
-          isLoading: false,
-          isDirty: false
+          theme: {
+            ...defaultImpulseTokens,
+            ...adminTokens
+          },
+          isLoading: false
         });
         
         logger.debug(`${DEFAULT_THEME_NAME} theme loaded successfully`);
       } else {
         // No theme in database, use defaults
         logger.warn(`No current theme found, using default ${DEFAULT_THEME_NAME} tokens`);
-        
-        // Apply default theme
-        applyThemeToDocument(defaultImpulseTokens);
-        
         set({ 
           theme: defaultImpulseTokens,
-          isLoading: false,
-          isDirty: false
+          isLoading: false
         });
       }
     } catch (error) {
@@ -115,12 +74,8 @@ export const useImpulsivityStore = create<ImpulsivityThemeState>((set, get) => (
         details: safeDetails(error)
       });
       
-      // Apply default theme on error
-      applyThemeToDocument(defaultImpulseTokens);
-      
       set({ 
         error: error instanceof Error ? error : new Error("Failed to load theme"),
-        theme: defaultImpulseTokens,
         isLoading: false
       });
     }
@@ -142,12 +97,8 @@ export const useImpulsivityStore = create<ImpulsivityThemeState>((set, get) => (
           admin: theme
         };
         
-        // Update the theme in the main store
-        themeStore.updateCurrentTheme({
-          design_tokens: updatedDesignTokens
-        });
+        await themeStore.setTheme(currentTheme.id);
         
-        // Mark as clean after saving
         set({ 
           isDirty: false,
           isLoading: false
@@ -166,29 +117,15 @@ export const useImpulsivityStore = create<ImpulsivityThemeState>((set, get) => (
         error: error instanceof Error ? error : new Error("Failed to save theme"),
         isLoading: false
       });
-      
-      throw error;
     }
   },
   
   resetTheme: () => {
-    try {
-      logger.info(`Resetting ${DEFAULT_THEME_NAME} theme to defaults`);
-      
-      // Apply default theme
-      applyThemeToDocument(defaultImpulseTokens);
-      
-      set({ 
-        theme: defaultImpulseTokens,
-        isDirty: true
-      });
-      
-      logger.debug(`${DEFAULT_THEME_NAME} theme reset to defaults`);
-    } catch (error) {
-      logger.error(`Error resetting ${DEFAULT_THEME_NAME} theme:`, {
-        details: safeDetails(error)
-      });
-    }
+    logger.info(`Resetting ${DEFAULT_THEME_NAME} theme to defaults`);
+    set({ 
+      theme: defaultImpulseTokens,
+      isDirty: true
+    });
   }
 }));
 

@@ -1,119 +1,292 @@
-
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { devtools } from 'zustand/middleware';
+import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { 
+  saveThemeToLocalStorage,
+  getThemeFromLocalStorage
+} from './localStorage';
 
-const logger = getLogger('ThemeStore', { category: LogCategory.THEME });
+const logger = getLogger('themeStore');
 
-export interface ThemeComponentStyle {
+export interface ThemeComponent {
+  id: string;
+  theme_id: string;
   component_name: string;
+  context: 'site' | 'admin' | 'print';
   styles: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
 }
 
-interface ThemeState {
-  currentTheme: string;
-  themeTokens: Record<string, any>;
-  siteComponents: ThemeComponentStyle[];
+export interface ThemeData {
+  id: string;
+  name: string;
+  description: string;
+  is_system: boolean;
+  is_active: boolean;
+  design_tokens: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ThemeStore {
+  // Theme state
+  currentTheme: ThemeData | null;
+  themeComponents: ThemeComponent[];
+  adminComponents: ThemeComponent[];
   isLoading: boolean;
   error: Error | null;
-  setTheme: (theme: string) => void;
-  setThemeTokens: (tokens: Record<string, any>) => void;
-  loadSiteComponents: () => Promise<void>;
+
+  // Theme actions
+  loadTheme: (themeId: string) => Promise<ThemeData>;
+  setTheme: (themeId: string) => Promise<void>;
+  loadComponents: (themeId: string) => Promise<ThemeComponent[]>;
+  loadAdminComponents: () => Promise<ThemeComponent[]>;
+  updateComponent: (component: ThemeComponent) => Promise<ThemeComponent>;
+  createComponent: (component: Omit<ThemeComponent, 'id' | 'created_at' | 'updated_at'>) => Promise<ThemeComponent>;
+  deleteComponent: (componentId: string) => Promise<void>;
   hydrateTheme: () => Promise<void>;
 }
 
-export const useThemeStore = create<ThemeState>()(
-  persist(
+export const useThemeStore = create<ThemeStore>()(
+  devtools(
     (set, get) => ({
-      currentTheme: '',
-      themeTokens: {},
-      siteComponents: [],
+      // Initial state
+      currentTheme: null,
+      themeComponents: [],
+      adminComponents: [],
       isLoading: false,
       error: null,
-      
-      setTheme: (theme) => {
-        logger.debug(`Setting theme to: ${theme}`);
-        set({ currentTheme: theme });
-      },
-      
-      setThemeTokens: (tokens) => {
-        logger.debug('Setting theme tokens', { details: { tokenCount: Object.keys(tokens).length } });
-        set({ themeTokens: tokens });
-      },
-      
+
+      // Hydrate theme from localStorage or use the default
       hydrateTheme: async () => {
-        logger.debug('Hydrating theme from store');
-        // This is a placeholder implementation
-        return Promise.resolve();
-      },
-      
-      loadSiteComponents: async () => {
-        try {
-          set({ isLoading: true });
-          logger.debug('Loading site components');
-          
-          // This would be replaced with an actual API call in a complete implementation
-          // For now, we'll use mock data
-          const mockComponents: ThemeComponentStyle[] = [
-            {
-              component_name: 'MainNav',
-              styles: {
-                container: {
-                  base: 'fixed top-0 w-full z-50 transition-all duration-300',
-                  animated: 'animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(var(--color-primary),0.1)]'
-                },
-                header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(var(--color-primary),0.2)] border-b border-primary/30',
-                dataStream: 'relative overflow-hidden',
-                dataStreamEffect: 'mainnav-data-stream',
-                glitchParticles: 'mainnav-glitch-particles',
+        const storedThemeId = getThemeFromLocalStorage();
+        if (storedThemeId) {
+          try {
+            logger.info('Hydrating theme from localStorage', { details: { themeId: storedThemeId } });
+            await get().setTheme(storedThemeId);
+          } catch (error) {
+            logger.error('Failed to hydrate theme, using default', { details: { error } });
+            // Try to set the default theme
+            try {
+              const { data } = await supabase
+                .from('themes')
+                .select('id')
+                .eq('is_default', true)
+                .single();
+                
+              if (data?.id) {
+                await get().setTheme(data.id);
               }
-            },
-            {
-              component_name: 'PageTitle',
-              styles: {
-                title: "text-4xl md:text-5xl lg:text-6xl font-bold mb-6 relative",
-                gradient: "bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mad-scientist-hover"
-              }
-            },
-            {
-              component_name: 'ActionButtons',
-              styles: {
-                buildCta: "cyber-card inline-flex h-12 items-center justify-center rounded-md bg-primary/20 px-8 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(0,240,255,0.15)] transition-all duration-300 hover:scale-105 hover:bg-primary/30 hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden",
-                browseCta: "glass-morphism inline-flex h-12 items-center justify-center rounded-md border border-primary/30 bg-background/30 backdrop-blur-xl px-8 text-sm font-medium ring-offset-background transition-colors hover:bg-accent/10 hover:text-accent-foreground hover:border-primary/50 hover:shadow-[0_0_15px_rgba(0,240,255,0.15)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden",
-                communityCta: "neo-blur inline-flex h-12 items-center justify-center rounded-md border border-secondary/30 bg-background/30 backdrop-blur-xl px-8 text-sm font-medium transition-colors hover:bg-secondary/10 hover:text-secondary-foreground hover:border-secondary/50 hover:shadow-[0_0_15px_rgba(255,45,110,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden"
-              }
-            },
-            {
-              component_name: 'SubscriptionForm',
-              styles: {
-                container: "subscribe-banner cyber-card p-4 md:p-6 max-w-xl mx-auto my-8 relative overflow-hidden",
-                gradient: "absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10"
-              }
+            } catch (defaultError) {
+              logger.error('Failed to load default theme as well', { details: { defaultError } });
+              set({ error: new Error('Failed to load any theme'), isLoading: false });
             }
-          ];
-          
-          await new Promise(resolve => setTimeout(resolve, 100)); // Simulate API delay
-          
-          set({
-            siteComponents: mockComponents,
-            isLoading: false
-          });
-          
-          logger.info('Site components loaded', { 
-            details: { componentCount: mockComponents.length } 
-          });
-        } catch (error: unknown) {
-          const err = error instanceof Error ? error : new Error(String(error));
-          logger.error('Failed to load site components', { 
-            details: { message: err.message } 
-          });
-          set({ error: err, isLoading: false });
+          }
+        } else {
+          logger.info('No theme in localStorage, attempting to load default');
+          try {
+            const { data } = await supabase
+              .from('themes')
+              .select('id')
+              .eq('is_default', true)
+              .single();
+              
+            if (data?.id) {
+              await get().setTheme(data.id);
+            }
+          } catch (error) {
+            logger.error('Failed to load default theme', { details: { error } });
+            set({ error: new Error('Failed to load default theme'), isLoading: false });
+          }
         }
       },
+
+      // Actions
+      loadTheme: async (themeId: string) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const { data, error } = await supabase
+            .from('themes')
+            .select('*')
+            .eq('id', themeId)
+            .single();
+
+          if (error) throw error;
+          if (!data) throw new Error(`Theme not found: ${themeId}`);
+
+          set({ currentTheme: data, isLoading: false });
+          
+          // Save successful theme to localStorage
+          saveThemeToLocalStorage(themeId);
+          
+          return data;
+        } catch (error: any) {
+          set({ error, isLoading: false });
+          throw error;
+        }
+      },
+
+      setTheme: async (themeId: string) => {
+        const { loadTheme, loadComponents } = get();
+        
+        try {
+          const theme = await loadTheme(themeId);
+          const components = await loadComponents(themeId);
+          
+          set({ 
+            currentTheme: theme,
+            themeComponents: components,
+            isLoading: false,
+            error: null
+          });
+          
+          // Save to localStorage
+          saveThemeToLocalStorage(themeId);
+        } catch (error: any) {
+          set({ error, isLoading: false });
+          throw error;
+        }
+      },
+
+      loadComponents: async (themeId: string) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const { data, error } = await supabase
+            .from('theme_components')
+            .select('*')
+            .eq('theme_id', themeId);
+
+          if (error) throw error;
+
+          set({ themeComponents: data || [], isLoading: false });
+          return data || [];
+        } catch (error: any) {
+          set({ error, isLoading: false });
+          throw error;
+        }
+      },
+
+      loadAdminComponents: async () => {
+        const { currentTheme } = get();
+        if (!currentTheme) {
+          return [];
+        }
+
+        set({ isLoading: true, error: null });
+        
+        try {
+          const { data, error } = await supabase
+            .from('theme_components')
+            .select('*')
+            .eq('theme_id', currentTheme.id)
+            .eq('context', 'admin');
+
+          if (error) throw error;
+
+          set({ adminComponents: data || [], isLoading: false });
+          return data || [];
+        } catch (error: any) {
+          set({ error, isLoading: false });
+          throw error;
+        }
+      },
+
+      updateComponent: async (component) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const { data, error } = await supabase
+            .from('theme_components')
+            .update({
+              component_name: component.component_name || '',
+              context: component.context || 'site',
+              styles: component.styles || {},
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', component.id)
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          // Update components in state
+          set(state => ({
+            themeComponents: state.themeComponents.map(c => 
+              c.id === component.id ? { ...c, ...data } : c
+            ),
+            adminComponents: state.adminComponents.map(c =>
+              c.id === component.id ? { ...c, ...data } : c
+            ),
+            isLoading: false
+          }));
+
+          return data;
+        } catch (error: any) {
+          set({ error, isLoading: false });
+          throw error;
+        }
+      },
+
+      createComponent: async (component) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const { data, error } = await supabase
+            .from('theme_components')
+            .insert({
+              theme_id: component.theme_id,
+              component_name: component.component_name || '',
+              context: component.context || 'site',
+              styles: component.styles || {}
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          // Add new component to state
+          set(state => ({
+            themeComponents: [...state.themeComponents, data],
+            adminComponents: component.context === 'admin' 
+              ? [...state.adminComponents, data] 
+              : state.adminComponents,
+            isLoading: false
+          }));
+
+          return data;
+        } catch (error: any) {
+          set({ error, isLoading: false });
+          throw error;
+        }
+      },
+
+      deleteComponent: async (componentId) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const { error } = await supabase
+            .from('theme_components')
+            .delete()
+            .eq('id', componentId);
+
+          if (error) throw error;
+
+          // Remove component from state
+          set(state => ({
+            themeComponents: state.themeComponents.filter(c => c.id !== componentId),
+            adminComponents: state.adminComponents.filter(c => c.id !== componentId),
+            isLoading: false
+          }));
+        } catch (error: any) {
+          set({ error, isLoading: false });
+          throw error;
+        }
+      }
     }),
-    {
-      name: 'theme-store',
-    }
+    { name: 'theme-store' }
   )
 );

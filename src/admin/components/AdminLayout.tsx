@@ -12,7 +12,7 @@ import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { LogConsole } from "@/logging/components/LogConsole";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging/types";
+import { LogCategory } from "@/logging";
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
 
@@ -34,7 +34,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const { showLogConsole } = useLoggingContext();
-  const logger = useLogger("AdminLayout", { category: LogCategory.ADMIN });
+  const logger = useLogger("AdminLayout", LogCategory.ADMIN);
   const { hasAdminAccess, isAuthenticated } = useAdminAccess();
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         permissionsCount: permissions.length,
         hasAdminAccess,
         isAuthenticated
-      }
+      },
     });
 
     // If somehow a non-admin user got here, redirect them

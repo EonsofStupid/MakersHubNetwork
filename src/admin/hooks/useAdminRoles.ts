@@ -1,73 +1,41 @@
 
-import { useMemo } from 'react';
-import { useAuth } from '@/auth/hooks/useAuth';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { useAdminStore } from '@/admin/store/admin.store';
+import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { UserRole } from '@/auth/types/auth.types';
 
 /**
- * Hook to check user roles in the admin panel
+ * Maps user roles to admin permissions
+ * This hook bridges the auth store with the admin store
  */
 export function useAdminRoles() {
-  const { roles, isLoading, isAuthenticated } = useAuth();
-  const logger = useLogger('useAdminRoles', { category: LogCategory.ADMIN });
+  const { user, roles, status } = useAuthStore();
+  const { loadPermissions, permissions } = useAdminStore();
+  const logger = useLogger('useAdminRoles', LogCategory.ADMIN);
   
-  const isAdmin = useMemo(() => {
-    const hasAdminRole = roles.includes('admin' as UserRole) || roles.includes('super_admin' as UserRole);
-    return hasAdminRole;
-  }, [roles]);
-  
-  const isModerator = useMemo(() => {
-    return roles.includes('moderator' as UserRole);
-  }, [roles]);
-  
-  const isEditor = useMemo(() => {
-    return roles.includes('editor' as UserRole);
-  }, [roles]);
-  
-  /**
-   * Check if the user has a specific role
-   */
-  const hasRole = (role: string): boolean => {
-    if (!isAuthenticated) return false;
-    return roles.includes(role as UserRole);
-  };
-  
-  /**
-   * Check if the user has any of the specified roles
-   */
-  const hasAnyRole = (checkRoles: string[]): boolean => {
-    if (!isAuthenticated) return false;
-    return checkRoles.some(role => roles.includes(role as UserRole));
-  };
-  
-  /**
-   * Get user's highest role
-   */
-  const getHighestRole = (): UserRole | null => {
-    if (!isAuthenticated || roles.length === 0) return null;
-    
-    const roleHierarchy: UserRole[] = [
-      'super_admin', 'admin', 'moderator', 'editor', 'user'
-    ];
-    
-    for (const role of roleHierarchy) {
-      if (roles.includes(role)) {
-        return role;
-      }
+  useEffect(() => {
+    // Only load permissions when user is authenticated and roles are loaded
+    if (status === 'authenticated' && roles && roles.length > 0) {
+      logger.info('Loading admin permissions for user roles', {
+        details: { 
+          userId: user?.id,
+          roles 
+        }
+      });
+      
+      loadPermissions().catch(error => {
+        logger.error('Error loading admin permissions', {
+          details: { error }
+        });
+      });
     }
-    
-    return roles[0];
-  };
+  }, [status, roles, loadPermissions, user, logger]);
   
   return {
-    roles,
-    isAdmin,
-    isModerator,
-    isEditor,
-    hasRole,
-    hasAnyRole,
-    getHighestRole,
-    isLoading
+    isAdmin: Boolean(roles?.includes('admin') || roles?.includes('super_admin')),
+    isSuperAdmin: Boolean(roles?.includes('super_admin')),
+    permissions
   };
 }

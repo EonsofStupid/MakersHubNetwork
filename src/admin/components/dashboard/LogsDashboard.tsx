@@ -1,149 +1,141 @@
 
-import React, { useState, useEffect } from "react";
-import { safeGetLogs, getLogsByLevel, getLogsByCategory, getErrorLogs, filterEntries } from "@/logging/utils/memoryTransportHelper";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogLevel } from "@/logging/types";
-import { getLogger } from "@/logging";
+import React, { useState, useEffect } from 'react';
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LogCategory, LogLevel, memoryTransport } from '@/logging';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Trash } from 'lucide-react';
 
-const LogsDashboard = () => {
-  const logger = getLogger("LogsDashboard");
-  const [logEntries, setLogEntries] = useState([]);
-  const [activeTab, setActiveTab] = useState("all");
-
-  // This is a placeholder - in a real implementation, you'd connect to your actual log storage
+export function LogsDashboard() {
+  const [logs, setLogs] = useState(memoryTransport.getLogs());
+  const [activeTab, setActiveTab] = useState<string>('level');
+  
+  // Refresh logs periodically
   useEffect(() => {
-    // Sample log for demonstration
-    logger.info("Logs dashboard initialized");
-    logger.debug("Debug information", { details: { someValue: 123 } });
+    const interval = setInterval(() => {
+      setLogs(memoryTransport.getLogs());
+    }, 5000);
     
-    // Get logs would come from your actual log storage
-    // setLogEntries(getLogEntries());
-  }, [logger]);
-
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Process log data for charts
+  const levelData = React.useMemo(() => {
+    const countsByLevel: Record<string, number> = {};
+    
+    logs.forEach(log => {
+      const levelName = LogLevel[log.level];
+      countsByLevel[levelName] = (countsByLevel[levelName] || 0) + 1;
+    });
+    
+    return Object.entries(countsByLevel).map(([level, count]) => ({
+      level,
+      count
+    }));
+  }, [logs]);
+  
+  const categoryData = React.useMemo(() => {
+    const countsByCategory: Record<string, number> = {};
+    
+    logs.forEach(log => {
+      countsByCategory[log.category] = (countsByCategory[log.category] || 0) + 1;
+    });
+    
+    return Object.entries(countsByCategory).map(([category, count]) => ({
+      category,
+      count
+    }));
+  }, [logs]);
+  
+  const clearAllLogs = () => {
+    memoryTransport.clear();
+    setLogs([]);
+  };
+  
+  // Calculate some statistics
+  const totalLogs = logs.length;
+  const errorCount = logs.filter(log => log.level >= LogLevel.ERROR).length;
+  const warningCount = logs.filter(log => log.level === LogLevel.WARN).length;
+  const errorPercentage = totalLogs ? ((errorCount / totalLogs) * 100).toFixed(1) : '0';
+  
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">System Logs</h2>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">Refresh</Button>
-          <Button variant="outline" size="sm">Export</Button>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Logging Dashboard</h2>
+          <p className="text-[var(--impulse-text-secondary)]">
+            Total Logs: {totalLogs} | Errors: {errorCount} ({errorPercentage}%) | Warnings: {warningCount}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Select defaultValue="hour">
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Time Range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="hour">Last Hour</SelectItem>
+              <SelectItem value="day">Last Day</SelectItem>
+              <SelectItem value="week">Last Week</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={clearAllLogs}
+            title="Clear all logs"
+          >
+            <Trash className="mr-2 h-4 w-4" />
+            Clear
+          </Button>
         </div>
       </div>
-
-      <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 mb-4">
-          <TabsTrigger value="all">All Logs</TabsTrigger>
-          <TabsTrigger value="errors">Errors</TabsTrigger>
-          <TabsTrigger value="warnings">Warnings</TabsTrigger>
-          <TabsTrigger value="info">Info</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
+      
+      <Tabs
+        defaultValue="level"
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
+        <TabsList className="mb-4">
+          <TabsTrigger value="level">By Level</TabsTrigger>
+          <TabsTrigger value="category">By Category</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="all" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>All System Logs</CardTitle>
-              <CardDescription>
-                Showing all system logs across all components and services
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[400px] overflow-auto p-4 border border-border/50 rounded-md bg-black/10 font-mono text-sm">
-                <div className="space-y-1">
-                  {/* This would be populated with actual logs */}
-                  <div className="text-green-500">[INFO] System started successfully</div>
-                  <div className="text-blue-500">[DEBUG] Loading user preferences</div>
-                  <div className="text-yellow-500">[WARN] Resource usage above 80%</div>
-                  <div className="text-red-500">[ERROR] Failed to connect to database</div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <div className="text-sm text-muted-foreground">
-                Showing most recent logs first
-              </div>
-            </CardFooter>
+        <TabsContent value="level" className="space-y-4">
+          <Card className="p-4">
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={levelData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="level" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="count" name="Count" fill="var(--primary)" />
+              </BarChart>
+            </ResponsiveContainer>
           </Card>
         </TabsContent>
         
-        <TabsContent value="errors" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Error Logs</CardTitle>
-              <CardDescription>
-                Critical errors and exceptions that require attention
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[400px] overflow-auto p-4 border border-border/50 rounded-md bg-black/10 font-mono text-sm">
-                <div className="space-y-1">
-                  {/* This would be populated with actual error logs */}
-                  <div className="text-red-500">[ERROR] Failed to connect to database</div>
-                  <div className="text-red-500">[ERROR] Authentication service unavailable</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="warnings" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Warning Logs</CardTitle>
-              <CardDescription>
-                Potential issues that might require attention
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px] overflow-auto p-4 border border-border/50 rounded-md bg-black/10 font-mono text-sm">
-                <div className="space-y-1">
-                  {/* This would be populated with actual warning logs */}
-                  <div className="text-yellow-500">[WARN] Resource usage above 80%</div>
-                  <div className="text-yellow-500">[WARN] Slow API response time</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="info" className="space-y-4">
-          {/* Info logs content */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Info Logs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px] overflow-auto p-4 border border-border/50 rounded-md bg-black/10 font-mono text-sm">
-                <div className="space-y-1">
-                  <div className="text-green-500">[INFO] System started successfully</div>
-                  <div className="text-green-500">[INFO] User login: admin</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="performance" className="space-y-4">
-          {/* Performance logs content */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Logs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px] overflow-auto p-4 border border-border/50 rounded-md bg-black/10 font-mono text-sm">
-                <div className="space-y-1">
-                  <div className="text-blue-500">[PERF] Page load: 320ms</div>
-                  <div className="text-blue-500">[PERF] API request: 150ms</div>
-                </div>
-              </div>
-            </CardContent>
+        <TabsContent value="category" className="space-y-4">
+          <Card className="p-4">
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={categoryData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="category" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="count" name="Count" fill="var(--primary)" />
+              </BarChart>
+            </ResponsiveContainer>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
   );
-};
-
-export default LogsDashboard;
+}

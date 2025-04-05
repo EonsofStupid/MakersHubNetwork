@@ -1,117 +1,57 @@
 
 import { LogEntry, LogLevel, LogTransport } from '../types';
-
-// Color mapping for log levels
-const LOG_LEVEL_COLORS: Record<LogLevel, string> = {
-  [LogLevel.TRACE]: '#6B7280', // gray-500
-  [LogLevel.DEBUG]: '#3B82F6', // blue-500
-  [LogLevel.INFO]: '#10B981',  // green-500
-  [LogLevel.WARN]: '#F59E0B',  // amber-500
-  [LogLevel.ERROR]: '#EF4444', // red-500
-  [LogLevel.FATAL]: '#7C3AED', // purple-600
-  [LogLevel.SUCCESS]: '#10B981', // green-500
-  [LogLevel.CRITICAL]: '#DC2626' // red-600
-};
-
-// Name mapping for log levels
-const LOG_LEVEL_NAMES: Record<LogLevel, string> = {
-  [LogLevel.TRACE]: 'TRACE',
-  [LogLevel.DEBUG]: 'DEBUG',
-  [LogLevel.INFO]: 'INFO',
-  [LogLevel.WARN]: 'WARN',
-  [LogLevel.ERROR]: 'ERROR',
-  [LogLevel.FATAL]: 'FATAL',
-  [LogLevel.SUCCESS]: 'SUCCESS',
-  [LogLevel.CRITICAL]: 'CRITICAL'
-};
+import { LOG_LEVEL_NAMES } from '../constants/log-level';
 
 /**
- * Console transport for logging to the browser console
+ * Format a log entry for console output
  */
-export const consoleTransport: LogTransport = {
-  log(entry: LogEntry) {
-    const { level, message, source, category, details, timestamp } = entry;
+function formatLogForConsole(entry: LogEntry): string {
+  const timestamp = entry.timestamp.toISOString();
+  const level = LOG_LEVEL_NAMES[entry.level];
+  const source = entry.source ? `[${entry.source}]` : '';
+  
+  return `${timestamp} ${level} ${source} ${entry.category}: ${String(entry.message)}`;
+}
+
+/**
+ * Transport that outputs logs to the browser console
+ */
+class ConsoleTransport implements LogTransport {
+  /**
+   * Log an entry to the console
+   */
+  public log(entry: LogEntry): void {
+    const formattedMessage = formatLogForConsole(entry);
     
-    // Get the appropriate console method based on log level
-    let method: 'log' | 'info' | 'debug' | 'warn' | 'error' = 'log';
-    switch (level) {
+    // Use the appropriate console method based on log level
+    switch (entry.level) {
       case LogLevel.TRACE:
       case LogLevel.DEBUG:
-        method = 'debug';
+        console.debug(formattedMessage, entry.details || '');
         break;
       case LogLevel.INFO:
       case LogLevel.SUCCESS:
-        method = 'info';
+        console.info(formattedMessage, entry.details || '');
         break;
       case LogLevel.WARN:
-        method = 'warn';
+        console.warn(formattedMessage, entry.details || '');
         break;
       case LogLevel.ERROR:
-      case LogLevel.FATAL:
       case LogLevel.CRITICAL:
-        method = 'error';
+        console.error(formattedMessage, entry.details || '');
         break;
-    }
-    
-    // Format timestamp
-    let timeStr: string;
-    if (typeof timestamp === 'string') {
-      timeStr = new Date(timestamp).toLocaleTimeString();
-    } else if (timestamp && timestamp instanceof Date) {
-      timeStr = timestamp.toLocaleTimeString();
-    } else {
-      timeStr = new Date().toLocaleTimeString();
-    }
-    
-    // Message title with proper styling
-    const color = LOG_LEVEL_COLORS[level] || '#3B82F6';
-    const levelName = LOG_LEVEL_NAMES[level] || 'LOG';
-    
-    // Build the title
-    const parts = [
-      `%c${timeStr}`,
-      `%c${levelName}`,
-      `%c${category || 'general'}${source ? ' › ' + source : ''}`
-    ];
-    
-    const styles = [
-      'color: #888; font-weight: normal;',
-      `color: ${color}; font-weight: bold;`,
-      'color: #333; font-weight: bold;'
-    ];
-    
-    // Handle browser vs server environment
-    if (typeof window !== 'undefined') {
-      // Browser environment - pretty formatting
-      console.groupCollapsed(`${parts.join(' ')}${message ? ' › ' + message : ''}`, ...styles);
-      
-      if (details) {
-        console.log('Details:', details);
-      }
-      
-      if (entry.tags?.length) {
-        console.log('Tags:', entry.tags);
-      }
-      
-      if (entry.trace) {
-        console.log('Trace:', entry.trace);
-      }
-      
-      console.groupEnd();
-    } else {
-      // Server environment - simpler formatting
-      console[method](`[${levelName}] [${category}] ${source ? source + ': ' : ''}${message}`);
-      if (details) console[method]('Details:', details);
+      default:
+        console.log(formattedMessage, entry.details || '');
     }
   }
-};
-
-/**
- * Extended console transport with additional options
- */
-export function createConsoleTransport(options = {}) {
-  return {
-    ...consoleTransport,
-    options,
-  };
+  
+  /**
+   * Flush implementation (no-op for console)
+   */
+  public async flush(): Promise<void> {
+    return Promise.resolve();
+  }
 }
+
+// Export singleton instance
+export const consoleTransport = new ConsoleTransport();

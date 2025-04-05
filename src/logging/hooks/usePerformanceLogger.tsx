@@ -1,121 +1,129 @@
 
-import { useCallback, useRef } from 'react';
-import { getLogger } from '@/logging';
-import { LogCategory, PerformanceMeasurementOptions } from '@/logging/types';
+import { useCallback } from 'react';
+import { getLogger } from '../service/logger.service';
+import { LogCategory } from '../types';
+import { useComponentPerformance } from './useComponentPerformance';
 
-/**
- * Hook for measuring and logging operation durations
- */
-export function usePerformanceLogger(source: string, options: Partial<PerformanceMeasurementOptions> = {}) {
+export interface PerformanceLoggerOptions {
+  category?: LogCategory;
+  details?: Record<string, unknown>;
+}
+
+export function usePerformanceLogger(source: string = 'Performance') {
   const logger = getLogger(source);
-  const defaultOptions: PerformanceMeasurementOptions = {
-    category: LogCategory.PERFORMANCE,
-    warnThreshold: 100,
-    ...options
-  };
   
-  const activeTimers = useRef<Record<string, { start: number; operationName: string }>>({});
+  const logPerformance = useCallback((
+    label: string, 
+    fn: () => any, 
+    warnThreshold: number = 100
+  ) => {
+    const start = performance.now();
+    const result = fn();
+    const duration = performance.now() - start;
+    
+    if (duration > warnThreshold) {
+      logger.warn(`Slow operation: ${label} took ${duration.toFixed(2)}ms`, {
+        category: LogCategory.PERFORMANCE,
+        details: { duration, threshold: warnThreshold }
+      });
+    } else {
+      logger.performance(`${label}`, duration, {
+        category: LogCategory.PERFORMANCE
+      });
+    }
+    
+    return result;
+  }, [logger]);
   
-  // Measure synchronous operations
-  const measure = useCallback(
-    function measure<T>(operationName: string, operation: () => T): T {
-      const start = performance.now();
-      let result: T;
-      let success = false;
-      let error: any;
+  const measure = useCallback((
+    name: string,
+    callback: () => any,
+    options?: PerformanceLoggerOptions
+  ) => {
+    const start = performance.now();
+    try {
+      const result = callback();
+      const duration = performance.now() - start;
       
-      try {
-        result = operation();
-        success = true;
-        return result;
-      } catch (e) {
-        error = e;
-        throw e;
-      } finally {
-        const end = performance.now();
-        const duration = Math.round(end - start);
-        
-        logger.performance(
-          `${operationName} ${success ? 'completed' : 'failed'} in ${duration}ms`,
-          duration,
-          success,
-          {
-            category: defaultOptions.category,
-            details: {
-              operationName,
-              duration,
-              success,
-              error: error ? String(error) : undefined,
-              ...options.details
-            },
-            tags: [...(defaultOptions.tags || []), 'performance', success ? 'success' : 'error']
-          }
-        );
-        
-        if (defaultOptions.onComplete) {
-          defaultOptions.onComplete({
-            name: operationName,
-            duration,
-            success,
-            timestamp: Date.now(),
-            error: error
-          });
-        }
-      }
-    },
-    [logger, defaultOptions]
-  );
-  
-  // Measure asynchronous operations
-  const measureAsync = useCallback(
-    async function measureAsync<T>(operationName: string, operation: () => Promise<T>): Promise<T> {
-      const start = performance.now();
-      let success = false;
-      let error: any;
+      logger.performance(name, duration, {
+        category: options?.category || LogCategory.PERFORMANCE,
+        details: options?.details
+      });
       
-      try {
-        const result = await operation();
-        success = true;
-        return result;
-      } catch (e) {
-        error = e;
-        throw e;
-      } finally {
-        const end = performance.now();
-        const duration = Math.round(end - start);
-        
-        logger.performance(
-          `${operationName} ${success ? 'completed' : 'failed'} in ${duration}ms`,
+      return result;
+    } catch (error) {
+      const duration = performance.now() - start;
+      logger.error(`Error in ${name} after ${duration.toFixed(2)}ms`, {
+        category: options?.category || LogCategory.PERFORMANCE,
+        details: {
           duration,
-          success,
-          {
-            category: defaultOptions.category,
-            details: {
-              operationName,
-              duration,
-              success,
-              error: error ? String(error) : undefined,
-              ...options.details
-            },
-            tags: [...(defaultOptions.tags || []), 'performance', 'async', success ? 'success' : 'error']
-          }
-        );
-        
-        if (defaultOptions.onComplete) {
-          defaultOptions.onComplete({
-            name: operationName,
-            duration,
-            success,
-            timestamp: Date.now(),
-            error: error
-          });
+          error: error instanceof Error ? {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+          } : String(error),
+          ...options?.details
         }
-      }
-    },
-    [logger, defaultOptions]
-  );
+      });
+      throw error;
+    }
+  }, [logger]);
   
-  return {
+  // Fix the generic type declaration to be outside the arrow function
+  const measureAsync = useCallback(<T,>(
+    name: string,
+    asyncFn: () => Promise<T>,
+    options?: PerformanceLoggerOptions
+  ): Promise<T> => {
+    const start = performance.now();
+    
+    try {
+      return asyncFn().then(result => {
+        const duration = performance.now() - start;
+        
+        logger.performance(name, duration, {
+          category: options?.category || LogCategory.PERFORMANCE,
+          details: options?.details
+        });
+        
+        return result;
+      }).catch(error => {
+        const duration = performance.now() - start;
+        logger.error(`Error in ${name} after ${duration.toFixed(2)}ms`, {
+          category: options?.category || LogCategory.PERFORMANCE,
+          details: {
+            duration,
+            error: error instanceof Error ? {
+              message: error.message,
+              name: error.name,
+              stack: error.stack
+            } : String(error),
+            ...options?.details
+          }
+        });
+        throw error;
+      });
+    } catch (error) {
+      // This catch block handles synchronous errors in the Promise creation
+      const duration = performance.now() - start;
+      logger.error(`Error in ${name} after ${duration.toFixed(2)}ms`, {
+        category: options?.category || LogCategory.PERFORMANCE,
+        details: {
+          duration,
+          error: error instanceof Error ? {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+          } : String(error),
+          ...options?.details
+        }
+      });
+      throw error;
+    }
+  }, [logger]);
+  
+  return { 
+    logPerformance,
     measure,
     measureAsync
   };

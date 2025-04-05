@@ -1,50 +1,55 @@
 
-import { useCallback } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { AuthState, AuthStatus } from '@/auth/types/auth.types';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
-export function useAuth(): {
-  user: AuthState['user'];
-  session: AuthState['session'];
-  roles: AuthState['roles'];
-  status: AuthState['status'];
-  error: AuthState['error'];
-  isLoading: AuthState['isLoading'];
-  isAuthenticated: AuthState['isAuthenticated'];
-  initialized: AuthState['initialized'];
-  initialize: () => Promise<void>;
-  logout: () => Promise<void>;
-  signOut: () => Promise<void>; // Alias for logout for backward compatibility
-} {
+/**
+ * Centralized hook for accessing authentication state
+ * This is the primary hook that should be used throughout the application
+ */
+export function useAuth() {
   const {
     user,
     session,
     roles,
     status,
-    error,
     isLoading,
-    isAuthenticated,
-    initialized,
+    error,
+    hasRole,
+    isAdmin,
+    logout,
     initialize,
-    logout
+    isAuthenticated,
+    initialized
   } = useAuthStore();
+  
+  const logger = useLogger('useAuth', LogCategory.AUTH);
+  
+  const isSuperAdmin = roles.includes('super_admin');
 
-  // Create an alias for logout as signOut for backward compatibility
-  const signOut = useCallback(() => {
+  // Log wrapper for logout to capture info before state is cleared
+  const handleLogout = async () => {
+    if (user) {
+      logger.info('User logging out', { 
+        details: { userId: user.id }
+      });
+    }
     return logout();
-  }, [logout]);
+  };
 
   return {
     user,
     session,
     roles,
     status,
-    error,
     isLoading,
+    error,
     isAuthenticated,
     initialized,
-    initialize,
-    logout,
-    signOut
+    isAdmin: isAdmin(),
+    isSuperAdmin,
+    hasRole,
+    logout: handleLogout,
+    initialize
   };
 }

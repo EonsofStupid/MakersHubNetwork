@@ -23,14 +23,12 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,
 
-   /* ✅ PATH ALIASES */
+    /* Path aliases */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
   "include": ["src"],
-
-  // Optional: helps editor/IDE resolve path errors
-  "exclude": ["node_modules", "dist", "build"]
+  // Remove references
 }

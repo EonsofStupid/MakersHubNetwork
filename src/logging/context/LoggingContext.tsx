@@ -1,10 +1,20 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { LogEntry, LoggingContextType, LogLevel } from '../types';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
-import { memoryTransport } from '../transports/memory.transport';
 
-// Create the context with a default value
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { LogEntry, LogLevel } from '../types';
+import { loggerService } from '../service/logger.service';
+import { memoryTransport } from '../transports/memory.transport';
+import { logEventEmitter } from '../events';
+
+interface LoggingContextType {
+  logs: LogEntry[];
+  clearLogs: () => void;
+  showLogConsole: boolean;
+  setShowLogConsole: (show: boolean) => void;
+  toggleLogConsole: () => void;
+  minLogLevel: LogLevel;
+  setMinLogLevel: (level: LogLevel) => void;
+}
+
 const LoggingContext = createContext<LoggingContextType>({
   logs: [],
   clearLogs: () => {},
@@ -12,88 +22,71 @@ const LoggingContext = createContext<LoggingContextType>({
   setShowLogConsole: () => {},
   toggleLogConsole: () => {},
   minLogLevel: LogLevel.INFO,
-  setMinLogLevel: () => {}
+  setMinLogLevel: () => {},
 });
 
-interface LoggingProviderProps {
-  children: React.ReactNode;
-}
-
-/**
- * Provider component that allows consuming components to subscribe to logging changes
- */
-export const LoggingProvider: React.FC<LoggingProviderProps> = ({ children }) => {
+export function LoggingProvider({ children }: { children: React.ReactNode }) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [showLogConsole, setShowLogConsole] = useState(false);
-  const [minLogLevel, setMinLogLevel] = useState<LogLevel>(LogLevel.INFO);
-  const logger = getLogger('LoggingContext', { category: LogCategory.SYSTEM });
-
+  const [minLogLevel, setMinLogLevel] = useState(LogLevel.INFO);
+  
+  const toggleLogConsole = () => setShowLogConsole(prev => !prev);
+  
   // Clear logs
-  const clearLogs = useCallback(() => {
-    if (memoryTransport?.clear) {
-      memoryTransport.clear();
-    }
+  const clearLogs = () => {
+    memoryTransport.clear();
     setLogs([]);
-  }, []);
-
-  // Toggle log console visibility
-  const toggleLogConsole = useCallback(() => {
-    setShowLogConsole(prev => !prev);
-  }, []);
-
-  // Set minimum log level for display
-  const handleSetMinLogLevel = useCallback((level: LogLevel) => {
-    setMinLogLevel(level);
-  }, []);
-
-  // Subscribe to log events
+  };
+  
+  // Update logs when new ones arrive
   useEffect(() => {
-    // Initial logs
-    if (memoryTransport?.getLogs) {
-      setLogs(memoryTransport.getLogs());
-    }
+    // Initial load
+    setLogs(memoryTransport.getLogs());
     
-    // Set up log event handler
-    const handleNewLog = (entry: LogEntry) => {
-      setLogs(currentLogs => [...currentLogs, entry]);
-    };
+    // Subscribe to new logs
+    const unsubscribe = logEventEmitter.onLog((entry) => {
+      setLogs(prev => {
+        // Add to the beginning to show newest first
+        const newLogs = [entry, ...prev];
+        // Limit the number of logs in state to prevent performance issues
+        return newLogs.slice(0, 1000);
+      });
+    });
     
-    // Add global event listener for logs
-    const unsubscribe = memoryTransport?.subscribe ? 
-      memoryTransport.subscribe(handleNewLog) : 
-      () => {};
-    
-    return () => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
-    };
+    return unsubscribe;
   }, []);
-
-  const contextValue: LoggingContextType = {
+  
+  // Update min log level when it changes
+  useEffect(() => {
+    loggerService.updateConfig({
+      minLevel: minLogLevel
+    });
+  }, [minLogLevel]);
+  
+  // Create memoized context value
+  const contextValue = useMemo(() => ({
     logs,
     clearLogs,
     showLogConsole,
     setShowLogConsole,
     toggleLogConsole,
     minLogLevel,
-    setMinLogLevel: handleSetMinLogLevel
-  };
-
+    setMinLogLevel,
+  }), [logs, showLogConsole, minLogLevel]);
+  
   return (
     <LoggingContext.Provider value={contextValue}>
       {children}
     </LoggingContext.Provider>
   );
-};
+}
 
-/**
- * Custom hook to use the logging context
- */
-export const useLoggingContext = (): LoggingContextType => {
+export function useLoggingContext() {
   const context = useContext(LoggingContext);
-  if (context === undefined) {
+  
+  if (!context) {
     throw new Error('useLoggingContext must be used within a LoggingProvider');
   }
+  
   return context;
-};
+}

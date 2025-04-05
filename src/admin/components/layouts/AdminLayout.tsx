@@ -16,16 +16,24 @@ import { LogCategory } from "@/logging";
 import { useAdminAccess } from "../../hooks/useAdminAccess";
 import { EditModeToggle } from "../ui/EditModeToggle";
 
-export function AdminLayout() {
+interface AdminLayoutProps {
+  title?: string;
+  fullWidth?: boolean;
+  className?: string;
+}
+
+export function AdminLayout({ 
+  title = "Admin Dashboard",
+  fullWidth = false,
+  className
+}: AdminLayoutProps) {
   const { permissions } = useAdminStore();
   const [isEditMode] = useAtom(adminEditModeAtom);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { showLogConsole } = useLoggingContext();
-  const logger = useLogger("AdminLayout", { category: LogCategory.ADMIN });
+  const logger = useLogger("AdminLayout", LogCategory.ADMIN);
   const { hasAdminAccess, isAuthenticated } = useAdminAccess();
-  const title = "Admin Dashboard";
-  const fullWidth = false;
 
   useEffect(() => {
     // Log the admin layout initialization
@@ -58,7 +66,7 @@ export function AdminLayout() {
   }
 
   return (
-    <div className={`flex h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)] ${fullWidth ? 'max-w-full' : ''}`}>
+    <div className={`flex h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)] ${fullWidth ? 'max-w-full' : ''} ${className || ''}`}>
       <AdminSidebar />
       
       <div className="flex flex-col flex-1 h-screen overflow-hidden">
@@ -76,3 +84,4 @@ export function AdminLayout() {
     </div>
   );
 }
+
