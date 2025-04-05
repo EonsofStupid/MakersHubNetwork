@@ -12,34 +12,11 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { user, session, initialized, setSession, initialize } = useAuthStore();
-  const [isPreLoaded, setIsPreLoaded] = useState(false);
+  const { user, session, initialized, setSession } = useAuthStore();
+  const [isInitializing, setIsInitializing] = useState(false);
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   
-  // Initialize auth on mount with a timeout to prevent blocking the UI
-  useEffect(() => {
-    const initAuth = async () => {
-      if (!initialized) {
-        logger.info('Initializing authentication');
-        try {
-          await initialize();
-          logger.info('Authentication initialized');
-        } catch (err) {
-          logger.error('Error initializing auth', { details: err });
-        } finally {
-          setIsPreLoaded(true);
-        }
-      } else {
-        setIsPreLoaded(true);
-      }
-    };
-
-    // Use a small timeout to prevent blocking the initial render
-    const timer = setTimeout(initAuth, 10);
-    return () => clearTimeout(timer);
-  }, [initialized, initialize, logger]);
-  
-  // Handle auth state changes
+  // Set up auth state change listener
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
@@ -53,14 +30,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Update Zustand store with the new session
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           setSession(currentSession);
-          
-          // Don't include this in the auth state change callback
-          // to prevent potential infinite loops
-          setTimeout(() => {
-            initialize().catch(err => {
-              logger.error('Error reinitializing after sign in', { details: err });
-            });
-          }, 10);
         } else if (event === 'SIGNED_OUT') {
           setSession(null);
         }
@@ -70,7 +39,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [logger, initialize, setSession]);
+  }, [logger, setSession]);
   
   // Don't wait for auth to initialize to render the app
   // Just provide the current auth state (even if null/loading)

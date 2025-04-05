@@ -2,12 +2,15 @@
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Hook for accessing authentication state
  */
 export function useAuth() {
+  const logger = useLogger('useAuth', LogCategory.AUTH);
+  const [isInitializing, setIsInitializing] = useState(false);
+  
   const {
     user,
     session,
@@ -19,19 +22,22 @@ export function useAuth() {
     hasRole,
     isAdmin,
     logout,
-    initialize
-  } = useAuthStore();
-  
-  const logger = useLogger('useAuth', LogCategory.AUTH);
+    initialize,
+    initialized
+  } = useAuthStore(state => state);
   
   // Auto-initialize auth if needed
   useEffect(() => {
-    if (status === 'idle') {
+    if (status === 'idle' && !initialized && !isInitializing) {
+      setIsInitializing(true);
+      
       initialize().catch(err => {
         logger.error('Failed to initialize auth', { details: err });
+      }).finally(() => {
+        setIsInitializing(false);
       });
     }
-  }, [status, initialize, logger]);
+  }, [status, initialize, initialized, logger, isInitializing]);
 
   const isSuperAdmin = roles.includes('super_admin');
 
@@ -50,7 +56,7 @@ export function useAuth() {
     session,
     roles,
     status,
-    isLoading,
+    isLoading: isLoading || isInitializing,
     error,
     isAuthenticated,
     isAdmin: isAdmin(),

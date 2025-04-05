@@ -10,8 +10,8 @@ import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { useEffect } from "react";
 import { initializeLogger, getLogger } from "@/logging";
-import { LogCategory } from "@/logging/types";
-import { Spinner } from "@/components/ui/spinner";
+import { LogCategory } from "@/logging";
+import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 
 // Import pages
 import Index from "./pages/Index";
@@ -59,15 +59,17 @@ function App() {
       <LoggingProvider>
         <AuthProvider>
           <AdminProvider>
-            {!isAdminRoute && <MainNav />}
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/admin/*" element={<Admin />} />
-            </Routes>
-            {!isAdminRoute && <Footer />}
-            <Toaster />
-            <LoggingComponents />
+            <ThemeInitializer>
+              {!isAdminRoute && <MainNav />}
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/admin/*" element={<Admin />} />
+              </Routes>
+              {!isAdminRoute && <Footer />}
+              <Toaster />
+              <LoggingComponents />
+            </ThemeInitializer>
           </AdminProvider>
         </AuthProvider>
       </LoggingProvider>

@@ -96,7 +96,9 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             <span className="font-medium">{log.category}</span>
           </div>
           <div className="message-content text-sm">
-            {typeof log.message === 'string' ? log.message : renderUnknownAsNode(log.message)}
+            {typeof log.message === 'string' 
+              ? log.message 
+              : renderUnknownAsNode(log.message)}
           </div>
           
           <AnimatePresence>

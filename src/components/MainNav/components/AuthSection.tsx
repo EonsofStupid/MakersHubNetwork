@@ -1,15 +1,12 @@
 
 import { useState } from "react";
-import { useAuthStore } from "@/auth/store/auth.store";
+import { useAuth } from "@/hooks/useAuth";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { LoginSheet } from "./LoginSheet";
 import { Spinner } from "@/components/ui/spinner";
 
 export const AuthSection = () => {
-  const { status, isLoading } = useAuthStore((state) => ({
-    status: state.status,
-    isLoading: state.isLoading
-  }));
+  const { status, isLoading } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const isAuthenticated = status === "authenticated";

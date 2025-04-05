@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 /**
  * Converts various types to a string representation for search
@@ -49,7 +49,7 @@ export function nodeToSearchableString(node: unknown): string {
  * Safely renders any value as a React node
  * Ensures that the output is always a valid ReactNode type
  */
-export function renderUnknownAsNode(value: unknown): React.ReactNode {
+export function renderUnknownAsNode(value: unknown): ReactNode {
   if (value === null || value === undefined) {
     return '';
   }
