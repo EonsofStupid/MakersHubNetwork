@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory, LogLevel, memoryTransport } from '@/logging';
@@ -7,24 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { renderUnknownAsNode } from '@/shared/utils/render';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertCircle, Check, Info, RefreshCw, Trash2, WarningTriangle } from 'lucide-react';
+import { AlertCircle, Check, Info, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
 
 export function LogsDashboard() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [filter, setFilter] = useState<LogLevel | null>(null);
   const logger = useLogger('LogsDashboard', LogCategory.ADMIN);
 
-  // Load logs when component mounts
   useEffect(() => {
-    // Get initial logs
     setLogs(memoryTransport.getLogs());
     
-    // Subscribe to new logs
     const unsubscribe = memoryTransport.subscribe((entry) => {
       setLogs(prevLogs => [entry, ...prevLogs].slice(0, 100));
     });
     
-    // Log component mount
     logger.info('Logs dashboard mounted');
     
     return () => {
@@ -33,32 +28,28 @@ export function LogsDashboard() {
     };
   }, [logger]);
   
-  // Filter logs by level
   const filteredLogs = filter 
     ? logs.filter(log => log.level === filter)
     : logs;
     
-  // Clear all logs
   const handleClearLogs = () => {
     memoryTransport.clear();
     setLogs([]);
     logger.info('Logs cleared');
   };
   
-  // Refresh logs
   const handleRefreshLogs = () => {
     setLogs(memoryTransport.getLogs());
     logger.info('Logs refreshed');
   };
   
-  // Get icon for log level
   const getLogIcon = (level: LogLevel) => {
     switch (level) {
       case LogLevel.ERROR:
       case LogLevel.CRITICAL:
         return <AlertCircle className="h-4 w-4 text-destructive" />;
       case LogLevel.WARN:
-        return <WarningTriangle className="h-4 w-4 text-amber-500" />;
+        return <AlertTriangle className="h-4 w-4 text-amber-500" />;
       case LogLevel.INFO:
         return <Info className="h-4 w-4 text-blue-500" />;
       case LogLevel.SUCCESS:

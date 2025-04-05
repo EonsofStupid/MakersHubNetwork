@@ -1,10 +1,13 @@
 
+import { ThemeComponent } from './component';
+
 export interface Theme {
   id: string;
   name: string;
   description?: string;
   status: 'draft' | 'published' | 'archived';
   is_default: boolean;
+  is_active: boolean;
   created_by?: string;
   created_at: string;
   updated_at: string;
@@ -60,10 +63,12 @@ export interface ComponentTokens {
 
 export interface ThemeToken {
   id: string;
-  name: string;
-  value: string;
+  name?: string;
+  token_name?: string;
+  value?: string;
+  token_value?: string;
   category: string;
-  theme_id: string;
+  theme_id?: string;
 }
 
 export interface ThemeLogDetails {
@@ -86,7 +91,6 @@ export interface ThemeLogDetails {
   admin?: boolean;
   database?: boolean;
   details?: Record<string, unknown>;
-  // Added for the TypeScript errors
   errorName?: string;
   reason?: string;
   source?: string;

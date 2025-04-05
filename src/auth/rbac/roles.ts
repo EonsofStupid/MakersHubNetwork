@@ -1,5 +1,6 @@
 
 import { UserRole } from '../types/roles';
+import { ROLE_PERMISSIONS, PermissionValue } from '../permissions';
 
 // Core role check - can be expanded with more granular permissions
 export const hasAdminAccess = (roles: UserRole[]): boolean => {
@@ -28,4 +29,29 @@ export const getHighestRole = (roles: UserRole[]): UserRole | null => {
   }
   
   return null;
+};
+
+// Map roles to permissions
+export const mapRolesToPermissions = (roles: UserRole[]): PermissionValue[] => {
+  const permissions: PermissionValue[] = [];
+  
+  // If no roles, return empty array
+  if (!roles || roles.length === 0) {
+    return permissions;
+  }
+  
+  // Add permissions for each role
+  roles.forEach(role => {
+    const rolePermissions = ROLE_PERMISSIONS[role];
+    if (rolePermissions) {
+      rolePermissions.forEach(permission => {
+        // Avoid duplicates
+        if (!permissions.includes(permission)) {
+          permissions.push(permission);
+        }
+      });
+    }
+  });
+  
+  return permissions;
 };

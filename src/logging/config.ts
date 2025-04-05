@@ -1,54 +1,48 @@
 
-import { LoggingConfig, LogCategory } from './types';
+import { LoggingConfig } from './types';
 import { LogLevel } from './constants/log-level';
-import { ConsoleTransport } from './transports/console-transport';
-import { UITransport } from './transports/ui-transport';
-import { MemoryTransport, memoryTransport } from './transports/memory-transport';
+import { LogCategory } from './types';
+import { consoleTransport } from './transports/console-transport';
+import { memoryTransport } from './transports/memory-transport';
 
-// Default logging configuration
-export const defaultLoggingConfig: LoggingConfig = {
-  minLevel: LogLevel.INFO, // Log info and above by default
-  transports: [
-    new ConsoleTransport(), // Always log to console
-    new UITransport(),      // Show UI toasts for logs
-    memoryTransport,        // Keep logs in memory for UI components
-  ],
-  bufferSize: 10,          // Buffer size before flush
-  flushInterval: 5000,     // Flush interval in ms
-  includeSource: true,     // Include source file/component info
-  includeUser: true,       // Include user ID if available
-  includeSession: true,    // Include session ID
+// Default configuration for the logging system
+const getDefaultLoggingConfig = (): LoggingConfig => ({
+  minLevel: LogLevel.INFO,
+  enabledCategories: Object.values(LogCategory),
+  transports: [consoleTransport, memoryTransport],
+  bufferSize: 100,
+  flushInterval: 30000, // 30 seconds
+  includeSource: true,
+  includeUser: true,
+  includeSession: true,
+});
+
+// Global logging configuration that can be overwritten
+let loggingConfig: LoggingConfig = getDefaultLoggingConfig();
+
+// Get the current logging configuration
+export const getLoggingConfig = (): LoggingConfig => {
+  return loggingConfig;
 };
 
-// Get config based on environment
-export function getLoggingConfig(): LoggingConfig {
-  // In development, debug everything
-  if (import.meta.env.DEV) {
-    return {
-      ...defaultLoggingConfig,
-      minLevel: LogLevel.DEBUG,
-      enabledCategories: Object.values(LogCategory),
-    };
-  }
-  
-  // In production, more selective
-  return {
-    ...defaultLoggingConfig,
-    minLevel: LogLevel.INFO,
-    // Exclude DEBUG level from UI transport in production
-    transports: [
-      new ConsoleTransport(),
-      new UITransport({
-        showDebug: false,
-        showInfo: true,
-        showWarning: true,
-        showError: true,
-        showCritical: true,
-      }),
-      memoryTransport,
-    ],
-  };
-}
+// Update the logging configuration
+export const updateLoggingConfig = (config: Partial<LoggingConfig>): LoggingConfig => {
+  loggingConfig = { ...loggingConfig, ...config };
+  return loggingConfig;
+};
 
-// Export the memory transport for direct access in components
-export { memoryTransport };
+// Set minimum log level
+export const setMinLogLevel = (level: LogLevel): void => {
+  loggingConfig.minLevel = level;
+};
+
+// Enable specific log categories
+export const enableLogCategories = (categories: LogCategory[]): void => {
+  loggingConfig.enabledCategories = categories;
+};
+
+// Reset to default configuration
+export const resetLoggingConfig = (): LoggingConfig => {
+  loggingConfig = getDefaultLoggingConfig();
+  return loggingConfig;
+};

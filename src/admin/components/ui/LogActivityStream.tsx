@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory, LogLevel, memoryTransport } from '@/logging';
@@ -6,16 +5,19 @@ import type { LogEntry } from '@/logging/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { renderUnknownAsNode } from '@/shared/utils/render';
-import { Check, Info, AlertCircle, WarningTriangle } from 'lucide-react';
+import { Check, Info, AlertCircle, AlertTriangle } from 'lucide-react';
 
 interface LogActivityStreamProps {
   maxItems?: number;
   showHeader?: boolean;
   showTimestamp?: boolean;
   category?: LogCategory;
+  level?: LogLevel;
+  categories?: LogCategory[];
   height?: string;
   autoScroll?: boolean;
   className?: string;
+  showSource?: boolean;
 }
 
 export function LogActivityStream({
@@ -23,8 +25,11 @@ export function LogActivityStream({
   showHeader = true,
   showTimestamp = true,
   category,
+  level,
+  categories,
   height = '300px',
   autoScroll = true,
+  showSource = false,
   className = '',
 }: LogActivityStreamProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -34,14 +39,39 @@ export function LogActivityStream({
   // Load logs when component mounts
   useEffect(() => {
     // Get initial logs
-    const initialLogs = category
-      ? memoryTransport.getLogsByCategory(category)
-      : memoryTransport.getLogs();
+    let initialLogs = memoryTransport.getLogs();
+    
+    // Filter by category or categories if provided
+    if (category) {
+      initialLogs = initialLogs.filter(log => log.category === category);
+    } else if (categories && categories.length > 0) {
+      initialLogs = initialLogs.filter(log => categories.includes(log.category));
+    }
+    
+    // Filter by level if provided
+    if (level) {
+      initialLogs = initialLogs.filter(log => log.level === level || log.level === LogLevel.ERROR);
+    }
+    
     setLogs(initialLogs.slice(0, maxItems));
     
     // Subscribe to new logs
     const unsubscribe = memoryTransport.subscribe((entry) => {
-      if (!category || entry.category === category) {
+      let shouldAdd = true;
+      
+      // Filter by category
+      if (category && entry.category !== category) {
+        shouldAdd = false;
+      } else if (categories && categories.length > 0 && !categories.includes(entry.category)) {
+        shouldAdd = false;
+      }
+      
+      // Filter by level
+      if (level && entry.level !== level && entry.level !== LogLevel.ERROR) {
+        shouldAdd = false;
+      }
+      
+      if (shouldAdd) {
         setLogs(prevLogs => [entry, ...prevLogs].slice(0, maxItems));
         
         // Auto-scroll to newest log
@@ -61,7 +91,7 @@ export function LogActivityStream({
       unsubscribe();
       logger.debug('Log activity stream unmounted');
     };
-  }, [category, maxItems, logger, autoScroll]);
+  }, [category, categories, level, maxItems, logger, autoScroll]);
   
   // Get icon for log level
   const getLogIcon = (level: LogLevel) => {
@@ -70,7 +100,7 @@ export function LogActivityStream({
       case LogLevel.CRITICAL:
         return <AlertCircle className="h-3 w-3 flex-shrink-0 text-destructive" />;
       case LogLevel.WARN:
-        return <WarningTriangle className="h-3 w-3 flex-shrink-0 text-amber-500" />;
+        return <AlertTriangle className="h-3 w-3 flex-shrink-0 text-amber-500" />;
       case LogLevel.INFO:
         return <Info className="h-3 w-3 flex-shrink-0 text-blue-500" />;
       case LogLevel.SUCCESS:

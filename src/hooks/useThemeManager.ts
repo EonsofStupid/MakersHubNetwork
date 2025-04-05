@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ComponentTokens } from '@/types/theme';
-import { Json } from '@/integrations/supabase/types';
 
 export function useThemeManager() {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +31,8 @@ export function useThemeManager() {
         description,
         status: 'draft' as const,
         is_default: false,
-        version: 1,
+        is_active: true,
+        version: "1",
         design_tokens: {
           colors: {
             background: '#080F1E',
@@ -54,6 +54,9 @@ export function useThemeManager() {
             ring: '#1E293B',
           },
           effects: {
+            shadows: {},
+            blurs: {},
+            gradients: {},
             primary: '#00F0FF',
             secondary: '#FF2D6E',
             tertiary: '#8B5CF6',
@@ -124,6 +127,7 @@ export function useThemeManager() {
         description: data.description || '',
         status: data.status || 'draft',
         is_default: data.is_default || false,
+        is_active: data.is_active || true,
         created_by: data.created_by || undefined,
         created_at: data.created_at || '',
         updated_at: data.updated_at || '',
@@ -240,6 +244,7 @@ export function useThemeManager() {
         description: item.description || '',
         status: item.status || 'draft',
         is_default: item.is_default || false,
+        is_active: item.is_active || true,
         created_by: item.created_by || undefined,
         created_at: item.created_at || '',
         updated_at: item.updated_at || '',
