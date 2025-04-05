@@ -1,76 +1,106 @@
 
 import React from 'react';
-import { AlertCircle, Info, AlertTriangle, XCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { LogCategory } from '../types';
 import { LogLevel } from '../constants/log-level';
+import { LogCategory } from '../types';
 import { renderUnknownAsNode } from '@/shared/utils/render';
+import { AlertCircle, Check, Info, WarningTriangle, X } from 'lucide-react';
 
 interface LogNotificationProps {
   level: LogLevel;
-  category: LogCategory;
   message: string | React.ReactNode;
-  onClose?: () => void;
+  category?: LogCategory;
+  timestamp?: Date;
+  onDismiss?: () => void;
+  className?: string;
+  duration?: number;
 }
 
-export const LogNotification: React.FC<LogNotificationProps> = ({
+export function LogNotification({
   level,
-  category,
   message,
-  onClose
-}) => {
-  const getIcon = () => {
+  category,
+  timestamp = new Date(),
+  onDismiss,
+  className = '',
+  duration,
+}: LogNotificationProps) {
+  // Get icon and classes based on log level
+  const getIconAndClasses = () => {
     switch (level) {
-      case LogLevel.DEBUG:
-        return <Info className="h-4 w-4" />;
-      case LogLevel.INFO:
-        return <Info className="h-4 w-4" />;
-      case LogLevel.WARN:
-        return <AlertTriangle className="h-4 w-4" />;
       case LogLevel.ERROR:
-        return <AlertCircle className="h-4 w-4" />;
       case LogLevel.CRITICAL:
-        return <XCircle className="h-4 w-4" />;
+        return {
+          icon: <AlertCircle className="h-5 w-5" />,
+          bgColor: 'bg-destructive/15',
+          borderColor: 'border-destructive'
+        };
+      case LogLevel.WARN:
+        return {
+          icon: <WarningTriangle className="h-5 w-5" />,
+          bgColor: 'bg-amber-500/15',
+          borderColor: 'border-amber-500'
+        };
+      case LogLevel.SUCCESS:
+        return {
+          icon: <Check className="h-5 w-5" />,
+          bgColor: 'bg-green-500/15',
+          borderColor: 'border-green-500'
+        };
+      case LogLevel.INFO:
       default:
-        return <Info className="h-4 w-4" />;
+        return {
+          icon: <Info className="h-5 w-5" />,
+          bgColor: 'bg-blue-500/15',
+          borderColor: 'border-blue-500'
+        };
     }
   };
 
-  const getVariant = (): "default" | "destructive" => {
-    switch (level) {
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-        return "destructive";
-      default:
-        return "default";
+  const { icon, bgColor, borderColor } = getIconAndClasses();
+  
+  // Auto-dismiss notification after duration
+  React.useEffect(() => {
+    if (duration && onDismiss) {
+      const timer = setTimeout(onDismiss, duration);
+      return () => clearTimeout(timer);
     }
-  };
-
-  // Get appropriate title based on level
-  const getTitle = (): string => {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return 'Debug';
-      case LogLevel.INFO:
-        return 'Information';
-      case LogLevel.WARN:
-        return 'Warning';
-      case LogLevel.ERROR:
-        return 'Error';
-      case LogLevel.CRITICAL:
-        return 'Critical Error';
-      default:
-        return 'Log';
-    }
-  };
+  }, [duration, onDismiss]);
 
   return (
-    <Alert variant={getVariant()} className="animate-in slide-in-from-right-5">
-      {getIcon()}
-      <AlertTitle>{getTitle()} - {category}</AlertTitle>
-      <AlertDescription>
-        {renderUnknownAsNode(message)}
-      </AlertDescription>
-    </Alert>
+    <div 
+      className={`${bgColor} ${borderColor} border rounded-lg shadow-lg p-4 max-w-md ${className}`}
+      role="alert"
+    >
+      <div className="flex">
+        <div className="flex-shrink-0">
+          {icon}
+        </div>
+        <div className="ml-3 flex-1">
+          <p className="text-sm font-medium">
+            {typeof message === 'string' ? message : renderUnknownAsNode(message)}
+          </p>
+          <div className="mt-1 flex justify-between items-center text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              {category && (
+                <span className="font-medium">{category}</span>
+              )}
+              <time dateTime={timestamp.toISOString()}>
+                {timestamp.toLocaleTimeString()}
+              </time>
+            </div>
+            {onDismiss && (
+              <button 
+                type="button"
+                onClick={onDismiss}
+                className="ml-auto -my-1.5 -mr-1.5 rounded-md p-1.5 hover:bg-muted/50 focus:ring-2 focus:outline-none"
+              >
+                <span className="sr-only">Dismiss</span>
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
-};
+}

@@ -1,111 +1,95 @@
 
-import { useCallback, useRef } from 'react';
-import { getLogger, LogCategory } from '@/logging';
+import { useRef, useEffect } from 'react';
+import { useLogger } from './use-logger';
+import { LogCategory } from '@/logging';
 
 /**
- * Hook for measuring and logging performance
+ * Hook for measuring and logging component performance
+ * @param componentName Name of the component
+ * @param options Options for performance logging
  */
-export function usePerformanceLogger(source: string) {
-  const logger = getLogger();
-  const timers = useRef<Record<string, number>>({});
+export function usePerformanceLogger(
+  componentName: string,
+  options: {
+    logMountTime?: boolean;
+    logRenderTime?: boolean;
+    threshold?: number; // ms threshold for logging warnings
+    category?: LogCategory;
+  } = {}
+) {
+  const {
+    logMountTime = true,
+    logRenderTime = false,
+    threshold = 50, // ms
+    category = LogCategory.PERFORMANCE
+  } = options;
   
-  /**
-   * Start measuring performance for an operation
-   */
-  const startTimer = useCallback((operationName: string) => {
-    timers.current[operationName] = performance.now();
-  }, []);
+  const mountTimeRef = useRef<number>(0);
+  const renderTimeRef = useRef<number>(0);
+  const logger = useLogger(componentName, category);
   
-  /**
-   * End measuring and log the duration
-   */
-  const endTimer = useCallback((operationName: string, options?: {
-    details?: unknown,
-    category?: LogCategory,
-    tags?: string[]
-  }) => {
-    const startTime = timers.current[operationName];
-    if (startTime) {
-      const duration = performance.now() - startTime;
+  // Log mount time
+  useEffect(() => {
+    if (logMountTime) {
+      mountTimeRef.current = performance.now();
       
-      // Use the added performance method
-      logger.performance(
-        `${operationName} completed in ${duration.toFixed(2)}ms`,
-        duration,
-        {
-          ...options,
-          source,
-          category: options?.category || LogCategory.PERFORMANCE
+      return () => {
+        const mountDuration = performance.now() - mountTimeRef.current;
+        
+        if (mountDuration > threshold) {
+          logger.warn(`Slow mount time`, {
+            details: { 
+              mountDuration: `${mountDuration.toFixed(2)}ms`,
+              threshold: `${threshold}ms`
+            }
+          });
+        } else {
+          logger.debug(`Mount time: ${mountDuration.toFixed(2)}ms`);
         }
-      );
+      };
+    }
+  }, [logger, logMountTime, threshold]);
+  
+  // Log every render time
+  useEffect(() => {
+    if (logRenderTime) {
+      renderTimeRef.current = performance.now();
       
-      delete timers.current[operationName];
-      return duration;
+      logger.debug(`Render started`);
+      
+      return () => {
+        const renderDuration = performance.now() - renderTimeRef.current;
+        
+        if (renderDuration > threshold) {
+          logger.warn(`Slow render time`, {
+            details: {
+              renderDuration: `${renderDuration.toFixed(2)}ms`,
+              threshold: `${threshold}ms`
+            }
+          });
+        } else {
+          logger.debug(`Render time: ${renderDuration.toFixed(2)}ms`);
+        }
+      };
     }
-    
-    logger.warn(`Timer "${operationName}" was never started`, {
-      source,
-      category: LogCategory.PERFORMANCE
-    });
-    return -1;
-  }, [logger, source]);
-  
-  /**
-   * Wrap an async function with performance logging
-   */
-  const measureAsync = useCallback(async <T>(
-    operationName: string,
-    fn: () => Promise<T>,
-    options?: {
-      details?: unknown,
-      category?: LogCategory,
-      tags?: string[]
-    }
-  ): Promise<T> => {
-    startTimer(operationName);
-    try {
-      const result = await fn();
-      endTimer(operationName, options);
-      return result;
-    } catch (error) {
-      endTimer(operationName, {
-        ...options,
-        details: { ...(options?.details || {}), error }
-      });
-      throw error;
-    }
-  }, [startTimer, endTimer]);
-  
-  /**
-   * Wrap a synchronous function with performance logging
-   */
-  const measure = useCallback(<T>(
-    operationName: string,
-    fn: () => T,
-    options?: {
-      details?: unknown,
-      category?: LogCategory,
-      tags?: string[]
-    }
-  ): T => {
-    startTimer(operationName);
-    try {
-      const result = fn();
-      endTimer(operationName, options);
-      return result;
-    } catch (error) {
-      endTimer(operationName, {
-        ...options,
-        details: { ...(options?.details || {}), error }
-      });
-      throw error;
-    }
-  }, [startTimer, endTimer]);
+  });
   
   return {
-    startTimer,
-    endTimer,
-    measure,
-    measureAsync
+    logCustomTiming: (label: string, startTime: number) => {
+      const duration = performance.now() - startTime;
+      
+      if (duration > threshold) {
+        logger.warn(`Slow operation: ${label}`, {
+          details: {
+            duration: `${duration.toFixed(2)}ms`,
+            threshold: `${threshold}ms`
+          }
+        });
+      } else {
+        logger.debug(`${label}: ${duration.toFixed(2)}ms`);
+      }
+      
+      return duration;
+    }
   };
 }

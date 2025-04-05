@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { errorToObject } from '@/shared/utils/render';
-import { useDebounce } from '@/hooks/useDebounce';
 
 // Configuration for rate limiting
 const SYNC_CONFIG = {
@@ -64,12 +63,17 @@ export function useAdminSync() {
     }, SYNC_CONFIG.COOLDOWN_PERIOD);
   }, [logger, resetSyncAttempts]);
   
-  // Debounced version of sync state check to prevent excessive state updates
-  const debouncedSetSyncing = useDebounce((value: boolean) => {
+  // Safe state update function with timeout check
+  const safeSetIsSyncing = useCallback((value: boolean) => {
     if (isMountedRef.current) {
-      setIsSyncing(value);
+      // Small delay to avoid state updates during unmounting
+      setTimeout(() => {
+        if (isMountedRef.current) {
+          setIsSyncing(value);
+        }
+      }, 0);
     }
-  }, 100);
+  }, []);
   
   // Sync data with rate limiting
   const syncData = useCallback(async (force = false) => {
@@ -118,7 +122,7 @@ export function useAdminSync() {
     if (!isMountedRef.current) return;
     
     try {
-      debouncedSetSyncing(true);
+      safeSetIsSyncing(true);
       logger.info('Syncing admin data...');
       
       // Update last sync time reference
@@ -133,12 +137,17 @@ export function useAdminSync() {
         
         // Reset attempt counter on success
         syncAttemptCountRef.current = 0;
+        
+        return { success: true };
       }
+      
+      return { success: true }; 
     } catch (error) {
       logger.error('Error syncing admin data', { details: errorToObject(error) });
+      return { success: false, error };
     } finally {
       if (isMountedRef.current) {
-        debouncedSetSyncing(false);
+        safeSetIsSyncing(false);
         
         // If there was another sync requested during this one, trigger it
         if (pendingSyncRef.current) {
@@ -150,7 +159,7 @@ export function useAdminSync() {
         }
       }
     }
-  }, [isSyncing, cleanupSync, enterCooldown, logger, debouncedSetSyncing]);
+  }, [isSyncing, cleanupSync, enterCooldown, logger, safeSetIsSyncing]);
   
   // Sync once on mount with debouncing
   useEffect(() => {
@@ -182,7 +191,7 @@ export function useAdminSync() {
     isSyncing,
     lastSynced,
     sync: useCallback(async (force = false) => {
-      await syncData(force);
+      return await syncData(force);
     }, [syncData])
   };
 }

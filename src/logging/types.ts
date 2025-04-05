@@ -15,7 +15,7 @@ export enum LogCategory {
   CHAT = 'chat',
   DATABASE = 'database',
   PERFORMANCE = 'performance',
-  CONTENT = 'content'  // Added this new category
+  CONTENT = 'content'
 }
 
 export interface LogEntry {

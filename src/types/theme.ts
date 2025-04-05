@@ -1,122 +1,78 @@
 
-import { Json } from "@/integrations/supabase/types";
-
-// Define the theme status type
-export type ThemeStatus = 'draft' | 'published' | 'archived';
-
-// Define the theme context type to ensure consistent usage
-export type ThemeContext = 'site' | 'admin' | 'chat';
-
-export interface ThemeToken {
-  id: string;
-  token_name: string;
-  token_value: string;
-  category: string;
-  description?: string;
-  fallback_value?: string;
-  theme_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface ComponentTokens {
-  id: string;
-  component_name: string;
-  styles: Record<string, any>;
-  description?: string;
-  theme_id?: string;
-  created_at?: string;
-  updated_at?: string;
-  context?: ThemeContext;
-}
-
-export interface DesignTokensStructure {
-  colors?: Record<string, any>;
-  spacing?: Record<string, any>;
-  typography?: {
-    fontSizes: Record<string, any>;
-    fontFamilies: Record<string, any>;
-    lineHeights: Record<string, any>;
-    letterSpacing: Record<string, any>;
-  };
-  effects?: {
-    shadows: Record<string, any>;
-    blurs: Record<string, any>;
-    gradients: Record<string, any>;
-    primary?: string;
-    secondary?: string;
-    tertiary?: string;
-  };
-  animation?: {
-    keyframes: Record<string, any>;
-    transitions: Record<string, any>;
-    durations: Record<string, any>;
-  };
-  admin?: Record<string, any>;
-}
+import { ThemeComponent } from './component';
 
 export interface Theme {
   id: string;
   name: string;
   description?: string;
-  status: ThemeStatus;
-  is_default: boolean;
-  created_by?: string;
-  created_at: string;
-  updated_at: string;
-  published_at?: string;
-  version: number;
-  cache_key?: string;
-  parent_theme_id?: string;
-  design_tokens: DesignTokensStructure;
-  component_tokens: ComponentTokens[];
-  composition_rules?: Record<string, any>;
-  cached_styles?: Record<string, any>;
+  author?: string;
+  version?: string;
+  tags?: string[];
+  created_at?: string; 
+  updated_at?: string;
+  base_theme?: string;
+  is_active: boolean;
+  design_tokens?: DesignTokensStructure;
 }
 
-// Updated ThemeLogDetails interface with more specific types
+export interface ThemeContext {
+  theme: Theme | null;
+  setTheme: (theme: Theme) => void;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+export interface DesignTokensStructure {
+  colors?: Record<string, string>;
+  typography?: TypographyTokens;
+  spacing?: Record<string, string>;
+  breakpoints?: Record<string, string>;
+  effects?: EffectsTokens;
+  radii?: Record<string, string>;
+  transitions?: Record<string, string>;
+  zIndices?: Record<string, string>;
+  components?: Record<string, any>;
+  [key: string]: any;
+}
+
+export interface TypographyTokens {
+  fontFamilies?: Record<string, string>;
+  fontSizes?: Record<string, string>;
+  fontWeights?: Record<string, string | number>;
+  lineHeights?: Record<string, string | number>;
+  letterSpacings?: Record<string, string>;
+}
+
+export interface EffectsTokens {
+  shadows?: Record<string, string>;
+  blurs?: Record<string, string>;
+  gradients?: Record<string, string>;
+  [key: string]: any;
+}
+
 export interface ThemeLogDetails {
-  // Status indicators
   success?: boolean;
   error?: boolean;
   warning?: boolean;
-  
-  // Error information
   errorMessage?: string;
-  errorCode?: string;
-  errorDetails?: string | Record<string, unknown>;
-  errorHint?: string;
-  errorName?: string;
-  
-  // Theme information
-  themeId?: string;
+  details?: Record<string, any>;
   theme?: string;
-  defaultTheme?: string;
   originalTheme?: string;
-  
-  // Component information
-  component?: string;
-  componentCount?: number;
-  reason?: string;
-  source?: string;
-  
-  // Operation status
   mainSite?: boolean;
   admin?: boolean;
   database?: boolean;
-  
-  // Additional context
-  details?: Record<string, unknown>;
-  
-  // Allow for additional properties
-  [key: string]: unknown;
 }
 
-export interface ThemeContextType {
-  currentTheme: Theme | null;
-  themeTokens: ThemeToken[];
-  themeComponents: ComponentTokens[];
+export interface ThemeProviderProps {
+  children: React.ReactNode;
+  theme?: Theme;
+  defaultThemeId?: string;
+}
+
+export interface ThemeContextValue {
+  theme: Theme | null;
+  setTheme: (themeId: string) => Promise<void>;
   isLoading: boolean;
   error: Error | null;
-  setTheme: (themeId: string) => Promise<void>;
+  components: ThemeComponent[];
 }
