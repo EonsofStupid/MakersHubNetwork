@@ -24,7 +24,9 @@ const LogDetails = forwardRef<HTMLDivElement, LogDetailsProps>(({ details, class
         <div key={key} className="flex">
           <span className="text-gray-400 mr-2">{key}:</span>
           <span className="text-gray-300">
-            {renderUnknownAsNode(value)}
+            {typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' 
+              ? String(value) 
+              : renderUnknownAsNode(value)}
           </span>
         </div>
       ))}
@@ -96,8 +98,8 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             <span className="font-medium">{log.category}</span>
           </div>
           <div className="message-content text-sm">
-            {typeof log.message === 'string' 
-              ? log.message 
+            {typeof log.message === 'string' || typeof log.message === 'number' || typeof log.message === 'boolean'
+              ? String(log.message)
               : renderUnknownAsNode(log.message)}
           </div>
           
