@@ -5,7 +5,7 @@ import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { Theme, DesignTokensStructure, ThemeLogDetails, ThemeContext } from '@/types/theme';
+import { Theme, DesignTokensStructure, ThemeContext } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -65,16 +65,16 @@ export function useImpulsivityTheme() {
         }
       }
       
-      const successLogDetails: ThemeLogDetails = { success: true };
-      logger.info('Applied Impulsivity theme to main site', successLogDetails);
+      logger.info('Applied Impulsivity theme to main site', { 
+        success: true 
+      });
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorLogDetails: ThemeLogDetails = { 
+      logger.error('Error applying Impulsivity theme to main site', { 
         error: true, 
         errorMessage 
-      };
-      logger.error('Error applying Impulsivity theme to main site', errorLogDetails);
+      });
       return false;
     }
   };
@@ -101,8 +101,9 @@ export function useImpulsivityTheme() {
           --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.7);
         `);
         
-        const successLogDetails: ThemeLogDetails = { success: true };
-        logger.info('Applied Impulsivity theme to admin panel', successLogDetails);
+        logger.info('Applied Impulsivity theme to admin panel', { 
+          success: true 
+        });
         return true;
       } else {
         logger.warn('Admin panel root element not found, skipping theme application');
@@ -110,11 +111,10 @@ export function useImpulsivityTheme() {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorLogDetails: ThemeLogDetails = { 
+      logger.error('Error applying Impulsivity theme to admin panel', { 
         error: true, 
         errorMessage 
-      };
-      logger.error('Error applying Impulsivity theme to admin panel', errorLogDetails);
+      });
       return false;
     }
   };
@@ -128,25 +128,24 @@ export function useImpulsivityTheme() {
       const result = await syncImpulsivityTheme();
       
       if (result) {
-        const successLogDetails: ThemeLogDetails = { success: true };
-        logger.info('Successfully synced Impulsivity theme to database', successLogDetails);
+        logger.info('Successfully synced Impulsivity theme to database', { 
+          success: true 
+        });
       } else {
-        const errorLogDetails: ThemeLogDetails = { 
+        logger.error('Failed to sync Impulsivity theme to database', { 
           error: true, 
           success: false 
-        };
-        logger.error('Failed to sync Impulsivity theme to database', errorLogDetails);
+        });
       }
       
       setSyncInProgress(false);
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorLogDetails: ThemeLogDetails = { 
+      logger.error('Error syncing Impulsivity theme to database', { 
         error: true, 
         errorMessage 
-      };
-      logger.error('Error syncing Impulsivity theme to database', errorLogDetails);
+      });
       
       setSyncInProgress(false);
       return false;
@@ -172,13 +171,12 @@ export function useImpulsivityTheme() {
         description: "The theme has been successfully applied across the entire application.",
       });
       
-      const successLogDetails: ThemeLogDetails = {
+      logger.info('Impulsivity theme fully applied', {
         success: true,
         mainSite: mainSiteResult, 
         admin: adminResult, 
         database: dbResult
-      };
-      logger.info('Impulsivity theme fully applied', successLogDetails);
+      });
       return true;
     } else {
       // Show toast with partial success message
@@ -193,14 +191,13 @@ export function useImpulsivityTheme() {
         variant: "destructive",
       });
       
-      const warningLogDetails: ThemeLogDetails = {
+      logger.warn('Impulsivity theme partially applied', {
         warning: true,
         success: false,
         mainSite: mainSiteResult, 
         admin: adminResult, 
         database: dbResult
-      };
-      logger.warn('Impulsivity theme partially applied', warningLogDetails);
+      });
       
       return false;
     }

@@ -5,7 +5,7 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 
 // Create a logger instance for the theme service
-const logger = getLogger('ThemeService', LogCategory.SERVICES);
+const logger = getLogger();
 
 // Local fallback theme for when the database is unavailable
 const fallbackTheme: Theme = {
@@ -82,7 +82,11 @@ interface GetThemeOptions {
  */
 export async function getTheme(options: GetThemeOptions = { isDefault: true }): Promise<{ theme: Theme, isFallback: boolean }> {
   try {
-    logger.info("Fetching theme from service", { details: options });
+    logger.info("Fetching theme from service", {
+      category: LogCategory.SERVICES,
+      details: options,
+      source: 'themeService'
+    });
     
     const { id, name, isDefault = true, context = 'site' } = options;
     
@@ -99,7 +103,9 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
 
     if (error) {
       logger.error("Error fetching theme from service", { 
-        details: { error, options } 
+        category: LogCategory.SERVICES,
+        details: { error, options },
+        source: 'themeService'
       });
       
       return { 
@@ -109,11 +115,13 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
     }
     
     logger.info("Theme set successfully", { 
+      category: LogCategory.SERVICES,
       details: {
         themeId: data.theme?.id || 'unknown',
         isFallback: data.isFallback || false,
         componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
-      }
+      },
+      source: 'themeService'
     });
 
     return { 
@@ -123,7 +131,9 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
     
   } catch (error) {
     logger.error("Error fetching theme from service", { 
-      details: error
+      category: LogCategory.SERVICES,
+      details: error,
+      source: 'themeService'
     });
     
     // Return local fallback theme as emergency backup

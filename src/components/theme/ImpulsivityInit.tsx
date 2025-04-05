@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useImpulsivityTheme } from '@/hooks/useImpulsivityTheme';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
@@ -18,11 +18,14 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
   const [isInitialized, setIsInitialized] = useState(false);
   const [isError, setIsError] = useState(false);
   const logger = useLogger('ImpulsivityInit', LogCategory.UI);
+  const initAttempted = useRef(false);
   
   useEffect(() => {
-    if (autoApply && !isInitialized && !isSyncing && !themeStoreLoading) {
+    // Only initialize once to prevent infinite loops
+    if (autoApply && !isInitialized && !isSyncing && !themeStoreLoading && !initAttempted.current) {
       const initTheme = async () => {
         try {
+          initAttempted.current = true;
           logger.info('Initializing Impulsivity theme');
           setIsError(false);
           

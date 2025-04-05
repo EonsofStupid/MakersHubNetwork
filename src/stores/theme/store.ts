@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { ThemeState } from "./types";
 import { ComponentTokens, ThemeContext } from "@/types/theme";
@@ -73,7 +72,7 @@ const themeSchema = z.object({
 });
 
 // Create a type-safe logger for the theme store
-const logger = getLogger('ThemeStore', LogCategory.UI);
+const logger = getLogger();
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
   currentTheme: null,
@@ -86,7 +85,11 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   setTheme: async (themeIdOrName: string) => {
     set({ isLoading: true, error: null });
     try {
-      logger.info('Setting theme', { details: { themeIdOrName } });
+      logger.info('Setting theme', { 
+        category: LogCategory.UI,
+        details: { themeIdOrName },
+        source: 'ThemeStore'
+      });
       
       // We receive a theme ID or name, fetch the theme
       const { theme: fetchedTheme, isFallback } = await getTheme({
@@ -179,15 +182,19 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       }
       
       logger.info('Theme set successfully', { 
+        category: LogCategory.SYSTEM,
         details: { 
           themeId: fetchedTheme.id, 
           isFallback, 
           componentTokensCount: Array.isArray(fetchedTheme.component_tokens) ? fetchedTheme.component_tokens.length : 0 
-        } 
+        },
+        source: 'ThemeStore'
       });
     } catch (error) {
       logger.error("Error fetching theme", { 
-        details: error
+        category: LogCategory.SYSTEM,
+        details: error,
+        source: 'ThemeStore'
       });
       
       set({ 
@@ -200,7 +207,10 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   loadAdminComponents: async () => {
     set({ isLoading: true, error: null });
     try {
-      logger.info('Loading admin components');
+      logger.info('Loading admin components', {
+        category: LogCategory.UI,
+        source: 'ThemeStore'
+      });
       
       // Use the theme service to get admin components
       const { theme: adminTheme } = await getTheme();
@@ -228,9 +238,17 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       }
       
       set({ adminComponents: validatedAdminComponents, isLoading: false });
-      logger.info('Admin components loaded', { details: { count: validatedAdminComponents.length } });
+      logger.info('Admin components loaded', { 
+        category: LogCategory.UI,
+        details: { count: validatedAdminComponents.length },
+        source: 'ThemeStore'
+      });
     } catch (error) {
-      logger.error("Error loading admin components", { details: error });
+      logger.error("Error loading admin components", { 
+        category: LogCategory.SYSTEM,
+        details: error,
+        source: 'ThemeStore'
+      });
       set({ 
         error: error instanceof Error ? error : new Error("Failed to load admin components"), 
         isLoading: false 
