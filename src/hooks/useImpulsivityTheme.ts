@@ -6,12 +6,13 @@ import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { Theme } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
  */
 export function useImpulsivityTheme() {
-  const { themeTokens, setThemeTokens } = useThemeStore();
+  const { currentTheme, setTheme } = useThemeStore();
   const adminStore = useAdminStore();
   const { toast } = useToast();
   const logger = useLogger('ImpulsivityTheme', LogCategory.UI);
@@ -29,26 +30,42 @@ export function useImpulsivityTheme() {
       rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
       rootElement.style.setProperty('--site-effect-tertiary', '#8B5CF6');
       
-      // Update the theme tokens in the store
-      setThemeTokens({
-        ...themeTokens,
-        colors: {
-          ...(themeTokens?.colors || {}),
-          primary: '#00F0FF',
-          secondary: '#FF2D6E',
-        },
-        effects: {
-          ...(themeTokens?.effects || {}),
-          primary: '#00F0FF',
-          secondary: '#FF2D6E',
-          tertiary: '#8B5CF6',
+      // Update the theme in the store if needed
+      if (currentTheme) {
+        // Create updated design tokens
+        const updatedDesignTokens = {
+          ...(currentTheme.design_tokens || {}),
+          colors: {
+            ...(currentTheme.design_tokens?.colors || {}),
+            primary: '#00F0FF',
+            secondary: '#FF2D6E',
+          },
+          effects: {
+            ...(currentTheme.design_tokens?.effects || {}),
+            primary: '#00F0FF',
+            secondary: '#FF2D6E',
+            tertiary: '#8B5CF6',
+          }
+        };
+        
+        // Update theme with the new design tokens
+        const updatedTheme: Theme = {
+          ...currentTheme,
+          design_tokens: updatedDesignTokens
+        };
+        
+        // Use the setTheme function from the store to update the theme
+        if (currentTheme.id) {
+          await setTheme(currentTheme.id);
         }
-      });
+      }
       
       logger.info('Applied Impulsivity theme to main site');
       return true;
     } catch (error) {
-      logger.error('Error applying Impulsivity theme to main site', { details: error });
+      logger.error('Error applying Impulsivity theme to main site', { 
+        details: error instanceof Error ? error.message : String(error)
+      });
       return false;
     }
   };
@@ -79,7 +96,9 @@ export function useImpulsivityTheme() {
       logger.info('Applied Impulsivity theme to admin panel');
       return true;
     } catch (error) {
-      logger.error('Error applying Impulsivity theme to admin panel', { details: error });
+      logger.error('Error applying Impulsivity theme to admin panel', { 
+        details: error instanceof Error ? error.message : String(error)
+      });
       return false;
     }
   };
@@ -97,7 +116,9 @@ export function useImpulsivityTheme() {
       
       return result;
     } catch (error) {
-      logger.error('Error syncing Impulsivity theme to database', { details: error });
+      logger.error('Error syncing Impulsivity theme to database', { 
+        details: error instanceof Error ? error.message : String(error)
+      });
       return false;
     }
   };
