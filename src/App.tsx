@@ -17,18 +17,18 @@ interface AppProps {
 function App({ onInitialized }: AppProps) {
   return (
     <LoggingProvider>
-      <AuthProvider onInitialized={onInitialized}>
-        <ThemeProvider>
-          <div className="min-h-screen bg-background">
-            <Router>
+      <ThemeProvider>
+        <Router>
+          <AuthProvider onInitialized={onInitialized}>
+            <div className="min-h-screen bg-background">
               <MainNav />
               <AppRoutes />
               <Footer />
-            </Router>
-          </div>
-          <Toaster />
-        </ThemeProvider>
-      </AuthProvider>
+            </div>
+            <Toaster />
+          </AuthProvider>
+        </Router>
+      </ThemeProvider>
     </LoggingProvider>
   );
 }

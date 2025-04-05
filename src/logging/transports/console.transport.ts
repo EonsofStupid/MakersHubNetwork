@@ -54,9 +54,14 @@ export const consoleTransport: LogTransport = {
     }
     
     // Format timestamp
-    const time = typeof timestamp === 'string' 
-      ? new Date(timestamp).toLocaleTimeString() 
-      : (timestamp && timestamp instanceof Date ? timestamp.toLocaleTimeString() : new Date().toLocaleTimeString());
+    let timeStr: string;
+    if (typeof timestamp === 'string') {
+      timeStr = new Date(timestamp).toLocaleTimeString();
+    } else if (timestamp && timestamp instanceof Date) {
+      timeStr = timestamp.toLocaleTimeString();
+    } else {
+      timeStr = new Date().toLocaleTimeString();
+    }
     
     // Message title with proper styling
     const color = LOG_LEVEL_COLORS[level] || '#3B82F6';
@@ -64,7 +69,7 @@ export const consoleTransport: LogTransport = {
     
     // Build the title
     const parts = [
-      `%c${time}`,
+      `%c${timeStr}`,
       `%c${levelName}`,
       `%c${category || 'general'}${source ? ' › ' + source : ''}`
     ];

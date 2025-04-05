@@ -20,6 +20,7 @@ interface ThemeState {
   setTheme: (theme: string) => void;
   setThemeTokens: (tokens: Record<string, any>) => void;
   loadSiteComponents: () => Promise<void>;
+  hydrateTheme: () => Promise<void>;
 }
 
 export const useThemeStore = create<ThemeState>()(
@@ -39,6 +40,12 @@ export const useThemeStore = create<ThemeState>()(
       setThemeTokens: (tokens) => {
         logger.debug('Setting theme tokens', { details: { tokenCount: Object.keys(tokens).length } });
         set({ themeTokens: tokens });
+      },
+      
+      hydrateTheme: async () => {
+        logger.debug('Hydrating theme from store');
+        // This is a placeholder implementation
+        return Promise.resolve();
       },
       
       loadSiteComponents: async () => {
