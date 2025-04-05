@@ -12,6 +12,7 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  // Use selector function for Zustand to prevent unnecessary rerenders
   const { user, session, setSession } = useAuthStore(state => ({
     user: state.user,
     session: state.session,
@@ -22,6 +23,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   
   // Set up auth state change listener
   useEffect(() => {
+    // Prevent setup from running multiple times
+    if (initAttemptedRef.current) {
+      return;
+    }
+    
+    initAttemptedRef.current = true;
     logger.info('Setting up auth state change listener');
     
     // Don't perform other auth actions inside this subscription callback
