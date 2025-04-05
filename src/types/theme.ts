@@ -74,8 +74,39 @@ export interface Theme {
   cached_styles?: Record<string, any>;
 }
 
-// Logger types for proper error handling
+// Updated ThemeLogDetails interface with more specific types
 export interface ThemeLogDetails {
+  // Status indicators
+  success?: boolean;
+  error?: boolean;
+  warning?: boolean;
+  
+  // Error information
+  errorMessage?: string;
+  errorCode?: string;
+  errorDetails?: string;
+  errorHint?: string;
+  
+  // Theme information
+  themeId?: string;
+  theme?: string;
+  defaultTheme?: string;
+  originalTheme?: string;
+  
+  // Component information
+  component?: string;
+  componentCount?: number;
+  
+  // Operation status
+  mainSite?: boolean;
+  admin?: boolean;
+  database?: boolean;
+  
+  // Additional context
+  reason?: string;
+  details?: Record<string, unknown>;
+  
+  // Allow for additional properties
   [key: string]: unknown;
 }
 

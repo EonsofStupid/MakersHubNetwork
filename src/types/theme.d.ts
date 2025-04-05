@@ -55,7 +55,7 @@ export interface ComponentTokens {
   theme_id?: string;
   created_at?: string;
   updated_at?: string;
-  context?: string;
+  context?: 'site' | 'admin' | 'chat';  // Use proper ThemeContext union type
 }
 
 export interface ThemeToken {
@@ -65,3 +65,42 @@ export interface ThemeToken {
   category: string;
   theme_id: string;
 }
+
+// Add ThemeLogDetails interface to ensure consistency across files
+export interface ThemeLogDetails {
+  // Status indicators
+  success?: boolean;
+  error?: boolean;
+  warning?: boolean;
+  
+  // Error information
+  errorMessage?: string;
+  errorCode?: string;
+  errorDetails?: string;
+  errorHint?: string;
+  
+  // Theme information
+  themeId?: string;
+  theme?: string;
+  defaultTheme?: string;
+  originalTheme?: string;
+  
+  // Component information
+  component?: string;
+  componentCount?: number;
+  
+  // Operation status
+  mainSite?: boolean;
+  admin?: boolean;
+  database?: boolean;
+  
+  // Additional context
+  reason?: string;
+  details?: Record<string, unknown>;
+  
+  // Allow for additional properties
+  [key: string]: unknown;
+}
+
+// Define ThemeContext type to ensure consistent usage
+export type ThemeContext = 'site' | 'admin' | 'chat';

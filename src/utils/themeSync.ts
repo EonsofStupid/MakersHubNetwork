@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { keyframes, animation } from '@/theme/animations';
 import { Json } from '@/integrations/supabase/types';
@@ -7,26 +6,19 @@ import { LogCategory } from '@/logging';
 import { ThemeContext, ThemeLogDetails } from '@/types/theme';
 import { PostgrestError } from '@supabase/supabase-js';
 
-// Create a type for handling PostgrestError properly
-type ErrorDetails = {
-  message: string;
-  code?: string;
-  details?: string;
-  hint?: string;
-};
-
-// Create a standalone logger instance since we can't use hooks outside components
+// Create a logger instance
 const logger = useLogger('ThemeSync', LogCategory.SYSTEM);
 
 /**
- * Convert PostgrestError to a proper log details object
+ * Convert PostgrestError to a proper ThemeLogDetails object
  */
 function formatPostgrestError(error: PostgrestError): ThemeLogDetails {
   return {
-    message: error.message,
-    code: error.code,
-    details: error.details,
-    hint: error.hint
+    error: true,
+    errorMessage: error.message,
+    errorCode: error.code,
+    errorDetails: error.details,
+    errorHint: error.hint
   };
 }
 
@@ -176,7 +168,11 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
     }
     
     if (!theme) {
-      const notFoundDetails: ThemeLogDetails = { themeId };
+      const notFoundDetails: ThemeLogDetails = { 
+        themeId,
+        error: true,
+        reason: 'Theme not found'
+      };
       logger.error('Theme not found', notFoundDetails);
       throw new Error('Theme not found');
     }
@@ -294,7 +290,10 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       throw updateError;
     }
     
-    const updateDetails: ThemeLogDetails = { themeId };
+    const updateDetails: ThemeLogDetails = { 
+      success: true,
+      themeId
+    };
     logger.info('Updated theme design tokens successfully', updateDetails);
     
     // Update component tokens
@@ -374,12 +373,16 @@ export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
       }
     }
     
-    const syncSuccessDetails: ThemeLogDetails = { themeId };
+    const syncSuccessDetails: ThemeLogDetails = { 
+      success: true,
+      themeId
+    };
     logger.info('CSS successfully synced to database', syncSuccessDetails);
     return true;
   } catch (error) {
     const syncErrorDetails: ThemeLogDetails = {
-      error: error instanceof Error ? error.message : String(error)
+      error: true,
+      errorMessage: error instanceof Error ? error.message : String(error)
     };
     logger.error('Error syncing CSS to database', syncErrorDetails);
     return false;
@@ -400,7 +403,7 @@ async function ensureImpulsivityTheme(): Promise<string | null> {
       .eq('name', 'Impulsivity');
       
     if (queryError) {
-      const queryErrorDetails: ThemeLogDetails = formatPostgrestError(queryError);
+      const queryErrorDetails = formatPostgrestError(queryError);
       logger.error('Error checking theme existence', queryErrorDetails);
       throw queryError;
     }
@@ -410,7 +413,10 @@ async function ensureImpulsivityTheme(): Promise<string | null> {
     if (existingThemes && existingThemes.length > 0) {
       // Use existing theme
       themeId = existingThemes[0].id;
-      const existingThemeDetails: ThemeLogDetails = { themeId };
+      const existingThemeDetails: ThemeLogDetails = { 
+        success: true,
+        themeId 
+      };
       logger.info('Found existing Impulsivity theme', existingThemeDetails);
     } else {
       // Create new theme with required structure
@@ -463,7 +469,8 @@ async function ensureImpulsivityTheme(): Promise<string | null> {
     return themeId;
   } catch (error) {
     const errorDetails: ThemeLogDetails = {
-      error: error instanceof Error ? error.message : String(error)
+      error: true,
+      errorMessage: error instanceof Error ? error.message : String(error)
     };
     logger.error('Error ensuring Impulsivity theme', errorDetails);
     return null;
@@ -480,6 +487,7 @@ export async function syncImpulsivityTheme(): Promise<boolean> {
     
     if (!themeId) {
       const noThemeIdDetails: ThemeLogDetails = {
+        error: true,
         reason: 'Failed to get or create Impulsivity theme'
       };
       logger.error('Failed to get or create Impulsivity theme', noThemeIdDetails);
@@ -490,7 +498,8 @@ export async function syncImpulsivityTheme(): Promise<boolean> {
     return await syncCSSToDatabase(themeId);
   } catch (error) {
     const errorDetails: ThemeLogDetails = {
-      error: error instanceof Error ? error.message : String(error)
+      error: true,
+      errorMessage: error instanceof Error ? error.message : String(error)
     };
     logger.error('Error syncing Impulsivity theme', errorDetails);
     return false;
@@ -509,7 +518,7 @@ export async function getImpulsivityThemeId(): Promise<string | null> {
       .single();
       
     if (error) {
-      const errorDetails: ThemeLogDetails = formatPostgrestError(error);
+      const errorDetails = formatPostgrestError(error);
       logger.error('Error fetching Impulsivity theme ID', errorDetails);
       return null;
     }
@@ -517,7 +526,8 @@ export async function getImpulsivityThemeId(): Promise<string | null> {
     return data?.id || null;
   } catch (error) {
     const errorDetails: ThemeLogDetails = {
-      error: error instanceof Error ? error.message : String(error)
+      error: true,
+      errorMessage: error instanceof Error ? error.message : String(error)
     };
     logger.error('Error getting Impulsivity theme ID', errorDetails);
     return null;
