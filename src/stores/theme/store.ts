@@ -22,24 +22,11 @@ export const useThemeStore = create<ThemeState>((set) => ({
         throw new Error('Invalid theme data received');
       }
 
-      // Ensure componentTokens has the correct type with proper mapping
+      // Ensure componentTokens has the correct type
       const componentTokens = Array.isArray(fetchedTheme.component_tokens)
-        ? fetchedTheme.component_tokens.map((token: unknown): ComponentTokens => {
-            // Safely cast the unknown token with proper checks
-            const safeToken = token as Record<string, unknown>;
-            
-            return {
-              id: typeof safeToken.id === 'string' ? safeToken.id : '',
-              component_name: typeof safeToken.component_name === 'string' ? safeToken.component_name : '',
-              styles: typeof safeToken.styles === 'object' && safeToken.styles !== null 
-                ? safeToken.styles as Record<string, any> 
-                : {},
-              theme_id: typeof safeToken.theme_id === 'string' ? safeToken.theme_id : undefined,
-              context: typeof safeToken.context === 'string' ? safeToken.context : undefined,
-              created_at: typeof safeToken.created_at === 'string' ? safeToken.created_at : '',
-              updated_at: typeof safeToken.updated_at === 'string' ? safeToken.updated_at : '',
-              description: typeof safeToken.description === 'string' ? safeToken.description : '',
-            };
+        ? fetchedTheme.component_tokens.map((token): ComponentTokens => {
+            // Already typed as ComponentTokens from validateTheme
+            return token;
           })
         : [];
 
@@ -71,29 +58,12 @@ export const useThemeStore = create<ThemeState>((set) => ({
         throw new Error('Admin theme component tokens are not an array');
       }
       
-      // Filter for admin components with strict type checking
-      const adminComponents = adminTheme.component_tokens.filter(comp => {
-        const token = comp as Record<string, unknown>;
-        return typeof token.context === 'string' && token.context === 'admin';
-      });
+      // Filter for admin components
+      const adminComponents = adminTheme.component_tokens.filter(comp => 
+        comp.context === 'admin'
+      );
       
-      const components: ComponentTokens[] = adminComponents.map(comp => {
-        const token = comp as Record<string, unknown>;
-        return {
-          id: typeof token.id === 'string' ? token.id : '',
-          component_name: typeof token.component_name === 'string' ? token.component_name : '',
-          styles: typeof token.styles === 'object' && token.styles !== null
-            ? token.styles as Record<string, any>
-            : {},
-          description: typeof token.description === 'string' ? token.description : '', 
-          theme_id: typeof token.theme_id === 'string' ? token.theme_id : undefined,
-          context: typeof token.context === 'string' ? token.context : undefined,
-          created_at: typeof token.created_at === 'string' ? token.created_at : '',
-          updated_at: typeof token.updated_at === 'string' ? token.updated_at : ''
-        };
-      });
-
-      set({ adminComponents: components, isLoading: false });
+      set({ adminComponents, isLoading: false });
     } catch (error) {
       console.error("Error loading admin components:", error);
       set({ 

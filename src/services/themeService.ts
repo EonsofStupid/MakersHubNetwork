@@ -1,14 +1,13 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Theme } from "@/types/theme";
+import { Theme, ComponentTokens } from "@/types/theme";
 
 // Create a logger for the theme service
 const logger = {
-  info: (message: string, details?: any) => 
+  info: (message: string, details?: Record<string, unknown>) => 
     console.info(`[ThemeService] ${message}`, details),
-  error: (message: string, details?: any) => 
+  error: (message: string, details?: Record<string, unknown>) => 
     console.error(`[ThemeService] ${message}`, details),
-  warn: (message: string, details?: any) => 
+  warn: (message: string, details?: Record<string, unknown>) => 
     console.warn(`[ThemeService] ${message}`, details)
 };
 
@@ -45,11 +44,16 @@ const fallbackTheme: Theme = {
       ring: "#1E293B",
     },
     effects: {
+      shadows: {},
+      blurs: {},
+      gradients: {},
       primary: "#00F0FF",
       secondary: "#FF2D6E",
       tertiary: "#8B5CF6",
     },
     animation: {
+      keyframes: {},
+      transitions: {},
       durations: {
         fast: "150ms",
         normal: "300ms",
@@ -117,33 +121,81 @@ export async function getTheme(themeId?: string): Promise<{theme: Theme, isFallb
 /**
  * Validates and normalizes a theme to ensure it has all required properties
  */
-function validateTheme(theme: any): Theme {
+function validateTheme(theme: unknown): Theme {
   // Ensure we have a valid theme object
   if (!theme || typeof theme !== 'object') {
     logger.error('Invalid theme object', { theme });
     return fallbackTheme;
   }
 
+  // Type assertion after basic validation
+  const themeObj = theme as Partial<Theme>;
+
   // Ensure required properties exist
-  if (!theme.id || !theme.name || !theme.status) {
+  if (!themeObj.id || !themeObj.name || !themeObj.status) {
     logger.warn('Theme missing required properties, using defaults', { theme });
   }
 
-  // Ensure design_tokens exist
-  if (!theme.design_tokens || typeof theme.design_tokens !== 'object') {
+  // Ensure design_tokens exist and have the correct structure
+  if (!themeObj.design_tokens || typeof themeObj.design_tokens !== 'object') {
     logger.warn('Theme missing design_tokens, using defaults', { theme });
-    theme.design_tokens = fallbackTheme.design_tokens;
+    themeObj.design_tokens = fallbackTheme.design_tokens;
+  } else {
+    // Ensure effects has all required properties
+    if (!themeObj.design_tokens.effects) {
+      themeObj.design_tokens.effects = fallbackTheme.design_tokens.effects;
+    } else {
+      if (!themeObj.design_tokens.effects.shadows) {
+        themeObj.design_tokens.effects.shadows = {};
+      }
+      if (!themeObj.design_tokens.effects.blurs) {
+        themeObj.design_tokens.effects.blurs = {};
+      }
+      if (!themeObj.design_tokens.effects.gradients) {
+        themeObj.design_tokens.effects.gradients = {};
+      }
+    }
+    
+    // Ensure animation has all required properties
+    if (!themeObj.design_tokens.animation) {
+      themeObj.design_tokens.animation = fallbackTheme.design_tokens.animation;
+    } else {
+      if (!themeObj.design_tokens.animation.keyframes) {
+        themeObj.design_tokens.animation.keyframes = {};
+      }
+      if (!themeObj.design_tokens.animation.transitions) {
+        themeObj.design_tokens.animation.transitions = {};
+      }
+    }
   }
 
   // Normalize component_tokens to ensure it's always an array
-  if (!Array.isArray(theme.component_tokens)) {
+  if (!Array.isArray(themeObj.component_tokens)) {
     logger.warn('Theme component_tokens is not an array, normalizing', { 
-      componentTokensType: typeof theme.component_tokens 
+      componentTokensType: typeof themeObj.component_tokens 
     });
-    theme.component_tokens = [];
+    themeObj.component_tokens = [];
   }
 
-  return theme as Theme;
+  // Ensure the theme has all required fields from the Theme interface
+  return {
+    id: themeObj.id || fallbackTheme.id,
+    name: themeObj.name || fallbackTheme.name,
+    description: themeObj.description || fallbackTheme.description,
+    status: themeObj.status || fallbackTheme.status,
+    is_default: themeObj.is_default ?? fallbackTheme.is_default,
+    created_at: themeObj.created_at || fallbackTheme.created_at,
+    updated_at: themeObj.updated_at || fallbackTheme.updated_at,
+    version: themeObj.version || fallbackTheme.version,
+    design_tokens: themeObj.design_tokens || fallbackTheme.design_tokens,
+    component_tokens: themeObj.component_tokens || fallbackTheme.component_tokens,
+    composition_rules: themeObj.composition_rules || fallbackTheme.composition_rules,
+    cached_styles: themeObj.cached_styles || fallbackTheme.cached_styles,
+    published_at: themeObj.published_at,
+    cache_key: themeObj.cache_key,
+    parent_theme_id: themeObj.parent_theme_id,
+    created_by: themeObj.created_by
+  };
 }
 
 /**
