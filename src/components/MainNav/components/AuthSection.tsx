@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,7 +20,8 @@ export const AuthSection = () => {
   const { hasAdminAccess } = useAdminAccess();
   
   // Handle avatar click with animation and effects
-  const handleAvatarClick = () => {
+  // Using useCallback to prevent recreating this function on each render
+  const handleAvatarClick = useCallback(() => {
     const avatar = document.querySelector('.avatar-trigger');
     if (avatar) {
       avatar.classList.add('cyber-glow');
@@ -28,7 +29,7 @@ export const AuthSection = () => {
         avatar.classList.remove('cyber-glow');
       }, 400);
     }
-  };
+  }, []);
   
   // If logged in, show avatar with dropdown
   if (user) {

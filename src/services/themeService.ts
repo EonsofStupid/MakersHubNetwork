@@ -107,9 +107,11 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
     }
     
     logger.info("Theme set successfully", { 
-      themeId: data.theme?.id || 'unknown',
-      isFallback: data.isFallback || false,
-      componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
+      details: {
+        themeId: data.theme?.id || 'unknown',
+        isFallback: data.isFallback || false,
+        componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
+      }
     });
 
     return { 
