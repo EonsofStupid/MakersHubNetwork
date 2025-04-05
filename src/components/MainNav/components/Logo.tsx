@@ -13,7 +13,8 @@ export const Logo = () => {
   const { variables, isLoaded } = useSiteTheme();
   const letters = "MakersImpulse".split("");
   const animationTimeoutRef = useRef<number[]>([]);
-  const logoColor = "#00F0FF"; // Vibrant cyber aqua
+  // Vibrant cyber aqua color that should remain consistent
+  const logoColor = "#00F0FF";
   
   // Clear all timeouts on unmount
   useEffect(() => {
@@ -72,7 +73,7 @@ export const Logo = () => {
     animationTimeoutRef.current.forEach(clearTimeout);
     animationTimeoutRef.current = [];
     
-    // Create new random animations for each letter
+    // Create new random animations for each letter with a gradual cascade effect
     letters.forEach((_, index) => {
       const timeoutId = window.setTimeout(() => {
         setLetterStates(prev => ({
@@ -84,7 +85,7 @@ export const Logo = () => {
             rotation: generateRandomRotation()
           }
         }));
-      }, generateRandomDelay());
+      }, generateRandomDelay() + (index * 50)); // Add cascade effect with index * 50
       
       animationTimeoutRef.current.push(timeoutId);
     });
@@ -104,12 +105,12 @@ export const Logo = () => {
           ...prev,
           [index]: {
             active: false,
-            color: 'currentColor',
+            color: logoColor, // Reset to default logo color
             scale: 1,
             rotation: 0
           }
         }));
-      }, generateRandomDelay());
+      }, generateRandomDelay() + (letters.length - index) * 40); // Reverse cascade for leaving
       
       animationTimeoutRef.current.push(timeoutId);
     });
@@ -125,19 +126,40 @@ export const Logo = () => {
       style={{
         '--x': `${mousePosition.x}px`,
         '--y': `${mousePosition.y}px`,
-        color: isHovered ? 'white' : logoColor, // Vibrant cyber aqua when not hovered
-        textShadow: isHovered ? 'none' : `0 0 10px rgba(0, 240, 255, 0.7)`,
+        color: logoColor, // Always start with cyber aqua
+        textShadow: `0 0 10px rgba(0, 240, 255, 0.7)`,
       } as React.CSSProperties}
     >
+      {/* Glass effect background that appears on hover */}
+      <div 
+        className={`
+          absolute inset-0 
+          bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 
+          backdrop-blur-md
+          border border-primary/20 rounded-lg
+          -z-10 opacity-0 group-hover:opacity-80
+          transition-all duration-[800ms] scale-110
+          group-hover:scale-120 overflow-hidden
+        `}
+      >
+        {/* Animated particles inside glass background */}
+        <div className="absolute w-full h-full overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-primary/20 rounded-full animate-pulse-slow transform -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-secondary/20 rounded-full animate-float transform -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-3 h-3 bg-primary/20 rounded-full animate-pulse-slow transform -translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+      </div>
+      
+      {/* Letters with individual animations */}
       <span className="relative z-10 flex items-center space-x-[1px]">
         {letters.map((letter, index) => {
-          const letterState = letterStates[index] || { active: false, color: 'currentColor', scale: 1, rotation: 0 };
+          const letterState = letterStates[index] || { active: false, color: logoColor, scale: 1, rotation: 0 };
           return (
             <span
               key={index}
               className="inline-block transition-all relative"
               style={{
-                color: letterState.active ? letterState.color : (isHovered ? 'white' : logoColor),
+                color: letterState.active ? letterState.color : logoColor,
                 transitionDelay: `${generateRandomDelay()}ms`,
                 transitionDuration: '500ms',
                 transform: letterState.active 
@@ -145,7 +167,7 @@ export const Logo = () => {
                   : 'scale(1) rotate(0deg)',
                 textShadow: letterState.active 
                   ? `0 0 8px ${letterState.color}`
-                  : (isHovered ? 'none' : `0 0 10px rgba(0, 240, 255, 0.7)`),
+                  : `0 0 10px rgba(0, 240, 255, 0.7)`,
                 zIndex: letterState.active ? 5 : 1
               }}
             >
@@ -164,6 +186,8 @@ export const Logo = () => {
           );
         })}
       </span>
+      
+      {/* Enhanced glow effect on hover */}
       <div 
         className={`
           absolute inset-0 

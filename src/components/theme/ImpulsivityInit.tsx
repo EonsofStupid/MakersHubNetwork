@@ -23,7 +23,13 @@ export function ImpulsivityInit({ autoApply = true, children }: ImpulsivityInitP
           setIsInitialized(true);
           logger.info('Impulsivity theme initialized successfully');
         } catch (error) {
-          logger.error('Failed to initialize Impulsivity theme', { details: error });
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'Unknown error initializing theme';
+          
+          logger.error('Failed to initialize Impulsivity theme', { 
+            details: errorMessage
+          });
         }
       };
       

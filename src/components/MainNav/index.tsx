@@ -7,7 +7,7 @@ import { SearchButton } from "./components/SearchButton";
 import { AuthSection } from "./components/AuthSection";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Link } from "react-router-dom";
-import { Shield } from "lucide-react";
+import { Shield, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { useLogger } from "@/hooks/use-logger";
@@ -15,6 +15,7 @@ import { LogCategory } from "@/logging";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { hasAdminAccess } = useAdminAccess();
   const { componentStyles, animations, variables, isLoaded: themeIsLoaded } = useSiteTheme();
   const logger = useLogger("MainNav", LogCategory.UI);
@@ -32,6 +33,20 @@ export function MainNav() {
     dataStreamEffect: 'mainnav-data-stream',
     glitchParticles: 'mainnav-glitch-particles',
   };
+
+  // Handle scroll position to apply trapezoid shape
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial scroll position
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   useEffect(() => {
     logger.info("MainNav mounting");
@@ -73,9 +88,20 @@ export function MainNav() {
         "mainnav-container",
         "mainnav-header",
         "mainnav-gradient",
-        isLoaded && (styles.container?.animated || "mainnav-morph")
+        isLoaded && (styles.container?.animated || "mainnav-morph"),
+        isScrolled && "mainnav-scrolled transform-gpu"
       )}
+      style={{
+        clipPath: isScrolled 
+          ? 'polygon(0 0, 100% 0, 98% 100%, 2% 100%)' // Trapezoid when scrolled
+          : 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' // Regular rectangle when at top
+      }}
     >
+      {/* Enhanced glass effect with dual color overlay */}
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary/5 to-secondary/5 backdrop-blur-xl border-b border-primary/30 overflow-hidden">
+        <div className="absolute inset-0 bg-black/40"></div>
+      </div>
+      
       <div className="mainnav-effects-wrapper absolute inset-0 w-full h-full overflow-hidden">
         <div 
           ref={dataStreamRef}
@@ -93,7 +119,7 @@ export function MainNav() {
           )} 
         />
       </div>
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 relative z-10">
         <div className="flex items-center justify-between py-4">
           <Logo />
           <NavigationItems />
@@ -111,6 +137,16 @@ export function MainNav() {
                   <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
                 </Button>
               </Link>
+            )}
+            {hasAdminAccess && (
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="text-primary hover:text-white hover:bg-primary/30 relative"
+              >
+                <Settings className="h-5 w-5 animate-spin-slow" />
+                <span className="absolute inset-0 rounded-full border border-primary/50 scale-0 group-hover:scale-100 transition-transform duration-300 opacity-0 group-hover:opacity-100"></span>
+              </Button>
             )}
             <AuthSection />
           </div>
