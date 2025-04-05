@@ -5,7 +5,7 @@ import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { Theme, DesignTokensStructure, ThemeLogDetails } from '@/types/theme';
+import { Theme, DesignTokensStructure, ThemeLogDetails, ThemeContext } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -124,7 +124,7 @@ export function useImpulsivityTheme() {
         const successLogDetails: ThemeLogDetails = { success: true };
         logger.info('Successfully synced Impulsivity theme to database', successLogDetails);
       } else {
-        const errorLogDetails: ThemeLogDetails = { success: false };
+        const errorLogDetails: ThemeLogDetails = { success: false, error: true };
         logger.error('Failed to sync Impulsivity theme to database', errorLogDetails);
       }
       
@@ -160,6 +160,7 @@ export function useImpulsivityTheme() {
       });
       
       const successLogDetails: ThemeLogDetails = {
+        success: true,
         mainSite: mainSiteResult, 
         admin: adminResult, 
         database: dbResult
@@ -180,6 +181,8 @@ export function useImpulsivityTheme() {
       });
       
       const warningLogDetails: ThemeLogDetails = {
+        warning: true,
+        success: false,
         mainSite: mainSiteResult, 
         admin: adminResult, 
         database: dbResult
