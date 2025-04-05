@@ -39,15 +39,18 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
           await setTheme(themeId);
           logger.info('Theme initialized successfully with ID:', { details: { themeId } });
         } else {
-          logger.warn('Failed to initialize theme, falling back to default styles');
+          // Use the 'default' keyword to get the default theme
+          await setTheme('default');
+          logger.info('Using default theme after failed initialization');
           toast({
-            title: 'Theme Warning',
-            description: 'Could not find or create theme. Using default styling.',
-            variant: "destructive",
+            title: 'Theme Notice',
+            description: 'Using fallback theme. Some styles may be limited.',
+            variant: "default",
           });
         }
       } catch (error) {
         logger.error('Error initializing theme:', { details: error });
+        // Despite errors, don't block the app - use basic styling
         toast({
           title: 'Theme Error',
           description: 'Failed to load theme. Using default styling.',

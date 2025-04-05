@@ -58,6 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setTimeout(() => {
         initialize().catch(err => {
           logger.error('Failed to initialize auth', { details: err });
+          // Don't block the app on auth errors - just log them
         });
       }, 0);
     }
@@ -67,7 +68,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [logger, setSession, initialize, initialized]);
   
-  // Provide the current auth state
+  // Provide the current auth state, whether authenticated or not
   return (
     <AuthContext.Provider value={{ user, session: session as Session | null }}>
       {children}
