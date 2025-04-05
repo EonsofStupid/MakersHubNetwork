@@ -43,11 +43,26 @@ function extractComponentStyles() {
           animated: 'animate-morph-header shadow-[0_4px_30px_rgba(0,0,0,0.1),inset_0_0_30px_rgba(0,240,255,0.1)]'
         },
         header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30',
-        logo: 'text-xl font-bold text-primary hover:text-primary/80 transition-colors duration-300',
+        logo: 'text-2xl font-bold text-cyber',
+        dataStream: 'relative',
+        dataStreamEffect: 'mainnav-data-stream',
+        glitchParticles: 'mainnav-glitch-particles',
         nav: 'flex items-center gap-1 md:gap-2',
-        navItem: 'px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors',
+        navItem: 'px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors relative group',
         navItemActive: 'text-primary',
+        navItemActiveIndicator: 'absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-center',
         mobileToggle: 'block md:hidden'
+      }
+    },
+    {
+      component_name: 'Logo',
+      styles: {
+        container: 'relative text-2xl font-bold transition-all duration-1000 hover:translate-y-[-8px] group',
+        text: 'relative z-10 flex items-center space-x-[1px]',
+        letter: 'inline-block transition-all relative',
+        letterActive: 'inline-block transition-all relative text-primary',
+        glow: 'absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-all duration-[1500ms] rounded-full scale-150',
+        hoverEffect: 'transform-gpu transition-all duration-500'
       }
     },
     {
@@ -64,187 +79,14 @@ function extractComponentStyles() {
         copyrightSection: 'mt-8 pt-4 border-t border-primary/20 text-xs text-muted-foreground',
         socialIcons: 'flex mt-2 space-x-4'
       }
-    },
-    {
-      component_name: 'SimpleCyberText',
-      styles: {
-        base: 'relative inline-block',
-        primary: 'absolute -top-[2px] left-[2px] text-primary/40 z-10 skew-x-6',
-        secondary: 'absolute -bottom-[2px] left-[-2px] text-secondary/40 z-10 skew-x-[-6deg]'
-      }
-    },
-    {
-      component_name: 'ThemeDataStream',
-      styles: {
-        container: 'absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none',
-        streamVertical: 'animate-stream-vertical absolute h-[50vh] w-[2px] bg-gradient-to-b from-transparent via-primary/20 to-transparent',
-        streamHorizontal: 'animate-stream-horizontal absolute h-[2px] w-[50vw] bg-gradient-to-r from-transparent via-secondary/20 to-transparent'
-      }
-    },
-    {
-      component_name: 'ActionButtons',
-      styles: {
-        buildCta: "cyber-card inline-flex h-12 items-center justify-center rounded-md bg-primary/20 px-8 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(0,240,255,0.15)] transition-all duration-300 hover:scale-105 hover:bg-primary/30 hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden",
-        browseCta: "glass-morphism inline-flex h-12 items-center justify-center rounded-md border border-primary/30 bg-background/30 backdrop-blur-xl px-8 text-sm font-medium ring-offset-background transition-colors hover:bg-accent/10 hover:text-accent-foreground hover:border-primary/50 hover:shadow-[0_0_15px_rgba(0,240,255,0.15)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden",
-        communityCta: "neo-blur inline-flex h-12 items-center justify-center rounded-md border border-secondary/30 bg-background/30 backdrop-blur-xl px-8 text-sm font-medium transition-colors hover:bg-secondary/10 hover:text-secondary-foreground hover:border-secondary/50 hover:shadow-[0_0_15px_rgba(255,45,110,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden"
-      }
-    },
-    {
-      component_name: 'PageTitle',
-      styles: {
-        title: "text-4xl md:text-5xl lg:text-6xl font-bold mb-6 relative",
-        gradient: "bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mad-scientist-hover"
-      }
-    },
-    {
-      component_name: 'SubscriptionForm',
-      styles: {
-        container: "subscribe-banner cyber-card p-4 md:p-6 max-w-xl mx-auto my-8 relative overflow-hidden",
-        gradient: "absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10"
-      }
-    },
-    {
-      component_name: 'FeaturesSection',
-      styles: {
-        container: "py-16 bg-background/30 backdrop-blur-sm relative",
-        title: "text-3xl font-bold text-center mb-12",
-        grid: "grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4",
-        feature: "feature-cta",
-        featureTitle: "feature-cta-title",
-        featureDescription: "feature-cta-description", 
-        featureButton: "feature-cta-button",
-        featureHoverEffect: "feature-cta-hover-effect"
-      }
-    },
-    {
-      component_name: 'BuildShowcase',
-      styles: {
-        container: "showcase-section py-16 relative",
-        title: "text-3xl font-bold text-center mb-12",
-        grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto px-4",
-        card: "build-card",
-        cardImageContainer: "build-card-image-container",
-        cardImage: "build-card-image",
-        cardGradientOverlay: "build-card-gradient-overlay",
-        cardCategory: "build-card-category",
-        cardContent: "build-card-content",
-        cardTitle: "build-card-title",
-        cardCreator: "build-card-creator",
-        cardStats: "build-card-stats"
-      }
     }
   ];
 }
 
 /**
- * Extract CSS utility classes and animations that aren't captured elsewhere
+ * Sync CSS styles to the database for a given theme
  */
-function extractCSSUtilitiesAndAnimations() {
-  return {
-    // Footer animations
-    "footer-float": {
-      "0%, 100%": { transform: "perspective(1000px) rotateX(1deg) translateY(0)" },
-      "50%": { transform: "perspective(1000px) rotateX(2deg) translateY(-10px)" }
-    },
-    "footer-pulse": {
-      "0%, 100%": {
-        opacity: "0.8",
-        boxShadow: "0 -8px 32px 0 rgba(0,240,255,0.2)"
-      },
-      "50%": {
-        opacity: "1",
-        boxShadow: "0 -12px 48px 0 rgba(0,240,255,0.3)"
-      }
-    },
-    // Particle effects
-    "particle-burst": {
-      "0%": {
-        transform: "scale(0)",
-        opacity: "0"
-      },
-      "20%": {
-        opacity: "1"
-      },
-      "80%": {
-        transform: "scale(10)",
-        opacity: "0.8"
-      },
-      "100%": {
-        transform: "scale(20)",
-        opacity: "0"
-      }
-    },
-    // Gradient flow
-    "gradient-flow": {
-      "0%": { backgroundPosition: "0% 50%" },
-      "50%": { backgroundPosition: "100% 50%" },
-      "100%": { backgroundPosition: "0% 50%" }
-    },
-    // CTA Effects
-    "cta-glitch": {
-      "0%": {
-        transform: "translate(0)",
-        textShadow: "0 0 0 var(--effect-color, #00F0FF)"
-      },
-      "25%": {
-        transform: "translate(-2px, 2px)",
-        textShadow: "-1px 0 2px var(--effect-color, #00F0FF)"
-      },
-      "50%": {
-        transform: "translate(0)",
-        textShadow: "0 0 0 var(--effect-color, #00F0FF)"
-      },
-      "75%": {
-        transform: "translate(2px, -2px)",
-        textShadow: "1px 0 2px var(--effect-color, #00F0FF)"
-      },
-      "100%": {
-        transform: "translate(0)",
-        textShadow: "0 0 0 var(--effect-color, #00F0FF)"
-      }
-    },
-    "cta-particles": {
-      "0%": { transform: "translateY(0) translateX(0)" },
-      "25%": { transform: "translateY(-20px) translateX(10px)" },
-      "50%": { transform: "translateY(0) translateX(20px)" },
-      "75%": { transform: "translateY(20px) translateX(10px)" },
-      "100%": { transform: "translateY(0) translateX(0)" }
-    },
-    "cta-gradient-flow": {
-      "0%": { backgroundPosition: "200% 0" },
-      "100%": { backgroundPosition: "-200% 0" }
-    },
-    // MainNav animations
-    "mainnav-stream": {
-      "from": { backgroundPosition: "200% 0" },
-      "to": { backgroundPosition: "-200% 0" }
-    },
-    "mainnav-particles-1": {
-      "0%": { transform: "translate(-50%, 0)" },
-      "20%": { transform: "translate(calc(-50% - 100px), 50px)" },
-      "40%": { transform: "translate(calc(-50% + 100px), -100px)" },
-      "60%": { transform: "translate(calc(-50% - 50px), 100px)" },
-      "80%": { transform: "translate(calc(-50% + 100px), -50px)" },
-      "100%": { transform: "translate(-50%, 0)" }
-    },
-    "mainnav-particles-2": {
-      "0%": { transform: "translate(-50%, 0)" },
-      "25%": { transform: "translate(calc(-50% + 100px), -50px)" },
-      "50%": { transform: "translate(calc(-50% - 100px), 100px)" },
-      "75%": { transform: "translate(calc(-50% + 50px), -100px)" },
-      "100%": { transform: "translate(-50%, 0)" }
-    },
-    // Shimmer effect
-    "shimmer": {
-      "to": { left: "150%" }
-    }
-  };
-}
-
-/**
- * Syncs all CSS to the database to ensure nothing is missed
- */
-export async function syncCSSToDatabase(themeId: string) {
+export async function syncCSSToDatabase(themeId: string): Promise<boolean> {
   try {
     console.log('Syncing CSS to database for theme:', themeId);
     
@@ -258,28 +100,61 @@ export async function syncCSSToDatabase(themeId: string) {
     if (themeError) throw themeError;
     if (!theme) throw new Error('Theme not found');
     
-    // Extract animations
-    const { keyframes: extractedKeyframes, animations: extractedAnimations } = extractAnimationsFromCSS();
+    // Extract animations from CSS files
+    const { keyframes: animationsKeyframes, animations: animationsDefs } = extractAnimationsFromCSS();
     
-    // Extract additional CSS utility animations
-    const additionalAnimations = extractCSSUtilitiesAndAnimations();
-    
-    // Merge all keyframes
-    const allKeyframes = {
-      ...extractedKeyframes,
-      ...additionalAnimations
-    };
-    
-    // Handle design tokens properly
-    const designTokens = theme.design_tokens as Record<string, any>;
+    // Extract component styles
+    const componentStyles = extractComponentStyles();
     
     // Update design tokens with animations
+    const designTokens = theme.design_tokens as Record<string, any>;
+    
     const updatedDesignTokens = {
       ...designTokens,
+      colors: {
+        ...(designTokens?.colors || {}),
+        primary: '#00F0FF',
+        secondary: '#FF2D6E',
+        background: '#121218',
+        foreground: '#F6F6F7',
+        card: '#1c1e26',
+        cardForeground: '#F6F6F7',
+        muted: '#1e2028',
+        mutedForeground: '#a8b3cf',
+        accent: '#FF2D6E',
+        accentForeground: '#F6F6F7',
+        destructive: '#ff4d4f',
+        destructiveForeground: '#F6F6F7',
+        border: 'rgba(0, 240, 255, 0.2)',
+        input: '#272935',
+        ring: 'rgba(0, 240, 255, 0.4)'
+      },
+      effects: {
+        ...(designTokens?.effects || {}),
+        primary: '#00F0FF',
+        secondary: '#FF2D6E',
+        tertiary: '#8B5CF6',
+        shadows: {
+          small: '0 2px 5px rgba(0, 0, 0, 0.2)',
+          medium: '0 4px 10px rgba(0, 0, 0, 0.3)',
+          large: '0 10px 25px rgba(0, 0, 0, 0.4)',
+          glow: '0 0 15px rgba(0, 240, 255, 0.7)'
+        },
+        blurs: {
+          slight: 'blur(4px)',
+          medium: 'blur(8px)',
+          heavy: 'blur(16px)'
+        },
+        gradients: {
+          primary: 'linear-gradient(90deg, #00F0FF, #0080FF)',
+          secondary: 'linear-gradient(90deg, #FF2D6E, #FFA07A)',
+          accent: 'linear-gradient(90deg, #8B5CF6, #D946EF)'
+        }
+      },
       animation: {
         ...(designTokens?.animation || {}),
-        keyframes: allKeyframes,
-        transitions: designTokens?.animation?.transitions || {},
+        keyframes: animationsKeyframes,
+        transitions: animationsDefs || {},
         durations: {
           ...(designTokens?.animation?.durations || {}),
           fast: '150ms',
@@ -289,17 +164,48 @@ export async function syncCSSToDatabase(themeId: string) {
           animationNormal: '2s',
           animationSlow: '3s'
         }
+      },
+      typography: {
+        ...(designTokens?.typography || {}),
+        fontFamilies: {
+          heading: 'Space Grotesk, sans-serif',
+          body: 'Inter, sans-serif',
+          mono: 'monospace'
+        },
+        fontSizes: {
+          xs: '0.75rem',
+          sm: '0.875rem',
+          base: '1rem',
+          lg: '1.125rem',
+          xl: '1.25rem',
+          '2xl': '1.5rem',
+          '3xl': '1.875rem',
+          '4xl': '2.25rem',
+          '5xl': '3rem',
+          '6xl': '3.75rem',
+          '7xl': '4.5rem',
+          '8xl': '6rem',
+          '9xl': '8rem'
+        }
+      },
+      spacing: {
+        ...(designTokens?.spacing || {}),
+        radius: {
+          sm: '0.25rem',
+          md: '0.5rem',
+          lg: '0.75rem',
+          full: '9999px'
+        }
       }
     };
-    
-    // Add new component styles
-    const componentStyles = extractComponentStyles();
     
     // Update the theme with the new design tokens
     const { error: updateError } = await supabase
       .from('themes')
       .update({
         design_tokens: updatedDesignTokens as Json,
+        name: 'Impulsivity',
+        description: 'A cyberpunk-inspired theme with neon effects and vivid colors',
       })
       .eq('id', themeId);
       
@@ -344,6 +250,56 @@ export async function syncCSSToDatabase(themeId: string) {
     return true;
   } catch (error) {
     console.error('Error syncing CSS to database:', error);
+    return false;
+  }
+}
+
+/**
+ * Sync the Impulsivity theme to the database
+ */
+export async function syncImpulsivityTheme(): Promise<boolean> {
+  try {
+    // First check if the Impulsivity theme exists
+    const { data: existingThemes, error: queryError } = await supabase
+      .from('themes')
+      .select('id')
+      .eq('name', 'Impulsivity');
+      
+    if (queryError) throw queryError;
+    
+    let themeId: string;
+    
+    if (existingThemes && existingThemes.length > 0) {
+      // Update existing theme
+      themeId = existingThemes[0].id;
+    } else {
+      // Create new theme
+      const { data: newTheme, error: createError } = await supabase
+        .from('themes')
+        .insert({
+          name: 'Impulsivity',
+          description: 'A cyberpunk-inspired theme with neon effects and vivid colors',
+          is_public: true,
+          design_tokens: {
+            colors: {
+              primary: '#00F0FF',
+              secondary: '#FF2D6E'
+            }
+          } as Json
+        })
+        .select('id')
+        .single();
+        
+      if (createError) throw createError;
+      if (!newTheme) throw new Error('Failed to create new theme');
+      
+      themeId = newTheme.id;
+    }
+    
+    // Sync CSS to the database
+    return await syncCSSToDatabase(themeId);
+  } catch (error) {
+    console.error('Error syncing Impulsivity theme:', error);
     return false;
   }
 }
