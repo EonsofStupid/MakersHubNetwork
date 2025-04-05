@@ -1,7 +1,10 @@
 
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
+import { DynamicKeyframes } from './DynamicKeyframes';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 // Create context
 const SiteThemeContext = createContext<{
@@ -10,12 +13,14 @@ const SiteThemeContext = createContext<{
   toggleDarkMode: () => void;
   componentStyles: Record<string, any>;
   animations: Record<string, any>;
+  isLoaded: boolean;
 }>({
   variables: {} as ThemeVariables,
   isDarkMode: true,
   toggleDarkMode: () => {},
   componentStyles: {},
   animations: {},
+  isLoaded: false,
 });
 
 // Custom hook to use the theme context
@@ -26,12 +31,25 @@ interface SiteThemeProviderProps {
 }
 
 export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
-  const { currentTheme, isLoading } = useThemeStore();
+  const { currentTheme, isLoading, setTheme } = useThemeStore();
   const variables = useThemeVariables(currentTheme);
+  const logger = useLogger('ThemeProvider', LogCategory.UI);
+  const [isLoaded, setIsLoaded] = useState(false);
+  
   // Get UI theme mode from localStorage or default to dark
   const [isDarkMode, setIsDarkMode] = React.useState<boolean>(
     localStorage.getItem('theme-mode') === 'light' ? false : true
   );
+  
+  // Load theme on mount
+  useEffect(() => {
+    if (!currentTheme && !isLoading) {
+      logger.info('Loading default theme');
+      setTheme('default').catch(err => {
+        logger.error('Failed to load default theme', { details: err });
+      });
+    }
+  }, [currentTheme, isLoading, setTheme, logger]);
   
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -65,12 +83,21 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
     return currentTheme.design_tokens.animation.keyframes;
   }, [currentTheme]);
 
-  // For debugging
+  // Mark theme as loaded when everything is ready
   useEffect(() => {
-    console.log('Theme Provider - currentTheme:', currentTheme);
-    console.log('Theme Provider - animations:', animations);
-    console.log('Theme Provider - componentStyles:', componentStyles);
-  }, [currentTheme, animations, componentStyles]);
+    if (!isLoading && currentTheme) {
+      setTimeout(() => {
+        setIsLoaded(true);
+        logger.info('Theme loaded successfully', { 
+          details: { 
+            themeName: currentTheme.name,
+            hasAnimations: Boolean(animations && Object.keys(animations).length > 0),
+            hasComponentStyles: Boolean(componentStyles && Object.keys(componentStyles).length > 0)
+          } 
+        });
+      }, 100);
+    }
+  }, [isLoading, currentTheme, animations, componentStyles, logger]);
 
   // Apply CSS variables when the theme changes
   useEffect(() => {
@@ -127,8 +154,19 @@ export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
     
   }, [variables, isLoading, isDarkMode, currentTheme]);
   
+  // Create the theme context value
+  const contextValue = {
+    variables, 
+    isDarkMode, 
+    toggleDarkMode, 
+    componentStyles, 
+    animations,
+    isLoaded
+  };
+  
   return (
-    <SiteThemeContext.Provider value={{ variables, isDarkMode, toggleDarkMode, componentStyles, animations }}>
+    <SiteThemeContext.Provider value={contextValue}>
+      <DynamicKeyframes />
       {children}
     </SiteThemeContext.Provider>
   );

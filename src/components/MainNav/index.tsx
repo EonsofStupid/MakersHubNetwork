@@ -10,12 +10,15 @@ import { Link } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
   const { hasAdminAccess } = useAdminAccess();
-  const { componentStyles } = useSiteTheme();
-
+  const { componentStyles, animations } = useSiteTheme();
+  const logger = useLogger("MainNav", LogCategory.UI);
+  
   // Get MainNav styles from theme
   const styles = componentStyles?.MainNav || {
     container: {
@@ -24,17 +27,23 @@ export function MainNav() {
     },
     header: 'mainnav-header',
     dataStream: 'relative',
-    dataStreamEffect: '',
-    glitchParticles: '',
+    dataStreamEffect: 'mainnav-data-stream',
+    glitchParticles: 'mainnav-glitch-particles',
   };
 
   useEffect(() => {
-    console.log("MainNav - hasAdminAccess:", hasAdminAccess); // Debug admin access
-    console.log("MainNav - componentStyles:", componentStyles); // Debug styles
+    logger.info("MainNav mounting", { 
+      details: { 
+        hasAdminAccess, 
+        componentStyles: Boolean(componentStyles),
+        animationsLoaded: Boolean(animations)
+      }
+    });
+    
     requestAnimationFrame(() => {
       setIsLoaded(true);
     });
-  }, [hasAdminAccess, componentStyles]);
+  }, [hasAdminAccess, componentStyles, animations, logger]);
 
   return (
     <header
@@ -42,15 +51,15 @@ export function MainNav() {
         "mainnav-container",
         "mainnav-header",
         "mainnav-gradient",
-        "mainnav-morph"
+        styles.container?.animated || "mainnav-morph"
       )}
     >
       <div className="mainnav-effects-wrapper absolute inset-0 w-full h-full overflow-hidden">
         <div className={cn(
           "w-full h-full pointer-events-none", 
           styles.dataStream,
-          styles.dataStreamEffect,
-          styles.glitchParticles
+          styles.dataStreamEffect || "mainnav-data-stream",
+          styles.glitchParticles || "mainnav-glitch-particles"
         )} />
       </div>
       <div className="container mx-auto px-4">
