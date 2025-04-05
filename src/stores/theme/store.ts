@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { ThemeState } from "./types";
 import { ComponentTokens, ThemeContext } from "@/types/theme";
@@ -230,11 +229,16 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
               ring: "#1E293B",
             },
             effects: {
+              shadows: {},
+              blurs: {},
+              gradients: {},
               primary: "#00F0FF",
               secondary: "#FF2D6E",
               tertiary: "#8B5CF6",
             },
             animation: {
+              keyframes: {},
+              transitions: {},
               durations: {
                 fast: "150ms",
                 normal: "300ms",

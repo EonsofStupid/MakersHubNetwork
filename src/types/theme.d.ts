@@ -1,3 +1,4 @@
+
 export interface Theme {
   id: string;
   name: string;
@@ -54,7 +55,7 @@ export interface ComponentTokens {
   theme_id?: string;
   created_at?: string;
   updated_at?: string;
-  context?: 'site' | 'admin' | 'chat';  // Use proper ThemeContext union type
+  context?: 'site' | 'admin' | 'chat';
 }
 
 export interface ThemeToken {
@@ -75,14 +76,16 @@ export interface ThemeLogDetails {
   errorHint?: string;
   themeId?: string;
   themeName?: string;
+  theme?: string;
   isFallback?: boolean;
+  originalTheme?: string;
   hasAnimations?: boolean;
   hasComponentStyles?: boolean;
   componentTokensCount?: number;
-  originalTheme?: string;
   mainSite?: boolean;
   admin?: boolean;
   database?: boolean;
+  details?: Record<string, unknown>;
 }
 
 export type ThemeContext = 'site' | 'admin' | 'chat';
