@@ -3,19 +3,21 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { LoginSheet } from "./LoginSheet";
-import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const AuthSection = () => {
   const { status, isLoading } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
-  // Don't use derived state here, just use the status directly
+  // Use direct status check for better reliability
   const isAuthenticated = status === "authenticated";
 
+  // Show skeleton loader while auth is initializing
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-8">
-        <Spinner size="sm" />
+      <div className="flex items-center space-x-2">
+        <Skeleton className="h-8 w-8 rounded-full" />
+        <Skeleton className="h-8 w-16" />
       </div>
     );
   }

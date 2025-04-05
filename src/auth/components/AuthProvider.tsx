@@ -21,6 +21,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   
   // Set up auth state change listener
   useEffect(() => {
+    logger.info('Setting up auth state change listener');
+    
     // Don't perform other auth actions inside this subscription callback
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
@@ -45,7 +47,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [logger, setSession]);
   
-  // Only provide the current auth state, don't trigger actions here
+  // Provide the current auth state, don't trigger actions here
   return (
     <AuthContext.Provider value={{ user, session: session as Session | null }}>
       {children}

@@ -1,3 +1,4 @@
+
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry } from '../types';
@@ -97,7 +98,9 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             <span className="font-medium">{log.category}</span>
           </div>
           <div className="message-content text-sm">
-            {renderUnknownAsNode(log.message)}
+            {typeof log.message === 'string' 
+              ? log.message 
+              : renderUnknownAsNode(log.message)}
           </div>
           
           <AnimatePresence>
@@ -143,7 +146,9 @@ export function LogConsole() {
     .filter(log => {
       if (search === '') return true;
       const searchLower = search.toLowerCase();
-      const messageStr = nodeToSearchableString(log.message).toLowerCase();
+      const messageStr = typeof log.message === 'string' 
+        ? log.message.toLowerCase() 
+        : nodeToSearchableString(log.message).toLowerCase();
       return messageStr.includes(searchLower) || 
              (log.category && log.category.toLowerCase().includes(searchLower));
     });

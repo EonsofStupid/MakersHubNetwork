@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { initializeLogger, getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
+import { AppInitializer } from "@/components/AppInitializer";
 
 // Import pages
 import Index from "./pages/Index";
@@ -63,15 +64,17 @@ function App() {
         <AuthProvider>
           <AdminProvider>
             <ThemeInitializer>
-              {!isAdminRoute && <MainNav />}
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/admin/*" element={<Admin />} />
-              </Routes>
-              {!isAdminRoute && <Footer />}
-              <Toaster />
-              <LoggingComponents />
+              <AppInitializer>
+                {!isAdminRoute && <MainNav />}
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/admin/*" element={<Admin />} />
+                </Routes>
+                {!isAdminRoute && <Footer />}
+                <Toaster />
+                <LoggingComponents />
+              </AppInitializer>
             </ThemeInitializer>
           </AdminProvider>
         </AuthProvider>

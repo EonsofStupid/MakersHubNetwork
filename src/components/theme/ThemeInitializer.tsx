@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ensureDefaultTheme } from '@/utils/themeInitializer';
 import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +7,7 @@ import { DynamicKeyframes } from './DynamicKeyframes';
 import { SiteThemeProvider } from './SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { ThemeLoadingState } from './info/ThemeLoadingState';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -17,10 +18,19 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const { setTheme, isLoading } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ThemeInitializer', LogCategory.UI);
+  const initAttemptedRef = useRef(false);
 
   useEffect(() => {
+    // Prevent multiple initialization attempts
+    if (initAttemptedRef.current) {
+      return;
+    }
+    
     async function initialize() {
       try {
+        initAttemptedRef.current = true;
+        logger.info('Initializing theme');
+        
         // First, ensure the default theme exists in the database
         const themeId = await ensureDefaultTheme();
         
@@ -51,16 +61,23 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     // Use a small timeout to prevent blocking the initial render
     const timer = setTimeout(() => {
       initialize();
-    }, 10);
+    }, 100);
     
     return () => clearTimeout(timer);
   }, [setTheme, toast, logger]);
 
+  // Render content or loading state
+  const showLoadingState = isInitializing || isLoading;
+  
   // Always render the app - the SiteThemeProvider will handle showing loading states if needed
   return (
-    <SiteThemeProvider isInitializing={isInitializing || isLoading}>
+    <SiteThemeProvider isInitializing={showLoadingState}>
       <DynamicKeyframes />
-      {children}
+      {showLoadingState ? (
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <ThemeLoadingState />
+        </div>
+      ) : children}
     </SiteThemeProvider>
   );
 }
