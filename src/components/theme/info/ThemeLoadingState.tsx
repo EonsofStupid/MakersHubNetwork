@@ -2,19 +2,14 @@
 import React from 'react';
 import { Loader } from 'lucide-react';
 
-export const ThemeLoadingState: React.FC = () => {
+export function ThemeLoadingState() {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-background text-foreground">
-      <div className="flex flex-col items-center justify-center space-y-4">
-        <div className="relative">
-          <Loader size={48} className="animate-spin text-primary" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-2 w-2 rounded-full bg-primary"></div>
-          </div>
-        </div>
-        <h2 className="text-xl font-bold">Loading Theme System</h2>
-        <p className="text-muted-foreground">Initializing visual components...</p>
+    <div className="min-h-screen w-full flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-3">
+        <Loader className="h-10 w-10 animate-spin text-primary" />
+        <div className="text-foreground font-medium">Loading theme...</div>
+        <p className="text-muted-foreground text-sm">Preparing your visual experience</p>
       </div>
     </div>
   );
-};
+}

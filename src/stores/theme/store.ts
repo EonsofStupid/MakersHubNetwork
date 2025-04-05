@@ -86,7 +86,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   setTheme: async (themeIdOrName: string) => {
     set({ isLoading: true, error: null });
     try {
-      logger.info('Setting theme', { details: { themeIdOrName }});
+      logger.info('Setting theme', { details: { themeIdOrName } });
       
       // We receive a theme ID or name, fetch the theme
       const { theme: fetchedTheme, isFallback } = await getTheme({
@@ -186,7 +186,10 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         } 
       });
     } catch (error) {
-      logger.error("Error fetching theme", { details: error });
+      logger.error("Error fetching theme", { 
+        details: error
+      });
+      
       set({ 
         error: error instanceof Error ? error : new Error("Failed to fetch theme"), 
         isLoading: false 
