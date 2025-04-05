@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ThemeErrorStateProps {
@@ -8,28 +8,31 @@ interface ThemeErrorStateProps {
   onRetry: () => void;
 }
 
-export const ThemeErrorState: React.FC<ThemeErrorStateProps> = ({ error, onRetry }) => {
+export function ThemeErrorState({ error, onRetry }: ThemeErrorStateProps) {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-background text-foreground">
-      <div className="max-w-md rounded-lg border border-destructive/20 bg-destructive/5 p-6 shadow">
-        <div className="flex flex-col items-center space-y-4 text-center">
+    <div className="min-h-screen w-full flex items-center justify-center bg-background">
+      <div className="max-w-md w-full p-6 rounded-lg border border-destructive/30 bg-card shadow-lg">
+        <div className="flex flex-col items-center gap-4 text-center">
           <AlertTriangle className="h-12 w-12 text-destructive" />
-          <h2 className="text-xl font-bold">Theme System Error</h2>
+          <h2 className="text-xl font-semibold text-foreground">Theme Loading Error</h2>
           <p className="text-muted-foreground">
-            We encountered an error while loading the theme system:
+            There was an error loading the application theme. Using the fallback theme for now.
           </p>
-          <div className="rounded bg-background/50 p-3 text-sm font-mono w-full text-left overflow-auto max-h-32">
-            {error.message}
+          
+          <div className="w-full p-2 bg-muted rounded-md overflow-auto my-2 text-left">
+            <pre className="text-xs text-muted-foreground whitespace-pre-wrap">
+              {error.message}
+            </pre>
           </div>
+          
           <Button 
             onClick={onRetry} 
-            variant="outline" 
-            className="mt-4 border-primary/20"
+            className="cyber-effect-text site-border-glow mt-2 w-full"
           >
-            <RefreshCw className="mr-2 h-4 w-4" /> Retry Loading Theme
+            Retry Loading Theme
           </Button>
         </div>
       </div>
     </div>
   );
-};
+}

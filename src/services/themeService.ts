@@ -2,8 +2,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeContext } from '@/types/theme';
 import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
 
-const logger = getLogger();
+// Create a logger instance for the theme service
+const logger = getLogger('ThemeService', LogCategory.SERVICES);
 
 // Local fallback theme for when the database is unavailable
 const fallbackTheme: Theme = {
