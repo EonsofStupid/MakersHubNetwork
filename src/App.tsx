@@ -8,7 +8,7 @@ import { LoggingProvider } from "@/logging/context/LoggingContext";
 import { LogConsole } from "@/logging/components/LogConsole";
 import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { initializeLogger, getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
@@ -42,20 +42,37 @@ function LoggingComponents() {
   );
 }
 
-// Initialize logging system
-initializeLogger();
+// Initialize logging system - do this only once
+const loggerInitialized = {current: false};
+
+function initLogging(): void {
+  if (!loggerInitialized.current) {
+    initializeLogger();
+    loggerInitialized.current = true;
+  }
+}
+
+// Initialize immediately
+initLogging();
 
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
   const logger = getLogger();
+  const routeLoggedRef = useRef(false);
 
-  // Log route changes
+  // Log route changes - with ref guard to prevent duplicate logs
   useEffect(() => {
-    logger.info(`Navigated to ${location.pathname}`, {
-      category: LogCategory.SYSTEM,
-      details: { path: location.pathname }
-    });
+    if (!routeLoggedRef.current) {
+      logger.info(`Navigated to ${location.pathname}`, {
+        category: LogCategory.SYSTEM,
+        details: { path: location.pathname }
+      });
+      routeLoggedRef.current = true;
+    } else {
+      // Reset ref for future logs
+      routeLoggedRef.current = false;
+    }
   }, [location.pathname, logger]);
 
   return (

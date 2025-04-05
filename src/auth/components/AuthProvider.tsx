@@ -1,5 +1,5 @@
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +18,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setSession: state.setSession
   }));
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
+  const initAttemptedRef = useRef(false);
   
   // Set up auth state change listener
   useEffect(() => {
