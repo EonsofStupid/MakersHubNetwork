@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { CyberCard } from '@/admin/components/ui/CyberCard';
 import { cn } from '@/lib/utils';
 import { renderUnknownAsNode } from '@/shared/utils/render';
+import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
 
 export function LogsDashboard() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -42,7 +43,9 @@ export function LogsDashboard() {
       });
       
       allLogs.forEach(log => {
-        categoryCounts[log.category] = (categoryCounts[log.category] || 0) + 1;
+        if (log.category) {
+          categoryCounts[log.category] = (categoryCounts[log.category] || 0) + 1;
+        }
       });
       
       setCategoryStats(
@@ -95,19 +98,15 @@ export function LogsDashboard() {
   
   // Level colors
   const LEVEL_COLORS: Record<string, string> = {
-    'DEBUG': '#888888',
-    'INFO': '#00F0FF',
-    'WARNING': '#FFB400',
-    'ERROR': '#FF2D6E',
-    'CRITICAL': '#FF4136'
+    'debug': '#888888',
+    'info': '#00F0FF',
+    'warn': '#FFB400',
+    'error': '#FF2D6E',
+    'critical': '#FF4136'
   };
   
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-[var(--impulse-text-primary)] mb-4">
-        Logs Dashboard
-      </h2>
-      
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <CyberCard className="p-4">
@@ -118,14 +117,14 @@ export function LogsDashboard() {
         <CyberCard className="p-4">
           <div className="text-lg font-medium mb-2">Warning+ Logs</div>
           <div className="text-3xl font-bold text-yellow-400">
-            {logs.filter(log => log.level >= LogLevel.WARN).length}
+            {logs.filter(log => log.level === LogLevel.WARN || log.level === LogLevel.ERROR || log.level === LogLevel.CRITICAL).length}
           </div>
         </CyberCard>
         
         <CyberCard className="p-4">
           <div className="text-lg font-medium mb-2">Error+ Logs</div>
           <div className="text-3xl font-bold text-[var(--impulse-secondary)]">
-            {logs.filter(log => log.level >= LogLevel.ERROR).length}
+            {logs.filter(log => log.level === LogLevel.ERROR || log.level === LogLevel.CRITICAL).length}
           </div>
         </CyberCard>
       </div>
@@ -220,63 +219,14 @@ export function LogsDashboard() {
       
       {/* Recent Logs Table */}
       <CyberCard title="Recent Logs" className="p-4">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[var(--impulse-border-normal)]">
-                <th className="py-2 px-4 text-left text-[var(--impulse-text-secondary)]">Time</th>
-                <th className="py-2 px-4 text-left text-[var(--impulse-text-secondary)]">Level</th>
-                <th className="py-2 px-4 text-left text-[var(--impulse-text-secondary)]">Category</th>
-                <th className="py-2 px-4 text-left text-[var(--impulse-text-secondary)]">Message</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.slice(0, 10).map((log) => (
-                <tr 
-                  key={log.id} 
-                  className="border-b border-[var(--impulse-border-normal)] hover:bg-[var(--impulse-bg-overlay)]"
-                >
-                  <td className="py-2 px-4 text-sm">
-                    {new Date(log.timestamp).toLocaleTimeString()}
-                  </td>
-                  <td className="py-2 px-4">
-                    <span 
-                      className={cn(
-                        "px-2 py-1 text-xs rounded-full", 
-                        getLevelBadgeClass(log.level)
-                      )}
-                    >
-                      {log.level}
-                    </span>
-                  </td>
-                  <td className="py-2 px-4 text-sm">{log.category}</td>
-                  <td className="py-2 px-4 text-sm truncate max-w-md">
-                    {renderUnknownAsNode(log.message)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <LogActivityStream 
+          height="400px"
+          maxEntries={10}
+          showSource={true}
+        />
       </CyberCard>
     </div>
   );
 }
 
-// Helper function for level badge styling
-function getLevelBadgeClass(level: LogLevel): string {
-  switch (level) {
-    case LogLevel.DEBUG:
-      return 'bg-gray-400/20 text-gray-400';
-    case LogLevel.INFO:
-      return 'bg-[var(--impulse-primary)]/20 text-[var(--impulse-primary)]';
-    case LogLevel.WARN:
-      return 'bg-yellow-400/20 text-yellow-400';
-    case LogLevel.ERROR:
-      return 'bg-[var(--impulse-secondary)]/20 text-[var(--impulse-secondary)]';
-    case LogLevel.CRITICAL:
-      return 'bg-red-600/20 text-red-600';
-    default:
-      return 'bg-gray-400/20 text-gray-400';
-  }
-}
+export default LogsDashboard;

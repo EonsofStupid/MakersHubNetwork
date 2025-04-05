@@ -27,6 +27,12 @@ export class ConsoleTransport implements LogTransport {
       case LogLevel.CRITICAL:
         console.error(message, entry.details || '');
         break;
+      case LogLevel.SUCCESS:
+        console.info(message, entry.details || '');
+        break;
+      case LogLevel.TRACE:
+        console.debug(message, entry.details || '');
+        break;
       default:
         console.log(message, entry.details || '');
     }
