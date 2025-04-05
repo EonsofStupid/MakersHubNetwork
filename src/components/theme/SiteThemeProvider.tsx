@@ -5,6 +5,7 @@ import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { DynamicKeyframes } from './DynamicKeyframes';
+import { ThemeLogDetails } from '@/types/theme';
 
 // Create context
 const SiteThemeContext = createContext<{
@@ -52,7 +53,8 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   // Get component styles from theme
   const componentStyles = useMemo(() => {
     if (!currentTheme || !Array.isArray(currentTheme.component_tokens)) {
-      logger.debug('No component styles found in theme');
+      const logDetails: ThemeLogDetails = { reason: 'No component tokens found in theme' };
+      logger.debug('No component styles found in theme', logDetails);
       return {};
     }
 
@@ -68,9 +70,10 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       
       return styles;
     } catch (error) {
-      logger.error('Error processing component styles', { 
-        details: error instanceof Error ? error.message : String(error) 
-      });
+      const logDetails: ThemeLogDetails = { 
+        error: error instanceof Error ? error.message : String(error) 
+      };
+      logger.error('Error processing component styles', logDetails);
       return {};
     }
   }, [currentTheme, logger]);
@@ -87,9 +90,10 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       const themeAnimations = currentTheme.design_tokens.animation.keyframes;
       return themeAnimations || defaultAnimations;
     } catch (error) {
-      logger.error('Error processing animations', { 
-        details: error instanceof Error ? error.message : String(error) 
-      });
+      const logDetails: ThemeLogDetails = { 
+        error: error instanceof Error ? error.message : String(error) 
+      };
+      logger.error('Error processing animations', logDetails);
       return defaultAnimations;
     }
   }, [currentTheme, logger]);
@@ -100,13 +104,12 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       // Small delay to ensure CSS variables are applied
       const timer = setTimeout(() => {
         setIsLoaded(true);
-        logger.info('Theme loaded successfully', { 
-          details: { 
-            themeName: currentTheme.name,
-            hasAnimations: Boolean(animations && Object.keys(animations).length > 0),
-            hasComponentStyles: Boolean(componentStyles && Object.keys(componentStyles).length > 0)
-          } 
-        });
+        const logDetails: ThemeLogDetails = { 
+          themeName: currentTheme.name,
+          hasAnimations: Boolean(animations && Object.keys(animations).length > 0),
+          hasComponentStyles: Boolean(componentStyles && Object.keys(componentStyles).length > 0)
+        };
+        logger.info('Theme loaded successfully', logDetails);
       }, 100);
       
       return () => clearTimeout(timer);
@@ -167,13 +170,15 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
         rootElement.classList.remove('dark');
       }
       
-      logger.debug('Applied theme CSS variables', {
-        details: { themeName: currentTheme?.name || 'default' }
-      });
+      const logDetails: ThemeLogDetails = { 
+        themeName: currentTheme?.name || 'default' 
+      };
+      logger.debug('Applied theme CSS variables', logDetails);
     } catch (error) {
-      logger.error('Failed to apply CSS variables', {
-        details: error instanceof Error ? error.message : String(error)
-      });
+      const logDetails: ThemeLogDetails = { 
+        error: error instanceof Error ? error.message : String(error) 
+      };
+      logger.error('Failed to apply CSS variables', logDetails);
     }
   }, [variables, isDarkMode, currentTheme, logger]);
   
