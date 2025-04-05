@@ -96,12 +96,8 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             <span className="font-medium">{log.category}</span>
           </div>
           <div className="message-content text-sm">
-            {/* Ensure message is always rendered as a React node */}
-            {React.isValidElement(log.message) 
-              ? log.message 
-              : typeof log.message === 'string' 
-                ? log.message 
-                : String(log.message)}
+            {/* Render message safely as a React node */}
+            {renderUnknownAsNode(log.message)}
           </div>
           
           <AnimatePresence>
