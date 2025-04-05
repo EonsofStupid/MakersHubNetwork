@@ -3,6 +3,8 @@ import { create } from "zustand";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "../types/auth.types";
+import { getLogger } from "@/logging";
+import { LogCategory } from "@/logging";
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated" | "error";
 
@@ -60,8 +62,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   
   initialize: async () => {
+    const logger = getLogger();
+    logger.info('Auth store initialization started', {
+      category: LogCategory.AUTH,
+      source: 'auth.store'
+    });
+    
     // Don't initialize multiple times
     if (get().initialized) {
+      logger.info('Auth already initialized, skipping', {
+        category: LogCategory.AUTH,
+        source: 'auth.store'
+      });
       return;
     }
 
@@ -73,12 +85,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       // Set the session from the response
       get().setSession(data.session);
+      
+      logger.info('Auth initialization completed', {
+        category: LogCategory.AUTH,
+        source: 'auth.store',
+        details: { 
+          hasSession: !!data.session,
+          status: data.session ? 'authenticated' : 'unauthenticated'
+        }
+      });
 
       // Mark as initialized
       set({ initialized: true, isLoading: false });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Authentication failed";
+      
+      logger.error('Auth initialization error', {
+        category: LogCategory.AUTH,
+        source: 'auth.store',
+        details: error
+      });
+      
       set({ 
-        error: error instanceof Error ? error.message : "Authentication failed", 
+        error: errorMessage, 
         status: "error",
         isLoading: false,
         initialized: true // Still mark as initialized even if there's an error
@@ -87,9 +116,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   
   logout: async () => {
+    const logger = getLogger();
     try {
       set({ isLoading: true });
+      
+      logger.info('User logging out', {
+        category: LogCategory.AUTH,
+        source: 'auth.store'
+      });
+      
       await supabase.auth.signOut();
+      
       set({
         user: null,
         session: null,
@@ -98,11 +135,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
         isAuthenticated: false
       });
-    } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : "Logout failed", 
-        isLoading: false 
+      
+      logger.info('User logged out successfully', {
+        category: LogCategory.AUTH,
+        source: 'auth.store'
       });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Logout failed";
+      
+      logger.error('Logout error', {
+        category: LogCategory.AUTH,
+        source: 'auth.store',
+        details: error
+      });
+      
+      set({ error: errorMessage, isLoading: false });
+      throw error;
     }
   }
 }));

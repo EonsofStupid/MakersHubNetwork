@@ -1,13 +1,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { errorToObject } from '@/shared/utils/render';
 
 export function useAdminAccess() {
   const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
-  const { user, roles, isLoading, status } = useAuthStore();
+  const { user, roles, isLoading, status, initialized } = useAuthState();
   const isAuthenticated = status === 'authenticated';
   const logger = useLogger("AdminAccess", LogCategory.AUTH);
   
@@ -40,8 +40,11 @@ export function useAdminAccess() {
 
   // Check admin access on mount and when auth state changes
   useEffect(() => {
-    initializeAdmin();
-  }, [initializeAdmin, user, roles]);
+    // Only initialize if auth is initialized
+    if (initialized) {
+      initializeAdmin();
+    }
+  }, [initializeAdmin, initialized, user, roles]);
 
   return {
     hasAdminAccess,

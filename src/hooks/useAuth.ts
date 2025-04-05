@@ -3,6 +3,7 @@ import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { useEffect, useRef } from 'react';
+import { errorToObject } from '@/shared/utils/render';
 
 /**
  * Hook for accessing authentication state
@@ -53,16 +54,14 @@ export function useAuth() {
       logger.info('Auto-initializing auth from useAuth hook');
       initAttemptedRef.current = true;
       
-      // Use setTimeout to break potential sync issues
       setTimeout(() => {
         initialize().catch(err => {
-          logger.error('Failed to initialize auth', { details: err });
+          logger.error('Failed to initialize auth', { details: errorToObject(err) });
         });
-      }, 0);
+      }, 50);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, initialized]); // We deliberately omit initialize and logger to prevent re-runs
-
+  }, [status, initialized]); // We deliberately omit initialize and logger
+  
   // Derived state
   const isSuperAdmin = roles.includes('super_admin');
 

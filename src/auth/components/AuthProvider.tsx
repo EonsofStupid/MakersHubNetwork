@@ -14,20 +14,13 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  // Use selector function for Zustand to prevent unnecessary rerenders
   const authStore = useAuthStore();
-  const { user, session, setSession, initialize, initialized } = {
-    user: authStore.user,
-    session: authStore.session,
-    setSession: authStore.setSession,
-    initialize: authStore.initialize,
-    initialized: authStore.initialized
-  };
+  const { user, session, setSession, initialize, initialized } = authStore;
   
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
   const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
-  const authTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cycleCountRef = useRef<number>(0);
   
   // Get theme loading status to ensure correct initialization order
@@ -52,11 +45,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
 
         // Only update session state, avoid triggering other effects
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          setSession(currentSession);
-        } else if (event === 'SIGNED_OUT') {
-          setSession(null);
-        }
+        setSession(currentSession);
       }
     );
       
@@ -70,18 +59,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
         authSubscriptionRef.current = null;
       }
       
-      if (authTimeoutRef.current) {
-        clearTimeout(authTimeoutRef.current);
-        authTimeoutRef.current = null;
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+        initTimeoutRef.current = null;
       }
     };
-  }, []); // Removed dependencies to ensure it runs only once
+  }, []); // Empty deps to ensure it runs only once
   
   // Initialize auth only once after theme is loaded
   useEffect(() => {
     // Detect potential infinite initialization loops
     cycleCountRef.current += 1;
-    if (cycleCountRef.current > 10) {
+    if (cycleCountRef.current > 5) {
       logger.warn('Possible auth initialization cycle detected', {
         details: { cycleCount: cycleCountRef.current, initialized, themeLoaded }
       });
@@ -101,20 +90,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Mark initialization as attempted immediately to prevent race conditions
     initAttemptedRef.current = true;
     
-    // Initialize auth state asynchronously
-    // Use setTimeout to break potential circular dependencies
-    authTimeoutRef.current = setTimeout(() => {
-      const initializeAuth = async () => {
-        try {
-          logger.info('Initializing auth state');
-          await initialize();
-        } catch (err) {
-          logger.error('Failed to initialize auth', { details: errorToObject(err) });
-        }
-      };
+    // Initialize auth state asynchronously with a small delay
+    // This delay helps break potential circular dependencies
+    initTimeoutRef.current = setTimeout(() => {
+      logger.info('Initializing auth state');
       
-      initializeAuth();
-    }, 0);
+      initialize().catch(err => {
+        logger.error('Failed to initialize auth', { details: errorToObject(err) });
+      });
+    }, 50); // Small delay to help with timing issues
+    
   }, [initialize, initialized, logger, themeLoaded]); 
   
   // Provide the current auth state, whether authenticated or not
