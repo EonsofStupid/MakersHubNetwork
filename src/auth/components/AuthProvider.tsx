@@ -22,51 +22,67 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }));
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
+  const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
   
-  // Setup initial auth state and listeners
+  // Setup auth state change listener only once
   useEffect(() => {
-    // Prevent multiple initialization attempts
-    if (initAttemptedRef.current) {
+    // Set up auth state listener FIRST, but only once
+    if (!authSubscriptionRef.current) {
+      logger.info('Setting up auth state change listener');
+      
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, currentSession) => {
+          logger.info(`Auth state change: ${event}`, {
+            details: { 
+              event,
+              userId: currentSession?.user?.id 
+            }
+          });
+
+          // Only update session state, avoid triggering other effects
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            setSession(currentSession);
+          } else if (event === 'SIGNED_OUT') {
+            setSession(null);
+          }
+        }
+      );
+      
+      // Store subscription to avoid creating multiple listeners
+      authSubscriptionRef.current = subscription;
+      
+      // Clean up subscription on unmount
+      return () => {
+        if (authSubscriptionRef.current) {
+          authSubscriptionRef.current.unsubscribe();
+          authSubscriptionRef.current = null;
+        }
+      };
+    }
+  }, [logger, setSession]);
+  
+  // Initialize auth only once
+  useEffect(() => {
+    // Prevent multiple initialization attempts with ref guard
+    if (initAttemptedRef.current || initialized) {
       return;
     }
     
+    // Mark initialization as attempted immediately to prevent race conditions
     initAttemptedRef.current = true;
-    logger.info('Setting up auth state change listener');
     
-    // First set up the state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        logger.info(`Auth state change: ${event}`, {
-          details: { 
-            event,
-            userId: currentSession?.user?.id 
-          }
-        });
-
-        // Only update session state, avoid triggering other effects
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          setSession(currentSession);
-        } else if (event === 'SIGNED_OUT') {
-          setSession(null);
-        }
-      }
-    );
-    
-    // Then initialize auth if needed - but only once
-    if (!initialized) {
-      // Use a flag to break potential circular dependencies
-      const initializationPromise = initialize();
-      
-      // Don't block rendering on the initialization promise
-      initializationPromise.catch(err => {
+    // Initialize auth state asynchronously
+    const initializeAuth = async () => {
+      try {
+        await initialize();
+      } catch (err) {
         logger.error('Failed to initialize auth', { details: err });
-      });
-    }
-    
-    return () => {
-      subscription.unsubscribe();
+      }
     };
-  }, [logger, setSession, initialize, initialized]);
+    
+    // Use setTimeout to break potential circular dependencies
+    setTimeout(initializeAuth, 0);
+  }, [initialize, initialized, logger]);
   
   // Provide the current auth state, whether authenticated or not
   return (

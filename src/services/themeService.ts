@@ -1,15 +1,67 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Theme, ComponentTokens } from "@/types/theme";
+import { getLogger } from "@/logging";
+import { LogCategory } from "@/logging";
+import { z } from "zod";
 
-// Create a logger for the theme service
-const logger = {
-  info: (message: string, details?: Record<string, unknown>) => 
-    console.info(`[ThemeService] ${message}`, details),
-  error: (message: string, details?: Record<string, unknown>) => 
-    console.error(`[ThemeService] ${message}`, details),
-  warn: (message: string, details?: Record<string, unknown>) => 
-    console.warn(`[ThemeService] ${message}`, details)
-};
+// Create a type-safe logger for the theme service
+const logger = getLogger('ThemeService', LogCategory.SERVICE);
+
+// Define Zod schemas for theme validation
+const designTokensSchema = z.object({
+  colors: z.record(z.string()).optional(),
+  spacing: z.record(z.unknown()).optional(),
+  typography: z.object({
+    fontSizes: z.record(z.unknown()).optional(),
+    fontFamilies: z.record(z.unknown()).optional(),
+    lineHeights: z.record(z.unknown()).optional(),
+    letterSpacing: z.record(z.unknown()).optional(),
+  }).optional(),
+  effects: z.object({
+    shadows: z.record(z.unknown()).optional(),
+    blurs: z.record(z.unknown()).optional(),
+    gradients: z.record(z.unknown()).optional(),
+    primary: z.string().optional(),
+    secondary: z.string().optional(),
+    tertiary: z.string().optional(),
+  }).optional(),
+  animation: z.object({
+    keyframes: z.record(z.unknown()).optional(),
+    transitions: z.record(z.unknown()).optional(),
+    durations: z.record(z.string().or(z.number())).optional(),
+  }).optional(),
+  admin: z.record(z.unknown()).optional(),
+});
+
+const componentTokenSchema = z.object({
+  id: z.string(),
+  component_name: z.string(),
+  styles: z.record(z.unknown()),
+  description: z.string().optional(),
+  theme_id: z.string().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  context: z.string().optional(),
+});
+
+const themeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  status: z.enum(['draft', 'published', 'archived']),
+  is_default: z.boolean().optional(),
+  created_by: z.string().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  published_at: z.string().optional(),
+  version: z.number(),
+  cache_key: z.string().optional(),
+  parent_theme_id: z.string().optional(),
+  design_tokens: designTokensSchema,
+  component_tokens: z.array(componentTokenSchema).optional(),
+  composition_rules: z.record(z.unknown()).optional(),
+  cached_styles: z.record(z.unknown()).optional(),
+});
 
 /**
  * Default fallback theme used when theme service fails
@@ -52,7 +104,84 @@ const fallbackTheme: Theme = {
       tertiary: "#8B5CF6",
     },
     animation: {
-      keyframes: {},
+      keyframes: {
+        // MakersImpulse original animations
+        "accordion-down": {
+          from: { height: "0", opacity: "0" },
+          to: { height: "var(--radix-accordion-content-height)", opacity: "1" }
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)", opacity: "1" },
+          to: { height: "0", opacity: "0" }
+        },
+        "fade-in": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(10px)"
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)"
+          }
+        },
+        "fade-out": {
+          "0%": {
+            opacity: "1",
+            transform: "translateY(0)"
+          },
+          "100%": {
+            opacity: "0",
+            transform: "translateY(10px)"
+          }
+        },
+        "scale-in": {
+          "0%": {
+            transform: "scale(0.95)",
+            opacity: "0"
+          },
+          "100%": {
+            transform: "scale(1)",
+            opacity: "1"
+          }
+        },
+        "scale-out": {
+          from: { transform: "scale(1)", opacity: "1" },
+          to: { transform: "scale(0.95)", opacity: "0" }
+        },
+        "slide-in-right": {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0)" }
+        },
+        "slide-out-right": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(100%)" }
+        },
+        "footer-float": {
+          "0%, 100%": {
+            transform: "perspective(1000px) rotateX(1deg) translateY(0)"
+          },
+          "50%": {
+            transform: "perspective(1000px) rotateX(2deg) translateY(-10px)"
+          }
+        },
+        "footer-pulse": {
+          "0%, 100%": {
+            opacity: 0.8,
+            boxShadow: "0 -8px 32px 0 rgba(0,240,255,0.2)"
+          },
+          "50%": {
+            opacity: 1,
+            boxShadow: "0 -12px 48px 0 rgba(0,240,255,0.3)"
+          }
+        },
+        "cyber-particles": {
+          "0%": { transform: "translateY(0) translateX(0)" },
+          "25%": { transform: "translateY(-20px) translateX(10px)" },
+          "50%": { transform: "translateY(0) translateX(20px)" },
+          "75%": { transform: "translateY(20px) translateX(10px)" },
+          "100%": { transform: "translateY(0) translateX(0)" }
+        }
+      },
       transitions: {},
       durations: {
         fast: "150ms",
@@ -78,11 +207,120 @@ const fallbackTheme: Theme = {
 };
 
 /**
+ * Validates a theme object using Zod
+ */
+function validateTheme(themeData: unknown): Theme {
+  try {
+    // Use Zod to validate the theme structure
+    const validationResult = themeSchema.safeParse(themeData);
+    
+    if (validationResult.success) {
+      return validationResult.data;
+    } else {
+      // Log validation errors for debugging
+      logger.warn('Theme validation failed', { 
+        details: { 
+          errors: validationResult.error.format() 
+        } 
+      });
+      
+      // Try to salvage what we can from the theme data
+      return mergeWithFallback(themeData as Partial<Theme>);
+    }
+  } catch (error) {
+    logger.error('Failed to validate theme', { details: error });
+    return fallbackTheme;
+  }
+}
+
+/**
+ * Merges a partial theme with the fallback theme
+ */
+function mergeWithFallback(partialTheme: Partial<Theme>): Theme {
+  try {
+    // Start with the fallback theme
+    const mergedTheme: Theme = { ...fallbackTheme };
+    
+    // Merge with the partial theme where values exist
+    if (partialTheme.id) mergedTheme.id = partialTheme.id;
+    if (partialTheme.name) mergedTheme.name = partialTheme.name;
+    if (partialTheme.description) mergedTheme.description = partialTheme.description;
+    if (partialTheme.status) mergedTheme.status = partialTheme.status;
+    if (partialTheme.is_default !== undefined) mergedTheme.is_default = partialTheme.is_default;
+    if (partialTheme.created_by) mergedTheme.created_by = partialTheme.created_by;
+    if (partialTheme.created_at) mergedTheme.created_at = partialTheme.created_at;
+    if (partialTheme.updated_at) mergedTheme.updated_at = partialTheme.updated_at;
+    if (partialTheme.published_at) mergedTheme.published_at = partialTheme.published_at;
+    if (partialTheme.version) mergedTheme.version = partialTheme.version;
+    if (partialTheme.cache_key) mergedTheme.cache_key = partialTheme.cache_key;
+    if (partialTheme.parent_theme_id) mergedTheme.parent_theme_id = partialTheme.parent_theme_id;
+    
+    // Merge design tokens - handle nested structure
+    if (partialTheme.design_tokens) {
+      mergedTheme.design_tokens = { 
+        ...mergedTheme.design_tokens,
+        ...partialTheme.design_tokens,
+        effects: { 
+          ...mergedTheme.design_tokens.effects,
+          ...partialTheme.design_tokens.effects
+        },
+        animation: { 
+          ...mergedTheme.design_tokens.animation,
+          ...partialTheme.design_tokens.animation,
+          keyframes: {
+            ...mergedTheme.design_tokens.animation?.keyframes,
+            ...partialTheme.design_tokens.animation?.keyframes
+          },
+          transitions: {
+            ...mergedTheme.design_tokens.animation?.transitions,
+            ...partialTheme.design_tokens.animation?.transitions
+          },
+          durations: {
+            ...mergedTheme.design_tokens.animation?.durations,
+            ...partialTheme.design_tokens.animation?.durations
+          }
+        }
+      };
+    }
+    
+    // Handle component tokens safely
+    if (Array.isArray(partialTheme.component_tokens)) {
+      // Validate each component token
+      const validatedTokens: ComponentTokens[] = [];
+      
+      for (const token of partialTheme.component_tokens) {
+        try {
+          const validatedToken = componentTokenSchema.parse(token);
+          validatedTokens.push(validatedToken);
+        } catch (err) {
+          logger.warn('Invalid component token in merge', { details: { token, error: err } });
+        }
+      }
+      
+      mergedTheme.component_tokens = validatedTokens;
+    }
+    
+    // Copy other properties
+    if (partialTheme.composition_rules) {
+      mergedTheme.composition_rules = partialTheme.composition_rules;
+    }
+    if (partialTheme.cached_styles) {
+      mergedTheme.cached_styles = partialTheme.cached_styles;
+    }
+    
+    return mergedTheme;
+  } catch (error) {
+    logger.error('Error merging theme with fallback', { details: error });
+    return fallbackTheme;
+  }
+}
+
+/**
  * Fetches a theme via the service role function
  */
 export async function getTheme(themeId?: string): Promise<{theme: Theme, isFallback: boolean}> {
   try {
-    logger.info('Fetching theme', { themeId: themeId || 'default' });
+    logger.info('Fetching theme', { details: { themeId: themeId || 'default' } });
     
     const { data, error } = await supabase.functions.invoke('theme-service', {
       body: {
@@ -94,108 +332,33 @@ export async function getTheme(themeId?: string): Promise<{theme: Theme, isFallb
     });
     
     if (error) {
-      logger.error('Error fetching theme', { error });
+      logger.error('Error fetching theme from service', { details: error });
       return { theme: fallbackTheme, isFallback: true };
     }
     
     if (!data || !data.theme) {
-      logger.error('No theme data returned', { data });
+      logger.error('No theme data returned from service', { details: data });
       return { theme: fallbackTheme, isFallback: true };
     }
     
+    // Validate the theme data
+    const validatedTheme = validateTheme(data.theme);
+    
     logger.info('Theme fetched successfully', { 
-      themeId: data.theme.id,
-      isFallback: data.isFallback
+      details: { 
+        themeId: validatedTheme.id,
+        isFallback: !!data.isFallback
+      }
     });
     
     return {
-      theme: validateTheme(data.theme),
+      theme: validatedTheme,
       isFallback: !!data.isFallback
     };
   } catch (error) {
-    logger.error('Failed to fetch theme', { error });
+    logger.error('Failed to fetch theme', { details: error });
     return { theme: fallbackTheme, isFallback: true };
   }
-}
-
-/**
- * Validates and normalizes a theme to ensure it has all required properties
- */
-function validateTheme(theme: unknown): Theme {
-  // Ensure we have a valid theme object
-  if (!theme || typeof theme !== 'object') {
-    logger.error('Invalid theme object', { theme });
-    return fallbackTheme;
-  }
-
-  // Type assertion after basic validation
-  const themeObj = theme as Partial<Theme>;
-
-  // Ensure required properties exist
-  if (!themeObj.id || !themeObj.name || !themeObj.status) {
-    logger.warn('Theme missing required properties, using defaults', { theme });
-  }
-
-  // Ensure design_tokens exist and have the correct structure
-  if (!themeObj.design_tokens || typeof themeObj.design_tokens !== 'object') {
-    logger.warn('Theme missing design_tokens, using defaults', { theme });
-    themeObj.design_tokens = fallbackTheme.design_tokens;
-  } else {
-    // Ensure effects has all required properties
-    if (!themeObj.design_tokens.effects) {
-      themeObj.design_tokens.effects = fallbackTheme.design_tokens.effects;
-    } else {
-      if (!themeObj.design_tokens.effects.shadows) {
-        themeObj.design_tokens.effects.shadows = {};
-      }
-      if (!themeObj.design_tokens.effects.blurs) {
-        themeObj.design_tokens.effects.blurs = {};
-      }
-      if (!themeObj.design_tokens.effects.gradients) {
-        themeObj.design_tokens.effects.gradients = {};
-      }
-    }
-    
-    // Ensure animation has all required properties
-    if (!themeObj.design_tokens.animation) {
-      themeObj.design_tokens.animation = fallbackTheme.design_tokens.animation;
-    } else {
-      if (!themeObj.design_tokens.animation.keyframes) {
-        themeObj.design_tokens.animation.keyframes = {};
-      }
-      if (!themeObj.design_tokens.animation.transitions) {
-        themeObj.design_tokens.animation.transitions = {};
-      }
-    }
-  }
-
-  // Normalize component_tokens to ensure it's always an array
-  if (!Array.isArray(themeObj.component_tokens)) {
-    logger.warn('Theme component_tokens is not an array, normalizing', { 
-      componentTokensType: typeof themeObj.component_tokens 
-    });
-    themeObj.component_tokens = [];
-  }
-
-  // Ensure the theme has all required fields from the Theme interface
-  return {
-    id: themeObj.id || fallbackTheme.id,
-    name: themeObj.name || fallbackTheme.name,
-    description: themeObj.description || fallbackTheme.description,
-    status: themeObj.status || fallbackTheme.status,
-    is_default: themeObj.is_default ?? fallbackTheme.is_default,
-    created_at: themeObj.created_at || fallbackTheme.created_at,
-    updated_at: themeObj.updated_at || fallbackTheme.updated_at,
-    version: themeObj.version || fallbackTheme.version,
-    design_tokens: themeObj.design_tokens || fallbackTheme.design_tokens,
-    component_tokens: themeObj.component_tokens || fallbackTheme.component_tokens,
-    composition_rules: themeObj.composition_rules || fallbackTheme.composition_rules,
-    cached_styles: themeObj.cached_styles || fallbackTheme.cached_styles,
-    published_at: themeObj.published_at,
-    cache_key: themeObj.cache_key,
-    parent_theme_id: themeObj.parent_theme_id,
-    created_by: themeObj.created_by
-  };
 }
 
 /**

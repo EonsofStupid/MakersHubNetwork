@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { Skeleton } from './ui/skeleton';
@@ -14,17 +14,23 @@ export function AppInitializer({ children }: AppInitializerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
   const { toast } = useToast();
+  const initMessageShownRef = useRef<boolean>(false);
   
   // Only access the status and error from auth store, do not trigger initialization here
-  const { status, error } = useAuthStore(state => ({
+  const { status, error, initialized } = useAuthStore(state => ({
     status: state.status,
     error: state.error,
+    initialized: state.initialized,
   }));
   
   useEffect(() => {
-    logger.info('App initializing, auth status:', { 
-      details: { status } 
-    });
+    // Log auth status change, but only once per render to avoid loops
+    if (!initMessageShownRef.current) {
+      logger.info('App initializing, auth status:', { 
+        details: { status } 
+      });
+      initMessageShownRef.current = true;
+    }
     
     // Initialize app with small timeout to allow other processes to complete
     const timer = setTimeout(() => {
@@ -37,12 +43,19 @@ export function AppInitializer({ children }: AppInitializerProps) {
         });
       }
       
-      // Always allow app to initialize regardless of auth state
-      setIsLoading(false);
+      // Don't set loading to false until auth is initialized
+      if (initialized || status !== 'idle') {
+        setIsLoading(false);
+      }
     }, 500);
     
     return () => clearTimeout(timer);
-  }, [logger, status, error, toast]);
+  }, [logger, status, error, toast, initialized]);
+  
+  // Reset the flag when dependencies change
+  useEffect(() => {
+    initMessageShownRef.current = false;
+  }, [status, error, initialized]);
   
   // Show minimal loading state while app is initializing
   if (isLoading) {

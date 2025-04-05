@@ -58,14 +58,13 @@ initLogging();
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const logger = getLogger();
-  const routeLoggedRef = useRef(false);
+  const logger = getLogger('App', LogCategory.SYSTEM);
+  const routeLoggedRef = useRef<boolean>(false);
 
   // Log route changes - with ref guard to prevent duplicate logs
   useEffect(() => {
     if (!routeLoggedRef.current) {
       logger.info(`Navigated to ${location.pathname}`, {
-        category: LogCategory.SYSTEM,
         details: { path: location.pathname }
       });
       routeLoggedRef.current = true;
@@ -75,14 +74,14 @@ function App() {
     }
   }, [location.pathname, logger]);
 
-  // Changed component order to prioritize theme loading
-  // ThemeInitializer no longer waits for auth to load
+  // Fixed component initialization order to prevent infinite loops
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
-        {/* ThemeInitializer first - independent of auth state */}
         <ThemeInitializer>
+          {/* Load auth after theme to avoid update loops */}
           <AuthProvider>
+            {/* App initializer should be AFTER auth provider, not inside it */}
             <AppInitializer>
               <AdminProvider>
                 {!isAdminRoute && <MainNav />}
