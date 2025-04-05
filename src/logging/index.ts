@@ -2,7 +2,8 @@
 import { LoggerService, getLogger } from './logger.service';
 import { LogCategory, LogEntry, LogTransport } from './types';
 import { LogLevel } from './constants/log-level';
-import { getLoggingConfig, memoryTransport } from './config';
+import { getLoggingConfig } from './config';
+import { memoryTransport } from './transports/memory-transport';
 
 // Initialize the logger with appropriate config
 export function initializeLogger(): void {
