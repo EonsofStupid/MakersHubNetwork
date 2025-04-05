@@ -13,16 +13,19 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   // Use selector function for Zustand to prevent unnecessary rerenders
-  const { user, session, setSession, initialize, initialized } = useAuthStore(state => ({
-    user: state.user,
-    session: state.session,
-    setSession: state.setSession,
-    initialize: state.initialize,
-    initialized: state.initialized
-  }));
+  const authStore = useAuthStore();
+  const { user, session, setSession, initialize, initialized } = {
+    user: authStore.user,
+    session: authStore.session,
+    setSession: authStore.setSession,
+    initialize: authStore.initialize,
+    initialized: authStore.initialized
+  };
+  
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
   const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
+  const authTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Setup auth state change listener only once
   useEffect(() => {
@@ -60,6 +63,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         authSubscriptionRef.current.unsubscribe();
         authSubscriptionRef.current = null;
       }
+      
+      if (authTimeoutRef.current) {
+        clearTimeout(authTimeoutRef.current);
+        authTimeoutRef.current = null;
+      }
     };
   }, []); // Removed dependencies to ensure it runs only once
   
@@ -74,17 +82,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initAttemptedRef.current = true;
     
     // Initialize auth state asynchronously
-    const initializeAuth = async () => {
-      try {
-        logger.info('Initializing auth state');
-        await initialize();
-      } catch (err) {
-        logger.error('Failed to initialize auth', { details: err });
-      }
-    };
-    
     // Use setTimeout to break potential circular dependencies
-    setTimeout(initializeAuth, 0);
+    authTimeoutRef.current = setTimeout(() => {
+      const initializeAuth = async () => {
+        try {
+          logger.info('Initializing auth state');
+          await initialize();
+        } catch (err) {
+          logger.error('Failed to initialize auth', { details: err });
+        }
+      };
+      
+      initializeAuth();
+    }, 0);
   }, [initialize, initialized]); // Keep only necessary dependencies
   
   // Provide the current auth state, whether authenticated or not

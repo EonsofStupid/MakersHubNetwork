@@ -19,6 +19,59 @@ const componentTokenSchema = z.object({
   context: z.string().optional(),
 });
 
+// Enhanced theme schema to catch all issues
+const designTokensSchema = z.object({
+  colors: z.record(z.unknown()).optional().default({}),
+  spacing: z.record(z.unknown()).optional().default({}),
+  typography: z.object({
+    fontSizes: z.record(z.unknown()).optional().default({}),
+    fontFamilies: z.record(z.unknown()).optional().default({}),
+    lineHeights: z.record(z.unknown()).optional().default({}),
+    letterSpacing: z.record(z.unknown()).optional().default({}),
+  }).optional().default({}),
+  effects: z.object({
+    shadows: z.record(z.unknown()).optional().default({}),
+    blurs: z.record(z.unknown()).optional().default({}),
+    gradients: z.record(z.unknown()).optional().default({}),
+    primary: z.string().optional(),
+    secondary: z.string().optional(),
+    tertiary: z.string().optional(),
+  }).optional().default({
+    shadows: {},
+    blurs: {},
+    gradients: {}
+  }),
+  animation: z.object({
+    keyframes: z.record(z.unknown()).optional().default({}),
+    transitions: z.record(z.unknown()).optional().default({}),
+    durations: z.record(z.union([z.string(), z.number()])).optional().default({}),
+  }).optional().default({
+    keyframes: {},
+    transitions: {},
+    durations: {}
+  }),
+  admin: z.record(z.unknown()).optional().default({}),
+}).default({});
+
+const themeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  status: z.enum(['draft', 'published', 'archived']),
+  is_default: z.boolean(),
+  created_by: z.string().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  published_at: z.string().optional(),
+  version: z.number(),
+  cache_key: z.string().optional(),
+  parent_theme_id: z.string().optional(),
+  design_tokens: designTokensSchema,
+  component_tokens: z.array(componentTokenSchema).optional().default([]),
+  composition_rules: z.record(z.unknown()).optional().default({}),
+  cached_styles: z.record(z.unknown()).optional().default({}),
+});
+
 // Create a type-safe logger for the theme store
 const logger = getLogger();
 
@@ -42,34 +95,84 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         throw new Error('Invalid theme data received');
       }
 
-      // Validate component tokens with Zod
-      const validatedComponentTokens: ComponentTokens[] = [];
+      // Validate the theme with Zod schema
+      const validationResult = themeSchema.safeParse(fetchedTheme);
       
-      if (Array.isArray(fetchedTheme.component_tokens)) {
-        for (const token of fetchedTheme.component_tokens) {
-          try {
-            const validatedToken = componentTokenSchema.parse(token);
-            validatedComponentTokens.push(validatedToken);
-          } catch (err) {
-            logger.warn('Invalid component token found', { details: { token, error: err } });
+      if (!validationResult.success) {
+        // Log validation errors
+        logger.warn('Theme validation failed', { 
+          details: { 
+            errors: validationResult.error.format(),
+            themeId 
+          } 
+        });
+        
+        // Still continue with safe defaults
+        // We'll create a sanitized version with defaults applied
+        const sanitizedTheme = {
+          ...fetchedTheme,
+          is_default: Boolean(fetchedTheme.is_default),
+          design_tokens: {
+            colors: fetchedTheme.design_tokens?.colors || {},
+            spacing: fetchedTheme.design_tokens?.spacing || {},
+            typography: fetchedTheme.design_tokens?.typography || {
+              fontSizes: {},
+              fontFamilies: {},
+              lineHeights: {},
+              letterSpacing: {}
+            },
+            effects: {
+              shadows: fetchedTheme.design_tokens?.effects?.shadows || {},
+              blurs: fetchedTheme.design_tokens?.effects?.blurs || {},
+              gradients: fetchedTheme.design_tokens?.effects?.gradients || {},
+              primary: fetchedTheme.design_tokens?.effects?.primary || "#00F0FF",
+              secondary: fetchedTheme.design_tokens?.effects?.secondary || "#FF2D6E",
+              tertiary: fetchedTheme.design_tokens?.effects?.tertiary || "#8B5CF6"
+            },
+            animation: {
+              keyframes: fetchedTheme.design_tokens?.animation?.keyframes || {},
+              transitions: fetchedTheme.design_tokens?.animation?.transitions || {},
+              durations: fetchedTheme.design_tokens?.animation?.durations || {}
+            },
+            admin: fetchedTheme.design_tokens?.admin || {}
+          },
+          component_tokens: Array.isArray(fetchedTheme.component_tokens) ? fetchedTheme.component_tokens : []
+        };
+        
+        // Validate component tokens and sanitize
+        const validatedComponentTokens: ComponentTokens[] = [];
+        
+        if (Array.isArray(sanitizedTheme.component_tokens)) {
+          for (const token of sanitizedTheme.component_tokens) {
+            try {
+              const validatedToken = componentTokenSchema.parse(token);
+              validatedComponentTokens.push(validatedToken);
+            } catch (err) {
+              logger.warn('Invalid component token found', { details: { token, error: err } });
+            }
           }
         }
+        
+        set({ 
+          currentTheme: { 
+            ...sanitizedTheme, 
+            component_tokens: validatedComponentTokens 
+          }, 
+          isLoading: false 
+        });
+      } else {
+        // Theme is valid, set it in the store
+        set({ 
+          currentTheme: validationResult.data, 
+          isLoading: false 
+        });
       }
-
-      // Set the theme in the store with validated component tokens
-      set({ 
-        currentTheme: { 
-          ...fetchedTheme, 
-          component_tokens: validatedComponentTokens 
-        }, 
-        isLoading: false 
-      });
       
       logger.info('Theme set successfully', { 
         details: { 
           themeId: fetchedTheme.id, 
           isFallback, 
-          componentTokensCount: validatedComponentTokens.length 
+          componentTokensCount: Array.isArray(fetchedTheme.component_tokens) ? fetchedTheme.component_tokens.length : 0 
         } 
       });
     } catch (error) {

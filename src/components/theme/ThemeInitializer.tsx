@@ -21,6 +21,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const { toast } = useToast();
   const logger = useLogger('ThemeInitializer', LogCategory.UI);
   const initAttemptedRef = useRef<boolean>(false);
+  const themeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initialize theme only once
   useEffect(() => {
@@ -35,33 +36,32 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         initAttemptedRef.current = true;
         logger.info('Initializing theme');
         
-        // Use a fallback first approach
+        // Try to get the theme directly - simplifies the call chain
         const fallbackTheme = await getTheme();
         
-        if (fallbackTheme.theme && fallbackTheme.theme.id) {
-          // Set the theme using the ID
-          await setTheme(fallbackTheme.theme.id);
+        if (!fallbackTheme.theme) {
+          throw new Error('Failed to load theme: No theme data');
+        }
+        
+        // Set the theme using the ID
+        await setTheme(fallbackTheme.theme.id);
+        
+        if (fallbackTheme.isFallback) {
+          logger.info('Using fallback theme - attempting to ensure default exists');
           
-          if (fallbackTheme.isFallback) {
-            logger.info('Using fallback theme - attempting to ensure default exists');
+          // Try to ensure a real default theme exists in the background
+          try {
+            const defaultThemeId = await ensureDefaultTheme();
             
-            // Try to ensure a real default theme exists in the background
-            try {
-              const defaultThemeId = await ensureDefaultTheme();
-              
-              if (defaultThemeId) {
-                logger.info('Default theme ensured', { details: { themeId: defaultThemeId } });
-                // We don't need to setTheme here - we're already using a working fallback
-              }
-            } catch (defaultThemeError) {
-              // Just log this error, don't set it as the main error
-              logger.error('Error ensuring default theme', { details: defaultThemeError });
+            if (defaultThemeId) {
+              logger.info('Default theme ensured', { details: { themeId: defaultThemeId } });
             }
-          } else {
-            logger.info('Theme initialized successfully with ID:', { details: { themeId: fallbackTheme.theme.id } });
+          } catch (defaultThemeError) {
+            // Just log this error, don't set it as the main error
+            logger.error('Error ensuring default theme', { details: defaultThemeError });
           }
         } else {
-          throw new Error('Failed to get a valid theme');
+          logger.info('Theme initialized successfully with ID:', { details: { themeId: fallbackTheme.theme.id } });
         }
       } catch (err) {
         const errorObj = err instanceof Error ? err : new Error(String(err));
@@ -79,11 +79,15 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
     }
     
     // Use a small timeout to prevent blocking the initial render
-    const timer = setTimeout(() => {
+    themeTimeoutRef.current = setTimeout(() => {
       initialize();
     }, 100);
     
-    return () => clearTimeout(timer);
+    return () => {
+      if (themeTimeoutRef.current) {
+        clearTimeout(themeTimeoutRef.current);
+      }
+    };
   }, [setTheme, toast, logger]);
 
   // Handle retry
