@@ -1,6 +1,6 @@
-
 import { useMemo } from 'react';
 import { Theme } from '@/types/theme';
+import { z } from 'zod';
 
 export interface ThemeVariables {
   // CSS HSL values (formatted as "H S% L%")
@@ -42,75 +42,123 @@ export interface ThemeVariables {
   radiusFull: string;
 }
 
+// Zod schema for hex color validation
+const hexColorSchema = z.string().regex(/^#([0-9a-fA-F]{3}){1,2}$/);
+
 /**
- * Convert hex color to HSL string (h s% l%)
- * With strict type checking and fallback to black if invalid
+ * Convert hex color to HSL string (h s% l%) with type validation
  */
 export function hexToHSL(input: unknown): string {
-  // Guard: ensure input is a string and valid hex color
-  if (typeof input !== 'string' || !/^#([0-9a-fA-F]{3}){1,2}$/.test(input)) {
-    console.warn('[Theme] Invalid hex color passed to hexToHSL:', input);
-    return '0 0% 0%'; // safe fallback: black
-  }
+  // Default HSL value for black
+  const defaultHSL = '0 0% 0%';
   
-  // Remove the hash if it exists
-  const hex = input.replace('#', '');
-  
-  // Convert hex to RGB
-  let r = parseInt(hex.substring(0, 2), 16) / 255;
-  let g = parseInt(hex.substring(2, 4), 16) / 255;
-  let b = parseInt(hex.substring(4, 6), 16) / 255;
-  
-  // Find the min and max values to determine lightness
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  
-  // Calculate lightness
-  let l = (max + min) / 2;
-  
-  let h = 0;
-  let s = 0;
-  
-  if (max !== min) {
-    // Calculate saturation
-    s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
+  try {
+    // Validate input is a valid hex color
+    const validationResult = hexColorSchema.safeParse(input);
     
-    // Calculate hue
-    if (max === r) {
-      h = (g - b) / (max - min) + (g < b ? 6 : 0);
-    } else if (max === g) {
-      h = (b - r) / (max - min) + 2;
-    } else {
-      h = (r - g) / (max - min) + 4;
+    if (!validationResult.success) {
+      console.warn('[Theme] Invalid hex color input:', input);
+      return defaultHSL;
     }
     
-    h *= 60;
+    const hex = validationResult.data.replace('#', '');
+    
+    // Parse the hex code based on its length
+    let r: number, g: number, b: number;
+    
+    if (hex.length === 3) {
+      // For 3-character hex codes (e.g. #ABC), duplicate each character (to #AABBCC)
+      r = parseInt(hex[0] + hex[0], 16) / 255;
+      g = parseInt(hex[1] + hex[1], 16) / 255;
+      b = parseInt(hex[2] + hex[2], 16) / 255;
+    } else if (hex.length === 6) {
+      // For 6-character hex codes
+      r = parseInt(hex.substring(0, 2), 16) / 255;
+      g = parseInt(hex.substring(2, 4), 16) / 255;
+      b = parseInt(hex.substring(4, 6), 16) / 255;
+    } else {
+      // Invalid length (should never happen due to regex validation)
+      return defaultHSL;
+    }
+    
+    // Find the min and max values to determine lightness
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    
+    // Calculate lightness
+    let l = (max + min) / 2;
+    
+    let h = 0;
+    let s = 0;
+    
+    if (max !== min) {
+      // Calculate saturation
+      s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
+      
+      // Calculate hue
+      if (max === r) {
+        h = (g - b) / (max - min) + (g < b ? 6 : 0);
+      } else if (max === g) {
+        h = (b - r) / (max - min) + 2;
+      } else {
+        h = (r - g) / (max - min) + 4;
+      }
+      
+      h *= 60;
+    }
+    
+    // Round values
+    h = Math.round(h);
+    s = Math.round(s * 100);
+    l = Math.round(l * 100);
+    
+    return `${h} ${s}% ${l}%`;
+  } catch (error) {
+    console.error('[Theme] Error in hexToHSL:', error);
+    return defaultHSL;
   }
-  
-  // Round values
-  h = Math.round(h);
-  s = Math.round(s * 100);
-  l = Math.round(l * 100);
-  
-  return `${h} ${s}% ${l}%`;
 }
 
 /**
- * Safely access a nested property from an object with a fallback value
+ * Type-safe nested property access with a fallback value
  */
-function safelyGetNestedValue<T>(obj: Record<string, any> | undefined | null, path: string[], fallback: T): T {
-  if (!obj) return fallback;
-  
-  let current = obj;
-  
-  for (const key of path) {
-    if (current === null || current === undefined || typeof current !== 'object') {
-      return fallback;
-    }
-    current = current[key];
+function safelyGetNestedValue<T>(
+  obj: unknown, 
+  path: string[], 
+  fallback: T
+): T {
+  // Guard against non-objects
+  if (!obj || typeof obj !== 'object') {
+    return fallback;
   }
   
-  return (current === undefined || current === null) ? fallback : current as T;
+  try {
+    // Start with the object
+    let current: unknown = obj;
+    
+    // Traverse the path
+    for (const key of path) {
+      // If current is not an object or null/undefined, return fallback
+      if (!current || typeof current !== 'object') {
+        return fallback;
+      }
+      
+      // Access the next level using type safety
+      current = (current as Record<string, unknown>)[key];
+      
+      // If the path leads to undefined or null, return fallback
+      if (current === undefined || current === null) {
+        return fallback;
+      }
+    }
+    
+    // If we've reached the end of the path and the value is of the expected type, return it
+    // Otherwise, return the fallback
+    return (current as T) ?? fallback;
+  } catch (error) {
+    console.error('[Theme] Error in safelyGetNestedValue:', error);
+    return fallback;
+  }
 }
 
 /**
@@ -157,81 +205,146 @@ export function useThemeVariables(theme: Theme | null): ThemeVariables {
     }
     
     try {
-      const { colors, effects, animation, spacing } = theme.design_tokens;
-      
-      // Extract colors with strict type checking
-      if (colors && typeof colors === 'object') {
-        // Use type safe getter for all values
-        const getColor = (key: string): string | undefined => {
-          const value = safelyGetNestedValue(colors, [key], undefined);
+      // Extract colors with type safety
+      if (theme.design_tokens.colors && typeof theme.design_tokens.colors === 'object') {
+        const colors = theme.design_tokens.colors;
+        
+        // Safe getters for color values
+        const getColorValue = (key: string): string | undefined => {
+          const value = safelyGetNestedValue<unknown>(colors, [key], undefined);
           return typeof value === 'string' ? value : undefined;
         };
         
-        if (getColor('background')) defaults.background = hexToHSL(getColor('background'));
-        if (getColor('foreground')) defaults.foreground = hexToHSL(getColor('foreground'));
-        if (getColor('card')) defaults.card = hexToHSL(getColor('card'));
-        if (getColor('cardForeground')) defaults.cardForeground = hexToHSL(getColor('cardForeground'));
-        if (getColor('primary')) defaults.primary = hexToHSL(getColor('primary'));
-        if (getColor('primaryForeground')) defaults.primaryForeground = hexToHSL(getColor('primaryForeground'));
-        if (getColor('secondary')) defaults.secondary = hexToHSL(getColor('secondary'));
-        if (getColor('secondaryForeground')) defaults.secondaryForeground = hexToHSL(getColor('secondaryForeground'));
-        if (getColor('muted')) defaults.muted = hexToHSL(getColor('muted'));
-        if (getColor('mutedForeground')) defaults.mutedForeground = hexToHSL(getColor('mutedForeground'));
-        if (getColor('accent')) defaults.accent = hexToHSL(getColor('accent'));
-        if (getColor('accentForeground')) defaults.accentForeground = hexToHSL(getColor('accentForeground'));
-        if (getColor('destructive')) defaults.destructive = hexToHSL(getColor('destructive'));
-        if (getColor('destructiveForeground')) defaults.destructiveForeground = hexToHSL(getColor('destructiveForeground'));
-        if (getColor('border')) defaults.border = hexToHSL(getColor('border'));
-        if (getColor('input')) defaults.input = hexToHSL(getColor('input'));
-        if (getColor('ring')) defaults.ring = hexToHSL(getColor('ring'));
+        // Apply theme colors using our safe getters
+        if (getColorValue('background')) {
+          defaults.background = hexToHSL(getColorValue('background'));
+        }
+        if (getColorValue('foreground')) {
+          defaults.foreground = hexToHSL(getColorValue('foreground'));
+        }
+        if (getColorValue('card')) {
+          defaults.card = hexToHSL(getColorValue('card'));
+        }
+        if (getColorValue('cardForeground')) {
+          defaults.cardForeground = hexToHSL(getColorValue('cardForeground'));
+        }
+        if (getColorValue('primary')) {
+          defaults.primary = hexToHSL(getColorValue('primary'));
+        }
+        if (getColorValue('primaryForeground')) {
+          defaults.primaryForeground = hexToHSL(getColorValue('primaryForeground'));
+        }
+        if (getColorValue('secondary')) {
+          defaults.secondary = hexToHSL(getColorValue('secondary'));
+        }
+        if (getColorValue('secondaryForeground')) {
+          defaults.secondaryForeground = hexToHSL(getColorValue('secondaryForeground'));
+        }
+        if (getColorValue('muted')) {
+          defaults.muted = hexToHSL(getColorValue('muted'));
+        }
+        if (getColorValue('mutedForeground')) {
+          defaults.mutedForeground = hexToHSL(getColorValue('mutedForeground'));
+        }
+        if (getColorValue('accent')) {
+          defaults.accent = hexToHSL(getColorValue('accent'));
+        }
+        if (getColorValue('accentForeground')) {
+          defaults.accentForeground = hexToHSL(getColorValue('accentForeground'));
+        }
+        if (getColorValue('destructive')) {
+          defaults.destructive = hexToHSL(getColorValue('destructive'));
+        }
+        if (getColorValue('destructiveForeground')) {
+          defaults.destructiveForeground = hexToHSL(getColorValue('destructiveForeground'));
+        }
+        if (getColorValue('border')) {
+          defaults.border = hexToHSL(getColorValue('border'));
+        }
+        if (getColorValue('input')) {
+          defaults.input = hexToHSL(getColorValue('input'));
+        }
+        if (getColorValue('ring')) {
+          defaults.ring = hexToHSL(getColorValue('ring'));
+        }
       }
       
       // Extract effect colors
-      if (effects && typeof effects === 'object') {
-        const getEffect = (key: string): string | undefined => {
-          const value = safelyGetNestedValue(effects, [key], undefined);
+      if (theme.design_tokens.effects && typeof theme.design_tokens.effects === 'object') {
+        const effects = theme.design_tokens.effects;
+        
+        // Safe getters for effect values
+        const getEffectValue = (key: string): string | undefined => {
+          const value = safelyGetNestedValue<unknown>(effects, [key], undefined);
           return typeof value === 'string' ? value : undefined;
         };
         
-        if (getEffect('primary')) defaults.effectColor = getEffect('primary') as string;
-        if (getEffect('secondary')) defaults.effectSecondary = getEffect('secondary') as string;
-        if (getEffect('tertiary')) defaults.effectTertiary = getEffect('tertiary') as string;
+        if (getEffectValue('primary')) {
+          defaults.effectColor = getEffectValue('primary') as string;
+        }
+        if (getEffectValue('secondary')) {
+          defaults.effectSecondary = getEffectValue('secondary') as string;
+        }
+        if (getEffectValue('tertiary')) {
+          defaults.effectTertiary = getEffectValue('tertiary') as string;
+        }
       }
       
-      // Extract animation times
-      if (animation && typeof animation === 'object' && animation.durations && typeof animation.durations === 'object') {
-        const durations = animation.durations as Record<string, unknown>;
+      // Extract animation durations
+      if (theme.design_tokens.animation?.durations && typeof theme.design_tokens.animation.durations === 'object') {
+        const durations = theme.design_tokens.animation.durations;
         
-        const getDuration = (key: string): string | undefined => {
-          const value = safelyGetNestedValue(durations, [key], undefined);
+        // Safe getter for duration values
+        const getDurationValue = (key: string): string | undefined => {
+          const value = safelyGetNestedValue<unknown>(durations, [key], undefined);
           return typeof value === 'string' ? value : undefined;
         };
         
-        if (getDuration('fast')) defaults.transitionFast = getDuration('fast') as string;
-        if (getDuration('normal')) defaults.transitionNormal = getDuration('normal') as string;
-        if (getDuration('slow')) defaults.transitionSlow = getDuration('slow') as string;
-        
-        if (getDuration('animationFast')) defaults.animationFast = getDuration('animationFast') as string;
-        if (getDuration('animationNormal')) defaults.animationNormal = getDuration('animationNormal') as string;
-        if (getDuration('animationSlow')) defaults.animationSlow = getDuration('animationSlow') as string;
+        if (getDurationValue('fast')) {
+          defaults.transitionFast = getDurationValue('fast') as string;
+        }
+        if (getDurationValue('normal')) {
+          defaults.transitionNormal = getDurationValue('normal') as string;
+        }
+        if (getDurationValue('slow')) {
+          defaults.transitionSlow = getDurationValue('slow') as string;
+        }
+        if (getDurationValue('animationFast')) {
+          defaults.animationFast = getDurationValue('animationFast') as string;
+        }
+        if (getDurationValue('animationNormal')) {
+          defaults.animationNormal = getDurationValue('animationNormal') as string;
+        }
+        if (getDurationValue('animationSlow')) {
+          defaults.animationSlow = getDurationValue('animationSlow') as string;
+        }
       }
       
-      // Extract radius
-      if (spacing && typeof spacing === 'object' && spacing.radius && typeof spacing.radius === 'object') {
-        const radius = spacing.radius as Record<string, unknown>;
+      // Extract radius values
+      if (theme.design_tokens.spacing?.radius && typeof theme.design_tokens.spacing.radius === 'object') {
+        const radius = theme.design_tokens.spacing.radius;
         
-        const getRadius = (key: string): string | undefined => {
-          const value = safelyGetNestedValue(radius, [key], undefined);
+        // Safe getter for radius values
+        const getRadiusValue = (key: string): string | undefined => {
+          const value = safelyGetNestedValue<unknown>(radius, [key], undefined);
           return typeof value === 'string' ? value : undefined;
         };
         
-        if (getRadius('sm')) defaults.radiusSm = getRadius('sm') as string;
-        if (getRadius('md')) defaults.radiusMd = getRadius('md') as string;
-        if (getRadius('lg')) defaults.radiusLg = getRadius('lg') as string;
-        if (getRadius('full')) defaults.radiusFull = getRadius('full') as string;
+        if (getRadiusValue('sm')) {
+          defaults.radiusSm = getRadiusValue('sm') as string;
+        }
+        if (getRadiusValue('md')) {
+          defaults.radiusMd = getRadiusValue('md') as string;
+        }
+        if (getRadiusValue('lg')) {
+          defaults.radiusLg = getRadiusValue('lg') as string;
+        }
+        if (getRadiusValue('full')) {
+          defaults.radiusFull = getRadiusValue('full') as string;
+        }
       }
     } catch (error) {
-      console.error('Error parsing theme tokens:', error);
+      console.error('[Theme] Error processing theme tokens:', error);
     }
     
     return defaults;

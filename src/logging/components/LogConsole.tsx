@@ -1,7 +1,6 @@
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
-import { LogEntry } from '../types';
-import { LogLevel } from '../constants/log-level';
+import { LogEntry, LogLevel } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
 import '../styles/logging.css';
@@ -23,7 +22,7 @@ const LogDetails = forwardRef<HTMLDivElement, LogDetailsProps>(({ details, class
         <div key={key} className="flex">
           <span className="text-gray-400 mr-2">{key}:</span>
           <span className="text-gray-300">
-            {renderUnknownAsNode(value)}
+            {typeof value === 'string' ? value : JSON.stringify(value)}
           </span>
         </div>
       ))}
@@ -80,6 +79,16 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
     }
   };
   
+  const renderMessageContent = () => {
+    if (typeof log.message === 'string') {
+      return log.message;
+    } else if (React.isValidElement(log.message)) {
+      return log.message;
+    } else {
+      return String(log.message);
+    }
+  };
+  
   return (
     <div 
       className={`log-item p-2 mb-1 rounded ${getBgColorClass(log.level)} ${index % 2 === 0 ? 'bg-opacity-50' : ''}`}
@@ -95,7 +104,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             <span className="font-medium">{log.category}</span>
           </div>
           <div className="message-content text-sm">
-            {renderUnknownAsNode(log.message)}
+            {renderMessageContent()}
           </div>
           
           <AnimatePresence>

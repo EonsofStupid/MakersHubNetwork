@@ -31,7 +31,7 @@ interface SiteThemeProviderProps {
 }
 
 export function SiteThemeProvider({ children, isInitializing = false }: SiteThemeProviderProps) {
-  const { currentTheme, isLoading, setTheme } = useThemeStore();
+  const { currentTheme, isLoading } = useThemeStore();
   const variables = useThemeVariables(currentTheme);
   const logger = useLogger('ThemeProvider', LogCategory.UI);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -40,16 +40,6 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   const [isDarkMode, setIsDarkMode] = useState<boolean>(
     localStorage.getItem('theme-mode') === 'light' ? false : true
   );
-  
-  // Load theme on mount - but only if no theme is already loaded and we're not in initialization phase
-  useEffect(() => {
-    if (!currentTheme && !isLoading && !isInitializing) {
-      logger.info('Loading default theme');
-      setTheme('default').catch(err => {
-        logger.error('Failed to load default theme', { details: err });
-      });
-    }
-  }, [currentTheme, isLoading, isInitializing, setTheme, logger]);
   
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -60,7 +50,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
 
   // Get component styles from theme
   const componentStyles = useMemo(() => {
-    if (!currentTheme || !currentTheme.component_tokens) {
+    if (!currentTheme || !Array.isArray(currentTheme.component_tokens)) {
       return {};
     }
 
@@ -68,7 +58,9 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     
     // Convert component tokens array to a map of component name -> styles
     currentTheme.component_tokens.forEach((component) => {
-      styles[component.component_name] = component.styles;
+      if (component && typeof component.component_name === 'string' && component.styles) {
+        styles[component.component_name] = component.styles;
+      }
     });
     
     return styles;
@@ -76,17 +68,21 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   
   // Get animations from theme
   const animations = useMemo(() => {
+    const defaultAnimations = {}; // Safe fallback
+    
     if (!currentTheme || !currentTheme.design_tokens?.animation?.keyframes) {
-      return {};
+      return defaultAnimations;
     }
     
-    return currentTheme.design_tokens.animation.keyframes;
+    const themeAnimations = currentTheme.design_tokens.animation.keyframes;
+    return themeAnimations ? themeAnimations : defaultAnimations;
   }, [currentTheme]);
 
   // Mark theme as loaded when everything is ready
   useEffect(() => {
-    if (!isLoading && currentTheme) {
-      setTimeout(() => {
+    if (!isLoading && currentTheme && !isInitializing) {
+      // Small delay to ensure CSS variables are applied
+      const timer = setTimeout(() => {
         setIsLoaded(true);
         logger.info('Theme loaded successfully', { 
           details: { 
@@ -96,12 +92,14 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
           } 
         });
       }, 100);
+      
+      return () => clearTimeout(timer);
     }
-  }, [isLoading, currentTheme, animations, componentStyles, logger]);
+  }, [isLoading, currentTheme, animations, componentStyles, logger, isInitializing]);
 
   // Apply CSS variables when the theme changes
   useEffect(() => {
-    // Still apply our CSS variables even if theme is loading or missing
+    // Always apply our CSS variables even if theme is loading or missing
     // This ensures the UI always has some styles
     const rootElement = document.documentElement;
     
