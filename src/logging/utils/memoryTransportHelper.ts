@@ -1,4 +1,3 @@
-
 import { LogEntry, LogLevel } from '../types';
 
 export interface MemoryTransportOptions {
@@ -96,18 +95,17 @@ export function filterEntries(
         case LogLevel.TRACE:
           return true; // Show all logs
         case LogLevel.DEBUG:
-          return entryLevel !== LogLevel.TRACE;
+          return entryLevel >= LogLevel.DEBUG;
         case LogLevel.INFO:
         case LogLevel.SUCCESS:
-          return entryLevel !== LogLevel.TRACE && entryLevel !== LogLevel.DEBUG;
+          return entryLevel >= LogLevel.INFO;
         case LogLevel.WARN:
-          return entryLevel !== LogLevel.TRACE && entryLevel !== LogLevel.DEBUG && 
-                 entryLevel !== LogLevel.INFO && entryLevel !== LogLevel.SUCCESS;
+          return entryLevel >= LogLevel.WARN;
         case LogLevel.ERROR:
         case LogLevel.CRITICAL:
-          return entryLevel === LogLevel.ERROR || entryLevel === LogLevel.CRITICAL || entryLevel === LogLevel.FATAL;
+          return entryLevel >= LogLevel.ERROR;
         case LogLevel.FATAL:
-          return entryLevel === LogLevel.FATAL;
+          return entryLevel >= LogLevel.FATAL;
         default:
           return true;
       }

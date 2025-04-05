@@ -1,8 +1,7 @@
 
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/auth/hooks/useAuth";
-import { LoadingScreen } from "@/components/ui/loading-screen";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,15 +13,20 @@ export const ProtectedRoute = ({
   requiredRoles 
 }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading, roles } = useAuth();
+  const location = useLocation();
   
-  // Show loading screen while auth state is being determined
   if (isLoading) {
-    return <LoadingScreen />;
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary"></div>
+        <span className="ml-2">Loading...</span>
+      </div>
+    );
   }
   
   // If user is not authenticated, redirect to login
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={`/login?from=${encodeURIComponent(location.pathname)}`} replace />;
   }
   
   // If there are required roles, check if user has at least one of them
