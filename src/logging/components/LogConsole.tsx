@@ -24,7 +24,7 @@ const LogDetails = forwardRef<HTMLDivElement, LogDetailsProps>(({ details, class
         <div key={key} className="flex">
           <span className="text-gray-400 mr-2">{key}:</span>
           <span className="text-gray-300">
-            {renderUnknownAsNode(value)}
+            {typeof value === 'string' ? value : renderUnknownAsNode(value)}
           </span>
         </div>
       ))}
@@ -96,8 +96,12 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
             <span className="font-medium">{log.category}</span>
           </div>
           <div className="message-content text-sm">
-            {/* Fixed type error: Ensuring message is always a ReactNode */}
-            {typeof log.message === 'string' ? log.message : renderUnknownAsNode(log.message)}
+            {/* Ensure message is always rendered as a React node */}
+            {React.isValidElement(log.message) 
+              ? log.message 
+              : typeof log.message === 'string' 
+                ? log.message 
+                : String(log.message)}
           </div>
           
           <AnimatePresence>
@@ -109,8 +113,8 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                {/* Fixed type error: Explicitly passing only Record<string, unknown> */}
-                <LogDetails details={(log.details as Record<string, unknown>) || {}} />
+                {/* Explicitly passing only Record<string, unknown> */}
+                <LogDetails details={log.details && typeof log.details === 'object' ? log.details as Record<string, unknown> : {}} />
               </motion.div>
             )}
           </AnimatePresence>

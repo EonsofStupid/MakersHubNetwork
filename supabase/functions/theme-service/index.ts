@@ -26,13 +26,15 @@ const supabaseAdmin = createClient(
 
 // Define request schema validation using Zod
 const GetThemeRequestSchema = z.object({
-  themeId: z.string().uuid().optional(),
+  operation: z.literal('get-theme'),
+  themeId: z.string().optional(),
   isDefault: z.boolean().optional(),
   context: z.enum(['site', 'admin']).optional(),
 });
 
 const UpdateThemeRequestSchema = z.object({
-  themeId: z.string().uuid(),
+  operation: z.literal('update-theme'),
+  themeId: z.string(),
   theme: z.object({
     name: z.string().optional(),
     description: z.string().optional(),
@@ -41,7 +43,21 @@ const UpdateThemeRequestSchema = z.object({
     composition_rules: z.record(z.any()).optional(),
     is_default: z.boolean().optional(),
   }).strict(),
-  userId: z.string().uuid(),
+  userId: z.string(),
+});
+
+const CreateThemeRequestSchema = z.object({
+  operation: z.literal('create-theme'),
+  theme: z.object({
+    name: z.string(),
+    description: z.string().optional(),
+    status: z.string(),
+    is_default: z.boolean().optional(),
+    design_tokens: z.record(z.any()),
+    component_tokens: z.array(z.any()).optional(),
+    composition_rules: z.record(z.any()).optional(),
+  }),
+  userId: z.string(),
 });
 
 // Default fallback theme definition
@@ -111,44 +127,41 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const operation = url.pathname.split('/').pop();
-    const isAuthenticated = req.headers.get('Authorization')?.startsWith('Bearer ');
+    // Parse the request body
+    let requestData;
+    try {
+      requestData = await req.json();
+      console.log("Received request:", JSON.stringify(requestData));
+    } catch (error) {
+      console.error("Error parsing request body:", error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
 
-    // Log the incoming request
-    console.log(`Theme-service handling operation: ${operation}`);
+    // Determine which operation to perform
+    const { operation } = requestData;
 
-    // Handle different operations
     switch (operation) {
       case 'get-theme':
-        return await handleGetTheme(req);
+        return await handleGetTheme(requestData);
       
       case 'update-theme':
-        if (!isAuthenticated) {
-          return new Response(
-            JSON.stringify({ error: 'Authentication required for theme updates' }),
-            { status: 401, headers: corsHeaders }
-          );
-        }
-        return await handleUpdateTheme(req);
+        return await handleUpdateTheme(requestData);
       
       case 'create-theme':
-        if (!isAuthenticated) {
-          return new Response(
-            JSON.stringify({ error: 'Authentication required for theme creation' }),
-            { status: 401, headers: corsHeaders }
-          );
-        }
-        return await handleCreateTheme(req);
+        return await handleCreateTheme(requestData);
       
       default:
+        console.error("Invalid operation:", operation);
         return new Response(
-          JSON.stringify({ error: 'Invalid operation' }), 
+          JSON.stringify({ error: 'Invalid operation', details: `Operation "${operation}" not supported` }), 
           { status: 400, headers: corsHeaders }
         );
     }
   } catch (error) {
-    console.error('Theme service error:', error);
+    console.error('Theme service unhandled error:', error);
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
@@ -160,32 +173,22 @@ serve(async (req) => {
 });
 
 // Handle get-theme operation
-async function handleGetTheme(req: Request) {
+async function handleGetTheme(data) {
   try {
-    let data;
+    console.log("Handling get-theme operation with data:", JSON.stringify(data));
     
-    try {
-      data = await req.json();
-    } catch (e) {
-      // If no JSON body, try to get parameters from URL
-      const url = new URL(req.url);
-      data = {
-        themeId: url.searchParams.get('themeId') || undefined,
-        isDefault: url.searchParams.get('isDefault') === 'true',
-        context: url.searchParams.get('context') || 'site',
-      };
-    }
-
     // Validate request data
-    const validation = GetThemeRequestSchema.safeParse(data);
-    if (!validation.success) {
+    const validationResult = GetThemeRequestSchema.safeParse(data);
+    if (!validationResult.success) {
+      console.error("Invalid request format:", validationResult.error);
       return new Response(
-        JSON.stringify({ error: 'Invalid request parameters', details: validation.error }),
+        JSON.stringify({ error: 'Invalid request parameters', details: validationResult.error.format() }),
         { status: 400, headers: corsHeaders }
       );
     }
 
-    const { themeId, isDefault = true, context = 'site' } = validation.data;
+    const { themeId, isDefault = true, context = 'site' } = validationResult.data;
+    console.log(`Looking for theme with ID: ${themeId || 'default'}, isDefault: ${isDefault}, context: ${context}`);
 
     // Query for the theme
     let query = supabaseAdmin.from('themes').select('*');
@@ -221,6 +224,7 @@ async function handleGetTheme(req: Request) {
       );
     }
 
+    console.log(`Theme found with ID: ${themes[0].id}`);
     // Return the theme
     return new Response(
       JSON.stringify({ theme: themes[0], isFallback: false }),
@@ -236,20 +240,18 @@ async function handleGetTheme(req: Request) {
 }
 
 // Handle update-theme operation
-async function handleUpdateTheme(req: Request) {
+async function handleUpdateTheme(data) {
   try {
-    const data = await req.json();
-    
     // Validate request data
-    const validation = UpdateThemeRequestSchema.safeParse(data);
-    if (!validation.success) {
+    const validationResult = UpdateThemeRequestSchema.safeParse(data);
+    if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ error: 'Invalid theme update data', details: validation.error }),
+        JSON.stringify({ error: 'Invalid theme update data', details: validationResult.error.format() }),
         { status: 400, headers: corsHeaders }
       );
     }
     
-    const { themeId, theme, userId } = validation.data;
+    const { themeId, theme, userId } = validationResult.data;
     
     // Check if the theme exists
     const { data: existingTheme, error: checkError } = await supabaseAdmin
@@ -299,16 +301,18 @@ async function handleUpdateTheme(req: Request) {
 }
 
 // Handle create-theme operation 
-async function handleCreateTheme(req: Request) {
+async function handleCreateTheme(data) {
   try {
-    const { theme, userId } = await req.json();
-    
-    if (!theme || !userId) {
+    // Validate request data
+    const validationResult = CreateThemeRequestSchema.safeParse(data);
+    if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ error: 'Theme data and userId are required' }),
+        JSON.stringify({ error: 'Invalid theme creation data', details: validationResult.error.format() }),
         { status: 400, headers: corsHeaders }
       );
     }
+
+    const { theme, userId } = validationResult.data;
     
     // Set additional theme properties
     const themeData = {

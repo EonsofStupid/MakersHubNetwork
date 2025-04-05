@@ -1,102 +1,78 @@
 
-import React, { ReactNode } from 'react';
+import React from 'react';
 
 /**
- * Converts various types to a string representation for search
+ * Safely renders an unknown value as a React node
  */
-export function nodeToSearchableString(node: unknown): string {
+export function renderUnknownAsNode(value: unknown): React.ReactNode {
+  if (value === null || value === undefined) {
+    return <span className="text-gray-500">null</span>;
+  }
+
+  if (React.isValidElement(value)) {
+    return value;
+  }
+
+  if (typeof value === 'object') {
+    try {
+      return <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(value, null, 2)}</pre>;
+    } catch (error) {
+      return <span className="text-red-400">[Unstringifiable Object]</span>;
+    }
+  }
+
+  if (typeof value === 'function') {
+    try {
+      return <span className="text-purple-400">{value.toString()}</span>;
+    } catch (error) {
+      return <span className="text-gray-400">[Function]</span>;
+    }
+  }
+
+  // Simple value
+  return String(value);
+}
+
+/**
+ * Converts a React node to a searchable string representation
+ */
+export function nodeToSearchableString(node: React.ReactNode): string {
   if (node === null || node === undefined) {
     return '';
   }
-  
+
   if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
     return String(node);
   }
-  
-  if (typeof node === 'object') {
-    if (React.isValidElement(node)) {
-      // Handle React elements by getting their text content
-      const props = node.props as Record<string, unknown>;
-      
-      if (props.children) {
-        if (typeof props.children === 'string') {
-          return props.children;
-        } else if (Array.isArray(props.children)) {
-          return props.children
-            .map(child => nodeToSearchableString(child))
-            .join(' ');
-        }
-      }
-      
+
+  if (React.isValidElement(node)) {
+    // Extract text content from children
+    const children = node.props.children;
+    if (!children) {
       return '';
-    } else if (Array.isArray(node)) {
-      // Handle arrays by joining their string representations
-      return node.map(item => nodeToSearchableString(item)).join(' ');
-    } else {
-      // Handle plain objects by converting to JSON
-      try {
-        return JSON.stringify(node);
-      } catch (e) {
-        return '';
-      }
     }
-  }
-  
-  return String(node);
-}
-
-/**
- * Type guard to check if a value is a valid React node
- */
-export function isValidReactNode(value: unknown): value is ReactNode {
-  return (
-    value === undefined ||
-    value === null ||
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean' ||
-    React.isValidElement(value) ||
-    Array.isArray(value) ||
-    typeof value === 'function'
-  );
-}
-
-/**
- * Safely renders any value as a React node
- * Ensures that the output is always a valid ReactNode type
- */
-export function renderUnknownAsNode(value: unknown): ReactNode {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  
-  if (isValidReactNode(value)) {
-    return value;
-  }
-  
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-  
-  if (typeof value === 'object') {
-    if (Array.isArray(value)) {
-      return (
-        <>
-          {value.map((item, index) => (
-            <React.Fragment key={index}>
-              {renderUnknownAsNode(item)}
-            </React.Fragment>
-          ))}
-        </>
-      );
+    if (typeof children === 'string' || typeof children === 'number') {
+      return String(children);
     }
-    
+    if (Array.isArray(children)) {
+      return children
+        .map((child) => nodeToSearchableString(child))
+        .join(' ');
+    }
+    return nodeToSearchableString(children);
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(nodeToSearchableString).join(' ');
+  }
+
+  if (typeof node === 'object') {
     try {
-      return <pre>{JSON.stringify(value, null, 2)}</pre>;
-    } catch (e) {
-      return String(value);
+      return JSON.stringify(node);
+    } catch {
+      return '';
     }
   }
-  
-  return String(value);
+
+  return '';
 }
