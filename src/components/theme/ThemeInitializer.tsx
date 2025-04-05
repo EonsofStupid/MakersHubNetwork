@@ -22,9 +22,19 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
   const logger = useLogger('ThemeInitializer', LogCategory.UI);
   const initAttemptedRef = useRef<boolean>(false);
   const themeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cycleCountRef = useRef<number>(0);
 
   // Initialize theme only once
   useEffect(() => {
+    // Cycle detection to prevent infinite loops
+    cycleCountRef.current += 1;
+    if (cycleCountRef.current > 10) {
+      logger.warn('Possible theme initialization cycle detected', {
+        details: { cycleCount: cycleCountRef.current }
+      });
+      return; // Stop execution to break the loop
+    }
+    
     // Prevent multiple initialization attempts
     if (initAttemptedRef.current) {
       return;

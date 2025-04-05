@@ -4,6 +4,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { Skeleton } from './ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
 
 interface AppInitializerProps {
   children: React.ReactNode;
@@ -15,6 +16,10 @@ export function AppInitializer({ children }: AppInitializerProps) {
   const { toast } = useToast();
   const initMessageShownRef = useRef<boolean>(false);
   const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cycleCountRef = useRef<number>(0);
+  
+  // Get theme loading status
+  const { isLoaded: themeLoaded } = useSiteTheme();
   
   // Get auth state directly from localStorage to avoid circular dependencies
   const authStatus = localStorage.getItem('auth-storage') 
@@ -26,12 +31,25 @@ export function AppInitializer({ children }: AppInitializerProps) {
     : false;
     
   useEffect(() => {
+    // Detect potential infinite initialization loops
+    cycleCountRef.current += 1;
+    if (cycleCountRef.current > 10) {
+      logger.warn('Possible initialization cycle detected', {
+        details: { cycleCount: cycleCountRef.current, themeLoaded, authStatus, initialized }
+      });
+    }
+    
     // Log auth status change, but only once per render to avoid loops
     if (!initMessageShownRef.current) {
       logger.info('App initializing, auth status:', { 
-        details: { status: authStatus } 
+        details: { status: authStatus, themeLoaded }
       });
       initMessageShownRef.current = true;
+    }
+    
+    // Wait for theme to be fully loaded before continuing initialization
+    if (!themeLoaded) {
+      return;
     }
     
     // Initialize app with small timeout to allow other processes to complete
@@ -44,6 +62,9 @@ export function AppInitializer({ children }: AppInitializerProps) {
         // If auth is still initializing after a timeout, render app anyway
         const renderTimeout = setTimeout(() => {
           setIsLoading(false);
+          logger.warn('Rendering app with uninitialized auth state', {
+            details: { authStatus, initialized }
+          });
         }, 2000); // Max wait time for auth
         
         return () => clearTimeout(renderTimeout);
@@ -55,12 +76,12 @@ export function AppInitializer({ children }: AppInitializerProps) {
         clearTimeout(initTimeoutRef.current);
       }
     };
-  }, [logger, authStatus, initialized]);
+  }, [logger, authStatus, initialized, themeLoaded]);
   
   // Reset the flag when dependencies change
   useEffect(() => {
     initMessageShownRef.current = false;
-  }, [authStatus, initialized]);
+  }, [authStatus, initialized, themeLoaded]);
   
   // Show minimal loading state while app is initializing
   if (isLoading) {
