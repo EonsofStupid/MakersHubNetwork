@@ -1,5 +1,5 @@
 
-import React, { useCallback } from "react";
+import React, { useCallback, memo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,7 +15,8 @@ import { LogOut, User, Settings, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 
-export const AuthSection = () => {
+// Memoize the component to prevent unnecessary rerenders
+export const AuthSection = memo(() => {
   const { user, logout } = useAuth();
   const { hasAdminAccess } = useAdminAccess();
   
@@ -30,6 +31,11 @@ export const AuthSection = () => {
       }, 400);
     }
   }, []);
+  
+  // Handle logout with useCallback to prevent function recreation
+  const handleLogout = useCallback(() => {
+    logout();
+  }, [logout]);
   
   // If logged in, show avatar with dropdown
   if (user) {
@@ -90,7 +96,7 @@ export const AuthSection = () => {
           
           <DropdownMenuItem 
             className="cursor-pointer text-destructive focus:text-destructive flex items-center gap-2"
-            onClick={() => logout()}
+            onClick={handleLogout}
           >
             <LogOut className="w-4 h-4" />
             <span>Log out</span>
@@ -113,4 +119,4 @@ export const AuthSection = () => {
       </Button>
     </Link>
   );
-};
+});
