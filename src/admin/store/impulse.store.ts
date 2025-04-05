@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { ImpulseTheme } from "../types/impulse.types";
 import { defaultImpulseTokens } from "../theme/impulse/tokens";
 import { useThemeStore } from "@/stores/theme/store";
+import { Theme } from "@/types/theme";
 
 interface ImpulseThemeState {
   // Theme state
@@ -76,13 +77,20 @@ export const useImpulseStore = create<ImpulseThemeState>((set, get) => ({
       const { currentTheme } = themeStore;
       const { theme } = get();
       
-      if (currentTheme?.id) {
+      if (currentTheme && currentTheme.id) {
         // Update existing theme
         const updatedDesignTokens = {
           ...currentTheme.design_tokens,
           admin: theme
         };
         
+        // Update the currentTheme with new design tokens
+        const updatedTheme: Theme = {
+          ...currentTheme,
+          design_tokens: updatedDesignTokens
+        };
+        
+        // Here we should have an API call to update the theme
         await themeStore.setTheme(currentTheme.id);
         
         set({ 

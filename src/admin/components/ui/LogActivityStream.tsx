@@ -6,8 +6,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { renderUnknownAsNode } from '@/shared/utils/render';
-import { LOG_LEVEL_MAP } from '@/logging/utils/map-log-level';
-import { isLogLevelAtLeast } from '@/logging/constants/log-level';
+import { isLogLevelAtLeast } from '@/logging/utils/map-log-level';
 
 interface LogActivityStreamProps {
   maxEntries?: number;
@@ -50,7 +49,7 @@ export function LogActivityStream({
       }
       
       // Apply limit
-      filteredLogs = filteredLogs.slice(-maxEntries);
+      filteredLogs = filteredLogs.slice(0, maxEntries);
       
       setLogs(filteredLogs);
     };
@@ -89,11 +88,6 @@ export function LogActivityStream({
       default:
         return 'text-gray-400';
     }
-  };
-  
-  // Get name for log level
-  const getLevelName = (level: LogLevel): string => {
-    return LOG_LEVEL_MAP[level] || "UNKNOWN";
   };
   
   // Get log item class based on level
@@ -143,7 +137,7 @@ export function LogActivityStream({
             >
               <div className="flex items-start gap-2 overflow-hidden">
                 <span className={cn("flex-shrink-0", getLevelColorClass(log.level))}>
-                  {getLevelName(log.level)}
+                  {log.level}
                 </span>
                 
                 <span className="flex-shrink-0 text-gray-400">

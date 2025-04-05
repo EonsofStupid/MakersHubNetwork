@@ -23,5 +23,8 @@ export const LOG_LEVEL_MAP: Record<LogLevel, string> = {
  * @returns True if level is at least minLevel
  */
 export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
-  return LOG_LEVEL_VALUES[level] >= LOG_LEVEL_VALUES[minLevel];
+  const levelValue = LOG_LEVEL_VALUES[level] !== undefined ? LOG_LEVEL_VALUES[level] : 0;
+  const minLevelValue = LOG_LEVEL_VALUES[minLevel] !== undefined ? LOG_LEVEL_VALUES[minLevel] : 0;
+  
+  return levelValue >= minLevelValue;
 }

@@ -1,52 +1,63 @@
-import { useState, useEffect } from "react";
-import { useThemeStore } from "@/stores/theme/store";
-import { motion } from "framer-motion";
-import { ThemeDataStream } from "./ThemeDataStream";
-import { ThemeLoadingState } from "./info/ThemeLoadingState";
-import { ThemeErrorState } from "./info/ThemeErrorState";
-import { ThemeInfoTabs } from "./info/ThemeInfoTabs";
+
+import React from 'react';
+import { useThemeStore } from '@/stores/theme/store';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Theme } from '@/types/theme';
 
 interface ThemeInfoPopupProps {
-  onClose?: () => void;
+  triggerComponent?: React.ReactNode;
 }
 
-export function ThemeInfoPopup({ onClose }: ThemeInfoPopupProps) {
-  const { currentTheme, isLoading, error, setTheme } = useThemeStore();
-  const [activeTab, setActiveTab] = useState("info");
-  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
-
-  useEffect(() => {
-    if (!hasAttemptedLoad) {
-      setTheme("");
-      setHasAttemptedLoad(true);
-    }
-  }, [setTheme, hasAttemptedLoad]);
-
-  if (error) {
-    return <ThemeErrorState error={error} onClose={onClose} />;
+export function ThemeInfoPopup({ triggerComponent }: ThemeInfoPopupProps) {
+  const { currentTheme, isLoading } = useThemeStore();
+  
+  if (isLoading) {
+    return null;
   }
-
-  if (isLoading || !currentTheme) {
-    return <ThemeLoadingState />;
-  }
-
+  
+  const themeObj = currentTheme as Theme;
+  
+  const defaultTrigger = (
+    <Button variant="outline" size="sm">
+      Theme Info
+    </Button>
+  );
+  
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20, rotateX: "15deg" }}
-      animate={{ 
-        opacity: 1, 
-        y: 0, 
-        rotateX: "0deg",
-        transition: {
-          duration: 0.5,
-          ease: [0.19, 1.0, 0.22, 1.0]
-        }
-      }}
-      exit={{ opacity: 0, y: -20, rotateX: "-15deg" }}
-      className="w-[800px] max-w-[90vw] rounded-lg bg-background/20 backdrop-blur-xl p-6 border border-primary/20 shadow-[0_0_15px_rgba(0,240,255,0.1)] animate-morph-header perspective-1000"
-    >
-      <ThemeDataStream className="opacity-10" />
-      <ThemeInfoTabs currentTheme={currentTheme} onTabChange={setActiveTab} />
-    </motion.div>
+    <Popover>
+      <PopoverTrigger asChild>
+        {triggerComponent || defaultTrigger}
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
+        <div className="space-y-2">
+          <h4 className="font-medium text-sm">Current Theme</h4>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline">{themeObj?.name || 'Default'}</Badge>
+            <Badge variant="secondary">v{themeObj?.version || '1'}</Badge>
+            {themeObj?.is_default && <Badge>Default</Badge>}
+          </div>
+          
+          <div className="mt-4 pt-4 border-t">
+            <h5 className="text-xs font-medium mb-2">Color Preview</h5>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="h-8 bg-primary rounded-md" title="Primary"></div>
+              <div className="h-8 bg-secondary rounded-md" title="Secondary"></div>
+              <div className="h-8 bg-accent rounded-md" title="Accent"></div>
+              <div className="h-8 bg-background rounded-md border" title="Background"></div>
+              <div className="h-8 bg-foreground rounded-md" title="Foreground"></div>
+              <div className="h-8 bg-muted rounded-md" title="Muted"></div>
+            </div>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
+
+export default ThemeInfoPopup;

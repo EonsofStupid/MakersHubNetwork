@@ -41,7 +41,7 @@ interface LogItemProps {
 
 const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
   const [expanded, setExpanded] = useState(false);
-  const hasDetails = log.details && Object.keys(log.details as object).length > 0;
+  const hasDetails = log.details && typeof log.details === 'object' && Object.keys(log.details as object).length > 0;
   
   const getLevelIcon = (level: LogLevel) => {
     switch (level) {
@@ -144,7 +144,7 @@ export function LogConsole() {
       const searchLower = search.toLowerCase();
       const messageStr = nodeToSearchableString(log.message).toLowerCase();
       return messageStr.includes(searchLower) || 
-             log.category.toLowerCase().includes(searchLower);
+             (log.category && log.category.toLowerCase().includes(searchLower));
     });
   
   const scrollToBottom = useCallback(() => {
@@ -216,7 +216,10 @@ export function LogConsole() {
             onClick={() => {
               const { useLoggingContext } = require('../context/LoggingContext');
               if (useLoggingContext) {
-                useLoggingContext().toggleLogConsole();
+                const ctx = useLoggingContext();
+                if (ctx && ctx.toggleLogConsole) {
+                  ctx.toggleLogConsole();
+                }
               }
             }}
           >

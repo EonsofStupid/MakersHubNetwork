@@ -2,92 +2,76 @@
 import React from 'react';
 
 /**
- * Safely renders unknown values as React nodes
+ * Converts various types to a string representation for search
  */
-export function renderUnknownAsNode(value: unknown): React.ReactNode {
-  if (value === null || value === undefined) {
-    return null;
+export function nodeToSearchableString(node: unknown): string {
+  if (node === null || node === undefined) {
+    return '';
   }
   
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
+  if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
+    return String(node);
   }
   
-  if (React.isValidElement(value)) {
-    return value;
-  }
-  
-  if (Array.isArray(value)) {
-    try {
-      return JSON.stringify(value);
-    } catch (e) {
-      return '[Array]';
+  if (typeof node === 'object') {
+    if (React.isValidElement(node)) {
+      // Handle React elements by getting their text content
+      const props = node.props as any;
+      
+      if (props.children) {
+        if (typeof props.children === 'string') {
+          return props.children;
+        } else if (Array.isArray(props.children)) {
+          return props.children
+            .map(child => nodeToSearchableString(child))
+            .join(' ');
+        }
+      }
+      
+      return '';
+    } else if (Array.isArray(node)) {
+      // Handle arrays by joining their string representations
+      return node.map(item => nodeToSearchableString(item)).join(' ');
+    } else {
+      // Handle plain objects by converting to JSON
+      try {
+        return JSON.stringify(node);
+      } catch (e) {
+        return '';
+      }
     }
   }
   
-  if (typeof value === 'object') {
-    try {
-      return JSON.stringify(value);
-    } catch (e) {
-      return '[Object]';
-    }
-  }
-  
-  // Default fallback
-  return String(value);
+  return String(node);
 }
 
 /**
- * Converts a React node to a searchable string representation
+ * Safely renders any value as a React node
  */
-export function nodeToSearchableString(value: React.ReactNode): string {
+export function renderUnknownAsNode(value: unknown): React.ReactNode {
   if (value === null || value === undefined) {
     return '';
   }
   
-  if (typeof value === 'string') {
+  if (React.isValidElement(value)) {
     return value;
   }
   
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-  
-  if (React.isValidElement(value)) {
-    try {
-      // Try to extract text content from props or children
-      const props = value.props || {};
-      if (typeof props.children === 'string') {
-        return props.children;
-      }
-      return '';
-    } catch (e) {
-      return '';
-    }
-  }
-  
-  if (Array.isArray(value)) {
-    try {
-      return value.map(item => nodeToSearchableString(item)).join(' ');
-    } catch (e) {
-      return '';
-    }
-  }
-  
   if (typeof value === 'object') {
+    if (Array.isArray(value)) {
+      return value.map((item, index) => (
+        <React.Fragment key={index}>
+          {renderUnknownAsNode(item)}
+        </React.Fragment>
+      ));
+    }
+    
     try {
-      return JSON.stringify(value);
+      return <pre>{JSON.stringify(value, null, 2)}</pre>;
     } catch (e) {
-      return '';
+      return String(value);
     }
   }
   
   return String(value);
-}
-
-/**
- * A React component that safely renders unknown values
- */
-export function SafeRender({ value }: { value: unknown }): React.ReactNode {
-  return <>{renderUnknownAsNode(value)}</>;
 }
