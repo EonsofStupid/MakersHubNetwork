@@ -12,9 +12,10 @@ import { Theme } from '@/types/theme';
 
 interface ThemeInfoPopupProps {
   triggerComponent?: React.ReactNode;
+  onClose?: () => void;
 }
 
-export function ThemeInfoPopup({ triggerComponent }: ThemeInfoPopupProps) {
+export function ThemeInfoPopup({ triggerComponent, onClose }: ThemeInfoPopupProps) {
   const { currentTheme, isLoading } = useThemeStore();
   
   if (isLoading) {
@@ -30,7 +31,11 @@ export function ThemeInfoPopup({ triggerComponent }: ThemeInfoPopupProps) {
   );
   
   return (
-    <Popover>
+    <Popover onOpenChange={(open) => {
+      if (!open && onClose) {
+        onClose();
+      }
+    }}>
       <PopoverTrigger asChild>
         {triggerComponent || defaultTrigger}
       </PopoverTrigger>
