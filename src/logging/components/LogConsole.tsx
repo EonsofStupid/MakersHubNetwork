@@ -1,4 +1,3 @@
-
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry } from '../types';
@@ -131,7 +130,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
 };
 
 export function LogConsole() {
-  const { logs, clearLogs } = useLoggingContext();
+  const { logs, clearLogs, toggleLogConsole, showLogConsole } = useLoggingContext();
   const [filter, setFilter] = useState<LogLevel | 'all'>('all');
   const [search, setSearch] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);

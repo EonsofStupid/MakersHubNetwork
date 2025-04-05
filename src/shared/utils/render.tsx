@@ -64,11 +64,15 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
   
   if (typeof value === 'object') {
     if (Array.isArray(value)) {
-      return value.map((item, index) => (
-        <React.Fragment key={index}>
-          {renderUnknownAsNode(item)}
-        </React.Fragment>
-      ));
+      return (
+        <>
+          {value.map((item, index) => (
+            <React.Fragment key={index}>
+              {renderUnknownAsNode(item)}
+            </React.Fragment>
+          ))}
+        </>
+      );
     }
     
     try {
