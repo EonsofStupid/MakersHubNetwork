@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
-import { DynamicKeyframes } from './DynamicKeyframes';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
@@ -38,7 +37,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   const [isLoaded, setIsLoaded] = useState(false);
   
   // Get UI theme mode from localStorage or default to dark
-  const [isDarkMode, setIsDarkMode] = React.useState<boolean>(
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(
     localStorage.getItem('theme-mode') === 'light' ? false : true
   );
   
@@ -102,8 +101,8 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
 
   // Apply CSS variables when the theme changes
   useEffect(() => {
-    if (isLoading || !currentTheme) return;
-    
+    // Still apply our CSS variables even if theme is loading or missing
+    // This ensures the UI always has some styles
     const rootElement = document.documentElement;
     
     // Apply the CSS variables
@@ -153,7 +152,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       rootElement.classList.remove('dark');
     }
     
-  }, [variables, isLoading, isDarkMode, currentTheme]);
+  }, [variables, isDarkMode]);
   
   // Create the theme context value
   const contextValue = {

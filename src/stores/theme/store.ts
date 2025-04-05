@@ -16,7 +16,8 @@ export const useThemeStore = create<ThemeState>((set) => ({
   setTheme: async (themeId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const query = themeId 
+      // Build query based on whether we're looking for a specific theme by ID or the default theme
+      const query = themeId !== 'default' 
         ? supabase.from("themes").select("*").eq("id", themeId).limit(1)
         : supabase.from("themes").select("*").eq("is_default", true).limit(1);
       

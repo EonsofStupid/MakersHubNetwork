@@ -6,27 +6,35 @@ import { keyframes } from '@/theme/animations';
 /**
  * Ensures that a default theme exists in the database
  * If no default theme exists, creates one
+ * Returns the ID of the default theme or null if operation failed
  */
 export async function ensureDefaultTheme(): Promise<string | null> {
   try {
+    console.log('Ensuring default theme exists');
+    
     // Check if a default theme already exists
     const { data: existingTheme, error } = await supabase
       .from('themes')
       .select('id')
       .eq('is_default', true)
-      .single();
+      .maybeSingle();
     
+    // If there was an error other than "no rows returned", log it
     if (error && error.code !== 'PGRST116') {
       console.error('Error checking for default theme:', error);
       return null;
     }
     
     // If a default theme exists, return its ID
-    if (existingTheme) {
+    if (existingTheme && existingTheme.id) {
+      console.log('Found existing default theme:', existingTheme.id);
+      
       // Automatically sync CSS to this theme
       await syncCSSToDatabase(existingTheme.id);
       return existingTheme.id;
     }
+    
+    console.log('No default theme found, creating one');
     
     // Otherwise, create a default theme
     const defaultTheme = {
@@ -99,11 +107,12 @@ export async function ensureDefaultTheme(): Promise<string | null> {
     
     // Sync CSS to the new theme
     if (data && data.id) {
+      console.log('Created default theme with ID:', data.id);
       await syncCSSToDatabase(data.id);
+      return data.id;
     }
     
-    console.log('Created default theme with ID:', data.id);
-    return data.id;
+    return null;
   } catch (error) {
     console.error('Unexpected error in ensureDefaultTheme:', error);
     return null;
