@@ -1,6 +1,6 @@
 
 import React, { ReactNode, useEffect, useState } from 'react';
-import { useAuthStore } from '@/stores/auth/store';
+import { useAuthStore } from '@/auth/store/auth.store';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthContext } from '../context/AuthContext';
@@ -13,7 +13,7 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { user, session, initialized, initialize } = useAuthStore();
+  const { user, session, initialized, setSession, initialize } = useAuthStore();
   const [isPreLoaded, setIsPreLoaded] = useState(false);
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   const { isLoaded: themeIsLoaded } = useSiteTheme();
@@ -29,6 +29,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsPreLoaded(true);
         logger.error('Error initializing auth', { details: err });
       });
+    } else {
+      setIsPreLoaded(true);
     }
   }, [initialized, initialize, logger]);
   
@@ -45,7 +47,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         // Update Zustand store with the new session
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          useAuthStore.getState().setSession(currentSession);
+          setSession(currentSession);
           
           // Don't include this in the auth state change callback
           // to prevent potential infinite loops
@@ -55,7 +57,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             });
           }, 0);
         } else if (event === 'SIGNED_OUT') {
-          useAuthStore.getState().setSession(null);
+          setSession(null);
         }
       }
     );
@@ -63,12 +65,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [logger, initialize]);
+  }, [logger, initialize, setSession]);
   
   // Wait for auth and theme to initialize
   if (!isPreLoaded || !themeIsLoaded) {
     return (
-      <div className="flex items-center justify-center h-screen w-screen">
+      <div className="flex items-center justify-center h-screen w-screen bg-background/80 backdrop-blur-sm">
         <div className="animate-pulse text-center">
           <div className="inline-block w-8 h-8 border-4 rounded-full border-primary/30 border-t-primary animate-spin"></div>
           <p className="mt-4 text-primary text-sm">Loading...</p>
