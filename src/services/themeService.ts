@@ -1,11 +1,12 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { Theme, ComponentTokens } from "@/types/theme";
+import { Theme, ComponentTokens, DesignTokensStructure } from "@/types/theme";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
 import { z } from "zod";
 
 // Create a type-safe logger for the theme service
-const logger = getLogger('ThemeService', LogCategory.SERVICE);
+const logger = getLogger('ThemeService');
 
 // Define Zod schemas for theme validation
 const designTokensSchema = z.object({
@@ -49,7 +50,7 @@ const themeSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   status: z.enum(['draft', 'published', 'archived']),
-  is_default: z.boolean().optional(),
+  is_default: z.boolean().default(false),
   created_by: z.string().optional(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -215,7 +216,7 @@ function validateTheme(themeData: unknown): Theme {
     const validationResult = themeSchema.safeParse(themeData);
     
     if (validationResult.success) {
-      return validationResult.data;
+      return validationResult.data as Theme;
     } else {
       // Log validation errors for debugging
       logger.warn('Theme validation failed', { 
@@ -257,28 +258,46 @@ function mergeWithFallback(partialTheme: Partial<Theme>): Theme {
     
     // Merge design tokens - handle nested structure
     if (partialTheme.design_tokens) {
+      const designTokens = mergedTheme.design_tokens;
+      
+      // Ensure all required objects exist in effects
+      const effects: NonNullable<DesignTokensStructure['effects']> = {
+        shadows: {},
+        blurs: {},
+        gradients: {},
+        ...designTokens.effects,
+        ...partialTheme.design_tokens.effects
+      };
+      
+      // Ensure proper keyframes structure
+      const keyframes = {
+        ...designTokens.animation?.keyframes,
+        ...partialTheme.design_tokens.animation?.keyframes
+      };
+      
+      // Ensure proper transitions structure
+      const transitions = {
+        ...designTokens.animation?.transitions,
+        ...partialTheme.design_tokens.animation?.transitions
+      };
+      
+      // Ensure proper durations structure
+      const durations = {
+        ...designTokens.animation?.durations,
+        ...partialTheme.design_tokens.animation?.durations
+      };
+      
+      // Build the merged design_tokens
       mergedTheme.design_tokens = { 
-        ...mergedTheme.design_tokens,
+        ...designTokens,
         ...partialTheme.design_tokens,
-        effects: { 
-          ...mergedTheme.design_tokens.effects,
-          ...partialTheme.design_tokens.effects
-        },
+        effects,
         animation: { 
-          ...mergedTheme.design_tokens.animation,
+          ...designTokens.animation,
           ...partialTheme.design_tokens.animation,
-          keyframes: {
-            ...mergedTheme.design_tokens.animation?.keyframes,
-            ...partialTheme.design_tokens.animation?.keyframes
-          },
-          transitions: {
-            ...mergedTheme.design_tokens.animation?.transitions,
-            ...partialTheme.design_tokens.animation?.transitions
-          },
-          durations: {
-            ...mergedTheme.design_tokens.animation?.durations,
-            ...partialTheme.design_tokens.animation?.durations
-          }
+          keyframes,
+          transitions,
+          durations
         }
       };
     }
@@ -373,7 +392,7 @@ export async function updateTheme(themeId: string, theme: Partial<Theme>): Promi
     }
     
     const userId = sessionData.session.user.id;
-    logger.info('Updating theme', { themeId, userId });
+    logger.info('Updating theme', { details: { themeId, userId } });
     
     const { data, error } = await supabase.functions.invoke('theme-service', {
       body: {
@@ -385,19 +404,19 @@ export async function updateTheme(themeId: string, theme: Partial<Theme>): Promi
     });
     
     if (error) {
-      logger.error('Error updating theme', { error });
+      logger.error('Error updating theme', { details: error });
       throw error;
     }
     
     if (!data || !data.theme) {
-      logger.error('No theme data returned after update', { data });
+      logger.error('No theme data returned after update', { details: data });
       throw new Error('No theme data returned from service');
     }
     
-    logger.info('Theme updated successfully', { themeId: data.theme.id });
+    logger.info('Theme updated successfully', { details: { themeId: data.theme.id } });
     return validateTheme(data.theme);
   } catch (error) {
-    logger.error('Failed to update theme', { error });
+    logger.error('Failed to update theme', { details: error });
     throw error;
   }
 }
@@ -414,7 +433,7 @@ export async function createTheme(theme: Partial<Theme>): Promise<Theme> {
     }
     
     const userId = sessionData.session.user.id;
-    logger.info('Creating new theme', { userId });
+    logger.info('Creating new theme', { details: { userId } });
     
     const { data, error } = await supabase.functions.invoke('theme-service', {
       body: {
@@ -425,19 +444,19 @@ export async function createTheme(theme: Partial<Theme>): Promise<Theme> {
     });
     
     if (error) {
-      logger.error('Error creating theme', { error });
+      logger.error('Error creating theme', { details: error });
       throw error;
     }
     
     if (!data || !data.theme) {
-      logger.error('No theme data returned after creation', { data });
+      logger.error('No theme data returned after creation', { details: data });
       throw new Error('No theme data returned from service');
     }
     
-    logger.info('Theme created successfully', { themeId: data.theme.id });
+    logger.info('Theme created successfully', { details: { themeId: data.theme.id } });
     return validateTheme(data.theme);
   } catch (error) {
-    logger.error('Failed to create theme', { error });
+    logger.error('Failed to create theme', { details: error });
     throw error;
   }
 }
@@ -454,7 +473,7 @@ export async function ensureDefaultTheme(): Promise<string | null> {
     
     // If we got a real theme (not the fallback), return its ID
     if (!isFallback && theme.id) {
-      logger.info('Found existing default theme', { id: theme.id });
+      logger.info('Found existing default theme', { details: { id: theme.id } });
       return theme.id;
     }
     
@@ -481,7 +500,7 @@ export async function ensureDefaultTheme(): Promise<string | null> {
     
     return newTheme.id;
   } catch (error) {
-    logger.error('Failed to ensure default theme', { error });
+    logger.error('Failed to ensure default theme', { details: error });
     return null;
   }
 }

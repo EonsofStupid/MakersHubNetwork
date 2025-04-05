@@ -1,7 +1,7 @@
 
 import { create } from "zustand";
 import { ThemeState } from "./types";
-import { Theme, ComponentTokens } from "@/types/theme";
+import { ComponentTokens } from "@/types/theme";
 import { getTheme } from "@/services/themeService";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
@@ -20,7 +20,7 @@ const componentTokenSchema = z.object({
 });
 
 // Create a type-safe logger for the theme store
-const logger = getLogger('ThemeStore', LogCategory.UI);
+const logger = getLogger('ThemeStore');
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
   currentTheme: null,

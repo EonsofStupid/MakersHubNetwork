@@ -58,7 +58,7 @@ initLogging();
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const logger = getLogger('App', LogCategory.SYSTEM);
+  const logger = getLogger('App');
   const routeLoggedRef = useRef<boolean>(false);
 
   // Log route changes - with ref guard to prevent duplicate logs
