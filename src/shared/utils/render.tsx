@@ -47,6 +47,7 @@ export function nodeToSearchableString(node: unknown): string {
 
 /**
  * Safely renders any value as a React node
+ * Ensures that the output is always a valid ReactNode type
  */
 export function renderUnknownAsNode(value: unknown): React.ReactNode {
   if (value === null || value === undefined) {
@@ -55,6 +56,10 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
   
   if (React.isValidElement(value)) {
     return value;
+  }
+  
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
   }
   
   if (typeof value === 'object') {
