@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { LogCategory, LogEntry, LogTransport, LoggingConfig } from './types';
 import { LogLevel, isLogLevelAtLeast } from './constants/log-level';
 import { defaultLoggingConfig } from './config';
+import { errorToObject } from '@/shared/utils/render';
 
 /**
  * Logger service - main class for logging management
@@ -121,7 +122,7 @@ export class LoggerService {
   }): void {
     const category = options?.category || LogCategory.PERFORMANCE;
     const details = options?.details ? 
-      { ...options.details, duration } : 
+      { ...errorToObject(options.details), duration } : 
       { duration };
       
     this.log(
@@ -158,6 +159,12 @@ export class LoggerService {
       return;
     }
     
+    // Process details to ensure it's a valid object
+    let processedDetails: Record<string, unknown> | undefined;
+    if (options?.details !== undefined) {
+      processedDetails = errorToObject(options.details);
+    }
+    
     // Create the log entry
     const entry: LogEntry = {
       id: uuidv4(),
@@ -165,7 +172,7 @@ export class LoggerService {
       level,
       category: options?.category || LogCategory.SYSTEM,
       message,
-      details: options?.details,
+      details: processedDetails,
       duration: options?.duration,
       tags: options?.tags
     };

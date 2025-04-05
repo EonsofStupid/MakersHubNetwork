@@ -9,6 +9,7 @@ import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
 import { ThemeErrorState } from './info/ThemeErrorState';
 import { getTheme, ensureDefaultTheme } from '@/services/themeService';
+import { errorToObject } from '@/shared/utils/render';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -68,14 +69,18 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
             }
           } catch (defaultThemeError) {
             // Just log this error, don't set it as the main error
-            logger.error('Error ensuring default theme', { details: defaultThemeError });
+            logger.error('Error ensuring default theme', { 
+              details: errorToObject(defaultThemeError) 
+            });
           }
         } else {
           logger.info('Theme initialized successfully with ID:', { details: { themeId: fallbackTheme.theme.id } });
         }
       } catch (err) {
         const errorObj = err instanceof Error ? err : new Error(String(err));
-        logger.error('Error initializing theme:', { details: errorObj });
+        logger.error('Error initializing theme:', { 
+          details: errorToObject(errorObj) 
+        });
         setError(errorObj);
         
         toast({

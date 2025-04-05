@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { errorToObject } from '@/shared/utils/render';
 
 export function useAdminAccess() {
   const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(false);
@@ -17,7 +18,7 @@ export function useAdminAccess() {
       const { data: { user }, error } = await supabase.auth.getUser();
       
       if (error) {
-        logger.error("Error fetching user:", { details: error });
+        logger.error("Error fetching user:", { details: errorToObject(error) });
         setIsAuthenticated(false);
         setHasAdminAccess(false);
         setIsLoading(false);
@@ -35,7 +36,7 @@ export function useAdminAccess() {
           .eq('user_id', user.id);
           
         if (rolesError) {
-          logger.error("Error fetching user roles:", { details: rolesError });
+          logger.error("Error fetching user roles:", { details: errorToObject(rolesError) });
           setIsLoading(false);
           return;
         }
@@ -55,7 +56,7 @@ export function useAdminAccess() {
         setHasAdminAccess(false);
       }
     } catch (error) {
-      logger.error("Error initializing admin access:", { details: error });
+      logger.error("Error initializing admin access:", { details: errorToObject(error) });
       setHasAdminAccess(false);
     } finally {
       setIsLoading(false);

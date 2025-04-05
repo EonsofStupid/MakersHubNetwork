@@ -7,6 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
+import { errorToObject } from '@/shared/utils/render';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -108,7 +109,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           logger.info('Initializing auth state');
           await initialize();
         } catch (err) {
-          logger.error('Failed to initialize auth', { details: err });
+          logger.error('Failed to initialize auth', { details: errorToObject(err) });
         }
       };
       

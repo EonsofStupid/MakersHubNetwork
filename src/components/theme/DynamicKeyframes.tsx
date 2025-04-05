@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useSiteTheme } from './SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { errorToObject } from '@/shared/utils/render';
 
 export function DynamicKeyframes() {
   const { animations } = useSiteTheme();
@@ -146,7 +147,7 @@ export function DynamicKeyframes() {
       keyframesCSS += '\n\n' + animationClasses;
       
     } catch (error) {
-      logger.error('Error generating keyframes CSS:', { details: error });
+      logger.error('Error generating keyframes CSS:', { details: errorToObject(error) });
     }
     
     if (sheet && keyframesCSS) {

@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess"
 import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/logging"
+import { errorToObject } from "@/shared/utils/render"
 
 export const UserMenu = memo(() => {
   const [isSheetOpen, setSheetOpen] = useState(false)
@@ -52,7 +53,7 @@ export const UserMenu = memo(() => {
       logger.info("User logged out successfully")
       window.location.reload()
     } catch (error) {
-      logger.error("Error logging out", { details: error })
+      logger.error("Error logging out", { details: errorToObject(error) })
       toast({
         variant: "destructive",
         title: "Error logging out",
