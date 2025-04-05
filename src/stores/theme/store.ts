@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 import { ThemeState } from "./types";
 import { ComponentTokens, ThemeContext } from "@/types/theme";
@@ -197,9 +198,61 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         source: 'ThemeStore'
       });
       
-      set({ 
+      // On error, set a basic hardcoded fallback theme to ensure UI doesn't break
+      set({
+        currentTheme: {
+          id: "fallback-theme-" + Date.now(),
+          name: "Emergency Fallback Theme",
+          description: "Fallback theme used when theme loading fails",
+          status: 'published',
+          is_default: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          version: 1,
+          design_tokens: {
+            colors: {
+              background: "#080F1E",
+              foreground: "#F9FAFB",
+              card: "#0E172A",
+              cardForeground: "#F9FAFB", 
+              primary: "#00F0FF",
+              primaryForeground: "#F9FAFB",
+              secondary: "#FF2D6E",
+              secondaryForeground: "#F9FAFB",
+              muted: "#131D35",
+              mutedForeground: "#94A3B8",
+              accent: "#131D35",
+              accentForeground: "#F9FAFB",
+              destructive: "#EF4444",
+              destructiveForeground: "#F9FAFB",
+              border: "#131D35",
+              input: "#131D35",
+              ring: "#1E293B",
+            },
+            effects: {
+              primary: "#00F0FF",
+              secondary: "#FF2D6E",
+              tertiary: "#8B5CF6",
+            },
+            animation: {
+              durations: {
+                fast: "150ms",
+                normal: "300ms",
+                slow: "500ms",
+                animationFast: "1s",
+                animationNormal: "2s",
+                animationSlow: "3s",
+              }
+            }
+          },
+          component_tokens: [],
+        },
         error: error instanceof Error ? error : new Error("Failed to fetch theme"), 
         isLoading: false 
+      });
+      
+      logger.warn("Using hardcoded fallback theme due to error", { 
+        details: { errorMessage: error instanceof Error ? error.message : String(error) }
       });
     }
   },

@@ -5,7 +5,7 @@ import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { Theme, DesignTokensStructure, ThemeContext } from '@/types/theme';
+import { Theme, DesignTokensStructure, ThemeContext, ThemeLogDetails } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -67,14 +67,14 @@ export function useImpulsivityTheme() {
       
       logger.info('Applied Impulsivity theme to main site', { 
         success: true 
-      });
+      } as ThemeLogDetails);
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Error applying Impulsivity theme to main site', { 
         error: true, 
         errorMessage 
-      });
+      } as ThemeLogDetails);
       return false;
     }
   };
@@ -103,7 +103,7 @@ export function useImpulsivityTheme() {
         
         logger.info('Applied Impulsivity theme to admin panel', { 
           success: true 
-        });
+        } as ThemeLogDetails);
         return true;
       } else {
         logger.warn('Admin panel root element not found, skipping theme application');
@@ -114,7 +114,7 @@ export function useImpulsivityTheme() {
       logger.error('Error applying Impulsivity theme to admin panel', { 
         error: true, 
         errorMessage 
-      });
+      } as ThemeLogDetails);
       return false;
     }
   };
@@ -130,12 +130,12 @@ export function useImpulsivityTheme() {
       if (result) {
         logger.info('Successfully synced Impulsivity theme to database', { 
           success: true 
-        });
+        } as ThemeLogDetails);
       } else {
         logger.error('Failed to sync Impulsivity theme to database', { 
           error: true, 
           success: false 
-        });
+        } as ThemeLogDetails);
       }
       
       setSyncInProgress(false);
@@ -145,7 +145,7 @@ export function useImpulsivityTheme() {
       logger.error('Error syncing Impulsivity theme to database', { 
         error: true, 
         errorMessage 
-      });
+      } as ThemeLogDetails);
       
       setSyncInProgress(false);
       return false;
@@ -176,7 +176,7 @@ export function useImpulsivityTheme() {
         mainSite: mainSiteResult, 
         admin: adminResult, 
         database: dbResult
-      });
+      } as ThemeLogDetails);
       return true;
     } else {
       // Show toast with partial success message
@@ -197,7 +197,7 @@ export function useImpulsivityTheme() {
         mainSite: mainSiteResult, 
         admin: adminResult, 
         database: dbResult
-      });
+      } as ThemeLogDetails);
       
       return false;
     }

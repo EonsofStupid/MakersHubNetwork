@@ -83,7 +83,7 @@ interface GetThemeOptions {
 export async function getTheme(options: GetThemeOptions = { isDefault: true }): Promise<{ theme: Theme, isFallback: boolean }> {
   try {
     logger.info("Fetching theme from service", {
-      category: LogCategory.SERVICES,
+      category: LogCategory.DATABASE,
       details: options,
       source: 'themeService'
     });
@@ -103,7 +103,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
 
     if (error) {
       logger.error("Error fetching theme from service", { 
-        category: LogCategory.SERVICES,
+        category: LogCategory.DATABASE,
         details: { error, options },
         source: 'themeService'
       });
@@ -115,7 +115,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
     }
     
     logger.info("Theme set successfully", { 
-      category: LogCategory.SERVICES,
+      category: LogCategory.DATABASE,
       details: {
         themeId: data.theme?.id || 'unknown',
         isFallback: data.isFallback || false,
@@ -131,7 +131,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
     
   } catch (error) {
     logger.error("Error fetching theme from service", { 
-      category: LogCategory.SERVICES,
+      category: LogCategory.DATABASE,
       details: error,
       source: 'themeService'
     });
