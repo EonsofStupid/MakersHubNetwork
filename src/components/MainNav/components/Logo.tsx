@@ -7,11 +7,13 @@ import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 export const Logo = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [letterStates, setLetterStates] = useState<{ [key: number]: {active: boolean, color: string, scale: number, rotation: number} }>({});
+  const [isHovered, setIsHovered] = useState(false);
   const [colors, setColors] = useState<string[]>([]);
   const { themeTokens } = useThemeStore();
   const { variables, isLoaded } = useSiteTheme();
   const letters = "MakersImpulse".split("");
   const animationTimeoutRef = useRef<number[]>([]);
+  const logoColor = "#00F0FF"; // Vibrant cyber aqua
   
   // Clear all timeouts on unmount
   useEffect(() => {
@@ -64,6 +66,8 @@ export const Logo = () => {
   }, []);
 
   const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+    
     // Clear any existing timeouts
     animationTimeoutRef.current.forEach(clearTimeout);
     animationTimeoutRef.current = [];
@@ -87,6 +91,8 @@ export const Logo = () => {
   }, [letters, generateRandomDelay, getRandomColor, generateRandomScale, generateRandomRotation]);
 
   const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+    
     // Clear existing timeouts
     animationTimeoutRef.current.forEach(clearTimeout);
     animationTimeoutRef.current = [];
@@ -119,6 +125,8 @@ export const Logo = () => {
       style={{
         '--x': `${mousePosition.x}px`,
         '--y': `${mousePosition.y}px`,
+        color: isHovered ? 'white' : logoColor, // Vibrant cyber aqua when not hovered
+        textShadow: isHovered ? 'none' : `0 0 10px rgba(0, 240, 255, 0.7)`,
       } as React.CSSProperties}
     >
       <span className="relative z-10 flex items-center space-x-[1px]">
@@ -129,7 +137,7 @@ export const Logo = () => {
               key={index}
               className="inline-block transition-all relative"
               style={{
-                color: letterState.active ? letterState.color : 'currentColor',
+                color: letterState.active ? letterState.color : (isHovered ? 'white' : logoColor),
                 transitionDelay: `${generateRandomDelay()}ms`,
                 transitionDuration: '500ms',
                 transform: letterState.active 
@@ -137,7 +145,7 @@ export const Logo = () => {
                   : 'scale(1) rotate(0deg)',
                 textShadow: letterState.active 
                   ? `0 0 8px ${letterState.color}`
-                  : 'none',
+                  : (isHovered ? 'none' : `0 0 10px rgba(0, 240, 255, 0.7)`),
                 zIndex: letterState.active ? 5 : 1
               }}
             >

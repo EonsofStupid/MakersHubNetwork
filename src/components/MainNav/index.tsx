@@ -1,11 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./components/Logo";
 import { NavigationItems } from "./components/NavigationItems";
 import { SearchButton } from "./components/SearchButton";
 import { AuthSection } from "./components/AuthSection";
-import { useAdminAccess } from "@/hooks/useAdminAccess"; // Correct import path
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Link } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ export function MainNav() {
   const { hasAdminAccess } = useAdminAccess();
   const { componentStyles, animations, variables, isLoaded: themeIsLoaded } = useSiteTheme();
   const logger = useLogger("MainNav", LogCategory.UI);
+  const dataStreamRef = useRef<HTMLDivElement>(null);
+  const glitchParticlesRef = useRef<HTMLDivElement>(null);
   
   // Get MainNav styles from theme
   const styles = componentStyles?.MainNav || {
@@ -38,20 +40,31 @@ export function MainNav() {
     const timer = setTimeout(() => {
       setIsLoaded(true);
       
-      // Apply any dynamic animation styles
-      const dataStreamElement = document.querySelector('.mainnav-data-stream');
-      const glitchElement = document.querySelector('.mainnav-glitch-particles');
-      
-      if (dataStreamElement && variables?.effectColor) {
-        dataStreamElement.classList.add('animate-data-stream');
+      // Apply dynamic animation styles
+      if (dataStreamRef.current) {
+        dataStreamRef.current.classList.add('animate-data-stream');
       }
       
-      if (glitchElement) {
-        glitchElement.classList.add('animate-particles-1');
+      if (glitchParticlesRef.current) {
+        glitchParticlesRef.current.classList.add('animate-particles-1');
       }
     }, 100);
     
-    return () => clearTimeout(timer);
+    // Apply random glitch effects occasionally
+    const glitchInterval = setInterval(() => {
+      const navElement = document.querySelector('.mainnav-container');
+      if (navElement && Math.random() > 0.7) {
+        navElement.classList.add('glitch-effect');
+        setTimeout(() => {
+          navElement.classList.remove('glitch-effect');
+        }, 200);
+      }
+    }, 5000);
+    
+    return () => {
+      clearTimeout(timer);
+      clearInterval(glitchInterval);
+    };
   }, [logger, variables]);
 
   return (
@@ -64,12 +77,21 @@ export function MainNav() {
       )}
     >
       <div className="mainnav-effects-wrapper absolute inset-0 w-full h-full overflow-hidden">
-        <div className={cn(
-          "w-full h-full pointer-events-none", 
-          styles.dataStream,
-          styles.dataStreamEffect || "mainnav-data-stream",
-          styles.glitchParticles || "mainnav-glitch-particles"
-        )} />
+        <div 
+          ref={dataStreamRef}
+          className={cn(
+            "w-full h-full pointer-events-none", 
+            styles.dataStream,
+            styles.dataStreamEffect || "mainnav-data-stream"
+          )} 
+        />
+        <div 
+          ref={glitchParticlesRef}
+          className={cn(
+            "w-full h-full pointer-events-none",
+            styles.glitchParticles || "mainnav-glitch-particles"
+          )} 
+        />
       </div>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
