@@ -1,13 +1,13 @@
 
 import { create } from "zustand";
 import { ThemeState } from "./types";
-import { ComponentTokens } from "@/types/theme";
+import { ComponentTokens, ThemeContext } from "@/types/theme";
 import { getTheme } from "@/services/themeService";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
 import { z } from "zod";
 
-// Create a Zod schema for component tokens validation
+// Create a Zod schema for component tokens validation with proper ThemeContext
 const componentTokenSchema = z.object({
   id: z.string(),
   component_name: z.string(),
@@ -16,7 +16,7 @@ const componentTokenSchema = z.object({
   theme_id: z.string().optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
-  context: z.string().optional(),
+  context: z.enum(['site', 'admin', 'chat']).optional(),
 });
 
 // Enhanced theme schema to catch all issues
@@ -145,8 +145,14 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         if (Array.isArray(sanitizedTheme.component_tokens)) {
           for (const token of sanitizedTheme.component_tokens) {
             try {
-              const validatedToken = componentTokenSchema.parse(token);
-              validatedComponentTokens.push(validatedToken);
+              // Ensure the context is valid ThemeContext before passing to validation
+              const tokenToValidate = {
+                ...token,
+                context: token.context as ThemeContext | undefined
+              };
+              
+              const validatedToken = componentTokenSchema.parse(tokenToValidate);
+              validatedComponentTokens.push(validatedToken as ComponentTokens);
             } catch (err) {
               logger.warn('Invalid component token found', { details: { token, error: err } });
             }
@@ -198,9 +204,15 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       if (Array.isArray(adminTheme.component_tokens)) {
         for (const token of adminTheme.component_tokens) {
           try {
-            const validatedToken = componentTokenSchema.parse(token);
+            // Ensure the context is valid ThemeContext before passing to validation
+            const tokenToValidate = {
+              ...token,
+              context: token.context as ThemeContext | undefined
+            };
+            
+            const validatedToken = componentTokenSchema.parse(tokenToValidate);
             if (validatedToken.context === 'admin') {
-              validatedAdminComponents.push(validatedToken);
+              validatedAdminComponents.push(validatedToken as ComponentTokens);
             }
           } catch (err) {
             logger.warn('Invalid admin component token found', { details: { token, error: err } });
