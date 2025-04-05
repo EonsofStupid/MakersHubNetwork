@@ -5,7 +5,9 @@ import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging";
 
 interface LoginSheetProps {
   isOpen: boolean;
@@ -14,6 +16,8 @@ interface LoginSheetProps {
 
 export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
   const { variables, componentStyles } = useSiteTheme();
+  const logger = useLogger("LoginSheet", LogCategory.AUTH);
+  const [isStylesApplied, setIsStylesApplied] = useState(false);
   
   // Get styles for LoginSheet from the theme
   const sheetStyles = componentStyles?.LoginSheet || {
@@ -24,12 +28,67 @@ export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
 
   // Use CSS custom properties for auth UI styling
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isStylesApplied) {
+      logger.info("Applying custom styles to auth UI", {
+        details: {
+          sheetOpen: isOpen,
+          effectColor: variables?.effectColor,
+          effectSecondary: variables?.effectSecondary 
+        }
+      });
+      
       const authContainer = document.querySelector('.auth-container');
       if (authContainer) {
         const style = document.createElement('style');
         style.id = 'auth-custom-styles';
-        style.innerHTML = `
+        
+        // Enhanced styling for Google login button
+        const googleButtonStyles = `
+          .sbui-btn-social.sbui-social-provider-google {
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--primary) !important;
+            color: white !important;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+            overflow: hidden;
+            transition: all 0.3s ease;
+          }
+          
+          .sbui-btn-social.sbui-social-provider-google:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+            border-color: rgba(0, 240, 255, 0.6) !important;
+          }
+          
+          .sbui-btn-social.sbui-social-provider-google::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(
+              90deg,
+              transparent 0%,
+              rgba(0, 240, 255, 0.2) 50%,
+              transparent 100%
+            );
+            transition: all 0.5s ease;
+            z-index: -1;
+          }
+          
+          .sbui-btn-social.sbui-social-provider-google:hover::after {
+            left: 100%;
+          }
+          
+          .sbui-btn-social.sbui-social-provider-google img {
+            filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.6));
+          }
+        `;
+        
+        // Base styles for auth buttons
+        const baseStyles = `
           .auth-button.sbui-btn-primary {
             background-color: var(--primary) !important;
             border: 1px solid var(--primary) !important;
@@ -72,15 +131,19 @@ export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
             left: 100%;
           }
         `;
+        
+        style.innerHTML = baseStyles + googleButtonStyles;
         document.head.appendChild(style);
+        setIsStylesApplied(true);
         
         return () => {
           const styleEl = document.getElementById('auth-custom-styles');
           if (styleEl) styleEl.remove();
+          setIsStylesApplied(false);
         };
       }
     }
-  }, [isOpen]);
+  }, [isOpen, variables, isStylesApplied, logger]);
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -107,18 +170,18 @@ export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
               variables: {
                 default: {
                   colors: {
-                    brand: variables.effectColor || '#00F0FF',
-                    brandAccent: variables.effectSecondary || '#FF2D6E',
+                    brand: variables?.effectColor || '#00F0FF',
+                    brandAccent: variables?.effectSecondary || '#FF2D6E',
                     brandButtonText: 'white',
                     defaultButtonBackground: 'transparent',
                     defaultButtonBackgroundHover: 'rgba(0, 240, 255, 0.1)',
-                    defaultButtonBorder: variables.effectColor || '#00F0FF',
-                    defaultButtonText: variables.effectColor || '#00F0FF',
+                    defaultButtonBorder: variables?.effectColor || '#00F0FF',
+                    defaultButtonText: variables?.effectColor || '#00F0FF',
                   },
                   radii: {
-                    borderRadiusButton: variables.radiusMd || '0.5rem',
-                    buttonBorderRadius: variables.radiusMd || '0.5rem',
-                    inputBorderRadius: variables.radiusMd || '0.5rem',
+                    borderRadiusButton: variables?.radiusMd || '0.5rem',
+                    buttonBorderRadius: variables?.radiusMd || '0.5rem',
+                    inputBorderRadius: variables?.radiusMd || '0.5rem',
                   },
                 },
               },

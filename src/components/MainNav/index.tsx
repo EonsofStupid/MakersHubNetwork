@@ -16,7 +16,7 @@ import { LogCategory } from "@/logging";
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
   const { hasAdminAccess } = useAdminAccess();
-  const { componentStyles, animations } = useSiteTheme();
+  const { componentStyles, animations, variables } = useSiteTheme();
   const logger = useLogger("MainNav", LogCategory.UI);
   
   // Get MainNav styles from theme
@@ -36,14 +36,29 @@ export function MainNav() {
       details: { 
         hasAdminAccess, 
         componentStyles: Boolean(componentStyles),
-        animationsLoaded: Boolean(animations)
+        animationsLoaded: Boolean(animations),
+        hasVariables: Boolean(variables),
+        effectColor: variables?.effectColor
       }
     });
     
+    // Apply animations after component mounts
     requestAnimationFrame(() => {
       setIsLoaded(true);
+      
+      // Apply any dynamic animation styles
+      const dataStreamElement = document.querySelector('.mainnav-data-stream');
+      const glitchElement = document.querySelector('.mainnav-glitch-particles');
+      
+      if (dataStreamElement && variables?.effectColor) {
+        dataStreamElement.classList.add('animate-data-stream');
+      }
+      
+      if (glitchElement) {
+        glitchElement.classList.add('animate-particles-1');
+      }
     });
-  }, [hasAdminAccess, componentStyles, animations, logger]);
+  }, [hasAdminAccess, componentStyles, animations, variables, logger]);
 
   return (
     <header
@@ -51,7 +66,7 @@ export function MainNav() {
         "mainnav-container",
         "mainnav-header",
         "mainnav-gradient",
-        styles.container?.animated || "mainnav-morph"
+        isLoaded && (styles.container?.animated || "mainnav-morph")
       )}
     >
       <div className="mainnav-effects-wrapper absolute inset-0 w-full h-full overflow-hidden">

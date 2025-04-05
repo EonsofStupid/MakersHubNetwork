@@ -13,6 +13,7 @@ export function useAuth() {
     roles,
     status,
     isLoading,
+    isAuthenticated,
     error,
     hasRole,
     isAdmin,
@@ -22,7 +23,6 @@ export function useAuth() {
   
   const logger = useLogger('useAuth', LogCategory.AUTH);
   
-  const isAuthenticated = status === 'authenticated';
   const isSuperAdmin = roles.includes('super_admin');
 
   // Log wrapper for logout to capture info before state is cleared
