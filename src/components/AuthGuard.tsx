@@ -1,9 +1,8 @@
-
 import { ReactNode, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { UserRole } from "@/auth/types/auth.types"
+import { UserRole } from "@/types/auth.types"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/auth/hooks/useAuth"
+import { useAuth } from "@/hooks/useAuth"
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess"
 import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/logging"

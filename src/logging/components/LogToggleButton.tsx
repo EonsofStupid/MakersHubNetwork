@@ -1,41 +1,32 @@
 
 import React from 'react';
-import { useLoggingContext } from '../context/LoggingContext';
 import { Terminal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useLoggingContext } from '../context/LoggingContext';
+import { cn } from '@/lib/utils';
 
-interface LogToggleButtonProps {
-  className?: string;
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-}
-
-export function LogToggleButton({ 
-  className = '',
-  position = 'bottom-right' 
-}: LogToggleButtonProps) {
-  const { toggleLogConsole, showLogConsole } = useLoggingContext();
-  
-  // Map position to CSS classes
-  const positionClasses = {
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4',
-    'top-right': 'top-4 right-4',
-    'top-left': 'top-4 left-4'
-  };
-  
-  const positionClass = positionClasses[position];
+export const LogToggleButton: React.FC = () => {
+  const { showLogConsole, setShowLogConsole } = useLoggingContext();
   
   return (
-    <button
-      onClick={toggleLogConsole}
-      className={`fixed ${positionClass} p-2 rounded-full shadow-lg z-50 ${
-        showLogConsole 
-          ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-          : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
-      } ${className}`}
-      title={showLogConsole ? 'Hide logs' : 'Show logs'}
-      aria-label={showLogConsole ? 'Hide logs' : 'Show logs'}
+    <Button
+      variant="outline"
+      size="icon"
+      className={cn(
+        "fixed bottom-4 right-4 z-20 rounded-full w-10 h-10 border-primary/30 shadow-md",
+        "hover:bg-primary/20 hover:border-primary/50 transition-all",
+        "group backdrop-blur-sm bg-background/60",
+        showLogConsole && "bg-primary/20 border-primary/50"
+      )}
+      onClick={() => setShowLogConsole(!showLogConsole)}
+      title={showLogConsole ? "Hide Log Console" : "Show Log Console"}
     >
-      <Terminal size={20} />
-    </button>
+      <Terminal 
+        className={cn(
+          "h-4 w-4 text-primary group-hover:animate-pulse",
+          showLogConsole && "animate-pulse"
+        )} 
+      />
+    </Button>
   );
-}
+};

@@ -1,160 +1,91 @@
 
-import React, { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSiteTheme } from './SiteThemeProvider';
-import { getLogger } from '@/logging';
 
-const logger = getLogger('DynamicKeyframes');
-
-/**
- * Dynamically generates and applies @keyframes animations based on the current theme
- */
 export function DynamicKeyframes() {
-  const { variables } = useSiteTheme();
+  const { animations } = useSiteTheme();
+  const [styleSheet, setStyleSheet] = useState<HTMLStyleElement | null>(null);
   
   useEffect(() => {
+    if (!animations || Object.keys(animations).length === 0) return;
+    
+    // Check if we already have a style element for our keyframes
+    let sheet = document.getElementById('dynamic-keyframes') as HTMLStyleElement | null;
+    
+    if (!sheet) {
+      sheet = document.createElement('style');
+      sheet.id = 'dynamic-keyframes';
+      document.head.appendChild(sheet);
+      setStyleSheet(sheet);
+    }
+    
+    // Create CSS from the keyframes data
+    let keyframesCSS = '';
+    
     try {
-      // Get values with fallbacks to ensure animations never fail
-      const primary = variables?.primary || '#00F0FF';
-      const secondary = variables?.secondary || '#FF2D6E';
-      const bg = variables?.background || '#12121A';
+      // Convert the keyframes object to CSS
+      keyframesCSS = Object.entries(animations)
+        .map(([name, frames]) => {
+          if (!frames || typeof frames !== 'object') return '';
+          
+          // Convert the keyframes object to CSS
+          const frameCSS = Object.entries(frames as Record<string, any>)
+            .map(([percent, styles]) => {
+              if (!styles || typeof styles !== 'object') return '';
+              
+              // Convert the styles object to CSS
+              const styleCSS = Object.entries(styles as Record<string, any>)
+                .map(([prop, value]) => {
+                  // Format the property name (camelCase to kebab-case)
+                  const formattedProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+                  return `${formattedProp}: ${value};`;
+                })
+                .join(' ');
+              
+              return `${percent} { ${styleCSS} }`;
+            })
+            .filter(Boolean) // Remove empty entries
+            .join('\n');
+          
+          return `@keyframes ${name} { ${frameCSS} }`;
+        })
+        .filter(Boolean) // Remove empty entries
+        .join('\n\n');
       
-      // Create a style element for our dynamic keyframes
-      let styleElement = document.getElementById('dynamic-theme-keyframes');
-      
-      if (!styleElement) {
-        styleElement = document.createElement('style');
-        styleElement.id = 'dynamic-theme-keyframes';
-        document.head.appendChild(styleElement);
-        logger.debug('Created dynamic keyframes style element');
-      }
-      
-      // Define keyframes with theme variables
-      styleElement.textContent = `
-        /* Pulse animation with theme colors */
-        @keyframes theme-pulse {
-          0%, 100% { box-shadow: 0 0 5px ${primary}; }
-          50% { box-shadow: 0 0 20px ${primary}; }
+      // Add animation classes
+      const animationClasses = `
+        .animate-morph-header {
+          animation: morph-header 3s ease-in-out infinite alternate;
         }
-        
-        /* Glow animation */
-        @keyframes theme-glow {
-          0%, 100% { text-shadow: 0 0 5px ${primary}; }
-          50% { text-shadow: 0 0 15px ${primary}; }
+        .animate-data-stream {
+          animation: data-stream 2s linear infinite;
         }
-        
-        /* Border pulse */
-        @keyframes theme-border-pulse {
-          0%, 100% { border-color: ${primary}40; }
-          50% { border-color: ${primary}; }
+        .animate-particles-1 {
+          animation: particles-1 6s linear infinite;
         }
-        
-        /* Background shimmer */
-        @keyframes theme-bg-shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        
-        /* Loading animation */
-        @keyframes theme-loading {
-          0% { transform: rotate(0deg); border-color: ${primary}; }
-          50% { border-color: ${secondary}; }
-          100% { transform: rotate(360deg); border-color: ${primary}; }
-        }
-        
-        /* Fade in with slight move */
-        @keyframes theme-fade-in {
-          0% { opacity: 0; transform: translateY(10px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Card hover effect animation */
-        @keyframes theme-card-hover {
-          0%, 100% { box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-          50% { box-shadow: 0 8px 25px rgba(0,0,0,0.3), 0 0 15px ${primary}40; }
-        }
-        
-        /* Utility classes that use the animations */
-        .animate-theme-pulse {
-          animation: theme-pulse 2s infinite ease-in-out;
-        }
-        
-        .animate-theme-glow {
-          animation: theme-glow 2s infinite ease-in-out;
-        }
-        
-        .animate-theme-border-pulse {
-          animation: theme-border-pulse 2s infinite ease-in-out;
-        }
-        
-        .hover-animate-pulse:hover {
-          animation: theme-pulse 2s infinite ease-in-out;
-        }
-        
-        .animate-theme-fade-in {
-          animation: theme-fade-in 0.5s ease-out forwards;
-        }
-        
-        .animate-theme-loading {
-          animation: theme-loading 1.5s infinite linear;
-        }
-        
-        /* Applying theme colors to various hover effects */
-        .hover-border-theme:hover {
-          border-color: ${primary};
-        }
-        
-        .hover-text-theme:hover {
-          color: ${primary};
-        }
-        
-        .hover-glow-theme:hover {
-          box-shadow: 0 0 15px ${primary}40;
+        .animate-particles-2 {
+          animation: particles-2 8s linear infinite;
         }
       `;
       
-      logger.debug('Applied dynamic keyframes with theme colors');
-    } catch (error) {
-      logger.error('Failed to apply dynamic keyframes', { details: { error } });
+      keyframesCSS += '\n\n' + animationClasses;
       
-      // Attempt emergency fallback for critical animations
-      try {
-        const styleElement = document.getElementById('dynamic-theme-keyframes') || document.createElement('style');
-        styleElement.id = 'dynamic-theme-keyframes';
-        
-        styleElement.textContent = `
-          @keyframes theme-pulse {
-            0%, 100% { box-shadow: 0 0 5px #00F0FF; }
-            50% { box-shadow: 0 0 20px #00F0FF; }
-          }
-          
-          @keyframes theme-glow {
-            0%, 100% { text-shadow: 0 0 5px #00F0FF; }
-            50% { text-shadow: 0 0 15px #00F0FF; }
-          }
-          
-          .animate-theme-pulse {
-            animation: theme-pulse 2s infinite ease-in-out;
-          }
-          
-          .animate-theme-glow {
-            animation: theme-glow 2s infinite ease-in-out;
-          }
-        `;
-        
-        if (!styleElement.parentNode) {
-          document.head.appendChild(styleElement);
-        }
-        
-        logger.debug('Applied emergency fallback animations');
-      } catch (fallbackError) {
-        logger.error('Critical failure: Unable to apply any animations', { details: { fallbackError } });
-      }
+    } catch (error) {
+      console.error('Error generating keyframes CSS:', error);
     }
     
+    if (sheet && keyframesCSS) {
+      sheet.textContent = keyframesCSS;
+      console.log('Added dynamic keyframes CSS:', keyframesCSS);
+    }
+    
+    // Cleanup on unmount
     return () => {
-      // We don't remove the style element on unmount to prevent flicker if remounted
+      if (styleSheet && styleSheet.parentNode) {
+        styleSheet.parentNode.removeChild(styleSheet);
+      }
     };
-  }, [variables]);
+  }, [animations]);
   
-  return null; // This component doesn't render anything
+  return null;
 }

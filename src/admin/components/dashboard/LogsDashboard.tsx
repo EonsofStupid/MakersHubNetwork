@@ -1,141 +1,282 @@
 
-import React, { useState, useEffect } from 'react';
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogCategory, LogLevel, memoryTransport } from '@/logging';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Trash } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { LogEntry, LogCategory, memoryTransport } from '@/logging';
+import { LogLevel } from '@/logging/constants/log-level';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { CyberCard } from '@/admin/components/ui/CyberCard';
+import { cn } from '@/lib/utils';
+import { renderUnknownAsNode } from '@/shared/utils/render';
 
 export function LogsDashboard() {
-  const [logs, setLogs] = useState(memoryTransport.getLogs());
-  const [activeTab, setActiveTab] = useState<string>('level');
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [levelStats, setLevelStats] = useState<{ name: string; value: number }[]>([]);
+  const [categoryStats, setCategoryStats] = useState<{ name: string; value: number }[]>([]);
+  const [timeStats, setTimeStats] = useState<{ name: string; count: number }[]>([]);
   
-  // Refresh logs periodically
+  // Update logs and stats
   useEffect(() => {
-    const interval = setInterval(() => {
-      setLogs(memoryTransport.getLogs());
-    }, 5000);
+    const updateStats = () => {
+      const allLogs = memoryTransport.getLogs();
+      setLogs(allLogs);
+      
+      // Calculate level stats
+      const levelCounts: Record<string, number> = {};
+      Object.values(LogLevel)
+        .filter(level => typeof level === 'string')
+        .forEach(level => {
+          levelCounts[level] = 0;
+        });
+      
+      allLogs.forEach(log => {
+        levelCounts[log.level] = (levelCounts[log.level] || 0) + 1;
+      });
+      
+      setLevelStats(
+        Object.entries(levelCounts).map(([name, value]) => ({ name, value }))
+      );
+      
+      // Calculate category stats
+      const categoryCounts: Record<string, number> = {};
+      Object.values(LogCategory).forEach(category => {
+        categoryCounts[category] = 0;
+      });
+      
+      allLogs.forEach(log => {
+        categoryCounts[log.category] = (categoryCounts[log.category] || 0) + 1;
+      });
+      
+      setCategoryStats(
+        Object.entries(categoryCounts)
+          .map(([name, value]) => ({ name, value }))
+          .filter(({ value }) => value > 0)
+      );
+      
+      // Calculate time-based stats (last hour by 5 min intervals)
+      const nowTime = new Date();
+      const lastHour = new Date(nowTime.getTime() - 60 * 60 * 1000);
+      const intervals: Record<string, number> = {};
+      
+      // Create 12 5-minute intervals
+      for (let i = 0; i < 12; i++) {
+        const time = new Date(lastHour.getTime() + i * 5 * 60 * 1000);
+        const label = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        intervals[label] = 0;
+      }
+      
+      allLogs.forEach(log => {
+        const logTime = new Date(log.timestamp);
+        if (logTime >= lastHour && logTime <= nowTime) {
+          // Find which 5-min interval this belongs to
+          const minutesSinceLastHour = Math.floor((logTime.getTime() - lastHour.getTime()) / (5 * 60 * 1000));
+          const intervalTime = new Date(lastHour.getTime() + minutesSinceLastHour * 5 * 60 * 1000);
+          const label = intervalTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          
+          intervals[label] = (intervals[label] || 0) + 1;
+        }
+      });
+      
+      setTimeStats(
+        Object.entries(intervals).map(([name, count]) => ({ name, count }))
+      );
+    };
     
-    return () => clearInterval(interval);
+    updateStats();
+    
+    // Update every 10 seconds
+    const interval = setInterval(updateStats, 10000);
+    
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
   
-  // Process log data for charts
-  const levelData = React.useMemo(() => {
-    const countsByLevel: Record<string, number> = {};
-    
-    logs.forEach(log => {
-      const levelName = LogLevel[log.level];
-      countsByLevel[levelName] = (countsByLevel[levelName] || 0) + 1;
-    });
-    
-    return Object.entries(countsByLevel).map(([level, count]) => ({
-      level,
-      count
-    }));
-  }, [logs]);
+  // Colors for charts
+  const COLORS = ['#00F0FF', '#FF2D6E', '#FFB400', '#00FF9D', '#8B5CF6'];
   
-  const categoryData = React.useMemo(() => {
-    const countsByCategory: Record<string, number> = {};
-    
-    logs.forEach(log => {
-      countsByCategory[log.category] = (countsByCategory[log.category] || 0) + 1;
-    });
-    
-    return Object.entries(countsByCategory).map(([category, count]) => ({
-      category,
-      count
-    }));
-  }, [logs]);
-  
-  const clearAllLogs = () => {
-    memoryTransport.clear();
-    setLogs([]);
+  // Level colors
+  const LEVEL_COLORS: Record<string, string> = {
+    'DEBUG': '#888888',
+    'INFO': '#00F0FF',
+    'WARNING': '#FFB400',
+    'ERROR': '#FF2D6E',
+    'CRITICAL': '#FF4136'
   };
   
-  // Calculate some statistics
-  const totalLogs = logs.length;
-  const errorCount = logs.filter(log => log.level >= LogLevel.ERROR).length;
-  const warningCount = logs.filter(log => log.level === LogLevel.WARN).length;
-  const errorPercentage = totalLogs ? ((errorCount / totalLogs) * 100).toFixed(1) : '0';
-  
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Logging Dashboard</h2>
-          <p className="text-[var(--impulse-text-secondary)]">
-            Total Logs: {totalLogs} | Errors: {errorCount} ({errorPercentage}%) | Warnings: {warningCount}
-          </p>
-        </div>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-[var(--impulse-text-primary)] mb-4">
+        Logs Dashboard
+      </h2>
+      
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CyberCard className="p-4">
+          <div className="text-lg font-medium mb-2">Total Logs</div>
+          <div className="text-3xl font-bold text-[var(--impulse-primary)]">{logs.length}</div>
+        </CyberCard>
         
-        <div className="flex items-center gap-2">
-          <Select defaultValue="hour">
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Time Range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="hour">Last Hour</SelectItem>
-              <SelectItem value="day">Last Day</SelectItem>
-              <SelectItem value="week">Last Week</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={clearAllLogs}
-            title="Clear all logs"
-          >
-            <Trash className="mr-2 h-4 w-4" />
-            Clear
-          </Button>
-        </div>
+        <CyberCard className="p-4">
+          <div className="text-lg font-medium mb-2">Warning+ Logs</div>
+          <div className="text-3xl font-bold text-yellow-400">
+            {logs.filter(log => log.level >= LogLevel.WARN).length}
+          </div>
+        </CyberCard>
+        
+        <CyberCard className="p-4">
+          <div className="text-lg font-medium mb-2">Error+ Logs</div>
+          <div className="text-3xl font-bold text-[var(--impulse-secondary)]">
+            {logs.filter(log => log.level >= LogLevel.ERROR).length}
+          </div>
+        </CyberCard>
       </div>
       
-      <Tabs
-        defaultValue="level"
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="w-full"
-      >
-        <TabsList className="mb-4">
-          <TabsTrigger value="level">By Level</TabsTrigger>
-          <TabsTrigger value="category">By Category</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="level" className="space-y-4">
-          <Card className="p-4">
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={levelData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="level" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" name="Count" fill="var(--primary)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="category" className="space-y-4">
-          <Card className="p-4">
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="category" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" name="Count" fill="var(--primary)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {/* Log Level Distribution */}
+      <CyberCard title="Log Level Distribution" className="p-4">
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={levelStats}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {levelStats.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={LEVEL_COLORS[entry.name] || COLORS[index % COLORS.length]} 
+                  />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => [`${value} logs`, 'Count']} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </CyberCard>
+      
+      {/* Log Categories Distribution */}
+      <CyberCard title="Log Categories" className="p-4">
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={categoryStats}
+              margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+              <XAxis 
+                dataKey="name" 
+                angle={-45} 
+                textAnchor="end" 
+                tick={{ fill: 'var(--impulse-text-secondary)' }} 
+              />
+              <YAxis tick={{ fill: 'var(--impulse-text-secondary)' }} />
+              <Tooltip 
+                formatter={(value) => [`${value} logs`, 'Count']}
+                contentStyle={{ 
+                  backgroundColor: 'var(--impulse-bg-card)', 
+                  border: '1px solid var(--impulse-border-normal)',
+                  borderRadius: '4px' 
+                }} 
+              />
+              <Bar dataKey="value" name="Count" fill="var(--impulse-primary)" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CyberCard>
+      
+      {/* Log Activity Timeline */}
+      <CyberCard title="Log Activity (Last Hour)" className="p-4">
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={timeStats}
+              margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+              <XAxis 
+                dataKey="name" 
+                angle={-45} 
+                textAnchor="end" 
+                tick={{ fill: 'var(--impulse-text-secondary)' }} 
+              />
+              <YAxis tick={{ fill: 'var(--impulse-text-secondary)' }} />
+              <Tooltip 
+                formatter={(value) => [`${value} logs`, 'Count']}
+                contentStyle={{ 
+                  backgroundColor: 'var(--impulse-bg-card)', 
+                  border: '1px solid var(--impulse-border-normal)',
+                  borderRadius: '4px' 
+                }}
+              />
+              <Bar dataKey="count" name="Log Count" fill="var(--impulse-secondary)" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CyberCard>
+      
+      {/* Recent Logs Table */}
+      <CyberCard title="Recent Logs" className="p-4">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-[var(--impulse-border-normal)]">
+                <th className="py-2 px-4 text-left text-[var(--impulse-text-secondary)]">Time</th>
+                <th className="py-2 px-4 text-left text-[var(--impulse-text-secondary)]">Level</th>
+                <th className="py-2 px-4 text-left text-[var(--impulse-text-secondary)]">Category</th>
+                <th className="py-2 px-4 text-left text-[var(--impulse-text-secondary)]">Message</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.slice(0, 10).map((log) => (
+                <tr 
+                  key={log.id} 
+                  className="border-b border-[var(--impulse-border-normal)] hover:bg-[var(--impulse-bg-overlay)]"
+                >
+                  <td className="py-2 px-4 text-sm">
+                    {new Date(log.timestamp).toLocaleTimeString()}
+                  </td>
+                  <td className="py-2 px-4">
+                    <span 
+                      className={cn(
+                        "px-2 py-1 text-xs rounded-full", 
+                        getLevelBadgeClass(log.level)
+                      )}
+                    >
+                      {log.level}
+                    </span>
+                  </td>
+                  <td className="py-2 px-4 text-sm">{log.category}</td>
+                  <td className="py-2 px-4 text-sm truncate max-w-md">
+                    {renderUnknownAsNode(log.message)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CyberCard>
     </div>
   );
+}
+
+// Helper function for level badge styling
+function getLevelBadgeClass(level: LogLevel): string {
+  switch (level) {
+    case LogLevel.DEBUG:
+      return 'bg-gray-400/20 text-gray-400';
+    case LogLevel.INFO:
+      return 'bg-[var(--impulse-primary)]/20 text-[var(--impulse-primary)]';
+    case LogLevel.WARN:
+      return 'bg-yellow-400/20 text-yellow-400';
+    case LogLevel.ERROR:
+      return 'bg-[var(--impulse-secondary)]/20 text-[var(--impulse-secondary)]';
+    case LogLevel.CRITICAL:
+      return 'bg-red-600/20 text-red-600';
+    default:
+      return 'bg-gray-400/20 text-gray-400';
+  }
 }

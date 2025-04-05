@@ -1,263 +1,242 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { LogEntry, LogLevel, LogCategory } from '../types';
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
-import { LOG_LEVEL_NAMES, isLogLevelAtLeast } from '../constants/log-level';
-import { safelyRenderNode } from '../utils/react';
-import { X, Minimize2, Maximize2, Download, Trash } from 'lucide-react';
+import { LogEntry } from '../types';
+import { LogLevel } from '../constants/log-level';
+import { motion, AnimatePresence } from 'framer-motion';
+import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
+import '../styles/logging.css';
+import { renderUnknownAsNode, nodeToSearchableString } from '@/shared/utils/render';
 
-interface LogConsoleProps {
-  minLevel?: LogLevel;
-  height?: string;
-  width?: string;
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  showSource?: boolean;
-  autoScroll?: boolean;
-  categories?: LogCategory[];
+interface LogDetailsProps {
+  details: Record<string, any>;
+  className?: string;
 }
 
-export function LogConsole({
-  minLevel = LogLevel.INFO,
-  height = '400px',
-  width = '100%',
-  position = 'bottom-right',
-  showSource = true,
-  autoScroll = true,
-  categories
-}: LogConsoleProps) {
-  const { logs, clearLogs, showLogConsole, setShowLogConsole } = useLoggingContext();
-  const [filter, setFilter] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState<LogLevel>(minLevel);
-  const [selectedCategory, setSelectedCategory] = useState<LogCategory | 'all'>('all');
-  const [isMinimized, setIsMinimized] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // Auto-scroll to bottom when new logs arrive
-  useEffect(() => {
-    if (autoScroll && scrollRef.current && !isMinimized) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [logs, autoScroll, isMinimized]);
-  
-  if (!showLogConsole) {
+const LogDetails = forwardRef<HTMLDivElement, LogDetailsProps>(({ details, className = '' }, ref) => {
+  if (!details || Object.keys(details).length === 0) {
     return null;
   }
   
-  // Position classes
-  const positionClass = {
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4',
-    'top-right': 'top-4 right-4',
-    'top-left': 'top-4 left-4'
-  }[position];
+  return (
+    <div ref={ref} className={`log-details mt-1 p-2 bg-gray-800 rounded text-xs font-mono ${className}`}>
+      {Object.entries(details).map(([key, value]) => (
+        <div key={key} className="flex">
+          <span className="text-gray-400 mr-2">{key}:</span>
+          <span className="text-gray-300">
+            {renderUnknownAsNode(value)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+});
+
+LogDetails.displayName = 'LogDetails';
+
+interface LogItemProps {
+  log: LogEntry;
+  index: number;
+}
+
+const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
+  const [expanded, setExpanded] = useState(false);
+  const hasDetails = log.details && Object.keys(log.details as object).length > 0;
   
-  // Filter logs by level, category, and text
-  const filteredLogs = logs
-    .filter(log => isLogLevelAtLeast(log.level, selectedLevel))
-    .filter(log => selectedCategory === 'all' || log.category === selectedCategory)
-    .filter(log => {
-      if (!filter) return true;
-      const message = typeof log.message === 'string' ? log.message : JSON.stringify(log.message);
-      return message.toLowerCase().includes(filter.toLowerCase()) ||
-        (log.source && log.source.toLowerCase().includes(filter.toLowerCase()));
-    });
+  const getLevelIcon = (level: LogLevel) => {
+    switch (level) {
+      case LogLevel.ERROR:
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case LogLevel.WARN:
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case LogLevel.INFO:
+        return <Info className="h-4 w-4 text-blue-500" />;
+      case LogLevel.SUCCESS:
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case LogLevel.DEBUG:
+        return <Bug className="h-4 w-4 text-purple-500" />;
+      case LogLevel.TRACE:
+        return <Code className="h-4 w-4 text-gray-500" />;
+      default:
+        return <Info className="h-4 w-4 text-blue-500" />;
+    }
+  };
   
-  // Collect unique categories for filter
-  const uniqueCategories = Array.from(
-    new Set(logs.map(log => log.category))
-  ).sort() as LogCategory[];
-  
-  const downloadLogs = () => {
-    const json = JSON.stringify(filteredLogs, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const getBgColorClass = (level: LogLevel) => {
+    switch (level) {
+      case LogLevel.ERROR:
+        return 'border-l-4 border-l-red-500 bg-red-900/10';
+      case LogLevel.WARN:
+        return 'border-l-4 border-l-yellow-500 bg-yellow-900/10';
+      case LogLevel.INFO:
+        return 'border-l-4 border-l-blue-500 bg-blue-900/10';
+      case LogLevel.SUCCESS:
+        return 'border-l-4 border-l-green-500 bg-green-900/10';
+      case LogLevel.DEBUG:
+        return 'border-l-4 border-l-purple-500 bg-purple-900/10';
+      case LogLevel.TRACE:
+        return 'border-l-4 border-l-gray-500 bg-gray-900/10';
+      default:
+        return 'border-l-4 border-l-blue-500 bg-blue-900/10';
+    }
   };
   
   return (
-    <div
-      className={`fixed ${positionClass} z-50 bg-background border border-border rounded-lg shadow-lg overflow-hidden transition-all duration-300`}
-      style={{
-        width: isMinimized ? '300px' : width,
-        height: isMinimized ? '40px' : height,
-        maxWidth: '100vw',
-        maxHeight: '80vh'
-      }}
+    <div 
+      className={`log-item p-2 mb-1 rounded ${getBgColorClass(log.level)} ${index % 2 === 0 ? 'bg-opacity-50' : ''}`}
+      onClick={() => hasDetails && setExpanded(!expanded)}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-2 bg-muted/50 border-b">
-        <div className="text-sm font-medium flex items-center gap-2">
-          {isMinimized ? 'Logs' : `Logs (${filteredLogs.length})`}
+      <div className="flex items-start">
+        <div className="mr-2 mt-0.5">{getLevelIcon(log.level)}</div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center text-sm">
+            <span className="text-xs text-gray-400 mr-2">
+              {new Date(log.timestamp).toLocaleTimeString()}
+            </span>
+            <span className="font-medium">{log.category}</span>
+          </div>
+          <div className="message-content text-sm">
+            {renderUnknownAsNode(log.message)}
+          </div>
+          
+          <AnimatePresence>
+            {expanded && hasDetails && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <LogDetails details={log.details as Record<string, any> || {}} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        <div className="flex items-center gap-1">
-          {!isMinimized && (
-            <>
-              <button 
-                onClick={downloadLogs}
-                className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                title="Download logs"
-              >
-                <Download size={14} />
-              </button>
-              <button 
-                onClick={clearLogs}
-                className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                title="Clear logs"
-              >
-                <Trash size={14} />
-              </button>
-            </>
-          )}
+        
+        {hasDetails && (
           <button 
-            onClick={() => setIsMinimized(!isMinimized)}
-            className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            title={isMinimized ? 'Expand' : 'Minimize'}
+            className="text-xs text-gray-400 hover:text-white ml-2 mt-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(!expanded);
+            }}
           >
-            {isMinimized ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
+            {expanded ? 'Hide' : 'Show'}
           </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export function LogConsole() {
+  const { logs, clearLogs } = useLoggingContext();
+  const [filter, setFilter] = useState<LogLevel | 'all'>('all');
+  const [search, setSearch] = useState('');
+  const [autoScroll, setAutoScroll] = useState(true);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+  
+  const filteredLogs = logs
+    .filter(log => filter === 'all' || log.level === filter)
+    .filter(log => {
+      if (search === '') return true;
+      const searchLower = search.toLowerCase();
+      const messageStr = nodeToSearchableString(log.message).toLowerCase();
+      return messageStr.includes(searchLower) || 
+             log.category.toLowerCase().includes(searchLower);
+    });
+  
+  const scrollToBottom = useCallback(() => {
+    if (autoScroll && logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [autoScroll]);
+  
+  useEffect(() => {
+    scrollToBottom();
+  }, [filteredLogs.length, scrollToBottom]);
+  
+  return (
+    <motion.div
+      initial={{ y: '100%' }}
+      animate={{ y: 0 }}
+      exit={{ y: '100%' }}
+      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      className="fixed bottom-0 left-0 right-0 z-50 h-64 bg-gray-900 text-white border-t border-gray-700 overflow-hidden flex flex-col"
+    >
+      <div className="p-2 flex items-center justify-between border-b border-gray-700">
+        <div className="flex items-center space-x-2">
+          <h3 className="text-sm font-medium">Console Logs</h3>
+          <div className="text-xs text-gray-400">
+            {filteredLogs.length} / {logs.length} logs
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
           <button 
-            onClick={() => setShowLogConsole(false)}
-            className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            title="Close"
+            className="px-2 py-1 text-xs rounded hover:bg-gray-700"
+            onClick={clearLogs}
           >
-            <X size={14} />
+            Clear
+          </button>
+          
+          <select
+            className="bg-gray-800 text-xs rounded px-2 py-1 border border-gray-700"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as LogLevel | 'all')}
+          >
+            <option value="all">All Levels</option>
+            <option value={LogLevel.ERROR}>Errors</option>
+            <option value={LogLevel.WARN}>Warnings</option>
+            <option value={LogLevel.INFO}>Info</option>
+            <option value={LogLevel.SUCCESS}>Success</option>
+            <option value={LogLevel.DEBUG}>Debug</option>
+            <option value={LogLevel.TRACE}>Trace</option>
+          </select>
+          
+          <input
+            type="text"
+            placeholder="Search logs..."
+            className="bg-gray-800 text-xs rounded px-2 py-1 border border-gray-700"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          
+          <button 
+            className={`flex items-center text-xs px-2 py-1 rounded ${autoScroll ? 'bg-blue-600' : 'bg-gray-700'}`}
+            onClick={() => setAutoScroll(!autoScroll)}
+          >
+            <ArrowDownCircle className="h-3 w-3 mr-1" />
+            Auto-scroll
+          </button>
+          
+          <button 
+            className="px-2 py-1 text-xs rounded hover:bg-gray-700"
+            onClick={() => {
+              const { useLoggingContext } = require('../context/LoggingContext');
+              if (useLoggingContext) {
+                useLoggingContext().toggleLogConsole();
+              }
+            }}
+          >
+            Close
           </button>
         </div>
       </div>
       
-      {!isMinimized && (
-        <>
-          {/* Filter bar */}
-          <div className="flex items-center p-2 border-b gap-2 flex-wrap">
-            <input
-              type="text"
-              value={filter}
-              onChange={e => setFilter(e.target.value)}
-              placeholder="Filter logs..."
-              className="flex-1 min-w-[100px] px-2 py-1 text-xs rounded border"
-            />
-            
-            <select 
-              value={selectedLevel} 
-              onChange={e => setSelectedLevel(Number(e.target.value) as LogLevel)}
-              className="px-2 py-1 text-xs rounded border bg-background"
-            >
-              {Object.entries(LOG_LEVEL_NAMES).map(([level, name]) => (
-                <option key={level} value={level}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            
-            <select 
-              value={selectedCategory} 
-              onChange={e => setSelectedCategory(e.target.value as LogCategory | 'all')}
-              className="px-2 py-1 text-xs rounded border bg-background"
-            >
-              <option value="all">All Categories</option>
-              {uniqueCategories.map(category => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
+      <div className="flex-1 overflow-y-auto p-2">
+        {filteredLogs.length > 0 ? (
+          filteredLogs.map((log, index) => (
+            <LogItem key={log.id} log={log} index={index} />
+          ))
+        ) : (
+          <div className="text-center text-gray-500 mt-4">
+            {logs.length > 0 ? 'No logs match your filters' : 'No logs to display'}
           </div>
-          
-          {/* Log list */}
-          <div 
-            ref={scrollRef}
-            className="overflow-auto h-full font-mono text-xs p-0"
-          >
-            {filteredLogs.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground italic p-4">
-                No logs to display
-              </div>
-            ) : (
-              <table className="w-full">
-                <thead className="sticky top-0 bg-background">
-                  <tr className="border-b">
-                    <th className="px-2 py-1 text-left font-medium text-xs text-muted-foreground">Time</th>
-                    <th className="px-2 py-1 text-left font-medium text-xs text-muted-foreground">Level</th>
-                    <th className="px-2 py-1 text-left font-medium text-xs text-muted-foreground">Category</th>
-                    {showSource && (
-                      <th className="px-2 py-1 text-left font-medium text-xs text-muted-foreground">Source</th>
-                    )}
-                    <th className="px-2 py-1 text-left font-medium text-xs text-muted-foreground">Message</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLogs.map(log => {
-                    // Pre-render the message with type safety
-                    const messageContent = safelyRenderNode(log.message);
-                    
-                    return (
-                      <tr 
-                        key={log.id}
-                        className="border-b hover:bg-muted/20"
-                      >
-                        <td className="px-2 py-1 whitespace-nowrap text-xs text-muted-foreground">
-                          {new Date(log.timestamp).toLocaleTimeString()}
-                        </td>
-                        <td className="px-2 py-1 whitespace-nowrap text-xs">
-                          <span className={getLevelColorClass(log.level)}>
-                            {LOG_LEVEL_NAMES[log.level]}
-                          </span>
-                        </td>
-                        <td className="px-2 py-1 whitespace-nowrap text-xs">
-                          {log.category}
-                        </td>
-                        {showSource && (
-                          <td className="px-2 py-1 whitespace-nowrap text-xs text-muted-foreground">
-                            {log.source || '-'}
-                          </td>
-                        )}
-                        <td className="px-2 py-1 text-xs overflow-hidden text-ellipsis">
-                          <div className="truncate max-w-[500px]">
-                            {messageContent}
-                          </div>
-                          {log.details && (
-                            <details className="mt-1">
-                              <summary className="cursor-pointer text-xs text-muted-foreground">Details</summary>
-                              <pre className="text-xs bg-muted/20 p-2 rounded mt-1 overflow-auto max-h-[200px]">
-                                {JSON.stringify(log.details, null, 2)}
-                              </pre>
-                            </details>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </>
-      )}
-    </div>
+        )}
+        <div ref={logsEndRef} />
+      </div>
+    </motion.div>
   );
-}
-
-function getLevelColorClass(level: LogLevel): string {
-  switch (level) {
-    case LogLevel.DEBUG:
-      return 'text-gray-400';
-    case LogLevel.INFO:
-      return 'text-blue-400';
-    case LogLevel.WARN:
-      return 'text-yellow-400';
-    case LogLevel.ERROR:
-      return 'text-red-400';
-    case LogLevel.CRITICAL:
-      return 'text-red-600 font-bold';
-    case LogLevel.SUCCESS:
-      return 'text-green-400';
-    default:
-      return 'text-gray-400';
-  }
 }

@@ -1,95 +1,102 @@
 
-import React, { useState, useEffect } from 'react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useAuth } from '@/auth/hooks/useAuth';
-import { Link } from 'react-router-dom';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { Icons } from '@/components/ui/icons';
-import { Button } from '@/components/ui/button';
-import { safeDetails } from '@/logging/utils/safeDetails';
+import { useState, memo, useCallback, useMemo } from "react" 
+import { useToast } from "@/hooks/use-toast"
+import { ProfileDialog } from "@/components/profile/ProfileDialog"
+import { UserMenuSheet } from "@/components/auth/UserMenuSheet"
+import { useAuth } from "@/hooks/useAuth"
+import { useAdminAccess } from "@/admin/hooks/useAdminAccess"
+import { useLogger } from "@/hooks/use-logger"
+import { LogCategory } from "@/logging"
 
-export function UserMenu() {
-  const { user, status, logout } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const logger = useLogger('UserMenu', LogCategory.UI);
+export const UserMenu = memo(() => {
+  const [isSheetOpen, setSheetOpen] = useState(false)
+  const [isProfileDialogOpen, setProfileDialogOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   
-  useEffect(() => {
-    if (status === 'authenticated') {
-      logger.debug('User authenticated, rendering user menu', {
-        details: {
-          userId: user?.id,
-          email: user?.email
-        }
-      });
-    } else {
-      logger.debug('No user authenticated, hiding user menu');
-    }
-  }, [status, user, logger]);
+  const { toast } = useToast()
+  const logger = useLogger("UserMenu", LogCategory.AUTH)
   
-  const handleLogout = async () => {
-    setIsLoading(true);
+  // Get auth data from centralized hook
+  const { user, roles, logout } = useAuth()
+  
+  // Get admin access status
+  const { hasAdminAccess } = useAdminAccess()
+  
+  // Log user status
+  const userEmail = user?.email
+  
+  // Memoize handlers to prevent recreating functions on each render
+  const handleOpenSheet = useCallback(() => {
+    setSheetOpen(true)
+  }, [])
+  
+  const handleCloseSheet = useCallback(() => {
+    setSheetOpen(false)
+  }, [])
+  
+  const handleOpenProfileDialog = useCallback(() => {
+    setSheetOpen(false)
+    setProfileDialogOpen(true)
+  }, [])
+  
+  const handleCloseProfileDialog = useCallback(() => {
+    setProfileDialogOpen(false)
+  }, [])
+
+  // Logout handler - memoized to prevent recreation
+  const handleLogout = useCallback(async () => {
     try {
-      await logout();
+      setIsLoading(true)
+      logger.info("User logging out")
+      await logout()
+      logger.info("User logged out successfully")
+      window.location.reload()
     } catch (error) {
-      logger.error('Logout failed', { details: safeDetails(error) });
+      logger.error("Error logging out", { details: error })
+      toast({
+        variant: "destructive",
+        title: "Error logging out",
+        description: "Please try again",
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }, [logout, toast, logger])
 
-  if (status !== 'authenticated') {
+  // Memoize props to prevent object recreation on each render
+  const sheetProps = useMemo(() => ({
+    isOpen: isSheetOpen,
+    onOpenChange: setSheetOpen,
+    userEmail: userEmail,
+    isLoadingLogout: isLoading,
+    onShowProfile: handleOpenProfileDialog,
+    onLogout: handleLogout,
+    hasAdminAccess: hasAdminAccess,
+    roles: roles
+  }), [
+    isSheetOpen, 
+    userEmail, 
+    isLoading, 
+    handleOpenProfileDialog, 
+    handleLogout, 
+    hasAdminAccess, 
+    roles
+  ])
+  
+  const profileDialogProps = useMemo(() => ({
+    open: isProfileDialogOpen,
+    onClose: handleCloseProfileDialog
+  }), [isProfileDialogOpen, handleCloseProfileDialog])
+
+  // Don't render if no user
+  if (!user) {
     return null;
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.user_metadata?.avatar_url as string} alt={user?.email as string} />
-            <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/profile">
-            <Icons.user className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/settings">
-            <Icons.settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem disabled={isLoading} onClick={handleLogout}>
-          {isLoading ? (
-            <>
-              <Icons.loader className="mr-2 h-4 w-4 animate-spin" />
-              <span>Logging out...</span>
-            </>
-          ) : (
-            <>
-              <Icons.logout className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </>
-          )}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <UserMenuSheet {...sheetProps} />
+      <ProfileDialog {...profileDialogProps} />
+    </>
   )
-}
+})

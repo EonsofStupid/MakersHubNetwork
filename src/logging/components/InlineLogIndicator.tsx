@@ -3,14 +3,14 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LogLevel } from '../types';
-import { safelyRenderNode } from '../utils/react';
+import { LogLevel } from '../constants/log-level';
+import { renderUnknownAsNode } from '@/shared/utils/render';
 
 // Define indicator variants
 export type LogIndicatorVariant = 'debug' | 'info' | 'warning' | 'error' | 'critical';
 
 interface InlineLogIndicatorProps {
-  message: string | number | boolean | React.ReactNode;
+  message: string | React.ReactNode;
   level?: LogLevel;
   variant?: LogIndicatorVariant;
   onClick?: () => void;
@@ -91,9 +91,6 @@ export const InlineLogIndicator: React.FC<InlineLogIndicatorProps> = ({
   
   const { Icon, colorClass, hoverClass } = getVariantProps(variant);
   
-  // Pre-render the message content with type safety
-  const messageContent = safelyRenderNode(message);
-  
   return (
     <motion.div
       className={cn(
@@ -112,7 +109,7 @@ export const InlineLogIndicator: React.FC<InlineLogIndicatorProps> = ({
       whileTap={onClick ? { scale: 0.98 } : undefined}
     >
       {showIcon && <Icon className="w-3 h-3" />}
-      <span>{messageContent}</span>
+      <span>{renderUnknownAsNode(message)}</span>
       {children}
     </motion.div>
   );

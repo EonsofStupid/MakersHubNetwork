@@ -5,12 +5,7 @@ import { defaultImpulseTokens } from '../impulse/tokens';
 import { ImpulseTheme } from '../../types/impulse.types';
 import { useToast } from '@/hooks/use-toast';
 import { deepMerge } from '../utils/themeUtils';
-import { DEFAULT_THEME_NAME } from '@/utils/themeInitializer';
 
-/**
- * Hook for managing the Impulsivity theme
- * Provides functionality for the upcoming visual theme editor
- */
 export function useImpulseTheme() {
   const [theme, setTheme] = useState<ImpulseTheme>(defaultImpulseTokens);
   const [isDirty, setIsDirty] = useState(false);
@@ -35,14 +30,14 @@ export function useImpulseTheme() {
           setTheme(mergedTheme);
         }
       } catch (error) {
-        console.error(`Error parsing ${DEFAULT_THEME_NAME} theme:`, error);
+        console.error("Error parsing theme:", error);
         // Fallback to defaults
         setTheme(defaultImpulseTokens);
       }
     }
   }, [currentTheme, isLoading, loadAdminComponents]);
 
-  // Update a specific part of the theme (for visual editor)
+  // Update a specific part of the theme
   const updateThemeValue = (path: string, value: any) => {
     setTheme(prevTheme => {
       const newTheme = { ...prevTheme };
@@ -76,7 +71,7 @@ export function useImpulseTheme() {
         setIsDirty(false);
         toast({
           title: "Theme saved",
-          description: `${DEFAULT_THEME_NAME} theme has been saved to the database.`
+          description: "Impulse theme has been saved to the database."
         });
       } else {
         toast({
@@ -86,7 +81,7 @@ export function useImpulseTheme() {
         });
       }
     } catch (error) {
-      console.error(`Error saving ${DEFAULT_THEME_NAME} theme:`, error);
+      console.error("Error saving theme:", error);
       toast({
         title: "Error saving theme",
         description: error instanceof Error ? error.message : "Unknown error",
@@ -97,7 +92,7 @@ export function useImpulseTheme() {
     }
   };
 
-  // Helper to set a value at a nested path (for visual editor)
+  // Helper to set a value at a nested path
   const setValueAtPath = (obj: any, path: string, value: any) => {
     const parts = path.split('.');
     let current = obj;
@@ -111,21 +106,6 @@ export function useImpulseTheme() {
     current[parts[parts.length - 1]] = value;
   };
 
-  // Get a value at a nested path (for visual editor)
-  const getValueAtPath = (path: string): any => {
-    const parts = path.split('.');
-    let current: any = theme;
-    
-    for (const part of parts) {
-      if (!current || typeof current !== 'object') {
-        return undefined;
-      }
-      current = current[part];
-    }
-    
-    return current;
-  };
-
   return { 
     theme,
     updateThemeValue,
@@ -134,7 +114,6 @@ export function useImpulseTheme() {
     isLoading,
     isSaving,
     isDirty,
-    getValueAtPath, // Added for visual editor
     // Filter for admin components
     adminComponents: adminComponents.filter(c => c.context === 'admin')
   };
