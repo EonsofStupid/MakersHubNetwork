@@ -5,7 +5,6 @@ import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 import { DynamicKeyframes } from './DynamicKeyframes';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { ThemeLoadingState } from './info/ThemeLoadingState';
 
 // Create context
 const SiteThemeContext = createContext<{
@@ -43,7 +42,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     localStorage.getItem('theme-mode') === 'light' ? false : true
   );
   
-  // Load theme on mount
+  // Load theme on mount - but only if no theme is already loaded and we're not in initialization phase
   useEffect(() => {
     if (!currentTheme && !isLoading && !isInitializing) {
       logger.info('Loading default theme');

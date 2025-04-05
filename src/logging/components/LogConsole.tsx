@@ -1,3 +1,4 @@
+
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry } from '../types';
@@ -5,7 +6,7 @@ import { LogLevel } from '../constants/log-level';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
 import '../styles/logging.css';
-import { renderUnknownAsNode, nodeToSearchableString } from '@/shared/utils/render';
+import { renderUnknownAsNode, nodeToSearchableString, isValidReactNode } from '@/shared/utils/render';
 
 interface LogDetailsProps {
   details: Record<string, unknown>;

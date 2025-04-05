@@ -32,17 +32,16 @@ export function AppInitializer({ children }: AppInitializerProps) {
         });
       }
       
-      // Only complete loading when auth is fully initialized
-      if (!authLoading && initialized) {
-        setIsLoading(false);
-      }
+      // Allow app to initialize even if auth isn't fully initialized
+      // This ensures the UI loads regardless of authentication status
+      setIsLoading(false);
     }, 500);
     
     return () => clearTimeout(timer);
   }, [logger, status, authLoading, initialized, error, toast]);
   
   // Show minimal loading state while app is initializing
-  if (isLoading || authLoading || !initialized) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <div className="w-full max-w-2xl px-4">
