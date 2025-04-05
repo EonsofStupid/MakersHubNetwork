@@ -1,55 +1,31 @@
 
-import { UserRole } from "../types/auth.types";
-import { PermissionValue, PERMISSIONS, ROLE_PERMISSIONS } from "../permissions";
+import { UserRole } from '../types/roles';
 
-/**
- * Maps user roles to app permissions
- */
-export const mapRolesToPermissions = (roles: UserRole[] = []): PermissionValue[] => {
-  // If no roles, return empty permissions array
-  if (!roles.length) {
-    return [];
-  }
+// Core role check - can be expanded with more granular permissions
+export const hasAdminAccess = (roles: UserRole[]): boolean => {
+  return roles.includes('admin') || roles.includes('super_admin');
+};
+
+// Check for a specific role
+export const hasRole = (roles: UserRole[], role: UserRole): boolean => {
+  return roles.includes(role);
+};
+
+// Check for any of the provided roles
+export const hasAnyRole = (roles: UserRole[], allowedRoles: UserRole[]): boolean => {
+  return allowedRoles.some(role => roles.includes(role));
+};
+
+// Get highest priority role - useful for UI display
+export const getHighestRole = (roles: UserRole[]): UserRole | null => {
+  // Order matters - from highest to lowest
+  const priorityOrder: UserRole[] = ['super_admin', 'admin', 'moderator', 'editor', 'user'];
   
-  // Super admins get all permissions
-  if (roles.includes('super_admin')) {
-    return [PERMISSIONS.SUPER_ADMIN];
-  }
-  
-  // Combine permissions from all roles
-  const permissions: PermissionValue[] = [];
-  
-  roles.forEach(role => {
-    const rolePermissions = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS];
-    if (rolePermissions) {
-      rolePermissions.forEach(permission => {
-        if (!permissions.includes(permission)) {
-          permissions.push(permission);
-        }
-      });
+  for (const role of priorityOrder) {
+    if (roles.includes(role)) {
+      return role;
     }
-  });
+  }
   
-  return permissions;
-};
-
-/**
- * Helper function to check if a user has a specific role
- */
-export const hasRole = (userRoles: UserRole[] = [], role: UserRole): boolean => {
-  return userRoles.includes(role);
-};
-
-/**
- * Helper function to check if a user has admin access
- */
-export const hasAdminAccess = (userRoles: UserRole[] = []): boolean => {
-  return userRoles.includes('admin') || userRoles.includes('super_admin');
-};
-
-/**
- * Helper function to check if a user is a super admin
- */
-export const isSuperAdmin = (userRoles: UserRole[] = []): boolean => {
-  return userRoles.includes('super_admin');
+  return null;
 };
