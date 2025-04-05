@@ -43,7 +43,7 @@ function LoggingComponents() {
 }
 
 // Initialize logging system - do this only once
-const loggerInitialized = {current: false};
+const loggerInitialized = { current: false };
 
 function initLogging(): void {
   if (!loggerInitialized.current) {
@@ -75,14 +75,16 @@ function App() {
     }
   }, [location.pathname, logger]);
 
+  // Changed component order to prioritize theme loading
+  // ThemeInitializer no longer waits for auth to load
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
-        <AuthProvider>
-          {/* ThemeInitializer comes before AdminProvider to ensure theme loads regardless of auth */}
-          <ThemeInitializer>
-            <AdminProvider>
-              <AppInitializer>
+        {/* ThemeInitializer first - independent of auth state */}
+        <ThemeInitializer>
+          <AuthProvider>
+            <AppInitializer>
+              <AdminProvider>
                 {!isAdminRoute && <MainNav />}
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -92,10 +94,10 @@ function App() {
                 {!isAdminRoute && <Footer />}
                 <Toaster />
                 <LoggingComponents />
-              </AppInitializer>
-            </AdminProvider>
-          </ThemeInitializer>
-        </AuthProvider>
+              </AdminProvider>
+            </AppInitializer>
+          </AuthProvider>
+        </ThemeInitializer>
       </LoggingProvider>
     </ThemeProvider>
   );

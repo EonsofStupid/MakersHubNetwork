@@ -35,7 +35,7 @@ export function ThemeInitializer({ children }: ThemeInitializerProps) {
         const themeId = await ensureDefaultTheme();
         
         if (themeId) {
-          // Then sync CSS using the ensureDefaultTheme's built-in sync capability
+          // Then set the theme using the ID
           await setTheme(themeId);
           logger.info('Theme initialized successfully with ID:', { details: { themeId } });
         } else {

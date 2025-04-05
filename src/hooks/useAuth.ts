@@ -6,12 +6,13 @@ import { useEffect, useRef } from 'react';
 
 /**
  * Hook for accessing authentication state
+ * Handles initialization of auth when needed
  */
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
   
-  // Use a selector to extract only what we need from the store
+  // Extract only what we need from the store to prevent unnecessary re-renders
   const {
     user,
     session,
@@ -61,6 +62,7 @@ export function useAuth() {
     }
   }, [status, initialize, initialized, logger]);
 
+  // Derived state
   const isSuperAdmin = roles.includes('super_admin');
 
   // Log wrapper for logout to capture info before state is cleared

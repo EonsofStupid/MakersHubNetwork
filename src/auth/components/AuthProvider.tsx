@@ -13,17 +13,19 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   // Use selector function for Zustand to prevent unnecessary rerenders
-  const { user, session, setSession } = useAuthStore(state => ({
+  const { user, session, setSession, initialize, initialized } = useAuthStore(state => ({
     user: state.user,
     session: state.session,
-    setSession: state.setSession
+    setSession: state.setSession,
+    initialize: state.initialize,
+    initialized: state.initialized
   }));
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
   
-  // Set up auth state change listener
+  // Setup initial auth state and listeners
   useEffect(() => {
-    // Prevent setup from running multiple times
+    // Prevent multiple initialization attempts
     if (initAttemptedRef.current) {
       return;
     }
@@ -31,7 +33,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initAttemptedRef.current = true;
     logger.info('Setting up auth state change listener');
     
-    // Don't perform other auth actions inside this subscription callback
+    // First set up the state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         logger.info(`Auth state change: ${event}`, {
@@ -50,12 +52,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     );
     
+    // Then initialize auth if needed
+    if (!initialized) {
+      // Defer initialization to break potential circular dependencies
+      setTimeout(() => {
+        initialize().catch(err => {
+          logger.error('Failed to initialize auth', { details: err });
+        });
+      }, 0);
+    }
+    
     return () => {
       subscription.unsubscribe();
     };
-  }, [logger, setSession]);
+  }, [logger, setSession, initialize, initialized]);
   
-  // Provide the current auth state, don't trigger actions here
+  // Provide the current auth state
   return (
     <AuthContext.Provider value={{ user, session: session as Session | null }}>
       {children}
