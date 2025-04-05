@@ -1,6 +1,6 @@
 
-// Define strict user role types
-export type UserRole = 'admin' | 'super_admin' | 'user' | 'moderator' | 'editor';
+// Define the complete set of user roles that matches our database enum
+export type UserRole = 'admin' | 'super_admin' | 'user' | 'moderator' | 'editor' | 'maker' | 'builder';
 
 // Helper functions for role-based access control
 export const hasAdminAccess = (roles: UserRole[]): boolean => {

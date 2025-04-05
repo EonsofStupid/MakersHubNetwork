@@ -1,32 +1,17 @@
 
 import React from 'react';
-import { Terminal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useLoggingContext } from '../context/LoggingContext';
-import { cn } from '@/lib/utils';
+import { Activity } from 'lucide-react';
 
-export const LogToggleButton: React.FC = () => {
-  const { showLogConsole, setShowLogConsole } = useLoggingContext();
-  
+export function LogToggleButton() {
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      className={cn(
-        "fixed bottom-4 right-4 z-20 rounded-full w-10 h-10 border-primary/30 shadow-md",
-        "hover:bg-primary/20 hover:border-primary/50 transition-all",
-        "group backdrop-blur-sm bg-background/60",
-        showLogConsole && "bg-primary/20 border-primary/50"
-      )}
-      onClick={() => setShowLogConsole(!showLogConsole)}
-      title={showLogConsole ? "Hide Log Console" : "Show Log Console"}
+    <button
+      className="fixed bottom-4 right-4 h-10 w-10 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700 z-50"
+      onClick={() => {
+        // This would toggle the log console visibility in a real implementation
+        console.log('Log toggle clicked');
+      }}
     >
-      <Terminal 
-        className={cn(
-          "h-4 w-4 text-primary group-hover:animate-pulse",
-          showLogConsole && "animate-pulse"
-        )} 
-      />
-    </Button>
+      <Activity className="h-5 w-5" />
+    </button>
   );
-};
+}
