@@ -1,10 +1,10 @@
-
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useLoggingContext } from '../context/LoggingContext';
 import { LogEntry, LogLevel } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XCircle, AlertTriangle, Info, CheckCircle, Bug, Code, ArrowDownCircle } from 'lucide-react';
 import '../styles/logging.css';
+import { renderUnknownAsNode } from '@/shared/utils/render';
 
 interface LogDetailsProps {
   details: Record<string, unknown>;
@@ -80,13 +80,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, index }) => {
   };
   
   const renderMessageContent = () => {
-    if (typeof log.message === 'string') {
-      return log.message;
-    } else if (React.isValidElement(log.message)) {
-      return log.message;
-    } else {
-      return String(log.message);
-    }
+    return renderUnknownAsNode(log.message);
   };
   
   return (

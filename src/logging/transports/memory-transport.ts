@@ -1,6 +1,6 @@
-
 import { LogCategory, LogEntry, LogLevel, LogTransport } from '../types';
 import { nodeToSearchableString } from '@/shared/utils/render';
+import { isLogLevelAtLeast } from '../utils/map-log-level';
 
 /**
  * Options for filtering logs in memory transport
@@ -54,7 +54,7 @@ export class MemoryTransport implements LogTransport {
     
     // Filter by level
     if (options.level !== undefined) {
-      filteredLogs = filteredLogs.filter(log => log.level >= options.level!);
+      filteredLogs = filteredLogs.filter(log => isLogLevelAtLeast(log.level, options.level!));
     }
     
     // Filter by category
