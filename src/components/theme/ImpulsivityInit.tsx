@@ -5,6 +5,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { Loader } from 'lucide-react';
 import { useThemeStore } from '@/stores/theme/store';
+import { ThemeLogDetails } from '@/types/theme';
 
 interface ImpulsivityInitProps {
   autoApply?: boolean;
@@ -29,6 +30,14 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
           logger.info('Initializing Impulsivity theme');
           setIsError(false);
           
+          // Directly set base CSS variables for quick visual feedback
+          // This ensures something is visible even if the theme system is slow
+          const rootElement = document.documentElement;
+          rootElement.style.setProperty('--site-primary', '186 100% 50%'); // #00F0FF in HSL  
+          rootElement.style.setProperty('--site-secondary', '334 100% 59%'); // #FF2D6E in HSL
+          rootElement.style.setProperty('--site-effect-color', '#00F0FF');
+          rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
+          
           const result = await applyTheme();
           
           if (result) {
@@ -48,7 +57,7 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
           
           logger.error('Failed to initialize Impulsivity theme', { 
             details: { errorMessage } 
-          });
+          } as ThemeLogDetails);
           
           // Still mark as initialized to avoid blocking the app
           setIsInitialized(true);
@@ -57,6 +66,16 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
       
       initTheme();
     }
+    
+    // Force initialization timeout after 5 seconds
+    const timeout = setTimeout(() => {
+      if (!isInitialized) {
+        logger.warn('Impulsivity theme initialization timed out, continuing anyway');
+        setIsInitialized(true);
+      }
+    }, 5000);
+    
+    return () => clearTimeout(timeout);
   }, [autoApply, applyTheme, isInitialized, logger, isSyncing, themeStoreLoading]);
   
   // If showing loader and still initializing, render a loading indicator

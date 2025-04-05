@@ -5,6 +5,7 @@ import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { DynamicKeyframes } from './DynamicKeyframes';
+import { ThemeLogDetails } from '@/types/theme';
 
 // Create context
 const SiteThemeContext = createContext<{
@@ -55,8 +56,8 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     if (!currentTheme || !Array.isArray(currentTheme.component_tokens)) {
       logger.debug('No component styles found in theme', { 
         error: true,
-        reason: 'No component tokens found in theme' 
-      });
+        details: { reason: 'No component tokens found in theme' } 
+      } as ThemeLogDetails);
       return {};
     }
 
@@ -74,8 +75,8 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     } catch (error) {
       logger.error('Error processing component styles', { 
         error: true,
-        errorMessage: error instanceof Error ? error.message : String(error) 
-      });
+        details: { errorMessage: error instanceof Error ? error.message : String(error) }
+      } as ThemeLogDetails);
       return {};
     }
   }, [currentTheme, logger]);
@@ -94,8 +95,8 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     } catch (error) {
       logger.error('Error processing animations', { 
         error: true,
-        errorMessage: error instanceof Error ? error.message : String(error) 
-      });
+        details: { errorMessage: error instanceof Error ? error.message : String(error) }
+      } as ThemeLogDetails);
       return defaultAnimations;
     }
   }, [currentTheme, logger]);
@@ -108,10 +109,12 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
         setIsLoaded(true);
         logger.info('Theme loaded successfully', { 
           success: true,
-          themeName: currentTheme.name,
-          hasAnimations: Boolean(animations && Object.keys(animations).length > 0),
-          hasComponentStyles: Boolean(componentStyles && Object.keys(componentStyles).length > 0)
-        });
+          details: {
+            themeName: currentTheme.name,
+            hasAnimations: Boolean(animations && Object.keys(animations).length > 0),
+            hasComponentStyles: Boolean(componentStyles && Object.keys(componentStyles).length > 0)
+          }
+        } as ThemeLogDetails);
       }, 100);
       
       return () => clearTimeout(timer);
@@ -169,13 +172,13 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       
       logger.debug('Applied theme CSS variables', { 
         success: true,
-        themeName: currentTheme?.name || 'default' 
-      });
+        details: { themeName: currentTheme?.name || 'default' }
+      } as ThemeLogDetails);
     } catch (error) {
       logger.error('Failed to apply CSS variables', { 
         error: true,
-        errorMessage: error instanceof Error ? error.message : String(error) 
-      });
+        details: { errorMessage: error instanceof Error ? error.message : String(error) }
+      } as ThemeLogDetails);
     }
   }, [variables, currentTheme, logger]);
   

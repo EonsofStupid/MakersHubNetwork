@@ -1,4 +1,3 @@
-
 export interface Theme {
   id: string;
   name: string;
@@ -67,44 +66,27 @@ export interface ThemeToken {
 }
 
 export interface ThemeLogDetails {
-  // Status indicators
-  success?: boolean;
   error?: boolean;
+  success?: boolean;
   warning?: boolean;
-  
-  // Error information
   errorMessage?: string;
+  errorDetails?: Record<string, any>;
   errorCode?: string;
-  errorDetails?: string;
   errorHint?: string;
-  
-  // Theme information
   themeId?: string;
-  theme?: string;
-  defaultTheme?: string;
+  themeName?: string;
+  isFallback?: boolean;
+  hasAnimations?: boolean;
+  hasComponentStyles?: boolean;
+  componentTokensCount?: number;
   originalTheme?: string;
-  
-  // Component information
-  component?: string;
-  componentCount?: number;
-  
-  // Operation status
   mainSite?: boolean;
   admin?: boolean;
   database?: boolean;
-  
-  // Additional context
-  reason?: string;
-  details?: Record<string, unknown>;
-  
-  // Allow for additional properties
-  [key: string]: unknown;
 }
 
-// Define ThemeContext type to ensure consistent usage
 export type ThemeContext = 'site' | 'admin' | 'chat';
 
-// Animation effect types
 export interface ThemeAnimation {
   name: string;
   duration: string | number;
@@ -116,7 +98,6 @@ export interface ThemeAnimation {
   keyframes: Record<string, any>;
 }
 
-// Effect types for components
 export interface ThemeEffect {
   id: string;
   type: 'glitch' | 'gradient' | 'cyber' | 'pulse' | 'particle' | 'morph';
