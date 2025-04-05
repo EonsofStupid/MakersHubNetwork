@@ -1,9 +1,14 @@
 
-import { useAuthState } from "@/auth/hooks/useAuthState";
+import { useEffect, useState } from 'react';
+import { useAuthState } from '@/auth/hooks/useAuthState';
+import { hasAdminAccess } from '@/auth/rbac/roles';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
+import { UserRole } from '@/auth/types/roles';
 
 interface AdminAccessOptions {
   requireAuth?: boolean;
-  allowedRoles?: string[];
+  allowedRoles?: UserRole[];
 }
 
 /**
@@ -11,28 +16,39 @@ interface AdminAccessOptions {
  * Uses useAuthState directly to avoid circular dependencies
  */
 export function useAdminAccess(options: AdminAccessOptions = { requireAuth: true }) {
-  const { user, roles } = useAuthState();
+  const { status, roles, user } = useAuthState();
+  const [isChecking, setIsChecking] = useState(true);
+  const logger = useLogger("useAdminAccess", LogCategory.ADMIN);
   
-  const hasAdminAccess = (): boolean => {
-    // If authentication is required and user is not logged in
-    if (options.requireAuth && !user) {
-      return false;
+  // Derived state
+  const isAuthenticated = status === 'authenticated' && !!user;
+  const adminAccessResult = hasAdminAccess(roles);
+  
+  useEffect(() => {
+    if (status !== 'loading') {
+      setIsChecking(false);
     }
-    
-    // Check if user has admin or super_admin role
-    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-    
-    // If specific roles are required
-    if (options.allowedRoles && options.allowedRoles.length > 0) {
-      return options.allowedRoles.some(role => roles.includes(role));
+  }, [status]);
+  
+  // Log access attempts only once
+  useEffect(() => {
+    if (!isChecking && isAuthenticated) {
+      const logLevel = adminAccessResult ? 'info' : 'warn';
+      
+      logger[logLevel]('Admin access check', {
+        details: {
+          userId: user?.id,
+          hasAccess: adminAccessResult,
+          roles
+        }
+      });
     }
-    
-    // Default to admin check
-    return isAdmin;
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isChecking, isAuthenticated, adminAccessResult]);
   
   return {
-    hasAdminAccess: hasAdminAccess(),
-    user
+    isLoading: isChecking,
+    isAuthenticated,
+    hasAdminAccess: adminAccessResult
   };
 }
