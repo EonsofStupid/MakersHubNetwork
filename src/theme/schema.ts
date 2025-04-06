@@ -1,9 +1,9 @@
 
 import { z } from "zod";
 
-// Define valid theme scopes
-export const ThemeScopeSchema = z.enum(['app', 'admin', 'chat', 'training']);
-export type ThemeScope = z.infer<typeof ThemeScopeSchema>;
+// Define valid theme contexts
+export const ThemeContextSchema = z.enum(['app', 'admin', 'chat', 'training']);
+export type ThemeContext = z.infer<typeof ThemeContextSchema>;
 
 // Color tokens with hex validation
 const HexColorSchema = z.string().regex(/^#([0-9a-fA-F]{3,8})$/, "Must be a valid hex color");
@@ -45,12 +45,14 @@ export const ThemeTokensSchema = z.object({
 export const ThemeSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  scope: ThemeScopeSchema,
+  context: ThemeContextSchema,
   tokens: ThemeTokensSchema,
   status: z.enum(['draft', 'published', 'archived']),
   isDefault: z.boolean(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  design_tokens: z.record(z.unknown()).optional(),
+  component_tokens: z.array(z.record(z.unknown())).optional(),
 });
 
 // Derived types

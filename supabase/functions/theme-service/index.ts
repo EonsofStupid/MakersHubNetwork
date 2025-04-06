@@ -54,17 +54,18 @@ serve(async (req) => {
   }
 
   try {
-    // Parse URL and get scope parameter
+    // Parse URL and get scope parameter (for backward compatibility)
     const url = new URL(req.url);
-    const scope = url.searchParams.get('scope') || 'app';
+    // Support both 'scope' and 'context' parameters, defaulting to 'app' context
+    const scopeOrContext = url.searchParams.get('scope') || url.searchParams.get('context') || 'app';
     
-    console.log(`Loading theme for scope: ${scope}`);
+    console.log(`Loading theme for context: ${scopeOrContext}`);
 
-    // Query for theme by scope and default status
+    // Query for theme by context and default status
     const { data: theme, error } = await supabaseAdmin
       .from('themes')
       .select('*')
-      .eq('scope', scope)
+      .eq('context', scopeOrContext) // Use context instead of scope
       .eq('is_default', true)
       .single();
 
@@ -76,27 +77,29 @@ serve(async (req) => {
         JSON.stringify({ 
           tokens: fallbackTokens,
           error: error.message,
-          theme: null
+          theme: null,
+          isFallback: true
         }),
         { headers: corsHeaders }
       );
     }
 
     if (!theme) {
-      console.warn(`No theme found for scope: ${scope}, using fallback`);
+      console.warn(`No theme found for context: ${scopeOrContext}, using fallback`);
       
       // Return fallback data when no theme found
       return new Response(
         JSON.stringify({ 
           tokens: fallbackTokens,
-          theme: null
+          theme: null,
+          isFallback: true
         }),
         { headers: corsHeaders }
       );
     }
 
     // Get tokens from theme design_tokens or use fallback
-    const tokens = theme.design_tokens?.tokens || fallbackTokens;
+    const tokens = theme.design_tokens?.colors || fallbackTokens;
     
     console.log(`Theme loaded successfully: ${theme.name}`);
 
@@ -107,12 +110,15 @@ serve(async (req) => {
         theme: {
           id: theme.id,
           name: theme.name,
-          scope: theme.scope || scope,
+          context: theme.context,
           status: theme.status,
           isDefault: theme.is_default,
           createdAt: theme.created_at,
-          updatedAt: theme.updated_at
-        }
+          updatedAt: theme.updated_at,
+          design_tokens: theme.design_tokens,
+          component_tokens: theme.component_tokens
+        },
+        isFallback: false
       }),
       { headers: corsHeaders }
     );
@@ -124,7 +130,8 @@ serve(async (req) => {
       JSON.stringify({ 
         tokens: fallbackTokens,
         error: error instanceof Error ? error.message : String(error),
-        theme: null
+        theme: null,
+        isFallback: true
       }),
       { status: 500, headers: corsHeaders }
     );
