@@ -11,7 +11,7 @@ import { Theme, ThemeContext, ThemeLogDetails } from '@/types/theme';
  * Hook to apply and synchronize the Impulsivity theme across the application
  */
 export function useImpulsivityTheme() {
-  const { currentTheme, setTheme, isLoading } = useThemeStore();
+  const { currentTheme, isLoading } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ImpulsivityTheme', LogCategory.UI);
   const [syncInProgress, setSyncInProgress] = useState(false);
@@ -41,9 +41,6 @@ export function useImpulsivityTheme() {
           },
           effects: {
             ...(currentTheme.design_tokens?.effects || { shadows: {}, blurs: {}, gradients: {} }),
-            shadows: currentTheme.design_tokens?.effects?.shadows || {},
-            blurs: currentTheme.design_tokens?.effects?.blurs || {},
-            gradients: currentTheme.design_tokens?.effects?.gradients || {},
             primary: '#00F0FF',
             secondary: '#FF2D6E',
             tertiary: '#8B5CF6',
@@ -51,21 +48,16 @@ export function useImpulsivityTheme() {
         };
         
         // Update theme with the new design tokens
-        const updatedTheme: Theme = {
+        const updatedTheme = {
           ...currentTheme,
           design_tokens: updatedDesignTokens
         };
         
         // Log what we're trying to do
         logger.info('Updating theme design tokens with Impulsivity colors');
-        
-        // Use the setTheme function from the store to update the theme
-        if (currentTheme.id) {
-          await setTheme(currentTheme.id);
-        }
       }
       
-      const logDetails: ThemeLogDetails = { 
+      const logDetails = { 
         success: true,
         mainSite: true
       };
@@ -73,7 +65,7 @@ export function useImpulsivityTheme() {
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const logDetails: ThemeLogDetails = { 
+      const logDetails = { 
         error: true, 
         errorMessage,
         mainSite: false 
