@@ -1,7 +1,8 @@
+
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { useThemeStore } from '@/stores/theme/themeStore';
-import { Theme, ThemeLogDetails, ComponentTokens } from '@/types/theme';
+import { ComponentTokens } from '@/types/theme';
 
 /**
  * Synchronize the Impulsivity theme to the database

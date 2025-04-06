@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 import { ThemeState } from "./types";
 import { ComponentTokens, ThemeContext } from "@/types/theme";
@@ -108,6 +109,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       if (!validationResult.success) {
         // Log validation errors
         logger.warn('Theme validation failed', { 
+          category: LogCategory.SYSTEM,
           details: { 
             errors: validationResult.error.format(),
             themeId: themeIdOrName 
@@ -161,7 +163,10 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
               const validatedToken = componentTokenSchema.parse(tokenToValidate);
               validatedComponentTokens.push(validatedToken as ComponentTokens);
             } catch (err) {
-              logger.warn('Invalid component token found', { details: { token, error: err } });
+              logger.warn('Invalid component token found', { 
+                category: LogCategory.SYSTEM,
+                details: { token, error: err } 
+              });
             }
           }
         }
@@ -256,6 +261,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       });
       
       logger.warn("Using hardcoded fallback theme due to error", { 
+        category: LogCategory.SYSTEM,
         details: { errorMessage: error instanceof Error ? error.message : String(error) }
       });
     }
@@ -289,7 +295,10 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
               validatedAdminComponents.push(validatedToken as ComponentTokens);
             }
           } catch (err) {
-            logger.warn('Invalid admin component token found', { details: { token, error: err } });
+            logger.warn('Invalid admin component token found', { 
+              category: LogCategory.SYSTEM,
+              details: { token, error: err } 
+            });
           }
         }
       }

@@ -5,7 +5,7 @@ import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { Theme, ThemeContext, ThemeLogDetails } from '@/types/theme';
+import { Theme, ThemeContext } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -54,20 +54,24 @@ export function useImpulsivityTheme() {
         logger.info('Updating theme design tokens with Impulsivity colors');
       }
       
-      const logDetails: ThemeLogDetails = { 
-        success: true,
-        mainSite: true
-      };
-      logger.info('Applied Impulsivity theme to main site', { details: logDetails });
+      logger.info('Applied Impulsivity theme to main site', { 
+        details: {
+          success: true,
+          mainSite: true
+        },
+        category: LogCategory.UI
+      });
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const logDetails: ThemeLogDetails = { 
-        error: true, 
-        errorMessage,
-        mainSite: false 
-      };
-      logger.error('Error applying Impulsivity theme to main site', { details: logDetails });
+      logger.error('Error applying Impulsivity theme to main site', { 
+        details: { 
+          error: true, 
+          errorMessage,
+          mainSite: false 
+        },
+        category: LogCategory.UI
+      });
       return false;
     }
   };
@@ -94,24 +98,30 @@ export function useImpulsivityTheme() {
           --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.7);
         `);
         
-        const logDetails: ThemeLogDetails = { 
-          success: true,
-          admin: true 
-        };
-        logger.info('Applied Impulsivity theme to admin panel', { details: logDetails });
+        logger.info('Applied Impulsivity theme to admin panel', { 
+          details: {
+            success: true,
+            admin: true 
+          },
+          category: LogCategory.UI 
+        });
         return true;
       } else {
-        logger.warn('Admin panel root element not found, skipping theme application');
+        logger.warn('Admin panel root element not found, skipping theme application', {
+          category: LogCategory.UI
+        });
         return true; // Not a critical failure
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const logDetails: ThemeLogDetails = { 
-        error: true, 
-        errorMessage,
-        admin: false 
-      };
-      logger.error('Error applying Impulsivity theme to admin panel', { details: logDetails });
+      logger.error('Error applying Impulsivity theme to admin panel', { 
+        details: { 
+          error: true, 
+          errorMessage,
+          admin: false 
+        },
+        category: LogCategory.UI
+      });
       return false;
     }
   };
@@ -120,35 +130,43 @@ export function useImpulsivityTheme() {
   const syncToDatabase = async () => {
     try {
       setSyncInProgress(true);
-      logger.info('Starting theme sync to database');
+      logger.info('Starting theme sync to database', {
+        category: LogCategory.UI
+      });
       
       const result = await syncImpulsivityTheme();
       
       if (result) {
-        const logDetails: ThemeLogDetails = { 
-          success: true,
-          database: true
-        };
-        logger.info('Successfully synced Impulsivity theme to database', { details: logDetails });
+        logger.info('Successfully synced Impulsivity theme to database', { 
+          details: {
+            success: true,
+            database: true
+          },
+          category: LogCategory.UI
+        });
       } else {
-        const logDetails: ThemeLogDetails = { 
-          error: true, 
-          success: false,
-          database: false
-        };
-        logger.error('Failed to sync Impulsivity theme to database', { details: logDetails });
+        logger.error('Failed to sync Impulsivity theme to database', { 
+          details: {
+            error: true, 
+            success: false,
+            database: false
+          },
+          category: LogCategory.UI
+        });
       }
       
       setSyncInProgress(false);
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const logDetails: ThemeLogDetails = { 
-        error: true, 
-        errorMessage,
-        database: false
-      };
-      logger.error('Error syncing Impulsivity theme to database', { details: logDetails });
+      logger.error('Error syncing Impulsivity theme to database', { 
+        details: { 
+          error: true, 
+          errorMessage,
+          database: false
+        },
+        category: LogCategory.UI
+      });
       
       setSyncInProgress(false);
       return false;
@@ -158,11 +176,15 @@ export function useImpulsivityTheme() {
   // Apply theme everywhere
   const applyTheme = async () => {
     if (syncInProgress) {
-      logger.warn('Theme sync already in progress, skipping');
+      logger.warn('Theme sync already in progress, skipping', {
+        category: LogCategory.UI
+      });
       return false;
     }
     
-    logger.info('Beginning full Impulsivity theme application');
+    logger.info('Beginning full Impulsivity theme application', {
+      category: LogCategory.UI
+    });
     
     const mainSiteResult = await applyToMainSite();
     const adminResult = await applyToAdmin();
@@ -174,14 +196,15 @@ export function useImpulsivityTheme() {
         description: "The theme has been successfully applied across the entire application.",
       });
       
-      const logDetails: ThemeLogDetails = {
-        success: true,
-        mainSite: true, 
-        admin: true, 
-        database: true
-      };
-      
-      logger.info('Impulsivity theme fully applied', { details: logDetails });
+      logger.info('Impulsivity theme fully applied', { 
+        details: {
+          success: true,
+          mainSite: true, 
+          admin: true, 
+          database: true
+        },
+        category: LogCategory.UI
+      });
       return true;
     } else {
       // Show toast with partial success message
@@ -196,15 +219,16 @@ export function useImpulsivityTheme() {
         variant: "destructive",
       });
       
-      const logDetails: ThemeLogDetails = {
-        warning: true,
-        success: false,
-        mainSite: mainSiteResult, 
-        admin: adminResult, 
-        database: dbResult
-      };
-      
-      logger.warn('Impulsivity theme partially applied', { details: logDetails });
+      logger.warn('Impulsivity theme partially applied', { 
+        details: {
+          warning: true,
+          success: false,
+          mainSite: mainSiteResult, 
+          admin: adminResult, 
+          database: dbResult
+        },
+        category: LogCategory.UI
+      });
       
       return false;
     }

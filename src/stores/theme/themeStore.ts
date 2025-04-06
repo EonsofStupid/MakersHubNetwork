@@ -1,6 +1,6 @@
 
 import { create } from "zustand";
-import { Theme, ThemeContext, ThemeToken, ComponentTokens, ThemeLogDetails } from "@/types/theme";
+import { Theme, ThemeContext, ThemeToken, ComponentTokens } from "@/types/theme";
 import { ThemeTokens, fallbackTokens, validateThemeTokens } from "@/theme/schema";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
@@ -93,13 +93,11 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set({ loadStatus: 'loading' });
     
     try {
-      const logDetails: ThemeLogDetails = {
+      logger.info('Loading theme', {
         category: LogCategory.UI,
         details: { context },
         source: 'ThemeStore'
-      };
-      
-      logger.info('Loading theme', logDetails);
+      });
       
       // Fetch theme data from Supabase edge function - using context parameter
       const response = await fetch(`https://kxeffcclfvecdvqpljbh.supabase.co/functions/v1/theme-service?context=${context}`);
@@ -125,7 +123,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
               details: {
                 errors: result.error.format(),
                 theme: data.theme.name || 'unknown'
-              }
+              },
+              category: LogCategory.SYSTEM
             });
           }
         }
@@ -135,7 +134,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
           details: { 
             error: validationError instanceof Error ? validationError.message : String(validationError),
             theme: data.theme?.name || 'unknown'
-          }
+          },
+          category: LogCategory.SYSTEM
         });
       }
       
@@ -201,7 +201,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       // Apply tokens to CSS variables
       applyTokensToDOM(validatedTokens);
       
-      const successLogDetails: ThemeLogDetails = {
+      logger.info('Theme loaded successfully', {
         category: LogCategory.SYSTEM,
         details: { 
           context, 
@@ -209,19 +209,15 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
           isFallback: data.isFallback || false,
           validationFailed
         }
-      };
-      
-      logger.info('Theme loaded successfully', successLogDetails);
+      });
     } catch (error) {
-      const errorLogDetails: ThemeLogDetails = {
+      logger.error('Failed to load theme', {
         category: LogCategory.SYSTEM,
         details: { 
           context, 
           error: error instanceof Error ? error.message : String(error) 
         }
-      };
-      
-      logger.error('Failed to load theme', errorLogDetails);
+      });
       
       // Fall back to default tokens on error
       set({ 
@@ -251,13 +247,11 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   setTheme: async (themeId: string) => {
     set({ loadStatus: 'loading' });
     try {
-      const logDetails: ThemeLogDetails = {
+      logger.info('Setting theme by ID', {
         category: LogCategory.UI,
         details: { themeId },
         source: 'ThemeStore'
-      };
-      
-      logger.info('Setting theme by ID', logDetails);
+      });
       
       // Fetch theme data from API
       const response = await fetch(`https://kxeffcclfvecdvqpljbh.supabase.co/functions/v1/get-theme?id=${themeId}`);
@@ -280,7 +274,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
           details: {
             errors: result.error.format(),
             themeId
-          }
+          },
+          category: LogCategory.SYSTEM
         });
         
         // Create a sanitized version
@@ -371,22 +366,18 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         applyTokensToDOM(get().tokens);
       }
       
-      const successLogDetails: ThemeLogDetails = {
+      logger.info('Theme set successfully', {
         category: LogCategory.SYSTEM,
         details: { themeId: data.theme.id, themeName: data.theme.name }
-      };
-      
-      logger.info('Theme set successfully', successLogDetails);
+      });
     } catch (error) {
-      const errorLogDetails: ThemeLogDetails = {
+      logger.error('Failed to set theme', {
         category: LogCategory.SYSTEM,
         details: { 
           themeId,
           error: error instanceof Error ? error.message : String(error) 
         }
-      };
-      
-      logger.error('Failed to set theme', errorLogDetails);
+      });
       
       set({ 
         loadStatus: 'error',
