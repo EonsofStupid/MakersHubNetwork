@@ -10,13 +10,13 @@ import { LogCategory } from '@/logging';
  * @param componentName The name of the component to get tokens for
  * @param context The theme context (site, admin, chat)
  */
-export function useComponentTokens(componentName: string, context: ThemeContext = 'site') {
+export function useComponentTokens(componentName: string, context: ThemeContext = 'site'): Record<string, string> {
   const { currentTheme } = useThemeStore();
   const logger = useLogger('ComponentTokens', LogCategory.UI);
   
   const styles = useMemo(() => {
-    // Default fallback styles
-    const fallbackStyles = {};
+    // Default fallback styles - return empty object to prevent TS errors
+    const fallbackStyles: Record<string, string> = {};
     
     try {
       if (!currentTheme?.component_tokens || !Array.isArray(currentTheme.component_tokens)) {
@@ -29,7 +29,7 @@ export function useComponentTokens(componentName: string, context: ThemeContext 
       );
       
       if (componentToken?.styles) {
-        return componentToken.styles;
+        return componentToken.styles as Record<string, string>;
       }
       
       // Find component tokens matching just the component name (fallback)
@@ -38,7 +38,7 @@ export function useComponentTokens(componentName: string, context: ThemeContext 
       );
       
       if (fallbackToken?.styles) {
-        return fallbackToken.styles;
+        return fallbackToken.styles as Record<string, string>;
       }
       
       return fallbackStyles;

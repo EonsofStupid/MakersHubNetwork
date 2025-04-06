@@ -1,10 +1,9 @@
 
 import { useMemo } from 'react';
-import { useThemeStore } from '@/stores/theme/store';
 import { Theme } from '@/types/theme';
 
 export interface ThemeVariables {
-  // Colors
+  // Color variables
   background: string;
   foreground: string;
   card: string;
@@ -23,12 +22,12 @@ export interface ThemeVariables {
   input: string;
   ring: string;
   
-  // Effects
+  // Effect colors
   effectColor: string;
   effectSecondary: string;
   effectTertiary: string;
   
-  // Timing
+  // Timing variables
   transitionFast: string;
   transitionNormal: string;
   transitionSlow: string;
@@ -36,115 +35,122 @@ export interface ThemeVariables {
   animationNormal: string;
   animationSlow: string;
   
-  // Radius
+  // Border radius variables
   radiusSm: string;
   radiusMd: string;
   radiusLg: string;
   radiusFull: string;
 }
 
-// Default theme variables
-const defaultVariables: ThemeVariables = {
-  // Colors
-  background: '228 47% 8%',
-  foreground: '210 40% 98%',
-  card: '228 47% 11%',
-  cardForeground: '210 40% 98%',
-  primary: '186 100% 50%',
-  primaryForeground: '210 40% 98%',
-  secondary: '334 100% 59%',
-  secondaryForeground: '210 40% 98%',
-  muted: '228 47% 15%',
-  mutedForeground: '215 20.2% 65.1%',
-  accent: '228 47% 15%',
-  accentForeground: '210 40% 98%',
-  destructive: '0 84.2% 60.2%',
-  destructiveForeground: '210 40% 98%',
-  border: '228 47% 15%',
-  input: '228 47% 15%',
-  ring: '228 47% 20%',
-  
-  // Effects
-  effectColor: '#00F0FF',
-  effectSecondary: '#FF2D6E',
-  effectTertiary: '#8B5CF6',
-  
-  // Timing
-  transitionFast: '150ms',
-  transitionNormal: '300ms',
-  transitionSlow: '500ms',
-  animationFast: '1s',
-  animationNormal: '2s',
-  animationSlow: '3s',
-  
-  // Radius
-  radiusSm: '0.25rem',
-  radiusMd: '0.5rem',
-  radiusLg: '0.75rem',
-  radiusFull: '9999px'
-};
-
 /**
- * Extract theme variables from the current theme or use defaults
+ * Hook to extract theme variables from the current theme
  */
-export function useThemeVariables(theme?: Theme | null): ThemeVariables {
-  const { currentTheme } = useThemeStore();
+export function useThemeVariables(theme: Theme | null): ThemeVariables {
+  // Default variables as a fallback
+  const defaultVariables: ThemeVariables = {
+    background: '228 47% 8%',
+    foreground: '210 40% 98%',
+    card: '228 47% 11%',
+    cardForeground: '210 40% 98%',
+    primary: '186 100% 50%',
+    primaryForeground: '210 40% 98%',
+    secondary: '334 100% 59%',
+    secondaryForeground: '210 40% 98%',
+    muted: '228 47% 15%',
+    mutedForeground: '215 20.2% 65.1%',
+    accent: '228 47% 15%',
+    accentForeground: '210 40% 98%',
+    destructive: '0 84.2% 60.2%',
+    destructiveForeground: '210 40% 98%',
+    border: '228 47% 15%',
+    input: '228 47% 15%',
+    ring: '228 47% 20%',
+    
+    // Effect colors
+    effectColor: '#00F0FF',
+    effectSecondary: '#FF2D6E',
+    effectTertiary: '#8B5CF6',
+    
+    // Timing variables
+    transitionFast: '150ms',
+    transitionNormal: '300ms',
+    transitionSlow: '500ms',
+    animationFast: '1s',
+    animationNormal: '2s',
+    animationSlow: '3s',
+    
+    // Border radius variables
+    radiusSm: '0.25rem',
+    radiusMd: '0.5rem',
+    radiusLg: '0.75rem',
+    radiusFull: '9999px'
+  };
   
-  const activeTheme = theme || currentTheme;
-  
+  // Extract variables from the theme
   return useMemo(() => {
-    if (!activeTheme || !activeTheme.design_tokens) {
+    if (!theme) {
       return defaultVariables;
     }
     
     try {
-      const tokens = activeTheme.design_tokens;
-      const colors = tokens.colors || {};
-      const effects = tokens.effects || {};
-      const animation = tokens.animation?.durations || {};
+      // Extract colors from the theme
+      const colors = theme.design_tokens?.colors || {};
+      
+      // Extract effects from the theme
+      const effects = theme.design_tokens?.effects || {};
+      
+      // Extract animations from the theme
+      const animations = theme.design_tokens?.animation || {};
+      
+      // Create default effects object if missing
+      const defaultEffects = {
+        primary: '#00F0FF',
+        secondary: '#FF2D6E',
+        tertiary: '#8B5CF6'
+      };
       
       return {
         // Colors
-        background: colors.background?.toString() || defaultVariables.background,
-        foreground: colors.foreground?.toString() || defaultVariables.foreground,
-        card: colors.card?.toString() || defaultVariables.card,
-        cardForeground: colors.cardForeground?.toString() || defaultVariables.cardForeground,
-        primary: colors.primary?.toString() || defaultVariables.primary,
-        primaryForeground: colors.primaryForeground?.toString() || defaultVariables.primaryForeground,
-        secondary: colors.secondary?.toString() || defaultVariables.secondary,
-        secondaryForeground: colors.secondaryForeground?.toString() || defaultVariables.secondaryForeground,
-        muted: colors.muted?.toString() || defaultVariables.muted,
-        mutedForeground: colors.mutedForeground?.toString() || defaultVariables.mutedForeground,
-        accent: colors.accent?.toString() || defaultVariables.accent,
-        accentForeground: colors.accentForeground?.toString() || defaultVariables.accentForeground,
-        destructive: colors.destructive?.toString() || defaultVariables.destructive,
-        destructiveForeground: colors.destructiveForeground?.toString() || defaultVariables.destructiveForeground,
-        border: colors.border?.toString() || defaultVariables.border,
-        input: colors.input?.toString() || defaultVariables.input,
-        ring: colors.ring?.toString() || defaultVariables.ring,
+        background: colors.background || defaultVariables.background,
+        foreground: colors.foreground || defaultVariables.foreground,
+        card: colors.card || defaultVariables.card,
+        cardForeground: colors.cardForeground || defaultVariables.cardForeground,
+        primary: colors.primary || defaultVariables.primary,
+        primaryForeground: colors.primaryForeground || defaultVariables.primaryForeground,
+        secondary: colors.secondary || defaultVariables.secondary,
+        secondaryForeground: colors.secondaryForeground || defaultVariables.secondaryForeground,
+        muted: colors.muted || defaultVariables.muted,
+        mutedForeground: colors.mutedForeground || defaultVariables.mutedForeground,
+        accent: colors.accent || defaultVariables.accent,
+        accentForeground: colors.accentForeground || defaultVariables.accentForeground,
+        destructive: colors.destructive || defaultVariables.destructive,
+        destructiveForeground: colors.destructiveForeground || defaultVariables.destructiveForeground,
+        border: colors.border || defaultVariables.border,
+        input: colors.input || defaultVariables.input,
+        ring: colors.ring || defaultVariables.ring,
         
-        // Effects
-        effectColor: effects.primary?.toString() || defaultVariables.effectColor,
-        effectSecondary: effects.secondary?.toString() || defaultVariables.effectSecondary,
-        effectTertiary: effects.tertiary?.toString() || defaultVariables.effectTertiary,
+        // Effect colors - handle missing effects object
+        effectColor: defaultEffects.primary || defaultVariables.effectColor,
+        effectSecondary: defaultEffects.secondary || defaultVariables.effectSecondary,
+        effectTertiary: defaultEffects.tertiary || defaultVariables.effectTertiary,
         
-        // Timing
-        transitionFast: animation.fast?.toString() || defaultVariables.transitionFast,
-        transitionNormal: animation.normal?.toString() || defaultVariables.transitionNormal,
-        transitionSlow: animation.slow?.toString() || defaultVariables.transitionSlow,
-        animationFast: animation.animationFast?.toString() || defaultVariables.animationFast,
-        animationNormal: animation.animationNormal?.toString() || defaultVariables.animationNormal,
-        animationSlow: animation.animationSlow?.toString() || defaultVariables.animationSlow,
+        // Timing variables
+        transitionFast: animations.durations?.fast as string || defaultVariables.transitionFast,
+        transitionNormal: animations.durations?.normal as string || defaultVariables.transitionNormal,
+        transitionSlow: animations.durations?.slow as string || defaultVariables.transitionSlow,
+        animationFast: animations.durations?.animationFast as string || defaultVariables.animationFast,
+        animationNormal: animations.durations?.animationNormal as string || defaultVariables.animationNormal,
+        animationSlow: animations.durations?.animationSlow as string || defaultVariables.animationSlow,
         
-        // Radius
-        radiusSm: '0.25rem',
-        radiusMd: '0.5rem',
-        radiusLg: '0.75rem',
-        radiusFull: '9999px'
+        // Border radius variables
+        radiusSm: defaultVariables.radiusSm,
+        radiusMd: defaultVariables.radiusMd,
+        radiusLg: defaultVariables.radiusLg,
+        radiusFull: defaultVariables.radiusFull
       };
     } catch (error) {
-      console.error('Error extracting theme variables', error);
+      console.error('Error extracting theme variables:', error);
       return defaultVariables;
     }
-  }, [activeTheme]);
+  }, [theme]);
 }

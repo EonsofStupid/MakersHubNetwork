@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
 import { BuildShowcase } from '@/components/landing/BuildShowcase';
@@ -13,7 +14,7 @@ export default function Index() {
   }, [applyToMainSite]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen w-full">
       {/* Hero section would go here */}
       
       {/* Features section */}

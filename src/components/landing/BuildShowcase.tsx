@@ -28,6 +28,21 @@ export function BuildShowcase({
 }: BuildShowcaseProps) {
   const styles = useComponentTokens('BuildShowcase');
   
+  // Ensure we have default styles to prevent TS errors
+  const defaultStyles = {
+    container: "py-16 bg-background/20 backdrop-blur-sm",
+    heading: "text-3xl font-bold text-center mb-4",
+    subheading: "text-xl text-muted-foreground text-center mb-12 max-w-3xl mx-auto",
+    grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto px-4",
+    card: "build-card overflow-hidden rounded-lg border border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300",
+    cardImage: "w-full h-full object-cover transition-transform duration-500",
+    cardOverlay: "absolute inset-0 bg-gradient-to-t from-background to-transparent",
+    cardContent: "p-4",
+    cardTitle: "font-bold text-lg mb-1 line-clamp-1",
+    cardCreator: "text-sm text-muted-foreground mb-2",
+    cardStats: "flex items-center justify-between text-xs text-muted-foreground"
+  };
+  
   const defaultBuilds: Build[] = [
     {
       id: '1',
@@ -63,40 +78,43 @@ export function BuildShowcase({
   
   const displayBuilds = builds.length > 0 ? builds : defaultBuilds;
   
+  // Merge component tokens with default styles
+  const mergedStyles = { ...defaultStyles, ...styles };
+  
   return (
-    <section className={cn(styles.container || "py-16 bg-background/20 backdrop-blur-sm")}>
-      <div className="container mx-auto">
-        <h2 className={cn(styles.heading || "text-3xl font-bold text-center mb-4")}>
+    <section className={cn(mergedStyles.container)}>
+      <div className="w-full max-w-[2000px] mx-auto">
+        <h2 className={cn(mergedStyles.heading)}>
           {title}
         </h2>
-        <p className={cn(styles.subheading || "text-xl text-muted-foreground text-center mb-12 max-w-3xl mx-auto")}>
+        <p className={cn(mergedStyles.subheading)}>
           {subtitle}
         </p>
         
-        <div className={cn(styles.grid || "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto px-4")}>
+        <div className={cn(mergedStyles.grid)}>
           {displayBuilds.map((build) => (
-            <div key={build.id} className={cn(styles.card || "build-card overflow-hidden rounded-lg border border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300")}>
+            <div key={build.id} className={cn(mergedStyles.card)}>
               <div className="build-card-image-container relative aspect-video overflow-hidden">
                 <img 
                   src={build.imageUrl} 
                   alt={build.title}
-                  className={cn(styles.cardImage || "w-full h-full object-cover transition-transform duration-500")}
+                  className={cn(mergedStyles.cardImage)}
                 />
-                <div className={cn(styles.cardOverlay || "absolute inset-0 bg-gradient-to-t from-background to-transparent")}></div>
+                <div className={cn(mergedStyles.cardOverlay)}></div>
                 <span className="build-card-category absolute bottom-2 left-2 inline-block px-2 py-1 text-xs rounded-md backdrop-blur-md bg-primary/30 text-primary-foreground border border-primary/40">
                   {build.category}
                 </span>
               </div>
               
-              <div className={cn(styles.cardContent || "p-4")}>
-                <h3 className={cn(styles.cardTitle || "font-bold text-lg mb-1 line-clamp-1")}>
+              <div className={cn(mergedStyles.cardContent)}>
+                <h3 className={cn(mergedStyles.cardTitle)}>
                   {build.title}
                 </h3>
-                <p className={cn(styles.cardCreator || "text-sm text-muted-foreground mb-2")}>
+                <p className={cn(mergedStyles.cardCreator)}>
                   by {build.creator}
                 </p>
                 
-                <div className={cn(styles.cardStats || "flex items-center justify-between text-xs text-muted-foreground")}>
+                <div className={cn(mergedStyles.cardStats)}>
                   <span className="flex items-center gap-1">
                     <Eye className="w-3 h-3" />
                     {build.views}
