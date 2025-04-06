@@ -4,6 +4,7 @@ import { Outlet, createRoute } from '@tanstack/react-router';
 import { rootRoute } from '@/router';
 import { AdminLayout } from '@/admin/components/layouts/AdminLayout';
 import { AdminAuthGuard } from '@/admin/components/AdminAuthGuard';
+import { AdminRoutes } from './AdminRoutes';
 
 // Import admin pages (Lazy load them for better performance)
 const Dashboard = React.lazy(() => import('./dashboard/DashboardPage'));
@@ -25,154 +26,104 @@ const PageLoader = () => (
   </div>
 );
 
-// Define the admin route with layout
-export const adminRoute = createRoute({
+// Define base admin route for all admin pages
+const adminBaseRoute = createRoute({
   getParentRoute: () => rootRoute,
+  id: 'adminBase',
   path: '/admin',
-  component: () => (
-    <AdminAuthGuard>
-      <AdminLayout>
-        <Outlet />
-      </AdminLayout>
-    </AdminAuthGuard>
-  ),
+  component: AdminRoutes
 });
 
-// Admin dashboard route
-export const adminDashboardRoute = createRoute({
-  getParentRoute: () => adminRoute,
+// Dashboard route
+const dashboardRoute = createRoute({
+  getParentRoute: () => adminBaseRoute,
   path: '/dashboard',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <Dashboard />
-    </React.Suspense>
-  ),
+  component: () => <React.Suspense fallback={<PageLoader />}><Dashboard /></React.Suspense>
 });
 
-// Admin builds route
-export const adminBuildsRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: '/builds',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <BuildsPage />
-    </React.Suspense>
-  ),
-});
-
-// Admin users route
-export const adminUsersRoute = createRoute({
-  getParentRoute: () => adminRoute,
+// Users route
+const usersRoute = createRoute({
+  getParentRoute: () => adminBaseRoute,
   path: '/users',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <UsersPage />
-    </React.Suspense>
-  ),
+  component: () => <React.Suspense fallback={<PageLoader />}><UsersPage /></React.Suspense>
 });
 
-// Admin parts route
-export const adminPartsRoute = createRoute({
-  getParentRoute: () => adminRoute,
+// Parts route
+const partsRoute = createRoute({
+  getParentRoute: () => adminBaseRoute,
   path: '/parts',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <PartsPage />
-    </React.Suspense>
-  ),
+  component: () => <React.Suspense fallback={<PageLoader />}><PartsPage /></React.Suspense>
 });
 
-// Admin themes route
-export const adminThemesRoute = createRoute({
-  getParentRoute: () => adminRoute,
+// Builds route
+const buildsRoute = createRoute({
+  getParentRoute: () => adminBaseRoute,
+  path: '/builds',
+  component: () => <React.Suspense fallback={<PageLoader />}><BuildsPage /></React.Suspense>
+});
+
+// Themes route
+const themesRoute = createRoute({
+  getParentRoute: () => adminBaseRoute,
   path: '/themes',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <ThemesPage />
-    </React.Suspense>
-  ),
+  component: () => <React.Suspense fallback={<PageLoader />}><ThemesPage /></React.Suspense>
 });
 
-// Admin content route
-export const adminContentRoute = createRoute({
-  getParentRoute: () => adminRoute,
+// Content route
+const contentRoute = createRoute({
+  getParentRoute: () => adminBaseRoute,
   path: '/content',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <ContentPage />
-    </React.Suspense>
-  ),
+  component: () => <React.Suspense fallback={<PageLoader />}><ContentPage /></React.Suspense>
 });
 
-// Admin settings route
-export const adminSettingsRoute = createRoute({
-  getParentRoute: () => adminRoute,
+// Settings route
+const settingsRoute = createRoute({
+  getParentRoute: () => adminBaseRoute,
   path: '/settings',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <SettingsPage />
-    </React.Suspense>
-  ),
+  component: () => <React.Suspense fallback={<PageLoader />}><SettingsPage /></React.Suspense>
 });
 
-// Admin permissions route
-export const adminPermissionsRoute = createRoute({
-  getParentRoute: () => adminRoute,
+// Permissions route
+const permissionsRoute = createRoute({
+  getParentRoute: () => adminBaseRoute,
   path: '/permissions',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <PermissionsPage />
-    </React.Suspense>
-  ),
+  component: () => <React.Suspense fallback={<PageLoader />}><PermissionsPage /></React.Suspense>
 });
 
-// Admin logs route
-export const adminLogsRoute = createRoute({
-  getParentRoute: () => adminRoute,
+// Logs route
+const logsRoute = createRoute({
+  getParentRoute: () => adminBaseRoute,
   path: '/logs',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <LogsPage />
-    </React.Suspense>
-  ),
+  component: () => <React.Suspense fallback={<PageLoader />}><LogsPage /></React.Suspense>
 });
 
-// Admin unauthorized route
-export const adminUnauthorizedRoute = createRoute({
-  getParentRoute: () => adminRoute,
+// Unauthorized page
+const unauthorizedRoute = createRoute({
+  getParentRoute: () => adminBaseRoute,
   path: '/unauthorized',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <UnauthorizedPage />
-    </React.Suspense>
-  ),
+  component: () => <React.Suspense fallback={<PageLoader />}><UnauthorizedPage /></React.Suspense>
 });
 
-// Admin not found route (catch-all)
-export const adminNotFoundRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: '*',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <NotFoundPage />
-    </React.Suspense>
-  ),
+// Not found page
+const notFoundRoute = createRoute({
+  getParentRoute: () => adminBaseRoute,
+  path: '/*',
+  component: () => <React.Suspense fallback={<PageLoader />}><NotFoundPage /></React.Suspense>
 });
 
-// Register all admin routes
-adminRoute.addChildren([
-  adminDashboardRoute,
-  adminBuildsRoute,
-  adminUsersRoute,
-  adminPartsRoute,
-  adminThemesRoute,
-  adminContentRoute,
-  adminSettingsRoute,
-  adminPermissionsRoute,
-  adminLogsRoute,
-  adminUnauthorizedRoute,
-  adminNotFoundRoute,
-]);
-
-// Export for use in the main router
-export const adminRoutes = [adminRoute];
+// Export all admin routes for registration in main router
+export const adminRoutes = [
+  adminBaseRoute.addChildren([
+    dashboardRoute,
+    usersRoute,
+    partsRoute,
+    buildsRoute, 
+    themesRoute,
+    contentRoute,
+    settingsRoute,
+    permissionsRoute,
+    logsRoute,
+    unauthorizedRoute,
+    notFoundRoute
+  ])
+];

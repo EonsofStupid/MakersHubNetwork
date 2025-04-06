@@ -53,10 +53,12 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
         <ThemeEffectProvider>
+          {/* Theme initialization happens FIRST, before any auth check */}
           <ThemeInitializer context="app" applyImmediately={true}>
             <SiteThemeProvider>
               <ImpulsivityThemeInitializer>
                 <ImpulsivityInit priority={true} autoApply={true} showLoadingState={true}>
+                  {/* Auth happens AFTER theme is initialized */}
                   <AuthProvider>
                     <AppInitializer>
                       <AdminProvider>

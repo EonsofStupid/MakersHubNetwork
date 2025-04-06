@@ -5,7 +5,6 @@ import { z } from 'zod';
 // Define type for navigation options
 interface NavigateOptions {
   replace?: boolean;
-  search?: Record<string, any>;
   state?: Record<string, any>;
 }
 
@@ -21,8 +20,8 @@ export function navigateTo(path: string, options?: NavigateOptions) {
   router.navigate({
     to: path as any, 
     replace: options?.replace,
-    search: options?.search,
-    state: options?.state
+    // Handle state properly for TanStack Router
+    state: options?.state ? options.state : undefined
   });
 }
 

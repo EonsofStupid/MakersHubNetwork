@@ -17,17 +17,18 @@ const PageLoader = () => (
 export function AdminRoutes() {
   const logger = useLogger('AdminRoutes', LogCategory.ADMIN);
   const navigate = useNavigate();
-  const { hasAdminAccess, isAuthenticated, isLoading } = useAdminAccess();
-  const { currentTheme, isLoading: themeLoading } = useThemeStore();
+  const { hasAdminAccess, isAuthenticated, isLoading: authLoading } = useAdminAccess();
+  const { loadStatus } = useThemeStore();
+  const themeLoading = loadStatus === 'loading';
   
   useEffect(() => {
     logger.info('Admin routes initialized', {
       details: {
         hasAdminAccess,
         isAuthenticated,
-        authLoading: isLoading,
+        authLoading,
         themeLoading,
-        themeAvailable: !!currentTheme
+        themeStatus: loadStatus
       }
     });
     
@@ -37,7 +38,7 @@ export function AdminRoutes() {
     }
     
     // Redirect unauthorized users
-    if (!isLoading && isAuthenticated && !hasAdminAccess) {
+    if (!authLoading && isAuthenticated && !hasAdminAccess) {
       logger.warn('Unauthorized access attempt to admin routes', {
         details: { path: location.pathname }
       });
@@ -45,19 +46,19 @@ export function AdminRoutes() {
     }
     
     // Redirect unauthenticated users
-    if (!isLoading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       logger.warn('Unauthenticated access attempt to admin routes', {
         details: { path: location.pathname }
       });
       navigate({ 
         to: '/login' as any,
-        state: { returnTo: location.pathname }
+        state: { returnUrl: location.pathname } // Use TanStack compatible state property
       });
     }
-  }, [logger, isAuthenticated, hasAdminAccess, isLoading, navigate]);
+  }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate]);
   
   // Show a loading state while checking permissions
-  if (isLoading) {
+  if (authLoading) {
     return <PageLoader />;
   }
   

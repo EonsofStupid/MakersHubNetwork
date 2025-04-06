@@ -52,9 +52,7 @@ export function useAuthRedirect(options: RedirectOptions) {
       
       navigate({ 
         to: to as any,
-        state: { 
-          previousPath: location.pathname 
-        }
+        state: { returnUrl: location.pathname } // Use TanStack compatible state
       });
     }
   }, [status, roles, navigate, to, allowRoles, redirectAuthenticated, redirectUnauthenticated, location.pathname, logger]);
