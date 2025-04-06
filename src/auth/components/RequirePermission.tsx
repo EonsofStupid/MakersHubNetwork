@@ -4,7 +4,8 @@ import { Navigate, useLocation, Outlet } from '@tanstack/react-router';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { UserRole } from '@/auth/types/auth.types';
+import { UserRole, ADMIN_ROLES, hasRequiredRole } from '@/auth/types/userRoles';
+import { createSearchParams } from '@/router/searchParams';
 
 interface RequirePermissionProps {
   children?: React.ReactNode;
@@ -22,7 +23,7 @@ export const RequirePermission = ({
   children,
   redirectTo = '/login',
   fallback,
-  allowedRoles = ['admin', 'super_admin'],
+  allowedRoles = ADMIN_ROLES,
   requiredPermission
 }: RequirePermissionProps) => {
   const { roles, status } = useAuthState();
@@ -35,7 +36,7 @@ export const RequirePermission = ({
   }
   
   // Check for required roles
-  const hasRequiredRole = roles.some(role => allowedRoles.includes(role));
+  const hasRequiredRole = roles.some(role => allowedRoles.includes(role as UserRole));
   
   // Specific permission check (if needed)
   const hasRequiredPermission = requiredPermission
@@ -56,11 +57,11 @@ export const RequirePermission = ({
       return <>{fallback}</>;
     }
     
-    // Use proper TanStack Router navigation pattern with correctly typed search params
+    // Use proper TanStack Router navigation pattern with type-safe search params
     return (
       <Navigate 
-        to={redirectTo as any}
-        search={{ from: location.pathname }}
+        to={redirectTo}
+        search={createSearchParams({ from: location.pathname })}
         replace={true}
       />
     );

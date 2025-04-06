@@ -6,6 +6,7 @@ import { LogCategory } from '@/logging';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { adminRoutes } from './index';
+import { createSearchParams } from '@/router/searchParams';
 
 // Loading component for lazy-loaded routes
 const PageLoader = () => (
@@ -34,7 +35,7 @@ export function AdminRoutes() {
     
     // Automatically redirect to dashboard if on /admin root
     if (location.pathname === '/admin') {
-      navigate({ to: '/admin/dashboard' as any });
+      navigate({ to: '/admin/dashboard' });
     }
     
     // Redirect unauthorized users
@@ -42,7 +43,7 @@ export function AdminRoutes() {
       logger.warn('Unauthorized access attempt to admin routes', {
         details: { path: location.pathname }
       });
-      navigate({ to: '/admin/unauthorized' as any });
+      navigate({ to: '/admin/unauthorized' });
     }
     
     // Redirect unauthenticated users
@@ -51,10 +52,10 @@ export function AdminRoutes() {
         details: { path: location.pathname }
       });
       
-      // Use TanStack Router compatible navigation with correctly typed search params
+      // Use TanStack Router compatible navigation with properly typed search params
       navigate({ 
-        to: '/login' as any,
-        search: { from: location.pathname }
+        to: '/login',
+        search: createSearchParams({ from: location.pathname })
       });
     }
   }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate, loadStatus]);
