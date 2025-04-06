@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
@@ -79,7 +80,7 @@ export function useImpulsivityTheme() {
     try {
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement) {
-        const cssVars: ThemeCssVars = {
+        const cssVars: Record<string, string> = {
           '--impulse-primary': tokens.effectPrimary || '#00F0FF',
           '--impulse-secondary': tokens.effectSecondary || '#FF2D6E',
           '--impulse-bg-main': '#121218',

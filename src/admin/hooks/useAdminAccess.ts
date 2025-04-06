@@ -1,48 +1,41 @@
 
-import { useEffect, useState } from 'react';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { hasAdminAccess } from '@/auth/rbac/roles';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { useAuthState } from "@/auth/hooks/useAuthState";
+import { UserRole } from "@/auth/types/auth.types";
+
+interface AdminAccessOptions {
+  requireAuth?: boolean;
+  allowedRoles?: UserRole[];
+}
 
 /**
  * Hook for checking admin access permissions
- * Simplified to avoid circular dependencies
+ * Uses useAuthState directly to avoid circular dependencies
  */
-export function useAdminAccess() {
-  const { status, roles, user } = useAuthState();
-  const [isChecking, setIsChecking] = useState(true);
-  const logger = useLogger("useAdminAccess", LogCategory.ADMIN);
+export function useAdminAccess(options: AdminAccessOptions = { requireAuth: true }) {
+  const { user, roles, status, isAuthenticated } = useAuthState();
   
-  // Derived state
-  const isAuthenticated = status === 'authenticated' && !!user;
-  const adminAccessResult = hasAdminAccess(roles);
-  
-  useEffect(() => {
-    if (status !== 'loading') {
-      setIsChecking(false);
+  const hasAdminAccess = (): boolean => {
+    // If authentication is required and user is not logged in
+    if (options.requireAuth && !isAuthenticated) {
+      return false;
     }
-  }, [status]);
-  
-  // Log access attempts only once
-  useEffect(() => {
-    if (!isChecking && isAuthenticated) {
-      const logLevel = adminAccessResult ? 'info' : 'warn';
-      
-      logger[logLevel]('Admin access check', {
-        details: {
-          userId: user?.id,
-          hasAccess: adminAccessResult,
-          roles
-        }
-      });
+    
+    // Check if user has admin or super_admin role
+    const isAdmin = roles.includes('admin' as UserRole) || roles.includes('super_admin' as UserRole);
+    
+    // If specific roles are required
+    if (options.allowedRoles && options.allowedRoles.length > 0) {
+      return options.allowedRoles.some(role => roles.includes(role));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isChecking, isAuthenticated, adminAccessResult]);
+    
+    // Default to admin check
+    return isAdmin;
+  };
   
   return {
-    isLoading: isChecking,
+    hasAdminAccess: hasAdminAccess(),
+    user,
     isAuthenticated,
-    hasAdminAccess: adminAccessResult
+    isLoading: status === 'loading'
   };
 }

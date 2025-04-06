@@ -7,6 +7,7 @@ import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { adminRoutes } from './index';
 import { createSearchParams } from '@/router/searchParams';
+import { validateAdminPath } from '@/admin/utils/adminRoutes';
 
 // Loading component for lazy-loaded routes
 const PageLoader = () => (
@@ -35,7 +36,10 @@ export function AdminRoutes() {
     
     // Automatically redirect to dashboard if on /admin root
     if (location.pathname === '/admin') {
-      navigate({ to: '/admin/dashboard' });
+      navigate({ 
+        to: validateAdminPath('/admin/dashboard'),
+        replace: true
+      });
     }
     
     // Redirect unauthorized users
@@ -43,7 +47,10 @@ export function AdminRoutes() {
       logger.warn('Unauthorized access attempt to admin routes', {
         details: { path: location.pathname }
       });
-      navigate({ to: '/admin/unauthorized' });
+      navigate({ 
+        to: validateAdminPath('/admin/unauthorized'),
+        replace: true
+      });
     }
     
     // Redirect unauthenticated users

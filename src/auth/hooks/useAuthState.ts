@@ -1,11 +1,20 @@
 
-import { useAuthStore } from '../store/auth.store';
+import { useAuthStore } from '@/auth/store/auth.store';
 
 /**
- * Hook to access auth state directly from store
- * Retrieves ONLY state, doesn't trigger initialization
- * @returns Auth state from store
+ * Hook for accessing authentication state
+ * Returns only the state without any actions to prevent circular dependencies
  */
 export function useAuthState() {
-  return useAuthStore();
+  // Use selector function pattern for better performance
+  return useAuthStore(state => ({
+    user: state.user,
+    session: state.session,
+    roles: state.roles,
+    status: state.status,
+    isLoading: state.isLoading,
+    error: state.error,
+    initialized: state.initialized,
+    isAuthenticated: state.isAuthenticated
+  }));
 }
