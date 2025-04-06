@@ -17,16 +17,18 @@ export async function loadThemeByIdOrName(themeIdOrName: string): Promise<Theme 
   const logger = getLogger('ThemeLoader', LogCategory.UI);
   
   try {
-    const { loadThemeById, loadThemeByName } = useThemeStore.getState();
+    const { setTheme, currentTheme } = useThemeStore.getState();
     
     // Check if the id is a UUID or a name
     if (isValidUUID(themeIdOrName)) {
       // If it's a valid UUID, load by ID
-      return await loadThemeById(themeIdOrName);
+      await setTheme(themeIdOrName);
+      return useThemeStore.getState().currentTheme;
     } else {
       // If it's not a valid UUID, treat as a name
       logger.info(`Loading theme by name: ${themeIdOrName}`);
-      return await loadThemeByName(themeIdOrName);
+      await setTheme(themeIdOrName);
+      return useThemeStore.getState().currentTheme;
     }
   } catch (error) {
     logger.error('Error loading theme', { 
@@ -54,15 +56,15 @@ export async function ensureThemeLoaded(themeIdentifier: string): Promise<boolea
     }
     
     // Try loading the theme
-    const theme = await loadThemeByIdOrName(themeIdentifier);
+    await setTheme(themeIdentifier);
+    const loadedTheme = useThemeStore.getState().currentTheme;
     
-    if (theme) {
-      await setTheme(theme.id);
+    if (loadedTheme) {
       return true;
     } else {
       logger.warn(`Theme not found: ${themeIdentifier}, falling back to default`);
-      const { loadDefaultTheme } = useThemeStore.getState();
-      await loadDefaultTheme();
+      // Load a default theme as fallback
+      await setTheme('Impulsivity');
       return true; // Return true since we fell back to default theme
     }
   } catch (error) {

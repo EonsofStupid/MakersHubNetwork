@@ -3,7 +3,11 @@ import { useEffect } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
-export function ImpulsivityInit({ children }: { children: React.ReactNode }) {
+interface ImpulsivityInitProps {
+  children: React.ReactNode;
+}
+
+export function ImpulsivityInit({ children }: ImpulsivityInitProps) {
   const logger = useLogger('ImpulsivityInit', LogCategory.UI);
   
   // Apply theme CSS variables directly for immediate visual consistency
@@ -48,15 +52,16 @@ export function ImpulsivityInit({ children }: { children: React.ReactNode }) {
       document.body.classList.add('theme-impulsivity-body');
       
       logger.info('Applied direct CSS variables for Impulsivity theme');
-      return true;
     } catch (error) {
       logger.error('Error applying immediate styles', { 
         details: {
           errorMessage: error instanceof Error ? error.message : String(error)
         }
       });
-      return false;
     }
+    
+    // No cleanup needed
+    return () => {};
   }, [logger]);
 
   return <>{children}</>;
