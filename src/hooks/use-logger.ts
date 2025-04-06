@@ -1,21 +1,8 @@
 
 import { useCallback } from 'react';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory, LogOptions } from '@/logging';
 import { LogLevel } from '@/logging/constants/log-level';
-
-// Extended options type for logger
-interface LogOptions {
-  category?: LogCategory;
-  details?: Record<string, unknown>;
-  tags?: string[];
-  success?: boolean;
-  error?: boolean;
-  warning?: boolean;
-  errorMessage?: string;
-  originalTheme?: string;
-  theme?: string;
-}
 
 /**
  * Hook for logging from React components
@@ -63,11 +50,20 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
     });
   }, [logger, source, defaultCategory]);
   
+  const logCustomTiming = useCallback((name: string, duration: number, options?: LogOptions) => {
+    logger.logCustomTiming(name, duration, {
+      ...options,
+      source,
+      category: options?.category || defaultCategory,
+    });
+  }, [logger, source, defaultCategory]);
+  
   return {
     debug,
     info,
     warn,
     error,
-    critical
+    critical,
+    logCustomTiming
   };
 }

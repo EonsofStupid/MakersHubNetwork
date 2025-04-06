@@ -241,12 +241,12 @@ export class LoggerService {
  * Get a logger instance for a specific source
  */
 export function getLogger(source?: string, category?: LogCategory): {
-  debug: (message: string, options?: any) => void;
-  info: (message: string, options?: any) => void;
-  warn: (message: string, options?: any) => void;
-  error: (message: string, options?: any) => void;
-  critical: (message: string, options?: any) => void;
-  logCustomTiming: (name: string, duration: number, options?: any) => void;
+  debug: (message: string, options?: LogOptions) => void;
+  info: (message: string, options?: LogOptions) => void;
+  warn: (message: string, options?: LogOptions) => void;
+  error: (message: string, options?: LogOptions) => void;
+  critical: (message: string, options?: LogOptions) => void;
+  logCustomTiming: (name: string, duration: number, options?: LogOptions) => void;
 } {
   const logger = LoggerService.getInstance();
   

@@ -3,6 +3,16 @@ import { LogEntry, LogLevel, LogTransport } from '../types';
 import { BehaviorSubject } from 'rxjs';
 
 /**
+ * UI transport configuration
+ */
+export interface UITransportConfig {
+  maxEntries?: number;
+  enabled?: boolean;
+  minLevel?: LogLevel;
+  includeDebug?: boolean;
+}
+
+/**
  * UI transport for logging
  */
 export class UITransport implements LogTransport {
@@ -13,8 +23,11 @@ export class UITransport implements LogTransport {
   private maxEntries: number = 100;
   private logsSubject = new BehaviorSubject<LogEntry[]>([]);
   private levelFilter: LogLevel | null = null;
+  private config: UITransportConfig;
   
-  constructor(config?: { maxEntries?: number, enabled?: boolean }) {
+  constructor(config?: UITransportConfig) {
+    this.config = config || {};
+    
     if (config?.maxEntries) {
       this.maxEntries = config.maxEntries;
     }
@@ -25,6 +38,17 @@ export class UITransport implements LogTransport {
   
   log(entry: LogEntry): void {
     if (!this.enabled) return;
+    
+    // Apply configuration filters
+    if (this.config.minLevel !== undefined) {
+      const entryLevelValue = Object.values(LogLevel).indexOf(entry.level);
+      const minLevelValue = Object.values(LogLevel).indexOf(this.config.minLevel);
+      if (entryLevelValue < minLevelValue) return;
+    }
+    
+    if (this.config.includeDebug === false && entry.level === LogLevel.DEBUG) {
+      return;
+    }
     
     // Apply level filter if set
     if (this.levelFilter !== null && entry.level !== this.levelFilter) {
@@ -54,7 +78,7 @@ export class UITransport implements LogTransport {
     this.logsSubject.next([]);
   }
   
-  subscribe(callback: (logs: LogEntry[]) => void): () => void {
+  subscribe(callback: (entries: LogEntry[]) => void): () => void {
     const subscription = this.logsSubject.subscribe(callback);
     return () => subscription.unsubscribe();
   }

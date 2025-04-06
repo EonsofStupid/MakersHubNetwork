@@ -14,7 +14,7 @@ export const consoleTransport: LogTransport = {
     const prefix = `[${timestamp}] [${entry.level}] [${entry.category}]`;
     
     // Special handling for theme-related errors - make them stand out
-    const isThemeRelated = entry.category?.toLowerCase().includes('theme') || 
+    const isThemeRelated = entry.category?.toString().toLowerCase().includes('theme') || 
                           (typeof entry.message === 'string' && entry.message.toLowerCase().includes('theme'));
     
     // Special handling for critical theme errors

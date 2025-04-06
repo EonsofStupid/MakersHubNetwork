@@ -21,6 +21,9 @@ interface LogFilterOptions {
  * Memory transport stores logs in memory for display in UI components
  */
 export class MemoryTransport implements LogTransport {
+  id: string = 'memory';
+  name: string = 'Memory Logger';
+  enabled: boolean = true;
   private logs: LogEntry[] = [];
   private maxEntries: number;
   
@@ -118,6 +121,16 @@ export class MemoryTransport implements LogTransport {
    */
   clear(): void {
     this.logs = [];
+  }
+
+  /**
+   * Subscribe to log updates (compatibility with LogTransport interface)
+   */
+  subscribe(callback: (entries: LogEntry[]) => void): () => void {
+    // Just return logs once immediately since we don't have a real subscription mechanism
+    callback([...this.logs]);
+    // Return no-op unsubscribe function
+    return () => {};
   }
 }
 
