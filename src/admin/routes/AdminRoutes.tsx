@@ -6,6 +6,7 @@ import { LogCategory } from '@/logging';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { adminRoutes } from './index';
+import { commonSearchParamsSchema } from '@/router/searchParams';
 
 // Loading component for lazy-loaded routes
 const PageLoader = () => (
@@ -52,12 +53,14 @@ export function AdminRoutes() {
         details: { path: location.pathname }
       });
       
-      // Navigate to login with correct search params
+      // Navigate to login with correct search params - using validated schema
+      const search = commonSearchParamsSchema.parse({ 
+        returnTo: location.pathname 
+      });
+      
       navigate({ 
         to: '/login' as any, 
-        search: { 
-          returnTo: location.pathname 
-        }
+        search
       });
     }
   }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate, loadStatus]);

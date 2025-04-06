@@ -1,81 +1,100 @@
 
-import { supabase } from '@/integrations/supabase/client';
+// Import necessary types from Supabase
+import { SupabaseClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
-export interface SearchResult {
-  id: string;
-  content: string;
-  metadata: Record<string, any>;
-  similarity: number;
-}
+// Define result schema with proper typing for content (allowing null)
+export const SearchResultSchema = z.object({
+  id: z.string(),
+  content: z.string().nullable(),
+  metadata: z.any(),
+  similarity: z.number()
+});
+
+export type SearchResult = z.infer<typeof SearchResultSchema>;
+
+// Create safe wrapper for search results
+const safeParseSearchResults = (results: any[]): SearchResult[] => {
+  return results.map(result => {
+    try {
+      return SearchResultSchema.parse(result);
+    } catch (error) {
+      // If parsing fails, provide a safe default
+      console.error('Error parsing search result:', error);
+      return {
+        id: result.id || 'unknown',
+        content: result.content || '',
+        metadata: result.metadata || {},
+        similarity: result.similarity || 0
+      };
+    }
+  });
+};
 
 /**
- * A placeholder RAG client implementation
- * This would need to be replaced with actual functionality
+ * RAG Client for embeddings search
  */
-export class RAGClient {
-  private sessionId: string;
-  private namespace: string;
-  
-  constructor(sessionId: string, namespace = 'default') {
-    this.sessionId = sessionId;
-    this.namespace = namespace;
+export class RagClient {
+  private supabase: SupabaseClient;
+  private embeddingsTable: string;
+
+  constructor(supabase: SupabaseClient, embeddingsTable = 'embeddings') {
+    this.supabase = supabase;
+    this.embeddingsTable = embeddingsTable;
   }
-  
+
   /**
-   * Search for content based on a query
+   * Search for similar content
    */
-  async search(query: string, limit = 5): Promise<SearchResult[]> {
+  async search(query: string, options?: { limit?: number; threshold?: number }): Promise<SearchResult[]> {
     try {
-      console.log(`Searching for "${query}" in namespace "${this.namespace}"`);
-      
-      // This is a placeholder - in a real implementation, 
-      // we would use vector search or some other technique
-      const { data, error } = await supabase
-        .from('content_items')
-        .select('id, content, metadata')
-        .textSearch('content', query)
-        .limit(limit);
-      
-      if (error) {
-        console.error('Error searching content:', error);
-        return [];
+      // Check if embeddings table exists
+      const { limit = 5, threshold = 0.5 } = options || {};
+
+      // Get embeddings for the query
+      const { data: embeddings, error: embeddingsError } = await this.supabase
+        .functions.invoke('get-embeddings', {
+          body: { text: query },
+        });
+
+      if (embeddingsError || !embeddings?.embedding) {
+        throw new Error(`Failed to get embeddings: ${embeddingsError?.message || 'Unknown error'}`);
       }
-      
-      // Convert to SearchResult format
-      return data.map(item => ({
-        id: item.id,
-        content: item.content,
-        metadata: item.metadata || {},
-        similarity: 0.5 // Placeholder similarity score
-      }));
+
+      // Search for similar content
+      const { data: results, error: searchError } = await this.supabase
+        .rpc('match_embeddings', {
+          query_embedding: embeddings.embedding,
+          match_threshold: threshold,
+          match_count: limit,
+        });
+
+      if (searchError) {
+        throw new Error(`Search error: ${searchError.message}`);
+      }
+
+      // Parse and return safe results
+      return safeParseSearchResults(results || []);
     } catch (error) {
-      console.error('Error in RAG search:', error);
+      console.error('RAG search error:', error);
       return [];
     }
   }
-  
+
   /**
-   * Get embeddings for a project
+   * Get context for the RAG system
    */
-  async getProjectEmbeddings(projectId: string): Promise<any[]> {
-    try {
-      // Since 'project_embeddings' doesn't exist in the schema, we're using content_items
-      // as a placeholder. In a real implementation, we would use the correct table.
-      const { data, error } = await supabase
-        .from('content_items')
-        .select('id, content, metadata')
-        .eq('metadata->>projectId', projectId)
-        .limit(10);
-      
-      if (error) {
-        console.error('Error fetching embeddings:', error);
-        return [];
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Error in getProjectEmbeddings:', error);
-      return [];
-    }
+  async getRagContext(query: string): Promise<string> {
+    const results = await this.search(query);
+    if (results.length === 0) return '';
+    
+    // Combine the content of all results
+    return results
+      .map(result => result.content)
+      .filter(Boolean) // Remove null/undefined values
+      .join('\n\n');
   }
 }
+
+// Export singleton instance
+export const ragClient = new RagClient(null as any); // Will be initialized later

@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { ragClient } from '../lib/ragClient';
 
 export function useChat(sessionId?: string) {
   const [messages, setMessages] = useState<any[]>([]);
@@ -8,17 +9,25 @@ export function useChat(sessionId?: string) {
   const sendMessage = async (content: string) => {
     try {
       setIsLoading(true);
-      // Placeholder for actual implementation
-      console.log('Sending message:', content);
       
       // Add user message to state
       setMessages(prev => [...prev, { role: 'user', content }]);
       
-      // Simulate response
+      // Get context from RAG if available
+      let context = '';
+      try {
+        context = await ragClient.getRagContext(content);
+      } catch (error) {
+        console.warn('Error getting RAG context:', error);
+      }
+      
+      // Simulate response with context
       setTimeout(() => {
         setMessages(prev => [...prev, { 
           role: 'assistant', 
-          content: 'This is a placeholder response from the chat system.' 
+          content: context 
+            ? `This is a response with context: ${context.substring(0, 100)}...` 
+            : 'This is a placeholder response from the chat system.' 
         }]);
         setIsLoading(false);
       }, 1000);

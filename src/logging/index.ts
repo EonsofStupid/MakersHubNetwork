@@ -1,33 +1,27 @@
 
-import { LoggerService, getLogger } from './logger.service';
-import { LogCategory, LogEntry, LogTransport } from './types';
-import { LogLevel } from './constants/log-level';
-import { getLoggingConfig, memoryTransport } from './config';
+// Import existing exports
+import { getLogger, initializeLogger } from './logger';
+import { LogLevel } from './types';
 
-// Initialize the logger with appropriate config
-export function initializeLogger(): void {
-  const config = getLoggingConfig();
-  LoggerService.getInstance(config);
-  
-  // Log initialization
-  const logger = getLogger();
-  logger.info('Logging system initialized', {
-    category: LogCategory.SYSTEM,
-    details: { config },
-    source: 'logging/index.ts'
-  });
+// Update LogCategory enum to include APP
+export enum LogCategory {
+  SYSTEM = 'system',
+  UI = 'ui',
+  ADMIN = 'admin',
+  AUTH = 'auth',
+  APP = 'app',
+  THEME = 'theme',
+  CHAT = 'chat',
+  API = 'api'
 }
 
-// Export everything needed for the logging system
+// Re-export everything
 export {
-  LoggerService,
   getLogger,
-  LogLevel,
-  LogCategory,
-  memoryTransport
+  initializeLogger,
+  LogLevel
 };
 
-export type {
-  LogEntry,
-  LogTransport
-};
+export * from './context/LoggingContext';
+export * from './components/LogConsole';
+export * from './components/LogToggleButton';

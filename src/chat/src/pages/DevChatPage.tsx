@@ -7,7 +7,7 @@ import { LogCategory } from '@/logging';
 
 export default function DevChatPage() {
   const { sessionId } = useParams() as { sessionId?: string };
-  const logger = useLogger('DevChatPage', LogCategory.SYSTEM);
+  const logger = useLogger('DevChatPage', LogCategory.CHAT);
   
   React.useEffect(() => {
     logger.info('Dev chat page initialized', { 
