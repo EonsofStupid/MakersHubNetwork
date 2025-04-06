@@ -40,7 +40,7 @@ export function useImpulsivityTheme() {
             secondary: '#FF2D6E',
           },
           effects: {
-            ...(currentTheme.design_tokens?.effects || {}),
+            ...(currentTheme.design_tokens?.effects || { shadows: {}, blurs: {}, gradients: {} }),
             shadows: currentTheme.design_tokens?.effects?.shadows || {},
             blurs: currentTheme.design_tokens?.effects?.blurs || {},
             gradients: currentTheme.design_tokens?.effects?.gradients || {},
