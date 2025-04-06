@@ -19,6 +19,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       logger.info('User not authenticated, redirecting to login page');
+      // Redirect to login with return path to admin
       navigate('/login?from=/admin');
     } else if (!isLoading && isAuthenticated && !hasAdminAccess) {
       logger.warn('User does not have admin access, redirecting to home page');
@@ -40,12 +41,15 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   }
   
   if (!isAuthenticated) {
-    return null;
+    // Redirect to login
+    return <Navigate to="/login?from=/admin" replace />;
   }
   
   if (!hasAdminAccess) {
+    // Redirect to homepage
     return <Navigate to="/" replace />;
   }
   
+  // Only render admin content if authenticated and has admin access
   return <>{children}</>;
 }

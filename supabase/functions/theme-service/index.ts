@@ -155,6 +155,13 @@ serve(async (req: Request) => {
   }
 });
 
+// Check if a string is a valid UUID
+function isValidUUID(id: string): boolean {
+  if (!id) return false;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
+
 // Get theme function
 async function getTheme(supabase, body) {
   try {
@@ -163,7 +170,7 @@ async function getTheme(supabase, body) {
     let query = supabase.from('themes').select('*');
     
     // Filter based on params
-    if (themeId) {
+    if (themeId && isValidUUID(themeId)) {
       query = query.eq('id', themeId);
     } else if (themeName) {
       query = query.eq('name', themeName);
@@ -187,6 +194,27 @@ async function getTheme(supabase, body) {
           theme: fallbackTheme, 
           isFallback: true, 
           error: error.message 
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+    
+    // If theme name was requested but not found, try specially for "Impulsivity" as fallback
+    if ((!themes || themes.length === 0) && themeName === 'Impulsivity') {
+      console.log("Impulsivity theme not found, returning hardcoded fallback");
+      const customImpulsivityTheme = {
+        ...fallbackTheme,
+        name: "Impulsivity",
+        id: "impulsivity-fallback-" + Date.now()
+      };
+      
+      return new Response(
+        JSON.stringify({ 
+          theme: customImpulsivityTheme, 
+          isFallback: true
         }),
         { 
           status: 200, 
