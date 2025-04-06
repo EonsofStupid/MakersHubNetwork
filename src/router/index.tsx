@@ -6,14 +6,13 @@ import {
   createRootRoute,
   createRoute
 } from '@tanstack/react-router';
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 
 import { MainNav } from '@/components/MainNav';
 import { Footer } from '@/components/Footer';
 import { LogToggleButton } from '@/logging/components/LogToggleButton';
 import { LogConsole } from '@/logging/components/LogConsole';
 import { useLoggingContext } from '@/logging/context/LoggingContext';
-import { useAuthState } from '@/auth/hooks/useAuthState';
 
 // Import pages
 import Index from '@/pages/Index';
@@ -56,7 +55,7 @@ function SiteLayout() {
 }
 
 // Define routes
-const rootRoute = createRootRoute({
+export const rootRoute = createRootRoute({
   component: () => (
     <RootLayout>
       <Outlet />
@@ -100,7 +99,7 @@ const routeTree = rootRoute.addChildren([
 ]);
 
 // Create the router instance
-const router = createRouter({ 
+export const router = createRouter({ 
   routeTree,
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,

@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { AdminRoutes } from '@/admin/routes';
+import { AdminRoutes } from '@/admin/routes/AdminRoutes';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import '../admin/theme/impulse/impulse.css';

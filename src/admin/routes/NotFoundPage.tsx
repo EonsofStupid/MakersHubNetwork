@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { Search, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,10 +26,10 @@ export default function NotFoundPage() {
           </p>
         </CardContent>
         <CardFooter className="flex justify-center gap-4">
-          <Button variant="outline" onClick={() => navigate("/admin")}>
+          <Button variant="outline" onClick={() => navigate({ to: "/admin" })}>
             Admin Dashboard
           </Button>
-          <Button onClick={() => navigate(-1)}>
+          <Button onClick={() => navigate({ to: ".." })}>
             Go Back
           </Button>
         </CardFooter>

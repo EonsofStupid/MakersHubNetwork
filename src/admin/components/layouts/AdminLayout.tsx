@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "@tanstack/react-router";
 import { AdminHeader } from "../AdminHeader";
 import { AdminSidebar } from "../AdminSidebar";
 import { useAdminStore } from "../../store/admin.store";
@@ -17,12 +17,14 @@ import { useAdminAccess } from "../../hooks/useAdminAccess";
 import { EditModeToggle } from "../ui/EditModeToggle";
 
 interface AdminLayoutProps {
+  children?: React.ReactNode;
   title?: string;
   fullWidth?: boolean;
   className?: string;
 }
 
 export function AdminLayout({ 
+  children,
   title = "Admin Dashboard",
   fullWidth = false,
   className
@@ -65,7 +67,7 @@ export function AdminLayout({
         variant: "destructive"
       });
       
-      navigate("/");
+      navigate({ to: "/" });
     }
   }, [isAuthenticated, hasAdminAccess]); // Reduced dependencies to prevent excessive re-renders
 
@@ -82,7 +84,7 @@ export function AdminLayout({
         <AdminHeader title={title} />
         
         <main className={`flex-1 overflow-auto p-4 sm:p-6 ${fullWidth ? 'max-w-full' : ''}`}>
-          <Outlet />
+          {children || <Outlet />}
         </main>
       </div>
       
