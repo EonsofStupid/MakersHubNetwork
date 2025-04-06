@@ -25,7 +25,7 @@ export function useAdminPermissions() {
   const { isAuthenticated, isAdmin } = useAdminAccess();
   
   const permissions = useMemo(() => {
-    return {
+    const permissionsByRole: Record<UserRole, Permission[]> = {
       'super_admin': [
         'dashboard:view', 'users:view', 'users:edit', 'users:delete', 
         'content:view', 'content:edit', 'content:publish',
@@ -53,7 +53,8 @@ export function useAdminPermissions() {
       'builder': [
         'builds:view'
       ]
-    } as Record<UserRole, Permission[]>;
+    };
+    return permissionsByRole;
   }, []);
   
   const hasPermission = (permission: Permission): boolean => {

@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useAuth } from '@/hooks/use-auth';
 import { UserProfile, UserMetadata } from '@/types/auth.unified';
 
 // Component that checks if user_metadata exists and has expected properties
