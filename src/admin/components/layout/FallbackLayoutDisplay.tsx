@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -7,6 +6,7 @@ import { useLayoutSkeleton } from '@/admin/hooks/useLayoutSkeleton';
 import { createDefaultDashboardLayout } from '@/admin/utils/layoutUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
+import { PermissionValue, PERMISSIONS } from '@/auth/permissions';
 
 interface FallbackLayoutDisplayProps {
   type: string;
@@ -18,7 +18,7 @@ export function FallbackLayoutDisplay({ type, scope, children }: FallbackLayoutD
   const { useSaveLayout } = useLayoutSkeleton();
   const { mutate: saveLayout, isPending } = useSaveLayout();
   const { hasPermission } = useAdminPermissions();
-  const canCreateLayout = hasPermission('admin:edit');
+  const canCreateLayout = hasPermission(PERMISSIONS.ADMIN_EDIT);
   
   const handleCreateDefaultLayout = () => {
     // Create a default layout based on type

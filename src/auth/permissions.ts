@@ -3,29 +3,75 @@ import { UserRole } from './types/roles';
 
 // Define permission values
 export const PERMISSIONS = {
+  // User management
   MANAGE_USERS: 'manage_users',
   VIEW_USERS: 'view_users',
   EDIT_USERS: 'edit_users',
   DELETE_USERS: 'delete_users',
+  USERS_VIEW: 'users_view',
+  USERS_CREATE: 'users_create',
+  USERS_EDIT: 'users_edit',
+  USERS_DELETE: 'users_delete',
   
+  // Content management
   MANAGE_CONTENT: 'manage_content',
   VIEW_CONTENT: 'view_content',
   EDIT_CONTENT: 'edit_content',
   DELETE_CONTENT: 'delete_content',
+  CONTENT_VIEW: 'content_view',
+  CONTENT_CREATE: 'content_create',
+  CONTENT_EDIT: 'content_edit',
+  CONTENT_DELETE: 'content_delete',
+  CONTENT_PUBLISH: 'content_publish',
   
+  // Admin access
+  MANAGE_ADMIN: 'manage_admin',
+  ACCESS_ADMIN: 'access_admin',
+  ADMIN_ACCESS: 'admin_access',
+  ADMIN_VIEW: 'admin_view',
+  ADMIN_EDIT: 'admin_edit',
+  
+  // Settings management
   MANAGE_SETTINGS: 'manage_settings',
   VIEW_SETTINGS: 'view_settings',
   EDIT_SETTINGS: 'edit_settings',
+  SETTINGS_VIEW: 'settings_view',
+  SETTINGS_EDIT: 'settings_edit',
   
+  // Theme management
   MANAGE_THEMES: 'manage_themes',
   VIEW_THEMES: 'view_themes',
   EDIT_THEMES: 'edit_themes',
   DELETE_THEMES: 'delete_themes',
+  THEMES_VIEW: 'themes_view',
+  THEMES_EDIT: 'themes_edit',
+  THEMES_DELETE: 'themes_delete',
   
-  MANAGE_ADMIN: 'manage_admin',
-  ACCESS_ADMIN: 'access_admin',
+  // Build management
+  BUILDS_VIEW: 'builds_view',
+  BUILDS_CREATE: 'builds_create',
+  BUILDS_EDIT: 'builds_edit',
+  BUILDS_APPROVE: 'builds_approve',
+  BUILDS_REJECT: 'builds_reject',
   
-  SYSTEM_DEBUG: 'system_debug'
+  // System management
+  SYSTEM_DEBUG: 'system_debug',
+  SYSTEM_VIEW: 'system_view',
+  SYSTEM_SETTINGS: 'system_settings',
+  SYSTEM_LOGS: 'system_logs',
+  SYSTEM_RESTART: 'system_restart',
+  
+  // Data management
+  DATA_VIEW: 'data_view',
+  DATA_EDIT: 'data_edit',
+  DATA_IMPORT: 'data_import',
+  DATA_EXPORT: 'data_export',
+  
+  // Analytics
+  ANALYTICS_VIEW: 'analytics_view',
+  
+  // Super admin
+  SUPER_ADMIN: 'super_admin'
 } as const;
 
 // Create a union type of all permission values
@@ -51,7 +97,39 @@ export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
     PERMISSIONS.DELETE_THEMES,
     PERMISSIONS.MANAGE_ADMIN,
     PERMISSIONS.ACCESS_ADMIN,
-    PERMISSIONS.SYSTEM_DEBUG
+    PERMISSIONS.SYSTEM_DEBUG,
+    PERMISSIONS.ADMIN_ACCESS,
+    PERMISSIONS.ADMIN_VIEW,
+    PERMISSIONS.ADMIN_EDIT,
+    PERMISSIONS.USERS_VIEW,
+    PERMISSIONS.USERS_CREATE,
+    PERMISSIONS.USERS_EDIT,
+    PERMISSIONS.USERS_DELETE,
+    PERMISSIONS.CONTENT_VIEW,
+    PERMISSIONS.CONTENT_CREATE,
+    PERMISSIONS.CONTENT_EDIT,
+    PERMISSIONS.CONTENT_DELETE,
+    PERMISSIONS.CONTENT_PUBLISH,
+    PERMISSIONS.BUILDS_VIEW,
+    PERMISSIONS.BUILDS_CREATE,
+    PERMISSIONS.BUILDS_EDIT,
+    PERMISSIONS.BUILDS_APPROVE,
+    PERMISSIONS.BUILDS_REJECT,
+    PERMISSIONS.SETTINGS_VIEW,
+    PERMISSIONS.SETTINGS_EDIT,
+    PERMISSIONS.SYSTEM_VIEW,
+    PERMISSIONS.SYSTEM_SETTINGS,
+    PERMISSIONS.SYSTEM_LOGS,
+    PERMISSIONS.SYSTEM_RESTART,
+    PERMISSIONS.THEMES_VIEW,
+    PERMISSIONS.THEMES_EDIT,
+    PERMISSIONS.THEMES_DELETE,
+    PERMISSIONS.DATA_VIEW,
+    PERMISSIONS.DATA_EDIT,
+    PERMISSIONS.DATA_IMPORT,
+    PERMISSIONS.DATA_EXPORT,
+    PERMISSIONS.ANALYTICS_VIEW,
+    PERMISSIONS.SUPER_ADMIN
   ],
   
   admin: [
@@ -66,20 +144,46 @@ export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
     PERMISSIONS.EDIT_SETTINGS,
     PERMISSIONS.VIEW_THEMES,
     PERMISSIONS.EDIT_THEMES,
-    PERMISSIONS.ACCESS_ADMIN
+    PERMISSIONS.ACCESS_ADMIN,
+    PERMISSIONS.ADMIN_ACCESS,
+    PERMISSIONS.ADMIN_VIEW,
+    PERMISSIONS.USERS_VIEW,
+    PERMISSIONS.USERS_CREATE,
+    PERMISSIONS.USERS_EDIT,
+    PERMISSIONS.CONTENT_VIEW,
+    PERMISSIONS.CONTENT_CREATE,
+    PERMISSIONS.CONTENT_EDIT,
+    PERMISSIONS.CONTENT_DELETE,
+    PERMISSIONS.BUILDS_VIEW,
+    PERMISSIONS.BUILDS_APPROVE,
+    PERMISSIONS.SETTINGS_VIEW,
+    PERMISSIONS.SETTINGS_EDIT,
+    PERMISSIONS.THEMES_VIEW,
+    PERMISSIONS.THEMES_EDIT,
+    PERMISSIONS.DATA_VIEW,
+    PERMISSIONS.DATA_IMPORT,
+    PERMISSIONS.SYSTEM_VIEW
   ],
   
   moderator: [
     PERMISSIONS.VIEW_USERS,
     PERMISSIONS.VIEW_CONTENT,
     PERMISSIONS.EDIT_CONTENT,
-    PERMISSIONS.ACCESS_ADMIN
+    PERMISSIONS.ACCESS_ADMIN,
+    PERMISSIONS.ADMIN_ACCESS,
+    PERMISSIONS.ADMIN_VIEW,
+    PERMISSIONS.USERS_VIEW,
+    PERMISSIONS.CONTENT_VIEW,
+    PERMISSIONS.CONTENT_EDIT
   ],
   
   editor: [
     PERMISSIONS.VIEW_CONTENT,
     PERMISSIONS.EDIT_CONTENT,
-    PERMISSIONS.ACCESS_ADMIN
+    PERMISSIONS.ACCESS_ADMIN,
+    PERMISSIONS.ADMIN_ACCESS,
+    PERMISSIONS.CONTENT_VIEW,
+    PERMISSIONS.CONTENT_EDIT
   ],
   
   user: []

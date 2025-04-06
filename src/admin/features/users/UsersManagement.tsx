@@ -11,11 +11,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { UserRole } from "@/types/auth.types";
 
+// Define extended user roles to include "builder"
+type ExtendedUserRole = UserRole | "builder";
+
 interface UserData {
   id: string;
   email: string;
   name: string;
-  role: UserRole;
+  role: ExtendedUserRole;
   status: "active" | "pending" | "suspended";
   createdAt: string;
   lastLogin: string | null;
