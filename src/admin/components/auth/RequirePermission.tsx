@@ -15,9 +15,10 @@ export function RequirePermission({
   children, 
   fallback 
 }: RequirePermissionProps) {
-  const { hasPermission, isLoading } = useAdminPermissions();
+  const { hasPermission, isLoaded } = useAdminPermissions();
   
-  if (isLoading) {
+  // Check if permissions are still loading
+  if (!isLoaded) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="h-6 w-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>

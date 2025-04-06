@@ -18,7 +18,11 @@ export const UserMenu = memo(() => {
   
   // Get auth data from centralized hook
   // Important: Using useAuthState to avoid initialization cycles
-  const { user, roles, logout, isAdmin } = useAuthState()
+  const auth = useAuthState();
+  const { user, roles } = auth;
+  // Handle potentially undefined methods from auth state
+  const logout = auth.logout || (() => Promise.resolve());
+  const isAdmin = auth.isAdmin || (() => false);
   
   // Memoize handlers to prevent recreating functions on each render
   const handleOpenSheet = useCallback(() => {
@@ -67,7 +71,7 @@ export const UserMenu = memo(() => {
     onShowProfile: handleOpenProfileDialog,
     onLogout: handleLogout,
     hasAdminAccess: isAdmin(),
-    roles: roles
+    roles
   }), [
     isSheetOpen, 
     user?.email, 

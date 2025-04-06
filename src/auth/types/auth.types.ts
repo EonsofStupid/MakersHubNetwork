@@ -21,6 +21,9 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
   initialized: boolean;
+  isAuthenticated: boolean;
+  logout?: () => Promise<void>;
+  isAdmin?: () => boolean;
 }
 
 // Define the authentication context

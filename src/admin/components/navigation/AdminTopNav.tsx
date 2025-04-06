@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,7 +9,7 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { useToast } from '@/hooks/use-toast';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { TopNavShortcuts } from '@/admin/components/navigation/TopNavShortcuts';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
+import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 import { SyncIndicator } from '@/admin/components/ui/SyncIndicator';
 
@@ -29,11 +28,10 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
   const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
   const { hasAdminAccess } = useAdminAccess();
   
-  const { 
-    sidebarExpanded, 
-    toggleSidebar,
-    savePreferences,
-  } = useAdminStore();
+  const adminStore = useAdminStore();
+  const sidebarExpanded = adminStore.sidebarExpanded;
+  const toggleSidebar = adminStore.toggleSidebar;
+  const savePreferences = adminStore.savePreferences;
   
   // Sync edit mode between jotai atom and zustand store
   useEffect(() => {

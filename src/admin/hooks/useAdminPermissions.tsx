@@ -17,7 +17,7 @@ export function useAdminPermissions() {
   const { status, roles } = useAuthState();
   const adminStore = useAdminStore();
   const permissions = adminStore.permissions;
-  const isLoadingPermissions = adminStore.isLoadingPermissions;
+  const isLoadingPermissions = adminStore.isLoadingPermissions || false;
   
   const isLoading = status === 'loading' || isLoadingPermissions;
   const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
@@ -84,6 +84,17 @@ export function useAdminPermissions() {
   return {
     permissions,
     hasPermission,
-    isLoading
+    isLoading,
+    isLoaded: permissions.length > 0 && !isLoading,
+    isSuperAdmin: permissions.includes(PERMISSIONS.SUPER_ADMIN),
+    isAdmin: permissions.includes(PERMISSIONS.ADMIN_ACCESS),
+    hasAllPermissions: (requiredPermissions: AdminPermissionValue[]) => {
+      if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) return true;
+      return requiredPermissions.every(p => permissions.includes(p));
+    },
+    hasAnyPermission: (requiredPermissions: AdminPermissionValue[]) => {
+      if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) return true;
+      return requiredPermissions.some(p => permissions.includes(p));
+    }
   };
 }
