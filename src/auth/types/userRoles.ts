@@ -38,3 +38,9 @@ export const isService = (roles: UserRole[] | undefined): boolean => {
   if (!roles) return false;
   return roles.includes(UserRole.SERVICE);
 };
+
+// Check if user has a specific required role
+export const hasRequiredRole = (roles: UserRole[] | undefined, requiredRole: UserRole): boolean => {
+  if (!roles) return false;
+  return roles.includes(requiredRole);
+};

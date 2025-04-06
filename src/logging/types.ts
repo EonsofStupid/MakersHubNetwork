@@ -27,7 +27,7 @@ export interface LogEntry {
   category: LogCategory;
   message: string | React.ReactNode;
   details?: Record<string, unknown>;
-  source?: string;
+  source?: string;  // Added source property
   userId?: string;
   sessionId?: string;
   duration?: number; // For performance logs
@@ -48,6 +48,17 @@ export interface LoggingConfig {
   includeSource?: boolean;
   includeUser?: boolean;
   includeSession?: boolean;
+}
+
+// Define a LogOptions interface for consistency across the codebase
+export interface LogOptions {
+  category?: LogCategory;
+  details?: Record<string, unknown>;
+  source?: string;  // Added source property
+  userId?: string;
+  sessionId?: string;
+  duration?: number;
+  tags?: string[];
 }
 
 // Re-export LogLevel for backward compatibility
