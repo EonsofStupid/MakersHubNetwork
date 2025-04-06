@@ -59,9 +59,6 @@ export function ImpulsivityInit({ children }: ImpulsivityInitProps) {
         }
       });
     }
-    
-    // No cleanup needed
-    return () => {};
   }, [logger]);
 
   return <>{children}</>;
