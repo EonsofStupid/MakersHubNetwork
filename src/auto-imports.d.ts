@@ -215,5 +215,4 @@ declare global {
   const MessageSquare: typeof import('lucide-react')['MessageSquare']
   const Minus: typeof import('lucide-react')['Minus']
   const MoreHorizontal: typeof import('lucide-react')['MoreHorizontal']
-  // Fixed the error that was here
 }

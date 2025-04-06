@@ -18,9 +18,13 @@ export function ThemeColorSystem({ tokens, onChange, className }: ThemeColorSyst
   const [colorValue, setColorValue] = useState<string | null>(null);
   const logger = useLogger('ThemeColorSystem', LogCategory.UI);
   
-  // Apply color tokens to document on component mount
+  // Apply all color tokens immediately on mount and whenever tokens change
   useEffect(() => {
-    if (!tokens || tokens.length === 0) return;
+    if (!tokens || tokens.length === 0) {
+      // Apply fallback colors if no tokens are available
+      applyFallbackColors();
+      return;
+    }
     
     try {
       logger.info('Applying color tokens to CSS variables');
@@ -29,26 +33,106 @@ export function ThemeColorSystem({ tokens, onChange, className }: ThemeColorSyst
       // Force apply all color tokens to ensure they're visible
       tokens.forEach(token => {
         if (token.category === 'color' && token.token_name && token.token_value) {
-          // Convert the color if it's in HSL format
+          // Apply color value
           const colorValue = token.token_value;
           
-          // Apply directly as CSS variable
+          // Apply as CSS variable with multiple formats for maximum compatibility
+          
+          // Format 1: Direct variable name if it starts with --
           if (token.token_name.startsWith('--')) {
             rootElement.style.setProperty(token.token_name, colorValue);
-          } else {
+          } 
+          // Format 2: Add -- prefix if not present
+          else {
             rootElement.style.setProperty(`--${token.token_name}`, colorValue);
           }
           
-          // Also try applying in site-* format for fallback
-          if (!token.token_name.startsWith('site-')) {
+          // Format 3: Add site- prefix for theme system compatibility
+          if (!token.token_name.startsWith('--site-') && !token.token_name.startsWith('site-')) {
             rootElement.style.setProperty(`--site-${token.token_name}`, colorValue);
+          }
+          
+          // If this is a primary/secondary/background color, apply additional formats
+          if (token.token_name.includes('primary') || 
+              token.token_name.includes('secondary') || 
+              token.token_name.includes('background') ||
+              token.token_name.includes('foreground')) {
+            
+            // Apply as impulse- prefixed variable for admin themes
+            rootElement.style.setProperty(`--impulse-${token.token_name}`, colorValue);
+            
+            // Apply standard Tailwind format without site- prefix
+            const tailwindName = token.token_name.replace('site-', '');
+            rootElement.style.setProperty(`--${tailwindName}`, colorValue);
           }
         }
       });
+      
+      // After applying all tokens, apply critical colors again to ensure they take precedence
+      applyCriticalColors();
+      
     } catch (error) {
-      logger.error('Failed to apply color tokens', { error });
+      logger.error('Failed to apply color tokens', { 
+        error,
+        errorMessage: error instanceof Error ? error.message : String(error)
+      });
+      
+      // Apply fallback colors on error
+      applyFallbackColors();
     }
   }, [tokens, logger]);
+  
+  // Apply critical colors that must always be visible
+  const applyCriticalColors = () => {
+    const rootElement = document.documentElement;
+    
+    // Primary theme colors
+    rootElement.style.setProperty('--site-primary', '186 100% 50%'); // #00F0FF in HSL  
+    rootElement.style.setProperty('--site-secondary', '334 100% 59%'); // #FF2D6E in HSL
+    
+    // Effect colors as direct hex
+    rootElement.style.setProperty('--site-effect-color', '#00F0FF');
+    rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
+    
+    // Standard variables
+    rootElement.style.setProperty('--primary', 'hsl(186 100% 50%)');
+    rootElement.style.setProperty('--secondary', 'hsl(334 100% 59%)');
+    
+    // Direct hex fallbacks
+    rootElement.style.setProperty('--impulse-primary', '#00F0FF');
+    rootElement.style.setProperty('--impulse-secondary', '#FF2D6E');
+  };
+  
+  // Apply fallback colors if no tokens are available
+  const applyFallbackColors = () => {
+    const rootElement = document.documentElement;
+    
+    // Primary theme colors
+    rootElement.style.setProperty('--site-primary', '186 100% 50%'); // #00F0FF in HSL  
+    rootElement.style.setProperty('--site-secondary', '334 100% 59%'); // #FF2D6E in HSL
+    
+    // Effect colors
+    rootElement.style.setProperty('--site-effect-color', '#00F0FF');
+    rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
+    
+    // Background and text colors
+    rootElement.style.setProperty('--site-background', '228 47% 8%'); // #080F1E in HSL
+    rootElement.style.setProperty('--site-foreground', '210 40% 98%'); // #F9FAFB in HSL
+    rootElement.style.setProperty('--site-card', '228 47% 11%');
+    rootElement.style.setProperty('--site-card-foreground', '210 40% 98%');
+    
+    // Standard CSS variables
+    rootElement.style.setProperty('--background', 'hsl(228 47% 8%)');
+    rootElement.style.setProperty('--foreground', 'hsl(210 40% 98%)');
+    rootElement.style.setProperty('--card', 'hsl(228 47% 11%)');
+    rootElement.style.setProperty('--primary', 'hsl(186 100% 50%)');
+    rootElement.style.setProperty('--secondary', 'hsl(334 100% 59%)');
+    
+    // Impulse specific variables
+    rootElement.style.setProperty('--impulse-primary', '#00F0FF');
+    rootElement.style.setProperty('--impulse-secondary', '#FF2D6E');
+    rootElement.style.setProperty('--impulse-bg-main', '#080F1E');
+  };
   
   const handleTokenClick = (token: ThemeToken) => {
     if (!token.token_name) return;
@@ -60,16 +144,19 @@ export function ThemeColorSystem({ tokens, onChange, className }: ThemeColorSyst
     if (token.token_name && token.token_value) {
       const rootElement = document.documentElement;
       
+      // Apply in all possible formats for maximum compatibility
       if (token.token_name.startsWith('--')) {
         rootElement.style.setProperty(token.token_name, token.token_value);
       } else {
         rootElement.style.setProperty(`--${token.token_name}`, token.token_value);
       }
       
-      // Also apply in site-* format
       if (!token.token_name.startsWith('site-')) {
         rootElement.style.setProperty(`--site-${token.token_name}`, token.token_value);
       }
+      
+      // Apply critical colors again to ensure consistency
+      applyCriticalColors();
     }
   };
   
@@ -79,22 +166,31 @@ export function ThemeColorSystem({ tokens, onChange, className }: ThemeColorSyst
     if (activeTokenId && onChange) {
       onChange(activeTokenId, color);
       
-      // Find the token and apply the new color immediately
+      // Apply the new color immediately
       const token = tokens.find(t => t.id === activeTokenId);
       if (token && token.token_name) {
         const rootElement = document.documentElement;
         
+        // Apply in all possible formats for maximum compatibility
         if (token.token_name.startsWith('--')) {
           rootElement.style.setProperty(token.token_name, color);
         } else {
           rootElement.style.setProperty(`--${token.token_name}`, color);
         }
         
-        // Also apply in site-* format
         if (!token.token_name.startsWith('site-')) {
           rootElement.style.setProperty(`--site-${token.token_name}`, color);
         }
+        
+        // Special handling for primary/secondary colors
+        if (token.token_name.includes('primary') || token.token_name.includes('secondary')) {
+          // Apply as impulse- prefixed variable for admin themes
+          rootElement.style.setProperty(`--impulse-${token.token_name.replace('site-', '')}`, color);
+        }
       }
+      
+      // After changing a color, apply critical colors again to ensure consistency
+      applyCriticalColors();
     }
   };
   
