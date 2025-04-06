@@ -1,11 +1,9 @@
-
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { Theme, ThemeContext } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -25,12 +23,12 @@ export function useImpulsivityTheme() {
       
       // Apply the Impulsivity theme colors
       if (rootElement) {
-        // Fix: Cast types properly instead of assigning string to never
-        rootElement.style.setProperty('--site-primary', String(tokens.primary || '186 100% 50%'));
-        rootElement.style.setProperty('--site-secondary', String(tokens.secondary || '334 100% 59%'));
-        rootElement.style.setProperty('--site-effect-color', String(tokens.effectPrimary || '#00F0FF'));
-        rootElement.style.setProperty('--site-effect-secondary', String(tokens.effectSecondary || '#FF2D6E'));
-        rootElement.style.setProperty('--site-effect-tertiary', String(tokens.effectTertiary || '#8B5CF6'));
+        // Apply CSS variables properly with type safety
+        rootElement.style.setProperty('--site-primary', tokens.primary || '186 100% 50%');
+        rootElement.style.setProperty('--site-secondary', tokens.secondary || '334 100% 59%');
+        rootElement.style.setProperty('--site-effect-color', tokens.effectPrimary || '#00F0FF');
+        rootElement.style.setProperty('--site-effect-secondary', tokens.effectSecondary || '#FF2D6E');
+        rootElement.style.setProperty('--site-effect-tertiary', tokens.effectTertiary || '#8B5CF6');
       }
       
       // Update the theme in the store if needed
@@ -83,7 +81,8 @@ export function useImpulsivityTheme() {
       // Update admin theme variables
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement) {
-        adminRootElement.setAttribute('style', `
+        // Create a CSS style string with all variables
+        const cssVars = `
           --impulse-primary: ${tokens.effectPrimary || '#00F0FF'};
           --impulse-secondary: ${tokens.effectSecondary || '#FF2D6E'};
           --impulse-bg-main: #121218;
@@ -95,9 +94,12 @@ export function useImpulsivityTheme() {
           --impulse-border-normal: rgba(0, 240, 255, 0.2);
           --impulse-border-hover: rgba(0, 240, 255, 0.4);
           --impulse-border-active: rgba(0, 240, 255, 0.6);
-          --impulse-glow-primary: 0 0 15px ${tokens.effectPrimary ? `rgba(${tokens.effectPrimary}, 0.7)` : 'rgba(0, 240, 255, 0.7)'};
-          --impulse-glow-secondary: 0 0 15px ${tokens.effectSecondary ? `rgba(${tokens.effectSecondary}, 0.7)` : 'rgba(255, 45, 110, 0.7)'};
-        `);
+          --impulse-glow-primary: 0 0 15px rgba(0, 240, 255, 0.7);
+          --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.7);
+        `;
+        
+        // Apply all CSS variables at once
+        adminRootElement.setAttribute('style', cssVars);
         
         logger.info('Applied Impulsivity theme to admin panel', { 
           details: {

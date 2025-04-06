@@ -18,7 +18,10 @@ export function useThemeDebug() {
   // Transform tokens into a list for display
   useEffect(() => {
     if (tokens) {
-      const list = Object.entries(tokens).map(([key, value]) => ({ key, value: String(value) }));
+      const list = Object.entries(tokens).map(([key, value]) => ({ 
+        key, 
+        value: typeof value === 'string' ? value : String(value || '')
+      }));
       setTokenList(list);
     }
   }, [tokens]);
