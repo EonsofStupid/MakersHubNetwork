@@ -1,10 +1,9 @@
 
-import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from '@/components/ui/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { getLogger } from '@/logging';
 import { LoggingProvider } from '@/logging/context/LoggingContext';
+import { ThemeProvider } from '@/components/ui/theme-provider';
 import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
 import { ImpulsivityInit } from '@/components/theme/ImpulsivityInit';
 import { SiteThemeProvider } from '@/components/theme/SiteThemeProvider';
@@ -40,27 +39,25 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-          <LoggingProvider>
-            <ThemeInitializer>
-              <ImpulsivityInit>
-                <SiteThemeProvider>
-                  <AuthProvider>
-                    <AppInitializer>
-                      <AdminProvider>
-                        <AppRoutes />
-                      </AdminProvider>
-                    </AppInitializer>
-                  </AuthProvider>
-                </SiteThemeProvider>
-              </ImpulsivityInit>
-            </ThemeInitializer>
-          </LoggingProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <LoggingProvider>
+          <ThemeInitializer>
+            <ImpulsivityInit>
+              <SiteThemeProvider>
+                <AuthProvider>
+                  <AppInitializer>
+                    <AdminProvider>
+                      <AppRoutes />
+                    </AdminProvider>
+                  </AppInitializer>
+                </AuthProvider>
+              </SiteThemeProvider>
+            </ImpulsivityInit>
+          </ThemeInitializer>
+        </LoggingProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
