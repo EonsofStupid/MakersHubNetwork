@@ -60,10 +60,7 @@ export const RequirePermission = ({
     return (
       <Navigate 
         to={redirectTo as any}
-        search={(prev) => ({
-          ...prev, 
-          from: location.pathname
-        })}
+        search={{ from: location.pathname }}
         replace={true}
       />
     );

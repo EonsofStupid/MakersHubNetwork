@@ -24,16 +24,12 @@ export function useImpulsivityTheme() {
       
       // Apply the Impulsivity theme colors
       if (rootElement) {
-        // Apply CSS variables properly with type safety - use setAttribute to bypass type issues
-        const cssVars = `
-          --site-primary: ${tokens.primary || '186 100% 50%'};
-          --site-secondary: ${tokens.secondary || '334 100% 59%'};
-          --site-effect-color: ${tokens.effectPrimary || '#00F0FF'};
-          --site-effect-secondary: ${tokens.effectSecondary || '#FF2D6E'};
-          --site-effect-tertiary: ${tokens.effectTertiary || '#8B5CF6'};
-        `;
-        
-        rootElement.setAttribute('style', rootElement.getAttribute('style') + cssVars);
+        // Apply CSS variables properly with type safety
+        rootElement.style.setProperty('--site-primary', tokens.primary || '186 100% 50%');
+        rootElement.style.setProperty('--site-secondary', tokens.secondary || '334 100% 59%');
+        rootElement.style.setProperty('--site-effect-color', tokens.effectPrimary || '#00F0FF');
+        rootElement.style.setProperty('--site-effect-secondary', tokens.effectSecondary || '#FF2D6E');
+        rootElement.style.setProperty('--site-effect-tertiary', tokens.effectTertiary || '#8B5CF6');
       }
       
       // Update the theme in the store if needed

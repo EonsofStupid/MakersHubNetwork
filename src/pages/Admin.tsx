@@ -14,7 +14,7 @@ import '../admin/theme/impulse/impulse-theme.css';
 
 // Create a separate admin router to avoid route collision
 const adminRouter = createRouter({
-  routeTree: rootRoute.addChildren([...adminRoutes]),
+  routeTree: rootRoute.addChildren(adminRoutes),
   // Use the same options as the main router
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,

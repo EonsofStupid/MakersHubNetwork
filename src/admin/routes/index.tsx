@@ -29,7 +29,6 @@ const PageLoader = () => (
 // Define base admin route for all admin pages
 const adminBaseRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'adminBase',
   path: '/admin',
   component: AdminRoutes
 });
