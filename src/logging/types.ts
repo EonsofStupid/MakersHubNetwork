@@ -15,33 +15,7 @@ export enum LogCategory {
   CHAT = 'chat',
   DATABASE = 'database',
   PERFORMANCE = 'performance',
-  CONTENT = 'content'
-}
-
-// Extended options type for logging
-export interface LogOptions {
-  category?: LogCategory;
-  details?: Record<string, unknown>;
-  tags?: string[];
-  success?: boolean;
-  error?: boolean;
-  warning?: boolean;
-  errorMessage?: string;
-  originalTheme?: string;
-  theme?: string;
-  mainSite?: boolean;
-  admin?: boolean;
-  database?: boolean;
-  component?: string;
-  componentCount?: number;
-  reason?: string;
-  errorCode?: string;
-  errorDetails?: string;
-  errorHint?: string;
-  themeId?: string;
-  defaultTheme?: string;
-  source?: string;
-  [key: string]: unknown;
+  CONTENT = 'content'  // Added this new category
 }
 
 export interface LogEntry {
@@ -59,13 +33,7 @@ export interface LogEntry {
 }
 
 export interface LogTransport {
-  id: string;
-  name: string;
-  enabled: boolean;
   log(entry: LogEntry): void;
-  getLogs?(): LogEntry[];
-  subscribe?(callback: (entries: LogEntry[]) => void): () => void;
-  clear?(): void;
   flush?(): Promise<void>;
 }
 
@@ -82,26 +50,3 @@ export interface LoggingConfig {
 
 // Re-export LogLevel for backward compatibility
 export { LogLevel } from './constants/log-level';
-
-// Performance logging interfaces
-export interface PerformanceLogger {
-  logCustomTiming: (name: string, duration: number, options?: LogOptions) => void;
-  performance: {
-    mark: (name: string) => void;
-    measure: (name: string, startMark: string, endMark: string) => void;
-    getEntriesByName: (name: string, type?: string) => PerformanceEntry[];
-    clearMarks: (name?: string) => void;
-    clearMeasures: (name?: string) => void;
-  };
-}
-
-// Extend the Logger interface to include performance logging
-export interface Logger {
-  debug: (message: string, options?: LogOptions) => void;
-  info: (message: string, options?: LogOptions) => void;
-  warn: (message: string, options?: LogOptions) => void;
-  error: (message: string, options?: LogOptions) => void;
-  critical: (message: string, options?: LogOptions) => void;
-  logCustomTiming?: (name: string, duration: number, options?: LogOptions) => void;
-  performance?: PerformanceLogger['performance'];
-}

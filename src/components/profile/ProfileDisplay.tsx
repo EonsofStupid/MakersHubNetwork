@@ -1,107 +1,173 @@
+import { useState } from "react";
+import { useAuthStore } from "@/stores/auth/store";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ProfileEditor } from "./ProfileEditor";
+import { ThemeDataStream } from "@/components/theme/ThemeDataStream";
+import { User, Edit2, Link, Github, Twitter } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-import React from 'react';
-import { UserProfile, UserMetadata } from '@/types/auth.unified';
+export const ProfileDisplay = () => {
+  const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const profile = user?.user_metadata;
 
-// Component that checks if user_metadata exists and has expected properties
-// Creating a safer access pattern for user metadata
-const getUserMetadataValue = (
-  user: UserProfile | null, 
-  property: keyof UserMetadata,
-  fallback: string
-): string => {
-  if (!user) return fallback;
-  if (!user.user_metadata) return fallback;
-  
-  const value = user.user_metadata[property];
-  return value ? String(value) : fallback;
-};
+  const handleSocialConnect = (platform: string) => {
+    toast({
+      title: "Coming Soon",
+      description: `${platform} integration will be available soon!`,
+      variant: "default",
+    });
+  };
 
-// Safe boolean getter with fallback
-const getUserMetadataBoolValue = (
-  user: UserProfile | null,
-  property: keyof UserMetadata,
-  fallback: boolean
-): boolean => {
-  if (!user) return fallback;
-  if (!user.user_metadata) return fallback;
-  
-  const value = user.user_metadata[property];
-  return typeof value === 'boolean' ? value : fallback;
-};
-
-interface ProfileDisplayProps {
-  user: UserProfile;
-  onEdit: () => void;
-}
-
-// This component now safely renders profile information with fallbacks
-export function ProfileDisplay({ user, onEdit }: ProfileDisplayProps) {
-  const displayName = getUserMetadataValue(user, 'display_name', user.username || user.email || 'User');
-  const fullName = getUserMetadataValue(user, 'full_name', displayName);
-  const avatarUrl = getUserMetadataValue(user, 'avatar_url', 
-    `https://api.dicebear.com/7.x/initials/svg?seed=${user.email || 'user'}`
-  );
-  const bio = getUserMetadataValue(user, 'bio', 'No bio available');
-  
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-center gap-4">
-        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/20">
-          <img 
-            src={avatarUrl} 
-            alt={displayName}
-            className="w-full h-full object-cover"
-          />
-        </div>
-        
-        <div className="flex-1 space-y-2 text-center sm:text-left">
-          <h3 className="text-xl font-semibold">{displayName}</h3>
-          {fullName !== displayName && (
-            <p className="text-muted-foreground">{fullName}</p>
-          )}
-          <button
-            onClick={onEdit}
-            className="text-sm bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1 rounded transition-colors"
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4">
+      <AnimatePresence mode="wait">
+        {!isEditing ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={cn(
+              "w-[672px] max-w-[95vw]", // Increased by 12% from 600px
+              "rounded-lg overflow-hidden",
+              "bg-background/20 backdrop-blur-xl",
+              "border border-primary/30",
+              "shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]",
+              "before:absolute before:inset-0",
+              "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
+              "before:pointer-events-none",
+              "relative z-50",
+              "transform-gpu scale-[1.12]" // 12% scale increase
+            )}
+            style={{
+              maxHeight: "90vh",
+              overflowY: "auto",
+              scrollbarWidth: "thin",
+              scrollbarColor: "rgba(0, 240, 255, 0.3) transparent"
+            }}
           >
-            Edit Profile
-          </button>
-        </div>
-      </div>
-      
-      <div className="space-y-4">
-        <div>
-          <h4 className="text-sm font-medium text-muted-foreground mb-1">Bio</h4>
-          <p className="text-sm">{bio}</p>
-        </div>
-        
-        <div>
-          <h4 className="text-sm font-medium text-muted-foreground mb-1">Email</h4>
-          <p className="text-sm">{user.email || 'No email available'}</p>
-        </div>
-        
-        <div>
-          <h4 className="text-sm font-medium text-muted-foreground mb-1">Username</h4>
-          <p className="text-sm">{user.username || 'No username set'}</p>
-        </div>
-        
-        <div className="pt-2">
-          <h4 className="text-sm font-medium text-muted-foreground mb-2">Preferences</h4>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center justify-between p-2 bg-muted/50 rounded">
-              <span className="text-xs">Theme</span>
-              <span className="text-xs font-medium">
-                {getUserMetadataValue(user, 'theme_preference', 'System')}
-              </span>
+            <ThemeDataStream className="absolute inset-0 pointer-events-none opacity-20" />
+            
+            <div className="relative z-10 p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <motion.div 
+                  className="flex items-center gap-4"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <div className="relative group">
+                    <div className="w-20 h-20 rounded-full border-2 border-primary/50 overflow-hidden bg-primary/20">
+                      {profile?.avatar_url ? (
+                        <img
+                          src={profile.avatar_url}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <User className="w-10 h-10 text-primary" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute inset-0 rounded-full bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-bold text-primary animate-morph-header">
+                      {profile?.display_name || "Anonymous Maker"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {profile?.bio || "No bio yet"}
+                    </p>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsEditing(true)}
+                    className={cn(
+                      "relative overflow-hidden",
+                      "before:absolute before:inset-0",
+                      "before:bg-primary/20 before:translate-y-full",
+                      "hover:before:translate-y-0",
+                      "before:transition-transform before:duration-300",
+                      "mad-scientist-hover"
+                    )}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                </motion.div>
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="grid grid-cols-2 gap-4"
+              >
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Theme</h4>
+                  <p className="text-sm">{profile?.theme_preference || "Cyberpunk"}</p>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Motion</h4>
+                  <p className="text-sm">{profile?.motion_enabled ? "Enabled" : "Disabled"}</p>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="flex gap-2 flex-wrap"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSocialConnect("GitHub")}
+                  className={cn(
+                    "group relative overflow-hidden",
+                    "before:absolute before:inset-0",
+                    "before:bg-primary/20 before:translate-y-full",
+                    "hover:before:translate-y-0",
+                    "before:transition-transform before:duration-300"
+                  )}
+                >
+                  <Github className="w-4 h-4 mr-2" />
+                  Connect GitHub
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSocialConnect("Twitter")}
+                  className={cn(
+                    "group relative overflow-hidden",
+                    "before:absolute before:inset-0",
+                    "before:bg-primary/20 before:translate-y-full",
+                    "hover:before:translate-y-0",
+                    "before:transition-transform before:duration-300"
+                  )}
+                >
+                  <Twitter className="w-4 h-4 mr-2" />
+                  Connect Twitter
+                </Button>
+              </motion.div>
             </div>
-            <div className="flex items-center justify-between p-2 bg-muted/50 rounded">
-              <span className="text-xs">Motion</span>
-              <span className="text-xs font-medium">
-                {getUserMetadataBoolValue(user, 'motion_enabled', true) ? 'Enabled' : 'Disabled'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        ) : (
+          <ProfileEditor onClose={() => setIsEditing(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
-}
+};

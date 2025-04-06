@@ -337,110 +337,6 @@ export type Database = {
           },
         ]
       }
-      chat_messages: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          metadata: Json | null
-          role: string
-          session_id: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          metadata?: Json | null
-          role: string
-          session_id?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          metadata?: Json | null
-          role?: string
-          session_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_messages_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "chat_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      chat_sessions: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          metadata: Json | null
-          system_user_id: string | null
-          title: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          metadata?: Json | null
-          system_user_id?: string | null
-          title: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          metadata?: Json | null
-          system_user_id?: string | null
-          title?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      chat_system_settings: {
-        Row: {
-          created_at: string | null
-          default_model: string | null
-          enable_history: boolean | null
-          id: string
-          max_context_length: number | null
-          provider: string
-          system_prompt: string | null
-          system_user_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          default_model?: string | null
-          enable_history?: boolean | null
-          id?: string
-          max_context_length?: number | null
-          provider?: string
-          system_prompt?: string | null
-          system_user_id?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          default_model?: string | null
-          enable_history?: boolean | null
-          id?: string
-          max_context_length?: number | null
-          provider?: string
-          system_prompt?: string | null
-          system_user_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       components: {
         Row: {
           category: string
@@ -1669,16 +1565,6 @@ export type Database = {
         }
         Returns: Json
       }
-      map_roles_to_permissions: {
-        Args: {
-          roles: Database["public"]["Enums"]["user_role"][]
-        }
-        Returns: {
-          permission: string
-          subject: string
-          action: string
-        }[]
-      }
       merge_theme_styles: {
         Args: {
           base_styles: Json
@@ -1689,12 +1575,6 @@ export type Database = {
       refresh_materialized_views: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      update_user_activity_status: {
-        Args: {
-          new: unknown
-        }
-        Returns: boolean
       }
       validate_api_key_format: {
         Args: {
@@ -1720,14 +1600,7 @@ export type Database = {
       part_status: "draft" | "published" | "archived"
       theme_context: "site" | "admin" | "chat"
       theme_status: "draft" | "published" | "archived"
-      user_role:
-        | "super_admin"
-        | "admin"
-        | "maker"
-        | "builder"
-        | "user"
-        | "moderator"
-        | "editor"
+      user_role: "super_admin" | "admin" | "maker" | "builder"
       workflow_field_type:
         | "string"
         | "textarea"

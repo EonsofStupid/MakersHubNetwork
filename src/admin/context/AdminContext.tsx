@@ -1,150 +1,79 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useThemeStore } from '@/stores/theme/store';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
-import { getLogger } from '@/logging';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useAdminStore } from '@/admin/store/admin.store';
+import { useAdminSync } from '@/admin/hooks/useAdminSync';
+import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { UserRole } from '@/types/auth.unified';
+import { useAuthState } from '@/auth/hooks/useAuthState';
+import { PERMISSIONS } from '@/auth/permissions';
+import { AdminPermissionValue } from '@/admin/types/permissions';
+import { mapRolesToPermissions } from '@/auth/rbac/roles';
 
-// Create logger instance
-const logger = getLogger('AdminContext', LogCategory.SYSTEM);
-
-// Types
-interface AdminState {
-  title: string;
-  adminMode: boolean;
-  theme: string;
-  showSidebar: boolean;
-  permissions: string[];
-  roles: UserRole[];
+// Create context
+interface AdminContextValue {
   initialized: boolean;
 }
 
-interface AdminContextType extends AdminState {
-  setTitle: (title: string) => void;
-  toggleAdminMode: () => void;
-  setTheme: (theme: string) => void;
-  toggleSidebar: () => void;
-  hasPermission: (permission: string) => boolean;
-}
-
-// Create the context
-const AdminContext = createContext<AdminContextType | undefined>(undefined);
+const AdminContext = createContext<AdminContextValue | undefined>(undefined);
 
 // Provider component
 export function AdminProvider({ children }: { children: React.ReactNode }) {
-  const { currentTheme } = useThemeStore();
-  const { toast } = useToast();
-  const { roles } = useAuth();
+  const { setPermissions } = useAdminStore();
+  const { isSyncing } = useAdminSync();
+  const [initialized, setInitialized] = useState(false);
+  const initAttemptedRef = useRef<boolean>(false);
+  const logger = useLogger('AdminContext', LogCategory.ADMIN);
   
-  // State
-  const [state, setState] = useState<AdminState>({
-    title: 'Administration',
-    adminMode: false,
-    theme: 'cyberpunk',
-    showSidebar: true,
-    permissions: [],
-    roles: (roles || []) as UserRole[],
-    initialized: false
-  });
+  // Get permissions directly from auth state to avoid circular dependencies
+  const { roles, status } = useAuthState();
   
-  // Load permissions based on roles
+  // Initialize admin context only once
   useEffect(() => {
-    // Simple mapping of roles to permissions - in a real app this might come from an API
-    const rolePermissions: Record<string, string[]> = {
-      admin: ['admin:read', 'admin:write', 'admin:delete', 'admin:manage-users'],
-      super_admin: ['admin:read', 'admin:write', 'admin:delete', 'admin:manage-users', 'admin:system-settings'],
-      editor: ['admin:read', 'admin:write'],
-      moderator: ['admin:read', 'admin:moderate-content']
-    };
+    // Guard against multiple initialization attempts and wait until auth is ready
+    if (initAttemptedRef.current || initialized || status === 'loading') {
+      return;
+    }
     
-    // Collect all permissions based on user roles
-    const userPermissions: string[] = [];
+    // Mark initialization as attempted immediately to prevent multiple attempts
+    initAttemptedRef.current = true;
     
-    roles.forEach(role => {
-      const perms = rolePermissions[role as string] || [];
-      userPermissions.push(...perms);
-    });
-    
-    // Remove duplicates
-    const uniquePermissions = [...new Set(userPermissions)];
-    
-    setState(prev => ({
-      ...prev,
-      permissions: uniquePermissions,
-      roles: roles as UserRole[],
-      initialized: true
-    }));
-    
-    logger.info('User permissions loaded', {
-      details: { 
-        permissionCount: uniquePermissions.length,
-        roleCount: roles.length
-      }
-    });
-  }, [roles]);
-  
-  // Set page title
-  const setTitle = (title: string) => {
-    setState(prev => ({ ...prev, title }));
-  };
-  
-  // Toggle admin mode
-  const toggleAdminMode = () => {
-    setState(prev => {
-      const newMode = !prev.adminMode;
-      
-      // Notify user of mode change
-      toast({
-        title: newMode ? 'Admin Mode Enabled' : 'Admin Mode Disabled',
-        description: newMode 
-          ? 'You now have access to advanced admin features' 
-          : 'Returned to standard admin view',
+    try {
+      logger.info('Initializing admin context', {
+        details: { userRoles: roles, authStatus: status }
       });
       
-      return { ...prev, adminMode: newMode };
-    });
-  };
+      // Use the proper role mapping function to get typed permissions
+      const adminPermissions: AdminPermissionValue[] = 
+        mapRolesToPermissions(roles);
+      
+      // Update permissions in store
+      setPermissions(adminPermissions);
+      setInitialized(true);
+      
+      logger.info('Admin context initialized successfully', {
+        details: { permissionsCount: adminPermissions.length }
+      });
+    } catch (error) {
+      logger.error('Failed to initialize admin context', {
+        details: { error }
+      });
+    }
+  }, [logger, roles, initialized, setPermissions, status]);
   
-  // Set admin theme
-  const setTheme = (theme: string) => {
-    setState(prev => ({ ...prev, theme }));
-  };
-  
-  // Toggle sidebar
-  const toggleSidebar = () => {
-    setState(prev => ({ ...prev, showSidebar: !prev.showSidebar }));
-  };
-  
-  // Check if user has a specific permission
-  const hasPermission = (permission: string) => {
-    return state.permissions.includes(permission);
-  };
-  
-  const contextValue: AdminContextType = {
-    ...state,
-    setTitle,
-    toggleAdminMode,
-    setTheme,
-    toggleSidebar,
-    hasPermission
-  };
+  const value = { initialized };
   
   return (
-    <AdminContext.Provider value={contextValue}>
+    <AdminContext.Provider value={value}>
       {children}
     </AdminContext.Provider>
   );
 }
 
-// Custom hook to use the admin context
-export function useAdmin() {
+// Hook to use admin context
+export function useAdminContext() {
   const context = useContext(AdminContext);
-  
   if (context === undefined) {
-    throw new Error('useAdmin must be used within an AdminProvider');
+    throw new Error('useAdminContext must be used within an AdminProvider');
   }
-  
   return context;
 }

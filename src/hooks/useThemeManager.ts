@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Theme, ComponentTokens, ThemeStatus } from '@/types/theme';
+import { Theme, ComponentTokens } from '@/types/theme';
 import { Json } from '@/integrations/supabase/types';
 
 export function useThemeManager() {
@@ -30,7 +30,7 @@ export function useThemeManager() {
       const themeData = {
         name,
         description,
-        status: 'draft' as ThemeStatus,
+        status: 'draft' as const,
         is_default: false,
         version: 1,
         design_tokens: {
@@ -128,7 +128,7 @@ export function useThemeManager() {
         created_at: data.created_at || '',
         updated_at: data.updated_at || '',
         published_at: data.published_at || undefined,
-        version: Number(data.version || 1),
+        version: data.version || 1,
         cache_key: data.cache_key || undefined,
         parent_theme_id: data.parent_theme_id || undefined,
         design_tokens: data.design_tokens as any || {},
@@ -238,13 +238,13 @@ export function useThemeManager() {
         id: item.id,
         name: item.name,
         description: item.description || '',
-        status: item.status as ThemeStatus || 'draft',
+        status: item.status || 'draft',
         is_default: item.is_default || false,
         created_by: item.created_by || undefined,
         created_at: item.created_at || '',
         updated_at: item.updated_at || '',
         published_at: item.published_at || undefined,
-        version: Number(item.version || 1),
+        version: item.version || 1,
         cache_key: item.cache_key || undefined,
         parent_theme_id: item.parent_theme_id || undefined,
         design_tokens: item.design_tokens as any || {},

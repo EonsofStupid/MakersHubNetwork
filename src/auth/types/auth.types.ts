@@ -1,18 +1,38 @@
 
-// Re-export types from the unified auth types file
-export type { 
-  UserRole,
-  AdminAccess,
-  UserProfile,
-  AuthStatus,
-  AuthState,
-  AuthActions,
-  AuthStore,
-  WithAdminAccess,
-  UserMetadata
-} from '@/types/auth.unified';
+import { Session, User } from "@supabase/supabase-js";
 
-// Auth provider props
-export interface AuthProviderProps {
-  children: React.ReactNode;
+export type UserRole = 'super_admin' | 'admin' | 'maker' | 'builder';
+
+export interface UserProfile {
+  id: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+  website?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type AuthUser = User;
+
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
+
+export interface AuthState {
+  user: AuthUser | null;
+  session: Session | null;
+  roles: UserRole[];
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  status: AuthStatus;
+  initialized?: boolean;
+}
+
+export interface AdminAccess {
+  isAdmin: boolean;
+  hasAdminAccess: boolean;
+}
+
+export interface WithAdminAccess {
+  hasAdminAccess: boolean;
 }

@@ -1,33 +1,38 @@
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { UserRole } from '@/types/auth.unified';
+import { useAuthState } from "@/auth/hooks/useAuthState";
 
-interface AdminAccess {
-  isAdmin: boolean;
-  isSuperAdmin: boolean;
-  hasAdminAccess: boolean;
+interface AdminAccessOptions {
+  requireAuth?: boolean;
+  allowedRoles?: string[];
 }
 
-export function useAdminAccess(): AdminAccess {
-  const { roles, user, status } = useAuth();
-  const [adminAccess, setAdminAccess] = useState<AdminAccess>({
-    isAdmin: false,
-    isSuperAdmin: false,
-    hasAdminAccess: false,
-  });
-
-  useEffect(() => {
-    const isAdmin = roles.includes('admin' as UserRole);
-    const isSuperAdmin = roles.includes('super_admin' as UserRole);
-    const hasAdminAccess = isAdmin || isSuperAdmin;
-
-    setAdminAccess({
-      isAdmin,
-      isSuperAdmin,
-      hasAdminAccess,
-    });
-  }, [roles, user, status]);
-
-  return adminAccess;
+/**
+ * Hook for checking admin access permissions
+ * Uses useAuthState directly to avoid circular dependencies
+ */
+export function useAdminAccess(options: AdminAccessOptions = { requireAuth: true }) {
+  const { user, roles } = useAuthState();
+  
+  const hasAdminAccess = (): boolean => {
+    // If authentication is required and user is not logged in
+    if (options.requireAuth && !user) {
+      return false;
+    }
+    
+    // Check if user has admin or super_admin role
+    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+    
+    // If specific roles are required
+    if (options.allowedRoles && options.allowedRoles.length > 0) {
+      return options.allowedRoles.some(role => roles.includes(role));
+    }
+    
+    // Default to admin check
+    return isAdmin;
+  };
+  
+  return {
+    hasAdminAccess: hasAdminAccess(),
+    user
+  };
 }

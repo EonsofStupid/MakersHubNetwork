@@ -1,25 +1,48 @@
 
-import { useMemo } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useEffect, useState } from 'react';
+import { useAuthState } from '@/auth/hooks/useAuthState';
+import { hasAdminAccess } from '@/auth/rbac/roles';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 /**
- * Hook to check admin access permissions
+ * Hook for checking admin access permissions
+ * Simplified to avoid circular dependencies
  */
 export function useAdminAccess() {
-  const { roles, user, status, isLoading } = useAuth();
+  const { status, roles, user } = useAuthState();
+  const [isChecking, setIsChecking] = useState(true);
+  const logger = useLogger("useAdminAccess", LogCategory.ADMIN);
   
-  const adminAccess = useMemo(() => {
-    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-    const hasAdminAccess = isAdmin;
-    const isAuthenticated = !!user;
-    
-    return {
-      isAdmin,
-      hasAdminAccess,
-      isLoading,
-      isAuthenticated
-    };
-  }, [roles, user, isLoading]);
-
-  return adminAccess;
+  // Derived state
+  const isAuthenticated = status === 'authenticated' && !!user;
+  const adminAccessResult = hasAdminAccess(roles);
+  
+  useEffect(() => {
+    if (status !== 'loading') {
+      setIsChecking(false);
+    }
+  }, [status]);
+  
+  // Log access attempts only once
+  useEffect(() => {
+    if (!isChecking && isAuthenticated) {
+      const logLevel = adminAccessResult ? 'info' : 'warn';
+      
+      logger[logLevel]('Admin access check', {
+        details: {
+          userId: user?.id,
+          hasAccess: adminAccessResult,
+          roles
+        }
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isChecking, isAuthenticated, adminAccessResult]);
+  
+  return {
+    isLoading: isChecking,
+    isAuthenticated,
+    hasAdminAccess: adminAccessResult
+  };
 }

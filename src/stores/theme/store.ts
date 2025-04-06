@@ -72,7 +72,7 @@ const themeSchema = z.object({
 });
 
 // Create a type-safe logger for the theme store
-const logger = getLogger('ThemeStore', LogCategory.SYSTEM);
+const logger = getLogger();
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
   currentTheme: null,
@@ -86,15 +86,15 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       logger.info('Setting theme', { 
-        details: { themeIdOrName } as Record<string, unknown>
+        category: LogCategory.UI,
+        details: { themeIdOrName },
+        source: 'ThemeStore'
       });
       
-      // Determine if themeIdOrName is a UUID or a name
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(themeIdOrName);
-      
-      // Request the theme with the appropriate parameter
+      // We receive a theme ID or name, fetch the theme
       const { theme: fetchedTheme, isFallback } = await getTheme({
-        ...(isUuid ? { id: themeIdOrName } : { name: themeIdOrName }),
+        id: themeIdOrName,
+        name: themeIdOrName,
         enableFallback: true
       });
       
@@ -119,7 +119,6 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         const sanitizedTheme = {
           ...fetchedTheme,
           is_default: Boolean(fetchedTheme.is_default),
-          version: Number(fetchedTheme.version || 1),
           design_tokens: {
             colors: fetchedTheme.design_tokens?.colors || {},
             spacing: fetchedTheme.design_tokens?.spacing || {},
@@ -183,15 +182,19 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       }
       
       logger.info('Theme set successfully', { 
+        category: LogCategory.SYSTEM,
         details: { 
           themeId: fetchedTheme.id, 
           isFallback, 
           componentTokensCount: Array.isArray(fetchedTheme.component_tokens) ? fetchedTheme.component_tokens.length : 0 
-        } as Record<string, unknown>
+        },
+        source: 'ThemeStore'
       });
     } catch (error) {
       logger.error("Error fetching theme", { 
-        details: error as Record<string, unknown>
+        category: LogCategory.SYSTEM,
+        details: error,
+        source: 'ThemeStore'
       });
       
       // On error, set a basic hardcoded fallback theme to ensure UI doesn't break
@@ -253,7 +256,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       });
       
       logger.warn("Using hardcoded fallback theme due to error", { 
-        details: { errorMessage: error instanceof Error ? error.message : String(error) } as Record<string, unknown>
+        details: { errorMessage: error instanceof Error ? error.message : String(error) }
       });
     }
   },
@@ -261,7 +264,10 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   loadAdminComponents: async () => {
     set({ isLoading: true, error: null });
     try {
-      logger.info('Loading admin components');
+      logger.info('Loading admin components', {
+        category: LogCategory.UI,
+        source: 'ThemeStore'
+      });
       
       // Use the theme service to get admin components
       const { theme: adminTheme } = await getTheme();
@@ -290,11 +296,15 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       
       set({ adminComponents: validatedAdminComponents, isLoading: false });
       logger.info('Admin components loaded', { 
-        details: { count: validatedAdminComponents.length } as Record<string, unknown>
+        category: LogCategory.UI,
+        details: { count: validatedAdminComponents.length },
+        source: 'ThemeStore'
       });
     } catch (error) {
       logger.error("Error loading admin components", { 
-        details: error as Record<string, unknown>
+        category: LogCategory.SYSTEM,
+        details: error,
+        source: 'ThemeStore'
       });
       set({ 
         error: error instanceof Error ? error : new Error("Failed to load admin components"), 

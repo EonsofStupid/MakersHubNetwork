@@ -1,17 +1,17 @@
 
-import { LoggingConfig, LogCategory, LogTransport } from './types';
+import { LoggingConfig, LogCategory } from './types';
 import { LogLevel } from './constants/log-level';
-import { consoleTransport } from './transports/console-transport';
+import { ConsoleTransport } from './transports/console-transport';
 import { UITransport } from './transports/ui-transport';
-import { memoryTransport } from './transports/memory-transport';
+import { MemoryTransport, memoryTransport } from './transports/memory-transport';
 
 // Default logging configuration
 export const defaultLoggingConfig: LoggingConfig = {
   minLevel: LogLevel.INFO, // Log info and above by default
   transports: [
-    consoleTransport, // Always log to console
-    new UITransport(),     // Show UI toasts for logs
-    memoryTransport,       // Keep logs in memory for UI components
+    new ConsoleTransport(), // Always log to console
+    new UITransport(),      // Show UI toasts for logs
+    memoryTransport,        // Keep logs in memory for UI components
   ],
   bufferSize: 10,          // Buffer size before flush
   flushInterval: 5000,     // Flush interval in ms
@@ -37,13 +37,13 @@ export function getLoggingConfig(): LoggingConfig {
     minLevel: LogLevel.INFO,
     // Exclude DEBUG level from UI transport in production
     transports: [
-      consoleTransport,
-      // Create a new UI transport with production settings
+      new ConsoleTransport(),
       new UITransport({
-        minLevel: LogLevel.INFO,
-        includeDebug: false,
-        maxEntries: 50,
-        enabled: true
+        showDebug: false,
+        showInfo: true,
+        showWarning: true,
+        showError: true,
+        showCritical: true,
       }),
       memoryTransport,
     ],

@@ -1,43 +1,99 @@
 
-import { useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState, useRef } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { Skeleton } from './ui/skeleton';
+import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
+import { useAuthState } from '@/auth/hooks/useAuthState';
 
-// This component handles global app initialization
-export function AppInitializer({ children }: { children: React.ReactNode }) {
-  const [isInitialized, setIsInitialized] = useState(false);
-  const { toast } = useToast();
+interface AppInitializerProps {
+  children: React.ReactNode;
+}
+
+export function AppInitializer({ children }: AppInitializerProps) {
+  const [isAppReady, setIsAppReady] = useState(false);
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
-
+  const initMessageShownRef = useRef<boolean>(false);
+  const maxWaitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Get theme and auth loading status
+  const { isLoaded: themeLoaded } = useSiteTheme();
+  const { initialized: authInitialized, status: authStatus } = useAuthState();
+  
   useEffect(() => {
-    const initializeApp = async () => {
-      try {
-        logger.info('Application initializing');
-        
-        // Small delay for UX purposes to ensure themes and styles are applied
-        // This is non-blocking and happens after the theme is already loaded
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        logger.info('Application initialized successfully');
-        setIsInitialized(true);
-      } catch (error) {
-        logger.error('Application initialization failed', { 
-          details: { error } 
-        });
-        toast({
-          title: 'Initialization Error',
-          description: 'Failed to initialize the application. Please refresh and try again.',
-          variant: 'destructive'
-        });
-        // Still mark as initialized to prevent eternal loading state
-        setIsInitialized(true);
+    // Log status changes, but only once per render to avoid loops
+    if (!initMessageShownRef.current) {
+      logger.info('App initializing, auth status:', { 
+        details: { status: authStatus, themeLoaded, authInitialized }
+      });
+      initMessageShownRef.current = true;
+    }
+    
+    // Clear any existing timeouts
+    if (maxWaitTimeoutRef.current) {
+      clearTimeout(maxWaitTimeoutRef.current);
+    }
+    
+    // If theme is loaded and auth is initialized, we can render the app
+    if (themeLoaded && authInitialized) {
+      logger.info('All systems initialized, rendering application');
+      setIsAppReady(true);
+      return;
+    }
+    
+    // Set a maximum wait time for initialization
+    // This prevents app from being stuck in loading state forever
+    maxWaitTimeoutRef.current = setTimeout(() => {
+      logger.warn('Rendering app with incomplete initialization', {
+        details: { themeLoaded, authStatus, authInitialized }
+      });
+      setIsAppReady(true);
+    }, 2000); // Max wait time
+    
+    return () => {
+      if (maxWaitTimeoutRef.current) {
+        clearTimeout(maxWaitTimeoutRef.current);
       }
     };
-
-    initializeApp();
-  }, [logger, toast]);
-
-  // Always render children, don't block on initialization
+  }, [logger, authStatus, authInitialized, themeLoaded]);
+  
+  // Reset the flag when dependencies change
+  useEffect(() => {
+    initMessageShownRef.current = false;
+  }, [authStatus, authInitialized, themeLoaded]);
+  
+  // Show minimal loading state while app is initializing
+  if (!isAppReady) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="w-full max-w-2xl px-4">
+          {/* Navbar skeleton */}
+          <div className="flex items-center justify-between mb-12">
+            <Skeleton className="h-8 w-32" />
+            <div className="flex gap-4">
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </div>
+          </div>
+          
+          {/* Content skeletons */}
+          <div className="space-y-8">
+            <Skeleton className="h-12 w-3/4 mx-auto" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="flex flex-col space-y-3">
+                  <Skeleton className="h-40 w-full rounded-lg" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   return <>{children}</>;
 }

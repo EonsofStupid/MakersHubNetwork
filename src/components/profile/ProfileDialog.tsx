@@ -1,8 +1,6 @@
-
 import React from "react"
 import { motion } from "framer-motion"
 import { X } from "lucide-react"
-import { useAuth } from "@/hooks/use-auth"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
@@ -17,16 +15,6 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   open,
   onClose,
 }) => {
-  const { user, setUser } = useAuth();
-
-  // Handle save functionality
-  const handleSaveProfile = (updatedUser: any) => {
-    if (setUser && user) {
-      setUser(updatedUser);
-    }
-    onClose();
-  };
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
@@ -55,16 +43,10 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
               Edit Profile
             </h2>
 
-            {user && (
-              <ProfileEditor 
-                user={user} 
-                onSave={handleSaveProfile} 
-                onCancel={onClose} 
-              />
-            )}
+            <ProfileEditor onClose={onClose} />
           </div>
         </motion.div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
