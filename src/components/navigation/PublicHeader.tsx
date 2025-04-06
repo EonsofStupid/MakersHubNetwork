@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/auth/hooks/useAuth';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 
