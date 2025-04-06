@@ -1,46 +1,72 @@
 
-import { User, Session } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 
-// Define the user role type
+// Define user roles for the application
 export type UserRole = 
-  | 'super_admin'
+  | 'super_admin'  // Changed from 'superadmin' to 'super_admin' for consistency
   | 'admin'
   | 'maker'
   | 'builder'
   | 'user'
   | 'moderator'
   | 'editor'
-  | 'service'; // Special role for SSR
+  | 'service';
 
-// Define the authentication status type
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+// Auth event types
+export type AuthEventType =
+  | 'AUTH_SIGNED_IN'
+  | 'AUTH_SIGNED_OUT'
+  | 'AUTH_USER_UPDATED'
+  | 'AUTH_SESSION_REFRESHED'
+  | 'AUTH_ERROR';
 
-// Define the authentication state
-export interface AuthState {
-  user: User | null;
-  session: Session | null;
-  roles: UserRole[];
-  status: AuthStatus;
-  isLoading: boolean;
-  error: string | null;
-  initialized: boolean;
-  isAuthenticated: boolean;
-  logout: () => Promise<void>;
-  isAdmin: () => boolean;
+// Auth event interface
+export interface AuthEvent {
+  type: AuthEventType;
+  payload?: unknown;
 }
 
-// Define the authentication context
-export interface AuthContext {
-  user: User | null;
-  session: Session | null;
+// Auth listener function type
+export type AuthEventListener = (event: AuthEvent) => void;
+
+// User profile interface
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  username?: string;
+  display_name?: string;
+  avatar_url?: string;
+  bio?: string;
+  website?: string;
+  location?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Extended user interface with roles and profile
+export interface AppUser {
+  id: string;
+  email: string;
   roles: UserRole[];
-  status: AuthStatus;
-  isLoading: boolean;
-  error: string | null;
+  profile?: UserProfile;
+  metadata?: Record<string, unknown>;
+}
+
+// Auth state interface for auth context
+export interface AuthState {
+  user: AppUser | null;
+  session: Session | null;
   isAuthenticated: boolean;
-  isAdmin: boolean;
-  isSuperAdmin: boolean;
-  hasRole: (role: UserRole) => boolean;
-  logout: () => Promise<void>;
-  initialize: () => Promise<void>;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+// Auth context interface
+export interface AuthContextValue extends AuthState {
+  signIn: (email: string, password: string) => Promise<void>;
+  signInWithProvider: (provider: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
 }

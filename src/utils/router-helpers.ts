@@ -3,7 +3,7 @@
  * Navigation helper functions for handling TanStack Router type safety issues
  */
 import { createRoute, Navigate } from '@tanstack/react-router';
-import type { AnyRoute, RoutePaths } from '@tanstack/react-router';
+import type { AnyRoute } from '@tanstack/react-router';
 
 // Helper function for string-based navigation
 export function navigateTo(path: string) {

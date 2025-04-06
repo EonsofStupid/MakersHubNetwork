@@ -14,7 +14,7 @@ export function hasRequiredRole(userRoles: UserRole[] | undefined, requiredRole:
  */
 export function isAdmin(userRoles: UserRole[] | undefined): boolean {
   if (!userRoles) return false;
-  return userRoles.some(role => role === 'admin' || role === 'superadmin');
+  return userRoles.some(role => role === 'admin' || role === 'super_admin');
 }
 
 /**
@@ -22,5 +22,5 @@ export function isAdmin(userRoles: UserRole[] | undefined): boolean {
  */
 export function isSuperAdmin(userRoles: UserRole[] | undefined): boolean {
   if (!userRoles) return false;
-  return userRoles.includes('superadmin');
+  return userRoles.includes('super_admin');
 }
