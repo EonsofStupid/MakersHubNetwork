@@ -1,37 +1,66 @@
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { AuthStatus, AuthStore, UserRole } from '@/auth/types/auth.types';
+import { persist } from 'zustand/middleware';
+import { AuthStore, UserRole, AuthStatus } from '@/types/auth.unified';
 import { supabase } from '@/integrations/supabase/client';
 import { authStorage } from '@/auth/store/middleware/persist.middleware';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 
+const initialState = {
+  user: null,
+  session: null,
+  roles: [],
+  isLoading: true,
+  error: null,
+  status: 'idle' as AuthStatus,
+  initialized: false,
+  isAuthenticated: false,
+};
+
+// Create a compatible storage object for Zustand persist middleware
+const createCompatibleStorage = () => ({
+  getItem: (name: string) => {
+    const value = authStorage.getItem(name);
+    if (value === null) return null;
+    return Promise.resolve(JSON.parse(value));
+  },
+  setItem: (name: string, value: unknown) => {
+    authStorage.setItem(name, JSON.stringify(value));
+    return Promise.resolve();
+  },
+  removeItem: (name: string) => {
+    authStorage.removeItem(name);
+    return Promise.resolve();
+  },
+});
+
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
-      // Initial state
-      user: null,
-      session: null,
-      roles: [],
-      isLoading: true,
-      error: null,
-      status: 'idle',
-      initialized: false,
-      isAuthenticated: false,
+      ...initialState,
       
       // Methods
-      setUser: (user) => set({ user }),
+      setUser: (user) => set({ 
+        user,
+        isAuthenticated: !!user
+      }),
+      
       setSession: (session) => set({ 
         session,
         user: session?.user ?? null,
         status: session ? 'authenticated' : 'unauthenticated',
         isAuthenticated: !!session
       }),
+      
       setRoles: (roles) => set({ roles }),
+      
       setError: (error) => set({ error }),
+      
       setLoading: (isLoading) => set({ isLoading }),
+      
       setInitialized: (initialized) => set({ initialized }),
+      
       setStatus: (status) => set(state => ({ 
         status,
         isAuthenticated: status === 'authenticated' 
@@ -39,7 +68,9 @@ export const useAuthStore = create<AuthStore>()(
       
       // Role checking
       hasRole: (role) => get().roles.includes(role),
-      isAdmin: () => get().roles.includes('admin') || get().roles.includes('super_admin'),
+      
+      isAdmin: () => get().roles.includes('admin' as UserRole) || 
+                    get().roles.includes('super_admin' as UserRole),
       
       // Initialize authentication
       initialize: async () => {
@@ -166,7 +197,7 @@ export const useAuthStore = create<AuthStore>()(
           });
           
           set({ error: errorMessage });
-          throw error; // Fixed 'err' to 'error'
+          throw error;
         } finally {
           set({ isLoading: false });
         }
@@ -174,7 +205,7 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => authStorage),
+      storage: createCompatibleStorage(),
       partialize: (state) => ({
         user: state.user,
         session: state.session,

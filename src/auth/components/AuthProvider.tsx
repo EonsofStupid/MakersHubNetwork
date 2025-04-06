@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { publishAuthEvent } from '@/auth/bridge';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
-import { UserRole } from '@/types/auth';
+import { UserRole } from '@/types/auth.unified';
 
 const logger = getLogger('AuthProvider', LogCategory.AUTH);
 
@@ -108,7 +108,6 @@ export function AuthProvider({ children, onAuthStateChange }: AuthProviderProps)
     };
   }, [auth, onAuthStateChange]);
   
-  // Return auth context provider with all auth state and methods
   return (
     <AuthContext.Provider value={auth}>
       {children}

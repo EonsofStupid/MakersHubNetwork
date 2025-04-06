@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { UserRole } from '@/types/auth';
+import { UserRole } from '@/types/auth.unified';
 
 interface AdminAccess {
   isAdmin: boolean;
