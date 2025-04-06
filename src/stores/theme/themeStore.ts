@@ -54,8 +54,6 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         tokens: { ...fallbackTokens, ...extractedTokens },
         loadStatus: 'loaded'
       });
-      
-      return theme;
     } catch (error) {
       console.error('Failed to load theme:', error);
       set({ 
@@ -81,8 +79,6 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         tokens: { ...fallbackTokens, ...extractedTokens },
         loadStatus: 'loaded'
       });
-      
-      return theme;
     } catch (error) {
       console.error('Failed to set theme:', error);
       set({ 

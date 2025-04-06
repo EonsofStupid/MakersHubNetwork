@@ -7,6 +7,7 @@ import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { adminRoutes } from './index';
 import { commonSearchParamsSchema } from '@/router/searchParams';
+import { navigateTo, createSearchParams } from '@/utils/router-helpers';
 
 // Loading component for lazy-loaded routes
 const PageLoader = () => (
@@ -35,8 +36,7 @@ export function AdminRoutes() {
     
     // Automatically redirect to dashboard if on /admin root
     if (location.pathname === '/admin') {
-      // Use string navigation to avoid type errors during this fix
-      navigate({ to: '/admin/dashboard' as any });
+      navigate({ to: navigateTo('/admin/dashboard') });
     }
     
     // Redirect unauthorized users
@@ -44,7 +44,7 @@ export function AdminRoutes() {
       logger.warn('Unauthorized access attempt to admin routes', {
         details: { path: location.pathname }
       });
-      navigate({ to: '/admin/unauthorized' as any });
+      navigate({ to: navigateTo('/admin/unauthorized') });
     }
     
     // Redirect unauthenticated users
@@ -53,13 +53,11 @@ export function AdminRoutes() {
         details: { path: location.pathname }
       });
       
-      // Navigate to login with correct search params - using validated schema
-      const search = commonSearchParamsSchema.parse({ 
-        returnTo: location.pathname 
-      });
+      // Navigate to login with correct search params
+      const search = createSearchParams({ returnTo: location.pathname });
       
       navigate({ 
-        to: '/login' as any, 
+        to: navigateTo('/login'),
         search
       });
     }

@@ -1,108 +1,62 @@
 
-import { z } from "zod";
+/**
+ * Theme tokens schema and fallback values
+ */
 
-// Define valid theme contexts
-export const ThemeContextSchema = z.enum(['app', 'site', 'admin', 'chat', 'training']);
-export type ThemeContext = z.infer<typeof ThemeContextSchema>;
-
-// Color tokens with hex validation
-const HexColorSchema = z.string().regex(/^#([0-9a-fA-F]{3,8})$/, "Must be a valid hex color");
-const HslColorSchema = z.string(); // HSL color in format like "186 100% 50%"
-
-// Base tokens schema with strong typing
-export const ThemeTokensSchema = z.object({
+export interface ThemeTokens {
   // Colors
-  primary: HslColorSchema,
-  secondary: HslColorSchema,
-  accent: HslColorSchema,
-  background: HslColorSchema,
-  foreground: HslColorSchema,
-  card: HslColorSchema,
-  cardForeground: HslColorSchema,
-  muted: HslColorSchema,
-  mutedForeground: HslColorSchema,
-  border: HslColorSchema,
-  input: HslColorSchema,
-  ring: HslColorSchema,
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  foreground: string;
+  card: string;
+  cardForeground: string;
+  muted: string;
+  mutedForeground: string;
+  border: string;
+  input: string;
+  ring: string;
   
-  // Effects
-  effectPrimary: HexColorSchema,
-  effectSecondary: HexColorSchema,
-  effectTertiary: HexColorSchema,
+  // Effect colors
+  effectPrimary: string;
+  effectSecondary: string;
+  effectTertiary: string;
   
-  // Animation timings (in ms)
-  transitionFast: z.string(),
-  transitionNormal: z.string(),
-  transitionSlow: z.string(),
+  // Timing variables
+  transitionFast: string;
+  transitionNormal: string;
+  transitionSlow: string;
   
-  // Radius values
-  radiusSm: z.string(),
-  radiusMd: z.string(),
-  radiusLg: z.string(),
-  radiusFull: z.string(),
-});
+  // Border radius variables
+  radiusSm: string;
+  radiusMd: string;
+  radiusLg: string;
+  radiusFull: string;
+}
 
-// Animation keyframe schema
-export const KeyframeSchema = z.record(z.record(z.string()));
-
-// Complete theme schema
-export const ThemeSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  context: ThemeContextSchema,
-  tokens: ThemeTokensSchema,
-  status: z.enum(['draft', 'published', 'archived']),
-  isDefault: z.boolean(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  design_tokens: z.record(z.unknown()).optional(),
-  component_tokens: z.array(z.record(z.unknown())).optional(),
-  animations: z.record(KeyframeSchema).optional(),
-});
-
-// Derived types
-export type ThemeTokens = z.infer<typeof ThemeTokensSchema>;
-export type Theme = z.infer<typeof ThemeSchema>;
-
-// Fallback tokens with default values
+// Fallback tokens for when the theme service fails
 export const fallbackTokens: ThemeTokens = {
-  // Colors
-  primary: "186 100% 50%",
-  secondary: "334 100% 59%",
-  accent: "262 80% 60%",
-  background: "228 47% 8%",
-  foreground: "210 40% 98%",
-  card: "228 47% 11%",
-  cardForeground: "210 40% 98%",
-  muted: "228 47% 15%",
-  mutedForeground: "215 20.2% 65.1%",
-  border: "228 47% 15%",
-  input: "228 47% 15%",
-  ring: "228 47% 20%",
-  
-  // Effects
+  primary: "#00F0FF",
+  secondary: "#FF2D6E",
+  accent: "#8B5CF6",
+  background: "#080F1E",
+  foreground: "#F9FAFB",
+  card: "#0E172A",
+  cardForeground: "#F9FAFB", 
+  muted: "#131D35",
+  mutedForeground: "#94A3B8",
+  border: "#131D35",
+  input: "#131D35",
+  ring: "#1E293B",
   effectPrimary: "#00F0FF",
   effectSecondary: "#FF2D6E",
   effectTertiary: "#8B5CF6",
-  
-  // Animation timings
   transitionFast: "150ms",
   transitionNormal: "300ms",
   transitionSlow: "500ms",
-  
-  // Radius values
   radiusSm: "0.25rem",
   radiusMd: "0.5rem",
   radiusLg: "0.75rem",
   radiusFull: "9999px",
 };
-
-// Utility function for theme token validation
-export function validateThemeTokens(tokens: unknown): ThemeTokens {
-  try {
-    return ThemeTokensSchema.parse(tokens);
-  } catch (error) {
-    console.error("Theme validation failed:", error);
-    return fallbackTokens;
-  }
-}

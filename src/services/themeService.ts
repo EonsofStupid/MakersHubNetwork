@@ -84,8 +84,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
   try {
     logger.info("Fetching theme from service", {
       category: LogCategory.DATABASE,
-      details: options,
-      source: 'themeService'
+      details: options
     });
     
     const { id, name, isDefault = true, context = 'site' } = options;
@@ -104,8 +103,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
     if (error) {
       logger.error("Error fetching theme from service", { 
         category: LogCategory.DATABASE,
-        details: { error, options },
-        source: 'themeService'
+        details: { error, options }
       });
       
       return { 
@@ -120,8 +118,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
         themeId: data.theme?.id || 'unknown',
         isFallback: data.isFallback || false,
         componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
-      },
-      source: 'themeService'
+      }
     });
 
     return { 
@@ -132,8 +129,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
   } catch (error) {
     logger.error("Error fetching theme from service", { 
       category: LogCategory.DATABASE,
-      details: error,
-      source: 'themeService'
+      details: error instanceof Error ? error.message : String(error)
     });
     
     // Return local fallback theme as emergency backup

@@ -3,7 +3,7 @@
 import { getLogger, initializeLogger } from './logger';
 import { LogLevel } from './constants/log-level';
 
-// Update LogCategory enum to include APP
+// Update LogCategory enum to include ALL needed categories
 export enum LogCategory {
   SYSTEM = 'system',
   NETWORK = 'network',

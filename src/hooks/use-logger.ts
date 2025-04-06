@@ -21,12 +21,11 @@ interface LogOptions {
  * Hook for logging from React components
  */
 export function useLogger(source: string, defaultCategory: LogCategory = LogCategory.UI) {
-  const logger = getLogger();
+  const logger = getLogger(source);
   
   const debug = useCallback((message: string, options?: LogOptions) => {
     logger.debug(message, {
       ...options,
-      source,
       category: options?.category || defaultCategory,
     });
   }, [logger, source, defaultCategory]);
@@ -34,7 +33,6 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
   const info = useCallback((message: string, options?: LogOptions) => {
     logger.info(message, {
       ...options,
-      source,
       category: options?.category || defaultCategory,
     });
   }, [logger, source, defaultCategory]);
@@ -42,7 +40,6 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
   const warn = useCallback((message: string, options?: LogOptions) => {
     logger.warn(message, {
       ...options,
-      source,
       category: options?.category || defaultCategory,
     });
   }, [logger, source, defaultCategory]);
@@ -50,7 +47,6 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
   const error = useCallback((message: string, options?: LogOptions) => {
     logger.error(message, {
       ...options,
-      source,
       category: options?.category || defaultCategory,
     });
   }, [logger, source, defaultCategory]);
@@ -58,7 +54,6 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
   const critical = useCallback((message: string, options?: LogOptions) => {
     logger.critical(message, {
       ...options,
-      source,
       category: options?.category || defaultCategory,
     });
   }, [logger, source, defaultCategory]);
