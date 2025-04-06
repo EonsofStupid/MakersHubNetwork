@@ -62,7 +62,7 @@ export function getPermissionGroups() {
       permissions: [
         PERMISSIONS.BUILDS_VIEW,
         PERMISSIONS.BUILDS_APPROVE,
-        PERMISSIONS.BUILDS_REJECT
+        PERMISSIONS.BUILDS_REJECT // Now this exists in PERMISSIONS
       ] as PermissionValue[]
     },
     {

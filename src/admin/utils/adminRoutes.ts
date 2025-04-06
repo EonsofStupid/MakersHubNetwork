@@ -19,7 +19,7 @@ export const adminPathSchema = z.enum([
 export type AdminPath = z.infer<typeof adminPathSchema>;
 
 // Helper function to validate admin paths
-export function validateAdminPath(path: string): AdminPath {
+export function validateAdminPath(path: string): string {
   try {
     return adminPathSchema.parse(path);
   } catch (error) {
@@ -32,7 +32,7 @@ export function validateAdminPath(path: string): AdminPath {
 /**
  * Returns the validated admin path or a fallback path if invalid
  */
-export function getAdminPath(path: string, fallback: AdminPath = '/admin/dashboard'): AdminPath {
+export function getAdminPath(path: string, fallback: AdminPath = '/admin/dashboard'): string {
   try {
     return adminPathSchema.parse(path);
   } catch (error) {

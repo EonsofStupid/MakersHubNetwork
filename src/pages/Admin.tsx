@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
@@ -20,9 +19,7 @@ const adminRootRoute = createRootRoute({
 const adminRouter = createRouter({
   routeTree: adminRootRoute.addChildren(adminRoutes),
   defaultPreload: 'intent',
-  defaultPreloadStaleTime: 0,
-  // Add router ID to prevent duplicate router instances
-  routerId: 'admin-router'
+  defaultPreloadStaleTime: 0
 });
 
 // Admin content wrapper component

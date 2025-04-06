@@ -24,6 +24,7 @@ export const PERMISSIONS = {
   BUILDS_CREATE: 'builds:create',
   BUILDS_EDIT: 'builds:edit',
   BUILDS_APPROVE: 'builds:approve',
+  BUILDS_REJECT: 'builds:reject', // Added the missing permission
   
   // Theme management
   THEMES_VIEW: 'themes:view',

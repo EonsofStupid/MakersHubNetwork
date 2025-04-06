@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
@@ -96,7 +95,7 @@ export function useImpulsivityTheme() {
           '--impulse-glow-secondary': '0 0 15px rgba(255, 45, 110, 0.7)'
         };
         
-        Object.entries(cssVars).forEach(([key, value]) => {
+        Object.entries(cssVars).forEach(([key, value]: [string, string]) => {
           (adminRootElement as HTMLElement).style.setProperty(key, value);
         });
         
