@@ -52,10 +52,12 @@ export function AdminRoutes() {
         details: { path: location.pathname }
       });
       
-      // Navigate to login with from parameter
+      // Navigate to login with correct search params
       navigate({ 
-        to: '/login' as any,
-        search: { from: location.pathname }
+        to: '/login' as any, 
+        search: { 
+          returnTo: location.pathname 
+        }
       });
     }
   }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate, loadStatus]);

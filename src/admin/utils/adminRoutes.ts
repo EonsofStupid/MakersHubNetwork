@@ -39,3 +39,25 @@ export function getAdminPath(path: string, fallback: AdminPath = '/admin/dashboa
     return fallback;
   }
 }
+
+/**
+ * Get path parts from an admin path
+ * Useful for breadcrumb generation and active route checking
+ */
+export function getAdminPathParts(path: string): string[] {
+  // Verify it's a valid admin path first
+  try {
+    adminPathSchema.parse(path);
+    // Split the path and filter out empty strings
+    return path.split('/').filter(Boolean);
+  } catch (error) {
+    return ['admin', 'dashboard']; // Default path parts
+  }
+}
+
+/**
+ * Check if a path is an admin path
+ */
+export function isAdminPath(path: string): boolean {
+  return path.startsWith('/admin');
+}

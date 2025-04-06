@@ -13,7 +13,10 @@ export const sectionPermissionMap: Record<string, PermissionValue> = {
   'data': PERMISSIONS.DATA_VIEW,
   'themes': PERMISSIONS.THEMES_VIEW,
   'settings': PERMISSIONS.SETTINGS_VIEW,
-  'analytics': PERMISSIONS.ADMIN_ACCESS
+  'analytics': PERMISSIONS.ADMIN_ACCESS,
+  'permissions': PERMISSIONS.ADMIN_ACCESS,
+  'logs': PERMISSIONS.SYSTEM_LOGS,
+  'parts': PERMISSIONS.PARTS_VIEW
 };
 
 /**
@@ -46,7 +49,9 @@ export function getPermissionGroups() {
       permissions: [
         PERMISSIONS.CONTENT_VIEW,
         PERMISSIONS.CONTENT_EDIT,
-        PERMISSIONS.CONTENT_DELETE
+        PERMISSIONS.CONTENT_DELETE,
+        PERMISSIONS.CONTENT_PUBLISH,
+        PERMISSIONS.CONTENT_CREATE
       ] as PermissionValue[]
     },
     {
@@ -54,7 +59,8 @@ export function getPermissionGroups() {
       permissions: [
         PERMISSIONS.USERS_VIEW,
         PERMISSIONS.USERS_EDIT,
-        PERMISSIONS.USERS_DELETE
+        PERMISSIONS.USERS_DELETE,
+        PERMISSIONS.USERS_CREATE
       ] as PermissionValue[]
     },
     {
@@ -62,7 +68,9 @@ export function getPermissionGroups() {
       permissions: [
         PERMISSIONS.BUILDS_VIEW,
         PERMISSIONS.BUILDS_APPROVE,
-        PERMISSIONS.BUILDS_REJECT // Now this exists in PERMISSIONS
+        PERMISSIONS.BUILDS_REJECT,
+        PERMISSIONS.BUILDS_CREATE,
+        PERMISSIONS.BUILDS_EDIT
       ] as PermissionValue[]
     },
     {
@@ -77,14 +85,34 @@ export function getPermissionGroups() {
       name: 'Data',
       permissions: [
         PERMISSIONS.DATA_VIEW,
-        PERMISSIONS.DATA_IMPORT
+        PERMISSIONS.DATA_IMPORT,
+        PERMISSIONS.DATA_EDIT,
+        PERMISSIONS.DATA_EXPORT
+      ] as PermissionValue[]
+    },
+    {
+      name: 'Parts',
+      permissions: [
+        PERMISSIONS.PARTS_VIEW,
+        PERMISSIONS.PARTS_CREATE,
+        PERMISSIONS.PARTS_EDIT,
+        PERMISSIONS.PARTS_DELETE
       ] as PermissionValue[]
     },
     {
       name: 'Settings',
       permissions: [
         PERMISSIONS.SETTINGS_VIEW,
-        PERMISSIONS.SETTINGS_EDIT
+        PERMISSIONS.SETTINGS_EDIT,
+        PERMISSIONS.SYSTEM_SETTINGS
+      ] as PermissionValue[]
+    },
+    {
+      name: 'System',
+      permissions: [
+        PERMISSIONS.SYSTEM_VIEW,
+        PERMISSIONS.SYSTEM_LOGS,
+        PERMISSIONS.SYSTEM_RESTART
       ] as PermissionValue[]
     }
   ];

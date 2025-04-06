@@ -1,101 +1,84 @@
 
-import { useState, memo, useCallback, useMemo } from "react" 
-import { useToast } from "@/hooks/use-toast"
-import { ProfileDialog } from "@/components/profile/ProfileDialog"
-import { UserMenuSheet } from "@/components/auth/UserMenuSheet"
-import { useAuthState } from "@/auth/hooks/useAuthState"
-import { useLogger } from "@/hooks/use-logger"
-import { LogCategory } from "@/logging"
-import { errorToObject } from "@/shared/utils/render"
+import React from 'react';
+import { useNavigate } from '@tanstack/react-router';
+import { useAuthState } from '@/auth/hooks/useAuthState';
+import { useAuthActions } from '@/auth/hooks/useAuthActions'; // Add this import
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
-export const UserMenu = memo(() => {
-  const [isSheetOpen, setSheetOpen] = useState(false)
-  const [isProfileDialogOpen, setProfileDialogOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+export function UserMenu() {
+  const { user, isAuthenticated } = useAuthState();
+  const { logout } = useAuthActions(); // Get logout from actions
+  const navigate = useNavigate();
   
-  const { toast } = useToast()
-  const logger = useLogger("UserMenu", LogCategory.AUTH)
+  // Get initials for avatar fallback
+  const getInitials = () => {
+    if (!user?.email) return 'U';
+    return user.email.substring(0, 2).toUpperCase();
+  };
   
-  // Get auth data from centralized hook
-  // Important: Using useAuthState to avoid initialization cycles
-  const auth = useAuthState();
-  const { user, roles } = auth;
-  // Handle potentially undefined methods from auth state
-  const logout = auth.logout || (() => Promise.resolve());
-  const isAdmin = auth.isAdmin || (() => false);
-  
-  // Memoize handlers to prevent recreating functions on each render
-  const handleOpenSheet = useCallback(() => {
-    setSheetOpen(true)
-  }, [])
-  
-  const handleCloseSheet = useCallback(() => {
-    setSheetOpen(false)
-  }, [])
-  
-  const handleOpenProfileDialog = useCallback(() => {
-    setSheetOpen(false)
-    setProfileDialogOpen(true)
-  }, [])
-  
-  const handleCloseProfileDialog = useCallback(() => {
-    setProfileDialogOpen(false)
-  }, [])
+  // Check if user has admin role - implement separately from state
+  const isAdmin = () => {
+    const authState = useAuthState();
+    return authState.roles.some(role => role === 'admin' || role === 'super_admin');
+  };
 
-  // Logout handler - memoized to prevent recreation
-  const handleLogout = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      logger.info("User logging out")
-      await logout()
-      logger.info("User logged out successfully")
-      window.location.reload()
-    } catch (error) {
-      logger.error("Error logging out", { details: errorToObject(error) })
-      toast({
-        variant: "destructive",
-        title: "Error logging out",
-        description: "Please try again",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [logout, toast, logger])
-
-  // Memoize props to prevent object recreation on each render
-  const sheetProps = useMemo(() => ({
-    isOpen: isSheetOpen,
-    onOpenChange: setSheetOpen,
-    userEmail: user?.email,
-    isLoadingLogout: isLoading,
-    onShowProfile: handleOpenProfileDialog,
-    onLogout: handleLogout,
-    hasAdminAccess: isAdmin(),
-    roles
-  }), [
-    isSheetOpen, 
-    user?.email, 
-    isLoading, 
-    handleOpenProfileDialog, 
-    handleLogout, 
-    isAdmin, 
-    roles
-  ])
-  
-  const profileDialogProps = useMemo(() => ({
-    open: isProfileDialogOpen,
-    onOpenChange: setProfileDialogOpen
-  }), [isProfileDialogOpen])
-
-  // Don't render if no user
-  if (!user) {
-    return null;
+  if (!isAuthenticated) {
+    return (
+      <Button onClick={() => navigate({ to: '/login' })}>
+        Sign In
+      </Button>
+    );
   }
 
   return (
-    <>
-      <UserMenuSheet {...sheetProps} />
-      <ProfileDialog {...profileDialogProps} />
-    </>
-  )
-})
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email || 'User'} />
+            <AvatarFallback>{getInitials()}</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{user?.user_metadata?.full_name || user?.email}</p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {user?.email}
+            </p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate({ to: '/profile' })}>
+          Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate({ to: '/settings' })}>
+          Settings
+        </DropdownMenuItem>
+        {isAdmin() && (
+          <DropdownMenuItem onClick={() => navigate({ to: '/admin' })}>
+            Admin
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem 
+          onClick={() => {
+            if (logout) logout();
+          }}
+        >
+          Log out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
