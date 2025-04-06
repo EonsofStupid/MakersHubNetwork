@@ -54,10 +54,7 @@ export function AdminRoutes() {
       // Use TanStack Router compatible navigation with correctly typed search params
       navigate({ 
         to: '/login' as any,
-        search: (prev) => ({
-          ...prev,
-          from: location.pathname
-        })
+        search: { from: location.pathname }
       });
     }
   }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate, loadStatus]);

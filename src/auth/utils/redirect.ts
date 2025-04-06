@@ -54,10 +54,8 @@ export function useAuthRedirect(options: RedirectOptions) {
       // Define the search params using a properly typed approach
       navigate({
         to: to as any,
-        search: (prev) => ({
-          ...prev,
-          from: location.pathname
-        })
+        // Pass a plain object instead of a function for search params
+        search: { from: location.pathname }
       });
     }
   }, [status, roles, navigate, to, allowRoles, redirectAuthenticated, redirectUnauthenticated, location.pathname, logger]);

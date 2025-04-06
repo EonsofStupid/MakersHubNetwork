@@ -20,10 +20,6 @@ import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import Admin from '@/pages/Admin';
 
-// Import admin routes but DO NOT register them directly here
-// This is to avoid duplicate route registration
-import { adminRoutes as importedAdminRoutes } from '@/admin/routes/index';
-
 // Root layout component that includes site-wide UI elements
 function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -71,7 +67,7 @@ export const rootRoute = createRootRoute({
 // Site route with navigation and footer
 const siteRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'site',
+  path: '/',
   component: SiteLayout
 });
 
@@ -110,18 +106,14 @@ const adminRoute = createRoute({
   component: Admin
 });
 
-// Register core routes, but NOT admin child routes since they are already registered in AdminRoutes
+// Register core routes - note that admin routes are registered separately in Admin.tsx
 export const routeTree = rootRoute.addChildren([
   siteRoute.addChildren([indexRoute]),
   loginRoute,
   profileRoute,
   settingsRoute,
-  adminRoute, 
-  // REMOVED: ...adminRoutes - This was causing duplicate route registration
+  adminRoute
 ]);
-
-// Instead, we'll export imported admin routes for reference
-export const adminRoutes = importedAdminRoutes;
 
 // Create the router instance
 export const router = createRouter({ 
