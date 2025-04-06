@@ -15,6 +15,11 @@ interface AdminTooltipProps {
   className?: string;
 }
 
+// Create a shared tooltip provider to avoid nesting providers
+export const AdminTooltipProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <TooltipProvider delayDuration={300}>{children}</TooltipProvider>;
+};
+
 export function AdminTooltip({
   children,
   content,
@@ -23,21 +28,19 @@ export function AdminTooltip({
   className,
 }: AdminTooltipProps) {
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
-          <div className="cursor-pointer">
-            {children}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent 
-          side={side} 
-          align={align}
-          className={`cyber-tooltip ${className || ''}`}
-        >
-          {content}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="cursor-pointer">
+          {children}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent 
+        side={side} 
+        align={align}
+        className={`cyber-tooltip ${className || ''}`}
+      >
+        {content}
+      </TooltipContent>
+    </Tooltip>
   );
 }

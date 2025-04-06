@@ -89,10 +89,12 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
         details: { themeIdOrName } as Record<string, unknown>
       });
       
-      // We receive a theme ID or name, fetch the theme
+      // Determine if themeIdOrName is a UUID or a name
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(themeIdOrName);
+      
+      // Request the theme with the appropriate parameter
       const { theme: fetchedTheme, isFallback } = await getTheme({
-        id: themeIdOrName,
-        name: themeIdOrName,
+        ...(isUuid ? { id: themeIdOrName } : { name: themeIdOrName }),
         enableFallback: true
       });
       
