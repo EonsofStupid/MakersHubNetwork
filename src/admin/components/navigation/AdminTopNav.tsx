@@ -146,4 +146,3 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
     </div>
   );
 }
-

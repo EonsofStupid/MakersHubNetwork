@@ -13,6 +13,7 @@ import { initializeLogger, getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { AppInitializer } from "@/components/AppInitializer";
+import { ImpulsivityInit } from "@/components/theme/ImpulsivityInit";
 
 // Import pages
 import Index from "./pages/Index";
@@ -87,21 +88,23 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
         <ThemeInitializer context={isAdminRoute ? 'admin' : 'app'} applyImmediately={true}>
-          <AuthProvider>
-            <AppInitializer>
-              <AdminProvider>
-                {!isAdminRoute && appReady && <MainNav />}
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/admin/*" element={<Admin />} />
-                </Routes>
-                {!isAdminRoute && appReady && <Footer />}
-                <Toaster />
-                <LoggingComponents />
-              </AdminProvider>
-            </AppInitializer>
-          </AuthProvider>
+          <ImpulsivityInit priority={true} autoApply={true}>
+            <AuthProvider>
+              <AppInitializer>
+                <AdminProvider>
+                  {!isAdminRoute && appReady && <MainNav />}
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/admin/*" element={<Admin />} />
+                  </Routes>
+                  {!isAdminRoute && appReady && <Footer />}
+                  <Toaster />
+                  <LoggingComponents />
+                </AdminProvider>
+              </AppInitializer>
+            </AuthProvider>
+          </ImpulsivityInit>
         </ThemeInitializer>
       </LoggingProvider>
     </ThemeProvider>
