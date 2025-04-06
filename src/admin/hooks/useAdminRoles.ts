@@ -1,7 +1,7 @@
 
 import { useMemo } from 'react';
 import { useAuthState } from '@/auth/hooks/useAuthState';
-import { AdminPermission } from '@/admin/types/permissions';
+import { AdminPermissionValue } from '@/admin/types/permissions';
 import { mapRolesToPermissions } from '@/auth/rbac/roles';
 
 export function useAdminRoles() {
@@ -11,7 +11,7 @@ export function useAdminRoles() {
     return mapRolesToPermissions(roles);
   }, [roles]);
   
-  const hasPermission = (permission: AdminPermission): boolean => {
+  const hasPermission = (permission: AdminPermissionValue): boolean => {
     return adminPermissions.includes(permission);
   };
   

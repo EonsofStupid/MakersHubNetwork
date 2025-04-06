@@ -10,13 +10,13 @@ import { useDebounce } from '@/hooks/useDebounce';
  * Hook for handling admin data synchronization
  */
 export function useAdminSync() {
-  const [isSyncing, setIsSyncing] = useState(false);
-  const { isInitialized, syncAdminData, hasPermission } = useAdminStore();
+  const [isSyncingState, setIsSyncing] = useState(false);
+  const adminStore = useAdminStore();
   const { user, status, isAuthenticated } = useAuthState();
   const logger = useLogger('useAdminSync', LogCategory.ADMIN);
 
   // Use proper debouncing for syncing state
-  const debouncedSyncValue = useDebounce(isSyncing, 300);
+  const debouncedSyncValue = useDebounce(isSyncingState, 300);
 
   // Function to sync admin data
   const syncData = useCallback(async () => {
@@ -25,7 +25,7 @@ export function useAdminSync() {
       return;
     }
     
-    if (isSyncing) {
+    if (isSyncingState) {
       logger.info('Already syncing, skipping duplicate sync request');
       return;
     }
@@ -34,15 +34,19 @@ export function useAdminSync() {
       setIsSyncing(true);
       
       logger.info('Syncing admin data');
-      await syncAdminData();
+      if (typeof adminStore.syncAdminData === 'function') {
+        await adminStore.syncAdminData();
+      } else {
+        logger.warn('syncAdminData function not available in adminStore');
+      }
       
       logger.info('Admin data sync complete');
     } catch (error) {
-      logger.error('Error syncing admin data', error);
+      logger.error('Error syncing admin data', error as Error);
     } finally {
       setIsSyncing(false);
     }
-  }, [user, isAuthenticated, isSyncing, syncAdminData, logger]);
+  }, [user, isAuthenticated, isSyncingState, adminStore, logger]);
   
   // Initialize and sync when auth status changes
   useEffect(() => {
@@ -60,7 +64,7 @@ export function useAdminSync() {
   return {
     isSyncing: debouncedSyncValue,
     syncAdminData: syncData,
-    isInitialized,
-    hasPermission
+    isInitialized: adminStore.initialized ?? false,
+    hasPermission: adminStore.hasPermission ?? (() => false)
   };
 }
