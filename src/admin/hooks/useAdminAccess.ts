@@ -1,48 +1,28 @@
 
-import { useEffect, useState } from 'react';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { hasAdminAccess } from '@/auth/rbac/roles';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { useMemo } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { UserRole } from '@/auth/types/auth.types';
+import { AdminAccess } from '@/auth/types/auth.types';
 
 /**
- * Hook for checking admin access permissions
- * Simplified to avoid circular dependencies
+ * Hook to determine if current user has admin access
+ * 
+ * @returns {AdminAccess} Object with admin access info
  */
-export function useAdminAccess() {
-  const { status, roles, user } = useAuthState();
-  const [isChecking, setIsChecking] = useState(true);
-  const logger = useLogger("useAdminAccess", LogCategory.ADMIN);
+export function useAdminAccess(): AdminAccess {
+  const { roles } = useAuth();
   
-  // Derived state
-  const isAuthenticated = status === 'authenticated' && !!user;
-  const adminAccessResult = hasAdminAccess(roles);
-  
-  useEffect(() => {
-    if (status !== 'loading') {
-      setIsChecking(false);
-    }
-  }, [status]);
-  
-  // Log access attempts only once
-  useEffect(() => {
-    if (!isChecking && isAuthenticated) {
-      const logLevel = adminAccessResult ? 'info' : 'warn';
-      
-      logger[logLevel]('Admin access check', {
-        details: {
-          userId: user?.id,
-          hasAccess: adminAccessResult,
-          roles
-        }
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isChecking, isAuthenticated, adminAccessResult]);
-  
-  return {
-    isLoading: isChecking,
-    isAuthenticated,
-    hasAdminAccess: adminAccessResult
-  };
+  return useMemo(() => {
+    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+    const hasEditorAccess = roles.includes('editor');
+    const hasModeratorAccess = roles.includes('moderator');
+    
+    // User has admin access if they are an admin or have editor/moderator roles
+    const hasAdminAccess = isAdmin || hasEditorAccess || hasModeratorAccess;
+    
+    return {
+      isAdmin,
+      hasAdminAccess
+    };
+  }, [roles]);
 }

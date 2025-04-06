@@ -1,25 +1,11 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AuthState, UserRole } from './types';
+import { AuthStatus, AuthStore, UserRole } from '@/auth/types/auth.types';
 import { supabase } from '@/integrations/supabase/client';
-import { authStorage } from './middleware/persist.middleware';
+import { authStorage } from '@/auth/store/middleware/persist.middleware';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
-
-interface AuthActions {
-  setUser: (user: AuthState['user']) => void;
-  setSession: (session: AuthState['session']) => void;
-  setRoles: (roles: UserRole[]) => void;
-  setError: (error: string | null) => void;
-  setLoading: (isLoading: boolean) => void;
-  setInitialized: (initialized: boolean) => void;
-  hasRole: (role: UserRole) => boolean;
-  isAdmin: () => boolean;
-  initialize: () => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-export type AuthStore = AuthState & AuthActions;
 
 export const useAuthStore = create<AuthStore>()(
   persist(
@@ -32,18 +18,24 @@ export const useAuthStore = create<AuthStore>()(
       error: null,
       status: 'idle',
       initialized: false,
+      isAuthenticated: false,
       
       // Methods
       setUser: (user) => set({ user }),
       setSession: (session) => set({ 
         session,
         user: session?.user ?? null,
-        status: session ? 'authenticated' : 'unauthenticated'
+        status: session ? 'authenticated' : 'unauthenticated',
+        isAuthenticated: !!session
       }),
       setRoles: (roles) => set({ roles }),
       setError: (error) => set({ error }),
       setLoading: (isLoading) => set({ isLoading }),
       setInitialized: (initialized) => set({ initialized }),
+      setStatus: (status) => set(state => ({ 
+        status,
+        isAuthenticated: status === 'authenticated' 
+      })),
       
       // Role checking
       hasRole: (role) => get().roles.includes(role),
@@ -85,7 +77,8 @@ export const useAuthStore = create<AuthStore>()(
               session,
               roles,
               status: 'authenticated',
-              error: null
+              error: null,
+              isAuthenticated: true
             });
             
             logger.info('User authenticated', {
@@ -102,7 +95,8 @@ export const useAuthStore = create<AuthStore>()(
               session: null,
               roles: [],
               status: 'unauthenticated',
-              error: null
+              error: null,
+              isAuthenticated: false
             });
             
             logger.info('No user session found', {
@@ -110,20 +104,21 @@ export const useAuthStore = create<AuthStore>()(
               source: 'auth/store'
             });
           }
-        } catch (error: unknown) {
+        } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           const errorDetails = {
             message: errorMessage,
-            details: error instanceof Error ? (error as Record<string, unknown>) : undefined
+            details: error instanceof Error ? { ...error } : undefined
           };
           
-          logger.error("Error fetching theme", { 
+          logger.error("Error initializing auth", { 
             details: errorDetails
           });
           
           set({
             error: errorMessage,
-            status: 'unauthenticated'
+            status: 'unauthenticated',
+            isAuthenticated: false
           });
         } finally {
           set({ 
@@ -151,26 +146,27 @@ export const useAuthStore = create<AuthStore>()(
             session: null,
             roles: [],
             status: 'unauthenticated',
-            error: null
+            error: null,
+            isAuthenticated: false
           });
           
           logger.info('User logged out successfully', {
             category: LogCategory.AUTH,
             source: 'auth/store'
           });
-        } catch (error: unknown) {
+        } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           const errorDetails = {
             message: errorMessage,
-            details: error instanceof Error ? (error as Record<string, unknown>) : undefined
+            details: error instanceof Error ? { ...error } : undefined
           };
           
-          logger.warn("Using hardcoded fallback theme due to error", { 
+          logger.warn("Error during logout", { 
             details: errorDetails
           });
           
           set({ error: errorMessage });
-          throw err;
+          throw error; // Fixed 'err' to 'error'
         } finally {
           set({ isLoading: false });
         }
@@ -183,7 +179,8 @@ export const useAuthStore = create<AuthStore>()(
         user: state.user,
         session: state.session,
         roles: state.roles,
-        status: state.status
+        status: state.status,
+        isAuthenticated: state.isAuthenticated
       })
     }
   )

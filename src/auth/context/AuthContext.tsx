@@ -1,13 +1,11 @@
 
 import React, { createContext, useContext, useEffect } from 'react';
 import { useAuthStore } from '../store/auth.store';
-import { AuthStatus } from '@/types/auth';
+import { AuthStatus, AuthStore } from '../types/auth.types';
 import { subscribeToAuthEvents } from '../bridge';
 
-// Create the auth context
-export const AuthContext = createContext<ReturnType<typeof useAuthStore.getState>>({
-  ...useAuthStore.getState()
-});
+// Create the auth context with proper typing
+export const AuthContext = createContext<AuthStore>(useAuthStore.getState());
 
 interface AuthProviderProps {
   children: React.ReactNode;
