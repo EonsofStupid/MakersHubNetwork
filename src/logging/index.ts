@@ -1,18 +1,21 @@
 
 // Import existing exports
 import { getLogger, initializeLogger } from './logger';
-import { LogLevel } from './types';
+import { LogLevel } from './constants/log-level';
 
 // Update LogCategory enum to include APP
 export enum LogCategory {
   SYSTEM = 'system',
+  NETWORK = 'network',
+  AUTH = 'auth',
   UI = 'ui',
   ADMIN = 'admin',
-  AUTH = 'auth',
   APP = 'app',
   THEME = 'theme',
   CHAT = 'chat',
-  API = 'api'
+  DATABASE = 'database',
+  PERFORMANCE = 'performance',
+  CONTENT = 'content'
 }
 
 // Re-export everything
@@ -22,6 +25,7 @@ export {
   LogLevel
 };
 
+export * from './types';
 export * from './context/LoggingContext';
 export * from './components/LogConsole';
 export * from './components/LogToggleButton';

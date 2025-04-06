@@ -12,10 +12,12 @@ export enum LogCategory {
   AUTH = 'auth',
   UI = 'ui',
   ADMIN = 'admin',
+  APP = 'app',
+  THEME = 'theme',
   CHAT = 'chat',
   DATABASE = 'database',
   PERFORMANCE = 'performance',
-  CONTENT = 'content'  // Added this new category
+  CONTENT = 'content'
 }
 
 export interface LogEntry {
