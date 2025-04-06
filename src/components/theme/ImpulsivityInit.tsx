@@ -4,21 +4,25 @@ import { useImpulsivityTheme } from '@/hooks/useImpulsivityTheme';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { useThemeStore } from '@/stores/theme/themeStore';
+import { ThemeLoadingState } from './info/ThemeLoadingState';
 
 interface ImpulsivityInitProps {
   children: React.ReactNode;
   priority?: boolean;
   autoApply?: boolean;
+  showLoadingState?: boolean;
 }
 
 export function ImpulsivityInit({ 
   children, 
   priority = false, 
-  autoApply = false 
+  autoApply = false,
+  showLoadingState = false
 }: ImpulsivityInitProps) {
   const { applyToMainSite } = useImpulsivityTheme();
   const logger = useLogger('ImpulsivityInit', LogCategory.UI);
   const [isApplied, setIsApplied] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
   const { loadStatus, currentTheme } = useThemeStore();
   const applyAttempted = useRef(false);
   
@@ -29,6 +33,7 @@ export function ImpulsivityInit({
         (autoApply && !isApplied && loadStatus === 'loaded' && !applyAttempted.current)) {
       
       applyAttempted.current = true;
+      setIsApplying(true);
       
       const applyWithPriority = async () => {
         try {
@@ -41,6 +46,7 @@ export function ImpulsivityInit({
             setTimeout(async () => {
               await applyToMainSite();
               setIsApplied(true);
+              setIsApplying(false);
             }, 100);
           }
           
@@ -64,6 +70,7 @@ export function ImpulsivityInit({
           
           // Mark as applied to prevent retries
           setIsApplied(true);
+          setIsApplying(false);
         }
       };
       
@@ -76,6 +83,7 @@ export function ImpulsivityInit({
     if (autoApply && !isApplied && loadStatus === 'loaded') {
       const timer = setTimeout(async () => {
         if (!isApplied) {
+          setIsApplying(true);
           try {
             await applyToMainSite();
             setIsApplied(true);
@@ -85,6 +93,8 @@ export function ImpulsivityInit({
               details: { error: error instanceof Error ? error.message : String(error) }
             });
             setIsApplied(true); // Mark as applied anyway to prevent retries
+          } finally {
+            setIsApplying(false);
           }
         }
       }, 1000); // Wait 1 second before forcing theme application
@@ -92,6 +102,11 @@ export function ImpulsivityInit({
       return () => clearTimeout(timer);
     }
   }, [autoApply, isApplied, loadStatus, applyToMainSite, logger]);
+  
+  // Show loading state if requested and still applying theme
+  if (showLoadingState && isApplying) {
+    return <ThemeLoadingState message="Applying Impulsivity Theme..." subMessage="Please wait while we finalize your experience" />;
+  }
   
   // Always render children - the theme is applied in the background
   return <>{children}</>;

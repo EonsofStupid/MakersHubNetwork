@@ -23,7 +23,7 @@ export function useImpulsivityTheme() {
       // Set the CSS variables directly for immediate effect
       const rootElement = document.documentElement;
       
-      // Apply the Impulsivity theme colors - using proper type casting
+      // Apply the Impulsivity theme colors
       if (rootElement) {
         rootElement.style.setProperty('--site-primary', '186 100% 50%');
         rootElement.style.setProperty('--site-secondary', '334 100% 59%');

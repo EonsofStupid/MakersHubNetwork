@@ -112,6 +112,7 @@ export interface ThemeLogDetails {
   hasAnimations?: boolean;
   hasComponentStyles?: boolean;
   source?: string;
+  category?: string;
   
   // Allow for additional properties
   [key: string]: unknown;
