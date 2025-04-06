@@ -42,7 +42,7 @@ export function useAdminSync() {
       }
     } catch (error) {
       logger.error('Error syncing admin data', {
-        details: error instanceof Error ? error.message : String(error)
+        details: error instanceof Error ? { message: error.message } : { message: String(error) }
       });
     } finally {
       setIsSyncing(false);
