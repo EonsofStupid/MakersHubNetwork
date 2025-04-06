@@ -37,7 +37,7 @@ initLogging();
 function App() {
   const logger = getLogger();
   const [appReady, setAppReady] = useState(false);
-
+  
   // Set app as ready after a short timeout to ensure all providers are initialized
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -48,12 +48,12 @@ function App() {
     }, 100);
     return () => clearTimeout(timer);
   }, [logger]);
-
+  
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
         <ThemeEffectProvider>
-          {/* Theme initialization happens FIRST, before any auth check */}
+          {/* Critical: Theme initialization happens FIRST, before any auth check */}
           <ThemeInitializer context="app" applyImmediately={true}>
             <SiteThemeProvider>
               <ImpulsivityThemeInitializer>
