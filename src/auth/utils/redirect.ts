@@ -1,11 +1,10 @@
-
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { UserRole } from '@/auth/types/userRoles';
-import { createSearchParams } from '@/router/searchParams';
+import { createSearchParams } from '@/utils/router-helpers';
 
 export interface RedirectOptions {
   to: string;

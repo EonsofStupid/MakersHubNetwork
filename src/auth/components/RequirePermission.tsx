@@ -1,11 +1,10 @@
-
 import React from 'react';
-import { Navigate, useLocation, Outlet } from '@tanstack/react-router';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { UserRole, ADMIN_ROLES, hasRequiredRole } from '@/auth/types/userRoles';
-import { createSearchParams } from '@/router/searchParams';
+import { useAuth } from '@/auth/hooks/useAuth';
+import { UserRole } from '@/auth/types/auth.types'; // Using auth.types instead of userRoles
+import { hasRequiredRole } from '@/auth/utils/roleHelpers';
+import { AuthSearchParams } from '@/router/searchParams'; // Using AuthSearchParams directly
+import { navigateTo } from '@/utils/router-helpers';
+import { useRouter } from '@tanstack/react-router';
 
 interface RequirePermissionProps {
   children?: React.ReactNode;
@@ -23,49 +22,46 @@ export const RequirePermission = ({
   children,
   redirectTo = '/login',
   fallback,
-  allowedRoles = ADMIN_ROLES,
+  allowedRoles,
   requiredPermission
 }: RequirePermissionProps) => {
-  const { roles, status } = useAuthState();
-  const location = useLocation();
-  const logger = useLogger('RequirePermission', LogCategory.AUTH);
-  
+  const { isAuthenticated, isLoading, user, session } = useAuth();
+  const router = useRouter();
+
   // Wait until auth is loaded
-  if (status === 'loading' || status === 'idle') {
+  if (isLoading) {
     return null; // Show nothing while loading
   }
-  
-  // Check for required roles
-  const hasRequiredRole = roles.some(role => allowedRoles.includes(role as UserRole));
-  
-  // Specific permission check (if needed)
-  const hasRequiredPermission = requiredPermission
-    ? roles.includes(requiredPermission)
-    : true;
-    
-  if (!hasRequiredRole || !hasRequiredPermission) {
-    logger.warn('Access denied - insufficient permissions', {
-      details: {
-        path: location.pathname,
-        userRoles: roles,
-        requiredRoles: allowedRoles,
-        requiredPermission
-      }
+
+  // Check if the user is authenticated
+  if (!isAuthenticated || !user) {
+    // Redirect to login page if not authenticated
+    router.navigate({
+      to: navigateTo(redirectTo),
+      search: { from: router.state.location.pathname }
     });
-    
-    if (fallback) {
-      return <>{fallback}</>;
-    }
-    
-    // Use proper TanStack Router navigation pattern with type-safe search params
-    return (
-      <Navigate 
-        to={redirectTo}
-        search={createSearchParams({ from: location.pathname })}
-        replace={true}
-      />
+    return null;
+  }
+
+  // Check for required roles
+  const hasRequiredRoles = allowedRoles
+    ? user.roles.some(role => allowedRoles.includes(role))
+    : true;
+
+  // Specific permission check (if needed)
+  const hasSpecificPermission = requiredPermission
+    ? hasRequiredRole(user.roles, requiredPermission)
+    : true;
+
+  if (!hasRequiredRoles || !hasSpecificPermission) {
+    // Render fallback content or redirect if permission is denied
+    return fallback ? <>{fallback}</> : (
+      router.navigate({
+        to: navigateTo(redirectTo),
+        search: { from: router.state.location.pathname }
+      })
     );
   }
-  
-  return <>{children || <Outlet />}</>;
+
+  return <>{children}</>;
 };

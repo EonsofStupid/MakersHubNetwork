@@ -17,7 +17,7 @@ export function useImpulsivityTheme() {
   
   const applyToMainSite = async () => {
     try {
-      const cssVars: Record<string, string> = {
+      const cssVars = {
         '--site-primary': tokens.primary || '186 100% 50%',
         '--site-secondary': tokens.secondary || '334 100% 59%',
         '--site-effect-color': tokens.effectPrimary || '#00F0FF',
@@ -75,7 +75,7 @@ export function useImpulsivityTheme() {
     try {
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement) {
-        const cssVars: Record<string, string> = {
+        const cssVars = {
           '--impulse-primary': tokens.effectPrimary || '#00F0FF',
           '--impulse-secondary': tokens.effectSecondary || '#FF2D6E',
           '--impulse-bg-main': '#121218',

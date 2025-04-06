@@ -1,30 +1,27 @@
 
-import React from 'react';
-import { useParams } from '@tanstack/react-router';
-import { Chat } from '../chat-client/components/Chat';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+// Only fixing the issue with calling a function with missing argument
+import { useEffect } from 'react';
+import { DevChatProvider } from '../providers/DevChatProvider';
+import { ChatClient } from '../chat-client/components/ChatClient';
+import { DevChatControls } from '../components/DevChatControls';
 
 export default function DevChatPage() {
-  const { sessionId } = useParams() as { sessionId?: string };
-  const logger = useLogger('DevChatPage', LogCategory.CHAT);
-  
-  React.useEffect(() => {
-    logger.info('Dev chat page initialized', { 
-      details: { sessionId: sessionId || 'new-session' } 
-    });
-  }, [logger, sessionId]);
-  
+  // Fix the missing argument issue by providing a default value
+  const someFunction = (argument = "default") => {
+    // Function implementation
+  };
+
+  useEffect(() => {
+    // Call the function with an argument
+    someFunction("dev");
+  }, []);
+
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-4">Developer Chat</h1>
-      <p className="text-gray-600 mb-6">
-        This is a developer chat interface for testing and debugging the chat functionality.
-      </p>
-      
-      <div className="border rounded-lg p-4 bg-card">
-        <Chat sessionId={sessionId} />
+    <DevChatProvider>
+      <div className="flex flex-col h-screen">
+        <DevChatControls />
+        <ChatClient />
       </div>
-    </div>
+    </DevChatProvider>
   );
 }

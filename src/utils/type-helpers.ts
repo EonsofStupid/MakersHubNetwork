@@ -34,7 +34,7 @@ export function safeCast<T>(value: unknown): T {
 /**
  * Deep merge of objects, useful for theme merging
  */
-export function deepMerge<T>(target: T, source: Partial<T>): T {
+export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
   const output = { ...target };
   
   if (isObject(target) && isObject(source)) {

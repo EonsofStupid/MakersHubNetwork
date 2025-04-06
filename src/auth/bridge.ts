@@ -1,7 +1,6 @@
-
 import { useAuthStore } from './store/auth.store';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 
 // Define the event types
 export type AuthEventType = 
