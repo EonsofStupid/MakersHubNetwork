@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { defaultImpulseTokens } from '@/admin/theme/impulse/tokens';
 import { getLogger } from '@/logging';
@@ -57,10 +58,13 @@ export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Prom
         admin: defaultImpulseTokens
       };
       
+      // Cast to Json for type safety
+      const safeTokens = JSON.parse(JSON.stringify(updatedDesignTokens)) as Json;
+      
       const { error: updateError } = await supabase
         .from('themes')
         .update({
-          design_tokens: updatedDesignTokens as Json,
+          design_tokens: safeTokens,
           updated_at: new Date().toISOString()
         })
         .eq('id', existingTheme.id);
@@ -124,10 +128,12 @@ export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Prom
             animationSlow: "3s",
           }
         },
-        admin: defaultImpulseTokens
+        // Cast defaultImpulseTokens to Json compatible object
+        admin: JSON.parse(JSON.stringify(defaultImpulseTokens))
       }
     };
     
+    // Properly serialize to ensure JSON compatibility
     const safeJsonData = JSON.parse(JSON.stringify(themeData));
     
     const { data: newTheme, error: createError } = await supabase

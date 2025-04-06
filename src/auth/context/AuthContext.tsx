@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [auth]);
 
   return (
-    <AuthContext.Provider value={auth as AuthStore}>
+    <AuthContext.Provider value={auth}>
       {children}
     </AuthContext.Provider>
   );
