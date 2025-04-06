@@ -1,52 +1,81 @@
 
-/**
- * Logging system type definitions
- */
-
 import { LogLevel } from './constants/log-level';
-import React from 'react';
 
+/**
+ * Log categories for grouping related log entries
+ */
 export enum LogCategory {
   SYSTEM = 'system',
-  NETWORK = 'network',
   AUTH = 'auth',
+  DATABASE = 'database',
+  API = 'api',
   UI = 'ui',
   ADMIN = 'admin',
-  CHAT = 'chat',
-  DATABASE = 'database',
+  THEME = 'theme',
   PERFORMANCE = 'performance',
-  CONTENT = 'content'
+  NETWORK = 'network',
+  USER = 'user'
 }
 
+/**
+ * Log entry structure
+ */
 export interface LogEntry {
-  id: string;
-  timestamp: Date;
+  timestamp: number;
   level: LogLevel;
-  category: LogCategory;
-  message: string | React.ReactNode;
-  details?: Record<string, unknown>;
+  message: string;
+  category?: LogCategory;
   source?: string;
-  userId?: string;
-  sessionId?: string;
-  duration?: number; // For performance logs
-  tags?: string[];
+  details?: Record<string, any>;
+  user?: string;
+  session?: string;
 }
 
+/**
+ * Transport interface for implementing different logging destinations
+ */
 export interface LogTransport {
-  log(entry: LogEntry): void;
-  flush?(): Promise<void>;
+  id: string;
+  name: string;
+  enabled: boolean;
+  log: (entry: LogEntry) => void;
 }
 
+/**
+ * Configuration for the logging system
+ */
 export interface LoggingConfig {
   minLevel: LogLevel;
-  enabledCategories?: LogCategory[];
+  enabledCategories: LogCategory[];
   transports: LogTransport[];
-  bufferSize?: number;
-  flushInterval?: number;
-  includeSource?: boolean;
-  includeUser?: boolean;
-  includeSession?: boolean;
+  bufferSize: number;
+  flushInterval: number;
+  includeSource: boolean;
+  includeUser: boolean;
+  includeSession: boolean;
 }
 
-// Re-export LogLevel for backward compatibility
-export { LogLevel } from './constants/log-level';
+/**
+ * Performance timing interface for measuring code execution time
+ */
+export interface PerformanceTiming {
+  label: string;
+  startTime: number;
+  endTime: number;
+  duration: number;
+  source?: string;
+}
+
+/**
+ * Logger interface for type safety across different logger implementations
+ */
+export interface Logger {
+  debug: (message: string, options?: { details?: Record<string, any> }) => void;
+  trace: (message: string, options?: { details?: Record<string, any> }) => void;
+  info: (message: string, options?: { details?: Record<string, any> }) => void;
+  success: (message: string, options?: { details?: Record<string, any> }) => void;
+  warn: (message: string, options?: { details?: Record<string, any> }) => void;
+  error: (message: string, options?: { details?: Record<string, any> }) => void;
+  critical: (message: string, options?: { details?: Record<string, any> }) => void;
+  logCustomTiming: (label: string, startTime: number) => number;
+}

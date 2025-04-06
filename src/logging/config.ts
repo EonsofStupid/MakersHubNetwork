@@ -2,14 +2,14 @@
 import { LoggingConfig } from './types';
 import { LogLevel } from './constants/log-level';
 import { LogCategory } from './types';
-import { consoleTransport } from './transports/console-transport';
-import { memoryTransport } from './transports/memory-transport';
+import { ConsoleTransport } from './transports/console-transport';
+import { MemoryTransport } from './transports/memory-transport';
 
 // Default configuration for the logging system
 const getDefaultLoggingConfig = (): LoggingConfig => ({
   minLevel: LogLevel.INFO,
   enabledCategories: Object.values(LogCategory),
-  transports: [consoleTransport, memoryTransport],
+  transports: [ConsoleTransport, MemoryTransport],
   bufferSize: 100,
   flushInterval: 30000, // 30 seconds
   includeSource: true,
@@ -46,3 +46,6 @@ export const resetLoggingConfig = (): LoggingConfig => {
   loggingConfig = getDefaultLoggingConfig();
   return loggingConfig;
 };
+
+// For backward compatibility
+export const defaultLoggingConfig = getDefaultLoggingConfig();

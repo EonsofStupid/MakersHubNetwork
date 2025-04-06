@@ -1,107 +1,86 @@
 
-/**
- * Unified Permissions System
- * Single source of truth for all permission values used throughout the application
- */
+import { UserRole } from './types/roles';
 
-// Define all permissions as a type-safe object
+// Define permission values
 export const PERMISSIONS = {
-  // Super admin has access to everything
-  SUPER_ADMIN: 'all:all',
+  MANAGE_USERS: 'manage_users',
+  VIEW_USERS: 'view_users',
+  EDIT_USERS: 'edit_users',
+  DELETE_USERS: 'delete_users',
   
-  // General admin access
-  ADMIN_ACCESS: 'admin:access',
-  ADMIN_VIEW: 'admin:view',
-  ADMIN_EDIT: 'admin:edit',
-  ADMIN_CREATE: 'admin:create',
-  ADMIN_DELETE: 'admin:delete',
+  MANAGE_CONTENT: 'manage_content',
+  VIEW_CONTENT: 'view_content',
+  EDIT_CONTENT: 'edit_content',
+  DELETE_CONTENT: 'delete_content',
   
-  // Content management
-  CONTENT_VIEW: 'content:view',
-  CONTENT_CREATE: 'content:create',
-  CONTENT_EDIT: 'content:edit',
-  CONTENT_DELETE: 'content:delete',
-  CONTENT_PUBLISH: 'content:publish',
+  MANAGE_SETTINGS: 'manage_settings',
+  VIEW_SETTINGS: 'view_settings',
+  EDIT_SETTINGS: 'edit_settings',
   
-  // User management
-  USERS_VIEW: 'users:view',
-  USERS_CREATE: 'users:create',
-  USERS_EDIT: 'users:edit',
-  USERS_DELETE: 'users:delete',
+  MANAGE_THEMES: 'manage_themes',
+  VIEW_THEMES: 'view_themes',
+  EDIT_THEMES: 'edit_themes',
+  DELETE_THEMES: 'delete_themes',
   
-  // Build management
-  BUILDS_VIEW: 'builds:view',
-  BUILDS_CREATE: 'builds:create',
-  BUILDS_EDIT: 'builds:edit',
-  BUILDS_DELETE: 'builds:delete',
-  BUILDS_APPROVE: 'builds:approve',
-  BUILDS_REJECT: 'builds:reject',
+  MANAGE_ADMIN: 'manage_admin',
+  ACCESS_ADMIN: 'access_admin',
   
-  // Analytics
-  ANALYTICS_VIEW: 'analytics:view',
-  
-  // Layout management 
-  LAYOUTS_VIEW: 'layouts:view',
-  LAYOUTS_EDIT: 'layouts:edit',
-  
-  // Theme management
-  THEMES_VIEW: 'themes:view',
-  THEMES_EDIT: 'themes:edit',
-  THEMES_DELETE: 'themes:delete',
-  
-  // Data management
-  DATA_VIEW: 'data:view',
-  DATA_EDIT: 'data:edit',
-  DATA_IMPORT: 'data:import',
-  DATA_EXPORT: 'data:export',
-  
-  // Reviews management
-  REVIEWS_VIEW: 'reviews:view',
-  REVIEWS_APPROVE: 'reviews:approve',
-  REVIEWS_REJECT: 'reviews:reject',
-  
-  // Settings management
-  SETTINGS_VIEW: 'settings:view',
-  SETTINGS_EDIT: 'settings:edit',
-  
-  // System management
-  SYSTEM_VIEW: 'system:view',
-  SYSTEM_SETTINGS: 'system:settings',
-  SYSTEM_LOGS: 'system:logs',
-  SYSTEM_RESTART: 'system:restart'
+  SYSTEM_DEBUG: 'system_debug'
 } as const;
 
-// Create permission value type from the PERMISSIONS object
+// Create a union type of all permission values
 export type PermissionValue = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 
-// Map roles to permissions
-export const ROLE_PERMISSIONS: Record<string, PermissionValue[]> = {
-  'super_admin': [PERMISSIONS.SUPER_ADMIN],
-  'admin': [
-    PERMISSIONS.ADMIN_ACCESS,
-    PERMISSIONS.ADMIN_VIEW,
-    PERMISSIONS.ADMIN_EDIT,
-    PERMISSIONS.CONTENT_VIEW,
-    PERMISSIONS.CONTENT_EDIT,
-    PERMISSIONS.USERS_VIEW,
-    PERMISSIONS.BUILDS_VIEW,
-    PERMISSIONS.BUILDS_APPROVE,
-    PERMISSIONS.SETTINGS_VIEW,
-    PERMISSIONS.THEMES_VIEW,
-    PERMISSIONS.SYSTEM_LOGS
+// Define role-based permissions
+export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
+  super_admin: [
+    PERMISSIONS.MANAGE_USERS,
+    PERMISSIONS.VIEW_USERS,
+    PERMISSIONS.EDIT_USERS,
+    PERMISSIONS.DELETE_USERS,
+    PERMISSIONS.MANAGE_CONTENT,
+    PERMISSIONS.VIEW_CONTENT,
+    PERMISSIONS.EDIT_CONTENT,
+    PERMISSIONS.DELETE_CONTENT,
+    PERMISSIONS.MANAGE_SETTINGS,
+    PERMISSIONS.VIEW_SETTINGS,
+    PERMISSIONS.EDIT_SETTINGS,
+    PERMISSIONS.MANAGE_THEMES,
+    PERMISSIONS.VIEW_THEMES,
+    PERMISSIONS.EDIT_THEMES,
+    PERMISSIONS.DELETE_THEMES,
+    PERMISSIONS.MANAGE_ADMIN,
+    PERMISSIONS.ACCESS_ADMIN,
+    PERMISSIONS.SYSTEM_DEBUG
   ],
-  'maker': [
-    PERMISSIONS.CONTENT_VIEW,
-    PERMISSIONS.CONTENT_EDIT,
-    PERMISSIONS.CONTENT_CREATE,
-    PERMISSIONS.BUILDS_VIEW
+  
+  admin: [
+    PERMISSIONS.MANAGE_USERS,
+    PERMISSIONS.VIEW_USERS,
+    PERMISSIONS.EDIT_USERS,
+    PERMISSIONS.MANAGE_CONTENT,
+    PERMISSIONS.VIEW_CONTENT,
+    PERMISSIONS.EDIT_CONTENT,
+    PERMISSIONS.DELETE_CONTENT,
+    PERMISSIONS.VIEW_SETTINGS,
+    PERMISSIONS.EDIT_SETTINGS,
+    PERMISSIONS.VIEW_THEMES,
+    PERMISSIONS.EDIT_THEMES,
+    PERMISSIONS.ACCESS_ADMIN
   ],
-  'builder': [
-    PERMISSIONS.BUILDS_VIEW,
-    PERMISSIONS.BUILDS_CREATE,
-    PERMISSIONS.CONTENT_VIEW
-  ]
+  
+  moderator: [
+    PERMISSIONS.VIEW_USERS,
+    PERMISSIONS.VIEW_CONTENT,
+    PERMISSIONS.EDIT_CONTENT,
+    PERMISSIONS.ACCESS_ADMIN
+  ],
+  
+  editor: [
+    PERMISSIONS.VIEW_CONTENT,
+    PERMISSIONS.EDIT_CONTENT,
+    PERMISSIONS.ACCESS_ADMIN
+  ],
+  
+  user: []
 };
-
-// Permission check function type
-export type PermissionCheckFn = (permission: PermissionValue) => boolean;
