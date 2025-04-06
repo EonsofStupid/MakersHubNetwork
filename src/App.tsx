@@ -14,6 +14,7 @@ import { LogCategory } from "@/logging";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { AppInitializer } from "@/components/AppInitializer";
 import { ImpulsivityInit } from "@/components/theme/ImpulsivityInit";
+import { ImpulsivityThemeInitializer } from "@/components/theme/ImpulsivityThemeInitializer";
 
 // Import pages
 import Index from "./pages/Index";
@@ -88,23 +89,25 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
         <ThemeInitializer context={isAdminRoute ? 'admin' : 'app'} applyImmediately={true}>
-          <ImpulsivityInit priority={true} autoApply={true}>
-            <AuthProvider>
-              <AppInitializer>
-                <AdminProvider>
-                  {!isAdminRoute && appReady && <MainNav />}
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/admin/*" element={<Admin />} />
-                  </Routes>
-                  {!isAdminRoute && appReady && <Footer />}
-                  <Toaster />
-                  <LoggingComponents />
-                </AdminProvider>
-              </AppInitializer>
-            </AuthProvider>
-          </ImpulsivityInit>
+          <ImpulsivityThemeInitializer>
+            <ImpulsivityInit priority={true} autoApply={true}>
+              <AuthProvider>
+                <AppInitializer>
+                  <AdminProvider>
+                    {!isAdminRoute && appReady && <MainNav />}
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/admin/*" element={<Admin />} />
+                    </Routes>
+                    {!isAdminRoute && appReady && <Footer />}
+                    <Toaster />
+                    <LoggingComponents />
+                  </AdminProvider>
+                </AppInitializer>
+              </AuthProvider>
+            </ImpulsivityInit>
+          </ImpulsivityThemeInitializer>
         </ThemeInitializer>
       </LoggingProvider>
     </ThemeProvider>
