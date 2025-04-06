@@ -29,9 +29,6 @@ export function AppInitializer({ children }: AppInitializerProps) {
           await loadTheme('app');
         }
         
-        // Perform any critical initialization tasks here
-        // For example, ensure authentication is initialized
-        
         // Mark as initialized
         setInitialized(true);
         

@@ -51,13 +51,13 @@ export function AdminRoutes() {
         details: { path: location.pathname }
       });
       
-      // Use state that's compatible with TanStack Router
+      // Use TanStack Router compatible navigation
       navigate({ 
         to: '/login' as any,
-        state: { from: location.pathname } // Changed returnUrl to from for TanStack compatibility
+        search: { returnUrl: location.pathname }
       });
     }
-  }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate]);
+  }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate, loadStatus]);
   
   // Show a loading state while checking permissions
   if (authLoading) {
