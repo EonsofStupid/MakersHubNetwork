@@ -1,13 +1,13 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { getLogger } from '@/logging';
 import { LoggingProvider } from '@/logging/context/LoggingContext';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
 import { ImpulsivityInit } from '@/components/theme/ImpulsivityInit';
 import { SiteThemeProvider } from '@/components/theme/SiteThemeProvider';
-import { AuthContext } from '@/hooks/use-auth';
+import { AuthProvider } from '@/hooks/useAuth';
 import { AppInitializer } from '@/components/AppInitializer';
 import { AdminProvider } from '@/admin/context/AdminContext';
 import { AppRoutes } from '@/routes/AppRoutes';
@@ -33,9 +33,6 @@ function initLogging() {
 }
 
 function App() {
-  // User state - simple implementation that can be enhanced later
-  const [user, setUser] = useState(null);
-
   // Initialize logging on app mount
   useEffect(() => {
     initLogging();
@@ -43,23 +40,25 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <LoggingProvider>
+      <LoggingProvider>
+        {/* Theme loading priority - no auth dependency */}
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
           <ThemeInitializer>
             <ImpulsivityInit>
               <SiteThemeProvider>
-                <AuthContext.Provider value={{ user, setUser }}>
+                {/* Auth comes after theme is initialized */}
+                <AuthProvider>
                   <AppInitializer>
                     <AdminProvider>
                       <AppRoutes />
                     </AdminProvider>
                   </AppInitializer>
-                </AuthContext.Provider>
+                </AuthProvider>
               </SiteThemeProvider>
             </ImpulsivityInit>
           </ThemeInitializer>
-        </LoggingProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </LoggingProvider>
     </QueryClientProvider>
   );
 }
