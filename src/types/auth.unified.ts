@@ -1,48 +1,14 @@
 
-/**
- * Unified auth type definitions to resolve import conflicts
- */
-
-// Define the complete set of user roles that includes all possible values
+// User roles and permissions
 export type UserRole = 
-  | 'user' 
-  | 'admin' 
-  | 'super_admin' 
-  | 'moderator' 
+  | 'admin'
+  | 'super_admin'
   | 'editor'
-  | 'maker'
-  | 'builder';
+  | 'moderator'
+  | 'user'
+  | 'guest';
 
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
-
-export interface AuthState {
-  user: any | null;
-  session: any | null;
-  roles: UserRole[];
-  isLoading: boolean;
-  error: string | null;
-  status: AuthStatus;
-  initialized: boolean;
-  isAuthenticated: boolean;
-}
-
-export interface AuthActions {
-  setUser: (user: any | null) => void;
-  setSession: (session: any | null) => void;
-  setRoles: (roles: UserRole[]) => void;
-  setError: (error: string | null) => void;
-  setLoading: (isLoading: boolean) => void;
-  setInitialized: (initialized: boolean) => void;
-  setStatus: (status: AuthStatus) => void;
-  hasRole: (role: UserRole) => boolean;
-  isAdmin: () => boolean;
-  initialize: () => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-export type AuthStore = AuthState & AuthActions;
-
-// Admin access interfaces
+// Admin access interface
 export interface AdminAccess {
   isAdmin: boolean;
   hasAdminAccess: boolean;
@@ -50,6 +16,14 @@ export interface AdminAccess {
   isAuthenticated: boolean;
 }
 
-export interface WithAdminAccess {
-  hasAdminAccess: boolean;
+// User profile minimal type
+export interface UserProfile {
+  id: string;
+  email?: string;
+  username?: string;
+  display_name?: string;
+  avatar_url?: string;
+  roles?: UserRole[];
+  last_sign_in_at?: string;
+  created_at?: string;
 }

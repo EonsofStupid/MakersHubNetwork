@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AdminRoutes } from '@/admin/routes';
+import { PublicRoutes } from '@/routes/PublicRoutes';
 
 export function AppRoutes() {
   return (
@@ -9,8 +10,8 @@ export function AppRoutes() {
       {/* Admin routes */}
       <Route path="/admin/*" element={<AdminRoutes />} />
       
-      {/* You can add more routes here for non-admin pages */}
-      <Route path="/*" element={<AdminRoutes />} />
+      {/* Public routes */}
+      <Route path="/*" element={<PublicRoutes />} />
     </Routes>
   );
 }
