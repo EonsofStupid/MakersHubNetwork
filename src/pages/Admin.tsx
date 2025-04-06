@@ -21,6 +21,8 @@ const adminRouter = createRouter({
   routeTree: adminRootRoute.addChildren(adminRoutes),
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,
+  // Add router ID to prevent duplicate router instances
+  routerId: 'admin-router'
 });
 
 // Admin content wrapper component

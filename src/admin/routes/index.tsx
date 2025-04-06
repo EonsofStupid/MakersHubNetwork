@@ -33,6 +33,7 @@ export const adminRootRoute = createRootRoute();
 // Define base admin route for all admin pages
 const adminBaseRoute = createRoute({
   getParentRoute: () => adminRootRoute,
+  id: 'admin-base', // Add explicit ID to prevent duplicates
   path: '/',
   component: AdminRoutes
 });
@@ -40,6 +41,7 @@ const adminBaseRoute = createRoute({
 // Dashboard route
 const dashboardRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
+  id: 'admin-dashboard', // Add explicit ID
   path: '/dashboard',
   component: () => <React.Suspense fallback={<PageLoader />}><Dashboard /></React.Suspense>
 });
@@ -47,6 +49,7 @@ const dashboardRoute = createRoute({
 // Users route
 const usersRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
+  id: 'admin-users', // Add explicit ID
   path: '/users',
   component: () => <React.Suspense fallback={<PageLoader />}><UsersPage /></React.Suspense>
 });
@@ -54,6 +57,7 @@ const usersRoute = createRoute({
 // Parts route
 const partsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
+  id: 'admin-parts', // Add explicit ID
   path: '/parts',
   component: () => <React.Suspense fallback={<PageLoader />}><PartsPage /></React.Suspense>
 });
@@ -61,6 +65,7 @@ const partsRoute = createRoute({
 // Builds route
 const buildsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
+  id: 'admin-builds', // Add explicit ID
   path: '/builds',
   component: () => <React.Suspense fallback={<PageLoader />}><BuildsPage /></React.Suspense>
 });
@@ -68,6 +73,7 @@ const buildsRoute = createRoute({
 // Themes route
 const themesRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
+  id: 'admin-themes', // Add explicit ID
   path: '/themes',
   component: () => <React.Suspense fallback={<PageLoader />}><ThemesPage /></React.Suspense>
 });
@@ -75,6 +81,7 @@ const themesRoute = createRoute({
 // Content route
 const contentRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
+  id: 'admin-content', // Add explicit ID
   path: '/content',
   component: () => <React.Suspense fallback={<PageLoader />}><ContentPage /></React.Suspense>
 });
@@ -82,6 +89,7 @@ const contentRoute = createRoute({
 // Settings route
 const settingsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
+  id: 'admin-settings', // Add explicit ID
   path: '/settings',
   component: () => <React.Suspense fallback={<PageLoader />}><SettingsPage /></React.Suspense>
 });
@@ -89,6 +97,7 @@ const settingsRoute = createRoute({
 // Permissions route
 const permissionsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
+  id: 'admin-permissions', // Add explicit ID
   path: '/permissions',
   component: () => <React.Suspense fallback={<PageLoader />}><PermissionsPage /></React.Suspense>
 });
@@ -96,6 +105,7 @@ const permissionsRoute = createRoute({
 // Logs route
 const logsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
+  id: 'admin-logs', // Add explicit ID
   path: '/logs',
   component: () => <React.Suspense fallback={<PageLoader />}><LogsPage /></React.Suspense>
 });
@@ -103,6 +113,7 @@ const logsRoute = createRoute({
 // Unauthorized page
 const unauthorizedRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
+  id: 'admin-unauthorized', // Add explicit ID
   path: '/unauthorized',
   component: () => <React.Suspense fallback={<PageLoader />}><UnauthorizedPage /></React.Suspense>
 });
@@ -110,6 +121,7 @@ const unauthorizedRoute = createRoute({
 // Not found page
 const notFoundRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
+  id: 'admin-not-found', // Add explicit ID
   path: '/*',
   component: () => <React.Suspense fallback={<PageLoader />}><NotFoundPage /></React.Suspense>
 });

@@ -10,12 +10,19 @@ interface ThemeInitializerProps {
   children: React.ReactNode;
   context?: ThemeContext;
   applyImmediately?: boolean;
+  fallbackTheme?: {
+    primary: string;
+    secondary: string;
+    background: string;
+    foreground: string;
+  };
 }
 
 export function ThemeInitializer({ 
   children, 
   context = 'app', 
-  applyImmediately = true 
+  applyImmediately = true,
+  fallbackTheme
 }: ThemeInitializerProps) {
   const { loadTheme, loadStatus } = useThemeStore();
   const logger = useLogger('ThemeInitializer', LogCategory.UI);
@@ -28,15 +35,15 @@ export function ThemeInitializer({
       const root = document.documentElement;
       
       // Apply critical CSS variables immediately
-      root.style.setProperty('--primary', '#00F0FF');
-      root.style.setProperty('--secondary', '#FF2D6E');
-      root.style.setProperty('--background', '#080F1E');
-      root.style.setProperty('--foreground', '#F9FAFB');
+      root.style.setProperty('--primary', fallbackTheme?.primary || '186 100% 50%');
+      root.style.setProperty('--secondary', fallbackTheme?.secondary || '334 100% 59%');
+      root.style.setProperty('--background', fallbackTheme?.background || '228 47% 8%');
+      root.style.setProperty('--foreground', fallbackTheme?.foreground || '210 40% 98%');
       
       // Set ready immediately to prevent blocking rendering
       setIsReady(true);
     }
-  }, [applyImmediately]);
+  }, [applyImmediately, fallbackTheme]);
   
   // Load theme on component mount - only once
   useEffect(() => {
@@ -50,8 +57,10 @@ export function ThemeInitializer({
         initAttempted.current = true;
         logger.info('Initializing theme system', { details: { context } });
         
-        // Load theme asynchronously
-        await loadTheme(context);
+        // Load theme asynchronously without blocking
+        loadTheme(context).catch(err => {
+          logger.error('Error loading theme:', err);
+        });
         
         // Set ready state after theme loads
         if (!applyImmediately) {
