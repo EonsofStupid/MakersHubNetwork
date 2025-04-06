@@ -23,9 +23,9 @@ export function useImpulsivityTheme() {
       // Set the CSS variables directly for immediate effect
       const rootElement = document.documentElement;
       
-      // Apply the Impulsivity theme colors
-      rootElement.style.setProperty('--site-primary', '186 100% 50%'); 
-      rootElement.style.setProperty('--site-secondary', '334 100% 59%'); 
+      // Apply the Impulsivity theme colors - fix type errors by ensuring they're proper CSS variables
+      rootElement.style.setProperty('--site-primary', '186 100% 50%');
+      rootElement.style.setProperty('--site-secondary', '334 100% 59%');
       rootElement.style.setProperty('--site-effect-color', '#00F0FF');
       rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
       rootElement.style.setProperty('--site-effect-tertiary', '#8B5CF6');
@@ -37,8 +37,8 @@ export function useImpulsivityTheme() {
           ...(currentTheme.design_tokens || {}),
           colors: {
             ...(currentTheme.design_tokens?.colors || {}),
-            primary: '#00F0FF',
-            secondary: '#FF2D6E',
+            primary: '186 100% 50%',
+            secondary: '334 100% 59%',
           },
           effects: {
             ...(currentTheme.design_tokens?.effects || { shadows: {}, blurs: {}, gradients: {} }),

@@ -93,6 +93,7 @@ export function MainNav() {
         "mainnav-container",
         "mainnav-header",
         "mainnav-gradient",
+        "w-full",
         isLoaded && (styles.container?.animated || "animate-morph-header"),
         isScrolled && "mainnav-scrolled transform-gpu"
       )}
@@ -125,8 +126,8 @@ export function MainNav() {
         />
       </div>
       
-      {/* Main navigation content - properly centered */}
-      <div className="container mx-auto flex items-center justify-between h-16 px-4 relative z-10">
+      {/* Main navigation content - properly centered with max width */}
+      <div className="w-full mx-auto flex items-center justify-between h-16 px-4 relative z-10 max-w-[2000px]">
         <div className="flex items-center justify-between w-full">
           <Logo />
           <NavigationItems />

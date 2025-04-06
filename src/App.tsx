@@ -88,21 +88,23 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
-        <ThemeInitializer context={isAdminRoute ? 'admin' : 'app'} applyImmediately={true}>
+        <ThemeInitializer context={isAdminRoute ? 'admin' : 'site'} applyImmediately={true}>
           <ImpulsivityThemeInitializer>
             <ImpulsivityInit priority={true} autoApply={true}>
               <AuthProvider>
                 <AppInitializer>
                   <AdminProvider>
-                    {!isAdminRoute && appReady && <MainNav />}
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/admin/*" element={<Admin />} />
-                    </Routes>
-                    {!isAdminRoute && appReady && <Footer />}
-                    <Toaster />
-                    <LoggingComponents />
+                    <div className="w-full max-w-full">
+                      {!isAdminRoute && appReady && <MainNav />}
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/admin/*" element={<Admin />} />
+                      </Routes>
+                      {!isAdminRoute && appReady && <Footer />}
+                      <Toaster />
+                      <LoggingComponents />
+                    </div>
                   </AdminProvider>
                 </AppInitializer>
               </AuthProvider>
