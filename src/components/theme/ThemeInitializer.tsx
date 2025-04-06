@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
+
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
-import { ImpulsivityInit } from './ImpulsivityInit';
 import { SiteThemeProvider } from './SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
@@ -20,45 +20,48 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
   const logger = useLogger('ThemeInitializer', LogCategory.UI);
   const initAttempted = useRef(false);
   
+  // Apply fallback styles implementation isolated as a function to avoid dependency issues
+  const applyFallbackStyles = useCallback(() => {
+    try {
+      const rootElement = document.documentElement;
+      
+      rootElement.style.setProperty('--site-primary', '186 100% 50%');
+      rootElement.style.setProperty('--site-secondary', '334 100% 59%');
+      rootElement.style.setProperty('--site-effect-color', '#00F0FF');
+      rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
+      rootElement.style.setProperty('--site-background', '228 47% 8%');
+      rootElement.style.setProperty('--site-foreground', '210 40% 98%');
+      
+      rootElement.style.setProperty('--background', 'hsl(228, 47%, 8%)');
+      rootElement.style.setProperty('--foreground', 'hsl(210, 40%, 98%)');
+      rootElement.style.setProperty('--card', 'hsl(228, 47%, 11%)');
+      rootElement.style.setProperty('--card-foreground', 'hsl(210, 40%, 98%)');
+      rootElement.style.setProperty('--primary', 'hsl(186, 100%, 50%)');
+      rootElement.style.setProperty('--primary-foreground', 'hsl(210, 40%, 98%)');
+      rootElement.style.setProperty('--secondary', 'hsl(334, 100%, 59%)');
+      rootElement.style.setProperty('--secondary-foreground', 'hsl(210, 40%, 98%)');
+      
+      rootElement.style.setProperty('--impulse-primary', '#00F0FF');
+      rootElement.style.setProperty('--impulse-secondary', '#FF2D6E');
+      rootElement.style.setProperty('--impulse-bg-main', '#121218');
+      
+      logger.info('Applied fallback styles in ThemeInitializer');
+    } catch (error) {
+      logger.error('Failed to apply fallback styles', {
+        errorMessage: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }, [logger]);
+  
+  // Apply fallback styles immediately
   useEffect(() => {
-    const applyFallbackStyles = () => {
-      try {
-        const rootElement = document.documentElement;
-        
-        rootElement.style.setProperty('--site-primary', '186 100% 50%');
-        rootElement.style.setProperty('--site-secondary', '334 100% 59%');
-        rootElement.style.setProperty('--site-effect-color', '#00F0FF');
-        rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
-        rootElement.style.setProperty('--site-background', '228 47% 8%');
-        rootElement.style.setProperty('--site-foreground', '210 40% 98%');
-        
-        rootElement.style.setProperty('--background', 'hsl(228, 47%, 8%)');
-        rootElement.style.setProperty('--foreground', 'hsl(210, 40%, 98%)');
-        rootElement.style.setProperty('--card', 'hsl(228, 47%, 11%)');
-        rootElement.style.setProperty('--card-foreground', 'hsl(210, 40%, 98%)');
-        rootElement.style.setProperty('--primary', 'hsl(186, 100%, 50%)');
-        rootElement.style.setProperty('--primary-foreground', 'hsl(210, 40%, 98%)');
-        rootElement.style.setProperty('--secondary', 'hsl(334, 100%, 59%)');
-        rootElement.style.setProperty('--secondary-foreground', 'hsl(210, 40%, 98%)');
-        
-        rootElement.style.setProperty('--impulse-primary', '#00F0FF');
-        rootElement.style.setProperty('--impulse-secondary', '#FF2D6E');
-        rootElement.style.setProperty('--impulse-bg-main', '#121218');
-        
-        logger.info('Applied fallback styles in ThemeInitializer');
-      } catch (error) {
-        logger.error('Failed to apply fallback styles', {
-          errorMessage: error instanceof Error ? error.message : String(error)
-        });
-      }
-    };
-    
     applyFallbackStyles();
     
     document.documentElement.classList.add('theme-impulsivity');
     document.body.classList.add('theme-impulsivity-body');
-  }, [logger]);
+  }, [applyFallbackStyles]);
   
+  // Initialize the theme
   useEffect(() => {
     if (isInitialized || initAttempted.current) {
       return;
@@ -98,13 +101,8 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
         
         setIsInitialized(true);
         
-        const rootElement = document.documentElement;
-        rootElement.style.setProperty('--site-primary', '186 100% 50%');
-        rootElement.style.setProperty('--site-secondary', '334 100% 59%');
-        rootElement.style.setProperty('--site-effect-color', '#00F0FF');
-        rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
-        rootElement.style.setProperty('--site-background', '228 47% 8%');
-        rootElement.style.setProperty('--site-foreground', '210 40% 98%');
+        // Apply fallback styles
+        applyFallbackStyles();
         
         try {
           await setTheme('fallback-theme');
@@ -123,9 +121,10 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
     };
     
     initializeTheme();
-  }, [defaultTheme, isInitialized, setTheme, logger]);
+  }, [defaultTheme, isInitialized, setTheme, logger, applyFallbackStyles]);
   
-  const handleRetry = async () => {
+  // Handle retry
+  const handleRetry = useCallback(async () => {
     try {
       initAttempted.current = false;
       setIsInitialized(false);
@@ -159,8 +158,9 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
       
       logger.error('Failed to retry theme initialization', errorDetails);
     }
-  };
+  }, [defaultTheme, logger, setTheme]);
   
+  // Add timeout for loading state
   useEffect(() => {
     if (isLoading && !isInitialized) {
       const timer = setTimeout(() => {
@@ -168,18 +168,16 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
           logger.warn('Theme initialization timeout, continuing with default styles');
           setIsInitialized(true);
           
-          const rootElement = document.documentElement;
-          rootElement.style.setProperty('--site-primary', '186 100% 50%');
-          rootElement.style.setProperty('--site-secondary', '334 100% 59%');
-          rootElement.style.setProperty('--site-effect-color', '#00F0FF');
-          rootElement.style.setProperty('--site-background', '228 47% 8%');
+          // Apply fallback styles
+          applyFallbackStyles();
         }
       }, 1500);
       
       return () => clearTimeout(timer);
     }
-  }, [isLoading, isInitialized, logger]);
+  }, [isLoading, isInitialized, logger, applyFallbackStyles]);
   
+  // Error state
   if ((initError || error) && !isInitialized) {
     return (
       <ThemeErrorState 
@@ -189,15 +187,14 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
     );
   }
   
+  // Loading state
   if (isLoading && !isInitialized) {
     return <ThemeLoadingState />;
   }
   
   return (
     <SiteThemeProvider isInitializing={isLoading || !isInitialized}>
-      <ImpulsivityInit>
-        {children}
-      </ImpulsivityInit>
+      {children}
     </SiteThemeProvider>
   );
 }

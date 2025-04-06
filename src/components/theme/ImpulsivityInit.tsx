@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
@@ -9,9 +9,13 @@ interface ImpulsivityInitProps {
 
 export function ImpulsivityInit({ children }: ImpulsivityInitProps) {
   const logger = useLogger('ImpulsivityInit', LogCategory.UI);
+  const hasAppliedStyles = useRef(false);
   
   // Apply theme CSS variables directly for immediate visual consistency
   useEffect(() => {
+    // Only apply styles once
+    if (hasAppliedStyles.current) return;
+    
     try {
       // Set essential CSS variables directly
       const rootElement = document.documentElement;
@@ -50,6 +54,9 @@ export function ImpulsivityInit({ children }: ImpulsivityInitProps) {
       // Set theme class on root elements
       rootElement.classList.add('theme-impulsivity');
       document.body.classList.add('theme-impulsivity-body');
+      
+      // Mark as applied so we don't do it again
+      hasAppliedStyles.current = true;
       
       logger.info('Applied direct CSS variables for Impulsivity theme');
     } catch (error) {
