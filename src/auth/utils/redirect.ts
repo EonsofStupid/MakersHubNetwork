@@ -51,10 +51,13 @@ export function useAuthRedirect(options: RedirectOptions) {
       });
       
       // Use TanStack Router compatible navigation
+      // Define the search params using a properly typed approach
       navigate({
         to: to as any,
-        // Use search parameters for state instead of passing directly
-        search: { returnUrl: location.pathname }
+        search: (prev) => ({
+          ...prev,
+          from: location.pathname
+        })
       });
     }
   }, [status, roles, navigate, to, allowRoles, redirectAuthenticated, redirectUnauthenticated, location.pathname, logger]);
