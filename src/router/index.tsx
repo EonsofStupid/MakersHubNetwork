@@ -4,7 +4,8 @@ import {
   RouterProvider,
   createRouter,
   createRootRoute,
-  createRoute
+  createRoute,
+  Navigate
 } from '@tanstack/react-router';
 import { ReactNode } from 'react';
 
@@ -18,6 +19,7 @@ import { useLoggingContext } from '@/logging/context/LoggingContext';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import Admin from '@/pages/Admin';
+import { adminRoutes } from '@/admin/routes/index';
 
 // Root layout component that includes site-wide UI elements
 function RootLayout({ children }: { children: ReactNode }) {
@@ -84,6 +86,20 @@ const loginRoute = createRoute({
   component: Login
 });
 
+// Profile route
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/profile',
+  component: () => <div>Profile Page</div> // Placeholder component
+});
+
+// Settings route
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings',
+  component: () => <div>Settings Page</div> // Placeholder component
+});
+
 // Admin route
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -92,10 +108,13 @@ const adminRoute = createRoute({
 });
 
 // Register all routes
-const routeTree = rootRoute.addChildren([
+export const routeTree = rootRoute.addChildren([
   siteRoute.addChildren([indexRoute]),
   loginRoute,
-  adminRoute
+  profileRoute,
+  settingsRoute,
+  adminRoute,
+  ...adminRoutes
 ]);
 
 // Create the router instance

@@ -1,6 +1,6 @@
 
 import React, { useCallback, memo, useMemo } from "react";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useAuthState } from "@/auth/hooks/useAuthState";
 import { 
@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 // Memoize the component to prevent unnecessary rerenders
 export const AuthSection = memo(() => {
   const { user, roles, logout, status } = useAuthState();
+  const navigate = useNavigate();
   
   // Determine admin access directly without the hook to avoid circular dependencies
   const hasAdminAccess = useMemo(() => {
@@ -75,26 +76,26 @@ export const AuthSection = memo(() => {
           
           <DropdownMenuSeparator />
           
-          <DropdownMenuItem asChild>
-            <Link to="/profile" className="cursor-pointer flex items-center gap-2">
+          <DropdownMenuItem onClick={() => navigate({ to: "/profile" as any })}>
+            <div className="cursor-pointer flex items-center gap-2">
               <User className="w-4 h-4" />
               <span>Profile</span>
-            </Link>
+            </div>
           </DropdownMenuItem>
           
-          <DropdownMenuItem asChild>
-            <Link to="/settings" className="cursor-pointer flex items-center gap-2">
+          <DropdownMenuItem onClick={() => navigate({ to: "/settings" as any })}>
+            <div className="cursor-pointer flex items-center gap-2">
               <Settings className="w-4 h-4" />
               <span>Settings</span>
-            </Link>
+            </div>
           </DropdownMenuItem>
           
           {hasAdminAccess && (
-            <DropdownMenuItem asChild>
-              <Link to="/admin" className="cursor-pointer flex items-center gap-2">
+            <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
+              <div className="cursor-pointer flex items-center gap-2">
                 <Shield className="w-4 h-4" />
                 <span>Admin Panel</span>
-              </Link>
+              </div>
             </DropdownMenuItem>
           )}
           
@@ -114,7 +115,7 @@ export const AuthSection = memo(() => {
   
   // If not logged in, show login button with animation effects
   return (
-    <Link to="/login">
+    <div onClick={() => navigate({ to: "/login" })}>
       <Button 
         variant="outline" 
         size="sm"
@@ -123,6 +124,6 @@ export const AuthSection = memo(() => {
         <span className="relative z-10">Login</span>
         <span className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md"></span>
       </Button>
-    </Link>
+    </div>
   );
 });

@@ -56,7 +56,14 @@ export const RequirePermission = ({
       return <>{fallback}</>;
     }
     
-    return <Navigate to={redirectTo} state={{ from: location.pathname }} replace={true} />;
+    // Use Navigate with state object that contains previousPath
+    return (
+      <Navigate 
+        to={redirectTo as any}  
+        state={{ previousPath: location.pathname }}
+        replace={true}
+      />
+    );
   }
   
   return <>{children || <Outlet />}</>;

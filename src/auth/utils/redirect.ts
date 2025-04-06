@@ -50,7 +50,12 @@ export function useAuthRedirect(options: RedirectOptions) {
         }
       });
       
-      navigate({ to, state: { from: location.pathname } });
+      navigate({ 
+        to: to as any,
+        state: { 
+          previousPath: location.pathname 
+        }
+      });
     }
   }, [status, roles, navigate, to, allowRoles, redirectAuthenticated, redirectUnauthenticated, location.pathname, logger]);
 }

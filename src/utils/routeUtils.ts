@@ -1,16 +1,28 @@
 
 import { router } from '@/router';
+import { z } from 'zod';
+
+// Define type for navigation options
+interface NavigateOptions {
+  replace?: boolean;
+  search?: Record<string, any>;
+  state?: Record<string, any>;
+}
+
+// Schema for search parameters
+const searchParamsSchema = z.record(z.unknown());
 
 /**
  * Navigate to a specific route
  * @param path The path to navigate to
  * @param options Optional navigation options
  */
-export function navigateTo(path: string, options?: { replace?: boolean; search?: Record<string, any> }) {
+export function navigateTo(path: string, options?: NavigateOptions) {
   router.navigate({
-    to: path, 
+    to: path as any, 
     replace: options?.replace,
-    search: options?.search
+    search: options?.search,
+    state: options?.state
   });
 }
 
