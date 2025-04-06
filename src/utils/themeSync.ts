@@ -1,90 +1,226 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { defaultImpulseTokens } from '@/admin/theme/impulse/tokens';
+import { Theme } from '@/types/theme';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
-import { Json } from '@/integrations/supabase/types';
-import { PostgrestError } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { keyframes } from '@/theme/animations';
 
-const formatPostgrestError = (error: PostgrestError | unknown): Record<string, unknown> => {
-  if (!error) return {};
-  
-  if (typeof error === 'object' && error !== null) {
-    if ('code' in error && 'message' in error) {
-      return {
-        code: (error as { code?: string }).code || 'UNKNOWN',
-        message: (error as { message?: string }).message || 'Unknown error',
-        details: (error as { details?: string }).details || undefined,
-        hint: (error as { hint?: string }).hint || undefined
-      };
-    }
-    
-    return { ...Object(error) };
-  }
-  
-  return { message: String(error) };
-};
-
-type ThemeSyncOptions = {
-  forceCreate?: boolean;
-  defaultName?: string;
-};
-
-export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Promise<boolean> {
-  const logger = getLogger('ThemeSync', LogCategory.DATABASE);
+/**
+ * Syncs the Impulsivity theme to the database
+ */
+export async function syncImpulsivityTheme(): Promise<boolean> {
+  const logger = getLogger();
   
   try {
-    const { forceCreate = false, defaultName = 'Impulsivity' } = options;
+    logger.info('Starting Impulsivity theme sync operation', {
+      category: LogCategory.DATABASE,
+      source: 'themeSync'
+    });
     
-    const { data: existingThemes, error } = await supabase
-      .from('themes')
-      .select('id, name, design_tokens')
-      .eq('name', defaultName)
-      .limit(1);
-      
+    // First try to get the existing theme
+    const { data, error } = await supabase.functions.invoke('theme-service', {
+      body: { 
+        operation: 'get-theme', 
+        themeName: 'Impulsivity'
+      }
+    });
+    
     if (error) {
-      logger.error('Error checking for existing theme', { 
-        details: formatPostgrestError(error)
+      logger.error('Failed to retrieve Impulsivity theme for syncing', {
+        category: LogCategory.DATABASE,
+        details: error,
+        source: 'themeSync'
       });
       return false;
     }
     
-    const existingTheme = existingThemes && existingThemes.length > 0 ? existingThemes[0] : null;
-    
-    if (existingTheme && !forceCreate) {
-      const existingTokens = existingTheme.design_tokens || {};
-      const updatedDesignTokens = {
-        ...(existingTokens as Record<string, unknown>),
-        admin: defaultImpulseTokens
+    // If the theme exists, update it
+    if (data && data.theme && !data.isFallback) {
+      const existingTheme = data.theme as Theme;
+      
+      // Prepare the updated theme with proper animations
+      const updatedTheme = {
+        ...existingTheme,
+        design_tokens: {
+          ...existingTheme.design_tokens,
+          colors: {
+            ...existingTheme.design_tokens?.colors,
+            primary: '#00F0FF',
+            secondary: '#FF2D6E',
+            background: '#080F1E',
+            foreground: '#F9FAFB',
+            card: '#0E172A',
+            cardForeground: '#F9FAFB'
+          },
+          effects: {
+            shadows: existingTheme.design_tokens?.effects?.shadows || {},
+            blurs: existingTheme.design_tokens?.effects?.blurs || {},
+            gradients: existingTheme.design_tokens?.effects?.gradients || {},
+            primary: '#00F0FF',
+            secondary: '#FF2D6E',
+            tertiary: '#8B5CF6'
+          },
+          animation: {
+            keyframes: keyframes,
+            transitions: {},
+            durations: {
+              fast: '150ms',
+              normal: '300ms',
+              slow: '500ms',
+              animationFast: '1s',
+              animationNormal: '2s',
+              animationSlow: '3s',
+            }
+          }
+        }
       };
       
-      // Cast to Json for type safety
-      const safeTokens = JSON.parse(JSON.stringify(updatedDesignTokens)) as Json;
+      // Update the theme
+      const { error: updateError } = await supabase.functions.invoke('theme-service', {
+        body: { 
+          operation: 'update-theme', 
+          themeId: existingTheme.id,
+          theme: updatedTheme,
+          userId: 'system' // Use system as userId for automatic updates
+        }
+      });
       
-      const { error: updateError } = await supabase
-        .from('themes')
-        .update({
-          design_tokens: safeTokens,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingTheme.id);
-        
       if (updateError) {
-        logger.error('Error updating theme', { 
-          details: formatPostgrestError(updateError)
+        logger.error('Failed to update Impulsivity theme', {
+          category: LogCategory.DATABASE,
+          details: updateError,
+          source: 'themeSync'
         });
         return false;
       }
       
-      logger.info('Successfully updated Impulsivity theme');
+      logger.info('Successfully updated Impulsivity theme', {
+        category: LogCategory.DATABASE,
+        details: { themeId: existingTheme.id },
+        source: 'themeSync'
+      });
       return true;
     }
     
-    const themeData = {
-      name: defaultName,
-      description: 'A cyberpunk-inspired theme with neon glow effects',
+    // If the theme doesn't exist, create it
+    const newTheme: Partial<Theme> = {
+      name: 'Impulsivity',
+      description: 'A cyberpunk-inspired theme with neon effects and vivid colors',
       status: 'published',
-      is_default: false,
+      is_default: true,
+      version: 1,
+      design_tokens: {
+        colors: {
+          background: '#080F1E',
+          foreground: '#F9FAFB',
+          card: '#0E172A',
+          cardForeground: '#F9FAFB', 
+          primary: '#00F0FF',
+          primaryForeground: '#F9FAFB',
+          secondary: '#FF2D6E',
+          secondaryForeground: '#F9FAFB',
+          muted: '#131D35',
+          mutedForeground: '#94A3B8',
+          accent: '#131D35',
+          accentForeground: '#F9FAFB',
+          destructive: '#EF4444',
+          destructiveForeground: '#F9FAFB',
+          border: '#131D35',
+          input: '#131D35',
+          ring: '#1E293B',
+        },
+        effects: {
+          shadows: {},
+          blurs: {},
+          gradients: {},
+          primary: '#00F0FF',
+          secondary: '#FF2D6E',
+          tertiary: '#8B5CF6',
+        },
+        animation: {
+          keyframes,
+          transitions: {},
+          durations: {
+            fast: '150ms',
+            normal: '300ms',
+            slow: '500ms',
+            animationFast: '1s',
+            animationNormal: '2s',
+            animationSlow: '3s',
+          }
+        }
+      },
+      component_tokens: []
+    };
+    
+    // Create the new theme
+    const { error: createError } = await supabase.functions.invoke('theme-service', {
+      body: { 
+        operation: 'create-theme', 
+        theme: newTheme,
+        userId: 'system'
+      }
+    });
+    
+    if (createError) {
+      logger.error('Failed to create Impulsivity theme', {
+        category: LogCategory.DATABASE,
+        details: createError,
+        source: 'themeSync'
+      });
+      return false;
+    }
+    
+    logger.info('Successfully created Impulsivity theme', {
+      category: LogCategory.DATABASE,
+      source: 'themeSync'
+    });
+    
+    return true;
+  } catch (error) {
+    logger.error('Error during Impulsivity theme sync', {
+      category: LogCategory.DATABASE,
+      details: error,
+      source: 'themeSync'
+    });
+    return false;
+  }
+}
+
+/**
+ * Gets the freshest theme from the database or falls back to local
+ */
+export async function getThemeWithFallback(themeName: string = 'Impulsivity'): Promise<Theme> {
+  const logger = getLogger();
+  
+  try {
+    // Try to get from database
+    const { data, error } = await supabase.functions.invoke('theme-service', {
+      body: { 
+        operation: 'get-theme', 
+        themeName: themeName
+      }
+    });
+    
+    if (error || !data || !data.theme) {
+      throw new Error('Failed to get theme from database');
+    }
+    
+    return data.theme as Theme;
+  } catch (error) {
+    logger.warn('Using local fallback theme due to error', {
+      category: LogCategory.DATABASE,
+      details: error,
+      source: 'themeSync'
+    });
+    
+    // Return a hardcoded fallback theme
+    return {
+      id: "fallback-theme-" + Date.now(),
+      name: "Emergency Fallback Theme",
+      description: "Fallback theme used when theme loading fails",
+      status: 'published',
+      is_default: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       version: 1,
@@ -117,7 +253,7 @@ export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Prom
           tertiary: "#8B5CF6",
         },
         animation: {
-          keyframes: {},
+          keyframes,
           transitions: {},
           durations: {
             fast: "150ms",
@@ -127,81 +263,9 @@ export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Prom
             animationNormal: "2s",
             animationSlow: "3s",
           }
-        },
-        // Cast defaultImpulseTokens to Json compatible object
-        admin: JSON.parse(JSON.stringify(defaultImpulseTokens))
-      }
-    };
-    
-    // Properly serialize to ensure JSON compatibility
-    const safeJsonData = JSON.parse(JSON.stringify(themeData));
-    
-    const { data: newTheme, error: createError } = await supabase
-      .from('themes')
-      .insert([safeJsonData])
-      .select('id')
-      .single();
-      
-    if (createError) {
-      logger.error('Error creating theme', { 
-        details: formatPostgrestError(createError)
-      });
-      return false;
-    }
-    
-    if (!newTheme) {
-      logger.warn('Theme creation returned no data');
-      return false;
-    }
-    
-    const componentData = [
-      {
-        component_name: 'Button',
-        theme_id: newTheme.id,
-        context: 'site',
-        styles: {
-          base: 'relative overflow-hidden bg-primary text-primary-foreground hover:bg-primary/90',
-          variants: {
-            cyber: 'border border-primary/50 bg-transparent text-primary hover:bg-primary/10 hover:border-primary/80',
-            neon: 'shadow-[0_0_15px_rgba(0,240,255,0.5)] hover:shadow-[0_0_25px_rgba(0,240,255,0.8)]'
-          }
         }
       },
-      {
-        component_name: 'Card',
-        theme_id: newTheme.id,
-        context: 'site',
-        styles: {
-          base: 'rounded-lg border bg-card text-card-foreground shadow-sm',
-          variants: {
-            cyber: 'border border-primary/30 bg-black/40 backdrop-blur-xl',
-            glass: 'bg-white/10 backdrop-blur-xl border border-white/20'
-          }
-        }
-      }
-    ];
-    
-    const safeComponentData = JSON.parse(JSON.stringify(componentData));
-    
-    const { error: componentError } = await supabase
-      .from('theme_components')
-      .insert(safeComponentData);
-      
-    if (componentError) {
-      logger.error('Error adding component tokens', { 
-        details: formatPostgrestError(componentError)
-      });
-      return true; // Still return true as theme was created successfully
-    }
-    
-    logger.info('Successfully created Impulsivity theme with components');
-    return true;
-    
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error('Unexpected error in syncImpulsivityTheme', { 
-      details: { message: errorMessage }
-    });
-    return false;
+      component_tokens: [],
+    };
   }
 }

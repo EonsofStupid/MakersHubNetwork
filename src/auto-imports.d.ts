@@ -1,4 +1,3 @@
-
 /* eslint-disable */
 /* prettier-ignore */
 // @ts-nocheck
@@ -215,4 +214,305 @@ declare global {
   const MessageSquare: typeof import('lucide-react')['MessageSquare']
   const Minus: typeof import('lucide-react')['Minus']
   const MoreHorizontal: typeof import('lucide-react')['MoreHorizontal']
+  const MoreVertical: typeof import('lucide-react')['MoreVertical']
+  const NavLink: typeof import('react-router-dom')['NavLink']
+  const Navigate: typeof import('react-router-dom')['Navigate']
+  const NavigationItems: typeof import('./components/MainNav/components/NavigationItems')['NavigationItems']
+  const NavigationMenu: typeof import('./components/ui/navigation-menu')['NavigationMenu']
+  const NavigationMenuContent: typeof import('./components/ui/navigation-menu')['NavigationMenuContent']
+  const NavigationMenuIndicator: typeof import('./components/ui/navigation-menu')['NavigationMenuIndicator']
+  const NavigationMenuItem: typeof import('./components/ui/navigation-menu')['NavigationMenuItem']
+  const NavigationMenuLink: typeof import('./components/ui/navigation-menu')['NavigationMenuLink']
+  const NavigationMenuList: typeof import('./components/ui/navigation-menu')['NavigationMenuList']
+  const NavigationMenuTrigger: typeof import('./components/ui/navigation-menu')['NavigationMenuTrigger']
+  const NavigationMenuViewport: typeof import('./components/ui/navigation-menu')['NavigationMenuViewport']
+  const NodeTypes: typeof import('./components/admin/data-maestro/types/data-maestro')['NodeTypes']
+  const Outlet: typeof import('react-router-dom')['Outlet']
+  const OverviewTab: typeof import('./components/admin/tabs/OverviewTab')['OverviewTab']
+  const Pagination: typeof import('./components/ui/pagination')['Pagination']
+  const PaginationContent: typeof import('./components/ui/pagination')['PaginationContent']
+  const PaginationEllipsis: typeof import('./components/ui/pagination')['PaginationEllipsis']
+  const PaginationItem: typeof import('./components/ui/pagination')['PaginationItem']
+  const PaginationLink: typeof import('./components/ui/pagination')['PaginationLink']
+  const PaginationNext: typeof import('./components/ui/pagination')['PaginationNext']
+  const PaginationPrevious: typeof import('./components/ui/pagination')['PaginationPrevious']
+  const Plus: typeof import('lucide-react')['Plus']
+  const Popover: typeof import('./components/ui/popover')['Popover']
+  const PopoverContent: typeof import('./components/ui/popover')['PopoverContent']
+  const PopoverTrigger: typeof import('./components/ui/popover')['PopoverTrigger']
+  const PreviewStep: typeof import('./components/admin/tabs/import/PreviewStep')['PreviewStep']
+  const ProfileDialog: typeof import('./components/profile/ProfileDialog')['ProfileDialog']
+  const ProfileDisplay: typeof import('./components/profile/ProfileDisplay')['ProfileDisplay']
+  const ProfileEditor: typeof import('./components/profile/ProfileEditor')['ProfileEditor']
+  const Progress: typeof import('./components/ui/progress')['Progress']
+  const ProviderConfig: typeof import('./components/admin/data-maestro/components/api/KeyManagement/ProviderConfig')['ProviderConfig']
+  const RadioGroup: typeof import('./components/ui/radio-group')['RadioGroup']
+  const RadioGroupItem: typeof import('./components/ui/radio-group')['RadioGroupItem']
+  const ResizableHandle: typeof import('./components/ui/resizable')['ResizableHandle']
+  const ResizablePanel: typeof import('./components/ui/resizable')['ResizablePanel']
+  const ResizablePanelGroup: typeof import('./components/ui/resizable')['ResizablePanelGroup']
+  const Route: typeof import('react-router-dom')['Route']
+  const Routes: typeof import('react-router-dom')['Routes']
+  const Save: typeof import('lucide-react')['Save']
+  const ScrollArea: typeof import('./components/ui/scroll-area')['ScrollArea']
+  const ScrollBar: typeof import('./components/ui/scroll-area')['ScrollBar']
+  const Search: typeof import('lucide-react')['Search']
+  const SearchButton: typeof import('./components/MainNav/components/SearchButton')['SearchButton']
+  const Select: typeof import('./components/ui/select')['Select']
+  const SelectContent: typeof import('./components/ui/select')['SelectContent']
+  const SelectGroup: typeof import('./components/ui/select')['SelectGroup']
+  const SelectItem: typeof import('./components/ui/select')['SelectItem']
+  const SelectLabel: typeof import('./components/ui/select')['SelectLabel']
+  const SelectScrollDownButton: typeof import('./components/ui/select')['SelectScrollDownButton']
+  const SelectScrollUpButton: typeof import('./components/ui/select')['SelectScrollUpButton']
+  const SelectSeparator: typeof import('./components/ui/select')['SelectSeparator']
+  const SelectTrigger: typeof import('./components/ui/select')['SelectTrigger']
+  const SelectValue: typeof import('./components/ui/select')['SelectValue']
+  const Separator: typeof import('./components/ui/separator')['Separator']
+  const Settings: typeof import('lucide-react')['Settings']
+  const SettingsPanel: typeof import('./components/admin/tabs/ChatTab/sections/SettingsPanel')['SettingsPanel']
+  const SettingsTab: typeof import('./components/admin/tabs/SettingsTab')['SettingsTab']
+  const Share: typeof import('lucide-react')['Share']
+  const Sheet: typeof import('./components/ui/sheet')['Sheet']
+  const SheetClose: typeof import('./components/ui/sheet')['SheetClose']
+  const SheetContent: typeof import('./components/ui/sheet')['SheetContent']
+  const SheetDescription: typeof import('./components/ui/sheet')['SheetDescription']
+  const SheetFooter: typeof import('./components/ui/sheet')['SheetFooter']
+  const SheetHeader: typeof import('./components/ui/sheet')['SheetHeader']
+  const SheetOverlay: typeof import('./components/ui/sheet')['SheetOverlay']
+  const SheetPortal: typeof import('./components/ui/sheet')['SheetPortal']
+  const SheetTitle: typeof import('./components/ui/sheet')['SheetTitle']
+  const SheetTrigger: typeof import('./components/ui/sheet')['SheetTrigger']
+  const Skeleton: typeof import('./components/ui/skeleton')['Skeleton']
+  const Slider: typeof import('./components/ui/slider')['Slider']
+  const Star: typeof import('lucide-react')['Star']
+  const Step: typeof import('./components/ui/steps')['Step']
+  const Steps: typeof import('./components/ui/steps')['Steps']
+  const Switch: typeof import('./components/ui/switch')['Switch']
+  const Table: typeof import('./components/ui/table')['Table']
+  const TableBody: typeof import('./components/ui/table')['TableBody']
+  const TableCaption: typeof import('./components/ui/table')['TableCaption']
+  const TableCell: typeof import('./components/ui/table')['TableCell']
+  const TableFooter: typeof import('./components/ui/table')['TableFooter']
+  const TableHead: typeof import('./components/ui/table')['TableHead']
+  const TableHeader: typeof import('./components/ui/table')['TableHeader']
+  const TableRow: typeof import('./components/ui/table')['TableRow']
+  const Tabs: typeof import('./components/ui/tabs')['Tabs']
+  const TabsContent: typeof import('./components/ui/tabs')['TabsContent']
+  const TabsList: typeof import('./components/ui/tabs')['TabsList']
+  const TabsTrigger: typeof import('./components/ui/tabs')['TabsTrigger']
+  const TextWithPopup: typeof import('./components/theme/info/TextWithPopup')['TextWithPopup']
+  const Textarea: typeof import('./components/ui/textarea')['Textarea']
+  const ThemeColorSystem: typeof import('./components/theme/ThemeColorSystem')['ThemeColorSystem']
+  const ThemeComponentPreview: typeof import('./components/theme/ThemeComponentPreview')['ThemeComponentPreview']
+  const ThemeDataStream: typeof import('./components/theme/ThemeDataStream')['ThemeDataStream']
+  const ThemeErrorState: typeof import('./components/theme/info/ThemeErrorState')['ThemeErrorState']
+  const ThemeInfoPopup: typeof import('./components/theme/ThemeInfoPopup')['ThemeInfoPopup']
+  const ThemeInfoTab: typeof import('./components/theme/info/ThemeInfoTab')['ThemeInfoTab']
+  const ThemeInfoTabs: typeof import('./components/theme/info/ThemeInfoTabs')['ThemeInfoTabs']
+  const ThemeLoadingState: typeof import('./components/theme/info/ThemeLoadingState')['ThemeLoadingState']
+  const Toast: typeof import('./components/ui/toast')['Toast']
+  const ToastAction: typeof import('./components/ui/toast')['ToastAction']
+  const ToastClose: typeof import('./components/ui/toast')['ToastClose']
+  const ToastDescription: typeof import('./components/ui/toast')['ToastDescription']
+  const ToastProvider: typeof import('./components/ui/toast')['ToastProvider']
+  const ToastTitle: typeof import('./components/ui/toast')['ToastTitle']
+  const ToastViewport: typeof import('./components/ui/toast')['ToastViewport']
+  const Toaster: typeof import('./components/ui/toaster')['Toaster']
+  const Toggle: typeof import('./components/ui/toggle')['Toggle']
+  const ToggleGroup: typeof import('./components/ui/toggle-group')['ToggleGroup']
+  const ToggleGroupItem: typeof import('./components/ui/toggle-group')['ToggleGroupItem']
+  const Tooltip: typeof import('./components/ui/tooltip')['Tooltip']
+  const TooltipContent: typeof import('./components/ui/tooltip')['TooltipContent']
+  const TooltipProvider: typeof import('./components/ui/tooltip')['TooltipProvider']
+  const TooltipTrigger: typeof import('./components/ui/tooltip')['TooltipTrigger']
+  const Trash: typeof import('lucide-react')['Trash']
+  const Upload: typeof import('lucide-react')['Upload']
+  const UsagePanel: typeof import('./components/admin/tabs/ChatTab/sections/UsagePanel')['UsagePanel']
+  const User: typeof import('lucide-react')['User']
+  const UserMenu: typeof import('./components/auth/UserMenu')['UserMenu']
+  const UserMenuSheet: typeof import('./components/UserMenuSheet')['UserMenuSheet']
+  const UsersTab: typeof import('./components/admin/tabs/UsersTab')['UsersTab']
+  const WorkflowEditor: typeof import('./components/admin/tabs/ContentTab/sections/workflows/WorkflowEditor')['WorkflowEditor']
+  const WorkflowFieldType: typeof import('./components/admin/cms/types/workflow-enums')['WorkflowFieldType']
+  const WorkflowList: typeof import('./components/admin/tabs/ContentTab/sections/workflows/WorkflowList')['WorkflowList']
+  const WorkflowManagement: typeof import('./components/admin/tabs/ContentTab/sections/workflows/index')['WorkflowManagement']
+  const X: typeof import('lucide-react')['X']
+  const badgeVariants: typeof import('./components/ui/badge')['badgeVariants']
+  const buildKeys: typeof import('./components/admin/tabs/ContentTab/queries/build.queries')['buildKeys']
+  const buttonVariants: typeof import('./components/ui/button')['buttonVariants']
+  const categoryKeys: typeof import('./components/admin/tabs/ContentTab/queries/category.queries')['categoryKeys']
+  const cmsKeys: typeof import('./components/admin/cms/queries/keys')['cmsKeys']
+  const cn: typeof import('./lib/utils')['cn']
+  const columns: typeof import('./components/admin/data-maestro/components/api/KeyManagement/columns')['columns']
+  const contentKeys: typeof import('./components/admin/tabs/ContentTab/queries/content.queries')['contentKeys']
+  const createRef: typeof import('react')['createRef']
+  const forwardRef: typeof import('react')['forwardRef']
+  const galleryKeys: typeof import('./components/admin/tabs/ContentTab/queries/gallery.queries')['galleryKeys']
+  const index: typeof import('./components/admin/tabs/ContentTab/index')['default']
+  const lazy: typeof import('react')['lazy']
+  const memo: typeof import('react')['memo']
+  const navigationMenuTriggerStyle: typeof import('./components/ui/navigation-menu')['navigationMenuTriggerStyle']
+  const providers: typeof import('./components/admin/data-maestro/constants/providers')['providers']
+  const queryClient: typeof import('./lib/react-query')['queryClient']
+  const reducer: typeof import('./hooks/use-toast')['reducer']
+  const selectAccentColor: typeof import('@/stores/ui/store')['selectAccentColor']
+  const selectCurrentTheme: typeof import('@/stores/theme/store')['selectCurrentTheme']
+  const selectError: typeof import('@/stores/auth/store')['selectError']
+  const selectIsAuthenticated: typeof import('@/stores/auth/store')['selectIsAuthenticated']
+  const selectIsLoading: typeof import('@/stores/auth/store')['selectIsLoading']
+  const selectLayout: typeof import('@/stores/ui/store')['selectLayout']
+  const selectPreferences: typeof import('@/stores/ui/store')['selectPreferences']
+  const selectStatus: typeof import('@/stores/auth/store')['selectStatus']
+  const selectThemeComponents: typeof import('@/stores/theme/store')['selectThemeComponents']
+  const selectThemeMode: typeof import('@/stores/ui/store')['selectThemeMode']
+  const selectThemeTokens: typeof import('@/stores/theme/store')['selectThemeTokens']
+  const selectUser: typeof import('@/stores/auth/store')['selectUser']
+  const selectUserRoles: typeof import('@/stores/auth/store')['selectUserRoles']
+  const slugify: typeof import('./lib/utils')['slugify']
+  const startTransition: typeof import('react')['startTransition']
+  const toast: typeof import('./hooks/use-toast')['toast']
+  const toggleVariants: typeof import('./components/ui/toggle')['toggleVariants']
+  const useActiveUsersCount: typeof import('./components/admin/queries/useActiveUsersCount')['useActiveUsersCount']
+  const useAdminAccess: typeof import('./hooks/useAdminAccess')['useAdminAccess']
+  const useAuthStore: typeof import('@/stores/auth/store')['useAuthStore']
+  const useBuildList: typeof import('./components/admin/tabs/ContentTab/queries/build.queries')['useBuildList']
+  const useBuildStore: typeof import('./components/admin/tabs/ContentTab/stores/build.store')['useBuildStore']
+  const useCallback: typeof import('react')['useCallback']
+  const useCategoryList: typeof import('./components/admin/tabs/ContentTab/queries/category.queries')['useCategoryList']
+  const useCategoryStore: typeof import('./components/admin/tabs/ContentTab/stores/category.store')['useCategoryStore']
+  const useCategoryTree: typeof import('./components/admin/cms/queries/useContentCategories')['useCategoryTree']
+  const useContentCategories: typeof import('./components/admin/cms/queries/useContentCategories')['useContentCategories']
+  const useContentItems: typeof import('./components/admin/cms/queries/useContentItems')['useContentItems']
+  const useContentList: typeof import('./components/admin/tabs/ContentTab/queries/content.queries')['useContentList']
+  const useContentStore: typeof import('./components/admin/tabs/ContentTab/stores/content.store')['useContentStore']
+  const useContentTypes: typeof import('./components/admin/cms/queries/useContentTypes')['useContentTypes']
+  const useContext: typeof import('react')['useContext']
+  const useCreateContentType: typeof import('./components/admin/cms/queries/useContentTypes')['useCreateContentType']
+  const useDebugValue: typeof import('react')['useDebugValue']
+  const useDeferredValue: typeof import('react')['useDeferredValue']
+  const useDeleteContent: typeof import('./components/admin/cms/queries/useContentItems')['useDeleteContent']
+  const useEffect: typeof import('react')['useEffect']
+  const useFormField: typeof import('./components/ui/form')['useFormField']
+  const useGalleryStore: typeof import('./components/admin/tabs/ContentTab/stores/gallery.store')['useGalleryStore']
+  const useHref: typeof import('react-router-dom')['useHref']
+  const useId: typeof import('react')['useId']
+  const useImperativeHandle: typeof import('react')['useImperativeHandle']
+  const useInRouterContext: typeof import('react-router-dom')['useInRouterContext']
+  const useInfiniteQuery: typeof import('@tanstack/react-query')['useInfiniteQuery']
+  const useInsertionEffect: typeof import('react')['useInsertionEffect']
+  const useKeyboardNavigation: typeof import('./components/KeyboardNavigation/hooks/useKeyboardNavigation')['useKeyboardNavigation']
+  const useKeyboardNavigationProvider: typeof import('./components/KeyboardNavigation/hooks/useKeyboardNavigation')['useKeyboardNavigationProvider']
+  const useKeyboardScroll: typeof import('./components/KeyboardNavigation/hooks/useKeyboardScroll')['useKeyboardScroll']
+  const useLayoutEffect: typeof import('react')['useLayoutEffect']
+  const useLinkClickHandler: typeof import('react-router-dom')['useLinkClickHandler']
+  const useLocation: typeof import('react-router-dom')['useLocation']
+  const useMediaList: typeof import('./components/admin/tabs/ContentTab/queries/gallery.queries')['useMediaList']
+  const useMemo: typeof import('react')['useMemo']
+  const useMutation: typeof import('@tanstack/react-query')['useMutation']
+  const useNavigate: typeof import('react-router-dom')['useNavigate']
+  const useNavigationType: typeof import('react-router-dom')['useNavigationType']
+  const useOutlet: typeof import('react-router-dom')['useOutlet']
+  const useOutletContext: typeof import('react-router-dom')['useOutletContext']
+  const useParams: typeof import('react-router-dom')['useParams']
+  const usePartsCount: typeof import('./components/admin/queries/usePartsCount')['usePartsCount']
+  const useQueries: typeof import('@tanstack/react-query')['useQueries']
+  const useQuery: typeof import('@tanstack/react-query')['useQuery']
+  const useQueryClient: typeof import('@tanstack/react-query')['useQueryClient']
+  const useRecentReviews: typeof import('./components/admin/queries/useRecentReviews')['useRecentReviews']
+  const useReducer: typeof import('react')['useReducer']
+  const useRef: typeof import('react')['useRef']
+  const useResolvedPath: typeof import('react-router-dom')['useResolvedPath']
+  const useReviewsCount: typeof import('./components/admin/queries/useReviewsCount')['useReviewsCount']
+  const useRoutes: typeof import('react-router-dom')['useRoutes']
+  const useSearchParams: typeof import('react-router-dom')['useSearchParams']
+  const useStandaloneKeyboardNavigation: typeof import('./components/KeyboardNavigation/hooks/useKeyboardNavigation')['useStandaloneKeyboardNavigation']
+  const useState: typeof import('react')['useState']
+  const useSuspenseInfiniteQuery: typeof import('@tanstack/react-query')['useSuspenseInfiniteQuery']
+  const useSuspenseQueries: typeof import('@tanstack/react-query')['useSuspenseQueries']
+  const useSuspenseQuery: typeof import('@tanstack/react-query')['useSuspenseQuery']
+  const useSyncExternalStore: typeof import('react')['useSyncExternalStore']
+  const useThemeManager: typeof import('./hooks/useThemeManager')['useThemeManager']
+  const useThemeStore: typeof import('@/stores/theme/store')['useThemeStore']
+  const useToast: typeof import('./hooks/use-toast')['useToast']
+  const useTokenConverters: typeof import('./hooks/useTokenConverters')['useTokenConverters']
+  const useTotalUsersCount: typeof import('./components/admin/queries/useTotalUsersCount')['useTotalUsersCount']
+  const useTransition: typeof import('react')['useTransition']
+  const useTrendingParts: typeof import('./components/admin/queries/useTrendingParts')['useTrendingParts']
+  const useUIStore: typeof import('@/stores/ui/store')['useUIStore']
+  const useUserActivity: typeof import('./hooks/useUserActivity')['useUserActivity']
+  const useWorkflowEditor: typeof import('./components/admin/cms/stores/workflow-editor')['useWorkflowEditor']
+  const useWorkflowList: typeof import('./components/admin/tabs/ContentTab/queries/workflow.queries')['useWorkflowList']
+  const useWorkflowStore: typeof import('./components/admin/tabs/ContentTab/stores/workflow.store')['useWorkflowStore']
+  const useWorkflows: typeof import('./components/admin/cms/queries/useWorkflows')['useWorkflows']
+  const workflowKeys: typeof import('./components/admin/tabs/ContentTab/queries/workflow.queries')['workflowKeys']
+}
+// for type re-export
+declare global {
+  // @ts-ignore
+  export type { NavigationDirection, NavigationKey, ScrollOptions, ScrollConfig, KeyboardNavigationOptions, KeyboardNavigationState, KeyboardNavigationContextType } from './components/KeyboardNavigation/types/navigation.types'
+  import('./components/KeyboardNavigation/types/navigation.types')
+  // @ts-ignore
+  export type { ChatAPIProvider, APIKeyDetails, CreateAPIKeyRequest } from './components/admin/chat/types/api-keys'
+  import('./components/admin/chat/types/api-keys')
+  // @ts-ignore
+  export type { ChatModelType, ChatModelConfig, ChatSystemPrompt, ChatModerationSettings, ChatSettings, UsageMetrics } from './components/admin/chat/types/settings'
+  import('./components/admin/chat/types/settings')
+  // @ts-ignore
+  export type { ContentType, ContentStatus, ContentItem, ContentCategory, MediaAsset, CategoryTreeItem } from './components/admin/cms/types/content'
+  import('./components/admin/cms/types/content')
+  // @ts-ignore
+  export type { WorkflowField } from './components/admin/cms/types/workflow'
+  import('./components/admin/cms/types/workflow')
+  // @ts-ignore
+  export type { WorkflowStatus } from './components/admin/cms/types/workflow-enums'
+  import('./components/admin/cms/types/workflow-enums')
+  // @ts-ignore
+  export type { ApiKeyCategory, ApiKeyType, ApiKeyField, ApiKeyRequirements, ApiKey, ApiKeyFormData } from './components/admin/data-maestro/types/api-keys'
+  import('./components/admin/data-maestro/types/api-keys')
+  // @ts-ignore
+  export type { DataMaestroTabId, APIKeyProvider, NodeType, EdgeType, VisualNode, VisualEdge } from './components/admin/data-maestro/types/data-maestro'
+  import('./components/admin/data-maestro/types/data-maestro')
+  // @ts-ignore
+  export type { ImportSessionRow, ImportErrorRow, ValidationError, ColumnType, ColumnMapping, ImportStep, ImportPreviewData, ImportSession } from './components/admin/data-maestro/types/import'
+  import('./components/admin/data-maestro/types/import')
+  // @ts-ignore
+  export type { ContentFilter, ContentListProps, ContentFiltersProps, BuildSubmission, CategoryData, WorkflowStep, Workflow } from './components/admin/tabs/ContentTab/types/content.types'
+  import('./components/admin/tabs/ContentTab/types/content.types')
+  // @ts-ignore
+  export type { UserProfile, UserStatsItem, ModeratorAction } from './components/admin/users/types/user'
+  import('./components/admin/users/types/user')
+  // @ts-ignore
+  export type { BadgeProps } from './components/ui/badge'
+  import('./components/ui/badge')
+  // @ts-ignore
+  export type { ButtonProps } from './components/ui/button'
+  import('./components/ui/button')
+  // @ts-ignore
+  export type { CalendarProps } from './components/ui/calendar'
+  import('./components/ui/calendar')
+  // @ts-ignore
+  export type { ChartConfig } from './components/ui/chart'
+  import('./components/ui/chart')
+  // @ts-ignore
+  export type { InputProps } from './components/ui/input'
+  import('./components/ui/input')
+  // @ts-ignore
+  export type { StepProps } from './components/ui/steps'
+  import('./components/ui/steps')
+  // @ts-ignore
+  export type { TextareaProps } from './components/ui/textarea'
+  import('./components/ui/textarea')
+  // @ts-ignore
+  export type { AdminAccess, WithAdminAccess, AuthUser } from './types/auth.types'
+  import('./types/auth.types')
+  // @ts-ignore
+  export type { Sensor, Component, APIKeyType, APIKey, APIKeyAuditLog, Database, DatabaseTables } from './types/database'
+  import('./types/database')
+  // @ts-ignore
+  export type { ThemeStatus, ThemeToken, ComponentTokens, DesignTokensStructure, Theme, ThemeContextType } from './types/theme'
+  import('./types/theme')
+  // @ts-ignore
+  export type { UserRole, UserActivityProfile, UseUserActivityOptions, UserActivityStats, ProfileWithRoles } from './types/user-activity'
+  import('./types/user-activity')
 }

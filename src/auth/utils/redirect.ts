@@ -1,51 +1,75 @@
 
-import { useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { useNavigate } from 'react-router-dom';
-import { UserRole } from '@/auth/types/auth.types';
-
-export interface RedirectOptions {
-  to: string;
-  ifAuthenticated?: boolean;
-  ifRole?: UserRole | UserRole[];
-  replace?: boolean;
-}
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthState } from "../hooks/useAuthState";
+import { canAccessAdmin } from "../rbac/enforce";
 
 /**
- * Hook for redirecting users based on auth state
+ * Redirect to login if the user is not authenticated
  */
-export function useAuthRedirect(options: RedirectOptions) {
-  const { isAuthenticated, roles, status } = useAuth();
+export const useRedirectUnauthenticated = (
+  redirectTo: string = "/login",
+  message: string = "Please log in to access this page"
+) => {
   const navigate = useNavigate();
-  
+  const { toast } = useToast();
+  const { isAuthenticated, isLoading } = useAuthState();
+
   useEffect(() => {
-    // Don't redirect if still loading
-    if (status === 'loading' || status === 'idle') return;
-    
-    const shouldRedirect = () => {
-      // Redirect if we care about authentication status and it matches
-      if (options.ifAuthenticated !== undefined && options.ifAuthenticated === isAuthenticated) {
-        return true;
-      }
-      
-      // Redirect if we care about specific roles and user has them
-      if (options.ifRole) {
-        // Convert to array if string
-        const requiredRoles = Array.isArray(options.ifRole) 
-          ? options.ifRole 
-          : [options.ifRole];
-          
-        // Check if user has any of the required roles
-        const hasRole = requiredRoles.some(role => roles.includes(role));
-        if (hasRole) return true;
-      }
-      
-      return false;
-    };
-    
-    // Perform redirect if conditions are met
-    if (shouldRedirect()) {
-      navigate(options.to, { replace: options.replace });
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: message,
+        variant: "destructive",
+      });
+      navigate(redirectTo);
     }
-  }, [isAuthenticated, roles, status, options, navigate]);
-}
+  }, [isAuthenticated, isLoading, navigate, redirectTo, toast, message]);
+
+  return { isLoading, isAuthenticated };
+};
+
+/**
+ * Redirect if the user is not an admin
+ */
+export const useRedirectNonAdmin = (
+  redirectTo: string = "/",
+  message: string = "You do not have permission to access this page"
+) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { roles, isAuthenticated, isLoading } = useAuthState();
+  const hasAccess = canAccessAdmin(roles);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !hasAccess) {
+      toast({
+        title: "Access Denied",
+        description: message,
+        variant: "destructive",
+      });
+      navigate(redirectTo);
+    }
+  }, [hasAccess, isAuthenticated, isLoading, navigate, redirectTo, toast, message]);
+
+  return { isLoading, isAuthenticated, hasAccess };
+};
+
+/**
+ * Redirect authenticated users (e.g., away from login page)
+ */
+export const useRedirectAuthenticated = (
+  redirectTo: string = "/"
+) => {
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useAuthState();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate(redirectTo);
+    }
+  }, [isAuthenticated, isLoading, navigate, redirectTo]);
+
+  return { isLoading, isAuthenticated };
+};

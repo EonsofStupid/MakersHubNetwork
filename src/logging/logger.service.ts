@@ -1,261 +1,260 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { LogLevel } from './constants/log-level';
-import { LogCategory, LogEntry, LogTransport, LoggingConfig, LogOptions } from './types';
+import { LogCategory, LogEntry, LogTransport, LoggingConfig } from './types';
+import { LogLevel, isLogLevelAtLeast } from './constants/log-level';
 import { defaultLoggingConfig } from './config';
+import { errorToObject } from '@/shared/utils/render';
 
 /**
- * Core logger service for application-wide logging
+ * Logger service - main class for logging management
  */
 export class LoggerService {
   private static instance: LoggerService;
   private config: LoggingConfig;
   private buffer: LogEntry[] = [];
-  private flushTimer: ReturnType<typeof setInterval> | null = null;
-
+  private flushInterval: ReturnType<typeof setInterval> | null = null;
+  private userId: string | undefined;
+  private sessionId: string | undefined;
+  
   private constructor(config: LoggingConfig = defaultLoggingConfig) {
-    this.config = config;
-    this.setupFlushTimer();
+    this.config = { ...defaultLoggingConfig, ...config };
+    this.sessionId = uuidv4();
+    this.setupFlushInterval();
   }
-
+  
   /**
-   * Get the singleton instance of LoggerService
+   * Get the singleton instance of the logger
    */
   public static getInstance(config?: LoggingConfig): LoggerService {
     if (!LoggerService.instance) {
       LoggerService.instance = new LoggerService(config);
-    } else if (config) {
-      // Update config if provided
-      LoggerService.instance.updateConfig(config);
     }
     return LoggerService.instance;
   }
-
+  
   /**
-   * Update logger configuration
+   * Update the logger configuration
    */
   public updateConfig(config: Partial<LoggingConfig>): void {
     this.config = { ...this.config, ...config };
-    this.setupFlushTimer();
-  }
-
-  /**
-   * Add or remove a transport
-   */
-  public configureTransport(transport: LogTransport, enable: boolean = true): void {
-    if (enable) {
-      // Add transport if it doesn't exist
-      const exists = this.config.transports.some(t => t.id === transport.id);
-      if (!exists) {
-        this.config.transports = [...this.config.transports, transport];
-      }
-    } else {
-      // Remove transport
-      this.config.transports = this.config.transports.filter(t => t.id !== transport.id);
-    }
-  }
-
-  /**
-   * Check if a log level should be processed
-   */
-  private shouldLog(level: LogLevel, category?: LogCategory): boolean {
-    // Check minimum log level
-    const levelValue = Object.values(LogLevel).indexOf(level);
-    const minLevelValue = Object.values(LogLevel).indexOf(this.config.minLevel);
     
-    if (levelValue < minLevelValue) {
-      return false;
-    }
-
-    // Check if category is enabled if categories are specified
-    if (this.config.enabledCategories && category) {
-      return this.config.enabledCategories.includes(category);
-    }
-
-    return true;
-  }
-
-  /**
-   * Log a message to all configured transports
-   */
-  private logToTransports(entry: LogEntry): void {
-    for (const transport of this.config.transports) {
-      if (transport.enabled) {
-        try {
-          transport.log(entry);
-        } catch (error) {
-          console.error(`Error in transport ${transport.name}:`, error);
-        }
-      }
+    // Update flush interval if it changed
+    if (config.flushInterval && this.config.flushInterval !== config.flushInterval) {
+      this.setupFlushInterval();
     }
   }
-
+  
   /**
-   * Log a debug message
+   * Set the current user ID for logs
    */
-  public debug(message: string, options?: LogOptions): void {
-    const category = options?.category || LogCategory.SYSTEM;
-    
-    if (!this.shouldLog(LogLevel.DEBUG, category)) {
-      return;
-    }
-
-    const entry: LogEntry = {
-      id: uuidv4(),
-      level: LogLevel.DEBUG,
-      message,
-      timestamp: new Date(),
-      category,
-      source: options?.source || (this.config.includeSource ? this.getCallerInfo() : undefined),
-      details: options,
-    };
-
-    this.processEntry(entry);
+  public setUserId(userId: string | undefined): void {
+    this.userId = userId;
   }
-
+  
   /**
-   * Generic logging method for all levels
+   * Log a message at DEBUG level
    */
-  public log(level: LogLevel, message: string, options?: LogOptions): void {
-    const category = options?.category || LogCategory.SYSTEM;
-    
-    if (!this.shouldLog(level, category)) {
-      return;
-    }
-
-    const entry: LogEntry = {
-      id: uuidv4(),
-      level,
-      message,
-      timestamp: new Date(),
-      category,
-      source: options?.source || (this.config.includeSource ? this.getCallerInfo() : undefined),
-      details: options,
-    };
-
-    this.processEntry(entry);
+  public debug(message: string, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
+    tags?: string[];
+  }): void {
+    this.log(LogLevel.DEBUG, message, options);
   }
-
+  
   /**
-   * Get caller information
+   * Log a message at INFO level
    */
-  private getCallerInfo(): string {
-    try {
-      const err = new Error();
-      const stackLines = err.stack?.split('\n') || [];
-      // Skip first lines which are this method and log methods
-      const callerLine = stackLines[3] || 'unknown';
-      // Extract just the file path and line number
-      const match = callerLine.match(/at\s+(.+?)\s+\((.+?)\)/) || 
-                    callerLine.match(/at\s+(.+)/);
-      return match ? match[1] : 'unknown';
-    } catch (e) {
-      return 'unknown';
-    }
+  public info(message: string, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
+    tags?: string[];
+  }): void {
+    this.log(LogLevel.INFO, message, options);
   }
-
+  
   /**
-   * Process a log entry (buffer or immediate)
+   * Log a message at WARNING level
    */
-  private processEntry(entry: LogEntry): void {
-    if (this.config.bufferSize && this.config.bufferSize > 0) {
-      this.buffer.push(entry);
+  public warn(message: string, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
+    tags?: string[];
+  }): void {
+    this.log(LogLevel.WARN, message, options);
+  }
+  
+  /**
+   * Log a message at ERROR level
+   */
+  public error(message: string, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
+    tags?: string[];
+  }): void {
+    this.log(LogLevel.ERROR, message, options);
+  }
+  
+  /**
+   * Log a message at CRITICAL level
+   */
+  public critical(message: string, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
+    tags?: string[];
+  }): void {
+    this.log(LogLevel.CRITICAL, message, options);
+  }
+  
+  /**
+   * Log a performance measurement
+   */
+  public performance(message: string, duration: number, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
+    tags?: string[];
+  }): void {
+    const category = options?.category || LogCategory.PERFORMANCE;
+    const details = options?.details ? 
+      { ...errorToObject(options.details), duration } : 
+      { duration };
       
-      if (this.buffer.length >= this.config.bufferSize) {
-        this.flush();
+    this.log(
+      duration > 1000 ? LogLevel.WARN : LogLevel.INFO,
+      message,
+      {
+        ...options,
+        category,
+        details
       }
-    } else {
-      // Log immediately if buffering is disabled
-      this.logToTransports(entry);
-    }
+    );
   }
-
+  
   /**
-   * Flush the log buffer
+   * The core logging method
    */
-  public flush(): void {
-    const entries = [...this.buffer];
-    this.buffer = [];
+  private log(level: LogLevel, message: string, options?: {
+    category?: LogCategory;
+    details?: unknown;
+    source?: string;
+    duration?: number;
+    tags?: string[];
+  }): void {
+    // Check if this log should be processed based on level and category
+    if (!isLogLevelAtLeast(level, this.config.minLevel)) {
+      return;
+    }
     
-    for (const entry of entries) {
-      this.logToTransports(entry);
+    if (
+      options?.category &&
+      this.config.enabledCategories &&
+      !this.config.enabledCategories.includes(options.category)
+    ) {
+      return;
+    }
+    
+    // Process details to ensure it's a valid object
+    let processedDetails: Record<string, unknown> | undefined;
+    if (options?.details !== undefined) {
+      processedDetails = errorToObject(options.details);
+    }
+    
+    // Create the log entry
+    const entry: LogEntry = {
+      id: uuidv4(),
+      timestamp: new Date(),
+      level,
+      category: options?.category || LogCategory.SYSTEM,
+      message,
+      details: processedDetails,
+      duration: options?.duration,
+      tags: options?.tags
+    };
+    
+    // Add source if configured
+    if (this.config.includeSource && options?.source) {
+      entry.source = options.source;
+    }
+    
+    // Add user ID if available and configured
+    if (this.config.includeUser && this.userId) {
+      entry.userId = this.userId;
+    }
+    
+    // Add session ID if configured
+    if (this.config.includeSession && this.sessionId) {
+      entry.sessionId = this.sessionId;
+    }
+    
+    // Add to buffer
+    this.buffer.push(entry);
+    
+    // Process immediately or wait for flush
+    if (
+      this.buffer.length >= (this.config.bufferSize || 1) ||
+      isLogLevelAtLeast(level, LogLevel.ERROR)
+    ) {
+      this.flush();
     }
   }
-
+  
   /**
-   * Set up the flush timer
+   * Process all logs in the buffer
    */
-  private setupFlushTimer(): void {
-    if (this.flushTimer) {
-      clearInterval(this.flushTimer);
-      this.flushTimer = null;
+  private flush(): void {
+    if (this.buffer.length === 0) {
+      return;
     }
-
+    
+    // Process each log through all transports
+    for (const entry of this.buffer) {
+      for (const transport of this.config.transports) {
+        transport.log(entry);
+      }
+    }
+    
+    // Clear the buffer
+    this.buffer = [];
+  }
+  
+  /**
+   * Set up automatic flush interval
+   */
+  private setupFlushInterval(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+    }
+    
     if (this.config.flushInterval && this.config.flushInterval > 0) {
-      this.flushTimer = setInterval(() => {
-        if (this.buffer.length > 0) {
-          this.flush();
-        }
+      this.flushInterval = setInterval(() => {
+        this.flush();
       }, this.config.flushInterval);
     }
   }
-
+  
   /**
-   * Convenience methods for different log levels
+   * Clean up resources
    */
-  public info(message: string, options?: LogOptions): void {
-    this.log(LogLevel.INFO, message, options);
-  }
-
-  public warn(message: string, options?: LogOptions): void {
-    this.log(LogLevel.WARN, message, options);
-  }
-
-  public error(message: string, options?: LogOptions): void {
-    this.log(LogLevel.ERROR, message, options);
-  }
-
-  public critical(message: string, options?: LogOptions): void {
-    this.log(LogLevel.CRITICAL, message, options);
-  }
-
-  /**
-   * Performance logging
-   */
-  public logCustomTiming(name: string, duration: number, options?: LogOptions): void {
-    const category = options?.category || LogCategory.PERFORMANCE;
-    const message = `Performance: ${name} took ${duration}ms`;
-    this.log(LogLevel.INFO, message, { 
-      ...options, 
-      category, 
-      details: { 
-        ...(options?.details || {}), 
-        duration,
-        performanceName: name
-      } 
-    });
+  public dispose(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+      this.flushInterval = null;
+    }
+    
+    // Final flush
+    this.flush();
   }
 }
 
 /**
- * Get a logger instance for a specific source
+ * Get the global logger instance
  */
-export function getLogger(source?: string, category?: LogCategory): {
-  debug: (message: string, options?: LogOptions) => void;
-  info: (message: string, options?: LogOptions) => void;
-  warn: (message: string, options?: LogOptions) => void;
-  error: (message: string, options?: LogOptions) => void;
-  critical: (message: string, options?: LogOptions) => void;
-  logCustomTiming: (name: string, duration: number, options?: LogOptions) => void;
-} {
-  const logger = LoggerService.getInstance();
-  
-  return {
-    debug: (message, options) => logger.debug(message, { ...options, source, category }),
-    info: (message, options) => logger.info(message, { ...options, source, category }),
-    warn: (message, options) => logger.warn(message, { ...options, source, category }),
-    error: (message, options) => logger.error(message, { ...options, source, category }),
-    critical: (message, options) => logger.critical(message, { ...options, source, category }),
-    logCustomTiming: (name, duration, options) => logger.logCustomTiming(name, duration, { ...options, source, category }),
-  };
+export function getLogger(): LoggerService {
+  return LoggerService.getInstance();
 }

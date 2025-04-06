@@ -1,76 +1,65 @@
 
-import { create } from 'zustand';
+import { subscribeToAuthEvents } from '@/auth/bridge';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging/types';
 
-// Define module types
-export type ModuleId = string;
-export type ModuleType = 'core' | 'plugin' | 'extension';
-export type ModuleStatus = 'active' | 'inactive' | 'error' | 'loading';
-
-// Define module interface
-export interface Module {
-  id: ModuleId;
-  name: string;
-  type: ModuleType;
-  status: ModuleStatus;
-  version: string;
-  dependencies?: string[];
-  exports?: Record<string, unknown>;
+// Module state type
+interface ModuleState {
+  initialized: boolean;
+  eventHandlersRegistered: boolean;
 }
 
-// Define module registry state
-interface ModuleRegistryState {
-  modules: Record<ModuleId, Module>;
-  registerModule: (module: Module, name?: string) => void;
-  unregisterModule: (moduleId: ModuleId) => void;
-  getModule: (moduleId: ModuleId) => Module | undefined;
-  listModules: () => Module[];
-}
+// Initialize module state
+const moduleState: ModuleState = {
+  initialized: false,
+  eventHandlersRegistered: false,
+};
 
-// Create registry store
-export const useModuleRegistry = create<ModuleRegistryState>((set, get) => ({
-  modules: {},
-  
-  registerModule: (module: Module, name?: string) => {
-    set((state) => {
-      const updatedModule = name ? { ...module, name } : module;
-      return {
-        modules: {
-          ...state.modules,
-          [module.id]: updatedModule
-        }
-      };
-    });
-  },
-  
-  unregisterModule: (moduleId: ModuleId) => {
-    set((state) => {
-      const { [moduleId]: removedModule, ...remainingModules } = state.modules;
-      return { modules: remainingModules };
-    });
-  },
-  
-  getModule: (moduleId: ModuleId) => {
-    return get().modules[moduleId];
-  },
-  
-  listModules: () => {
-    return Object.values(get().modules);
+/**
+ * Initialize the admin module
+ */
+export function initializeAdminModule(): void {
+  if (moduleState.initialized) {
+    return;
   }
-}));
 
-// Export registry functions for external use
-export const registerModule = (module: Module, name?: string): void => {
-  useModuleRegistry.getState().registerModule(module, name);
-};
+  const logger = getLogger();
+  logger.info('Initializing admin module', {
+    category: LogCategory.ADMIN,
+    source: 'ModuleRegistry'
+  });
 
-export const unregisterModule = (moduleId: ModuleId): void => {
-  useModuleRegistry.getState().unregisterModule(moduleId);
-};
+  // Register event handlers if not already done
+  if (!moduleState.eventHandlersRegistered) {
+    registerEventHandlers();
+    moduleState.eventHandlersRegistered = true;
+  }
 
-export const getModule = (moduleId: ModuleId): Module | undefined => {
-  return useModuleRegistry.getState().getModule(moduleId);
-};
+  moduleState.initialized = true;
+}
 
-export const listModules = (): Module[] => {
-  return useModuleRegistry.getState().listModules();
-};
+/**
+ * Register event handlers for admin module
+ */
+function registerEventHandlers(): void {
+  const logger = getLogger();
+  
+  // Subscribe to auth events
+  subscribeToAuthEvents((event) => {
+    logger.info(`Admin module received auth event: ${event.type}`, {
+      category: LogCategory.ADMIN,
+      source: 'ModuleRegistry',
+      details: { eventType: event.type }
+    });
+
+    // Handle auth events specific to admin functionality
+    switch (event.type) {
+      case 'AUTH_SIGNED_IN':
+        // Handle sign in if needed
+        break;
+      case 'AUTH_SIGNED_OUT':
+        // Handle sign out if needed
+        break;
+    }
+  });
+}

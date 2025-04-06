@@ -1,11 +1,11 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { Theme, DesignTokensStructure, ThemeLogDetails } from '@/types/theme';
+import { Theme, DesignTokensStructure, ThemeContext, ThemeLogDetails } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -16,64 +16,18 @@ export function useImpulsivityTheme() {
   const logger = useLogger('ImpulsivityTheme', LogCategory.UI);
   const [syncInProgress, setSyncInProgress] = useState(false);
   
-  // Apply immediate CSS variables directly to the document
-  const applyImmediateStyles = useCallback(() => {
+  // Apply the Impulsivity theme to the main site
+  const applyToMainSite = async () => {
     try {
-      // Set essential CSS variables directly for fast visual feedback
+      // Set the CSS variables directly for immediate effect
       const rootElement = document.documentElement;
       
-      // Primary theme colors
-      rootElement.style.setProperty('--site-primary', '186 100% 50%'); // #00F0FF in HSL  
+      // Apply the Impulsivity theme colors
+      rootElement.style.setProperty('--site-primary', '186 100% 50%'); // #00F0FF in HSL
       rootElement.style.setProperty('--site-secondary', '334 100% 59%'); // #FF2D6E in HSL
-      
-      // Effect colors as direct hex (most compatible approach)
       rootElement.style.setProperty('--site-effect-color', '#00F0FF');
       rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
       rootElement.style.setProperty('--site-effect-tertiary', '#8B5CF6');
-      
-      // Background and foreground colors
-      rootElement.style.setProperty('--site-background', '228 47% 8%');
-      rootElement.style.setProperty('--site-foreground', '210 40% 98%');
-      rootElement.style.setProperty('--site-card', '228 47% 11%');
-      rootElement.style.setProperty('--site-card-foreground', '210 40% 98%');
-      
-      // Standard Tailwind CSS variables
-      rootElement.style.setProperty('--background', 'hsl(228 47% 8%)');
-      rootElement.style.setProperty('--foreground', 'hsl(210 40% 98%)');
-      rootElement.style.setProperty('--card', 'hsl(228 47% 11%)');
-      rootElement.style.setProperty('--card-foreground', 'hsl(210 40% 98%)');
-      rootElement.style.setProperty('--primary', 'hsl(186 100% 50%)');
-      rootElement.style.setProperty('--primary-foreground', 'hsl(210 40% 98%)');
-      rootElement.style.setProperty('--secondary', 'hsl(334 100% 59%)');
-      rootElement.style.setProperty('--secondary-foreground', 'hsl(210 40% 98%)');
-      
-      // Fallback direct hex values
-      rootElement.style.setProperty('--impulse-primary', '#00F0FF');
-      rootElement.style.setProperty('--impulse-secondary', '#FF2D6E');
-      rootElement.style.setProperty('--impulse-bg-main', '#080F1E');
-      rootElement.style.setProperty('--impulse-text-primary', '#F9FAFB');
-      
-      // Set theme class on root elements
-      rootElement.classList.add('theme-impulsivity');
-      document.body.classList.add('theme-impulsivity-body');
-      
-      logger.info('Applied immediate styles for Impulsivity theme');
-      return true;
-    } catch (error) {
-      const logDetails: ThemeLogDetails = {
-        errorMessage: error instanceof Error ? error.message : String(error)
-      };
-      
-      logger.error('Error applying immediate styles', logDetails);
-      return false;
-    }
-  }, [logger]);
-  
-  // Apply the Impulsivity theme to the main site
-  const applyToMainSite = useCallback(async () => {
-    try {
-      // Always apply immediate styles first
-      applyImmediateStyles();
       
       // Update the theme in the store if needed
       if (currentTheme) {
@@ -84,10 +38,6 @@ export function useImpulsivityTheme() {
             ...(currentTheme.design_tokens?.colors || {}),
             primary: '#00F0FF',
             secondary: '#FF2D6E',
-            background: '#080F1E',
-            foreground: '#F9FAFB',
-            card: '#0E172A',
-            cardForeground: '#F9FAFB',
           },
           effects: {
             ...(currentTheme.design_tokens?.effects || {}),
@@ -106,34 +56,19 @@ export function useImpulsivityTheme() {
           design_tokens: updatedDesignTokens
         };
         
+        // Log what we're trying to do
         logger.info('Updating theme design tokens with Impulsivity colors');
         
         // Use the setTheme function from the store to update the theme
         if (currentTheme.id) {
-          try {
-            await setTheme(currentTheme.id);
-          } catch (error) {
-            // Even if the store update fails, we've already applied the CSS variables directly
-            const logDetails: ThemeLogDetails = {
-              errorMessage: error instanceof Error ? error.message : String(error)
-            };
-            
-            logger.warn('Failed to set theme in store, using direct application', logDetails);
-            
-            // Reapply immediate styles to ensure visuals are consistent
-            applyImmediateStyles();
-          }
+          await setTheme(currentTheme.id);
         }
       }
-      
-      // Final application of immediate styles to ensure they take precedence
-      applyImmediateStyles();
       
       const logDetails: ThemeLogDetails = { 
         success: true,
         mainSite: true
       };
-      
       logger.info('Applied Impulsivity theme to main site', logDetails);
       return true;
     } catch (error) {
@@ -143,17 +78,13 @@ export function useImpulsivityTheme() {
         errorMessage,
         mainSite: false 
       };
-      
       logger.error('Error applying Impulsivity theme to main site', logDetails);
-      
-      // Apply emergency CSS vars directly as fallback
-      applyImmediateStyles();
-      return true; // Return true anyway to allow app to continue
+      return false;
     }
-  }, [currentTheme, logger, setTheme, applyImmediateStyles]);
+  };
   
   // Apply the Impulsivity theme to the admin panel
-  const applyToAdmin = useCallback(async () => {
+  const applyToAdmin = async () => {
     try {
       // Update admin theme variables
       const adminRootElement = document.querySelector('.impulse-admin-root');
@@ -178,13 +109,10 @@ export function useImpulsivityTheme() {
           success: true,
           admin: true 
         };
-        
         logger.info('Applied Impulsivity theme to admin panel', logDetails);
         return true;
       } else {
-        // Try to find and apply to document root as a fallback
-        applyImmediateStyles();
-        logger.warn('Admin panel root element not found, applied to document root as fallback');
+        logger.warn('Admin panel root element not found, skipping theme application');
         return true; // Not a critical failure
       }
     } catch (error) {
@@ -194,107 +122,67 @@ export function useImpulsivityTheme() {
         errorMessage,
         admin: false 
       };
-      
       logger.error('Error applying Impulsivity theme to admin panel', logDetails);
-      return true; // Return true to allow app to continue
+      return false;
     }
-  }, [logger, applyImmediateStyles]);
+  };
   
-  // Sync theme to database - with improved error handling
-  const syncToDatabase = useCallback(async () => {
-    // Skip sync if already in progress
-    if (syncInProgress) {
-      return true;
-    }
-    
+  // Sync theme to database
+  const syncToDatabase = async () => {
     try {
       setSyncInProgress(true);
       logger.info('Starting theme sync to database');
       
-      // Use a try/catch here and handle errors gracefully
-      try {
-        const result = await syncImpulsivityTheme();
-        
-        if (result) {
-          const logDetails: ThemeLogDetails = {
-            success: true,
-            database: true
-          };
-          
-          logger.info('Successfully synced Impulsivity theme to database', logDetails);
-        } else {
-          const logDetails: ThemeLogDetails = {
-            warning: true,
-            database: false
-          };
-          
-          logger.warn('Sync function completed but returned false', logDetails);
-        }
-        
-        setSyncInProgress(false);
-        return true; // Return true even if sync failed - app should continue
-      } catch (syncError) {
-        // Log the error but don't let it block the app
-        const errorMessage = syncError instanceof Error ? syncError.message : String(syncError);
-        const logDetails: ThemeLogDetails = {
-          errorMessage,
+      const result = await syncImpulsivityTheme();
+      
+      if (result) {
+        const logDetails: ThemeLogDetails = { 
+          success: true,
+          database: true
+        };
+        logger.info('Successfully synced Impulsivity theme to database', logDetails);
+      } else {
+        const logDetails: ThemeLogDetails = { 
+          error: true, 
+          success: false,
           database: false
         };
-        
-        logger.error('Error syncing Impulsivity theme to database', logDetails);
-        
-        setSyncInProgress(false);
-        return true; // Return true even if sync failed - app should continue
+        logger.error('Failed to sync Impulsivity theme to database', logDetails);
       }
+      
+      setSyncInProgress(false);
+      return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const logDetails: ThemeLogDetails = {
+      const logDetails: ThemeLogDetails = { 
+        error: true, 
         errorMessage,
         database: false
       };
-      
-      logger.error('Error in syncToDatabase function', logDetails);
+      logger.error('Error syncing Impulsivity theme to database', logDetails);
       
       setSyncInProgress(false);
-      return true; // Return true even if sync failed - app should continue
+      return false;
     }
-  }, [syncInProgress, logger]);
+  };
   
-  // Apply theme everywhere - with improved fallback behavior
-  const applyTheme = useCallback(async () => {
+  // Apply theme everywhere
+  const applyTheme = async () => {
+    if (syncInProgress) {
+      logger.warn('Theme sync already in progress, skipping');
+      return false;
+    }
+    
     logger.info('Beginning full Impulsivity theme application');
     
-    // First, ensure immediate styles are applied
-    applyImmediateStyles();
-    
-    // Then apply to main site (most critical)
     const mainSiteResult = await applyToMainSite();
-    
-    // Then apply to admin if main site succeeded
     const adminResult = await applyToAdmin();
+    const dbResult = await syncToDatabase();
     
-    // Finally, try to sync to DB but don't block the UI
-    let dbResult = true; // Default to true even if we skip the sync
-    try {
-      // Only attempt sync if not already in progress 
-      if (!syncInProgress) {
-        dbResult = await syncToDatabase();
-      }
-    } catch (error) {
-      const logDetails: ThemeLogDetails = {
-        errorMessage: error instanceof Error ? error.message : String(error)
-      };
-      
-      logger.warn('Database sync failed but continuing', logDetails);
-    }
-    
-    // No matter what happened, reapply immediate styles
-    applyImmediateStyles();
-    
-    if (mainSiteResult) {
+    if (mainSiteResult && adminResult && dbResult) {
       toast({
         title: "Impulsivity Theme Applied",
-        description: "Theme has been applied to the site",
+        description: "The theme has been successfully applied across the entire application.",
       });
       
       const logDetails: ThemeLogDetails = {
@@ -304,11 +192,20 @@ export function useImpulsivityTheme() {
         database: dbResult
       };
       
-      logger.info('Impulsivity theme applied', logDetails);
+      logger.info('Impulsivity theme fully applied', logDetails);
       return true;
     } else {
-      // Even with failure, ensure the CSS variables are applied
-      applyImmediateStyles();
+      // Show toast with partial success message
+      const failedComponents = [];
+      if (!mainSiteResult) failedComponents.push('main site');
+      if (!adminResult) failedComponents.push('admin panel');
+      if (!dbResult) failedComponents.push('database');
+      
+      toast({
+        title: "Theme Application Incomplete",
+        description: `Could not apply theme to: ${failedComponents.join(', ')}`,
+        variant: "destructive",
+      });
       
       const logDetails: ThemeLogDetails = {
         warning: true,
@@ -320,22 +217,14 @@ export function useImpulsivityTheme() {
       
       logger.warn('Impulsivity theme partially applied', logDetails);
       
-      return true; // Return true anyway to allow app to continue
+      return false;
     }
-  }, [applyToAdmin, applyToMainSite, logger, syncInProgress, syncToDatabase, toast, applyImmediateStyles]);
-  
-  // Ensure immediate application of styles on mount
-  useEffect(() => {
-    // Apply immediate styles on mount
-    applyImmediateStyles();
-    logger.info('Applied emergency styles on hook mount');
-  }, [logger, applyImmediateStyles]);
+  };
   
   return {
     applyTheme,
     applyToMainSite,
     applyToAdmin,
-    applyImmediateStyles,
     syncToDatabase,
     isSyncing: syncInProgress,
     isLoading

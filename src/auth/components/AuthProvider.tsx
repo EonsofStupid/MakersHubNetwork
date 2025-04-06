@@ -1,51 +1,100 @@
 
-import React, { useEffect } from 'react';
+import React, { ReactNode, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { AuthContext } from '@/auth/context/AuthContext';
-import { getLogger } from '@/logging';
+import { Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { AuthContext } from '../context/AuthContext';
+import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { UserRole } from '@/types/auth.unified';
-
-const logger = getLogger('AuthProvider', LogCategory.AUTH);
+import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
+import { errorToObject } from '@/shared/utils/render';
 
 interface AuthProviderProps {
-  children: React.ReactNode;
-  onAuthStateChange?: (authenticated: boolean) => void;
-  redirectOnSignOut?: string;
+  children: ReactNode;
 }
 
-export function AuthProvider({ children, onAuthStateChange }: AuthProviderProps) {
-  const auth = useAuthStore();
+export function AuthProvider({ children }: AuthProviderProps) {
+  const { user, session, setSession, initialize, initialized, status } = useAuthStore();
   
-  // Initialize auth when component mounts
-  useEffect(() => {
-    if (!auth.initialized && auth.initialize) {
-      auth.initialize();
-    }
-  }, [auth]);
+  const logger = useLogger('AuthProvider', LogCategory.AUTH);
+  const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
+  const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initAttemptedRef = useRef<boolean>(false);
   
-  // Listen for auth state changes
+  // Get theme loading status to ensure correct initialization order
+  const { isLoaded: themeLoaded } = useSiteTheme();
+  
+  // Setup auth state change listener only once
   useEffect(() => {
-    logger.info('Auth provider mounted');
-    
-    // Mock auth state changes - this would be replaced with actual listener in real implementation
-    
-    // Call onAuthStateChange if provided
-    if (onAuthStateChange) {
-      onAuthStateChange(auth.isAuthenticated);
+    // Only run once 
+    if (authSubscriptionRef.current !== null) {
+      return;
     }
-    
-    // No real cleanup needed for this mock implementation
+
+    logger.info('Setting up auth state change listener');
+      
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        logger.info(`Auth state change: ${event}`, {
+          details: { 
+            event,
+            userId: currentSession?.user?.id 
+          }
+        });
+
+        // Only update session state, avoid triggering other effects
+        setSession(currentSession);
+      }
+    );
+      
+    // Store subscription to avoid creating multiple listeners
+    authSubscriptionRef.current = subscription;
+      
+    // Clean up subscription on unmount
     return () => {
-      logger.info('Auth provider unmounted');
+      if (authSubscriptionRef.current) {
+        authSubscriptionRef.current.unsubscribe();
+        authSubscriptionRef.current = null;
+      }
+      
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+        initTimeoutRef.current = null;
+      }
     };
-  }, [onAuthStateChange, auth.isAuthenticated]);
+  }, []); // Empty deps to ensure it runs only once
   
+  // Initialize auth only once after theme is loaded
+  useEffect(() => {
+    // Wait for theme to be loaded first
+    if (!themeLoaded) {
+      return;
+    }
+    
+    // Prevent multiple initialization attempts with ref guard
+    if (initAttemptedRef.current || initialized) {
+      return;
+    }
+    
+    // Mark initialization as attempted immediately to prevent race conditions
+    initAttemptedRef.current = true;
+    
+    // Initialize auth state asynchronously with a small delay
+    // This delay helps break potential circular dependencies
+    initTimeoutRef.current = setTimeout(() => {
+      logger.info('Initializing auth state');
+      
+      initialize().catch(err => {
+        logger.error('Failed to initialize auth', { details: errorToObject(err) });
+      });
+    }, 50); // Small delay to help with timing issues
+    
+  }, [initialize, initialized, logger, themeLoaded]); 
+  
+  // Provide the current auth state, whether authenticated or not
   return (
-    <AuthContext.Provider value={auth}>
+    <AuthContext.Provider value={{ user, session: session as Session | null, status }}>
       {children}
     </AuthContext.Provider>
   );
 }
-
-export default AuthProvider;

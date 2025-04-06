@@ -1,14 +1,8 @@
 
-/**
- * Type definitions for Impulse theme system
- */
-
 export interface ImpulseTheme {
-  // Color palette
   colors: {
     primary: string;
     secondary: string;
-    tertiary?: string;
     background: {
       main: string;
       card: string;
@@ -24,10 +18,7 @@ export interface ImpulseTheme {
       hover: string;
       active: string;
     };
-    [key: string]: any;
   };
-  
-  // Effect settings
   effects: {
     glow: {
       primary: string;
@@ -43,10 +34,7 @@ export interface ImpulseTheme {
       accent: string;
       card: string;
     };
-    [key: string]: any;
   };
-  
-  // Animation settings
   animation: {
     duration: {
       fast: string;
@@ -58,11 +46,8 @@ export interface ImpulseTheme {
       ease: string;
       spring: string;
     };
-    [key: string]: any;
   };
-  
-  // UI component variants
-  components?: {
+  components: {
     panel: {
       borderRadius: string;
       padding: string;
@@ -75,18 +60,27 @@ export interface ImpulseTheme {
       borderRadius: string;
       padding: string;
     };
-    [key: string]: any;
   };
-  
-  // Optional metadata
-  meta?: {
-    name?: string;
-    description?: string;
-    author?: string;
-    version?: string;
-    [key: string]: string | undefined;
-  };
-  
-  // Allow additional properties
-  [key: string]: any;
+}
+
+export interface ImpulseTokens {
+  [key: string]: string | ImpulseTokenGroup;
+}
+
+export interface ImpulseTokenGroup {
+  [key: string]: string | ImpulseTokenGroup;
+}
+
+export interface ImpulseStyleOverride {
+  componentId: string;
+  styles: Record<string, string | number>;
+  variant?: string;
+  state?: 'default' | 'hover' | 'active' | 'disabled';
+}
+
+export interface ImpulseThemeVariant {
+  id: string;
+  name: string;
+  baseTheme: string;
+  overrides: Record<string, string>;
 }

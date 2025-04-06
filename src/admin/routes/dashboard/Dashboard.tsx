@@ -1,85 +1,187 @@
 
-import React from 'react';
-import { PageLayout } from '@/admin/components/layouts/PageLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DashboardOverview } from '@/admin/components/dashboard/DashboardOverview';
-import { MetricsPanel } from '@/admin/components/dashboard/MetricsPanel';
-import { ActivityFeed } from '@/admin/components/dashboard/ActivityFeed';
-import { PermissionChecker, AdminPermissionValue } from '@/admin/components/auth/PermissionChecker';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import React, { useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
+import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
+import { AdminLayout } from '@/admin/components/AdminLayout';
+import { motion } from "framer-motion";
+import { useAtom } from "jotai";
+import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
+import { cn } from "@/lib/utils";
+import { BarChart3, Users, Activity, Zap } from "lucide-react";
+import { ActiveUsersList } from "@/admin/components/dashboard/ActiveUsersList";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging/types";
+import { InlineLogIndicator } from "@/logging/components/InlineLogIndicator";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const [isEditMode] = useAtom(adminEditModeAtom);
+  const logger = useLogger('Dashboard', LogCategory.ADMIN);
+  
+  // Log dashboard access on mount
+  useEffect(() => {
+    logger.info("Admin dashboard accessed", {
+      details: { editMode: isEditMode }
+    });
+  }, [logger, isEditMode]);
+  
   return (
-    <PageLayout
-      title="Admin Dashboard"
-      description="Administrative dashboard and key metrics for your platform."
-    >
-      <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="metrics">Metrics</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-        </TabsList>
-
-        <div className="mt-4 space-y-4">
-          <TabsContent value="overview" className="space-y-4">
-            <DashboardOverview />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-medium">System Health</h3>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>CPU Usage</span>
-                      <span>32%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Memory</span>
-                      <span>2.7 GB / 8 GB</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Disk</span>
-                      <span>78% Free</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-medium">Quick Actions</h3>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <button className="w-full text-left px-3 py-2 hover:bg-muted rounded-md transition-colors">
-                    Generate Report
-                  </button>
-                  <button className="w-full text-left px-3 py-2 hover:bg-muted rounded-md transition-colors">
-                    System Backup
-                  </button>
-                  <button className="w-full text-left px-3 py-2 hover:bg-muted rounded-md transition-colors">
-                    Clear Cache
-                  </button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="metrics">
-            <PermissionChecker permission={AdminPermissionValue.ViewMetrics}>
-              <MetricsPanel />
-            </PermissionChecker>
-          </TabsContent>
-
-          <TabsContent value="activity">
-            <PermissionChecker permission={AdminPermissionValue.ViewActivity}>
-              <ActivityFeed />
-            </PermissionChecker>
-          </TabsContent>
+    <AdminLayout title="Admin Dashboard">
+      <motion.div 
+        className="space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <motion.div className="flex justify-between items-center">
+          <motion.h1 
+            className="text-2xl font-bold"
+            layoutId="dashboard-title"
+          >
+            Admin Dashboard
+          </motion.h1>
+          
+          {isEditMode && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="px-3 py-1.5 bg-primary/20 rounded-full text-sm font-medium text-primary flex items-center gap-1"
+            >
+              <span>Drag & Drop Mode</span>
+            </motion.div>
+          )}
+        </motion.div>
+        
+        {/* System status indicator */}
+        <div className="flex flex-wrap gap-2">
+          <InlineLogIndicator 
+            message="System logs enabled" 
+            variant="info"
+            onClick={() => navigate('/admin/settings')}
+          />
         </div>
-      </Tabs>
-    </PageLayout>
+        
+        {/* Dashboard Shortcuts - Draggable area */}
+        <DashboardShortcuts />
+        
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatsCard 
+            title="Total Users" 
+            value="1,234"
+            icon={Users}
+            trend={12.5}
+            delay={0}
+          />
+          <StatsCard 
+            title="Active Now" 
+            value="56"
+            icon={Activity}
+            trend={-3.2}
+            delay={1}
+          />
+          <StatsCard 
+            title="Builds This Week" 
+            value="87"
+            icon={BarChart3}
+            trend={24.8}
+            delay={2}
+          />
+          <StatsCard 
+            title="System Status" 
+            value="Operational"
+            icon={Zap}
+            trend={0}
+            delay={3}
+          />
+        </div>
+        
+        {/* Performance Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="lg:col-span-2"
+          >
+            <div className={cn(
+              "glassmorphism p-6 rounded-lg border border-[var(--impulse-border-normal)]",
+              "cyber-effect-1 hover-glow transition-all duration-300",
+              isEditMode && "border-dashed"
+            )}>
+              <h2 className="font-medium text-lg mb-3 cyber-text">Performance Metrics</h2>
+              <div className="h-[240px] flex items-center justify-center text-[var(--impulse-text-secondary)]">
+                Graph coming soon
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <ActiveUsersList />
+          </motion.div>
+        </div>
+        
+        {isEditMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-center text-sm text-muted-foreground my-8 p-4 border border-dashed border-primary/20 rounded-lg bg-primary/5"
+          >
+            <p>
+              You're in edit mode. Drag items from the sidebar to add shortcuts to your dashboard or top navigation.
+              Click the edit button again to save your changes.
+            </p>
+          </motion.div>
+        )}
+      </motion.div>
+    </AdminLayout>
   );
 }
+
+interface StatsCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  trend?: number;
+  delay?: number;
+}
+
+const StatsCard = ({ title, value, icon: Icon, trend = 0, delay = 0 }: StatsCardProps) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: delay * 0.1, duration: 0.5 }}
+  >
+    <div className={cn(
+      "glassmorphism p-5 rounded-lg border border-[var(--impulse-border-normal)]",
+      "hover-glow transition-all duration-300 h-32"
+    )}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium text-[var(--impulse-text-secondary)]">{title}</h3>
+        <Icon className="w-5 h-5 text-[var(--impulse-text-accent)]" />
+      </div>
+      <div className="mt-2">
+        <p className="text-2xl font-bold text-[var(--impulse-text-primary)]">{value}</p>
+        {typeof trend === 'number' && (
+          <div className="flex items-center mt-1">
+            <span 
+              className={
+                trend > 0 
+                  ? "text-emerald-400" 
+                  : "text-red-400"
+              }
+            >
+              {trend > 0 ? '+' : ''}{trend}%
+            </span>
+            <span className="text-xs ml-1 text-[var(--impulse-text-secondary)]">vs last month</span>
+          </div>
+        )}
+      </div>
+    </div>
+  </motion.div>
+);

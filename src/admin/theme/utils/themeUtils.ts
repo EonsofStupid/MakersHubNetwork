@@ -1,5 +1,5 @@
 
-import { ImpulseTheme } from "../../types/impulse.types";
+import { ImpulseTheme, ImpulseTokens } from "../../types/impulse.types";
 
 /**
  * Convert a theme object to CSS variables

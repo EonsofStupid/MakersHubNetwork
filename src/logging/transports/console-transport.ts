@@ -1,77 +1,61 @@
 
-import { LogEntry, LogTransport } from '../types';
+import { LogEntry, LogTransport } from "../types";
+import { LogLevel } from "../constants/log-level";
 
 /**
- * Console transport for logging with enhanced theme error visibility
+ * Transport for logging to the browser console
  */
-export const consoleTransport: LogTransport = {
-  id: 'console',
-  name: 'Console',
-  enabled: true,
-  
+export class ConsoleTransport implements LogTransport {
   log(entry: LogEntry): void {
     const timestamp = entry.timestamp.toISOString();
-    const prefix = `[${timestamp}] [${entry.level}] [${entry.category}]`;
+    const source = entry.source ? ` [${entry.source}]` : '';
+    const category = entry.category ? `(${entry.category})` : '';
+    const message = `${timestamp} ${this.getLevelPrefix(entry.level)}${category}${source}: ${entry.message}`;
     
-    // Special handling for theme-related errors - make them stand out
-    const isThemeRelated = entry.category?.toString().toLowerCase().includes('theme') || 
-                          (typeof entry.message === 'string' && entry.message.toLowerCase().includes('theme'));
-    
-    // Special handling for critical theme errors
-    if (isThemeRelated && (entry.level === 'error' || entry.level === 'critical')) {
-      console.error(`%c${prefix} ${entry.message}`, 'background: #ff2d6e; color: white; padding: 2px 4px; border-radius: 2px; font-weight: bold;', entry.details || '');
-      
-      // Log details separately for better visibility
-      if (entry.details && typeof entry.details === 'object') {
-        console.error('%cTheme Error Details:', 'color: #ff2d6e; font-weight: bold;', entry.details);
-      }
-      return;
-    }
-    
-    // Special handling for theme warnings
-    if (isThemeRelated && entry.level === 'warn') {
-      console.warn(`%c${prefix} ${entry.message}`, 'background: #ff9e2d; color: black; padding: 2px 4px; border-radius: 2px; font-weight: bold;', entry.details || '');
-      return;
-    }
-    
-    // Normal logging for other messages
+    // Log with appropriate console method based on level
     switch (entry.level) {
-      case 'debug':
-        console.debug(`${prefix} ${entry.message}`, entry.details || '');
+      case LogLevel.DEBUG:
+        console.debug(message, entry.details || '');
         break;
-      case 'info':
-        if (isThemeRelated) {
-          console.info(`%c${prefix} ${entry.message}`, 'color: #00F0FF; font-weight: bold;', entry.details || '');
-        } else {
-          console.info(`${prefix} ${entry.message}`, entry.details || '');
-        }
+      case LogLevel.INFO:
+        console.info(message, entry.details || '');
         break;
-      case 'warn':
-        console.warn(`${prefix} ${entry.message}`, entry.details || '');
+      case LogLevel.WARN:
+        console.warn(message, entry.details || '');
         break;
-      case 'error':
-        console.error(`${prefix} ${entry.message}`, entry.details || '');
+      case LogLevel.ERROR:
+      case LogLevel.CRITICAL:
+        console.error(message, entry.details || '');
         break;
-      case 'critical':
-        console.error(`%c${prefix} CRITICAL: ${entry.message}`, 'background: #FF2D6E; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;', entry.details || '');
+      case LogLevel.SUCCESS:
+        console.info(message, entry.details || '');
+        break;
+      case LogLevel.TRACE:
+        console.debug(message, entry.details || '');
         break;
       default:
-        console.log(`${prefix} ${entry.message}`, entry.details || '');
+        console.log(message, entry.details || '');
     }
-  },
-  
-  getLogs(): LogEntry[] {
-    return []; // Console doesn't store logs, so this returns an empty array
-  },
-  
-  subscribe(): () => void {
-    // Console transport doesn't support subscriptions
-    return () => {}; // Return unsubscribe function
-  },
-  
-  clear(): void {
-    console.clear();
   }
-};
-
-export default consoleTransport;
+  
+  private getLevelPrefix(level: LogLevel): string {
+    switch (level) {
+      case LogLevel.DEBUG:
+        return '[DEBUG] ';
+      case LogLevel.INFO:
+        return '[INFO] ';
+      case LogLevel.WARN:
+        return '[WARN] ';
+      case LogLevel.ERROR:
+        return '[ERROR] ';
+      case LogLevel.CRITICAL:
+        return '[CRITICAL] ';
+      case LogLevel.SUCCESS:
+        return '[SUCCESS] ';
+      case LogLevel.TRACE:
+        return '[TRACE] ';
+      default:
+        return '[LOG] ';
+    }
+  }
+}
