@@ -24,8 +24,8 @@ export function useImpulsivityTheme() {
       const rootElement = document.documentElement;
       
       // Apply the Impulsivity theme colors
-      rootElement.style.setProperty('--site-primary', '186 100% 50%'); // #00F0FF in HSL
-      rootElement.style.setProperty('--site-secondary', '334 100% 59%'); // #FF2D6E in HSL
+      rootElement.style.setProperty('--site-primary', '186 100% 50%'); 
+      rootElement.style.setProperty('--site-secondary', '334 100% 59%'); 
       rootElement.style.setProperty('--site-effect-color', '#00F0FF');
       rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
       rootElement.style.setProperty('--site-effect-tertiary', '#8B5CF6');
