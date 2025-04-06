@@ -28,5 +28,5 @@ const Footer: React.FC = () => {
 
 export default Footer;
 
-// Export named Footer component for modules that need it
+// Export named FooterComponent for modules that need it
 export const FooterComponent = React.memo(Footer);

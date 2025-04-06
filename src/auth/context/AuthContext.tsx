@@ -79,10 +79,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: '123',
         email,
         username: email.split('@')[0],
+        display_name: email.split('@')[0],
         roles: ['user'],
         user_metadata: {
           full_name: 'Test User',
-          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${email}`
+          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${email}`,
+          display_name: email.split('@')[0],
+          bio: '',
+          theme_preference: 'dark',
+          motion_enabled: true
         }
       };
       
@@ -132,10 +137,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: '123',
         email,
         username: username || email.split('@')[0],
+        display_name: username || email.split('@')[0],
         roles: ['user'],
         user_metadata: {
           full_name: username || email.split('@')[0],
-          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${email}`
+          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${email}`,
+          display_name: username || email.split('@')[0],
+          bio: '',
+          theme_preference: 'dark',
+          motion_enabled: true
         }
       };
       
@@ -186,13 +196,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     register,
     resetPassword,
-    setUser,
-    setSession,
-    setRoles,
-    setStatus,
-    setError,
-    setLoading,
-    setInitialized,
+    setUser: (user: UserProfile | null) => setUser(user),
+    setSession: (session: any) => setSession(session),
+    setRoles: (roles: UserRole[]) => setRoles(roles),
+    setStatus: (status: AuthStatus) => setStatus(status),
+    setError: (error: Error | string | null) => {
+      if (typeof error === 'string') {
+        setError(new Error(error));
+      } else {
+        setError(error);
+      }
+    },
+    setLoading: (loading: boolean) => setIsLoading(loading),
+    setInitialized: (init: boolean) => setInitialized(init),
     initialize,
     hasRole,
     isAdmin

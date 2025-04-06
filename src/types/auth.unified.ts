@@ -18,6 +18,16 @@ export interface AdminAccess {
   isAuthenticated: boolean;
 }
 
+// Extended user metadata type
+export interface UserMetadata {
+  full_name?: string;
+  avatar_url?: string;
+  display_name?: string;
+  bio?: string;
+  theme_preference?: string;
+  motion_enabled?: boolean;
+}
+
 // User profile minimal type
 export interface UserProfile {
   id: string;
@@ -28,10 +38,7 @@ export interface UserProfile {
   roles?: UserRole[];
   last_sign_in_at?: string;
   created_at?: string;
-  user_metadata?: {
-    full_name?: string;
-    avatar_url?: string;
-  };
+  user_metadata?: UserMetadata;
 }
 
 // Auth status type
