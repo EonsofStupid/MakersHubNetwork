@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Outlet, createRoute } from '@tanstack/react-router';
-import { rootRoute } from '@/router';
+import { createRootRoute } from '@tanstack/react-router';
 import { AdminLayout } from '@/admin/components/layouts/AdminLayout';
 import { AdminAuthGuard } from '@/admin/components/AdminAuthGuard';
 import { AdminRoutes } from './AdminRoutes';
+import { UserRole, ADMIN_ROLES } from '@/auth/types/userRoles';
 
 // Import admin pages (Lazy load them for better performance)
 const Dashboard = React.lazy(() => import('./dashboard/DashboardPage'));
@@ -26,10 +27,13 @@ const PageLoader = () => (
   </div>
 );
 
+// Create admin root route specifically for admin router
+export const adminRootRoute = createRootRoute();
+
 // Define base admin route for all admin pages
 const adminBaseRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/admin',
+  getParentRoute: () => adminRootRoute,
+  path: '/',
   component: AdminRoutes
 });
 

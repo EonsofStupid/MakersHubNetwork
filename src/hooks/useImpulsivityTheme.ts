@@ -6,6 +6,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
+interface ThemeCssVars {
+  [key: string]: string;
+}
+
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
  */
@@ -16,21 +20,23 @@ export function useImpulsivityTheme() {
   const [syncInProgress, setSyncInProgress] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Apply the Impulsivity theme to the main site
+  // Apply the Impulsivity theme to the main site with type-safe CSS variables
   const applyToMainSite = async () => {
     try {
-      // Set the CSS variables directly for immediate effect
-      const rootElement = document.documentElement;
+      // Define CSS variables with type safety
+      const cssVars: ThemeCssVars = {
+        '--site-primary': tokens.primary || '186 100% 50%',
+        '--site-secondary': tokens.secondary || '334 100% 59%',
+        '--site-effect-color': tokens.effectPrimary || '#00F0FF',
+        '--site-effect-secondary': tokens.effectSecondary || '#FF2D6E',
+        '--site-effect-tertiary': tokens.effectTertiary || '#8B5CF6'
+      };
       
-      // Apply the Impulsivity theme colors
-      if (rootElement) {
-        // Apply CSS variables properly with type safety
-        rootElement.style.setProperty('--site-primary', tokens.primary || '186 100% 50%');
-        rootElement.style.setProperty('--site-secondary', tokens.secondary || '334 100% 59%');
-        rootElement.style.setProperty('--site-effect-color', tokens.effectPrimary || '#00F0FF');
-        rootElement.style.setProperty('--site-effect-secondary', tokens.effectSecondary || '#FF2D6E');
-        rootElement.style.setProperty('--site-effect-tertiary', tokens.effectTertiary || '#8B5CF6');
-      }
+      // Set the CSS variables on the root element
+      const rootElement = document.documentElement;
+      Object.entries(cssVars).forEach(([key, value]) => {
+        rootElement.style.setProperty(key, value);
+      });
       
       // Update the theme in the store if needed
       if (currentTheme) {
@@ -79,28 +85,30 @@ export function useImpulsivityTheme() {
   // Apply the Impulsivity theme to the admin panel
   const applyToAdmin = async () => {
     try {
-      // Update admin theme variables
+      // Update admin theme variables with type safety
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement) {
-        // Create a CSS style string with all variables
-        const cssVars = `
-          --impulse-primary: ${tokens.effectPrimary || '#00F0FF'};
-          --impulse-secondary: ${tokens.effectSecondary || '#FF2D6E'};
-          --impulse-bg-main: #121218;
-          --impulse-bg-overlay: rgba(22, 24, 29, 0.85);
-          --impulse-bg-card: rgba(28, 30, 38, 0.7);
-          --impulse-text-primary: #F6F6F7;
-          --impulse-text-secondary: rgba(255, 255, 255, 0.7);
-          --impulse-text-accent: ${tokens.effectPrimary || '#00F0FF'};
-          --impulse-border-normal: rgba(0, 240, 255, 0.2);
-          --impulse-border-hover: rgba(0, 240, 255, 0.4);
-          --impulse-border-active: rgba(0, 240, 255, 0.6);
-          --impulse-glow-primary: 0 0 15px rgba(0, 240, 255, 0.7);
-          --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.7);
-        `;
+        // Define CSS variables with type safety
+        const cssVars: ThemeCssVars = {
+          '--impulse-primary': tokens.effectPrimary || '#00F0FF',
+          '--impulse-secondary': tokens.effectSecondary || '#FF2D6E',
+          '--impulse-bg-main': '#121218',
+          '--impulse-bg-overlay': 'rgba(22, 24, 29, 0.85)',
+          '--impulse-bg-card': 'rgba(28, 30, 38, 0.7)',
+          '--impulse-text-primary': '#F6F6F7',
+          '--impulse-text-secondary': 'rgba(255, 255, 255, 0.7)',
+          '--impulse-text-accent': tokens.effectPrimary || '#00F0FF',
+          '--impulse-border-normal': 'rgba(0, 240, 255, 0.2)',
+          '--impulse-border-hover': 'rgba(0, 240, 255, 0.4)',
+          '--impulse-border-active': 'rgba(0, 240, 255, 0.6)',
+          '--impulse-glow-primary': '0 0 15px rgba(0, 240, 255, 0.7)',
+          '--impulse-glow-secondary': '0 0 15px rgba(255, 45, 110, 0.7)'
+        };
         
-        // Apply all CSS variables at once
-        adminRootElement.setAttribute('style', cssVars);
+        // Apply each CSS variable individually using setProperty
+        Object.entries(cssVars).forEach(([key, value]) => {
+          (adminRootElement as HTMLElement).style.setProperty(key, value);
+        });
         
         logger.info('Applied Impulsivity theme to admin panel', { 
           details: {

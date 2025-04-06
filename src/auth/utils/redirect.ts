@@ -4,10 +4,12 @@ import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { UserRole } from '@/auth/types/userRoles';
+import { createSearchParams } from '@/router/searchParams';
 
 export interface RedirectOptions {
   to: string;
-  allowRoles?: string[];
+  allowRoles?: UserRole[];
   redirectAuthenticated?: boolean;
   redirectUnauthenticated?: boolean;
 }
@@ -32,7 +34,7 @@ export function useAuthRedirect(options: RedirectOptions) {
     
     // Handle role-based access
     const hasRequiredRole = allowRoles 
-      ? roles.some(role => allowRoles.includes(role))
+      ? roles.some(role => allowRoles.includes(role as UserRole))
       : true;
     
     const shouldRedirect = 
@@ -50,12 +52,10 @@ export function useAuthRedirect(options: RedirectOptions) {
         }
       });
       
-      // Use TanStack Router compatible navigation
-      // Define the search params using a properly typed approach
+      // Use TanStack Router compatible navigation with properly typed search params
       navigate({
-        to: to as any,
-        // Pass a plain object instead of a function for search params
-        search: { from: location.pathname }
+        to: to,
+        search: createSearchParams({ from: location.pathname })
       });
     }
   }, [status, roles, navigate, to, allowRoles, redirectAuthenticated, redirectUnauthenticated, location.pathname, logger]);
