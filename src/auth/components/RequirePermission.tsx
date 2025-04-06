@@ -1,66 +1,33 @@
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuthState } from '../hooks/useAuthState';
-import { hasPermission } from '../rbac/enforce';
-import { PermissionValue } from '../permissions';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { useAuth } from '@/hooks/use-auth';
+import { UserRole } from '@/auth/types/auth.types';
 
 interface RequirePermissionProps {
   children: React.ReactNode;
-  permission: PermissionValue;
   fallback?: React.ReactNode;
-  redirectTo?: string;
+  roles: UserRole[];
+  requireAll?: boolean;
 }
 
 /**
- * Component that checks if the current user has the required permission
- * and either renders the children or redirects/renders fallback
+ * Component that renders children only if user has required roles
  */
-export function RequirePermission({
+const RequirePermission: React.FC<RequirePermissionProps> = ({
   children,
-  permission,
-  fallback,
-  redirectTo = '/admin/unauthorized'
-}: RequirePermissionProps) {
-  const { roles, isLoading } = useAuthState();
-  const logger = getLogger();
+  fallback = null,
+  roles,
+  requireAll = false
+}) => {
+  const { roles: userRoles } = useAuth();
   
-  // Show loading state while permissions are being determined
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full p-6">
-        <div className="h-6 w-6 border-t-2 border-primary animate-spin rounded-full" />
-      </div>
-    );
-  }
-  
-  // Check permission
-  const allowed = hasPermission(roles, permission);
-  
-  // Log permission check
-  logger.info(`Permission check for ${permission}`, {
-    category: LogCategory.AUTH,
-    source: "RequirePermission",
-    details: { 
-      permission,
-      allowed,
-      redirectTo: !allowed ? redirectTo : null 
-    }
-  });
-  
-  // If permission check fails
-  if (!allowed) {
-    // Return fallback if provided
-    if (fallback) {
-      return <>{fallback}</>;
-    }
+  // Check if user has required roles
+  const hasPermission = requireAll
+    ? roles.every(role => userRoles.includes(role))
+    : roles.some(role => userRoles.includes(role));
     
-    // Otherwise redirect
-    return <Navigate to={redirectTo} replace />;
-  }
-  
-  // Render children if permission check passes
-  return <>{children}</>;
-}
+  // Render children if user has permission, otherwise fallback
+  return hasPermission ? <>{children}</> : <>{fallback}</>;
+};
+
+export default RequirePermission;

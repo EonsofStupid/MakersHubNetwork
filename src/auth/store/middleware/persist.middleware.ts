@@ -1,35 +1,31 @@
 
 import { PersistStorage } from 'zustand/middleware';
-import { AuthState } from '@/types/auth';
+import { AuthState } from '@/auth/types/auth.types';
+import { StateStorage } from 'zustand/middleware';
 
 // Custom storage implementation for auth state
-export const authStorage: PersistStorage<AuthState> = {
-  getItem: (name: string): Promise<AuthState | null> => {
+export const authStorage: StateStorage = {
+  getItem: (name: string): string | null => {
     try {
       // Use sessionStorage for auth state (more secure)
-      const value = sessionStorage.getItem(name);
-      return Promise.resolve(value ? JSON.parse(value) : null);
+      return sessionStorage.getItem(name);
     } catch (error) {
       console.error('Error getting item from authStorage', error);
-      return Promise.resolve(null);
+      return null;
     }
   },
-  setItem: (name: string, value: AuthState): Promise<void> => {
+  setItem: (name: string, value: string): void => {
     try {
-      sessionStorage.setItem(name, JSON.stringify(value));
-      return Promise.resolve();
+      sessionStorage.setItem(name, value);
     } catch (error) {
       console.error('Error setting item in authStorage', error);
-      return Promise.resolve();
     }
   },
-  removeItem: (name: string): Promise<void> => {
+  removeItem: (name: string): void => {
     try {
       sessionStorage.removeItem(name);
-      return Promise.resolve();
     } catch (error) {
       console.error('Error removing item from authStorage', error);
-      return Promise.resolve();
     }
   }
 };

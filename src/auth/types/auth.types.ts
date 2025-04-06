@@ -1,32 +1,34 @@
 
-import { Session, User } from "@supabase/supabase-js";
-
-export type UserRole = 'super_admin' | 'admin' | 'maker' | 'builder';
-
-export interface UserProfile {
-  id: string;
-  username?: string;
-  full_name?: string;
-  avatar_url?: string;
-  website?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export type AuthUser = User;
+export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor';
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 
 export interface AuthState {
-  user: AuthUser | null;
-  session: Session | null;
+  user: any | null;
+  session: any | null;
   roles: UserRole[];
-  isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
   status: AuthStatus;
-  initialized?: boolean;
+  initialized: boolean;
+  isAuthenticated: boolean;
 }
+
+export interface AuthActions {
+  setUser: (user: any | null) => void;
+  setSession: (session: any | null) => void;
+  setRoles: (roles: UserRole[]) => void;
+  setError: (error: string | null) => void;
+  setLoading: (isLoading: boolean) => void;
+  setInitialized: (initialized: boolean) => void;
+  setStatus: (status: AuthStatus) => void;
+  hasRole: (role: UserRole) => boolean;
+  isAdmin: () => boolean;
+  initialize: () => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+export type AuthStore = AuthState & AuthActions;
 
 export interface AdminAccess {
   isAdmin: boolean;
