@@ -79,8 +79,14 @@ const fallbackTheme = {
 
 // Helper to check if a string is a valid UUID
 function isValidUUID(id: string): boolean {
+  if (!id || typeof id !== 'string') return false;
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(id);
+}
+
+// Log a message with timestamp and details
+function logMessage(message: string, details?: any) {
+  console.log(`${new Date().toISOString()} - ${message}`, details || '');
 }
 
 // Main function to handle requests
@@ -95,7 +101,7 @@ serve(async (req: Request) => {
     try {
       body = await req.json();
     } catch (e) {
-      console.error("Error parsing request JSON:", e);
+      logMessage("Error parsing request JSON:", e);
       return new Response(
         JSON.stringify({ error: "Invalid JSON", details: e.message }),
         { 
@@ -144,7 +150,7 @@ serve(async (req: Request) => {
         );
     }
   } catch (error) {
-    console.error("Theme service error:", error);
+    logMessage("Theme service error:", error);
     
     // Return the fallback theme on any error
     return new Response(
@@ -168,22 +174,22 @@ async function getTheme(supabase, body) {
     
     let query = supabase.from('themes').select('*');
     
-    // Filter based on params - being careful with type handling
+    // Handle theme lookup by ID or name properly
     if (themeId) {
       // Check if themeId is a valid UUID
       if (isValidUUID(themeId)) {
-        console.log(`Looking up theme by UUID: ${themeId}`);
+        logMessage(`Looking up theme by UUID: ${themeId}`);
         query = query.eq('id', themeId);
       } else {
         // If not a UUID, treat as a name
-        console.log(`ThemeId not a UUID, treating as name: ${themeId}`);
+        logMessage(`ThemeId not a UUID, treating as name: ${themeId}`);
         query = query.eq('name', themeId);
       }
     } else if (themeName) {
-      console.log(`Looking up theme by name: ${themeName}`);
+      logMessage(`Looking up theme by name: ${themeName}`);
       query = query.eq('name', themeName);
     } else if (isDefault) {
-      console.log('Looking up default theme');
+      logMessage('Looking up default theme');
       query = query.eq('is_default', true);
     }
     
@@ -197,7 +203,42 @@ async function getTheme(supabase, body) {
     const { data: themes, error } = await query;
     
     if (error) {
-      console.error("Database error:", error);
+      // Handle database errors gracefully
+      logMessage("Database error:", error);
+      
+      // Check if this is a UUID format error
+      if (error.message && error.message.includes("invalid input syntax for type uuid")) {
+        // Try looking up by name instead
+        logMessage("UUID format error, retrying by name");
+        
+        // Attempt name-based lookup if we were trying a UUID lookup
+        if (themeId && !isValidUUID(themeId)) {
+          const { data: themesByName, error: nameError } = await supabase
+            .from('themes')
+            .select('*')
+            .eq('name', themeId)
+            .eq('context', context)
+            .order('version', { ascending: false })
+            .limit(1);
+            
+          if (!nameError && themesByName && themesByName.length > 0) {
+            logMessage(`Successfully found theme by name: ${themeId}`);
+            return new Response(
+              JSON.stringify({ 
+                theme: themesByName[0], 
+                isFallback: false,
+                lookupMethod: 'name' 
+              }),
+              { 
+                status: 200, 
+                headers: { ...corsHeaders, "Content-Type": "application/json" } 
+              }
+            );
+          }
+        }
+      }
+      
+      // If all lookups fail, return fallback
       return new Response(
         JSON.stringify({ 
           theme: fallbackTheme, 
@@ -212,7 +253,7 @@ async function getTheme(supabase, body) {
     }
     
     if (!themes || themes.length === 0) {
-      console.info("No theme found, returning fallback");
+      logMessage("No theme found, returning fallback");
       return new Response(
         JSON.stringify({ 
           theme: fallbackTheme, 
@@ -236,7 +277,7 @@ async function getTheme(supabase, body) {
       }
     );
   } catch (error) {
-    console.error("Error getting theme:", error);
+    logMessage("Error getting theme:", error);
     return new Response(
       JSON.stringify({ 
         theme: fallbackTheme, 
@@ -275,18 +316,21 @@ async function updateTheme(supabase, body) {
       getQuery = getQuery.eq('name', themeId);
     }
     
-    const { data: existingTheme, error: getError } = await getQuery.single();
+    const { data: existingThemes, error: getError } = await getQuery;
     
-    if (getError) {
-      console.error("Error getting theme to update:", getError);
+    if (getError || !existingThemes || existingThemes.length === 0) {
+      const errorMsg = getError ? getError.message : "Theme not found";
+      logMessage("Error getting theme to update:", errorMsg);
       return new Response(
-        JSON.stringify({ error: getError.message }),
+        JSON.stringify({ error: errorMsg }),
         { 
           status: 404, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         }
       );
     }
+    
+    const existingTheme = existingThemes[0];
     
     // Update the theme
     const { data, error } = await supabase
@@ -299,7 +343,7 @@ async function updateTheme(supabase, body) {
       .select();
     
     if (error) {
-      console.error("Error updating theme:", error);
+      logMessage("Error updating theme:", error);
       return new Response(
         JSON.stringify({ error: error.message }),
         { 
@@ -320,7 +364,7 @@ async function updateTheme(supabase, body) {
       }
     );
   } catch (error) {
-    console.error("Error updating theme:", error);
+    logMessage("Error updating theme:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
@@ -344,7 +388,7 @@ async function listThemes(supabase, body) {
       .limit(limit);
     
     if (error) {
-      console.error("Error listing themes:", error);
+      logMessage("Error listing themes:", error);
       return new Response(
         JSON.stringify({ error: error.message }),
         { 
@@ -362,7 +406,7 @@ async function listThemes(supabase, body) {
       }
     );
   } catch (error) {
-    console.error("Error listing themes:", error);
+    logMessage("Error listing themes:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
