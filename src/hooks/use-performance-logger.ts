@@ -6,7 +6,7 @@ import { getLogger, LogCategory } from '@/logging';
  * Hook for measuring and logging performance
  */
 export function usePerformanceLogger(source: string) {
-  const logger = getLogger();
+  const logger = getLogger(source);
   const timers = useRef<Record<string, number>>({});
   
   /**
@@ -28,14 +28,17 @@ export function usePerformanceLogger(source: string) {
     if (startTime) {
       const duration = performance.now() - startTime;
       
-      // Use the added performance method
-      logger.performance(
+      // Use info level with duration in details
+      logger.info(
         `${operationName} completed in ${duration.toFixed(2)}ms`,
-        duration,
         {
-          ...options,
+          category: options?.category || LogCategory.PERFORMANCE,
           source,
-          category: options?.category || LogCategory.PERFORMANCE
+          details: {
+            ...(options?.details as Record<string, unknown> || {}),
+            duration
+          },
+          tags: options?.tags
         }
       );
       
@@ -70,7 +73,7 @@ export function usePerformanceLogger(source: string) {
     } catch (error) {
       endTimer(operationName, {
         ...options,
-        details: { ...(options?.details || {}), error }
+        details: { ...(options?.details as Record<string, unknown> || {}), error }
       });
       throw error;
     }
@@ -96,7 +99,7 @@ export function usePerformanceLogger(source: string) {
     } catch (error) {
       endTimer(operationName, {
         ...options,
-        details: { ...(options?.details || {}), error }
+        details: { ...(options?.details as Record<string, unknown> || {}), error }
       });
       throw error;
     }

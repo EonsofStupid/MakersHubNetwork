@@ -1,14 +1,9 @@
-
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-
-interface ThemeCssVars {
-  [key: string]: string;
-}
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -22,7 +17,7 @@ export function useImpulsivityTheme() {
   
   const applyToMainSite = async () => {
     try {
-      const cssVars: ThemeCssVars = {
+      const cssVars: Record<string, string> = {
         '--site-primary': tokens.primary || '186 100% 50%',
         '--site-secondary': tokens.secondary || '334 100% 59%',
         '--site-effect-color': tokens.effectPrimary || '#00F0FF',

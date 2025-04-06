@@ -2,6 +2,7 @@
 // Import existing exports
 import { getLogger, initializeLogger } from './logger';
 import { LogLevel } from './constants/log-level';
+import { memoryTransport } from './transports/memory-transport';
 
 // Update LogCategory enum to include ALL needed categories
 export enum LogCategory {
@@ -22,7 +23,8 @@ export enum LogCategory {
 export {
   getLogger,
   initializeLogger,
-  LogLevel
+  LogLevel,
+  memoryTransport // Export memoryTransport
 };
 
 export * from './types';

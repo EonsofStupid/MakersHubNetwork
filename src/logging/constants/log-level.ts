@@ -9,6 +9,7 @@ export enum LogLevel {
   WARN = 40,
   ERROR = 50,
   CRITICAL = 60,
+  SUCCESS = 35,  // Added SUCCESS log level between INFO and WARN
 }
 
 /**
@@ -27,5 +28,6 @@ export const LOG_LEVEL_VALUES = {
   INFO: LogLevel.INFO,
   WARN: LogLevel.WARN,
   ERROR: LogLevel.ERROR,
-  CRITICAL: LogLevel.CRITICAL
+  CRITICAL: LogLevel.CRITICAL,
+  SUCCESS: LogLevel.SUCCESS  // Added SUCCESS log level
 };
