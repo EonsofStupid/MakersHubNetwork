@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeContext } from '@/types/theme';
 import { getLogger } from '@/logging';
@@ -69,7 +68,7 @@ const fallbackTheme: Theme = {
   component_tokens: [],
 };
 
-// Make GetThemeOptions extend Record<string, unknown>
+// Make GetThemeOptions extend Record<string, unknown> properly
 interface GetThemeOptions extends Record<string, unknown> {
   id?: string;
   name?: string;
@@ -85,7 +84,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
   try {
     logger.info("Fetching theme from service", {
       category: LogCategory.DATABASE,
-      details: options as Record<string, unknown>,
+      details: options,
       source: 'themeService'
     });
     
@@ -105,7 +104,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
     if (error) {
       logger.error("Error fetching theme from service", { 
         category: LogCategory.DATABASE,
-        details: { error, options } as Record<string, unknown>,
+        details: { error, options },
         source: 'themeService'
       });
       
@@ -121,7 +120,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
         themeId: data.theme?.id || 'unknown',
         isFallback: data.isFallback || false,
         componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
-      } as Record<string, unknown>,
+      },
       source: 'themeService'
     });
 
@@ -133,7 +132,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
   } catch (error) {
     logger.error("Error fetching theme from service", { 
       category: LogCategory.DATABASE,
-      details: error as Record<string, unknown>,
+      details: error instanceof Error ? { message: error.message, stack: error.stack } : { error },
       source: 'themeService'
     });
     

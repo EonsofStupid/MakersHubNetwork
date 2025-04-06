@@ -4,17 +4,17 @@ import { Button } from '@/components/ui/button';
 import { LoginModal } from './LoginModal';
 
 export function LoginButton() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
   return (
     <>
-      <Button size="sm" onClick={() => setIsModalOpen(true)}>
+      <Button size="sm" onClick={() => setOpen(true)}>
         Login
       </Button>
       
       <LoginModal 
-        open={isModalOpen} 
-        onOpenChange={setIsModalOpen} 
+        open={open} 
+        onOpenChange={setOpen} 
       />
     </>
   );

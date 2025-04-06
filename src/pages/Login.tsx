@@ -11,8 +11,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useAuth } from "@/hooks/useAuth";
-import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
+import { useAuth } from "@/hooks/use-auth";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 
@@ -24,13 +24,16 @@ const Login = ({ onSuccess }: LoginProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const auth = useAuth();
   const { hasAdminAccess } = useAdminAccess();
   const logger = useLogger("LoginPage", LogCategory.AUTH);
   
   const from = new URLSearchParams(location.search).get("from") || "/";
 
   useEffect(() => {
+    const { status, user } = auth;
+    const isAuthenticated = status === 'authenticated' && !!user;
+    
     if (isAuthenticated) {
       logger.info("User authenticated, redirecting", { details: { redirectTo: from } });
       onSuccess?.();
@@ -69,7 +72,7 @@ const Login = ({ onSuccess }: LoginProps) => {
         navigate(from);
       }
     }
-  }, [isAuthenticated, navigate, onSuccess, hasAdminAccess, from, toast, logger]);
+  }, [auth, navigate, onSuccess, hasAdminAccess, from, toast, logger]);
 
   return (
     <div className="container mx-auto flex items-center justify-center min-h-screen p-4">

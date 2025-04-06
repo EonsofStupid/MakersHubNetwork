@@ -18,12 +18,12 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   const { status, session, user, roles } = useAuth();
 
   // Still loading the auth state
-  if (status === AuthStatus.LOADING) {
+  if (status === 'loading') {
     return <div>Loading authentication status...</div>;
   }
 
   // Not authenticated
-  if (status !== AuthStatus.AUTHENTICATED || !session) {
+  if (status !== 'authenticated' || !session) {
     return <Navigate to={redirectTo} />;
   }
 

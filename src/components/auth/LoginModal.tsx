@@ -10,11 +10,12 @@ export interface LoginModalProps {
 }
 
 export function LoginModal({ open, onOpenChange }: LoginModalProps) {
-  const { login } = useAuth();
+  const { logout } = useAuth();
 
   const handleLogin = async () => {
     try {
-      await login();
+      // Mock login for now
+      console.log("Login functionality would be implemented here");
       onOpenChange(false);
     } catch (error) {
       console.error('Login failed:', error);

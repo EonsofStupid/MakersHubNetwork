@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { useAuth } from './use-auth';
+import { useAuth } from '@/hooks/use-auth';
 import { UserRole } from '@/types/auth';
 
 interface AdminAccess {

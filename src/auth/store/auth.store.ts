@@ -1,10 +1,12 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AuthState, UserRole } from './types';
+import { AuthState, UserRole, AuthStatus } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
-import { authStorage } from './middleware/persist.middleware';
+import { authStorage } from '@/auth/store/middleware/persist.middleware';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { publishAuthEvent } from '@/auth/bridge';
 
 interface AuthActions {
   setUser: (user: AuthState['user']) => void;
@@ -30,15 +32,17 @@ export const useAuthStore = create<AuthStore>()(
       roles: [],
       isLoading: true,
       error: null,
-      status: 'idle',
+      status: 'idle' as AuthStatus,
       initialized: false,
+      isAuthenticated: false,
       
       // Methods
       setUser: (user) => set({ user }),
       setSession: (session) => set({ 
         session,
         user: session?.user ?? null,
-        status: session ? 'authenticated' : 'unauthenticated'
+        status: session ? 'authenticated' as AuthStatus : 'unauthenticated' as AuthStatus,
+        isAuthenticated: !!session
       }),
       setRoles: (roles) => set({ roles }),
       setError: (error) => set({ error }),
@@ -84,8 +88,9 @@ export const useAuthStore = create<AuthStore>()(
               user: session.user,
               session,
               roles,
-              status: 'authenticated',
-              error: null
+              status: 'authenticated' as AuthStatus,
+              error: null,
+              isAuthenticated: true
             });
             
             logger.info('User authenticated', {
@@ -96,37 +101,65 @@ export const useAuthStore = create<AuthStore>()(
                 rolesCount: roles.length 
               }
             });
+            
+            // Publish auth event
+            publishAuthEvent({
+              type: 'AUTH_SIGNED_IN',
+              payload: { user: session.user, session }
+            });
           } else {
             set({
               user: null,
               session: null,
               roles: [],
-              status: 'unauthenticated',
-              error: null
+              status: 'unauthenticated' as AuthStatus,
+              error: null,
+              isAuthenticated: false
             });
             
             logger.info('No user session found', {
               category: LogCategory.AUTH,
               source: 'auth/store'
             });
+            
+            // Publish auth event
+            publishAuthEvent({
+              type: 'AUTH_SIGNED_OUT'
+            });
           }
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : 'Unknown error';
           
+          const errorDetails: Record<string, unknown> = { 
+            message: errorMessage 
+          };
+          
           logger.error('Auth initialization error', {
             category: LogCategory.AUTH,
             source: 'auth/store',
-            details: err
+            details: errorDetails
           });
           
           set({
             error: errorMessage,
-            status: 'unauthenticated'
+            status: 'unauthenticated' as AuthStatus,
+            isAuthenticated: false
+          });
+          
+          // Publish auth error event
+          publishAuthEvent({
+            type: 'AUTH_ERROR',
+            payload: { error: errorMessage }
           });
         } finally {
           set({ 
             isLoading: false,
             initialized: true
+          });
+          
+          // Publish initialization complete event
+          publishAuthEvent({
+            type: 'AUTH_INITIALIZED'
           });
         }
       },
@@ -148,27 +181,45 @@ export const useAuthStore = create<AuthStore>()(
             user: null,
             session: null,
             roles: [],
-            status: 'unauthenticated',
-            error: null
+            status: 'unauthenticated' as AuthStatus,
+            error: null,
+            isAuthenticated: false
           });
           
-          // Log successful logout
+          // Log successful logout with properly formatted details
           const logDetails: Record<string, unknown> = {
-            success: true,
+            success: true
           };
           
           logger.info('User logged out successfully', logDetails);
-        } catch (error) {
-          // Type-safe error logging
-          const logDetails: Record<string, unknown> = {
-            error: true,
-            errorMessage: error instanceof Error ? error.message : String(error),
+          
+          // Publish auth event
+          publishAuthEvent({
+            type: 'AUTH_SIGNED_OUT'
+          });
+          
+          return true;
+        } catch (err) {
+          // Format error details correctly
+          const errorDetails: Record<string, unknown> = {
+            message: err instanceof Error ? err.message : String(err)
           };
           
-          logger.error('Error during logout', logDetails);
+          logger.error('Error during logout', {
+            category: LogCategory.AUTH,
+            source: 'auth/store',
+            details: errorDetails
+          });
           
-          set({ error: logDetails.errorMessage as string });
-          throw error;
+          set({ error: errorDetails.message as string });
+          
+          // Publish auth error event
+          publishAuthEvent({
+            type: 'AUTH_ERROR',
+            payload: { error: errorDetails.message }
+          });
+          
+          throw err;
         } finally {
           set({ isLoading: false });
         }
