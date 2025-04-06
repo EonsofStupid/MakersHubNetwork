@@ -14,43 +14,65 @@ interface ImpulsivityInitProps {
 }
 
 export function ImpulsivityInit({ autoApply = true, children, showLoader = false }: ImpulsivityInitProps) {
-  const { applyTheme, isSyncing } = useImpulsivityTheme();
+  const { applyTheme, applyToMainSite, isSyncing } = useImpulsivityTheme();
   const { isLoading: themeStoreLoading } = useThemeStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isError, setIsError] = useState(false);
   const logger = useLogger('ImpulsivityInit', LogCategory.UI);
   const initAttempted = useRef(false);
   
+  // Function to apply the critical CSS variables directly
+  const applyDirectCSSVariables = () => {
+    try {
+      // Apply immediate styles for fast visual feedback - CRITICAL
+      const rootElement = document.documentElement;
+      
+      // Primary colors
+      rootElement.style.setProperty('--site-primary', '186 100% 50%'); // #00F0FF in HSL  
+      rootElement.style.setProperty('--site-secondary', '334 100% 59%'); // #FF2D6E in HSL
+      
+      // Effect colors (direct hex values for maximum compatibility)
+      rootElement.style.setProperty('--site-effect-color', '#00F0FF');
+      rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
+      rootElement.style.setProperty('--site-effect-tertiary', '#8B5CF6');
+      
+      // Background and text colors
+      rootElement.style.setProperty('--site-background', '228 47% 8%'); // #080F1E in HSL
+      rootElement.style.setProperty('--site-foreground', '210 40% 98%'); // #F9FAFB in HSL
+      rootElement.style.setProperty('--site-card', '228 47% 11%');
+      rootElement.style.setProperty('--site-card-foreground', '210 40% 98%');
+      
+      // Standard variants (convert HSL to regular CSS variables for direct use)
+      rootElement.style.setProperty('--background', 'hsl(228 47% 8%)'); // #080F1E in HSL
+      rootElement.style.setProperty('--foreground', 'hsl(210 40% 98%)'); // #F9FAFB in HSL
+      rootElement.style.setProperty('--card', 'hsl(228 47% 11%)');
+      rootElement.style.setProperty('--primary', 'hsl(186 100% 50%)');
+      rootElement.style.setProperty('--secondary', 'hsl(334 100% 59%)');
+      
+      // Direct fallback hex values
+      rootElement.style.setProperty('--impulse-primary', '#00F0FF');
+      rootElement.style.setProperty('--impulse-secondary', '#FF2D6E');
+      rootElement.style.setProperty('--impulse-bg-main', '#080F1E');
+      rootElement.style.setProperty('--impulse-text-primary', '#F9FAFB');
+      
+      // Add theme class to the HTML element
+      rootElement.classList.add('theme-impulsivity');
+      document.body.classList.add('theme-impulsivity-body');
+      
+      logger.info('Applied direct CSS variables for Impulsivity theme');
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Error applying direct CSS variables', { 
+        errorMessage
+      });
+      return false;
+    }
+  };
+  
   useEffect(() => {
-    // Apply immediate styles to ensure something is visible
-    const applyImmediateStyles = () => {
-      try {
-        // Set essential CSS variables directly for fast visual feedback
-        const rootElement = document.documentElement;
-        rootElement.style.setProperty('--site-primary', '186 100% 50%'); // #00F0FF in HSL  
-        rootElement.style.setProperty('--site-secondary', '334 100% 59%'); // #FF2D6E in HSL
-        rootElement.style.setProperty('--site-effect-color', '#00F0FF');
-        rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
-        rootElement.style.setProperty('--site-background', '#080F1E');
-        rootElement.style.setProperty('--site-foreground', '#F9FAFB');
-        
-        // Convert to standard variables as well
-        rootElement.style.setProperty('--background', 'hsl(228 47% 8%)'); // #080F1E in HSL
-        rootElement.style.setProperty('--foreground', 'hsl(210 40% 98%)'); // #F9FAFB in HSL
-        rootElement.style.setProperty('--card', 'hsl(228 47% 11%)');
-        rootElement.style.setProperty('--primary', 'hsl(186 100% 50%)');
-        rootElement.style.setProperty('--secondary', 'hsl(334 100% 59%)');
-        
-        logger.info('Applied immediate styles for Impulsivity theme');
-      } catch (error) {
-        logger.error('Error applying immediate styles', { 
-          errorMessage: error instanceof Error ? error.message : String(error) 
-        });
-      }
-    };
-    
-    // Apply immediate styles regardless of theme system state
-    applyImmediateStyles();
+    // Always apply direct CSS variables first for immediate visual feedback
+    applyDirectCSSVariables();
     
     // Only initialize once to prevent infinite loops
     if (autoApply && !isInitialized && !isSyncing && !themeStoreLoading && !initAttempted.current) {
@@ -60,27 +82,40 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
           logger.info('Initializing Impulsivity theme');
           setIsError(false);
           
-          // Apply immediate styles first
-          applyImmediateStyles();
+          // Ensure CSS variables are applied immediately
+          applyDirectCSSVariables();
           
-          // Then try the full theme application
-          const result = await applyTheme();
-          
-          if (result) {
-            setIsInitialized(true);
-            logger.info('Impulsivity theme initialized successfully');
+          try {
+            // Try to apply to the main site first - most critical
+            const mainSiteResult = await applyToMainSite();
             
-            // Re-apply immediate styles to ensure they take precedence
-            applyImmediateStyles();
-          } else {
+            // Only attempt the full theme system application if the main site succeeded
+            if (mainSiteResult) {
+              // Then try the full theme application
+              await applyTheme();
+            }
+            
+            // Mark as initialized regardless, we've applied the direct styles already
+            setIsInitialized(true);
+            logger.info('Impulsivity theme initialization complete');
+          } catch (error) {
+            // Even if we fail, we've already applied the direct CSS variables
+            // so we can mark as initialized to let the app continue
+            setIsInitialized(true);
             setIsError(true);
-            logger.warn('Impulsivity theme initialization incomplete');
             
-            // Still apply immediate styles
-            applyImmediateStyles();
+            const errorMessage = error instanceof Error 
+              ? error.message 
+              : 'Unknown error initializing theme';
             
-            // Allow the app to load, but in a potentially inconsistent state
-            setIsInitialized(true);
+            const logDetails: ThemeLogDetails = { 
+              errorMessage
+            };
+            
+            logger.warn('Impulsivity theme initialization incomplete', logDetails);
+            
+            // Ensure we reapply direct styles after error
+            applyDirectCSSVariables();
           }
         } catch (error) {
           setIsError(true);
@@ -94,8 +129,8 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
           
           logger.error('Failed to initialize Impulsivity theme', logDetails);
           
-          // Apply immediate styles as fallback
-          applyImmediateStyles();
+          // Apply direct CSS variables as ultimate fallback
+          applyDirectCSSVariables();
           
           // Still mark as initialized to avoid blocking the app
           setIsInitialized(true);
@@ -105,27 +140,27 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
       initTheme();
     }
     
-    // Force initialization timeout after 2 seconds (reduced from 3 to make app more responsive)
+    // Emergency timeout - reduced to 1 second to ensure app is responsive
     const timeout = setTimeout(() => {
       if (!isInitialized) {
         logger.warn('Impulsivity theme initialization timed out, continuing anyway');
         setIsInitialized(true);
         
-        // Reapply immediate styles as fallback
-        applyImmediateStyles();
+        // Reapply direct CSS variables as fallback
+        applyDirectCSSVariables();
       }
-    }, 2000);
+    }, 1000);
     
     return () => clearTimeout(timeout);
-  }, [autoApply, applyTheme, isInitialized, logger, isSyncing, themeStoreLoading]);
+  }, [autoApply, applyTheme, applyToMainSite, isInitialized, logger, isSyncing, themeStoreLoading]);
   
   // If showing loader and still initializing, render a loading indicator
-  if (showLoader && (isSyncing || themeStoreLoading) && !isInitialized) {
+  if (showLoader && !isInitialized) {
     return (
       <div className="fixed inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-50">
         <div className="bg-card p-6 rounded-lg shadow-lg border border-border flex flex-col items-center">
           <Loader className="animate-spin h-8 w-8 text-primary mb-4" />
-          <p className="text-foreground font-medium">Initializing Impulsivity Theme...</p>
+          <p className="text-foreground font-medium">Initializing Theme...</p>
         </div>
       </div>
     );
