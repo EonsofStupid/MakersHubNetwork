@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ComponentTokens } from '@/types/theme';
 import { getLogger } from '@/logging';
@@ -27,7 +28,7 @@ export async function syncImpulsivityTheme() {
     }
 
     // Define the base Impulsivity theme
-    const baseImpulsivityTheme: Theme = {
+    const baseImpulsivityTheme: Partial<Theme> = {
       id: currentTheme.id,
       name: 'Impulsivity',
       description: 'Base Impulsivity theme',
@@ -83,17 +84,25 @@ export async function syncImpulsivityTheme() {
 
     // Update the theme if needed
     if (themeNeedsUpdate) {
-      const { error: updateThemeError } = await supabase
-        .from('themes')
-        .update(updatedTheme)
-        .eq('id', currentTheme.id);
+      try {
+        const { error: updateThemeError } = await supabase
+          .from('themes')
+          .update({
+            design_tokens: updatedTheme.design_tokens,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', currentTheme.id);
 
-      if (updateThemeError) {
-        logger.error('Error updating theme', { error: updateThemeError });
-        throw updateThemeError;
+        if (updateThemeError) {
+          logger.error('Error updating theme', { error: updateThemeError });
+          return false;
+        }
+
+        logger.info('Updated theme successfully');
+      } catch (error) {
+        logger.error('Error updating theme', { error });
+        return false;
       }
-
-      logger.info('Updated theme successfully');
     }
 
     // Fetch existing theme components
@@ -104,11 +113,11 @@ export async function syncImpulsivityTheme() {
 
     if (getComponentsError) {
       logger.error('Error fetching theme components', { error: getComponentsError });
-      throw getComponentsError;
+      return false;
     }
 
     // Define base components
-    const baseComponents: ComponentTokens[] = [
+    const baseComponents: Partial<ComponentTokens>[] = [
       {
         id: 'main-nav',
         theme_id: currentTheme.id,
@@ -144,8 +153,8 @@ export async function syncImpulsivityTheme() {
     ];
 
     // Determine which components need to be created or updated
-    const newComponents: ComponentTokens[] = [];
-    const updatedComponents: ComponentTokens[] = [];
+    const newComponents: Partial<ComponentTokens>[] = [];
+    const updatedComponents: Partial<ComponentTokens>[] = [];
 
     for (const baseComponent of baseComponents) {
       const existingComponent = existingComponents?.find(c => c.component_name === baseComponent.component_name);
@@ -169,21 +178,23 @@ export async function syncImpulsivityTheme() {
 
         if (createComponentsError) {
           logger.error('Error creating theme components', { error: createComponentsError });
-          throw createComponentsError;
+          return false;
         }
 
         logger.info('Created theme components successfully', { componentCount: newComponents.length });
       } catch (error) {
         logger.error('Failed to create theme components', { error });
+        return false;
       }
     }
 
     // Update the theme component tokens if needed
     if (updatedComponents.length > 0) {
       try {
-        // Fix the type error by properly formatting the API call
+        // Update components one by one to ensure proper typing
         for (const component of updatedComponents) {
-          // Update components one by one to ensure proper typing
+          if (!component.id) continue;
+          
           await supabase
             .from('theme_components')
             .update({
@@ -196,6 +207,7 @@ export async function syncImpulsivityTheme() {
         logger.info('Updated theme components successfully', { componentCount: updatedComponents.length });
       } catch (error) {
         logger.error('Failed to update theme components', { error });
+        return false;
       }
     }
 
