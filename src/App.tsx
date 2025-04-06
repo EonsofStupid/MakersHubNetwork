@@ -1,16 +1,17 @@
+
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { getLogger } from '@/logging';
 import { LoggingProvider } from '@/logging/context/LoggingContext';
-import ThemeInitializer from '@/components/theme/ThemeInitializer';
-import ImpulsivityInit from '@/components/theme/ImpulsivityInit';
-import SiteThemeProvider from '@/components/theme/SiteThemeProvider';
+import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
+import { ImpulsivityInit } from '@/components/theme/ImpulsivityInit';
+import { SiteThemeProvider } from '@/components/theme/SiteThemeProvider';
 import { AuthProvider } from '@/auth/context/AuthContext';
-import AppInitializer from '@/components/AppInitializer';
+import { AppInitializer } from '@/components/AppInitializer';
 import { AdminProvider } from '@/admin/context/AdminContext';
-import AppRoutes from '@/routes/AppRoutes';
+import { AppRoutes } from '@/routes/AppRoutes';
 
 const queryClient = new QueryClient({
   defaultOptions: {
