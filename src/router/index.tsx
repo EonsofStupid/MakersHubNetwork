@@ -67,6 +67,7 @@ export const rootRoute = createRootRoute({
 // Site route with navigation and footer
 const siteRoute = createRoute({
   getParentRoute: () => rootRoute,
+  id: 'site', // Add explicit ID to prevent duplicates
   path: '/',
   component: SiteLayout
 });
@@ -74,6 +75,7 @@ const siteRoute = createRoute({
 // Index route
 const indexRoute = createRoute({
   getParentRoute: () => siteRoute,
+  id: 'index', // Add explicit ID to prevent duplicates
   path: '/',
   component: Index
 });
@@ -81,6 +83,7 @@ const indexRoute = createRoute({
 // Login route
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
+  id: 'login', // Add explicit ID
   path: '/login',
   component: Login
 });
@@ -88,6 +91,7 @@ const loginRoute = createRoute({
 // Profile route
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
+  id: 'profile', // Add explicit ID
   path: '/profile',
   component: () => <div>Profile Page</div> // Placeholder component
 });
@@ -95,6 +99,7 @@ const profileRoute = createRoute({
 // Settings route
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
+  id: 'settings', // Add explicit ID
   path: '/settings',
   component: () => <div>Settings Page</div> // Placeholder component
 });
@@ -102,6 +107,7 @@ const settingsRoute = createRoute({
 // Admin route
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
+  id: 'admin', // Add explicit ID
   path: '/admin/*',
   component: Admin
 });

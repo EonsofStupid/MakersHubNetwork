@@ -1,9 +1,10 @@
+
 import { ReactNode, useEffect } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import { UserRole } from "@/auth/types/auth.types"
 import { useToast } from "@/hooks/use-toast"
 import { useAuthState } from "@/auth/hooks/useAuthState"
-import { useAdminAccess } from "@/hooks/useAdminAccess"
+import { useAdminAccess } from "@/admin/hooks/useAdminAccess"
 import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/logging"
 import { router } from "@/router"
@@ -12,16 +13,22 @@ interface AuthGuardProps {
   children: ReactNode
   requiredRoles?: UserRole[]
   adminOnly?: boolean
+  fallback?: ReactNode
 }
 
-export const AuthGuard = ({ children, requiredRoles, adminOnly }: AuthGuardProps) => {
+export const AuthGuard = ({ 
+  children, 
+  requiredRoles, 
+  adminOnly,
+  fallback = <div>Loading authentication...</div> 
+}: AuthGuardProps) => {
   const navigate = useNavigate()
   const { pathname } = router.state.location
   const { toast } = useToast()
   const logger = useLogger("AuthGuard", LogCategory.AUTH)
   
   // Use centralized auth state - avoid initialization loops
-  const { isLoading, status, roles, user } = useAuthState()
+  const { isLoading, status, roles, user, initialized } = useAuthState()
   const { hasAdminAccess } = useAdminAccess()
 
   const isAuthenticated = status === "authenticated" && !!user?.id
@@ -35,6 +42,9 @@ export const AuthGuard = ({ children, requiredRoles, adminOnly }: AuthGuardProps
   const hasAdminPermission = adminOnly ? hasAdminAccess : true
 
   useEffect(() => {
+    // Only perform checks after auth is initialized
+    if (!initialized) return;
+    
     if (!isLoading && !isAuthenticated) {
       logger.info("AuthGuard - Redirecting to login: Not authenticated")
       // Keep track of the current path to redirect back after login
@@ -77,13 +87,22 @@ export const AuthGuard = ({ children, requiredRoles, adminOnly }: AuthGuardProps
     navigate, 
     pathname, 
     toast,
-    logger
+    logger,
+    initialized
   ])
 
-  if (isLoading) return <div>Loading...</div>
-  if (!isAuthenticated) return null
-  if (requiredRoles && !hasRequiredRole) return null
-  if (adminOnly && !hasAdminPermission) return null
+  // Show a fallback while loading
+  if (isLoading) return <>{fallback}</>
+  
+  // Early return for authenticated-only content
+  if (initialized && !isAuthenticated) return null
+  
+  // Check role requirements
+  if (initialized && requiredRoles && !hasRequiredRole) return null
+  
+  // Check admin requirements
+  if (initialized && adminOnly && !hasAdminPermission) return null
 
+  // If we're still initializing auth, render children to avoid flash
   return <>{children}</>
 }
