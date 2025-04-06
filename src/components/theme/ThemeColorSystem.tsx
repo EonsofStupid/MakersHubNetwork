@@ -3,7 +3,9 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { ThemeToken } from '@/types/theme';
 import { HexColorPicker } from 'react-colorful';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 interface ThemeColorSystemProps {
   tokens: ThemeToken[];
@@ -14,12 +16,61 @@ interface ThemeColorSystemProps {
 export function ThemeColorSystem({ tokens, onChange, className }: ThemeColorSystemProps) {
   const [activeTokenId, setActiveTokenId] = useState<string | null>(null);
   const [colorValue, setColorValue] = useState<string | null>(null);
+  const logger = useLogger('ThemeColorSystem', LogCategory.UI);
+  
+  // Apply color tokens to document on component mount
+  useEffect(() => {
+    if (!tokens || tokens.length === 0) return;
+    
+    try {
+      logger.info('Applying color tokens to CSS variables');
+      const rootElement = document.documentElement;
+
+      // Force apply all color tokens to ensure they're visible
+      tokens.forEach(token => {
+        if (token.category === 'color' && token.token_name && token.token_value) {
+          // Convert the color if it's in HSL format
+          const colorValue = token.token_value;
+          
+          // Apply directly as CSS variable
+          if (token.token_name.startsWith('--')) {
+            rootElement.style.setProperty(token.token_name, colorValue);
+          } else {
+            rootElement.style.setProperty(`--${token.token_name}`, colorValue);
+          }
+          
+          // Also try applying in site-* format for fallback
+          if (!token.token_name.startsWith('site-')) {
+            rootElement.style.setProperty(`--site-${token.token_name}`, colorValue);
+          }
+        }
+      });
+    } catch (error) {
+      logger.error('Failed to apply color tokens', { error });
+    }
+  }, [tokens, logger]);
   
   const handleTokenClick = (token: ThemeToken) => {
     if (!token.token_name) return;
     
     setActiveTokenId(token.id);
     setColorValue(token.token_value || null);
+    
+    // Apply the selected color immediately for preview
+    if (token.token_name && token.token_value) {
+      const rootElement = document.documentElement;
+      
+      if (token.token_name.startsWith('--')) {
+        rootElement.style.setProperty(token.token_name, token.token_value);
+      } else {
+        rootElement.style.setProperty(`--${token.token_name}`, token.token_value);
+      }
+      
+      // Also apply in site-* format
+      if (!token.token_name.startsWith('site-')) {
+        rootElement.style.setProperty(`--site-${token.token_name}`, token.token_value);
+      }
+    }
   };
   
   const handleColorChange = (color: string) => {
@@ -27,6 +78,23 @@ export function ThemeColorSystem({ tokens, onChange, className }: ThemeColorSyst
     
     if (activeTokenId && onChange) {
       onChange(activeTokenId, color);
+      
+      // Find the token and apply the new color immediately
+      const token = tokens.find(t => t.id === activeTokenId);
+      if (token && token.token_name) {
+        const rootElement = document.documentElement;
+        
+        if (token.token_name.startsWith('--')) {
+          rootElement.style.setProperty(token.token_name, color);
+        } else {
+          rootElement.style.setProperty(`--${token.token_name}`, color);
+        }
+        
+        // Also apply in site-* format
+        if (!token.token_name.startsWith('site-')) {
+          rootElement.style.setProperty(`--site-${token.token_name}`, color);
+        }
+      }
     }
   };
   

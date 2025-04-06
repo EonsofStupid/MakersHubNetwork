@@ -13,12 +13,26 @@ export const consoleTransport: LogTransport = {
     const timestamp = entry.timestamp.toISOString();
     const prefix = `[${timestamp}] [${entry.level}] [${entry.category}]`;
     
+    // Special handling for theme-related errors - make them stand out
+    const isThemeRelated = entry.category?.toLowerCase().includes('theme') || 
+                          (typeof entry.message === 'string' && entry.message.toLowerCase().includes('theme'));
+    
+    if (isThemeRelated && (entry.level === 'error' || entry.level === 'critical' || entry.level === 'warn')) {
+      console.error(`%c${prefix} ${entry.message}`, 'background: #ff2d6e; color: white; padding: 2px 4px; border-radius: 2px;', entry.details || '');
+      return;
+    }
+    
+    // Normal logging for other messages
     switch (entry.level) {
       case 'debug':
         console.debug(`${prefix} ${entry.message}`, entry.details || '');
         break;
       case 'info':
-        console.info(`${prefix} ${entry.message}`, entry.details || '');
+        if (isThemeRelated) {
+          console.info(`%c${prefix} ${entry.message}`, 'color: #00F0FF;', entry.details || '');
+        } else {
+          console.info(`${prefix} ${entry.message}`, entry.details || '');
+        }
         break;
       case 'warn':
         console.warn(`${prefix} ${entry.message}`, entry.details || '');
