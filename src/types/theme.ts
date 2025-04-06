@@ -1,51 +1,22 @@
 
-export interface Theme {
+import { Json } from "@/integrations/supabase/types";
+
+// Define the theme status type
+export type ThemeStatus = 'draft' | 'published' | 'archived';
+
+// Define the theme context type to ensure consistent usage
+export type ThemeContext = 'site' | 'admin' | 'chat';
+
+export interface ThemeToken {
   id: string;
-  name: string;
+  token_name: string;
+  token_value: string;
+  category: string;
   description?: string;
-  status: 'draft' | 'published' | 'archived';
-  is_default: boolean;
-  is_active: boolean;
-  created_by?: string;
-  created_at: string;
-  updated_at: string;
-  published_at?: string;
-  version: string;
-  cache_key?: string;
-  parent_theme_id?: string;
-  design_tokens: DesignTokensStructure;
-  component_tokens: ComponentTokens[];
-  composition_rules?: Record<string, any>;
-  cached_styles?: Record<string, any>;
-}
-
-export interface DesignTokensStructure {
-  colors?: Record<string, string>;
-  spacing?: Record<string, any>;
-  typography?: TypographyTokens;
-  effects: {
-    shadows: Record<string, any>;
-    blurs: Record<string, any>;
-    gradients: Record<string, any>;
-    primary?: string;
-    secondary?: string;
-    tertiary?: string;
-  };
-  animation?: AnimationTokens;
-  admin?: Record<string, any>;
-}
-
-export interface TypographyTokens {
-  fontSizes?: Record<string, any>;
-  fontFamilies?: Record<string, any>;
-  lineHeights?: Record<string, any>;
-  letterSpacing?: Record<string, any>;
-}
-
-export interface AnimationTokens {
-  keyframes?: Record<string, any>;
-  transitions?: Record<string, any>;
-  durations?: Record<string, string | number>;
+  fallback_value?: string;
+  theme_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ComponentTokens {
@@ -59,85 +30,93 @@ export interface ComponentTokens {
   context?: ThemeContext;
 }
 
-export interface ThemeToken {
-  id: string;
-  name?: string;
-  token_name?: string;
-  value?: string;
-  token_value?: string;
-  category: string;
-  theme_id?: string;
+export interface DesignTokensStructure {
+  colors?: Record<string, any>;
+  spacing?: Record<string, any>;
+  typography?: {
+    fontSizes: Record<string, any>;
+    fontFamilies: Record<string, any>;
+    lineHeights: Record<string, any>;
+    letterSpacing: Record<string, any>;
+  };
+  effects?: {
+    shadows: Record<string, any>;
+    blurs: Record<string, any>;
+    gradients: Record<string, any>;
+    primary?: string;
+    secondary?: string;
+    tertiary?: string;
+  };
+  animation?: {
+    keyframes: Record<string, any>;
+    transitions: Record<string, any>;
+    durations: Record<string, any>;
+  };
+  admin?: Record<string, any>;
 }
 
+export interface Theme {
+  id: string;
+  name: string;
+  description?: string;
+  status: ThemeStatus;
+  is_default: boolean;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  published_at?: string;
+  version: number;
+  cache_key?: string;
+  parent_theme_id?: string;
+  design_tokens: DesignTokensStructure;
+  component_tokens: ComponentTokens[];
+  composition_rules?: Record<string, any>;
+  cached_styles?: Record<string, any>;
+}
+
+// Updated ThemeLogDetails interface with more specific types
 export interface ThemeLogDetails {
-  error?: boolean;
+  // Status indicators
   success?: boolean;
+  error?: boolean;
   warning?: boolean;
+  
+  // Error information
   errorMessage?: string;
-  errorDetails?: Record<string, any>;
   errorCode?: string;
+  errorDetails?: string | Record<string, unknown>;
   errorHint?: string;
+  errorName?: string;
+  
+  // Theme information
   themeId?: string;
-  themeName?: string;
   theme?: string;
-  isFallback?: boolean;
+  defaultTheme?: string;
   originalTheme?: string;
-  hasAnimations?: boolean;
-  hasComponentStyles?: boolean;
-  componentTokensCount?: number;
+  
+  // Component information
+  component?: string;
+  componentCount?: number;
+  reason?: string;
+  source?: string;
+  
+  // Operation status
   mainSite?: boolean;
   admin?: boolean;
   database?: boolean;
+  
+  // Additional context
   details?: Record<string, unknown>;
-  errorName?: string;
-  reason?: string;
-  source?: string;
-  component?: string;
+  
+  // Allow for additional properties
+  [key: string]: unknown;
 }
 
-export type ThemeContext = 'site' | 'admin' | 'chat';
-
-export interface ThemeAnimation {
-  name: string;
-  duration: string | number;
-  timingFunction: string;
-  delay?: string | number;
-  iterationCount?: string | number;
-  direction?: string;
-  fillMode?: string;
-  keyframes: Record<string, any>;
-}
-
-export interface ThemeEffect {
-  id: string;
-  type: 'glitch' | 'gradient' | 'cyber' | 'pulse' | 'particle' | 'morph';
-  enabled: boolean;
-  [key: string]: any; // Allow for type-specific properties
-}
-
-export interface ThemeProviderProps {
-  children: React.ReactNode;
-  theme?: Theme;
-  defaultThemeId?: string;
-}
-
-export interface ThemeContextValue {
-  theme: Theme | null;
-  setTheme: (themeId: string) => Promise<void>;
+export interface ThemeContextType {
+  currentTheme: Theme | null;
+  themeTokens: ThemeToken[];
+  themeComponents: ComponentTokens[];
   isLoading: boolean;
   error: Error | null;
-  components: ThemeComponent[];
-}
-
-// Add these missing interfaces for compatibility
-export interface ThemeComponent {
-  id: string;
-  type: string;
-  name: string;
-  description?: string;
-  props?: Record<string, any>;
-  styles?: Record<string, any>;
-  variants?: Record<string, any>;
-  states?: Record<string, any>;
-  context?: ThemeContext;
+  setTheme: (themeId: string) => Promise<void>;
 }

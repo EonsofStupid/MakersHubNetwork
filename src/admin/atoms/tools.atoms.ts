@@ -6,7 +6,7 @@ export const adminEditModeAtom = atom(false);
 export const adminDebugModeAtom = atom(false);
 export const adminEditTargetAtom = atom<string | null>(null);
 
-// Sidebar state
+// Sidebar state (moved from index.ts to here)
 export const adminSidebarExpandedAtom = atom<boolean>(true);
 
 // Drag and drop state
@@ -30,9 +30,9 @@ export const effectsPaletteVisibleAtom = atom<boolean>(false);
 export const selectedEffectAtom = atom<string | null>(null);
 export const hoveredIconAtom = atom<string | null>(null);
 
+// Key state for special interactions
+export const altKeyPressedAtom = atom<boolean>(false);
+
 // Dragged item state
 export const adminDraggedItemAtom = atom<any>(null);
 export const adminDropTargetAtom = atom<string | null>(null);
-
-// Keyboard state
-export const altKeyPressedAtom = atom<boolean>(false);

@@ -33,6 +33,7 @@ export function LogsPage() {
               <CyberCard title="System Logs" className="p-4">
                 <LogActivityStream 
                   height="400px"
+                  level={LogLevel.INFO}
                   categories={[LogCategory.SYSTEM]}
                   showSource={true}
                 />
@@ -43,6 +44,7 @@ export function LogsPage() {
               <CyberCard title="All Activity" className="p-4">
                 <LogActivityStream 
                   height="400px"
+                  level={LogLevel.DEBUG}
                   showSource={true}
                 />
               </CyberCard>
@@ -62,6 +64,7 @@ export function LogsPage() {
               <CyberCard title="Network Activity" className="p-4">
                 <LogActivityStream 
                   height="300px"
+                  level={LogLevel.INFO}
                   categories={[LogCategory.NETWORK]}
                   showSource={true}
                 />

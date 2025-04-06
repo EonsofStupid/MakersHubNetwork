@@ -1,86 +1,114 @@
 
-import { JsonValue } from "type-fest";
-
-export interface ThemeToken {
-  id: string;
-  token_name: string;
-  token_value: string;
-  token_type: string;
-  category: string;
-  theme_id?: string;
-  description?: string;
-  fallback_value?: string;
-  name?: string;
-  value?: string;
-}
-
 export interface Theme {
   id: string;
   name: string;
-  description: string;
-  status: "draft" | "published" | "archived";
+  description?: string;
+  status: 'draft' | 'published' | 'archived';
   is_default: boolean;
-  is_active: boolean;
   created_by?: string;
   created_at: string;
   updated_at: string;
   published_at?: string;
-  version: string; // Store as string to avoid type conversion issues
-  design_tokens?: {
-    colors?: {
-      primary?: string;
-      secondary?: string;
-      background?: string;
-      foreground?: string;
-      accent?: string;
-      [key: string]: string | undefined;
-    };
-    typography?: {
-      fontFamily?: string;
-      fontSize?: Record<string, string>;
-      lineHeight?: Record<string, string>;
-      fontWeight?: Record<string, number | string>;
-      [key: string]: any;
-    };
-    spacing?: Record<string, string>;
-    breakpoints?: Record<string, string>;
-    animation?: {
-      durations?: Record<string, string>;
-      easings?: Record<string, string>;
-      keyframes?: Record<string, any>;
-    };
-    effects?: Record<string, any>;
-    [key: string]: any;
-  };
-  component_tokens: {
-    id: string;
-    component_name: string;
-    styles: Record<string, any>;
-    variables?: Record<string, string>;
-    states?: Record<string, any>;
-    variants?: Record<string, any>;
-    theme_id?: string;
-  }[];
-  cached_styles?: any;
-  context: "site" | "admin" | "chat";
+  version: number;
+  cache_key?: string;
+  parent_theme_id?: string;
+  design_tokens: DesignTokensStructure;
+  component_tokens: ComponentTokens[];
+  composition_rules?: Record<string, any>;
+  cached_styles?: Record<string, any>;
 }
 
-export interface ThemeUpdate {
-  name?: string;
+export interface DesignTokensStructure {
+  colors?: Record<string, string>;
+  spacing?: Record<string, any>;
+  typography?: TypographyTokens;
+  effects: {
+    shadows: Record<string, any>;
+    blurs: Record<string, any>;
+    gradients: Record<string, any>;
+    primary?: string;
+    secondary?: string;
+    tertiary?: string;
+  };
+  animation?: AnimationTokens;
+  admin?: Record<string, any>;
+}
+
+export interface TypographyTokens {
+  fontSizes?: Record<string, any>;
+  fontFamilies?: Record<string, any>;
+  lineHeights?: Record<string, any>;
+  letterSpacing?: Record<string, any>;
+}
+
+export interface AnimationTokens {
+  keyframes?: Record<string, any>;
+  transitions?: Record<string, any>;
+  durations?: Record<string, string | number>;
+}
+
+export interface ComponentTokens {
+  id: string;
+  component_name: string;
+  styles: Record<string, any>;
   description?: string;
-  status?: "draft" | "published" | "archived";
-  is_default?: boolean;
-  design_tokens?: Record<string, any>;
-  component_tokens?: Theme["component_tokens"];
-  published_at?: string | null;
+  theme_id?: string;
+  created_at?: string;
   updated_at?: string;
+  context?: 'site' | 'admin' | 'chat';
+}
+
+export interface ThemeToken {
+  id: string;
+  name: string;
+  value: string;
+  category: string;
+  theme_id: string;
 }
 
 export interface ThemeLogDetails {
-  theme?: string;
-  originalTheme?: string;
-  errorMessage?: string;
-  details?: Record<string, any>;
-  success?: boolean;
   error?: boolean;
+  success?: boolean;
+  warning?: boolean;
+  errorMessage?: string;
+  errorDetails?: Record<string, any>;
+  errorCode?: string;
+  errorHint?: string;
+  themeId?: string;
+  themeName?: string;
+  theme?: string;
+  isFallback?: boolean;
+  originalTheme?: string;
+  hasAnimations?: boolean;
+  hasComponentStyles?: boolean;
+  componentTokensCount?: number;
+  mainSite?: boolean;
+  admin?: boolean;
+  database?: boolean;
+  details?: Record<string, unknown>;
+  // Added for the TypeScript errors
+  errorName?: string;
+  reason?: string;
+  source?: string;
+  component?: string;
+}
+
+export type ThemeContext = 'site' | 'admin' | 'chat';
+
+export interface ThemeAnimation {
+  name: string;
+  duration: string | number;
+  timingFunction: string;
+  delay?: string | number;
+  iterationCount?: string | number;
+  direction?: string;
+  fillMode?: string;
+  keyframes: Record<string, any>;
+}
+
+export interface ThemeEffect {
+  id: string;
+  type: 'glitch' | 'gradient' | 'cyber' | 'pulse' | 'particle' | 'morph';
+  enabled: boolean;
+  [key: string]: any; // Allow for type-specific properties
 }

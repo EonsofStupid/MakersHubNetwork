@@ -1,49 +1,42 @@
 
-import React from 'react';
-import { MainNav } from '@/components/MainNav';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export default function AboutPage() {
-  const logger = useLogger('AboutPage', LogCategory.UI);
-
-  React.useEffect(() => {
-    logger.info('About page mounted');
-    
-    return () => {
-      logger.info('About page unmounted');
-    };
-  }, [logger]);
-
   return (
-    <div className="min-h-screen bg-background">
-      <MainNav />
+    <div className="container mx-auto px-4 py-16">
+      <h1 className="text-4xl font-bold mb-6">About Impulse</h1>
       
-      <main className="container mx-auto px-4 pt-24 pb-16">
-        <h1 className="text-4xl font-bold tracking-tight mb-6">About Impulsivity</h1>
+      <div className="prose dark:prose-invert max-w-none">
+        <p className="text-xl mb-8">
+          Impulse is a modern, flexible administration platform designed to streamline content management and user administration.
+        </p>
         
-        <div className="prose prose-lg dark:prose-invert max-w-none">
-          <p>
-            Impulsivity is an advanced admin interface with powerful tools for content management,
-            visual editing, and real-time debugging.
-          </p>
-          
-          <h2>Key Features</h2>
-          <ul>
-            <li>Visual page editor with overlay debugging</li>
-            <li>Advanced theme customization</li>
-            <li>Role-based access control</li>
-            <li>Integrated logging system</li>
-            <li>Real-time admin dashboard</li>
-          </ul>
-          
-          <h2>Technology Stack</h2>
-          <p>
-            Built with React, TypeScript, Tailwind CSS, and advanced state management
-            using both Zustand and Jotai for global and component state.
-          </p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Our Mission</h2>
+        <p>
+          To provide a seamless, intuitive interface for managing digital content and user experiences, empowering organizations 
+          to focus on their core business without wrestling with complex administrative tools.
+        </p>
+        
+        <h2 className="text-2xl font-bold mt-8 mb-4">Key Features</h2>
+        <ul className="list-disc pl-6 space-y-2">
+          <li>Role-based access control with granular permissions</li>
+          <li>Visual page builder with live preview</li>
+          <li>Comprehensive user management</li>
+          <li>Content publishing workflow</li>
+          <li>Theme customization</li>
+          <li>Extensible plugin architecture</li>
+          <li>Real-time collaboration tools</li>
+          <li>Advanced analytics and reporting</li>
+        </ul>
+        
+        <div className="mt-12">
+          <Button asChild>
+            <Link to="/">Back to Home</Link>
+          </Button>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

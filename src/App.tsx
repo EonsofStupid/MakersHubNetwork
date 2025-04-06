@@ -4,7 +4,7 @@ import HomePage from "./pages/Home";
 import AboutPage from "./pages/About";
 import LoginPage from "./pages/Login";
 import { AdminLayout } from "./admin/components/layouts/AdminLayout";
-import AdminDashboard from "./admin/pages/Dashboard";
+import Dashboard from "./admin/pages/Dashboard";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { DebugProvider } from "@/admin/providers/DebugProvider";
 
@@ -17,7 +17,7 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
+            <Route index element={<Dashboard />} />
           </Route>
         </Routes>
       </DebugProvider>

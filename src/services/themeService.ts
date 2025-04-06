@@ -14,10 +14,9 @@ const fallbackTheme: Theme = {
   description: "Local emergency fallback theme used when theme service is unavailable",
   status: 'published',
   is_default: true,
-  is_active: true,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
-  version: "1",
+  version: 1,
   design_tokens: {
     colors: {
       background: "#080F1E",

@@ -67,7 +67,7 @@ export function AdminLayout({
       
       navigate("/");
     }
-  }, [isAuthenticated, hasAdminAccess, logger, navigate, toast, isEditMode, permissions]); 
+  }, [isAuthenticated, hasAdminAccess]); // Reduced dependencies to prevent excessive re-renders
 
   // If user is not authenticated or doesn't have admin access, don't render the layout
   if (!isAuthenticated || !hasAdminAccess) {

@@ -1,8 +1,12 @@
 
-import { PermissionValue } from '@/auth/permissions';
+import { PermissionValue } from "@/auth/permissions";
 
-// Export admin permission value type
+// Re-export the core permission type
 export type AdminPermissionValue = PermissionValue;
 
-// Permission check function type
-export type PermissionCheckFn = (permission: AdminPermissionValue) => boolean;
+// Optional: Define admin-specific permission interfaces if needed
+export interface AdminPermission {
+  value: AdminPermissionValue;
+  displayName: string;
+  description?: string;
+}

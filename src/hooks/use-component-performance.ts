@@ -1,57 +1,69 @@
 
-import { useRef } from 'react';
-import { useLogger } from './use-logger';
-import { LogCategory } from '@/logging';
+import { useRef, useEffect, useCallback } from 'react';
+import { usePerformanceLogger } from './use-performance-logger';
 
 /**
- * Hook for measuring component performance
+ * Hook for monitoring React component performance
  */
 export function useComponentPerformance(componentName: string) {
-  const logger = useLogger(componentName, LogCategory.PERFORMANCE);
-  const timers = useRef<Record<string, number>>({});
+  const { startTimer, endTimer, measure } = usePerformanceLogger(componentName);
+  const mountTimeRef = useRef<number>(0);
+  const renderCountRef = useRef<number>(0);
   
-  /**
-   * Start measuring a performance timing
-   * @param label Label for the timing
-   */
-  const startTimer = (label: string): void => {
-    timers.current[label] = performance.now();
-  };
-  
-  /**
-   * End measuring a performance timing and log the result
-   * @param label Label for the timing
-   * @returns Duration in milliseconds
-   */
-  const endTimer = (label: string): number | null => {
-    const startTime = timers.current[label];
-    if (startTime === undefined) {
-      logger.warn(`Timer "${label}" was not started`);
-      return null;
+  // Track component mounting and updates
+  useEffect(() => {
+    if (renderCountRef.current === 0) {
+      // First render (mount)
+      mountTimeRef.current = performance.now();
+      startTimer('mount');
+    } else {
+      // Re-render
+      startTimer(`render-${renderCountRef.current}`);
     }
     
-    const duration = logger.logCustomTiming(label, startTime);
-    delete timers.current[label];
-    return duration;
-  };
+    renderCountRef.current += 1;
+    
+    return () => {
+      if (renderCountRef.current === 1) {
+        // Component is unmounting after first render
+        endTimer('mount', {
+          details: { lifecycle: 'mount-unmount' }
+        });
+      } else {
+        // End the render timer
+        endTimer(`render-${renderCountRef.current - 1}`, {
+          details: { renderCount: renderCountRef.current }
+        });
+      }
+    };
+  });
   
-  /**
-   * Measure execution time of a function
-   * @param label Label for the timing
-   * @param fn Function to measure
-   * @returns Result of the function
-   */
-  const measure = <T>(label: string, fn: () => T): T => {
-    startTimer(label);
-    const result = fn();
-    endTimer(label);
-    return result;
-  };
+  // Measure time to first meaningful render
+  const markMeaningfulRender = useCallback(() => {
+    if (mountTimeRef.current > 0) {
+      const timeToMeaningful = performance.now() - mountTimeRef.current;
+      
+      endTimer('mount', {
+        details: {
+          timeToMeaningful,
+          lifecycle: 'meaningful-render'
+        }
+      });
+    }
+  }, [endTimer]);
+  
+  // Wrapper for measuring specific operations
+  const measureOperation = useCallback(<T>(
+    operationName: string,
+    fn: () => T,
+    options?: { details?: unknown }
+  ): T => {
+    return measure(`${componentName}:${operationName}`, fn, options);
+  }, [componentName, measure]);
   
   return {
-    startTimer,
-    endTimer,
-    measure,
-    logCustomTiming: logger.logCustomTiming
+    renderCount: renderCountRef.current,
+    markMeaningfulRender,
+    measureOperation
   };
 }
