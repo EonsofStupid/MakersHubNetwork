@@ -1,11 +1,11 @@
 
 import { useEffect, useState } from 'react';
-import { useThemeStore } from '@/stores/theme/store';
+import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { Theme, DesignTokensStructure, ThemeContext, ThemeLogDetails } from '@/types/theme';
+import { Theme, ThemeContext, ThemeLogDetails } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -32,7 +32,7 @@ export function useImpulsivityTheme() {
       // Update the theme in the store if needed
       if (currentTheme) {
         // Create updated design tokens
-        const updatedDesignTokens: DesignTokensStructure = {
+        const updatedDesignTokens = {
           ...(currentTheme.design_tokens || {}),
           colors: {
             ...(currentTheme.design_tokens?.colors || {}),
@@ -105,7 +105,7 @@ export function useImpulsivityTheme() {
           --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.7);
         `);
         
-        const logDetails: ThemeLogDetails = { 
+        const logDetails = { 
           success: true,
           admin: true 
         };
@@ -117,7 +117,7 @@ export function useImpulsivityTheme() {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const logDetails: ThemeLogDetails = { 
+      const logDetails = { 
         error: true, 
         errorMessage,
         admin: false 
@@ -136,13 +136,13 @@ export function useImpulsivityTheme() {
       const result = await syncImpulsivityTheme();
       
       if (result) {
-        const logDetails: ThemeLogDetails = { 
+        const logDetails = { 
           success: true,
           database: true
         };
         logger.info('Successfully synced Impulsivity theme to database', logDetails);
       } else {
-        const logDetails: ThemeLogDetails = { 
+        const logDetails = { 
           error: true, 
           success: false,
           database: false
@@ -154,7 +154,7 @@ export function useImpulsivityTheme() {
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const logDetails: ThemeLogDetails = { 
+      const logDetails = { 
         error: true, 
         errorMessage,
         database: false
@@ -185,7 +185,7 @@ export function useImpulsivityTheme() {
         description: "The theme has been successfully applied across the entire application.",
       });
       
-      const logDetails: ThemeLogDetails = {
+      const logDetails = {
         success: true,
         mainSite: true, 
         admin: true, 
@@ -207,7 +207,7 @@ export function useImpulsivityTheme() {
         variant: "destructive",
       });
       
-      const logDetails: ThemeLogDetails = {
+      const logDetails = {
         warning: true,
         success: false,
         mainSite: mainSiteResult, 

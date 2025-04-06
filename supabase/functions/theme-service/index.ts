@@ -57,15 +57,15 @@ serve(async (req) => {
     // Parse URL and get scope parameter (for backward compatibility)
     const url = new URL(req.url);
     // Support both 'scope' and 'context' parameters, defaulting to 'app' context
-    const scopeOrContext = url.searchParams.get('scope') || url.searchParams.get('context') || 'app';
+    const context = url.searchParams.get('context') || url.searchParams.get('scope') || 'app';
     
-    console.log(`Loading theme for context: ${scopeOrContext}`);
+    console.log(`Loading theme for context: ${context}`);
 
     // Query for theme by context and default status
     const { data: theme, error } = await supabaseAdmin
       .from('themes')
       .select('*')
-      .eq('context', scopeOrContext) // Use context instead of scope
+      .eq('context', context) 
       .eq('is_default', true)
       .single();
 
@@ -85,7 +85,7 @@ serve(async (req) => {
     }
 
     if (!theme) {
-      console.warn(`No theme found for context: ${scopeOrContext}, using fallback`);
+      console.warn(`No theme found for context: ${context}, using fallback`);
       
       // Return fallback data when no theme found
       return new Response(
