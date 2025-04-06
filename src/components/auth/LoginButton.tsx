@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { LoginModal } from "./LoginModal";
+import { LoginSheet } from "@/components/MainNav/components/LoginSheet";
 import { Button } from "@/components/ui/button";
 import { useAuthState } from "@/auth/hooks/useAuthState";
 
@@ -24,7 +24,7 @@ export const LoginButton = () => {
           Login
         </Button>
       )}
-      <LoginModal 
+      <LoginSheet 
         isOpen={isLoginOpen}
         onOpenChange={setIsLoginOpen}
       />
