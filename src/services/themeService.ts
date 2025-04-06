@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeContext } from '@/types/theme';
 import { getLogger } from '@/logging';
@@ -80,14 +79,14 @@ interface GetThemeOptions {
 /**
  * Get a theme from the database
  */
-export async function getTheme(options: GetThemeOptions = { isDefault: true }): Promise<{ theme: Theme, isFallback: boolean }> {
+export async function getTheme(options?: GetThemeOptions): Promise<{ theme: any; isFallback: boolean }> {
   try {
     logger.info("Fetching theme from service", {
       category: LogCategory.DATABASE,
       details: options
     });
     
-    const { id, name, isDefault = true, context = 'site' } = options;
+    const { id, name, isDefault = true, context = 'site' } = options || {};
     
     // Use edge function to get theme
     const { data, error } = await supabase.functions.invoke('theme-service', {
@@ -104,6 +103,66 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
       logger.error("Error fetching theme from service", { 
         category: LogCategory.DATABASE,
         details: { error, options }
+      });
+      
+      return { 
+        theme: fallbackTheme, 
+        isFallback: true 
+      };
+    }
+    
+    logger.info("Theme set successfully", { 
+      category: LogCategory.DATABASE,
+      details: {
+        themeId: data.theme?.id || 'unknown',
+        isFallback: data.isFallback || false,
+        componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
+      }
+    });
+
+    return { 
+      theme: data.theme, 
+      isFallback: data.isFallback || false 
+    };
+    
+  } catch (error) {
+    logger.error("Error fetching theme from service", { 
+      category: LogCategory.DATABASE,
+      details: error instanceof Error ? error.message : String(error)
+    });
+    
+    // Return local fallback theme as emergency backup
+    return { 
+      theme: fallbackTheme, 
+      isFallback: true 
+    };
+  }
+}
+
+export async function fetchTheme(themeId: string): Promise<any> {
+  // Create a record object for the theme ID
+  const themeParams: Record<string, unknown> = { id: themeId };
+  
+  try {
+    logger.info("Fetching theme from service", {
+      category: LogCategory.DATABASE,
+      details: themeParams
+    });
+    
+    const { data, error } = await supabase.functions.invoke('theme-service', {
+      body: { 
+        operation: 'get-theme', 
+        themeId: themeId,
+        themeName: null,
+        isDefault: false,
+        context: 'site'
+      }
+    });
+
+    if (error) {
+      logger.error("Error fetching theme from service", { 
+        category: LogCategory.DATABASE,
+        details: { error, themeParams }
       });
       
       return { 
