@@ -1,10 +1,18 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeContext } from '@/types/theme';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 
 // Create a logger instance for the theme service
-const logger = getLogger();
+const logger = getLogger('ThemeService', LogCategory.UI);
+
+// Helper to check if a string is a valid UUID
+function isValidUUID(id: string): boolean {
+  if (!id || typeof id !== 'string') return false;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
 
 // Local fallback theme for when the database is unavailable
 const fallbackTheme: Theme = {
@@ -82,20 +90,35 @@ interface GetThemeOptions extends Record<string, unknown> {
  */
 export async function getTheme(options: GetThemeOptions = { isDefault: true }): Promise<{ theme: Theme, isFallback: boolean }> {
   try {
+    const { id, name, isDefault = true, context = 'site' } = options;
+    
+    let themeId = id;
+    let themeName = name;
+    
+    // If id is provided but not a UUID, treat it as a name
+    if (id && !isValidUUID(id)) {
+      themeName = id;
+      themeId = undefined;
+    }
+    
     logger.info("Fetching theme from service", {
       category: LogCategory.DATABASE,
-      details: options,
+      details: {
+        themeId,
+        themeName,
+        isUuid: themeId ? isValidUUID(themeId) : false,
+        lookupType: themeId ? 'by-uuid' : (themeName ? 'by-name' : 'default'),
+        context
+      },
       source: 'themeService'
     });
-    
-    const { id, name, isDefault = true, context = 'site' } = options;
     
     // Use edge function to get theme
     const { data, error } = await supabase.functions.invoke('theme-service', {
       body: { 
         operation: 'get-theme', 
-        themeId: id,
-        themeName: name,
+        themeId,
+        themeName,
         isDefault,
         context
       } as Record<string, unknown>
@@ -118,7 +141,9 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
       category: LogCategory.DATABASE,
       details: {
         themeId: data.theme?.id || 'unknown',
+        themeName: data.theme?.name || 'unknown',
         isFallback: data.isFallback || false,
+        lookupMethod: data.lookupMethod || 'unknown',
         componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
       },
       source: 'themeService'

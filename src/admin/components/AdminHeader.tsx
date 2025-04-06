@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { AdminTooltip } from "./ui/AdminTooltip";
 import { useTheme } from "@/components/ui/theme-provider";
 import { Link } from "react-router-dom";
-import { useAdminContext } from "../context/AdminContext";
+import { useAdmin } from "../context/AdminContext";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AdminHeaderProps {
   title?: string;
@@ -14,7 +15,7 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ title = "Admin Dashboard", onToggleSidebar }: AdminHeaderProps) {
   const { theme, setTheme } = useTheme();
-  const { user } = useAdminContext();
+  const { user } = useAuth();
   
   return (
     <header className="border-b border-[var(--impulse-border-normal)] bg-[var(--impulse-bg-card)] backdrop-blur-md">
