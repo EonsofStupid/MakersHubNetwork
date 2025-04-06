@@ -11,10 +11,11 @@ import { Theme, ThemeContext, ThemeLogDetails } from '@/types/theme';
  * Hook to apply and synchronize the Impulsivity theme across the application
  */
 export function useImpulsivityTheme() {
-  const { currentTheme, isLoading } = useThemeStore();
+  const { currentTheme } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ImpulsivityTheme', LogCategory.UI);
   const [syncInProgress, setSyncInProgress] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Apply the Impulsivity theme to the main site
   const applyToMainSite = async () => {
