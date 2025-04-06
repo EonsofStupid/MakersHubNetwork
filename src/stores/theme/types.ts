@@ -52,4 +52,3 @@ export interface ThemeState {
   loadTheme: (context?: ThemeContext) => Promise<void>;
   applyTokens: (tokenUpdates: Partial<ThemeTokens>) => void;
 }
-

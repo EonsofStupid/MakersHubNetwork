@@ -56,11 +56,14 @@ export const RequirePermission = ({
       return <>{fallback}</>;
     }
     
-    // Use proper TanStack Router navigation pattern
+    // Use proper TanStack Router navigation pattern with correctly typed search params
     return (
       <Navigate 
-        to={redirectTo as any}  
-        search={{ returnUrl: location.pathname }}
+        to={redirectTo as any}
+        search={(prev) => ({
+          ...prev, 
+          from: location.pathname
+        })}
         replace={true}
       />
     );
