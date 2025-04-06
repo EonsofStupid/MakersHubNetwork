@@ -1,9 +1,8 @@
 
 import { User, Session } from "@supabase/supabase-js";
 import { Database } from "@/integrations/supabase/types";
-import { UserRole as BaseUserRole } from "@/auth/types/roles";
 
-export type UserRole = BaseUserRole;
+export type UserRole = Database["public"]["Enums"]["user_role"];
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 

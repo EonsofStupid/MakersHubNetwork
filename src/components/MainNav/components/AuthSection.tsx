@@ -13,7 +13,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Settings, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UserRole } from "@/auth/types/roles";
 
 // IMPORTANT: Use useAuthState instead of useAuth to prevent circular dependencies
 // and useAdminAccess is replaced with a simpler check to avoid circular dependencies
@@ -24,8 +23,7 @@ export const AuthSection = memo(() => {
   
   // Determine admin access directly without the hook to avoid circular dependencies
   const hasAdminAccess = useMemo(() => {
-    const adminRoles: UserRole[] = ['admin', 'super_admin'];
-    return roles.some(role => adminRoles.includes(role as UserRole));
+    return roles.includes('admin') || roles.includes('super_admin');
   }, [roles]);
   
   // Handle avatar click with animation and effects
