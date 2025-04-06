@@ -1,34 +1,37 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",                          // ✅ Required for Error.cause
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],    // ✅ Modern API + browser + iterable support
     "module": "ESNext",
+
+    /* Compiler behavior */
     "skipLibCheck": true,
     "allowJs": true,
-    "noEmit": true,    
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": false,
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
 
-    /* Linting */
+    /* Linting & Safety */
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,
 
-    /* Path aliases */
+    /* Module resolution */
+    "moduleResolution": "bundler",               // ✅ Required for Vite + Next + modern stacks
+
+    /* Paths & aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["src/*"],                          // ✅ App root
+      "@admin/*": ["src/admin/*"],               // ✅ Admin features
+      "@chat/*": ["src/chat/*"],                 // ✅ Chat system
     }
   },
   "include": ["src"],
-  // Remove references
+  "exclude": ["node_modules", "dist"]
 }
