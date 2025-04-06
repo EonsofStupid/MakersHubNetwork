@@ -9,56 +9,73 @@ export interface ImpulseTheme {
     primary: string;
     secondary: string;
     tertiary?: string;
-    background: string;
-    foreground: string;
-    card?: string;
-    accent?: string;
-    muted?: string;
-    border?: string;
-    [key: string]: string | undefined;
+    background: {
+      main: string;
+      card: string;
+      overlay: string;
+    };
+    text: {
+      primary: string;
+      secondary: string;
+      accent: string;
+    };
+    borders: {
+      normal: string;
+      hover: string;
+      active: string;
+    };
+    [key: string]: any;
   };
   
   // Effect settings
   effects: {
-    glowStrength?: string;
-    primaryGlow?: string;
-    secondaryGlow?: string;
-    scanlines?: boolean;
-    noise?: boolean;
-    [key: string]: string | boolean | undefined;
+    glow: {
+      primary: string;
+      secondary: string;
+      hover: string;
+    };
+    blur: {
+      background: string;
+      overlay: string;
+    };
+    gradients: {
+      main: string;
+      accent: string;
+      card: string;
+    };
+    [key: string]: any;
   };
   
   // Animation settings
   animation: {
-    speed?: string;
-    intensity?: string;
-    enableMotion?: boolean;
-    [key: string]: string | boolean | undefined;
+    duration: {
+      fast: string;
+      normal: string;
+      slow: string;
+    };
+    curves: {
+      bounce: string;
+      ease: string;
+      spring: string;
+    };
+    [key: string]: any;
   };
   
   // UI component variants
   components?: {
-    buttons?: {
-      roundness?: string;
-      borderWidth?: string;
-      glowEffect?: boolean;
-      [key: string]: string | boolean | undefined;
+    panel: {
+      borderRadius: string;
+      padding: string;
     };
-    cards?: {
-      glassEffect?: boolean;
-      borderGlow?: boolean;
-      backdropBlur?: string;
-      [key: string]: string | boolean | undefined;
+    button: {
+      borderRadius: string;
+      padding: string;
     };
-    [key: string]: Record<string, unknown> | undefined;
-  };
-  
-  // Typography settings
-  typography?: {
-    fontFamily?: string;
-    headingFont?: string;
-    monoFont?: string;
-    [key: string]: string | undefined;
+    tooltip: {
+      borderRadius: string;
+      padding: string;
+    };
+    [key: string]: any;
   };
   
   // Optional metadata
@@ -69,4 +86,7 @@ export interface ImpulseTheme {
     version?: string;
     [key: string]: string | undefined;
   };
+  
+  // Allow additional properties
+  [key: string]: any;
 }

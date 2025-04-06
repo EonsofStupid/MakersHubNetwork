@@ -18,12 +18,12 @@ const initialState = {
   isAuthenticated: false,
 };
 
-// Create a compatible storage object for Zustand persist middleware
+// Fix for handling Promise or string from storage
 const createCompatibleStorage = () => ({
-  getItem: (name: string) => {
+  getItem: async (name: string) => {
     const value = authStorage.getItem(name);
     if (value === null) return null;
-    return Promise.resolve(JSON.parse(value));
+    return Promise.resolve(typeof value === 'string' ? JSON.parse(value) : null);
   },
   setItem: (name: string, value: unknown) => {
     authStorage.setItem(name, JSON.stringify(value));

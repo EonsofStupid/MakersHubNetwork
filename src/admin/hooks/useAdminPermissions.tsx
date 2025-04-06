@@ -44,7 +44,14 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'manage_content',
     'view_analytics'
   ],
-  'user': []
+  'user': [],
+  'maker': [
+    'view_admin_panel',
+    'manage_content'
+  ],
+  'builder': [
+    'view_admin_panel'
+  ]
 };
 
 /**
