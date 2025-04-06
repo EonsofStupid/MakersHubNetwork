@@ -77,6 +77,12 @@ const fallbackTheme = {
   component_tokens: [],
 };
 
+// Helper to check if a string is a valid UUID
+function isValidUUID(id: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
+
 // Main function to handle requests
 serve(async (req: Request) => {
   try {
@@ -162,12 +168,22 @@ async function getTheme(supabase, body) {
     
     let query = supabase.from('themes').select('*');
     
-    // Filter based on params
+    // Filter based on params - being careful with type handling
     if (themeId) {
-      query = query.eq('id', themeId);
+      // Check if themeId is a valid UUID
+      if (isValidUUID(themeId)) {
+        console.log(`Looking up theme by UUID: ${themeId}`);
+        query = query.eq('id', themeId);
+      } else {
+        // If not a UUID, treat as a name
+        console.log(`ThemeId not a UUID, treating as name: ${themeId}`);
+        query = query.eq('name', themeId);
+      }
     } else if (themeName) {
+      console.log(`Looking up theme by name: ${themeName}`);
       query = query.eq('name', themeName);
     } else if (isDefault) {
+      console.log('Looking up default theme');
       query = query.eq('is_default', true);
     }
     
@@ -250,12 +266,16 @@ async function updateTheme(supabase, body) {
       );
     }
     
-    // Get current theme
-    const { data: existingTheme, error: getError } = await supabase
-      .from('themes')
-      .select('*')
-      .eq('id', themeId)
-      .single();
+    // Get current theme - handle both UUID and name lookups
+    let getQuery = supabase.from('themes').select('*');
+    
+    if (isValidUUID(themeId)) {
+      getQuery = getQuery.eq('id', themeId);
+    } else {
+      getQuery = getQuery.eq('name', themeId);
+    }
+    
+    const { data: existingTheme, error: getError } = await getQuery.single();
     
     if (getError) {
       console.error("Error getting theme to update:", getError);
@@ -275,7 +295,7 @@ async function updateTheme(supabase, body) {
         ...theme,
         updated_at: new Date().toISOString()
       })
-      .eq('id', themeId)
+      .eq('id', existingTheme.id)
       .select();
     
     if (error) {

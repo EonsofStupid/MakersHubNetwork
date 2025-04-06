@@ -15,6 +15,7 @@ import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 import { useAdminPermissions } from "@/admin/hooks/useAdminPermissions";
+import { AdminTooltipProvider } from "./ui/AdminTooltip";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -77,21 +78,23 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   }
 
   return (
-    <div className={`flex h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)] ${fullWidth ? 'max-w-full' : ''} ${className || ''}`}>
-      <AdminSidebar />
-      
-      <div className="flex flex-col flex-1 h-screen overflow-hidden">
-        <AdminHeader title={title} />
+    <AdminTooltipProvider>
+      <div className={`flex h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)] ${fullWidth ? 'max-w-full' : ''} ${className || ''}`}>
+        <AdminSidebar />
         
-        <main className={`flex-1 overflow-auto p-4 sm:p-6 ${fullWidth ? 'max-w-full' : ''}`}>
-          {children}
-        </main>
+        <div className="flex flex-col flex-1 h-screen overflow-hidden">
+          <AdminHeader title={title} />
+          
+          <main className={`flex-1 overflow-auto p-4 sm:p-6 ${fullWidth ? 'max-w-full' : ''}`}>
+            {children}
+          </main>
+        </div>
+        
+        {isEditMode && <FrozenZones />}
+        {isEditMode && <EditModeToggle />}
+        <LogToggleButton />
+        {showLogConsole && <LogConsole />}
       </div>
-      
-      {isEditMode && <FrozenZones />}
-      {isEditMode && <EditModeToggle />}
-      <LogToggleButton />
-      {showLogConsole && <LogConsole />}
-    </div>
+    </AdminTooltipProvider>
   );
 }
