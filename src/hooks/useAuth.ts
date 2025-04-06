@@ -1,5 +1,5 @@
 
-import { useContext, createContext } from 'react';
+import { useContext, createContext, useState, useEffect } from 'react';
 
 interface User {
   id: string;
@@ -12,18 +12,21 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  setUser: (user: User | null) => void; 
-  signIn?: (email: string, password: string) => Promise<User>;
-  signOut?: () => Promise<void>;
-  logout?: () => Promise<void>;
-  isLoading?: boolean;
-  error?: string | null;
+  signIn: (email: string, password: string) => Promise<User>;
+  signOut: () => Promise<void>;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
 }
 
 // Create a default context
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  setUser: () => {}
+  signIn: async () => ({ id: '' }),
+  signOut: async () => {},
+  isAuthenticated: false,
+  isLoading: false,
+  error: null
 });
 
 // Simple hook to use the auth context
@@ -32,16 +35,3 @@ export const useAuth = () => useContext(AuthContext);
 // Export the AuthContext for use in the provider
 export { AuthContext };
 
-// Export a simple provider that can be used in tests/storybook
-export const AuthProvider = ({ children, value }: { children: React.ReactNode, value?: AuthContextType }) => {
-  const defaultValue: AuthContextType = {
-    user: null,
-    setUser: () => {}
-  };
-
-  return (
-    <AuthContext.Provider value={value || defaultValue}>
-      {children}
-    </AuthContext.Provider>
-  );
-};

@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/components/ui/theme-provider';
 import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
 import { ImpulsivityInit } from '@/components/theme/ImpulsivityInit';
 import { SiteThemeProvider } from '@/components/theme/SiteThemeProvider';
-import { AuthProvider } from '@/hooks/useAuth';
+import { AuthProvider } from '@/hooks/useAuthProvider';
 import { AppInitializer } from '@/components/AppInitializer';
 import { AdminProvider } from '@/admin/context/AdminContext';
 import { AppRoutes } from '@/routes/AppRoutes';
