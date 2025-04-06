@@ -94,13 +94,17 @@ export function MainNav() {
         "mainnav-header",
         "mainnav-gradient",
         "w-full",
+        "left-0",
+        "right-0",
+        "absolute",
         isLoaded && (styles.container?.animated || "animate-morph-header"),
         isScrolled && "mainnav-scrolled transform-gpu"
       )}
       style={{
         clipPath: isScrolled 
           ? 'polygon(0 0, 100% 0, 98% 100%, 2% 100%)' // Trapezoid when scrolled
-          : 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' // Regular rectangle when at top
+          : 'polygon(0 0, 100% 0, 100% 100%, 0 100%)', // Regular rectangle when at top
+        width: '100vw'
       }}
     >
       {/* Enhanced glass effect with dual color overlay */}
@@ -126,9 +130,9 @@ export function MainNav() {
         />
       </div>
       
-      {/* Main navigation content - properly centered with max width */}
-      <div className="w-full mx-auto flex items-center justify-between h-16 px-4 relative z-10 max-w-[2000px]">
-        <div className="flex items-center justify-between w-full">
+      {/* Main navigation content - centered with max width but container itself is full width */}
+      <div className="w-screen mx-auto flex items-center justify-between h-16 px-4 relative z-10">
+        <div className="flex items-center justify-between w-full max-w-[2000px] mx-auto">
           <Logo />
           <NavigationItems />
           <div className="flex items-center gap-2">

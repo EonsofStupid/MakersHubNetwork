@@ -73,8 +73,9 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
   }
   
   return (
-    <div className="fixed top-0 left-0 right-0 w-full z-40">
-      <div className="admin-topnav w-full flex items-center justify-between px-4 h-14 top-nav-trapezoid">
+    <div className="fixed top-0 left-0 right-0 w-screen z-40">
+      <div className="admin-topnav w-full flex items-center justify-between px-4 h-14 top-nav-trapezoid" 
+        style={{ width: '100vw' }}>
         <div className="flex items-center space-x-4">
           <motion.button 
             whileHover={{ scale: 1.1 }}
