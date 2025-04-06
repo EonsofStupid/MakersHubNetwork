@@ -6,7 +6,8 @@ export type UserRole =
   | 'editor'
   | 'moderator'
   | 'user'
-  | 'guest';
+  | 'guest'
+  | 'maker'; // Added 'maker' role
 
 // Admin access interface
 export interface AdminAccess {
@@ -27,3 +28,36 @@ export interface UserProfile {
   last_sign_in_at?: string;
   created_at?: string;
 }
+
+// Auth status type
+export enum AuthStatus {
+  INITIAL = 'initial',
+  LOADING = 'loading',
+  AUTHENTICATED = 'authenticated',
+  UNAUTHENTICATED = 'unauthenticated',
+  ERROR = 'error',
+}
+
+// Auth state interface
+export interface AuthState {
+  status: AuthStatus;
+  user: UserProfile | null;
+  error: Error | null;
+  roles: UserRole[];
+  isLoading: boolean;
+  isAuthenticated: boolean;
+}
+
+// Auth actions interface
+export interface AuthActions {
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (email: string, password: string, username?: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+}
+
+// Auth store interface
+export interface AuthStore extends AuthState, AuthActions {}
+
+// Additional types
+export type WithAdminAccess = AdminAccess;

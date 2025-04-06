@@ -1,21 +1,20 @@
 
-// Re-export unified auth types
-import {
+// Re-export types from the unified auth types file
+export {
   UserRole,
+  AdminAccess,
+  UserProfile,
   AuthStatus,
   AuthState,
   AuthActions,
   AuthStore,
-  AdminAccess,
   WithAdminAccess
 } from '@/types/auth.unified';
 
-export type {
-  UserRole,
-  AuthStatus,
-  AuthState,
-  AuthActions,
-  AuthStore,
-  AdminAccess,
-  WithAdminAccess
-};
+// Additional auth-related types can be defined here
+export interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+  avatar?: string;
+}

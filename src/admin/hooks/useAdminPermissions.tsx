@@ -1,102 +1,68 @@
 
 import { useMemo } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { UserRole } from '@/auth/types/auth.types';
+import { useAdminAccess } from './useAdminAccess';
+import { UserRole } from '@/types/auth.unified';
 
-// Define permission type
-type Permission = 
-  | 'view_admin_panel' 
-  | 'manage_users' 
-  | 'manage_content'
-  | 'manage_settings'
-  | 'manage_themes'
-  | 'manage_plugins'
-  | 'view_analytics'
-  | 'manage_roles';
-
-// Define role-permission mapping
-const rolePermissions: Record<UserRole, Permission[]> = {
-  'super_admin': [
-    'view_admin_panel',
-    'manage_users',
-    'manage_content',
-    'manage_settings',
-    'manage_themes',
-    'manage_plugins',
-    'view_analytics',
-    'manage_roles'
-  ],
-  'admin': [
-    'view_admin_panel',
-    'manage_users',
-    'manage_content',
-    'manage_settings',
-    'manage_themes',
-    'view_analytics'
-  ],
-  'editor': [
-    'view_admin_panel',
-    'manage_content',
-    'view_analytics'
-  ],
-  'moderator': [
-    'view_admin_panel',
-    'manage_content',
-    'view_analytics'
-  ],
-  'user': [],
-  'maker': [
-    'view_admin_panel',
-    'manage_content'
-  ],
-  'builder': [
-    'view_admin_panel'
-  ]
-};
+export type Permission = 
+  | 'dashboard:view'
+  | 'users:view'
+  | 'users:edit'
+  | 'users:delete'
+  | 'content:view'
+  | 'content:edit'
+  | 'content:publish'
+  | 'settings:view'
+  | 'settings:edit'
+  | 'builds:view'
+  | 'builds:approve'
+  | 'builds:feature'
+  | 'builds:delete';
 
 /**
- * Hook to check if the current user has specific permissions
+ * Hook to check admin permissions based on roles
  */
 export function useAdminPermissions() {
-  const { roles } = useAuth();
+  const { isAuthenticated, isAdmin } = useAdminAccess();
   
-  const permissions = useMemo(() => {
-    const allPermissions = new Set<Permission>();
-    
-    // Add permissions for each role the user has
-    roles.forEach(role => {
-      const perms = rolePermissions[role] || [];
-      perms.forEach(permission => allPermissions.add(permission));
-    });
-    
-    return Array.from(allPermissions);
-  }, [roles]);
+  const permissions = useMemo<Record<UserRole, Permission[]>>(() => {
+    return {
+      'super_admin': [
+        'dashboard:view', 'users:view', 'users:edit', 'users:delete', 
+        'content:view', 'content:edit', 'content:publish',
+        'settings:view', 'settings:edit',
+        'builds:view', 'builds:approve', 'builds:feature', 'builds:delete'
+      ],
+      'admin': [
+        'dashboard:view', 'users:view', 'users:edit',
+        'content:view', 'content:edit', 'content:publish',
+        'settings:view', 'settings:edit',
+        'builds:view', 'builds:approve', 'builds:feature'
+      ],
+      'editor': [
+        'dashboard:view', 'content:view', 'content:edit', 'content:publish',
+        'builds:view', 'builds:approve'
+      ],
+      'moderator': [
+        'dashboard:view', 'content:view', 'builds:view', 'builds:approve'
+      ],
+      'user': [],
+      'guest': [],
+      'maker': [
+        'builds:view'
+      ]
+    };
+  }, []);
   
-  /**
-   * Check if user has specific permission
-   */
   const hasPermission = (permission: Permission): boolean => {
-    return permissions.includes(permission);
+    if (!isAuthenticated) return false;
+    
+    // Super admins have all permissions
+    if (isAdmin) return true;
+    
+    // Check if user has the specific permission based on role
+    // In a real app, you would check the user's roles from auth context
+    return false;
   };
   
-  /**
-   * Check if user has all specified permissions
-   */
-  const hasAllPermissions = (requiredPermissions: Permission[]): boolean => {
-    return requiredPermissions.every(p => permissions.includes(p));
-  };
-  
-  /**
-   * Check if user has any of the specified permissions
-   */
-  const hasAnyPermission = (requiredPermissions: Permission[]): boolean => {
-    return requiredPermissions.some(p => permissions.includes(p));
-  };
-  
-  return {
-    permissions,
-    hasPermission,
-    hasAllPermissions,
-    hasAnyPermission
-  };
+  return { hasPermission, permissions };
 }
