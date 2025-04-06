@@ -12,18 +12,21 @@ export type UserRole =
   | 'editor'
   | 'service'; // Special role for SSR
 
+// Define the authentication status type
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+
 // Define the authentication state
 export interface AuthState {
   user: User | null;
   session: Session | null;
   roles: UserRole[];
-  status: 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+  status: AuthStatus;
   isLoading: boolean;
   error: string | null;
   initialized: boolean;
   isAuthenticated: boolean;
-  logout?: () => Promise<void>;
-  isAdmin?: () => boolean;
+  logout: () => Promise<void>;
+  isAdmin: () => boolean;
 }
 
 // Define the authentication context
@@ -31,7 +34,7 @@ export interface AuthContext {
   user: User | null;
   session: Session | null;
   roles: UserRole[];
-  status: 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+  status: AuthStatus;
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;

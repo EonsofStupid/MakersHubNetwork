@@ -24,7 +24,7 @@ export const PERMISSIONS = {
   BUILDS_CREATE: 'builds:create',
   BUILDS_EDIT: 'builds:edit',
   BUILDS_APPROVE: 'builds:approve',
-  BUILDS_REJECT: 'builds:reject', // Added the missing permission
+  BUILDS_REJECT: 'builds:reject',
   
   // Theme management
   THEMES_VIEW: 'themes:view',
@@ -78,6 +78,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionValue[]> = {
     PERMISSIONS.CONTENT_PUBLISH,
     PERMISSIONS.BUILDS_VIEW,
     PERMISSIONS.BUILDS_APPROVE,
+    PERMISSIONS.BUILDS_REJECT,
     PERMISSIONS.THEMES_VIEW,
     PERMISSIONS.THEMES_EDIT,
     PERMISSIONS.SETTINGS_VIEW,
@@ -94,6 +95,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionValue[]> = {
     PERMISSIONS.CONTENT_EDIT,
     PERMISSIONS.BUILDS_VIEW,
     PERMISSIONS.BUILDS_APPROVE,
+    PERMISSIONS.BUILDS_REJECT,
     PERMISSIONS.SYSTEM_LOGS
   ],
   maker: [
@@ -121,5 +123,27 @@ export const ROLE_PERMISSIONS: Record<string, PermissionValue[]> = {
     PERMISSIONS.CONTENT_CREATE,
     PERMISSIONS.CONTENT_EDIT,
     PERMISSIONS.CONTENT_PUBLISH
+  ],
+  service: [
+    PERMISSIONS.CONTENT_VIEW,
+    PERMISSIONS.THEMES_VIEW,
+    PERMISSIONS.PARTS_VIEW
   ]
 };
+
+/**
+ * Check if a user has a specific permission based on their roles
+ * @param userRoles Array of roles the user has
+ * @param permission The permission to check
+ * @returns boolean indicating if the user has the permission
+ */
+export function hasPermission(userRoles: string[], permission: PermissionValue): boolean {
+  // Super admin has all permissions
+  if (userRoles.includes('super_admin')) return true;
+  
+  // Check if any of the user's roles include the permission
+  return userRoles.some(role => {
+    const rolePermissions = ROLE_PERMISSIONS[role] || [];
+    return rolePermissions.includes(permission);
+  });
+}
