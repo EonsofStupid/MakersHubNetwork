@@ -40,11 +40,14 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <LoggingProvider>
-          <ThemeInitializer>
-            <ImpulsivityInit>
+      <LoggingProvider>
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+          {/* Apply immediate basic styling to ensure visual consistency */}
+          <ImpulsivityInit>
+            {/* Theme initialization before auth to ensure theme is available for all routes */}
+            <ThemeInitializer defaultTheme="Impulsivity">
               <SiteThemeProvider>
+                {/* Auth wrapped around routes but after theme initialization */}
                 <AuthProvider>
                   <AppInitializer>
                     <AdminProvider>
@@ -53,10 +56,10 @@ function App() {
                   </AppInitializer>
                 </AuthProvider>
               </SiteThemeProvider>
-            </ImpulsivityInit>
-          </ThemeInitializer>
-        </LoggingProvider>
-      </ThemeProvider>
+            </ThemeInitializer>
+          </ImpulsivityInit>
+        </ThemeProvider>
+      </LoggingProvider>
     </QueryClientProvider>
   );
 }
