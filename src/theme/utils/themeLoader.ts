@@ -6,7 +6,6 @@ import { LogCategory } from '@/logging';
 
 // Helper to check if a string is a valid UUID
 function isValidUUID(id: string): boolean {
-  if (!id || typeof id !== 'string') return false;
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(id);
 }
@@ -18,40 +17,19 @@ export async function loadThemeByIdOrName(themeIdOrName: string): Promise<Theme 
   const logger = getLogger('ThemeLoader', LogCategory.UI);
   
   try {
-    // Input validation
-    if (!themeIdOrName) {
-      logger.warn('Empty theme identifier provided');
-      return null;
-    }
-    
     const { setTheme, currentTheme } = useThemeStore.getState();
     
-    logger.info(`Attempting to load theme: ${themeIdOrName}`, {
-      details: {
-        isUuid: isValidUUID(themeIdOrName),
-        lookupType: isValidUUID(themeIdOrName) ? 'by-uuid' : 'by-name'
-      }
-    });
-    
-    // Attempt to load the theme - internally setTheme now handles both UUIDs and names
-    await setTheme(themeIdOrName);
-    
-    // Check if theme was loaded
-    const loadedTheme = useThemeStore.getState().currentTheme;
-    
-    if (loadedTheme) {
-      logger.info(`Theme loaded successfully: ${loadedTheme.name}`, {
-        details: { 
-          id: loadedTheme.id, 
-          name: loadedTheme.name,
-          wasFoundByName: loadedTheme.name === themeIdOrName && !isValidUUID(themeIdOrName)
-        }
-      });
+    // Check if the id is a UUID or a name
+    if (isValidUUID(themeIdOrName)) {
+      // If it's a valid UUID, load by ID
+      await setTheme(themeIdOrName);
+      return useThemeStore.getState().currentTheme;
     } else {
-      logger.warn(`Failed to load theme: ${themeIdOrName}`);
+      // If it's not a valid UUID, treat as a name
+      logger.info(`Loading theme by name: ${themeIdOrName}`);
+      await setTheme(themeIdOrName);
+      return useThemeStore.getState().currentTheme;
     }
-    
-    return loadedTheme;
   } catch (error) {
     logger.error('Error loading theme', { 
       details: { 
@@ -64,7 +42,7 @@ export async function loadThemeByIdOrName(themeIdOrName: string): Promise<Theme 
 }
 
 /**
- * Ensures a theme is loaded and applied correctly, with no dependency on authentication
+ * Ensures a theme is loaded and applied correctly
  */
 export async function ensureThemeLoaded(themeIdentifier: string): Promise<boolean> {
   const logger = getLogger('ThemeLoader', LogCategory.UI);
@@ -72,28 +50,22 @@ export async function ensureThemeLoaded(themeIdentifier: string): Promise<boolea
   try {
     const { setTheme, currentTheme } = useThemeStore.getState();
     
-    // If theme is already loaded with this ID or name, no need to reload
-    if (
-      currentTheme?.id === themeIdentifier || 
-      currentTheme?.name === themeIdentifier
-    ) {
-      logger.info(`Theme already loaded: ${currentTheme.name}`);
+    // If theme is already loaded with this ID, no need to reload
+    if (currentTheme?.id === themeIdentifier || currentTheme?.name === themeIdentifier) {
       return true;
     }
     
-    // Try loading the theme - by UUID or name
-    logger.info(`Ensuring theme is loaded: ${themeIdentifier}`);
+    // Try loading the theme
     await setTheme(themeIdentifier);
     const loadedTheme = useThemeStore.getState().currentTheme;
     
     if (loadedTheme) {
-      logger.info(`Successfully loaded theme: ${loadedTheme.name}`);
       return true;
     } else {
       logger.warn(`Theme not found: ${themeIdentifier}, falling back to default`);
-      // Load a default theme as fallback - using a hardcoded name that should exist
+      // Load a default theme as fallback
       await setTheme('Impulsivity');
-      return useThemeStore.getState().currentTheme !== null;
+      return true; // Return true since we fell back to default theme
     }
   } catch (error) {
     logger.error('Failed to ensure theme loaded', { 
