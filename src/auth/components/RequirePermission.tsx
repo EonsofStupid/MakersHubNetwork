@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Navigate, useLocation, Outlet } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from '@tanstack/react-router';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
@@ -56,7 +56,7 @@ export const RequirePermission = ({
       return <>{fallback}</>;
     }
     
-    return <Navigate to={redirectTo} state={{ from: location.pathname }} replace />;
+    return <Navigate to={redirectTo} state={{ from: location.pathname }} replace={true} />;
   }
   
   return <>{children || <Outlet />}</>;

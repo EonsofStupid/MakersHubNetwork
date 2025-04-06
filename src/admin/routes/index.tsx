@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Outlet, createRoute, createFileRoute } from '@tanstack/react-router';
+import { Outlet, createRoute } from '@tanstack/react-router';
 import { rootRoute } from '@/router';
 import { AdminLayout } from '@/admin/components/layouts/AdminLayout';
 import { AdminAuthGuard } from '@/admin/components/AdminAuthGuard';
