@@ -16,8 +16,6 @@ export function AppInitializer({ children }: { children: React.ReactNode }) {
         logger.info('Application initializing');
         
         // Initialize the application
-        // Note: We're allowing the theme to load first, without waiting for auth
-        
         // Small delay for UX purposes to ensure themes and styles are applied
         await new Promise(resolve => setTimeout(resolve, 100));
         
@@ -40,7 +38,5 @@ export function AppInitializer({ children }: { children: React.ReactNode }) {
     initializeApp();
   }, [logger, toast]);
 
-  // Always render children regardless of auth state
-  // This allows theme to load without auth checks
   return <>{children}</>;
 }

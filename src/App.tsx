@@ -1,13 +1,13 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { getLogger } from '@/logging';
 import { LoggingProvider } from '@/logging/context/LoggingContext';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
 import { ImpulsivityInit } from '@/components/theme/ImpulsivityInit';
 import { SiteThemeProvider } from '@/components/theme/SiteThemeProvider';
-import { AuthProvider } from '@/auth/context/AuthContext';
+import { AuthContext } from '@/hooks/use-auth';
 import { AppInitializer } from '@/components/AppInitializer';
 import { AdminProvider } from '@/admin/context/AdminContext';
 import { AppRoutes } from '@/routes/AppRoutes';
@@ -33,6 +33,9 @@ function initLogging() {
 }
 
 function App() {
+  // User state - simple implementation that can be enhanced later
+  const [user, setUser] = useState(null);
+
   // Initialize logging on app mount
   useEffect(() => {
     initLogging();
@@ -45,13 +48,13 @@ function App() {
           <ThemeInitializer>
             <ImpulsivityInit>
               <SiteThemeProvider>
-                <AuthProvider>
+                <AuthContext.Provider value={{ user, setUser }}>
                   <AppInitializer>
                     <AdminProvider>
                       <AppRoutes />
                     </AdminProvider>
                   </AppInitializer>
-                </AuthProvider>
+                </AuthContext.Provider>
               </SiteThemeProvider>
             </ImpulsivityInit>
           </ThemeInitializer>

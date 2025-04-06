@@ -66,5 +66,5 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
         </motion.div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

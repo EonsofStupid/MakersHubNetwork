@@ -1,124 +1,25 @@
 
-import React, { useCallback, memo, useMemo } from "react";
+import React, { useCallback, memo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAuthState } from "@/auth/hooks/useAuthState";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Settings, Shield } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-// IMPORTANT: Use useAuthState instead of useAuth to prevent circular dependencies
-// and useAdminAccess is replaced with a simpler check to avoid circular dependencies
+import { useAuth } from "@/hooks/use-auth";
 
 // Memoize the component to prevent unnecessary rerenders
 export const AuthSection = memo(() => {
-  const { user, roles, logout, status } = useAuthState();
-  
-  // Determine admin access directly without the hook to avoid circular dependencies
-  const hasAdminAccess = useMemo(() => {
-    return roles.includes('admin') || roles.includes('super_admin');
-  }, [roles]);
-  
-  // Handle avatar click with animation and effects
-  // Using useCallback to prevent recreating this function on each render
-  const handleAvatarClick = useCallback(() => {
-    const avatar = document.querySelector('.avatar-trigger');
-    if (avatar) {
-      avatar.classList.add('cyber-glow');
-      setTimeout(() => {
-        avatar.classList.remove('cyber-glow');
-      }, 400);
-    }
-  }, []);
-  
-  // Handle logout with useCallback to prevent function recreation
-  const handleLogout = useCallback(() => {
-    logout();
-  }, [logout]);
+  const { user } = useAuth();
   
   // If logged in, show avatar with dropdown
   if (user) {
-    const avatarUrl = user.user_metadata?.avatar_url || user.avatar_url;
-    const displayName = user.user_metadata?.full_name || user.display_name || user.username;
-    const email = user.email;
-    
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "rounded-full p-0 w-8 h-8 avatar-trigger transition-all duration-300 hover:scale-110",
-              "hover:shadow-[0_0_10px_rgba(0,240,255,0.7)]"
-            )}
-            onClick={handleAvatarClick}
-          >
-            <Avatar className="w-8 h-8 border border-primary/30">
-              <AvatarImage src={avatarUrl} />
-              <AvatarFallback className="bg-primary/10 text-primary">
-                {email?.charAt(0).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 backdrop-blur-lg bg-background/80 border-primary/20">
-          <div className="flex items-center justify-start p-2">
-            <div className="flex flex-col space-y-1 leading-none">
-              <p className="font-medium text-sm text-foreground">{displayName}</p>
-              <p className="text-xs text-muted-foreground truncate">{email}</p>
-            </div>
-          </div>
-          
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuItem asChild>
-            <Link to="/profile" className="cursor-pointer flex items-center gap-2">
-              <User className="w-4 h-4" />
-              <span>Profile</span>
-            </Link>
-          </DropdownMenuItem>
-          
-          <DropdownMenuItem asChild>
-            <Link to="/settings" className="cursor-pointer flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              <span>Settings</span>
-            </Link>
-          </DropdownMenuItem>
-          
-          {hasAdminAccess && (
-            <DropdownMenuItem asChild>
-              <Link to="/admin" className="cursor-pointer flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                <span>Admin Panel</span>
-              </Link>
-            </DropdownMenuItem>
-          )}
-          
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuItem 
-            className="cursor-pointer text-destructive focus:text-destructive flex items-center gap-2"
-            onClick={handleLogout}
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Log out</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button variant="outline" className="site-border-glow">
+        Profile
+      </Button>
     );
   }
   
   // If not logged in, show login button with animation effects
   return (
-    <Link to="/login">
+    <Link to="/">
       <Button 
         variant="outline" 
         size="sm"

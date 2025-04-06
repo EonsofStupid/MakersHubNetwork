@@ -4,7 +4,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { MainNav } from '@/components/MainNav';
-import Login from '@/pages/Login';
 import LandingPage from '@/pages/Landing';
 import Footer from '@/components/Footer';
 import { useLogger } from '@/hooks/use-logger';
@@ -31,12 +30,6 @@ export function PublicRoutes() {
       {/* Public content area */}
       <div className="flex-grow">
         <Routes>
-          {/* Login Page */}
-          <Route 
-            path="/login" 
-            element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} 
-          />
-          
           {/* Landing Page */}
           <Route path="/" element={<LandingPage />} />
           
