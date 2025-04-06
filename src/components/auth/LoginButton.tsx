@@ -1,14 +1,33 @@
+
 import { useState } from "react";
 import { LoginModal } from "./LoginModal";
 import { Button } from "@/components/ui/button";
+import { useAuthState } from "@/auth/hooks/useAuthState";
 
 export const LoginButton = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const { status } = useAuthState();
+  
+  const handleLoginClick = () => {
+    setIsLoginOpen(true);
+  };
 
   return (
-    <LoginModal 
-      isOpen={isLoginOpen}
-      onOpenChange={setIsLoginOpen}
-    />
+    <>
+      {status !== 'authenticated' && (
+        <Button 
+          variant="outline"
+          size="sm"
+          onClick={handleLoginClick}
+          className="cyber-button electric-text"
+        >
+          Login
+        </Button>
+      )}
+      <LoginModal 
+        isOpen={isLoginOpen}
+        onOpenChange={setIsLoginOpen}
+      />
+    </>
   );
 };

@@ -11,9 +11,15 @@ interface ImpulsivityInitProps {
   autoApply?: boolean;
   children?: React.ReactNode;
   showLoader?: boolean;
+  priority?: boolean;
 }
 
-export function ImpulsivityInit({ autoApply = true, children, showLoader = false }: ImpulsivityInitProps) {
+export function ImpulsivityInit({ 
+  autoApply = true, 
+  children, 
+  showLoader = false,
+  priority = false
+}: ImpulsivityInitProps) {
   const { applyTheme, isSyncing } = useImpulsivityTheme();
   const { isLoading: themeStoreLoading } = useThemeStore();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -45,7 +51,12 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
           logger.info('Initializing Impulsivity theme');
           setIsError(false);
           
-          const result = await applyTheme();
+          // Run with higher priority if specified
+          const initPromise = priority 
+            ? Promise.resolve().then(() => applyTheme()) 
+            : applyTheme();
+          
+          const result = await initPromise;
           
           if (result) {
             setIsInitialized(true);
@@ -85,10 +96,10 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
         // Reapply immediate styles as fallback
         applyImmediateStyles();
       }
-    }, 3000);
+    }, 2000); // Reduced from 3000 for even faster responsiveness
     
     return () => clearTimeout(timeout);
-  }, [autoApply, applyTheme, isInitialized, logger, isSyncing, themeStoreLoading]);
+  }, [autoApply, applyTheme, isInitialized, logger, isSyncing, themeStoreLoading, priority]);
   
   // If showing loader and still initializing, render a loading indicator
   if (showLoader && (isSyncing || themeStoreLoading) && !isInitialized) {
