@@ -1,9 +1,10 @@
 
 import { useAuthState } from "@/auth/hooks/useAuthState";
+import { UserRole } from "@/auth/types/auth.types";
 
 interface AdminAccessOptions {
   requireAuth?: boolean;
-  allowedRoles?: string[];
+  allowedRoles?: UserRole[];
 }
 
 /**
@@ -20,7 +21,7 @@ export function useAdminAccess(options: AdminAccessOptions = { requireAuth: true
     }
     
     // Check if user has admin or super_admin role
-    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+    const isAdmin = roles.includes('admin' as UserRole) || roles.includes('super_admin' as UserRole);
     
     // If specific roles are required
     if (options.allowedRoles && options.allowedRoles.length > 0) {

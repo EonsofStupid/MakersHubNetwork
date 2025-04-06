@@ -1,7 +1,7 @@
 
 import { ReactNode, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { UserRole } from "@/types/auth.types"
+import { UserRole } from "@/auth/types/auth.types"
 import { useToast } from "@/hooks/use-toast"
 import { useAuthState } from "@/auth/hooks/useAuthState"
 import { useAdminAccess } from "@/hooks/useAdminAccess"

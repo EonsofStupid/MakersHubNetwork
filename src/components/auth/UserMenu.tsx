@@ -80,8 +80,8 @@ export const UserMenu = memo(() => {
   
   const profileDialogProps = useMemo(() => ({
     open: isProfileDialogOpen,
-    onClose: handleCloseProfileDialog
-  }), [isProfileDialogOpen, handleCloseProfileDialog])
+    onOpenChange: setProfileDialogOpen
+  }), [isProfileDialogOpen])
 
   // Don't render if no user
   if (!user) {

@@ -12,7 +12,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthState } from "@/auth/hooks/useAuthState";
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
@@ -25,10 +25,11 @@ const Login = ({ onSuccess }: LoginProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { status, user } = useAuthState();
   const { hasAdminAccess } = useAdminAccess();
   const logger = useLogger("LoginPage", LogCategory.AUTH);
   
+  const isAuthenticated = status === 'authenticated' && !!user;
   const from = new URLSearchParams(location.search).get("from") || "/";
 
   useEffect(() => {

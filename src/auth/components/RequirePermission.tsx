@@ -4,13 +4,14 @@ import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { UserRole } from '@/auth/types/auth.types';
 
 interface RequirePermissionProps {
   children?: React.ReactNode;
   redirectTo?: string;
   fallback?: React.ReactNode;
-  allowedRoles?: string[];
-  requiredPermission?: string;
+  allowedRoles?: UserRole[];
+  requiredPermission?: UserRole;
 }
 
 /**

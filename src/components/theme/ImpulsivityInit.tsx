@@ -48,75 +48,21 @@ export function ImpulsivityInit({
       } as ThemeLogDetails)
     );
     
+    // Mark as initialized immediately to not block rendering
+    setIsInitialized(true);
+    
     // Only initialize once to prevent infinite loops
-    if (autoApply && !isInitialized && !initAttempted.current) {
-      const initTheme = async () => {
-        try {
-          initAttempted.current = true;
-          logger.info('Initializing Impulsivity theme');
-          setIsError(false);
-          
-          // Run with higher priority if specified
-          const initPromise = priority 
-            ? Promise.resolve().then(() => applyTheme()) 
-            : applyTheme();
-          
-          const result = await initPromise;
-          
-          if (result) {
-            setIsInitialized(true);
-            logger.info('Impulsivity theme initialized successfully');
-          } else {
-            setIsError(true);
-            logger.warn('Impulsivity theme initialization incomplete');
-            // Still allow the app to load, but in a potentially inconsistent state
-            setIsInitialized(true);
-          }
-        } catch (error) {
-          setIsError(true);
-          const errorMessage = error instanceof Error 
-            ? error.message 
-            : 'Unknown error initializing theme';
-          
-          const logDetails: ThemeLogDetails = { 
-            errorMessage
-          };
-          
-          logger.error('Failed to initialize Impulsivity theme', logDetails);
-          
-          // Still mark as initialized to avoid blocking the app
-          setIsInitialized(true);
-        }
-      };
+    if (autoApply && !initAttempted.current) {
+      initAttempted.current = true;
+      logger.info('Initializing Impulsivity theme');
       
-      initTheme();
+      // Run in background without blocking rendering
+      const initPromise = priority 
+        ? Promise.resolve().then(() => applyTheme()) 
+        : setTimeout(() => applyTheme(), 0);
     }
-    
-    // Force initialization timeout after 2 seconds
-    const timeout = setTimeout(() => {
-      if (!isInitialized) {
-        logger.warn('Impulsivity theme initialization timed out, continuing anyway');
-        setIsInitialized(true);
-        
-        // Reapply immediate styles as fallback
-        applyImmediateStyles();
-      }
-    }, 2000);
-    
-    return () => clearTimeout(timeout);
-  }, [autoApply, applyTheme, applyToMainSite, isInitialized, logger, isSyncing, themeStoreLoading, priority]);
+  }, [autoApply, applyTheme, applyToMainSite, logger, priority]);
   
-  // If showing loader and still initializing, render a loading indicator
-  if (showLoader && (isSyncing || themeStoreLoading) && !isInitialized) {
-    return (
-      <div className="fixed inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-card p-6 rounded-lg shadow-lg border border-border flex flex-col items-center">
-          <Loader className="animate-spin h-8 w-8 text-primary mb-4" />
-          <p className="text-foreground font-medium">Initializing Impulsivity Theme...</p>
-        </div>
-      </div>
-    );
-  }
-  
+  // Skip loader - always render children to avoid blocking UI
   return <>{children}</>;
 }
