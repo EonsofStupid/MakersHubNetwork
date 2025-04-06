@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory, LogLevel, memoryTransport } from '@/logging';
@@ -45,7 +46,9 @@ export function LogActivityStream({
     if (category) {
       initialLogs = initialLogs.filter(log => log.category === category);
     } else if (categories && categories.length > 0) {
-      initialLogs = initialLogs.filter(log => categories.includes(log.category));
+      initialLogs = initialLogs.filter(log => 
+        log.category !== undefined && categories.includes(log.category)
+      );
     }
     
     // Filter by level if provided
@@ -56,13 +59,15 @@ export function LogActivityStream({
     setLogs(initialLogs.slice(0, maxItems));
     
     // Subscribe to new logs
-    const unsubscribe = memoryTransport.subscribe((entry) => {
+    const subscription = memoryTransport.subscribe((entry) => {
       let shouldAdd = true;
       
       // Filter by category
       if (category && entry.category !== category) {
         shouldAdd = false;
-      } else if (categories && categories.length > 0 && !categories.includes(entry.category)) {
+      } else if (categories && categories.length > 0 && 
+                entry.category !== undefined && 
+                !categories.includes(entry.category)) {
         shouldAdd = false;
       }
       
@@ -88,7 +93,9 @@ export function LogActivityStream({
     logger.debug('Log activity stream mounted');
     
     return () => {
-      unsubscribe();
+      if (subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
+      }
       logger.debug('Log activity stream unmounted');
     };
   }, [category, categories, level, maxItems, logger, autoScroll]);

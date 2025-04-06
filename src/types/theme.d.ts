@@ -10,6 +10,8 @@ export interface ThemeToken {
   theme_id?: string;
   description?: string;
   fallback_value?: string;
+  name?: string;
+  value?: string;
 }
 
 export interface Theme {

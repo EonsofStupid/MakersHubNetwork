@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory, LogLevel, memoryTransport } from '@/logging';
@@ -16,14 +17,16 @@ export function LogsDashboard() {
   useEffect(() => {
     setLogs(memoryTransport.getLogs());
     
-    const unsubscribe = memoryTransport.subscribe((entry) => {
+    const subscription = memoryTransport.subscribe((entry) => {
       setLogs(prevLogs => [entry, ...prevLogs].slice(0, 100));
     });
     
     logger.info('Logs dashboard mounted');
     
     return () => {
-      unsubscribe();
+      if (subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
+      }
       logger.info('Logs dashboard unmounted');
     };
   }, [logger]);
@@ -33,14 +36,18 @@ export function LogsDashboard() {
     : logs;
     
   const handleClearLogs = () => {
-    memoryTransport.clear();
-    setLogs([]);
-    logger.info('Logs cleared');
+    if (memoryTransport.clear) {
+      memoryTransport.clear();
+      setLogs([]);
+      logger.info('Logs cleared');
+    }
   };
   
   const handleRefreshLogs = () => {
-    setLogs(memoryTransport.getLogs());
-    logger.info('Logs refreshed');
+    if (memoryTransport.getLogs) {
+      setLogs(memoryTransport.getLogs());
+      logger.info('Logs refreshed');
+    }
   };
   
   const getLogIcon = (level: LogLevel) => {

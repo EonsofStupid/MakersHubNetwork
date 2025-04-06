@@ -34,7 +34,7 @@ export function ThemeColorSystem({ tokens }: ThemeColorSystemProps) {
             transformStyle: "preserve-3d",
             perspective: "1000px"
           }}
-          onClick={() => setActiveColor(activeColor === token.token_name ? null : token.token_name)}
+          onClick={() => setActiveColor(activeColor === token.token_name || token.name ? null : token.token_name)}
         >
           <div className="flex items-center space-x-3">
             <div
@@ -47,7 +47,7 @@ export function ThemeColorSystem({ tokens }: ThemeColorSystemProps) {
               style={{ backgroundColor: token.token_value }}
             />
             <div>
-              <p className="text-sm font-medium">{token.token_name}</p>
+              <p className="text-sm font-medium">{token.token_name || token.name}</p>
               <p className="text-xs text-muted-foreground">{token.token_value}</p>
             </div>
           </div>

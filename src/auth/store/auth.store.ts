@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -92,7 +91,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         details: { 
           hasSession: !!data.session,
           status: data.session ? 'authenticated' : 'unauthenticated'
-        }
+        } as Record<string, any> | undefined
       });
 
       // Mark as initialized
@@ -103,7 +102,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       logger.error('Auth initialization error', {
         category: LogCategory.AUTH,
         source: 'auth.store',
-        details: error
+        details: error as Record<string, any> | undefined
       });
       
       set({ 
@@ -146,7 +145,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       logger.error('Logout error', {
         category: LogCategory.AUTH,
         source: 'auth.store',
-        details: error
+        details: error as Record<string, any> | undefined
       });
       
       set({ error: errorMessage, isLoading: false });
