@@ -3,7 +3,6 @@
 // This function provides access to themes with service role permissions
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { z } from 'https://esm.sh/zod@3.22.4';
 
 // Define response headers with CORS support
 const corsHeaders = {
@@ -23,115 +22,6 @@ const supabaseAdmin = createClient(
     }
   }
 );
-
-// Define common schemas
-const ThemeStatusSchema = z.enum(['draft', 'published', 'archived']);
-const ThemeContextSchema = z.enum(['site', 'admin', 'chat']);
-
-// Define color token schema
-const HexColorSchema = z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional();
-const ColorTokensSchema = z.object({
-  background: HexColorSchema,
-  foreground: HexColorSchema,
-  card: HexColorSchema,
-  cardForeground: HexColorSchema,
-  primary: HexColorSchema,
-  primaryForeground: HexColorSchema,
-  secondary: HexColorSchema,
-  secondaryForeground: HexColorSchema,
-  muted: HexColorSchema,
-  mutedForeground: HexColorSchema,
-  accent: HexColorSchema,
-  accentForeground: HexColorSchema,
-  destructive: HexColorSchema,
-  destructiveForeground: HexColorSchema,
-  border: HexColorSchema,
-  input: HexColorSchema,
-  ring: HexColorSchema,
-}).partial();
-
-// Define effects schema
-const EffectsSchema = z.object({
-  shadows: z.record(z.unknown()).optional(),
-  blurs: z.record(z.unknown()).optional(),
-  gradients: z.record(z.unknown()).optional(),
-  primary: HexColorSchema,
-  secondary: HexColorSchema,
-  tertiary: HexColorSchema,
-}).partial();
-
-// Define animation schema
-const AnimationSchema = z.object({
-  keyframes: z.record(z.unknown()).optional(),
-  transitions: z.record(z.unknown()).optional(),
-  durations: z.record(z.string()).optional(),
-}).partial();
-
-// Define design tokens schema
-const DesignTokensSchema = z.object({
-  colors: ColorTokensSchema.optional(),
-  effects: EffectsSchema.optional(),
-  animation: AnimationSchema.optional(),
-  spacing: z.record(z.unknown()).optional(),
-  typography: z.record(z.unknown()).optional(),
-}).partial();
-
-// Define theme schema for validation
-const BaseThemeSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z.string(),
-  description: z.string().optional(),
-  status: ThemeStatusSchema,
-  is_default: z.boolean().optional(),
-  created_by: z.string().uuid().optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
-  published_at: z.string().optional(),
-  version: z.number().optional(),
-  cache_key: z.string().optional(),
-  parent_theme_id: z.string().uuid().optional(),
-  design_tokens: DesignTokensSchema,
-  component_tokens: z.array(z.unknown()).optional(),
-  composition_rules: z.record(z.unknown()).optional(),
-  cached_styles: z.record(z.unknown()).optional(),
-}).partial();
-
-// Define request schemas using Zod
-const GetThemeRequestSchema = z.object({
-  operation: z.literal('get-theme'),
-  themeId: z.string().optional(),
-  themeName: z.string().optional(),
-  isDefault: z.boolean().optional(),
-  context: ThemeContextSchema.optional(),
-});
-
-const UpdateThemeRequestSchema = z.object({
-  operation: z.literal('update-theme'),
-  themeId: z.string().uuid(),
-  theme: z.object({
-    name: z.string().optional(),
-    description: z.string().optional(),
-    design_tokens: DesignTokensSchema.optional(),
-    component_tokens: z.array(z.unknown()).optional(),
-    composition_rules: z.record(z.unknown()).optional(),
-    is_default: z.boolean().optional(),
-  }).strict(),
-  userId: z.string().uuid(),
-});
-
-const CreateThemeRequestSchema = z.object({
-  operation: z.literal('create-theme'),
-  theme: z.object({
-    name: z.string(),
-    description: z.string().optional(),
-    status: ThemeStatusSchema,
-    is_default: z.boolean().optional(),
-    design_tokens: DesignTokensSchema,
-    component_tokens: z.array(z.unknown()).optional(),
-    composition_rules: z.record(z.unknown()).optional(),
-  }),
-  userId: z.string().uuid(),
-});
 
 // Default fallback theme definition
 const defaultFallbackTheme = {
@@ -250,48 +140,12 @@ serve(async (req) => {
   }
 });
 
-// Validate theme data for correct formatting
-function validateThemeData(themeData: unknown): { isValid: boolean, warnings: string[] } {
-  const warnings: string[] = [];
-  
-  // Basic structure validation
-  if (!themeData || typeof themeData !== 'object') {
-    warnings.push('Invalid theme structure');
-    return { isValid: false, warnings };
-  }
-  
-  try {
-    // Use the BaseThemeSchema to validate the core theme structure
-    const parseResult = BaseThemeSchema.safeParse(themeData);
-    if (!parseResult.success) {
-      const issues = parseResult.error.issues;
-      warnings.push(...issues.map(issue => `${issue.path.join('.')}: ${issue.message}`));
-      return { isValid: false, warnings };
-    }
-    
-    return { isValid: true, warnings };
-  } catch (error) {
-    warnings.push(`Validation error: ${error instanceof Error ? error.message : String(error)}`);
-    return { isValid: false, warnings };
-  }
-}
-
 // Handle get-theme operation
-async function handleGetTheme(data: unknown) {
+async function handleGetTheme(data) {
   try {
     console.log("Handling get-theme operation with data:", JSON.stringify(data));
     
-    // Validate request data
-    const validationResult = GetThemeRequestSchema.safeParse(data);
-    if (!validationResult.success) {
-      console.error("Invalid request format:", validationResult.error);
-      return new Response(
-        JSON.stringify({ error: 'Invalid request parameters', details: validationResult.error.format() }),
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    const { themeId, themeName, isDefault = true, context = 'site' } = validationResult.data;
+    const { themeId, themeName, isDefault = true, context = 'site' } = data;
     console.log(`Looking for theme with ID: ${themeId || 'N/A'}, Name: ${themeName || 'N/A'}, isDefault: ${isDefault}, context: ${context}`);
 
     // Query for the theme
@@ -397,138 +251,246 @@ async function handleGetTheme(data: unknown) {
       );
     }
 
-    // Validate the theme data
+    // Theme found, return it
     const theme = themes[0];
-    const validation = validateThemeData(theme);
     
-    console.log(`Theme found with ID: ${theme.id}`);
+    // Process any serialized fields
+    let processedTheme = { ...theme };
     
-    // Return the theme with validation status
+    try {
+      // Parse design_tokens if it's a JSON string
+      if (typeof processedTheme.design_tokens === 'string') {
+        processedTheme.design_tokens = JSON.parse(processedTheme.design_tokens);
+      }
+      
+      // Parse component_tokens if it's a JSON string
+      if (typeof processedTheme.component_tokens === 'string') {
+        processedTheme.component_tokens = JSON.parse(processedTheme.component_tokens);
+      }
+      
+      // Parse composition_rules if it's a JSON string
+      if (typeof processedTheme.composition_rules === 'string') {
+        processedTheme.composition_rules = JSON.parse(processedTheme.composition_rules);
+      }
+      
+      // Parse cached_styles if it's a JSON string
+      if (typeof processedTheme.cached_styles === 'string') {
+        processedTheme.cached_styles = JSON.parse(processedTheme.cached_styles);
+      }
+    } catch (parseError) {
+      console.warn('Error parsing JSON fields in theme:', parseError);
+      // Continue with the original theme data
+    }
+    
     return new Response(
-      JSON.stringify({ 
-        theme: theme, 
-        isFallback: false,
-        validation
-      }),
+      JSON.stringify({ theme: processedTheme, isFallback: false }),
       { status: 200, headers: corsHeaders }
     );
   } catch (error) {
-    console.error('Error in handleGetTheme:', error);
+    console.error('Error handling get-theme:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to retrieve theme', details: error instanceof Error ? error.message : String(error) }),
+      JSON.stringify({ error: 'Error retrieving theme', details: error.message, theme: defaultFallbackTheme, isFallback: true }),
       { status: 500, headers: corsHeaders }
     );
   }
 }
 
 // Handle update-theme operation
-async function handleUpdateTheme(data: unknown) {
+async function handleUpdateTheme(data) {
   try {
-    // Validate request data
-    const validationResult = UpdateThemeRequestSchema.safeParse(data);
-    if (!validationResult.success) {
+    console.log("Handling update-theme operation with data:", JSON.stringify(data));
+    
+    const { themeId, theme, userId } = data;
+    
+    if (!themeId) {
       return new Response(
-        JSON.stringify({ error: 'Invalid theme update data', details: validationResult.error.format() }),
+        JSON.stringify({ error: 'Missing theme ID' }),
         { status: 400, headers: corsHeaders }
       );
     }
     
-    const { themeId, theme, userId } = validationResult.data;
-    
     // Check if the theme exists
     const { data: existingTheme, error: checkError } = await supabaseAdmin
       .from('themes')
-      .select('id')
+      .select('*')
       .eq('id', themeId)
       .single();
-      
-    if (checkError || !existingTheme) {
+    
+    if (checkError) {
+      return new Response(
+        JSON.stringify({ error: 'Error checking theme existence', details: checkError.message }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
+    
+    if (!existingTheme) {
       return new Response(
         JSON.stringify({ error: 'Theme not found' }),
         { status: 404, headers: corsHeaders }
       );
     }
     
-    // Update the theme
-    const updateData = {
-      ...theme,
-      updated_at: new Date().toISOString(),
-      updated_by: userId
-    };
+    // Process fields that might need serialization
+    const updateData = { ...theme, updated_at: new Date().toISOString() };
     
-    const { data: updatedTheme, error: updateError } = await supabaseAdmin
+    if (updateData.design_tokens && typeof updateData.design_tokens === 'object') {
+      updateData.design_tokens = JSON.stringify(updateData.design_tokens);
+    }
+    
+    if (updateData.component_tokens && Array.isArray(updateData.component_tokens)) {
+      updateData.component_tokens = JSON.stringify(updateData.component_tokens);
+    }
+    
+    if (updateData.composition_rules && typeof updateData.composition_rules === 'object') {
+      updateData.composition_rules = JSON.stringify(updateData.composition_rules);
+    }
+    
+    // Update the theme
+    const { error: updateError } = await supabaseAdmin
       .from('themes')
       .update(updateData)
-      .eq('id', themeId)
-      .select()
-      .single();
-      
+      .eq('id', themeId);
+    
     if (updateError) {
       return new Response(
-        JSON.stringify({ error: 'Failed to update theme', details: updateError.message }),
+        JSON.stringify({ error: 'Error updating theme', details: updateError.message }),
         { status: 500, headers: corsHeaders }
       );
     }
     
+    // Fetch the updated theme
+    const { data: updatedTheme, error: fetchError } = await supabaseAdmin
+      .from('themes')
+      .select('*')
+      .eq('id', themeId)
+      .single();
+    
+    if (fetchError) {
+      return new Response(
+        JSON.stringify({ error: 'Error fetching updated theme', details: fetchError.message }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
+    
+    // Process any serialized fields for response
+    let processedTheme = { ...updatedTheme };
+    
+    try {
+      // Parse JSON strings for response
+      if (typeof processedTheme.design_tokens === 'string') {
+        processedTheme.design_tokens = JSON.parse(processedTheme.design_tokens);
+      }
+      
+      if (typeof processedTheme.component_tokens === 'string') {
+        processedTheme.component_tokens = JSON.parse(processedTheme.component_tokens);
+      }
+      
+      if (typeof processedTheme.composition_rules === 'string') {
+        processedTheme.composition_rules = JSON.parse(processedTheme.composition_rules);
+      }
+      
+      if (typeof processedTheme.cached_styles === 'string') {
+        processedTheme.cached_styles = JSON.parse(processedTheme.cached_styles);
+      }
+    } catch (parseError) {
+      console.warn('Error parsing JSON fields in updated theme:', parseError);
+      // Continue with the original theme data
+    }
+    
     return new Response(
-      JSON.stringify({ theme: updatedTheme, success: true }),
+      JSON.stringify({ theme: processedTheme, success: true }),
       { status: 200, headers: corsHeaders }
     );
   } catch (error) {
+    console.error('Error handling update-theme:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to update theme', details: error instanceof Error ? error.message : String(error) }),
+      JSON.stringify({ error: 'Error updating theme', details: error.message }),
       { status: 500, headers: corsHeaders }
     );
   }
 }
 
-// Handle create-theme operation 
-async function handleCreateTheme(data: unknown) {
+// Handle create-theme operation
+async function handleCreateTheme(data) {
   try {
-    // Validate request data
-    const validationResult = CreateThemeRequestSchema.safeParse(data);
-    if (!validationResult.success) {
+    console.log("Handling create-theme operation with data:", JSON.stringify(data));
+    
+    const { theme, userId } = data;
+    
+    if (!theme || !theme.name) {
       return new Response(
-        JSON.stringify({ error: 'Invalid theme creation data', details: validationResult.error.format() }),
+        JSON.stringify({ error: 'Missing theme data or name' }),
         { status: 400, headers: corsHeaders }
       );
     }
-
-    const { theme, userId } = validationResult.data;
     
-    // Set additional theme properties
-    const themeData = {
+    // Process fields that might need serialization
+    const themeData = { 
       ...theme,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      created_by: userId,
-      version: 1,
-      status: theme.status || 'draft',
-      // Add missing context field with default value for backward compatibility
-      context: 'site' as const
+      created_by: userId || null
     };
     
-    // Insert the new theme
-    const { data: newTheme, error } = await supabaseAdmin
+    if (themeData.design_tokens && typeof themeData.design_tokens === 'object') {
+      themeData.design_tokens = JSON.stringify(themeData.design_tokens);
+    }
+    
+    if (themeData.component_tokens && Array.isArray(themeData.component_tokens)) {
+      themeData.component_tokens = JSON.stringify(themeData.component_tokens);
+    }
+    
+    if (themeData.composition_rules && typeof themeData.composition_rules === 'object') {
+      themeData.composition_rules = JSON.stringify(themeData.composition_rules);
+    }
+    
+    // Insert the theme
+    const { data: newTheme, error: insertError } = await supabaseAdmin
       .from('themes')
       .insert(themeData)
       .select()
       .single();
-      
-    if (error) {
+    
+    if (insertError) {
       return new Response(
-        JSON.stringify({ error: 'Failed to create theme', details: error.message }),
+        JSON.stringify({ error: 'Error creating theme', details: insertError.message }),
         { status: 500, headers: corsHeaders }
       );
     }
     
+    // Process any serialized fields for response
+    let processedTheme = { ...newTheme };
+    
+    try {
+      // Parse JSON strings for response
+      if (typeof processedTheme.design_tokens === 'string') {
+        processedTheme.design_tokens = JSON.parse(processedTheme.design_tokens);
+      }
+      
+      if (typeof processedTheme.component_tokens === 'string') {
+        processedTheme.component_tokens = JSON.parse(processedTheme.component_tokens);
+      }
+      
+      if (typeof processedTheme.composition_rules === 'string') {
+        processedTheme.composition_rules = JSON.parse(processedTheme.composition_rules);
+      }
+      
+      if (typeof processedTheme.cached_styles === 'string') {
+        processedTheme.cached_styles = JSON.parse(processedTheme.cached_styles);
+      }
+    } catch (parseError) {
+      console.warn('Error parsing JSON fields in new theme:', parseError);
+      // Continue with the original theme data
+    }
+    
     return new Response(
-      JSON.stringify({ theme: newTheme, success: true }),
+      JSON.stringify({ theme: processedTheme, success: true }),
       { status: 201, headers: corsHeaders }
     );
   } catch (error) {
+    console.error('Error handling create-theme:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to create theme', details: error instanceof Error ? error.message : String(error) }),
+      JSON.stringify({ error: 'Error creating theme', details: error.message }),
       { status: 500, headers: corsHeaders }
     );
   }

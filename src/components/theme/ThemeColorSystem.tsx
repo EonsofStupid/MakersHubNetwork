@@ -59,7 +59,7 @@ export function ThemeColorSystem({ tokens, onChange, className }: ThemeColorSyst
               token.token_name.includes('foreground')) {
             
             // Apply as impulse- prefixed variable for admin themes
-            rootElement.style.setProperty(`--impulse-${token.token_name}`, colorValue);
+            rootElement.style.setProperty(`--impulse-${token.token_name.replace('site-', '')}`, colorValue);
             
             // Apply standard Tailwind format without site- prefix
             const tailwindName = token.token_name.replace('site-', '');
@@ -72,9 +72,10 @@ export function ThemeColorSystem({ tokens, onChange, className }: ThemeColorSyst
       applyCriticalColors();
       
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
       logger.error('Failed to apply color tokens', { 
-        error,
-        errorMessage: error instanceof Error ? error.message : String(error)
+        error: true,
+        errorMessage: errorMsg
       });
       
       // Apply fallback colors on error
