@@ -40,8 +40,8 @@ export function ThemeInitializer({
   
   // Load theme on component mount - only once
   useEffect(() => {
-    // Skip if already initialized or loading
-    if (initAttempted.current) {
+    // Skip if already initialized or loading or loadTheme is not defined
+    if (initAttempted.current || !loadTheme) {
       return;
     }
     

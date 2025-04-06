@@ -1,38 +1,40 @@
 
-import { Session, User } from "@supabase/supabase-js";
+import { User, Session } from '@supabase/supabase-js';
 
-export type UserRole = 'super_admin' | 'admin' | 'maker' | 'builder' | 'user' | 'moderator' | 'editor';
+// Define the user role type
+export type UserRole = 
+  | 'super_admin'
+  | 'admin'
+  | 'maker'
+  | 'builder'
+  | 'user'
+  | 'moderator'
+  | 'editor'
+  | 'service'; // Special role for SSR
 
-export interface UserProfile {
-  id: string;
-  username?: string;
-  full_name?: string;
-  avatar_url?: string;
-  website?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export type AuthUser = User;
-
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
-
+// Define the authentication state
 export interface AuthState {
-  user: AuthUser | null;
+  user: User | null;
   session: Session | null;
   roles: UserRole[];
-  isAuthenticated: boolean;
+  status: 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
   isLoading: boolean;
   error: string | null;
-  status: AuthStatus;
-  initialized?: boolean;
+  initialized: boolean;
 }
 
-export interface AdminAccess {
+// Define the authentication context
+export interface AuthContext {
+  user: User | null;
+  session: Session | null;
+  roles: UserRole[];
+  status: 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+  isLoading: boolean;
+  error: string | null;
+  isAuthenticated: boolean;
   isAdmin: boolean;
-  hasAdminAccess: boolean;
-}
-
-export interface WithAdminAccess {
-  hasAdminAccess: boolean;
+  isSuperAdmin: boolean;
+  hasRole: (role: UserRole) => boolean;
+  logout: () => Promise<void>;
+  initialize: () => Promise<void>;
 }

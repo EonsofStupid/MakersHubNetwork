@@ -1,71 +1,57 @@
 
-import { ReactNode, useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+import { useThemeStore } from '@/stores/theme/themeStore';
+import { useAuth } from '@/hooks/useAuth';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useThemeStore } from '@/stores/theme/themeStore';
-import { ThemeLoadingState } from './theme/info/ThemeLoadingState';
 
 interface AppInitializerProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export function AppInitializer({ children }: AppInitializerProps) {
-  const { toast } = useToast();
-  const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
-  const [initialized, setInitialized] = useState(false);
-  const { loadStatus, loadTheme } = useThemeStore();
-  
+  const { loadTheme, isLoading: themeLoading } = useThemeStore();
+  const { isLoading: authLoading, initialize } = useAuth();
+  const [isInitializing, setIsInitializing] = useState(true);
+  const logger = useLogger('AppInitializer', LogCategory.APP);
+
+  // Initialize core services
   useEffect(() => {
-    const initializeApp = async () => {
+    const initApp = async () => {
       try {
-        // Log initialization
-        logger.info('Initializing application', {
-          details: { themeStatus: loadStatus }
-        });
-        
-        // Pre-fetch the theme if not already loading
-        if (loadStatus === 'idle') {
+        logger.info('Initializing application');
+
+        // Always try to initialize auth first
+        if (initialize) {
+          await initialize();
+        }
+
+        // Then load the theme if available
+        if (loadTheme) {
           await loadTheme('app');
         }
-        
-        // Mark as initialized
-        setInitialized(true);
-        
-        // Log success
-        logger.info('Application initialized successfully', {
-          details: { themeLoaded: loadStatus === 'loaded' }
-        });
-        
+
+        logger.info('Application initialized successfully');
       } catch (error) {
-        // Log error
-        logger.error('Failed to initialize application', { 
-          details: { 
-            error: error instanceof Error ? error.message : String(error) 
-          }
+        logger.error('Failed to initialize application', {
+          details: { error: error instanceof Error ? error.message : String(error) }
         });
-        
-        // Show error toast
-        toast({
-          title: 'Initialization Failed',
-          description: 'Failed to initialize application. Some features may not work properly.',
-          variant: 'destructive',
-        });
-        
-        // Still mark as initialized to avoid blocking UI
-        setInitialized(true);
+      } finally {
+        setIsInitializing(false);
       }
     };
-    
-    // Run initialization
-    initializeApp();
-  }, [logger, toast, loadStatus, loadTheme]);
-  
-  // Show loading state if not initialized yet
-  if (!initialized && loadStatus === 'loading') {
-    return <ThemeLoadingState message="Starting up..." subMessage="Initializing the application" />;
+
+    initApp();
+  }, [logger]);
+
+  // Show a minimal loading indicator while critical services initialize
+  if (isInitializing && (authLoading || themeLoading)) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen bg-background">
+        <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
   }
-  
-  // Always render children - we don't block rendering
+
   return <>{children}</>;
 }

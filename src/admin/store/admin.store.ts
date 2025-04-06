@@ -1,141 +1,62 @@
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { createAdminPersistMiddleware } from '@/admin/middleware/persist.middleware';
-import { AdminPermissionValue } from '@/admin/types/permissions';
-import { ROLE_PERMISSIONS } from '@/admin/constants/permissions';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { AdminPermissionValue } from '../constants/permissions';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 
 interface AdminState {
-  // UI state
-  sidebarExpanded: boolean;
-  dashboardCollapsed: boolean;
-  isDarkMode: boolean;
-  
-  // Dashboard items
-  dashboardItems: string[];
-  
-  // Preferences
-  defaultView: 'cards' | 'list' | 'table';
-  
-  // Permissions
   permissions: AdminPermissionValue[];
-  isLoadingPermissions: boolean;
-  
-  // Status
-  initialized: boolean;
+  selectedEntityId: string | null;
+  isEditMode: boolean;
+  isSaving: boolean;
+  currentView: string;
 }
 
 interface AdminActions {
-  // UI actions
-  setSidebarExpanded: (expanded: boolean) => void;
-  setDashboardCollapsed: (collapsed: boolean) => void;
-  toggleSidebar: () => void;
-  toggleDarkMode: () => void;
-  
-  // Preferences actions
-  setDefaultView: (view: 'cards' | 'list' | 'table') => void;
-  setDashboardItems: (items: string[]) => void;
-  
-  // Permissions actions
   setPermissions: (permissions: AdminPermissionValue[]) => void;
-  loadPermissions: () => Promise<void>;
-  hasRole: (role: string) => boolean;
-  
-  // Misc actions
-  savePreferences: () => Promise<void>;
+  setSelectedEntityId: (id: string | null) => void;
+  setEditMode: (isEditMode: boolean) => void;
+  setSaving: (isSaving: boolean) => void;
+  setCurrentView: (view: string) => void;
 }
 
 export type AdminStore = AdminState & AdminActions;
 
-// Use the persist middleware
-export const useAdminStore = create<AdminStore>()(
-  persist(
-    (set, get) => ({
-      // Initial state
-      sidebarExpanded: true,
-      dashboardCollapsed: false,
-      isDarkMode: false,
-      defaultView: 'cards',
-      dashboardItems: ['users', 'builds', 'content', 'settings'],
-      permissions: [],
-      isLoadingPermissions: false,
-      initialized: false,
+export const useAdminStore = create<AdminStore>((set) => {
+  const logger = getLogger();
 
-      // Methods
-      setSidebarExpanded: (expanded) => set({ sidebarExpanded: expanded }),
-      setDashboardCollapsed: (collapsed) => set({ dashboardCollapsed: collapsed }),
-      toggleSidebar: () => set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
-      toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
-      setDefaultView: (view) => set({ defaultView: view }),
-      setDashboardItems: (items) => set({ dashboardItems: items }),
-      setPermissions: (permissions) => set({ permissions, initialized: true }),
-      hasRole: (role) => {
-        return get().permissions.includes(role as AdminPermissionValue);
-      },
-      
-      // Load permissions from auth store roles
-      loadPermissions: async () => {
-        const logger = getLogger();
-        set({ isLoadingPermissions: true });
-
-        try {
-          // Get current user roles from auth store
-          const authState = useAuthStore.getState();
-          const { roles } = authState;
-          
-          logger.info('Loading admin permissions', {
-            category: LogCategory.ADMIN,
-            source: 'admin/store',
-            details: { userRoles: roles }
-          });
-          
-          // Map roles to admin permissions
-          let allPermissions: AdminPermissionValue[] = [];
-          
-          roles.forEach(role => {
-            const rolePermissions = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS];
-            if (rolePermissions) {
-              rolePermissions.forEach(permission => {
-                if (!allPermissions.includes(permission)) {
-                  allPermissions.push(permission);
-                }
-              });
-            }
-          });
-          
-          set({ permissions: allPermissions, initialized: true });
-          
-          logger.info('Admin permissions loaded', {
-            category: LogCategory.ADMIN,
-            source: 'admin/store',
-            details: { 
-              permissionsCount: allPermissions.length,
-              permissions: allPermissions
-            }
-          });
-          
-          return Promise.resolve();
-        } catch (error) {
-          logger.error('Error loading admin permissions', {
-            category: LogCategory.ADMIN,
-            source: 'admin/store',
-            details: { error }
-          });
-          return Promise.reject(error);
-        } finally {
-          set({ isLoadingPermissions: false });
+  return {
+    // State
+    permissions: [],
+    selectedEntityId: null,
+    isEditMode: false,
+    isSaving: false,
+    currentView: 'overview',
+    
+    // Actions
+    setPermissions: (permissions) => {
+      logger.info('Setting admin permissions', {
+        category: LogCategory.ADMIN,
+        source: 'admin.store',
+        details: { 
+          permissionCount: permissions.length
         }
-      },
-      
-      savePreferences: async () => {
-        // Simulate saving to backend
-        await new Promise(resolve => setTimeout(resolve, 100));
-        return Promise.resolve();
-      }
-    }),
-    createAdminPersistMiddleware('admin-store')
-  )
-);
+      });
+      set({ permissions });
+    },
+    
+    setSelectedEntityId: (id) => set({ selectedEntityId: id }),
+    
+    setEditMode: (isEditMode) => {
+      logger.info(`${isEditMode ? 'Entering' : 'Exiting'} admin edit mode`, {
+        category: LogCategory.ADMIN,
+        source: 'admin.store'
+      });
+      set({ isEditMode });
+    },
+    
+    setSaving: (isSaving) => set({ isSaving }),
+    
+    setCurrentView: (currentView) => set({ currentView })
+  };
+});
