@@ -50,9 +50,11 @@ export function AdminRoutes() {
       logger.warn('Unauthenticated access attempt to admin routes', {
         details: { path: location.pathname }
       });
+      
+      // Use state that's compatible with TanStack Router
       navigate({ 
         to: '/login' as any,
-        state: { returnUrl: location.pathname } // Use TanStack compatible state property
+        state: { from: location.pathname } // Changed returnUrl to from for TanStack compatibility
       });
     }
   }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate]);

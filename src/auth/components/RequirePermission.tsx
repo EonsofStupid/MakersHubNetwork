@@ -56,11 +56,11 @@ export const RequirePermission = ({
       return <>{fallback}</>;
     }
     
-    // Use Navigate with state object compatible with TanStack Router
+    // Use state that's compatible with TanStack Router
     return (
       <Navigate 
         to={redirectTo as any}  
-        state={{ returnUrl: location.pathname }}
+        state={{ from: location.pathname }} // Changed returnUrl to from for TanStack compatibility
         replace={true}
       />
     );
