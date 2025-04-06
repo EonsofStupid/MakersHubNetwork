@@ -5,8 +5,6 @@ import { ImpulsivityInit } from './ImpulsivityInit';
 import { SiteThemeProvider } from './SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { ThemeLoadingState } from './info/ThemeLoadingState';
-import { ThemeErrorState } from './info/ThemeErrorState';
 import { ThemeLogDetails } from '@/types/theme';
 
 interface ThemeInitializerProps {
@@ -15,9 +13,8 @@ interface ThemeInitializerProps {
 }
 
 export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: ThemeInitializerProps) {
-  const { setTheme, isLoading, error } = useThemeStore();
+  const { setTheme } = useThemeStore();
   const [isInitialized, setIsInitialized] = useState(false);
-  const [initError, setInitError] = useState<Error | null>(null);
   const logger = useLogger('ThemeInitializer', LogCategory.UI);
   const initAttempted = useRef(false);
   
@@ -50,9 +47,6 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
           details: { defaultTheme } 
         } as ThemeLogDetails);
         
-        // Clear any previous errors
-        setInitError(null);
-        
         // Attempt to set the theme - don't wait, let it run in background
         setTheme(defaultTheme)
           .then(() => logger.info('Theme loaded successfully'))
@@ -63,9 +57,6 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
         logger.info('Theme system initialization started');
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
-        const errorObj = e instanceof Error ? e : new Error(errorMessage);
-        
-        setInitError(errorObj);
         
         logger.error('Failed to initialize theme system', { 
           errorMessage,
@@ -89,45 +80,7 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
     };
     
     initializeTheme();
-    
-    // Force initialization timeout after 1.5 seconds
-    const timeout = setTimeout(() => {
-      if (!isInitialized) {
-        logger.warn('Theme initialization timeout, continuing with default styles');
-        setIsInitialized(true);
-      }
-    }, 1500);
-    
-    return () => clearTimeout(timeout);
-  }, [defaultTheme, isInitialized, setTheme, logger]);
-  
-  // Handle retry logic
-  const handleRetry = async () => {
-    try {
-      logger.info('Retrying theme initialization', { 
-        details: { defaultTheme }
-      } as ThemeLogDetails);
-      
-      initAttempted.current = false;
-      await setTheme(defaultTheme);
-      
-      setIsInitialized(true);
-      setInitError(null);
-      
-      logger.info('Theme system successfully initialized on retry', { 
-        theme: defaultTheme 
-      } as ThemeLogDetails);
-    } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      const errorObj = e instanceof Error ? e : new Error(errorMessage);
-      
-      setInitError(errorObj);
-      
-      logger.error('Failed to retry theme initialization', { 
-        errorMessage 
-      } as ThemeLogDetails);
-    }
-  };
+  }, [defaultTheme, setTheme, logger]);
   
   // Skip error states and just render children with fallback styles
   return (

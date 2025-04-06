@@ -26,7 +26,8 @@ export function useAuth() {
     isAdmin: state.isAdmin,
     logout: state.logout,
     initialize: state.initialize,
-    initialized: state.initialized
+    initialized: state.initialized,
+    isAuthenticated: state.isAuthenticated
   }));
   
   // Auto-initialize auth if needed - with guard against infinite loops
@@ -69,6 +70,7 @@ export function useAuth() {
     ...authState,
     isAdmin: authState.isAdmin(),
     isSuperAdmin,
-    logout: handleLogout
+    logout: handleLogout,
+    isAuthenticated: authState.isAuthenticated
   };
 }

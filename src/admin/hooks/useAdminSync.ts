@@ -34,15 +34,16 @@ export function useAdminSync() {
       setIsSyncing(true);
       
       logger.info('Syncing admin data');
-      if (typeof adminStore.syncAdminData === 'function') {
-        await adminStore.syncAdminData();
+      if (typeof adminStore.loadPermissions === 'function') {
+        await adminStore.loadPermissions();
+        logger.info('Admin data sync complete');
       } else {
-        logger.warn('syncAdminData function not available in adminStore');
+        logger.warn('loadPermissions function not available in adminStore');
       }
-      
-      logger.info('Admin data sync complete');
     } catch (error) {
-      logger.error('Error syncing admin data', error as Error);
+      logger.error('Error syncing admin data', {
+        details: error instanceof Error ? error.message : String(error)
+      });
     } finally {
       setIsSyncing(false);
     }
@@ -60,11 +61,11 @@ export function useAdminSync() {
     }
   }, [status, user, syncData, logger]);
   
-  // Re-export the debounced syncing state
+  // Return proper interface
   return {
     isSyncing: debouncedSyncValue,
     syncAdminData: syncData,
     isInitialized: adminStore.initialized ?? false,
-    hasPermission: adminStore.hasPermission ?? (() => false)
+    hasPermission: adminStore.hasRole ?? (() => false)
   };
 }

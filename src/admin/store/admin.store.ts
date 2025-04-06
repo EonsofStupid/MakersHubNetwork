@@ -23,6 +23,9 @@ interface AdminState {
   // Permissions
   permissions: AdminPermissionValue[];
   isLoadingPermissions: boolean;
+  
+  // Status
+  initialized: boolean;
 }
 
 interface AdminActions {
@@ -39,6 +42,7 @@ interface AdminActions {
   // Permissions actions
   setPermissions: (permissions: AdminPermissionValue[]) => void;
   loadPermissions: () => Promise<void>;
+  hasRole: (role: string) => boolean;
   
   // Misc actions
   savePreferences: () => Promise<void>;
@@ -58,6 +62,7 @@ export const useAdminStore = create<AdminStore>()(
       dashboardItems: ['users', 'builds', 'content', 'settings'],
       permissions: [],
       isLoadingPermissions: false,
+      initialized: false,
 
       // Methods
       setSidebarExpanded: (expanded) => set({ sidebarExpanded: expanded }),
@@ -66,7 +71,10 @@ export const useAdminStore = create<AdminStore>()(
       toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
       setDefaultView: (view) => set({ defaultView: view }),
       setDashboardItems: (items) => set({ dashboardItems: items }),
-      setPermissions: (permissions) => set({ permissions }),
+      setPermissions: (permissions) => set({ permissions, initialized: true }),
+      hasRole: (role) => {
+        return get().permissions.includes(role as AdminPermissionValue);
+      },
       
       // Load permissions from auth store roles
       loadPermissions: async () => {
@@ -98,7 +106,7 @@ export const useAdminStore = create<AdminStore>()(
             }
           });
           
-          set({ permissions: allPermissions });
+          set({ permissions: allPermissions, initialized: true });
           
           logger.info('Admin permissions loaded', {
             category: LogCategory.ADMIN,
