@@ -1,38 +1,40 @@
 
-// Define the user roles
-export type UserRole = 'admin' | 'super_admin' | 'maker' | 'builder' | 'moderator' | 'editor' | 'user';
+export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor';
 
-export interface UserRoles {
-  id: string;
-  user_id: string;
-  role: UserRole;
-  created_at: string;
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
+
+export interface AuthState {
+  user: any | null;
+  session: any | null;
+  roles: UserRole[];
+  isLoading: boolean;
+  error: string | null;
+  status: AuthStatus;
+  initialized: boolean;
+  isAuthenticated: boolean;
 }
 
-export enum AuthStatus {
-  LOADING = 'loading',
-  AUTHENTICATED = 'authenticated',
-  UNAUTHENTICATED = 'unauthenticated',
-  ERROR = 'error',
+export interface AuthActions {
+  setUser: (user: any | null) => void;
+  setSession: (session: any | null) => void;
+  setRoles: (roles: UserRole[]) => void;
+  setError: (error: string | null) => void;
+  setLoading: (isLoading: boolean) => void;
+  setInitialized: (initialized: boolean) => void;
+  setStatus: (status: AuthStatus) => void;
+  hasRole: (role: UserRole) => boolean;
+  isAdmin: () => boolean;
+  initialize: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-export interface User {
-  id: string;
-  email?: string;
-  display_name?: string;
-  avatar_url?: string;
-  roles?: UserRole[];
+export type AuthStore = AuthState & AuthActions;
+
+export interface AdminAccess {
+  isAdmin: boolean;
+  hasAdminAccess: boolean;
 }
 
-export interface Session {
-  id: string;
-  user_id: string;
-  expires_at: number;
-  created_at: string;
-}
-
-// Define AuthEvent interface with string index signature
-export interface AuthEvent extends Record<string, unknown> {
-  type: string;
-  payload?: Record<string, unknown>;
+export interface WithAdminAccess {
+  hasAdminAccess: boolean;
 }

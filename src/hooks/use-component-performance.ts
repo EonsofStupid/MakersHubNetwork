@@ -1,103 +1,101 @@
-import { useEffect, useRef } from 'react';
-import { useLogger } from './use-logger';
+import { useState, useEffect, useRef } from 'react';
+import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
-// Extended performance interface with the 'now' method
-interface ExtendedPerformance {
-  mark: (name: string) => void;
-  measure: (name: string, startMark: string, endMark: string) => void;
-  getEntriesByName: (name: string, type?: string) => PerformanceEntry[];
-  clearMarks: (name?: string) => void;
-  clearMeasures: (name?: string) => void;
-  now: () => number;
+interface PerformanceMetrics {
+  renderCount: number;
+  totalRenderTime: number;
+  averageRenderTime: number;
+  maxRenderTime: number;
+  minRenderTime: number;
+  startRender: () => void;
+  endRender: () => void;
 }
 
-// Safe access to performance API
-const getPerformance = (): ExtendedPerformance | null => {
-  if (typeof window !== 'undefined' && window.performance) {
-    // Add the 'now' method if it doesn't exist (for type safety)
-    if (!window.performance.now) {
-      const originalPerformance = window.performance;
-      return {
-        ...originalPerformance,
-        now: () => Date.now()
-      } as ExtendedPerformance;
-    }
-    return window.performance as ExtendedPerformance;
+interface PerformanceOptions {
+  enabled?: boolean;
+  logThreshold?: number;
+}
+
+// Fix the performance.now() type error by using a type guard
+const getPerformanceNow = (): number => {
+  if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+    return performance.now();
   }
-  return null;
+  return Date.now(); // Fallback for environments without performance.now()
 };
 
-interface ComponentPerformanceProps {
-  componentName: string;
-  enabled?: boolean;
-}
-
-export function useComponentPerformance({ componentName, enabled = true }: ComponentPerformanceProps) {
+export function useComponentPerformance(componentName: string, options: PerformanceOptions = {}): PerformanceMetrics {
+  const { enabled = true, logThreshold = 1 } = options;
+  const [renderCount, setRenderCount] = useState(0);
+  const [totalRenderTime, setTotalRenderTime] = useState(0);
+  const [averageRenderTime, setAverageRenderTime] = useState(0);
+  const [maxRenderTime, setMaxRenderTime] = useState(0);
+  const [minRenderTime, setMinRenderTime] = useState(Number.MAX_SAFE_INTEGER);
+  const [renderStart, setRenderStart] = useState<number | null>(null);
   const logger = useLogger('ComponentPerformance', LogCategory.PERFORMANCE);
-  const performance = useRef(getPerformance());
-  const mountTime = useRef<number | null>(null);
-
+  const isFirstRender = useRef(true);
+  
   useEffect(() => {
-    if (!enabled || !performance.current) {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
       return;
     }
-
-    const now = performance.current.now;
-
-    // Mark mount start
-    const mountStartMark = `${componentName}-mount-start`;
-    performance.current.mark(mountStartMark);
-    mountTime.current = now();
-
-    return () => {
-      // Component unmounted
-      const unmountMark = `${componentName}-unmount`;
-      performance.current?.mark(unmountMark);
-
-      // Measure the time the component was mounted
-      const mountDurationMeasure = `${componentName}-mount-duration`;
-      performance.current?.measure(mountDurationMeasure, mountStartMark, unmountMark);
-
-      // Log the duration
-      const entries = performance.current?.getEntriesByName(mountDurationMeasure);
-      if (entries && entries.length > 0) {
-        const duration = entries[0].duration;
-        logger.debug(`${componentName} mounted for ${duration.toFixed(2)}ms`);
-      }
-
-      // Clear marks and measures
-      performance.current?.clearMarks(mountStartMark);
-      performance.current?.clearMarks(unmountMark);
-      performance.current?.clearMeasures(mountDurationMeasure);
-    };
-  }, [componentName, enabled, logger]);
-
-  useEffect(() => {
-    if (!enabled || !performance.current) {
-      return;
+    
+    if (renderCount > 0) {
+      const newAverage = totalRenderTime / renderCount;
+      setAverageRenderTime(newAverage);
     }
-
-    // Mark first render after mount
-    const firstRenderMark = `${componentName}-first-render`;
-    performance.current.mark(firstRenderMark);
-
-    if (mountTime.current) {
-      // Measure time to first render
-      const timeToFirstRenderMeasure = `${componentName}-time-to-first-render`;
-      performance.current.measure(timeToFirstRenderMeasure, `${componentName}-mount-start`, firstRenderMark);
-
-      // Log the duration
-      const entries = performance.current.getEntriesByName(timeToFirstRenderMeasure);
-      if (entries && entries.length > 0) {
-        const duration = entries[0].duration;
-        logger.debug(`${componentName} time to first render: ${duration.toFixed(2)}ms`);
+  }, [renderCount, totalRenderTime]);
+  
+  const startRender = () => {
+    try {
+      if (!enabled) return;
+      
+      // Use our safe wrapper for performance.now()
+      const startTime = getPerformanceNow();
+      setRenderStart(startTime);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(`[${componentName}] Render started`);
       }
-
-      // Clear marks and measures
-      performance.current.clearMarks(`${componentName}-mount-start`);
-      performance.current.clearMarks(firstRenderMark);
-      performance.current.clearMeasures(timeToFirstRenderMeasure);
+    } catch (e) {
+      logger.error(`[${componentName}] Error starting render timer: ${e}`);
     }
-  }, [componentName, enabled, logger]);
+  };
+  
+  const endRender = () => {
+    try {
+      if (!enabled || renderStart === null) return;
+      
+      // Use our safe wrapper for performance.now()
+      const endTime = getPerformanceNow();
+      const duration = endTime - renderStart;
+      
+      setRenderCount((prevCount) => prevCount + 1);
+      setTotalRenderTime((prevTotal) => prevTotal + duration);
+      setMaxRenderTime((prevMax) => Math.max(prevMax, duration));
+      setMinRenderTime((prevMin) => Math.min(prevMin, duration));
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(`[${componentName}] Render ended in ${duration.toFixed(2)}ms`);
+      }
+      
+      if (duration > logThreshold) {
+        logger.warn(`[${componentName}] Render time exceeded threshold (${logThreshold}ms): ${duration.toFixed(2)}ms`);
+      }
+    } catch (e) {
+      logger.error(`[${componentName}] Error ending render timer: ${e}`);
+    }
+  };
+  
+  return {
+    renderCount,
+    totalRenderTime,
+    averageRenderTime,
+    maxRenderTime,
+    minRenderTime,
+    startRender,
+    endRender
+  };
 }
