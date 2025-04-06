@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2022",                          // ✅ Required for Error.cause
+    "target": "ES2022",                          // Already correct for Error.cause
     "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],    // ✅ Modern API + browser + iterable support
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],    // Already includes ES2022 for Error.cause
     "module": "ESNext",
 
     /* Compiler behavior */
@@ -22,14 +22,21 @@
     "noImplicitAny": false,
 
     /* Module resolution */
-    "moduleResolution": "bundler",               // ✅ Required for Vite + Next + modern stacks
+    "moduleResolution": "bundler",               // Correct for Vite
 
     /* Paths & aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],                          // ✅ App root
-      "@admin/*": ["src/admin/*"],               // ✅ Admin features
-      "@chat/*": ["src/chat/*"],                 // ✅ Chat system
+      "@/*": ["src/*"],                          // App root
+      "@admin/*": ["src/admin/*"],               // Admin features
+      "@chat/*": ["src/chat/*"],                 // Chat system
+      "@components/*": ["src/components/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@lib/*": ["src/lib/*"],
+      "@state/*": ["src/state/*"],
+      "@theme/*": ["src/theme/*"],
+      "@types/*": ["src/types/*"],
+      "@utils/*": ["src/shared/utils/*"]
     }
   },
   "include": ["src"],
