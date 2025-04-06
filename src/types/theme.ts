@@ -5,7 +5,7 @@ import { Json } from "@/integrations/supabase/types";
 export type ThemeStatus = 'draft' | 'published' | 'archived';
 
 // Define the theme context type to ensure consistent usage
-export type ThemeContext = 'site' | 'admin' | 'chat';
+export type ThemeContext = 'site' | 'admin' | 'chat' | 'app' | 'training';
 
 export interface ThemeToken {
   id: string;
@@ -34,23 +34,23 @@ export interface DesignTokensStructure {
   colors?: Record<string, any>;
   spacing?: Record<string, any>;
   typography?: {
-    fontSizes: Record<string, any>;
-    fontFamilies: Record<string, any>;
-    lineHeights: Record<string, any>;
-    letterSpacing: Record<string, any>;
+    fontSizes?: Record<string, any>;
+    fontFamilies?: Record<string, any>;
+    lineHeights?: Record<string, any>;
+    letterSpacing?: Record<string, any>;
   };
   effects?: {
-    shadows: Record<string, any>;
-    blurs: Record<string, any>;
-    gradients: Record<string, any>;
+    shadows?: Record<string, any>;
+    blurs?: Record<string, any>;
+    gradients?: Record<string, any>;
     primary?: string;
     secondary?: string;
     tertiary?: string;
   };
   animation?: {
-    keyframes: Record<string, any>;
-    transitions: Record<string, any>;
-    durations: Record<string, any>;
+    keyframes?: Record<string, any>;
+    transitions?: Record<string, any>;
+    durations?: Record<string, any>;
   };
   admin?: Record<string, any>;
 }
@@ -84,11 +84,12 @@ export interface ThemeLogDetails {
   // Error information
   errorMessage?: string;
   errorCode?: string;
-  errorDetails?: string;
+  errorDetails?: unknown; // Changed from string to unknown for broader compatibility
   errorHint?: string;
   
   // Theme information
   themeId?: string;
+  themeName?: string; // Added missing property
   theme?: string;
   defaultTheme?: string;
   originalTheme?: string;
@@ -96,15 +97,19 @@ export interface ThemeLogDetails {
   // Component information
   component?: string;
   componentCount?: number;
+  componentTokensCount?: number; // Added missing property
   
   // Operation status
   mainSite?: boolean;
   admin?: boolean;
   database?: boolean;
+  isFallback?: boolean; // Added missing property
   
   // Additional context
   reason?: string;
   details?: Record<string, unknown>;
+  hasAnimations?: boolean; // Added missing property
+  hasComponentStyles?: boolean; // Added missing property
   
   // Allow for additional properties
   [key: string]: unknown;

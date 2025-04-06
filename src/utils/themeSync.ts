@@ -1,4 +1,3 @@
-
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { useThemeStore } from '@/stores/theme/themeStore';
@@ -30,7 +29,7 @@ export async function syncImpulsivityTheme(): Promise<boolean> {
     
     // We need to ensure component_tokens is of the correct type
     const componentTokens: ComponentTokens[] = Array.isArray(currentTheme.component_tokens) 
-      ? currentTheme.component_tokens as ComponentTokens[]
+      ? currentTheme.component_tokens.map(token => token as ComponentTokens)
       : [];
     
     // Prepare Impulsivity theme data

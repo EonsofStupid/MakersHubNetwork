@@ -7,22 +7,23 @@ export type ThemeContext = z.infer<typeof ThemeContextSchema>;
 
 // Color tokens with hex validation
 const HexColorSchema = z.string().regex(/^#([0-9a-fA-F]{3,8})$/, "Must be a valid hex color");
+const HslColorSchema = z.string(); // HSL color in format like "186 100% 50%"
 
 // Base tokens schema with strong typing
 export const ThemeTokensSchema = z.object({
   // Colors
-  primary: HexColorSchema,
-  secondary: HexColorSchema,
-  accent: HexColorSchema,
-  background: HexColorSchema,
-  foreground: HexColorSchema,
-  card: HexColorSchema,
-  cardForeground: HexColorSchema,
-  muted: HexColorSchema,
-  mutedForeground: HexColorSchema,
-  border: HexColorSchema,
-  input: HexColorSchema,
-  ring: HexColorSchema,
+  primary: HslColorSchema,
+  secondary: HslColorSchema,
+  accent: HslColorSchema,
+  background: HslColorSchema,
+  foreground: HslColorSchema,
+  card: HslColorSchema,
+  cardForeground: HslColorSchema,
+  muted: HslColorSchema,
+  mutedForeground: HslColorSchema,
+  border: HslColorSchema,
+  input: HslColorSchema,
+  ring: HslColorSchema,
   
   // Effects
   effectPrimary: HexColorSchema,
@@ -41,6 +42,9 @@ export const ThemeTokensSchema = z.object({
   radiusFull: z.string(),
 });
 
+// Animation keyframe schema
+export const KeyframeSchema = z.record(z.record(z.string()));
+
 // Complete theme schema
 export const ThemeSchema = z.object({
   id: z.string().uuid(),
@@ -53,6 +57,7 @@ export const ThemeSchema = z.object({
   updatedAt: z.string().datetime(),
   design_tokens: z.record(z.unknown()).optional(),
   component_tokens: z.array(z.record(z.unknown())).optional(),
+  animations: z.record(KeyframeSchema).optional(),
 });
 
 // Derived types
@@ -62,18 +67,18 @@ export type Theme = z.infer<typeof ThemeSchema>;
 // Fallback tokens with default values
 export const fallbackTokens: ThemeTokens = {
   // Colors
-  primary: "#00F0FF",
-  secondary: "#FF2D6E",
-  accent: "#8B5CF6",
-  background: "#080F1E",
-  foreground: "#F9FAFB",
-  card: "#0E172A",
-  cardForeground: "#F9FAFB",
-  muted: "#131D35",
-  mutedForeground: "#94A3B8",
-  border: "#131D35",
-  input: "#131D35",
-  ring: "#1E293B",
+  primary: "186 100% 50%",
+  secondary: "334 100% 59%",
+  accent: "262 80% 60%",
+  background: "228 47% 8%",
+  foreground: "210 40% 98%",
+  card: "228 47% 11%",
+  cardForeground: "210 40% 98%",
+  muted: "228 47% 15%",
+  mutedForeground: "215 20.2% 65.1%",
+  border: "228 47% 15%",
+  input: "228 47% 15%",
+  ring: "228 47% 20%",
   
   // Effects
   effectPrimary: "#00F0FF",
