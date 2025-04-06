@@ -5,8 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardOverview } from "@/admin/components/dashboard/DashboardOverview";
 import { MetricsPanel } from "@/admin/components/dashboard/MetricsPanel";
 import { ActivityFeed } from "@/admin/components/dashboard/ActivityFeed";
-import { PermissionChecker } from "@/admin/components/auth/PermissionChecker";
-import { AdminPermissionValue } from "@/admin/types/permissions";
+import { PermissionChecker, AdminPermissionValue } from "@/admin/components/auth/PermissionChecker";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 

@@ -1,34 +1,26 @@
 
-// Theme Service Edge Function
-// This function provides access to themes with service role permissions
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
-// Define response headers with CORS support
+// CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Content-Type': 'application/json'
 };
 
-// Initialize Supabase client with service role for admin privileges
-const supabaseAdmin = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-  {
-    auth: {
-      persistSession: false,
-    }
+// Handle CORS preflight requests
+function handleCors(req: Request) {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
-);
+}
 
-// Default fallback theme definition
-const defaultFallbackTheme = {
-  id: "00000000-0000-0000-0000-000000000000",
-  name: "Fallback Theme",
-  description: "Emergency fallback theme used when theme service is unavailable",
-  status: "published",
+// Create a fallback theme
+const fallbackTheme = {
+  id: "fallback-theme-" + Date.now(),
+  name: "Emergency Fallback Theme",
+  description: "Fallback theme used when theme service is unavailable",
+  status: 'published',
   is_default: true,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
@@ -38,7 +30,7 @@ const defaultFallbackTheme = {
       background: "#080F1E",
       foreground: "#F9FAFB",
       card: "#0E172A",
-      cardForeground: "#F9FAFB",
+      cardForeground: "#F9FAFB", 
       primary: "#00F0FF",
       primaryForeground: "#F9FAFB",
       secondary: "#FF2D6E",
@@ -83,415 +75,280 @@ const defaultFallbackTheme = {
     }
   },
   component_tokens: [],
-  composition_rules: {},
-  cached_styles: {}
 };
 
-// Handle incoming requests
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+// Main function to handle requests
+serve(async (req: Request) => {
   try {
-    // Parse the request body
-    let requestData;
+    // Check for CORS preflight
+    const corsResponse = handleCors(req);
+    if (corsResponse) return corsResponse;
+
+    // Parse the request
+    let body;
     try {
-      requestData = await req.json();
-      console.log("Received request:", JSON.stringify(requestData));
-    } catch (error) {
-      console.error("Error parsing request body:", error);
+      body = await req.json();
+    } catch (e) {
+      console.error("Error parsing request JSON:", e);
       return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }),
-        { status: 400, headers: corsHeaders }
+        JSON.stringify({ error: "Invalid JSON", details: e.message }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
       );
     }
 
-    // Determine which operation to perform
-    const { operation } = requestData;
+    // Determine the operation
+    const operation = body?.operation;
+    if (!operation) {
+      return new Response(
+        JSON.stringify({ error: "Missing operation parameter" }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
 
+    // Create Supabase client
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") || "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
+    );
+
+    // Process the operation
     switch (operation) {
       case 'get-theme':
-        return await handleGetTheme(requestData);
+        return await getTheme(supabase, body);
       
       case 'update-theme':
-        return await handleUpdateTheme(requestData);
+        return await updateTheme(supabase, body);
       
-      case 'create-theme':
-        return await handleCreateTheme(requestData);
+      case 'list-themes':
+        return await listThemes(supabase, body);
       
       default:
-        console.error("Invalid operation:", operation);
         return new Response(
-          JSON.stringify({ error: 'Invalid operation', details: `Operation "${operation}" not supported` }), 
-          { status: 400, headers: corsHeaders }
+          JSON.stringify({ error: "Unknown operation" }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
         );
     }
   } catch (error) {
-    console.error('Theme service unhandled error:', error);
+    console.error("Theme service error:", error);
+    
+    // Return the fallback theme on any error
     return new Response(
       JSON.stringify({ 
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : String(error) 
+        theme: fallbackTheme, 
+        isFallback: true, 
+        error: error.message 
       }),
-      { status: 500, headers: corsHeaders }
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
   }
 });
 
-// Handle get-theme operation
-async function handleGetTheme(data) {
+// Get theme function
+async function getTheme(supabase, body) {
   try {
-    console.log("Handling get-theme operation with data:", JSON.stringify(data));
+    const { themeId, themeName, isDefault = true, context = 'site' } = body;
     
-    const { themeId, themeName, isDefault = true, context = 'site' } = data;
-    console.log(`Looking for theme with ID: ${themeId || 'N/A'}, Name: ${themeName || 'N/A'}, isDefault: ${isDefault}, context: ${context}`);
-
-    // Query for the theme
-    let query = supabaseAdmin.from('themes').select('*');
+    let query = supabase.from('themes').select('*');
     
-    // Apply filters based on parameters
-    if (themeId && themeId !== 'Impulsivity' && themeId !== 'fallback-theme') {
-      // If it looks like a UUID, use it as an ID
-      if (themeId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        console.log("Using ID filter:", themeId);
-        query = query.eq('id', themeId);
-      } else {
-        console.log("Using name filter (from themeId field):", themeId);
-        query = query.eq('name', themeId);
-      }
+    // Filter based on params
+    if (themeId) {
+      query = query.eq('id', themeId);
     } else if (themeName) {
-      console.log("Using name filter:", themeName);
       query = query.eq('name', themeName);
     } else if (isDefault) {
-      console.log("Using is_default filter");
       query = query.eq('is_default', true);
     }
-
-    // Apply context filter - optional for backward compatibility
+    
     if (context) {
-      console.log("Applying context filter:", context);
       query = query.eq('context', context);
     }
     
-    // Execute the query
-    const { data: themes, error } = await query.limit(1);
+    // Get latest version
+    query = query.order('version', { ascending: false }).limit(1);
     
-    // Check for database error
+    const { data: themes, error } = await query;
+    
     if (error) {
-      console.error('Database error fetching theme:', error);
+      console.error("Database error:", error);
       return new Response(
-        JSON.stringify({ error: 'Database error', details: error.message }),
-        { status: 500, headers: corsHeaders }
-      );
-    }
-    
-    // Handle no theme found
-    if (!themes || themes.length === 0) {
-      console.warn('No theme found, returning fallback theme');
-      
-      // Special case for Impulsivity: create it if it doesn't exist
-      if (themeName === 'Impulsivity' || themeId === 'Impulsivity') {
-        console.log("Creating Impulsivity theme since it was requested but doesn't exist");
-        
-        const impulsivityTheme = {
-          name: 'Impulsivity',
-          description: 'A cyberpunk-inspired theme with neon effects and vivid colors',
-          status: 'published',
-          is_default: true,
-          version: 1,
-          context: 'site',
-          design_tokens: {
-            colors: {
-              primary: '#00F0FF',
-              secondary: '#FF2D6E',
-              background: '#121218',
-              foreground: '#F6F6F7' 
-            },
-            effects: {
-              shadows: {},
-              blurs: {},
-              gradients: {},
-              primary: '#00F0FF',
-              secondary: '#FF2D6E',
-              tertiary: '#8B5CF6'
-            }
-          },
-          component_tokens: []
-        };
-        
-        try {
-          const { data: newTheme, error: createError } = await supabaseAdmin
-            .from('themes')
-            .insert(impulsivityTheme)
-            .select()
-            .single();
-            
-          if (createError) {
-            throw createError;
-          }
-          
-          if (newTheme) {
-            console.log(`Created Impulsivity theme with ID: ${newTheme.id}`);
-            return new Response(
-              JSON.stringify({ theme: newTheme, isFallback: false }),
-              { status: 200, headers: corsHeaders }
-            );
-          }
-        } catch (createError) {
-          console.error('Error creating Impulsivity theme:', createError);
-          // Fall through to return fallback theme
+        JSON.stringify({ 
+          theme: fallbackTheme, 
+          isFallback: true, 
+          error: error.message 
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
         }
-      }
-      
-      return new Response(
-        JSON.stringify({ theme: defaultFallbackTheme, isFallback: true }),
-        { status: 200, headers: corsHeaders }
       );
     }
-
-    // Theme found, return it
-    const theme = themes[0];
     
-    // Process any serialized fields
-    let processedTheme = { ...theme };
-    
-    try {
-      // Parse design_tokens if it's a JSON string
-      if (typeof processedTheme.design_tokens === 'string') {
-        processedTheme.design_tokens = JSON.parse(processedTheme.design_tokens);
-      }
-      
-      // Parse component_tokens if it's a JSON string
-      if (typeof processedTheme.component_tokens === 'string') {
-        processedTheme.component_tokens = JSON.parse(processedTheme.component_tokens);
-      }
-      
-      // Parse composition_rules if it's a JSON string
-      if (typeof processedTheme.composition_rules === 'string') {
-        processedTheme.composition_rules = JSON.parse(processedTheme.composition_rules);
-      }
-      
-      // Parse cached_styles if it's a JSON string
-      if (typeof processedTheme.cached_styles === 'string') {
-        processedTheme.cached_styles = JSON.parse(processedTheme.cached_styles);
-      }
-    } catch (parseError) {
-      console.warn('Error parsing JSON fields in theme:', parseError);
-      // Continue with the original theme data
+    if (!themes || themes.length === 0) {
+      console.info("No theme found, returning fallback");
+      return new Response(
+        JSON.stringify({ 
+          theme: fallbackTheme, 
+          isFallback: true
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
     }
     
     return new Response(
-      JSON.stringify({ theme: processedTheme, isFallback: false }),
-      { status: 200, headers: corsHeaders }
+      JSON.stringify({ 
+        theme: themes[0], 
+        isFallback: false
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
   } catch (error) {
-    console.error('Error handling get-theme:', error);
+    console.error("Error getting theme:", error);
     return new Response(
-      JSON.stringify({ error: 'Error retrieving theme', details: error.message, theme: defaultFallbackTheme, isFallback: true }),
-      { status: 500, headers: corsHeaders }
+      JSON.stringify({ 
+        theme: fallbackTheme, 
+        isFallback: true, 
+        error: error.message 
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
   }
 }
 
-// Handle update-theme operation
-async function handleUpdateTheme(data) {
+// Update theme function
+async function updateTheme(supabase, body) {
   try {
-    console.log("Handling update-theme operation with data:", JSON.stringify(data));
-    
-    const { themeId, theme, userId } = data;
+    const { themeId, theme } = body;
     
     if (!themeId) {
       return new Response(
-        JSON.stringify({ error: 'Missing theme ID' }),
-        { status: 400, headers: corsHeaders }
+        JSON.stringify({ error: "Missing themeId parameter" }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
       );
     }
     
-    // Check if the theme exists
-    const { data: existingTheme, error: checkError } = await supabaseAdmin
+    // Get current theme
+    const { data: existingTheme, error: getError } = await supabase
       .from('themes')
       .select('*')
       .eq('id', themeId)
       .single();
     
-    if (checkError) {
+    if (getError) {
+      console.error("Error getting theme to update:", getError);
       return new Response(
-        JSON.stringify({ error: 'Error checking theme existence', details: checkError.message }),
-        { status: 500, headers: corsHeaders }
+        JSON.stringify({ error: getError.message }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
       );
-    }
-    
-    if (!existingTheme) {
-      return new Response(
-        JSON.stringify({ error: 'Theme not found' }),
-        { status: 404, headers: corsHeaders }
-      );
-    }
-    
-    // Process fields that might need serialization
-    const updateData = { ...theme, updated_at: new Date().toISOString() };
-    
-    if (updateData.design_tokens && typeof updateData.design_tokens === 'object') {
-      updateData.design_tokens = JSON.stringify(updateData.design_tokens);
-    }
-    
-    if (updateData.component_tokens && Array.isArray(updateData.component_tokens)) {
-      updateData.component_tokens = JSON.stringify(updateData.component_tokens);
-    }
-    
-    if (updateData.composition_rules && typeof updateData.composition_rules === 'object') {
-      updateData.composition_rules = JSON.stringify(updateData.composition_rules);
     }
     
     // Update the theme
-    const { error: updateError } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('themes')
-      .update(updateData)
-      .eq('id', themeId);
-    
-    if (updateError) {
-      return new Response(
-        JSON.stringify({ error: 'Error updating theme', details: updateError.message }),
-        { status: 500, headers: corsHeaders }
-      );
-    }
-    
-    // Fetch the updated theme
-    const { data: updatedTheme, error: fetchError } = await supabaseAdmin
-      .from('themes')
-      .select('*')
+      .update({
+        ...theme,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', themeId)
-      .single();
+      .select();
     
-    if (fetchError) {
+    if (error) {
+      console.error("Error updating theme:", error);
       return new Response(
-        JSON.stringify({ error: 'Error fetching updated theme', details: fetchError.message }),
-        { status: 500, headers: corsHeaders }
+        JSON.stringify({ error: error.message }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
       );
-    }
-    
-    // Process any serialized fields for response
-    let processedTheme = { ...updatedTheme };
-    
-    try {
-      // Parse JSON strings for response
-      if (typeof processedTheme.design_tokens === 'string') {
-        processedTheme.design_tokens = JSON.parse(processedTheme.design_tokens);
-      }
-      
-      if (typeof processedTheme.component_tokens === 'string') {
-        processedTheme.component_tokens = JSON.parse(processedTheme.component_tokens);
-      }
-      
-      if (typeof processedTheme.composition_rules === 'string') {
-        processedTheme.composition_rules = JSON.parse(processedTheme.composition_rules);
-      }
-      
-      if (typeof processedTheme.cached_styles === 'string') {
-        processedTheme.cached_styles = JSON.parse(processedTheme.cached_styles);
-      }
-    } catch (parseError) {
-      console.warn('Error parsing JSON fields in updated theme:', parseError);
-      // Continue with the original theme data
     }
     
     return new Response(
-      JSON.stringify({ theme: processedTheme, success: true }),
-      { status: 200, headers: corsHeaders }
+      JSON.stringify({ 
+        success: true, 
+        theme: data[0] || existingTheme 
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
   } catch (error) {
-    console.error('Error handling update-theme:', error);
+    console.error("Error updating theme:", error);
     return new Response(
-      JSON.stringify({ error: 'Error updating theme', details: error.message }),
-      { status: 500, headers: corsHeaders }
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
   }
 }
 
-// Handle create-theme operation
-async function handleCreateTheme(data) {
+// List themes function
+async function listThemes(supabase, body) {
   try {
-    console.log("Handling create-theme operation with data:", JSON.stringify(data));
+    const { context = 'site', limit = 10 } = body;
     
-    const { theme, userId } = data;
-    
-    if (!theme || !theme.name) {
-      return new Response(
-        JSON.stringify({ error: 'Missing theme data or name' }),
-        { status: 400, headers: corsHeaders }
-      );
-    }
-    
-    // Process fields that might need serialization
-    const themeData = { 
-      ...theme,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      created_by: userId || null
-    };
-    
-    if (themeData.design_tokens && typeof themeData.design_tokens === 'object') {
-      themeData.design_tokens = JSON.stringify(themeData.design_tokens);
-    }
-    
-    if (themeData.component_tokens && Array.isArray(themeData.component_tokens)) {
-      themeData.component_tokens = JSON.stringify(themeData.component_tokens);
-    }
-    
-    if (themeData.composition_rules && typeof themeData.composition_rules === 'object') {
-      themeData.composition_rules = JSON.stringify(themeData.composition_rules);
-    }
-    
-    // Insert the theme
-    const { data: newTheme, error: insertError } = await supabaseAdmin
+    const { data: themes, error } = await supabase
       .from('themes')
-      .insert(themeData)
-      .select()
-      .single();
+      .select('*')
+      .eq('context', context)
+      .order('updated_at', { ascending: false })
+      .limit(limit);
     
-    if (insertError) {
+    if (error) {
+      console.error("Error listing themes:", error);
       return new Response(
-        JSON.stringify({ error: 'Error creating theme', details: insertError.message }),
-        { status: 500, headers: corsHeaders }
+        JSON.stringify({ error: error.message }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
       );
-    }
-    
-    // Process any serialized fields for response
-    let processedTheme = { ...newTheme };
-    
-    try {
-      // Parse JSON strings for response
-      if (typeof processedTheme.design_tokens === 'string') {
-        processedTheme.design_tokens = JSON.parse(processedTheme.design_tokens);
-      }
-      
-      if (typeof processedTheme.component_tokens === 'string') {
-        processedTheme.component_tokens = JSON.parse(processedTheme.component_tokens);
-      }
-      
-      if (typeof processedTheme.composition_rules === 'string') {
-        processedTheme.composition_rules = JSON.parse(processedTheme.composition_rules);
-      }
-      
-      if (typeof processedTheme.cached_styles === 'string') {
-        processedTheme.cached_styles = JSON.parse(processedTheme.cached_styles);
-      }
-    } catch (parseError) {
-      console.warn('Error parsing JSON fields in new theme:', parseError);
-      // Continue with the original theme data
     }
     
     return new Response(
-      JSON.stringify({ theme: processedTheme, success: true }),
-      { status: 201, headers: corsHeaders }
+      JSON.stringify({ themes }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
   } catch (error) {
-    console.error('Error handling create-theme:', error);
+    console.error("Error listing themes:", error);
     return new Response(
-      JSON.stringify({ error: 'Error creating theme', details: error.message }),
-      { status: 500, headers: corsHeaders }
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
   }
 }

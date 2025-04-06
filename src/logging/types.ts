@@ -18,6 +18,7 @@ export enum LogCategory {
   CONTENT = 'content'
 }
 
+// Extended options type for logging
 export interface LogOptions {
   category?: LogCategory;
   details?: Record<string, unknown>;
@@ -39,6 +40,7 @@ export interface LogOptions {
   errorHint?: string;
   themeId?: string;
   defaultTheme?: string;
+  source?: string;
   [key: string]: unknown;
 }
 
@@ -62,7 +64,7 @@ export interface LogTransport {
   enabled: boolean;
   log(entry: LogEntry): void;
   getLogs?(): LogEntry[];
-  subscribe?(callback: (entry: LogEntry) => void): () => void;
+  subscribe?(callback: (entries: LogEntry[]) => void): () => void;
   clear?(): void;
   flush?(): Promise<void>;
 }

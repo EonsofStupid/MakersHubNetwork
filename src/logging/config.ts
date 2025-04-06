@@ -10,8 +10,8 @@ export const defaultLoggingConfig: LoggingConfig = {
   minLevel: LogLevel.INFO, // Log info and above by default
   transports: [
     consoleTransport, // Always log to console
-    new UITransport(),      // Show UI toasts for logs
-    memoryTransport,        // Keep logs in memory for UI components
+    new UITransport(),     // Show UI toasts for logs
+    memoryTransport,       // Keep logs in memory for UI components
   ],
   bufferSize: 10,          // Buffer size before flush
   flushInterval: 5000,     // Flush interval in ms
@@ -38,9 +38,12 @@ export function getLoggingConfig(): LoggingConfig {
     // Exclude DEBUG level from UI transport in production
     transports: [
       consoleTransport,
+      // Create a new UI transport with production settings
       new UITransport({
         minLevel: LogLevel.INFO,
         includeDebug: false,
+        maxEntries: 50,
+        enabled: true
       }),
       memoryTransport,
     ],
