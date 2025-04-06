@@ -1,17 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAdminSync } from '@/admin/hooks/useAdminSync';
-import { Loader } from 'lucide-react';
+import { Loader, RefreshCw } from 'lucide-react';
 import { AdminTooltip } from './AdminTooltip';
 
 export function SyncIndicator() {
-  const { isSyncing, lastSynced, sync } = useAdminSync();
+  const { isSyncing, syncAdminData } = useAdminSync();
+  const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
+  
+  const handleSync = async () => {
+    if (isSyncing) return;
+    
+    await syncAdminData();
+    setLastSyncTime(Date.now());
+  };
   
   const formatLastSynced = () => {
-    if (!lastSynced) return 'Never synced';
+    if (!lastSyncTime) return 'Never synced';
     
     // If synced less than 1 minute ago
-    const diff = Math.floor((Date.now() - lastSynced.getTime()) / 1000);
+    const diff = Math.floor((Date.now() - lastSyncTime) / 1000);
     if (diff < 60) return 'Just now';
     
     // If synced less than 1 hour ago
@@ -21,13 +29,13 @@ export function SyncIndicator() {
     }
     
     // Otherwise show time
-    return lastSynced.toLocaleTimeString();
+    return new Date(lastSyncTime).toLocaleTimeString();
   };
   
   return (
     <AdminTooltip content={`Last synced: ${formatLastSynced()}`} side="bottom">
       <button 
-        onClick={() => !isSyncing && sync()}
+        onClick={handleSync}
         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
         disabled={isSyncing}
       >

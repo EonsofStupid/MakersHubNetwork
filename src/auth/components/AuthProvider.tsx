@@ -26,8 +26,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       // Log auth state changes
       logger.info(`Auth state change: ${event}`, {
-        event,
-        userId: session?.user?.id
+        details: {
+          event,
+          userId: session?.user?.id
+        }
       });
       
       // Update session in the store

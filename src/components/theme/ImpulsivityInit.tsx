@@ -20,7 +20,7 @@ export function ImpulsivityInit({
   showLoader = false,
   priority = false
 }: ImpulsivityInitProps) {
-  const { applyTheme, isSyncing } = useImpulsivityTheme();
+  const { applyTheme, applyToMainSite, isSyncing } = useImpulsivityTheme();
   const { isLoading: themeStoreLoading } = useThemeStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -42,9 +42,14 @@ export function ImpulsivityInit({
     
     // Apply immediate styles regardless of theme system state
     applyImmediateStyles();
+    applyToMainSite().catch(e => 
+      logger.warn('Failed to apply immediate styles', { 
+        errorMessage: e instanceof Error ? e.message : String(e) 
+      } as ThemeLogDetails)
+    );
     
     // Only initialize once to prevent infinite loops
-    if (autoApply && !isInitialized && !isSyncing && !themeStoreLoading && !initAttempted.current) {
+    if (autoApply && !isInitialized && !initAttempted.current) {
       const initTheme = async () => {
         try {
           initAttempted.current = true;
@@ -87,7 +92,7 @@ export function ImpulsivityInit({
       initTheme();
     }
     
-    // Force initialization timeout after 3 seconds (reduced from 5 to make app more responsive)
+    // Force initialization timeout after 2 seconds
     const timeout = setTimeout(() => {
       if (!isInitialized) {
         logger.warn('Impulsivity theme initialization timed out, continuing anyway');
@@ -96,10 +101,10 @@ export function ImpulsivityInit({
         // Reapply immediate styles as fallback
         applyImmediateStyles();
       }
-    }, 2000); // Reduced from 3000 for even faster responsiveness
+    }, 2000);
     
     return () => clearTimeout(timeout);
-  }, [autoApply, applyTheme, isInitialized, logger, isSyncing, themeStoreLoading, priority]);
+  }, [autoApply, applyTheme, applyToMainSite, isInitialized, logger, isSyncing, themeStoreLoading, priority]);
   
   // If showing loader and still initializing, render a loading indicator
   if (showLoader && (isSyncing || themeStoreLoading) && !isInitialized) {

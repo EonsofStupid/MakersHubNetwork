@@ -30,88 +30,83 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
     rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
     rootElement.style.setProperty('--site-background', '#080F1E');
     rootElement.style.setProperty('--site-foreground', '#F9FAFB');
+    
+    // Mark as initialized to avoid blocking app rendering
+    setIsInitialized(true);
   }, []);
   
   // Initialize theme on component mount
   useEffect(() => {
     // Skip if already initialized or loading
-    if (isInitialized || isLoading || initAttempted.current) {
+    if (initAttempted.current) {
       return;
     }
     
     const initializeTheme = async () => {
       try {
         initAttempted.current = true;
-        const logDetails: ThemeLogDetails = { 
-          details: { defaultTheme } 
-        };
         
-        logger.info('Initializing theme system', logDetails);
+        logger.info('Initializing theme system', { 
+          details: { defaultTheme } 
+        } as ThemeLogDetails);
         
         // Clear any previous errors
         setInitError(null);
         
-        // Attempt to set the theme
-        await setTheme(defaultTheme);
+        // Attempt to set the theme - don't wait, let it run in background
+        setTheme(defaultTheme)
+          .then(() => logger.info('Theme loaded successfully'))
+          .catch(e => logger.warn('Theme load error:', { 
+            errorMessage: e instanceof Error ? e.message : String(e) 
+          } as ThemeLogDetails));
         
-        // Mark as initialized only if successful
-        setIsInitialized(true);
-        
-        const successDetails: ThemeLogDetails = { 
-          success: true,
-          theme: defaultTheme
-        };
-        
-        logger.info('Theme system initialized successfully', successDetails);
+        logger.info('Theme system initialization started');
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         const errorObj = e instanceof Error ? e : new Error(errorMessage);
         
         setInitError(errorObj);
         
-        const errorDetails: ThemeLogDetails = { 
+        logger.error('Failed to initialize theme system', { 
           errorMessage,
           details: { themeId: defaultTheme }
-        };
-        
-        logger.error('Failed to initialize theme system', errorDetails);
+        } as ThemeLogDetails);
         
         // Try to load a fallback theme silently
         try {
-          await setTheme('fallback-theme');
+          setTheme('fallback-theme')
+            .catch(() => logger.warn('Fallback theme also failed'));
           
-          const fallbackDetails: ThemeLogDetails = { 
+          logger.warn('Using fallback theme after initialization error', { 
             originalTheme: defaultTheme 
-          };
-          
-          logger.warn('Using fallback theme after initialization error', fallbackDetails);
-          
-          // Still mark as initialized so the app can proceed
-          setIsInitialized(true);
+          } as ThemeLogDetails);
         } catch (fallbackError) {
           logger.error('Fallback theme also failed', {
             errorMessage: String(fallbackError)
           } as ThemeLogDetails);
-          
-          // As a last resort, we'll just let the app continue
-          // even without properly initialized theme - the CSS fallbacks
-          // will be used
-          setIsInitialized(true);
         }
       }
     };
     
     initializeTheme();
-  }, [defaultTheme, isInitialized, isLoading, setTheme, logger]);
+    
+    // Force initialization timeout after 1.5 seconds
+    const timeout = setTimeout(() => {
+      if (!isInitialized) {
+        logger.warn('Theme initialization timeout, continuing with default styles');
+        setIsInitialized(true);
+      }
+    }, 1500);
+    
+    return () => clearTimeout(timeout);
+  }, [defaultTheme, isInitialized, setTheme, logger]);
   
   // Handle retry logic
   const handleRetry = async () => {
     try {
-      const retryDetails: ThemeLogDetails = { 
+      logger.info('Retrying theme initialization', { 
         details: { defaultTheme }
-      };
-      
-      logger.info('Retrying theme initialization', retryDetails);
+      } as ThemeLogDetails);
       
       initAttempted.current = false;
       await setTheme(defaultTheme);
@@ -119,59 +114,25 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
       setIsInitialized(true);
       setInitError(null);
       
-      const successDetails: ThemeLogDetails = { 
+      logger.info('Theme system successfully initialized on retry', { 
         theme: defaultTheme 
-      };
-      
-      logger.info('Theme system successfully initialized on retry', successDetails);
+      } as ThemeLogDetails);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       const errorObj = e instanceof Error ? e : new Error(errorMessage);
       
       setInitError(errorObj);
       
-      const errorDetails: ThemeLogDetails = { 
+      logger.error('Failed to retry theme initialization', { 
         errorMessage 
-      };
-      
-      logger.error('Failed to retry theme initialization', errorDetails);
+      } as ThemeLogDetails);
     }
   };
   
-  // Show loading state during initialization, but with a timeout
-  // to prevent hanging indefinitely
-  useEffect(() => {
-    if (isLoading && !isInitialized) {
-      // If loading takes too long, force continue anyway
-      const timer = setTimeout(() => {
-        if (!isInitialized) {
-          logger.warn('Theme initialization timeout, continuing with default styles');
-          setIsInitialized(true);
-        }
-      }, 2000); // 2 second timeout (reduced from 3)
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, isInitialized, logger]);
-  
-  // If there's an initialization error or store error, show error state
-  if (initError || error) {
-    return (
-      <ThemeErrorState 
-        error={initError || error || new Error('Unknown theme initialization error')}
-        onRetry={handleRetry}
-      />
-    );
-  }
-  
-  // Show loading state while initializing, but only briefly
-  if (isLoading && !isInitialized) {
-    return <ThemeLoadingState />;
-  }
-  
+  // Skip error states and just render children with fallback styles
   return (
-    <SiteThemeProvider isInitializing={isLoading || !isInitialized}>
-      <ImpulsivityInit autoApply={true}>
+    <SiteThemeProvider isInitializing={false}>
+      <ImpulsivityInit autoApply={true} priority={true}>
         {children}
       </ImpulsivityInit>
     </SiteThemeProvider>

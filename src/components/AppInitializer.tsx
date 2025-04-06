@@ -34,8 +34,8 @@ export function AppInitializer({ children }: AppInitializerProps) {
       clearTimeout(maxWaitTimeoutRef.current);
     }
     
-    // If theme is loaded and auth is initialized, we can render the app
-    if (themeLoaded && authInitialized) {
+    // If theme is loaded, we can render the app regardless of auth state
+    if (themeLoaded) {
       logger.info('All systems initialized, rendering application');
       setIsAppReady(true);
       return;
@@ -48,7 +48,7 @@ export function AppInitializer({ children }: AppInitializerProps) {
         details: { themeLoaded, authStatus, authInitialized }
       });
       setIsAppReady(true);
-    }, 2000); // Max wait time
+    }, 1500); // Reduced max wait time
     
     return () => {
       if (maxWaitTimeoutRef.current) {
@@ -62,38 +62,7 @@ export function AppInitializer({ children }: AppInitializerProps) {
     initMessageShownRef.current = false;
   }, [authStatus, authInitialized, themeLoaded]);
   
-  // Show minimal loading state while app is initializing
-  if (!isAppReady) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="w-full max-w-2xl px-4">
-          {/* Navbar skeleton */}
-          <div className="flex items-center justify-between mb-12">
-            <Skeleton className="h-8 w-32" />
-            <div className="flex gap-4">
-              <Skeleton className="h-8 w-20" />
-              <Skeleton className="h-8 w-20" />
-              <Skeleton className="h-8 w-8 rounded-full" />
-            </div>
-          </div>
-          
-          {/* Content skeletons */}
-          <div className="space-y-8">
-            <Skeleton className="h-12 w-3/4 mx-auto" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="flex flex-col space-y-3">
-                  <Skeleton className="h-40 w-full rounded-lg" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
+  // Skip loading screen and always render children to avoid blocking the app
+  // This ensures the site loads immediately with fallback styling
   return <>{children}</>;
 }
