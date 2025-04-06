@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { LoginModal } from './LoginModal';
+import { LoginSheet } from '@/components/MainNav/components/LoginSheet';
 
 export function LoginButton() {
   const [open, setOpen] = useState(false);
@@ -12,8 +12,8 @@ export function LoginButton() {
         Login
       </Button>
       
-      <LoginModal 
-        open={open} 
+      <LoginSheet 
+        isOpen={open} 
         onOpenChange={setOpen} 
       />
     </>
