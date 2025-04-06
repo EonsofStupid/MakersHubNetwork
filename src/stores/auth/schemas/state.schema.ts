@@ -1,10 +1,9 @@
-
 import { z } from "zod";
 import { User, Session } from "@supabase/supabase-js";
 import { Database } from "@/integrations/supabase/types";
 
 // Define the UserRole enum schema based on Supabase types
-export const UserRoleSchema = z.enum(['admin', 'super_admin', 'user', 'moderator', 'editor', 'maker', 'builder'] as const);
+export const UserRoleSchema = z.enum(['admin', 'editor', 'viewer'] as const);
 export type UserRole = z.infer<typeof UserRoleSchema>;
 
 // Define the AuthStatus enum schema

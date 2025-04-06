@@ -35,7 +35,7 @@ const mockUsers: UserData[] = [
     id: "2",
     email: "jane@example.com",
     name: "Jane Smith",
-    role: "maker",
+    role: "builder",
     status: "active",
     createdAt: "2023-03-22T14:20:00Z",
     lastLogin: "2023-05-09T16:30:00Z"
@@ -53,7 +53,7 @@ const mockUsers: UserData[] = [
     id: "4",
     email: "alex@example.com",
     name: "Alex Johnson",
-    role: "editor",
+    role: "builder",
     status: "pending",
     createdAt: "2023-05-05T16:45:00Z",
     lastLogin: null
@@ -62,7 +62,7 @@ const mockUsers: UserData[] = [
     id: "5",
     email: "taylor@example.com",
     name: "Taylor Brown",
-    role: "moderator",
+    role: "builder",
     status: "suspended",
     createdAt: "2023-01-18T13:10:00Z",
     lastLogin: "2023-04-28T10:05:00Z"

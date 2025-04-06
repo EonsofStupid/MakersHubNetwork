@@ -1,9 +1,7 @@
 
 import { Session, User } from "@supabase/supabase-js";
-import { UserRole as BaseUserRole } from "./roles";
 
-// Use the base role type from roles.ts
-export type UserRole = BaseUserRole;
+export type UserRole = 'super_admin' | 'admin' | 'maker' | 'builder';
 
 export interface UserProfile {
   id: string;

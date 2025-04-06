@@ -1,96 +1,55 @@
 
-import { UserRole } from '../types/roles';
-import { PERMISSIONS, PermissionValue } from '../permissions';
+import { UserRole } from "../types/auth.types";
+import { PermissionValue, PERMISSIONS, ROLE_PERMISSIONS } from "../permissions";
 
-// Core role check - can be expanded with more granular permissions
-export const hasAdminAccess = (roles: UserRole[]): boolean => {
-  return roles.includes('admin') || roles.includes('super_admin');
-};
-
-// Check for a specific role
-export const hasRole = (roles: UserRole[], role: UserRole): boolean => {
-  return roles.includes(role);
-};
-
-// Check for any of the provided roles
-export const hasAnyRole = (roles: UserRole[], allowedRoles: UserRole[]): boolean => {
-  return allowedRoles.some(role => roles.includes(role));
-};
-
-// Map roles to their associated permissions
-export const mapRolesToPermissions = (roles: UserRole[]): PermissionValue[] => {
-  const permissions: PermissionValue[] = [];
+/**
+ * Maps user roles to app permissions
+ */
+export const mapRolesToPermissions = (roles: UserRole[] = []): PermissionValue[] => {
+  // If no roles, return empty permissions array
+  if (!roles.length) {
+    return [];
+  }
   
-  // Super admin gets all permissions
+  // Super admins get all permissions
   if (roles.includes('super_admin')) {
     return [PERMISSIONS.SUPER_ADMIN];
   }
   
-  // Add role-specific permissions
+  // Combine permissions from all roles
+  const permissions: PermissionValue[] = [];
+  
   roles.forEach(role => {
-    switch (role) {
-      case 'admin':
-        permissions.push(
-          PERMISSIONS.ADMIN_ACCESS,
-          PERMISSIONS.ADMIN_VIEW,
-          PERMISSIONS.ADMIN_EDIT,
-          PERMISSIONS.CONTENT_VIEW,
-          PERMISSIONS.CONTENT_EDIT,
-          PERMISSIONS.USERS_VIEW,
-          PERMISSIONS.BUILDS_VIEW
-        );
-        break;
-      case 'moderator':
-        permissions.push(
-          PERMISSIONS.CONTENT_VIEW,
-          PERMISSIONS.CONTENT_EDIT,
-          PERMISSIONS.REVIEWS_VIEW,
-          PERMISSIONS.REVIEWS_APPROVE,
-          PERMISSIONS.REVIEWS_REJECT
-        );
-        break;
-      case 'editor':
-        permissions.push(
-          PERMISSIONS.CONTENT_VIEW,
-          PERMISSIONS.CONTENT_EDIT,
-          PERMISSIONS.CONTENT_CREATE
-        );
-        break;
-      case 'maker':
-        permissions.push(
-          PERMISSIONS.CONTENT_VIEW,
-          PERMISSIONS.BUILDS_VIEW,
-          PERMISSIONS.BUILDS_CREATE
-        );
-        break;
-      case 'builder':
-        permissions.push(
-          PERMISSIONS.BUILDS_VIEW,
-          PERMISSIONS.BUILDS_CREATE
-        );
-        break;
-      case 'user':
-        permissions.push(
-          PERMISSIONS.CONTENT_VIEW
-        );
-        break;
+    const rolePermissions = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS];
+    if (rolePermissions) {
+      rolePermissions.forEach(permission => {
+        if (!permissions.includes(permission)) {
+          permissions.push(permission);
+        }
+      });
     }
   });
   
-  // Remove duplicates
-  return [...new Set(permissions)];
+  return permissions;
 };
 
-// Get highest priority role - useful for UI display
-export const getHighestRole = (roles: UserRole[]): UserRole | null => {
-  // Order matters - from highest to lowest
-  const priorityOrder: UserRole[] = ['super_admin', 'admin', 'moderator', 'editor', 'maker', 'builder', 'user'];
-  
-  for (const role of priorityOrder) {
-    if (roles.includes(role)) {
-      return role;
-    }
-  }
-  
-  return null;
+/**
+ * Helper function to check if a user has a specific role
+ */
+export const hasRole = (userRoles: UserRole[] = [], role: UserRole): boolean => {
+  return userRoles.includes(role);
+};
+
+/**
+ * Helper function to check if a user has admin access
+ */
+export const hasAdminAccess = (userRoles: UserRole[] = []): boolean => {
+  return userRoles.includes('admin') || userRoles.includes('super_admin');
+};
+
+/**
+ * Helper function to check if a user is a super admin
+ */
+export const isSuperAdmin = (userRoles: UserRole[] = []): boolean => {
+  return userRoles.includes('super_admin');
 };

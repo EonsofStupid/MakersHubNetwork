@@ -84,9 +84,8 @@ export interface ThemeLogDetails {
   // Error information
   errorMessage?: string;
   errorCode?: string;
-  errorDetails?: string | Record<string, unknown>;
+  errorDetails?: string;
   errorHint?: string;
-  errorName?: string;
   
   // Theme information
   themeId?: string;
@@ -97,8 +96,6 @@ export interface ThemeLogDetails {
   // Component information
   component?: string;
   componentCount?: number;
-  reason?: string;
-  source?: string;
   
   // Operation status
   mainSite?: boolean;
@@ -106,6 +103,7 @@ export interface ThemeLogDetails {
   database?: boolean;
   
   // Additional context
+  reason?: string;
   details?: Record<string, unknown>;
   
   // Allow for additional properties

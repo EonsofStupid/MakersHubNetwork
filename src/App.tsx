@@ -1,27 +1,117 @@
 
-import { Routes, Route } from "react-router-dom";
-import HomePage from "./pages/Home";
-import AboutPage from "./pages/About";
-import LoginPage from "./pages/Login";
-import { AdminLayout } from "./admin/components/layouts/AdminLayout";
-import Dashboard from "./admin/pages/Dashboard";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/auth/components/AuthProvider";
+import { AdminProvider } from "@/admin/context/AdminContext";
+import { LoggingProvider } from "@/logging/context/LoggingContext";
+import { LogConsole } from "@/logging/components/LogConsole";
+import { LogToggleButton } from "@/logging/components/LogToggleButton";
+import { useLoggingContext } from "@/logging/context/LoggingContext";
+import { useEffect, useRef, useState } from "react";
+import { initializeLogger, getLogger } from "@/logging";
+import { LogCategory } from "@/logging";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
-import { DebugProvider } from "@/admin/providers/DebugProvider";
+import { AppInitializer } from "@/components/AppInitializer";
+
+// Import pages
+import Index from "./pages/Index";
+import Admin from "./pages/Admin";
+import Login from "./pages/Login";
+
+// Import UI components
+import { MainNav } from "@/components/MainNav";
+import { Footer } from "@/components/Footer";
+
+// Import styles
+import "./App.css";
+import "@/theme/site-theme.css";
+import "@/components/MainNav/styles/cyber-effects.css";
+import "@/logging/styles/logging.css";
+import "@/admin/styles/cyber-effects.css";
+
+// LoggingComponents wrapper to avoid context issues
+function LoggingComponents() {
+  const { showLogConsole } = useLoggingContext();
+  
+  return (
+    <>
+      {showLogConsole && <LogConsole />}
+      <LogToggleButton />
+    </>
+  );
+}
+
+// Initialize logging system - do this only once
+const loggerInitialized = { current: false };
+
+function initLogging(): void {
+  if (!loggerInitialized.current) {
+    initializeLogger();
+    loggerInitialized.current = true;
+  }
+}
+
+// Initialize immediately
+initLogging();
 
 function App() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const logger = getLogger();
+  const routeLoggedRef = useRef<boolean>(false);
+  const [appReady, setAppReady] = useState(false);
+
+  // Log route changes - with ref guard to prevent duplicate logs
+  useEffect(() => {
+    if (!routeLoggedRef.current) {
+      logger.info(`Navigated to ${location.pathname}`, {
+        details: { path: location.pathname }
+      });
+      routeLoggedRef.current = true;
+    } else {
+      // Reset ref for future logs
+      routeLoggedRef.current = false;
+    }
+  }, [location.pathname, logger]);
+
+  // Set app as ready after a short timeout to ensure all providers are initialized
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppReady(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Enforced component initialization order to prevent infinite loops:
+  // 1. ThemeProvider (shadcn)
+  // 2. LoggingProvider
+  // 3. ThemeInitializer (site theme)
+  // 4. AuthProvider
+  // 5. AppInitializer
+  // 6. AdminProvider
   return (
-    <ThemeInitializer>
-      <DebugProvider>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-          </Route>
-        </Routes>
-      </DebugProvider>
-    </ThemeInitializer>
+    <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
+      <LoggingProvider>
+        <ThemeInitializer defaultTheme="Impulsivity">
+          <AuthProvider>
+            <AppInitializer>
+              <AdminProvider>
+                {!isAdminRoute && appReady && <MainNav />}
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/admin/*" element={<Admin />} />
+                </Routes>
+                {!isAdminRoute && appReady && <Footer />}
+                <Toaster />
+                <LoggingComponents />
+              </AdminProvider>
+            </AppInitializer>
+          </AuthProvider>
+        </ThemeInitializer>
+      </LoggingProvider>
+    </ThemeProvider>
   );
 }
 

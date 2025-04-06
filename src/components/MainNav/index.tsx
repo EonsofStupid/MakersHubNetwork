@@ -7,13 +7,11 @@ import { SearchButton } from "./components/SearchButton";
 import { AuthSection } from "./components/AuthSection";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Link } from "react-router-dom";
-import { Shield, Wrench } from "lucide-react";
+import { Shield, Wrench, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
-import { useAtom } from "jotai";
-import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -23,7 +21,6 @@ export function MainNav() {
   const logger = useLogger("MainNav", LogCategory.UI);
   const dataStreamRef = useRef<HTMLDivElement>(null);
   const glitchParticlesRef = useRef<HTMLDivElement>(null);
-  const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
   
   // Get MainNav styles from theme
   const styles = componentStyles?.MainNav || {
@@ -90,11 +87,6 @@ export function MainNav() {
     };
   }, [logger, variables]);
 
-  // Toggle edit mode for admin
-  const toggleEditMode = () => {
-    setEditMode(!isEditMode);
-  };
-
   return (
     <header
       className={cn(
@@ -141,40 +133,19 @@ export function MainNav() {
           <div className="flex items-center gap-2">
             <SearchButton />
             
-            {/* Admin access buttons */}
+            {/* Admin access button with wrench icon */}
             {hasAdminAccess && (
-              <>
-                {/* Visual Page Editor toggle button */}
+              <Link to="/admin">
                 <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className={cn(
-                    "relative h-8 w-8 rounded-full",
-                    isEditMode 
-                      ? "bg-primary/20 text-primary hover:bg-primary/30" 
-                      : "hover:bg-primary/10 text-primary/80"
-                  )}
-                  onClick={toggleEditMode}
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-1 group text-primary hover:text-white hover:bg-primary/30 border-primary/40 relative overflow-hidden"
                 >
-                  <Wrench className="h-4 w-4" />
-                  {isEditMode && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full animate-ping" />
-                  )}
+                  <Wrench className="h-4 w-4 group-hover:animate-pulse" />
+                  <span>Admin</span>
+                  <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
                 </Button>
-                
-                {/* Admin panel link button */}
-                <Link to="/admin">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="flex items-center gap-1 group text-primary hover:text-white hover:bg-primary/30 border-primary/40 relative overflow-hidden"
-                  >
-                    <Shield className="h-4 w-4 group-hover:animate-pulse" />
-                    <span>Admin</span>
-                    <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-                  </Button>
-                </Link>
-              </>
+              </Link>
             )}
             
             <AuthSection />
