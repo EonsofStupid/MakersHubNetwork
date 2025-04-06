@@ -1,8 +1,7 @@
 
 import { useMemo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { UserRole } from '@/types/auth';
-import { AdminAccess } from '@/types/auth';
+import { UserRole, AdminAccess } from '@/types/auth.unified';
 
 /**
  * Hook to determine if current user has admin access

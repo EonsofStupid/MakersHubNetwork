@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect } from 'react';
 import { useAuthStore } from '../store/auth.store';
-import { AuthStatus, AuthStore } from '../types/auth.types';
+import { AuthStore } from '@/types/auth.unified';
 import { subscribeToAuthEvents } from '../bridge';
 
 // Create the auth context with proper typing
@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [auth]);
 
   return (
-    <AuthContext.Provider value={auth}>
+    <AuthContext.Provider value={auth as AuthStore}>
       {children}
     </AuthContext.Provider>
   );

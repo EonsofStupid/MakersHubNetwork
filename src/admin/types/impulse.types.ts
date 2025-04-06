@@ -1,86 +1,72 @@
 
+/**
+ * Type definitions for Impulse theme system
+ */
+
 export interface ImpulseTheme {
+  // Color palette
   colors: {
     primary: string;
     secondary: string;
-    background: {
-      main: string;
-      card: string;
-      overlay: string;
-    };
-    text: {
-      primary: string;
-      secondary: string;
-      accent: string;
-    };
-    borders: {
-      normal: string;
-      hover: string;
-      active: string;
-    };
+    tertiary?: string;
+    background: string;
+    foreground: string;
+    card?: string;
+    accent?: string;
+    muted?: string;
+    border?: string;
+    [key: string]: string | undefined;
   };
+  
+  // Effect settings
   effects: {
-    glow: {
-      primary: string;
-      secondary: string;
-      hover: string;
-    };
-    blur: {
-      background: string;
-      overlay: string;
-    };
-    gradients: {
-      main: string;
-      accent: string;
-      card: string;
-    };
+    glowStrength?: string;
+    primaryGlow?: string;
+    secondaryGlow?: string;
+    scanlines?: boolean;
+    noise?: boolean;
+    [key: string]: string | boolean | undefined;
   };
+  
+  // Animation settings
   animation: {
-    duration: {
-      fast: string;
-      normal: string;
-      slow: string;
-    };
-    curves: {
-      bounce: string;
-      ease: string;
-      spring: string;
-    };
+    speed?: string;
+    intensity?: string;
+    enableMotion?: boolean;
+    [key: string]: string | boolean | undefined;
   };
-  components: {
-    panel: {
-      borderRadius: string;
-      padding: string;
+  
+  // UI component variants
+  components?: {
+    buttons?: {
+      roundness?: string;
+      borderWidth?: string;
+      glowEffect?: boolean;
+      [key: string]: string | boolean | undefined;
     };
-    button: {
-      borderRadius: string;
-      padding: string;
+    cards?: {
+      glassEffect?: boolean;
+      borderGlow?: boolean;
+      backdropBlur?: string;
+      [key: string]: string | boolean | undefined;
     };
-    tooltip: {
-      borderRadius: string;
-      padding: string;
-    };
+    [key: string]: Record<string, unknown> | undefined;
   };
-}
-
-export interface ImpulseTokens {
-  [key: string]: string | ImpulseTokenGroup;
-}
-
-export interface ImpulseTokenGroup {
-  [key: string]: string | ImpulseTokenGroup;
-}
-
-export interface ImpulseStyleOverride {
-  componentId: string;
-  styles: Record<string, string | number>;
-  variant?: string;
-  state?: 'default' | 'hover' | 'active' | 'disabled';
-}
-
-export interface ImpulseThemeVariant {
-  id: string;
-  name: string;
-  baseTheme: string;
-  overrides: Record<string, string>;
+  
+  // Typography settings
+  typography?: {
+    fontFamily?: string;
+    headingFont?: string;
+    monoFont?: string;
+    [key: string]: string | undefined;
+  };
+  
+  // Optional metadata
+  meta?: {
+    name?: string;
+    description?: string;
+    author?: string;
+    version?: string;
+    [key: string]: string | undefined;
+  };
 }

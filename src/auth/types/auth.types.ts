@@ -1,42 +1,39 @@
 
-export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor';
+// Re-export unified auth types to maintain compatibility
+import {
+  UserRole,
+  AuthStatus,
+  AuthState,
+  AuthActions,
+  AuthStore,
+  AdminAccess,
+  WithAdminAccess
+} from '@/types/auth.unified';
 
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
+export type {
+  UserRole,
+  AuthStatus,
+  AuthState,
+  AuthActions,
+  AuthStore,
+  AdminAccess,
+  WithAdminAccess
+};
 
-export interface AuthState {
-  user: any | null;
-  session: any | null;
-  roles: UserRole[];
-  isLoading: boolean;
-  error: string | null;
-  status: AuthStatus;
-  initialized: boolean;
-  isAuthenticated: boolean;
+// Additional auth types specific to auth module
+import { Database } from "@/integrations/supabase/types";
+
+// Auth user interface for app-specific user data
+export interface AuthUser {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  primary_role_id: string | null;
+  user_roles: Array<{
+    id: string;
+    role: UserRole;
+  }>;
 }
 
-export interface AuthActions {
-  setUser: (user: any | null) => void;
-  setSession: (session: any | null) => void;
-  setRoles: (roles: UserRole[]) => void;
-  setError: (error: string | null) => void;
-  setLoading: (isLoading: boolean) => void;
-  setInitialized: (initialized: boolean) => void;
-  setStatus: (status: AuthStatus) => void;
-  hasRole: (role: UserRole) => boolean;
-  isAdmin: () => boolean;
-  initialize: () => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-export type AuthStore = AuthState & AuthActions;
-
-export interface AdminAccess {
-  isAdmin: boolean;
-  hasAdminAccess: boolean;
-  isLoading?: boolean;
-  isAuthenticated?: boolean;
-}
-
-export interface WithAdminAccess {
-  hasAdminAccess: boolean;
-}
+// Re-export for backward compatibility
+export type { UserRole as AuthUserRole };
