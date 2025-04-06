@@ -3,7 +3,6 @@ import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { useEffect, useRef } from 'react';
-import { errorToObject } from '@/shared/utils/render';
 
 /**
  * Hook for accessing authentication state
@@ -22,11 +21,15 @@ export function useAuth() {
     status: state.status,
     isLoading: state.isLoading,
     error: state.error,
+    login: state.login,
+    logout: state.logout,
+    register: state.register,
+    resetPassword: state.resetPassword,
     hasRole: state.hasRole,
     isAdmin: state.isAdmin,
-    logout: state.logout,
     initialize: state.initialize,
-    initialized: state.initialized
+    initialized: state.initialized,
+    isAuthenticated: state.isAuthenticated
   }));
   
   // Auto-initialize auth if needed - with guard against infinite loops
@@ -37,23 +40,28 @@ export function useAuth() {
     }
     
     // Only initialize if needed
-    if (!authState.initialized && authState.status === 'idle') {
+    if (!authState.initialized && authState.status === AuthStatus.IDLE) {
       logger.info('Auto-initializing auth from useAuth hook');
       initAttemptedRef.current = true;
       
       // Use setTimeout to break potential circular dependencies
       const timeoutId = setTimeout(() => {
-        authState.initialize().catch(err => {
-          logger.error('Failed to initialize auth', { details: errorToObject(err) });
-        });
+        if (authState.initialize) {
+          authState.initialize().catch(err => {
+            logger.error('Failed to initialize auth', { 
+              details: err instanceof Error ? { message: err.message } : { error: String(err) }
+            });
+          });
+        }
       }, 50);
       
       return () => clearTimeout(timeoutId);
     }
   }, [authState.status, authState.initialized]); // We deliberately omit initialize and logger
   
-  // Derived state
-  const isSuperAdmin = authState.roles.includes('super_admin');
+  // Derive default values if methods are missing
+  const hasRole = authState.hasRole || ((role) => authState.roles.includes(role));
+  const isAdmin = authState.isAdmin || (() => authState.roles.includes('admin') || authState.roles.includes('super_admin'));
 
   // Log wrapper for logout to capture info before state is cleared
   const handleLogout = async () => {
@@ -67,8 +75,11 @@ export function useAuth() {
 
   return {
     ...authState,
-    isAdmin: authState.isAdmin(),
-    isSuperAdmin,
+    hasRole,
+    isAdmin: isAdmin(),
     logout: handleLogout
   };
 }
+
+// Export from store for TypeScript support
+export { AuthStatus } from '@/auth/store/auth.store';

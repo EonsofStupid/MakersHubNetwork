@@ -45,6 +45,10 @@ export const AuthSection = memo(() => {
   
   // If logged in, show avatar with dropdown
   if (user) {
+    const avatarUrl = user.user_metadata?.avatar_url || user.avatar_url;
+    const displayName = user.user_metadata?.full_name || user.display_name || user.username;
+    const email = user.email;
+    
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -58,9 +62,9 @@ export const AuthSection = memo(() => {
             onClick={handleAvatarClick}
           >
             <Avatar className="w-8 h-8 border border-primary/30">
-              <AvatarImage src={user.user_metadata?.avatar_url} />
+              <AvatarImage src={avatarUrl} />
               <AvatarFallback className="bg-primary/10 text-primary">
-                {user.email?.charAt(0).toUpperCase() || 'U'}
+                {email?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -68,8 +72,8 @@ export const AuthSection = memo(() => {
         <DropdownMenuContent align="end" className="w-56 backdrop-blur-lg bg-background/80 border-primary/20">
           <div className="flex items-center justify-start p-2">
             <div className="flex flex-col space-y-1 leading-none">
-              <p className="font-medium text-sm text-foreground">{user.user_metadata?.full_name || user.email}</p>
-              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              <p className="font-medium text-sm text-foreground">{displayName}</p>
+              <p className="text-xs text-muted-foreground truncate">{email}</p>
             </div>
           </div>
           

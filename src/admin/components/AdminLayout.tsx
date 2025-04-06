@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { AdminHeader } from "./AdminHeader";
 import { AdminSidebar } from "./AdminSidebar";
 import { useNavigate } from "react-router-dom";
@@ -37,6 +37,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const { showLogConsole } = useLoggingContext();
   const logger = useLogger("AdminLayout", LogCategory.ADMIN);
   const { hasAdminAccess, isAuthenticated } = useAdminAccess();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const handleToggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   useEffect(() => {
     // Log the admin layout initialization
@@ -80,7 +85,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   return (
     <AdminTooltipProvider>
       <div className={`flex h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)] ${fullWidth ? 'max-w-full' : ''} ${className || ''}`}>
-        <AdminSidebar />
+        <AdminSidebar open={sidebarOpen} onToggle={handleToggleSidebar} />
         
         <div className="flex flex-col flex-1 h-screen overflow-hidden">
           <AdminHeader title={title} />

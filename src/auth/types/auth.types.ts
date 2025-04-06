@@ -1,6 +1,6 @@
 
 // Re-export types from the unified auth types file
-export {
+export type { 
   UserRole,
   AdminAccess,
   UserProfile,

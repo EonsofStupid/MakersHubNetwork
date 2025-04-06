@@ -5,7 +5,7 @@ import {
 } from '@/types/auth.unified';
 
 // Create the auth context
-const AuthContext = createContext<AuthStore | undefined>(undefined);
+export const AuthContext = createContext<AuthStore | undefined>(undefined);
 
 // Auth provider component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -14,6 +14,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [roles, setRoles] = useState<UserRole[]>([]);
+  const [initialized, setInitialized] = useState<boolean>(false);
+  const [session, setSession] = useState(null);
   
   // Initialize auth state
   useEffect(() => {
@@ -24,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setStatus(AuthStatus.UNAUTHENTICATED);
         setUser(null);
         setRoles([]);
+        setInitialized(true);
       } catch (err) {
         setStatus(AuthStatus.ERROR);
         setError(err instanceof Error ? err : new Error('Failed to initialize auth'));
@@ -34,6 +37,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     initializeAuth();
   }, []);
+
+  // Helper functions
+  const hasRole = (role: UserRole): boolean => {
+    return roles.includes(role);
+  };
+
+  const isAdmin = (): boolean => {
+    return roles.includes('admin' as UserRole) || roles.includes('super_admin' as UserRole);
+  };
+  
+  const initialize = async (): Promise<void> => {
+    try {
+      setStatus(AuthStatus.LOADING);
+      setIsLoading(true);
+      
+      // Mock initialization
+      setStatus(AuthStatus.UNAUTHENTICATED);
+      setUser(null);
+      setRoles([]);
+      setInitialized(true);
+      
+      return Promise.resolve();
+    } catch (err) {
+      setStatus(AuthStatus.ERROR);
+      setError(err instanceof Error ? err : new Error('Initialization failed'));
+      return Promise.reject(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Login function
   const login = async (email: string, password: string): Promise<void> => {
@@ -46,7 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: '123',
         email,
         username: email.split('@')[0],
-        roles: ['user']
+        roles: ['user'],
+        user_metadata: {
+          full_name: 'Test User',
+          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${email}`
+        }
       };
       
       setUser(mockUser);
@@ -95,7 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: '123',
         email,
         username: username || email.split('@')[0],
-        roles: ['user']
+        roles: ['user'],
+        user_metadata: {
+          full_name: username || email.split('@')[0],
+          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${email}`
+        }
       };
       
       setUser(mockUser);
@@ -139,10 +180,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     roles,
     isLoading,
     isAuthenticated: status === AuthStatus.AUTHENTICATED,
+    session,
+    initialized,
     login,
     logout,
     register,
-    resetPassword
+    resetPassword,
+    setUser,
+    setSession,
+    setRoles,
+    setStatus,
+    setError,
+    setLoading,
+    setInitialized,
+    initialize,
+    hasRole,
+    isAdmin
   };
   
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
