@@ -1,66 +1,62 @@
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuthState } from '../hooks/useAuthState';
-import { hasPermission } from '../rbac/enforce';
-import { PermissionValue } from '../permissions';
-import { getLogger } from '@/logging';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
+import { useAuthState } from '@/auth/hooks/useAuthState';
+import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
 interface RequirePermissionProps {
-  children: React.ReactNode;
-  permission: PermissionValue;
-  fallback?: React.ReactNode;
+  children?: React.ReactNode;
   redirectTo?: string;
+  fallback?: React.ReactNode;
+  allowedRoles?: string[];
+  requiredPermission?: string;
 }
 
 /**
- * Component that checks if the current user has the required permission
- * and either renders the children or redirects/renders fallback
+ * Component for protecting routes based on user permissions
+ * Can be used as a wrapper or as a Route element
  */
-export function RequirePermission({
+export const RequirePermission = ({
   children,
-  permission,
+  redirectTo = '/login',
   fallback,
-  redirectTo = '/admin/unauthorized'
-}: RequirePermissionProps) {
-  const { roles, isLoading } = useAuthState();
-  const logger = getLogger();
+  allowedRoles = ['admin', 'super_admin'],
+  requiredPermission
+}: RequirePermissionProps) => {
+  const { roles, status } = useAuthState();
+  const location = useLocation();
+  const logger = useLogger('RequirePermission', LogCategory.AUTH);
   
-  // Show loading state while permissions are being determined
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full p-6">
-        <div className="h-6 w-6 border-t-2 border-primary animate-spin rounded-full" />
-      </div>
-    );
+  // Wait until auth is loaded
+  if (status === 'loading' || status === 'idle') {
+    return null; // Show nothing while loading
   }
   
-  // Check permission
-  const allowed = hasPermission(roles, permission);
+  // Check for required roles
+  const hasRequiredRole = roles.some(role => allowedRoles.includes(role));
   
-  // Log permission check
-  logger.info(`Permission check for ${permission}`, {
-    category: LogCategory.AUTH,
-    source: "RequirePermission",
-    details: { 
-      permission,
-      allowed,
-      redirectTo: !allowed ? redirectTo : null 
-    }
-  });
-  
-  // If permission check fails
-  if (!allowed) {
-    // Return fallback if provided
+  // Specific permission check (if needed)
+  const hasRequiredPermission = requiredPermission
+    ? roles.includes(requiredPermission)
+    : true;
+    
+  if (!hasRequiredRole || !hasRequiredPermission) {
+    logger.warn('Access denied - insufficient permissions', {
+      details: {
+        path: location.pathname,
+        userRoles: roles,
+        requiredRoles: allowedRoles,
+        requiredPermission
+      }
+    });
+    
     if (fallback) {
       return <>{fallback}</>;
     }
     
-    // Otherwise redirect
-    return <Navigate to={redirectTo} replace />;
+    return <Navigate to={redirectTo} state={{ from: location.pathname }} replace />;
   }
   
-  // Render children if permission check passes
-  return <>{children}</>;
-}
+  return <>{children || <Outlet />}</>;
+};

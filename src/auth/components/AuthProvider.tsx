@@ -1,100 +1,49 @@
 
-import React, { ReactNode, useEffect, useRef } from 'react';
+import { useEffect, ReactNode } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { AuthContext } from '../context/AuthContext';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
-import { errorToObject } from '@/shared/utils/render';
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
+/**
+ * AuthProvider component
+ * Initializes auth, listens for auth state changes, and provides auth state via Zustand
+ */
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { user, session, setSession, initialize, initialized, status } = useAuthStore();
-  
+  const { initialize, setSession } = useAuthStore();
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
-  const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
-  const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const initAttemptedRef = useRef<boolean>(false);
   
-  // Get theme loading status to ensure correct initialization order
-  const { isLoaded: themeLoaded } = useSiteTheme();
-  
-  // Setup auth state change listener only once
   useEffect(() => {
-    // Only run once 
-    if (authSubscriptionRef.current !== null) {
-      return;
-    }
-
-    logger.info('Setting up auth state change listener');
-      
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        logger.info(`Auth state change: ${event}`, {
-          details: { 
-            event,
-            userId: currentSession?.user?.id 
-          }
-        });
-
-        // Only update session state, avoid triggering other effects
-        setSession(currentSession);
-      }
-    );
-      
-    // Store subscription to avoid creating multiple listeners
-    authSubscriptionRef.current = subscription;
-      
-    // Clean up subscription on unmount
-    return () => {
-      if (authSubscriptionRef.current) {
-        authSubscriptionRef.current.unsubscribe();
-        authSubscriptionRef.current = null;
-      }
-      
-      if (initTimeoutRef.current) {
-        clearTimeout(initTimeoutRef.current);
-        initTimeoutRef.current = null;
-      }
-    };
-  }, []); // Empty deps to ensure it runs only once
-  
-  // Initialize auth only once after theme is loaded
-  useEffect(() => {
-    // Wait for theme to be loaded first
-    if (!themeLoaded) {
-      return;
-    }
+    logger.info('AuthProvider mounting');
     
-    // Prevent multiple initialization attempts with ref guard
-    if (initAttemptedRef.current || initialized) {
-      return;
-    }
-    
-    // Mark initialization as attempted immediately to prevent race conditions
-    initAttemptedRef.current = true;
-    
-    // Initialize auth state asynchronously with a small delay
-    // This delay helps break potential circular dependencies
-    initTimeoutRef.current = setTimeout(() => {
-      logger.info('Initializing auth state');
-      
-      initialize().catch(err => {
-        logger.error('Failed to initialize auth', { details: errorToObject(err) });
+    // Set up Supabase auth state change listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Log auth state changes
+      logger.info(`Auth state change: ${event}`, {
+        event,
+        userId: session?.user?.id
       });
-    }, 50); // Small delay to help with timing issues
+      
+      // Update session in the store
+      setSession(session);
+    });
     
-  }, [initialize, initialized, logger, themeLoaded]); 
+    // Initialize auth on mount
+    initialize();
+    
+    // Clean up auth listener on unmount
+    return () => {
+      subscription.unsubscribe();
+      logger.info('Auth subscription removed');
+    };
+  }, [initialize, setSession, logger]);
   
-  // Provide the current auth state, whether authenticated or not
-  return (
-    <AuthContext.Provider value={{ user, session: session as Session | null, status }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  // No context provider, just render children and use Zustand for state
+  return <>{children}</>;
 }

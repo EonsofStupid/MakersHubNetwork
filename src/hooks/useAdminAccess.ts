@@ -11,11 +11,11 @@ interface AdminAccessOptions {
  * Uses useAuthState directly to avoid circular dependencies
  */
 export function useAdminAccess(options: AdminAccessOptions = { requireAuth: true }) {
-  const { user, roles } = useAuthState();
+  const { user, roles, status } = useAuthState();
   
   const hasAdminAccess = (): boolean => {
     // If authentication is required and user is not logged in
-    if (options.requireAuth && !user) {
+    if (options.requireAuth && (!user || status !== 'authenticated')) {
       return false;
     }
     
