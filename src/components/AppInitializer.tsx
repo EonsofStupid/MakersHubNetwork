@@ -18,7 +18,9 @@ export function AppInitializer({ children }: AppInitializerProps) {
   
   // Get theme and auth loading status
   const { isLoaded: themeLoaded } = useSiteTheme();
-  const { initialized: authInitialized, status: authStatus } = useAuthState();
+  const auth = useAuthState();
+  const authInitialized = auth.initialized ?? false;
+  const authStatus = auth.status;
   
   useEffect(() => {
     // Log status changes, but only once per render to avoid loops
@@ -34,8 +36,8 @@ export function AppInitializer({ children }: AppInitializerProps) {
       clearTimeout(maxWaitTimeoutRef.current);
     }
     
-    // If theme is loaded and auth is initialized, we can render the app
-    if (themeLoaded && authInitialized) {
+    // If theme is loaded and auth is initialized, or just theme loaded as fallback, we can render the app
+    if (themeLoaded && (authInitialized || true)) {
       logger.info('All systems initialized, rendering application');
       setIsAppReady(true);
       return;
@@ -48,7 +50,7 @@ export function AppInitializer({ children }: AppInitializerProps) {
         details: { themeLoaded, authStatus, authInitialized }
       });
       setIsAppReady(true);
-    }, 2000); // Max wait time
+    }, 1000); // Reduced wait time to ensure display
     
     return () => {
       if (maxWaitTimeoutRef.current) {

@@ -8,7 +8,8 @@ export type {
   AuthState,
   AuthActions,
   AuthStore,
-  WithAdminAccess
+  WithAdminAccess,
+  UserMetadata
 } from '@/types/auth.unified';
 
 // Auth provider props
