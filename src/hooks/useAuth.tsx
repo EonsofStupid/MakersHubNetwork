@@ -14,6 +14,7 @@ interface AuthContextType {
   user: User | null;
   signIn: (email: string, password: string) => Promise<User>;
   signOut: () => Promise<void>;
+  isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
 }
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   signIn: async () => ({ id: '' }),
   signOut: async () => {},
+  isAuthenticated: false,
   isLoading: false,
   error: null,
 });
@@ -88,9 +90,19 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       setIsLoading(false);
     }
   };
+
+  // Computed property to check if user is authenticated
+  const isAuthenticated = user !== null;
   
   return (
-    <AuthContext.Provider value={{ user, signIn, signOut, isLoading, error }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      signIn, 
+      signOut, 
+      isAuthenticated,
+      isLoading, 
+      error 
+    }}>
       {children}
     </AuthContext.Provider>
   );

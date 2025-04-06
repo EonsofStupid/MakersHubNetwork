@@ -15,8 +15,8 @@ export function AppInitializer({ children }: { children: React.ReactNode }) {
       try {
         logger.info('Application initializing');
         
-        // Initialize the application
         // Small delay for UX purposes to ensure themes and styles are applied
+        // This is non-blocking and happens after the theme is already loaded
         await new Promise(resolve => setTimeout(resolve, 100));
         
         logger.info('Application initialized successfully');
@@ -38,5 +38,6 @@ export function AppInitializer({ children }: { children: React.ReactNode }) {
     initializeApp();
   }, [logger, toast]);
 
+  // Always render children, don't block on initialization
   return <>{children}</>;
 }
