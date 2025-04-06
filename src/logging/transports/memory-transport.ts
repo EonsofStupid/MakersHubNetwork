@@ -1,92 +1,125 @@
 
-import { LogEntry, LogTransport } from '../types';
-import { getLoggingConfig } from '../config';
-import { v4 as uuidv4 } from 'uuid';
+import { LogCategory, LogEntry, LogLevel, LogTransport } from '../types';
+import { nodeToSearchableString } from '@/shared/utils/render';
+import { isLogLevelAtLeast } from '../utils/map-log-level';
 
-// In-memory log storage
-let logEntries: LogEntry[] = [];
-let subscribers: ((entry: LogEntry) => void)[] = [];
-
-export const MemoryTransport: LogTransport = {
-  id: 'memory',
-  name: 'Memory Transport',
-  enabled: true,
-  
-  log: (entry: LogEntry): void => {
-    // Add unique id if not provided
-    const entryWithId = { 
-      ...entry,
-      id: entry.id || uuidv4() 
-    };
-    
-    // Add the entry to the memory buffer
-    logEntries.push(entryWithId);
-    
-    // Respect buffer size limit
-    const config = getLoggingConfig();
-    if (logEntries.length > config.bufferSize) {
-      logEntries = logEntries.slice(-config.bufferSize);
-    }
-    
-    // Notify subscribers
-    subscribers.forEach(callback => {
-      try {
-        callback(entryWithId);
-      } catch (error) {
-        console.error('Error in log subscriber:', error);
-      }
-    });
-  },
-  
-  // Get all logs stored in memory
-  getLogs: (): LogEntry[] => {
-    return [...logEntries];
-  },
-  
-  // Clear memory logs
-  clear: (): void => {
-    logEntries = [];
-  },
-  
-  // Subscribe to new log entries
-  subscribe: (callback: (entry: LogEntry) => void) => {
-    subscribers.push(callback);
-    return {
-      unsubscribe: () => {
-        subscribers = subscribers.filter(cb => cb !== callback);
-      }
-    };
-  }
-};
-
-// Get logs filtered by parameters
-export const getFilteredLogs = (filter: {
-  level?: string;
-  category?: string;
+/**
+ * Options for filtering logs in memory transport
+ */
+interface LogFilterOptions {
+  level?: LogLevel;
+  category?: LogCategory;
   source?: string;
+  userId?: string;
   search?: string;
-}): LogEntry[] => {
-  return logEntries.filter(entry => {
-    if (filter.level && entry.level !== filter.level) {
-      return false;
-    }
-    if (filter.category && entry.category !== filter.category) {
-      return false;
-    }
-    if (filter.source && entry.source !== filter.source) {
-      return false;
-    }
-    if (filter.search) {
-      const searchTerm = filter.search.toLowerCase();
-      const message = entry.message.toLowerCase();
-      const details = entry.details ? JSON.stringify(entry.details).toLowerCase() : '';
-      if (!message.includes(searchTerm) && !details.includes(searchTerm)) {
-        return false;
-      }
-    }
-    return true;
-  });
-};
+  fromDate?: Date;
+  toDate?: Date;
+  limit?: number;
+}
 
-// Export for backward compatibility
-export const memoryTransport = MemoryTransport;
+/**
+ * Memory transport stores logs in memory for display in UI components
+ */
+export class MemoryTransport implements LogTransport {
+  private logs: LogEntry[] = [];
+  private maxEntries: number;
+  
+  constructor(maxEntries = 1000) {
+    this.maxEntries = maxEntries;
+  }
+  
+  /**
+   * Log an entry to memory
+   */
+  log(entry: LogEntry): void {
+    this.logs.unshift(entry); // Add to beginning for most recent first
+    
+    // Trim if we exceed max entries
+    if (this.logs.length > this.maxEntries) {
+      this.logs = this.logs.slice(0, this.maxEntries);
+    }
+  }
+  
+  /**
+   * Get all logs in memory
+   */
+  getLogs(): LogEntry[] {
+    return [...this.logs];
+  }
+  
+  /**
+   * Get logs filtered by specified criteria
+   */
+  getFilteredLogs(options: LogFilterOptions = {}): LogEntry[] {
+    let filteredLogs = [...this.logs];
+    
+    // Filter by level
+    if (options.level !== undefined) {
+      filteredLogs = filteredLogs.filter(log => isLogLevelAtLeast(log.level, options.level!));
+    }
+    
+    // Filter by category
+    if (options.category) {
+      filteredLogs = filteredLogs.filter(log => log.category === options.category);
+    }
+    
+    // Filter by source
+    if (options.source) {
+      filteredLogs = filteredLogs.filter(log => 
+        log.source && log.source.includes(options.source!)
+      );
+    }
+    
+    // Filter by user ID
+    if (options.userId) {
+      filteredLogs = filteredLogs.filter(log => 
+        log.userId && log.userId === options.userId
+      );
+    }
+    
+    // Filter by search text
+    if (options.search) {
+      const searchLower = options.search.toLowerCase();
+      filteredLogs = filteredLogs.filter(log => {
+        // Convert message to searchable string
+        const messageStr = nodeToSearchableString(log.message).toLowerCase();
+        const sourceStr = log.source ? log.source.toLowerCase() : '';
+        const categoryStr = log.category.toLowerCase();
+        
+        return messageStr.includes(searchLower) || 
+               sourceStr.includes(searchLower) || 
+               categoryStr.includes(searchLower);
+      });
+    }
+    
+    // Filter by date range
+    if (options.fromDate) {
+      filteredLogs = filteredLogs.filter(log => 
+        log.timestamp >= options.fromDate!
+      );
+    }
+    
+    if (options.toDate) {
+      filteredLogs = filteredLogs.filter(log => 
+        log.timestamp <= options.toDate!
+      );
+    }
+    
+    // Apply limit
+    if (options.limit && options.limit > 0) {
+      filteredLogs = filteredLogs.slice(0, options.limit);
+    }
+    
+    return filteredLogs;
+  }
+  
+  /**
+   * Clear all logs from memory
+   */
+  clear(): void {
+    this.logs = [];
+  }
+}
+
+// Create singleton instance
+export const memoryTransport = new MemoryTransport();

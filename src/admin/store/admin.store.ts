@@ -1,79 +1,65 @@
-
 import { create } from 'zustand';
-import { UserRole } from '@/auth/types/roles';
-import { PermissionValue, PERMISSIONS, ROLE_PERMISSIONS } from '@/auth/permissions';
+import { AdminPermissionValue } from '../types/permissions';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { LogCategory } from '@/logging';
 
-interface AdminStoreState {
-  permissions: PermissionValue[];
-  isLoading: boolean;
-  error: Error | null;
-  
-  // Actions
-  setPermissions: (permissions: PermissionValue[]) => void;
-  loadPermissions: () => Promise<PermissionValue[]>;
+interface AdminState {
+  permissions: AdminPermissionValue[];
+  isLoadingPermissions: boolean;
 }
 
-export const useAdminStore = create<AdminStoreState>((set, get) => ({
+interface AdminActions {
+  setPermissions: (permissions: AdminPermissionValue[]) => void;
+  loadPermissions: () => Promise<void>;
+}
+
+type AdminStore = AdminState & AdminActions;
+
+export const useAdminStore = create<AdminStore>((set, get) => ({
+  // Initial state
   permissions: [],
-  isLoading: false,
-  error: null,
+  isLoadingPermissions: false,
   
-  // Set permissions directly
-  setPermissions: (permissions) => set({ permissions }),
+  // Actions
+  setPermissions: (permissions) => {
+    set({ permissions });
+  },
   
-  // Load permissions based on roles
   loadPermissions: async () => {
-    const logger = getLogger('adminStore', LogCategory.ADMIN);
-    set({ isLoading: true, error: null });
-    
+    const logger = getLogger();
     try {
-      // This would normally fetch permissions from API
-      // For now, just simulate a network request
-      await new Promise(resolve => setTimeout(resolve, 300));
+      set({ isLoadingPermissions: true });
       
-      // In a real app, we'd get the roles from auth
-      // and map them to permissions
-      const roles = ['admin']; // Example role
-      let allPermissions: PermissionValue[] = [];
-      
-      // Map roles to permissions
-      roles.forEach(role => {
-        const rolePermissions = ROLE_PERMISSIONS[role as UserRole] || [];
-        allPermissions = [...allPermissions, ...rolePermissions];
+      logger.info('Loading admin permissions', {
+        category: LogCategory.ADMIN,
+        source: 'admin/store'
       });
       
-      // Deduplicate permissions
-      const uniquePermissions = [...new Set(allPermissions)];
+      // In a real implementation, this might fetch from an API
+      // Here we're just keeping the permissions that were already set
+      const currentPermissions = get().permissions;
       
-      set({ 
-        permissions: uniquePermissions,
-        isLoading: false 
-      });
+      // If no permissions are set yet, don't overwrite with an empty array
+      if (currentPermissions.length === 0) {
+        logger.warn('No permissions loaded - using defaults', {
+          category: LogCategory.ADMIN,
+          source: 'admin/store'
+        });
+      }
       
-      logger.info('Admin permissions loaded', {
-        details: { 
-          permissionCount: uniquePermissions.length 
-        }
-      });
-      
-      return uniquePermissions;
+      return Promise.resolve();
     } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error(String(error));
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error loading permissions';
       
-      logger.error('Failed to load admin permissions', {
-        details: { 
-          error: errorObj.message 
-        }
+      logger.error('Error loading admin permissions', {
+        category: LogCategory.ADMIN,
+        source: 'admin/store',
+        details: { error: errorMessage }
       });
       
-      set({ 
-        error: errorObj, 
-        isLoading: false 
-      });
-      
-      throw errorObj;
+      throw error;
+    } finally {
+      set({ isLoadingPermissions: false });
     }
-  }
+  },
 }));

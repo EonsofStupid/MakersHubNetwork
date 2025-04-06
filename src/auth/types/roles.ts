@@ -1,17 +1,12 @@
 
-// Define user roles
-export type UserRole = 'super_admin' | 'admin' | 'moderator' | 'editor' | 'user' | 'builder';
+// Define the complete set of user roles that matches our database enum
+export type UserRole = 'admin' | 'super_admin' | 'user' | 'moderator' | 'editor' | 'maker' | 'builder';
 
-export const USER_ROLE_LABELS: Record<UserRole, string> = {
-  super_admin: 'Super Admin',
-  admin: 'Administrator',
-  moderator: 'Moderator',
-  editor: 'Editor',
-  user: 'User',
-  builder: 'Builder'
+// Helper functions for role-based access control
+export const hasAdminAccess = (roles: UserRole[]): boolean => {
+  return roles.includes('admin') || roles.includes('super_admin');
 };
 
-// Helper function to check if a role is admin-level
-export function isAdminRole(role: UserRole): boolean {
-  return role === 'super_admin' || role === 'admin';
-}
+export const hasRole = (roles: UserRole[], role: UserRole): boolean => {
+  return roles.includes(role);
+};

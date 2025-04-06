@@ -1,88 +1,132 @@
 
-import React from 'react';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { MainNav } from '@/components/MainNav';
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { useAuth } from "@/hooks/useAuth";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging";
 
-export default function LoginPage() {
-  const logger = useLogger('LoginPage', LogCategory.AUTH);
+interface LoginProps {
+  onSuccess?: () => void;
+}
 
-  React.useEffect(() => {
-    logger.info('Login page mounted');
-    
-    return () => {
-      logger.info('Login page unmounted');
-    };
-  }, [logger]);
+const Login = ({ onSuccess }: LoginProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
+  const { hasAdminAccess } = useAdminAccess();
+  const logger = useLogger("LoginPage", LogCategory.AUTH);
+  
+  const from = new URLSearchParams(location.search).get("from") || "/";
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      logger.info("User authenticated, redirecting", { details: { redirectTo: from } });
+      onSuccess?.();
+      
+      // Check if user was trying to access admin section or has admin access
+      const goingToAdmin = from.includes("/admin");
+      
+      if (goingToAdmin) {
+        if (hasAdminAccess) {
+          logger.info("User has admin access, redirecting to admin");
+          toast({
+            title: "Admin Access",
+            description: "Welcome to the admin dashboard",
+          });
+          navigate("/admin"); 
+        } else {
+          logger.info("User lacks admin access, redirecting to home");
+          toast({
+            title: "Access Denied",
+            description: "You don't have permission to access the admin section",
+            variant: "destructive"
+          });
+          navigate("/");
+        }
+      } else if (from === "/login" && hasAdminAccess) {
+        // If coming directly to login page and has admin access, suggest admin
+        logger.info("User has admin access, suggesting admin panel");
+        toast({
+          title: "Admin Access Available",
+          description: "You can access the admin dashboard",
+        });
+        navigate("/"); 
+      } else {
+        // Normal redirect to requested page
+        logger.info("Standard redirect after login");
+        navigate(from);
+      }
+    }
+  }, [isAuthenticated, navigate, onSuccess, hasAdminAccess, from, toast, logger]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <MainNav />
-      
-      <div className="container mx-auto px-4 pt-24 pb-16 flex items-center justify-center">
-        <div className="w-full max-w-md p-8 space-y-8 bg-card border border-border rounded-lg shadow-lg">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold">Login to Impulsivity</h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              Enter your credentials to access the admin panel
-            </p>
-          </div>
-          
-          <form className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                placeholder="name@example.com"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </label>
-                <a href="#" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </a>
-              </div>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              />
-            </div>
-            
-            <div>
-              <button
-                type="submit"
-                className="flex justify-center items-center w-full h-10 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              >
-                Sign in
-              </button>
-            </div>
-          </form>
-          
-          <div className="mt-6 text-center text-sm">
-            <p>
-              Don't have an account?{" "}
-              <a href="#" className="text-primary hover:underline">
-                Sign up
-              </a>
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="container mx-auto flex items-center justify-center min-h-screen p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-heading text-primary">
+            Welcome Back
+          </CardTitle>
+          <CardDescription>Sign in to access your account</CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <Auth
+            supabaseClient={supabase}
+            appearance={{
+              theme: ThemeSupa,
+              variables: {
+                default: {
+                  colors: {
+                    brand: '#00F0FF',
+                    brandAccent: '#FF2D6E',
+                    brandButtonText: 'white',
+                    defaultButtonBackground: 'transparent',
+                    defaultButtonBackgroundHover: 'rgba(0, 240, 255, 0.1)',
+                    defaultButtonBorder: '#00F0FF',
+                    defaultButtonText: '#00F0FF',
+                  },
+                  radii: {
+                    borderRadiusButton: '0.5rem',
+                    buttonBorderRadius: '0.5rem',
+                    inputBorderRadius: '0.5rem',
+                  },
+                },
+              },
+              className: {
+                container: 'auth-container',
+                button: 'auth-button',
+                input: 'auth-input',
+                divider: 'auth-divider',
+                anchor: 'auth-anchor text-primary hover:text-primary/80',
+              },
+              style: {
+                button: {
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                },
+              },
+            }}
+            theme="dark"
+            providers={["github", "google"]}
+            redirectTo={window.location.origin}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default Login;

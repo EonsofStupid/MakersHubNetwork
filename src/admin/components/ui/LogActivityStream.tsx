@@ -1,165 +1,167 @@
 
-import React, { useEffect, useState } from 'react';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory, LogLevel, memoryTransport } from '@/logging';
-import type { LogEntry } from '@/logging/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useEffect, useRef, useState } from 'react';
+import { LogCategory, LogEntry, memoryTransport } from '@/logging';
+import { LogLevel } from '@/logging/constants/log-level';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { renderUnknownAsNode } from '@/shared/utils/render';
-import { Check, Info, AlertCircle, AlertTriangle } from 'lucide-react';
+import { isLogLevelAtLeast } from '@/logging/utils/map-log-level';
 
 interface LogActivityStreamProps {
-  maxItems?: number;
-  showHeader?: boolean;
-  showTimestamp?: boolean;
-  category?: LogCategory;
-  level?: LogLevel;
-  categories?: LogCategory[];
+  maxEntries?: number;
   height?: string;
   autoScroll?: boolean;
-  className?: string;
+  level?: LogLevel;
+  categories?: LogCategory[];
   showSource?: boolean;
+  className?: string;
 }
 
 export function LogActivityStream({
-  maxItems = 20,
-  showHeader = true,
-  showTimestamp = true,
-  category,
-  level,
-  categories,
+  maxEntries = 50,
   height = '300px',
   autoScroll = true,
+  level = LogLevel.INFO,
+  categories,
   showSource = false,
-  className = '',
+  className
 }: LogActivityStreamProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const logger = useLogger('LogActivityStream', LogCategory.ADMIN);
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
-
-  // Load logs when component mounts
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Update logs from memory transport
   useEffect(() => {
-    // Get initial logs
-    let initialLogs = memoryTransport.getLogs();
-    
-    // Filter by category or categories if provided
-    if (category) {
-      initialLogs = initialLogs.filter(log => log.category === category);
-    } else if (categories && categories.length > 0) {
-      initialLogs = initialLogs.filter(log => 
-        log.category !== undefined && categories.includes(log.category)
-      );
-    }
-    
-    // Filter by level if provided
-    if (level) {
-      initialLogs = initialLogs.filter(log => log.level === level || log.level === LogLevel.ERROR);
-    }
-    
-    setLogs(initialLogs.slice(0, maxItems));
-    
-    // Subscribe to new logs
-    const subscription = memoryTransport.subscribe((entry) => {
-      let shouldAdd = true;
-      
-      // Filter by category
-      if (category && entry.category !== category) {
-        shouldAdd = false;
-      } else if (categories && categories.length > 0 && 
-                entry.category !== undefined && 
-                !categories.includes(entry.category)) {
-        shouldAdd = false;
-      }
+    const updateLogs = () => {
+      // Get all logs and filter them
+      const allLogs = memoryTransport.getLogs();
       
       // Filter by level
-      if (level && entry.level !== level && entry.level !== LogLevel.ERROR) {
-        shouldAdd = false;
+      let filteredLogs = allLogs.filter(log => 
+        isLogLevelAtLeast(log.level, level)
+      );
+      
+      // Filter by categories if specified
+      if (categories && categories.length > 0) {
+        filteredLogs = filteredLogs.filter(log => 
+          categories.includes(log.category as LogCategory)
+        );
       }
       
-      if (shouldAdd) {
-        setLogs(prevLogs => [entry, ...prevLogs].slice(0, maxItems));
-        
-        // Auto-scroll to newest log
-        if (autoScroll && scrollAreaRef.current) {
-          setTimeout(() => {
-            if (scrollAreaRef.current) {
-              scrollAreaRef.current.scrollTop = 0;
-            }
-          }, 10);
-        }
-      }
-    });
+      // Apply limit
+      filteredLogs = filteredLogs.slice(0, maxEntries);
+      
+      setLogs(filteredLogs);
+    };
     
-    logger.debug('Log activity stream mounted');
+    // Initial update
+    updateLogs();
+    
+    // Set up interval to update logs
+    const interval = setInterval(updateLogs, 2000);
     
     return () => {
-      if (subscription && typeof subscription.unsubscribe === 'function') {
-        subscription.unsubscribe();
-      }
-      logger.debug('Log activity stream unmounted');
+      clearInterval(interval);
     };
-  }, [category, categories, level, maxItems, logger, autoScroll]);
+  }, [level, categories, maxEntries]);
   
-  // Get icon for log level
-  const getLogIcon = (level: LogLevel) => {
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (autoScroll && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [logs, autoScroll]);
+  
+  // Get color class for log level
+  const getLevelColorClass = (level: LogLevel): string => {
     switch (level) {
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-        return <AlertCircle className="h-3 w-3 flex-shrink-0 text-destructive" />;
-      case LogLevel.WARN:
-        return <AlertTriangle className="h-3 w-3 flex-shrink-0 text-amber-500" />;
+      case LogLevel.DEBUG:
+        return 'text-gray-400';
       case LogLevel.INFO:
-        return <Info className="h-3 w-3 flex-shrink-0 text-blue-500" />;
-      case LogLevel.SUCCESS:
-        return <Check className="h-3 w-3 flex-shrink-0 text-green-500" />;
+        return 'text-blue-400';
+      case LogLevel.WARN:
+        return 'text-yellow-400';
+      case LogLevel.ERROR:
+        return 'text-red-400';
+      case LogLevel.CRITICAL:
+        return 'text-red-600 font-bold';
       default:
-        return <Info className="h-3 w-3 flex-shrink-0 text-muted-foreground" />;
+        return 'text-gray-400';
     }
   };
-
+  
+  // Get log item class based on level
+  const getLogItemClass = (level: LogLevel): string => {
+    switch (level) {
+      case LogLevel.WARN:
+        return 'border-l-2 border-l-yellow-500';
+      case LogLevel.ERROR:
+        return 'border-l-2 border-l-red-500';
+      case LogLevel.CRITICAL:
+        return 'border-l-2 border-l-red-600 bg-red-950/20';
+      default:
+        return '';
+    }
+  };
+  
+  // Format timestamp
+  const formatTime = (date: Date): string => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
+  
   return (
-    <Card className={className}>
-      {showHeader && (
-        <CardHeader className="py-2">
-          <CardTitle className="text-sm font-medium">
-            Activity Stream {category && `(${category})`}
-          </CardTitle>
-        </CardHeader>
+    <ScrollArea
+      ref={scrollRef as any}
+      className={cn(
+        "font-mono text-xs bg-[var(--impulse-bg-main)]/50",
+        "border border-[var(--impulse-border-normal)] rounded-md",
+        className
       )}
-      <CardContent className={`p-0 ${!showHeader ? 'pt-0' : ''}`}>
-        <ScrollArea 
-          className={`bg-background/50 rounded-md`}
-          style={{ height }}
-          ref={scrollAreaRef}
-        >
-          <div className="space-y-0.5 p-2">
-            {logs.length > 0 ? (
-              logs.map((log) => (
-                <div
-                  key={log.id}
-                  className="text-[10px] border-b border-border/30 last:border-0 py-1"
-                >
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    {showTimestamp && (
-                      <span className="font-mono">
-                        {new Date(log.timestamp).toLocaleTimeString()}
-                      </span>
-                    )}
-                    {getLogIcon(log.level)}
-                    <span className="font-mono text-foreground line-clamp-2">
-                      {typeof log.message === 'string' ? log.message : renderUnknownAsNode(log.message)}
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4 text-muted-foreground text-xs">
-                No activity to display
+      style={{ height }}
+    >
+      {logs.length === 0 ? (
+        <div className="flex items-center justify-center h-full text-[var(--impulse-text-secondary)] italic p-4">
+          No logs to display
+        </div>
+      ) : (
+        <div className="p-1">
+          {logs.map((log) => (
+            <div 
+              key={log.id}
+              className={cn(
+                "py-1 px-2 border-b border-[var(--impulse-border-normal)]/30",
+                "hover:bg-[var(--impulse-bg-overlay)]/50",
+                "transition-colors duration-150",
+                getLogItemClass(log.level)
+              )}
+            >
+              <div className="flex items-start gap-2 overflow-hidden">
+                <span className={cn("flex-shrink-0", getLevelColorClass(log.level))}>
+                  {log.level}
+                </span>
+                
+                <span className="flex-shrink-0 text-gray-400">
+                  {formatTime(log.timestamp)}
+                </span>
+                
+                <Badge variant="outline" className="flex-shrink-0 py-0 h-5">
+                  {log.category}
+                </Badge>
+                
+                {showSource && log.source && (
+                  <Badge variant="secondary" className="flex-shrink-0 py-0 h-5">
+                    {log.source}
+                  </Badge>
+                )}
+                
+                <span className="flex-grow truncate">
+                  {renderUnknownAsNode(log.message)}
+                </span>
               </div>
-            )}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+            </div>
+          ))}
+        </div>
+      )}
+    </ScrollArea>
   );
 }

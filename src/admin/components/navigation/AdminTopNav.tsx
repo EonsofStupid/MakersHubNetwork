@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, User, Settings, Menu, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAdminStore } from '@/admin/store/admin.store';
 import { useAtom } from 'jotai';
-import { adminEditModeAtom, adminSidebarExpandedAtom } from '@/admin/atoms/tools.atoms';
+import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { useToast } from '@/hooks/use-toast';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { TopNavShortcuts } from '@/admin/components/navigation/TopNavShortcuts';
@@ -28,19 +29,11 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
   const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
   const { hasAdminAccess } = useAdminAccess();
   
-  const [sidebarExpanded, setSidebarExpanded] = useAtom(adminSidebarExpandedAtom);
-  
-  // Toggle sidebar
-  const toggleSidebar = () => {
-    setSidebarExpanded(!sidebarExpanded);
-  };
-  
-  // Save preferences
-  const savePreferences = async () => {
-    // Simulate saving to backend
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return Promise.resolve();
-  };
+  const { 
+    sidebarExpanded, 
+    toggleSidebar,
+    savePreferences,
+  } = useAdminStore();
   
   // Sync edit mode between jotai atom and zustand store
   useEffect(() => {
@@ -51,7 +44,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
     };
     
     handleSyncStore();
-  }, [isEditMode]);
+  }, [isEditMode, savePreferences]);
   
   // Generate random glitch effect
   useEffect(() => {
@@ -153,3 +146,4 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
     </div>
   );
 }
+

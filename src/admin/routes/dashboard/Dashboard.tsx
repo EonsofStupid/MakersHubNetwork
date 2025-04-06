@@ -1,182 +1,187 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, CreditCard, Activity, Package, LineChart, BarChart3, PieChart } from 'lucide-react';
-import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
-import { LogCategory } from '@/logging';
-import { useLogger } from '@/hooks/use-logger';
-import { useComponentPerformance } from '@/hooks/use-component-performance';
+
+import React, { useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
+import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
+import { AdminLayout } from '@/admin/components/AdminLayout';
+import { motion } from "framer-motion";
+import { useAtom } from "jotai";
+import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
+import { cn } from "@/lib/utils";
+import { BarChart3, Users, Activity, Zap } from "lucide-react";
+import { ActiveUsersList } from "@/admin/components/dashboard/ActiveUsersList";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging/types";
+import { InlineLogIndicator } from "@/logging/components/InlineLogIndicator";
 
 export default function Dashboard() {
-  const logger = useLogger('AdminDashboard', LogCategory.ADMIN);
-  const { measure } = useComponentPerformance('AdminDashboard');
+  const navigate = useNavigate();
+  const [isEditMode] = useAtom(adminEditModeAtom);
+  const logger = useLogger('Dashboard', LogCategory.ADMIN);
   
-  // Log dashboard render
-  React.useEffect(() => {
-    logger.info('Admin dashboard rendered');
-    
-    return () => {
-      logger.debug('Admin dashboard unmounted');
-    };
-  }, [logger]);
-
+  // Log dashboard access on mount
+  useEffect(() => {
+    logger.info("Admin dashboard accessed", {
+      details: { editMode: isEditMode }
+    });
+  }, [logger, isEditMode]);
+  
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">Admin Dashboard</h1>
-      
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Cards */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Users
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+2,350</div>
-            <p className="text-xs text-muted-foreground">
-              +180 from last month
-            </p>
-          </CardContent>
-        </Card>
+    <AdminLayout title="Admin Dashboard">
+      <motion.div 
+        className="space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <motion.div className="flex justify-between items-center">
+          <motion.h1 
+            className="text-2xl font-bold"
+            layoutId="dashboard-title"
+          >
+            Admin Dashboard
+          </motion.h1>
+          
+          {isEditMode && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="px-3 py-1.5 bg-primary/20 rounded-full text-sm font-medium text-primary flex items-center gap-1"
+            >
+              <span>Drag & Drop Mode</span>
+            </motion.div>
+          )}
+        </motion.div>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Revenue
-            </CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
-          </CardContent>
-        </Card>
+        {/* System status indicator */}
+        <div className="flex flex-wrap gap-2">
+          <InlineLogIndicator 
+            message="System logs enabled" 
+            variant="info"
+            onClick={() => navigate('/admin/settings')}
+          />
+        </div>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Now
-            </CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+573</div>
-            <p className="text-xs text-muted-foreground">
-              +201 since last hour
-            </p>
-          </CardContent>
-        </Card>
+        {/* Dashboard Shortcuts - Draggable area */}
+        <DashboardShortcuts />
         
-        {/* User activity section */}
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>User Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="overview" variant="default">
-              <TabsList>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              </TabsList>
-              <TabsContent value="overview">
-                <div className="h-[200px]">{/* Chart would go here */}</div>
-              </TabsContent>
-              <TabsContent value="analytics">
-                <div className="h-[200px]">{/* Analytics content would go here */}</div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatsCard 
+            title="Total Users" 
+            value="1,234"
+            icon={Users}
+            trend={12.5}
+            delay={0}
+          />
+          <StatsCard 
+            title="Active Now" 
+            value="56"
+            icon={Activity}
+            trend={-3.2}
+            delay={1}
+          />
+          <StatsCard 
+            title="Builds This Week" 
+            value="87"
+            icon={BarChart3}
+            trend={24.8}
+            delay={2}
+          />
+          <StatsCard 
+            title="System Status" 
+            value="Operational"
+            icon={Zap}
+            trend={0}
+            delay={3}
+          />
+        </div>
         
-        {/* Recent Sales */}
-        <Card className="col-span-2">
-          <CardHeader>
-            <CardTitle>Recent Sales</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-8">
-              {/* This would be a list of recent sales */}
-              <div className="flex items-center">
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">Olivia Martin</p>
-                  <p className="text-sm text-muted-foreground">olivia.martin@email.com</p>
-                </div>
-                <div className="ml-auto font-medium">+$1,999.00</div>
-              </div>
-              <div className="flex items-center">
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">Jackson Lee</p>
-                  <p className="text-sm text-muted-foreground">jackson.lee@email.com</p>
-                </div>
-                <div className="ml-auto font-medium">+$39.00</div>
-              </div>
-              <div className="flex items-center">
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">Isabella Nguyen</p>
-                  <p className="text-sm text-muted-foreground">isabella.nguyen@email.com</p>
-                </div>
-                <div className="ml-auto font-medium">+$299.00</div>
+        {/* Performance Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="lg:col-span-2"
+          >
+            <div className={cn(
+              "glassmorphism p-6 rounded-lg border border-[var(--impulse-border-normal)]",
+              "cyber-effect-1 hover-glow transition-all duration-300",
+              isEditMode && "border-dashed"
+            )}>
+              <h2 className="font-medium text-lg mb-3 cyber-text">Performance Metrics</h2>
+              <div className="h-[240px] flex items-center justify-center text-[var(--impulse-text-secondary)]">
+                Graph coming soon
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <ActiveUsersList />
+          </motion.div>
+        </div>
         
-        {/* System Logs */}
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>System Logs</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <LogActivityStream 
-              maxItems={5}
-              showHeader={false}
-              height="200px"
-              categories={[LogCategory.SYSTEM, LogCategory.ADMIN]}
-            />
-          </CardContent>
-        </Card>
-        
-        {/* Charts Section */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Sales Overview
-            </CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px]">{/* Chart would go here */}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Traffic Sources
-            </CardTitle>
-            <PieChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px]">{/* Chart would go here */}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Conversion Rate
-            </CardTitle>
-            <LineChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px]">{/* Chart would go here */}</div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+        {isEditMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-center text-sm text-muted-foreground my-8 p-4 border border-dashed border-primary/20 rounded-lg bg-primary/5"
+          >
+            <p>
+              You're in edit mode. Drag items from the sidebar to add shortcuts to your dashboard or top navigation.
+              Click the edit button again to save your changes.
+            </p>
+          </motion.div>
+        )}
+      </motion.div>
+    </AdminLayout>
   );
 }
+
+interface StatsCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  trend?: number;
+  delay?: number;
+}
+
+const StatsCard = ({ title, value, icon: Icon, trend = 0, delay = 0 }: StatsCardProps) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: delay * 0.1, duration: 0.5 }}
+  >
+    <div className={cn(
+      "glassmorphism p-5 rounded-lg border border-[var(--impulse-border-normal)]",
+      "hover-glow transition-all duration-300 h-32"
+    )}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium text-[var(--impulse-text-secondary)]">{title}</h3>
+        <Icon className="w-5 h-5 text-[var(--impulse-text-accent)]" />
+      </div>
+      <div className="mt-2">
+        <p className="text-2xl font-bold text-[var(--impulse-text-primary)]">{value}</p>
+        {typeof trend === 'number' && (
+          <div className="flex items-center mt-1">
+            <span 
+              className={
+                trend > 0 
+                  ? "text-emerald-400" 
+                  : "text-red-400"
+              }
+            >
+              {trend > 0 ? '+' : ''}{trend}%
+            </span>
+            <span className="text-xs ml-1 text-[var(--impulse-text-secondary)]">vs last month</span>
+          </div>
+        )}
+      </div>
+    </div>
+  </motion.div>
+);
