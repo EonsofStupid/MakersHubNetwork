@@ -7,6 +7,10 @@ interface LoginModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface LoginProps {
+  onSuccess: () => void;
+}
+
 export const LoginModal = ({ isOpen, onOpenChange }: LoginModalProps) => {
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>

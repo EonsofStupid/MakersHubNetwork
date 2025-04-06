@@ -116,35 +116,27 @@ export class LoggerService {
   }
 }
 
-// Factory function to create a logger instance with predefined source and category
-export function getLogger(source?: string, category?: LogCategory) {
-  const loggerService = LoggerService.getInstance();
+// Factory function to get a configured logger instance
+export function getLogger(source?: string, category?: LogCategory): Logger {
+  const instance = LoggerService.getInstance();
   
+  // Return a logger that automatically applies source and category
   return {
     debug: (message: string, options?: LogOptions) => 
-      loggerService.debug(message, { ...options, source: options?.source || source, category: options?.category || category }),
+      instance.debug(message, { ...options, source: options?.source || source, category: options?.category || category }),
     trace: (message: string, options?: LogOptions) => 
-      loggerService.trace(message, { ...options, source: options?.source || source, category: options?.category || category }),
+      instance.trace(message, { ...options, source: options?.source || source, category: options?.category || category }),
     info: (message: string, options?: LogOptions) => 
-      loggerService.info(message, { ...options, source: options?.source || source, category: options?.category || category }),
+      instance.info(message, { ...options, source: options?.source || source, category: options?.category || category }),
     success: (message: string, options?: LogOptions) => 
-      loggerService.success(message, { ...options, source: options?.source || source, category: options?.category || category }),
+      instance.success(message, { ...options, source: options?.source || source, category: options?.category || category }),
     warn: (message: string, options?: LogOptions) => 
-      loggerService.warn(message, { ...options, source: options?.source || source, category: options?.category || category }),
+      instance.warn(message, { ...options, source: options?.source || source, category: options?.category || category }),
     error: (message: string, options?: LogOptions) => 
-      loggerService.error(message, { ...options, source: options?.source || source, category: options?.category || category }),
+      instance.error(message, { ...options, source: options?.source || source, category: options?.category || category }),
     critical: (message: string, options?: LogOptions) => 
-      loggerService.critical(message, { ...options, source: options?.source || source, category: options?.category || category }),
-    // Add custom timing functionality for performance measurements
-    logCustomTiming: (label: string, startTime: number): number => {
-      const endTime = performance.now();
-      const duration = endTime - startTime;
-      loggerService.info(`${label}: ${duration.toFixed(2)}ms`, { 
-        source: source, 
-        category: category || LogCategory.PERFORMANCE, 
-        details: { duration, label, startTime, endTime } 
-      });
-      return duration;
-    }
+      instance.critical(message, { ...options, source: options?.source || source, category: options?.category || category }),
+    logCustomTiming: (label: string, startTime: number) =>
+      instance.logCustomTiming(label, startTime)
   };
 }

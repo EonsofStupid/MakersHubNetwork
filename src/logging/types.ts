@@ -43,10 +43,10 @@ export interface LogTransport {
   enabled: boolean;
   log: (entry: LogEntry) => void;
   
-  // Extended methods for UI components
-  getLogs?: () => LogEntry[];
-  subscribe?: (callback: (entry: LogEntry) => void) => { unsubscribe: () => void };
-  clear?: () => void;
+  // Make these methods required, not optional
+  getLogs: () => LogEntry[];
+  subscribe: (callback: (entry: LogEntry) => void) => { unsubscribe: () => void };
+  clear: () => void;
 }
 
 /**
@@ -97,3 +97,6 @@ export interface Logger {
   critical: (message: string, options?: LogOptions) => void;
   logCustomTiming: (label: string, startTime: number) => number;
 }
+
+// Re-export LogLevel for components that import from types
+export { LogLevel } from './constants/log-level';

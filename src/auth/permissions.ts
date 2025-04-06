@@ -77,8 +77,11 @@ export const PERMISSIONS = {
 // Create a union type of all permission values
 export type PermissionValue = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 
+// Define extended user roles including all that are used in the code
+export type ExtendedUserRole = UserRole | 'builder';
+
 // Define role-based permissions
-export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
+export const ROLE_PERMISSIONS: Record<ExtendedUserRole, PermissionValue[]> = {
   super_admin: [
     PERMISSIONS.MANAGE_USERS,
     PERMISSIONS.VIEW_USERS,
@@ -186,5 +189,21 @@ export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
     PERMISSIONS.CONTENT_EDIT
   ],
   
-  user: []
+  user: [],
+  
+  builder: [
+    PERMISSIONS.VIEW_CONTENT,
+    PERMISSIONS.EDIT_CONTENT,
+    PERMISSIONS.ACCESS_ADMIN,
+    PERMISSIONS.ADMIN_ACCESS,
+    PERMISSIONS.CONTENT_VIEW,
+    PERMISSIONS.CONTENT_EDIT,
+    PERMISSIONS.CONTENT_CREATE,
+    PERMISSIONS.BUILDS_VIEW,
+    PERMISSIONS.BUILDS_CREATE,
+    PERMISSIONS.BUILDS_EDIT
+  ]
 };
+
+// Make TypeScript aware of this extended role
+export const USER_ROLES = ['super_admin', 'admin', 'moderator', 'editor', 'builder', 'user'] as const;
