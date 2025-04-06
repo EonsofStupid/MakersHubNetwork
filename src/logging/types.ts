@@ -15,7 +15,31 @@ export enum LogCategory {
   CHAT = 'chat',
   DATABASE = 'database',
   PERFORMANCE = 'performance',
-  CONTENT = 'content'  // Added this new category
+  CONTENT = 'content'
+}
+
+export interface LogOptions {
+  category?: LogCategory;
+  details?: Record<string, unknown>;
+  tags?: string[];
+  success?: boolean;
+  error?: boolean;
+  warning?: boolean;
+  errorMessage?: string;
+  originalTheme?: string;
+  theme?: string;
+  mainSite?: boolean;
+  admin?: boolean;
+  database?: boolean;
+  component?: string;
+  componentCount?: number;
+  reason?: string;
+  errorCode?: string;
+  errorDetails?: string;
+  errorHint?: string;
+  themeId?: string;
+  defaultTheme?: string;
+  [key: string]: unknown;
 }
 
 export interface LogEntry {
@@ -33,7 +57,13 @@ export interface LogEntry {
 }
 
 export interface LogTransport {
+  id: string;
+  name: string;
+  enabled: boolean;
   log(entry: LogEntry): void;
+  getLogs?(): LogEntry[];
+  subscribe?(callback: (entry: LogEntry) => void): () => void;
+  clear?(): void;
   flush?(): Promise<void>;
 }
 

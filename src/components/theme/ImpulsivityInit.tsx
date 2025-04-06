@@ -63,9 +63,11 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Error applying direct CSS variables', { 
+      const logDetails: ThemeLogDetails = { 
         errorMessage
-      });
+      };
+      
+      logger.error('Error applying direct CSS variables', logDetails);
       return false;
     }
   };

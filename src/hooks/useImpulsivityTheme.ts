@@ -60,9 +60,11 @@ export function useImpulsivityTheme() {
       logger.info('Applied immediate styles for Impulsivity theme');
       return true;
     } catch (error) {
-      logger.error('Error applying immediate styles', { 
-        errorMessage: error instanceof Error ? error.message : String(error) 
-      });
+      const logDetails: ThemeLogDetails = {
+        errorMessage: error instanceof Error ? error.message : String(error)
+      };
+      
+      logger.error('Error applying immediate styles', logDetails);
       return false;
     }
   }, [logger]);
@@ -112,9 +114,11 @@ export function useImpulsivityTheme() {
             await setTheme(currentTheme.id);
           } catch (error) {
             // Even if the store update fails, we've already applied the CSS variables directly
-            logger.warn('Failed to set theme in store, using direct application', {
+            const logDetails: ThemeLogDetails = {
               errorMessage: error instanceof Error ? error.message : String(error)
-            });
+            };
+            
+            logger.warn('Failed to set theme in store, using direct application', logDetails);
             
             // Reapply immediate styles to ensure visuals are consistent
             applyImmediateStyles();
@@ -129,6 +133,7 @@ export function useImpulsivityTheme() {
         success: true,
         mainSite: true
       };
+      
       logger.info('Applied Impulsivity theme to main site', logDetails);
       return true;
     } catch (error) {
@@ -138,6 +143,7 @@ export function useImpulsivityTheme() {
         errorMessage,
         mainSite: false 
       };
+      
       logger.error('Error applying Impulsivity theme to main site', logDetails);
       
       // Apply emergency CSS vars directly as fallback
@@ -172,6 +178,7 @@ export function useImpulsivityTheme() {
           success: true,
           admin: true 
         };
+        
         logger.info('Applied Impulsivity theme to admin panel', logDetails);
         return true;
       } else {
@@ -187,6 +194,7 @@ export function useImpulsivityTheme() {
         errorMessage,
         admin: false 
       };
+      
       logger.error('Error applying Impulsivity theme to admin panel', logDetails);
       return true; // Return true to allow app to continue
     }
@@ -208,15 +216,19 @@ export function useImpulsivityTheme() {
         const result = await syncImpulsivityTheme();
         
         if (result) {
-          logger.info('Successfully synced Impulsivity theme to database', { 
+          const logDetails: ThemeLogDetails = {
             success: true,
             database: true
-          });
+          };
+          
+          logger.info('Successfully synced Impulsivity theme to database', logDetails);
         } else {
-          logger.warn('Sync function completed but returned false', { 
+          const logDetails: ThemeLogDetails = {
             warning: true,
             database: false
-          });
+          };
+          
+          logger.warn('Sync function completed but returned false', logDetails);
         }
         
         setSyncInProgress(false);
@@ -224,20 +236,24 @@ export function useImpulsivityTheme() {
       } catch (syncError) {
         // Log the error but don't let it block the app
         const errorMessage = syncError instanceof Error ? syncError.message : String(syncError);
-        logger.error('Error syncing Impulsivity theme to database', {
+        const logDetails: ThemeLogDetails = {
           errorMessage,
           database: false
-        });
+        };
+        
+        logger.error('Error syncing Impulsivity theme to database', logDetails);
         
         setSyncInProgress(false);
         return true; // Return true even if sync failed - app should continue
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Error in syncToDatabase function', { 
+      const logDetails: ThemeLogDetails = {
         errorMessage,
         database: false
-      });
+      };
+      
+      logger.error('Error in syncToDatabase function', logDetails);
       
       setSyncInProgress(false);
       return true; // Return true even if sync failed - app should continue
@@ -265,9 +281,11 @@ export function useImpulsivityTheme() {
         dbResult = await syncToDatabase();
       }
     } catch (error) {
-      logger.warn('Database sync failed but continuing', {
+      const logDetails: ThemeLogDetails = {
         errorMessage: error instanceof Error ? error.message : String(error)
-      });
+      };
+      
+      logger.warn('Database sync failed but continuing', logDetails);
     }
     
     // No matter what happened, reapply immediate styles
@@ -279,24 +297,28 @@ export function useImpulsivityTheme() {
         description: "Theme has been applied to the site",
       });
       
-      logger.info('Impulsivity theme applied', {
+      const logDetails: ThemeLogDetails = {
         success: true,
         mainSite: mainSiteResult, 
         admin: adminResult, 
         database: dbResult
-      });
+      };
+      
+      logger.info('Impulsivity theme applied', logDetails);
       return true;
     } else {
       // Even with failure, ensure the CSS variables are applied
       applyImmediateStyles();
       
-      logger.warn('Impulsivity theme partially applied', {
+      const logDetails: ThemeLogDetails = {
         warning: true,
         success: false,
         mainSite: mainSiteResult, 
         admin: adminResult, 
         database: dbResult
-      });
+      };
+      
+      logger.warn('Impulsivity theme partially applied', logDetails);
       
       return true; // Return true anyway to allow app to continue
     }
