@@ -33,6 +33,8 @@ export type AuthStore = AuthState & AuthActions;
 export interface AdminAccess {
   isAdmin: boolean;
   hasAdminAccess: boolean;
+  isLoading?: boolean;
+  isAuthenticated?: boolean;
 }
 
 export interface WithAdminAccess {

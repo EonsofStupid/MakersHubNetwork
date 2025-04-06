@@ -1,5 +1,5 @@
 
-export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor';
+export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor' | 'maker' | 'builder';
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -33,6 +33,8 @@ export type AuthStore = AuthState & AuthActions;
 export interface AdminAccess {
   isAdmin: boolean;
   hasAdminAccess: boolean;
+  isLoading?: boolean;
+  isAuthenticated?: boolean;
 }
 
 export interface WithAdminAccess {

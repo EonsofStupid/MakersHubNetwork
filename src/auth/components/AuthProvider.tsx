@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { publishAuthEvent } from '@/auth/bridge';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { UserRole } from '@/types/auth';
 
 const logger = getLogger('AuthProvider', LogCategory.AUTH);
 
@@ -49,8 +50,11 @@ export function AuthProvider({ children, onAuthStateChange }: AuthProviderProps)
                 throw rolesError;
               }
               
+              // Cast roles to UserRole type to ensure compatibility
+              const typedRoles = (rolesData?.map(r => r.role) || []) as UserRole[];
+              
               // Update roles in auth store
-              auth.setRoles(rolesData?.map(r => r.role) || []);
+              auth.setRoles(typedRoles);
               
               // Set auth status
               auth.setStatus('authenticated');
