@@ -58,7 +58,7 @@ export function useImpulsivityTheme() {
         logger.info('Updating theme design tokens with Impulsivity colors');
       }
       
-      const logDetails = { 
+      const logDetails: ThemeLogDetails = { 
         success: true,
         mainSite: true
       };
@@ -66,7 +66,7 @@ export function useImpulsivityTheme() {
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const logDetails = { 
+      const logDetails: ThemeLogDetails = { 
         error: true, 
         errorMessage,
         mainSite: false 
@@ -98,7 +98,7 @@ export function useImpulsivityTheme() {
           --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.7);
         `);
         
-        const logDetails = { 
+        const logDetails: ThemeLogDetails = { 
           success: true,
           admin: true 
         };
@@ -110,7 +110,7 @@ export function useImpulsivityTheme() {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const logDetails = { 
+      const logDetails: ThemeLogDetails = { 
         error: true, 
         errorMessage,
         admin: false 
@@ -129,13 +129,13 @@ export function useImpulsivityTheme() {
       const result = await syncImpulsivityTheme();
       
       if (result) {
-        const logDetails = { 
+        const logDetails: ThemeLogDetails = { 
           success: true,
           database: true
         };
         logger.info('Successfully synced Impulsivity theme to database', logDetails);
       } else {
-        const logDetails = { 
+        const logDetails: ThemeLogDetails = { 
           error: true, 
           success: false,
           database: false
@@ -147,7 +147,7 @@ export function useImpulsivityTheme() {
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const logDetails = { 
+      const logDetails: ThemeLogDetails = { 
         error: true, 
         errorMessage,
         database: false
@@ -178,7 +178,7 @@ export function useImpulsivityTheme() {
         description: "The theme has been successfully applied across the entire application.",
       });
       
-      const logDetails = {
+      const logDetails: ThemeLogDetails = {
         success: true,
         mainSite: true, 
         admin: true, 
@@ -200,7 +200,7 @@ export function useImpulsivityTheme() {
         variant: "destructive",
       });
       
-      const logDetails = {
+      const logDetails: ThemeLogDetails = {
         warning: true,
         success: false,
         mainSite: mainSiteResult, 
