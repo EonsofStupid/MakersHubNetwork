@@ -1,69 +1,87 @@
 
-import { useRef, useEffect, useCallback } from 'react';
-import { usePerformanceLogger } from './use-performance-logger';
+import { useEffect, useRef } from 'react';
+import { useLogger } from './use-logger';
+import { LogCategory } from '@/logging';
+
+interface PerformanceOptions {
+  enabled?: boolean;
+  threshold?: number;
+  trackUpdates?: boolean;
+}
 
 /**
- * Hook for monitoring React component performance
+ * Hook to track component mount and update performance
  */
-export function useComponentPerformance(componentName: string) {
-  const { startTimer, endTimer, measure } = usePerformanceLogger(componentName);
-  const mountTimeRef = useRef<number>(0);
-  const renderCountRef = useRef<number>(0);
+export function useComponentPerformance(
+  componentName: string,
+  options: PerformanceOptions = {}
+) {
+  const {
+    enabled = true,
+    threshold = 0,
+    trackUpdates = true
+  } = options;
   
-  // Track component mounting and updates
+  const logger = useLogger('ComponentPerformance', LogCategory.PERFORMANCE);
+  const mountTime = useRef<number | null>(null);
+  const updateCount = useRef<number>(0);
+  const lastUpdateTime = useRef<number | null>(null);
+  
+  // On mount
   useEffect(() => {
-    if (renderCountRef.current === 0) {
-      // First render (mount)
-      mountTimeRef.current = performance.now();
-      startTimer('mount');
-    } else {
-      // Re-render
-      startTimer(`render-${renderCountRef.current}`);
-    }
+    if (!enabled) return;
     
-    renderCountRef.current += 1;
+    const startTime = performance.now();
+    mountTime.current = startTime;
     
     return () => {
-      if (renderCountRef.current === 1) {
-        // Component is unmounting after first render
-        endTimer('mount', {
-          details: { lifecycle: 'mount-unmount' }
-        });
-      } else {
-        // End the render timer
-        endTimer(`render-${renderCountRef.current - 1}`, {
-          details: { renderCount: renderCountRef.current }
+      // On unmount
+      const unmountTime = performance.now();
+      const duration = mountTime.current 
+        ? unmountTime - mountTime.current 
+        : 0;
+      
+      if (duration > threshold) {
+        logger.logCustomTiming(
+          `${componentName} (total lifecycle)`, 
+          duration,
+          { details: { component: componentName, type: 'lifecycle' } }
+        );
+      }
+      
+      if (trackUpdates && updateCount.current > 0) {
+        logger.info(`${componentName} rendered ${updateCount.current} times`, {
+          details: { 
+            component: componentName, 
+            updateCount: updateCount.current 
+          } 
         });
       }
     };
-  });
+  }, [enabled, componentName, threshold, trackUpdates, logger]);
   
-  // Measure time to first meaningful render
-  const markMeaningfulRender = useCallback(() => {
-    if (mountTimeRef.current > 0) {
-      const timeToMeaningful = performance.now() - mountTimeRef.current;
+  // On each render after mount
+  useEffect(() => {
+    if (!enabled || !trackUpdates) return;
+    
+    const now = performance.now();
+    
+    // Skip first render as it's already tracked by mount timing
+    if (lastUpdateTime.current !== null) {
+      updateCount.current++;
+      const timeSinceLastUpdate = now - lastUpdateTime.current;
       
-      endTimer('mount', {
-        details: {
-          timeToMeaningful,
-          lifecycle: 'meaningful-render'
-        }
-      });
+      if (timeSinceLastUpdate > threshold) {
+        logger.logCustomTiming(
+          `${componentName} update`, 
+          timeSinceLastUpdate,
+          { details: { component: componentName, type: 'update', count: updateCount.current } }
+        );
+      }
     }
-  }, [endTimer]);
-  
-  // Wrapper for measuring specific operations
-  const measureOperation = useCallback(<T>(
-    operationName: string,
-    fn: () => T,
-    options?: { details?: unknown }
-  ): T => {
-    return measure(`${componentName}:${operationName}`, fn, options);
-  }, [componentName, measure]);
-  
-  return {
-    renderCount: renderCountRef.current,
-    markMeaningfulRender,
-    measureOperation
-  };
+    
+    lastUpdateTime.current = now;
+  });
 }
+
+export default useComponentPerformance;

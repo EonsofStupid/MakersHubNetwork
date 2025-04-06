@@ -1,31 +1,113 @@
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import Login from "@/pages/Login";
+
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface LoginModalProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export const LoginModal = ({ isOpen, onOpenChange }: LoginModalProps) => {
+export function LoginModal({ onSuccess }: LoginModalProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Login successful',
+        description: 'You have successfully logged in.',
+      });
+
+      setOpen(false);
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Login failed',
+        description: error.message || 'An error occurred during login',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        <Button className="mad-scientist-hover">
-          Login
-        </Button>
-      </SheetTrigger>
-      <SheetContent 
-        side="right" 
-        className="w-[400px] backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu"
-        style={{
-          clipPath: "polygon(0 0, 100% 0, 95% 15%, 100% 30%, 95% 85%, 100% 100%, 0 100%)",
-          transform: "translateX(0) skew(-5deg)",
-          transformOrigin: "100% 50%",
-        }}
-      >
-        <Login onSuccess={() => onOpenChange(false)} />
-      </SheetContent>
-    </Sheet>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Login</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Login</DialogTitle>
+          <DialogDescription>
+            Enter your credentials to login to your account.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleLogin}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="password" className="text-right">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
-};
+}
