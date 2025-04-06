@@ -3,16 +3,16 @@ import React from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
-// Define the permission values as an enum
+// Define the permission values as a proper enum
 export enum AdminPermissionValue {
-  ViewDashboard = 'view_dashboard',
-  ViewMetrics = 'view_metrics',
-  ViewActivity = 'view_activity',
-  ManageSettings = 'manage_settings',
-  ManageUsers = 'manage_users',
-  ManageRoles = 'manage_roles',
-  ManageBuilds = 'manage_builds',
-  ManageComments = 'manage_comments',
+  ViewDashboard = "view_dashboard",
+  ViewMetrics = "view_metrics",
+  ViewActivity = "view_activity",
+  ManageSettings = "manage_settings",
+  ManageUsers = "manage_users",
+  ManageRoles = "manage_roles",
+  ManageBuilds = "manage_builds",
+  ManageComments = "manage_comments"
 }
 
 interface PermissionCheckerProps {

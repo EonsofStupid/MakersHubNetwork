@@ -1,89 +1,82 @@
 
 import { LogEntry, LogLevel, LogTransport } from '../types';
-import { BehaviorSubject } from 'rxjs';
 
-/**
- * UI transport configuration
- */
-export interface UITransportConfig {
+interface UITransportOptions {
   maxEntries?: number;
   enabled?: boolean;
   minLevel?: LogLevel;
   includeDebug?: boolean;
 }
 
-/**
- * UI transport for logging
- */
 export class UITransport implements LogTransport {
-  id: string = 'ui';
-  name: string = 'UI Logger';
-  enabled: boolean = true;
-  private logs: LogEntry[] = [];
-  private maxEntries: number = 100;
-  private logsSubject = new BehaviorSubject<LogEntry[]>([]);
-  private levelFilter: LogLevel | null = null;
-  private config: UITransportConfig;
-  
-  constructor(config?: UITransportConfig) {
-    this.config = config || {};
-    
-    if (config?.maxEntries) {
-      this.maxEntries = config.maxEntries;
-    }
-    if (config?.enabled !== undefined) {
-      this.enabled = config.enabled;
-    }
+  id: string;
+  name: string;
+  enabled: boolean;
+  private logs: LogEntry[];
+  private maxEntries: number;
+  private subscribers: ((entries: LogEntry[]) => void)[];
+  private minLevel: LogLevel;
+  private includeDebug: boolean;
+
+  constructor(options: UITransportOptions = {}) {
+    this.id = 'ui-transport';
+    this.name = 'UI Transport';
+    this.enabled = options.enabled ?? true;
+    this.maxEntries = options.maxEntries ?? 100;
+    this.minLevel = options.minLevel ?? LogLevel.DEBUG;
+    this.includeDebug = options.includeDebug ?? true;
+    this.logs = [];
+    this.subscribers = [];
   }
-  
+
   log(entry: LogEntry): void {
     if (!this.enabled) return;
+
+    // Filter by log level
+    if (entry.level < this.minLevel) return;
+
+    // Optional debug filtering
+    if (!this.includeDebug && entry.level === LogLevel.DEBUG) return;
     
-    // Apply configuration filters
-    if (this.config.minLevel !== undefined) {
-      const entryLevelValue = Object.values(LogLevel).indexOf(entry.level);
-      const minLevelValue = Object.values(LogLevel).indexOf(this.config.minLevel);
-      if (entryLevelValue < minLevelValue) return;
-    }
+    // Add log entry
+    this.logs.push(entry);
     
-    if (this.config.includeDebug === false && entry.level === LogLevel.DEBUG) {
-      return;
-    }
-    
-    // Apply level filter if set
-    if (this.levelFilter !== null && entry.level !== this.levelFilter) {
-      return;
-    }
-    
-    // Add new log and trim if exceeding max entries
-    this.logs.unshift(entry);
+    // Trim logs if they exceed max entries
     if (this.logs.length > this.maxEntries) {
-      this.logs = this.logs.slice(0, this.maxEntries);
+      this.logs = this.logs.slice(-this.maxEntries);
     }
     
     // Notify subscribers
-    this.logsSubject.next([...this.logs]);
+    this.notifySubscribers();
   }
-  
+
   getLogs(): LogEntry[] {
     return [...this.logs];
   }
-  
-  setLevelFilter(level: LogLevel | null): void {
-    this.levelFilter = level;
-  }
-  
+
   clear(): void {
     this.logs = [];
-    this.logsSubject.next([]);
+    this.notifySubscribers();
   }
-  
+
   subscribe(callback: (entries: LogEntry[]) => void): () => void {
-    const subscription = this.logsSubject.subscribe(callback);
-    return () => subscription.unsubscribe();
+    this.subscribers.push(callback);
+    
+    // Immediately call with current logs
+    callback([...this.logs]);
+    
+    // Return unsubscribe function
+    return () => {
+      this.subscribers = this.subscribers.filter(sub => sub !== callback);
+    };
+  }
+
+  private notifySubscribers(): void {
+    const logs = [...this.logs];
+    this.subscribers.forEach(callback => callback(logs));
+  }
+
+  flush(): Promise<void> {
+    return Promise.resolve();
   }
 }
-
-// Default instance
-export const uiTransport = new UITransport();
-export default uiTransport;

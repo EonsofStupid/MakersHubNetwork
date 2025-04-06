@@ -1,14 +1,21 @@
-import { useState } from "react";
-import { LoginModal } from "./LoginModal";
-import { Button } from "@/components/ui/button";
 
-export const LoginButton = () => {
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { LoginModal } from './LoginModal';
+
+export function LoginButton() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <LoginModal 
-      isOpen={isLoginOpen}
-      onOpenChange={setIsLoginOpen}
-    />
+    <>
+      <Button size="sm" onClick={() => setIsModalOpen(true)}>
+        Login
+      </Button>
+      
+      <LoginModal 
+        open={isModalOpen} 
+        onOpenChange={setIsModalOpen} 
+      />
+    </>
   );
-};
+}
