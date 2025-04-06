@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
 import { UserProfile } from '@/types/auth.unified';
 
-interface ProfileEditorProps {
+export interface ProfileEditorProps {
   user: UserProfile;
   onSave: (user: UserProfile) => void;
   onCancel: () => void;

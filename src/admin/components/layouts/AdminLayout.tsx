@@ -15,6 +15,7 @@ import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { useAdminAccess } from "../../hooks/useAdminAccess";
 import { EditModeToggle } from "../ui/EditModeToggle";
+import { useState } from "react";
 
 interface AdminLayoutProps {
   title?: string;
@@ -36,6 +37,11 @@ export function AdminLayout({
   const { hasAdminAccess, isAuthenticated } = useAdminAccess();
   const redirectAttemptedRef = useRef<boolean>(false);
   const loggedInitRef = useRef<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const handleToggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   useEffect(() => {
     // Log the admin layout initialization - only once
@@ -76,7 +82,7 @@ export function AdminLayout({
 
   return (
     <div className={`flex h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)] ${fullWidth ? 'max-w-full' : ''} ${className || ''}`}>
-      <AdminSidebar />
+      <AdminSidebar open={sidebarOpen} onToggle={handleToggleSidebar} />
       
       <div className="flex flex-col flex-1 h-screen overflow-hidden">
         <AdminHeader title={title} />
