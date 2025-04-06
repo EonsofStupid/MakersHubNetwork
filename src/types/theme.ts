@@ -74,7 +74,7 @@ export interface Theme {
   cached_styles?: Record<string, any>;
 }
 
-// Updated ThemeLogDetails interface with more specific types
+// Comprehensive ThemeLogDetails interface with all possible properties
 export interface ThemeLogDetails {
   // Status indicators
   success?: boolean;
@@ -84,12 +84,13 @@ export interface ThemeLogDetails {
   // Error information
   errorMessage?: string;
   errorCode?: string;
-  errorDetails?: unknown; // Changed from string to unknown for broader compatibility
+  errorDetails?: unknown;
   errorHint?: string;
+  errorName?: string;
   
   // Theme information
   themeId?: string;
-  themeName?: string; // Added missing property
+  themeName?: string;
   theme?: string;
   defaultTheme?: string;
   originalTheme?: string;
@@ -97,19 +98,20 @@ export interface ThemeLogDetails {
   // Component information
   component?: string;
   componentCount?: number;
-  componentTokensCount?: number; // Added missing property
+  componentTokensCount?: number;
   
   // Operation status
   mainSite?: boolean;
   admin?: boolean;
   database?: boolean;
-  isFallback?: boolean; // Added missing property
+  isFallback?: boolean;
   
   // Additional context
   reason?: string;
   details?: Record<string, unknown>;
-  hasAnimations?: boolean; // Added missing property
-  hasComponentStyles?: boolean; // Added missing property
+  hasAnimations?: boolean;
+  hasComponentStyles?: boolean;
+  source?: string;
   
   // Allow for additional properties
   [key: string]: unknown;

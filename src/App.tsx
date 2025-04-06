@@ -15,6 +15,7 @@ import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { AppInitializer } from "@/components/AppInitializer";
 import { ImpulsivityInit } from "@/components/theme/ImpulsivityInit";
 import { ImpulsivityThemeInitializer } from "@/components/theme/ImpulsivityThemeInitializer";
+import { SiteThemeProvider } from "@/components/theme/SiteThemeProvider";
 
 // Import pages
 import Index from "./pages/Index";
@@ -89,27 +90,31 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
         <ThemeInitializer context={isAdminRoute ? "admin" : "app"} applyImmediately={true}>
-          <ImpulsivityThemeInitializer>
-            <ImpulsivityInit priority={true} autoApply={true}>
-              <AuthProvider>
-                <AppInitializer>
-                  <AdminProvider>
-                    <div className="w-full max-w-full">
-                      {!isAdminRoute && appReady && <MainNav />}
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/admin/*" element={<Admin />} />
-                      </Routes>
-                      {!isAdminRoute && appReady && <Footer />}
-                      <Toaster />
-                      <LoggingComponents />
-                    </div>
-                  </AdminProvider>
-                </AppInitializer>
-              </AuthProvider>
-            </ImpulsivityInit>
-          </ImpulsivityThemeInitializer>
+          <SiteThemeProvider>
+            <ImpulsivityThemeInitializer>
+              <ImpulsivityInit priority={true} autoApply={true}>
+                <AuthProvider>
+                  <AppInitializer>
+                    <AdminProvider>
+                      <div className="w-full max-w-full min-h-screen flex flex-col">
+                        {!isAdminRoute && appReady && <MainNav />}
+                        <main className="flex-grow w-full">
+                          <Routes>
+                            <Route path="/" element={<Index />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/admin/*" element={<Admin />} />
+                          </Routes>
+                        </main>
+                        {!isAdminRoute && appReady && <Footer />}
+                        <Toaster />
+                        <LoggingComponents />
+                      </div>
+                    </AdminProvider>
+                  </AppInitializer>
+                </AuthProvider>
+              </ImpulsivityInit>
+            </ImpulsivityThemeInitializer>
+          </SiteThemeProvider>
         </ThemeInitializer>
       </LoggingProvider>
     </ThemeProvider>
