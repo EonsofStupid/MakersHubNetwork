@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
@@ -20,10 +19,8 @@ export function useImpulsivityTheme() {
   const [syncInProgress, setSyncInProgress] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Apply the Impulsivity theme to the main site with type-safe CSS variables
   const applyToMainSite = async () => {
     try {
-      // Define CSS variables with type safety
       const cssVars: ThemeCssVars = {
         '--site-primary': tokens.primary || '186 100% 50%',
         '--site-secondary': tokens.secondary || '334 100% 59%',
@@ -32,15 +29,12 @@ export function useImpulsivityTheme() {
         '--site-effect-tertiary': tokens.effectTertiary || '#8B5CF6'
       };
       
-      // Set the CSS variables on the root element
       const rootElement = document.documentElement;
       Object.entries(cssVars).forEach(([key, value]) => {
         rootElement.style.setProperty(key, value);
       });
       
-      // Update the theme in the store if needed
       if (currentTheme) {
-        // Create updated design tokens
         const updatedDesignTokens = {
           ...(currentTheme.design_tokens || {}),
           colors: {
@@ -56,7 +50,6 @@ export function useImpulsivityTheme() {
           }
         };
         
-        // Log what we're trying to do
         logger.info('Updating theme design tokens with Impulsivity colors');
       }
       
@@ -82,13 +75,10 @@ export function useImpulsivityTheme() {
     }
   };
   
-  // Apply the Impulsivity theme to the admin panel
   const applyToAdmin = async () => {
     try {
-      // Update admin theme variables with type safety
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement) {
-        // Define CSS variables with type safety
         const cssVars: ThemeCssVars = {
           '--impulse-primary': tokens.effectPrimary || '#00F0FF',
           '--impulse-secondary': tokens.effectSecondary || '#FF2D6E',
@@ -105,7 +95,6 @@ export function useImpulsivityTheme() {
           '--impulse-glow-secondary': '0 0 15px rgba(255, 45, 110, 0.7)'
         };
         
-        // Apply each CSS variable individually using setProperty
         Object.entries(cssVars).forEach(([key, value]) => {
           (adminRootElement as HTMLElement).style.setProperty(key, value);
         });
@@ -138,7 +127,6 @@ export function useImpulsivityTheme() {
     }
   };
   
-  // Sync theme to database
   const syncToDatabase = async () => {
     try {
       setSyncInProgress(true);
@@ -185,7 +173,6 @@ export function useImpulsivityTheme() {
     }
   };
   
-  // Apply theme everywhere
   const applyTheme = async () => {
     if (syncInProgress) {
       logger.warn('Theme sync already in progress, skipping', {
@@ -219,7 +206,6 @@ export function useImpulsivityTheme() {
       });
       return true;
     } else {
-      // Show toast with partial success message
       const failedComponents = [];
       if (!mainSiteResult) failedComponents.push('main site');
       if (!adminResult) failedComponents.push('admin panel');

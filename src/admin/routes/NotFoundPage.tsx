@@ -26,10 +26,10 @@ export default function NotFoundPage() {
           </p>
         </CardContent>
         <CardFooter className="flex justify-center gap-4">
-          <Button variant="outline" onClick={() => navigate({ to: "/admin" })}>
+          <Button variant="outline" onClick={() => navigate({ to: '/admin/dashboard' })}>
             Admin Dashboard
           </Button>
-          <Button onClick={() => navigate({ to: ".." })}>
+          <Button onClick={() => navigate({ to: '..' })}>
             Go Back
           </Button>
         </CardFooter>

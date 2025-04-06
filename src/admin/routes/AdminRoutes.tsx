@@ -35,7 +35,7 @@ export function AdminRoutes() {
     
     // Automatically redirect to dashboard if on /admin root
     if (location.pathname === '/admin') {
-      navigate({ to: '/admin/dashboard' as any });
+      navigate({ to: '/admin/dashboard' });
     }
     
     // Redirect unauthorized users
@@ -43,7 +43,7 @@ export function AdminRoutes() {
       logger.warn('Unauthorized access attempt to admin routes', {
         details: { path: location.pathname }
       });
-      navigate({ to: '/admin/unauthorized' as any });
+      navigate({ to: '/admin/unauthorized' });
     }
     
     // Redirect unauthenticated users

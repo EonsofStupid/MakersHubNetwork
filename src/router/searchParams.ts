@@ -1,22 +1,41 @@
 
 import { z } from 'zod';
 
-// Define standard search param schemas that can be used across the app
-export const searchParamsSchema = z.object({
-  returnTo: z.string().optional(),
-  from: z.string().optional(),
+// Define schemas for common search parameters
+export const fromSchema = z.string().optional();
+export const pageSchema = z.coerce.number().int().positive().optional().default(1);
+export const limitSchema = z.coerce.number().int().positive().optional().default(10);
+
+// Common search params structure
+export const commonSearchParamsSchema = z.object({
+  from: fromSchema,
+  page: pageSchema,
+  limit: limitSchema
 });
 
-export type SearchParams = z.infer<typeof searchParamsSchema>;
+export type CommonSearchParams = z.infer<typeof commonSearchParamsSchema>;
 
-// Type-safe navigation helper for TanStack Router
-export function createSearchParams(params: Partial<SearchParams>): Record<string, string> {
-  // Filter out undefined values and validate against schema
-  const filteredParams = Object.fromEntries(
-    Object.entries(params).filter(([_, value]) => value !== undefined)
-  );
+/**
+ * Creates type-safe search parameters object
+ */
+export function createSearchParams(params: Record<string, string | number | boolean | undefined | null>): Record<string, string> {
+  const result: Record<string, string> = {};
   
-  // Parse with schema to validate (will throw if invalid)
-  const validParams = searchParamsSchema.parse(filteredParams);
-  return validParams as Record<string, string>;
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      result[key] = String(value);
+    }
+  });
+  
+  return result;
+}
+
+/**
+ * Validates search parameters against a schema
+ */
+export function validateSearchParams<T extends z.ZodType>(
+  params: Record<string, string>, 
+  schema: T
+): z.infer<T> {
+  return schema.parse(params);
 }
