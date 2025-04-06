@@ -1,6 +1,6 @@
 
 // Re-export types from the unified auth types file
-export {
+export type {
   UserRole,
   AdminAccess,
   UserProfile,
@@ -17,4 +17,8 @@ export interface AuthUser {
   email: string;
   name?: string;
   avatar?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
 }

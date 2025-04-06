@@ -6,7 +6,6 @@ import { UserMenuSheet } from "@/components/auth/UserMenuSheet"
 import { useAuthState } from "@/auth/hooks/useAuthState"
 import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/logging"
-import { errorToObject } from "@/shared/utils/render"
 
 export const UserMenu = memo(() => {
   const [isSheetOpen, setSheetOpen] = useState(false)
@@ -18,7 +17,10 @@ export const UserMenu = memo(() => {
   
   // Get auth data from centralized hook
   // Important: Using useAuthState to avoid initialization cycles
-  const { user, roles, logout, isAdmin } = useAuthState()
+  const { user, roles, logout } = useAuthState()
+  
+  // Check if user has admin access
+  const isAdmin = roles.includes('admin') || roles.includes('super_admin');
   
   // Memoize handlers to prevent recreating functions on each render
   const handleOpenSheet = useCallback(() => {
@@ -47,7 +49,9 @@ export const UserMenu = memo(() => {
       logger.info("User logged out successfully")
       window.location.reload()
     } catch (error) {
-      logger.error("Error logging out", { details: errorToObject(error) })
+      logger.error("Error logging out", { 
+        details: error instanceof Error ? { message: error.message } : { error: String(error) } 
+      })
       toast({
         variant: "destructive",
         title: "Error logging out",
@@ -58,6 +62,9 @@ export const UserMenu = memo(() => {
     }
   }, [logout, toast, logger])
 
+  // Convert roles to required type for UserMenuSheet
+  const userRoles = roles.map(role => role.toString()) as Array<"admin" | "super_admin" | "editor" | "moderator" | "user" | "maker" | "builder">;
+
   // Memoize props to prevent object recreation on each render
   const sheetProps = useMemo(() => ({
     isOpen: isSheetOpen,
@@ -66,8 +73,8 @@ export const UserMenu = memo(() => {
     isLoadingLogout: isLoading,
     onShowProfile: handleOpenProfileDialog,
     onLogout: handleLogout,
-    hasAdminAccess: isAdmin(),
-    roles: roles
+    hasAdminAccess: isAdmin,
+    roles: userRoles
   }), [
     isSheetOpen, 
     user?.email, 
@@ -75,7 +82,7 @@ export const UserMenu = memo(() => {
     handleOpenProfileDialog, 
     handleLogout, 
     isAdmin, 
-    roles
+    userRoles
   ])
   
   const profileDialogProps = useMemo(() => ({

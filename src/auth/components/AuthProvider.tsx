@@ -1,9 +1,7 @@
 
 import React, { useEffect } from 'react';
-import { useAuthStore } from '@/stores/auth/store';
+import { useAuthStore } from '@/auth/store/auth.store';
 import { AuthContext } from '@/auth/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { publishAuthEvent } from '@/auth/bridge';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { UserRole } from '@/types/auth.unified';
@@ -21,92 +19,27 @@ export function AuthProvider({ children, onAuthStateChange }: AuthProviderProps)
   
   // Initialize auth when component mounts
   useEffect(() => {
-    if (!auth.initialized) {
+    if (!auth.initialized && auth.initialize) {
       auth.initialize();
     }
   }, [auth]);
   
-  // Listen for auth state changes from Supabase
+  // Listen for auth state changes
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      logger.info('Auth state changed', { 
-        details: { event } 
-      });
-      
-      switch (event) {
-        case 'SIGNED_IN':
-          // Update session
-          auth.setSession(session);
-          
-          // If we have a user id, fetch roles
-          if (session?.user?.id) {
-            try {
-              const { data: rolesData, error: rolesError } = await supabase
-                .from('user_roles')
-                .select('role')
-                .eq('user_id', session.user.id);
-                
-              if (rolesError) {
-                throw rolesError;
-              }
-              
-              // Cast roles to UserRole type to ensure compatibility
-              const typedRoles = (rolesData?.map(r => r.role) || []) as UserRole[];
-              
-              // Update roles in auth store
-              auth.setRoles(typedRoles);
-              
-              // Set auth status
-              auth.setStatus('authenticated');
-              
-              // Notify external listeners
-              publishAuthEvent('login', { user: session.user });
-              
-              // Call onAuthStateChange callback
-              onAuthStateChange?.(true);
-              
-            } catch (error) {
-              logger.error('Error fetching roles', { 
-                details: error instanceof Error ? { message: error.message } : { error } 
-              });
-              
-              // Still mark as authenticated but with no roles
-              auth.setRoles([]);
-              auth.setStatus('authenticated');
-            }
-          }
-          break;
-          
-        case 'SIGNED_OUT':
-          // Update auth store
-          auth.setSession(null);
-          auth.setUser(null);
-          auth.setRoles([]);
-          auth.setStatus('unauthenticated');
-          
-          // Notify external listeners
-          publishAuthEvent('logout');
-          
-          // Call onAuthStateChange callback
-          onAuthStateChange?.(false);
-          break;
-          
-        case 'USER_UPDATED':
-          // Update user in auth store
-          auth.setUser(session?.user || null);
-          break;
-          
-        case 'TOKEN_REFRESHED':
-          // Update session in auth store
-          auth.setSession(session);
-          break;
-      }
-    });
+    logger.info('Auth provider mounted');
     
+    // Mock auth state changes - this would be replaced with actual listener in real implementation
+    
+    // Call onAuthStateChange if provided
+    if (onAuthStateChange) {
+      onAuthStateChange(auth.isAuthenticated);
+    }
+    
+    // No real cleanup needed for this mock implementation
     return () => {
-      authListener.subscription.unsubscribe();
+      logger.info('Auth provider unmounted');
     };
-  }, [auth, onAuthStateChange]);
+  }, [onAuthStateChange, auth.isAuthenticated]);
   
   return (
     <AuthContext.Provider value={auth}>

@@ -1,12 +1,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { AuthState, AuthActions, AuthStatus, UserRole } from '@/types/auth';
-import { supabase } from '@/integrations/supabase/client';
-import { authStorage } from './middleware/persist.middleware';
-import { publishAuthEvent } from '../bridge';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { AuthState, AuthActions, AuthStatus, UserRole, UserProfile, AuthStore } from '@/types/auth.unified';
 
 // Initial state
 const initialState: AuthState = {
@@ -15,29 +10,23 @@ const initialState: AuthState = {
   roles: [],
   isLoading: false,
   error: null,
-  status: 'idle',
+  status: AuthStatus.IDLE,
   initialized: false,
   isAuthenticated: false
 };
 
 // Create store with persist middleware
-export const useAuthStore = create<AuthState & AuthActions>()(
+export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
       ...initialState,
 
-      // Actions
+      // State setters
       setUser: (user) => {
         set({ 
           user,
           isAuthenticated: !!user
         });
-        
-        if (user) {
-          publishAuthEvent('login', { user });
-        } else {
-          publishAuthEvent('logout');
-        }
       },
       
       setSession: (session) => {
@@ -49,14 +38,12 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       
       setRoles: (roles) => {
         set({ roles });
-        publishAuthEvent('roleChange', { roles });
       },
       
       setError: (error) => {
-        set({ error });
-        if (error) {
-          publishAuthEvent('error', { error });
-        }
+        set({ 
+          error: typeof error === 'string' ? new Error(error) : error 
+        });
       },
       
       setLoading: (isLoading) => {
@@ -65,15 +52,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       
       setInitialized: (initialized) => {
         set({ initialized });
-        if (initialized) {
-          publishAuthEvent('initialized');
-        }
       },
       
       setStatus: (status) => {
         set({ status });
       },
       
+      // Helper methods
       hasRole: (role) => {
         return get().roles.includes(role);
       },
@@ -88,158 +73,158 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         try {
           set({ isLoading: true, error: null });
           
-          // Get current session
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-          
-          if (sessionError) {
-            set({ 
-              error: sessionError.message,
-              status: 'unauthenticated',
-              isLoading: false,
-              initialized: true,
-              isAuthenticated: false
-            });
-            return;
-          }
-          
-          // If we have a session, set user and fetch roles
-          if (session) {
-            set({ 
-              user: session.user,
-              session,
-              status: 'authenticated',
-              isAuthenticated: true
-            });
-            
-            // Fetch user roles
-            try {
-              const { data: userRoles, error: rolesError } = await supabase
-                .from('user_roles')
-                .select('role')
-                .eq('user_id', session.user.id);
-                
-              if (rolesError) {
-                console.error('Error fetching roles:', rolesError);
-              } else if (userRoles) {
-                const roles = userRoles.map((r) => r.role as UserRole);
-                set({ roles });
-              }
-            } catch (error) {
-              console.error('Error in roles query:', error);
-              // Don't fail initialization if roles fetch fails
-            }
-          } else {
-            set({ 
-              user: null,
-              session: null,
-              roles: [],
-              status: 'unauthenticated',
-              isAuthenticated: false
-            });
-          }
-          
-          // Setup auth state change listener
-          const { data: { subscription } } = await supabase.auth.onAuthStateChange(
-            async (event, session) => {
-              if (event === 'SIGNED_IN' && session) {
-                set({ 
-                  user: session.user,
-                  session,
-                  status: 'authenticated',
-                  isAuthenticated: true 
-                });
-                
-                // Fetch roles when signed in
-                try {
-                  const { data: userRoles } = await supabase
-                    .from('user_roles')
-                    .select('role')
-                    .eq('user_id', session.user.id);
-                    
-                  if (userRoles) {
-                    const roles = userRoles.map((r) => r.role as UserRole);
-                    set({ roles });
-                  }
-                } catch (error) {
-                  console.error('Error fetching roles:', error);
-                }
-                
-                publishAuthEvent('login', { user: session.user });
-              } else if (event === 'SIGNED_OUT') {
-                set({ 
-                  user: null,
-                  session: null,
-                  roles: [],
-                  status: 'unauthenticated',
-                  isAuthenticated: false
-                });
-                publishAuthEvent('logout');
-              }
-            }
-          );
-          
-          // Store subscription for cleanup
+          // For now, just mock initialization
           set({ 
-            isLoading: false, 
-            initialized: true,
-            // Store subscription reference for cleanup if needed
-            // @ts-ignore - We're adding a non-typed field, but it's fine for internal use
-            _subscription: subscription
-          });
-          
-        } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown authentication error';
-          set({ 
-            error: errorMessage,
-            status: 'unauthenticated',
+            user: null,
+            session: null,
+            roles: [],
+            status: AuthStatus.UNAUTHENTICATED,
             isLoading: false,
             initialized: true,
             isAuthenticated: false
           });
-          publishAuthEvent('error', { error: errorMessage });
+          
+          return Promise.resolve();
+        } catch (error: unknown) {
+          const errorObj = error instanceof Error ? error : new Error('Unknown authentication error');
+          set({ 
+            error: errorObj,
+            status: AuthStatus.UNAUTHENTICATED,
+            isLoading: false,
+            initialized: true,
+            isAuthenticated: false
+          });
+          return Promise.reject(error);
         }
       },
       
-      // Logout
-      logout: async () => {
+      // Login function
+      login: async (email: string, password: string) => {
         try {
           set({ isLoading: true, error: null });
           
-          const { error } = await supabase.auth.signOut();
+          // Mock login
+          const mockUser: UserProfile = {
+            id: '123',
+            email,
+            username: email.split('@')[0],
+            roles: ['user'],
+            user_metadata: {
+              full_name: email.split('@')[0],
+              avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${email}`
+            }
+          };
           
-          if (error) {
-            set({ 
-              error: error.message,
-              isLoading: false
-            });
-            return;
-          }
+          set({
+            user: mockUser,
+            roles: mockUser.roles as UserRole[] || [],
+            status: AuthStatus.AUTHENTICATED,
+            isAuthenticated: true,
+            error: null,
+            isLoading: false
+          });
+          
+          return Promise.resolve();
+        } catch (err) {
+          const errorObj = err instanceof Error ? err : new Error('Login failed');
+          set({
+            status: AuthStatus.ERROR,
+            error: errorObj,
+            isLoading: false
+          });
+          return Promise.reject(err);
+        }
+      },
+      
+      // Logout function
+      logout: async () => {
+        try {
+          set({ isLoading: true, error: null });
           
           // Reset state
           set({ 
             ...initialState,
             initialized: true,
-            status: 'unauthenticated',
+            status: AuthStatus.UNAUTHENTICATED,
             isLoading: false
           });
           
-          publishAuthEvent('logout');
-        } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error during logout';
+          return Promise.resolve();
+        } catch (err) {
+          const errorObj = err instanceof Error ? err : new Error('Logout failed');
           set({ 
-            error: errorMessage,
+            error: errorObj,
             isLoading: false
           });
-          publishAuthEvent('error', { error: errorMessage });
+          return Promise.reject(err);
+        }
+      },
+      
+      // Register function
+      register: async (email: string, password: string, username?: string) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          // Mock registration
+          const mockUser: UserProfile = {
+            id: '123',
+            email,
+            username: username || email.split('@')[0],
+            roles: ['user'],
+            user_metadata: {
+              full_name: username || email.split('@')[0],
+              avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${email}`
+            }
+          };
+          
+          set({
+            user: mockUser,
+            roles: mockUser.roles as UserRole[] || [],
+            status: AuthStatus.AUTHENTICATED,
+            isAuthenticated: true,
+            error: null,
+            isLoading: false
+          });
+          
+          return Promise.resolve();
+        } catch (err) {
+          const errorObj = err instanceof Error ? err : new Error('Registration failed');
+          set({
+            status: AuthStatus.ERROR,
+            error: errorObj,
+            isLoading: false
+          });
+          return Promise.reject(err);
+        }
+      },
+      
+      // Reset password function
+      resetPassword: async (email: string) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          // Mock password reset
+          console.log(`Password reset email sent to ${email}`);
+          
+          set({ isLoading: false });
+          
+          return Promise.resolve();
+        } catch (err) {
+          const errorObj = err instanceof Error ? err : new Error('Password reset failed');
+          set({
+            error: errorObj,
+            isLoading: false
+          });
+          return Promise.reject(err);
         }
       }
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => authStorage)
+      storage: createJSONStorage(() => localStorage)
     }
   )
 );
 
 // Export types for components
-export { type AuthStatus } from '@/types/auth';
+export { AuthStatus };

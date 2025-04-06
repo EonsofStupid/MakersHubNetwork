@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-export default function Footer() {
+const Footer: React.FC = () => {
   return (
     <footer className="footer-container footer-base footer-gradient footer-transform py-6">
       <div className="container mx-auto px-4">
@@ -24,7 +24,9 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
+};
 
-// Export named Footer for modules that expect it
-export const Footer = React.memo(Footer);
+export default Footer;
+
+// Export named Footer component for modules that need it
+export const FooterComponent = React.memo(Footer);

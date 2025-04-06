@@ -7,7 +7,8 @@ export type UserRole =
   | 'moderator'
   | 'user'
   | 'guest'
-  | 'maker'; // Added 'maker' role
+  | 'maker'
+  | 'builder'; // Added 'builder' role
 
 // Admin access interface
 export interface AdminAccess {
@@ -27,6 +28,10 @@ export interface UserProfile {
   roles?: UserRole[];
   last_sign_in_at?: string;
   created_at?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
 }
 
 // Auth status type
@@ -36,6 +41,7 @@ export enum AuthStatus {
   AUTHENTICATED = 'authenticated',
   UNAUTHENTICATED = 'unauthenticated',
   ERROR = 'error',
+  IDLE = 'idle'
 }
 
 // Auth state interface
@@ -46,6 +52,8 @@ export interface AuthState {
   roles: UserRole[];
   isLoading: boolean;
   isAuthenticated: boolean;
+  session?: any;
+  initialized?: boolean;
 }
 
 // Auth actions interface
@@ -54,6 +62,16 @@ export interface AuthActions {
   logout: () => Promise<void>;
   register: (email: string, password: string, username?: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  setUser?: (user: UserProfile | null) => void;
+  setSession?: (session: any) => void;
+  setRoles?: (roles: UserRole[]) => void;
+  setStatus?: (status: AuthStatus) => void;
+  setError?: (error: Error | string | null) => void;
+  setLoading?: (isLoading: boolean) => void;
+  setInitialized?: (initialized: boolean) => void;
+  initialize?: () => Promise<void>;
+  hasRole?: (role: UserRole) => boolean;
+  isAdmin?: () => boolean;
 }
 
 // Auth store interface
