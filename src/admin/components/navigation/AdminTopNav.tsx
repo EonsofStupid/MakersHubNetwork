@@ -127,7 +127,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               className="admin-topnav-item"
-              onClick={() => navigate({ to: "/admin/settings" })}
+              onClick={() => navigate({ to: "/admin/settings" as any })}
             >
               <Settings className="w-5 h-5" />
             </motion.button>

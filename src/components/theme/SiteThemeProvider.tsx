@@ -134,42 +134,42 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     
     try {
       // Apply the CSS variables
-      rootElement.style.setProperty('--site-background', variables.background);
-      rootElement.style.setProperty('--site-foreground', variables.foreground);
-      rootElement.style.setProperty('--site-card', variables.card);
-      rootElement.style.setProperty('--site-card-foreground', variables.cardForeground);
-      rootElement.style.setProperty('--site-primary', variables.primary);
-      rootElement.style.setProperty('--site-primary-foreground', variables.primaryForeground);
-      rootElement.style.setProperty('--site-secondary', variables.secondary);
-      rootElement.style.setProperty('--site-secondary-foreground', variables.secondaryForeground);
-      rootElement.style.setProperty('--site-muted', variables.muted);
-      rootElement.style.setProperty('--site-muted-foreground', variables.mutedForeground);
-      rootElement.style.setProperty('--site-accent', variables.accent);
-      rootElement.style.setProperty('--site-accent-foreground', variables.accentForeground);
-      rootElement.style.setProperty('--site-destructive', variables.destructive);
-      rootElement.style.setProperty('--site-destructive-foreground', variables.destructiveForeground);
-      rootElement.style.setProperty('--site-border', variables.border);
-      rootElement.style.setProperty('--site-input', variables.input);
-      rootElement.style.setProperty('--site-ring', variables.ring);
+      rootElement.style.setProperty('--site-background', variables.background || '');
+      rootElement.style.setProperty('--site-foreground', variables.foreground || '');
+      rootElement.style.setProperty('--site-card', variables.card || '');
+      rootElement.style.setProperty('--site-card-foreground', variables.cardForeground || '');
+      rootElement.style.setProperty('--site-primary', variables.primary || '');
+      rootElement.style.setProperty('--site-primary-foreground', variables.primaryForeground || '');
+      rootElement.style.setProperty('--site-secondary', variables.secondary || '');
+      rootElement.style.setProperty('--site-secondary-foreground', variables.secondaryForeground || '');
+      rootElement.style.setProperty('--site-muted', variables.muted || '');
+      rootElement.style.setProperty('--site-muted-foreground', variables.mutedForeground || '');
+      rootElement.style.setProperty('--site-accent', variables.accent || '');
+      rootElement.style.setProperty('--site-accent-foreground', variables.accentForeground || '');
+      rootElement.style.setProperty('--site-destructive', variables.destructive || '');
+      rootElement.style.setProperty('--site-destructive-foreground', variables.destructiveForeground || '');
+      rootElement.style.setProperty('--site-border', variables.border || '');
+      rootElement.style.setProperty('--site-input', variables.input || '');
+      rootElement.style.setProperty('--site-ring', variables.ring || '');
       
       // Apply effect colors
-      rootElement.style.setProperty('--site-effect-color', variables.effectColor);
-      rootElement.style.setProperty('--site-effect-secondary', variables.effectSecondary);
-      rootElement.style.setProperty('--site-effect-tertiary', variables.effectTertiary);
+      rootElement.style.setProperty('--site-effect-color', variables.effectColor || '');
+      rootElement.style.setProperty('--site-effect-secondary', variables.effectSecondary || '');
+      rootElement.style.setProperty('--site-effect-tertiary', variables.effectTertiary || '');
       
       // Apply timing values
-      rootElement.style.setProperty('--site-transition-fast', variables.transitionFast);
-      rootElement.style.setProperty('--site-transition-normal', variables.transitionNormal);
-      rootElement.style.setProperty('--site-transition-slow', variables.transitionSlow);
-      rootElement.style.setProperty('--site-animation-fast', variables.animationFast);
-      rootElement.style.setProperty('--site-animation-normal', variables.animationNormal);
-      rootElement.style.setProperty('--site-animation-slow', variables.animationSlow);
+      rootElement.style.setProperty('--site-transition-fast', variables.transitionFast || '');
+      rootElement.style.setProperty('--site-transition-normal', variables.transitionNormal || '');
+      rootElement.style.setProperty('--site-transition-slow', variables.transitionSlow || '');
+      rootElement.style.setProperty('--site-animation-fast', variables.animationFast || '');
+      rootElement.style.setProperty('--site-animation-normal', variables.animationNormal || '');
+      rootElement.style.setProperty('--site-animation-slow', variables.animationSlow || '');
       
       // Apply radius values
-      rootElement.style.setProperty('--site-radius-sm', variables.radiusSm);
-      rootElement.style.setProperty('--site-radius-md', variables.radiusMd);
-      rootElement.style.setProperty('--site-radius-lg', variables.radiusLg);
-      rootElement.style.setProperty('--site-radius-full', variables.radiusFull);
+      rootElement.style.setProperty('--site-radius-sm', variables.radiusSm || '');
+      rootElement.style.setProperty('--site-radius-md', variables.radiusMd || '');
+      rootElement.style.setProperty('--site-radius-lg', variables.radiusLg || '');
+      rootElement.style.setProperty('--site-radius-full', variables.radiusFull || '');
       
       cssVarsApplied.current = true;
       
