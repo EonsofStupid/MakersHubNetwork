@@ -1,12 +1,12 @@
-
 import { ReactNode, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate } from "@tanstack/react-router"
 import { UserRole } from "@/auth/types/auth.types"
 import { useToast } from "@/hooks/use-toast"
 import { useAuthState } from "@/auth/hooks/useAuthState"
 import { useAdminAccess } from "@/hooks/useAdminAccess"
 import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/logging"
+import { router } from "@/router"
 
 interface AuthGuardProps {
   children: ReactNode
@@ -16,7 +16,7 @@ interface AuthGuardProps {
 
 export const AuthGuard = ({ children, requiredRoles, adminOnly }: AuthGuardProps) => {
   const navigate = useNavigate()
-  const location = useLocation()
+  const { pathname } = router.state.location
   const { toast } = useToast()
   const logger = useLogger("AuthGuard", LogCategory.AUTH)
   
@@ -38,8 +38,8 @@ export const AuthGuard = ({ children, requiredRoles, adminOnly }: AuthGuardProps
     if (!isLoading && !isAuthenticated) {
       logger.info("AuthGuard - Redirecting to login: Not authenticated")
       // Keep track of the current path to redirect back after login
-      const currentPath = location.pathname
-      navigate(`/login?from=${encodeURIComponent(currentPath)}`)
+      const currentPath = pathname
+      navigate({ to: "/login", search: { from: encodeURIComponent(currentPath) }})
       return
     }
 
@@ -52,7 +52,7 @@ export const AuthGuard = ({ children, requiredRoles, adminOnly }: AuthGuardProps
         title: "Access Denied",
         description: "You don't have permission to access this page"
       })
-      navigate("/")
+      navigate({ to: "/" })
     }
 
     if (!isLoading && isAuthenticated && adminOnly && !hasAdminPermission) {
@@ -64,7 +64,7 @@ export const AuthGuard = ({ children, requiredRoles, adminOnly }: AuthGuardProps
         title: "Admin Access Required",
         description: "You need admin privileges to access this section"
       })
-      navigate("/")
+      navigate({ to: "/" })
     }
   }, [
     isLoading, 
@@ -75,7 +75,7 @@ export const AuthGuard = ({ children, requiredRoles, adminOnly }: AuthGuardProps
     hasRequiredRole, 
     hasAdminPermission, 
     navigate, 
-    location.pathname, 
+    pathname, 
     toast,
     logger
   ])

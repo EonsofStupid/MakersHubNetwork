@@ -1,6 +1,8 @@
 
+import { router } from '@/router';
+
 /**
- * Utility for handling admin routing with React Router
+ * Utility for handling admin routing with TanStack Router
  */
 
 // Get the current section from a path
@@ -11,11 +13,10 @@ export const getSectionFromPath = (path: string): string => {
     return matches[1];
   }
   
-  // Check for legacy tab parameter
-  const url = new URL(path, window.location.origin);
-  const tab = url.searchParams.get('tab');
-  if (tab) {
-    return tab;
+  // Check for search parameters
+  const search = router.state.location.search;
+  if (search.tab) {
+    return search.tab as string;
   }
   
   return 'overview';
