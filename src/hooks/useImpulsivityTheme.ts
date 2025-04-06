@@ -11,7 +11,7 @@ import { Theme, ThemeContext } from '@/types/theme';
  * Hook to apply and synchronize the Impulsivity theme across the application
  */
 export function useImpulsivityTheme() {
-  const { currentTheme } = useThemeStore();
+  const { currentTheme, tokens } = useThemeStore();
   const { toast } = useToast();
   const logger = useLogger('ImpulsivityTheme', LogCategory.UI);
   const [syncInProgress, setSyncInProgress] = useState(false);
@@ -25,11 +25,12 @@ export function useImpulsivityTheme() {
       
       // Apply the Impulsivity theme colors
       if (rootElement) {
-        rootElement.style.setProperty('--site-primary', '186 100% 50%');
-        rootElement.style.setProperty('--site-secondary', '334 100% 59%');
-        rootElement.style.setProperty('--site-effect-color', '#00F0FF');
-        rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
-        rootElement.style.setProperty('--site-effect-tertiary', '#8B5CF6');
+        // Use theme tokens directly, safely accessing properties
+        rootElement.style.setProperty('--site-primary', tokens.primary || '186 100% 50%');
+        rootElement.style.setProperty('--site-secondary', tokens.secondary || '334 100% 59%');
+        rootElement.style.setProperty('--site-effect-color', tokens.effectPrimary || '#00F0FF');
+        rootElement.style.setProperty('--site-effect-secondary', tokens.effectSecondary || '#FF2D6E');
+        rootElement.style.setProperty('--site-effect-tertiary', tokens.effectTertiary || '#8B5CF6');
       }
       
       // Update the theme in the store if needed
@@ -83,19 +84,19 @@ export function useImpulsivityTheme() {
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement) {
         adminRootElement.setAttribute('style', `
-          --impulse-primary: #00F0FF;
-          --impulse-secondary: #FF2D6E;
+          --impulse-primary: ${tokens.effectPrimary || '#00F0FF'};
+          --impulse-secondary: ${tokens.effectSecondary || '#FF2D6E'};
           --impulse-bg-main: #121218;
           --impulse-bg-overlay: rgba(22, 24, 29, 0.85);
           --impulse-bg-card: rgba(28, 30, 38, 0.7);
           --impulse-text-primary: #F6F6F7;
           --impulse-text-secondary: rgba(255, 255, 255, 0.7);
-          --impulse-text-accent: #00F0FF;
+          --impulse-text-accent: ${tokens.effectPrimary || '#00F0FF'};
           --impulse-border-normal: rgba(0, 240, 255, 0.2);
           --impulse-border-hover: rgba(0, 240, 255, 0.4);
           --impulse-border-active: rgba(0, 240, 255, 0.6);
-          --impulse-glow-primary: 0 0 15px rgba(0, 240, 255, 0.7);
-          --impulse-glow-secondary: 0 0 15px rgba(255, 45, 110, 0.7);
+          --impulse-glow-primary: 0 0 15px ${tokens.effectPrimary ? `rgba(${tokens.effectPrimary}, 0.7)` : 'rgba(0, 240, 255, 0.7)'};
+          --impulse-glow-secondary: 0 0 15px ${tokens.effectSecondary ? `rgba(${tokens.effectSecondary}, 0.7)` : 'rgba(255, 45, 110, 0.7)'};
         `);
         
         logger.info('Applied Impulsivity theme to admin panel', { 

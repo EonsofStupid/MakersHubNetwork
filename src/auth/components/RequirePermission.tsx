@@ -56,11 +56,11 @@ export const RequirePermission = ({
       return <>{fallback}</>;
     }
     
-    // Use Navigate with state object that contains previousPath
+    // Use Navigate with state object compatible with TanStack Router
     return (
       <Navigate 
         to={redirectTo as any}  
-        state={{ previousPath: location.pathname }}
+        state={{ returnUrl: location.pathname }}
         replace={true}
       />
     );
