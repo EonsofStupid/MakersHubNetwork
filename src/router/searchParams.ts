@@ -5,10 +5,12 @@ import { z } from 'zod';
 export const fromSchema = z.string().optional();
 export const pageSchema = z.coerce.number().int().positive().optional().default(1);
 export const limitSchema = z.coerce.number().int().positive().optional().default(10);
+export const returnToSchema = z.string().optional();
 
 // Common search params structure
 export const commonSearchParamsSchema = z.object({
   from: fromSchema,
+  returnTo: returnToSchema,
   page: pageSchema,
   limit: limitSchema
 });

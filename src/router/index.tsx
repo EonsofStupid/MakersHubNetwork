@@ -8,6 +8,8 @@ import {
   Navigate
 } from '@tanstack/react-router';
 import { ReactNode } from 'react';
+import { z } from 'zod';
+import { ROUTES, loginSearchSchema } from './routes';
 
 import { MainNav } from '@/components/MainNav';
 import { Footer } from '@/components/Footer';
@@ -55,7 +57,7 @@ function SiteLayout() {
   );
 }
 
-// Define routes
+// Define routes with proper search param validation
 export const rootRoute = createRootRoute({
   component: () => (
     <RootLayout>
@@ -67,7 +69,7 @@ export const rootRoute = createRootRoute({
 // Site route with navigation and footer
 const siteRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'site', // Add explicit ID to prevent duplicates
+  id: 'site', 
   path: '/',
   component: SiteLayout
 });
@@ -75,41 +77,50 @@ const siteRoute = createRoute({
 // Index route
 const indexRoute = createRoute({
   getParentRoute: () => siteRoute,
-  id: 'index', // Add explicit ID to prevent duplicates
+  id: 'index', 
   path: '/',
   component: Index
 });
 
-// Login route
+// Login route with search param validation
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'login', // Add explicit ID
-  path: '/login',
+  id: 'login', 
+  path: ROUTES.LOGIN,
+  validateSearch: loginSearchSchema,
   component: Login
 });
 
 // Profile route
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'profile', // Add explicit ID
-  path: '/profile',
-  component: () => <div>Profile Page</div> // Placeholder component
+  id: 'profile', 
+  path: ROUTES.PROFILE,
+  component: () => <div>Profile Page</div>
 });
 
 // Settings route
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'settings', // Add explicit ID
-  path: '/settings',
-  component: () => <div>Settings Page</div> // Placeholder component
+  id: 'settings', 
+  path: ROUTES.SETTINGS,
+  component: () => <div>Settings Page</div>
 });
 
 // Admin route
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'admin', // Add explicit ID
-  path: '/admin/*',
+  id: 'admin', 
+  path: ROUTES.ADMIN,
   component: Admin
+});
+
+// Chat route
+const chatRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'chat',
+  path: ROUTES.CHAT,
+  component: () => <div>Chat Route</div>
 });
 
 // Register core routes - note that admin routes are registered separately in Admin.tsx
@@ -118,7 +129,8 @@ export const routeTree = rootRoute.addChildren([
   loginRoute,
   profileRoute,
   settingsRoute,
-  adminRoute
+  adminRoute,
+  chatRoute
 ]);
 
 // Create the router instance

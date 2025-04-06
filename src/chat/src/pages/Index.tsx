@@ -24,11 +24,11 @@ export default function ChatIndexPage() {
           
           <div className="flex flex-col space-y-4 mt-6">
             <Button asChild variant="outline">
-              <Link to="/chat/dev">Open Developer Chat</Link>
+              <Link to="/chat">Open Developer Chat</Link>
             </Button>
             
             <Button asChild variant="outline">
-              <Link to="/admin/settings">Chat Settings</Link>
+              <Link to="/admin/dashboard">Admin Dashboard</Link>
             </Button>
           </div>
         </div>
