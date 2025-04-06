@@ -64,7 +64,7 @@ export async function loadThemeByIdOrName(themeIdOrName: string): Promise<Theme 
 }
 
 /**
- * Ensures a theme is loaded and applied correctly
+ * Ensures a theme is loaded and applied correctly, with no dependency on authentication
  */
 export async function ensureThemeLoaded(themeIdentifier: string): Promise<boolean> {
   const logger = getLogger('ThemeLoader', LogCategory.UI);

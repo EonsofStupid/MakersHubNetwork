@@ -7,6 +7,7 @@ import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
 import { ThemeErrorState } from './info/ThemeErrorState';
 import { ThemeLogDetails } from '@/types/theme';
+import { ensureThemeLoaded } from '@/theme/utils/themeLoader';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ interface ThemeInitializerProps {
 }
 
 export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: ThemeInitializerProps) {
-  const { setTheme, isLoading, error } = useThemeStore();
+  const { isLoading, error } = useThemeStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [initError, setInitError] = useState<Error | null>(null);
   const logger = useLogger('ThemeInitializer', LogCategory.UI);
@@ -25,6 +26,7 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
     try {
       const rootElement = document.documentElement;
       
+      // Apply basic CSS variables immediately
       rootElement.style.setProperty('--site-primary', '186 100% 50%');
       rootElement.style.setProperty('--site-secondary', '334 100% 59%');
       rootElement.style.setProperty('--site-effect-color', '#00F0FF');
@@ -45,20 +47,23 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
       rootElement.style.setProperty('--impulse-secondary', '#FF2D6E');
       rootElement.style.setProperty('--impulse-bg-main', '#121218');
       
+      // Apply classes for broader styling
+      rootElement.classList.add('theme-impulsivity');
+      document.body.classList.add('theme-impulsivity-body');
+      
       logger.info('Applied fallback styles in ThemeInitializer');
+      return true;
     } catch (error) {
       logger.error('Failed to apply fallback styles', {
         errorMessage: error instanceof Error ? error.message : String(error)
       });
+      return false;
     }
   }, [logger]);
   
-  // Apply fallback styles immediately
+  // Apply fallback styles immediately before any async operations
   useEffect(() => {
     applyFallbackStyles();
-    
-    document.documentElement.classList.add('theme-impulsivity');
-    document.body.classList.add('theme-impulsivity-body');
   }, [applyFallbackStyles]);
   
   // Initialize the theme
@@ -78,16 +83,23 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
         
         setInitError(null);
         
-        await setTheme(defaultTheme);
+        // Use our utility function to ensure theme is loaded
+        const success = await ensureThemeLoaded(defaultTheme);
         
         setIsInitialized(true);
         
-        const successDetails: ThemeLogDetails = { 
-          success: true,
-          theme: defaultTheme
-        };
-        
-        logger.info('Theme system initialized successfully', successDetails);
+        if (success) {
+          const successDetails: ThemeLogDetails = { 
+            success: true,
+            theme: defaultTheme
+          };
+          
+          logger.info('Theme system initialized successfully', successDetails);
+        } else {
+          logger.warn('Theme system initialized with fallback', {
+            theme: 'fallback'
+          } as ThemeLogDetails);
+        }
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         const errorObj = e instanceof Error ? e : new Error(errorMessage);
@@ -103,25 +115,11 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
         
         // Apply fallback styles
         applyFallbackStyles();
-        
-        try {
-          await setTheme('fallback-theme');
-          
-          const fallbackDetails: ThemeLogDetails = { 
-            originalTheme: defaultTheme 
-          };
-          
-          logger.warn('Using fallback theme after initialization error', fallbackDetails);
-        } catch (fallbackError) {
-          logger.error('Fallback theme also failed', {
-            errorMessage: String(fallbackError)
-          } as ThemeLogDetails);
-        }
       }
     };
     
     initializeTheme();
-  }, [defaultTheme, isInitialized, setTheme, logger, applyFallbackStyles]);
+  }, [defaultTheme, isInitialized, logger, applyFallbackStyles]);
   
   // Handle retry
   const handleRetry = useCallback(async () => {
@@ -135,16 +133,18 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
       
       logger.info('Retrying theme initialization', retryDetails);
       
-      await setTheme(defaultTheme);
+      const success = await ensureThemeLoaded(defaultTheme);
       
       setIsInitialized(true);
       setInitError(null);
       
-      const successDetails: ThemeLogDetails = { 
-        theme: defaultTheme 
-      };
-      
-      logger.info('Theme system successfully initialized on retry', successDetails);
+      if (success) {
+        const successDetails: ThemeLogDetails = { 
+          theme: defaultTheme 
+        };
+        
+        logger.info('Theme system successfully initialized on retry', successDetails);
+      }
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       const errorObj = e instanceof Error ? e : new Error(errorMessage);
@@ -158,9 +158,9 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
       
       logger.error('Failed to retry theme initialization', errorDetails);
     }
-  }, [defaultTheme, logger, setTheme]);
+  }, [defaultTheme, logger]);
   
-  // Add timeout for loading state
+  // Add timeout for loading state to prevent UI from being blocked indefinitely
   useEffect(() => {
     if (isLoading && !isInitialized) {
       const timer = setTimeout(() => {
@@ -187,13 +187,15 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
     );
   }
   
-  // Loading state
+  // Loading state - show for a limited time only
   if (isLoading && !isInitialized) {
     return <ThemeLoadingState />;
   }
   
+  // Main render - notice we're using isInitializing prop to inform SiteThemeProvider
+  // about the initialization state so it can adapt accordingly
   return (
-    <SiteThemeProvider isInitializing={isLoading || !isInitialized}>
+    <SiteThemeProvider isInitializing={!isInitialized}>
       {children}
     </SiteThemeProvider>
   );
