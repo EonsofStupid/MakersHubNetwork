@@ -3,7 +3,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { ThemeContext } from '@/theme/schema';
+import { ThemeContext } from '@/types/theme';
+import { DynamicKeyframes } from './DynamicKeyframes';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -79,5 +80,10 @@ export function ThemeInitializer({
     return null;
   }
   
-  return <>{children}</>;
+  return (
+    <>
+      <DynamicKeyframes />
+      {children}
+    </>
+  );
 }

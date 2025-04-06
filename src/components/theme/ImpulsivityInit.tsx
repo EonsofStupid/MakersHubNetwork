@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useImpulsivityTheme } from '@/hooks/useImpulsivityTheme';
 import { useLogger } from '@/hooks/use-logger';
@@ -35,10 +36,18 @@ export function ImpulsivityInit({
             }, 100);
           }
           
-          logger.info('Impulsivity theme auto-applied');
+          logger.info('Impulsivity theme auto-applied', {
+            details: {
+              priority,
+              success: true
+            }
+          });
         } catch (error) {
           logger.error('Failed to auto-apply Impulsivity theme', { 
-            details: { error: error instanceof Error ? error.message : String(error) }
+            details: { 
+              error: error instanceof Error ? error.message : String(error),
+              priority
+            }
           });
           
           // Mark as applied to prevent retries

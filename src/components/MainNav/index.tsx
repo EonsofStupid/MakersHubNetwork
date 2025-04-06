@@ -54,7 +54,12 @@ export function MainNav() {
   }, []);
 
   useEffect(() => {
-    logger.info("MainNav mounting");
+    logger.info("MainNav mounting", {
+      details: {
+        stylesLoaded: !!componentStyles?.MainNav,
+        themeLoaded: themeIsLoaded
+      }
+    });
     
     // Apply animations after component mounts
     const timer = setTimeout(() => {
@@ -85,7 +90,7 @@ export function MainNav() {
       clearTimeout(timer);
       clearInterval(glitchInterval);
     };
-  }, [logger, variables]);
+  }, [logger, variables, componentStyles, themeIsLoaded]);
 
   return (
     <header
@@ -96,7 +101,8 @@ export function MainNav() {
         "w-full",
         "left-0",
         "right-0",
-        "absolute",
+        "top-0",
+        "fixed",
         isLoaded && (styles.container?.animated || "animate-morph-header"),
         isScrolled && "mainnav-scrolled transform-gpu"
       )}
@@ -104,7 +110,7 @@ export function MainNav() {
         clipPath: isScrolled 
           ? 'polygon(0 0, 100% 0, 98% 100%, 2% 100%)' // Trapezoid when scrolled
           : 'polygon(0 0, 100% 0, 100% 100%, 0 100%)', // Regular rectangle when at top
-        width: '100vw'
+        width: '100%'
       }}
     >
       {/* Enhanced glass effect with dual color overlay */}
@@ -131,7 +137,7 @@ export function MainNav() {
       </div>
       
       {/* Main navigation content - centered with max width but container itself is full width */}
-      <div className="w-screen mx-auto flex items-center justify-between h-16 px-4 relative z-10">
+      <div className="w-full mx-auto flex items-center justify-between h-16 px-4 relative z-10">
         <div className="flex items-center justify-between w-full max-w-[2000px] mx-auto">
           <Logo />
           <NavigationItems />
