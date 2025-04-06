@@ -1,221 +1,124 @@
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { AuthStore, UserRole, AuthStatus } from '@/types/auth.unified';
-import { supabase } from '@/integrations/supabase/client';
-import { authStorage } from '@/auth/store/middleware/persist.middleware';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { 
+  AuthStore, AuthStatus, UserRole, UserProfile 
+} from '@/types/auth.unified';
 
-const initialState = {
+// Create auth store with Zustand
+export const useAuthStore = create<AuthStore>((set) => ({
+  status: AuthStatus.INITIAL,
   user: null,
-  session: null,
+  error: null,
   roles: [],
   isLoading: true,
-  error: null,
-  status: 'idle' as AuthStatus,
-  initialized: false,
   isAuthenticated: false,
-};
-
-// Fix for handling Promise or string from storage
-const createCompatibleStorage = () => ({
-  getItem: async (name: string) => {
-    const value = authStorage.getItem(name);
-    if (value === null) return null;
-    return Promise.resolve(typeof value === 'string' ? JSON.parse(value) : null);
-  },
-  setItem: (name: string, value: unknown) => {
-    authStorage.setItem(name, JSON.stringify(value));
-    return Promise.resolve();
-  },
-  removeItem: (name: string) => {
-    authStorage.removeItem(name);
-    return Promise.resolve();
-  },
-});
-
-export const useAuthStore = create<AuthStore>()(
-  persist(
-    (set, get) => ({
-      ...initialState,
+  
+  login: async (email: string, password: string) => {
+    try {
+      set({ status: AuthStatus.LOADING, isLoading: true });
       
-      // Methods
-      setUser: (user) => set({ 
-        user,
-        isAuthenticated: !!user
-      }),
+      // Simulate login - would be replaced with actual auth service
+      const mockUser: UserProfile = {
+        id: '123',
+        email,
+        username: email.split('@')[0],
+        roles: ['user']
+      };
       
-      setSession: (session) => set({ 
-        session,
-        user: session?.user ?? null,
-        status: session ? 'authenticated' : 'unauthenticated',
-        isAuthenticated: !!session
-      }),
+      set({
+        user: mockUser,
+        roles: mockUser.roles as UserRole[] || [],
+        status: AuthStatus.AUTHENTICATED,
+        isAuthenticated: true,
+        error: null,
+        isLoading: false
+      });
       
-      setRoles: (roles) => set({ roles }),
-      
-      setError: (error) => set({ error }),
-      
-      setLoading: (isLoading) => set({ isLoading }),
-      
-      setInitialized: (initialized) => set({ initialized }),
-      
-      setStatus: (status) => set(state => ({ 
-        status,
-        isAuthenticated: status === 'authenticated' 
-      })),
-      
-      // Role checking
-      hasRole: (role) => get().roles.includes(role),
-      
-      isAdmin: () => get().roles.includes('admin' as UserRole) || 
-                    get().roles.includes('super_admin' as UserRole),
-      
-      // Initialize authentication
-      initialize: async () => {
-        const logger = getLogger();
-        try {
-          set({ isLoading: true, error: null });
-          
-          logger.info('Initializing auth store', {
-            category: LogCategory.AUTH,
-            source: 'auth/store'
-          });
-          
-          // Get current session
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-          
-          if (sessionError) {
-            throw sessionError;
-          }
-          
-          if (session) {
-            // Fetch user roles if we have a session
-            const { data: rolesData, error: rolesError } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', session.user.id);
-              
-            if (rolesError) {
-              throw rolesError;
-            }
-            
-            const roles = (rolesData?.map(r => r.role) as UserRole[]) || [];
-            
-            set({
-              user: session.user,
-              session,
-              roles,
-              status: 'authenticated',
-              error: null,
-              isAuthenticated: true
-            });
-            
-            logger.info('User authenticated', {
-              category: LogCategory.AUTH,
-              source: 'auth/store',
-              details: { 
-                userId: session.user.id,
-                rolesCount: roles.length 
-              }
-            });
-          } else {
-            set({
-              user: null,
-              session: null,
-              roles: [],
-              status: 'unauthenticated',
-              error: null,
-              isAuthenticated: false
-            });
-            
-            logger.info('No user session found', {
-              category: LogCategory.AUTH,
-              source: 'auth/store'
-            });
-          }
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          const errorDetails = {
-            message: errorMessage,
-            details: error instanceof Error ? { ...error } : undefined
-          };
-          
-          logger.error("Error initializing auth", { 
-            details: errorDetails
-          });
-          
-          set({
-            error: errorMessage,
-            status: 'unauthenticated',
-            isAuthenticated: false
-          });
-        } finally {
-          set({ 
-            isLoading: false,
-            initialized: true
-          });
-        }
-      },
-      
-      // Logout
-      logout: async () => {
-        const logger = getLogger();
-        try {
-          set({ isLoading: true });
-          
-          logger.info('User logging out', {
-            category: LogCategory.AUTH,
-            source: 'auth/store'
-          });
-          
-          await supabase.auth.signOut();
-          
-          set({
-            user: null,
-            session: null,
-            roles: [],
-            status: 'unauthenticated',
-            error: null,
-            isAuthenticated: false
-          });
-          
-          logger.info('User logged out successfully', {
-            category: LogCategory.AUTH,
-            source: 'auth/store'
-          });
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          const errorDetails = {
-            message: errorMessage,
-            details: error instanceof Error ? { ...error } : undefined
-          };
-          
-          logger.warn("Error during logout", { 
-            details: errorDetails
-          });
-          
-          set({ error: errorMessage });
-          throw error;
-        } finally {
-          set({ isLoading: false });
-        }
-      }
-    }),
-    {
-      name: 'auth-storage',
-      storage: createCompatibleStorage(),
-      partialize: (state) => ({
-        user: state.user,
-        session: state.session,
-        roles: state.roles,
-        status: state.status,
-        isAuthenticated: state.isAuthenticated,
-        isLoading: state.isLoading,
-        error: state.error,
-        initialized: state.initialized
-      })
+      return Promise.resolve();
+    } catch (err) {
+      set({
+        status: AuthStatus.ERROR,
+        error: err instanceof Error ? err : new Error('Login failed'),
+        isLoading: false
+      });
+      return Promise.reject(err);
     }
-  )
-);
+  },
+  
+  logout: async () => {
+    try {
+      set({ status: AuthStatus.LOADING, isLoading: true });
+      
+      // Simulate logout - would be replaced with actual auth service
+      set({
+        user: null,
+        roles: [],
+        status: AuthStatus.UNAUTHENTICATED,
+        isAuthenticated: false,
+        error: null,
+        isLoading: false
+      });
+      
+      return Promise.resolve();
+    } catch (err) {
+      set({
+        status: AuthStatus.ERROR,
+        error: err instanceof Error ? err : new Error('Logout failed'),
+        isLoading: false
+      });
+      return Promise.reject(err);
+    }
+  },
+  
+  register: async (email: string, password: string, username?: string) => {
+    try {
+      set({ status: AuthStatus.LOADING, isLoading: true });
+      
+      // Simulate registration - would be replaced with actual auth service
+      const mockUser: UserProfile = {
+        id: '123',
+        email,
+        username: username || email.split('@')[0],
+        roles: ['user']
+      };
+      
+      set({
+        user: mockUser,
+        roles: mockUser.roles as UserRole[] || [],
+        status: AuthStatus.AUTHENTICATED,
+        isAuthenticated: true,
+        error: null,
+        isLoading: false
+      });
+      
+      return Promise.resolve();
+    } catch (err) {
+      set({
+        status: AuthStatus.ERROR,
+        error: err instanceof Error ? err : new Error('Registration failed'),
+        isLoading: false
+      });
+      return Promise.reject(err);
+    }
+  },
+  
+  resetPassword: async (email: string) => {
+    try {
+      set({ status: AuthStatus.LOADING, isLoading: true });
+      
+      // Simulate password reset - would be replaced with actual auth service
+      console.log(`Password reset email sent to ${email}`);
+      
+      set({ status: AuthStatus.UNAUTHENTICATED, isLoading: false });
+      
+      return Promise.resolve();
+    } catch (err) {
+      set({
+        status: AuthStatus.ERROR,
+        error: err instanceof Error ? err : new Error('Password reset failed'),
+        isLoading: false
+      });
+      return Promise.reject(err);
+    }
+  }
+}));
