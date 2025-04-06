@@ -8,8 +8,9 @@ import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
 import { ImpulsivityInit } from '@/components/theme/ImpulsivityInit';
 import { SiteThemeProvider } from '@/components/theme/SiteThemeProvider';
 import { AuthProvider } from '@/auth/context/AuthContext';
-import { AppRoutes } from '@/routes/AppRoutes';
+import { AppInitializer } from '@/components/AppInitializer';
 import { AdminProvider } from '@/admin/context/AdminContext';
+import { AppRoutes } from '@/routes/AppRoutes';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,16 +42,15 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <LoggingProvider>
-          {/* Theme is loaded first and independently of auth */}
           <ThemeInitializer>
             <ImpulsivityInit>
               <SiteThemeProvider>
-                {/* Auth provider is separate from theme, so theme works without auth */}
                 <AuthProvider>
-                  {/* Admin provider only affects admin routes */}
-                  <AdminProvider>
-                    <AppRoutes />
-                  </AdminProvider>
+                  <AppInitializer>
+                    <AdminProvider>
+                      <AppRoutes />
+                    </AdminProvider>
+                  </AppInitializer>
                 </AuthProvider>
               </SiteThemeProvider>
             </ImpulsivityInit>
