@@ -2,7 +2,7 @@
 import { z } from "zod";
 
 // Define valid theme contexts
-export const ThemeContextSchema = z.enum(['app', 'admin', 'chat', 'training']);
+export const ThemeContextSchema = z.enum(['app', 'site', 'admin', 'chat', 'training']);
 export type ThemeContext = z.infer<typeof ThemeContextSchema>;
 
 // Color tokens with hex validation

@@ -88,7 +88,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
-        <ThemeInitializer context={isAdminRoute ? 'admin' : 'site'} applyImmediately={true}>
+        <ThemeInitializer context={isAdminRoute ? "admin" : "app"} applyImmediately={true}>
           <ImpulsivityThemeInitializer>
             <ImpulsivityInit priority={true} autoApply={true}>
               <AuthProvider>

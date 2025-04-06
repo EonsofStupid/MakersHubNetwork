@@ -1,58 +1,49 @@
 
 import { useEffect, useState } from 'react';
-import { useImpulsivityTheme } from '@/hooks/useImpulsivityTheme';
-import { useToast } from '@/hooks/use-toast';
-import { useThemeStore } from '@/stores/theme/store';
-import { setImpulsivityAsDefault, syncAnimations } from '@/utils/themeSync';
-import { landingComponentTokens, adminComponentTokens } from '@/theme/componentTokens/landingComponents';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 interface ImpulsivityThemeInitializerProps {
   children: React.ReactNode;
+  applyImmediately?: boolean;
 }
 
-/**
- * Component that initializes and ensures Impulsivity theme is properly applied
- * across the entire application
- */
-export function ImpulsivityThemeInitializer({ children }: ImpulsivityThemeInitializerProps) {
-  const { applyTheme, isSyncing } = useImpulsivityTheme();
-  const { toast } = useToast();
-  const { currentTheme } = useThemeStore();
-  const [initialized, setInitialized] = useState(false);
-
+export function ImpulsivityThemeInitializer({ 
+  children, 
+  applyImmediately = true 
+}: ImpulsivityThemeInitializerProps) {
+  const logger = useLogger('ImpulsivityThemeInitializer', LogCategory.UI);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
   // Initialize Impulsivity theme on component mount
   useEffect(() => {
-    const initializeTheme = async () => {
-      if (initialized || isSyncing) return;
-
+    if (!isInitialized) {
       try {
-        // Apply the theme to both site and admin
-        const result = await applyTheme();
+        // Apply critical CSS variables immediately
+        const root = document.documentElement;
         
-        if (result) {
-          // Set Impulsivity as default theme
-          await setImpulsivityAsDefault();
-          
-          // Sync animations to database
-          await syncAnimations();
-          
-          // Sync component tokens (in a real implementation, this would be done through an API)
-          
-          setInitialized(true);
-        }
+        // Set cyberpunk theme colors as CSS variables
+        root.style.setProperty('--site-primary', '186 100% 50%');
+        root.style.setProperty('--site-secondary', '334 100% 59%');
+        root.style.setProperty('--site-effect-color', '#00F0FF');
+        root.style.setProperty('--site-effect-secondary', '#FF2D6E');
+        root.style.setProperty('--site-effect-tertiary', '#8B5CF6');
+        
+        // Mark as initialized
+        setIsInitialized(true);
+        
+        logger.info('Impulsivity theme initialized');
       } catch (error) {
-        toast({
-          title: "Theme Initialization Error",
-          description: error instanceof Error ? error.message : "Failed to initialize theme",
-          variant: "destructive"
+        logger.error('Failed to initialize Impulsivity theme', { 
+          details: { error: error instanceof Error ? error.message : String(error) }
         });
+        
+        // Still mark as initialized to prevent infinite retries
+        setIsInitialized(true);
       }
-    };
-    
-    // Initialize theme asynchronously
-    initializeTheme();
-  }, [applyTheme, toast, isSyncing, initialized, currentTheme]);
+    }
+  }, [logger, isInitialized]);
   
-  // The initializer is just a container, it doesn't render anything additional
+  // Always render children - the useEffect above will apply the theme
   return <>{children}</>;
 }

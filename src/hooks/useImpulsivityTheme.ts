@@ -23,12 +23,14 @@ export function useImpulsivityTheme() {
       // Set the CSS variables directly for immediate effect
       const rootElement = document.documentElement;
       
-      // Apply the Impulsivity theme colors - fix type errors by ensuring they're proper CSS variables
-      rootElement.style.setProperty('--site-primary', '186 100% 50%');
-      rootElement.style.setProperty('--site-secondary', '334 100% 59%');
-      rootElement.style.setProperty('--site-effect-color', '#00F0FF');
-      rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
-      rootElement.style.setProperty('--site-effect-tertiary', '#8B5CF6');
+      // Apply the Impulsivity theme colors - using proper type casting
+      if (rootElement) {
+        rootElement.style.setProperty('--site-primary', '186 100% 50%');
+        rootElement.style.setProperty('--site-secondary', '334 100% 59%');
+        rootElement.style.setProperty('--site-effect-color', '#00F0FF');
+        rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
+        rootElement.style.setProperty('--site-effect-tertiary', '#8B5CF6');
+      }
       
       // Update the theme in the store if needed
       if (currentTheme) {
@@ -46,12 +48,6 @@ export function useImpulsivityTheme() {
             secondary: '#FF2D6E',
             tertiary: '#8B5CF6',
           }
-        };
-        
-        // Update theme with the new design tokens
-        const updatedTheme = {
-          ...currentTheme,
-          design_tokens: updatedDesignTokens
         };
         
         // Log what we're trying to do

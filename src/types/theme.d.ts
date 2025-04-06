@@ -1,9 +1,12 @@
 
+export type ThemeStatus = 'draft' | 'published' | 'archived';
+export type ThemeContext = 'site' | 'admin' | 'chat' | 'app' | 'training';
+
 export interface Theme {
   id: string;
   name: string;
   description?: string;
-  status: 'draft' | 'published' | 'archived';
+  status: ThemeStatus;
   is_default: boolean;
   created_by?: string;
   created_at: string;
@@ -55,7 +58,7 @@ export interface ComponentTokens {
   theme_id?: string;
   created_at?: string;
   updated_at?: string;
-  context?: 'site' | 'admin' | 'chat';
+  context?: ThemeContext;
 }
 
 export interface ThemeToken {
@@ -92,8 +95,6 @@ export interface ThemeLogDetails {
   source?: string;
   component?: string;
 }
-
-export type ThemeContext = 'site' | 'admin' | 'chat';
 
 export interface ThemeAnimation {
   name: string;

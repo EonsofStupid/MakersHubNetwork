@@ -97,17 +97,13 @@ export function useThemeVariables(theme: Theme | null): ThemeVariables {
       const colors = theme.design_tokens?.colors || {};
       
       // Extract effects from the theme
-      const effects = theme.design_tokens?.effects || {};
+      const effects = theme.design_tokens?.effects || { shadows: {}, blurs: {}, gradients: {} };
       
-      // Extract animations from the theme
-      const animations = theme.design_tokens?.animation || {};
+      // Extract animations from the theme with safer typing
+      const animation = theme.design_tokens?.animation || { keyframes: {}, transitions: {}, durations: {} };
       
-      // Create default effects object if missing
-      const defaultEffects = {
-        primary: '#00F0FF',
-        secondary: '#FF2D6E',
-        tertiary: '#8B5CF6'
-      };
+      // Ensure durations is initialized even if empty
+      const durations = animation?.durations || {};
       
       return {
         // Colors
@@ -129,18 +125,18 @@ export function useThemeVariables(theme: Theme | null): ThemeVariables {
         input: colors.input || defaultVariables.input,
         ring: colors.ring || defaultVariables.ring,
         
-        // Effect colors - handle missing effects object
-        effectColor: defaultEffects.primary || defaultVariables.effectColor,
-        effectSecondary: defaultEffects.secondary || defaultVariables.effectSecondary,
-        effectTertiary: defaultEffects.tertiary || defaultVariables.effectTertiary,
+        // Effect colors
+        effectColor: effects.primary || defaultVariables.effectColor,
+        effectSecondary: effects.secondary || defaultVariables.effectSecondary,
+        effectTertiary: effects.tertiary || defaultVariables.effectTertiary,
         
-        // Timing variables
-        transitionFast: animations.durations?.fast as string || defaultVariables.transitionFast,
-        transitionNormal: animations.durations?.normal as string || defaultVariables.transitionNormal,
-        transitionSlow: animations.durations?.slow as string || defaultVariables.transitionSlow,
-        animationFast: animations.durations?.animationFast as string || defaultVariables.animationFast,
-        animationNormal: animations.durations?.animationNormal as string || defaultVariables.animationNormal,
-        animationSlow: animations.durations?.animationSlow as string || defaultVariables.animationSlow,
+        // Timing variables - type safe access with fallbacks
+        transitionFast: typeof durations.fast === 'string' ? durations.fast : defaultVariables.transitionFast,
+        transitionNormal: typeof durations.normal === 'string' ? durations.normal : defaultVariables.transitionNormal,
+        transitionSlow: typeof durations.slow === 'string' ? durations.slow : defaultVariables.transitionSlow,
+        animationFast: typeof durations.animationFast === 'string' ? durations.animationFast : defaultVariables.animationFast,
+        animationNormal: typeof durations.animationNormal === 'string' ? durations.animationNormal : defaultVariables.animationNormal,
+        animationSlow: typeof durations.animationSlow === 'string' ? durations.animationSlow : defaultVariables.animationSlow,
         
         // Border radius variables
         radiusSm: defaultVariables.radiusSm,

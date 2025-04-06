@@ -95,9 +95,10 @@ export async function syncImpulsivityTheme(): Promise<boolean> {
     // Would typically update the theme in Supabase here
     // For now, we'll just log it
     logger.info('Would update theme in database here', {
-      themeId: currentTheme.id,
-      themeDetails: {
-        name: impulsivityTheme.name,
+      category: LogCategory.SYSTEM,
+      source: 'ThemeSync',
+      details: {
+        themeName: impulsivityTheme.name,
         componentTokensCount: impulsivityTheme.component_tokens.length
       }
     });

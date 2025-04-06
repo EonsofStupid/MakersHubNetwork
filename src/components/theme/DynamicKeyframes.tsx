@@ -1,58 +1,81 @@
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSiteTheme } from './SiteThemeProvider';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 /**
- * Generates CSS for keyframe animations from theme
+ * Component that dynamically injects CSS keyframes from the theme
+ * Ensures animations are available in the DOM
  */
-export const DynamicKeyframes: React.FC = () => {
-  const { animations } = useSiteTheme();
+export function DynamicKeyframes() {
+  const { animations, isLoaded } = useSiteTheme();
+  const logger = useLogger('DynamicKeyframes', LogCategory.UI);
+  const styleElementRef = useRef<HTMLStyleElement | null>(null);
   
-  const keyframesStyles = useMemo(() => {
-    if (!animations || Object.keys(animations).length === 0) {
-      return '';
+  // Inject keyframes CSS
+  useEffect(() => {
+    if (!isLoaded || !animations) return;
+    
+    try {
+      // Create a style element if it doesn't exist yet
+      if (!styleElementRef.current) {
+        const styleElement = document.createElement('style');
+        styleElement.id = 'dynamic-keyframes';
+        document.head.appendChild(styleElement);
+        styleElementRef.current = styleElement;
+      }
+      
+      // Generate keyframes CSS
+      let keyframesCss = '';
+      
+      Object.entries(animations).forEach(([name, keyframeConfig]) => {
+        if (name && keyframeConfig) {
+          keyframesCss += `@keyframes ${name} {`;
+          
+          Object.entries(keyframeConfig).forEach(([step, properties]) => {
+            keyframesCss += `${step} {`;
+            
+            if (typeof properties === 'object' && properties !== null) {
+              Object.entries(properties).forEach(([prop, value]) => {
+                keyframesCss += `${prop}: ${value};`;
+              });
+            }
+            
+            keyframesCss += `}`;
+          });
+          
+          keyframesCss += `}`;
+        }
+      });
+      
+      // Apply the CSS
+      if (styleElementRef.current) {
+        styleElementRef.current.textContent = keyframesCss;
+      }
+      
+      logger.debug('Applied dynamic keyframes', {
+        details: { 
+          keyframesCount: Object.keys(animations).length 
+        }
+      });
+    } catch (error) {
+      logger.error('Failed to apply dynamic keyframes', {
+        details: { 
+          error: error instanceof Error ? error.message : String(error)
+        }
+      });
     }
     
-    // Generate CSS keyframes from the animation definitions
-    return Object.entries(animations).map(([name, keyframeObj]) => {
-      // Skip if the keyframeObj is not properly structured
-      if (!keyframeObj || typeof keyframeObj !== 'object') return '';
-      
-      // Convert the keyframe object to CSS
-      const keyframeContent = Object.entries(keyframeObj)
-        .map(([percent, styles]) => {
-          // Normalize percentage format
-          const normalizedPercent = percent.endsWith('%') 
-            ? percent
-            : isNaN(Number(percent)) 
-              ? percent // Keywords like 'from', 'to'
-              : `${percent}%`;
-              
-          // Skip if styles is missing or not an object
-          if (!styles || typeof styles !== 'object') return '';
-          
-          // Convert style object to CSS string
-          const styleString = Object.entries(styles as Record<string, string>)
-            .map(([prop, value]) => {
-              // Convert camelCase to kebab-case
-              const cssProperty = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
-              return `${cssProperty}: ${value};`;
-            })
-            .join(' ');
-            
-          return `${normalizedPercent} { ${styleString} }`;
-        })
-        .join(' ');
-        
-      return `@keyframes ${name} { ${keyframeContent} }`;
-    }).join('\n');
-  }, [animations]);
+    // Clean up on unmount
+    return () => {
+      if (styleElementRef.current && styleElementRef.current.parentNode) {
+        styleElementRef.current.parentNode.removeChild(styleElementRef.current);
+        styleElementRef.current = null;
+      }
+    };
+  }, [animations, isLoaded, logger]);
   
-  if (!keyframesStyles) {
-    return null;
-  }
-  
-  return (
-    <style>{keyframesStyles}</style>
-  );
-};
+  // This component doesn't render anything
+  return null;
+}
