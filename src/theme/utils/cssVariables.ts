@@ -15,9 +15,9 @@ export function cssVariablesFromTheme(theme: Theme): Record<string, string> {
   
   // Extract effect colors
   const effects = theme.design_tokens?.effects || {};
-  if (effects.primary) variables['--site-effect-color'] = effects.primary;
-  if (effects.secondary) variables['--site-effect-secondary'] = effects.secondary;
-  if (effects.tertiary) variables['--site-effect-tertiary'] = effects.tertiary;
+  if (effects && typeof effects === 'object' && 'primary' in effects) variables['--site-effect-color'] = String(effects.primary);
+  if (effects && typeof effects === 'object' && 'secondary' in effects) variables['--site-effect-secondary'] = String(effects.secondary);
+  if (effects && typeof effects === 'object' && 'tertiary' in effects) variables['--site-effect-tertiary'] = String(effects.tertiary);
   
   // Extract animation durations
   const durations = theme.design_tokens?.animation?.durations || {};
@@ -55,8 +55,8 @@ export function cssVariablesFromTheme(theme: Theme): Record<string, string> {
   variables['--ring'] = `hsl(${variables['--site-ring'] || '228 47% 20%'})`;
   
   // Add Impulse-specific variables
-  variables['--impulse-primary'] = effects.primary || '#00F0FF';
-  variables['--impulse-secondary'] = effects.secondary || '#FF2D6E';
+  variables['--impulse-primary'] = effects && typeof effects === 'object' && 'primary' in effects ? String(effects.primary) : '#00F0FF';
+  variables['--impulse-secondary'] = effects && typeof effects === 'object' && 'secondary' in effects ? String(effects.secondary) : '#FF2D6E';
   variables['--impulse-bg-main'] = '#080F1E';
   variables['--impulse-text-primary'] = '#F9FAFB';
   

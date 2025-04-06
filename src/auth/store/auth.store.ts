@@ -1,10 +1,12 @@
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { AuthState, AuthActions, AuthStatus, UserRole } from '@/types/auth';
-import { publishAuthEvent } from '../bridge';
-import { authStorage } from './middleware/persist.middleware';
 import { supabase } from '@/integrations/supabase/client';
+import { authStorage } from './middleware/persist.middleware';
+import { publishAuthEvent } from '../bridge';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
 
 // Initial state
 const initialState: AuthState = {
@@ -234,7 +236,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
     }),
     {
       name: 'auth-storage',
-      storage: authStorage
+      storage: createJSONStorage(() => authStorage)
     }
   )
 );

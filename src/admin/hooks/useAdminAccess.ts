@@ -1,8 +1,8 @@
 
 import { useMemo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { UserRole } from '@/auth/types/auth.types';
-import { AdminAccess } from '@/auth/types/auth.types';
+import { UserRole } from '@/types/auth';
+import { AdminAccess } from '@/types/auth';
 
 /**
  * Hook to determine if current user has admin access
@@ -10,19 +10,21 @@ import { AdminAccess } from '@/auth/types/auth.types';
  * @returns {AdminAccess} Object with admin access info
  */
 export function useAdminAccess(): AdminAccess {
-  const { roles } = useAuth();
+  const { roles, isLoading, isAuthenticated } = useAuth();
   
   return useMemo(() => {
-    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-    const hasEditorAccess = roles.includes('editor');
-    const hasModeratorAccess = roles.includes('moderator');
+    const isAdmin = roles.includes('admin' as UserRole) || roles.includes('super_admin' as UserRole);
+    const hasEditorAccess = roles.includes('editor' as UserRole);
+    const hasModeratorAccess = roles.includes('moderator' as UserRole);
     
     // User has admin access if they are an admin or have editor/moderator roles
     const hasAdminAccess = isAdmin || hasEditorAccess || hasModeratorAccess;
     
     return {
       isAdmin,
-      hasAdminAccess
+      hasAdminAccess,
+      isLoading,
+      isAuthenticated
     };
-  }, [roles]);
+  }, [roles, isLoading, isAuthenticated]);
 }

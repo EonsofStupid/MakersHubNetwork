@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { AuthStatus, AuthStore, UserRole } from '@/auth/types/auth.types';
 import { supabase } from '@/integrations/supabase/client';
 import { authStorage } from '@/auth/store/middleware/persist.middleware';
@@ -174,13 +174,16 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'auth-storage',
-      storage: authStorage,
+      storage: createJSONStorage(() => authStorage),
       partialize: (state) => ({
         user: state.user,
         session: state.session,
         roles: state.roles,
         status: state.status,
-        isAuthenticated: state.isAuthenticated
+        isAuthenticated: state.isAuthenticated,
+        isLoading: state.isLoading,
+        error: state.error,
+        initialized: state.initialized
       })
     }
   )

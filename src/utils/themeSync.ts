@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { defaultImpulseTokens } from '@/admin/theme/impulse/tokens';
 import { getLogger } from '@/logging';
@@ -23,7 +24,9 @@ export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Prom
       .limit(1);
       
     if (error) {
-      logger.error('Error checking for existing theme', { details: error });
+      logger.error('Error checking for existing theme', { 
+        details: error.message ? { message: error.message, code: error.code } : error
+      });
       return false;
     }
     
@@ -41,13 +44,15 @@ export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Prom
       const { error: updateError } = await supabase
         .from('themes')
         .update({
-          design_tokens: updatedDesignTokens as Json,
+          design_tokens: updatedDesignTokens as unknown as Json,
           updated_at: new Date().toISOString()
         })
         .eq('id', existingTheme.id);
         
       if (updateError) {
-        logger.error('Error updating theme', { details: updateError });
+        logger.error('Error updating theme', { 
+          details: updateError.message ? { message: updateError.message, code: updateError.code } : updateError
+        });
         return false;
       }
       
@@ -108,14 +113,16 @@ export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Prom
               }
             },
             admin: defaultImpulseTokens
-          } as Json
+          } as unknown as Json
         }
       ])
       .select('id')
       .single();
       
     if (createError) {
-      logger.error('Error creating theme', { details: createError });
+      logger.error('Error creating theme', { 
+        details: createError.message ? { message: createError.message, code: createError.code } : createError
+      });
       return false;
     }
     
@@ -125,8 +132,9 @@ export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Prom
     }
     
     // Add default component tokens
+    // Change the table name to match the correct Supabase structure
     const { error: componentError } = await supabase
-      .from('component_tokens')
+      .from('theme_components')
       .insert([
         {
           component_name: 'Button',
@@ -138,7 +146,7 @@ export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Prom
               cyber: 'border border-primary/50 bg-transparent text-primary hover:bg-primary/10 hover:border-primary/80',
               neon: 'shadow-[0_0_15px_rgba(0,240,255,0.5)] hover:shadow-[0_0_25px_rgba(0,240,255,0.8)]'
             }
-          } as Json
+          } as unknown as Json
         },
         {
           component_name: 'Card',
@@ -150,12 +158,14 @@ export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Prom
               cyber: 'border border-primary/30 bg-black/40 backdrop-blur-xl',
               glass: 'bg-white/10 backdrop-blur-xl border border-white/20'
             }
-          } as Json
+          } as unknown as Json
         }
       ]);
       
     if (componentError) {
-      logger.error('Error adding component tokens', { details: componentError });
+      logger.error('Error adding component tokens', { 
+        details: componentError.message ? { message: componentError.message, code: componentError.code } : componentError 
+      });
       return true; // Still return true as theme was created successfully
     }
     
@@ -163,8 +173,9 @@ export async function syncImpulsivityTheme(options: ThemeSyncOptions = {}): Prom
     return true;
     
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     logger.error('Unexpected error in syncImpulsivityTheme', { 
-      details: error instanceof Error ? error.message : 'Unknown error' 
+      details: { message: errorMessage }
     });
     return false;
   }
