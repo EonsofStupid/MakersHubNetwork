@@ -17,6 +17,10 @@ interface UITransportOptions {
  * Transport for showing logs as UI toasts
  */
 export class UITransport implements LogTransport {
+  id = 'ui-toast';
+  name = 'UI Toast Transport';
+  enabled = true;
+  
   private options: UITransportOptions;
   private recentMessages: Map<string, { timestamp: number, count: number }> = new Map();
   
@@ -166,3 +170,6 @@ export class UITransport implements LogTransport {
     }
   }
 }
+
+// Create a singleton instance for easy import
+export const uiTransport = new UITransport();

@@ -1,8 +1,9 @@
 
-import { LogEntry, LoggingConfig, LogTransport } from './types';
+import { LogEntry, LoggingConfig, LogTransport, LogOptions } from './types';
 import { LogLevel, isLogLevelAtLeast } from './constants/log-level';
 import { LogCategory } from './types';
 import { getLoggingConfig } from './config';
+import { v4 as uuidv4 } from 'uuid';
 
 export class LoggerService {
   private static instance: LoggerService;
@@ -22,12 +23,7 @@ export class LoggerService {
     return LoggerService.instance;
   }
 
-  public log(level: LogLevel, message: string, options?: {
-    category?: LogCategory;
-    details?: Record<string, any>;
-    source?: string;
-    timestamp?: number;
-  }): void {
+  public log(level: LogLevel, message: string, options?: LogOptions): void {
     const { minLevel, enabledCategories, transports } = this.config;
 
     // Check if level is enabled
@@ -41,18 +37,22 @@ export class LoggerService {
       return;
     }
 
-    const timestamp = options?.timestamp || Date.now();
+    const timestamp = Date.now();
     const source = options?.source || '';
     const details = options?.details;
+    const tags = options?.tags;
+    const id = uuidv4(); // Generate an ID for each log entry
 
     // Create log entry
     const entry: LogEntry = {
+      id,
       timestamp,
       level,
       message,
       category,
       source,
       details,
+      tags
     };
 
     // Log to all enabled transports
@@ -69,32 +69,50 @@ export class LoggerService {
   }
 
   // Logger methods for each level
-  public debug(message: string, options?: { category?: LogCategory; details?: Record<string, any>; source?: string; }): void {
+  public debug(message: string, options?: LogOptions): void {
     this.log(LogLevel.DEBUG, message, options);
   }
 
-  public trace(message: string, options?: { category?: LogCategory; details?: Record<string, any>; source?: string; }): void {
+  public trace(message: string, options?: LogOptions): void {
     this.log(LogLevel.TRACE, message, options);
   }
 
-  public info(message: string, options?: { category?: LogCategory; details?: Record<string, any>; source?: string; }): void {
+  public info(message: string, options?: LogOptions): void {
     this.log(LogLevel.INFO, message, options);
   }
 
-  public success(message: string, options?: { category?: LogCategory; details?: Record<string, any>; source?: string; }): void {
+  public success(message: string, options?: LogOptions): void {
     this.log(LogLevel.SUCCESS, message, options);
   }
 
-  public warn(message: string, options?: { category?: LogCategory; details?: Record<string, any>; source?: string; }): void {
+  public warn(message: string, options?: LogOptions): void {
     this.log(LogLevel.WARN, message, options);
   }
 
-  public error(message: string, options?: { category?: LogCategory; details?: Record<string, any>; source?: string; }): void {
+  public error(message: string, options?: LogOptions): void {
     this.log(LogLevel.ERROR, message, options);
   }
 
-  public critical(message: string, options?: { category?: LogCategory; details?: Record<string, any>; source?: string; }): void {
+  public critical(message: string, options?: LogOptions): void {
     this.log(LogLevel.CRITICAL, message, options);
+  }
+  
+  // Additional method for performance timing
+  public logCustomTiming(label: string, startTime: number): number {
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    
+    this.info(`${label}: ${duration.toFixed(2)}ms`, {
+      details: { 
+        duration, 
+        label, 
+        startTime, 
+        endTime 
+      },
+      category: LogCategory.PERFORMANCE
+    });
+    
+    return duration;
   }
 }
 
@@ -103,27 +121,27 @@ export function getLogger(source?: string, category?: LogCategory) {
   const loggerService = LoggerService.getInstance();
   
   return {
-    debug: (message: string, options?: { details?: Record<string, any>; category?: LogCategory; source?: string }) => 
-      loggerService.debug(message, { source: options?.source || source, category: options?.category || category, details: options?.details }),
-    trace: (message: string, options?: { details?: Record<string, any>; category?: LogCategory; source?: string }) => 
-      loggerService.trace(message, { source: options?.source || source, category: options?.category || category, details: options?.details }),
-    info: (message: string, options?: { details?: Record<string, any>; category?: LogCategory; source?: string }) => 
-      loggerService.info(message, { source: options?.source || source, category: options?.category || category, details: options?.details }),
-    success: (message: string, options?: { details?: Record<string, any>; category?: LogCategory; source?: string }) => 
-      loggerService.success(message, { source: options?.source || source, category: options?.category || category, details: options?.details }),
-    warn: (message: string, options?: { details?: Record<string, any>; category?: LogCategory; source?: string }) => 
-      loggerService.warn(message, { source: options?.source || source, category: options?.category || category, details: options?.details }),
-    error: (message: string, options?: { details?: Record<string, any>; category?: LogCategory; source?: string }) => 
-      loggerService.error(message, { source: options?.source || source, category: options?.category || category, details: options?.details }),
-    critical: (message: string, options?: { details?: Record<string, any>; category?: LogCategory; source?: string }) => 
-      loggerService.critical(message, { source: options?.source || source, category: options?.category || category, details: options?.details }),
+    debug: (message: string, options?: LogOptions) => 
+      loggerService.debug(message, { ...options, source: options?.source || source, category: options?.category || category }),
+    trace: (message: string, options?: LogOptions) => 
+      loggerService.trace(message, { ...options, source: options?.source || source, category: options?.category || category }),
+    info: (message: string, options?: LogOptions) => 
+      loggerService.info(message, { ...options, source: options?.source || source, category: options?.category || category }),
+    success: (message: string, options?: LogOptions) => 
+      loggerService.success(message, { ...options, source: options?.source || source, category: options?.category || category }),
+    warn: (message: string, options?: LogOptions) => 
+      loggerService.warn(message, { ...options, source: options?.source || source, category: options?.category || category }),
+    error: (message: string, options?: LogOptions) => 
+      loggerService.error(message, { ...options, source: options?.source || source, category: options?.category || category }),
+    critical: (message: string, options?: LogOptions) => 
+      loggerService.critical(message, { ...options, source: options?.source || source, category: options?.category || category }),
     // Add custom timing functionality for performance measurements
     logCustomTiming: (label: string, startTime: number): number => {
       const endTime = performance.now();
       const duration = endTime - startTime;
       loggerService.info(`${label}: ${duration.toFixed(2)}ms`, { 
         source: source, 
-        category: category, 
+        category: category || LogCategory.PERFORMANCE, 
         details: { duration, label, startTime, endTime } 
       });
       return duration;

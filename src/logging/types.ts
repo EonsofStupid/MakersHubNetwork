@@ -14,13 +14,15 @@ export enum LogCategory {
   THEME = 'theme',
   PERFORMANCE = 'performance',
   NETWORK = 'network',
-  USER = 'user'
+  USER = 'user',
+  CONTENT = 'content' // Adding missing CONTENT category
 }
 
 /**
  * Log entry structure
  */
 export interface LogEntry {
+  id?: string; // Make ID required for UI components
   timestamp: number;
   level: LogLevel;
   message: string;
@@ -29,6 +31,7 @@ export interface LogEntry {
   details?: Record<string, any>;
   user?: string;
   session?: string;
+  tags?: string[]; // Add support for tags
 }
 
 /**
@@ -39,6 +42,11 @@ export interface LogTransport {
   name: string;
   enabled: boolean;
   log: (entry: LogEntry) => void;
+  
+  // Extended methods for UI components
+  getLogs?: () => LogEntry[];
+  subscribe?: (callback: (entry: LogEntry) => void) => { unsubscribe: () => void };
+  clear?: () => void;
 }
 
 /**
@@ -67,15 +75,25 @@ export interface PerformanceTiming {
 }
 
 /**
+ * Logger options type 
+ */
+export interface LogOptions {
+  details?: Record<string, any>;
+  category?: LogCategory;
+  source?: string;
+  tags?: string[]; // Add support for tags
+}
+
+/**
  * Logger interface for type safety across different logger implementations
  */
 export interface Logger {
-  debug: (message: string, options?: { details?: Record<string, any> }) => void;
-  trace: (message: string, options?: { details?: Record<string, any> }) => void;
-  info: (message: string, options?: { details?: Record<string, any> }) => void;
-  success: (message: string, options?: { details?: Record<string, any> }) => void;
-  warn: (message: string, options?: { details?: Record<string, any> }) => void;
-  error: (message: string, options?: { details?: Record<string, any> }) => void;
-  critical: (message: string, options?: { details?: Record<string, any> }) => void;
+  debug: (message: string, options?: LogOptions) => void;
+  trace: (message: string, options?: LogOptions) => void;
+  info: (message: string, options?: LogOptions) => void;
+  success: (message: string, options?: LogOptions) => void;
+  warn: (message: string, options?: LogOptions) => void;
+  error: (message: string, options?: LogOptions) => void;
+  critical: (message: string, options?: LogOptions) => void;
   logCustomTiming: (label: string, startTime: number) => number;
 }
