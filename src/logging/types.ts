@@ -27,7 +27,7 @@ export interface LogEntry {
   category: LogCategory;
   message: string | React.ReactNode;
   details?: Record<string, unknown>;
-  source?: string;  // This property is explicitly allowed now
+  source?: string;
   userId?: string;
   sessionId?: string;
   duration?: number; // For performance logs
@@ -54,7 +54,7 @@ export interface LoggingConfig {
 export interface LogOptions {
   category?: LogCategory;
   details?: Record<string, unknown>;
-  source?: string;  // Explicitly allowed here too
+  source?: string;  // Explicitly including the source property
   userId?: string;
   sessionId?: string;
   duration?: number;
