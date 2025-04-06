@@ -110,7 +110,9 @@ export function MainNav() {
         clipPath: isScrolled 
           ? 'polygon(0 0, 100% 0, 98% 100%, 2% 100%)' // Trapezoid when scrolled
           : 'polygon(0 0, 100% 0, 100% 100%, 0 100%)', // Regular rectangle when at top
-        width: '100vw'
+        width: '100vw',
+        left: '0',
+        right: '0'
       }}
     >
       {/* Enhanced glass effect with dual color overlay */}

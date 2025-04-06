@@ -70,30 +70,46 @@ export interface ThemeToken {
 }
 
 export interface ThemeLogDetails {
-  error?: boolean;
+  // Status indicators
   success?: boolean;
+  error?: boolean;
   warning?: boolean;
+  
+  // Error information
   errorMessage?: string;
-  errorDetails?: Record<string, any>;
   errorCode?: string;
+  errorDetails?: Record<string, any>;
   errorHint?: string;
+  errorName?: string;
+  
+  // Theme information
   themeId?: string;
   themeName?: string;
   theme?: string;
-  isFallback?: boolean;
+  defaultTheme?: string;
   originalTheme?: string;
-  hasAnimations?: boolean;
-  hasComponentStyles?: boolean;
+  
+  // Component information
+  component?: string;
+  componentCount?: number;
   componentTokensCount?: number;
+  
+  // Operation status
   mainSite?: boolean;
   admin?: boolean;
   database?: boolean;
-  details?: Record<string, unknown>;
-  // Added for the TypeScript errors
-  errorName?: string;
+  isFallback?: boolean;
+  
+  // Additional context
   reason?: string;
   source?: string;
-  component?: string;
+  details?: Record<string, unknown>;
+  hasAnimations?: boolean;
+  hasComponentStyles?: boolean;
+  category?: string;
+  
+  // Allow for additional properties
+  [key: string]: unknown;
 }
 
 export interface ThemeAnimation {
