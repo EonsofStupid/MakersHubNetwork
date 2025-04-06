@@ -9,9 +9,19 @@ import { UserRole, AdminAccess } from '@/types/auth.unified';
  * @returns {AdminAccess} Object with admin access info
  */
 export function useAdminAccess(): AdminAccess {
-  const { roles, isLoading, isAuthenticated } = useAuth();
+  const { roles, isLoading, isAuthenticated, user } = useAuth();
   
   return useMemo(() => {
+    // If not authenticated, no admin access
+    if (!isAuthenticated || !user) {
+      return {
+        isAdmin: false,
+        hasAdminAccess: false,
+        isLoading,
+        isAuthenticated
+      };
+    }
+    
     const isAdmin = roles.includes('admin' as UserRole) || roles.includes('super_admin' as UserRole);
     const hasEditorAccess = roles.includes('editor' as UserRole);
     const hasModeratorAccess = roles.includes('moderator' as UserRole);
@@ -25,5 +35,5 @@ export function useAdminAccess(): AdminAccess {
       isLoading,
       isAuthenticated
     };
-  }, [roles, isLoading, isAuthenticated]);
+  }, [roles, isLoading, isAuthenticated, user]);
 }
