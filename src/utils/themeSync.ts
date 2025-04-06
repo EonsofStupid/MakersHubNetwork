@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Theme, ComponentTokens } from '@/types/theme';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { PostgrestError } from '@supabase/supabase-js';
 
 const logger = getLogger('ThemeSync', LogCategory.SYSTEM);
 
@@ -19,7 +20,7 @@ export async function syncImpulsivityTheme() {
 
     if (getThemeError) {
       logger.error('Error fetching current theme', { error: getThemeError });
-      throw getThemeError;
+      return false; // Return boolean instead of the error
     }
 
     if (!currentTheme) {
@@ -85,10 +86,13 @@ export async function syncImpulsivityTheme() {
     // Update the theme if needed
     if (themeNeedsUpdate) {
       try {
+        // Convert to appropriate type for database
+        const dbSafeDesignTokens = updatedTheme.design_tokens as Record<string, unknown>;
+        
         const { error: updateThemeError } = await supabase
           .from('themes')
           .update({
-            design_tokens: updatedTheme.design_tokens,
+            design_tokens: dbSafeDesignTokens,
             updated_at: new Date().toISOString(),
           })
           .eq('id', currentTheme.id);
@@ -117,11 +121,10 @@ export async function syncImpulsivityTheme() {
     }
 
     // Define base components
-    const baseComponents: Partial<ComponentTokens>[] = [
+    const baseComponents = [
       {
-        id: 'main-nav',
-        theme_id: currentTheme.id,
         component_name: 'MainNav',
+        theme_id: currentTheme.id,
         styles: {
           container: {
             base: 'fixed top-0 w-full z-50 transition-all duration-300',
@@ -138,23 +141,24 @@ export async function syncImpulsivityTheme() {
           mobileToggle: 'block md:hidden'
         },
         description: 'Main navigation bar styles',
+        context: 'site' as const,
       },
       {
-        id: 'footer',
-        theme_id: currentTheme.id,
         component_name: 'Footer',
+        theme_id: currentTheme.id,
         styles: {
           container: 'bg-background text-foreground py-8',
           content: 'container mx-auto px-4',
           text: 'text-sm text-muted-foreground',
         },
         description: 'Footer styles',
+        context: 'site' as const,
       },
     ];
 
     // Determine which components need to be created or updated
-    const newComponents: Partial<ComponentTokens>[] = [];
-    const updatedComponents: Partial<ComponentTokens>[] = [];
+    const newComponents: any[] = [];
+    const updatedComponents: any[] = [];
 
     for (const baseComponent of baseComponents) {
       const existingComponent = existingComponents?.find(c => c.component_name === baseComponent.component_name);
@@ -164,7 +168,10 @@ export async function syncImpulsivityTheme() {
       } else {
         // Compare styles and add to updatedComponents if different
         if (JSON.stringify(existingComponent.styles) !== JSON.stringify(baseComponent.styles)) {
-          updatedComponents.push({ ...existingComponent, styles: baseComponent.styles });
+          updatedComponents.push({
+            ...existingComponent,
+            styles: baseComponent.styles
+          });
         }
       }
     }
@@ -172,6 +179,7 @@ export async function syncImpulsivityTheme() {
     // Create new components
     if (newComponents.length > 0) {
       try {
+        // Use type assertion to address the insert type issue
         const { error: createComponentsError } = await supabase
           .from('theme_components')
           .insert(newComponents);
@@ -198,7 +206,7 @@ export async function syncImpulsivityTheme() {
           await supabase
             .from('theme_components')
             .update({
-              styles: component.styles,
+              styles: component.styles as Record<string, unknown>,
               updated_at: new Date().toISOString(),
             })
             .eq('id', component.id);

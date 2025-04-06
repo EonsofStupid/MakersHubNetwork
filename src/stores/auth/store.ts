@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthState, UserRole } from './types';
@@ -111,13 +110,15 @@ export const useAuthStore = create<AuthStore>()(
               source: 'auth/store'
             });
           }
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorDetails = {
+            message: errorMessage,
+            details: error instanceof Error ? (error as Record<string, unknown>) : undefined
+          };
           
-          logger.error('Auth initialization error', {
-            category: LogCategory.AUTH,
-            source: 'auth/store',
-            details: err
+          logger.error("Error fetching theme", { 
+            details: errorDetails
           });
           
           set({
@@ -157,13 +158,15 @@ export const useAuthStore = create<AuthStore>()(
             category: LogCategory.AUTH,
             source: 'auth/store'
           });
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorDetails = {
+            message: errorMessage,
+            details: error instanceof Error ? (error as Record<string, unknown>) : undefined
+          };
           
-          logger.error('Logout error', {
-            category: LogCategory.AUTH,
-            source: 'auth/store',
-            details: err
+          logger.warn("Using hardcoded fallback theme due to error", { 
+            details: errorDetails
           });
           
           set({ error: errorMessage });
