@@ -1,7 +1,8 @@
 
 import { create } from "zustand";
-import { Theme, ThemeScope, ThemeTokens, fallbackTokens, validateThemeTokens } from "@/theme/schema";
+import { Theme, ThemeContext, ThemeTokens, fallbackTokens, validateThemeTokens } from "@/theme/schema";
 import { getLogger } from "@/logging";
+import { LogCategory } from "@/logging";
 
 // Logger for the theme store
 const logger = getLogger();
@@ -9,7 +10,7 @@ const logger = getLogger();
 export interface ThemeState {
   // Theme data
   tokens: ThemeTokens;
-  scope: ThemeScope;
+  context: ThemeContext;
   currentTheme: Theme | null;
   
   // Loading state
@@ -17,30 +18,34 @@ export interface ThemeState {
   error: Error | null;
   
   // Theme actions
-  loadTheme: (scope?: ThemeScope) => Promise<void>;
+  loadTheme: (context?: ThemeContext) => Promise<void>;
   applyTokens: (tokens: Partial<ThemeTokens>) => void;
 }
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
   // Initial state with fallback tokens
   tokens: fallbackTokens,
-  scope: 'app',
+  context: 'app',
   currentTheme: null,
   loadStatus: 'idle',
   error: null,
   
   // Load theme from backend
-  loadTheme: async (scope = 'app') => {
+  loadTheme: async (context = 'app') => {
     // Don't reload if already loading
     if (get().loadStatus === 'loading') return;
     
     set({ loadStatus: 'loading' });
     
     try {
-      logger.info('Loading theme', { details: { scope } });
+      logger.info('Loading theme', { 
+        category: LogCategory.UI,
+        details: { context },
+        source: 'ThemeStore'
+      });
       
-      // Fetch theme data from Supabase edge function
-      const response = await fetch(`https://kxeffcclfvecdvqpljbh.supabase.co/functions/v1/theme-service?scope=${scope}`);
+      // Fetch theme data from Supabase edge function - using context parameter
+      const response = await fetch(`https://kxeffcclfvecdvqpljbh.supabase.co/functions/v1/theme-service?context=${context}`);
       
       if (!response.ok) {
         throw new Error(`Failed to load theme: ${response.statusText}`);
@@ -54,7 +59,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       set({ 
         tokens: validatedTokens,
         currentTheme: data.theme || null,
-        scope, 
+        context, 
         loadStatus: 'loaded',
         error: null 
       });
@@ -63,11 +68,20 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       applyTokensToDOM(validatedTokens);
       
       logger.info('Theme loaded successfully', {
-        details: { scope, themeName: data.theme?.name || 'fallback' }
+        category: LogCategory.SYSTEM,
+        details: { 
+          context, 
+          themeName: data.theme?.name || 'fallback',
+          isFallback: data.isFallback || false
+        }
       });
     } catch (error) {
       logger.error('Failed to load theme', { 
-        details: { scope, error: error instanceof Error ? error.message : String(error) }
+        category: LogCategory.SYSTEM,
+        details: { 
+          context, 
+          error: error instanceof Error ? error.message : String(error) 
+        }
       });
       
       // Fall back to default tokens on error

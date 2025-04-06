@@ -3,17 +3,17 @@ import { useEffect, useState, useRef } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { ThemeScope } from '@/theme/schema';
+import { ThemeContext } from '@/theme/schema';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
-  scope?: ThemeScope;
+  context?: ThemeContext;
   applyImmediately?: boolean;
 }
 
 export function ThemeInitializer({ 
   children, 
-  scope = 'app', 
+  context = 'app', 
   applyImmediately = true 
 }: ThemeInitializerProps) {
   const { loadTheme, loadStatus } = useThemeStore();
@@ -47,10 +47,10 @@ export function ThemeInitializer({
     const initializeTheme = async () => {
       try {
         initAttempted.current = true;
-        logger.info('Initializing theme system', { details: { scope } });
+        logger.info('Initializing theme system', { details: { context } });
         
         // Load theme asynchronously
-        await loadTheme(scope);
+        await loadTheme(context);
         
         // Set ready state after theme loads
         if (!applyImmediately) {
@@ -72,7 +72,7 @@ export function ThemeInitializer({
     
     // Initialize without blocking rendering
     initializeTheme();
-  }, [scope, loadTheme, logger, applyImmediately]);
+  }, [context, loadTheme, logger, applyImmediately]);
   
   // Prevent rendering until theme is ready if applyImmediately is false
   if (!isReady) {

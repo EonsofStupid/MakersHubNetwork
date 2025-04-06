@@ -86,7 +86,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
-        <ThemeInitializer scope={isAdminRoute ? 'admin' : 'app'} applyImmediately={true}>
+        <ThemeInitializer context={isAdminRoute ? 'admin' : 'app'} applyImmediately={true}>
           <AuthProvider>
             <AppInitializer>
               <AdminProvider>
