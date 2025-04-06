@@ -1,62 +1,47 @@
 
 import { useCallback } from 'react';
 import { getLogger } from '@/logging';
-import { LogCategory, LogOptions } from '@/logging';
-import { LogLevel } from '@/logging/constants/log-level';
+import { LogCategory, LogOptions } from '@/logging/types';
 
-/**
- * Hook for logging from React components
- */
-export function useLogger(source: string, defaultCategory: LogCategory = LogCategory.UI) {
-  const logger = getLogger();
+export function useLogger(source: string, category: LogCategory = LogCategory.UI) {
+  const logger = getLogger(source);
   
   const debug = useCallback((message: string, options?: LogOptions) => {
-    logger.debug(message, {
-      ...options,
-      source,
-      category: options?.category || defaultCategory,
-    });
-  }, [logger, source, defaultCategory]);
+    logger.debug(message, { ...options, category, source });
+  }, [logger, category, source]);
   
   const info = useCallback((message: string, options?: LogOptions) => {
-    logger.info(message, {
-      ...options,
-      source,
-      category: options?.category || defaultCategory,
-    });
-  }, [logger, source, defaultCategory]);
+    logger.info(message, { ...options, category, source });
+  }, [logger, category, source]);
   
   const warn = useCallback((message: string, options?: LogOptions) => {
-    logger.warn(message, {
-      ...options,
-      source,
-      category: options?.category || defaultCategory,
-    });
-  }, [logger, source, defaultCategory]);
+    logger.warn(message, { ...options, category, source });
+  }, [logger, category, source]);
   
   const error = useCallback((message: string, options?: LogOptions) => {
-    logger.error(message, {
-      ...options,
-      source,
-      category: options?.category || defaultCategory,
-    });
-  }, [logger, source, defaultCategory]);
+    logger.error(message, { ...options, category, source });
+  }, [logger, category, source]);
   
   const critical = useCallback((message: string, options?: LogOptions) => {
-    logger.critical(message, {
-      ...options,
-      source,
-      category: options?.category || defaultCategory,
-    });
-  }, [logger, source, defaultCategory]);
+    logger.critical(message, { ...options, category, source });
+  }, [logger, category, source]);
   
-  const logCustomTiming = useCallback((name: string, duration: number, options?: LogOptions) => {
-    logger.logCustomTiming(name, duration, {
-      ...options,
-      source,
-      category: options?.category || defaultCategory,
-    });
-  }, [logger, source, defaultCategory]);
+  // Add logCustomTiming if available
+  const logCustomTiming = useCallback(
+    (name: string, duration: number, options?: LogOptions) => {
+      if (logger.logCustomTiming) {
+        logger.logCustomTiming(name, duration, { ...options, category, source });
+      } else {
+        logger.info(`Timing - ${name}: ${duration}ms`, {
+          ...options,
+          category,
+          source,
+          duration,
+        });
+      }
+    },
+    [logger, category, source]
+  );
   
   return {
     debug,
@@ -64,6 +49,6 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
     warn,
     error,
     critical,
-    logCustomTiming
+    logCustomTiming,
   };
 }

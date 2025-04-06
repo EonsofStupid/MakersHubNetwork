@@ -82,3 +82,26 @@ export interface LoggingConfig {
 
 // Re-export LogLevel for backward compatibility
 export { LogLevel } from './constants/log-level';
+
+// Performance logging interfaces
+export interface PerformanceLogger {
+  logCustomTiming: (name: string, duration: number, options?: LogOptions) => void;
+  performance: {
+    mark: (name: string) => void;
+    measure: (name: string, startMark: string, endMark: string) => void;
+    getEntriesByName: (name: string, type?: string) => PerformanceEntry[];
+    clearMarks: (name?: string) => void;
+    clearMeasures: (name?: string) => void;
+  };
+}
+
+// Extend the Logger interface to include performance logging
+export interface Logger {
+  debug: (message: string, options?: LogOptions) => void;
+  info: (message: string, options?: LogOptions) => void;
+  warn: (message: string, options?: LogOptions) => void;
+  error: (message: string, options?: LogOptions) => void;
+  critical: (message: string, options?: LogOptions) => void;
+  logCustomTiming?: (name: string, duration: number, options?: LogOptions) => void;
+  performance?: PerformanceLogger['performance'];
+}

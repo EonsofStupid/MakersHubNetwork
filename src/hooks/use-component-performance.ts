@@ -1,87 +1,103 @@
 
 import { useEffect, useRef } from 'react';
-import { useLogger } from './use-logger';
-import { LogCategory } from '@/logging';
+import { usePerformanceLogger } from './use-performance-logger';
+import { LogCategory } from '@/logging/types';
 
-interface PerformanceOptions {
-  enabled?: boolean;
-  threshold?: number;
-  trackUpdates?: boolean;
+// Unique identifier for components
+let componentCounter = 0;
+
+interface ComponentPerformanceOptions {
+  trackRender?: boolean;
+  trackMount?: boolean;
+  trackUnmount?: boolean;
+  category?: LogCategory;
+  componentId?: string;
 }
 
-/**
- * Hook to track component mount and update performance
- */
 export function useComponentPerformance(
   componentName: string,
-  options: PerformanceOptions = {}
+  options: ComponentPerformanceOptions = {}
 ) {
   const {
-    enabled = true,
-    threshold = 0,
-    trackUpdates = true
+    trackRender = true,
+    trackMount = true,
+    trackUnmount = true,
+    category = LogCategory.PERFORMANCE,
+    componentId,
   } = options;
   
-  const logger = useLogger('ComponentPerformance', LogCategory.PERFORMANCE);
-  const mountTime = useRef<number | null>(null);
-  const updateCount = useRef<number>(0);
-  const lastUpdateTime = useRef<number | null>(null);
+  // Create a unique ID for this component instance
+  const idRef = useRef(`${componentName}-${componentId || componentCounter++}`);
+  const renderCountRef = useRef(0);
+  const mountTimeRef = useRef<number | null>(null);
   
-  // On mount
+  // Track time between renders
+  const lastRenderTimeRef = useRef<number | null>(null);
+  
+  const { logCustomTiming, performance } = usePerformanceLogger(componentName, category);
+  
+  // Handle component mount
   useEffect(() => {
-    if (!enabled) return;
+    if (trackMount) {
+      const mountTime = performance.now();
+      mountTimeRef.current = mountTime;
+      
+      // Create unique mark for this component instance
+      const mountMarkName = `${idRef.current}-mount`;
+      performance.mark(mountMarkName);
+      
+      // Log mount timing
+      logCustomTiming(`${componentName}:mount`, 0, {
+        component: componentName,
+        componentId: idRef.current,
+      });
+    }
     
-    const startTime = performance.now();
-    mountTime.current = startTime;
-    
+    // Handle component unmount
     return () => {
-      // On unmount
-      const unmountTime = performance.now();
-      const duration = mountTime.current 
-        ? unmountTime - mountTime.current 
-        : 0;
-      
-      if (duration > threshold) {
-        logger.logCustomTiming(
-          `${componentName} (total lifecycle)`, 
-          duration,
-          { details: { component: componentName, type: 'lifecycle' } }
-        );
-      }
-      
-      if (trackUpdates && updateCount.current > 0) {
-        logger.info(`${componentName} rendered ${updateCount.current} times`, {
-          details: { 
-            component: componentName, 
-            updateCount: updateCount.current 
-          } 
+      if (trackUnmount && mountTimeRef.current !== null) {
+        const unmountTime = performance.now();
+        const lifetimeDuration = unmountTime - mountTimeRef.current;
+        
+        // Log component lifetime
+        logCustomTiming(`${componentName}:lifetime`, lifetimeDuration, {
+          component: componentName,
+          componentId: idRef.current,
+          renderCount: renderCountRef.current,
         });
       }
     };
-  }, [enabled, componentName, threshold, trackUpdates, logger]);
+  }, [componentName, trackMount, trackUnmount, logCustomTiming, performance]);
   
-  // On each render after mount
+  // Track renders
   useEffect(() => {
-    if (!enabled || !trackUpdates) return;
-    
-    const now = performance.now();
-    
-    // Skip first render as it's already tracked by mount timing
-    if (lastUpdateTime.current !== null) {
-      updateCount.current++;
-      const timeSinceLastUpdate = now - lastUpdateTime.current;
+    if (trackRender) {
+      // Increment render count
+      renderCountRef.current += 1;
       
-      if (timeSinceLastUpdate > threshold) {
-        logger.logCustomTiming(
-          `${componentName} update`, 
-          timeSinceLastUpdate,
-          { details: { component: componentName, type: 'update', count: updateCount.current } }
-        );
+      const now = performance.now();
+      
+      // Track time between renders
+      if (lastRenderTimeRef.current !== null) {
+        const timeBetweenRenders = now - lastRenderTimeRef.current;
+        
+        // Only log if this isn't the first render
+        if (renderCountRef.current > 1) {
+          logCustomTiming(`${componentName}:re-render`, timeBetweenRenders, {
+            component: componentName,
+            componentId: idRef.current,
+            renderCount: renderCountRef.current,
+          });
+        }
       }
+      
+      // Update last render time
+      lastRenderTimeRef.current = now;
     }
-    
-    lastUpdateTime.current = now;
   });
+  
+  return {
+    componentId: idRef.current,
+    renderCount: renderCountRef.current,
+  };
 }
-
-export default useComponentPerformance;

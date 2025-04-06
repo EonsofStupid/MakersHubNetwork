@@ -1,287 +1,208 @@
-
-import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
-import { Theme, ComponentTokens, DesignTokensStructure } from '@/types/theme';
+import { Theme, ComponentTokens } from '@/types/theme';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 
-const logger = getLogger('themeSync', LogCategory.DATABASE);
+const logger = getLogger('ThemeSync', LogCategory.SYSTEM);
 
-/**
- * Sync the Impulsivity theme to the database
- */
-export async function syncImpulsivityTheme(): Promise<boolean> {
+export async function syncImpulsivityTheme() {
   try {
     logger.info('Starting Impulsivity theme sync');
-    
-    // First check if the Impulsivity theme exists
-    const { data: existingThemes, error: checkError } = await supabase
+
+    // Fetch the current theme from the database
+    const { data: currentTheme, error: getThemeError } = await supabase
       .from('themes')
-      .select('id, name')
+      .select('*')
       .eq('name', 'Impulsivity')
-      .limit(1);
-    
-    if (checkError) {
-      logger.error('Error checking for Impulsivity theme', { errorMessage: checkError.message });
+      .single();
+
+    if (getThemeError) {
+      logger.error('Error fetching current theme', { error: getThemeError });
+      throw getThemeError;
+    }
+
+    if (!currentTheme) {
+      logger.warn('No Impulsivity theme found in database');
       return false;
     }
-    
-    // Generate a theme ID - use existing or create new
-    const themeId = existingThemes && existingThemes.length > 0
-      ? existingThemes[0].id
-      : uuidv4();
-      
-    // Basic Impulsivity theme design tokens
-    const designTokens: DesignTokensStructure = {
-      colors: {
-        primary: '#00F0FF',
-        secondary: '#FF2D6E', 
-        background: '#080F1E',
-        foreground: '#F9FAFB',
-        card: '#0E172A',
-        cardForeground: '#F9FAFB', 
-        muted: '#131D35',
-        mutedForeground: '#94A3B8',
-        accent: '#131D35',
-        accentForeground: '#F9FAFB',
-        destructive: '#EF4444',
-        destructiveForeground: '#F9FAFB',
-        border: '#131D35',
-        input: '#131D35',
-        ring: '#1E293B',
-      },
-      effects: {
-        shadows: {},
-        blurs: {},
-        gradients: {},
-        primary: '#00F0FF',
-        secondary: '#FF2D6E',
-        tertiary: '#8B5CF6',
-      },
-      animation: {
-        keyframes: {
-          'fade-in': {
-            '0%': { opacity: '0', transform: 'translateY(-10px)' },
-            '100%': { opacity: '1', transform: 'translateY(0)' }
-          },
-          'fade-out': {
-            '0%': { opacity: '1', transform: 'translateY(0)' },
-            '100%': { opacity: '0', transform: 'translateY(-10px)' }
-          },
-          'pulse': {
-            '0%': { opacity: '0.6' },
-            '50%': { opacity: '1' },
-            '100%': { opacity: '0.6' }
-          },
-          'float': {
-            '0%': { transform: 'translateY(0px)' },
-            '50%': { transform: 'translateY(-10px)' },
-            '100%': { transform: 'translateY(0px)' }
-          },
-          'data-stream': {
-            '0%': { backgroundPosition: '0% 0%' },
-            '100%': { backgroundPosition: '0% 100%' }
-          },
-          'spin': {
-            '0%': { transform: 'rotate(0deg)' },
-            '100%': { transform: 'rotate(360deg)' }
-          },
-          'shimmer': {
-            '0%': { backgroundPosition: '200% 0' },
-            '100%': { backgroundPosition: '-200% 0' }
-          },
-          'glitch': {
-            '0%': { transform: 'translate(0)' },
-            '20%': { transform: 'translate(-3px, 3px)' },
-            '40%': { transform: 'translate(-3px, -3px)' },
-            '60%': { transform: 'translate(3px, 3px)' },
-            '80%': { transform: 'translate(3px, -3px)' },
-            '100%': { transform: 'translate(0)' }
-          },
-          'gradient': {
-            '0%': { backgroundPosition: '0% 50%' },
-            '50%': { backgroundPosition: '100% 50%' },
-            '100%': { backgroundPosition: '0% 50%' }
-          }
-        },
-        transitions: {
-          'default': 'all 0.3s ease',
-          'slow': 'all 0.6s ease',
-          'spring': 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-          'bounce': 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
-        },
-        durations: {
-          'fast': '150ms',
-          'normal': '300ms',
-          'slow': '500ms',
-          'animationFast': '1s',
-          'animationNormal': '2s',
-          'animationSlow': '3s'
-        }
-      },
-      spacing: {
-        radius: {
-          'sm': '0.25rem',
-          'md': '0.5rem',
-          'lg': '0.75rem',
-          'full': '9999px'
-        }
-      },
-      typography: {
-        fontSizes: {
-          'xs': '0.75rem',
-          'sm': '0.875rem',
-          'base': '1rem',
-          'lg': '1.125rem',
-          'xl': '1.25rem',
-          '2xl': '1.5rem',
-          '3xl': '1.875rem',
-          '4xl': '2.25rem',
-          '5xl': '3rem'
-        },
-        fontFamilies: {
-          'sans': '"Inter", system-ui, -apple-system, sans-serif',
-          'mono': '"Roboto Mono", monospace'
-        },
-        lineHeights: {
-          'tight': '1.25',
-          'normal': '1.5',
-          'loose': '1.75'
-        },
-        letterSpacing: {
-          'tight': '-0.025em',
-          'normal': '0',
-          'wide': '0.025em'
-        }
-      }
-    };
-    
-    // Component tokens
-    const componentTokens: ComponentTokens[] = [
-      {
-        id: uuidv4(),
-        component_name: 'navbar',
-        styles: {
-          background: 'rgba(8, 15, 30, 0.8)',
-          backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid rgba(0, 240, 255, 0.2)',
-          height: '64px'
-        },
-        description: 'Main navigation bar',
-        theme_id: themeId,
-        context: 'site'
-      },
-      {
-        id: uuidv4(),
-        component_name: 'button-primary',
-        styles: {
-          background: 'linear-gradient(135deg, #00F0FF 0%, #00B8F9 100%)',
-          color: '#FFFFFF',
-          borderRadius: '8px',
-          padding: '10px 20px',
-          fontSize: '16px',
-          fontWeight: '500',
-          boxShadow: '0 0 15px rgba(0, 240, 255, 0.5)',
-          hover: {
-            transform: 'translateY(-2px)',
-            boxShadow: '0 0 20px rgba(0, 240, 255, 0.7)'
-          }
-        },
-        description: 'Primary action button',
-        theme_id: themeId,
-        context: 'site'
-      },
-      {
-        id: uuidv4(),
-        component_name: 'button-secondary',
-        styles: {
-          background: 'transparent',
-          color: '#00F0FF',
-          border: '1px solid #00F0FF',
-          borderRadius: '8px',
-          padding: '10px 20px',
-          fontSize: '16px',
-          fontWeight: '500',
-          hover: {
-            background: 'rgba(0, 240, 255, 0.1)',
-            boxShadow: '0 0 10px rgba(0, 240, 255, 0.3)'
-          }
-        },
-        description: 'Secondary action button',
-        theme_id: themeId,
-        context: 'site'
-      },
-      {
-        id: uuidv4(),
-        component_name: 'card',
-        styles: {
-          background: 'rgba(14, 23, 42, 0.7)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '12px',
-          border: '1px solid rgba(0, 240, 255, 0.2)',
-          padding: '24px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
-        },
-        description: 'Content card component',
-        theme_id: themeId,
-        context: 'site'
-      }
-    ];
-    
-    // Theme object
-    const impulsivityTheme: Record<string, any> = {
-      id: themeId,
+
+    // Define the base Impulsivity theme
+    const baseImpulsivityTheme: Theme = {
+      id: currentTheme.id,
       name: 'Impulsivity',
-      description: 'A cyberpunk-inspired theme with neon effects and vivid colors',
+      description: 'Base Impulsivity theme',
       status: 'published',
-      is_default: true,
+      is_default: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       version: 1,
-      context: 'site',
-      // Convert to stringified JSON to match database schema
-      design_tokens: JSON.stringify(designTokens),
-      component_tokens: JSON.stringify(componentTokens)
+      design_tokens: {
+        colors: {
+          primary: '#00F0FF',
+          secondary: '#FF2D6E',
+          background: '#080F1E',
+          foreground: '#F9FAFB',
+          card: '#0E172A',
+          cardForeground: '#F9FAFB',
+        },
+        effects: {
+          shadows: {},
+          blurs: {},
+          gradients: {},
+          primary: '#00F0FF',
+          secondary: '#FF2D6E',
+          tertiary: '#8B5CF6',
+        },
+        animation: {
+          keyframes: {},
+          transitions: {},
+          durations: {
+            fast: "150ms",
+            normal: "300ms",
+            slow: "500ms",
+            animationFast: "1s",
+            animationNormal: "2s",
+            animationSlow: "3s",
+          }
+        }
+      },
+      component_tokens: [],
+      composition_rules: {},
+      cached_styles: {},
     };
-    
-    // Update or insert theme
-    if (existingThemes && existingThemes.length > 0) {
-      // Update existing theme
-      const { error: updateError } = await supabase
-        .from('themes')
-        .update({
-          description: impulsivityTheme.description,
-          updated_at: impulsivityTheme.updated_at,
-          version: impulsivityTheme.version,
-          design_tokens: impulsivityTheme.design_tokens,
-          component_tokens: impulsivityTheme.component_tokens
-        })
-        .eq('id', themeId);
-      
-      if (updateError) {
-        logger.error('Error updating Impulsivity theme', { errorMessage: updateError.message });
-        return false;
-      }
-      
-      logger.info('Successfully updated Impulsivity theme');
-      return true;
-    } else {
-      // Insert new theme
-      const { error: insertError } = await supabase
-        .from('themes')
-        .insert([impulsivityTheme]);
-      
-      if (insertError) {
-        logger.error('Error inserting Impulsivity theme', { errorMessage: insertError.message });
-        return false;
-      }
-      
-      logger.info('Successfully created Impulsivity theme');
-      return true;
+
+    // Check if the theme needs to be updated
+    let themeNeedsUpdate = false;
+    const updatedTheme = { ...baseImpulsivityTheme };
+
+    // Compare design tokens
+    if (JSON.stringify(currentTheme.design_tokens) !== JSON.stringify(baseImpulsivityTheme.design_tokens)) {
+      updatedTheme.design_tokens = baseImpulsivityTheme.design_tokens;
+      themeNeedsUpdate = true;
     }
+
+    // Update the theme if needed
+    if (themeNeedsUpdate) {
+      const { error: updateThemeError } = await supabase
+        .from('themes')
+        .update(updatedTheme)
+        .eq('id', currentTheme.id);
+
+      if (updateThemeError) {
+        logger.error('Error updating theme', { error: updateThemeError });
+        throw updateThemeError;
+      }
+
+      logger.info('Updated theme successfully');
+    }
+
+    // Fetch existing theme components
+    const { data: existingComponents, error: getComponentsError } = await supabase
+      .from('theme_components')
+      .select('*')
+      .eq('theme_id', currentTheme.id);
+
+    if (getComponentsError) {
+      logger.error('Error fetching theme components', { error: getComponentsError });
+      throw getComponentsError;
+    }
+
+    // Define base components
+    const baseComponents: ComponentTokens[] = [
+      {
+        id: 'main-nav',
+        theme_id: currentTheme.id,
+        component_name: 'MainNav',
+        styles: {
+          container: {
+            base: 'fixed top-0 w-full z-50 transition-all duration-300',
+            animated: 'animate-morph-header'
+          },
+          header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30',
+          dataStream: 'relative',
+          dataStreamEffect: 'mainnav-data-stream',
+          glitchParticles: 'mainnav-glitch-particles',
+          nav: 'flex items-center gap-1 md:gap-2',
+          navItem: 'px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors relative group',
+          navItemActive: 'text-primary',
+          navItemActiveIndicator: 'absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-center',
+          mobileToggle: 'block md:hidden'
+        },
+        description: 'Main navigation bar styles',
+      },
+      {
+        id: 'footer',
+        theme_id: currentTheme.id,
+        component_name: 'Footer',
+        styles: {
+          container: 'bg-background text-foreground py-8',
+          content: 'container mx-auto px-4',
+          text: 'text-sm text-muted-foreground',
+        },
+        description: 'Footer styles',
+      },
+    ];
+
+    // Determine which components need to be created or updated
+    const newComponents: ComponentTokens[] = [];
+    const updatedComponents: ComponentTokens[] = [];
+
+    for (const baseComponent of baseComponents) {
+      const existingComponent = existingComponents?.find(c => c.component_name === baseComponent.component_name);
+
+      if (!existingComponent) {
+        newComponents.push(baseComponent);
+      } else {
+        // Compare styles and add to updatedComponents if different
+        if (JSON.stringify(existingComponent.styles) !== JSON.stringify(baseComponent.styles)) {
+          updatedComponents.push({ ...existingComponent, styles: baseComponent.styles });
+        }
+      }
+    }
+
+    // Create new components
+    if (newComponents.length > 0) {
+      try {
+        const { error: createComponentsError } = await supabase
+          .from('theme_components')
+          .insert(newComponents);
+
+        if (createComponentsError) {
+          logger.error('Error creating theme components', { error: createComponentsError });
+          throw createComponentsError;
+        }
+
+        logger.info('Created theme components successfully', { componentCount: newComponents.length });
+      } catch (error) {
+        logger.error('Failed to create theme components', { error });
+      }
+    }
+
+    // Update the theme component tokens if needed
+    if (updatedComponents.length > 0) {
+      try {
+        // Fix the type error by properly formatting the API call
+        for (const component of updatedComponents) {
+          // Update components one by one to ensure proper typing
+          await supabase
+            .from('theme_components')
+            .update({
+              styles: component.styles,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', component.id);
+        }
+        
+        logger.info('Updated theme components successfully', { componentCount: updatedComponents.length });
+      } catch (error) {
+        logger.error('Failed to update theme components', { error });
+      }
+    }
+
+    logger.info('Impulsivity theme sync completed');
+    return true;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Failed to update Impulsivity theme', { errorMessage });
+    logger.error('Impulsivity theme sync failed', { error });
     return false;
   }
 }

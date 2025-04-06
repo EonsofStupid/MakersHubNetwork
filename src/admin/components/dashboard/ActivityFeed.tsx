@@ -4,40 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
-interface ActivityItem {
-  id: string;
-  user: string;
-  action: string;
-  timestamp: string;
-}
-
-const mockActivities: ActivityItem[] = [
-  {
-    id: '1',
-    user: 'John Doe',
-    action: 'Created a new build',
-    timestamp: '2 hours ago',
-  },
-  {
-    id: '2',
-    user: 'Jane Smith',
-    action: 'Updated profile settings',
-    timestamp: '3 hours ago',
-  },
-  {
-    id: '3',
-    user: 'Alex Johnson',
-    action: 'Commented on build #123',
-    timestamp: '5 hours ago',
-  },
-  {
-    id: '4',
-    user: 'Sarah Williams',
-    action: 'Published a new build',
-    timestamp: '1 day ago',
-  },
-];
-
 export function ActivityFeed() {
   const logger = useLogger('ActivityFeed', LogCategory.ADMIN);
 
@@ -55,15 +21,12 @@ export function ActivityFeed() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {mockActivities.map((activity) => (
-            <div key={activity.id} className="flex items-start gap-4 border-b pb-4 last:border-0 last:pb-0">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                {activity.user.charAt(0)}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">{activity.user}</p>
-                <p className="text-sm text-muted-foreground">{activity.action}</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">{activity.timestamp}</p>
+          {activities.map((activity, index) => (
+            <div key={index} className="flex items-start space-x-4 pb-4 border-b last:border-0 border-muted">
+              <div className={`w-2 h-2 mt-2 rounded-full bg-${activity.type === 'system' ? 'blue' : activity.type === 'error' ? 'red' : 'green'}-500`} />
+              <div>
+                <p className="text-sm font-medium">{activity.message}</p>
+                <p className="text-xs text-muted-foreground">{activity.time}</p>
               </div>
             </div>
           ))}
@@ -72,3 +35,31 @@ export function ActivityFeed() {
     </Card>
   );
 }
+
+const activities = [
+  {
+    type: 'user',
+    message: 'User login from new device',
+    time: '2 minutes ago'
+  },
+  {
+    type: 'system',
+    message: 'System update completed',
+    time: '10 minutes ago'
+  },
+  {
+    type: 'error',
+    message: 'API rate limit reached',
+    time: '25 minutes ago'
+  },
+  {
+    type: 'user',
+    message: 'New user registered',
+    time: '1 hour ago'
+  },
+  {
+    type: 'system',
+    message: 'Database backup successful',
+    time: '2 hours ago'
+  }
+];

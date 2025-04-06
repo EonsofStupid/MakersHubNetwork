@@ -30,3 +30,9 @@ export interface Session {
   expires_at: number;
   created_at: string;
 }
+
+// Define AuthEvent interface with string index signature
+export interface AuthEvent extends Record<string, unknown> {
+  type: string;
+  payload?: Record<string, unknown>;
+}

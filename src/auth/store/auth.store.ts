@@ -1,156 +1,188 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { AuthState, UserRole } from './types';
+import { supabase } from '@/integrations/supabase/client';
+import { authStorage } from './middleware/persist.middleware';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
 
-import { create } from "zustand";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
-import { UserRole } from "../types/auth.types";
-import { getLogger } from "@/logging";
-import { LogCategory } from "@/logging";
-
-export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated" | "error";
-
-interface AuthState {
-  user: User | null;
-  session: Session | null;
-  roles: UserRole[];
-  status: AuthStatus;
-  isLoading: boolean;
-  error: string | null;
-  initialized: boolean;
-  isAuthenticated: boolean;
+interface AuthActions {
+  setUser: (user: AuthState['user']) => void;
+  setSession: (session: AuthState['session']) => void;
+  setRoles: (roles: UserRole[]) => void;
+  setError: (error: string | null) => void;
+  setLoading: (isLoading: boolean) => void;
+  setInitialized: (initialized: boolean) => void;
   hasRole: (role: UserRole) => boolean;
   isAdmin: () => boolean;
-  setSession: (session: Session | null) => void;
   initialize: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
-  session: null,
-  roles: [],
-  status: "idle",
-  isLoading: false,
-  error: null,
-  initialized: false,
-  isAuthenticated: false,
-  
-  hasRole: (role: UserRole) => {
-    return get().roles.includes(role);
-  },
-  
-  isAdmin: () => {
-    const roles = get().roles;
-    return roles.includes("admin") || roles.includes("super_admin");
-  },
-  
-  setSession: (session: Session | null) => {
-    const currentUser = session?.user || null;
-    
-    // Derive roles from user metadata when available
-    const roles: UserRole[] = [];
-    if (currentUser?.app_metadata?.roles && Array.isArray(currentUser.app_metadata.roles)) {
-      roles.push(...currentUser.app_metadata.roles);
-    }
-    
-    set({
-      session,
-      user: currentUser,
-      roles,
-      status: session ? "authenticated" : "unauthenticated",
-      isAuthenticated: !!session,
-    });
-  },
-  
-  initialize: async () => {
-    const logger = getLogger();
-    logger.info('Auth store initialization started', {
-      category: LogCategory.AUTH,
-      source: 'auth.store'
-    });
-    
-    // Don't initialize multiple times
-    if (get().initialized) {
-      logger.info('Auth already initialized, skipping', {
-        category: LogCategory.AUTH,
-        source: 'auth.store'
-      });
-      return;
-    }
+export type AuthStore = AuthState & AuthActions;
 
-    try {
-      set({ isLoading: true, status: "loading" });
+export const useAuthStore = create<AuthStore>()(
+  persist(
+    (set, get) => ({
+      // Initial state
+      user: null,
+      session: null,
+      roles: [],
+      isLoading: true,
+      error: null,
+      status: 'idle',
+      initialized: false,
       
-      const { data, error } = await supabase.auth.getSession();
-      if (error) throw error;
+      // Methods
+      setUser: (user) => set({ user }),
+      setSession: (session) => set({ 
+        session,
+        user: session?.user ?? null,
+        status: session ? 'authenticated' : 'unauthenticated'
+      }),
+      setRoles: (roles) => set({ roles }),
+      setError: (error) => set({ error }),
+      setLoading: (isLoading) => set({ isLoading }),
+      setInitialized: (initialized) => set({ initialized }),
       
-      // Set the session from the response
-      get().setSession(data.session);
+      // Role checking
+      hasRole: (role) => get().roles.includes(role),
+      isAdmin: () => get().roles.includes('admin') || get().roles.includes('super_admin'),
       
-      logger.info('Auth initialization completed', {
-        category: LogCategory.AUTH,
-        source: 'auth.store',
-        details: { 
-          hasSession: !!data.session,
-          status: data.session ? 'authenticated' : 'unauthenticated'
+      // Initialize authentication
+      initialize: async () => {
+        const logger = getLogger();
+        try {
+          set({ isLoading: true, error: null });
+          
+          logger.info('Initializing auth store', {
+            category: LogCategory.AUTH,
+            source: 'auth/store'
+          });
+          
+          // Get current session
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            throw sessionError;
+          }
+          
+          if (session) {
+            // Fetch user roles if we have a session
+            const { data: rolesData, error: rolesError } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', session.user.id);
+              
+            if (rolesError) {
+              throw rolesError;
+            }
+            
+            const roles = (rolesData?.map(r => r.role) as UserRole[]) || [];
+            
+            set({
+              user: session.user,
+              session,
+              roles,
+              status: 'authenticated',
+              error: null
+            });
+            
+            logger.info('User authenticated', {
+              category: LogCategory.AUTH,
+              source: 'auth/store',
+              details: { 
+                userId: session.user.id,
+                rolesCount: roles.length 
+              }
+            });
+          } else {
+            set({
+              user: null,
+              session: null,
+              roles: [],
+              status: 'unauthenticated',
+              error: null
+            });
+            
+            logger.info('No user session found', {
+              category: LogCategory.AUTH,
+              source: 'auth/store'
+            });
+          }
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          
+          logger.error('Auth initialization error', {
+            category: LogCategory.AUTH,
+            source: 'auth/store',
+            details: err
+          });
+          
+          set({
+            error: errorMessage,
+            status: 'unauthenticated'
+          });
+        } finally {
+          set({ 
+            isLoading: false,
+            initialized: true
+          });
         }
-      });
-
-      // Mark as initialized
-      set({ initialized: true, isLoading: false });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Authentication failed";
+      },
       
-      logger.error('Auth initialization error', {
-        category: LogCategory.AUTH,
-        source: 'auth.store',
-        details: error
-      });
-      
-      set({ 
-        error: errorMessage, 
-        status: "error",
-        isLoading: false,
-        initialized: true // Still mark as initialized even if there's an error
-      });
+      // Logout
+      logout: async () => {
+        const logger = getLogger();
+        try {
+          set({ isLoading: true });
+          
+          logger.info('User logging out', {
+            category: LogCategory.AUTH,
+            source: 'auth/store'
+          });
+          
+          await supabase.auth.signOut();
+          
+          set({
+            user: null,
+            session: null,
+            roles: [],
+            status: 'unauthenticated',
+            error: null
+          });
+          
+          // Log successful logout
+          const logDetails: Record<string, unknown> = {
+            success: true,
+          };
+          
+          logger.info('User logged out successfully', logDetails);
+        } catch (error) {
+          // Type-safe error logging
+          const logDetails: Record<string, unknown> = {
+            error: true,
+            errorMessage: error instanceof Error ? error.message : String(error),
+          };
+          
+          logger.error('Error during logout', logDetails);
+          
+          set({ error: logDetails.errorMessage as string });
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      }
+    }),
+    {
+      name: 'auth-storage',
+      storage: authStorage,
+      partialize: (state) => ({
+        user: state.user,
+        session: state.session,
+        roles: state.roles,
+        status: state.status
+      })
     }
-  },
-  
-  logout: async () => {
-    const logger = getLogger();
-    try {
-      set({ isLoading: true });
-      
-      logger.info('User logging out', {
-        category: LogCategory.AUTH,
-        source: 'auth.store'
-      });
-      
-      await supabase.auth.signOut();
-      
-      set({
-        user: null,
-        session: null,
-        roles: [],
-        status: "unauthenticated",
-        isLoading: false,
-        isAuthenticated: false
-      });
-      
-      logger.info('User logged out successfully', {
-        category: LogCategory.AUTH,
-        source: 'auth.store'
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Logout failed";
-      
-      logger.error('Logout error', {
-        category: LogCategory.AUTH,
-        source: 'auth.store',
-        details: error
-      });
-      
-      set({ error: errorMessage, isLoading: false });
-      throw error;
-    }
-  }
-}));
+  )
+);

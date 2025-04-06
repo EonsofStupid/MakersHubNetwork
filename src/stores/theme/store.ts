@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { ThemeState } from "./types";
 import { ComponentTokens, ThemeContext } from "@/types/theme";
@@ -87,7 +86,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       logger.info('Setting theme', { 
-        details: { themeIdOrName }
+        details: { themeIdOrName } as Record<string, unknown>
       });
       
       // We receive a theme ID or name, fetch the theme
@@ -186,11 +185,11 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
           themeId: fetchedTheme.id, 
           isFallback, 
           componentTokensCount: Array.isArray(fetchedTheme.component_tokens) ? fetchedTheme.component_tokens.length : 0 
-        }
+        } as Record<string, unknown>
       });
     } catch (error) {
       logger.error("Error fetching theme", { 
-        details: error
+        details: error as Record<string, unknown>
       });
       
       // On error, set a basic hardcoded fallback theme to ensure UI doesn't break
@@ -252,7 +251,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       });
       
       logger.warn("Using hardcoded fallback theme due to error", { 
-        details: { errorMessage: error instanceof Error ? error.message : String(error) }
+        details: { errorMessage: error instanceof Error ? error.message : String(error) } as Record<string, unknown>
       });
     }
   },
@@ -289,11 +288,11 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       
       set({ adminComponents: validatedAdminComponents, isLoading: false });
       logger.info('Admin components loaded', { 
-        details: { count: validatedAdminComponents.length }
+        details: { count: validatedAdminComponents.length } as Record<string, unknown>
       });
     } catch (error) {
       logger.error("Error loading admin components", { 
-        details: error
+        details: error as Record<string, unknown>
       });
       set({ 
         error: error instanceof Error ? error : new Error("Failed to load admin components"), 

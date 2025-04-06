@@ -1,127 +1,120 @@
 
-import { useAuthStore } from './store/auth.store';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { create } from 'zustand';
+import { User, Session, AuthStatus } from '@/types/auth';
 
-// Define the event types
-export type AuthEventType = 
-  | 'AUTH_SIGNED_IN'
-  | 'AUTH_SIGNED_OUT'
-  | 'AUTH_STATE_CHANGED'
-  | 'AUTH_SESSION_REFRESH'
-  | 'AUTH_USER_UPDATED'
-  | 'AUTH_ROLES_UPDATED';
+// Define allowed event types for type safety
+export type AuthEventType =
+  | 'SIGNED_IN'
+  | 'SIGNED_OUT'
+  | 'USER_UPDATED'
+  | 'SESSION_UPDATED'
+  | 'INITIALIZED'
+  | 'ERROR';
 
-export interface AuthEvent {
+// Modified AuthEvent to implement Record<string, unknown>
+export interface AuthEvent extends Record<string, unknown> {
   type: AuthEventType;
-  payload?: any;
+  payload?: Record<string, unknown>;
+  timestamp?: number;
 }
 
-type AuthEventHandler = (event: AuthEvent) => void;
+// Store for auth bridge
+interface AuthBridgeStore {
+  initialized: boolean;
+  isReady: boolean;
+  user: User | null;
+  session: Session | null;
+  status: AuthStatus;
+  error: Error | null;
+  events: AuthEvent[];
 
-// Create a simple event system
-const eventHandlers: AuthEventHandler[] = [];
+  // Actions
+  dispatch: (event: AuthEvent) => void;
+  setUser: (user: User | null) => void;
+  setSession: (session: Session | null) => void;
+  setStatus: (status: AuthStatus) => void;
+  setError: (error: Error | null) => void;
+  setInitialized: (initialized: boolean) => void;
+  reset: () => void;
+}
 
-/**
- * Subscribe to auth events
- * @param handler The handler function to call when an event occurs
- * @returns Unsubscribe function
- */
-export function subscribeToAuthEvents(handler: AuthEventHandler): () => void {
-  eventHandlers.push(handler);
-  
-  return () => {
-    const index = eventHandlers.indexOf(handler);
-    if (index !== -1) {
-      eventHandlers.splice(index, 1);
+export const useAuthBridge = create<AuthBridgeStore>((set, get) => ({
+  initialized: false,
+  isReady: false,
+  user: null,
+  session: null,
+  status: AuthStatus.LOADING,
+  error: null,
+  events: [],
+
+  dispatch: (event) => {
+    set((state) => ({
+      events: [...state.events, {
+        ...event,
+        timestamp: Date.now(),
+      }],
+    }));
+
+    // Process events
+    switch (event.type) {
+      case 'SIGNED_IN':
+        set({
+          status: AuthStatus.AUTHENTICATED,
+          user: event.payload?.user as User || null,
+          session: event.payload?.session as Session || null,
+        });
+        break;
+
+      case 'SIGNED_OUT':
+        set({
+          status: AuthStatus.UNAUTHENTICATED,
+          user: null,
+          session: null,
+        });
+        break;
+
+      case 'USER_UPDATED':
+        set({
+          user: event.payload?.user as User || get().user,
+        });
+        break;
+
+      case 'SESSION_UPDATED':
+        set({
+          session: event.payload?.session as Session || get().session,
+        });
+        break;
+
+      case 'INITIALIZED':
+        set({
+          initialized: true,
+          isReady: true,
+        });
+        break;
+
+      case 'ERROR':
+        set({
+          error: event.payload?.error as Error || null,
+          status: AuthStatus.ERROR,
+        });
+        break;
+
+      default:
+        break;
     }
-  };
-}
+  },
 
-/**
- * Publish an auth event
- * @param event The event to publish
- */
-export function publishAuthEvent(event: AuthEvent): void {
-  const logger = getLogger();
-  logger.debug(`Auth event published: ${event.type}`, {
-    category: LogCategory.AUTH,
-    source: 'auth/bridge',
-    details: event
-  });
-  
-  eventHandlers.forEach(handler => {
-    try {
-      handler(event);
-    } catch (error) {
-      logger.error('Error in auth event handler', {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge',
-        details: { error, eventType: event.type }
-      });
-    }
-  });
-}
+  setUser: (user) => set({ user }),
+  setSession: (session) => set({ session }),
+  setStatus: (status) => set({ status }),
+  setError: (error) => set({ error }),
+  setInitialized: (initialized) => set({ initialized }),
 
-/**
- * Initialize auth bridge by subscribing to auth store changes
- */
-export function initializeAuthBridge(): void {
-  const logger = getLogger();
-  logger.info('Initializing auth bridge', {
-    category: LogCategory.AUTH,
-    source: 'auth/bridge'
-  });
-  
-  // Setup auth state listener
-  const unsubscribe = useAuthStore.subscribe(
-    (state, prevState) => {
-      // User signed in
-      if (!prevState.user && state.user) {
-        publishAuthEvent({
-          type: 'AUTH_SIGNED_IN',
-          payload: { user: state.user }
-        });
-      }
-      
-      // User signed out
-      if (prevState.user && !state.user) {
-        publishAuthEvent({
-          type: 'AUTH_SIGNED_OUT'
-        });
-      }
-      
-      // Session changed
-      if (prevState.session !== state.session) {
-        publishAuthEvent({
-          type: 'AUTH_SESSION_REFRESH',
-          payload: { session: state.session }
-        });
-      }
-      
-      // User updated
-      if (prevState.user !== state.user && prevState.user && state.user) {
-        publishAuthEvent({
-          type: 'AUTH_USER_UPDATED',
-          payload: { 
-            previous: prevState.user,
-            current: state.user
-          }
-        });
-      }
-      
-      // Roles updated
-      if (prevState.roles !== state.roles) {
-        publishAuthEvent({
-          type: 'AUTH_ROLES_UPDATED',
-          payload: { roles: state.roles }
-        });
-      }
-    }
-  );
-  
-  // Clean up on window unload
-  window.addEventListener('beforeunload', () => {
-    unsubscribe();
-  });
-}
+  reset: () => set({
+    user: null,
+    session: null,
+    status: AuthStatus.LOADING,
+    error: null,
+    events: [],
+  }),
+}));

@@ -69,7 +69,8 @@ const fallbackTheme: Theme = {
   component_tokens: [],
 };
 
-interface GetThemeOptions {
+// Make GetThemeOptions extend Record<string, unknown>
+interface GetThemeOptions extends Record<string, unknown> {
   id?: string;
   name?: string;
   isDefault?: boolean;
@@ -84,7 +85,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
   try {
     logger.info("Fetching theme from service", {
       category: LogCategory.DATABASE,
-      details: options,
+      details: options as Record<string, unknown>,
       source: 'themeService'
     });
     
@@ -98,13 +99,13 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
         themeName: name,
         isDefault,
         context
-      }
+      } as Record<string, unknown>
     });
 
     if (error) {
       logger.error("Error fetching theme from service", { 
         category: LogCategory.DATABASE,
-        details: { error, options },
+        details: { error, options } as Record<string, unknown>,
         source: 'themeService'
       });
       
@@ -120,7 +121,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
         themeId: data.theme?.id || 'unknown',
         isFallback: data.isFallback || false,
         componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
-      },
+      } as Record<string, unknown>,
       source: 'themeService'
     });
 
@@ -132,7 +133,7 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
   } catch (error) {
     logger.error("Error fetching theme from service", { 
       category: LogCategory.DATABASE,
-      details: error,
+      details: error as Record<string, unknown>,
       source: 'themeService'
     });
     

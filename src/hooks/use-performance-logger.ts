@@ -1,111 +1,78 @@
 
-import { useCallback, useRef } from 'react';
-import { getLogger, LogCategory } from '@/logging';
+import { useCallback, useMemo } from 'react';
+import { useLogger } from './use-logger';
+import { LogCategory, LogOptions } from '@/logging/types';
 
-/**
- * Hook for measuring and logging performance
- */
-export function usePerformanceLogger(source: string) {
-  const logger = getLogger();
-  const timers = useRef<Record<string, number>>({});
-  
-  /**
-   * Start measuring performance for an operation
-   */
-  const startTimer = useCallback((operationName: string) => {
-    timers.current[operationName] = performance.now();
-  }, []);
-  
-  /**
-   * End measuring and log the duration
-   */
-  const endTimer = useCallback((operationName: string, options?: {
-    details?: unknown,
-    category?: LogCategory,
-    tags?: string[]
-  }) => {
-    const startTime = timers.current[operationName];
-    if (startTime) {
-      const duration = performance.now() - startTime;
-      
-      // Use the added performance method
-      logger.performance(
-        `${operationName} completed in ${duration.toFixed(2)}ms`,
-        duration,
-        {
-          ...options,
-          source,
-          category: options?.category || LogCategory.PERFORMANCE
+interface PerformanceOptions extends LogOptions {
+  category?: LogCategory;
+  component?: string;
+}
+
+// Performance utility functions
+export function usePerformanceLogger(componentName: string, category: LogCategory = LogCategory.PERFORMANCE) {
+  const logger = useLogger(`Performance:${componentName}`, category);
+
+  // Custom performance interface with necessary methods
+  const performanceAPI = useMemo(() => ({
+    mark: (name: string): void => {
+      if (typeof performance !== 'undefined') {
+        try {
+          performance.mark(name);
+        } catch (e) {
+          logger.warn(`Failed to create performance mark: ${name}`, {
+            errorMessage: e instanceof Error ? e.message : String(e)
+          });
         }
-      );
-      
-      delete timers.current[operationName];
-      return duration;
-    }
+      }
+    },
     
-    logger.warn(`Timer "${operationName}" was never started`, {
-      source,
-      category: LogCategory.PERFORMANCE
-    });
-    return -1;
-  }, [logger, source]);
-  
-  /**
-   * Wrap an async function with performance logging
-   */
-  const measureAsync = useCallback(async <T>(
-    operationName: string,
-    fn: () => Promise<T>,
-    options?: {
-      details?: unknown,
-      category?: LogCategory,
-      tags?: string[]
+    measure: (name: string, startMark: string, endMark: string): void => {
+      if (typeof performance !== 'undefined') {
+        try {
+          performance.measure(name, startMark, endMark);
+        } catch (e) {
+          logger.warn(`Failed to create performance measure: ${name}`, {
+            errorMessage: e instanceof Error ? e.message : String(e),
+            startMark,
+            endMark
+          });
+        }
+      }
+    },
+    
+    getEntriesByName: (name: string, type?: string): PerformanceEntry[] => {
+      if (typeof performance !== 'undefined') {
+        return performance.getEntriesByName(name, type);
+      }
+      return [];
+    },
+    
+    clearMarks: (name?: string): void => {
+      if (typeof performance !== 'undefined') {
+        performance.clearMarks(name);
+      }
+    },
+    
+    clearMeasures: (name?: string): void => {
+      if (typeof performance !== 'undefined') {
+        performance.clearMeasures(name);
+      }
     }
-  ): Promise<T> => {
-    startTimer(operationName);
-    try {
-      const result = await fn();
-      endTimer(operationName, options);
-      return result;
-    } catch (error) {
-      endTimer(operationName, {
+  }), [logger]);
+
+  // Log custom timing measurement
+  const logCustomTiming = useCallback(
+    (name: string, duration: number, options?: PerformanceOptions) => {
+      logger.logCustomTiming(name, duration, {
         ...options,
-        details: { ...(options?.details || {}), error }
+        component: componentName,
       });
-      throw error;
-    }
-  }, [startTimer, endTimer]);
-  
-  /**
-   * Wrap a synchronous function with performance logging
-   */
-  const measure = useCallback(<T>(
-    operationName: string,
-    fn: () => T,
-    options?: {
-      details?: unknown,
-      category?: LogCategory,
-      tags?: string[]
-    }
-  ): T => {
-    startTimer(operationName);
-    try {
-      const result = fn();
-      endTimer(operationName, options);
-      return result;
-    } catch (error) {
-      endTimer(operationName, {
-        ...options,
-        details: { ...(options?.details || {}), error }
-      });
-      throw error;
-    }
-  }, [startTimer, endTimer]);
-  
+    },
+    [logger, componentName]
+  );
+
   return {
-    startTimer,
-    endTimer,
-    measure,
-    measureAsync
+    performance: performanceAPI,
+    logCustomTiming,
   };
 }
