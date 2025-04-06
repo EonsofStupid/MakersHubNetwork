@@ -69,6 +69,9 @@ export interface ThemeToken {
   theme_id: string;
 }
 
+// Updated to be compatible with logger options
+import { LogCategory } from '@/logging';
+
 export interface ThemeLogDetails {
   // Status indicators
   success?: boolean;
@@ -106,7 +109,7 @@ export interface ThemeLogDetails {
   details?: Record<string, unknown>;
   hasAnimations?: boolean;
   hasComponentStyles?: boolean;
-  category?: string;
+  category?: LogCategory;
   
   // Allow for additional properties
   [key: string]: unknown;
