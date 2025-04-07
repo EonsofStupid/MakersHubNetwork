@@ -5,15 +5,9 @@ import { Theme, ThemeContext } from '@/types/theme';
 import { ThemeTokens, defaultTokens } from '@/theme/tokenSchema';
 import defaultTheme from '@/theme/defaultTheme';
 import { persistThemeTokens } from '@/lib/theme/safeStorage';
+import { toBoolean, isBoolean } from '@/utils/typeGuards';
 
 const logger = getLogger('ThemeLoader');
-
-/**
- * Helper function to safely convert unknown types to boolean
- */
-function toBoolean(value: unknown): boolean {
-  return value === true;
-}
 
 /**
  * Load theme tokens with fallback chain:
