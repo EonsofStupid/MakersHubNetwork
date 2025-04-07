@@ -23,8 +23,8 @@ export interface Theme {
 
 export interface DesignTokensStructure {
   colors?: {
-    primary?: string;
-    secondary?: string;
+    primary: string;
+    secondary: string;
     accent?: string;
     background?: string;
     foreground?: string;
@@ -146,4 +146,31 @@ export interface ThemeEffect {
   type: 'glitch' | 'gradient' | 'cyber' | 'pulse' | 'particle' | 'morph';
   enabled: boolean;
   [key: string]: any; // Allow for type-specific properties
+}
+
+// Fixed ThemeTokens type for the store
+export interface StoreThemeTokens {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  foreground: string;
+  card: string;
+  cardForeground: string;
+  muted: string;
+  mutedForeground: string;
+  border: string;
+  input: string;
+  ring: string;
+  effectPrimary: string;
+  effectSecondary: string;
+  effectTertiary: string;
+  transitionFast: string;
+  transitionNormal: string;
+  transitionSlow: string;
+  radiusSm: string;
+  radiusMd: string;
+  radiusLg: string;
+  radiusFull: string;
+  [key: string]: string;
 }

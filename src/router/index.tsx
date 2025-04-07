@@ -73,10 +73,10 @@ const siteRoute = createRoute({
   component: SiteLayout
 });
 
-// Index route
+// Index route - FIXED: Use empty path instead of '/' to avoid duplicate route ID
 const indexRoute = createRoute({
   getParentRoute: () => siteRoute,
-  path: '/', // Use path only, no id
+  path: '', // Empty path instead of '/' to avoid duplicate route
   component: Index
 });
 

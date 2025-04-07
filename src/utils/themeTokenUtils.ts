@@ -4,6 +4,13 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 
 /**
+ * Type guard to check if a value is a non-null object
+ */
+function isObject(val: unknown): val is Record<string, any> {
+  return typeof val === 'object' && val !== null && !Array.isArray(val);
+}
+
+/**
  * Safely extends/updates theme design tokens with new values
  * @param currentTokens Current design tokens structure
  * @param updates The updates to apply
@@ -22,20 +29,25 @@ export function updateDesignTokens(
     
     // Update colors if provided
     if (updates.colors) {
+      const baseColors = isObject(result.colors) ? result.colors : {};
       result.colors = {
-        ...(result.colors || {}),
+        ...baseColors,
         ...updates.colors
       };
     }
     
     // Update effects if provided
     if (updates.effects) {
+      const baseEffects = isObject(result.effects) ? result.effects : { shadows: {}, blurs: {}, gradients: {} };
+      
       result.effects = {
-        shadows: {...(result.effects?.shadows || {}), ...(updates.effects.shadows || {})},
-        blurs: {...(result.effects?.blurs || {}), ...(updates.effects.blurs || {})},
-        gradients: {...(result.effects?.gradients || {}), ...(updates.effects.gradients || {})},
-        ...(result.effects || {}),
-        ...updates.effects
+        shadows: { ...(baseEffects.shadows || {}), ...(updates.effects.shadows || {}) },
+        blurs: { ...(baseEffects.blurs || {}), ...(updates.effects.blurs || {}) },
+        gradients: { ...(baseEffects.gradients || {}), ...(updates.effects.gradients || {}) },
+        ...baseEffects,
+        ...(updates.effects.primary !== undefined ? { primary: updates.effects.primary } : {}),
+        ...(updates.effects.secondary !== undefined ? { secondary: updates.effects.secondary } : {}),
+        ...(updates.effects.tertiary !== undefined ? { tertiary: updates.effects.tertiary } : {})
       };
     }
     
@@ -94,7 +106,7 @@ export function updateThemeColors(
   colorUpdates: Record<string, string>
 ): DesignTokensStructure {
   return updateDesignTokens(currentTokens, {
-    colors: colorUpdates
+    colors: colorUpdates as any
   });
 }
 
@@ -109,6 +121,6 @@ export function updateThemeEffects(
   effectUpdates: Record<string, string>
 ): DesignTokensStructure {
   return updateDesignTokens(currentTokens, {
-    effects: effectUpdates
+    effects: effectUpdates as any
   });
 }

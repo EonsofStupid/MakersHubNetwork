@@ -32,8 +32,8 @@ export interface ComponentTokens {
 
 export interface DesignTokensStructure {
   colors?: {
-    primary?: string;
-    secondary?: string;
+    primary: string;
+    secondary: string;
     accent?: string;
     background?: string;
     foreground?: string;
@@ -65,7 +65,7 @@ export interface DesignTokensStructure {
   animation?: {
     keyframes?: Record<string, any>;
     transitions?: Record<string, any>;
-    durations?: Record<string, any>;
+    durations?: Record<string, string | number>;
   };
   admin?: Record<string, any>;
 }
@@ -140,4 +140,31 @@ export interface ThemeContextType {
   isLoading: boolean;
   error: Error | null;
   setTheme: (themeId: string) => Promise<void>;
+}
+
+// Fixed ThemeTokens type for the store
+export interface StoreThemeTokens {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  foreground: string;
+  card: string;
+  cardForeground: string;
+  muted: string;
+  mutedForeground: string;
+  border: string;
+  input: string;
+  ring: string;
+  effectPrimary: string;
+  effectSecondary: string;
+  effectTertiary: string;
+  transitionFast: string;
+  transitionNormal: string;
+  transitionSlow: string;
+  radiusSm: string;
+  radiusMd: string;
+  radiusLg: string;
+  radiusFull: string;
+  [key: string]: string;
 }
