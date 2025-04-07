@@ -1,11 +1,10 @@
 
 import { createRoute } from '@tanstack/react-router';
 import { rootRoute } from './site';
-import { AdminLayout } from '@/admin/components/layouts/AdminLayout';
-import { AdminAuthGuard } from '@/admin/components/AdminAuthGuard';
 import React from 'react';
 
 // Import admin pages (Lazy load them for better performance)
+const AdminLayout = React.lazy(() => import('@/admin/components/layouts/AdminLayout'));
 const Dashboard = React.lazy(() => import('@/admin/routes/dashboard/DashboardPage'));
 const BuildsPage = React.lazy(() => import('@/admin/routes/builds/BuildsPage'));
 const UsersPage = React.lazy(() => import('@/admin/routes/users/UsersPage'));
@@ -29,7 +28,7 @@ const PageLoader = () => (
 const adminBaseRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'admin-dashboard',
-  component: AdminLayout
+  component: () => <React.Suspense fallback={<PageLoader />}><AdminLayout /></React.Suspense>
 });
 
 // Dashboard route
