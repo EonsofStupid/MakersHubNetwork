@@ -1,100 +1,81 @@
 
+import { LogEntry } from '../types';
 import { Transport } from './transport';
-import { LogEntry, LogLevel } from '../types';
+
+interface UiTransportOptions {
+  maxLogs?: number;
+  target?: string;
+}
 
 /**
- * Transport that keeps logs in memory for UI components to display
+ * Transport for UI display of logs
  */
 export class UiTransport implements Transport {
   private logs: LogEntry[] = [];
-  private maxLogs: number;
-  private subscribers: Array<(logs: LogEntry[]) => void> = [];
-
-  constructor({ maxLogs = 100 }: { maxLogs?: number } = {}) {
-    this.maxLogs = maxLogs;
-  }
-
-  log(entry: LogEntry): void {
-    // Add log to beginning of array for most recent first
-    this.logs.unshift(entry);
-    
-    // Trim logs if they exceed the maximum
-    if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(0, this.maxLogs);
-    }
-    
-    // Notify subscribers
-    this.notifySubscribers();
-  }
+  private options: UiTransportOptions;
+  private subscribers: ((logs: LogEntry[]) => void)[] = [];
   
-  /**
-   * Get all logs
-   */
-  getLogs(): LogEntry[] {
-    return [...this.logs];
-  }
-  
-  /**
-   * Get filtered logs
-   */
-  getFilteredLogs({ 
-    level, 
-    category, 
-    source,
-    limit = this.maxLogs 
-  }: {
-    level?: LogLevel;
-    category?: string;
-    source?: string;
-    limit?: number;
-  } = {}): LogEntry[] {
-    let filtered = [...this.logs];
-    
-    if (level !== undefined) {
-      filtered = filtered.filter(log => log.level === level);
-    }
-    
-    if (category !== undefined) {
-      filtered = filtered.filter(log => log.category === category);
-    }
-    
-    if (source !== undefined) {
-      filtered = filtered.filter(log => log.source === source);
-    }
-    
-    return filtered.slice(0, limit);
-  }
-  
-  /**
-   * Clear all logs
-   */
-  clear(): void {
-    this.logs = [];
-    this.notifySubscribers();
-  }
-  
-  /**
-   * Subscribe to log updates
-   */
-  subscribe(callback: (logs: LogEntry[]) => void): () => void {
-    this.subscribers.push(callback);
-    
-    // Return unsubscribe function
-    return () => {
-      this.subscribers = this.subscribers.filter(cb => cb !== callback);
+  constructor(options: UiTransportOptions = {}) {
+    this.options = {
+      maxLogs: 100,
+      ...options
     };
   }
   
-  /**
-   * Notify all subscribers of log updates
-   */
-  private notifySubscribers(): void {
-    this.subscribers.forEach(callback => {
-      try {
-        callback([...this.logs]);
-      } catch (error) {
-        console.error('Error notifying log subscriber:', error);
-      }
-    });
+  log(entry: LogEntry): void {
+    // Add to logs at the beginning (newest first)
+    this.logs.unshift(entry);
+    
+    // Limit size
+    if (this.options.maxLogs && this.logs.length > this.options.maxLogs) {
+      this.logs = this.logs.slice(0, this.options.maxLogs);
+    }
+    
+    // Notify subscribers
+    this.subscribers.forEach(callback => callback(this.logs));
+    
+    // Update UI if target exists
+    this.updateUI();
+  }
+  
+  getLogs(): LogEntry[] {
+    return this.logs;
+  }
+  
+  clear(): void {
+    this.logs = [];
+    this.updateUI();
+    
+    // Notify subscribers
+    this.subscribers.forEach(callback => callback(this.logs));
+  }
+  
+  subscribe(callback: (logs: LogEntry[]) => void): () => void {
+    this.subscribers.push(callback);
+    
+    // Call immediately with current logs
+    callback(this.logs);
+    
+    // Return unsubscribe function
+    return () => {
+      this.subscribers = this.subscribers.filter(sub => sub !== callback);
+    };
+  }
+  
+  private updateUI(): void {
+    // Implementation would depend on the specific UI framework
+    if (typeof document === 'undefined' || !this.options.target) {
+      return;
+    }
+    
+    const target = document.getElementById(this.options.target);
+    if (!target) {
+      return;
+    }
+    
+    // Simple implementation - in practice, would use a framework renderer
+    target.innerHTML = this.logs
+      .map(log => `<div class="log-entry log-${log.level}">${new Date(log.timestamp).toISOString()} [${log.level.toUpperCase()}] ${String(log.message)}</div>`)
+      .join('');
   }
 }

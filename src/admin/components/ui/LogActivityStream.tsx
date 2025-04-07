@@ -14,7 +14,7 @@ interface LogActivityStreamProps {
   title?: string;
   autoRefresh?: boolean;
   refreshInterval?: number;
-  height?: string;
+  maxHeight?: string;
   level?: LogLevel;
   categories?: LogCategory[];
   showSource?: boolean;
@@ -25,7 +25,7 @@ export const LogActivityStream: React.FC<LogActivityStreamProps> = ({
   title = "Recent Activity",
   autoRefresh = true,
   refreshInterval = 10000,
-  height = "300px",
+  maxHeight = "300px",
   level,
   categories,
   showSource = false
@@ -116,7 +116,7 @@ export const LogActivityStream: React.FC<LogActivityStreamProps> = ({
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4" style={{ maxHeight: height, overflowY: 'auto' }}>
+        <div className="space-y-4" style={{ maxHeight, overflowY: 'auto' }}>
           {logs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No recent activity
