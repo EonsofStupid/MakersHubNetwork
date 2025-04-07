@@ -1,5 +1,6 @@
 
 import { LogLevel } from './constants/log-level';
+import { ReactNode } from 'react';
 
 export enum LogCategory {
   SYSTEM = 'system',
@@ -16,7 +17,7 @@ export enum LogCategory {
 
 export interface LogMessage {
   level: LogLevel;
-  message: string;
+  message: string | ReactNode;
   timestamp: Date;
   category?: LogCategory;
   source?: string;
@@ -25,6 +26,8 @@ export interface LogMessage {
   sessionId?: string;
   duration?: number;
   tags?: string[];
+  error?: boolean;
+  success?: boolean;
 }
 
 export interface LogEntry extends LogMessage {
@@ -39,6 +42,8 @@ export interface LogOptions {
   userId?: string;
   sessionId?: string;
   duration?: number;
+  error?: boolean;
+  success?: boolean;
 }
 
 export interface LoggerOptions {
@@ -58,11 +63,11 @@ export interface LoggerConfig {
 }
 
 export interface Logger {
-  debug: (message: string, options?: LogOptions) => void;
-  info: (message: string, options?: LogOptions) => void;
-  warn: (message: string, options?: LogOptions) => void;
-  error: (message: string, options?: LogOptions) => void;
-  critical: (message: string, options?: LogOptions) => void;
+  debug: (message: string | ReactNode, options?: LogOptions) => void;
+  info: (message: string | ReactNode, options?: LogOptions) => void;
+  warn: (message: string | ReactNode, options?: LogOptions) => void;
+  error: (message: string | ReactNode, options?: LogOptions) => void;
+  critical: (message: string | ReactNode, options?: LogOptions) => void;
 }
 
 export interface LogTransport {
