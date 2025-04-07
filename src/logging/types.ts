@@ -44,6 +44,8 @@ export interface LogOptions {
   duration?: number;
   error?: boolean;
   success?: boolean;
+  // Added additional properties that were being used
+  warning?: boolean;
 }
 
 export interface LoggerOptions {
@@ -86,3 +88,7 @@ export interface LoggingConfig {
   includeSession?: boolean;
   enabledCategories?: LogCategory[];
 }
+
+// Re-export LogLevel to fix missing export error
+export { LogLevel } from './constants/log-level';
+

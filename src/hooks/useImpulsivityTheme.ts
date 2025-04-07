@@ -3,7 +3,8 @@ import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory, LogOptions } from '@/logging/types';
+import { LogCategory } from '@/logging/types';
+import { createLogOptions } from '@/logging/utils/log-helpers';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -17,7 +18,16 @@ export function useImpulsivityTheme() {
   
   const applyToMainSite = async () => {
     try {
-      const cssVars: Record<string, string> = {
+      // Use a type-safe approach to CSS variables
+      interface CSSVars {
+        '--site-primary': string;
+        '--site-secondary': string;
+        '--site-effect-color': string;
+        '--site-effect-secondary': string;
+        '--site-effect-tertiary': string;
+      }
+      
+      const cssVars: CSSVars = {
         '--site-primary': tokens.primary || '186 100% 50%',
         '--site-secondary': tokens.secondary || '334 100% 59%',
         '--site-effect-color': tokens.effectPrimary || '#00F0FF',
@@ -26,7 +36,7 @@ export function useImpulsivityTheme() {
       };
       
       const rootElement = document.documentElement;
-      Object.entries(cssVars).forEach(([key, value]) => {
+      (Object.entries(cssVars) as [keyof CSSVars, string][]).forEach(([key, value]) => {
         rootElement.style.setProperty(key, value);
       });
       
@@ -49,22 +59,25 @@ export function useImpulsivityTheme() {
         logger.info('Updating theme design tokens with Impulsivity colors');
       }
       
-      logger.info('Applied Impulsivity theme to main site', { 
-        details: {
-          success: true,
-          mainSite: true
-        } as Record<string, unknown>
-      });
+      logger.info('Applied Impulsivity theme to main site', 
+        { 
+          details: {
+            success: true,
+            mainSite: true
+          }
+        }
+      );
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Error applying Impulsivity theme to main site', { 
-        details: { 
-          error: true, 
-          errorMessage,
-          mainSite: false 
-        } as Record<string, unknown>
-      });
+      logger.error('Error applying Impulsivity theme to main site', 
+        { 
+          details: { 
+            errorMessage,
+            mainSite: false 
+          }
+        }
+      );
       return false;
     }
   };
@@ -73,7 +86,11 @@ export function useImpulsivityTheme() {
     try {
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement) {
-        const cssVars = {
+        interface AdminCssVars {
+          [key: string]: string;
+        }
+        
+        const cssVars: AdminCssVars = {
           '--impulse-primary': tokens.effectPrimary || '#00F0FF',
           '--impulse-secondary': tokens.effectSecondary || '#FF2D6E',
           '--impulse-bg-main': '#121218',
@@ -93,28 +110,29 @@ export function useImpulsivityTheme() {
           (adminRootElement as HTMLElement).style.setProperty(key, value);
         });
         
-        logger.info('Applied Impulsivity theme to admin panel', { 
-          details: {
-            success: true,
-            admin: true 
-          } as Record<string, unknown>
-        });
+        logger.info('Applied Impulsivity theme to admin panel', 
+          { 
+            details: {
+              success: true,
+              admin: true 
+            }
+          }
+        );
         return true;
       } else {
-        logger.warn('Admin panel root element not found, skipping theme application', {
-          category: LogCategory.UI
-        } as LogOptions);
+        logger.warn('Admin panel root element not found, skipping theme application');
         return true; // Not a critical failure
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Error applying Impulsivity theme to admin panel', { 
-        details: { 
-          error: true, 
-          errorMessage,
-          admin: false 
-        } as Record<string, unknown>
-      });
+      logger.error('Error applying Impulsivity theme to admin panel', 
+        { 
+          details: { 
+            errorMessage,
+            admin: false 
+          }
+        }
+      );
       return false;
     }
   };

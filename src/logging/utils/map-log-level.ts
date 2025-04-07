@@ -1,30 +1,53 @@
 
-import { LogLevel, LOG_LEVEL_VALUES } from '../constants/log-level';
+import { LogLevel } from '../constants/log-level';
 
 /**
- * Maps LogLevel enum values to their string representation
- */
-export const LOG_LEVEL_MAP: Record<LogLevel, string> = {
-  [LogLevel.DEBUG]: "DEBUG",
-  [LogLevel.TRACE]: "TRACE",
-  [LogLevel.INFO]: "INFO",
-  [LogLevel.SUCCESS]: "SUCCESS",
-  [LogLevel.WARN]: "WARN", 
-  [LogLevel.ERROR]: "ERROR",
-  [LogLevel.CRITICAL]: "CRITICAL"
-};
-
-/**
- * Safely compares log levels
- * Uses the LOG_LEVEL_VALUES from constants
- * 
- * @param level The level to check
- * @param minLevel The minimum level required
- * @returns True if level is at least minLevel
+ * Check if a log level meets or exceeds the minimum level
  */
 export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
-  const levelValue = LOG_LEVEL_VALUES[level] !== undefined ? LOG_LEVEL_VALUES[level] : 0;
-  const minLevelValue = LOG_LEVEL_VALUES[minLevel] !== undefined ? LOG_LEVEL_VALUES[minLevel] : 0;
-  
-  return levelValue >= minLevelValue;
+  const levelOrder = {
+    [LogLevel.TRACE]: 0,
+    [LogLevel.DEBUG]: 1,
+    [LogLevel.INFO]: 2,
+    [LogLevel.SUCCESS]: 3,
+    [LogLevel.WARN]: 4,
+    [LogLevel.ERROR]: 5,
+    [LogLevel.CRITICAL]: 6,
+  };
+
+  return levelOrder[level] >= levelOrder[minLevel];
 }
+
+/**
+ * Maps a log level string to the corresponding LogLevel enum value
+ */
+export function mapLogLevel(level: string): LogLevel {
+  switch (level.toLowerCase()) {
+    case 'trace':
+      return LogLevel.TRACE;
+    case 'debug':
+      return LogLevel.DEBUG;
+    case 'info':
+      return LogLevel.INFO;
+    case 'success':
+      return LogLevel.SUCCESS;
+    case 'warn':
+    case 'warning':
+      return LogLevel.WARN;
+    case 'error':
+      return LogLevel.ERROR;
+    case 'critical':
+    case 'fatal':
+      return LogLevel.CRITICAL;
+    default:
+      return LogLevel.INFO;
+  }
+}
+
+/**
+ * Export a utility for use with TanStack Router and other contexts
+ */
+export const logLevelUtils = {
+  isLogLevelAtLeast,
+  mapLogLevel,
+};

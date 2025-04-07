@@ -1,8 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeContext } from '@/types/theme';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { createLogOptions } from '@/logging/utils/log-helpers';
 
 // Create a logger instance for the theme service
 const logger = getLogger();
@@ -69,7 +69,7 @@ const fallbackTheme: Theme = {
   component_tokens: [],
 };
 
-interface GetThemeOptions {
+export interface GetThemeOptions {
   id?: string;
   name?: string;
   isDefault?: boolean;
@@ -82,19 +82,18 @@ interface GetThemeOptions {
  */
 export async function getTheme(options?: GetThemeOptions): Promise<{ theme: any; isFallback: boolean }> {
   try {
-    logger.info("Fetching theme from service", {
-      category: LogCategory.DATABASE,
-      details: options || {}
-    });
+    logger.info("Fetching theme from service", 
+      createLogOptions(LogCategory.DATABASE, { details: options || {} })
+    );
     
     const { id, name, isDefault = true, context = 'site' } = options || {};
     
     // Build query params manually to avoid type issues
-    const queryParams: Record<string, string> = {};
-    if (id) queryParams.themeId = id;
-    if (name) queryParams.themeName = name;
-    queryParams.isDefault = isDefault ? 'true' : 'false';
-    queryParams.context = context;
+    const params: Record<string, string> = {};
+    if (id) params.themeId = id;
+    if (name) params.themeName = name;
+    params.isDefault = isDefault ? 'true' : 'false';
+    params.context = context;
     
     // Use edge function to get theme with proper params
     const { data, error } = await supabase.functions.invoke('theme-service', {
@@ -103,10 +102,12 @@ export async function getTheme(options?: GetThemeOptions): Promise<{ theme: any;
     });
 
     if (error) {
-      logger.error("Error fetching theme from service", { 
-        category: LogCategory.DATABASE,
-        details: { error, options: options || {} }
-      });
+      logger.error("Error fetching theme from service", 
+        createLogOptions(LogCategory.DATABASE, { 
+          details: { error, options: options || {} },
+          error: true 
+        })
+      );
       
       return { 
         theme: fallbackTheme, 
@@ -114,14 +115,15 @@ export async function getTheme(options?: GetThemeOptions): Promise<{ theme: any;
       };
     }
     
-    logger.info("Theme set successfully", { 
-      category: LogCategory.DATABASE,
-      details: {
-        themeId: data.theme?.id || 'unknown',
-        isFallback: data.isFallback || false,
-        componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
-      }
-    });
+    logger.info("Theme set successfully", 
+      createLogOptions(LogCategory.DATABASE, {
+        details: {
+          themeId: data.theme?.id || 'unknown',
+          isFallback: data.isFallback || false,
+          componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
+        }
+      })
+    );
 
     return { 
       theme: data.theme, 
@@ -129,10 +131,12 @@ export async function getTheme(options?: GetThemeOptions): Promise<{ theme: any;
     };
     
   } catch (error) {
-    logger.error("Error fetching theme from service", { 
-      category: LogCategory.DATABASE,
-      details: { error: error instanceof Error ? error.message : String(error) }
-    });
+    logger.error("Error fetching theme from service", 
+      createLogOptions(LogCategory.DATABASE, { 
+        details: { error: error instanceof Error ? error.message : String(error) },
+        error: true
+      })
+    );
     
     // Return local fallback theme as emergency backup
     return { 

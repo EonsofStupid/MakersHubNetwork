@@ -1,7 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { LogEntry, LogCategory } from '../types';
-import { LogLevel } from '../constants/log-level';
+import { LogEntry, LogCategory, LogLevel } from '../types';
 import { nodeToSearchableString } from '@/shared/utils/render';
 
 /**
@@ -61,15 +60,15 @@ export class MemoryTransport {
     let filtered = [...this.logs];
     
     // Filter by level if specified
-    if (options.level) {
-      filtered = filtered.filter(log => log.level >= options.level);
+    if (options.level !== undefined) {
+      filtered = filtered.filter(log => log.level >= options.level!);
     }
     
     // Filter by category if specified
     if (options.category) {
       if (Array.isArray(options.category)) {
         filtered = filtered.filter(log => 
-          log.category && options.category.includes(log.category as LogCategory)
+          log.category && options.category!.includes(log.category as LogCategory)
         );
       } else {
         filtered = filtered.filter(log => 
@@ -147,3 +146,4 @@ export class MemoryTransport {
 
 // Create a singleton memory transport instance
 export const memoryTransport = new MemoryTransport();
+
