@@ -85,7 +85,7 @@ const indexRoute = createRoute({
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
-  validateSearch: loginSearchSchema,
+  validateSearch: (search) => loginSearchSchema.parse(search),
   component: Login
 });
 
