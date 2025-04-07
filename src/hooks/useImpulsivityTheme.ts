@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
@@ -19,20 +20,15 @@ export function useImpulsivityTheme() {
   
   const applyToMainSite = async () => {
     try {
-      // Use CSS variables for consistent theming
-      // Since this is only for styling, no need for type safety on CSS vars
-      const cssVars: Record<string, string> = {
-        '--site-primary': tokens.primary || '186 100% 50%',
-        '--site-secondary': tokens.secondary || '334 100% 59%',
-        '--site-effect-color': tokens.effectPrimary || '#00F0FF',
-        '--site-effect-secondary': tokens.effectSecondary || '#FF2D6E',
-        '--site-effect-tertiary': tokens.effectTertiary || '#8B5CF6'
-      };
-      
+      // Define type-safe CSS variables
       const rootElement = document.documentElement;
-      Object.entries(cssVars).forEach(([key, value]) => {
-        rootElement.style.setProperty(key, value);
-      });
+      
+      // Apply theme CSS variables with proper type safety
+      rootElement.style.setProperty('--site-primary', tokens.primary || '186 100% 50%');
+      rootElement.style.setProperty('--site-secondary', tokens.secondary || '334 100% 59%');
+      rootElement.style.setProperty('--site-effect-color', tokens.effectPrimary || '#00F0FF');
+      rootElement.style.setProperty('--site-effect-secondary', tokens.effectSecondary || '#FF2D6E');
+      rootElement.style.setProperty('--site-effect-tertiary', tokens.effectTertiary || '#8B5CF6');
       
       if (currentTheme) {
         // Use our utility function to safely update design tokens
@@ -74,26 +70,20 @@ export function useImpulsivityTheme() {
     try {
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement) {
-        // Since this is only for styling, no need for type safety on CSS vars
-        const cssVars: Record<string, string> = {
-          '--impulse-primary': tokens.effectPrimary || '#00F0FF',
-          '--impulse-secondary': tokens.effectSecondary || '#FF2D6E',
-          '--impulse-bg-main': '#121218',
-          '--impulse-bg-overlay': 'rgba(22, 24, 29, 0.85)',
-          '--impulse-bg-card': 'rgba(28, 30, 38, 0.7)',
-          '--impulse-text-primary': '#F6F6F7',
-          '--impulse-text-secondary': 'rgba(255, 255, 255, 0.7)',
-          '--impulse-text-accent': tokens.effectPrimary || '#00F0FF',
-          '--impulse-border-normal': 'rgba(0, 240, 255, 0.2)',
-          '--impulse-border-hover': 'rgba(0, 240, 255, 0.4)',
-          '--impulse-border-active': 'rgba(0, 240, 255, 0.6)',
-          '--impulse-glow-primary': '0 0 15px rgba(0, 240, 255, 0.7)',
-          '--impulse-glow-secondary': '0 0 15px rgba(255, 45, 110, 0.7)'
-        };
-        
-        Object.entries(cssVars).forEach(([key, value]) => {
-          (adminRootElement as HTMLElement).style.setProperty(key, value);
-        });
+        // Apply CSS variables with proper type safety
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-primary', tokens.effectPrimary || '#00F0FF');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-secondary', tokens.effectSecondary || '#FF2D6E');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-bg-main', '#121218');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-bg-overlay', 'rgba(22, 24, 29, 0.85)');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-bg-card', 'rgba(28, 30, 38, 0.7)');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-text-primary', '#F6F6F7');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-text-secondary', 'rgba(255, 255, 255, 0.7)');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-text-accent', tokens.effectPrimary || '#00F0FF');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-border-normal', 'rgba(0, 240, 255, 0.2)');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-border-hover', 'rgba(0, 240, 255, 0.4)');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-border-active', 'rgba(0, 240, 255, 0.6)');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-glow-primary', '0 0 15px rgba(0, 240, 255, 0.7)');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-glow-secondary', '0 0 15px rgba(255, 45, 110, 0.7)');
         
         logger.info('Applied Impulsivity theme to admin panel', { 
           details: {
