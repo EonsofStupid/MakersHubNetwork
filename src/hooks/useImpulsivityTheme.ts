@@ -2,11 +2,11 @@
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
-import { updateDesignTokens } from '@/utils/themeTokenUtils';
+import { updateDesignTokens, updateThemeColors, updateThemeEffects } from '@/utils/themeTokenUtils';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
-import { StoreThemeTokens } from '@/types/theme';
+import { StoreThemeTokens, DesignTokensStructure } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -31,17 +31,32 @@ export function useImpulsivityTheme() {
       rootElement.style.setProperty('--site-effect-tertiary', tokens.effectTertiary || '#8B5CF6');
       
       if (currentTheme) {
-        // Use our utility function to safely update design tokens
-        const updatedDesignTokens = updateDesignTokens(currentTheme.design_tokens, {
+        // Create safe default structure if needed
+        const safeDesignTokens: DesignTokensStructure = currentTheme.design_tokens || {
           colors: {
             primary: '186 100% 50%',
             secondary: '334 100% 59%',
           },
           effects: {
+            shadows: {},
+            blurs: {},
+            gradients: {},
             primary: '#00F0FF',
             secondary: '#FF2D6E',
-            tertiary: '#8B5CF6',
+            tertiary: '#8B5CF6'
           }
+        };
+        
+        // Use our utility function to safely update design tokens
+        const updatedDesignTokens = updateThemeColors(safeDesignTokens, {
+          primary: '186 100% 50%',
+          secondary: '334 100% 59%',
+        });
+        
+        const finalTokens = updateThemeEffects(updatedDesignTokens, {
+          primary: '#00F0FF',
+          secondary: '#FF2D6E',
+          tertiary: '#8B5CF6',
         });
         
         logger.info('Updating theme design tokens with Impulsivity colors');

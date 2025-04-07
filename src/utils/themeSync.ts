@@ -16,8 +16,8 @@ export async function syncImpulsivityTheme(): Promise<boolean> {
     
     // Log the sync for development purposes
     console.log('Synced theme to database (simulated):', {
-      themeId: store.currentTheme?.id,
-      tokens: store.tokens
+      themeId: store.currentTheme?.id || 'default',
+      tokens: store.tokens || {}
     });
     
     return true;
