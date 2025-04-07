@@ -34,6 +34,15 @@ export function getThemeContextForPath(path: string): ThemeContext {
       return ThemeContextSchema.parse('chat');
     }
     
+    // Additional mappings for new contexts
+    if (path.startsWith('/app')) {
+      return ThemeContextSchema.parse('app');
+    }
+    
+    if (path.startsWith('/training')) {
+      return ThemeContextSchema.parse('training');
+    }
+    
     // Default to 'site' for all other routes
     return ThemeContextSchema.parse('site');
   } catch (error) {

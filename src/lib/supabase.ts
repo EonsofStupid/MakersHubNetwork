@@ -34,3 +34,6 @@ logger.info('Supabase client initialized', {
     url: supabaseUrl?.substring(0, 10) + '...' 
   } 
 });
+
+// Export this client as the default to be used throughout the app
+export default supabase;

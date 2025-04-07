@@ -4,10 +4,7 @@ import { siteRoutes } from './routes/site';
 import { adminRoutes } from './routes/admin';
 import { chatRoutes } from './routes/chat';
 import { ThemeContext } from '@/types/theme';
-import { z } from 'zod';
-
-// Define a Zod schema for ThemeContext to ensure valid values
-const ThemeContextSchema = z.enum(['site', 'admin', 'chat', 'app', 'training']);
+import RootRouteFallback from '@/components/layouts/RootRouteFallback';
 
 /**
  * Registry of all routes in the application
@@ -25,7 +22,7 @@ export const routeRegistry = {
 
 // Create a root route for testing or fallback
 export const rootRoute = createRootRoute({
-  component: () => <div>Root Route</div>
+  component: RootRouteFallback
 });
 
 /**
