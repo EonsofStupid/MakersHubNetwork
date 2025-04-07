@@ -2,6 +2,12 @@
 import { createRoute } from '@tanstack/react-router';
 import { rootRoute } from './site';
 import React from 'react';
+import { z } from 'zod';
+
+// Zod schema for chat route params
+export const chatParamsSchema = {
+  sessionId: z.string()
+};
 
 // Lazy load the chat components
 const ChatLayout = React.lazy(() => import('@/chat/components/layouts/ChatLayout'));
@@ -37,10 +43,13 @@ const chatHomeRoute = createRoute({
   )
 });
 
-// Chat session route
+// Chat session route with Zod parameter validation
 const chatSessionRoute = createRoute({
   getParentRoute: () => chatBaseRoute,
   path: '/session/$sessionId',
+  validateParams: (params) => ({ 
+    sessionId: chatParamsSchema.sessionId.parse(params.sessionId) 
+  }),
   component: ({ params }) => (
     <React.Suspense fallback={<PageLoader />}>
       <ChatSession sessionId={params.sessionId} />

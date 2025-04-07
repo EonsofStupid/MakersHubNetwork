@@ -2,6 +2,7 @@
 import { createRoute } from '@tanstack/react-router';
 import { rootRoute } from './site';
 import React from 'react';
+import { z } from 'zod';
 
 // Import admin pages (Lazy load them for better performance)
 const AdminLayout = React.lazy(() => import('@/admin/components/layouts/AdminLayout'));
@@ -17,6 +18,13 @@ const LogsPage = React.lazy(() => import('@/admin/pages/LogsPage'));
 const UnauthorizedPage = React.lazy(() => import('@/admin/routes/UnauthorizedPage'));
 const NotFoundPage = React.lazy(() => import('@/admin/routes/NotFoundPage'));
 
+// Zod schema for admin route params
+export const adminParamsSchema = {
+  buildId: z.string(),
+  userId: z.string(),
+  themeId: z.string()
+};
+
 // Loading component for lazy-loaded routes
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
@@ -24,7 +32,7 @@ const PageLoader = () => (
   </div>
 );
 
-// Admin base route - FIXED path to be '/admin' instead of 'admin-dashboard'
+// Admin base route - Fixed path to be '/admin' instead of 'admin-dashboard'
 const adminBaseRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
