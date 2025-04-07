@@ -1,7 +1,7 @@
 
 import { subscribeToAuthEvents } from '@/auth/bridge';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
+import { LogCategory, LogOptions } from '@/logging/types';
 
 // Module state type
 interface ModuleState {
@@ -27,7 +27,7 @@ export function initializeAdminModule(): void {
   logger.info('Initializing admin module', {
     category: LogCategory.ADMIN,
     source: 'ModuleRegistry'
-  });
+  } as LogOptions);
 
   // Register event handlers if not already done
   if (!moduleState.eventHandlersRegistered) {
@@ -52,7 +52,7 @@ function registerEventHandlers(): void {
       details: { 
         eventType: event.type 
       }
-    });
+    } as LogOptions);
 
     // Handle auth events specific to admin functionality
     switch (event.type) {

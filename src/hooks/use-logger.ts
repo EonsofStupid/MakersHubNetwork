@@ -1,21 +1,8 @@
 
 import { useCallback } from 'react';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory, LogOptions } from '@/logging/types';
 import { LogLevel } from '@/logging/constants/log-level';
-
-// Extended options type for logger
-interface LogOptions {
-  category?: LogCategory;
-  details?: Record<string, unknown>;
-  tags?: string[];
-  success?: boolean;
-  error?: boolean;
-  warning?: boolean;
-  errorMessage?: string;
-  originalTheme?: string;
-  theme?: string;
-}
 
 /**
  * Hook for logging from React components
@@ -23,40 +10,40 @@ interface LogOptions {
 export function useLogger(source: string, defaultCategory: LogCategory = LogCategory.UI) {
   const logger = getLogger(source);
   
-  const debug = useCallback((message: string, options?: LogOptions) => {
+  const debug = useCallback((message: string, options?: Omit<LogOptions, 'category'>) => {
     logger.debug(message, {
       ...options,
-      category: options?.category || defaultCategory,
+      category: defaultCategory,
     });
-  }, [logger, source, defaultCategory]);
+  }, [logger, defaultCategory]);
   
-  const info = useCallback((message: string, options?: LogOptions) => {
+  const info = useCallback((message: string, options?: Omit<LogOptions, 'category'>) => {
     logger.info(message, {
       ...options,
-      category: options?.category || defaultCategory,
+      category: defaultCategory,
     });
-  }, [logger, source, defaultCategory]);
+  }, [logger, defaultCategory]);
   
-  const warn = useCallback((message: string, options?: LogOptions) => {
+  const warn = useCallback((message: string, options?: Omit<LogOptions, 'category'>) => {
     logger.warn(message, {
       ...options,
-      category: options?.category || defaultCategory,
+      category: defaultCategory,
     });
-  }, [logger, source, defaultCategory]);
+  }, [logger, defaultCategory]);
   
-  const error = useCallback((message: string, options?: LogOptions) => {
+  const error = useCallback((message: string, options?: Omit<LogOptions, 'category'>) => {
     logger.error(message, {
       ...options,
-      category: options?.category || defaultCategory,
+      category: defaultCategory,
     });
-  }, [logger, source, defaultCategory]);
+  }, [logger, defaultCategory]);
   
-  const critical = useCallback((message: string, options?: LogOptions) => {
+  const critical = useCallback((message: string, options?: Omit<LogOptions, 'category'>) => {
     logger.critical(message, {
       ...options,
-      category: options?.category || defaultCategory,
+      category: defaultCategory,
     });
-  }, [logger, source, defaultCategory]);
+  }, [logger, defaultCategory]);
   
   return {
     debug,

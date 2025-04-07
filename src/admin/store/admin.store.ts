@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { AdminPermissionValue } from '../constants/permissions';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory, LogOptions } from '@/logging/types';
 
 interface AdminState {
   permissions: AdminPermissionValue[];
@@ -51,7 +51,7 @@ export const useAdminStore = create<AdminStore>((set, get) => {
         details: { 
           permissionCount: permissions.length
         }
-      });
+      } as LogOptions);
       set({ permissions });
     },
     
@@ -61,7 +61,7 @@ export const useAdminStore = create<AdminStore>((set, get) => {
       logger.info(`${isEditMode ? 'Entering' : 'Exiting'} admin edit mode`, {
         category: LogCategory.ADMIN,
         source: 'admin.store'
-      });
+      } as LogOptions);
       set({ isEditMode });
     },
     
@@ -77,7 +77,7 @@ export const useAdminStore = create<AdminStore>((set, get) => {
       logger.info('Saving admin preferences', {
         category: LogCategory.ADMIN,
         source: 'admin.store'
-      });
+      } as LogOptions);
       // Actual implementation could save to user preferences
       return Promise.resolve();
     },
@@ -87,7 +87,7 @@ export const useAdminStore = create<AdminStore>((set, get) => {
         logger.info('Loading admin permissions', {
           category: LogCategory.ADMIN,
           source: 'admin.store'
-        });
+        } as LogOptions);
         set({ isLoadingPermissions: true });
         // Actual implementation would load from API or local storage
         // For now, we're just resolving
@@ -98,7 +98,7 @@ export const useAdminStore = create<AdminStore>((set, get) => {
           category: LogCategory.ADMIN,
           source: 'admin.store',
           details: { error }
-        });
+        } as LogOptions);
         set({ isLoadingPermissions: false });
         throw error;
       }
