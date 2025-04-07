@@ -2,27 +2,76 @@
 /**
  * Navigation helper functions for handling TanStack Router type safety issues
  */
-import { createRoute, Navigate } from '@tanstack/react-router';
+import { router } from '@/router';
 import type { AnyRoute } from '@tanstack/react-router';
+import { z } from 'zod';
 
-// Helper function for string-based navigation
-export function navigateTo(path: string) {
-  // This is a type assertion to handle the TanStack Router type error
-  return path as unknown as '/' | '.' | '..';
+// Define type for navigation options
+interface NavigateOptions {
+  replace?: boolean;
+  state?: Record<string, any>;
 }
 
-// Create typed search params helper
-export function createSearchParams<T extends Record<string, any>>(params: T): T {
-  return params;
+// Schema for search parameters
+const searchParamsSchema = z.record(z.unknown());
+
+/**
+ * Navigate to a specific route
+ * @param path The path to navigate to
+ * @param options Optional navigation options
+ */
+export function navigateTo(path: string, options?: NavigateOptions) {
+  router.navigate({
+    to: path as any, 
+    replace: options?.replace,
+    // Handle state properly for TanStack Router
+    state: options?.state ? options.state : undefined
+  });
 }
 
-// Generate a route helper that returns properly typed "to" objects
+/**
+ * Navigate back in the router history
+ */
+export function navigateBack() {
+  window.history.back();
+}
+
+/**
+ * Get the current route path
+ */
+export function getCurrentRoute() {
+  return router.state.location.pathname;
+}
+
+/**
+ * Get URL search parameters
+ */
+export function getSearchParams() {
+  return router.state.location.search;
+}
+
+/**
+ * Get a specific search parameter value
+ * @param key The search parameter key
+ */
+export function getSearchParam(key: string) {
+  return router.state.location.search[key];
+}
+
+/**
+ * Check if the current route matches a specific path
+ * @param path The path to check against
+ */
+export function isCurrentRoute(path: string) {
+  return router.state.location.pathname === path;
+}
+
+// Helper function for creating strongly-typed route objects with proper TanStack Router compatibility
 export function createTypedRoute(path: string) {
-  const route = {
+  return {
     path,
-    to: path as unknown as '/' | '.' | '..'
+    to: path as any // Type assertion to make TanStack Router happy
   };
-  return route;
 }
 
 // Common routes for easy access
@@ -35,7 +84,7 @@ export const ROUTES = {
   CHAT: createTypedRoute('/chat')
 };
 
-// Helper to safely create search params for navigation
+// Helper to create search params that are compatible with TanStack Router
 export function createRouteParams<T extends Record<string, any>>(params: T): Record<string, unknown> {
   return params as Record<string, unknown>;
 }
