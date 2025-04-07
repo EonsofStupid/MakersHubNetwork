@@ -1,103 +1,79 @@
 
 import React from 'react';
+import { useAuth } from '@/auth/hooks/useAuth';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
-import { 
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from '@/components/ui/sheet';
-import { UserRole } from '@/auth/types/userRoles';
-import { useAuth } from '@/auth/hooks/useAuthStore';
-import { commonSearchParamsSchema } from '@/router/searchParams';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LogOut, Settings, User, ShieldCheck } from 'lucide-react';
 
-export function UserMenuSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function UserMenu() {
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const auth = useAuth();
-  const { user, isAuthenticated } = auth;
   
-  // Check admin status safely
-  const isAdmin = auth.roles?.includes(UserRole.ADMIN) || auth.roles?.includes(UserRole.SUPER_ADMIN) || false;
+  if (!user) return null;
   
   const handleLogout = async () => {
-    if (auth.logout) {
-      await auth.logout();
-      onOpenChange(false);
+    try {
+      await logout();
       navigate({ to: '/' });
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
   };
   
-  const navigateToProfile = () => {
-    onOpenChange(false);
-    navigate({ to: '/profile' });
-  };
-  
-  const navigateToSettings = () => {
-    onOpenChange(false);
-    navigate({ to: '/settings' });
-  };
-  
-  const navigateToAdmin = () => {
-    onOpenChange(false);
-    navigate({ to: '/admin/dashboard' });
-  };
-  
-  const navigateToLogin = () => {
-    onOpenChange(false);
-    const search = commonSearchParamsSchema.parse({ 
-      returnTo: window.location.pathname 
-    });
-    navigate({ 
-      to: '/login', 
-      search
-    });
+  // Get user initials for avatar fallback
+  const getInitials = () => {
+    if (!user.name) return 'U';
+    const names = user.name.split(' ');
+    return names.length > 1
+      ? (names[0][0] + names[1][0]).toUpperCase()
+      : names[0].substring(0, 2).toUpperCase();
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[300px] sm:w-[380px]">
-        <SheetHeader>
-          <SheetTitle>Account</SheetTitle>
-          <SheetDescription>
-            {isAuthenticated 
-              ? `Logged in as ${user?.email || 'User'}`
-              : 'You are not logged in'}
-          </SheetDescription>
-        </SheetHeader>
-        
-        <div className="py-4">
-          {isAuthenticated ? (
-            <div className="flex flex-col gap-3">
-              <Button variant="outline" onClick={navigateToProfile}>
-                Profile
-              </Button>
-              <Button variant="outline" onClick={navigateToSettings}>
-                Settings
-              </Button>
-              {isAdmin && (
-                <Button variant="outline" onClick={navigateToAdmin}>
-                  Admin Panel
-                </Button>
-              )}
-            </div>
-          ) : (
-            <Button onClick={navigateToLogin} className="w-full">
-              Log In
-            </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+          <Avatar className="h-9 w-9">
+            <AvatarImage src={user.avatar_url || ''} />
+            <AvatarFallback>{getInitials()}</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => navigate({ to: '/profile' as any })}>
+            <User className="mr-2 h-4 w-4" />
+            Profile
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate({ to: '/settings' as any })}>
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </DropdownMenuItem>
+          {isAdmin() && (
+            <DropdownMenuItem onClick={() => navigate({ to: '/admin/dashboard' as any })}>
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              Admin Dashboard
+            </DropdownMenuItem>
           )}
-        </div>
-        
-        <SheetFooter>
-          {isAuthenticated && (
-            <Button variant="outline" onClick={handleLogout}>
-              Logout
-            </Button>
-          )}
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          Log out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

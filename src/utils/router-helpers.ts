@@ -27,9 +27,9 @@ export function createSearchParams<T extends Record<string, any>>(params: T): Re
  * @param path The path to navigate to
  * @param options Optional navigation options
  */
-export function navigateTo(path: string, options?: NavigateOptions) {
+export function navigateTo(path: string, options?: NavigateOptions): void {
   router.navigate({
-    to: path,
+    to: path as any, // Type cast to avoid TanStack Router type issues
     replace: options?.replace,
     state: options?.state
   });
@@ -38,9 +38,9 @@ export function navigateTo(path: string, options?: NavigateOptions) {
 /**
  * Navigate to a route with search parameters
  */
-export function navigateWithParams(path: string, params: Record<string, any>, options?: NavigateOptions) {
+export function navigateWithParams(path: string, params: Record<string, any>, options?: NavigateOptions): void {
   router.navigate({
-    to: path,
+    to: path as any, // Type cast to avoid TanStack Router type issues
     search: params,
     replace: options?.replace,
     state: options?.state
