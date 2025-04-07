@@ -174,9 +174,9 @@ serve(async (req) => {
           name: theme.name,
           context: theme.context,
           status: theme.status,
-          isDefault: theme.is_default,
-          createdAt: theme.created_at,
-          updatedAt: theme.updated_at,
+          is_default: theme.is_default,
+          created_at: theme.created_at,
+          updated_at: theme.updated_at,
           design_tokens: theme.design_tokens,
           component_tokens: theme.component_tokens
         },

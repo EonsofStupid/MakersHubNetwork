@@ -3,3 +3,4 @@ project_id = "kxeffcclfvecdvqpljbh"
 
 [functions.theme-service]
 verify_jwt = false
+

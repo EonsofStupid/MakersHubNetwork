@@ -5,10 +5,11 @@ import { ImpulsivityThemeInitializer } from '@/components/theme/ImpulsivityTheme
 import { SiteThemeProvider } from '@/components/theme/SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { ThemeContext } from '@/types/theme';
 
 interface AppProviderProps {
   children: React.ReactNode;
-  themeContext?: 'site' | 'admin' | 'chat' | 'app' | 'training';
+  themeContext?: ThemeContext;
 }
 
 export function AppProvider({ 
@@ -19,7 +20,8 @@ export function AppProvider({
 
   return (
     <ThemeInitializer 
-      context={themeContext} 
+      themeContext={themeContext} 
+      applyImmediately={true}
       fallbackTheme={{
         primary: '186 100% 50%',
         secondary: '334 100% 59%',

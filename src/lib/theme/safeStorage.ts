@@ -1,6 +1,6 @@
 
 import { getLogger } from '@/logging';
-import { ThemeTokensSchema } from '@/theme/tokenSchema';
+import { ThemeTokens, ThemeTokensSchema } from '@/theme/tokenSchema';
 import { z } from 'zod';
 
 const logger = getLogger('ThemeStorage');
@@ -25,7 +25,7 @@ export function safeLocalStorage<T>(key: string, fallback: T, parse = true): T {
 /**
  * Save theme tokens to localStorage for offline use
  */
-export function persistThemeTokens(tokens: z.infer<typeof ThemeTokensSchema>): void {
+export function persistThemeTokens(tokens: ThemeTokens): void {
   try {
     localStorage.setItem('impulse-theme', JSON.stringify(tokens));
     logger.info('Theme tokens persisted to localStorage');
@@ -37,7 +37,7 @@ export function persistThemeTokens(tokens: z.infer<typeof ThemeTokensSchema>): v
 /**
  * Types-safe local storage getter for theme tokens
  */
-export function getStoredThemeTokens(): z.infer<typeof ThemeTokensSchema> | null {
+export function getStoredThemeTokens(): ThemeTokens | null {
   try {
     const stored = localStorage.getItem('impulse-theme');
     if (!stored) return null;
@@ -48,7 +48,7 @@ export function getStoredThemeTokens(): z.infer<typeof ThemeTokensSchema> | null
     if (result.success) {
       return result.data;
     } else {
-      logger.warn('Invalid theme tokens in localStorage:', { errors: result.error });
+      logger.warn('Invalid theme tokens in localStorage:', { error: result.error.format() });
       return null;
     }
   } catch (error) {
