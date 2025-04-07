@@ -1,4 +1,5 @@
 
 project_id = "kxeffcclfvecdvqpljbh"
-[functions.theme-service]
+
+[functions.get-theme]
 verify_jwt = false

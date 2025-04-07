@@ -42,9 +42,9 @@ export function defineScopedRoute<
  * Get the current scope from the router context
  */
 export function useCurrentScope(): RouteScope {
-  // Access scope from router options context
+  // Access scope from router options context with proper typing
   const routerInstance = useRouter();
-  return routerInstance.options.context.scope;
+  return routerInstance.options.context.scope as RouteScope;
 }
 
 /**

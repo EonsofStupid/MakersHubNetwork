@@ -56,19 +56,22 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
       body: { context } 
     });
     
-    const { data, error } = await Promise.race([themePromise, timeoutPromise]) as any;
+    const result = await Promise.race([themePromise, timeoutPromise]) as {
+      data: { tokens: ThemeTokensSchema; } | null;
+      error: Error | null;
+    };
     
-    if (error) {
-      throw new Error(`Supabase error: ${error.message}`);
+    if (result.error) {
+      throw new Error(`Supabase error: ${result.error.message}`);
     }
     
-    if (data?.tokens) {
+    if (result.data?.tokens) {
       logger.info('Theme loaded from Supabase', { source: 'edge-function' });
       
       // Persist for future offline use
-      persistThemeTokens(data.tokens);
+      persistThemeTokens(result.data.tokens);
       
-      return data.tokens;
+      return result.data.tokens;
     }
     
     throw new Error('Invalid data from Supabase');
@@ -77,7 +80,7 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
     
     try {
       // Try localStorage fallback
-      const localTokens = safeLocalStorage('impulse-theme', null);
+      const localTokens = safeLocalStorage<ThemeTokensSchema | null>('impulse-theme', null);
       
       if (localTokens) {
         logger.info('Theme loaded from localStorage', { source: 'local-storage' });

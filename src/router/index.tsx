@@ -45,8 +45,8 @@ const buildRouteTree = () => {
         children.push(chatRoutes.tree);
       }
       
-      // Build the route tree safely
-      return siteRoutes.root.addChildren(children);
+      // Build the route tree safely by explicitly casting to the correct type
+      return siteRoutes.root.addChildren(children as any[]);
     }
     
     throw new Error('Site root route not available');
@@ -192,9 +192,8 @@ function GlobalLoggingComponents() {
 
 // Export a utility to get the current scope
 export const useRouterScope = () => {
-  const router = useRouter();
-  const scope = router.options.context.scope;
-  return scope as 'site' | 'admin' | 'chat';
+  const scope = router.options.context.scope as 'site' | 'admin' | 'chat';
+  return scope;
 };
 
 // Create a hook to use the router for safer access
