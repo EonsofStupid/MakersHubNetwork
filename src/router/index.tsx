@@ -29,21 +29,20 @@ interface RouterContext {
 // Try to build a safe route tree with error handling
 const buildRouteTree = () => {
   try {
-    // Combine all route trees with safety checks
-    if (siteRoutes.root) {
-      const children = [];
-      
-      // Add admin routes if available
-      if (adminRoutes.tree) {
-        children.push(adminRoutes.tree);
-      }
-      
-      // Add chat routes if available
-      if (chatRoutes.tree) {
-        children.push(chatRoutes.tree);
-      }
-      
-      // Build the route tree safely
+    const children = [];
+    
+    // Add admin routes if available
+    if (adminRoutes && adminRoutes.tree) {
+      children.push(adminRoutes.tree);
+    }
+    
+    // Add chat routes if available
+    if (chatRoutes && chatRoutes.tree) {
+      children.push(chatRoutes.tree);
+    }
+    
+    // Build the route tree safely
+    if (siteRoutes && siteRoutes.root) {
       return siteRoutes.root.addChildren(children);
     }
     
@@ -61,14 +60,20 @@ const getCurrentPathname = () => {
   return safeSSR(() => window.location.pathname, '/');
 };
 
+// Determine scope from pathname
+const getScopeFromPathname = (pathname: string): 'site' | 'admin' | 'chat' => {
+  if (pathname.startsWith('/admin')) return 'admin';
+  if (pathname.startsWith('/chat')) return 'chat';
+  return 'site';
+};
+
 // Create the router instance with error handling and proper typings
 export const router = (() => {
   try {
     const routeTree = buildRouteTree();
     const pathname = getCurrentPathname();
     const themeContext = getThemeContextForRoute(pathname);
-    const scope = pathname.startsWith('/admin') ? 'admin' as const : 
-                 pathname.startsWith('/chat') ? 'chat' as const : 'site' as const;
+    const scope = getScopeFromPathname(pathname);
     
     return createRouter({ 
       routeTree,
@@ -95,7 +100,7 @@ export const router = (() => {
         </div>
       ),
       context: {
-        scope: 'site' as const,
+        scope: 'site',
         themeContext: 'site' as ThemeContext
       }
     });
@@ -111,16 +116,9 @@ export function AppRouter() {
   // Update the current scope when the pathname changes
   useEffect(() => {
     try {
-      if (pathname.startsWith('/admin')) {
-        setCurrentScope('admin');
-        logger.info('Set scope to admin');
-      } else if (pathname.startsWith('/chat')) {
-        setCurrentScope('chat');
-        logger.info('Set scope to chat');
-      } else {
-        setCurrentScope('site');
-        logger.info('Set scope to site');
-      }
+      const newScope = getScopeFromPathname(pathname);
+      setCurrentScope(newScope);
+      logger.info(`Set scope to ${newScope}`);
     } catch (error) {
       logger.error('Error setting scope', { details: { error, pathname } });
       // Default to site scope on error for resilience
@@ -187,12 +185,6 @@ function GlobalLoggingComponents() {
     </>
   );
 }
-
-// Export a utility to get the current scope
-export const useRouterScope = () => {
-  const context = router.options.context as RouterContext;
-  return context.scope as 'site' | 'admin' | 'chat';
-};
 
 // Create a hook to use the router for safer access
 export function useRouter() {

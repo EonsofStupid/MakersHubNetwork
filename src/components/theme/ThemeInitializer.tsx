@@ -1,93 +1,62 @@
 
 import { useEffect, useState, useRef } from 'react';
-import { useThemeStore } from '@/stores/theme/themeStore';
+import { useThemeStore } from '@/stores/theme/store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { ThemeContext } from '@/types/theme';
+import { useThemeRoutingContext } from '@/hooks/useThemeRoutingContext';
 import { DynamicKeyframes } from './DynamicKeyframes';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
-  context?: ThemeContext;
-  applyImmediately?: boolean;
-  fallbackTheme?: {
-    primary: string;
-    secondary: string;
-    background: string;
-    foreground: string;
-  };
 }
 
-export function ThemeInitializer({ 
-  children, 
-  context = 'app', 
-  applyImmediately = true,
-  fallbackTheme
-}: ThemeInitializerProps) {
-  const { loadTheme, loadStatus } = useThemeStore();
-  const logger = useLogger('ThemeInitializer', LogCategory.UI);
+export function ThemeInitializer({ children }: ThemeInitializerProps) {
+  const logger = useLogger('ThemeInitializer', LogCategory.SYSTEM);
+  const [isInitialized, setIsInitialized] = useState(false);
   const initAttempted = useRef(false);
-  const [isReady, setIsReady] = useState(false);
+  const { loadTheme, loadStatus } = useThemeStore();
+  const { themeContext } = useThemeRoutingContext();
   
-  // Apply immediate fallback styles to prevent flash of unstyled content
+  // Load theme on component mount - only once with re-attempt protection
   useEffect(() => {
-    if (applyImmediately) {
-      const root = document.documentElement;
-      
-      // Apply critical CSS variables immediately
-      root.style.setProperty('--primary', fallbackTheme?.primary || '186 100% 50%');
-      root.style.setProperty('--secondary', fallbackTheme?.secondary || '334 100% 59%');
-      root.style.setProperty('--background', fallbackTheme?.background || '228 47% 8%');
-      root.style.setProperty('--foreground', fallbackTheme?.foreground || '210 40% 98%');
-      
-      // Set ready immediately to prevent blocking rendering
-      setIsReady(true);
-    }
-  }, []); // Empty dependency array to run only once
-  
-  // Load theme on component mount - only once
-  useEffect(() => {
-    // Skip if already initialized or loading or loadTheme is not defined
-    if (initAttempted.current || !loadTheme) {
+    if (initAttempted.current) {
       return;
     }
     
     const initializeTheme = async () => {
       try {
         initAttempted.current = true;
-        logger.info('Initializing theme system', { details: { context } });
+        logger.info('Initializing theme system', { details: { context: themeContext } });
         
-        // Load theme asynchronously without blocking
-        loadTheme(context).catch(err => {
-          logger.error('Error loading theme:', err);
-        });
-        
-        // Set ready state after theme loads
-        if (!applyImmediately) {
-          setIsReady(true);
-        }
+        // Load theme asynchronously
+        await loadTheme(themeContext);
         
         logger.info('Theme system initialized');
+        setIsInitialized(true);
       } catch (error) {
         logger.error('Failed to initialize theme', { 
           details: { error: error instanceof Error ? error.message : String(error) }
         });
         
-        // Set ready even on error to avoid blocking UI
-        if (!applyImmediately) {
-          setIsReady(true);
-        }
+        // Set as initialized even on error to avoid blocking UI
+        setIsInitialized(true);
       }
     };
     
     // Initialize without blocking rendering
     initializeTheme();
-  }, [context, loadTheme, logger]); // Only re-run if these dependencies change
+  }, [logger, loadTheme, themeContext]);
   
-  // Prevent rendering until theme is ready if applyImmediately is false
-  if (!isReady) {
-    return null;
-  }
+  // Apply immediate fallback styles to prevent flash of unstyled content
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    // Apply critical CSS variables immediately
+    root.style.setProperty('--primary', '186 100% 50%');
+    root.style.setProperty('--secondary', '334 100% 59%');
+    root.style.setProperty('--background', '228 47% 8%');
+    root.style.setProperty('--foreground', '210 40% 98%');
+  }, []); // Empty dependency array to run only once
   
   return (
     <>
