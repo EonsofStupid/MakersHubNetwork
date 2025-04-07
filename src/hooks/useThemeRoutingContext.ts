@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { useLocation } from '@tanstack/react-router';
-import { getThemeContextForRoute } from '@/routeRegistry';
+import { getThemeContextForRoute } from '@/router/routeRegistry';
 import { ThemeContext } from '@/types/theme';
 import { parseThemeContext } from '@/types/themeContext';
 

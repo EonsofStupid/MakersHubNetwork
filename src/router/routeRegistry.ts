@@ -1,9 +1,10 @@
-import { ThemeContext } from './types/theme';
-import { parseThemeContext } from './types/themeContext';
+
+import { ThemeContext } from '@/types/theme';
+import { parseThemeContext } from '@/types/themeContext';
 import { createRootRoute } from '@tanstack/react-router';
-import { siteRoutes } from './router/routes/site';
-import { adminRoutes } from './router/routes/admin';
-import { chatRoutes } from './router/routes/chat';
+import { siteRoutes } from '@/router/routes/site';
+import { adminRoutes } from '@/router/routes/admin';
+import { chatRoutes } from '@/router/routes/chat';
 import RootRouteFallback from '@/components/layouts/RootRouteFallback';
 
 const routeScopes: Record<string, string> = {
