@@ -2,6 +2,7 @@
 import { DesignTokensStructure } from '@/types/theme';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { defaultTokens } from '@/theme/tokenSchema';
 
 /**
  * Type guard to check if a value is a non-null object
@@ -16,13 +17,16 @@ function isObject(val: unknown): val is Record<string, any> {
 function createDefaultTokens(): DesignTokensStructure {
   return {
     colors: {
-      primary: "#00F0FF",
-      secondary: "#FF2D6E",
+      primary: defaultTokens.primary,
+      secondary: defaultTokens.secondary,
     },
     effects: {
       shadows: {},
       blurs: {},
-      gradients: {}
+      gradients: {},
+      primary: defaultTokens.effectPrimary,
+      secondary: defaultTokens.effectSecondary,
+      tertiary: defaultTokens.effectTertiary
     }
   };
 }
@@ -54,15 +58,37 @@ export function updateDesignTokens(
     
     // Update effects if provided
     if (updates.effects) {
-      result.effects = {
-        shadows: { ...result.effects.shadows, ...(updates.effects.shadows || {}) },
-        blurs: { ...result.effects.blurs, ...(updates.effects.blurs || {}) },
-        gradients: { ...result.effects.gradients, ...(updates.effects.gradients || {}) },
-        ...(result.effects || {}),
-        ...(updates.effects.primary !== undefined ? { primary: updates.effects.primary } : {}),
-        ...(updates.effects.secondary !== undefined ? { secondary: updates.effects.secondary } : {}),
-        ...(updates.effects.tertiary !== undefined ? { tertiary: updates.effects.tertiary } : {})
-      };
+      // Create a new effects object
+      const updatedEffects = { ...result.effects };
+      
+      // Update shadows, blurs, and gradients if provided
+      if (updates.effects.shadows) {
+        updatedEffects.shadows = { ...updatedEffects.shadows, ...updates.effects.shadows };
+      }
+      
+      if (updates.effects.blurs) {
+        updatedEffects.blurs = { ...updatedEffects.blurs, ...updates.effects.blurs };
+      }
+      
+      if (updates.effects.gradients) {
+        updatedEffects.gradients = { ...updatedEffects.gradients, ...updates.effects.gradients };
+      }
+      
+      // Update primary, secondary, tertiary 
+      if (updates.effects.primary !== undefined) {
+        updatedEffects.primary = updates.effects.primary;
+      }
+      
+      if (updates.effects.secondary !== undefined) {
+        updatedEffects.secondary = updates.effects.secondary;
+      }
+      
+      if (updates.effects.tertiary !== undefined) {
+        updatedEffects.tertiary = updates.effects.tertiary;
+      }
+      
+      // Assign the updated effects
+      result.effects = updatedEffects;
     }
     
     // Update other token categories
@@ -147,4 +173,16 @@ export function updateThemeEffects(
       ...effectUpdates
     }
   });
+}
+
+/**
+ * Utility to remove undefined values from an object
+ */
+export function removeUndefineds<T extends Record<string, any>>(obj: T): T {
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    if (value !== undefined) {
+      acc[key as keyof T] = value;
+    }
+    return acc;
+  }, {} as T);
 }
