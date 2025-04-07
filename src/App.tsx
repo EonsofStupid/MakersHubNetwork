@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/auth/components/AuthProvider";
 import { AdminProvider } from "@/admin/context/AdminContext";
 import { LoggingProvider } from "@/logging/context/LoggingContext";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { initializeLogger, getLogger } from "@/logging";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { AppInitializer } from "@/components/AppInitializer";
@@ -13,6 +13,7 @@ import { ImpulsivityThemeInitializer } from "@/components/theme/ImpulsivityTheme
 import { SiteThemeProvider } from "@/components/theme/SiteThemeProvider";
 import { ThemeEffectProvider } from "@/components/theme/effects/ThemeEffectProvider";
 import { AppRouter } from "@/router";
+import { ChatProvider } from '@/chat/context/ChatProvider';
 
 // Import styles
 import "./App.css";
@@ -62,8 +63,10 @@ function App() {
                   <AuthProvider>
                     <AppInitializer>
                       <AdminProvider>
-                        <AppRouter />
-                        <Toaster />
+                        <ChatProvider>
+                          <AppRouter />
+                          <Toaster />
+                        </ChatProvider>
                       </AdminProvider>
                     </AppInitializer>
                   </AuthProvider>

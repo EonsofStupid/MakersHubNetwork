@@ -4,25 +4,17 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 
-import { rootRoute } from './routes/site';
-import { siteRoutes } from './routes/site';
-import { adminRoutes } from './routes/admin';
-import { chatRoutes } from './routes/chat';
 import { routeRegistry } from './routeRegistry';
 import { getThemeContextForRoute } from './routeRegistry';
+import { useLoggingContext } from '@/logging/context/LoggingContext';
 import { LogConsole } from '@/logging/components/LogConsole';
 import { LogToggleButton } from '@/logging/components/LogToggleButton';
-import { useLoggingContext } from '@/logging/context/LoggingContext';
+import { useEffect, useState } from 'react';
 
-// Remember - TanStack Router requires that all routes have a unique ID
-// If you're getting duplicate route ID errors, ensure all route paths are unique
-// You can also explicitly set IDs with `id: 'your-unique-id'` in createRoute options
-
-// Combine all routes
-const routeTree = rootRoute.addChildren([
-  ...siteRoutes,
-  ...adminRoutes,
-  ...chatRoutes
+// Combine all route trees
+const routeTree = routeRegistry.site.root.addChildren([
+  ...routeRegistry.admin.tree.children,
+  ...routeRegistry.chat.tree.children
 ]);
 
 // Create the router instance
@@ -34,9 +26,29 @@ export const router = createRouter({
 
 // Router provider component with global logging components
 export function AppRouter() {
+  const [currentScope, setCurrentScope] = useState<'site' | 'admin' | 'chat'>('site');
+  const pathname = router.state.location.pathname;
+  
+  // Update the current scope when the pathname changes
+  useEffect(() => {
+    if (pathname.startsWith('/admin')) {
+      setCurrentScope('admin');
+    } else if (pathname.startsWith('/chat')) {
+      setCurrentScope('chat');
+    } else {
+      setCurrentScope('site');
+    }
+  }, [pathname]);
+
   return (
     <>
-      <RouterProvider router={router} />
+      <RouterProvider 
+        router={router}
+        context={{
+          scope: currentScope,
+          themeContext: getThemeContextForRoute(pathname)
+        }} 
+      />
       <GlobalLoggingComponents />
     </>
   );
@@ -59,6 +71,17 @@ declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
   }
+  
+  // Add custom context for scope-based rendering
+  interface RouterContext {
+    scope: 'site' | 'admin' | 'chat';
+    themeContext: ThemeContext;
+  }
 }
+
+// Export a utility to get the current scope
+export const useRouterScope = () => {
+  return router.useRouterContext().scope;
+};
 
 export default router;
