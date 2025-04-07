@@ -1,5 +1,16 @@
 
-import { LogLevel } from '../types';
+/**
+ * Log levels in order of increasing severity
+ */
+export enum LogLevel {
+  TRACE = 'trace',
+  DEBUG = 'debug',
+  INFO = 'info',
+  SUCCESS = 'success',
+  WARN = 'warn',
+  ERROR = 'error',
+  CRITICAL = 'critical'
+}
 
 /**
  * Helper function to compare log levels

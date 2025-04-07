@@ -7,5 +7,8 @@ import { LogEntry } from '../types';
 export interface Transport {
   log(entry: LogEntry): void;
   flush?(): Promise<void>;
+  getLogs?(): LogEntry[];
+  getFilteredLogs?(options?: any): LogEntry[];
+  clear?(): void;
   subscribe?(callback: (logs: LogEntry[]) => void): () => void;
 }

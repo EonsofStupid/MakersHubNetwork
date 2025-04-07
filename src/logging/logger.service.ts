@@ -1,9 +1,8 @@
-
 import { v4 as uuidv4 } from 'uuid';
-import { LogCategory, LogEntry, LogTransport, LoggingConfig } from './types';
+import { LogCategory, LogEntry, Transport, LoggingConfig } from './types';
 import { LogLevel, isLogLevelAtLeast } from './constants/log-level';
-import { defaultLoggingConfig } from './config';
-import { errorToObject } from '@/shared/utils/render';
+import { defaultLoggingConfig } from './config/default-config';
+import { errorToObject } from '@/shared/rendering';
 
 /**
  * Logger service - main class for logging management

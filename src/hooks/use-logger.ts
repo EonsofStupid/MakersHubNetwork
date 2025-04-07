@@ -1,10 +1,9 @@
 
 import { useCallback } from 'react';
 import { getLogger } from '@/logging';
-import { LogCategory, LogOptions } from '@/logging/types';
-import { LogLevel } from '@/logging/constants/log-level';
-import { ReactNode } from 'react';
+import { LogCategory, LogOptions, LogLevel } from '@/logging/types';
 import { createLogOptions } from '@/logging/utils/log-helpers';
+import { ReactNode } from 'react';
 
 /**
  * Hook for logging from React components

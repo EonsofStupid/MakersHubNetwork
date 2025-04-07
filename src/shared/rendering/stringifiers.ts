@@ -1,5 +1,6 @@
 
 import { RenderOptions, StringifyOptions } from './types';
+import * as React from 'react';
 import { ReactNode } from 'react';
 
 /**

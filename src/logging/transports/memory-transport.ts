@@ -1,144 +1,132 @@
 
-import { Transport } from './transport';
-import { LogEntry, LogLevel } from '../types';
+import { LogEntry, Transport } from '../types';
+import { nodeToSearchableString } from '@/shared/rendering';
 
 /**
- * Transport that keeps logs in memory for internal use
+ * Memory transport that stores log entries in memory
  */
 export class MemoryTransport implements Transport {
   private logs: LogEntry[] = [];
-  private maxLogs: number;
   private subscribers: ((logs: LogEntry[]) => void)[] = [];
-
-  constructor({ maxLogs = 1000 }: { maxLogs?: number } = {}) {
-    this.maxLogs = maxLogs;
+  private options: { maxLogs?: number } = { maxLogs: 1000 };
+  
+  constructor(options: { maxLogs?: number } = {}) {
+    this.options = { ...this.options, ...options };
   }
-
+  
   log(entry: LogEntry): void {
-    // Add log to array
-    this.logs.push(entry);
+    // Store searchable versions of message and details
+    const entryWithSearch = {
+      ...entry,
+      searchableMessage: nodeToSearchableString(entry.message),
+      searchableDetails: entry.details ? JSON.stringify(entry.details) : undefined
+    };
     
-    // Trim logs if they exceed the maximum
-    if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(this.logs.length - this.maxLogs);
+    // Add to logs
+    this.logs.unshift(entryWithSearch as LogEntry);
+    
+    // Limit size
+    if (this.options.maxLogs && this.logs.length > this.options.maxLogs) {
+      this.logs = this.logs.slice(0, this.options.maxLogs);
     }
-    
-    // Make logs searchable for easier filtering
-    this.makeSearchable(entry);
     
     // Notify subscribers
     this.notifySubscribers();
   }
   
-  /**
-   * Get all logs
-   */
   getLogs(): LogEntry[] {
-    return [...this.logs];
+    return this.logs;
   }
   
-  /**
-   * Get filtered logs
-   */
-  getFilteredLogs({ 
-    level, 
-    category, 
-    source,
-    search,
-    limit = this.maxLogs 
-  }: {
-    level?: LogLevel;
+  getFilteredLogs(options: {
+    search?: string;
+    level?: string;
     category?: string;
     source?: string;
-    search?: string;
-    limit?: number;
+    startTime?: Date;
+    endTime?: Date;
   } = {}): LogEntry[] {
     let filtered = [...this.logs];
     
-    if (level !== undefined) {
-      filtered = filtered.filter(log => log.level === level);
+    // Filter by level
+    if (options.level) {
+      filtered = filtered.filter(log => log.level === options.level);
     }
     
-    if (category !== undefined) {
-      filtered = filtered.filter(log => log.category === category);
+    // Filter by category
+    if (options.category) {
+      filtered = filtered.filter(log => log.category === options.category);
     }
     
-    if (source !== undefined) {
-      filtered = filtered.filter(log => log.source === source);
+    // Filter by source
+    if (options.source) {
+      filtered = filtered.filter(log => log.source === options.source);
     }
     
-    if (search !== undefined && search.trim() !== '') {
-      const searchTerm = search.toLowerCase();
+    // Filter by time range
+    if (options.startTime) {
+      filtered = filtered.filter(log => 
+        log.timestamp instanceof Date 
+          ? log.timestamp >= options.startTime! 
+          : new Date(log.timestamp) >= options.startTime!
+      );
+    }
+    
+    if (options.endTime) {
+      filtered = filtered.filter(log => 
+        log.timestamp instanceof Date 
+          ? log.timestamp <= options.endTime! 
+          : new Date(log.timestamp) <= options.endTime!
+      );
+    }
+    
+    // Filter by search term
+    if (options.search) {
+      const searchLower = options.search.toLowerCase();
       filtered = filtered.filter(log => {
-        const searchableMessage = log.searchableMessage || '';
-        const searchableDetails = log.searchableDetails || '';
+        // Search in message
+        const searchableMessage = (log as any).searchableMessage || 
+          nodeToSearchableString(log.message);
         
-        return (
-          searchableMessage.toLowerCase().includes(searchTerm) ||
-          searchableDetails.toLowerCase().includes(searchTerm) ||
-          (log.source || '').toLowerCase().includes(searchTerm) ||
-          (log.category || '').toLowerCase().includes(searchTerm)
-        );
+        if (searchableMessage.toLowerCase().includes(searchLower)) {
+          return true;
+        }
+        
+        // Search in details
+        if (log.details) {
+          const searchableDetails = (log as any).searchableDetails || 
+            JSON.stringify(log.details);
+          
+          if (searchableDetails.toLowerCase().includes(searchLower)) {
+            return true;
+          }
+        }
+        
+        return false;
       });
     }
     
-    return filtered.slice(0, limit);
+    return filtered;
   }
   
-  /**
-   * Clear all logs
-   */
   clear(): void {
     this.logs = [];
     this.notifySubscribers();
   }
-
-  /**
-   * Subscribe to log updates
-   */
+  
   subscribe(callback: (logs: LogEntry[]) => void): () => void {
     this.subscribers.push(callback);
     
     // Return unsubscribe function
     return () => {
-      this.subscribers = this.subscribers.filter(cb => cb !== callback);
+      this.subscribers = this.subscribers.filter(sub => sub !== callback);
     };
   }
   
-  /**
-   * Notify all subscribers of log updates
-   */
   private notifySubscribers(): void {
-    for (const subscriber of this.subscribers) {
-      try {
-        subscriber([...this.logs]);
-      } catch (error) {
-        console.error('Error notifying log subscriber:', error);
-      }
-    }
-  }
-  
-  /**
-   * Add searchable properties to log entry
-   */
-  private makeSearchable(entry: LogEntry): void {
-    // Convert message to searchable string
-    if (typeof entry.message === 'string') {
-      entry.searchableMessage = entry.message;
-    } else {
-      entry.searchableMessage = 'React Node';
-    }
-    
-    // Convert details to searchable string if they exist
-    if (entry.details) {
-      try {
-        entry.searchableDetails = JSON.stringify(entry.details);
-      } catch (e) {
-        entry.searchableDetails = '[Error converting details to searchable string]';
-      }
-    }
+    this.subscribers.forEach(callback => callback(this.logs));
   }
 }
 
-// Create a singleton instance
+// Create a singleton instance for global use
 export const memoryTransport = new MemoryTransport();
