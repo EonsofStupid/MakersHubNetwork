@@ -1,76 +1,78 @@
 
 import React from 'react';
-import { AlertCircle, Info, AlertTriangle, XCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { LogCategory } from '../types';
-import { LogLevel } from '../constants/log-level';
-import { renderUnknownAsNode } from '@/shared/utils/render';
+import { LogEntry } from '../types';
+import { Info, AlertTriangle, XCircle, CheckCircle } from 'lucide-react';
+import { renderUnknownAsNode } from '@/shared/rendering';
 
 interface LogNotificationProps {
-  level: LogLevel;
-  category: LogCategory;
-  message: string | React.ReactNode;
+  log: LogEntry;
   onClose?: () => void;
 }
 
-export const LogNotification: React.FC<LogNotificationProps> = ({
-  level,
-  category,
-  message,
-  onClose
-}) => {
-  const getIcon = () => {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return <Info className="h-4 w-4" />;
-      case LogLevel.INFO:
-        return <Info className="h-4 w-4" />;
-      case LogLevel.WARN:
-        return <AlertTriangle className="h-4 w-4" />;
-      case LogLevel.ERROR:
-        return <AlertCircle className="h-4 w-4" />;
-      case LogLevel.CRITICAL:
-        return <XCircle className="h-4 w-4" />;
+export const LogNotification: React.FC<LogNotificationProps> = ({ log, onClose }) => {
+  // Determine the appropriate styles based on log level
+  const getStyles = () => {
+    switch (log.level) {
+      case 'error':
+      case 'critical':
+        return {
+          container: 'border-destructive bg-destructive/10',
+          icon: <XCircle className="text-destructive h-5 w-5" />,
+        };
+      case 'warn':
+        return {
+          container: 'border-yellow-500 bg-yellow-500/10',
+          icon: <AlertTriangle className="text-yellow-500 h-5 w-5" />,
+        };
+      case 'success':
+        return {
+          container: 'border-green-500 bg-green-500/10',
+          icon: <CheckCircle className="text-green-500 h-5 w-5" />,
+        };
       default:
-        return <Info className="h-4 w-4" />;
+        return {
+          container: 'border-blue-500 bg-blue-500/10',
+          icon: <Info className="text-blue-500 h-5 w-5" />,
+        };
     }
   };
 
-  const getVariant = (): "default" | "destructive" => {
-    switch (level) {
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-        return "destructive";
-      default:
-        return "default";
-    }
-  };
-
-  // Get appropriate title based on level
-  const getTitle = (): string => {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return 'Debug';
-      case LogLevel.INFO:
-        return 'Information';
-      case LogLevel.WARN:
-        return 'Warning';
-      case LogLevel.ERROR:
-        return 'Error';
-      case LogLevel.CRITICAL:
-        return 'Critical Error';
-      default:
-        return 'Log';
-    }
-  };
+  const styles = getStyles();
 
   return (
-    <Alert variant={getVariant()} className="animate-in slide-in-from-right-5">
-      {getIcon()}
-      <AlertTitle>{getTitle()} - {category}</AlertTitle>
-      <AlertDescription>
-        {renderUnknownAsNode(message)}
-      </AlertDescription>
-    </Alert>
+    <div
+      className={`rounded-md border p-3 shadow-md ${styles.container}`}
+      role="alert"
+    >
+      <div className="flex items-start gap-3">
+        <div>{styles.icon}</div>
+        <div className="flex-1">
+          <div className="font-medium">{renderUnknownAsNode(log.message)}</div>
+          {log.details && (
+            <div className="text-sm text-muted-foreground mt-1">
+              {typeof log.details === 'object'
+                ? Object.entries(log.details)
+                    .filter(([key]) => typeof key === 'string')
+                    .map(([key, value]) => (
+                      <div key={key} className="flex gap-1">
+                        <span className="font-medium">{key}:</span>
+                        <span>{String(value)}</span>
+                      </div>
+                    ))
+                : String(log.details)}
+            </div>
+          )}
+        </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+    </div>
   );
 };

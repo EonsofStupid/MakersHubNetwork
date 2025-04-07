@@ -1,168 +1,100 @@
 
-import { toast } from '@/hooks/use-toast';
-import { LogEntry, LogTransport } from '../types';
-import { LogLevel } from '../constants/log-level';
-import { nodeToSearchableString } from '@/shared/utils/render';
+import { LogEntry, LogLevel } from '../types';
+import { LogTransport } from '../types';
+import { isLogLevelAtLeast } from '../utils/map-log-level';
+import { nodeToSearchableString } from '@/shared/rendering';
 
-interface UITransportOptions {
-  showDebug?: boolean;
-  showInfo?: boolean;
-  showWarning?: boolean;
-  showError?: boolean;
-  showCritical?: boolean;
-  throttleMs?: number;
+interface UiTransportOptions {
+  /**
+   * Minimum log level to display in UI
+   */
+  minLevel?: LogLevel;
 }
 
 /**
- * Transport for showing logs as UI toasts
+ * A log transport that displays logs in the UI
+ * This is useful for showing important logs to users
  */
-export class UITransport implements LogTransport {
-  private options: UITransportOptions;
-  private recentMessages: Map<string, { timestamp: number, count: number }> = new Map();
+export class UiTransport implements LogTransport {
+  private options: Required<UiTransportOptions>;
+  private notifications: Map<string, any> = new Map();
   
-  constructor(options: UITransportOptions = {}) {
+  constructor(options: UiTransportOptions = {}) {
     this.options = {
-      showDebug: false,
-      showInfo: true,
-      showWarning: true,
-      showError: true,
-      showCritical: true,
-      throttleMs: 5000,
-      ...options
+      minLevel: options.minLevel ?? LogLevel.INFO,
     };
   }
   
+  /**
+   * Process a log entry and display in UI if appropriate
+   */
   log(entry: LogEntry): void {
-    // Check if we should show a toast for this log level
-    if (!this.shouldShowToast(entry.level)) {
+    // Skip entries below minimum level
+    if (!isLogLevelAtLeast(entry.level, this.options.minLevel)) {
       return;
     }
     
-    // Create a key for this message to track duplicates
-    const messageStr = nodeToSearchableString(entry.message);
-    const messageKey = `${entry.level}-${entry.category}-${messageStr}`;
-    
-    // Check if we're throttling this message
-    if (this.isThrottled(messageKey)) {
+    // Skip entries without UI notification flag
+    if (!this.shouldDisplayInUi(entry)) {
       return;
     }
     
-    // Show the toast
-    this.showToast(entry);
+    // Display in UI
+    this.displayNotification(entry);
   }
   
-  private shouldShowToast(level: LogLevel): boolean {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return !!this.options.showDebug;
-      case LogLevel.INFO:
-        return !!this.options.showInfo;
-      case LogLevel.WARN:
-        return !!this.options.showWarning;
-      case LogLevel.ERROR:
-        return !!this.options.showError;
-      case LogLevel.CRITICAL:
-        return !!this.options.showCritical;
-      default:
-        return false;
-    }
-  }
-  
-  private isThrottled(messageKey: string): boolean {
-    const now = Date.now();
-    const recent = this.recentMessages.get(messageKey);
-    
-    if (recent) {
-      // If the message was seen recently
-      if (now - recent.timestamp < (this.options.throttleMs || 5000)) {
-        // Update count and timestamp
-        this.recentMessages.set(messageKey, {
-          timestamp: now,
-          count: recent.count + 1
-        });
-        return true;
-      }
+  /**
+   * Determine if entry should be displayed in UI
+   */
+  private shouldDisplayInUi(entry: LogEntry): boolean {
+    // Always show errors and critical logs
+    if (entry.level === LogLevel.ERROR || entry.level === LogLevel.CRITICAL) {
+      return true;
     }
     
-    // Not throttled, record it
-    this.recentMessages.set(messageKey, {
-      timestamp: now,
-      count: 1
-    });
+    // Show explicit success messages
+    if (entry.level === LogLevel.SUCCESS || entry.success) {
+      return true;
+    }
     
-    // Clean up old messages
-    this.cleanupOldMessages(now);
+    // Show warnings based on warning flag or level
+    if (entry.level === LogLevel.WARN || entry.warning) {
+      return true;
+    }
+    
+    // Check for notification flag in details
+    if (entry.details && (entry.details.notify || entry.details.notification)) {
+      return true;
+    }
     
     return false;
   }
   
-  private cleanupOldMessages(now: number): void {
-    const expiryTime = now - ((this.options.throttleMs || 5000) * 2);
+  /**
+   * Display notification in UI
+   * This implementation uses console, but would be replaced with toast or notification component
+   */
+  private displayNotification(entry: LogEntry): void {
+    const message = nodeToSearchableString(entry.message);
     
-    for (const [key, data] of this.recentMessages.entries()) {
-      if (data.timestamp < expiryTime) {
-        this.recentMessages.delete(key);
-      }
-    }
-  }
-  
-  private showToast(entry: LogEntry): void {
-    let iconName: string;
-    let variant: "default" | "destructive" | undefined;
-    const title = this.getTitle(entry);
-    const messageStr = nodeToSearchableString(entry.message);
-    
+    // For demo, just log to console
+    // In a real implementation, would use a toast or notification component
     switch (entry.level) {
-      case LogLevel.DEBUG:
-        iconName = "info";
-        variant = "default";
-        break;
-      case LogLevel.INFO:
-        iconName = "info";
-        variant = "default";
+      case LogLevel.ERROR:
+      case LogLevel.CRITICAL:
+        console.error(`[UI] ${message}`);
         break;
       case LogLevel.WARN:
-        iconName = "alert-triangle";
-        variant = "default";
+        console.warn(`[UI] ${message}`);
         break;
-      case LogLevel.ERROR:
-        iconName = "alert-circle";
-        variant = "destructive";
-        break;
-      case LogLevel.CRITICAL:
-        iconName = "x-circle";
-        variant = "destructive";
+      case LogLevel.SUCCESS:
+        console.info(`[UI] ${message}`);
         break;
       default:
-        iconName = "info";
-        variant = "default";
-    }
-    
-    // Show toast with appropriate styling
-    toast({
-      title,
-      description: messageStr,
-      variant,
-      // Use plain strings for icon names - the toast component will handle rendering
-      icon: iconName,
-      duration: entry.level === LogLevel.ERROR || entry.level === LogLevel.CRITICAL ? 7000 : 4000,
-    });
-  }
-  
-  private getTitle(entry: LogEntry): string {
-    switch (entry.level) {
-      case LogLevel.DEBUG:
-        return `Debug [${entry.category}]`;
-      case LogLevel.INFO:
-        return `Info [${entry.category}]`;
-      case LogLevel.WARN:
-        return `Warning [${entry.category}]`;
-      case LogLevel.ERROR:
-        return `Error [${entry.category}]`;
-      case LogLevel.CRITICAL:
-        return `Critical Error [${entry.category}]`;
-      default:
-        return `Log [${entry.category}]`;
+        console.log(`[UI] ${message}`);
     }
   }
 }
+
+// Create singleton instance
+export const uiTransport = new UiTransport();
