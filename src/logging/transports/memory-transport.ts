@@ -1,136 +1,108 @@
 
+import { Transport } from './transport';
 import { LogEntry, LogLevel } from '../types';
-import { LogTransport } from '../types';
-import { isLogLevelAtLeast } from '../utils/map-log-level';
 import { nodeToSearchableString } from '@/shared/rendering';
 
-interface MemoryTransportOptions {
-  /**
-   * Maximum number of log entries to keep in memory
-   */
-  maxEntries?: number;
-  
-  /**
-   * Minimum log level to store in memory
-   */
-  minLevel?: LogLevel;
-}
-
-interface MemoryTransportState {
-  entries: LogEntry[];
-  searchableEntries: Record<string, string>;
-}
-
 /**
- * A log transport that stores log entries in memory
- * Useful for displaying logs in the UI
+ * Transport that keeps logs in memory for internal use
  */
-export class MemoryTransport implements LogTransport {
-  private options: Required<MemoryTransportOptions>;
-  private state: MemoryTransportState;
-  
-  private listeners: ((entries: LogEntry[]) => void)[] = [];
-  
-  constructor(options: MemoryTransportOptions = {}) {
-    this.options = {
-      maxEntries: options.maxEntries ?? 1000,
-      minLevel: options.minLevel ?? LogLevel.DEBUG,
-    };
-    
-    this.state = {
-      entries: [],
-      searchableEntries: {},
-    };
+export class MemoryTransport implements Transport {
+  private logs: LogEntry[] = [];
+  private maxLogs: number;
+
+  constructor({ maxLogs = 1000 }: { maxLogs?: number } = {}) {
+    this.maxLogs = maxLogs;
   }
-  
-  /**
-   * Add a log entry to memory
-   */
+
   log(entry: LogEntry): void {
-    // Skip entries below minimum level
-    if (!isLogLevelAtLeast(entry.level, this.options.minLevel)) {
-      return;
+    // Add log to array
+    this.logs.push(entry);
+    
+    // Trim logs if they exceed the maximum
+    if (this.logs.length > this.maxLogs) {
+      this.logs = this.logs.slice(this.logs.length - this.maxLogs);
     }
     
-    // Add entry to memory
-    this.state.entries.unshift(entry);
-    
-    // Create searchable version of the entry
-    this.state.searchableEntries[entry.id] = nodeToSearchableString(entry.message);
-    
-    // Limit number of entries
-    while (this.state.entries.length > this.options.maxEntries) {
-      const removed = this.state.entries.pop();
-      if (removed) {
-        delete this.state.searchableEntries[removed.id];
-      }
-    }
-    
-    // Notify listeners
-    this.notifyListeners();
+    // Make logs searchable for easier filtering
+    this.makeSearchable(entry);
   }
   
   /**
-   * Get all log entries
+   * Get all logs
    */
-  getEntries(): LogEntry[] {
-    return [...this.state.entries];
+  getLogs(): LogEntry[] {
+    return [...this.logs];
   }
   
   /**
-   * Filter log entries by search text
+   * Get filtered logs
    */
-  search(text: string): LogEntry[] {
-    if (!text) {
-      return this.getEntries();
+  getFilteredLogs({ 
+    level, 
+    category, 
+    source,
+    search,
+    limit = this.maxLogs 
+  }: {
+    level?: LogLevel;
+    category?: string;
+    source?: string;
+    search?: string;
+    limit?: number;
+  } = {}): LogEntry[] {
+    let filtered = [...this.logs];
+    
+    if (level !== undefined) {
+      filtered = filtered.filter(log => log.level === level);
     }
     
-    const searchText = text.toLowerCase();
+    if (category !== undefined) {
+      filtered = filtered.filter(log => log.category === category);
+    }
     
-    return this.state.entries.filter((entry) => {
-      const searchableText = this.state.searchableEntries[entry.id] || '';
-      return searchableText.toLowerCase().includes(searchText);
-    });
+    if (source !== undefined) {
+      filtered = filtered.filter(log => log.source === source);
+    }
+    
+    if (search !== undefined && search.trim() !== '') {
+      const searchTerm = search.toLowerCase();
+      filtered = filtered.filter(log => {
+        const searchableMessage = log.searchableMessage || '';
+        const searchableDetails = log.searchableDetails || '';
+        
+        return (
+          searchableMessage.toLowerCase().includes(searchTerm) ||
+          searchableDetails.toLowerCase().includes(searchTerm) ||
+          (log.source || '').toLowerCase().includes(searchTerm) ||
+          (log.category || '').toLowerCase().includes(searchTerm)
+        );
+      });
+    }
+    
+    return filtered.slice(0, limit);
   }
   
   /**
-   * Clear all log entries
+   * Clear all logs
    */
   clear(): void {
-    this.state.entries = [];
-    this.state.searchableEntries = {};
-    this.notifyListeners();
+    this.logs = [];
   }
   
   /**
-   * Subscribe to log entry updates
+   * Add searchable properties to log entry
    */
-  subscribe(listener: (entries: LogEntry[]) => void): () => void {
-    this.listeners.push(listener);
+  private makeSearchable(entry: LogEntry): void {
+    // Convert message to searchable string
+    entry.searchableMessage = nodeToSearchableString(entry.message);
     
-    // Notify immediately with current entries
-    listener(this.getEntries());
-    
-    // Return unsubscribe function
-    return () => {
-      this.listeners = this.listeners.filter((l) => l !== listener);
-    };
-  }
-  
-  /**
-   * Notify all listeners of changes
-   */
-  private notifyListeners(): void {
-    const entries = this.getEntries();
-    this.listeners.forEach((listener) => {
+    // Convert details to searchable string if they exist
+    if (entry.details) {
       try {
-        listener(entries);
-      } catch (error) {
-        console.error('Error in log listener:', error);
+        entry.searchableDetails = nodeToSearchableString(entry.details);
+      } catch (e) {
+        entry.searchableDetails = '[Error converting details to searchable string]';
       }
-    });
+    }
   }
 }
-
-// Create singleton instance
-export const memoryTransport = new MemoryTransport();

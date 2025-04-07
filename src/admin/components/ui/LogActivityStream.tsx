@@ -1,168 +1,111 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import { LogCategory, LogEntry } from '@/logging/types';
-import { LogLevel } from '@/logging/constants/log-level';
-import { memoryTransport } from '@/logging/transports/memory-transport';
-import { cn } from '@/lib/utils';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LogEntry } from '@/logging/types';
+import { getLogger } from '@/logging';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { renderUnknownAsNode } from '@/shared/utils/render';
-import { isLogLevelAtLeast } from '@/logging/utils/map-log-level';
+import { RotateCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { renderUnknownAsNode } from '@/shared/rendering';
 
 interface LogActivityStreamProps {
-  maxEntries?: number;
-  height?: string;
-  autoScroll?: boolean;
-  level?: LogLevel;
-  categories?: LogCategory[];
-  showSource?: boolean;
-  className?: string;
+  maxItems?: number;
+  title?: string;
+  autoRefresh?: boolean;
+  refreshInterval?: number;
 }
 
-export function LogActivityStream({
-  maxEntries = 50,
-  height = '300px',
-  autoScroll = true,
-  level = LogLevel.INFO,
-  categories,
-  showSource = false,
-  className
-}: LogActivityStreamProps) {
+export const LogActivityStream: React.FC<LogActivityStreamProps> = ({ 
+  maxItems = 5, 
+  title = "Recent Activity",
+  autoRefresh = true,
+  refreshInterval = 10000
+}) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Update logs from memory transport
-  useEffect(() => {
-    const updateLogs = () => {
-      // Get all logs and filter them
-      const allLogs = memoryTransport.getLogs();
+  const fetchLogs = async () => {
+    setIsLoading(true);
+    try {
+      // Get logger instance
+      const logger = getLogger();
       
-      // Filter by level
-      let filteredLogs = allLogs.filter(log => 
-        isLogLevelAtLeast(log.level, level)
-      );
+      // Get memory transport
+      const transport = logger.getTransports().find(t => t.constructor.name === 'MemoryTransport');
       
-      // Filter by categories if specified
-      if (categories && categories.length > 0) {
-        filteredLogs = filteredLogs.filter(log => 
-          log.category && categories.includes(log.category as LogCategory)
-        );
+      if (transport && 'getLogs' in transport) {
+        // Get recent logs and limit to maxItems
+        const allLogs = (transport as any).getLogs();
+        setLogs(allLogs.slice(0, maxItems));
       }
-      
-      // Apply limit
-      filteredLogs = filteredLogs.slice(-maxEntries);
-      
-      setLogs(filteredLogs);
-    };
+    } catch (error) {
+      console.error('Failed to fetch logs:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    fetchLogs();
     
-    // Initial update
-    updateLogs();
-    
-    // Set up interval to update logs
-    const interval = setInterval(updateLogs, 2000);
+    // Set up interval to refresh logs if autoRefresh is enabled
+    let interval: NodeJS.Timeout | undefined;
+    if (autoRefresh) {
+      interval = setInterval(fetchLogs, refreshInterval);
+    }
     
     return () => {
-      clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
     };
-  }, [level, categories, maxEntries]);
+  }, [autoRefresh, refreshInterval]);
   
-  // Auto-scroll to bottom
-  useEffect(() => {
-    if (autoScroll && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [logs, autoScroll]);
-  
-  // Get color class for log level
-  const getLevelColorClass = (level: LogLevel): string => {
+  // Level to color mapping
+  const getLevelColor = (level: string): string => {
     switch (level) {
-      case LogLevel.DEBUG:
-        return 'text-gray-400';
-      case LogLevel.INFO:
-        return 'text-blue-400';
-      case LogLevel.WARN:
-        return 'text-yellow-400';
-      case LogLevel.ERROR:
-        return 'text-red-400';
-      case LogLevel.CRITICAL:
-        return 'text-red-600 font-bold';
-      default:
-        return 'text-gray-400';
+      case 'debug': return 'bg-gray-500';
+      case 'info': return 'bg-blue-500';
+      case 'warn': return 'bg-yellow-500';
+      case 'error': return 'bg-red-500';
+      case 'critical': return 'bg-purple-500';
+      case 'success': return 'bg-green-500';
+      default: return 'bg-gray-500';
     }
-  };
-  
-  // Get log item class based on level
-  const getLogItemClass = (level: LogLevel): string => {
-    switch (level) {
-      case LogLevel.WARN:
-        return 'border-l-2 border-l-yellow-500';
-      case LogLevel.ERROR:
-        return 'border-l-2 border-l-red-500';
-      case LogLevel.CRITICAL:
-        return 'border-l-2 border-l-red-600 bg-red-950/20';
-      default:
-        return '';
-    }
-  };
-  
-  // Format timestamp
-  const formatTime = (date: Date): string => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
   
   return (
-    <ScrollArea
-      ref={scrollRef as any}
-      className={cn(
-        "font-mono text-xs bg-[var(--impulse-bg-main)]/50",
-        "border border-[var(--impulse-border-normal)] rounded-md",
-        className
-      )}
-      style={{ height }}
-    >
-      {logs.length === 0 ? (
-        <div className="flex items-center justify-center h-full text-[var(--impulse-text-secondary)] italic p-4">
-          No logs to display
-        </div>
-      ) : (
-        <div className="p-1">
-          {logs.map((log) => (
-            <div 
-              key={log.id}
-              className={cn(
-                "py-1 px-2 border-b border-[var(--impulse-border-normal)]/30",
-                "hover:bg-[var(--impulse-bg-overlay)]/50",
-                "transition-colors duration-150",
-                getLogItemClass(log.level)
-              )}
-            >
-              <div className="flex items-start gap-2 overflow-hidden">
-                <span className={cn("flex-shrink-0", getLevelColorClass(log.level))}>
-                  {log.level}
-                </span>
-                
-                <span className="flex-shrink-0 text-gray-400">
-                  {formatTime(log.timestamp)}
-                </span>
-                
-                <Badge variant="outline" className="flex-shrink-0 py-0 h-5">
-                  {log.category}
-                </Badge>
-                
-                {showSource && log.source && (
-                  <Badge variant="secondary" className="flex-shrink-0 py-0 h-5">
-                    {log.source}
-                  </Badge>
-                )}
-                
-                <span className="flex-grow truncate">
-                  {renderUnknownAsNode(log.message)}
-                </span>
-              </div>
+    <Card className="h-full">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>{title}</CardTitle>
+        <Button variant="outline" size="sm" onClick={fetchLogs} disabled={isLoading}>
+          <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {logs.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No recent activity
             </div>
-          ))}
+          ) : (
+            logs.map((log, index) => (
+              <div key={index} className="flex flex-col space-y-1 pb-3 border-b last:border-b-0">
+                <div className="flex justify-between items-center">
+                  <Badge className={getLevelColor(log.level)}>{log.level}</Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(log.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
+                <div className="font-medium">{renderUnknownAsNode(log.message)}</div>
+                <div className="text-xs text-muted-foreground">
+                  {log.category} • {log.source || 'system'}
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      )}
-    </ScrollArea>
+      </CardContent>
+    </Card>
   );
-}
+};
