@@ -1,3 +1,4 @@
+
 import React, { Suspense, useEffect } from 'react';
 import { Outlet, useNavigate } from '@tanstack/react-router';
 import { useLogger } from '@/hooks/use-logger';
@@ -6,7 +7,7 @@ import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { adminRoutes } from './index';
 import { commonSearchParamsSchema } from '@/router/searchParams';
-import { navigateTo, createSearchParams } from '@/utils/router-helpers';
+import { navigateTo, navigateWithParams } from '@/utils/router-helpers';
 
 // Loading component for lazy-loaded routes
 const PageLoader = () => (
@@ -52,10 +53,7 @@ export function AdminRoutes() {
         details: { path: location.pathname }
       });
       
-      navigate({ 
-        to: '/login',
-        search: { returnTo: location.pathname }
-      });
+      navigateWithParams('/login', { returnTo: location.pathname });
     }
   }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate, loadStatus]);
   

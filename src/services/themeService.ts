@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeContext } from '@/types/theme';
 import { getLogger } from '@/logging';
@@ -88,14 +89,15 @@ export async function getTheme(options?: GetThemeOptions): Promise<{ theme: any;
     
     const { id, name, isDefault = true, context = 'site' } = options || {};
     
-    // Use edge function to get theme
+    // Use edge function to get theme - using URL parameters instead of body
     const { data, error } = await supabase.functions.invoke('theme-service', {
-      body: { 
-        operation: 'get-theme', 
+      // Don't use body for GET requests, use query string parameters instead
+      method: 'GET',
+      params: { 
         themeId: id,
         themeName: name,
-        isDefault,
-        context
+        isDefault: isDefault ? 'true' : 'false',
+        context 
       }
     });
 
@@ -140,21 +142,17 @@ export async function getTheme(options?: GetThemeOptions): Promise<{ theme: any;
 }
 
 export async function fetchTheme(themeId: string): Promise<any> {
-  // Create a record object for the theme ID
-  const themeParams: Record<string, unknown> = { id: themeId };
-  
   try {
     logger.info("Fetching theme from service", {
       category: LogCategory.DATABASE,
-      details: themeParams
+      details: { themeId }
     });
     
+    // Use GET params instead of body
     const { data, error } = await supabase.functions.invoke('theme-service', {
-      body: { 
-        operation: 'get-theme', 
-        themeId: themeId,
-        themeName: null,
-        isDefault: false,
+      method: 'GET',
+      params: {
+        themeId,
         context: 'site'
       }
     });
@@ -162,7 +160,7 @@ export async function fetchTheme(themeId: string): Promise<any> {
     if (error) {
       logger.error("Error fetching theme from service", { 
         category: LogCategory.DATABASE,
-        details: { error, themeParams }
+        details: { error, themeId }
       });
       
       return { 

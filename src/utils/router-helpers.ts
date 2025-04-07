@@ -16,16 +16,34 @@ interface NavigateOptions {
 const searchParamsSchema = z.record(z.unknown());
 
 /**
+ * Create properly formatted search params for TanStack Router
+ */
+export function createSearchParams<T extends Record<string, any>>(params: T): Record<string, unknown> {
+  return params as Record<string, unknown>;
+}
+
+/**
  * Navigate to a specific route
  * @param path The path to navigate to
  * @param options Optional navigation options
  */
 export function navigateTo(path: string, options?: NavigateOptions) {
   router.navigate({
-    to: path as any, 
+    to: path,
     replace: options?.replace,
-    // Handle state properly for TanStack Router
-    state: options?.state ? options.state : undefined
+    state: options?.state
+  });
+}
+
+/**
+ * Navigate to a route with search parameters
+ */
+export function navigateWithParams(path: string, params: Record<string, any>, options?: NavigateOptions) {
+  router.navigate({
+    to: path,
+    search: params,
+    replace: options?.replace,
+    state: options?.state
   });
 }
 
@@ -70,13 +88,8 @@ export function isCurrentRoute(path: string) {
 export function createTypedRoute(path: string) {
   return {
     path,
-    to: path as any // Type assertion to make TanStack Router happy
+    to: path
   };
-}
-
-// Helper to create search params that are compatible with TanStack Router
-export function createSearchParams<T extends Record<string, any>>(params: T): Record<string, unknown> {
-  return params as Record<string, unknown>;
 }
 
 // Common routes for easy access
