@@ -21,6 +21,7 @@ export const DevChatProvider: React.FC<DevChatProviderProps> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(false);
   const [context, setContext] = useState("");
   const [isLoadingContext, setIsLoadingContext] = useState(false);
+  const [mode, setMode] = useState<ChatMode>('dev');
   
   const loadContext = async (query: string): Promise<string> => {
     setIsLoadingContext(true);
@@ -42,10 +43,15 @@ export const DevChatProvider: React.FC<DevChatProviderProps> = ({ children }) =>
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Add user message
-      const userMessage = { role: 'user', content };
+      const userMessage = { 
+        id: Date.now().toString(),
+        role: 'user', 
+        content 
+      };
       
       // Simulate AI response
       const aiMessage = { 
+        id: (Date.now() + 1).toString(),
         role: 'assistant', 
         content: `Development mode response to: "${content}"` 
       };
@@ -63,7 +69,7 @@ export const DevChatProvider: React.FC<DevChatProviderProps> = ({ children }) =>
     messages,
     sendMessage,
     isLoading,
-    mode: 'dev'
+    mode
   };
   
   return (
