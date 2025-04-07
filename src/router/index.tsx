@@ -1,8 +1,9 @@
-
 import { 
   RouterProvider,
   createRouter,
-  type AnyRoute
+  type RegisterRouter,
+  type AnyRoute,
+  createRootRouteWithContext
 } from '@tanstack/react-router';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { routeRegistry } from './routeRegistry';
@@ -16,6 +17,12 @@ import { ThemeContext } from '@/types/theme';
 
 const logger = getLogger('Router');
 
+// Define router context type properly
+interface RouterContext {
+  scope: 'site' | 'admin' | 'chat';
+  themeContext: ThemeContext;
+}
+
 // Try to build a safe route tree with error handling
 const buildRouteTree = () => {
   try {
@@ -24,12 +31,12 @@ const buildRouteTree = () => {
       const children = [];
       
       // Add admin routes if available
-      if (routeRegistry.admin.tree && routeRegistry.admin.tree.children) {
+      if (routeRegistry.admin.tree) {
         children.push(routeRegistry.admin.tree);
       }
       
       // Add chat routes if available
-      if (routeRegistry.chat.tree && routeRegistry.chat.tree.children) {
+      if (routeRegistry.chat.tree) {
         children.push(routeRegistry.chat.tree);
       }
       
@@ -45,7 +52,7 @@ const buildRouteTree = () => {
   }
 };
 
-// Create the router instance with error handling
+// Create the router instance with error handling and proper typings
 export const router = (() => {
   try {
     const routeTree = buildRouteTree();
@@ -54,6 +61,10 @@ export const router = (() => {
       routeTree,
       defaultPreload: 'intent',
       defaultPreloadStaleTime: 0,
+      context: {
+        scope: 'site' as const,
+        themeContext: 'site' as ThemeContext
+      }
     });
   } catch (error) {
     logger.error('Failed to create router', { 
@@ -69,7 +80,11 @@ export const router = (() => {
           <h1 className="text-xl font-bold mb-4">Router Initialization Error</h1>
           <p>Please check the console for details and try refreshing the page.</p>
         </div>
-      )
+      ),
+      context: {
+        scope: 'site' as const,
+        themeContext: 'site' as ThemeContext
+      }
     });
   }
 })();
@@ -152,7 +167,7 @@ function GlobalLoggingComponents() {
   );
 }
 
-// Type declarations for our routes
+// Type declarations for our routes with proper context typing
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
