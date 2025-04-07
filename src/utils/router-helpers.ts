@@ -5,6 +5,8 @@
 import { router } from '@/router';
 import type { AnyRoute } from '@tanstack/react-router';
 import { z } from 'zod';
+import { RouteScope, navigateToScope } from '@/router/utils/scopedRouting';
+import { routeRegistry } from '@/router/routeRegistry';
 
 // Define type for navigation options
 interface NavigateOptions {
@@ -48,6 +50,17 @@ export function navigateWithParams(path: string, params: Record<string, any>, op
 }
 
 /**
+ * Navigate within a specific scope (site, admin, chat)
+ */
+export function navigateWithinScope(scope: RouteScope, path: string, options?: {
+  params?: Record<string, string>;
+  search?: Record<string, unknown>;
+  replace?: boolean;
+}): void {
+  navigateToScope(scope, path, options);
+}
+
+/**
  * Navigate back in the router history
  */
 export function navigateBack() {
@@ -84,6 +97,24 @@ export function isCurrentRoute(path: string) {
   return router.state.location.pathname === path;
 }
 
+/**
+ * Check if the current route is within a specific scope
+ */
+export function isInScope(scope: RouteScope): boolean {
+  const pathname = router.state.location.pathname;
+  
+  switch (scope) {
+    case 'admin':
+      return pathname.startsWith('/admin');
+    case 'chat':
+      return pathname.startsWith('/chat');
+    case 'site':
+      return !pathname.startsWith('/admin') && !pathname.startsWith('/chat');
+    default:
+      return false;
+  }
+}
+
 // Helper function for creating strongly-typed route objects with proper TanStack Router compatibility
 export function createTypedRoute(path: string) {
   return {
@@ -92,12 +123,26 @@ export function createTypedRoute(path: string) {
   };
 }
 
-// Common routes for easy access
+// Common routes for easy access - updated with scope awareness
 export const ROUTES = {
+  // Site routes
   HOME: createTypedRoute('/'),
   LOGIN: createTypedRoute('/login'),
   PROFILE: createTypedRoute('/profile'),
   SETTINGS: createTypedRoute('/settings'),
+  
+  // Admin routes
   ADMIN_DASHBOARD: createTypedRoute('/admin/dashboard'),
-  CHAT: createTypedRoute('/chat')
+  ADMIN_USERS: createTypedRoute('/admin/users'),
+  ADMIN_PARTS: createTypedRoute('/admin/parts'),
+  ADMIN_BUILDS: createTypedRoute('/admin/builds'),
+  ADMIN_THEMES: createTypedRoute('/admin/themes'),
+  ADMIN_CONTENT: createTypedRoute('/admin/content'),
+  ADMIN_SETTINGS: createTypedRoute('/admin/settings'),
+  ADMIN_PERMISSIONS: createTypedRoute('/admin/permissions'),
+  ADMIN_LOGS: createTypedRoute('/admin/logs'),
+  
+  // Chat routes
+  CHAT: createTypedRoute('/chat'),
+  CHAT_SESSION: (sessionId: string) => createTypedRoute(`/chat/session/${sessionId}`),
 };

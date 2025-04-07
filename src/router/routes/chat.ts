@@ -18,15 +18,23 @@ const PageLoader = () => (
 // Chat base route
 const chatBaseRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: 'chat',
-  component: () => <React.Suspense fallback={<PageLoader />}><ChatLayout /></React.Suspense>
+  path: '/chat',
+  component: () => (
+    <React.Suspense fallback={<PageLoader />}>
+      <ChatLayout />
+    </React.Suspense>
+  )
 });
 
 // Chat home route
 const chatHomeRoute = createRoute({
   getParentRoute: () => chatBaseRoute,
   path: '/',
-  component: () => <React.Suspense fallback={<PageLoader />}><ChatHome /></React.Suspense>
+  component: () => (
+    <React.Suspense fallback={<PageLoader />}>
+      <ChatHome />
+    </React.Suspense>
+  )
 });
 
 // Chat session route
@@ -40,10 +48,16 @@ const chatSessionRoute = createRoute({
   )
 });
 
-// Export all chat routes
-export const chatRoutes = [
-  chatBaseRoute.addChildren([
-    chatHomeRoute,
-    chatSessionRoute
-  ])
-];
+// Create a complete chat route tree
+const chatRouteTree = chatBaseRoute.addChildren([
+  chatHomeRoute,
+  chatSessionRoute
+]);
+
+// Export individual routes and the complete tree
+export const chatRoutes = {
+  base: chatBaseRoute,
+  tree: chatRouteTree,
+  home: chatHomeRoute,
+  session: chatSessionRoute
+};

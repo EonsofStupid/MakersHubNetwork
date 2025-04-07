@@ -1,7 +1,8 @@
 
 import { 
   createRoute,
-  createRootRoute
+  createRootRoute,
+  Outlet
 } from '@tanstack/react-router';
 import { ReactNode } from 'react';
 import { z } from 'zod';
@@ -88,10 +89,19 @@ const loginRoute = createRoute({
   component: Login
 });
 
-// Export site routes
-export const siteRoutes = [
+// Create a complete site route tree
+const siteRouteTree = rootRoute.addChildren([
   siteBaseRoute.addChildren([indexRoute]),
   loginRoute
-];
+]);
+
+// Export individual routes and the complete tree
+export const siteRoutes = {
+  root: rootRoute,
+  base: siteBaseRoute,
+  index: indexRoute,
+  login: loginRoute,
+  tree: siteRouteTree
+};
 
 export { Outlet } from '@tanstack/react-router';
