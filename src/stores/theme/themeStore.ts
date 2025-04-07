@@ -1,4 +1,4 @@
-// Renaming the file to avoid conflicts with src/stores/theme/store.ts
+
 import { create } from 'zustand';
 import { getTheme } from '@/services/themeService';
 import { getLogger } from '@/logging';
@@ -6,12 +6,15 @@ import { LogCategory } from '@/logging';
 import { errorToObject } from '@/shared/rendering';
 import { defaultTokens, ThemeTokensSchema } from '@/theme/tokenSchema';
 import { removeUndefineds } from '@/utils/themeTokenUtils';
-import { ThemeContext, ThemeContextSchema } from '@/router/routeRegistry';
 import { z } from 'zod';
+import { Theme, ThemeContext } from '@/types/theme';
 
 // Define valid load status values using Zod for better type safety
 export const ThemeLoadStatusSchema = z.enum(['idle', 'loading', 'success', 'error']);
 export type ThemeLoadStatus = z.infer<typeof ThemeLoadStatusSchema>;
+
+// Define ThemeContext enum to ensure consistent usage
+export const ThemeContextSchema = z.enum(['site', 'admin', 'chat', 'app', 'training']);
 
 // Interface for theme service options with Zod validation
 export const ThemeServiceOptionsSchema = z.object({
@@ -24,7 +27,7 @@ export const ThemeServiceOptionsSchema = z.object({
 export type ThemeServiceOptions = z.infer<typeof ThemeServiceOptionsSchema>;
 
 interface ThemeState {
-  currentTheme: any | null;
+  currentTheme: Theme | null;
   isLoading: boolean;
   error: Error | null;
   loadStatus: ThemeLoadStatus;
@@ -75,7 +78,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         }
       } else {
         // Default to 'app' context if no input provided
-        options = { context: ThemeContextSchema.enum.app };
+        options = { context: 'app' as ThemeContext };
         getLogger().info('Loading default app theme');
       }
 

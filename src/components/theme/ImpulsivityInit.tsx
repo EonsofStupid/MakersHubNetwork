@@ -30,7 +30,7 @@ export function ImpulsivityInit({
   useEffect(() => {
     // Skip if we've already applied or attempted to apply the theme
     if ((autoApply && !isApplied && !applyAttempted.current) || 
-        (autoApply && !isApplied && loadStatus === 'loaded' && !applyAttempted.current)) {
+        (autoApply && !isApplied && loadStatus === 'success' && !applyAttempted.current)) {
       
       applyAttempted.current = true;
       setIsApplying(true);
@@ -80,7 +80,7 @@ export function ImpulsivityInit({
   
   // Force apply the theme after a delay if it's still not applied
   useEffect(() => {
-    if (autoApply && !isApplied && loadStatus === 'loaded') {
+    if (autoApply && !isApplied && loadStatus === 'success') {
       const timer = setTimeout(async () => {
         if (!isApplied) {
           setIsApplying(true);

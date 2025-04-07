@@ -47,7 +47,7 @@ const chatHomeRoute = createRoute({
 const chatSessionRoute = createRoute({
   getParentRoute: () => chatBaseRoute,
   path: '/session/$sessionId',
-  validateParams: (params) => ({ 
+  parseParams: (params) => ({ 
     sessionId: chatParamsSchema.sessionId.parse(params.sessionId) 
   }),
   component: ({ params }) => (

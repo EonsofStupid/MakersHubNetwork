@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
  */
 export async function syncImpulsivityTheme(): Promise<boolean> {
   try {
-    const logger = getLogger('ThemeSync', LogCategory.THEME);
+    const logger = getLogger('ThemeSync');
     logger.info('Starting to sync Impulsivity theme to database');
     
     const { currentTheme, tokens } = useThemeStore.getState();
@@ -142,7 +142,7 @@ export async function syncImpulsivityTheme(): Promise<boolean> {
       return false;
     }
   } catch (error) {
-    const logger = getLogger('ThemeSync', LogCategory.THEME);
+    const logger = getLogger('ThemeSync');
     logger.error('Unexpected error in theme sync:', {
       details: {
         error: error instanceof Error ? error.message : String(error)

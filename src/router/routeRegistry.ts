@@ -2,14 +2,12 @@
 import { siteRoutes } from './routes/site';
 import { adminRoutes } from './routes/admin';
 import { chatRoutes } from './routes/chat';
-import { ThemeContext } from '@/types/theme';
 import { z } from 'zod';
 import { getLogger } from '@/logging';
+import { ThemeContext } from '@/types/theme';
+import { ThemeContextSchema } from '@/types/themeContext';
 
 const logger = getLogger('RouteRegistry');
-
-// Define a Zod schema for ThemeContext to ensure valid values
-export const ThemeContextSchema = z.enum(['site', 'admin', 'chat', 'app', 'training']);
 
 /**
  * Central registry of all application routes with their trees and individual routes

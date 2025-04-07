@@ -28,7 +28,7 @@ export function AppInitializer({ children }: AppInitializerProps) {
         }
 
         logger.info('Application initialized successfully', {
-          details: { themeLoaded: loadStatus === 'loaded' }
+          details: { themeLoaded: loadStatus === 'success' }
         });
         setIsInitialized(true);
       } catch (error) {

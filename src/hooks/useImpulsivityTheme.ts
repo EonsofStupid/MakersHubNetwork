@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useThemeStore } from '@/stores/theme/store';
+import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { updateDesignTokens, updateThemeColors, updateThemeEffects } from '@/utils/themeTokenUtils';
 import { useToast } from '@/hooks/use-toast';
