@@ -17,6 +17,7 @@ import { chatRoutes } from './routes/chat';
 import { siteRoutes } from './routes/site';
 import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
 import { safeSSR } from '@/lib/utils/safeSSR';
+import { stringToBoolean } from '@/utils/typeGuards';
 
 const logger = getLogger('Router');
 

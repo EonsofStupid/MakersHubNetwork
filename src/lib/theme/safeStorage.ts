@@ -2,15 +2,9 @@
 import { getLogger } from '@/logging';
 import { ThemeTokens, ThemeTokensSchema } from '@/theme/tokenSchema';
 import { z } from 'zod';
+import { toBoolean, isBoolean } from '@/utils/typeGuards';
 
 const logger = getLogger('ThemeStorage');
-
-/**
- * Helper function to safely convert unknown types to boolean
- */
-export function toBoolean(value: unknown): boolean | undefined {
-  return typeof value === 'boolean' ? value : undefined;
-}
 
 /**
  * Safe wrapper for localStorage to prevent SSR issues
