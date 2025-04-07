@@ -189,81 +189,16 @@ export async function getTheme(options: GetThemeOptions = {}): Promise<GetThemeR
 }
 
 /**
- * Save a theme to the database
+ * Helper function to remove undefined values from an object
  */
-export async function saveTheme(theme: Partial<Theme>): Promise<Theme> {
-  try {
-    // In a real implementation, this would save to an API or database
-    // For now, we'll just return a mock response with a simulated delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    const savedTheme: Theme = {
-      ...fallbackTheme,
-      ...theme,
-      updated_at: new Date().toISOString(),
-      version: (theme.version || 1) + 1,
-    };
-    
-    return savedTheme;
-  } catch (error) {
-    console.error('Error saving theme:', error);
-    throw error;
-  }
-}
-
-/**
- * Create a new theme
- */
-export async function createTheme(theme: Partial<Theme>): Promise<Theme> {
-  try {
-    // In a real implementation, this would create in an API or database
-    // For now, we'll just return a mock response with a simulated delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    const newTheme: Theme = {
-      ...fallbackTheme,
-      ...theme,
-      id: `theme-${Date.now()}`,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      version: 1,
-    };
-    
-    return newTheme;
-  } catch (error) {
-    console.error('Error creating theme:', error);
-    throw error;
-  }
-}
-
-/**
- * Delete a theme
- */
-export async function deleteTheme(id: string): Promise<boolean> {
-  try {
-    // In a real implementation, this would delete from an API or database
-    // For now, we'll just return a mock response with a simulated delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    return true;
-  } catch (error) {
-    console.error('Error deleting theme:', error);
-    throw error;
-  }
-}
-
-/**
- * List all themes
- */
-export async function listThemes(params: Record<string, unknown> = {}): Promise<Theme[]> {
-  try {
-    // In a real implementation, this would fetch from an API or database
-    // For now, we'll just return a mock response with a simulated delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    return [fallbackTheme];
-  } catch (error) {
-    console.error('Error listing themes:', error);
-    throw error;
-  }
+export function removeUndefineds<T extends Record<string, any>>(obj: T): T {
+  const result = {} as T;
+  
+  Object.keys(obj).forEach(key => {
+    if (obj[key] !== undefined) {
+      result[key as keyof T] = obj[key];
+    }
+  });
+  
+  return result;
 }

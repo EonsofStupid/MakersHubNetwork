@@ -43,7 +43,7 @@ export function persistThemeTokens(tokens: ThemeTokensSchema): void {
  * 3. From static default theme
  */
 export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<ThemeTokensSchema> {
-  logger.info('Loading theme tokens', { context });
+  logger.info('Loading theme tokens', { details: { context } });
   
   try {
     // Try loading from Supabase with timeout
