@@ -11,9 +11,12 @@ export const LogConsole: React.FC = () => {
   const [filter, setFilter] = useState<LogLevel | null>(null);
 
   useEffect(() => {
-    return memoryTransport.subscribe((entries) => {
+    // Subscribe to memory transport logs
+    const unsubscribe = memoryTransport.subscribe((entries) => {
       setLogs(entries);
     });
+    
+    return unsubscribe;
   }, []);
 
   const filteredLogs = filter
@@ -62,7 +65,9 @@ export const LogConsole: React.FC = () => {
             >
               <div className="flex gap-2 items-start">
                 <span className="text-muted-foreground">
-                  {new Date(log.timestamp).toLocaleTimeString()}
+                  {log.timestamp instanceof Date 
+                    ? log.timestamp.toLocaleTimeString() 
+                    : new Date(log.timestamp).toLocaleTimeString()}
                 </span>
                 <span className="font-medium">
                   {renderUnknownAsNode(log.message)}

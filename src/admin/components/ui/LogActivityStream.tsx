@@ -1,25 +1,34 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogEntry } from '@/logging/types';
+import { LogEntry, LogLevel, LogCategory } from '@/logging/types';
 import { getLogger } from '@/logging';
 import { Badge } from '@/components/ui/badge';
 import { RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { renderUnknownAsNode } from '@/shared/rendering';
+import { memoryTransport } from '@/logging/transports/memory-transport';
 
 interface LogActivityStreamProps {
   maxItems?: number;
   title?: string;
   autoRefresh?: boolean;
   refreshInterval?: number;
+  height?: string;
+  level?: LogLevel;
+  categories?: LogCategory[];
+  showSource?: boolean;
 }
 
 export const LogActivityStream: React.FC<LogActivityStreamProps> = ({ 
   maxItems = 5, 
   title = "Recent Activity",
   autoRefresh = true,
-  refreshInterval = 10000
+  refreshInterval = 10000,
+  height = "300px",
+  level,
+  categories,
+  showSource = false
 }) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,17 +36,35 @@ export const LogActivityStream: React.FC<LogActivityStreamProps> = ({
   const fetchLogs = async () => {
     setIsLoading(true);
     try {
-      // Get logger instance
-      const logger = getLogger();
+      // Get recent logs and filter them if needed
+      let allLogs = memoryTransport.getLogs();
       
-      // Get memory transport
-      const transport = logger.getTransports().find(t => t.constructor.name === 'MemoryTransport');
-      
-      if (transport && 'getLogs' in transport) {
-        // Get recent logs and limit to maxItems
-        const allLogs = (transport as any).getLogs();
-        setLogs(allLogs.slice(0, maxItems));
+      // Filter by level if specified
+      if (level) {
+        allLogs = allLogs.filter(log => {
+          // For warn level, include error and critical too
+          if (level === LogLevel.WARN) {
+            return [LogLevel.WARN, LogLevel.ERROR, LogLevel.CRITICAL].includes(log.level as LogLevel);
+          }
+          // For debug level, include all
+          else if (level === LogLevel.DEBUG) {
+            return true;
+          }
+          // For info level, include info and success
+          else if (level === LogLevel.INFO) {
+            return [LogLevel.INFO, LogLevel.SUCCESS].includes(log.level as LogLevel);
+          }
+          return log.level === level;
+        });
       }
+      
+      // Filter by category if specified
+      if (categories && categories.length > 0) {
+        allLogs = allLogs.filter(log => categories.includes(log.category as LogCategory));
+      }
+      
+      // Limit to maxItems
+      setLogs(allLogs.slice(0, maxItems));
     } catch (error) {
       console.error('Failed to fetch logs:', error);
     } finally {
@@ -54,12 +81,18 @@ export const LogActivityStream: React.FC<LogActivityStreamProps> = ({
       interval = setInterval(fetchLogs, refreshInterval);
     }
     
+    // Subscribe to memory transport for real-time updates
+    const unsubscribe = memoryTransport.subscribe(() => {
+      if (autoRefresh) fetchLogs();
+    });
+    
     return () => {
       if (interval) {
         clearInterval(interval);
       }
+      unsubscribe();
     };
-  }, [autoRefresh, refreshInterval]);
+  }, [autoRefresh, refreshInterval, level, categories?.toString(), maxItems]);
   
   // Level to color mapping
   const getLevelColor = (level: string): string => {
@@ -83,7 +116,7 @@ export const LogActivityStream: React.FC<LogActivityStreamProps> = ({
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-4" style={{ maxHeight: height, overflowY: 'auto' }}>
           {logs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No recent activity
@@ -94,13 +127,17 @@ export const LogActivityStream: React.FC<LogActivityStreamProps> = ({
                 <div className="flex justify-between items-center">
                   <Badge className={getLevelColor(log.level)}>{log.level}</Badge>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(log.timestamp).toLocaleTimeString()}
+                    {log.timestamp instanceof Date 
+                      ? log.timestamp.toLocaleTimeString() 
+                      : new Date(log.timestamp).toLocaleTimeString()}
                   </span>
                 </div>
                 <div className="font-medium">{renderUnknownAsNode(log.message)}</div>
-                <div className="text-xs text-muted-foreground">
-                  {log.category} • {log.source || 'system'}
-                </div>
+                {showSource && (
+                  <div className="text-xs text-muted-foreground">
+                    {log.category} • {log.source || 'system'}
+                  </div>
+                )}
               </div>
             ))
           )}

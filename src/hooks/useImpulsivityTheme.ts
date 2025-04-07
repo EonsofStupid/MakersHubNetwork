@@ -18,16 +18,9 @@ export function useImpulsivityTheme() {
   
   const applyToMainSite = async () => {
     try {
-      // Use a type-safe approach to CSS variables
-      interface CSSVars {
-        '--site-primary': string;
-        '--site-secondary': string;
-        '--site-effect-color': string;
-        '--site-effect-secondary': string;
-        '--site-effect-tertiary': string;
-      }
-      
-      const cssVars: CSSVars = {
+      // Use CSS variables for consistent theming
+      // Since this is only for styling, no need for type safety on CSS vars
+      const cssVars: Record<string, string> = {
         '--site-primary': tokens.primary || '186 100% 50%',
         '--site-secondary': tokens.secondary || '334 100% 59%',
         '--site-effect-color': tokens.effectPrimary || '#00F0FF',
@@ -36,7 +29,7 @@ export function useImpulsivityTheme() {
       };
       
       const rootElement = document.documentElement;
-      (Object.entries(cssVars) as [keyof CSSVars, string][]).forEach(([key, value]) => {
+      Object.entries(cssVars).forEach(([key, value]) => {
         rootElement.style.setProperty(key, value);
       });
       
@@ -82,11 +75,8 @@ export function useImpulsivityTheme() {
     try {
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement) {
-        interface AdminCssVars {
-          [key: string]: string;
-        }
-        
-        const cssVars: AdminCssVars = {
+        // Since this is only for styling, no need for type safety on CSS vars
+        const cssVars: Record<string, string> = {
           '--impulse-primary': tokens.effectPrimary || '#00F0FF',
           '--impulse-secondary': tokens.effectSecondary || '#FF2D6E',
           '--impulse-bg-main': '#121218',

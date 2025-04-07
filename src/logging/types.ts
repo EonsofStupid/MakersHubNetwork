@@ -44,6 +44,8 @@ export interface LogMessage {
 
 export interface LogEntry extends LogMessage {
   id: string;
+  searchableMessage?: string; // For searching log messages
+  searchableDetails?: string; // For searching log details
 }
 
 export interface LogOptions {
@@ -73,25 +75,32 @@ export interface LoggerConfig {
   bufferSize: number;
   defaultCategory: LogCategory;
   defaultSource: string;
+  context?: Record<string, unknown>; // Adding context to LoggerConfig
+  transports: Transport[];
 }
 
 export interface Logger {
-  debug: (message: string | ReactNode, options?: LogOptions) => void;
-  info: (message: string | ReactNode, options?: LogOptions) => void;
-  warn: (message: string | ReactNode, options?: LogOptions) => void;
-  error: (message: string | ReactNode, options?: LogOptions) => void;
-  critical: (message: string | ReactNode, options?: LogOptions) => void;
+  debug: (message: string | ReactNode, options?: LogOptions) => LogEntry | undefined;
+  info: (message: string | ReactNode, options?: LogOptions) => LogEntry | undefined;
+  warn: (message: string | ReactNode, options?: LogOptions) => LogEntry | undefined;
+  error: (message: string | ReactNode, options?: LogOptions) => LogEntry | undefined;
+  critical: (message: string | ReactNode, options?: LogOptions) => LogEntry | undefined;
+  getTransports: () => Transport[]; // Add this method to Logger interface
 }
 
-export interface LogTransport {
-  log: (logMessage: LogEntry) => void;
+export interface Transport {
+  log: (logEntry: LogEntry) => void;
   flush?: () => Promise<void>;
+  getLogs?: () => LogEntry[];
+  getFilteredLogs?: (options?: any) => LogEntry[];
+  clear?: () => void;
+  subscribe?: (callback: (logs: LogEntry[]) => void) => () => void;
 }
 
 // Add LoggingConfig interface needed by logger.service.ts
 export interface LoggingConfig {
   minLevel: LogLevel;
-  transports: LogTransport[];
+  transports: Transport[];
   bufferSize?: number;
   flushInterval?: number;
   includeSource?: boolean;

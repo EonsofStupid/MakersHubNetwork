@@ -1,81 +1,137 @@
 
-import React from 'react';
-import { StringifyOptions } from './types';
+import { RenderOptions, StringifyOptions } from './types';
+import { ReactNode } from 'react';
 
 /**
- * Converts any value to a searchable string
+ * Safely stringify objects for debugging or display
  */
-export function nodeToSearchableString(value: unknown, options?: StringifyOptions): string {
-  const { maxLength = 1000, handleCircular = true, fallback = '' } = options || {};
-  
-  if (value === null || value === undefined) {
-    return '';
-  }
-  
-  // Handle React elements
-  if (React.isValidElement(value)) {
-    return 'React Element';
-  }
-  
-  // Handle primitive types
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    const stringValue = String(value);
-    return maxLength && stringValue.length > maxLength ? stringValue.substring(0, maxLength) + '...' : stringValue;
-  }
-  
-  // Handle arrays
-  if (Array.isArray(value)) {
-    const result = value.map(item => nodeToSearchableString(item, { 
-      maxLength: Math.floor(maxLength / value.length), 
-      handleCircular 
-    })).join(', ');
-    
-    return maxLength && result.length > maxLength ? result.substring(0, maxLength) + '...' : result;
-  }
-  
-  // Handle objects
-  if (typeof value === 'object') {
-    try {
-      // Use a replacer function to handle circular references if enabled
-      if (handleCircular) {
-        const seen = new WeakSet();
-        const stringified = JSON.stringify(value, (key, val) => {
-          if (typeof val === 'object' && val !== null) {
-            if (seen.has(val)) {
-              return '[Circular]';
-            }
-            seen.add(val);
-          }
-          return val;
-        });
-        return maxLength && stringified.length > maxLength ? stringified.substring(0, maxLength) + '...' : stringified;
-      } else {
-        const stringified = JSON.stringify(value);
-        return maxLength && stringified.length > maxLength ? stringified.substring(0, maxLength) + '...' : stringified;
-      }
-    } catch (e) {
-      return '[Complex Object]';
+export function safeStringify(
+  value: unknown,
+  options: StringifyOptions = {}
+): string {
+  const {
+    maxDepth = 3,
+    maxLength = 1000,
+    fallback = '[Complex Object]',
+    handleCircular = true,
+  } = options;
+
+  try {
+    if (value === null || value === undefined) {
+      return 'null';
     }
+
+    if (
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    ) {
+      return String(value);
+    }
+
+    if (value instanceof Error) {
+      return value.message;
+    }
+
+    if (typeof value === 'object') {
+      // Handle circular references with WeakSet
+      const seen = handleCircular ? new WeakSet() : null;
+      
+      const replacer = handleCircular
+        ? (key: string, val: any) => {
+            if (typeof val === 'object' && val !== null) {
+              if (seen && seen.has(val)) {
+                return '[Circular]';
+              }
+              if (seen) seen.add(val);
+            }
+            return val;
+          }
+        : null;
+
+      const stringified = JSON.stringify(value, replacer as any, 2);
+      
+      // Truncate if too long
+      if (stringified.length > maxLength) {
+        return stringified.substring(0, maxLength) + '...';
+      }
+      
+      return stringified;
+    }
+
+    return String(value);
+  } catch (e) {
+    return fallback;
   }
-  
-  // Default fallback
-  return String(value) || fallback;
 }
 
 /**
- * Converts an Error object to a plain object for logging and serialization
+ * Convert a React node to a searchable string
  */
-export function errorToObject(error: unknown): Record<string, any> {
+export function nodeToSearchableString(node: ReactNode | unknown): string {
+  if (node === null || node === undefined) {
+    return '';
+  }
+
+  if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
+    return String(node);
+  }
+
+  if (node instanceof Error) {
+    return `${node.name}: ${node.message}`;
+  }
+
+  if (React.isValidElement(node)) {
+    // For React elements, try to extract text content
+    const props = node.props as any;
+    
+    if (props.children) {
+      if (typeof props.children === 'string' || typeof props.children === 'number') {
+        return String(props.children);
+      }
+      
+      if (Array.isArray(props.children)) {
+        return props.children
+          .map((child: any) => nodeToSearchableString(child))
+          .join(' ')
+          .trim();
+      }
+    }
+    
+    return `[${node.type.toString()}]`;
+  }
+  
+  if (Array.isArray(node)) {
+    return node.map(nodeToSearchableString).join(' ').trim();
+  }
+
+  if (typeof node === 'object' && node !== null) {
+    try {
+      return safeStringify(node);
+    } catch (e) {
+      return '[Object]';
+    }
+  }
+
+  return String(node);
+}
+
+/**
+ * Convert an error to a plain object for logging
+ */
+export function errorToObject(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
     return {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      cause: (error as any).cause ? errorToObject((error as any).cause) : undefined
+      ...(error as any)
     };
   }
   
-  return {
-    error: String(error)
-  };
+  if (typeof error === 'object' && error !== null) {
+    return { ...error as Record<string, unknown> };
+  }
+  
+  return { value: error };
 }

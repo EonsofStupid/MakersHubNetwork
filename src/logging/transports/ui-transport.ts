@@ -1,5 +1,5 @@
 
-import { Transport } from '../transports/transport';
+import { Transport } from './transport';
 import { LogEntry, LogLevel } from '../types';
 
 /**

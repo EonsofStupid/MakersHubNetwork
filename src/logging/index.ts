@@ -16,8 +16,7 @@ export {
 };
 
 // Use export type for types when 'isolatedModules' is enabled
-export type { LogEntry, LogOptions, Logger, LogMessage } from './types';
+export type { LogEntry, LogOptions, Logger, LogMessage, Transport } from './types';
 export * from './context/LoggingContext';
 export * from './components/LogConsole';
 export * from './components/LogToggleButton';
-

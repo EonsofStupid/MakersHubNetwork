@@ -1,7 +1,6 @@
 
 import { Transport } from './transport';
 import { LogEntry, LogLevel } from '../types';
-import { nodeToSearchableString } from '@/shared/rendering';
 
 /**
  * Transport that keeps logs in memory for internal use
@@ -9,6 +8,7 @@ import { nodeToSearchableString } from '@/shared/rendering';
 export class MemoryTransport implements Transport {
   private logs: LogEntry[] = [];
   private maxLogs: number;
+  private subscribers: ((logs: LogEntry[]) => void)[] = [];
 
   constructor({ maxLogs = 1000 }: { maxLogs?: number } = {}) {
     this.maxLogs = maxLogs;
@@ -25,6 +25,9 @@ export class MemoryTransport implements Transport {
     
     // Make logs searchable for easier filtering
     this.makeSearchable(entry);
+    
+    // Notify subscribers
+    this.notifySubscribers();
   }
   
   /**
@@ -87,6 +90,32 @@ export class MemoryTransport implements Transport {
    */
   clear(): void {
     this.logs = [];
+    this.notifySubscribers();
+  }
+
+  /**
+   * Subscribe to log updates
+   */
+  subscribe(callback: (logs: LogEntry[]) => void): () => void {
+    this.subscribers.push(callback);
+    
+    // Return unsubscribe function
+    return () => {
+      this.subscribers = this.subscribers.filter(cb => cb !== callback);
+    };
+  }
+  
+  /**
+   * Notify all subscribers of log updates
+   */
+  private notifySubscribers(): void {
+    for (const subscriber of this.subscribers) {
+      try {
+        subscriber([...this.logs]);
+      } catch (error) {
+        console.error('Error notifying log subscriber:', error);
+      }
+    }
   }
   
   /**
@@ -94,15 +123,22 @@ export class MemoryTransport implements Transport {
    */
   private makeSearchable(entry: LogEntry): void {
     // Convert message to searchable string
-    entry.searchableMessage = nodeToSearchableString(entry.message);
+    if (typeof entry.message === 'string') {
+      entry.searchableMessage = entry.message;
+    } else {
+      entry.searchableMessage = 'React Node';
+    }
     
     // Convert details to searchable string if they exist
     if (entry.details) {
       try {
-        entry.searchableDetails = nodeToSearchableString(entry.details);
+        entry.searchableDetails = JSON.stringify(entry.details);
       } catch (e) {
         entry.searchableDetails = '[Error converting details to searchable string]';
       }
     }
   }
 }
+
+// Create a singleton instance
+export const memoryTransport = new MemoryTransport();
