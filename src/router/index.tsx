@@ -42,7 +42,7 @@ const buildRouteTree = () => {
     return routeTree;
   } catch (error) {
     logger.error('Failed to build route tree', { 
-      error: error instanceof Error ? error.message : String(error)
+      details: { error: error instanceof Error ? error.message : String(error) }
     });
     throw error;
   }
@@ -79,7 +79,7 @@ export const router = (() => {
     });
   } catch (error) {
     logger.error('Failed to create router', { 
-      error: error instanceof Error ? error.message : String(error)
+      details: { error: error instanceof Error ? error.message : String(error) }
     });
     
     // Return a minimal router that at least won't crash the app

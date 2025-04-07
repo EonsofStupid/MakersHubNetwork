@@ -1,4 +1,3 @@
-
 import { getLogger } from '@/logging';
 import { ThemeTokens, ThemeTokensSchema } from '@/theme/tokenSchema';
 import { z } from 'zod';
@@ -21,14 +20,18 @@ export function safeLocalStorage<T>(key: string, fallback: T, parse = true): T {
       try {
         return JSON.parse(value) as T;
       } catch (error) {
-        logger.warn('Error parsing localStorage value:', { error });
+        logger.warn('Error parsing localStorage value:', { 
+          details: { error: error instanceof Error ? error.message : String(error) }
+        });
         return fallback;
       }
     }
     
     return (value as unknown as T);
   } catch (error) {
-    logger.warn('Error accessing localStorage:', { error });
+    logger.warn('Error accessing localStorage:', { 
+      details: { error: error instanceof Error ? error.message : String(error) }
+    });
     return fallback;
   }
 }
@@ -42,7 +45,9 @@ export function persistThemeTokens(tokens: ThemeTokens): void {
     localStorage.setItem('impulse-theme', JSON.stringify(tokens));
     logger.info('Theme tokens persisted to localStorage');
   } catch (error) {
-    logger.error('Failed to persist theme tokens:', { error });
+    logger.error('Failed to persist theme tokens:', { 
+      details: { error: error instanceof Error ? error.message : String(error) }
+    });
   }
 }
 
@@ -64,14 +69,14 @@ export function getStoredThemeTokens(): ThemeTokens | null {
     } else {
       // Safe handling of ZodError
       logger.warn('Invalid theme tokens in localStorage:', { 
-        error: result.error.message 
+        details: { error: result.error.message }
       });
       return null;
     }
   } catch (error) {
     // Safe error handling 
     logger.error('Error reading theme tokens from localStorage:', { 
-      error: error instanceof Error ? error.message : String(error) 
+      details: { error: error instanceof Error ? error.message : String(error) }
     });
     return null;
   }
@@ -86,7 +91,7 @@ export function setStoredThemeContext(context: string): void {
     localStorage.setItem('theme-context', context);
   } catch (error) {
     logger.error('Error saving theme context:', { 
-      error: error instanceof Error ? error.message : String(error) 
+      details: { error: error instanceof Error ? error.message : String(error) }
     });
   }
 }
@@ -100,7 +105,7 @@ export function getStoredThemeContext(): string | null {
     return localStorage.getItem('theme-context');
   } catch (error) {
     logger.error('Error reading theme context:', { 
-      error: error instanceof Error ? error.message : String(error) 
+      details: { error: error instanceof Error ? error.message : String(error) }
     });
     return null;
   }
