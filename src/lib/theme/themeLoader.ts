@@ -2,39 +2,11 @@
 import { supabase } from '@/lib/supabase';
 import { getLogger } from '@/logging';
 import { Theme, ThemeContext } from '@/types/theme';
-import { ThemeTokensSchema } from '@/theme/tokenSchema';
+import { ThemeTokens, ThemeTokensSchema, defaultTokens } from '@/theme/tokenSchema';
 import defaultTheme from '@/theme/defaultTheme';
+import { safeLocalStorage, persistThemeTokens } from '@/lib/theme/safeStorage';
 
 const logger = getLogger('ThemeLoader');
-
-/**
- * Safe wrapper for localStorage to prevent SSR issues
- */
-export function safeLocalStorage<T>(key: string, fallback: T, parse = true): T {
-  try {
-    if (typeof window === 'undefined') return fallback;
-    
-    const value = localStorage.getItem(key);
-    if (!value) return fallback;
-    
-    return parse ? JSON.parse(value) : (value as unknown as T);
-  } catch (error) {
-    logger.warn('Error accessing localStorage:', { error });
-    return fallback;
-  }
-}
-
-/**
- * Save theme tokens to localStorage for offline use
- */
-export function persistThemeTokens(tokens: ThemeTokensSchema): void {
-  try {
-    localStorage.setItem('impulse-theme', JSON.stringify(tokens));
-    logger.info('Theme tokens persisted to localStorage');
-  } catch (error) {
-    logger.error('Failed to persist theme tokens:', { error });
-  }
-}
 
 /**
  * Load theme tokens with fallback chain:
@@ -42,8 +14,10 @@ export function persistThemeTokens(tokens: ThemeTokensSchema): void {
  * 2. From localStorage
  * 3. From static default theme
  */
-export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<ThemeTokensSchema> {
-  logger.info('Loading theme tokens', { details: { context } });
+export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<ThemeTokens> {
+  logger.info('Loading theme tokens', { 
+    details: { context } 
+  });
   
   try {
     // Try loading from Supabase with timeout
@@ -65,12 +39,14 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
     const data = (result as any).data;
     
     if (data?.tokens) {
-      logger.info('Theme loaded from Supabase', { source: 'edge-function' });
+      logger.info('Theme loaded from Supabase', { 
+        details: { source: 'edge-function' }
+      });
       
       // Persist for future offline use
       persistThemeTokens(data.tokens);
       
-      return data.tokens as ThemeTokensSchema;
+      return data.tokens as ThemeTokens;
     }
     
     throw new Error('Invalid data from Supabase');
@@ -79,10 +55,12 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
     
     try {
       // Try localStorage fallback
-      const localTokens = safeLocalStorage<ThemeTokensSchema | null>('impulse-theme', null);
+      const localTokens = safeLocalStorage<ThemeTokens | null>('impulse-theme', null);
       
       if (localTokens) {
-        logger.info('Theme loaded from localStorage', { source: 'local-storage' });
+        logger.info('Theme loaded from localStorage', { 
+          details: { source: 'local-storage' }
+        });
         return localTokens;
       }
     } catch (localError) {
@@ -90,7 +68,9 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
     }
     
     // Final fallback to static default theme
-    logger.info('Using default theme', { source: 'static-default' });
+    logger.info('Using default theme', { 
+      details: { source: 'static-default' }
+    });
     return defaultTheme;
   }
 }

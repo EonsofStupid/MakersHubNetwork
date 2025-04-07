@@ -20,7 +20,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   
   return (
     <ThemeInitializer 
-      context="site" 
+      themeContext="site" 
       applyImmediately={true}
       fallbackTheme={{
         primary: '186 100% 50%',
@@ -33,13 +33,9 @@ export function MainLayout({ children }: MainLayoutProps) {
         <main className="flex-1">
           {children || <Outlet />}
         </main>
-        
-        {/* Global logging components */}
         {showLogConsole && <LogConsole />}
         <LogToggleButton />
       </div>
     </ThemeInitializer>
   );
 }
-
-export default MainLayout;

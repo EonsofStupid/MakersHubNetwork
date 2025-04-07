@@ -4,51 +4,7 @@ import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { Theme, DesignTokensStructure } from '@/types/theme';
-import { StoreThemeTokens } from '@/stores/theme/themeStore';
-
-type UpdateFunction<T> = (prev: T) => T;
-
-/**
- * Safely update theme design tokens
- */
-function updateThemeTokens(
-  theme: Theme | null,
-  tokens: StoreThemeTokens,
-  updateFn: UpdateFunction<DesignTokensStructure>
-): Theme | null {
-  if (!theme) return null;
-  
-  const safeTokens: DesignTokensStructure = theme.design_tokens || {
-    colors: {
-      primary: tokens.primary,
-      secondary: tokens.secondary,
-    },
-    effects: {
-      shadows: {},
-      blurs: {},
-      gradients: {},
-      primary: tokens.effectPrimary,
-      secondary: tokens.effectSecondary,
-      tertiary: tokens.effectTertiary
-    }
-  };
-  
-  const updatedTokens = updateFn(safeTokens);
-  
-  return {
-    ...theme,
-    design_tokens: updatedTokens
-  };
-}
-
-/**
- * Sync theme with database (implementation depends on your backend)
- */
-async function syncImpulsivityTheme(): Promise<boolean> {
-  // This would be implemented to sync with the database
-  return Promise.resolve(true);
-}
+import { Theme } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -158,7 +114,8 @@ export function useImpulsivityTheme() {
       setSyncInProgress(true);
       logger.info('Starting theme sync to database');
       
-      const result = await syncImpulsivityTheme();
+      // Placeholder for actual database sync
+      const result = await Promise.resolve(true);
       
       if (result) {
         logger.info('Successfully synced Impulsivity theme to database', { 
