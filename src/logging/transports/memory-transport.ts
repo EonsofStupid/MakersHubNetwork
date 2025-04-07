@@ -1,125 +1,149 @@
 
-import { LogCategory, LogEntry, LogLevel, LogTransport } from '../types';
+import { v4 as uuidv4 } from 'uuid';
+import { LogEntry, LogCategory } from '../types';
+import { LogLevel } from '../constants/log-level';
 import { nodeToSearchableString } from '@/shared/utils/render';
-import { isLogLevelAtLeast } from '../utils/map-log-level';
 
 /**
- * Options for filtering logs in memory transport
+ * Transport that keeps logs in memory for real-time display in UI components
  */
-interface LogFilterOptions {
-  level?: LogLevel;
-  category?: LogCategory;
-  source?: string;
-  userId?: string;
-  search?: string;
-  fromDate?: Date;
-  toDate?: Date;
-  limit?: number;
-}
-
-/**
- * Memory transport stores logs in memory for display in UI components
- */
-export class MemoryTransport implements LogTransport {
+export class MemoryTransport {
   private logs: LogEntry[] = [];
-  private maxEntries: number;
-  
-  constructor(maxEntries = 1000) {
-    this.maxEntries = maxEntries;
+  private maxSize: number;
+  private searchIndex: Map<string, string> = new Map();
+
+  constructor(maxSize = 1000) {
+    this.maxSize = maxSize;
   }
-  
+
   /**
-   * Log an entry to memory
+   * Add a log entry to memory storage
    */
   log(entry: LogEntry): void {
-    this.logs.unshift(entry); // Add to beginning for most recent first
+    // Ensure entry has an ID
+    if (!entry.id) {
+      entry.id = uuidv4();
+    }
+
+    // Add to logs array
+    this.logs.push(entry);
     
-    // Trim if we exceed max entries
-    if (this.logs.length > this.maxEntries) {
-      this.logs = this.logs.slice(0, this.maxEntries);
+    // Build search index for this entry
+    this.indexLogForSearch(entry);
+    
+    // Trim logs if they exceed the max size
+    if (this.logs.length > this.maxSize) {
+      const removedLogs = this.logs.splice(0, this.logs.length - this.maxSize);
+      
+      // Clean up search index for removed logs
+      removedLogs.forEach(log => {
+        this.searchIndex.delete(log.id);
+      });
     }
   }
-  
+
   /**
-   * Get all logs in memory
+   * Get all log entries
    */
   getLogs(): LogEntry[] {
     return [...this.logs];
   }
-  
+
   /**
-   * Get logs filtered by specified criteria
+   * Get logs filtered by level and category
    */
-  getFilteredLogs(options: LogFilterOptions = {}): LogEntry[] {
-    let filteredLogs = [...this.logs];
+  getFilteredLogs(options: {
+    level?: LogLevel,
+    category?: LogCategory | LogCategory[],
+    search?: string,
+    limit?: number
+  } = {}): LogEntry[] {
+    let filtered = [...this.logs];
     
-    // Filter by level
-    if (options.level !== undefined) {
-      filteredLogs = filteredLogs.filter(log => isLogLevelAtLeast(log.level, options.level!));
+    // Filter by level if specified
+    if (options.level) {
+      filtered = filtered.filter(log => log.level >= options.level);
     }
     
-    // Filter by category
+    // Filter by category if specified
     if (options.category) {
-      filteredLogs = filteredLogs.filter(log => log.category === options.category);
+      if (Array.isArray(options.category)) {
+        filtered = filtered.filter(log => 
+          log.category && options.category.includes(log.category as LogCategory)
+        );
+      } else {
+        filtered = filtered.filter(log => 
+          log.category === options.category
+        );
+      }
     }
     
-    // Filter by source
-    if (options.source) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.source && log.source.includes(options.source!)
-      );
-    }
-    
-    // Filter by user ID
-    if (options.userId) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.userId && log.userId === options.userId
-      );
-    }
-    
-    // Filter by search text
+    // Filter by search text if specified
     if (options.search) {
       const searchLower = options.search.toLowerCase();
-      filteredLogs = filteredLogs.filter(log => {
-        // Convert message to searchable string
-        const messageStr = nodeToSearchableString(log.message).toLowerCase();
-        const sourceStr = log.source ? log.source.toLowerCase() : '';
-        const categoryStr = log.category.toLowerCase();
-        
-        return messageStr.includes(searchLower) || 
-               sourceStr.includes(searchLower) || 
-               categoryStr.includes(searchLower);
+      filtered = filtered.filter(log => {
+        // Check if this log matches the search text
+        const searchableText = this.searchIndex.get(log.id) || '';
+        return searchableText.includes(searchLower);
       });
     }
     
-    // Filter by date range
-    if (options.fromDate) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.timestamp >= options.fromDate!
-      );
-    }
-    
-    if (options.toDate) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.timestamp <= options.toDate!
-      );
-    }
-    
-    // Apply limit
+    // Apply limit if specified
     if (options.limit && options.limit > 0) {
-      filteredLogs = filteredLogs.slice(0, options.limit);
+      filtered = filtered.slice(-options.limit);
     }
     
-    return filteredLogs;
+    return filtered;
   }
   
   /**
-   * Clear all logs from memory
+   * Clear all logs
    */
   clear(): void {
     this.logs = [];
+    this.searchIndex.clear();
+  }
+  
+  /**
+   * Build search index entry for a log
+   */
+  private indexLogForSearch(log: LogEntry): void {
+    try {
+      const searchableStrings: string[] = [];
+      
+      // Include message as searchable text
+      searchableStrings.push(nodeToSearchableString(log.message).toLowerCase());
+      
+      // Include level
+      searchableStrings.push(String(log.level).toLowerCase());
+      
+      // Include category if present
+      if (log.category) {
+        searchableStrings.push(String(log.category).toLowerCase());
+      }
+      
+      // Include source if present
+      if (log.source) {
+        searchableStrings.push(String(log.source).toLowerCase());
+      }
+      
+      // Include details as searchable text if present
+      if (log.details) {
+        searchableStrings.push(nodeToSearchableString(log.details).toLowerCase());
+      }
+      
+      // Include tags if present
+      if (log.tags && log.tags.length > 0) {
+        searchableStrings.push(log.tags.join(' ').toLowerCase());
+      }
+      
+      // Set the combined searchable text in the index
+      this.searchIndex.set(log.id, searchableStrings.join(' '));
+    } catch (error) {
+      console.error('Error indexing log for search:', error);
+    }
   }
 }
 
-// Create singleton instance
+// Create a singleton memory transport instance
 export const memoryTransport = new MemoryTransport();

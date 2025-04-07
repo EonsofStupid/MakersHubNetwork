@@ -1,7 +1,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { LogCategory, LogEntry, memoryTransport } from '@/logging';
+import { LogCategory, LogEntry } from '@/logging/types';
 import { LogLevel } from '@/logging/constants/log-level';
+import { memoryTransport } from '@/logging/transports/memory-transport';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -44,12 +45,12 @@ export function LogActivityStream({
       // Filter by categories if specified
       if (categories && categories.length > 0) {
         filteredLogs = filteredLogs.filter(log => 
-          categories.includes(log.category as LogCategory)
+          log.category && categories.includes(log.category as LogCategory)
         );
       }
       
       // Apply limit
-      filteredLogs = filteredLogs.slice(0, maxEntries);
+      filteredLogs = filteredLogs.slice(-maxEntries);
       
       setLogs(filteredLogs);
     };

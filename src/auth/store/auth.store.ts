@@ -65,15 +65,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     const logger = getLogger();
     logger.info('Auth store initialization started', {
-      category: LogCategory.AUTH,
-      source: 'auth.store'
+      category: LogCategory.AUTH
     });
     
     // Don't initialize multiple times
     if (get().initialized) {
       logger.info('Auth already initialized, skipping', {
-        category: LogCategory.AUTH,
-        source: 'auth.store'
+        category: LogCategory.AUTH
       });
       return;
     }
@@ -89,7 +87,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       logger.info('Auth initialization completed', {
         category: LogCategory.AUTH,
-        source: 'auth.store',
         details: { 
           hasSession: !!data.session,
           status: data.session ? 'authenticated' : 'unauthenticated'
@@ -103,8 +100,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       logger.error('Auth initialization error', {
         category: LogCategory.AUTH,
-        source: 'auth.store',
-        details: errorDetails
+        details: errorDetails,
+        error: true
       });
       
       set({ 
@@ -122,8 +119,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: true });
       
       logger.info('User logging out', {
-        category: LogCategory.AUTH,
-        source: 'auth.store'
+        category: LogCategory.AUTH
       });
       
       await supabase.auth.signOut();
@@ -138,16 +134,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       
       logger.info('User logged out successfully', {
-        category: LogCategory.AUTH,
-        source: 'auth.store'
+        category: LogCategory.AUTH
       });
     } catch (error) {
       const errorDetails = errorToObject(error);
       
       logger.error('Logout error', {
         category: LogCategory.AUTH,
-        source: 'auth.store',
-        details: errorDetails
+        details: errorDetails,
+        error: true
       });
       
       set({ error: error instanceof Error ? error.message : String(error), isLoading: false });

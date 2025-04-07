@@ -1,7 +1,8 @@
 
 import { LogLevel } from './constants/log-level';
-import { LogCategory, LogEntry, LogTransport } from './types';
+import { LogCategory, LogEntry, LogTransport, LogOptions } from './types';
 import { v4 as uuidv4 } from 'uuid';
+import { ReactNode } from 'react';
 
 // Memory transport for in-memory log retention
 export class MemoryTransport implements LogTransport {
@@ -52,14 +53,7 @@ export function initializeLogger(customConfig = {}) {
 
 export function getLogger(source?: string) {
   const createLogMethod = (level: LogLevel) => {
-    return (message: string | React.ReactNode, options: { 
-      category?: LogCategory;
-      details?: Record<string, unknown>;
-      userId?: string;
-      sessionId?: string;
-      duration?: number;
-      tags?: string[];
-    } = {}) => {
+    return (message: string | ReactNode, options: LogOptions = {}) => {
       // Skip if level is below minimum
       if (level < config.minLevel) return;
       
@@ -71,11 +65,13 @@ export function getLogger(source?: string) {
         category: options.category || LogCategory.SYSTEM,
         message,
         details: options.details,
-        source: config.includeSource ? source : undefined,
+        source: config.includeSource ? (options.source || source) : undefined,
         userId: config.includeUser ? options.userId : undefined,
         sessionId: config.includeSession ? options.sessionId : undefined,
         duration: options.duration,
         tags: options.tags,
+        error: options.error,
+        success: options.success
       };
       
       // Send to all transports

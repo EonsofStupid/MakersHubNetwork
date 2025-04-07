@@ -42,6 +42,11 @@ export function useAuth(): AuthState {
     }
   }, [initialized, initialize]);
 
+  // Make sure we return a function with the correct signature for hasRole
+  const hasRoleWrapper = (role: UserRole): boolean => {
+    return hasRole(role);
+  };
+
   return {
     user: user ? {
       id: user.id,
@@ -53,7 +58,7 @@ export function useAuth(): AuthState {
     status,
     isLoading,
     error,
-    hasRole,
+    hasRole: hasRoleWrapper,
     isAuthenticated: status === 'authenticated' && !!user,
     initialized,
   };
