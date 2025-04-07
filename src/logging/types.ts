@@ -54,7 +54,7 @@ export interface LoggingConfig {
 export interface LogOptions {
   category?: LogCategory;
   details?: Record<string, unknown>;
-  source?: string;  // Adding source property explicitly to fix the type errors
+  source?: string;  // Added source property explicitly
   userId?: string;
   sessionId?: string;
   duration?: number;

@@ -17,7 +17,7 @@ export function useImpulsivityTheme() {
   
   const applyToMainSite = async () => {
     try {
-      const cssVars = {
+      const cssVars: Record<string, string> = {
         '--site-primary': tokens.primary || '186 100% 50%',
         '--site-secondary': tokens.secondary || '334 100% 59%',
         '--site-effect-color': tokens.effectPrimary || '#00F0FF',
