@@ -45,7 +45,7 @@ export function useCurrentScope(): RouteScope {
   // Access scope from router options context with proper typing
   const routerInstance = useRouter();
   const routerContext = routerInstance.options.context || {};
-  const scopeValue = routerContext.scope;
+  const scopeValue = (routerContext as { scope?: string }).scope;
   
   // Make sure we have a valid scope value
   if (typeof scopeValue === 'string' && ['site', 'admin', 'chat'].includes(scopeValue)) {

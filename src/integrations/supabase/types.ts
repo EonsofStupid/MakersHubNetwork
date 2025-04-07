@@ -1625,6 +1625,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      check_table_exists: {
+        Args: { table_name: string }
+        Returns: boolean
+      }
       ensure_theme_token_structure: {
         Args: { data: Json }
         Returns: Json

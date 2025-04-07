@@ -1,47 +1,58 @@
-
 import { ThemeContext } from './types/theme';
 import { parseThemeContext } from './types/themeContext';
 
-// Map routes to theme contexts
-const routeContextMap: Record<string, ThemeContext> = {
-  '/': 'site',
+const routeScopes: Record<string, string> = {
+  '/admin': 'admin',
+  '/chat': 'chat'
+};
+
+const routeThemeContexts: Record<string, ThemeContext> = {
   '/admin': 'admin',
   '/chat': 'chat',
+  '/': 'site'
 };
 
 /**
- * Get the theme context for a given route
+ * Determine if a path belongs to a specific scope
+ * @param path The current route path
+ * @param scope The scope to check against
+ * @returns boolean indicating if the path is in the specified scope
+ */
+export function isPathInScope(path: string, scope: string): boolean {
+  if (!path) return false;
+  
+  // Check if the path matches a route directly
+  if (path === '/' && scope === 'site') return true;
+  
+  // Otherwise check if the path starts with the scope
+  return path.startsWith(`/${scope}`);
+}
+
+/**
+ * Get the theme context for a route path
+ * @param path The current route path
+ * @returns The corresponding theme context for the path
  */
 export function getThemeContextForRoute(path: string): ThemeContext {
-  // First check for exact matches
-  if (routeContextMap[path]) {
-    return routeContextMap[path];
+  if (!path) return 'site';
+  
+  // Check exact path matches
+  if (routeThemeContexts[path]) {
+    return routeThemeContexts[path];
   }
   
-  // Then check for path prefixes
-  if (path.startsWith('/admin/')) {
-    return 'admin';
+  // Check for path prefixes
+  for (const [routePrefix, context] of Object.entries(routeScopes)) {
+    if (path.startsWith(routePrefix)) {
+      return parseThemeContext(context);
+    }
   }
   
-  if (path.startsWith('/chat/')) {
-    return 'chat';
-  }
-  
-  // Default to site for any other routes
+  // Default context
   return 'site';
 }
 
-/**
- * Check if a path is within a specific scope
- */
-export function isPathInScope(path: string, scope: 'site' | 'admin' | 'chat'): boolean {
-  const context = getThemeContextForRoute(path);
-  return parseThemeContext(context) === scope;
-}
-
-/**
- * Register a new route with its theme context
- */
-export function registerRouteContext(path: string, context: ThemeContext): void {
-  routeContextMap[path] = context;
-}
+export default {
+  isPathInScope,
+  getThemeContextForRoute
+};
