@@ -1,3 +1,4 @@
+
 import { DesignTokensStructure } from "@/types/theme";
 
 /**
@@ -13,6 +14,19 @@ export function removeUndefineds<T extends Record<string, any>>(obj: T): T {
   });
   
   return result;
+}
+
+/**
+ * Updates design tokens with new values
+ */
+export function updateDesignTokens(
+  designTokens: DesignTokensStructure,
+  updates: Partial<DesignTokensStructure>
+): DesignTokensStructure {
+  return {
+    ...designTokens,
+    ...removeUndefineds(updates)
+  };
 }
 
 /**

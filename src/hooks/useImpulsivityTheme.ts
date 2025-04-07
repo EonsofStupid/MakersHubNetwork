@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
-import { updateDesignTokens, updateThemeColors, updateThemeEffects } from '@/utils/themeTokenUtils';
+import { updateThemeColors, updateThemeEffects } from '@/utils/themeTokenUtils';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';

@@ -1,7 +1,7 @@
 
 import { z } from 'zod';
 import { router } from '../index';
-import { getThemeContextForRoute, isPathInScope } from '../routeRegistry';
+import { getThemeContextForRoute } from '../routeRegistry';
 import { ThemeContext } from '@/types/theme';
 
 // Type for scope
@@ -51,6 +51,22 @@ export function useCurrentScope(): RouteScope {
 export function useThemeContextForRoute(): ThemeContext {
   const pathname = router.state.location.pathname;
   return getThemeContextForRoute(pathname);
+}
+
+/**
+ * Check if a path is within a specific scope
+ */
+export function isPathInScope(path: string, scope: RouteScope): boolean {
+  switch (scope) {
+    case 'admin':
+      return path.startsWith('/admin');
+    case 'chat':
+      return path.startsWith('/chat');
+    case 'site':
+      return !path.startsWith('/admin') && !path.startsWith('/chat');
+    default:
+      return false;
+  }
 }
 
 /**

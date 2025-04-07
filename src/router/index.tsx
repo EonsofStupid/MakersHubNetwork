@@ -41,7 +41,8 @@ const buildRouteTree = () => {
         children.push(routeRegistry.chat.tree);
       }
       
-      return routeRegistry.site.root.addChildren(children);
+      // Type assertion for adding children as it expects AnyRoute[]
+      return routeRegistry.site.root.addChildren(children as any);
     }
     
     throw new Error('Site root route not available');
