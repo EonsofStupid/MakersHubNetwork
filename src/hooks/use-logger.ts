@@ -4,6 +4,7 @@ import { getLogger } from '@/logging';
 import { LogCategory, LogOptions } from '@/logging/types';
 import { LogLevel } from '@/logging/constants/log-level';
 import { ReactNode } from 'react';
+import { createLogOptions } from '@/logging/utils/log-helpers';
 
 /**
  * Hook for logging from React components
@@ -12,45 +13,40 @@ export function useLogger(source: string, defaultCategory: LogCategory = LogCate
   const logger = getLogger(source);
   
   const debug = useCallback((message: string | ReactNode, options?: Omit<LogOptions, 'category'>) => {
-    logger.debug(message, {
+    logger.debug(message, createLogOptions(defaultCategory, {
       ...options,
-      category: defaultCategory,
       source
-    });
+    }));
   }, [logger, defaultCategory, source]);
   
   const info = useCallback((message: string | ReactNode, options?: Omit<LogOptions, 'category'>) => {
-    logger.info(message, {
+    logger.info(message, createLogOptions(defaultCategory, {
       ...options,
-      category: defaultCategory,
       source
-    });
+    }));
   }, [logger, defaultCategory, source]);
   
   const warn = useCallback((message: string | ReactNode, options?: Omit<LogOptions, 'category'>) => {
-    logger.warn(message, {
+    logger.warn(message, createLogOptions(defaultCategory, {
       ...options,
-      category: defaultCategory,
       source
-    });
+    }));
   }, [logger, defaultCategory, source]);
   
   const error = useCallback((message: string | ReactNode, options?: Omit<LogOptions, 'category'>) => {
-    logger.error(message, {
+    logger.error(message, createLogOptions(defaultCategory, {
       ...options,
-      category: defaultCategory,
       source,
       error: true
-    });
+    }));
   }, [logger, defaultCategory, source]);
   
   const critical = useCallback((message: string | ReactNode, options?: Omit<LogOptions, 'category'>) => {
-    logger.critical(message, {
+    logger.critical(message, createLogOptions(defaultCategory, {
       ...options,
-      category: defaultCategory,
       source,
       error: true
-    });
+    }));
   }, [logger, defaultCategory, source]);
   
   return {

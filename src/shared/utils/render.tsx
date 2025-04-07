@@ -122,3 +122,4 @@ export function nodeToSearchableString(value: unknown): string {
   // Default fallback
   return String(value);
 }
+
