@@ -1,7 +1,7 @@
 
-import { Theme, ThemeContext, ThemeStatus } from '@/types/theme';
+import { Theme, ThemeContext } from '@/types/theme';
 import { z } from 'zod';
-import { ThemeContextSchema } from '@/router/routeRegistry';
+import { ThemeContextSchema } from '@/types/themeContext';
 import { getLogger } from '@/logging';
 
 // Use Zod to validate service options

@@ -4,20 +4,6 @@ import { rootRoute } from './site';
 import React from 'react';
 import { z } from 'zod';
 
-// Import admin pages (Lazy load them for better performance)
-const AdminLayout = React.lazy(() => import('@/admin/components/layouts/AdminLayout'));
-const Dashboard = React.lazy(() => import('@/admin/routes/dashboard/DashboardPage'));
-const BuildsPage = React.lazy(() => import('@/admin/routes/builds/BuildsPage'));
-const UsersPage = React.lazy(() => import('@/admin/routes/users/UsersPage'));
-const PartsPage = React.lazy(() => import('@/admin/routes/parts/PartsPage'));
-const ThemesPage = React.lazy(() => import('@/admin/routes/themes/ThemesPage'));
-const ContentPage = React.lazy(() => import('@/admin/routes/content/ContentPage'));
-const SettingsPage = React.lazy(() => import('@/admin/routes/settings/SettingsPage'));
-const PermissionsPage = React.lazy(() => import('@/admin/routes/permissions/PermissionsPage'));
-const LogsPage = React.lazy(() => import('@/admin/pages/LogsPage'));
-const UnauthorizedPage = React.lazy(() => import('@/admin/routes/UnauthorizedPage'));
-const NotFoundPage = React.lazy(() => import('@/admin/routes/NotFoundPage'));
-
 // Zod schema for admin route params
 export const adminParamsSchema = {
   buildId: z.string(),
@@ -32,7 +18,21 @@ const PageLoader = () => (
   </div>
 );
 
-// Admin base route - Fixed path to be '/admin' instead of 'admin-dashboard'
+// Lazy load the admin components
+const AdminLayout = React.lazy(() => import('@/admin/components/layouts/AdminLayout').then(mod => ({ default: mod.default })));
+const Dashboard = React.lazy(() => import('@/admin/routes/dashboard/DashboardPage').then(mod => ({ default: mod.default })));
+const BuildsPage = React.lazy(() => import('@/admin/routes/builds/BuildsPage').then(mod => ({ default: mod.default })));
+const UsersPage = React.lazy(() => import('@/admin/routes/users/UsersPage').then(mod => ({ default: mod.default })));
+const PartsPage = React.lazy(() => import('@/admin/routes/parts/PartsPage').then(mod => ({ default: mod.default })));
+const ThemesPage = React.lazy(() => import('@/admin/routes/themes/ThemesPage').then(mod => ({ default: mod.default })));
+const ContentPage = React.lazy(() => import('@/admin/routes/content/ContentPage').then(mod => ({ default: mod.default })));
+const SettingsPage = React.lazy(() => import('@/admin/routes/settings/SettingsPage').then(mod => ({ default: mod.default })));
+const PermissionsPage = React.lazy(() => import('@/admin/routes/permissions/PermissionsPage').then(mod => ({ default: mod.default })));
+const LogsPage = React.lazy(() => import('@/admin/pages/LogsPage').then(mod => ({ default: mod.default })));
+const UnauthorizedPage = React.lazy(() => import('@/admin/routes/UnauthorizedPage').then(mod => ({ default: mod.default })));
+const NotFoundPage = React.lazy(() => import('@/admin/routes/NotFoundPage').then(mod => ({ default: mod.default })));
+
+// Admin base route
 const adminBaseRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
@@ -142,7 +142,7 @@ const logsRoute = createRoute({
   )
 });
 
-// Unauthorized page
+// Unauthorized route
 const unauthorizedRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/unauthorized',
@@ -153,8 +153,8 @@ const unauthorizedRoute = createRoute({
   )
 });
 
-// Not found page
-const notFoundRoute = createRoute({
+// Admin not found route
+const adminNotFoundRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '*',
   component: () => (
@@ -169,17 +169,17 @@ const adminRouteTree = adminBaseRoute.addChildren([
   dashboardRoute,
   usersRoute,
   partsRoute,
-  buildsRoute, 
+  buildsRoute,
   themesRoute,
   contentRoute,
   settingsRoute,
   permissionsRoute,
   logsRoute,
   unauthorizedRoute,
-  notFoundRoute
+  adminNotFoundRoute
 ]);
 
-// Export individual routes and the complete tree for better discoverability
+// Export individual routes and the complete tree
 export const adminRoutes = {
   base: adminBaseRoute,
   tree: adminRouteTree,
@@ -193,5 +193,5 @@ export const adminRoutes = {
   permissions: permissionsRoute,
   logs: logsRoute,
   unauthorized: unauthorizedRoute,
-  notFound: notFoundRoute
+  notFound: adminNotFoundRoute
 };

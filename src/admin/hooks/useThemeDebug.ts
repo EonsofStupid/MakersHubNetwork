@@ -41,7 +41,7 @@ export function useThemeDebug() {
   return {
     tokens,
     tokenList,
-    isLoaded: loadStatus === 'loaded',
+    isLoaded: loadStatus === 'success',
     showOverlay,
     hoveredToken,
     inspectMode,

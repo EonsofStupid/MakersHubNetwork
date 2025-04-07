@@ -2,6 +2,7 @@
 import { 
   RouterProvider,
   createRouter,
+  type AnyRoute
 } from '@tanstack/react-router';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { routeRegistry } from './routeRegistry';
@@ -11,6 +12,7 @@ import { LogConsole } from '@/logging/components/LogConsole';
 import { LogToggleButton } from '@/logging/components/LogToggleButton';
 import { useEffect, useState } from 'react';
 import { getLogger } from '@/logging';
+import { ThemeContext } from '@/types/theme';
 
 const logger = getLogger('Router');
 
@@ -23,12 +25,12 @@ const buildRouteTree = () => {
       
       // Add admin routes if available
       if (routeRegistry.admin.tree && routeRegistry.admin.tree.children) {
-        children.push(...routeRegistry.admin.tree.children);
+        children.push(routeRegistry.admin.tree);
       }
       
       // Add chat routes if available
       if (routeRegistry.chat.tree && routeRegistry.chat.tree.children) {
-        children.push(...routeRegistry.chat.tree.children);
+        children.push(routeRegistry.chat.tree);
       }
       
       return routeRegistry.site.root.addChildren(children);
@@ -59,7 +61,7 @@ export const router = (() => {
     });
     
     // Return a minimal router that at least won't crash the app
-    const minimalTree = routeRegistry.site.root;
+    const minimalTree = routeRegistry.site.root || ({} as AnyRoute);
     return createRouter({
       routeTree: minimalTree,
       defaultComponent: () => (
@@ -119,9 +121,11 @@ export function AppRouter() {
           scope: currentScope,
           themeContext: getThemeContextForRoute(pathname)
         }} 
-        defaultPendingComponent={<div className="flex items-center justify-center h-screen">
-          <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-        </div>}
+        defaultPendingComponent={() => (
+          <div className="flex items-center justify-center h-screen">
+            <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          </div>
+        )}
         defaultErrorComponent={({ error }) => (
           <div className="flex items-center justify-center h-screen flex-col">
             <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
