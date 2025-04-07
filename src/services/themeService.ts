@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeContext } from '@/types/theme';
 import { getLogger } from '@/logging';
@@ -83,7 +84,7 @@ export interface GetThemeOptions {
 export async function getTheme(options?: GetThemeOptions): Promise<{ theme: any; isFallback: boolean }> {
   try {
     logger.info("Fetching theme from service", 
-      createLogOptions(LogCategory.DATABASE, { details: options || {} })
+      createLogOptions(LogCategory.DATABASE, { details: options || {} as Record<string, unknown> })
     );
     
     const { id, name, isDefault = true, context = 'site' } = options || {};

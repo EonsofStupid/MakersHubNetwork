@@ -5,7 +5,7 @@
  */
 
 // Re-export render utilities for easier access
-export { renderUnknownAsNode, nodeToSearchableString } from '@/shared/utils/render';
+export { renderUnknownAsNode, nodeToSearchableString } from '@/shared/rendering';
 
 // Re-export logging helpers
 export { createLogOptions, withSource, withDetails, createErrorLogOptions, createSuccessLogOptions } from './log-helpers';

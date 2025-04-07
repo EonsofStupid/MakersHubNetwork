@@ -4,7 +4,6 @@ import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
-import { createLogOptions } from '@/logging/utils/log-helpers';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -59,25 +58,21 @@ export function useImpulsivityTheme() {
         logger.info('Updating theme design tokens with Impulsivity colors');
       }
       
-      logger.info('Applied Impulsivity theme to main site', 
-        { 
-          details: {
-            success: true,
-            mainSite: true
-          }
+      logger.info('Applied Impulsivity theme to main site', { 
+        details: {
+          success: true,
+          mainSite: true
         }
-      );
+      });
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Error applying Impulsivity theme to main site', 
-        { 
-          details: { 
-            errorMessage,
-            mainSite: false 
-          }
+      logger.error('Error applying Impulsivity theme to main site', { 
+        details: { 
+          errorMessage,
+          mainSite: false 
         }
-      );
+      });
       return false;
     }
   };
@@ -110,14 +105,12 @@ export function useImpulsivityTheme() {
           (adminRootElement as HTMLElement).style.setProperty(key, value);
         });
         
-        logger.info('Applied Impulsivity theme to admin panel', 
-          { 
-            details: {
-              success: true,
-              admin: true 
-            }
+        logger.info('Applied Impulsivity theme to admin panel', { 
+          details: {
+            success: true,
+            admin: true 
           }
-        );
+        });
         return true;
       } else {
         logger.warn('Admin panel root element not found, skipping theme application');
@@ -125,14 +118,12 @@ export function useImpulsivityTheme() {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Error applying Impulsivity theme to admin panel', 
-        { 
-          details: { 
-            errorMessage,
-            admin: false 
-          }
+      logger.error('Error applying Impulsivity theme to admin panel', { 
+        details: { 
+          errorMessage,
+          admin: false 
         }
-      );
+      });
       return false;
     }
   };
@@ -183,67 +174,65 @@ export function useImpulsivityTheme() {
     }
   };
   
-  const applyTheme = async () => {
-    if (syncInProgress) {
-      logger.warn('Theme sync already in progress, skipping', {
-        category: LogCategory.UI
-      });
-      return false;
-    }
-    
-    logger.info('Beginning full Impulsivity theme application', {
-      category: LogCategory.UI
-    });
-    
-    const mainSiteResult = await applyToMainSite();
-    const adminResult = await applyToAdmin();
-    const dbResult = await syncToDatabase();
-    
-    if (mainSiteResult && adminResult && dbResult) {
-      toast({
-        title: "Impulsivity Theme Applied",
-        description: "The theme has been successfully applied across the entire application.",
-      });
-      
-      logger.info('Impulsivity theme fully applied', { 
-        details: {
-          success: true,
-          mainSite: true, 
-          admin: true, 
-          database: true
-        },
-        category: LogCategory.UI
-      });
-      return true;
-    } else {
-      const failedComponents = [];
-      if (!mainSiteResult) failedComponents.push('main site');
-      if (!adminResult) failedComponents.push('admin panel');
-      if (!dbResult) failedComponents.push('database');
-      
-      toast({
-        title: "Theme Application Incomplete",
-        description: `Could not apply theme to: ${failedComponents.join(', ')}`,
-        variant: "destructive",
-      });
-      
-      logger.warn('Impulsivity theme partially applied', { 
-        details: {
-          warning: true,
-          success: false,
-          mainSite: mainSiteResult, 
-          admin: adminResult, 
-          database: dbResult
-        },
-        category: LogCategory.UI
-      });
-      
-      return false;
-    }
-  };
-  
   return {
-    applyTheme,
+    applyTheme: async () => {
+      if (syncInProgress) {
+        logger.warn('Theme sync already in progress, skipping', {
+          category: LogCategory.UI
+        });
+        return false;
+      }
+      
+      logger.info('Beginning full Impulsivity theme application', {
+        category: LogCategory.UI
+      });
+      
+      const mainSiteResult = await applyToMainSite();
+      const adminResult = await applyToAdmin();
+      const dbResult = await syncToDatabase();
+      
+      if (mainSiteResult && adminResult && dbResult) {
+        toast({
+          title: "Impulsivity Theme Applied",
+          description: "The theme has been successfully applied across the entire application.",
+        });
+        
+        logger.info('Impulsivity theme fully applied', { 
+          details: {
+            success: true,
+            mainSite: true, 
+            admin: true, 
+            database: true
+          },
+          category: LogCategory.UI
+        });
+        return true;
+      } else {
+        const failedComponents = [];
+        if (!mainSiteResult) failedComponents.push('main site');
+        if (!adminResult) failedComponents.push('admin panel');
+        if (!dbResult) failedComponents.push('database');
+        
+        toast({
+          title: "Theme Application Incomplete",
+          description: `Could not apply theme to: ${failedComponents.join(', ')}`,
+          variant: "destructive",
+        });
+        
+        logger.warn('Impulsivity theme partially applied', { 
+          details: {
+            warning: true,
+            success: false,
+            mainSite: mainSiteResult, 
+            admin: adminResult, 
+            database: dbResult
+          },
+          category: LogCategory.UI
+        });
+        
+        return false;
+      }
+    },
     applyToMainSite,
     applyToAdmin,
     syncToDatabase,

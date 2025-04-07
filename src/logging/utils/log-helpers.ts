@@ -7,7 +7,7 @@ import { LogCategory, LogOptions } from '../types';
  */
 export function createLogOptions(
   category: LogCategory,
-  options: Omit<LogOptions, 'category'> = {}
+  options: Partial<Omit<LogOptions, 'category'>> = {}
 ): LogOptions {
   return {
     category,
