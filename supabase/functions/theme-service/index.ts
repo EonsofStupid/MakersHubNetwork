@@ -82,8 +82,7 @@ serve(async (req) => {
       const tableCheck = await supabaseAdmin
         .from('themes')
         .select('count')
-        .limit(1)
-        .maybeSingle();
+        .limit(1);
       
       // If we can query the table without error, it exists
       tablesExist = !tableCheck.error;
