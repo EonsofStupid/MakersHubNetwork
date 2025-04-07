@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth/store';
 import { UserRole } from '@/auth/types/auth.types';
+import { errorToObject } from '@/shared/utils/render';
 
 export interface AuthState {
   user: {
@@ -35,7 +36,9 @@ export function useAuth(): AuthState {
   useEffect(() => {
     // Initialize auth state if not already initialized
     if (!initialized) {
-      initialize();
+      initialize().catch(err => {
+        console.error('Failed to initialize auth:', errorToObject(err));
+      });
     }
   }, [initialized, initialize]);
 
