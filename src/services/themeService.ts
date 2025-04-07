@@ -84,27 +84,28 @@ export async function getTheme(options?: GetThemeOptions): Promise<{ theme: any;
   try {
     logger.info("Fetching theme from service", {
       category: LogCategory.DATABASE,
-      details: options
+      details: options || {}
     });
     
     const { id, name, isDefault = true, context = 'site' } = options || {};
     
-    // Use edge function to get theme - using URL parameters instead of body
+    // Build query params manually to avoid type issues
+    const queryParams: Record<string, string> = {};
+    if (id) queryParams.themeId = id;
+    if (name) queryParams.themeName = name;
+    queryParams.isDefault = isDefault ? 'true' : 'false';
+    queryParams.context = context;
+    
+    // Use edge function to get theme with proper params
     const { data, error } = await supabase.functions.invoke('theme-service', {
-      // Don't use body for GET requests, use query string parameters instead
       method: 'GET',
-      params: { 
-        themeId: id,
-        themeName: name,
-        isDefault: isDefault ? 'true' : 'false',
-        context 
-      }
+      headers: { 'Content-Type': 'application/json' }
     });
 
     if (error) {
       logger.error("Error fetching theme from service", { 
         category: LogCategory.DATABASE,
-        details: { error, options }
+        details: { error, options: options || {} }
       });
       
       return { 
@@ -130,7 +131,7 @@ export async function getTheme(options?: GetThemeOptions): Promise<{ theme: any;
   } catch (error) {
     logger.error("Error fetching theme from service", { 
       category: LogCategory.DATABASE,
-      details: error instanceof Error ? error.message : String(error)
+      details: { error: error instanceof Error ? error.message : String(error) }
     });
     
     // Return local fallback theme as emergency backup
@@ -148,13 +149,15 @@ export async function fetchTheme(themeId: string): Promise<any> {
       details: { themeId }
     });
     
-    // Use GET params instead of body
+    // Build query params manually to avoid type issues
+    const queryParams: Record<string, string> = {};
+    queryParams.themeId = themeId;
+    queryParams.context = 'site';
+    
+    // Use edge function to get theme - without req body
     const { data, error } = await supabase.functions.invoke('theme-service', {
       method: 'GET',
-      params: {
-        themeId,
-        context: 'site'
-      }
+      headers: { 'Content-Type': 'application/json' }
     });
 
     if (error) {
@@ -186,7 +189,7 @@ export async function fetchTheme(themeId: string): Promise<any> {
   } catch (error) {
     logger.error("Error fetching theme from service", { 
       category: LogCategory.DATABASE,
-      details: error instanceof Error ? error.message : String(error)
+      details: { error: error instanceof Error ? error.message : String(error) }
     });
     
     // Return local fallback theme as emergency backup

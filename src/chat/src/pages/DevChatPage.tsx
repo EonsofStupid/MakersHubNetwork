@@ -1,26 +1,22 @@
 
-import React, { useEffect } from 'react';
-import { DevChatProvider } from '../providers/DevChatProvider';
+import React from 'react';
+import { ChatProvider } from '../chat-client/context/ChatContext';
 import { ChatClient } from '../chat-client/components/ChatClient';
-import { DevChatControls } from '../components/DevChatControls';
 
-export default function DevChatPage() {
-  // Fixed the missing argument issue by providing a default value
-  const someFunction = (argument: string = "default") => {
-    console.log("Development mode:", argument);
-  };
-
-  useEffect(() => {
-    // Call the function with an argument
-    someFunction("dev");
-  }, []);
-
-  return (
-    <DevChatProvider>
-      <div className="flex flex-col h-screen">
-        <DevChatControls />
-        <ChatClient />
-      </div>
-    </DevChatProvider>
-  );
+interface DevChatPageProps {
+  mode?: 'normal' | 'dev' | 'debug';
 }
+
+const DevChatPage: React.FC<DevChatPageProps> = ({ mode = 'normal' }) => {
+  return (
+    <ChatProvider>
+      <div className="min-h-screen bg-black">
+        <div className="mx-auto max-w-4xl p-4">
+          <ChatClient />
+        </div>
+      </div>
+    </ChatProvider>
+  );
+};
+
+export default DevChatPage;

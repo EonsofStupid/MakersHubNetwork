@@ -1,10 +1,9 @@
+
 import React from 'react';
 import { useAuth } from '@/auth/hooks/useAuth';
-import { UserRole } from '@/auth/types/auth.types'; // Using auth.types instead of userRoles
+import { UserRole } from '@/auth/types/auth.types'; 
 import { hasRequiredRole } from '@/auth/utils/roleHelpers';
-import { AuthSearchParams } from '@/router/searchParams'; // Using AuthSearchParams directly
-import { navigateTo } from '@/utils/router-helpers';
-import { useRouter } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 
 interface RequirePermissionProps {
   children?: React.ReactNode;
@@ -16,7 +15,6 @@ interface RequirePermissionProps {
 
 /**
  * Component for protecting routes based on user permissions
- * Can be used as a wrapper or as a Route element
  */
 export const RequirePermission = ({
   children,
@@ -26,7 +24,7 @@ export const RequirePermission = ({
   requiredPermission
 }: RequirePermissionProps) => {
   const { isAuthenticated, isLoading, user, session } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   // Wait until auth is loaded
   if (isLoading) {
@@ -36,9 +34,9 @@ export const RequirePermission = ({
   // Check if the user is authenticated
   if (!isAuthenticated || !user) {
     // Redirect to login page if not authenticated
-    router.navigate({
-      to: navigateTo(redirectTo),
-      search: { from: router.state.location.pathname }
+    navigate({
+      to: redirectTo,
+      search: { from: window.location.pathname }
     });
     return null;
   }
@@ -55,12 +53,15 @@ export const RequirePermission = ({
 
   if (!hasRequiredRoles || !hasSpecificPermission) {
     // Render fallback content or redirect if permission is denied
-    return fallback ? <>{fallback}</> : (
-      router.navigate({
-        to: navigateTo(redirectTo),
-        search: { from: router.state.location.pathname }
-      })
-    );
+    if (fallback) {
+      return <>{fallback}</>;
+    } else {
+      navigate({
+        to: redirectTo,
+        search: { from: window.location.pathname }
+      });
+      return null;
+    }
   }
 
   return <>{children}</>;
