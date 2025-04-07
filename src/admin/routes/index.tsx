@@ -40,77 +40,77 @@ const adminBaseRoute = createRoute({
 // Dashboard route
 const dashboardRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  path: '/dashboard', // Use path only, no id
+  path: 'dashboard', // Remove leading slash to prevent duplicate routes
   component: () => <React.Suspense fallback={<PageLoader />}><Dashboard /></React.Suspense>
 });
 
 // Users route
 const usersRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  path: '/users', // Use path only, no id
+  path: 'users', // Remove leading slash to prevent duplicate routes
   component: () => <React.Suspense fallback={<PageLoader />}><UsersPage /></React.Suspense>
 });
 
 // Parts route
 const partsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  path: '/parts', // Use path only, no id
+  path: 'parts', // Remove leading slash to prevent duplicate routes
   component: () => <React.Suspense fallback={<PageLoader />}><PartsPage /></React.Suspense>
 });
 
 // Builds route
 const buildsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  path: '/builds', // Use path only, no id
+  path: 'builds', // Remove leading slash to prevent duplicate routes
   component: () => <React.Suspense fallback={<PageLoader />}><BuildsPage /></React.Suspense>
 });
 
 // Themes route
 const themesRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  path: '/themes', // Use path only, no id
+  path: 'themes', // Remove leading slash to prevent duplicate routes
   component: () => <React.Suspense fallback={<PageLoader />}><ThemesPage /></React.Suspense>
 });
 
 // Content route
 const contentRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  path: '/content', // Use path only, no id
+  path: 'content', // Remove leading slash to prevent duplicate routes
   component: () => <React.Suspense fallback={<PageLoader />}><ContentPage /></React.Suspense>
 });
 
 // Settings route
 const settingsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  path: '/settings', // Use path only, no id
+  path: 'settings', // Remove leading slash to prevent duplicate routes
   component: () => <React.Suspense fallback={<PageLoader />}><SettingsPage /></React.Suspense>
 });
 
 // Permissions route
 const permissionsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  path: '/permissions', // Use path only, no id
+  path: 'permissions', // Remove leading slash to prevent duplicate routes
   component: () => <React.Suspense fallback={<PageLoader />}><PermissionsPage /></React.Suspense>
 });
 
 // Logs route
 const logsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  path: '/logs', // Use path only, no id
+  path: 'logs', // Remove leading slash to prevent duplicate routes
   component: () => <React.Suspense fallback={<PageLoader />}><LogsPage /></React.Suspense>
 });
 
 // Unauthorized page
 const unauthorizedRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  path: '/unauthorized', // Use path only, no id
+  path: 'unauthorized', // Remove leading slash to prevent duplicate routes
   component: () => <React.Suspense fallback={<PageLoader />}><UnauthorizedPage /></React.Suspense>
 });
 
 // Not found page
 const notFoundRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  path: '/*', // Use path only, no id
+  path: '*', // Keep catch-all without leading slash
   component: () => <React.Suspense fallback={<PageLoader />}><NotFoundPage /></React.Suspense>
 });
 

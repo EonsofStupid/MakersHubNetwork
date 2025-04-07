@@ -5,6 +5,7 @@ import { updateDesignTokens } from '@/utils/themeTokenUtils';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
+import { StoreThemeTokens } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
