@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +21,8 @@ export const Dashboard: React.FC = () => {
   // Use these sample logs for the log indicators
   const sampleLogs: LogEntry[] = [
     {
-      timestamp: Date.now(),
+      id: '1',
+      timestamp: new Date(),
       level: LogLevel.SUCCESS,
       category: LogCategory.THEME,
       message: 'Theme applied successfully',
@@ -28,7 +30,8 @@ export const Dashboard: React.FC = () => {
       details: { themeName: 'Cyberpunk', appliedTo: 'global' }
     },
     {
-      timestamp: Date.now(),
+      id: '2',
+      timestamp: new Date(),
       level: LogLevel.WARN,
       category: LogCategory.AUTH,
       message: 'User login attempt failed',

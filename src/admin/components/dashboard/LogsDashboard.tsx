@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { RotateCw, XCircle } from 'lucide-react';
 import { LogEntry, LogLevel } from '@/logging/types';
-import { getLogger } from '@/logging';
 import { renderUnknownAsNode } from '@/shared/rendering';
+import { memoryTransport } from '@/logging/transports/memory-transport';
 
 export const LogsDashboard: React.FC = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -16,18 +16,9 @@ export const LogsDashboard: React.FC = () => {
   const fetchLogs = async () => {
     setIsLoading(true);
     try {
-      // Get logger instance
-      const logger = getLogger();
-      
-      // Get memory transport
-      const transport = logger.getTransports().find(t => t.constructor.name === 'MemoryTransport');
-      
-      if (transport && 'getLogs' in transport) {
-        const logs = (transport as any).getLogs();
-        setLogs(logs || []);
-      } else {
-        setLogs([]);
-      }
+      // Get logs directly from memoryTransport
+      const allLogs = memoryTransport.getLogs();
+      setLogs(allLogs || []);
     } catch (error) {
       console.error('Failed to fetch logs:', error);
     } finally {
@@ -41,8 +32,14 @@ export const LogsDashboard: React.FC = () => {
     // Set up interval to refresh logs 
     const interval = setInterval(fetchLogs, 5000);
     
+    // Subscribe to memory transport for real-time updates
+    const unsubscribe = memoryTransport.subscribe(() => {
+      fetchLogs();
+    });
+    
     return () => {
       clearInterval(interval);
+      unsubscribe();
     };
   }, []);
 
@@ -59,6 +56,10 @@ export const LogsDashboard: React.FC = () => {
     }
   };
 
+  const handleClearLogs = () => {
+    memoryTransport.clear();
+  };
+
   return (
     <Card className="w-full h-full">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -68,7 +69,7 @@ export const LogsDashboard: React.FC = () => {
             <RotateCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button variant="outline" size="sm" className="text-destructive">
+          <Button variant="outline" size="sm" className="text-destructive" onClick={handleClearLogs}>
             <XCircle className="mr-2 h-4 w-4" />
             Clear
           </Button>
@@ -90,12 +91,14 @@ export const LogsDashboard: React.FC = () => {
               {logs.map((log, index) => (
                 <TableRow key={index}>
                   <TableCell>
-                    <Badge className={getLevelColor(log.level)}>
+                    <Badge className={getLevelColor(log.level as LogLevel)}>
                       {log.level}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs">
-                    {new Date(log.timestamp).toLocaleString()}
+                    {log.timestamp instanceof Date 
+                      ? log.timestamp.toLocaleString() 
+                      : new Date(log.timestamp).toLocaleString()}
                   </TableCell>
                   <TableCell>{log.category}</TableCell>
                   <TableCell className="font-mono text-sm">
