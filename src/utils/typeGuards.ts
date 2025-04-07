@@ -3,6 +3,8 @@
  * Type guard utilities to safely handle unknown types
  */
 
+import { z } from 'zod';
+
 /**
  * Helper function to safely convert unknown values to boolean
  */
@@ -11,11 +13,25 @@ export function toBoolean(value: unknown): boolean {
 }
 
 /**
+ * Helper function that safely returns boolean or undefined for strict type checking
+ */
+export function toBooleanOrUndefined(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+/**
  * Helper function to safely convert string representation to boolean
  */
 export function stringToBoolean(value: string | null | undefined): boolean {
   if (value === null || value === undefined) return false;
   return value.toLowerCase() === 'true';
+}
+
+/**
+ * Function to safely handle ZodError instances
+ */
+export function zodErrorToBool(error: unknown): boolean {
+  return error instanceof z.ZodError ? false : true;
 }
 
 /**
