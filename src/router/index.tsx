@@ -5,7 +5,7 @@ import {
 } from '@tanstack/react-router';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { rootRoute } from '@/router/routes/site';
-import { getThemeContextForRoute } from '@/routeRegistry';
+import { getThemeContextForRoute } from '@/router/routeRegistry';
 import { useLoggingContext } from '@/logging/context/LoggingContext';
 import { LogConsole } from '@/logging/components/LogConsole';
 import { LogToggleButton } from '@/logging/components/LogToggleButton';
