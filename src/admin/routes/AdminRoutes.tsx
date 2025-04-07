@@ -1,4 +1,3 @@
-
 import React, { Suspense, useEffect } from 'react';
 import { Outlet, useNavigate } from '@tanstack/react-router';
 import { useLogger } from '@/hooks/use-logger';
@@ -36,7 +35,7 @@ export function AdminRoutes() {
     
     // Automatically redirect to dashboard if on /admin root
     if (location.pathname === '/admin') {
-      navigate({ to: navigateTo('/admin/dashboard') });
+      navigate({ to: '/admin/dashboard' });
     }
     
     // Redirect unauthorized users
@@ -44,7 +43,7 @@ export function AdminRoutes() {
       logger.warn('Unauthorized access attempt to admin routes', {
         details: { path: location.pathname }
       });
-      navigate({ to: navigateTo('/admin/unauthorized') });
+      navigate({ to: '/admin/unauthorized' });
     }
     
     // Redirect unauthenticated users
@@ -53,12 +52,9 @@ export function AdminRoutes() {
         details: { path: location.pathname }
       });
       
-      // Navigate to login with correct search params
-      const search = createSearchParams({ returnTo: location.pathname });
-      
       navigate({ 
-        to: navigateTo('/login'),
-        search
+        to: '/login',
+        search: { returnTo: location.pathname }
       });
     }
   }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate, loadStatus]);
