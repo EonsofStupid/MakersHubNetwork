@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { Theme, ThemeContext } from '@/types/theme';
 import { ThemeContextSchema } from '@/types/themeContext';
 import defaultTheme from '@/theme/defaultTheme';
+import { getTheme, removeUndefineds } from '@/services/themeService';
 
 // Define valid load status values using Zod for better type safety
 export const ThemeLoadStatusSchema = z.enum(['idle', 'loading', 'success', 'error']);
