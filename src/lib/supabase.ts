@@ -18,22 +18,60 @@ if (!supabaseUrl || !supabaseAnonKey) {
   });
 }
 
-// Initialize Supabase client with robust error handling
+/**
+ * Initialize Supabase client with robust error handling and offline detection
+ */
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: localStorage
+    storage: typeof localStorage !== 'undefined' ? localStorage : undefined
   }
-});
-
-// Log successful client initialization
-logger.info('Supabase client initialized', { 
-  details: { 
-    url: supabaseUrl?.substring(0, 10) + '...' 
-  } 
 });
 
 // Export this client as the default to be used throughout the app
 export default supabase;
+
+/**
+ * Get the current auth session safely
+ */
+export async function getSession() {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    return data.session;
+  } catch (error) {
+    logger.error('Failed to get session', { 
+      details: { error: error instanceof Error ? error.message : String(error) }
+    });
+    return null;
+  }
+}
+
+/**
+ * Check if the user is currently online
+ */
+export function isOnline() {
+  return typeof navigator !== 'undefined' && navigator.onLine;
+}
+
+/**
+ * Function to safely execute Supabase queries with fallbacks
+ */
+export async function safeQuery<T>(
+  queryFn: () => Promise<{ data: T | null; error: any }>,
+  fallback: T | null = null
+): Promise<{ data: T | null; error: any }> {
+  try {
+    if (!isOnline()) {
+      return { data: fallback, error: new Error('Offline') };
+    }
+    return await queryFn();
+  } catch (error) {
+    logger.error('Error executing Supabase query', {
+      details: { error: error instanceof Error ? error.message : String(error) }
+    });
+    return { data: fallback, error };
+  }
+}

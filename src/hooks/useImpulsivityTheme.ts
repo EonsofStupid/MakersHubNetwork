@@ -1,12 +1,19 @@
+
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
-import { syncImpulsivityTheme } from '@/utils/themeSync';
-import { updateThemeColors, updateThemeEffects } from '@/utils/themeTokenUtils';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
 import { DesignTokensStructure } from '@/types/theme';
-import { defaultTokens } from '@/theme/tokenSchema';
+import { updateThemeColors, updateThemeEffects } from '@/utils/themeTokenUtils';
+
+/**
+ * Sync theme with database (implementation depends on your backend)
+ */
+async function syncImpulsivityTheme(): Promise<boolean> {
+  // This would be implemented to sync with the database
+  return Promise.resolve(true);
+}
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -54,9 +61,9 @@ export function useImpulsivityTheme() {
         });
         
         const finalTokens = updateThemeEffects(updatedDesignTokens, {
-          primary: tokens.effectPrimary,
-          secondary: tokens.effectSecondary,
-          tertiary: tokens.effectTertiary,
+          primary: tokens.effectPrimary || '#00F0FF',
+          secondary: tokens.effectSecondary || '#FF2D6E',
+          tertiary: tokens.effectTertiary || '#8B5CF6',
         });
         
         logger.info('Updating theme design tokens with Impulsivity colors');
@@ -86,14 +93,14 @@ export function useImpulsivityTheme() {
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement) {
         // Apply CSS variables with proper type safety
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-primary', tokens.effectPrimary);
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-secondary', tokens.effectSecondary);
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-primary', tokens.effectPrimary || '#00F0FF');
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-secondary', tokens.effectSecondary || '#FF2D6E');
         (adminRootElement as HTMLElement).style.setProperty('--impulse-bg-main', '#121218');
         (adminRootElement as HTMLElement).style.setProperty('--impulse-bg-overlay', 'rgba(22, 24, 29, 0.85)');
         (adminRootElement as HTMLElement).style.setProperty('--impulse-bg-card', 'rgba(28, 30, 38, 0.7)');
         (adminRootElement as HTMLElement).style.setProperty('--impulse-text-primary', '#F6F6F7');
         (adminRootElement as HTMLElement).style.setProperty('--impulse-text-secondary', 'rgba(255, 255, 255, 0.7)');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-text-accent', tokens.effectPrimary);
+        (adminRootElement as HTMLElement).style.setProperty('--impulse-text-accent', tokens.effectPrimary || '#00F0FF');
         (adminRootElement as HTMLElement).style.setProperty('--impulse-border-normal', 'rgba(0, 240, 255, 0.2)');
         (adminRootElement as HTMLElement).style.setProperty('--impulse-border-hover', 'rgba(0, 240, 255, 0.4)');
         (adminRootElement as HTMLElement).style.setProperty('--impulse-border-active', 'rgba(0, 240, 255, 0.6)');

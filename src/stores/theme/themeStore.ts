@@ -1,20 +1,17 @@
-
 import { create } from 'zustand';
-import { getTheme } from '@/services/themeService';
+import { getThemeWithFallback, loadThemeTokens, persistThemeTokens } from '@/lib/theme/themeLoader';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { errorToObject } from '@/shared/rendering';
-import { defaultTokens, ThemeTokensSchema } from '@/theme/tokenSchema';
-import { removeUndefineds } from '@/utils/themeTokenUtils';
+import { ThemeTokensSchema } from '@/theme/tokenSchema';
 import { z } from 'zod';
 import { Theme, ThemeContext } from '@/types/theme';
+import { ThemeContextSchema } from '@/types/themeContext';
+import defaultTheme from '@/theme/defaultTheme';
 
 // Define valid load status values using Zod for better type safety
 export const ThemeLoadStatusSchema = z.enum(['idle', 'loading', 'success', 'error']);
 export type ThemeLoadStatus = z.infer<typeof ThemeLoadStatusSchema>;
-
-// Define ThemeContext enum to ensure consistent usage
-export const ThemeContextSchema = z.enum(['site', 'admin', 'chat', 'app', 'training']);
 
 // Interface for theme service options with Zod validation
 export const ThemeServiceOptionsSchema = z.object({
@@ -44,9 +41,9 @@ const initialThemeState: Omit<ThemeState, 'loadTheme' | 'setTheme' | 'loadAdminC
   isLoading: false,
   error: null,
   loadStatus: ThemeLoadStatusSchema.enum.idle,
-  tokens: { ...defaultTokens },
+  tokens: { ...defaultTheme },
   adminComponents: [],
-  themeTokens: { ...defaultTokens },
+  themeTokens: { ...defaultTheme },
 };
 
 export type ThemeStore = ThemeState;
@@ -64,14 +61,15 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
 
       // Parse input as either themeId or context
       let options: ThemeServiceOptions = {};
+      let context: ThemeContext = 'app';
       
       if (contextOrThemeId) {
         // Try to parse as ThemeContext first
-        try {
-          const context = ThemeContextSchema.parse(contextOrThemeId);
+        if (ThemeContextSchema.safeParse(contextOrThemeId).success) {
+          context = contextOrThemeId as ThemeContext;
           options = { context };
           getLogger().info(`Loading theme for context: ${context}`);
-        } catch {
+        } else {
           // If not a valid context, treat as themeId
           options = { id: contextOrThemeId };
           getLogger().info(`Loading theme by ID: ${contextOrThemeId}`);
@@ -82,79 +80,30 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         getLogger().info('Loading default app theme');
       }
 
-      const { theme, isFallback } = await getTheme(options);
+      // Load theme with fallback chain
+      const theme = await getThemeWithFallback(options);
+      const tokens = await loadThemeTokens(context);
+      
+      // Persist tokens for offline use
+      persistThemeTokens(tokens);
 
-      if (theme) {
-        // Extract colors safely, ensuring they're all defined
-        const safeColors = theme.design_tokens?.colors || {};
-        const safeEffects = theme.design_tokens?.effects || { primary: '', secondary: '', tertiary: '' };
-        
-        // Create a safe token object with fallbacks
-        const safeTokens: Partial<ThemeTokensSchema> = {
-          primary: safeColors.primary || defaultTokens.primary,
-          secondary: safeColors.secondary || defaultTokens.secondary,
-          accent: safeColors.accent || defaultTokens.accent,
-          background: safeColors.background || defaultTokens.background,
-          foreground: safeColors.foreground || defaultTokens.foreground,
-          card: safeColors.card || defaultTokens.card,
-          cardForeground: safeColors.cardForeground || defaultTokens.cardForeground,
-          muted: safeColors.muted || defaultTokens.muted,
-          mutedForeground: safeColors.mutedForeground || defaultTokens.mutedForeground,
-          border: safeColors.border || defaultTokens.border,
-          input: safeColors.input || defaultTokens.input,
-          ring: safeColors.ring || defaultTokens.ring,
-          effectPrimary: safeEffects.primary || defaultTokens.effectPrimary,
-          effectSecondary: safeEffects.secondary || defaultTokens.effectSecondary,
-          effectTertiary: safeEffects.tertiary || defaultTokens.effectTertiary,
-          transitionFast: defaultTokens.transitionFast,
-          transitionNormal: defaultTokens.transitionNormal,
-          transitionSlow: defaultTokens.transitionSlow,
-          radiusSm: defaultTokens.radiusSm,
-          radiusMd: defaultTokens.radiusMd,
-          radiusLg: defaultTokens.radiusLg,
-          radiusFull: defaultTokens.radiusFull,
-        };
-        
-        // Clean up any undefined values and merge with defaults
-        const cleanTokens = {
-          ...defaultTokens,
-          ...removeUndefineds(safeTokens)
-        };
+      set({
+        currentTheme: theme,
+        tokens,
+        themeTokens: tokens,
+        isLoading: false,
+        loadStatus: ThemeLoadStatusSchema.enum.success,
+        error: null
+      });
 
-        set({
-          currentTheme: theme,
-          tokens: cleanTokens,
-          themeTokens: cleanTokens,
-          isLoading: false,
-          loadStatus: ThemeLoadStatusSchema.enum.success,
-          error: null
-        });
-
-        getLogger().info(`Theme loaded successfully: ${theme.name} (fallback: ${isFallback})`, {
-          category: LogCategory.THEME,
-          details: {
-            themeId: theme.id,
-            context: options.context,
-            isFallback,
-            componentTokensCount: Array.isArray(theme.component_tokens) ? theme.component_tokens.length : 0
-          }
-        });
-      } else {
-        const errorMessage = 'Failed to load theme: Theme not found';
-        getLogger().error(errorMessage, {
-          category: LogCategory.THEME,
-          details: { themeId: options.id, context: options.context }
-        });
-
-        set({
-          isLoading: false,
-          loadStatus: ThemeLoadStatusSchema.enum.error,
-          error: new Error(errorMessage),
-          // Always use default tokens when there's an error
-          tokens: { ...defaultTokens },
-          themeTokens: { ...defaultTokens }
-        });
-      }
+      getLogger().info(`Theme loaded successfully: ${theme.name}`, {
+        category: LogCategory.THEME,
+        details: {
+          themeId: theme.id,
+          context: options.context,
+          componentTokensCount: Array.isArray(theme.component_tokens) ? theme.component_tokens.length : 0
+        }
+      });
     } catch (error) {
       const errorObj = errorToObject(error);
       getLogger().error('Error loading theme', {
@@ -167,8 +116,8 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         loadStatus: ThemeLoadStatusSchema.enum.error,
         error: error instanceof Error ? error : new Error(String(error)),
         // Always use default tokens when there's an error
-        tokens: { ...defaultTokens },
-        themeTokens: { ...defaultTokens }
+        tokens: { ...defaultTheme },
+        themeTokens: { ...defaultTheme }
       });
     }
   },
@@ -190,33 +139,33 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         
         // Create a safe token object with fallbacks
         const safeTokens: Partial<ThemeTokensSchema> = {
-          primary: safeColors.primary || defaultTokens.primary,
-          secondary: safeColors.secondary || defaultTokens.secondary,
-          accent: safeColors.accent || defaultTokens.accent,
-          background: safeColors.background || defaultTokens.background,
-          foreground: safeColors.foreground || defaultTokens.foreground,
-          card: safeColors.card || defaultTokens.card,
-          cardForeground: safeColors.cardForeground || defaultTokens.cardForeground,
-          muted: safeColors.muted || defaultTokens.muted,
-          mutedForeground: safeColors.mutedForeground || defaultTokens.mutedForeground,
-          border: safeColors.border || defaultTokens.border,
-          input: safeColors.input || defaultTokens.input,
-          ring: safeColors.ring || defaultTokens.ring,
-          effectPrimary: safeEffects.primary || defaultTokens.effectPrimary,
-          effectSecondary: safeEffects.secondary || defaultTokens.effectSecondary,
-          effectTertiary: safeEffects.tertiary || defaultTokens.effectTertiary,
-          transitionFast: defaultTokens.transitionFast,
-          transitionNormal: defaultTokens.transitionNormal,
-          transitionSlow: defaultTokens.transitionSlow,
-          radiusSm: defaultTokens.radiusSm,
-          radiusMd: defaultTokens.radiusMd,
-          radiusLg: defaultTokens.radiusLg,
-          radiusFull: defaultTokens.radiusFull,
+          primary: safeColors.primary || defaultTheme.primary,
+          secondary: safeColors.secondary || defaultTheme.secondary,
+          accent: safeColors.accent || defaultTheme.accent,
+          background: safeColors.background || defaultTheme.background,
+          foreground: safeColors.foreground || defaultTheme.foreground,
+          card: safeColors.card || defaultTheme.card,
+          cardForeground: safeColors.cardForeground || defaultTheme.cardForeground,
+          muted: safeColors.muted || defaultTheme.muted,
+          mutedForeground: safeColors.mutedForeground || defaultTheme.mutedForeground,
+          border: safeColors.border || defaultTheme.border,
+          input: safeColors.input || defaultTheme.input,
+          ring: safeColors.ring || defaultTheme.ring,
+          effectPrimary: safeEffects.primary || defaultTheme.effectPrimary,
+          effectSecondary: safeEffects.secondary || defaultTheme.effectSecondary,
+          effectTertiary: safeEffects.tertiary || defaultTheme.effectTertiary,
+          transitionFast: defaultTheme.transitionFast,
+          transitionNormal: defaultTheme.transitionNormal,
+          transitionSlow: defaultTheme.transitionSlow,
+          radiusSm: defaultTheme.radiusSm,
+          radiusMd: defaultTheme.radiusMd,
+          radiusLg: defaultTheme.radiusLg,
+          radiusFull: defaultTheme.radiusFull,
         };
         
         // Clean up any undefined values and merge with defaults
         const cleanTokens = {
-          ...defaultTokens,
+          ...defaultTheme,
           ...removeUndefineds(safeTokens)
         };
 
@@ -248,8 +197,8 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
           loadStatus: ThemeLoadStatusSchema.enum.error,
           error: new Error(errorMessage),
           // Always use default tokens when there's an error
-          tokens: { ...defaultTokens },
-          themeTokens: { ...defaultTokens }
+          tokens: { ...defaultTheme },
+          themeTokens: { ...defaultTheme }
         });
       }
     } catch (error) {
@@ -264,8 +213,8 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         loadStatus: ThemeLoadStatusSchema.enum.error,
         error: error instanceof Error ? error : new Error(String(error)),
         // Always use default tokens when there's an error
-        tokens: { ...defaultTokens },
-        themeTokens: { ...defaultTokens }
+        tokens: { ...defaultTheme },
+        themeTokens: { ...defaultTheme }
       });
     }
   },

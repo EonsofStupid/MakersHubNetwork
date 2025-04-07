@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { router } from '../index';
+import { useRouter, router } from '../index';
 import { getThemeContextForRoute, isPathInScope } from '../../routeRegistry';
 import { ThemeContext } from '@/types/theme';
 
@@ -42,14 +42,17 @@ export function defineScopedRoute<
  * Get the current scope from the router context
  */
 export function useCurrentScope(): RouteScope {
-  return router.useRouterContext().scope;
+  // Access scope from router options context
+  const routerInstance = useRouter();
+  return routerInstance.options.context.scope;
 }
 
 /**
  * Get the theme context for the current route
  */
 export function useThemeContextForRoute(): ThemeContext {
-  const pathname = router.state.location.pathname;
+  const routerInstance = useRouter();
+  const pathname = routerInstance.state.location.pathname;
   return getThemeContextForRoute(pathname);
 }
 
