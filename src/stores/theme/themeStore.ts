@@ -1,14 +1,15 @@
+
 import { create } from 'zustand';
-import { getThemeWithFallback, loadThemeTokens, persistThemeTokens } from '@/lib/theme/themeLoader';
+import { z } from 'zod';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { errorToObject } from '@/shared/rendering';
 import { ThemeTokensSchema } from '@/theme/tokenSchema';
-import { z } from 'zod';
 import { Theme, ThemeContext } from '@/types/theme';
 import { ThemeContextSchema } from '@/types/themeContext';
 import defaultTheme from '@/theme/defaultTheme';
-import { getTheme, removeUndefineds } from '@/services/themeService';
+import { supabase } from '@/lib/supabase';
+import { safeLocalStorage, persistThemeTokens } from '@/lib/theme/safeStorage';
 
 // Define valid load status values using Zod for better type safety
 export const ThemeLoadStatusSchema = z.enum(['idle', 'loading', 'success', 'error']);
@@ -24,39 +25,44 @@ export const ThemeServiceOptionsSchema = z.object({
 
 export type ThemeServiceOptions = z.infer<typeof ThemeServiceOptionsSchema>;
 
+// Type for our theme tokens
+export type StoreThemeTokens = z.infer<typeof ThemeTokensSchema>;
+
 interface ThemeState {
   currentTheme: Theme | null;
   isLoading: boolean;
   error: Error | null;
   loadStatus: ThemeLoadStatus;
-  tokens: ThemeTokensSchema;
-  loadTheme: (contextOrThemeId?: string) => Promise<void>;
-  setTheme: (themeId: string) => Promise<void>;
+  tokens: StoreThemeTokens;
+  context: ThemeContext;
   adminComponents: any[];
+  themeTokens: StoreThemeTokens;
+  
+  // Actions
+  loadTheme: (contextOrThemeId?: ThemeContext | string) => Promise<void>;
+  setTheme: (themeId: string) => Promise<void>;
   loadAdminComponents: () => Promise<void>;
-  themeTokens: ThemeTokensSchema;
 }
 
 const initialThemeState: Omit<ThemeState, 'loadTheme' | 'setTheme' | 'loadAdminComponents'> = {
   currentTheme: null,
   isLoading: false,
   error: null,
-  loadStatus: ThemeLoadStatusSchema.enum.idle,
+  loadStatus: 'idle',
   tokens: { ...defaultTheme },
+  context: 'app',
   adminComponents: [],
   themeTokens: { ...defaultTheme },
 };
 
-export type ThemeStore = ThemeState;
-
-export const useThemeStore = create<ThemeStore>((set, get) => ({
+export const useThemeStore = create<ThemeState>((set, get) => ({
   ...initialThemeState,
 
-  loadTheme: async (contextOrThemeId?: string) => {
+  loadTheme: async (contextOrThemeId?: ThemeContext | string) => {
     try {
       set({
         isLoading: true,
-        loadStatus: ThemeLoadStatusSchema.enum.loading,
+        loadStatus: 'loading',
         error: null
       });
 
@@ -65,7 +71,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
       let context: ThemeContext = 'app';
       
       if (contextOrThemeId) {
-        // Try to parse as ThemeContext first
+        // Try to parse as ThemeContext
         if (ThemeContextSchema.safeParse(contextOrThemeId).success) {
           context = contextOrThemeId as ThemeContext;
           options = { context };
@@ -77,32 +83,47 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         }
       } else {
         // Default to 'app' context if no input provided
-        options = { context: 'app' as ThemeContext };
+        options = { context: 'app' };
         getLogger().info('Loading default app theme');
       }
 
-      // Load theme with fallback chain
-      const theme = await getThemeWithFallback(options);
-      const tokens = await loadThemeTokens(context);
+      // Call theme service edge function
+      const { data: themeData, error: themeError } = await supabase.functions.invoke('theme-service', {
+        body: { 
+          context: options.context,
+          id: options.id,
+          name: options.name,
+          isDefault: options.isDefault !== false
+        }
+      });
+
+      if (themeError || !themeData) {
+        throw new Error(themeError?.message || 'Failed to load theme data');
+      }
+
+      const { tokens, theme } = themeData;
       
-      // Persist tokens for offline use
-      persistThemeTokens(tokens);
+      // Persist tokens for offline use if available
+      if (tokens) {
+        persistThemeTokens(tokens);
+      }
 
       set({
-        currentTheme: theme,
-        tokens,
-        themeTokens: tokens,
+        currentTheme: theme || null,
+        tokens: tokens || { ...defaultTheme },
+        themeTokens: tokens || { ...defaultTheme },
+        context,
         isLoading: false,
-        loadStatus: ThemeLoadStatusSchema.enum.success,
+        loadStatus: 'success',
         error: null
       });
 
-      getLogger().info(`Theme loaded successfully: ${theme.name}`, {
+      getLogger().info(`Theme loaded successfully ${theme?.name || '(fallback)'}`, {
         category: LogCategory.THEME,
         details: {
-          themeId: theme.id,
+          themeId: theme?.id || 'default',
           context: options.context,
-          componentTokensCount: Array.isArray(theme.component_tokens) ? theme.component_tokens.length : 0
+          isFallback: !theme
         }
       });
     } catch (error) {
@@ -112,14 +133,20 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         details: errorObj
       });
 
+      // Load fallback from localStorage if available
+      const localTokens = safeLocalStorage('impulse-theme', null);
+      
       set({
         isLoading: false,
-        loadStatus: ThemeLoadStatusSchema.enum.error,
+        loadStatus: 'error',
         error: error instanceof Error ? error : new Error(String(error)),
-        // Always use default tokens when there's an error
-        tokens: { ...defaultTheme },
-        themeTokens: { ...defaultTheme }
+        // Use localStorage fallback or default tokens
+        tokens: localTokens || { ...defaultTheme },
+        themeTokens: localTokens || { ...defaultTheme }
       });
+      
+      // Even when there's an error, try to apply some theme for better UX
+      applyFallbackTheme();
     }
   },
 
@@ -127,81 +154,41 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     try {
       set({
         isLoading: true,
-        loadStatus: ThemeLoadStatusSchema.enum.loading,
+        loadStatus: 'loading',
         error: null
       });
 
-      const { theme, isFallback } = await getTheme({ id: themeId });
+      // Call theme service to get specific theme
+      const { data: themeData, error: themeError } = await supabase.functions.invoke('theme-service', {
+        body: { id: themeId }
+      });
 
-      if (theme) {
-        // Extract colors safely, ensuring they're all defined
-        const safeColors = theme.design_tokens?.colors || {};
-        const safeEffects = theme.design_tokens?.effects || { primary: '', secondary: '', tertiary: '' };
-        
-        // Create a safe token object with fallbacks
-        const safeTokens: Partial<ThemeTokensSchema> = {
-          primary: safeColors.primary || defaultTheme.primary,
-          secondary: safeColors.secondary || defaultTheme.secondary,
-          accent: safeColors.accent || defaultTheme.accent,
-          background: safeColors.background || defaultTheme.background,
-          foreground: safeColors.foreground || defaultTheme.foreground,
-          card: safeColors.card || defaultTheme.card,
-          cardForeground: safeColors.cardForeground || defaultTheme.cardForeground,
-          muted: safeColors.muted || defaultTheme.muted,
-          mutedForeground: safeColors.mutedForeground || defaultTheme.mutedForeground,
-          border: safeColors.border || defaultTheme.border,
-          input: safeColors.input || defaultTheme.input,
-          ring: safeColors.ring || defaultTheme.ring,
-          effectPrimary: safeEffects.primary || defaultTheme.effectPrimary,
-          effectSecondary: safeEffects.secondary || defaultTheme.effectSecondary,
-          effectTertiary: safeEffects.tertiary || defaultTheme.effectTertiary,
-          transitionFast: defaultTheme.transitionFast,
-          transitionNormal: defaultTheme.transitionNormal,
-          transitionSlow: defaultTheme.transitionSlow,
-          radiusSm: defaultTheme.radiusSm,
-          radiusMd: defaultTheme.radiusMd,
-          radiusLg: defaultTheme.radiusLg,
-          radiusFull: defaultTheme.radiusFull,
-        };
-        
-        // Clean up any undefined values and merge with defaults
-        const cleanTokens = {
-          ...defaultTheme,
-          ...removeUndefineds(safeTokens)
-        };
-
-        set({
-          currentTheme: theme,
-          tokens: cleanTokens,
-          themeTokens: cleanTokens,
-          isLoading: false,
-          loadStatus: ThemeLoadStatusSchema.enum.success,
-          error: null
-        });
-
-        getLogger().info(`Theme set successfully: ${theme.name}`, {
-          category: LogCategory.THEME,
-          details: {
-            themeId: theme.id,
-            isFallback
-          }
-        });
-      } else {
-        const errorMessage = 'Failed to set theme: Theme not found';
-        getLogger().error(errorMessage, {
-          category: LogCategory.THEME,
-          details: { themeId }
-        });
-
-        set({
-          isLoading: false,
-          loadStatus: ThemeLoadStatusSchema.enum.error,
-          error: new Error(errorMessage),
-          // Always use default tokens when there's an error
-          tokens: { ...defaultTheme },
-          themeTokens: { ...defaultTheme }
-        });
+      if (themeError || !themeData) {
+        throw new Error(themeError?.message || 'Failed to load theme data');
       }
+
+      const { tokens, theme } = themeData;
+      
+      if (!theme) {
+        throw new Error('Theme not found');
+      }
+
+      // Update store with theme data
+      set({
+        currentTheme: theme,
+        tokens: tokens || { ...defaultTheme },
+        themeTokens: tokens || { ...defaultTheme },
+        isLoading: false,
+        loadStatus: 'success',
+        error: null
+      });
+
+      getLogger().info(`Theme set successfully: ${theme.name}`, {
+        category: LogCategory.THEME,
+        details: {
+          themeId: theme.id
+        }
+      });
     } catch (error) {
       const errorObj = errorToObject(error);
       getLogger().error('Error setting theme', {
@@ -211,11 +198,8 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
 
       set({
         isLoading: false,
-        loadStatus: ThemeLoadStatusSchema.enum.error,
+        loadStatus: 'error',
         error: error instanceof Error ? error : new Error(String(error)),
-        // Always use default tokens when there's an error
-        tokens: { ...defaultTheme },
-        themeTokens: { ...defaultTheme }
       });
     }
   },
@@ -240,3 +224,20 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     }
   },
 }));
+
+// Apply fallback theme directly to DOM
+function applyFallbackTheme() {
+  try {
+    const root = document.documentElement;
+    
+    // Apply critical CSS variables as fallback
+    root.style.setProperty('--primary', defaultTheme.primary);
+    root.style.setProperty('--secondary', defaultTheme.secondary);
+    root.style.setProperty('--background', defaultTheme.background);
+    root.style.setProperty('--foreground', defaultTheme.foreground);
+    root.style.setProperty('--site-effect-color', defaultTheme.effectPrimary);
+    root.style.setProperty('--site-effect-secondary', defaultTheme.effectSecondary);
+  } catch (error) {
+    console.error('Failed to apply fallback theme', error);
+  }
+}

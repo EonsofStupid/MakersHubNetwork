@@ -75,12 +75,22 @@ serve(async (req) => {
     
     console.log(`Loading theme with params: context=${context}, id=${id}, name=${name}, isDefault=${isDefault}`);
 
-    // Check the database if the themes table exists
-    const { data: tablesExist, error: tableCheckError } = await supabaseAdmin.rpc('check_table_exists', { 
-      table_name: 'themes' 
-    });
+    // Check if the themes table exists
+    let tablesExist = false;
+    try {
+      const { data, error } = await supabaseAdmin.rpc('check_table_exists', { 
+        table_name: 'themes' 
+      });
+      tablesExist = !!data;
+      if (error) {
+        throw new Error(`Error checking table: ${error.message}`);
+      }
+    } catch (error) {
+      console.warn('Error checking if themes table exists:', error);
+      tablesExist = false;
+    }
     
-    if (tableCheckError || !tablesExist) {
+    if (!tablesExist) {
       console.warn('Themes table does not exist yet, returning fallback tokens');
       return new Response(
         JSON.stringify({ 
@@ -103,10 +113,13 @@ serve(async (req) => {
     } else if (name) {
       query = query.eq('name', name);
     } else {
-      query = query.eq('context', context).eq('is_default', isDefault);
+      query = query.eq('context', context);
+      if (isDefault) {
+        query = query.eq('is_default', true);
+      }
     }
 
-    const { data: theme, error } = await query.single();
+    const { data: theme, error } = await query.maybeSingle();
 
     if (error) {
       console.error('Error fetching theme:', error);
@@ -138,13 +151,13 @@ serve(async (req) => {
     }
 
     // Extract tokens from the theme's design_tokens
-    const tokens = theme.design_tokens?.colors || fallbackTokens;
+    const colorsTokens = theme.design_tokens?.colors || {};
     const effectsTokens = theme.design_tokens?.effects || {};
     
     // Combine colors and effects tokens with fallbacks
     const safeTokens = {
       ...fallbackTokens,
-      ...tokens,
+      ...colorsTokens,
       effectPrimary: effectsTokens.primary || fallbackTokens.effectPrimary,
       effectSecondary: effectsTokens.secondary || fallbackTokens.effectSecondary,
       effectTertiary: effectsTokens.tertiary || fallbackTokens.effectTertiary

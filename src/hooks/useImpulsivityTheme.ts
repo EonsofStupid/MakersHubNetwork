@@ -1,39 +1,44 @@
 
 import { useState, useRef } from 'react';
-import { useThemeStore } from '@/stores/theme/themeStore';
+import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging/types';
-import { DesignTokensStructure } from '@/types/theme';
+import { LogCategory } from '@/logging';
+import { Theme, DesignTokensStructure } from '@/types/theme';
+import { StoreThemeTokens } from '@/stores/theme/themeStore';
+
+type UpdateFunction<T> = (prev: T) => T;
 
 /**
- * Safely update theme colors
+ * Safely update theme design tokens
  */
-function updateThemeColors(tokens: DesignTokensStructure, colorUpdates: Record<string, string>): DesignTokensStructure {
-  return {
-    ...tokens,
+function updateThemeTokens(
+  theme: Theme | null,
+  tokens: StoreThemeTokens,
+  updateFn: UpdateFunction<DesignTokensStructure>
+): Theme | null {
+  if (!theme) return null;
+  
+  const safeTokens: DesignTokensStructure = theme.design_tokens || {
     colors: {
-      ...tokens.colors,
-      ...colorUpdates
+      primary: tokens.primary,
+      secondary: tokens.secondary,
+    },
+    effects: {
+      shadows: {},
+      blurs: {},
+      gradients: {},
+      primary: tokens.effectPrimary,
+      secondary: tokens.effectSecondary,
+      tertiary: tokens.effectTertiary
     }
   };
-}
-
-/**
- * Safely update theme effects
- */
-function updateThemeEffects(
-  tokens: DesignTokensStructure, 
-  effectUpdates: { primary?: string; secondary?: string; tertiary?: string }
-): DesignTokensStructure {
+  
+  const updatedTokens = updateFn(safeTokens);
+  
   return {
-    ...tokens,
-    effects: {
-      ...tokens.effects,
-      ...(effectUpdates.primary ? { primary: effectUpdates.primary } : {}),
-      ...(effectUpdates.secondary ? { secondary: effectUpdates.secondary } : {}),
-      ...(effectUpdates.tertiary ? { tertiary: effectUpdates.tertiary } : {})
-    }
+    ...theme,
+    design_tokens: updatedTokens
   };
 }
 
@@ -75,42 +80,6 @@ export function useImpulsivityTheme() {
       rootElement.style.setProperty('--site-effect-secondary', tokens.effectSecondary || '#FF2D6E');
       rootElement.style.setProperty('--site-effect-tertiary', tokens.effectTertiary || '#8B5CF6');
       
-      if (currentTheme) {
-        // Create safe default structure if needed
-        const safeDesignTokens: DesignTokensStructure = currentTheme.design_tokens || {
-          colors: {
-            primary: '186 100% 50%',
-            secondary: '334 100% 59%',
-          },
-          effects: {
-            shadows: {},
-            blurs: {},
-            gradients: {},
-            primary: '#00F0FF',
-            secondary: '#FF2D6E',
-            tertiary: '#8B5CF6'
-          }
-        };
-        
-        // Use our utility function to safely update design tokens
-        const colorUpdates = {
-          primary: tokens.primary || '186 100% 50%',
-          secondary: tokens.secondary || '334 100% 59%',
-        };
-        
-        const effectUpdates = {
-          primary: tokens.effectPrimary || '#00F0FF',
-          secondary: tokens.effectSecondary || '#FF2D6E',
-          tertiary: tokens.effectTertiary || '#8B5CF6',
-        };
-        
-        // Update colors first, then effects
-        const updatedWithColors = updateThemeColors(safeDesignTokens, colorUpdates);
-        const finalTokens = updateThemeEffects(updatedWithColors, effectUpdates);
-        
-        logger.info('Updating theme design tokens with Impulsivity colors');
-      }
-      
       // Mark as applied
       appliedToMainSite.current = true;
       
@@ -142,21 +111,21 @@ export function useImpulsivityTheme() {
     
     try {
       const adminRootElement = document.querySelector('.impulse-admin-root');
-      if (adminRootElement) {
+      if (adminRootElement instanceof HTMLElement) {
         // Apply CSS variables with proper type safety
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-primary', tokens.effectPrimary || '#00F0FF');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-secondary', tokens.effectSecondary || '#FF2D6E');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-bg-main', '#121218');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-bg-overlay', 'rgba(22, 24, 29, 0.85)');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-bg-card', 'rgba(28, 30, 38, 0.7)');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-text-primary', '#F6F6F7');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-text-secondary', 'rgba(255, 255, 255, 0.7)');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-text-accent', tokens.effectPrimary || '#00F0FF');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-border-normal', 'rgba(0, 240, 255, 0.2)');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-border-hover', 'rgba(0, 240, 255, 0.4)');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-border-active', 'rgba(0, 240, 255, 0.6)');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-glow-primary', '0 0 15px rgba(0, 240, 255, 0.7)');
-        (adminRootElement as HTMLElement).style.setProperty('--impulse-glow-secondary', '0 0 15px rgba(255, 45, 110, 0.7)');
+        adminRootElement.style.setProperty('--impulse-primary', tokens.effectPrimary || '#00F0FF');
+        adminRootElement.style.setProperty('--impulse-secondary', tokens.effectSecondary || '#FF2D6E');
+        adminRootElement.style.setProperty('--impulse-bg-main', '#121218');
+        adminRootElement.style.setProperty('--impulse-bg-overlay', 'rgba(22, 24, 29, 0.85)');
+        adminRootElement.style.setProperty('--impulse-bg-card', 'rgba(28, 30, 38, 0.7)');
+        adminRootElement.style.setProperty('--impulse-text-primary', '#F6F6F7');
+        adminRootElement.style.setProperty('--impulse-text-secondary', 'rgba(255, 255, 255, 0.7)');
+        adminRootElement.style.setProperty('--impulse-text-accent', tokens.effectPrimary || '#00F0FF');
+        adminRootElement.style.setProperty('--impulse-border-normal', 'rgba(0, 240, 255, 0.2)');
+        adminRootElement.style.setProperty('--impulse-border-hover', 'rgba(0, 240, 255, 0.4)');
+        adminRootElement.style.setProperty('--impulse-border-active', 'rgba(0, 240, 255, 0.6)');
+        adminRootElement.style.setProperty('--impulse-glow-primary', '0 0 15px rgba(0, 240, 255, 0.7)');
+        adminRootElement.style.setProperty('--impulse-glow-secondary', '0 0 15px rgba(255, 45, 110, 0.7)');
         
         // Mark as applied
         appliedToAdmin.current = true;

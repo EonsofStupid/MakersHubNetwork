@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useThemeStore } from '@/stores/theme/themeStore';
+import { useThemeStore } from '@/stores/theme/store';
 
 interface AppInitializerProps {
   children: React.ReactNode;
@@ -24,9 +24,6 @@ export function AppInitializer({ children }: AppInitializerProps) {
       try {
         initializationAttempted.current = true;
         logger.info('Initializing application...');
-
-        // Theme should already be initialized by ThemeInitializer
-        // This is just a checkpoint
 
         logger.info('Application initialized successfully', {
           details: { themeLoaded: loadStatus === 'success' }
