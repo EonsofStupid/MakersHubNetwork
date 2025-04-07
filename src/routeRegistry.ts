@@ -1,4 +1,3 @@
-
 import { ThemeContext } from './types/theme';
 import { parseThemeContext } from './types/themeContext';
 import { createRootRoute } from '@tanstack/react-router';

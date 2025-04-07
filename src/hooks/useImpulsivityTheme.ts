@@ -4,7 +4,6 @@ import { useThemeStore } from '@/stores/theme/store';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { Theme } from '@/types/theme';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -180,7 +179,7 @@ export function useImpulsivityTheme() {
         });
         return true;
       } else {
-        const failedComponents = [];
+        const failedComponents: string[] = [];
         if (!mainSiteResult) failedComponents.push('main site');
         if (!adminResult) failedComponents.push('admin panel');
         if (!dbResult) failedComponents.push('database');

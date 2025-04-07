@@ -75,23 +75,23 @@ serve(async (req) => {
     
     console.log(`Loading theme with params: context=${context}, id=${id}, name=${name}, isDefault=${isDefault}`);
 
-    // Check if the themes table exists using a simple SELECT query
+    // Check if the themes table exists using a simple direct query instead of RPC
     let tablesExist = false;
     try {
-      const { data, error } = await supabaseAdmin.rpc('check_table_exists', { table_name: 'themes' });
+      // Direct query to check if the table exists and has content
+      const tableCheck = await supabaseAdmin
+        .from('themes')
+        .select('count')
+        .limit(1)
+        .maybeSingle();
       
-      if (error) {
-        console.error('Error checking table existence via RPC:', error);
-        
-        // Fallback to direct query if RPC fails
-        const tableCheckResult = await supabaseAdmin
-          .from('themes')
-          .select('id')
-          .limit(1);
-          
-        tablesExist = !tableCheckResult.error;
+      // If we can query the table without error, it exists
+      tablesExist = !tableCheck.error;
+      
+      if (tableCheck.error) {
+        console.log('Table check error:', tableCheck.error);
       } else {
-        tablesExist = !!data;
+        console.log('Table exists check successful');
       }
     } catch (error) {
       console.warn('Error checking if themes table exists:', error);
