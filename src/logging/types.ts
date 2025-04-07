@@ -1,65 +1,65 @@
 
-/**
- * Logging system type definitions
- */
-
 import { LogLevel } from './constants/log-level';
-import React from 'react';
 
 export enum LogCategory {
   SYSTEM = 'system',
   NETWORK = 'network',
-  AUTH = 'auth',
   UI = 'ui',
+  AUTH = 'auth',
   ADMIN = 'admin',
-  APP = 'app',
-  THEME = 'theme',
-  CHAT = 'chat',
-  DATABASE = 'database',
   PERFORMANCE = 'performance',
-  CONTENT = 'content'
+  CHAT = 'chat',
+  THEME = 'theme'
 }
 
-export interface LogEntry {
-  id: string;
-  timestamp: Date;
+export interface LogMessage {
   level: LogLevel;
-  category: LogCategory;
-  message: string | React.ReactNode;
-  details?: Record<string, unknown>;
-  source?: string;
-  userId?: string;
-  sessionId?: string;
-  duration?: number; // For performance logs
-  tags?: string[];
-}
-
-export interface LogTransport {
-  log(entry: LogEntry): void;
-  flush?(): Promise<void>;
-}
-
-export interface LoggingConfig {
-  minLevel: LogLevel;
-  enabledCategories?: LogCategory[];
-  transports: LogTransport[];
-  bufferSize?: number;
-  flushInterval?: number;
-  includeSource?: boolean;
-  includeUser?: boolean;
-  includeSession?: boolean;
-}
-
-// Define a LogOptions interface for consistency across the codebase
-export interface LogOptions {
+  message: string;
+  timestamp: Date;
   category?: LogCategory;
+  source?: string;
   details?: Record<string, unknown>;
-  source?: string;  // Added source property explicitly
   userId?: string;
   sessionId?: string;
   duration?: number;
   tags?: string[];
 }
 
-// Re-export LogLevel for backward compatibility
-export { LogLevel } from './constants/log-level';
+export interface LogOptions {
+  category?: LogCategory;
+  source?: string;
+  details?: Record<string, unknown>;
+  tags?: string[];
+  userId?: string;
+  sessionId?: string;
+  duration?: number;
+}
+
+export interface LoggerOptions {
+  minLevel?: LogLevel;
+  enableConsole?: boolean;
+  bufferSize?: number;
+  defaultCategory?: LogCategory;
+  defaultSource?: string;
+}
+
+export interface LoggerConfig {
+  minLevel: LogLevel;
+  enableConsole: boolean;
+  bufferSize: number;
+  defaultCategory: LogCategory;
+  defaultSource: string;
+}
+
+export interface Logger {
+  debug: (message: string, options?: LogOptions) => void;
+  info: (message: string, options?: LogOptions) => void;
+  warn: (message: string, options?: LogOptions) => void;
+  error: (message: string, options?: LogOptions) => void;
+  critical: (message: string, options?: LogOptions) => void;
+}
+
+export interface LogTransport {
+  log: (logMessage: LogMessage) => void;
+  flush?: () => Promise<void>;
+}

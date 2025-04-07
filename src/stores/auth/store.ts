@@ -1,11 +1,12 @@
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { AuthState, UserRole } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { authStorage } from './middleware/persist.middleware';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { errorToObject } from '@/shared/utils/render';
 
 interface AuthActions {
   setUser: (user: AuthState['user']) => void;
@@ -33,13 +34,15 @@ export const useAuthStore = create<AuthStore>()(
       error: null,
       status: 'idle',
       initialized: false,
+      isAuthenticated: false,
       
       // Methods
       setUser: (user) => set({ user }),
       setSession: (session) => set({ 
         session,
         user: session?.user ?? null,
-        status: session ? 'authenticated' : 'unauthenticated'
+        status: session ? 'authenticated' : 'unauthenticated',
+        isAuthenticated: !!session
       }),
       setRoles: (roles) => set({ roles }),
       setError: (error) => set({ error }),
@@ -86,6 +89,7 @@ export const useAuthStore = create<AuthStore>()(
               session,
               roles,
               status: 'authenticated',
+              isAuthenticated: true,
               error: null
             });
             
@@ -103,6 +107,7 @@ export const useAuthStore = create<AuthStore>()(
               session: null,
               roles: [],
               status: 'unauthenticated',
+              isAuthenticated: false,
               error: null
             });
             
@@ -112,17 +117,19 @@ export const useAuthStore = create<AuthStore>()(
             });
           }
         } catch (err) {
+          const errorData = errorToObject(err);
           const errorMessage = err instanceof Error ? err.message : 'Unknown error';
           
           logger.error('Auth initialization error', {
             category: LogCategory.AUTH,
             source: 'auth/store',
-            details: err
+            details: errorData
           });
           
           set({
             error: errorMessage,
-            status: 'unauthenticated'
+            status: 'unauthenticated',
+            isAuthenticated: false
           });
         } finally {
           set({ 
@@ -150,6 +157,7 @@ export const useAuthStore = create<AuthStore>()(
             session: null,
             roles: [],
             status: 'unauthenticated',
+            isAuthenticated: false,
             error: null
           });
           
@@ -158,12 +166,13 @@ export const useAuthStore = create<AuthStore>()(
             source: 'auth/store'
           });
         } catch (err) {
+          const errorData = errorToObject(err);
           const errorMessage = err instanceof Error ? err.message : 'Unknown error';
           
           logger.error('Logout error', {
             category: LogCategory.AUTH,
             source: 'auth/store',
-            details: err
+            details: errorData
           });
           
           set({ error: errorMessage });
@@ -180,7 +189,8 @@ export const useAuthStore = create<AuthStore>()(
         user: state.user,
         session: state.session,
         roles: state.roles,
-        status: state.status
+        status: state.status,
+        isAuthenticated: state.isAuthenticated
       })
     }
   )

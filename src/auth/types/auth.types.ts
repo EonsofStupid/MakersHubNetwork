@@ -8,6 +8,10 @@ export const UserRoleEnum = z.enum([
   'editor',
   'viewer',
   'user',
+  'maker',
+  'builder',
+  'moderator',
+  'service'
 ]);
 
 export type UserRole = z.infer<typeof UserRoleEnum>;
@@ -32,6 +36,8 @@ export const AuthEventTypeEnum = z.enum([
   'PASSWORD_RECOVERY',
   'TOKEN_REFRESHED',
   'USER_DELETED',
+  'AUTH_SIGNED_IN',
+  'AUTH_SIGNED_OUT'
 ]);
 
 export type AuthEventType = z.infer<typeof AuthEventTypeEnum>;

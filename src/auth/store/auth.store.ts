@@ -1,9 +1,11 @@
+
 import { create } from "zustand";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "../types/auth.types";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
+import { errorToObject } from "@/shared/utils/render";
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated" | "error";
 
@@ -97,18 +99,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Mark as initialized
       set({ initialized: true, isLoading: false });
     } catch (error) {
-      const errorMessage = error instanceof Error 
-        ? { message: error.message, stack: error.stack } 
-        : { error: String(error) } as Record<string, unknown>;
+      const errorDetails = errorToObject(error);
       
       logger.error('Auth initialization error', {
         category: LogCategory.AUTH,
         source: 'auth.store',
-        details: errorMessage
+        details: errorDetails
       });
       
       set({ 
-        error: errorMessage, 
+        error: error instanceof Error ? error.message : String(error), 
         status: "error",
         isLoading: false,
         initialized: true // Still mark as initialized even if there's an error
@@ -142,17 +142,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         source: 'auth.store'
       });
     } catch (error) {
-      const errorMessage = error instanceof Error 
-        ? { message: error.message, stack: error.stack } 
-        : { error: String(error) } as Record<string, unknown>;
+      const errorDetails = errorToObject(error);
       
       logger.error('Logout error', {
         category: LogCategory.AUTH,
         source: 'auth.store',
-        details: errorMessage
+        details: errorDetails
       });
       
-      set({ error: errorMessage, isLoading: false });
+      set({ error: error instanceof Error ? error.message : String(error), isLoading: false });
       throw error;
     }
   }
