@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { getLogger } from '@/logging';
 import { Theme, ThemeContext } from '@/types/theme';
@@ -39,7 +38,12 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
       throw new Error('Invalid result from Supabase');
     }
     
-    const functionResult = raceResult as { data?: any, error?: any };
+    // Cast to unknown first, then to our expected type
+    const functionResult = raceResult as unknown as { 
+      data?: { tokens?: unknown }; 
+      error?: { message?: string } | null;
+    };
+    
     if (functionResult.error) {
       throw new Error(`Supabase error: ${functionResult.error?.message || 'Unknown error'}`);
     }
@@ -59,7 +63,9 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
     
     throw new Error('Invalid data from Supabase');
   } catch (err) {
-    logger.warn('Falling back to local theme:', { error: err });
+    logger.warn('Falling back to local theme:', { 
+      details: { error: err instanceof Error ? err.message : String(err) }
+    });
     
     try {
       // Try localStorage fallback
@@ -73,12 +79,16 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
             });
             return localTokens;
           } catch (parseError) {
-            logger.error('Error parsing localStorage theme:', { error: parseError });
+            logger.error('Error parsing localStorage theme:', { 
+              details: { error: parseError instanceof Error ? parseError.message : String(parseError) }
+            });
           }
         }
       }
     } catch (localError) {
-      logger.error('Error loading from localStorage:', { error: localError });
+      logger.error('Error loading from localStorage:', { 
+        details: { error: localError instanceof Error ? localError.message : String(localError) }
+      });
     }
     
     // Final fallback to static default theme
@@ -125,7 +135,9 @@ export async function getThemeWithFallback(options: {
       version: 1
     } as Theme;
   } catch (error) {
-    logger.error('Failed to get theme:', { error });
+    logger.error('Failed to get theme:', { 
+      details: { error: error instanceof Error ? error.message : String(error) }
+    });
     return {
       ...defaultTheme,
       id: 'default',
