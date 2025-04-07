@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
@@ -55,9 +54,9 @@ export function useImpulsivityTheme() {
         });
         
         const finalTokens = updateThemeEffects(updatedDesignTokens, {
-          primary: tokens.effectPrimary || '#00F0FF',
-          secondary: tokens.effectSecondary || '#FF2D6E',
-          tertiary: tokens.effectTertiary || '#8B5CF6',
+          primary: tokens.effectPrimary,
+          secondary: tokens.effectSecondary,
+          tertiary: tokens.effectTertiary,
         });
         
         logger.info('Updating theme design tokens with Impulsivity colors');

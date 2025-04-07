@@ -39,7 +39,7 @@ export function updateThemeColors(
   return {
     ...designTokens,
     colors: {
-      ...designTokens.colors,
+      ...(designTokens.colors || {}),
       ...removeUndefineds(colors)
     }
   };
@@ -59,7 +59,7 @@ export function updateThemeEffects(
   return {
     ...designTokens,
     effects: {
-      ...designTokens.effects,
+      ...(designTokens.effects || { shadows: {}, blurs: {}, gradients: {} }),
       ...(effects.primary ? { primary: effects.primary } : {}),
       ...(effects.secondary ? { secondary: effects.secondary } : {}),
       ...(effects.tertiary ? { tertiary: effects.tertiary } : {})

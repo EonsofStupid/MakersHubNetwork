@@ -7,14 +7,17 @@ import {
   createRootRouteWithContext
 } from '@tanstack/react-router';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { routeRegistry } from './routeRegistry';
-import { getThemeContextForRoute } from './routeRegistry';
+import { rootRoute } from '@/router/routes/site';
+import { getThemeContextForRoute } from '../routeRegistry';
 import { useLoggingContext } from '@/logging/context/LoggingContext';
 import { LogConsole } from '@/logging/components/LogConsole';
 import { LogToggleButton } from '@/logging/components/LogToggleButton';
 import { useEffect, useState } from 'react';
 import { getLogger } from '@/logging';
 import { ThemeContext } from '@/types/theme';
+import { adminRoutes } from './routes/admin';
+import { chatRoutes } from './routes/chat';
+import { siteRoutes } from './routes/site';
 
 const logger = getLogger('Router');
 
@@ -28,21 +31,21 @@ interface RouterContext {
 const buildRouteTree = () => {
   try {
     // Combine all route trees with safety checks
-    if (routeRegistry.site.root) {
+    if (siteRoutes.root) {
       const children = [];
       
       // Add admin routes if available
-      if (routeRegistry.admin.tree) {
-        children.push(routeRegistry.admin.tree);
+      if (adminRoutes.tree) {
+        children.push(adminRoutes.tree);
       }
       
       // Add chat routes if available
-      if (routeRegistry.chat.tree) {
-        children.push(routeRegistry.chat.tree);
+      if (chatRoutes.tree) {
+        children.push(chatRoutes.tree);
       }
       
-      // Type assertion for adding children as it expects AnyRoute[]
-      return routeRegistry.site.root.addChildren(children as any);
+      // Build the route tree safely
+      return siteRoutes.root.addChildren(children);
     }
     
     throw new Error('Site root route not available');
@@ -74,7 +77,7 @@ export const router = (() => {
     });
     
     // Return a minimal router that at least won't crash the app
-    const minimalTree = routeRegistry.site.root || ({} as AnyRoute);
+    const minimalTree = siteRoutes.root || ({} as AnyRoute);
     return createRouter({
       routeTree: minimalTree,
       defaultComponent: () => (
@@ -169,22 +172,10 @@ function GlobalLoggingComponents() {
   );
 }
 
-// Type declarations for our routes with proper context typing
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router;
-  }
-  
-  // Add custom context for scope-based rendering
-  interface RouterContext {
-    scope: 'site' | 'admin' | 'chat';
-    themeContext: ThemeContext;
-  }
-}
-
 // Export a utility to get the current scope
 export const useRouterScope = () => {
-  return router.useRouterContext().scope;
+  const scope = router.useRouterContext().scope;
+  return scope as 'site' | 'admin' | 'chat';
 };
 
 export default router;
