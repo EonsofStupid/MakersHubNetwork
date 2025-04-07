@@ -3,5 +3,4 @@
 export * from './themeStore';
 
 // Export the default import for easier access
-import { default as themeStore } from './themeStore';
-export default themeStore;
+export { useThemeStore as default } from './themeStore';
