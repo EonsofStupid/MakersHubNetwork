@@ -30,11 +30,11 @@ export function useImpulsivityTheme() {
       const rootElement = document.documentElement;
       
       // Apply theme CSS variables with proper type safety
-      rootElement.style.setProperty('--site-primary', tokens.primary || '186 100% 50%');
-      rootElement.style.setProperty('--site-secondary', tokens.secondary || '334 100% 59%');
-      rootElement.style.setProperty('--site-effect-color', tokens.effectPrimary || '#00F0FF');
-      rootElement.style.setProperty('--site-effect-secondary', tokens.effectSecondary || '#FF2D6E');
-      rootElement.style.setProperty('--site-effect-tertiary', tokens.effectTertiary || '#8B5CF6');
+      if (tokens.primary) rootElement.style.setProperty('--site-primary', tokens.primary);
+      if (tokens.secondary) rootElement.style.setProperty('--site-secondary', tokens.secondary);
+      if (tokens.effectPrimary) rootElement.style.setProperty('--site-effect-color', tokens.effectPrimary);
+      if (tokens.effectSecondary) rootElement.style.setProperty('--site-effect-secondary', tokens.effectSecondary);
+      if (tokens.effectTertiary) rootElement.style.setProperty('--site-effect-tertiary', tokens.effectTertiary);
       
       // Mark as applied
       appliedToMainSite.current = true;
@@ -69,14 +69,14 @@ export function useImpulsivityTheme() {
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement instanceof HTMLElement) {
         // Apply CSS variables with proper type safety
-        adminRootElement.style.setProperty('--impulse-primary', tokens.effectPrimary || '#00F0FF');
-        adminRootElement.style.setProperty('--impulse-secondary', tokens.effectSecondary || '#FF2D6E');
+        if (tokens.effectPrimary) adminRootElement.style.setProperty('--impulse-primary', tokens.effectPrimary);
+        if (tokens.effectSecondary) adminRootElement.style.setProperty('--impulse-secondary', tokens.effectSecondary);
         adminRootElement.style.setProperty('--impulse-bg-main', '#121218');
         adminRootElement.style.setProperty('--impulse-bg-overlay', 'rgba(22, 24, 29, 0.85)');
         adminRootElement.style.setProperty('--impulse-bg-card', 'rgba(28, 30, 38, 0.7)');
         adminRootElement.style.setProperty('--impulse-text-primary', '#F6F6F7');
         adminRootElement.style.setProperty('--impulse-text-secondary', 'rgba(255, 255, 255, 0.7)');
-        adminRootElement.style.setProperty('--impulse-text-accent', tokens.effectPrimary || '#00F0FF');
+        if (tokens.effectPrimary) adminRootElement.style.setProperty('--impulse-text-accent', tokens.effectPrimary);
         adminRootElement.style.setProperty('--impulse-border-normal', 'rgba(0, 240, 255, 0.2)');
         adminRootElement.style.setProperty('--impulse-border-hover', 'rgba(0, 240, 255, 0.4)');
         adminRootElement.style.setProperty('--impulse-border-active', 'rgba(0, 240, 255, 0.6)');

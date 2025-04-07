@@ -15,7 +15,7 @@ export function safeLocalStorage<T>(key: string, fallback: T, parse = true): T {
     const value = localStorage.getItem(key);
     if (!value) return fallback;
     
-    return parse ? JSON.parse(value) : (value as unknown as T);
+    return parse ? JSON.parse(value) as T : (value as unknown as T);
   } catch (error) {
     logger.warn('Error accessing localStorage:', { error });
     return fallback;
@@ -48,7 +48,7 @@ export function getStoredThemeTokens(): ThemeTokens | null {
     if (result.success) {
       return result.data;
     } else {
-      logger.warn('Invalid theme tokens in localStorage:', { error: result.error.format() });
+      logger.warn('Invalid theme tokens in localStorage:', { error: result.error });
       return null;
     }
   } catch (error) {

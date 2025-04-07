@@ -44,7 +44,7 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
       });
       
       // Persist for future offline use
-      persistThemeTokens(data.tokens);
+      persistThemeTokens(data.tokens as ThemeTokens);
       
       return data.tokens as ThemeTokens;
     }
