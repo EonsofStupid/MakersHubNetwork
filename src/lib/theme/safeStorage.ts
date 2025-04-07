@@ -27,6 +27,7 @@ export function safeLocalStorage<T>(key: string, fallback: T, parse = true): T {
  */
 export function persistThemeTokens(tokens: ThemeTokens): void {
   try {
+    if (typeof window === 'undefined') return;
     localStorage.setItem('impulse-theme', JSON.stringify(tokens));
     logger.info('Theme tokens persisted to localStorage');
   } catch (error) {
@@ -39,6 +40,8 @@ export function persistThemeTokens(tokens: ThemeTokens): void {
  */
 export function getStoredThemeTokens(): ThemeTokens | null {
   try {
+    if (typeof window === 'undefined') return null;
+    
     const stored = localStorage.getItem('impulse-theme');
     if (!stored) return null;
     
@@ -62,6 +65,7 @@ export function getStoredThemeTokens(): ThemeTokens | null {
  */
 export function setStoredThemeContext(context: string): void {
   try {
+    if (typeof window === 'undefined') return;
     localStorage.setItem('theme-context', context);
   } catch (error) {
     logger.error('Error saving theme context:', { error });
@@ -73,6 +77,7 @@ export function setStoredThemeContext(context: string): void {
  */
 export function getStoredThemeContext(): string | null {
   try {
+    if (typeof window === 'undefined') return null;
     return localStorage.getItem('theme-context');
   } catch (error) {
     logger.error('Error reading theme context:', { error });

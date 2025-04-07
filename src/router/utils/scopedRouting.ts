@@ -1,7 +1,7 @@
 
 import { z } from 'zod';
 import { useRouter, router } from '../index';
-import { getThemeContextForRoute, isPathInScope } from '../../routeRegistry';
+import { getThemeContextForRoute, isPathInScope } from '@/routeRegistry';
 import { ThemeContext } from '@/types/theme';
 
 // Type for scope
