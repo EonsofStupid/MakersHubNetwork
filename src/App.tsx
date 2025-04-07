@@ -8,8 +8,6 @@ import { useEffect, useState } from "react";
 import { initializeLogger, getLogger } from "@/logging";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { AppInitializer } from "@/components/AppInitializer";
-import { ImpulsivityInit } from "@/components/theme/ImpulsivityInit";
-import { ImpulsivityThemeInitializer } from "@/components/theme/ImpulsivityThemeInitializer";
 import { SiteThemeProvider } from "@/components/theme/SiteThemeProvider";
 import { ThemeEffectProvider } from "@/components/theme/effects/ThemeEffectProvider";
 import { AppRouter } from "@/router";
@@ -57,21 +55,16 @@ function App() {
           {/* Critical: Theme initialization happens FIRST, before any auth check */}
           <ThemeInitializer context="app" applyImmediately={true}>
             <SiteThemeProvider>
-              <ImpulsivityThemeInitializer>
-                <ImpulsivityInit priority={true} autoApply={true} showLoadingState={true}>
-                  {/* Auth happens AFTER theme is initialized */}
-                  <AuthProvider>
-                    <AppInitializer>
-                      <AdminProvider>
-                        <ChatProvider>
-                          <AppRouter />
-                          <Toaster />
-                        </ChatProvider>
-                      </AdminProvider>
-                    </AppInitializer>
-                  </AuthProvider>
-                </ImpulsivityInit>
-              </ImpulsivityThemeInitializer>
+              <AuthProvider>
+                <AppInitializer>
+                  <AdminProvider>
+                    <ChatProvider>
+                      <AppRouter />
+                      <Toaster />
+                    </ChatProvider>
+                  </AdminProvider>
+                </AppInitializer>
+              </AuthProvider>
             </SiteThemeProvider>
           </ThemeInitializer>
         </ThemeEffectProvider>

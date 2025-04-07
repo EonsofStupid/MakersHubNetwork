@@ -43,7 +43,7 @@ export function ThemeInitializer({
       // Set ready immediately to prevent blocking rendering
       setIsReady(true);
     }
-  }, [applyImmediately, fallbackTheme]);
+  }, []); // Empty dependency array to run only once
   
   // Load theme on component mount - only once
   useEffect(() => {
@@ -82,7 +82,7 @@ export function ThemeInitializer({
     
     // Initialize without blocking rendering
     initializeTheme();
-  }, [context, loadTheme, logger, applyImmediately]);
+  }, [context, loadTheme, logger]); // Only re-run if these dependencies change
   
   // Prevent rendering until theme is ready if applyImmediately is false
   if (!isReady) {

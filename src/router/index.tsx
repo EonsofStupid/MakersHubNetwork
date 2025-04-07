@@ -2,8 +2,6 @@
 import { 
   RouterProvider,
   createRouter,
-  type RegisteredRouter,
-  type AnyRoute
 } from '@tanstack/react-router';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { rootRoute } from '@/router/routes/site';
@@ -45,8 +43,8 @@ const buildRouteTree = () => {
         children.push(chatRoutes.tree);
       }
       
-      // Build the route tree safely by explicitly casting to the correct type
-      return siteRoutes.root.addChildren(children as any[]);
+      // Build the route tree safely
+      return siteRoutes.root.addChildren(children);
     }
     
     throw new Error('Site root route not available');
@@ -69,8 +67,8 @@ export const router = (() => {
     const routeTree = buildRouteTree();
     const pathname = getCurrentPathname();
     const themeContext = getThemeContextForRoute(pathname);
-    const scope = pathname.startsWith('/admin') ? 'admin' : 
-                 pathname.startsWith('/chat') ? 'chat' : 'site';
+    const scope = pathname.startsWith('/admin') ? 'admin' as const : 
+                 pathname.startsWith('/chat') ? 'chat' as const : 'site' as const;
     
     return createRouter({ 
       routeTree,
@@ -87,7 +85,7 @@ export const router = (() => {
     });
     
     // Return a minimal router that at least won't crash the app
-    const minimalTree = rootRoute || ({} as AnyRoute);
+    const minimalTree = rootRoute;
     return createRouter({
       routeTree: minimalTree,
       defaultComponent: () => (
@@ -192,8 +190,8 @@ function GlobalLoggingComponents() {
 
 // Export a utility to get the current scope
 export const useRouterScope = () => {
-  const scope = router.options.context.scope as 'site' | 'admin' | 'chat';
-  return scope;
+  const context = router.options.context as RouterContext;
+  return context.scope as 'site' | 'admin' | 'chat';
 };
 
 // Create a hook to use the router for safer access
