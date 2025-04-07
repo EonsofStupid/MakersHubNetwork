@@ -52,7 +52,7 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
     });
     
     // Try to get theme from Supabase edge function
-    const themePromise = supabase.functions.invoke('get-theme', { 
+    const themePromise = supabase.functions.invoke(theme-service', { 
       body: { context } 
     });
     
