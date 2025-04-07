@@ -1,200 +1,62 @@
-
-import { DesignTokensStructure } from '@/types/theme';
-import { defaultTokens } from '@/theme/tokenSchema';
+import { DesignTokensStructure } from "@/types/theme";
 
 /**
- * Updates colors within the design tokens structure
+ * Removes undefined values from an object
+ */
+export function removeUndefineds<T extends Record<string, any>>(obj: T): T {
+  const result = { ...obj };
+  
+  Object.keys(result).forEach(key => {
+    if (result[key] === undefined) {
+      delete result[key];
+    }
+  });
+  
+  return result;
+}
+
+/**
+ * Updates theme colors in design tokens
  */
 export function updateThemeColors(
-  tokens: DesignTokensStructure,
-  newColors: Record<string, string>
+  designTokens: DesignTokensStructure, 
+  colors: Record<string, string>
 ): DesignTokensStructure {
   return {
-    ...tokens,
+    ...designTokens,
     colors: {
-      ...(tokens.colors || {}),
-      ...newColors,
-    },
+      ...designTokens.colors,
+      ...removeUndefineds(colors)
+    }
   };
 }
 
 /**
- * Updates effects within the design tokens structure
+ * Updates theme effects in design tokens
  */
 export function updateThemeEffects(
-  tokens: DesignTokensStructure,
-  newEffects: {
+  designTokens: DesignTokensStructure,
+  effects: {
     primary?: string;
     secondary?: string;
     tertiary?: string;
   }
 ): DesignTokensStructure {
   return {
-    ...tokens,
+    ...designTokens,
     effects: {
-      ...(tokens.effects || { shadows: {}, blurs: {}, gradients: {} }),
-      ...newEffects,
-    },
-  };
-}
-
-/**
- * Updates all design tokens with new values
- */
-export function updateDesignTokens(
-  tokens: DesignTokensStructure,
-  updates: Partial<DesignTokensStructure>
-): DesignTokensStructure {
-  return {
-    ...tokens,
-    ...updates,
-    colors: {
-      ...(tokens.colors || {}),
-      ...(updates.colors || {}),
-    },
-    effects: {
-      ...(tokens.effects || { shadows: {}, blurs: {}, gradients: {} }),
-      ...(updates.effects || {}),
-      shadows: {
-        ...(tokens.effects?.shadows || {}),
-        ...(updates.effects?.shadows || {}),
-      },
-      blurs: {
-        ...(tokens.effects?.blurs || {}),
-        ...(updates.effects?.blurs || {}),
-      },
-      gradients: {
-        ...(tokens.effects?.gradients || {}),
-        ...(updates.effects?.gradients || {}),
-      },
-    },
-    typography: {
-      ...(tokens.typography || {}),
-      ...(updates.typography || {}),
-      fontSizes: {
-        ...(tokens.typography?.fontSizes || {}),
-        ...(updates.typography?.fontSizes || {}),
-      },
-      fontFamilies: {
-        ...(tokens.typography?.fontFamilies || {}),
-        ...(updates.typography?.fontFamilies || {}),
-      },
-      lineHeights: {
-        ...(tokens.typography?.lineHeights || {}),
-        ...(updates.typography?.lineHeights || {}),
-      },
-      letterSpacing: {
-        ...(tokens.typography?.letterSpacing || {}),
-        ...(updates.typography?.letterSpacing || {}),
-      },
-    },
-    animation: {
-      ...(tokens.animation || {}),
-      ...(updates.animation || {}),
-      keyframes: {
-        ...(tokens.animation?.keyframes || {}),
-        ...(updates.animation?.keyframes || {}),
-      },
-      transitions: {
-        ...(tokens.animation?.transitions || {}),
-        ...(updates.animation?.transitions || {}),
-      },
-      durations: {
-        ...(tokens.animation?.durations || {}),
-        ...(updates.animation?.durations || {}),
-      },
-    },
-  };
-}
-
-/**
- * Creates a complete design tokens structure with defaults for any missing values
- */
-export function createCompleteDesignTokens(
-  partial?: Partial<DesignTokensStructure>
-): DesignTokensStructure {
-  return {
-    colors: {
-      primary: defaultTokens.primary,
-      secondary: defaultTokens.secondary,
-      accent: defaultTokens.accent,
-      background: defaultTokens.background,
-      foreground: defaultTokens.foreground,
-      card: defaultTokens.card,
-      cardForeground: defaultTokens.cardForeground,
-      muted: defaultTokens.muted,
-      mutedForeground: defaultTokens.mutedForeground,
-      border: defaultTokens.border,
-      input: defaultTokens.input,
-      ring: defaultTokens.ring,
-      ...(partial?.colors || {})
-    },
-    effects: {
-      shadows: {},
-      blurs: {},
-      gradients: {},
-      primary: defaultTokens.effectPrimary,
-      secondary: defaultTokens.effectSecondary,
-      tertiary: defaultTokens.effectTertiary,
-      ...(partial?.effects || {}),
-    },
-    spacing: partial?.spacing || {},
-    typography: partial?.typography || {
-      fontSizes: {},
-      fontFamilies: {},
-      lineHeights: {},
-      letterSpacing: {},
-    },
-    animation: partial?.animation || {
-      keyframes: {},
-      transitions: {},
-      durations: {
-        fast: defaultTokens.transitionFast,
-        normal: defaultTokens.transitionNormal,
-        slow: defaultTokens.transitionSlow,
-      },
-    },
-  };
-}
-
-/**
- * Removes any undefined values from an object (recursively)
- */
-export function removeUndefineds<T extends Record<string, any>>(obj: T): T {
-  const result: Record<string, any> = {};
-  
-  for (const key in obj) {
-    if (obj[key] !== undefined) {
-      if (obj[key] !== null && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
-        result[key] = removeUndefineds(obj[key]);
-      } else {
-        result[key] = obj[key];
-      }
+      ...designTokens.effects,
+      ...(effects.primary ? { primary: effects.primary } : {}),
+      ...(effects.secondary ? { secondary: effects.secondary } : {}),
+      ...(effects.tertiary ? { tertiary: effects.tertiary } : {})
     }
-  }
-  
-  return result as T;
+  };
 }
 
 /**
- * Safely retrieves a nested value from an object with a path
- * Example: getNestedValue(theme, 'design_tokens.colors.primary', '#000')
+ * Create a theme sync utility placeholder
  */
-export function getNestedValue<T>(obj: any, path: string, defaultValue: T): T {
-  try {
-    const keys = path.split('.');
-    let current = obj;
-    
-    for (const key of keys) {
-      if (current === undefined || current === null) {
-        return defaultValue;
-      }
-      current = current[key];
-    }
-    
-    return (current !== undefined && current !== null) ? current : defaultValue;
-  } catch (e) {
-    console.error(`Error getting nested value at path ${path}:`, e);
-    return defaultValue;
-  }
+export function syncThemeTokens(themeId: string, tokens: Record<string, any>): Promise<boolean> {
+  // This would be implemented to sync with the database
+  return Promise.resolve(true);
 }
