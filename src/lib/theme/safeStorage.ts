@@ -6,6 +6,13 @@ import { z } from 'zod';
 const logger = getLogger('ThemeStorage');
 
 /**
+ * Helper function to safely convert unknown types to boolean
+ */
+export function toBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+/**
  * Safe wrapper for localStorage to prevent SSR issues
  */
 export function safeLocalStorage<T>(key: string, fallback: T, parse = true): T {

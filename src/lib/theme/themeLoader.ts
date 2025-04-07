@@ -9,6 +9,13 @@ import { persistThemeTokens } from '@/lib/theme/safeStorage';
 const logger = getLogger('ThemeLoader');
 
 /**
+ * Helper function to safely convert unknown types to boolean
+ */
+function toBoolean(value: unknown): boolean {
+  return value === true;
+}
+
+/**
  * Load theme tokens with fallback chain:
  * 1. From Supabase edge function
  * 2. From localStorage
