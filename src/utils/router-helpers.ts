@@ -41,7 +41,7 @@ export function navigateTo(path: string, options?: NavigateOptions): void {
 export function navigateWithParams(path: string, params: Record<string, any>, options?: NavigateOptions): void {
   router.navigate({
     to: path as any, // Type cast to avoid TanStack Router type issues
-    search: params,
+    search: params as any, // Changed this line to fix typing issues
     replace: options?.replace,
     state: options?.state
   });
