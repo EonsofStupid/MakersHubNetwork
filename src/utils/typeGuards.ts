@@ -6,15 +6,15 @@
 /**
  * Helper function to safely convert unknown values to boolean
  */
-export function toBoolean(value: unknown): boolean | undefined {
-  return typeof value === 'boolean' ? value : undefined;
+export function toBoolean(value: unknown): boolean {
+  return value === true;
 }
 
 /**
  * Helper function to safely convert string representation to boolean
  */
-export function stringToBoolean(value: string | null | undefined): boolean | undefined {
-  if (value === null || value === undefined) return undefined;
+export function stringToBoolean(value: string | null | undefined): boolean {
+  if (value === null || value === undefined) return false;
   return value.toLowerCase() === 'true';
 }
 

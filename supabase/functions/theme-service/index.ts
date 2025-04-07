@@ -67,11 +67,13 @@ serve(async (req) => {
         context: url.searchParams.get('context') || 'site',
         id: url.searchParams.get('id'),
         name: url.searchParams.get('name'),
-        isDefault: url.searchParams.get('isDefault') !== 'false'
+        isDefault: url.searchParams.get('isDefault') === 'false' ? false : true
       };
     }
     
-    const { context = 'site', id, name, isDefault = true } = params;
+    const { context = 'site', id, name } = params;
+    // Ensure isDefault is always a boolean
+    const isDefault = params.isDefault === false ? false : true;
     
     console.log(`Loading theme with params: context=${context}, id=${id}, name=${name}, isDefault=${isDefault}`);
 
