@@ -1,35 +1,37 @@
 
 import { create } from 'zustand';
-import { Theme } from '@/types/theme';
 import { getTheme } from '@/services/themeService';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { errorToObject } from '@/shared/rendering';
+import { defaultTokens } from '@/theme/tokenSchema';
+import { ThemeTokensSchema } from '@/theme/tokenSchema';
+import { removeUndefineds } from '@/utils/themeTokenUtils';
 
 // Define valid load status values
 export type ThemeLoadStatus = 'idle' | 'loading' | 'success' | 'error';
 
 interface ThemeState {
-  currentTheme: Theme | null;
+  currentTheme: any | null;
   isLoading: boolean;
   error: Error | null;
   loadStatus: ThemeLoadStatus;
-  tokens: Record<string, string>;
+  tokens: ThemeTokensSchema;
   loadTheme: (themeId?: string) => Promise<void>;
   setTheme: (themeId: string) => Promise<void>;
   adminComponents: any[];
   loadAdminComponents: () => Promise<void>;
-  themeTokens: Record<string, string>;
+  themeTokens: ThemeTokensSchema;
 }
 
-const initialThemeState = {
+const initialThemeState: Omit<ThemeState, 'loadTheme' | 'setTheme' | 'loadAdminComponents'> = {
   currentTheme: null,
   isLoading: false,
   error: null,
   loadStatus: 'idle' as ThemeLoadStatus,
-  tokens: {},
+  tokens: { ...defaultTokens },
   adminComponents: [],
-  themeTokens: {},
+  themeTokens: { ...defaultTokens },
 };
 
 export type ThemeStore = ThemeState;
@@ -39,25 +41,59 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
 
   loadTheme: async (themeId?: string) => {
     try {
-      set(state => ({
-        ...state,
+      set({
         isLoading: true,
         loadStatus: 'loading',
         error: null
-      }));
+      });
 
       const { theme, isFallback } = await getTheme({ id: themeId });
 
       if (theme) {
-        set(state => ({
-          ...state,
+        // Extract colors safely, ensuring they're all defined
+        const safeColors = theme.design_tokens?.colors || {};
+        const safeEffects = theme.design_tokens?.effects || { primary: '', secondary: '', tertiary: '' };
+        
+        // Create a safe token object with fallbacks
+        const safeTokens: Partial<ThemeTokensSchema> = {
+          primary: safeColors.primary || defaultTokens.primary,
+          secondary: safeColors.secondary || defaultTokens.secondary,
+          accent: safeColors.accent || defaultTokens.accent,
+          background: safeColors.background || defaultTokens.background,
+          foreground: safeColors.foreground || defaultTokens.foreground,
+          card: safeColors.card || defaultTokens.card,
+          cardForeground: safeColors.cardForeground || defaultTokens.cardForeground,
+          muted: safeColors.muted || defaultTokens.muted,
+          mutedForeground: safeColors.mutedForeground || defaultTokens.mutedForeground,
+          border: safeColors.border || defaultTokens.border,
+          input: safeColors.input || defaultTokens.input,
+          ring: safeColors.ring || defaultTokens.ring,
+          effectPrimary: safeEffects.primary || defaultTokens.effectPrimary,
+          effectSecondary: safeEffects.secondary || defaultTokens.effectSecondary,
+          effectTertiary: safeEffects.tertiary || defaultTokens.effectTertiary,
+          transitionFast: defaultTokens.transitionFast,
+          transitionNormal: defaultTokens.transitionNormal,
+          transitionSlow: defaultTokens.transitionSlow,
+          radiusSm: defaultTokens.radiusSm,
+          radiusMd: defaultTokens.radiusMd,
+          radiusLg: defaultTokens.radiusLg,
+          radiusFull: defaultTokens.radiusFull,
+        };
+        
+        // Clean up any undefined values and merge with defaults
+        const cleanTokens = {
+          ...defaultTokens,
+          ...removeUndefineds(safeTokens)
+        };
+
+        set({
           currentTheme: theme,
-          tokens: theme.design_tokens?.colors || {},
-          themeTokens: theme.design_tokens?.colors || {},
+          tokens: cleanTokens,
+          themeTokens: cleanTokens,
           isLoading: false,
           loadStatus: 'success',
           error: null
-        }));
+        });
 
         getLogger().info(`Theme loaded successfully: ${theme.name} (fallback: ${isFallback})`, {
           category: LogCategory.THEME,
@@ -74,12 +110,14 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
           details: { themeId }
         });
 
-        set(state => ({
-          ...state,
+        set({
           isLoading: false,
           loadStatus: 'error' as ThemeLoadStatus,
-          error: new Error(errorMessage)
-        }));
+          error: new Error(errorMessage),
+          // Always use default tokens when there's an error
+          tokens: { ...defaultTokens },
+          themeTokens: { ...defaultTokens }
+        });
       }
     } catch (error) {
       const errorObj = errorToObject(error);
@@ -88,36 +126,72 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         details: errorObj
       });
 
-      set(state => ({
-        ...state,
+      set({
         isLoading: false,
         loadStatus: 'error',
-        error: error instanceof Error ? error : new Error(String(error))
-      }));
+        error: error instanceof Error ? error : new Error(String(error)),
+        // Always use default tokens when there's an error
+        tokens: { ...defaultTokens },
+        themeTokens: { ...defaultTokens }
+      });
     }
   },
 
   setTheme: async (themeId: string) => {
     try {
-      set(state => ({
-        ...state,
+      set({
         isLoading: true,
         loadStatus: 'loading',
         error: null
-      }));
+      });
 
       const { theme, isFallback } = await getTheme({ id: themeId });
 
       if (theme) {
-        set(state => ({
-          ...state,
+        // Extract colors safely, ensuring they're all defined
+        const safeColors = theme.design_tokens?.colors || {};
+        const safeEffects = theme.design_tokens?.effects || { primary: '', secondary: '', tertiary: '' };
+        
+        // Create a safe token object with fallbacks
+        const safeTokens: Partial<ThemeTokensSchema> = {
+          primary: safeColors.primary || defaultTokens.primary,
+          secondary: safeColors.secondary || defaultTokens.secondary,
+          accent: safeColors.accent || defaultTokens.accent,
+          background: safeColors.background || defaultTokens.background,
+          foreground: safeColors.foreground || defaultTokens.foreground,
+          card: safeColors.card || defaultTokens.card,
+          cardForeground: safeColors.cardForeground || defaultTokens.cardForeground,
+          muted: safeColors.muted || defaultTokens.muted,
+          mutedForeground: safeColors.mutedForeground || defaultTokens.mutedForeground,
+          border: safeColors.border || defaultTokens.border,
+          input: safeColors.input || defaultTokens.input,
+          ring: safeColors.ring || defaultTokens.ring,
+          effectPrimary: safeEffects.primary || defaultTokens.effectPrimary,
+          effectSecondary: safeEffects.secondary || defaultTokens.effectSecondary,
+          effectTertiary: safeEffects.tertiary || defaultTokens.effectTertiary,
+          transitionFast: defaultTokens.transitionFast,
+          transitionNormal: defaultTokens.transitionNormal,
+          transitionSlow: defaultTokens.transitionSlow,
+          radiusSm: defaultTokens.radiusSm,
+          radiusMd: defaultTokens.radiusMd,
+          radiusLg: defaultTokens.radiusLg,
+          radiusFull: defaultTokens.radiusFull,
+        };
+        
+        // Clean up any undefined values and merge with defaults
+        const cleanTokens = {
+          ...defaultTokens,
+          ...removeUndefineds(safeTokens)
+        };
+
+        set({
           currentTheme: theme,
-          tokens: theme.design_tokens?.colors || {},
-          themeTokens: theme.design_tokens?.colors || {},
+          tokens: cleanTokens,
+          themeTokens: cleanTokens,
           isLoading: false,
           loadStatus: 'success',
           error: null
-        }));
+        });
 
         getLogger().info(`Theme set successfully: ${theme.name}`, {
           category: LogCategory.THEME,
@@ -133,12 +207,14 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
           details: { themeId }
         });
 
-        set(state => ({
-          ...state,
+        set({
           isLoading: false,
           loadStatus: 'error',
-          error: new Error(errorMessage)
-        }));
+          error: new Error(errorMessage),
+          // Always use default tokens when there's an error
+          tokens: { ...defaultTokens },
+          themeTokens: { ...defaultTokens }
+        });
       }
     } catch (error) {
       const errorObj = errorToObject(error);
@@ -147,12 +223,14 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         details: errorObj
       });
 
-      set(state => ({
-        ...state,
+      set({
         isLoading: false,
         loadStatus: 'error',
-        error: error instanceof Error ? error : new Error(String(error))
-      }));
+        error: error instanceof Error ? error : new Error(String(error)),
+        // Always use default tokens when there's an error
+        tokens: { ...defaultTokens },
+        themeTokens: { ...defaultTokens }
+      });
     }
   },
 
