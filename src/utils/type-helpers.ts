@@ -33,7 +33,7 @@ export function safeCast<T>(value: unknown): T {
 
 /**
  * Deep merge of objects, useful for theme merging
- * Uses proper type constraints to avoid generic indexing issues
+ * Fixed to properly handle generic types
  */
 export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
   const output = { ...target } as T;
@@ -46,8 +46,11 @@ export function deepMerge<T extends Record<string, any>>(target: T, source: Part
       if (isObject(source[sourceKey])) {
         if (!(key in target)) {
           Object.assign(output, { [key]: source[sourceKey] });
-        } else {
-          output[targetKey] = deepMerge(target[targetKey], source[sourceKey]);
+        } else if (isObject(target[targetKey])) {
+          output[targetKey] = deepMerge(
+            target[targetKey] as Record<string, any>,
+            source[sourceKey] as Record<string, any>
+          ) as any;
         }
       } else {
         Object.assign(output, { [key]: source[sourceKey] });

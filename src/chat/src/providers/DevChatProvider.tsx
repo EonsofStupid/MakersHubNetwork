@@ -21,7 +21,7 @@ export const DevChatProvider: React.FC<DevChatProviderProps> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(false);
   const [context, setContext] = useState("");
   const [isLoadingContext, setIsLoadingContext] = useState(false);
-  const [mode, setMode] = useState<ChatMode>('dev');
+  const [mode, setMode] = useState<ChatMode>('dev'); // Using the ChatMode type
   
   const loadContext = async (query: string): Promise<string> => {
     setIsLoadingContext(true);

@@ -74,6 +74,11 @@ export function createTypedRoute(path: string) {
   };
 }
 
+// Helper to create search params that are compatible with TanStack Router
+export function createSearchParams<T extends Record<string, any>>(params: T): Record<string, unknown> {
+  return params as Record<string, unknown>;
+}
+
 // Common routes for easy access
 export const ROUTES = {
   HOME: createTypedRoute('/'),
@@ -83,8 +88,3 @@ export const ROUTES = {
   ADMIN_DASHBOARD: createTypedRoute('/admin/dashboard'),
   CHAT: createTypedRoute('/chat')
 };
-
-// Helper to create search params that are compatible with TanStack Router
-export function createRouteParams<T extends Record<string, any>>(params: T): Record<string, unknown> {
-  return params as Record<string, unknown>;
-}

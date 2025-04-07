@@ -8,5 +8,5 @@ export interface ChatContext {
   messages: any[];
   sendMessage: (content: string) => Promise<void>;
   isLoading: boolean;
-  mode: ChatMode; // Required property
+  mode: ChatMode; // Ensuring this required property is present
 }
