@@ -1,91 +1,106 @@
 
 import React from 'react';
-import { useAuth } from '@/auth/hooks/useAuth';
-import { useNavigate } from '@tanstack/react-router';
+import { useAuth, AuthUser } from '@/auth/hooks/useAuth'; 
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Settings, User, ShieldCheck } from 'lucide-react';
+import { User, LogOut, Settings, Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-export function UserMenu() {
-  const { user, session, status, hasRole } = useAuth();
-  const navigate = useNavigate();
+export const UserMenu: React.FC = () => {
+  const auth = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = auth;
   
-  if (!user) return null;
-  
-  const handleLogout = async () => {
-    try {
-      await useAuthStore.getState().logout();
-      navigate({ to: '/' });
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-  
-  // Get user initials for avatar fallback
-  const getInitials = () => {
-    const profile = user.profile as Record<string, string> | undefined;
-    const displayName = profile?.displayName || user.email;
+  // Helper to get user initials for avatar fallback
+  const getUserInitials = (user: AuthUser | null) => {
+    if (!user) return 'GU';
     
-    if (!displayName) return 'U';
-    
-    if (displayName.includes('@')) {
-      return displayName.substring(0, 2).toUpperCase();
+    if (user.display_name) {
+      return user.display_name
+        .split(' ')
+        .map(name => name[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
     }
     
-    const names = displayName.split(' ');
-    return names.length > 1
-      ? (names[0][0] + names[1][0]).toUpperCase()
-      : names[0].substring(0, 2).toUpperCase();
+    return user.email ? user.email.substring(0, 2).toUpperCase() : 'GU';
   };
-
-  const isAdmin = hasRole('admin') || hasRole('super_admin');
-  const profile = user.profile as Record<string, string> | undefined;
-  const avatarUrl = profile?.avatarUrl;
-
+  
+  // Get avatar URL
+  const getAvatarUrl = (user: AuthUser | null) => {
+    if (!user) return '';
+    return user.avatar_url || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.id}`;
+  };
+  
+  if (isLoading) {
+    return <Button variant="ghost" disabled>Loading...</Button>;
+  }
+  
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="flex gap-2">
+        <Button variant="ghost" asChild>
+          <Link to="/auth/login">Login</Link>
+        </Button>
+        <Button variant="default" asChild>
+          <Link to="/auth/register">Sign Up</Link>
+        </Button>
+      </div>
+    );
+  }
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-          <Avatar className="h-9 w-9">
-            <AvatarImage src={avatarUrl || ''} />
-            <AvatarFallback>{getInitials()}</AvatarFallback>
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={getAvatarUrl(user)} alt={user.display_name || "User avatar"} />
+            <AvatarFallback>{getUserInitials(user)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{user.display_name || 'User'}</p>
+            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+          </div>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => navigate({ to: '/profile' as any })}>
+        <DropdownMenuItem asChild>
+          <Link to="/profile">
             <User className="mr-2 h-4 w-4" />
             Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate({ to: '/settings' as any })}>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings">
             <Settings className="mr-2 h-4 w-4" />
             Settings
+          </Link>
+        </DropdownMenuItem>
+        {auth.hasRole('admin') && (
+          <DropdownMenuItem asChild>
+            <Link to="/admin">
+              <Shield className="mr-2 h-4 w-4" />
+              Admin
+            </Link>
           </DropdownMenuItem>
-          {isAdmin && (
-            <DropdownMenuItem onClick={() => navigate({ to: '/admin/dashboard' as any })}>
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              Admin Dashboard
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuGroup>
+        )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
+        <DropdownMenuItem onClick={() => logout()}>
           <LogOut className="mr-2 h-4 w-4" />
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};

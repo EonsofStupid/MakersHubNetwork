@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Session, User } from '@supabase/supabase-js';
+import { Session, User, AuthError } from '@supabase/supabase-js';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
 
@@ -19,6 +20,7 @@ export interface AuthState {
   user: AuthUser | null;
   session: Session | null;
   error: Error | null;
+  status?: 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 }
 
 export interface AuthActions {
@@ -40,6 +42,7 @@ export function useAuth() {
     user: null,
     session: null,
     error: null,
+    status: 'loading'
   });
 
   const logger = useLogger('useAuth', LogCategory.AUTH);
@@ -55,9 +58,9 @@ export function useAuth() {
   }, [authState.user]);
 
   const login = useCallback(async (email: string, password: string) => {
-    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null, status: 'loading' }));
     try {
-      const { data: { session, user }, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
         password: password,
       });
@@ -67,13 +70,14 @@ export function useAuth() {
         throw error;
       }
 
-      const authUser = user as AuthUser;
+      const authUser = data.user as AuthUser;
       setAuthState({
         isLoading: false,
         isAuthenticated: true,
         user: authUser,
-        session: session,
+        session: data.session,
         error: null,
+        status: 'authenticated'
       });
 
       logger.info(`User ${email} logged in successfully`, { details: { userId: authUser.id } });
@@ -83,12 +87,13 @@ export function useAuth() {
         ...prev,
         isLoading: false,
         error: err instanceof Error ? err : new Error('Login failed'),
+        status: 'error'
       }));
     }
   }, [logger]);
 
   const logout = useCallback(async () => {
-    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null, status: 'loading' }));
     try {
       const { error } = await supabase.auth.signOut();
 
@@ -103,6 +108,7 @@ export function useAuth() {
         user: null,
         session: null,
         error: null,
+        status: 'unauthenticated'
       });
 
       logger.info('User logged out successfully');
@@ -112,14 +118,15 @@ export function useAuth() {
         ...prev,
         isLoading: false,
         error: err instanceof Error ? err : new Error('Logout failed'),
+        status: 'error'
       }));
     }
   }, [logger]);
 
   const register = useCallback(async (email: string, password: string) => {
-    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null, status: 'loading' }));
     try {
-      const { data: { session, user }, error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: email,
         password: password,
       });
@@ -129,22 +136,23 @@ export function useAuth() {
         throw error;
       }
 
-       const authUser = user as AuthUser;
-      setAuthState({
+      // Don't automatically log in user after registration
+      // They may need to verify their email first
+      setAuthState(prev => ({
+        ...prev,
         isLoading: false,
-        isAuthenticated: true,
-        user: authUser,
-        session: session,
         error: null,
-      });
+        status: 'unauthenticated'
+      }));
 
-      logger.info(`User ${email} registered successfully`, { details: { userId: authUser.id } });
+      logger.info(`User ${email} registered successfully`, { details: { userId: data.user?.id } });
     } catch (err: any) {
       logger.error(`Registration attempt failed for user ${email}`, { details: { error: err.message } });
       setAuthState(prev => ({
         ...prev,
         isLoading: false,
         error: err instanceof Error ? err : new Error('Registration failed'),
+        status: 'error'
       }));
     }
   }, [logger]);
@@ -152,19 +160,17 @@ export function useAuth() {
   const resetPassword = useCallback(async (email: string) => {
     setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
 
       if (error) {
-        logger.error(`Password reset failed for user ${email}`, { details: { error: error.message } });
+        logger.error(`Password reset failed for ${email}`, { details: { error: error.message } });
         throw error;
       }
 
-      setAuthState(prev => ({ ...prev, isLoading: false }));
       logger.info(`Password reset email sent to ${email}`);
+      setAuthState(prev => ({ ...prev, isLoading: false }));
     } catch (err: any) {
-      logger.error(`Password reset attempt failed for user ${email}`, { details: { error: err.message } });
+      logger.error(`Password reset attempt failed for ${email}`, { details: { error: err.message } });
       setAuthState(prev => ({
         ...prev,
         isLoading: false,
@@ -176,30 +182,32 @@ export function useAuth() {
   const updateProfile = useCallback(async (profile: Partial<AuthUser>) => {
     setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      if (!authState.user) {
-        throw new Error('No user is currently authenticated.');
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(profile)
-        .eq('id', authState.user.id)
-        .select()
-        .single();
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url,
+        },
+      });
 
       if (error) {
-        logger.error(`Profile update failed for user ${authState.user.id}`, { details: { error: error.message } });
+        logger.error('Profile update failed', { details: { error: error.message } });
         throw error;
       }
 
-      // Update the user object in auth state
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-        user: { ...prev.user, ...profile },
-      }));
+      if (authState.user) {
+        const updatedUser: AuthUser = {
+          ...authState.user,
+          ...profile,
+        };
+        
+        setAuthState(prev => ({
+          ...prev,
+          isLoading: false,
+          user: updatedUser,
+        }));
+      }
 
-      logger.info(`Profile updated successfully for user ${authState.user.id}`, { details: { userId: authState.user.id } });
+      logger.info('User profile updated successfully');
     } catch (err: any) {
       logger.error('Profile update attempt failed', { details: { error: err.message } });
       setAuthState(prev => ({
@@ -208,28 +216,25 @@ export function useAuth() {
         error: err instanceof Error ? err : new Error('Profile update failed'),
       }));
     }
-  }, [logger, authState.user]);
+  }, [authState.user, logger]);
 
   const refreshSession = useCallback(async () => {
-    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const { data: { session, user }, error } = await supabase.auth.getSession();
-
+      const { data, error } = await supabase.auth.getSession();
+      
       if (error) {
-        logger.error('Session refresh failed', { details: { error: error.message } });
         throw error;
       }
-
-      if (session && user) {
-        const authUser = user as AuthUser;
+      
+      if (data.session) {
         setAuthState({
           isLoading: false,
           isAuthenticated: true,
-          user: authUser,
-          session: session,
+          user: data.session.user as AuthUser,
+          session: data.session,
           error: null,
+          status: 'authenticated'
         });
-        logger.info('Session refreshed successfully', { details: { userId: authUser.id } });
       } else {
         setAuthState({
           isLoading: false,
@@ -237,53 +242,61 @@ export function useAuth() {
           user: null,
           session: null,
           error: null,
+          status: 'unauthenticated'
         });
-        logger.info('No active session found');
       }
-    } catch (err: any) {
-      logger.error('Session refresh attempt failed', { details: { error: err.message } });
+    } catch (error) {
+      logger.error('Failed to refresh session', { 
+        details: { error: error instanceof Error ? error.message : String(error) } 
+      });
       setAuthState(prev => ({
         ...prev,
         isLoading: false,
-        error: err instanceof Error ? err : new Error('Session refresh failed'),
+        error: error instanceof Error ? error : new Error('Failed to refresh session'),
+        status: 'error'
       }));
     }
   }, [logger]);
 
+  // Initialize auth on component mount
   useEffect(() => {
-    const getInitialSession = async () => {
-      await refreshSession();
-    };
-
-    getInitialSession();
-
-    const { subscription } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'INITIAL_SESSION') {
-        return;
-      }
-
-      if (session?.user) {
-        const authUser = session.user as AuthUser;
+    const subscription = supabase.auth.onAuthStateChange((event, session) => {
+      const user = session?.user as AuthUser | null;
+      
+      if (event === 'SIGNED_IN') {
         setAuthState({
           isLoading: false,
           isAuthenticated: true,
-          user: authUser,
-          session: session,
+          user,
+          session,
           error: null,
+          status: 'authenticated'
         });
-        logger.info(`Auth state changed: ${event}`, { details: { userId: authUser.id } });
-      } else {
+        logger.info('User signed in', { details: { userId: user?.id, event } });
+      } else if (event === 'SIGNED_OUT') {
         setAuthState({
           isLoading: false,
           isAuthenticated: false,
           user: null,
           session: null,
           error: null,
+          status: 'unauthenticated'
         });
-        logger.info(`Auth state changed: ${event}`);
+        logger.info('User signed out', { details: { event } });
+      } else if (event === 'USER_UPDATED') {
+        setAuthState(prev => ({
+          ...prev,
+          user,
+          session,
+        }));
+        logger.info('User updated', { details: { userId: user?.id, event } });
       }
     });
 
+    // Check for existing session
+    refreshSession();
+
+    // Cleanup subscription
     return () => {
       subscription.data.subscription.unsubscribe();
     };
@@ -291,12 +304,12 @@ export function useAuth() {
 
   return {
     ...authState,
-    hasRole,
     login,
     logout,
     register,
     resetPassword,
     updateProfile,
-    refreshSession,
+    hasRole,
+    refreshSession
   };
 }

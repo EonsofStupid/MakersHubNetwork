@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
@@ -131,9 +132,7 @@ export function useImpulsivityTheme() {
   const syncToDatabase = async () => {
     try {
       setSyncInProgress(true);
-      logger.info('Starting theme sync to database', {
-        category: LogCategory.UI
-      });
+      logger.info('Starting theme sync to database');
       
       const result = await syncImpulsivityTheme();
       
@@ -142,8 +141,7 @@ export function useImpulsivityTheme() {
           details: {
             success: true,
             database: true
-          },
-          category: LogCategory.UI
+          }
         });
       } else {
         logger.error('Failed to sync Impulsivity theme to database', { 
@@ -151,8 +149,7 @@ export function useImpulsivityTheme() {
             error: true, 
             success: false,
             database: false
-          },
-          category: LogCategory.UI
+          }
         });
       }
       
@@ -165,8 +162,7 @@ export function useImpulsivityTheme() {
           error: true, 
           errorMessage,
           database: false
-        },
-        category: LogCategory.UI
+        }
       });
       
       setSyncInProgress(false);
@@ -177,15 +173,11 @@ export function useImpulsivityTheme() {
   return {
     applyTheme: async () => {
       if (syncInProgress) {
-        logger.warn('Theme sync already in progress, skipping', {
-          category: LogCategory.UI
-        });
+        logger.warn('Theme sync already in progress, skipping');
         return false;
       }
       
-      logger.info('Beginning full Impulsivity theme application', {
-        category: LogCategory.UI
-      });
+      logger.info('Beginning full Impulsivity theme application');
       
       const mainSiteResult = await applyToMainSite();
       const adminResult = await applyToAdmin();
@@ -203,8 +195,7 @@ export function useImpulsivityTheme() {
             mainSite: true, 
             admin: true, 
             database: true
-          },
-          category: LogCategory.UI
+          }
         });
         return true;
       } else {
@@ -226,8 +217,7 @@ export function useImpulsivityTheme() {
             mainSite: mainSiteResult, 
             admin: adminResult, 
             database: dbResult
-          },
-          category: LogCategory.UI
+          }
         });
         
         return false;

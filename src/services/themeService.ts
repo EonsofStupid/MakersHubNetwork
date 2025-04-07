@@ -1,206 +1,154 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { Theme, ThemeContext } from '@/types/theme';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
-import { createLogOptions } from '@/logging/utils/log-helpers';
+import { Theme, ThemeContext, ThemeStatus } from '@/types/theme';
 
-// Create a logger instance for the theme service
-const logger = getLogger();
+interface GetThemeOptions {
+  id?: string;
+  name?: string;
+  status?: ThemeStatus;
+  isDefault?: boolean;
+  context?: ThemeContext;
+}
 
-// Local fallback theme for when the database is unavailable
+interface GetThemeResponse {
+  theme: Theme;
+  isFallback: boolean;
+}
+
+// Fallback theme to use when no theme is found
 const fallbackTheme: Theme = {
-  id: "00000000-0000-0000-0000-000000000001",
-  name: "Local Fallback Theme",
-  description: "Local emergency fallback theme used when theme service is unavailable",
+  id: 'default',
+  name: 'Default',
+  description: 'Default theme',
   status: 'published',
   is_default: true,
+  created_by: 'system',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   version: 1,
   design_tokens: {
     colors: {
-      background: "#080F1E",
-      foreground: "#F9FAFB",
-      card: "#0E172A",
-      cardForeground: "#F9FAFB", 
-      primary: "#00F0FF",
-      primaryForeground: "#F9FAFB",
-      secondary: "#FF2D6E",
-      secondaryForeground: "#F9FAFB",
-      muted: "#131D35",
-      mutedForeground: "#94A3B8",
-      accent: "#131D35",
-      accentForeground: "#F9FAFB",
-      destructive: "#EF4444",
-      destructiveForeground: "#F9FAFB",
-      border: "#131D35",
-      input: "#131D35",
-      ring: "#1E293B",
+      primary: '186 100% 50%',
+      secondary: '334 100% 59%',
+      background: '228 47% 8%',
+      foreground: '210 40% 98%',
     },
     effects: {
       shadows: {},
       blurs: {},
       gradients: {},
-      primary: "#00F0FF",
-      secondary: "#FF2D6E",
-      tertiary: "#8B5CF6",
+      primary: '#00F0FF',
+      secondary: '#FF2D6E',
+      tertiary: '#8B5CF6',
     },
-    animation: {
-      keyframes: {},
-      transitions: {},
-      durations: {
-        fast: "150ms",
-        normal: "300ms",
-        slow: "500ms",
-        animationFast: "1s",
-        animationNormal: "2s",
-        animationSlow: "3s",
-      }
-    },
-    spacing: {
-      radius: {
-        sm: "0.25rem",
-        md: "0.5rem",
-        lg: "0.75rem",
-        full: "9999px",
-      }
-    }
   },
   component_tokens: [],
 };
 
-export interface GetThemeOptions {
-  id?: string;
-  name?: string;
-  isDefault?: boolean;
-  context?: ThemeContext;
-  enableFallback?: boolean;
-}
-
 /**
  * Get a theme from the database
  */
-export async function getTheme(options?: GetThemeOptions): Promise<{ theme: any; isFallback: boolean }> {
+export async function getTheme(options: GetThemeOptions = {}): Promise<GetThemeResponse> {
   try {
-    logger.info("Fetching theme from service", 
-      createLogOptions(LogCategory.DATABASE, { details: options || {} as Record<string, unknown> })
-    );
+    // In a real implementation, this would fetch from an API or database
+    // For now, we'll just return the fallback theme with a simulated delay
+    await new Promise(resolve => setTimeout(resolve, 100));
     
-    const { id, name, isDefault = true, context = 'site' } = options || {};
-    
-    // Build query params manually to avoid type issues
-    const params: Record<string, string> = {};
-    if (id) params.themeId = id;
-    if (name) params.themeName = name;
-    params.isDefault = isDefault ? 'true' : 'false';
-    params.context = context;
-    
-    // Use edge function to get theme with proper params
-    const { data, error } = await supabase.functions.invoke('theme-service', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    if (error) {
-      logger.error("Error fetching theme from service", 
-        createLogOptions(LogCategory.DATABASE, { 
-          details: { error, options: options || {} },
-          error: true 
-        })
-      );
-      
-      return { 
-        theme: fallbackTheme, 
-        isFallback: true 
-      };
-    }
-    
-    logger.info("Theme set successfully", 
-      createLogOptions(LogCategory.DATABASE, {
-        details: {
-          themeId: data.theme?.id || 'unknown',
-          isFallback: data.isFallback || false,
-          componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
-        }
-      })
-    );
-
-    return { 
-      theme: data.theme, 
-      isFallback: data.isFallback || false 
+    return {
+      theme: {
+        ...fallbackTheme,
+        id: options.id || fallbackTheme.id,
+        name: options.name || fallbackTheme.name,
+        status: options.status || fallbackTheme.status,
+        is_default: options.isDefault || fallbackTheme.is_default,
+      },
+      isFallback: true
     };
-    
   } catch (error) {
-    logger.error("Error fetching theme from service", 
-      createLogOptions(LogCategory.DATABASE, { 
-        details: { error: error instanceof Error ? error.message : String(error) },
-        error: true
-      })
-    );
+    console.error('Error fetching theme:', error);
     
-    // Return local fallback theme as emergency backup
-    return { 
-      theme: fallbackTheme, 
-      isFallback: true 
+    return {
+      theme: fallbackTheme,
+      isFallback: true
     };
   }
 }
 
-export async function fetchTheme(themeId: string): Promise<any> {
+/**
+ * Save a theme to the database
+ */
+export async function saveTheme(theme: Partial<Theme>): Promise<Theme> {
   try {
-    logger.info("Fetching theme from service", {
-      category: LogCategory.DATABASE,
-      details: { themeId }
-    });
+    // In a real implementation, this would save to an API or database
+    // For now, we'll just return a mock response with a simulated delay
+    await new Promise(resolve => setTimeout(resolve, 200));
     
-    // Build query params manually to avoid type issues
-    const queryParams: Record<string, string> = {};
-    queryParams.themeId = themeId;
-    queryParams.context = 'site';
-    
-    // Use edge function to get theme - without req body
-    const { data, error } = await supabase.functions.invoke('theme-service', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    if (error) {
-      logger.error("Error fetching theme from service", { 
-        category: LogCategory.DATABASE,
-        details: { error, themeId }
-      });
-      
-      return { 
-        theme: fallbackTheme, 
-        isFallback: true 
-      };
-    }
-    
-    logger.info("Theme set successfully", { 
-      category: LogCategory.DATABASE,
-      details: {
-        themeId: data.theme?.id || 'unknown',
-        isFallback: data.isFallback || false,
-        componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
-      }
-    });
-
-    return { 
-      theme: data.theme, 
-      isFallback: data.isFallback || false 
+    const savedTheme: Theme = {
+      ...fallbackTheme,
+      ...theme,
+      updated_at: new Date().toISOString(),
+      version: (theme.version || 1) + 1,
     };
     
+    return savedTheme;
   } catch (error) {
-    logger.error("Error fetching theme from service", { 
-      category: LogCategory.DATABASE,
-      details: { error: error instanceof Error ? error.message : String(error) }
-    });
+    console.error('Error saving theme:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new theme
+ */
+export async function createTheme(theme: Partial<Theme>): Promise<Theme> {
+  try {
+    // In a real implementation, this would create in an API or database
+    // For now, we'll just return a mock response with a simulated delay
+    await new Promise(resolve => setTimeout(resolve, 200));
     
-    // Return local fallback theme as emergency backup
-    return { 
-      theme: fallbackTheme, 
-      isFallback: true 
+    const newTheme: Theme = {
+      ...fallbackTheme,
+      ...theme,
+      id: `theme-${Date.now()}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      version: 1,
     };
+    
+    return newTheme;
+  } catch (error) {
+    console.error('Error creating theme:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a theme
+ */
+export async function deleteTheme(id: string): Promise<boolean> {
+  try {
+    // In a real implementation, this would delete from an API or database
+    // For now, we'll just return a mock response with a simulated delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting theme:', error);
+    throw error;
+  }
+}
+
+/**
+ * List all themes
+ */
+export async function listThemes(params: Record<string, unknown> = {}): Promise<Theme[]> {
+  try {
+    // In a real implementation, this would fetch from an API or database
+    // For now, we'll just return a mock response with a simulated delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    return [fallbackTheme];
+  } catch (error) {
+    console.error('Error listing themes:', error);
+    throw error;
   }
 }

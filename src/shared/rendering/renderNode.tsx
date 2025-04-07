@@ -1,10 +1,13 @@
 
 import React from 'react';
+import { RenderOptions } from './types';
 
 /**
  * Renders unknown values as React nodes safely
  */
-export function renderUnknownAsNode(value: unknown): React.ReactNode {
+export function renderUnknownAsNode(value: unknown, options?: RenderOptions): React.ReactNode {
+  const { maxDepth = 3, maxLength = 1000, fallback = null } = options || {};
+
   if (value === null || value === undefined) {
     return <span className="text-muted-foreground italic">null</span>;
   }
@@ -27,7 +30,7 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
       <span className="array-value">
         {value.map((item, index) => (
           <React.Fragment key={index}>
-            {renderUnknownAsNode(item)}
+            {renderUnknownAsNode(item, { maxDepth: maxDepth - 1, maxLength, fallback })}
             {index < value.length - 1 && ', '}
           </React.Fragment>
         ))}
@@ -35,7 +38,7 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
     );
   }
   
-  if (typeof value === 'object') {
+  if (typeof value === 'object' && value !== null) {
     try {
       // Use a replacer function to handle circular references
       const seen = new WeakSet();
@@ -49,7 +52,12 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
         return val;
       }, 2);
       
-      return safeString;
+      // Truncate if too long
+      const truncatedString = safeString.length > maxLength 
+        ? safeString.substring(0, maxLength) + '...'
+        : safeString;
+      
+      return truncatedString;
     } catch (e) {
       return <span className="text-destructive">[Circular Object]</span>;
     }

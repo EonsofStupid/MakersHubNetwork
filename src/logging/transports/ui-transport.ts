@@ -1,100 +1,100 @@
 
+import { Transport } from '../transports/transport';
 import { LogEntry, LogLevel } from '../types';
-import { LogTransport } from '../types';
-import { isLogLevelAtLeast } from '../utils/map-log-level';
-import { nodeToSearchableString } from '@/shared/rendering';
-
-interface UiTransportOptions {
-  /**
-   * Minimum log level to display in UI
-   */
-  minLevel?: LogLevel;
-}
 
 /**
- * A log transport that displays logs in the UI
- * This is useful for showing important logs to users
+ * Transport that keeps logs in memory for UI components to display
  */
-export class UiTransport implements LogTransport {
-  private options: Required<UiTransportOptions>;
-  private notifications: Map<string, any> = new Map();
+export class UiTransport implements Transport {
+  private logs: LogEntry[] = [];
+  private maxLogs: number;
+  private subscribers: Array<(logs: LogEntry[]) => void> = [];
+
+  constructor({ maxLogs = 100 }: { maxLogs?: number } = {}) {
+    this.maxLogs = maxLogs;
+  }
+
+  log(entry: LogEntry): void {
+    // Add log to beginning of array for most recent first
+    this.logs.unshift(entry);
+    
+    // Trim logs if they exceed the maximum
+    if (this.logs.length > this.maxLogs) {
+      this.logs = this.logs.slice(0, this.maxLogs);
+    }
+    
+    // Notify subscribers
+    this.notifySubscribers();
+  }
   
-  constructor(options: UiTransportOptions = {}) {
-    this.options = {
-      minLevel: options.minLevel ?? LogLevel.INFO,
+  /**
+   * Get all logs
+   */
+  getLogs(): LogEntry[] {
+    return [...this.logs];
+  }
+  
+  /**
+   * Get filtered logs
+   */
+  getFilteredLogs({ 
+    level, 
+    category, 
+    source,
+    limit = this.maxLogs 
+  }: {
+    level?: LogLevel;
+    category?: string;
+    source?: string;
+    limit?: number;
+  } = {}): LogEntry[] {
+    let filtered = [...this.logs];
+    
+    if (level !== undefined) {
+      filtered = filtered.filter(log => log.level === level);
+    }
+    
+    if (category !== undefined) {
+      filtered = filtered.filter(log => log.category === category);
+    }
+    
+    if (source !== undefined) {
+      filtered = filtered.filter(log => log.source === source);
+    }
+    
+    return filtered.slice(0, limit);
+  }
+  
+  /**
+   * Clear all logs
+   */
+  clear(): void {
+    this.logs = [];
+    this.notifySubscribers();
+  }
+  
+  /**
+   * Subscribe to log updates
+   */
+  subscribe(callback: (logs: LogEntry[]) => void): () => void {
+    this.subscribers.push(callback);
+    
+    // Return unsubscribe function
+    return () => {
+      this.subscribers = this.subscribers.filter(cb => cb !== callback);
     };
   }
   
   /**
-   * Process a log entry and display in UI if appropriate
+   * Notify all subscribers of log updates
    */
-  log(entry: LogEntry): void {
-    // Skip entries below minimum level
-    if (!isLogLevelAtLeast(entry.level, this.options.minLevel)) {
-      return;
-    }
-    
-    // Skip entries without UI notification flag
-    if (!this.shouldDisplayInUi(entry)) {
-      return;
-    }
-    
-    // Display in UI
-    this.displayNotification(entry);
-  }
-  
-  /**
-   * Determine if entry should be displayed in UI
-   */
-  private shouldDisplayInUi(entry: LogEntry): boolean {
-    // Always show errors and critical logs
-    if (entry.level === LogLevel.ERROR || entry.level === LogLevel.CRITICAL) {
-      return true;
-    }
-    
-    // Show explicit success messages
-    if (entry.level === LogLevel.SUCCESS || entry.success) {
-      return true;
-    }
-    
-    // Show warnings based on warning flag or level
-    if (entry.level === LogLevel.WARN || entry.warning) {
-      return true;
-    }
-    
-    // Check for notification flag in details
-    if (entry.details && (entry.details.notify || entry.details.notification)) {
-      return true;
-    }
-    
-    return false;
-  }
-  
-  /**
-   * Display notification in UI
-   * This implementation uses console, but would be replaced with toast or notification component
-   */
-  private displayNotification(entry: LogEntry): void {
-    const message = nodeToSearchableString(entry.message);
-    
-    // For demo, just log to console
-    // In a real implementation, would use a toast or notification component
-    switch (entry.level) {
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-        console.error(`[UI] ${message}`);
-        break;
-      case LogLevel.WARN:
-        console.warn(`[UI] ${message}`);
-        break;
-      case LogLevel.SUCCESS:
-        console.info(`[UI] ${message}`);
-        break;
-      default:
-        console.log(`[UI] ${message}`);
-    }
+  private notifySubscribers(): void {
+    this.subscribers.forEach(callback => {
+      try {
+        callback([...this.logs]);
+      } catch (error) {
+        console.error('Error notifying log subscriber:', error);
+      }
+    });
   }
 }
-
-// Create singleton instance
-export const uiTransport = new UiTransport();
