@@ -1,5 +1,11 @@
+
 import { ThemeContext } from './types/theme';
 import { parseThemeContext } from './types/themeContext';
+import { createRootRoute } from '@tanstack/react-router';
+import { siteRoutes } from './router/routes/site';
+import { adminRoutes } from './router/routes/admin';
+import { chatRoutes } from './router/routes/chat';
+import RootRouteFallback from '@/components/layouts/RootRouteFallback';
 
 const routeScopes: Record<string, string> = {
   '/admin': 'admin',
@@ -50,6 +56,39 @@ export function getThemeContextForRoute(path: string): ThemeContext {
   
   // Default context
   return 'site';
+}
+
+/**
+ * Registry of all routes in the application
+ */
+export const routeRegistry = {
+  // Site routes
+  site: siteRoutes,
+  
+  // Admin routes
+  admin: adminRoutes,
+  
+  // Chat routes
+  chat: chatRoutes
+};
+
+// Create a root route for testing or fallback
+export const rootRoute = createRootRoute({
+  component: RootRouteFallback
+});
+
+/**
+ * Validate if a scope string is a valid router scope
+ */
+export function isValidScope(scope: string): scope is 'site' | 'admin' | 'chat' {
+  return ['site', 'admin', 'chat'].includes(scope);
+}
+
+/**
+ * Map a route path to a theme context
+ */
+export function mapRouteToThemeContext(path: string): ThemeContext {
+  return getThemeContextForRoute(path);
 }
 
 export default {

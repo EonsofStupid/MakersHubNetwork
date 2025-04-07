@@ -1,10 +1,11 @@
+
 import { 
   RouterProvider,
   createRouter,
 } from '@tanstack/react-router';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { rootRoute } from '@/router/routes/site';
-import { getThemeContextForRoute } from '../routeRegistry';
+import { getThemeContextForRoute } from '@/routeRegistry';
 import { useLoggingContext } from '@/logging/context/LoggingContext';
 import { LogConsole } from '@/logging/components/LogConsole';
 import { LogToggleButton } from '@/logging/components/LogToggleButton';
@@ -28,24 +29,17 @@ interface RouterContext {
 // Try to build a safe route tree with error handling
 const buildRouteTree = () => {
   try {
-    const children = [];
+    const routeTree = siteRoutes.root;
     
-    // Add admin routes if available
-    if (adminRoutes && adminRoutes.tree) {
-      children.push(adminRoutes.tree);
+    if (adminRoutes?.tree) {
+      routeTree.addChildren([adminRoutes.tree]);
     }
     
-    // Add chat routes if available
-    if (chatRoutes && chatRoutes.tree) {
-      children.push(chatRoutes.tree);
+    if (chatRoutes?.tree) {
+      routeTree.addChildren([chatRoutes.tree]);
     }
     
-    // Build the route tree safely
-    if (siteRoutes && siteRoutes.root) {
-      return siteRoutes.root.addChildren(children);
-    }
-    
-    throw new Error('Site root route not available');
+    return routeTree;
   } catch (error) {
     logger.error('Failed to build route tree', { 
       error: error instanceof Error ? error.message : String(error)

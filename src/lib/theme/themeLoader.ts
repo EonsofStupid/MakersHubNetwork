@@ -4,7 +4,7 @@ import { getLogger } from '@/logging';
 import { Theme, ThemeContext } from '@/types/theme';
 import { ThemeTokens, ThemeTokensSchema, defaultTokens } from '@/theme/tokenSchema';
 import defaultTheme from '@/theme/defaultTheme';
-import { safeLocalStorage, persistThemeTokens } from '@/lib/theme/safeStorage';
+import { persistThemeTokens } from '@/lib/theme/safeStorage';
 
 const logger = getLogger('ThemeLoader');
 
@@ -55,13 +55,19 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
     
     try {
       // Try localStorage fallback
-      const localTokens = safeLocalStorage<ThemeTokens | null>('impulse-theme', null);
-      
-      if (localTokens) {
-        logger.info('Theme loaded from localStorage', { 
-          details: { source: 'local-storage' }
-        });
-        return localTokens;
+      if (typeof window !== 'undefined') {
+        const storedTheme = localStorage.getItem('impulse-theme');
+        if (storedTheme) {
+          try {
+            const localTokens = JSON.parse(storedTheme) as ThemeTokens;
+            logger.info('Theme loaded from localStorage', { 
+              details: { source: 'local-storage' }
+            });
+            return localTokens;
+          } catch (parseError) {
+            logger.error('Error parsing localStorage theme:', { error: parseError });
+          }
+        }
       }
     } catch (localError) {
       logger.error('Error loading from localStorage:', { error: localError });
