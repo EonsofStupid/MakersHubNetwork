@@ -29,28 +29,28 @@ export interface ThemeState {
 // Ensure we have fallbacks for all required token properties
 const ensureAllTokens = (tokens: Partial<StoreThemeTokens>): StoreThemeTokens => {
   return {
-    primary: tokens.primary || fallbackTokens.primary || '',
-    secondary: tokens.secondary || fallbackTokens.secondary || '',
-    accent: tokens.accent || fallbackTokens.accent || '',
-    background: tokens.background || fallbackTokens.background || '',
-    foreground: tokens.foreground || fallbackTokens.foreground || '',
-    card: tokens.card || fallbackTokens.card || '',
-    cardForeground: tokens.cardForeground || fallbackTokens.cardForeground || '',
-    muted: tokens.muted || fallbackTokens.muted || '',
-    mutedForeground: tokens.mutedForeground || fallbackTokens.mutedForeground || '',
-    border: tokens.border || fallbackTokens.border || '',
-    input: tokens.input || fallbackTokens.input || '',
-    ring: tokens.ring || fallbackTokens.ring || '',
-    effectPrimary: tokens.effectPrimary || fallbackTokens.effectPrimary || '',
-    effectSecondary: tokens.effectSecondary || fallbackTokens.effectSecondary || '',
-    effectTertiary: tokens.effectTertiary || fallbackTokens.effectTertiary || '',
-    transitionFast: tokens.transitionFast || fallbackTokens.transitionFast || '',
-    transitionNormal: tokens.transitionNormal || fallbackTokens.transitionNormal || '',
-    transitionSlow: tokens.transitionSlow || fallbackTokens.transitionSlow || '',
-    radiusSm: tokens.radiusSm || fallbackTokens.radiusSm || '',
-    radiusMd: tokens.radiusMd || fallbackTokens.radiusMd || '',
-    radiusLg: tokens.radiusLg || fallbackTokens.radiusLg || '',
-    radiusFull: tokens.radiusFull || fallbackTokens.radiusFull || '',
+    primary: tokens.primary || fallbackTokens.primary,
+    secondary: tokens.secondary || fallbackTokens.secondary,
+    accent: tokens.accent || fallbackTokens.accent,
+    background: tokens.background || fallbackTokens.background,
+    foreground: tokens.foreground || fallbackTokens.foreground,
+    card: tokens.card || fallbackTokens.card,
+    cardForeground: tokens.cardForeground || fallbackTokens.cardForeground,
+    muted: tokens.muted || fallbackTokens.muted,
+    mutedForeground: tokens.mutedForeground || fallbackTokens.mutedForeground,
+    border: tokens.border || fallbackTokens.border,
+    input: tokens.input || fallbackTokens.input,
+    ring: tokens.ring || fallbackTokens.ring,
+    effectPrimary: tokens.effectPrimary || fallbackTokens.effectPrimary,
+    effectSecondary: tokens.effectSecondary || fallbackTokens.effectSecondary,
+    effectTertiary: tokens.effectTertiary || fallbackTokens.effectTertiary,
+    transitionFast: tokens.transitionFast || fallbackTokens.transitionFast,
+    transitionNormal: tokens.transitionNormal || fallbackTokens.transitionNormal,
+    transitionSlow: tokens.transitionSlow || fallbackTokens.transitionSlow,
+    radiusSm: tokens.radiusSm || fallbackTokens.radiusSm,
+    radiusMd: tokens.radiusMd || fallbackTokens.radiusMd,
+    radiusLg: tokens.radiusLg || fallbackTokens.radiusLg,
+    radiusFull: tokens.radiusFull || fallbackTokens.radiusFull,
     ...tokens // Keep any additional tokens
   };
 };
@@ -169,7 +169,7 @@ function extractTokensFromTheme(theme: Theme): Partial<StoreThemeTokens> {
     }
 
     const colors = theme.design_tokens.colors || {};
-    const effects = theme.design_tokens.effects || {};
+    const effects = theme.design_tokens.effects || { shadows: {}, blurs: {}, gradients: {} };
     const animation = theme.design_tokens.animation || {};
     const spacing = theme.design_tokens.spacing || {};
     

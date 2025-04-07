@@ -11,7 +11,7 @@ interface AppInitializerProps {
 export function AppInitializer({ children }: AppInitializerProps) {
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
   const [isInitialized, setIsInitialized] = useState(false);
-  const { loadTheme } = useThemeStore();
+  const { loadTheme, loadStatus } = useThemeStore();
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -20,10 +20,16 @@ export function AppInitializer({ children }: AppInitializerProps) {
 
         // Load theme - this is a critical functionality
         if (loadTheme) {
-          await loadTheme('app');
+          await loadTheme('app').catch(err => {
+            logger.error('Error loading theme, continuing with fallbacks', {
+              details: { error: err instanceof Error ? err.message : String(err) }
+            });
+          });
         }
 
-        logger.info('Application initialized successfully');
+        logger.info('Application initialized successfully', {
+          details: { themeLoaded: loadStatus === 'loaded' }
+        });
         setIsInitialized(true);
       } catch (error) {
         logger.error('Failed to initialize application', {
@@ -34,8 +40,11 @@ export function AppInitializer({ children }: AppInitializerProps) {
       }
     };
 
-    initializeApp();
-  }, [loadTheme, logger]);
+    if (!isInitialized) {
+      initializeApp();
+    }
+  }, [loadTheme, logger, isInitialized, loadStatus]);
 
+  // Always render children - initialization happens in the background
   return <>{children}</>;
 }

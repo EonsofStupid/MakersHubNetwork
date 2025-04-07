@@ -21,7 +21,7 @@ export function updateDesignTokens(
   updates: Partial<DesignTokensStructure>
 ): DesignTokensStructure {
   // Start with empty defaults if no tokens exist
-  const baseTokens: DesignTokensStructure = currentTokens || {};
+  const baseTokens: DesignTokensStructure = currentTokens || { colors: {}, effects: { shadows: {}, blurs: {}, gradients: {} } };
   
   try {
     // Create deep copy to avoid mutation
@@ -29,22 +29,19 @@ export function updateDesignTokens(
     
     // Update colors if provided
     if (updates.colors) {
-      const baseColors = isObject(result.colors) ? result.colors : {};
       result.colors = {
-        ...baseColors,
+        ...(result.colors || {}),
         ...updates.colors
       };
     }
     
     // Update effects if provided
     if (updates.effects) {
-      const baseEffects = isObject(result.effects) ? result.effects : { shadows: {}, blurs: {}, gradients: {} };
-      
       result.effects = {
-        shadows: { ...(baseEffects.shadows || {}), ...(updates.effects.shadows || {}) },
-        blurs: { ...(baseEffects.blurs || {}), ...(updates.effects.blurs || {}) },
-        gradients: { ...(baseEffects.gradients || {}), ...(updates.effects.gradients || {}) },
-        ...baseEffects,
+        shadows: { ...(result.effects?.shadows || {}), ...(updates.effects.shadows || {}) },
+        blurs: { ...(result.effects?.blurs || {}), ...(updates.effects.blurs || {}) },
+        gradients: { ...(result.effects?.gradients || {}), ...(updates.effects.gradients || {}) },
+        ...(result.effects || {}),
         ...(updates.effects.primary !== undefined ? { primary: updates.effects.primary } : {}),
         ...(updates.effects.secondary !== undefined ? { secondary: updates.effects.secondary } : {}),
         ...(updates.effects.tertiary !== undefined ? { tertiary: updates.effects.tertiary } : {})
@@ -106,7 +103,7 @@ export function updateThemeColors(
   colorUpdates: Record<string, string>
 ): DesignTokensStructure {
   return updateDesignTokens(currentTokens, {
-    colors: colorUpdates as any
+    colors: colorUpdates
   });
 }
 
@@ -118,9 +115,9 @@ export function updateThemeColors(
  */
 export function updateThemeEffects(
   currentTokens: DesignTokensStructure | undefined,
-  effectUpdates: Record<string, string>
+  effectUpdates: { primary?: string; secondary?: string; tertiary?: string; shadows?: Record<string, any>; blurs?: Record<string, any>; gradients?: Record<string, any> }
 ): DesignTokensStructure {
   return updateDesignTokens(currentTokens, {
-    effects: effectUpdates as any
+    effects: effectUpdates
   });
 }
