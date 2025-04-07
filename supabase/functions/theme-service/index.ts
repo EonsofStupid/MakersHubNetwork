@@ -79,16 +79,16 @@ serve(async (req) => {
     let tablesExist = false;
     try {
       // Direct query to check if the table exists and has content
-      const tableCheck = await supabaseAdmin
+      const { data, error } = await supabaseAdmin
         .from('themes')
         .select('count')
         .limit(1);
       
       // If we can query the table without error, it exists
-      tablesExist = !tableCheck.error;
+      tablesExist = !error && Array.isArray(data);
       
-      if (tableCheck.error) {
-        console.log('Table check error:', tableCheck.error);
+      if (error) {
+        console.log('Table check error:', error.message);
       } else {
         console.log('Table exists check successful');
       }
@@ -129,7 +129,7 @@ serve(async (req) => {
     const { data: theme, error } = await query.maybeSingle();
 
     if (error) {
-      console.error('Error fetching theme:', error);
+      console.error('Error fetching theme:', error.message);
       
       // Return fallback data on error
       return new Response(
