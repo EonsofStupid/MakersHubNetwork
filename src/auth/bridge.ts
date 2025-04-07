@@ -1,6 +1,6 @@
 
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory, LogOptions } from '@/logging/types';
 import { AuthEvent, AuthEventListener, AuthEventType } from './types/auth.types';
 
 // Event listeners registry
@@ -20,7 +20,7 @@ export function subscribeToAuthEvents(listener: AuthEventListener): () => void {
     details: {
       listenersCount: authEventListeners.length
     }
-  });
+  } as LogOptions);
   
   // Return unsubscribe function
   return () => {
@@ -34,7 +34,7 @@ export function subscribeToAuthEvents(listener: AuthEventListener): () => void {
         details: {
           listenersCount: authEventListeners.length
         }
-      });
+      } as LogOptions);
     }
   };
 }
@@ -48,7 +48,7 @@ export function dispatchAuthEvent(event: AuthEvent): void {
     category: LogCategory.AUTH,
     source: 'AuthBridge',
     details: { type: event.type }
-  });
+  } as LogOptions);
   
   // Convert AuthEvent to Record<string, unknown> for logging compatibility
   const eventForLogging = {
@@ -67,7 +67,7 @@ export function dispatchAuthEvent(event: AuthEvent): void {
           error,
           eventType: event.type
         }
-      });
+      } as LogOptions);
     }
   });
 }

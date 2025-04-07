@@ -19,6 +19,7 @@ interface AuthActions {
   isAdmin: () => boolean;
   initialize: () => Promise<void>;
   logout: () => Promise<void>;
+  isAuthenticated: boolean;
 }
 
 export type AuthStore = AuthState & AuthActions;

@@ -9,7 +9,9 @@ export enum LogCategory {
   ADMIN = 'admin',
   PERFORMANCE = 'performance',
   CHAT = 'chat',
-  THEME = 'theme'
+  THEME = 'theme',
+  DATABASE = 'database',
+  CONTENT = 'content'
 }
 
 export interface LogMessage {
@@ -23,6 +25,10 @@ export interface LogMessage {
   sessionId?: string;
   duration?: number;
   tags?: string[];
+}
+
+export interface LogEntry extends LogMessage {
+  id: string;
 }
 
 export interface LogOptions {
@@ -60,6 +66,18 @@ export interface Logger {
 }
 
 export interface LogTransport {
-  log: (logMessage: LogMessage) => void;
+  log: (logMessage: LogEntry) => void;
   flush?: () => Promise<void>;
+}
+
+// Add LoggingConfig interface needed by logger.service.ts
+export interface LoggingConfig {
+  minLevel: LogLevel;
+  transports: LogTransport[];
+  bufferSize?: number;
+  flushInterval?: number;
+  includeSource?: boolean;
+  includeUser?: boolean;
+  includeSession?: boolean;
+  enabledCategories?: LogCategory[];
 }

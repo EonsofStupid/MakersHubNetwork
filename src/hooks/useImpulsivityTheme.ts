@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { LogCategory, LogOptions } from '@/logging/types';
 
 /**
  * Hook to apply and synchronize the Impulsivity theme across the application
@@ -54,8 +53,7 @@ export function useImpulsivityTheme() {
         details: {
           success: true,
           mainSite: true
-        },
-        category: LogCategory.UI
+        } as Record<string, unknown>
       });
       return true;
     } catch (error) {
@@ -65,8 +63,7 @@ export function useImpulsivityTheme() {
           error: true, 
           errorMessage,
           mainSite: false 
-        },
-        category: LogCategory.UI
+        } as Record<string, unknown>
       });
       return false;
     }
@@ -100,14 +97,13 @@ export function useImpulsivityTheme() {
           details: {
             success: true,
             admin: true 
-          },
-          category: LogCategory.UI 
+          } as Record<string, unknown>
         });
         return true;
       } else {
         logger.warn('Admin panel root element not found, skipping theme application', {
           category: LogCategory.UI
-        });
+        } as LogOptions);
         return true; // Not a critical failure
       }
     } catch (error) {
@@ -117,8 +113,7 @@ export function useImpulsivityTheme() {
           error: true, 
           errorMessage,
           admin: false 
-        },
-        category: LogCategory.UI
+        } as Record<string, unknown>
       });
       return false;
     }

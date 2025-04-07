@@ -1,43 +1,62 @@
 
 import React from 'react';
-import { Link } from '@tanstack/react-router';
-import { DockableChat } from '../chat-client/components/DockableChat';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/hooks/useAuth';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
-export default function ChatIndexPage() {
+export interface ChatIndexProps {
+  title?: string;
+}
+
+export const ChatIndex: React.FC<ChatIndexProps> = ({ 
+  title = 'Chat Module'
+}) => {
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+  const logger = useLogger('ChatIndex', LogCategory.CHAT);
+  
+  const handleStartChat = () => {
+    logger.info('User started chat session', {
+      details: {
+        userId: user?.id || 'anonymous'
+      }
+    });
+    navigate('/chat/session');
+  };
+  
+  const handleGoToAdmin = () => {
+    // Use relative path instead of absolute path
+    navigate('/admin');
+  };
+  
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Chat System</h1>
-        <p className="text-gray-600">
-          This is the main entry point for the chat functionality.
-        </p>
-      </div>
-      
-      <div className="grid md:grid-cols-2 gap-8">
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">Getting Started</h2>
-          <p className="mb-4">
-            You can use the chat component in docked or floating mode.
-            Integration options are available for various parts of the application.
+    <div className="container mx-auto p-4">
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>Start a new chat session or manage existing ones</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            {isAuthenticated 
+              ? `Welcome back, ${user?.email}!` 
+              : 'You are currently using chat as a guest'}
           </p>
-          
-          <div className="flex flex-col space-y-4 mt-6">
-            <Button asChild variant="outline">
-              <Link to="/chat">Open Developer Chat</Link>
-            </Button>
-            
-            <Button asChild variant="outline">
-              <Link to="/admin/dashboard">Admin Dashboard</Link>
-            </Button>
-          </div>
-        </div>
-        
-        <div className="border rounded-lg p-4 bg-card">
-          <h3 className="font-medium mb-3">Chat Preview</h3>
-          <DockableChat />
-        </div>
-      </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="outline" onClick={handleGoToAdmin}>
+            Admin Panel
+          </Button>
+          <Button onClick={handleStartChat}>
+            Start New Chat
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
-}
+};
+
+export default ChatIndex;

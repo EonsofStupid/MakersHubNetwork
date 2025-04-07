@@ -1,6 +1,7 @@
 
 import { useCallback, useRef } from 'react';
-import { getLogger, LogCategory } from '@/logging';
+import { getLogger } from '@/logging';
+import { LogCategory, LogOptions } from '@/logging/types';
 
 /**
  * Hook for measuring and logging performance
@@ -28,18 +29,20 @@ export function usePerformanceLogger(source: string) {
     if (startTime) {
       const duration = performance.now() - startTime;
       
+      const category = options?.category || LogCategory.PERFORMANCE;
+      
       // Use info level with duration in details
       logger.info(
         `${operationName} completed in ${duration.toFixed(2)}ms`,
         {
-          category: options?.category || LogCategory.PERFORMANCE,
+          category,
           source,
           details: {
             ...(options?.details as Record<string, unknown> || {}),
             duration
           },
           tags: options?.tags
-        }
+        } as LogOptions
       );
       
       delete timers.current[operationName];
@@ -49,7 +52,7 @@ export function usePerformanceLogger(source: string) {
     logger.warn(`Timer "${operationName}" was never started`, {
       source,
       category: LogCategory.PERFORMANCE
-    });
+    } as LogOptions);
     return -1;
   }, [logger, source]);
   
