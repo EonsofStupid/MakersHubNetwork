@@ -2,7 +2,7 @@
 import { supabase } from '@/lib/supabase';
 import { getLogger } from '@/logging';
 import { Theme, ThemeContext } from '@/types/theme';
-import { ThemeTokens, ThemeTokensSchema, defaultTokens } from '@/theme/tokenSchema';
+import { ThemeTokens, defaultTokens } from '@/theme/tokenSchema';
 import defaultTheme from '@/theme/defaultTheme';
 import { persistThemeTokens } from '@/lib/theme/safeStorage';
 
@@ -32,11 +32,16 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
     
     const result = await Promise.race([themePromise, timeoutPromise]);
     
-    if (!result || (result as any).error) {
-      throw new Error(`Supabase error: ${(result as any).error?.message || 'Unknown error'}`);
+    if (!result) {
+      throw new Error('No result from Supabase');
     }
     
-    const data = (result as any).data;
+    const functionResult = result as { data?: any, error?: any };
+    if (functionResult.error) {
+      throw new Error(`Supabase error: ${functionResult.error?.message || 'Unknown error'}`);
+    }
+    
+    const data = functionResult.data;
     
     if (data?.tokens) {
       logger.info('Theme loaded from Supabase', { 
