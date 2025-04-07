@@ -5,7 +5,7 @@ import { Theme, ThemeContext } from '@/types/theme';
 import { ThemeTokens, defaultTokens } from '@/theme/tokenSchema';
 import defaultTheme from '@/theme/defaultTheme';
 import { persistThemeTokens } from '@/lib/theme/safeStorage';
-import { toBoolean, isBoolean } from '@/utils/typeGuards';
+import { isBoolean, toBoolean } from '@/utils/typeGuards';
 
 const logger = getLogger('ThemeLoader');
 

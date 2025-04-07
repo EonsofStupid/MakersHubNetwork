@@ -2,7 +2,7 @@
 import { getLogger } from '@/logging';
 import { ThemeTokens, ThemeTokensSchema } from '@/theme/tokenSchema';
 import { z } from 'zod';
-import { toBoolean, isBoolean } from '@/utils/typeGuards';
+import { isBoolean, toBoolean } from '@/utils/typeGuards';
 
 const logger = getLogger('ThemeStorage');
 
