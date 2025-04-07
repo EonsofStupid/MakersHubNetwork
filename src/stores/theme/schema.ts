@@ -14,9 +14,35 @@ export const ComponentTokenSchema = z.object({
   context: z.enum(['site', 'admin', 'chat', 'app', 'training']).optional()
 });
 
+// Define colors schema with specific properties
+export const ColorsSchema = z.object({
+  primary: z.string().optional(),
+  secondary: z.string().optional(),
+  accent: z.string().optional(),
+  background: z.string().optional(),
+  foreground: z.string().optional(),
+  card: z.string().optional(),
+  cardForeground: z.string().optional(),
+  muted: z.string().optional(),
+  mutedForeground: z.string().optional(),
+  border: z.string().optional(),
+  input: z.string().optional(),
+  ring: z.string().optional(),
+}).catchall(z.string());
+
+// Define effects schema with specific properties
+export const EffectsSchema = z.object({
+  shadows: z.record(z.unknown()).optional().default({}),
+  blurs: z.record(z.unknown()).optional().default({}),
+  gradients: z.record(z.unknown()).optional().default({}),
+  primary: z.string().optional(),
+  secondary: z.string().optional(),
+  tertiary: z.string().optional(),
+}).catchall(z.union([z.string(), z.record(z.unknown())]));
+
 // Define design tokens schema
 export const DesignTokensSchema = z.object({
-  colors: z.record(z.unknown()).optional().default({}),
+  colors: ColorsSchema.optional().default({}),
   spacing: z.record(z.unknown()).optional().default({}),
   typography: z.object({
     fontSizes: z.record(z.unknown()).optional().default({}),
@@ -24,14 +50,7 @@ export const DesignTokensSchema = z.object({
     lineHeights: z.record(z.unknown()).optional().default({}),
     letterSpacing: z.record(z.unknown()).optional().default({}),
   }).optional().default({}),
-  effects: z.object({
-    shadows: z.record(z.unknown()).optional().default({}),
-    blurs: z.record(z.unknown()).optional().default({}),
-    gradients: z.record(z.unknown()).optional().default({}),
-    primary: z.string().optional(),
-    secondary: z.string().optional(),
-    tertiary: z.string().optional(),
-  }).optional().default({
+  effects: EffectsSchema.optional().default({
     shadows: {},
     blurs: {},
     gradients: {}

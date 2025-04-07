@@ -31,7 +31,21 @@ export interface ComponentTokens {
 }
 
 export interface DesignTokensStructure {
-  colors?: Record<string, any>;
+  colors?: {
+    primary?: string;
+    secondary?: string;
+    accent?: string;
+    background?: string;
+    foreground?: string;
+    card?: string;
+    cardForeground?: string;
+    muted?: string;
+    mutedForeground?: string;
+    border?: string;
+    input?: string;
+    ring?: string;
+    [key: string]: string | undefined;
+  };
   spacing?: Record<string, any>;
   typography?: {
     fontSizes?: Record<string, any>;
@@ -46,6 +60,7 @@ export interface DesignTokensStructure {
     primary?: string;
     secondary?: string;
     tertiary?: string;
+    [key: string]: string | Record<string, any> | undefined;
   };
   animation?: {
     keyframes?: Record<string, any>;
