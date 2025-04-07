@@ -1,13 +1,19 @@
 
 import { Theme, ThemeContext, ThemeStatus } from '@/types/theme';
+import { z } from 'zod';
+import { ThemeContextSchema } from '@/router/routeRegistry';
+import { getLogger } from '@/logging';
 
-interface GetThemeOptions {
-  id?: string;
-  name?: string;
-  status?: ThemeStatus;
-  isDefault?: boolean;
-  context?: ThemeContext;
-}
+// Use Zod to validate service options
+const GetThemeOptionsSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().optional(),
+  status: z.enum(['draft', 'published', 'archived'] as const).optional(),
+  isDefault: z.boolean().optional(),
+  context: ThemeContextSchema.optional(),
+});
+
+export type GetThemeOptions = z.infer<typeof GetThemeOptionsSchema>;
 
 interface GetThemeResponse {
   theme: Theme;
@@ -45,22 +51,131 @@ const fallbackTheme: Theme = {
 };
 
 /**
- * Get a theme from the database
+ * Get a theme from the database or Supabase edge function
  */
 export async function getTheme(options: GetThemeOptions = {}): Promise<GetThemeResponse> {
   try {
-    // In a real implementation, this would fetch from an API or database
-    // For now, we'll just return the fallback theme with a simulated delay
-    await new Promise(resolve => setTimeout(resolve, 100));
+    const logger = getLogger('ThemeService');
+    // Validate options with Zod
+    const validOptions = GetThemeOptionsSchema.parse(options);
+    logger.info('Fetching theme', { 
+      details: { 
+        options: validOptions,
+        hasId: !!validOptions.id,
+        hasContext: !!validOptions.context 
+      } 
+    });
+    
+    // Try to fetch from Supabase edge function if available
+    try {
+      if (import.meta.env.VITE_SUPABASE_URL) {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        
+        // Build the query parameters
+        const params = new URLSearchParams();
+        if (validOptions.id) params.append('themeId', validOptions.id);
+        if (validOptions.name) params.append('themeName', validOptions.name);
+        if (validOptions.context) params.append('context', validOptions.context);
+        if (validOptions.isDefault !== undefined) params.append('isDefault', validOptions.isDefault.toString());
+        
+        const url = `${supabaseUrl}/functions/v1/theme-service?${params.toString()}`;
+        logger.info('Calling theme service edge function', { details: { url } });
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`Theme service responded with ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.theme) {
+          logger.info('Theme loaded from edge function', { 
+            details: { 
+              themeName: data.theme.name,
+              isFallback: data.isFallback
+            } 
+          });
+          
+          return {
+            theme: data.theme,
+            isFallback: data.isFallback
+          };
+        }
+        
+        // If theme not found but tokens are returned, create a fallback theme with those tokens
+        if (data.tokens) {
+          const fallbackWithTokens = {
+            ...fallbackTheme,
+            design_tokens: {
+              colors: data.tokens,
+              effects: {
+                shadows: {},
+                blurs: {},
+                gradients: {},
+                primary: data.tokens.effectPrimary || '#00F0FF',
+                secondary: data.tokens.effectSecondary || '#FF2D6E',
+                tertiary: data.tokens.effectTertiary || '#8B5CF6',
+              }
+            }
+          };
+          
+          logger.warn('Using fallback theme with edge function tokens', { 
+            details: { isFallback: true } 
+          });
+          
+          return {
+            theme: fallbackWithTokens,
+            isFallback: true
+          };
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to fetch theme from edge function', { 
+        details: { error: error instanceof Error ? error.message : String(error) } 
+      });
+      // Continue to fallback implementation
+    }
+    
+    // Fallback implementation
+    logger.warn('Using memory fallback theme', { details: { reason: 'No edge function or API available' } });
+    
+    // Create a context-appropriate theme
+    const contextTheme = {
+      ...fallbackTheme,
+      id: validOptions.id || fallbackTheme.id,
+      name: validOptions.name || `Default ${validOptions.context || 'App'} Theme`,
+      status: validOptions.status || fallbackTheme.status,
+      is_default: validOptions.isDefault ?? fallbackTheme.is_default,
+      design_tokens: {
+        ...fallbackTheme.design_tokens,
+        // Customize colors based on context
+        colors: {
+          ...fallbackTheme.design_tokens.colors,
+          ...(validOptions.context === 'admin' ? {
+            primary: '186 100% 50%', // Cyan for admin
+            secondary: '334 100% 59%', // Hot pink for admin
+          } : validOptions.context === 'chat' ? {
+            primary: '262 80% 50%', // Purple for chat
+            secondary: '160 100% 50%', // Green for chat
+          } : {})
+        },
+        // Customize effects based on context
+        effects: {
+          ...fallbackTheme.design_tokens.effects,
+          ...(validOptions.context === 'admin' ? {
+            primary: '#00F0FF', // Cyan for admin
+            secondary: '#FF2D6E', // Hot pink for admin
+          } : validOptions.context === 'chat' ? {
+            primary: '#8B5CF6', // Purple for chat
+            secondary: '#10B981', // Green for chat
+          } : {})
+        }
+      }
+    };
     
     return {
-      theme: {
-        ...fallbackTheme,
-        id: options.id || fallbackTheme.id,
-        name: options.name || fallbackTheme.name,
-        status: options.status || fallbackTheme.status,
-        is_default: options.isDefault || fallbackTheme.is_default,
-      },
+      theme: contextTheme,
       isFallback: true
     };
   } catch (error) {

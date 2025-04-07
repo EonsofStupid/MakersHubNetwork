@@ -1,160 +1,277 @@
-
+// Renaming the file to avoid conflicts with src/stores/theme/store.ts
 import { create } from 'zustand';
 import { getTheme } from '@/services/themeService';
-import { Theme, ThemeContext, ComponentTokens, StoreThemeTokens, DesignTokensStructure } from '@/types/theme';
-import { ThemeTokens, fallbackTokens } from '@/theme/schema';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
+import { errorToObject } from '@/shared/rendering';
+import { defaultTokens, ThemeTokensSchema } from '@/theme/tokenSchema';
+import { removeUndefineds } from '@/utils/themeTokenUtils';
+import { ThemeContext, ThemeContextSchema } from '@/router/routeRegistry';
+import { z } from 'zod';
 
-export type ThemeLoadStatus = 'idle' | 'loading' | 'loaded' | 'error';
+// Define valid load status values using Zod for better type safety
+export const ThemeLoadStatusSchema = z.enum(['idle', 'loading', 'success', 'error']);
+export type ThemeLoadStatus = z.infer<typeof ThemeLoadStatusSchema>;
 
-// Define the store state
-export interface ThemeState {
-  // Theme data
-  currentTheme: Theme | null;
-  tokens: StoreThemeTokens;
-  themeComponents: ComponentTokens[];
-  adminComponents: ComponentTokens[];
-  loadStatus: ThemeLoadStatus;
+// Interface for theme service options with Zod validation
+export const ThemeServiceOptionsSchema = z.object({
+  id: z.string().optional(),
+  context: ThemeContextSchema.optional(),
+  name: z.string().optional(),
+  isDefault: z.boolean().optional(),
+});
+
+export type ThemeServiceOptions = z.infer<typeof ThemeServiceOptionsSchema>;
+
+interface ThemeState {
+  currentTheme: any | null;
+  isLoading: boolean;
   error: Error | null;
-  
-  // Loader functions
-  loadTheme: (context?: ThemeContext) => Promise<void>;
+  loadStatus: ThemeLoadStatus;
+  tokens: ThemeTokensSchema;
+  loadTheme: (contextOrThemeId?: string) => Promise<void>;
   setTheme: (themeId: string) => Promise<void>;
-  loadThemeComponents: () => Promise<void>;
+  adminComponents: any[];
   loadAdminComponents: () => Promise<void>;
-  
-  // Direct token update
-  updateTokens: (tokens: Partial<StoreThemeTokens>) => void;
+  themeTokens: ThemeTokensSchema;
 }
 
-// Ensure we have fallbacks for all required token properties
-const ensureAllTokens = (tokens: Partial<StoreThemeTokens>): StoreThemeTokens => {
-  return {
-    primary: tokens.primary || fallbackTokens.primary,
-    secondary: tokens.secondary || fallbackTokens.secondary,
-    accent: tokens.accent || fallbackTokens.accent,
-    background: tokens.background || fallbackTokens.background,
-    foreground: tokens.foreground || fallbackTokens.foreground,
-    card: tokens.card || fallbackTokens.card,
-    cardForeground: tokens.cardForeground || fallbackTokens.cardForeground,
-    muted: tokens.muted || fallbackTokens.muted,
-    mutedForeground: tokens.mutedForeground || fallbackTokens.mutedForeground,
-    border: tokens.border || fallbackTokens.border,
-    input: tokens.input || fallbackTokens.input,
-    ring: tokens.ring || fallbackTokens.ring,
-    effectPrimary: tokens.effectPrimary || fallbackTokens.effectPrimary,
-    effectSecondary: tokens.effectSecondary || fallbackTokens.effectSecondary,
-    effectTertiary: tokens.effectTertiary || fallbackTokens.effectTertiary,
-    transitionFast: tokens.transitionFast || fallbackTokens.transitionFast,
-    transitionNormal: tokens.transitionNormal || fallbackTokens.transitionNormal,
-    transitionSlow: tokens.transitionSlow || fallbackTokens.transitionSlow,
-    radiusSm: tokens.radiusSm || fallbackTokens.radiusSm,
-    radiusMd: tokens.radiusMd || fallbackTokens.radiusMd,
-    radiusLg: tokens.radiusLg || fallbackTokens.radiusLg,
-    radiusFull: tokens.radiusFull || fallbackTokens.radiusFull,
-    ...tokens // Keep any additional tokens
-  };
-};
-
-// Default design tokens structure with required properties
-const defaultDesignTokens: DesignTokensStructure = {
-  colors: {
-    primary: fallbackTokens.primary,
-    secondary: fallbackTokens.secondary,
-  },
-  effects: {
-    shadows: {},
-    blurs: {},
-    gradients: {},
-    primary: fallbackTokens.effectPrimary,
-    secondary: fallbackTokens.effectSecondary,
-    tertiary: fallbackTokens.effectTertiary
-  }
-};
-
-// Create the store
-export const useThemeStore = create<ThemeState>((set, get) => ({
-  // Initial state
+const initialThemeState: Omit<ThemeState, 'loadTheme' | 'setTheme' | 'loadAdminComponents'> = {
   currentTheme: null,
-  tokens: ensureAllTokens({}), // Initialize with fallbacks
-  themeComponents: [],
-  adminComponents: [],
-  loadStatus: 'idle',
+  isLoading: false,
   error: null,
-  
-  // Load theme from API
-  loadTheme: async (context: ThemeContext = 'site') => {
+  loadStatus: ThemeLoadStatusSchema.enum.idle,
+  tokens: { ...defaultTokens },
+  adminComponents: [],
+  themeTokens: { ...defaultTokens },
+};
+
+export type ThemeStore = ThemeState;
+
+export const useThemeStore = create<ThemeStore>((set, get) => ({
+  ...initialThemeState,
+
+  loadTheme: async (contextOrThemeId?: string) => {
     try {
-      set({ loadStatus: 'loading' });
-      
-      const { theme, isFallback } = await getTheme({ 
-        isDefault: true,
-        context 
+      set({
+        isLoading: true,
+        loadStatus: ThemeLoadStatusSchema.enum.loading,
+        error: null
       });
+
+      // Parse input as either themeId or context
+      let options: ThemeServiceOptions = {};
       
-      // Extract tokens from the theme
-      const extractedTokens = extractTokensFromTheme(theme);
-      
-      set({ 
-        currentTheme: theme,
-        tokens: ensureAllTokens(extractedTokens),
-        loadStatus: 'loaded'
-      });
+      if (contextOrThemeId) {
+        // Try to parse as ThemeContext first
+        try {
+          const context = ThemeContextSchema.parse(contextOrThemeId);
+          options = { context };
+          getLogger().info(`Loading theme for context: ${context}`);
+        } catch {
+          // If not a valid context, treat as themeId
+          options = { id: contextOrThemeId };
+          getLogger().info(`Loading theme by ID: ${contextOrThemeId}`);
+        }
+      } else {
+        // Default to 'app' context if no input provided
+        options = { context: ThemeContextSchema.enum.app };
+        getLogger().info('Loading default app theme');
+      }
+
+      const { theme, isFallback } = await getTheme(options);
+
+      if (theme) {
+        // Extract colors safely, ensuring they're all defined
+        const safeColors = theme.design_tokens?.colors || {};
+        const safeEffects = theme.design_tokens?.effects || { primary: '', secondary: '', tertiary: '' };
+        
+        // Create a safe token object with fallbacks
+        const safeTokens: Partial<ThemeTokensSchema> = {
+          primary: safeColors.primary || defaultTokens.primary,
+          secondary: safeColors.secondary || defaultTokens.secondary,
+          accent: safeColors.accent || defaultTokens.accent,
+          background: safeColors.background || defaultTokens.background,
+          foreground: safeColors.foreground || defaultTokens.foreground,
+          card: safeColors.card || defaultTokens.card,
+          cardForeground: safeColors.cardForeground || defaultTokens.cardForeground,
+          muted: safeColors.muted || defaultTokens.muted,
+          mutedForeground: safeColors.mutedForeground || defaultTokens.mutedForeground,
+          border: safeColors.border || defaultTokens.border,
+          input: safeColors.input || defaultTokens.input,
+          ring: safeColors.ring || defaultTokens.ring,
+          effectPrimary: safeEffects.primary || defaultTokens.effectPrimary,
+          effectSecondary: safeEffects.secondary || defaultTokens.effectSecondary,
+          effectTertiary: safeEffects.tertiary || defaultTokens.effectTertiary,
+          transitionFast: defaultTokens.transitionFast,
+          transitionNormal: defaultTokens.transitionNormal,
+          transitionSlow: defaultTokens.transitionSlow,
+          radiusSm: defaultTokens.radiusSm,
+          radiusMd: defaultTokens.radiusMd,
+          radiusLg: defaultTokens.radiusLg,
+          radiusFull: defaultTokens.radiusFull,
+        };
+        
+        // Clean up any undefined values and merge with defaults
+        const cleanTokens = {
+          ...defaultTokens,
+          ...removeUndefineds(safeTokens)
+        };
+
+        set({
+          currentTheme: theme,
+          tokens: cleanTokens,
+          themeTokens: cleanTokens,
+          isLoading: false,
+          loadStatus: ThemeLoadStatusSchema.enum.success,
+          error: null
+        });
+
+        getLogger().info(`Theme loaded successfully: ${theme.name} (fallback: ${isFallback})`, {
+          category: LogCategory.THEME,
+          details: {
+            themeId: theme.id,
+            context: options.context,
+            isFallback,
+            componentTokensCount: Array.isArray(theme.component_tokens) ? theme.component_tokens.length : 0
+          }
+        });
+      } else {
+        const errorMessage = 'Failed to load theme: Theme not found';
+        getLogger().error(errorMessage, {
+          category: LogCategory.THEME,
+          details: { themeId: options.id, context: options.context }
+        });
+
+        set({
+          isLoading: false,
+          loadStatus: ThemeLoadStatusSchema.enum.error,
+          error: new Error(errorMessage),
+          // Always use default tokens when there's an error
+          tokens: { ...defaultTokens },
+          themeTokens: { ...defaultTokens }
+        });
+      }
     } catch (error) {
-      console.error('Failed to load theme:', error);
-      set({ 
-        error: error instanceof Error ? error : new Error('Failed to load theme'),
-        loadStatus: 'error',
-        tokens: ensureAllTokens({}) // Use fallbacks
+      const errorObj = errorToObject(error);
+      getLogger().error('Error loading theme', {
+        category: LogCategory.THEME,
+        details: errorObj
+      });
+
+      set({
+        isLoading: false,
+        loadStatus: ThemeLoadStatusSchema.enum.error,
+        error: error instanceof Error ? error : new Error(String(error)),
+        // Always use default tokens when there's an error
+        tokens: { ...defaultTokens },
+        themeTokens: { ...defaultTokens }
       });
     }
   },
-  
-  // Set theme by ID
+
   setTheme: async (themeId: string) => {
     try {
-      set({ loadStatus: 'loading' });
-      
+      set({
+        isLoading: true,
+        loadStatus: ThemeLoadStatusSchema.enum.loading,
+        error: null
+      });
+
       const { theme, isFallback } = await getTheme({ id: themeId });
-      
-      // Extract tokens from the theme
-      const extractedTokens = extractTokensFromTheme(theme);
-      
-      set({ 
-        currentTheme: theme,
-        tokens: ensureAllTokens(extractedTokens),
-        loadStatus: 'loaded'
-      });
+
+      if (theme) {
+        // Extract colors safely, ensuring they're all defined
+        const safeColors = theme.design_tokens?.colors || {};
+        const safeEffects = theme.design_tokens?.effects || { primary: '', secondary: '', tertiary: '' };
+        
+        // Create a safe token object with fallbacks
+        const safeTokens: Partial<ThemeTokensSchema> = {
+          primary: safeColors.primary || defaultTokens.primary,
+          secondary: safeColors.secondary || defaultTokens.secondary,
+          accent: safeColors.accent || defaultTokens.accent,
+          background: safeColors.background || defaultTokens.background,
+          foreground: safeColors.foreground || defaultTokens.foreground,
+          card: safeColors.card || defaultTokens.card,
+          cardForeground: safeColors.cardForeground || defaultTokens.cardForeground,
+          muted: safeColors.muted || defaultTokens.muted,
+          mutedForeground: safeColors.mutedForeground || defaultTokens.mutedForeground,
+          border: safeColors.border || defaultTokens.border,
+          input: safeColors.input || defaultTokens.input,
+          ring: safeColors.ring || defaultTokens.ring,
+          effectPrimary: safeEffects.primary || defaultTokens.effectPrimary,
+          effectSecondary: safeEffects.secondary || defaultTokens.effectSecondary,
+          effectTertiary: safeEffects.tertiary || defaultTokens.effectTertiary,
+          transitionFast: defaultTokens.transitionFast,
+          transitionNormal: defaultTokens.transitionNormal,
+          transitionSlow: defaultTokens.transitionSlow,
+          radiusSm: defaultTokens.radiusSm,
+          radiusMd: defaultTokens.radiusMd,
+          radiusLg: defaultTokens.radiusLg,
+          radiusFull: defaultTokens.radiusFull,
+        };
+        
+        // Clean up any undefined values and merge with defaults
+        const cleanTokens = {
+          ...defaultTokens,
+          ...removeUndefineds(safeTokens)
+        };
+
+        set({
+          currentTheme: theme,
+          tokens: cleanTokens,
+          themeTokens: cleanTokens,
+          isLoading: false,
+          loadStatus: ThemeLoadStatusSchema.enum.success,
+          error: null
+        });
+
+        getLogger().info(`Theme set successfully: ${theme.name}`, {
+          category: LogCategory.THEME,
+          details: {
+            themeId: theme.id,
+            isFallback
+          }
+        });
+      } else {
+        const errorMessage = 'Failed to set theme: Theme not found';
+        getLogger().error(errorMessage, {
+          category: LogCategory.THEME,
+          details: { themeId }
+        });
+
+        set({
+          isLoading: false,
+          loadStatus: ThemeLoadStatusSchema.enum.error,
+          error: new Error(errorMessage),
+          // Always use default tokens when there's an error
+          tokens: { ...defaultTokens },
+          themeTokens: { ...defaultTokens }
+        });
+      }
     } catch (error) {
-      console.error('Failed to set theme:', error);
-      set({ 
-        error: error instanceof Error ? error : new Error('Failed to set theme'),
-        loadStatus: 'error'
+      const errorObj = errorToObject(error);
+      getLogger().error('Error setting theme', {
+        category: LogCategory.THEME,
+        details: errorObj
+      });
+
+      set({
+        isLoading: false,
+        loadStatus: ThemeLoadStatusSchema.enum.error,
+        error: error instanceof Error ? error : new Error(String(error)),
+        // Always use default tokens when there's an error
+        tokens: { ...defaultTokens },
+        themeTokens: { ...defaultTokens }
       });
     }
   },
-  
-  // Load theme components
-  loadThemeComponents: async () => {
-    const { currentTheme } = get();
-    
-    if (!currentTheme) {
-      return;
-    }
-    
-    try {
-      // Extract components from the current theme
-      const components = currentTheme.component_tokens || [];
-      set({ themeComponents: components });
-    } catch (error) {
-      console.error('Failed to load theme components:', error);
-    }
-  },
-  
-  // Load admin components
+
   loadAdminComponents: async () => {
     const { currentTheme } = get();
     
     if (!currentTheme) {
+      set({ adminComponents: [] });
       return;
     }
     
@@ -166,71 +283,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       set({ adminComponents: components });
     } catch (error) {
       console.error('Failed to load admin components:', error);
+      set({ adminComponents: [] });
     }
   },
-  
-  // Update tokens directly
-  updateTokens: (newTokens) => {
-    set(state => ({
-      tokens: ensureAllTokens({ ...state.tokens, ...newTokens })
-    }));
-  }
 }));
-
-// Helper function to extract tokens from theme with proper type safety
-function extractTokensFromTheme(theme: Theme): Partial<StoreThemeTokens> {
-  try {
-    if (!theme || !theme.design_tokens) {
-      return {};
-    }
-
-    // Use default structure with required properties if missing
-    const designTokens = theme.design_tokens || defaultDesignTokens;
-    const colors = designTokens.colors || { primary: fallbackTokens.primary, secondary: fallbackTokens.secondary };
-    const effects = designTokens.effects || { shadows: {}, blurs: {}, gradients: {}, primary: fallbackTokens.effectPrimary, secondary: fallbackTokens.effectSecondary, tertiary: fallbackTokens.effectTertiary };
-    const animation = designTokens.animation || {};
-    const spacing = designTokens.spacing || {};
-    
-    return {
-      // Colors with fallbacks
-      primary: colors.primary || fallbackTokens.primary,
-      secondary: colors.secondary || fallbackTokens.secondary,
-      accent: colors.accent || fallbackTokens.accent,
-      background: colors.background || fallbackTokens.background,
-      foreground: colors.foreground || fallbackTokens.foreground,
-      card: colors.card || fallbackTokens.card,
-      cardForeground: colors.cardForeground || fallbackTokens.cardForeground,
-      muted: colors.muted || fallbackTokens.muted,
-      mutedForeground: colors.mutedForeground || fallbackTokens.mutedForeground,
-      border: colors.border || fallbackTokens.border,
-      input: colors.input || fallbackTokens.input,
-      ring: colors.ring || fallbackTokens.ring,
-      
-      // Effect colors
-      effectPrimary: effects.primary || fallbackTokens.effectPrimary,
-      effectSecondary: effects.secondary || fallbackTokens.effectSecondary,
-      effectTertiary: effects.tertiary || fallbackTokens.effectTertiary,
-      
-      // Animation timings
-      transitionFast: animation.durations?.fast as string || fallbackTokens.transitionFast,
-      transitionNormal: animation.durations?.normal as string || fallbackTokens.transitionNormal,
-      transitionSlow: animation.durations?.slow as string || fallbackTokens.transitionSlow,
-      
-      // Radius values
-      radiusSm: (spacing.radius?.sm as string) || fallbackTokens.radiusSm,
-      radiusMd: (spacing.radius?.md as string) || fallbackTokens.radiusMd,
-      radiusLg: (spacing.radius?.lg as string) || fallbackTokens.radiusLg,
-      radiusFull: (spacing.radius?.full as string) || fallbackTokens.radiusFull,
-    };
-  } catch (error) {
-    console.error('Error extracting tokens from theme:', error);
-    return {};
-  }
-}
-
-// Create selector hooks for convenience
-export const useThemeTokens = () => useThemeStore(state => state.tokens);
-export const useThemeComponents = () => useThemeStore(state => state.themeComponents);
-export const useAdminComponents = () => useThemeStore(state => state.adminComponents);
-export const useThemeStatus = () => useThemeStore(state => state.loadStatus);
-export const useThemeError = () => useThemeStore(state => state.error);

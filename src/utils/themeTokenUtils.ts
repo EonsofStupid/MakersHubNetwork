@@ -1,24 +1,133 @@
 
 import { DesignTokensStructure } from '@/types/theme';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
 import { defaultTokens } from '@/theme/tokenSchema';
 
 /**
- * Type guard to check if a value is a non-null object
+ * Updates colors within the design tokens structure
  */
-function isObject(val: unknown): val is Record<string, any> {
-  return typeof val === 'object' && val !== null && !Array.isArray(val);
+export function updateThemeColors(
+  tokens: DesignTokensStructure,
+  newColors: Record<string, string>
+): DesignTokensStructure {
+  return {
+    ...tokens,
+    colors: {
+      ...(tokens.colors || {}),
+      ...newColors,
+    },
+  };
 }
 
 /**
- * Creates a default design tokens structure with required properties
+ * Updates effects within the design tokens structure
  */
-function createDefaultTokens(): DesignTokensStructure {
+export function updateThemeEffects(
+  tokens: DesignTokensStructure,
+  newEffects: {
+    primary?: string;
+    secondary?: string;
+    tertiary?: string;
+  }
+): DesignTokensStructure {
+  return {
+    ...tokens,
+    effects: {
+      ...(tokens.effects || { shadows: {}, blurs: {}, gradients: {} }),
+      ...newEffects,
+    },
+  };
+}
+
+/**
+ * Updates all design tokens with new values
+ */
+export function updateDesignTokens(
+  tokens: DesignTokensStructure,
+  updates: Partial<DesignTokensStructure>
+): DesignTokensStructure {
+  return {
+    ...tokens,
+    ...updates,
+    colors: {
+      ...(tokens.colors || {}),
+      ...(updates.colors || {}),
+    },
+    effects: {
+      ...(tokens.effects || { shadows: {}, blurs: {}, gradients: {} }),
+      ...(updates.effects || {}),
+      shadows: {
+        ...(tokens.effects?.shadows || {}),
+        ...(updates.effects?.shadows || {}),
+      },
+      blurs: {
+        ...(tokens.effects?.blurs || {}),
+        ...(updates.effects?.blurs || {}),
+      },
+      gradients: {
+        ...(tokens.effects?.gradients || {}),
+        ...(updates.effects?.gradients || {}),
+      },
+    },
+    typography: {
+      ...(tokens.typography || {}),
+      ...(updates.typography || {}),
+      fontSizes: {
+        ...(tokens.typography?.fontSizes || {}),
+        ...(updates.typography?.fontSizes || {}),
+      },
+      fontFamilies: {
+        ...(tokens.typography?.fontFamilies || {}),
+        ...(updates.typography?.fontFamilies || {}),
+      },
+      lineHeights: {
+        ...(tokens.typography?.lineHeights || {}),
+        ...(updates.typography?.lineHeights || {}),
+      },
+      letterSpacing: {
+        ...(tokens.typography?.letterSpacing || {}),
+        ...(updates.typography?.letterSpacing || {}),
+      },
+    },
+    animation: {
+      ...(tokens.animation || {}),
+      ...(updates.animation || {}),
+      keyframes: {
+        ...(tokens.animation?.keyframes || {}),
+        ...(updates.animation?.keyframes || {}),
+      },
+      transitions: {
+        ...(tokens.animation?.transitions || {}),
+        ...(updates.animation?.transitions || {}),
+      },
+      durations: {
+        ...(tokens.animation?.durations || {}),
+        ...(updates.animation?.durations || {}),
+      },
+    },
+  };
+}
+
+/**
+ * Creates a complete design tokens structure with defaults for any missing values
+ */
+export function createCompleteDesignTokens(
+  partial?: Partial<DesignTokensStructure>
+): DesignTokensStructure {
   return {
     colors: {
       primary: defaultTokens.primary,
       secondary: defaultTokens.secondary,
+      accent: defaultTokens.accent,
+      background: defaultTokens.background,
+      foreground: defaultTokens.foreground,
+      card: defaultTokens.card,
+      cardForeground: defaultTokens.cardForeground,
+      muted: defaultTokens.muted,
+      mutedForeground: defaultTokens.mutedForeground,
+      border: defaultTokens.border,
+      input: defaultTokens.input,
+      ring: defaultTokens.ring,
+      ...(partial?.colors || {})
     },
     effects: {
       shadows: {},
@@ -26,163 +135,66 @@ function createDefaultTokens(): DesignTokensStructure {
       gradients: {},
       primary: defaultTokens.effectPrimary,
       secondary: defaultTokens.effectSecondary,
-      tertiary: defaultTokens.effectTertiary
-    }
+      tertiary: defaultTokens.effectTertiary,
+      ...(partial?.effects || {}),
+    },
+    spacing: partial?.spacing || {},
+    typography: partial?.typography || {
+      fontSizes: {},
+      fontFamilies: {},
+      lineHeights: {},
+      letterSpacing: {},
+    },
+    animation: partial?.animation || {
+      keyframes: {},
+      transitions: {},
+      durations: {
+        fast: defaultTokens.transitionFast,
+        normal: defaultTokens.transitionNormal,
+        slow: defaultTokens.transitionSlow,
+      },
+    },
   };
 }
 
 /**
- * Safely extends/updates theme design tokens with new values
- * @param currentTokens Current design tokens structure
- * @param updates The updates to apply
- * @returns Updated design tokens structure
- */
-export function updateDesignTokens(
-  currentTokens: DesignTokensStructure | undefined, 
-  updates: Partial<DesignTokensStructure>
-): DesignTokensStructure {
-  // Start with empty defaults if no tokens exist
-  const baseTokens: DesignTokensStructure = currentTokens || createDefaultTokens();
-  
-  try {
-    // Create deep copy to avoid mutation
-    const result = JSON.parse(JSON.stringify(baseTokens)) as DesignTokensStructure;
-    
-    // Update colors if provided
-    if (updates.colors) {
-      result.colors = {
-        ...result.colors,
-        ...updates.colors
-      };
-    }
-    
-    // Update effects if provided
-    if (updates.effects) {
-      // Create a new effects object
-      const updatedEffects = { ...result.effects };
-      
-      // Update shadows, blurs, and gradients if provided
-      if (updates.effects.shadows) {
-        updatedEffects.shadows = { ...updatedEffects.shadows, ...updates.effects.shadows };
-      }
-      
-      if (updates.effects.blurs) {
-        updatedEffects.blurs = { ...updatedEffects.blurs, ...updates.effects.blurs };
-      }
-      
-      if (updates.effects.gradients) {
-        updatedEffects.gradients = { ...updatedEffects.gradients, ...updates.effects.gradients };
-      }
-      
-      // Update primary, secondary, tertiary 
-      if (updates.effects.primary !== undefined) {
-        updatedEffects.primary = updates.effects.primary;
-      }
-      
-      if (updates.effects.secondary !== undefined) {
-        updatedEffects.secondary = updates.effects.secondary;
-      }
-      
-      if (updates.effects.tertiary !== undefined) {
-        updatedEffects.tertiary = updates.effects.tertiary;
-      }
-      
-      // Assign the updated effects
-      result.effects = updatedEffects;
-    }
-    
-    // Update other token categories
-    if (updates.typography) {
-      result.typography = {
-        ...(result.typography || {}),
-        ...updates.typography
-      };
-    }
-    
-    if (updates.animation) {
-      result.animation = {
-        ...(result.animation || {}),
-        ...updates.animation
-      };
-    }
-    
-    if (updates.spacing) {
-      result.spacing = {
-        ...(result.spacing || {}),
-        ...updates.spacing
-      };
-    }
-    
-    if (updates.admin) {
-      result.admin = {
-        ...(result.admin || {}),
-        ...updates.admin
-      };
-    }
-    
-    return result;
-  } catch (error) {
-    const logger = getLogger();
-    logger.error('Error updating design tokens', {
-      category: LogCategory.THEME,
-      details: {
-        error: error instanceof Error ? error.message : String(error)
-      }
-    });
-    
-    // Return the original tokens as fallback
-    return baseTokens;
-  }
-}
-
-/**
- * Updates specific theme colors
- * @param currentTokens Current tokens or undefined
- * @param colorUpdates Color updates to apply
- * @returns Updated design tokens
- */
-export function updateThemeColors(
-  currentTokens: DesignTokensStructure | undefined,
-  colorUpdates: Record<string, string>
-): DesignTokensStructure {
-  const baseTokens = currentTokens || createDefaultTokens();
-  
-  return updateDesignTokens(baseTokens, {
-    colors: {
-      ...baseTokens.colors,
-      ...colorUpdates
-    }
-  });
-}
-
-/**
- * Updates specific theme effects
- * @param currentTokens Current tokens or undefined
- * @param effectUpdates Effect updates to apply
- * @returns Updated design tokens
- */
-export function updateThemeEffects(
-  currentTokens: DesignTokensStructure | undefined,
-  effectUpdates: { primary?: string; secondary?: string; tertiary?: string; shadows?: Record<string, any>; blurs?: Record<string, any>; gradients?: Record<string, any> }
-): DesignTokensStructure {
-  const baseTokens = currentTokens || createDefaultTokens();
-  
-  return updateDesignTokens(baseTokens, {
-    effects: {
-      ...baseTokens.effects,
-      ...effectUpdates
-    }
-  });
-}
-
-/**
- * Utility to remove undefined values from an object
+ * Removes any undefined values from an object (recursively)
  */
 export function removeUndefineds<T extends Record<string, any>>(obj: T): T {
-  return Object.entries(obj).reduce((acc, [key, value]) => {
-    if (value !== undefined) {
-      acc[key as keyof T] = value;
+  const result: Record<string, any> = {};
+  
+  for (const key in obj) {
+    if (obj[key] !== undefined) {
+      if (obj[key] !== null && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+        result[key] = removeUndefineds(obj[key]);
+      } else {
+        result[key] = obj[key];
+      }
     }
-    return acc;
-  }, {} as T);
+  }
+  
+  return result as T;
+}
+
+/**
+ * Safely retrieves a nested value from an object with a path
+ * Example: getNestedValue(theme, 'design_tokens.colors.primary', '#000')
+ */
+export function getNestedValue<T>(obj: any, path: string, defaultValue: T): T {
+  try {
+    const keys = path.split('.');
+    let current = obj;
+    
+    for (const key of keys) {
+      if (current === undefined || current === null) {
+        return defaultValue;
+      }
+      current = current[key];
+    }
+    
+    return (current !== undefined && current !== null) ? current : defaultValue;
+  } catch (e) {
+    console.error(`Error getting nested value at path ${path}:`, e);
+    return defaultValue;
+  }
 }

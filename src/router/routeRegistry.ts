@@ -8,6 +8,9 @@ import { getLogger } from '@/logging';
 
 const logger = getLogger('RouteRegistry');
 
+// Define a Zod schema for ThemeContext to ensure valid values
+export const ThemeContextSchema = z.enum(['site', 'admin', 'chat', 'app', 'training']);
+
 /**
  * Central registry of all application routes with their trees and individual routes
  * This allows for easier management and discovery of routes across scopes
@@ -65,22 +68,24 @@ export const routeParamsSchema = {
  */
 export function getThemeContextForRoute(path: string): ThemeContext {
   try {
+    // Use the Zod schema to validate the output
     if (path.startsWith('/admin')) {
-      return 'admin';
+      return ThemeContextSchema.parse('admin');
     }
     
     if (path.startsWith('/chat')) {
-      return 'chat';
+      return ThemeContextSchema.parse('chat');
     }
     
     // Default to 'site' for all other routes
-    return 'site';
+    return ThemeContextSchema.parse('site');
   } catch (error) {
     logger.error('Error determining theme context', {
       path,
       error: error instanceof Error ? error.message : String(error)
     });
-    return 'site'; // Fallback to site theme
+    // Fallback to site theme if validation fails
+    return 'site';
   }
 }
 
