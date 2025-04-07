@@ -52,26 +52,25 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
     });
     
     // Try to get theme from Supabase edge function
-    const themePromise = supabase.functions.invoke(theme-service', { 
+    const themePromise = supabase.functions.invoke('theme-service', { 
       body: { context } 
     });
     
-    const result = await Promise.race([themePromise, timeoutPromise]) as {
-      data: { tokens: ThemeTokensSchema; } | null;
-      error: Error | null;
-    };
+    const result = await Promise.race([themePromise, timeoutPromise]);
     
-    if (result.error) {
-      throw new Error(`Supabase error: ${result.error.message}`);
+    if (!result || (result as any).error) {
+      throw new Error(`Supabase error: ${(result as any).error?.message || 'Unknown error'}`);
     }
     
-    if (result.data?.tokens) {
+    const data = (result as any).data;
+    
+    if (data?.tokens) {
       logger.info('Theme loaded from Supabase', { source: 'edge-function' });
       
       // Persist for future offline use
-      persistThemeTokens(result.data.tokens);
+      persistThemeTokens(data.tokens);
       
-      return result.data.tokens;
+      return data.tokens as ThemeTokensSchema;
     }
     
     throw new Error('Invalid data from Supabase');
@@ -112,9 +111,49 @@ export async function getThemeWithFallback(options: {
       ...defaultTheme,
       id: options.id || 'default',
       name: `Default ${options.context || 'App'} Theme`,
-    } as unknown as Theme;
+      status: 'published',
+      context: options.context || 'app',
+      is_default: true,
+      design_tokens: {
+        colors: defaultTheme,
+        effects: {
+          shadows: {},
+          blurs: {},
+          gradients: {},
+          primary: defaultTheme.effectPrimary,
+          secondary: defaultTheme.effectSecondary,
+          tertiary: defaultTheme.effectTertiary
+        }
+      },
+      component_tokens: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      version: 1
+    } as Theme;
   } catch (error) {
     logger.error('Failed to get theme:', { error });
-    return defaultTheme as unknown as Theme;
+    return {
+      ...defaultTheme,
+      id: 'default',
+      name: 'Default Theme',
+      status: 'published',
+      context: 'app',
+      is_default: true,
+      design_tokens: {
+        colors: defaultTheme,
+        effects: {
+          shadows: {},
+          blurs: {},
+          gradients: {},
+          primary: defaultTheme.effectPrimary,
+          secondary: defaultTheme.effectSecondary,
+          tertiary: defaultTheme.effectTertiary
+        }
+      },
+      component_tokens: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      version: 1
+    } as Theme;
   }
 }

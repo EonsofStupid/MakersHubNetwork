@@ -1,5 +1,5 @@
 
-// Create a simple re-export file to properly expose the theme store
+// Re-export the consolidated theme store
 export * from './themeStore';
 
 // Export the themeStore as default for easier access

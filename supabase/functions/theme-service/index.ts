@@ -23,18 +23,18 @@ const supabaseAdmin = createClient(
 
 // Fallback theme tokens if database fails
 const fallbackTokens = {
-  primary: "#00F0FF",
-  secondary: "#FF2D6E",
-  accent: "#8B5CF6",
-  background: "#080F1E",
-  foreground: "#F9FAFB",
-  card: "#0E172A",
-  cardForeground: "#F9FAFB", 
-  muted: "#131D35",
-  mutedForeground: "#94A3B8",
-  border: "#131D35",
-  input: "#131D35",
-  ring: "#1E293B",
+  primary: "186 100% 50%",
+  secondary: "334 100% 59%",
+  accent: "262 80% 50%",
+  background: "228 47% 8%",
+  foreground: "210 40% 98%",
+  card: "228 47% 11%",
+  cardForeground: "210 40% 98%", 
+  muted: "228 47% 15%",
+  mutedForeground: "215 20% 65%",
+  border: "228 47% 15%",
+  input: "228 47% 15%",
+  ring: "228 47% 20%",
   effectPrimary: "#00F0FF",
   effectSecondary: "#FF2D6E",
   effectTertiary: "#8B5CF6",
@@ -54,26 +54,54 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Theme service received request:", req.url);
+    console.log("Theme service received request");
     
-    // Parse URL and get query parameters
-    const url = new URL(req.url);
+    // Parse request body
+    let params;
+    try {
+      params = await req.json();
+    } catch (e) {
+      // If JSON parsing fails, try to get parameters from URL
+      const url = new URL(req.url);
+      params = {
+        context: url.searchParams.get('context') || 'site',
+        id: url.searchParams.get('id'),
+        name: url.searchParams.get('name'),
+        isDefault: url.searchParams.get('isDefault') !== 'false'
+      };
+    }
     
-    // Support both 'scope' and 'context' parameters, defaulting to 'app' context
-    const context = url.searchParams.get('context') || url.searchParams.get('scope') || 'app';
-    const themeId = url.searchParams.get('themeId');
-    const themeName = url.searchParams.get('themeName');
-    const isDefault = url.searchParams.get('isDefault') !== 'false'; // Default to true
+    const { context = 'site', id, name, isDefault = true } = params;
     
-    console.log(`Loading theme with params: context=${context}, themeId=${themeId}, themeName=${themeName}, isDefault=${isDefault}`);
+    console.log(`Loading theme with params: context=${context}, id=${id}, name=${name}, isDefault=${isDefault}`);
 
-    let query = supabaseAdmin.from('themes').select('*');
+    // Check the database if the themes table exists
+    const { data: tablesExist, error: tableCheckError } = await supabaseAdmin.rpc('check_table_exists', { 
+      table_name: 'themes' 
+    });
+    
+    if (tableCheckError || !tablesExist) {
+      console.warn('Themes table does not exist yet, returning fallback tokens');
+      return new Response(
+        JSON.stringify({ 
+          tokens: fallbackTokens,
+          theme: null,
+          isFallback: true 
+        }),
+        { headers: corsHeaders }
+      );
+    }
+
+    // Try to fetch theme from database
+    let query = supabaseAdmin
+      .from('themes')
+      .select('*');
     
     // Apply filters based on available parameters
-    if (themeId) {
-      query = query.eq('id', themeId);
-    } else if (themeName) {
-      query = query.eq('name', themeName);
+    if (id) {
+      query = query.eq('id', id);
+    } else if (name) {
+      query = query.eq('name', name);
     } else {
       query = query.eq('context', context).eq('is_default', isDefault);
     }
@@ -109,15 +137,25 @@ serve(async (req) => {
       );
     }
 
-    // Get tokens from theme design_tokens or use fallback
+    // Extract tokens from the theme's design_tokens
     const tokens = theme.design_tokens?.colors || fallbackTokens;
+    const effectsTokens = theme.design_tokens?.effects || {};
     
+    // Combine colors and effects tokens with fallbacks
+    const safeTokens = {
+      ...fallbackTokens,
+      ...tokens,
+      effectPrimary: effectsTokens.primary || fallbackTokens.effectPrimary,
+      effectSecondary: effectsTokens.secondary || fallbackTokens.effectSecondary,
+      effectTertiary: effectsTokens.tertiary || fallbackTokens.effectTertiary
+    };
+
     console.log(`Theme loaded successfully: ${theme.name}`);
 
     // Return tokens and theme metadata
     return new Response(
       JSON.stringify({
-        tokens,
+        tokens: safeTokens,
         theme: {
           id: theme.id,
           name: theme.name,

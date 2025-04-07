@@ -44,7 +44,15 @@ export function defineScopedRoute<
 export function useCurrentScope(): RouteScope {
   // Access scope from router options context with proper typing
   const routerInstance = useRouter();
-  return routerInstance.options.context.scope as RouteScope;
+  const scopeValue = routerInstance.options.context.scope;
+  
+  // Make sure we have a valid scope value
+  if (typeof scopeValue === 'string' && ['site', 'admin', 'chat'].includes(scopeValue)) {
+    return scopeValue as RouteScope;
+  }
+  
+  // Default to site if scope is invalid
+  return 'site';
 }
 
 /**
@@ -76,9 +84,9 @@ export function navigateToScope(scope: RouteScope, path: string, options?: {
   
   // Navigate using the router
   router.navigate({
-    to: fullPath as any,
-    params: params as any,
-    search: search as any,
+    to: fullPath,
+    params: params,
+    search: search,
     replace
   });
 }

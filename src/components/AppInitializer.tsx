@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { useThemeStore } from '@/stores/theme/themeStore';
@@ -11,21 +11,22 @@ interface AppInitializerProps {
 export function AppInitializer({ children }: AppInitializerProps) {
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
   const [isInitialized, setIsInitialized] = useState(false);
-  const { loadTheme, loadStatus } = useThemeStore();
+  const initializationAttempted = useRef(false);
+  const { loadStatus } = useThemeStore();
 
   useEffect(() => {
+    // Only attempt initialization once
+    if (initializationAttempted.current) {
+      return;
+    }
+
     const initializeApp = async () => {
       try {
+        initializationAttempted.current = true;
         logger.info('Initializing application...');
 
-        // Load theme - this is a critical functionality
-        if (loadTheme) {
-          await loadTheme('app').catch(err => {
-            logger.error('Error loading theme, continuing with fallbacks', {
-              details: { error: err instanceof Error ? err.message : String(err) }
-            });
-          });
-        }
+        // Theme should already be initialized by ThemeInitializer
+        // This is just a checkpoint
 
         logger.info('Application initialized successfully', {
           details: { themeLoaded: loadStatus === 'success' }
@@ -40,10 +41,8 @@ export function AppInitializer({ children }: AppInitializerProps) {
       }
     };
 
-    if (!isInitialized) {
-      initializeApp();
-    }
-  }, [loadTheme, logger, isInitialized, loadStatus]);
+    initializeApp();
+  }, [logger, loadStatus]);
 
   // Always render children - initialization happens in the background
   return <>{children}</>;

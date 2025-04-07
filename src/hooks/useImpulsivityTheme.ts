@@ -1,11 +1,41 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
 import { DesignTokensStructure } from '@/types/theme';
-import { updateThemeColors, updateThemeEffects } from '@/utils/themeTokenUtils';
+
+/**
+ * Safely update theme colors
+ */
+function updateThemeColors(tokens: DesignTokensStructure, colorUpdates: Record<string, string>): DesignTokensStructure {
+  return {
+    ...tokens,
+    colors: {
+      ...tokens.colors,
+      ...colorUpdates
+    }
+  };
+}
+
+/**
+ * Safely update theme effects
+ */
+function updateThemeEffects(
+  tokens: DesignTokensStructure, 
+  effectUpdates: { primary?: string; secondary?: string; tertiary?: string }
+): DesignTokensStructure {
+  return {
+    ...tokens,
+    effects: {
+      ...tokens.effects,
+      ...(effectUpdates.primary ? { primary: effectUpdates.primary } : {}),
+      ...(effectUpdates.secondary ? { secondary: effectUpdates.secondary } : {}),
+      ...(effectUpdates.tertiary ? { tertiary: effectUpdates.tertiary } : {})
+    }
+  };
+}
 
 /**
  * Sync theme with database (implementation depends on your backend)
@@ -24,8 +54,16 @@ export function useImpulsivityTheme() {
   const logger = useLogger('ImpulsivityTheme', LogCategory.UI);
   const [syncInProgress, setSyncInProgress] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const appliedToMainSite = useRef(false);
+  const appliedToAdmin = useRef(false);
   
   const applyToMainSite = async () => {
+    // Skip if already applied
+    if (appliedToMainSite.current) {
+      logger.debug('Theme already applied to main site, skipping');
+      return true;
+    }
+    
     try {
       // Define type-safe CSS variables
       const rootElement = document.documentElement;
@@ -55,19 +93,26 @@ export function useImpulsivityTheme() {
         };
         
         // Use our utility function to safely update design tokens
-        const updatedDesignTokens = updateThemeColors(safeDesignTokens, {
+        const colorUpdates = {
           primary: tokens.primary || '186 100% 50%',
           secondary: tokens.secondary || '334 100% 59%',
-        });
+        };
         
-        const finalTokens = updateThemeEffects(updatedDesignTokens, {
+        const effectUpdates = {
           primary: tokens.effectPrimary || '#00F0FF',
           secondary: tokens.effectSecondary || '#FF2D6E',
           tertiary: tokens.effectTertiary || '#8B5CF6',
-        });
+        };
+        
+        // Update colors first, then effects
+        const updatedWithColors = updateThemeColors(safeDesignTokens, colorUpdates);
+        const finalTokens = updateThemeEffects(updatedWithColors, effectUpdates);
         
         logger.info('Updating theme design tokens with Impulsivity colors');
       }
+      
+      // Mark as applied
+      appliedToMainSite.current = true;
       
       logger.info('Applied Impulsivity theme to main site', { 
         details: {
@@ -89,6 +134,12 @@ export function useImpulsivityTheme() {
   };
   
   const applyToAdmin = async () => {
+    // Skip if already applied
+    if (appliedToAdmin.current) {
+      logger.debug('Theme already applied to admin, skipping');
+      return true;
+    }
+    
     try {
       const adminRootElement = document.querySelector('.impulse-admin-root');
       if (adminRootElement) {
@@ -106,6 +157,9 @@ export function useImpulsivityTheme() {
         (adminRootElement as HTMLElement).style.setProperty('--impulse-border-active', 'rgba(0, 240, 255, 0.6)');
         (adminRootElement as HTMLElement).style.setProperty('--impulse-glow-primary', '0 0 15px rgba(0, 240, 255, 0.7)');
         (adminRootElement as HTMLElement).style.setProperty('--impulse-glow-secondary', '0 0 15px rgba(255, 45, 110, 0.7)');
+        
+        // Mark as applied
+        appliedToAdmin.current = true;
         
         logger.info('Applied Impulsivity theme to admin panel', { 
           details: {
