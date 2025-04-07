@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/theme/themeStore';
 import { syncImpulsivityTheme } from '@/utils/themeSync';
+import { updateDesignTokens } from '@/utils/themeTokenUtils';
 import { useToast } from '@/hooks/use-toast';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
@@ -34,20 +34,18 @@ export function useImpulsivityTheme() {
       });
       
       if (currentTheme) {
-        const updatedDesignTokens = {
-          ...(currentTheme.design_tokens || {}),
+        // Use our utility function to safely update design tokens
+        const updatedDesignTokens = updateDesignTokens(currentTheme.design_tokens, {
           colors: {
-            ...(currentTheme.design_tokens?.colors || {}),
             primary: '186 100% 50%',
             secondary: '334 100% 59%',
           },
           effects: {
-            ...(currentTheme.design_tokens?.effects || { shadows: {}, blurs: {}, gradients: {} }),
             primary: '#00F0FF',
             secondary: '#FF2D6E',
             tertiary: '#8B5CF6',
           }
-        };
+        });
         
         logger.info('Updating theme design tokens with Impulsivity colors');
       }
