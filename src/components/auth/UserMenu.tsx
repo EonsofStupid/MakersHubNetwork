@@ -16,14 +16,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Settings, User, ShieldCheck } from 'lucide-react';
 
 export function UserMenu() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, session, status, hasRole } = useAuth();
   const navigate = useNavigate();
   
   if (!user) return null;
   
   const handleLogout = async () => {
     try {
-      await logout();
+      await useAuthStore.getState().logout();
       navigate({ to: '/' });
     } catch (error) {
       console.error('Logout failed:', error);
@@ -32,19 +32,31 @@ export function UserMenu() {
   
   // Get user initials for avatar fallback
   const getInitials = () => {
-    if (!user.name) return 'U';
-    const names = user.name.split(' ');
+    const profile = user.profile as Record<string, string> | undefined;
+    const displayName = profile?.displayName || user.email;
+    
+    if (!displayName) return 'U';
+    
+    if (displayName.includes('@')) {
+      return displayName.substring(0, 2).toUpperCase();
+    }
+    
+    const names = displayName.split(' ');
     return names.length > 1
       ? (names[0][0] + names[1][0]).toUpperCase()
       : names[0].substring(0, 2).toUpperCase();
   };
+
+  const isAdmin = hasRole('admin') || hasRole('super_admin');
+  const profile = user.profile as Record<string, string> | undefined;
+  const avatarUrl = profile?.avatarUrl;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-9 w-9 rounded-full">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={user.avatar_url || ''} />
+            <AvatarImage src={avatarUrl || ''} />
             <AvatarFallback>{getInitials()}</AvatarFallback>
           </Avatar>
         </Button>
@@ -61,7 +73,7 @@ export function UserMenu() {
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </DropdownMenuItem>
-          {isAdmin() && (
+          {isAdmin && (
             <DropdownMenuItem onClick={() => navigate({ to: '/admin/dashboard' as any })}>
               <ShieldCheck className="mr-2 h-4 w-4" />
               Admin Dashboard
