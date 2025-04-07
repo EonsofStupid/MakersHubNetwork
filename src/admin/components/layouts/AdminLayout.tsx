@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { Outlet, useNavigate } from "@tanstack/react-router";
 import { AdminHeader } from "../AdminHeader";
@@ -40,7 +39,6 @@ export function AdminLayout({
   const loggedInitRef = useRef<boolean>(false);
 
   useEffect(() => {
-    // Log the admin layout initialization - only once
     if (!loggedInitRef.current) {
       loggedInitRef.current = true;
       logger.info("Admin layout rendered", {
@@ -53,7 +51,6 @@ export function AdminLayout({
       });
     }
 
-    // If somehow a non-admin user got here, redirect them - but only once
     if (!hasAdminAccess && isAuthenticated && !redirectAttemptedRef.current) {
       redirectAttemptedRef.current = true;
       
@@ -69,9 +66,8 @@ export function AdminLayout({
       
       navigate({ to: "/" });
     }
-  }, [isAuthenticated, hasAdminAccess]); // Reduced dependencies to prevent excessive re-renders
+  }, [isAuthenticated, hasAdminAccess]);
 
-  // If user is not authenticated or doesn't have admin access, don't render the layout
   if (!isAuthenticated || !hasAdminAccess) {
     return null;
   }
@@ -95,3 +91,5 @@ export function AdminLayout({
     </div>
   );
 }
+
+export default AdminLayout;
