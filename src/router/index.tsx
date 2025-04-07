@@ -102,10 +102,10 @@ const settingsRoute = createRoute({
   component: () => <div>Settings Page</div>
 });
 
-// Admin route
+// Admin route - Changed from '/admin/*' to '/admin-dashboard/*' to avoid conflicts
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/admin/*',
+  path: '/admin-dashboard/*',
   component: Admin
 });
 

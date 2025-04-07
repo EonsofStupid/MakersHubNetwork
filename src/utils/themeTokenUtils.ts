@@ -11,6 +11,23 @@ function isObject(val: unknown): val is Record<string, any> {
 }
 
 /**
+ * Creates a default design tokens structure with required properties
+ */
+function createDefaultTokens(): DesignTokensStructure {
+  return {
+    colors: {
+      primary: "#00F0FF",
+      secondary: "#FF2D6E",
+    },
+    effects: {
+      shadows: {},
+      blurs: {},
+      gradients: {}
+    }
+  };
+}
+
+/**
  * Safely extends/updates theme design tokens with new values
  * @param currentTokens Current design tokens structure
  * @param updates The updates to apply
@@ -21,7 +38,7 @@ export function updateDesignTokens(
   updates: Partial<DesignTokensStructure>
 ): DesignTokensStructure {
   // Start with empty defaults if no tokens exist
-  const baseTokens: DesignTokensStructure = currentTokens || { colors: {}, effects: { shadows: {}, blurs: {}, gradients: {} } };
+  const baseTokens: DesignTokensStructure = currentTokens || createDefaultTokens();
   
   try {
     // Create deep copy to avoid mutation
@@ -30,7 +47,7 @@ export function updateDesignTokens(
     // Update colors if provided
     if (updates.colors) {
       result.colors = {
-        ...(result.colors || {}),
+        ...result.colors,
         ...updates.colors
       };
     }
@@ -38,9 +55,9 @@ export function updateDesignTokens(
     // Update effects if provided
     if (updates.effects) {
       result.effects = {
-        shadows: { ...(result.effects?.shadows || {}), ...(updates.effects.shadows || {}) },
-        blurs: { ...(result.effects?.blurs || {}), ...(updates.effects.blurs || {}) },
-        gradients: { ...(result.effects?.gradients || {}), ...(updates.effects.gradients || {}) },
+        shadows: { ...result.effects.shadows, ...(updates.effects.shadows || {}) },
+        blurs: { ...result.effects.blurs, ...(updates.effects.blurs || {}) },
+        gradients: { ...result.effects.gradients, ...(updates.effects.gradients || {}) },
         ...(result.effects || {}),
         ...(updates.effects.primary !== undefined ? { primary: updates.effects.primary } : {}),
         ...(updates.effects.secondary !== undefined ? { secondary: updates.effects.secondary } : {}),
@@ -102,8 +119,13 @@ export function updateThemeColors(
   currentTokens: DesignTokensStructure | undefined,
   colorUpdates: Record<string, string>
 ): DesignTokensStructure {
-  return updateDesignTokens(currentTokens, {
-    colors: colorUpdates
+  const baseTokens = currentTokens || createDefaultTokens();
+  
+  return updateDesignTokens(baseTokens, {
+    colors: {
+      ...baseTokens.colors,
+      ...colorUpdates
+    }
   });
 }
 
@@ -117,7 +139,12 @@ export function updateThemeEffects(
   currentTokens: DesignTokensStructure | undefined,
   effectUpdates: { primary?: string; secondary?: string; tertiary?: string; shadows?: Record<string, any>; blurs?: Record<string, any>; gradients?: Record<string, any> }
 ): DesignTokensStructure {
-  return updateDesignTokens(currentTokens, {
-    effects: effectUpdates
+  const baseTokens = currentTokens || createDefaultTokens();
+  
+  return updateDesignTokens(baseTokens, {
+    effects: {
+      ...baseTokens.effects,
+      ...effectUpdates
+    }
   });
 }

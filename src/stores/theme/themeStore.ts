@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { getTheme } from '@/services/themeService';
-import { Theme, ThemeContext, ComponentTokens, StoreThemeTokens } from '@/types/theme';
+import { Theme, ThemeContext, ComponentTokens, StoreThemeTokens, DesignTokensStructure } from '@/types/theme';
 import { ThemeTokens, fallbackTokens } from '@/theme/schema';
 
 export type ThemeLoadStatus = 'idle' | 'loading' | 'loaded' | 'error';
@@ -53,6 +53,22 @@ const ensureAllTokens = (tokens: Partial<StoreThemeTokens>): StoreThemeTokens =>
     radiusFull: tokens.radiusFull || fallbackTokens.radiusFull,
     ...tokens // Keep any additional tokens
   };
+};
+
+// Default design tokens structure with required properties
+const defaultDesignTokens: DesignTokensStructure = {
+  colors: {
+    primary: fallbackTokens.primary,
+    secondary: fallbackTokens.secondary,
+  },
+  effects: {
+    shadows: {},
+    blurs: {},
+    gradients: {},
+    primary: fallbackTokens.effectPrimary,
+    secondary: fallbackTokens.effectSecondary,
+    tertiary: fallbackTokens.effectTertiary
+  }
 };
 
 // Create the store
@@ -161,17 +177,19 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   }
 }));
 
-// Helper function to extract tokens from theme
+// Helper function to extract tokens from theme with proper type safety
 function extractTokensFromTheme(theme: Theme): Partial<StoreThemeTokens> {
   try {
     if (!theme || !theme.design_tokens) {
       return {};
     }
 
-    const colors = theme.design_tokens.colors || {};
-    const effects = theme.design_tokens.effects || { shadows: {}, blurs: {}, gradients: {} };
-    const animation = theme.design_tokens.animation || {};
-    const spacing = theme.design_tokens.spacing || {};
+    // Use default structure with required properties if missing
+    const designTokens = theme.design_tokens || defaultDesignTokens;
+    const colors = designTokens.colors || { primary: fallbackTokens.primary, secondary: fallbackTokens.secondary };
+    const effects = designTokens.effects || { shadows: {}, blurs: {}, gradients: {}, primary: fallbackTokens.effectPrimary, secondary: fallbackTokens.effectSecondary, tertiary: fallbackTokens.effectTertiary };
+    const animation = designTokens.animation || {};
+    const spacing = designTokens.spacing || {};
     
     return {
       // Colors with fallbacks

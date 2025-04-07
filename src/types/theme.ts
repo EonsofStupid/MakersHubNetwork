@@ -30,8 +30,9 @@ export interface ComponentTokens {
   context?: ThemeContext;
 }
 
+// Fixed DesignTokensStructure with required properties
 export interface DesignTokensStructure {
-  colors?: {
+  colors: {
     primary: string;
     secondary: string;
     accent?: string;
@@ -53,10 +54,10 @@ export interface DesignTokensStructure {
     lineHeights?: Record<string, any>;
     letterSpacing?: Record<string, any>;
   };
-  effects?: {
-    shadows?: Record<string, any>;
-    blurs?: Record<string, any>;
-    gradients?: Record<string, any>;
+  effects: {
+    shadows: Record<string, any>;
+    blurs: Record<string, any>;
+    gradients: Record<string, any>;
     primary?: string;
     secondary?: string;
     tertiary?: string;
