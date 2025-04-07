@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from "react";
 import { Outlet, useNavigate } from "@tanstack/react-router";
 import { AdminHeader } from "../AdminHeader";
@@ -92,4 +93,5 @@ export function AdminLayout({
   );
 }
 
+// This default export is critical for dynamic imports in routes
 export default AdminLayout;

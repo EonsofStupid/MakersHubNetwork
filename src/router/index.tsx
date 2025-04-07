@@ -1,7 +1,8 @@
+
 import { 
   RouterProvider,
   createRouter,
-  type RegisterRouter,
+  type RegisteredRouter,
   type AnyRoute,
   createRootRouteWithContext
 } from '@tanstack/react-router';

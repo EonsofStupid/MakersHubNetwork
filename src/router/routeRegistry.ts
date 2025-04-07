@@ -1,113 +1,61 @@
 
+import { createRootRoute } from '@tanstack/react-router';
 import { siteRoutes } from './routes/site';
 import { adminRoutes } from './routes/admin';
 import { chatRoutes } from './routes/chat';
-import { z } from 'zod';
-import { getLogger } from '@/logging';
 import { ThemeContext } from '@/types/theme';
-import { ThemeContextSchema } from '@/types/themeContext';
+import { z } from 'zod';
 
-const logger = getLogger('RouteRegistry');
+// Define a Zod schema for ThemeContext to ensure valid values
+const ThemeContextSchema = z.enum(['site', 'admin', 'chat', 'app', 'training']);
 
 /**
- * Central registry of all application routes with their trees and individual routes
- * This allows for easier management and discovery of routes across scopes
+ * Registry of all routes in the application
  */
-export const routeRegistry = (() => {
-  try {
-    return {
-      site: siteRoutes,
-      admin: adminRoutes,
-      chat: chatRoutes
-    };
-  } catch (error) {
-    logger.error('Failed to initialize route registry', { 
-      error: error instanceof Error ? error.message : String(error) 
-    });
-    
-    // Provide fallback routes to prevent complete app failure
-    return {
-      site: {
-        root: null,
-        base: null,
-        index: null,
-        login: null,
-        tree: null
-      },
-      admin: {
-        base: null,
-        tree: null
-      },
-      chat: {
-        base: null,
-        tree: null
-      }
-    };
-  }
-})();
-
-// Zod schema for route params by scope
-export const routeParamsSchema = {
-  chat: {
-    session: z.object({
-      sessionId: z.string()
-    })
-  },
-  admin: {
-    // Add schemas for admin routes with params as needed
-  },
-  site: {
-    // Add schemas for site routes with params as needed
-  }
+export const routeRegistry = {
+  // Site routes
+  site: siteRoutes,
+  
+  // Admin routes
+  admin: adminRoutes,
+  
+  // Chat routes
+  chat: chatRoutes
 };
 
+// Create a root route for testing or fallback
+export const rootRoute = createRootRoute({
+  component: () => <div>Root Route</div>
+});
+
 /**
- * Get the appropriate theme context based on the current route path
+ * Get theme context for the current route path
  */
-export function getThemeContextForRoute(path: string): ThemeContext {
+export function getThemeContextForRoute(routePath: string): ThemeContext {
   try {
-    // Use the Zod schema to validate the output
-    if (path.startsWith('/admin')) {
-      return ThemeContextSchema.parse('admin');
+    if (routePath.startsWith('/admin')) {
+      return 'admin';
+    } else if (routePath.startsWith('/chat')) {
+      return 'chat';
+    } else {
+      return 'site';
     }
-    
-    if (path.startsWith('/chat')) {
-      return ThemeContextSchema.parse('chat');
-    }
-    
-    // Default to 'site' for all other routes
-    return ThemeContextSchema.parse('site');
   } catch (error) {
-    logger.error('Error determining theme context', {
-      path,
-      error: error instanceof Error ? error.message : String(error)
-    });
-    // Fallback to site theme if validation fails
-    return 'site';
+    console.error('Error determining theme context for route:', error);
+    return 'site'; // Fallback to site theme
   }
 }
 
 /**
- * Check if a path belongs to a specific scope
+ * Validate if a scope string is a valid router scope
  */
-export function isPathInScope(path: string, scope: 'site' | 'admin' | 'chat'): boolean {
-  try {
-    switch (scope) {
-      case 'admin':
-        return path.startsWith('/admin');
-      case 'chat':
-        return path.startsWith('/chat');
-      case 'site':
-        return !path.startsWith('/admin') && !path.startsWith('/chat');
-      default:
-        return false;
-    }
-  } catch (error) {
-    logger.error('Error checking path scope', {
-      path,
-      scope,
-      error: error instanceof Error ? error.message : String(error)
-    });
-    return false;
-  }
+export function isValidScope(scope: string): scope is 'site' | 'admin' | 'chat' {
+  return ['site', 'admin', 'chat'].includes(scope);
+}
+
+/**
+ * Map a route path to a theme context
+ */
+export function mapRouteToThemeContext(path: string): ThemeContext {
+  return getThemeContextForRoute(path);
 }

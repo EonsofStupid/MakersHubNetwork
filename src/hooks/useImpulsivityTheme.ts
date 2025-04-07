@@ -50,14 +50,14 @@ export function useImpulsivityTheme() {
         
         // Use our utility function to safely update design tokens
         const updatedDesignTokens = updateThemeColors(safeDesignTokens, {
-          primary: '186 100% 50%',
-          secondary: '334 100% 59%',
+          primary: tokens.primary || '186 100% 50%',
+          secondary: tokens.secondary || '334 100% 59%',
         });
         
         const finalTokens = updateThemeEffects(updatedDesignTokens, {
-          primary: '#00F0FF',
-          secondary: '#FF2D6E',
-          tertiary: '#8B5CF6',
+          primary: tokens.effectPrimary || '#00F0FF',
+          secondary: tokens.effectSecondary || '#FF2D6E',
+          tertiary: tokens.effectTertiary || '#8B5CF6',
         });
         
         logger.info('Updating theme design tokens with Impulsivity colors');
