@@ -2,41 +2,29 @@
 import { createRootRoute } from '@tanstack/react-router';
 import { ThemeContext } from '@/types/theme';
 import RootRouteFallback from '@/components/layouts/RootRouteFallback';
-
-// Import router routes dynamically to avoid circular dependencies
-/**
- * Registry of all routes in the application
- */
-export const routeRegistry = {
-  // Site routes - these will be imported on demand
-  site: { root: null, tree: null },
-  
-  // Admin routes - these will be imported on demand
-  admin: { tree: null },
-  
-  // Chat routes - these will be imported on demand
-  chat: { tree: null }
-};
-
-// Initialize route trees dynamically
-export async function initializeRoutes() {
-  // Import route modules dynamically
-  const siteModule = await import('./router/routes/site');
-  const adminModule = await import('./router/routes/admin');
-  const chatModule = await import('./router/routes/chat');
-  
-  // Update registry
-  routeRegistry.site = siteModule.siteRoutes;
-  routeRegistry.admin = adminModule.adminRoutes;
-  routeRegistry.chat = chatModule.chatRoutes;
-  
-  return routeRegistry;
-}
+import { adminRoutes } from '@/router/routes/admin';
+import { chatRoutes } from '@/router/routes/chat';
+import { siteRoutes } from '@/router/routes/site';
 
 // Create a root route for testing or fallback
 export const rootRoute = createRootRoute({
   component: RootRouteFallback
 });
+
+/**
+ * Registry of all routes in the application
+ * Note: The route registry is initialized during application bootstrap
+ */
+export const routeRegistry = {
+  // Site routes - these are dynamically imported
+  site: siteRoutes,
+  
+  // Admin routes - these are dynamically imported
+  admin: adminRoutes,
+  
+  // Chat routes - these are dynamically imported
+  chat: chatRoutes
+};
 
 /**
  * Get theme context for the current route path

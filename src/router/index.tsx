@@ -3,8 +3,7 @@ import {
   RouterProvider,
   createRouter,
   type RegisteredRouter,
-  type AnyRoute,
-  createRootRouteWithContext
+  type AnyRoute
 } from '@tanstack/react-router';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { rootRoute } from '@/router/routes/site';
@@ -18,6 +17,8 @@ import { ThemeContext } from '@/types/theme';
 import { adminRoutes } from './routes/admin';
 import { chatRoutes } from './routes/chat';
 import { siteRoutes } from './routes/site';
+import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
+import { safeSSR } from '@/lib/utils/safeSSR';
 
 const logger = getLogger('Router');
 
@@ -57,19 +58,28 @@ const buildRouteTree = () => {
   }
 };
 
+// Get the current pathname safely (works in SSR and client)
+const getCurrentPathname = () => {
+  return safeSSR(() => window.location.pathname, '/');
+};
+
 // Create the router instance with error handling and proper typings
 export const router = (() => {
   try {
     const routeTree = buildRouteTree();
+    const pathname = getCurrentPathname();
+    const themeContext = getThemeContextForRoute(pathname);
+    const scope = pathname.startsWith('/admin') ? 'admin' : 
+                 pathname.startsWith('/chat') ? 'chat' : 'site';
     
     return createRouter({ 
       routeTree,
       defaultPreload: 'intent',
       defaultPreloadStaleTime: 0,
       context: {
-        scope: 'site' as const,
-        themeContext: 'site' as ThemeContext
-      }
+        scope,
+        themeContext
+      } as RouterContext
     });
   } catch (error) {
     logger.error('Failed to create router', { 
@@ -77,7 +87,7 @@ export const router = (() => {
     });
     
     // Return a minimal router that at least won't crash the app
-    const minimalTree = siteRoutes.root || ({} as AnyRoute);
+    const minimalTree = rootRoute || ({} as AnyRoute);
     return createRouter({
       routeTree: minimalTree,
       defaultComponent: () => (
@@ -97,7 +107,7 @@ export const router = (() => {
 // Router provider component with global logging components
 export function AppRouter() {
   const [currentScope, setCurrentScope] = useState<'site' | 'admin' | 'chat'>('site');
-  const pathname = router.state.location.pathname;
+  const pathname = safeSSR(() => router.state.location.pathname, '/');
   const logger = getLogger('AppRouter');
   
   // Update the current scope when the pathname changes
@@ -135,27 +145,35 @@ export function AppRouter() {
         </div>
       }
     >
-      <RouterProvider 
-        router={router}
-        context={{
-          scope: currentScope,
-          themeContext: getThemeContextForRoute(pathname)
-        }} 
-        defaultPendingComponent={() => (
+      <NoHydrationMismatch
+        fallback={
           <div className="flex items-center justify-center h-screen">
             <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
           </div>
-        )}
-        defaultErrorComponent={({ error }) => (
-          <div className="flex items-center justify-center h-screen flex-col">
-            <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
-            <pre className="bg-red-50 p-4 rounded border border-red-200 max-w-md overflow-auto">
-              {error instanceof Error ? error.message : String(error)}
-            </pre>
-          </div>
-        )}
-      />
-      <GlobalLoggingComponents />
+        }
+      >
+        <RouterProvider 
+          router={router}
+          context={{
+            scope: currentScope,
+            themeContext: getThemeContextForRoute(pathname)
+          }} 
+          defaultPendingComponent={() => (
+            <div className="flex items-center justify-center h-screen">
+              <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+            </div>
+          )}
+          defaultErrorComponent={({ error }) => (
+            <div className="flex items-center justify-center h-screen flex-col">
+              <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+              <pre className="bg-red-50 p-4 rounded border border-red-200 max-w-md overflow-auto">
+                {error instanceof Error ? error.message : String(error)}
+              </pre>
+            </div>
+          )}
+        />
+        <GlobalLoggingComponents />
+      </NoHydrationMismatch>
     </ErrorBoundary>
   );
 }
@@ -174,8 +192,14 @@ function GlobalLoggingComponents() {
 
 // Export a utility to get the current scope
 export const useRouterScope = () => {
-  const scope = router.useRouterContext().scope;
+  const router = useRouter();
+  const scope = router.options.context.scope;
   return scope as 'site' | 'admin' | 'chat';
 };
+
+// Create a hook to use the router for safer access
+export function useRouter() {
+  return router;
+}
 
 export default router;

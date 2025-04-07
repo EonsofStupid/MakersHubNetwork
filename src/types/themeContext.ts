@@ -1,10 +1,12 @@
 
 import { z } from 'zod';
-import { ThemeContext } from './theme';
 
-// Define a Zod schema for ThemeContext to ensure valid values
-export const ThemeContextSchema = z.enum(['site', 'admin', 'chat', 'app', 'training']);
-export type ThemeContextType = z.infer<typeof ThemeContextSchema>;
+// Define valid theme contexts as a union type
+export const ThemeContextValues = ['site', 'admin', 'chat', 'app', 'training'] as const;
+export type ThemeContext = typeof ThemeContextValues[number];
+
+// Create a Zod schema for ThemeContext validation
+export const ThemeContextSchema = z.enum(ThemeContextValues);
 
 /**
  * Get the default theme context for a specific scope
@@ -27,24 +29,24 @@ export function getDefaultThemeContext(scope: 'site' | 'admin' | 'chat'): ThemeC
 export function getThemeContextForPath(path: string): ThemeContext {
   try {
     if (path.startsWith('/admin')) {
-      return ThemeContextSchema.parse('admin');
+      return 'admin';
     }
     
     if (path.startsWith('/chat')) {
-      return ThemeContextSchema.parse('chat');
+      return 'chat';
     }
     
     // Additional mappings for new contexts
     if (path.startsWith('/app')) {
-      return ThemeContextSchema.parse('app');
+      return 'app';
     }
     
     if (path.startsWith('/training')) {
-      return ThemeContextSchema.parse('training');
+      return 'training';
     }
     
     // Default to 'site' for all other routes
-    return ThemeContextSchema.parse('site');
+    return 'site';
   } catch (error) {
     console.error('Error determining theme context for path:', path, error);
     // Fallback to site theme if validation fails
@@ -55,11 +57,6 @@ export function getThemeContextForPath(path: string): ThemeContext {
 /**
  * Validate that a theme context is valid
  */
-export function isValidThemeContext(context: string): context is ThemeContext {
-  try {
-    ThemeContextSchema.parse(context);
-    return true;
-  } catch {
-    return false;
-  }
+export function isValidThemeContext(context: unknown): context is ThemeContext {
+  return typeof context === 'string' && ThemeContextValues.includes(context as ThemeContext);
 }
