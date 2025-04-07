@@ -54,20 +54,31 @@ serve(async (req) => {
   }
 
   try {
-    // Parse URL and get scope parameter (for backward compatibility)
+    console.log("Theme service received request:", req.url);
+    
+    // Parse URL and get query parameters
     const url = new URL(req.url);
+    
     // Support both 'scope' and 'context' parameters, defaulting to 'app' context
     const context = url.searchParams.get('context') || url.searchParams.get('scope') || 'app';
+    const themeId = url.searchParams.get('themeId');
+    const themeName = url.searchParams.get('themeName');
+    const isDefault = url.searchParams.get('isDefault') !== 'false'; // Default to true
     
-    console.log(`Loading theme for context: ${context}`);
+    console.log(`Loading theme with params: context=${context}, themeId=${themeId}, themeName=${themeName}, isDefault=${isDefault}`);
 
-    // Query for theme by context and default status
-    const { data: theme, error } = await supabaseAdmin
-      .from('themes')
-      .select('*')
-      .eq('context', context) 
-      .eq('is_default', true)
-      .single();
+    let query = supabaseAdmin.from('themes').select('*');
+    
+    // Apply filters based on available parameters
+    if (themeId) {
+      query = query.eq('id', themeId);
+    } else if (themeName) {
+      query = query.eq('name', themeName);
+    } else {
+      query = query.eq('context', context).eq('is_default', isDefault);
+    }
+
+    const { data: theme, error } = await query.single();
 
     if (error) {
       console.error('Error fetching theme:', error);

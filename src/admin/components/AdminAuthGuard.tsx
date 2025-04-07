@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { router } from '@/router';
@@ -5,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { navigateTo, createSearchParams } from '@/utils/router-helpers';
+import { navigateTo, navigateWithParams } from '@/utils/router-helpers';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
@@ -20,10 +21,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       logger.info('User not authenticated, redirecting to login page');
-      navigate({ 
-        to: '/login',
-        search: { from: '/admin' }
-      });
+      navigateWithParams('/login', { from: '/admin' });
     } else if (!isLoading && isAuthenticated && !hasAdminAccess) {
       logger.warn('User does not have admin access, redirecting to home page');
       toast({
@@ -31,9 +29,9 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
         description: 'You do not have permission to access the admin section',
         variant: 'destructive'
       });
-      navigate({ to: '/' });
+      navigateTo('/');
     }
-  }, [isLoading, isAuthenticated, hasAdminAccess, navigate, toast, logger]);
+  }, [isLoading, isAuthenticated, hasAdminAccess, toast, logger]);
   
   if (isLoading) {
     return (

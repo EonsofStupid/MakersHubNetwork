@@ -33,96 +33,84 @@ export const adminRootRoute = createRootRoute();
 // Define base admin route for all admin pages
 const adminBaseRoute = createRoute({
   getParentRoute: () => adminRootRoute,
-  id: 'admin-base', // Add explicit ID to prevent duplicates
-  path: '/',
+  path: '/', // Use path only, no id
   component: AdminRoutes
 });
 
 // Dashboard route
 const dashboardRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  id: 'admin-dashboard', // Add explicit ID
-  path: '/dashboard',
+  path: '/dashboard', // Use path only, no id
   component: () => <React.Suspense fallback={<PageLoader />}><Dashboard /></React.Suspense>
 });
 
 // Users route
 const usersRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  id: 'admin-users', // Add explicit ID
-  path: '/users',
+  path: '/users', // Use path only, no id
   component: () => <React.Suspense fallback={<PageLoader />}><UsersPage /></React.Suspense>
 });
 
 // Parts route
 const partsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  id: 'admin-parts', // Add explicit ID
-  path: '/parts',
+  path: '/parts', // Use path only, no id
   component: () => <React.Suspense fallback={<PageLoader />}><PartsPage /></React.Suspense>
 });
 
 // Builds route
 const buildsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  id: 'admin-builds', // Add explicit ID
-  path: '/builds',
+  path: '/builds', // Use path only, no id
   component: () => <React.Suspense fallback={<PageLoader />}><BuildsPage /></React.Suspense>
 });
 
 // Themes route
 const themesRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  id: 'admin-themes', // Add explicit ID
-  path: '/themes',
+  path: '/themes', // Use path only, no id
   component: () => <React.Suspense fallback={<PageLoader />}><ThemesPage /></React.Suspense>
 });
 
 // Content route
 const contentRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  id: 'admin-content', // Add explicit ID
-  path: '/content',
+  path: '/content', // Use path only, no id
   component: () => <React.Suspense fallback={<PageLoader />}><ContentPage /></React.Suspense>
 });
 
 // Settings route
 const settingsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  id: 'admin-settings', // Add explicit ID
-  path: '/settings',
+  path: '/settings', // Use path only, no id
   component: () => <React.Suspense fallback={<PageLoader />}><SettingsPage /></React.Suspense>
 });
 
 // Permissions route
 const permissionsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  id: 'admin-permissions', // Add explicit ID
-  path: '/permissions',
+  path: '/permissions', // Use path only, no id
   component: () => <React.Suspense fallback={<PageLoader />}><PermissionsPage /></React.Suspense>
 });
 
 // Logs route
 const logsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  id: 'admin-logs', // Add explicit ID
-  path: '/logs',
+  path: '/logs', // Use path only, no id
   component: () => <React.Suspense fallback={<PageLoader />}><LogsPage /></React.Suspense>
 });
 
 // Unauthorized page
 const unauthorizedRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  id: 'admin-unauthorized', // Add explicit ID
-  path: '/unauthorized',
+  path: '/unauthorized', // Use path only, no id
   component: () => <React.Suspense fallback={<PageLoader />}><UnauthorizedPage /></React.Suspense>
 });
 
 // Not found page
 const notFoundRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
-  id: 'admin-not-found', // Add explicit ID
-  path: '/*',
+  path: '/*', // Use path only, no id
   component: () => <React.Suspense fallback={<PageLoader />}><NotFoundPage /></React.Suspense>
 });
 

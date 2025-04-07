@@ -69,24 +69,21 @@ export const rootRoute = createRootRoute({
 // Site route with navigation and footer
 const siteRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'site', 
-  path: '/',
+  path: '/', // Use path only, no id
   component: SiteLayout
 });
 
 // Index route
 const indexRoute = createRoute({
   getParentRoute: () => siteRoute,
-  id: 'index', 
-  path: '/',
+  path: '/', // Use path only, no id
   component: Index
 });
 
 // Login route with search param validation
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'login', 
-  path: ROUTES.LOGIN,
+  path: '/login', // Use path only, no id
   validateSearch: loginSearchSchema,
   component: Login
 });
@@ -94,32 +91,28 @@ const loginRoute = createRoute({
 // Profile route
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'profile', 
-  path: ROUTES.PROFILE,
+  path: '/profile', // Use path only, no id
   component: () => <div>Profile Page</div>
 });
 
 // Settings route
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'settings', 
-  path: ROUTES.SETTINGS,
+  path: '/settings', // Use path only, no id
   component: () => <div>Settings Page</div>
 });
 
 // Admin route
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'admin', 
-  path: ROUTES.ADMIN,
+  path: '/admin/*', // Use path only, no id
   component: Admin
 });
 
 // Chat route
 const chatRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'chat',
-  path: ROUTES.CHAT,
+  path: '/chat', // Use path only, no id
   component: () => <div>Chat Route</div>
 });
 
