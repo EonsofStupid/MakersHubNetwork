@@ -5,7 +5,7 @@ import { Theme, ThemeContext } from '@/types/theme';
 import { ThemeTokens, defaultTokens } from '@/theme/tokenSchema';
 import defaultTheme from '@/theme/defaultTheme';
 import { persistThemeTokens } from '@/lib/theme/safeStorage';
-import { isBoolean, toBoolean } from '@/utils/typeGuards';
+import { isBoolean, toBoolean, toBooleanOrUndefined, isObject } from '@/utils/typeGuards';
 
 const logger = getLogger('ThemeLoader');
 
@@ -31,20 +31,22 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
       body: { context } 
     });
     
-    const result = await Promise.race([themePromise, timeoutPromise]);
+    // Safely handle the race result with proper typing
+    const raceResult = await Promise.race([themePromise, timeoutPromise]);
     
-    if (!result) {
-      throw new Error('No result from Supabase');
+    // Type guard to ensure we have a valid result
+    if (!isObject(raceResult)) {
+      throw new Error('Invalid result from Supabase');
     }
     
-    const functionResult = result as { data?: any, error?: any };
+    const functionResult = raceResult as { data?: any, error?: any };
     if (functionResult.error) {
       throw new Error(`Supabase error: ${functionResult.error?.message || 'Unknown error'}`);
     }
     
     const data = functionResult.data;
     
-    if (data?.tokens) {
+    if (data?.tokens && isObject(data.tokens)) {
       logger.info('Theme loaded from Supabase', { 
         details: { source: 'edge-function' }
       });

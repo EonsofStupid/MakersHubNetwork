@@ -2,7 +2,7 @@
 import { getLogger } from '@/logging';
 import { ThemeTokens, ThemeTokensSchema } from '@/theme/tokenSchema';
 import { z } from 'zod';
-import { isBoolean, toBoolean } from '@/utils/typeGuards';
+import { isBoolean, toBoolean, toBooleanOrUndefined, zodErrorToBool } from '@/utils/typeGuards';
 
 const logger = getLogger('ThemeStorage');
 
@@ -16,7 +16,17 @@ export function safeLocalStorage<T>(key: string, fallback: T, parse = true): T {
     const value = localStorage.getItem(key);
     if (!value) return fallback;
     
-    return parse ? JSON.parse(value) as T : (value as unknown as T);
+    // Safe parsing with type checking
+    if (parse) {
+      try {
+        return JSON.parse(value) as T;
+      } catch (error) {
+        logger.warn('Error parsing localStorage value:', { error });
+        return fallback;
+      }
+    }
+    
+    return (value as unknown as T);
   } catch (error) {
     logger.warn('Error accessing localStorage:', { error });
     return fallback;
@@ -52,11 +62,17 @@ export function getStoredThemeTokens(): ThemeTokens | null {
     if (result.success) {
       return result.data;
     } else {
-      logger.warn('Invalid theme tokens in localStorage:', { error: result.error });
+      // Safe handling of ZodError
+      logger.warn('Invalid theme tokens in localStorage:', { 
+        error: result.error.message 
+      });
       return null;
     }
   } catch (error) {
-    logger.error('Error reading theme tokens from localStorage:', { error });
+    // Safe error handling 
+    logger.error('Error reading theme tokens from localStorage:', { 
+      error: error instanceof Error ? error.message : String(error) 
+    });
     return null;
   }
 }
@@ -69,7 +85,9 @@ export function setStoredThemeContext(context: string): void {
     if (typeof window === 'undefined') return;
     localStorage.setItem('theme-context', context);
   } catch (error) {
-    logger.error('Error saving theme context:', { error });
+    logger.error('Error saving theme context:', { 
+      error: error instanceof Error ? error.message : String(error) 
+    });
   }
 }
 
@@ -81,7 +99,9 @@ export function getStoredThemeContext(): string | null {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem('theme-context');
   } catch (error) {
-    logger.error('Error reading theme context:', { error });
+    logger.error('Error reading theme context:', { 
+      error: error instanceof Error ? error.message : String(error) 
+    });
     return null;
   }
 }
