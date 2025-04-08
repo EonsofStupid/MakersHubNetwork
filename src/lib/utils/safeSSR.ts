@@ -10,7 +10,12 @@ export function safeSSR<T>(fn: () => T, fallback: T): T {
     }
     
     // Check if we're in a hydration phase
-    if (document.readyState === 'loading' || !document.documentElement.hasAttribute('data-hydrated')) {
+    if (document.readyState === 'loading') {
+      return fallback;
+    }
+    
+    // Check if we're in a hydration phase using our custom attribute
+    if (!document.documentElement.hasAttribute('data-hydrated')) {
       return fallback;
     }
     

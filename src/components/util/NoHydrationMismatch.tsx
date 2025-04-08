@@ -16,12 +16,12 @@ export const NoHydrationMismatch = ({
   const [isMounted, setIsMounted] = useState(false);
   
   useEffect(() => {
-    // Use requestAnimationFrame to ensure we're fully hydrated
-    const frame = requestAnimationFrame(() => {
+    // Use a timeout to ensure we're fully hydrated
+    const timer = setTimeout(() => {
       setIsMounted(true);
-    });
+    }, 0);
     
-    return () => cancelAnimationFrame(frame);
+    return () => clearTimeout(timer);
   }, []);
   
   // Return null during SSR to prevent hydration mismatches
