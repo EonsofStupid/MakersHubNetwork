@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 
 interface NoHydrationMismatchProps {
@@ -17,11 +16,25 @@ export const NoHydrationMismatch = ({
   const [isMounted, setIsMounted] = useState(false);
   
   useEffect(() => {
-    setIsMounted(true);
+    // Use requestAnimationFrame to ensure we're fully hydrated
+    const frame = requestAnimationFrame(() => {
+      setIsMounted(true);
+    });
+    
+    return () => cancelAnimationFrame(frame);
   }, []);
   
+  // Return null during SSR to prevent hydration mismatches
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  
   // Return fallback or nothing until client-side mounted
-  return isMounted ? <>{children}</> : <>{fallback}</>;
+  if (!isMounted) {
+    return <>{fallback}</>;
+  }
+  
+  return <>{children}</>;
 };
 
 export default NoHydrationMismatch;

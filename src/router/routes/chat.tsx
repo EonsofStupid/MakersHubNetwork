@@ -1,4 +1,3 @@
-
 import { createRoute } from '@tanstack/react-router';
 import { rootRoute } from './site';
 import React from 'react';

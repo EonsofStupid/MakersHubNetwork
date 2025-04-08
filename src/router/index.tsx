@@ -72,6 +72,7 @@ export const router = (() => {
       routeTree,
       defaultPreload: 'intent',
       defaultPreloadStaleTime: 0,
+      defaultComponent: () => null, // Prevent hydration issues with default component
       context: {
         scope,
         themeContext
@@ -86,12 +87,7 @@ export const router = (() => {
     const minimalTree = rootRoute;
     return createRouter({
       routeTree: minimalTree,
-      defaultComponent: () => (
-        <div className="p-8">
-          <h1 className="text-xl font-bold mb-4">Router Initialization Error</h1>
-          <p>Please check the console for details and try refreshing the page.</p>
-        </div>
-      ),
+      defaultComponent: () => null, // Prevent hydration issues with default component
       context: {
         scope: 'site',
         themeContext: 'site' as ThemeContext
@@ -103,11 +99,20 @@ export const router = (() => {
 // Router provider component with global logging components
 export function AppRouter() {
   const [currentScope, setCurrentScope] = useState<'site' | 'admin' | 'chat'>('site');
+  const [isClient, setIsClient] = useState(false);
   const pathname = safeSSR(() => router.state.location.pathname, '/');
   const logger = getLogger('AppRouter');
   
+  // Mark when we're on the client to prevent hydration issues
+  useEffect(() => {
+    setIsClient(true);
+    document.documentElement.setAttribute('data-hydrated', 'true');
+  }, []);
+  
   // Update the current scope when the pathname changes
   useEffect(() => {
+    if (!isClient) return; // Skip during SSR
+    
     try {
       const newScope = getScopeFromPathname(pathname);
       setCurrentScope(newScope);
@@ -117,7 +122,13 @@ export function AppRouter() {
       // Default to site scope on error for resilience
       setCurrentScope('site');
     }
-  }, [pathname, logger]);
+  }, [pathname, logger, isClient]);
+
+  // Use a consistent initial context for SSR
+  const initialContext: RouterContext = {
+    scope: 'site',
+    themeContext: 'site' as ThemeContext
+  };
 
   return (
     <ErrorBoundary
@@ -143,10 +154,10 @@ export function AppRouter() {
       >
         <RouterProvider 
           router={router}
-          context={{
+          context={isClient ? {
             scope: currentScope,
             themeContext: getThemeContextForRoute(pathname)
-          }} 
+          } : initialContext} 
           defaultPendingComponent={() => (
             <div className="flex items-center justify-center h-screen">
               <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
@@ -161,7 +172,7 @@ export function AppRouter() {
             </div>
           )}
         />
-        <GlobalLoggingComponents />
+        {isClient && <GlobalLoggingComponents />}
       </NoHydrationMismatch>
     </ErrorBoundary>
   );
