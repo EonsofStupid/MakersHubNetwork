@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getLogger } from '@/logging';
 
 interface NoHydrationMismatchProps {
@@ -15,38 +15,24 @@ export const NoHydrationMismatch = ({
   children, 
   fallback = null 
 }: NoHydrationMismatchProps) => {
-  const isMountedRef = useRef(false);
+  const [isMounted, setIsMounted] = useState(false);
   const logger = getLogger('NoHydrationMismatch');
-  const forceUpdateRef = useRef(() => {});
   
-  // Use ref instead of state to prevent re-renders
+  // Use a simpler approach with useState for better reliability
   useEffect(() => {
-    // Set up force update mechanism that doesn't cause infinite loops
-    const forceUpdateEvent = new Event('forceUpdateNoHydration');
-    
-    // Simple helper function to force a re-render by dispatching event
-    forceUpdateRef.current = () => {
-      window.dispatchEvent(forceUpdateEvent);
-    };
-    
-    // Use a timeout to ensure we're fully hydrated
+    // Set timeout to ensure hydration is complete
     const timer = setTimeout(() => {
-      // Only set if not already mounted to prevent loops
-      if (!isMountedRef.current) {
-        isMountedRef.current = true;
-        // Force re-render after setting the ref
-        forceUpdateRef.current();
+      setIsMounted(true);
+      
+      // Mark hydration complete on document for global state tracking
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-hydrated', 'true');
         logger.debug('NoHydrationMismatch mounted and ready');
       }
     }, 50);
     
     // Only log once on initial mount
     logger.debug('NoHydrationMismatch initializing');
-    
-    // Mark hydration complete on document for global state tracking
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-hydrated', 'true');
-    }
     
     return () => {
       clearTimeout(timer);
@@ -59,7 +45,7 @@ export const NoHydrationMismatch = ({
   }
   
   // Return fallback or nothing until client-side mounted
-  if (!isMountedRef.current) {
+  if (!isMounted) {
     return <>{fallback}</>;
   }
   
