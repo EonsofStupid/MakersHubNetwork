@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoggingProvider } from '@/logging/context/LoggingContext';
 import { LogConsole } from '@/logging/components/LogConsole';
 import { LogToggleButton } from '@/logging/components/LogToggleButton';
@@ -56,80 +56,77 @@ export function AppRouter() {
         </div>
       }
     >
-      <BrowserRouter>
-        <LoggingProvider>
-          <ThemeInitializer 
-            fallbackTheme={defaultFallbackTheme}
-            applyImmediately={true}
-          >
-            <ThemeEffectProvider>
-              <SiteThemeProvider>
-                <NoHydrationMismatch
-                  fallback={<SuspenseLoading />}
-                >
-                  <Routes>
-                    {/* Site Routes */}
-                    <Route path="/" element={
-                      <React.Suspense fallback={<SuspenseLoading />}>
-                        <Index />
-                      </React.Suspense>
-                    } />
-                    <Route path="/login" element={
-                      <React.Suspense fallback={<SuspenseLoading />}>
-                        <Login />
-                      </React.Suspense>
-                    } />
-                    
-                    {/* Admin Routes */}
-                    <Route path="/admin/*" element={
-                      <React.Suspense fallback={<SuspenseLoading />}>
-                        <AdminRoutes />
-                      </React.Suspense>
-                    } />
-                    
-                    {/* Chat Routes */}
-                    <Route path="/chat" element={
-                      <React.Suspense fallback={<SuspenseLoading />}>
-                        <ChatLayout />
-                      </React.Suspense>
-                    }>
-                      <Route index element={
-                        <React.Suspense fallback={<SuspenseLoading />}>
-                          <ChatHome />
-                        </React.Suspense>
-                      } />
-                      <Route path="session/:sessionId" element={
-                        <React.Suspense fallback={<SuspenseLoading />}>
-                          <ChatSession />
-                        </React.Suspense>
-                      } />
-                    </Route>
-                    
-                    {/* 404 Page */}
-                    <Route path="*" element={
-                      <React.Suspense fallback={<SuspenseLoading />}>
-                        <NotFound />
-                      </React.Suspense>
-                    } />
-                  </Routes>
+      <LoggingProvider>
+        <ThemeInitializer 
+          fallbackTheme={defaultFallbackTheme}
+          applyImmediately={true}
+        >
+          <ThemeEffectProvider>
+            <SiteThemeProvider>
+              <NoHydrationMismatch
+                fallback={<SuspenseLoading />}
+              >
+                <Routes>
+                  {/* Site Routes */}
+                  <Route path="/" element={
+                    <React.Suspense fallback={<SuspenseLoading />}>
+                      <Index />
+                    </React.Suspense>
+                  } />
+                  <Route path="/login" element={
+                    <React.Suspense fallback={<SuspenseLoading />}>
+                      <Login />
+                    </React.Suspense>
+                  } />
                   
-                  {/* Floating UI elements */}
-                  <LogConsole />
-                  <LogToggleButton />
-                </NoHydrationMismatch>
-              </SiteThemeProvider>
-            </ThemeEffectProvider>
-          </ThemeInitializer>
-        </LoggingProvider>
-      </BrowserRouter>
+                  {/* Admin Routes */}
+                  <Route path="/admin/*" element={
+                    <React.Suspense fallback={<SuspenseLoading />}>
+                      <AdminRoutes />
+                    </React.Suspense>
+                  } />
+                  
+                  {/* Chat Routes */}
+                  <Route path="/chat" element={
+                    <React.Suspense fallback={<SuspenseLoading />}>
+                      <ChatLayout />
+                    </React.Suspense>
+                  }>
+                    <Route index element={
+                      <React.Suspense fallback={<SuspenseLoading />}>
+                        <ChatHome />
+                      </React.Suspense>
+                    } />
+                    <Route path="session/:sessionId" element={
+                      <React.Suspense fallback={<SuspenseLoading />}>
+                        <ChatSession />
+                      </React.Suspense>
+                    } />
+                  </Route>
+                  
+                  {/* 404 Page */}
+                  <Route path="*" element={
+                    <React.Suspense fallback={<SuspenseLoading />}>
+                      <NotFound />
+                    </React.Suspense>
+                  } />
+                </Routes>
+                
+                {/* Floating UI elements */}
+                <LogConsole />
+                <LogToggleButton />
+              </NoHydrationMismatch>
+            </SiteThemeProvider>
+          </ThemeEffectProvider>
+        </ThemeInitializer>
+      </LoggingProvider>
     </ErrorBoundary>
   );
 }
 
 // Simple hook to access the current router path
 export function useCurrentPath() {
-  const location = window.location;
-  return location.pathname;
+  return window.location.pathname;
 }
 
 export default AppRouter;

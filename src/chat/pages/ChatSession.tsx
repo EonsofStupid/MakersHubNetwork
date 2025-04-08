@@ -9,10 +9,11 @@ import { Send, ArrowLeft } from 'lucide-react';
 
 export default function ChatSession() {
   const navigate = useNavigate();
-  const { sessionId } = useParams<{ sessionId: string }>();
+  const params = useParams<{ sessionId: string }>();
+  const sessionId = params.sessionId || '';
   const [inputMessage, setInputMessage] = React.useState('');
   const { messages, sendMessage, isLoading } = useChatSession({ 
-    sessionId: sessionId || '' 
+    sessionId 
   });
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   

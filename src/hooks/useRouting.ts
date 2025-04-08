@@ -16,9 +16,10 @@ export function useRouting() {
   }, [navigate]);
   
   const navigateWithParams = useCallback((path: string, params: Record<string, any>, options?: { replace?: boolean; state?: any }) => {
+    const searchString = createSearchParams(params);
     navigate({
       pathname: path,
-      search: `?${createSearchParams(params)}`,
+      search: `?${searchString}`,
     }, { 
       replace: options?.replace || false,
       state: options?.state 

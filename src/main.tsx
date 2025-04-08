@@ -13,7 +13,7 @@ const queryClient = new QueryClient({
       retry: 1,
     },
   },
-})
+});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -21,4 +21,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <App />
     </QueryClientProvider>
   </React.StrictMode>,
-)
+);

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ChatWidget } from './ChatWidget';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useChat } from '../context/ChatProvider';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useAuthState } from '@/auth/hooks/useAuthState';

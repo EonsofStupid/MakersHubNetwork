@@ -1,10 +1,5 @@
 import { ThemeContext } from '@/types/theme';
 import { parseThemeContext } from '@/types/themeContext';
-import { createRootRoute } from '@tanstack/react-router';
-import { siteRoutes } from '@/router/routes/site';
-import { adminRoutes } from '@/router/routes/admin';
-import { chatRoutes } from '@/router/routes/chat';
-import RootRouteFallback from '@/components/layouts/RootRouteFallback';
 
 const routeScopes: Record<string, string> = {
   '/admin': 'admin',
@@ -62,19 +57,34 @@ export function getThemeContextForRoute(path: string): ThemeContext {
  */
 export const routeRegistry = {
   // Site routes
-  site: siteRoutes,
+  site: {
+    base: '/',
+    login: '/login',
+    home: '/'
+  },
   
   // Admin routes
-  admin: adminRoutes,
+  admin: {
+    base: '/admin',
+    dashboard: '/admin/dashboard',
+    users: '/admin/users',
+    parts: '/admin/parts',
+    builds: '/admin/builds',
+    themes: '/admin/themes',
+    content: '/admin/content',
+    settings: '/admin/settings',
+    permissions: '/admin/permissions',
+    logs: '/admin/logs',
+    unauthorized: '/admin/unauthorized'
+  },
   
   // Chat routes
-  chat: chatRoutes
+  chat: {
+    base: '/chat',
+    home: '/chat',
+    session: (sessionId: string) => `/chat/session/${sessionId}`
+  }
 };
-
-// Create a root route for testing or fallback
-export const rootRoute = createRootRoute({
-  component: RootRouteFallback
-});
 
 /**
  * Validate if a scope string is a valid router scope
