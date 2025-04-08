@@ -1,4 +1,3 @@
-
 import { 
   createRoute,
   createRootRoute,
@@ -6,6 +5,7 @@ import {
 } from '@tanstack/react-router';
 import { ReactNode } from 'react';
 import { z } from 'zod';
+import React from 'react';
 
 import { MainNav } from '@/components/MainNav';
 import { Footer } from '@/components/Footer';
@@ -60,11 +60,7 @@ function SiteLayout() {
 
 // Define routes with proper search param validation
 export const rootRoute = createRootRoute({
-  component: ({ children }) => (
-    <RootLayout>
-      {children}
-    </RootLayout>
-  )
+  component: RootLayout
 });
 
 // Site route with navigation and footer
@@ -78,7 +74,11 @@ export const siteBaseRoute = createRoute({
 const indexRoute = createRoute({
   getParentRoute: () => siteBaseRoute,
   path: '',
-  component: Index
+  component: () => (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <Index />
+    </React.Suspense>
+  )
 });
 
 // Login route with search param validation
@@ -86,7 +86,11 @@ const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
   validateSearch: (search) => loginSearchSchema.parse(search),
-  component: Login
+  component: () => (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <Login />
+    </React.Suspense>
+  )
 });
 
 // Create a complete site route tree
