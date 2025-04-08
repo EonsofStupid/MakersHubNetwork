@@ -8,6 +8,7 @@ import NoHydrationMismatch from '../util/NoHydrationMismatch';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
 import { ThemeErrorState } from './info/ThemeErrorState';
 import { safeSSR, isBrowser } from '@/lib/utils/safeSSR';
+import CircuitBreaker from '@/lib/utils/CircuitBreaker';
 
 interface ThemeInitializerProps {
   children: ReactNode;
@@ -30,6 +31,9 @@ export function ThemeInitializer({
   applyImmediately = true,
   fallbackTheme
 }: ThemeInitializerProps) {
+  // Initialize circuit breaker to prevent infinite loops
+  CircuitBreaker.init('ThemeInitializer-effect', 5, 1000);
+  
   // Use a stable selector to prevent recreation on each render
   const themeState = useMemo(() => {
     return (state: ReturnType<typeof useThemeStore.getState>) => ({
@@ -82,10 +86,20 @@ export function ThemeInitializer({
         setInitializationComplete(true); // Still mark as complete to prevent blocking UI
       }
     };
-  }, [loadTheme, themeContext, logger]);
+  }, [loadTheme, themeContext]);
 
   // Initialize theme loading with timeout protection - only once
   useEffect(() => {
+    // Check if we're caught in an infinite loop
+    if (CircuitBreaker.isTripped('ThemeInitializer-effect')) {
+      logger.warn('Breaking potential infinite loop in ThemeInitializer');
+      setInitializationComplete(true); // Force to complete to avoid blocking UI
+      return;
+    }
+    
+    // Increment counter for circuit breaker
+    CircuitBreaker.count('ThemeInitializer-effect');
+    
     // Skip if already initialized
     if (initAttemptedRef.current) {
       return;
@@ -121,14 +135,14 @@ export function ThemeInitializer({
     loadThemeSafely()();
   };
 
-  // Don't use hydration protection for SSR-safe components
-  if (loadStatus === 'error' && error) {
-    return <ThemeErrorState error={error} onRetry={handleRetryLoading} />;
-  }
-
-  // Early exit with minimal UI if we have a fallback applied
+  // If we have a fallback applied or initialization is complete, don't block rendering
   if ((appliedFallback || initializationComplete) && loadStatus !== 'loading') {
     return <>{children}</>;
+  }
+
+  // Show error state if there's an error
+  if (loadStatus === 'error' && error) {
+    return <ThemeErrorState error={error} onRetry={handleRetryLoading} />;
   }
 
   // Only show loading state if theme is loading and we don't have a theme yet

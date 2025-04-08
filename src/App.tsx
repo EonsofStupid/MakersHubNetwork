@@ -11,7 +11,7 @@ import { AppRouter } from "@/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import CircuitBreaker from "@/utils/CircuitBreaker";
+import CircuitBreaker from "@/lib/utils/CircuitBreaker";
 
 // Import styles
 import "./App.css";
@@ -35,12 +35,16 @@ initLogging();
 
 const logger = getLogger('App');
 
-// Create QueryClient instance
+// Create QueryClient instance with better defaults to avoid excessive retries
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000,
-      retry: 1
+      staleTime: 60 * 1000, // 1 minute
+      retry: 1, // Limit retries
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      retry: 1,
     }
   }
 });
@@ -63,6 +67,7 @@ function App() {
       return;
     }
     
+    // Mark as ready to avoid repeated initialization
     appReadyRef.current = true;
     
     // Small delay to ensure initial rendering is complete

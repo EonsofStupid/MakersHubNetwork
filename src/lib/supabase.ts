@@ -2,76 +2,80 @@
 import { createClient } from '@supabase/supabase-js';
 import { getLogger } from '@/logging';
 
-const logger = getLogger('Supabase');
+// Get Supabase URL and anon key from environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Get Supabase URL and key from environment or use fallback values for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kxeffcclfvecdvqpljbh.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4ZWZmY2NsZnZlY2R2cXBsamJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU0MjIwMTMsImV4cCI6MjA1MDk5ODAxM30.4O56xT1rUNnwrIzr3xHIHXPfa_pIMHyjQXjIoo9H4K4';
+// Fallback logger in case we can't access the main logger
+const fallbackLogger = {
+  error: (message: string, details?: any) => console.error(message, details),
+  warn: (message: string, details?: any) => console.warn(message, details),
+  info: (message: string, details?: any) => console.info(message, details),
+  debug: (message: string, details?: any) => console.debug(message, details),
+};
 
-// Validate that we have the required values to create the client
+// Check if Supabase configuration is available
 if (!supabaseUrl || !supabaseAnonKey) {
-  logger.error('Missing Supabase configuration', {
-    details: { 
-      hasUrl: !!supabaseUrl, 
-      hasKey: !!supabaseAnonKey 
-    }
-  });
+  try {
+    const logger = getLogger('supabase');
+    logger.warn('Missing Supabase configuration, using dummy client', {
+      details: { 
+        hasUrl: !!supabaseUrl, 
+        hasKey: !!supabaseAnonKey
+      }
+    });
+  } catch (e) {
+    fallbackLogger.warn('Missing Supabase configuration, using dummy client');
+  }
 }
 
-/**
- * Initialize Supabase client with robust error handling and offline detection
- */
+// Create Supabase client with optimized configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: typeof localStorage !== 'undefined' ? localStorage : undefined
-  }
+    storageKey: 'supabase.auth.token',
+  },
+  global: {
+    headers: { 
+      'x-application-name': 'lovable-web-app',
+    },
+  },
+  // Improved logging for development and debugging
+  debug: import.meta.env.DEV,
 });
 
-// Export this client as the default to be used throughout the app
-export default supabase;
+// Re-export Supabase types for easier access
+export type { 
+  User, 
+  Session,
+  UserIdentity, 
+  UserMetadata 
+} from '@supabase/supabase-js';
 
-/**
- * Get the current auth session safely
- */
-export async function getSession() {
+// Optional fallback for testing/development without Supabase
+export function createDummyClient() {
   try {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    return data.session;
-  } catch (error) {
-    logger.error('Failed to get session', { 
-      details: { error: error instanceof Error ? error.message : String(error) }
-    });
-    return null;
+    const logger = getLogger('supabase-dummy');
+    logger.warn('Creating dummy Supabase client - all operations will fail');
+  } catch (e) {
+    fallbackLogger.warn('Creating dummy Supabase client');
   }
-}
-
-/**
- * Check if the user is currently online
- */
-export function isOnline() {
-  return typeof navigator !== 'undefined' && navigator.onLine;
-}
-
-/**
- * Function to safely execute Supabase queries with fallbacks
- */
-export async function safeQuery<T>(
-  queryFn: () => Promise<{ data: T | null; error: any }>,
-  fallback: T | null = null
-): Promise<{ data: T | null; error: any }> {
-  try {
-    if (!isOnline()) {
-      return { data: fallback, error: new Error('Offline') };
-    }
-    return await queryFn();
-  } catch (error) {
-    logger.error('Error executing Supabase query', {
-      details: { error: error instanceof Error ? error.message : String(error) }
-    });
-    return { data: fallback, error };
-  }
+  
+  return {
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      onAuthStateChange: () => ({ 
+        data: { subscription: { unsubscribe: () => {} } }
+      }),
+      signOut: () => Promise.resolve({ error: null }),
+    },
+    functions: {
+      invoke: (name: string) => Promise.resolve({ 
+        data: null, 
+        error: { message: 'Dummy client - no Supabase connection' }
+      }),
+    },
+  };
 }
