@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserRole } from "@/auth/types/auth.types";
@@ -12,13 +13,15 @@ interface AuthGuardProps {
   requiredRoles?: UserRole[];
   adminOnly?: boolean;
   fallback?: ReactNode;
+  publicRoute?: boolean; // Add option for public routes that don't require authentication
 }
 
 export const AuthGuard = ({ 
   children, 
   requiredRoles, 
   adminOnly,
-  fallback = <div>Loading authentication...</div> 
+  fallback = <div>Loading authentication...</div>,
+  publicRoute = false // Default to protected route
 }: AuthGuardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,6 +44,9 @@ export const AuthGuard = ({
   const hasAdminPermission = adminOnly ? hasAdminAccess : true;
 
   useEffect(() => {
+    // For public routes, we don't need to check authentication status
+    if (publicRoute) return;
+    
     // Only perform checks after auth is initialized
     if (!initialized) return;
     
@@ -91,8 +97,14 @@ export const AuthGuard = ({
     pathname, 
     toast,
     logger,
-    initialized
+    initialized,
+    publicRoute
   ]);
+
+  // For public routes, always render children regardless of auth status
+  if (publicRoute) {
+    return <>{children}</>;
+  }
 
   // Show a fallback while loading
   if (isLoading) return <>{fallback}</>;

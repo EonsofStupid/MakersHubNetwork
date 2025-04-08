@@ -42,6 +42,9 @@ const queryClient = new QueryClient({
       staleTime: 60 * 1000, // 1 minute
       retry: 1, // Limit retries
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Skip cache invalidation on unmount and window focus to prevent excess requests
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false
     },
     mutations: {
       retry: 1,
@@ -90,6 +93,9 @@ function App() {
             Bridge Architecture:
             AuthProvider -> AdminProvider -> ChatProvider -> AppRouter
             Each provider should only consume from providers above it
+            
+            We've configured AuthProvider to not block rendering of public routes,
+            so users can see content even if auth is still initializing
           */}
           <AuthProvider>
             <AppInitializer>
