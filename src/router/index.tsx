@@ -4,17 +4,35 @@ import { Routes, Route } from 'react-router-dom';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { useRouteCircuitBreaker } from '@/hooks/useRouteCircuitBreaker';
+import { SiteLayout, RootLayout } from '@/router/routes/site';
+import FloatingChatWrapper from '@/chat/components/FloatingChatWrapper';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 export function AppRouter() {
   // Use the route circuit breaker to reset circuit breakers on route changes
   useRouteCircuitBreaker();
+  const logger = useLogger('AppRouter', LogCategory.SYSTEM);
+  
+  // Log router initialization
+  React.useEffect(() => {
+    logger.info('AppRouter initialized');
+  }, [logger]);
   
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
+    <RootLayout>
+      <Routes>
+        <Route element={<SiteLayout />}>
+          {/* Main site routes */}
+          <Route path="/" element={<HomePage />} />
+          
+          {/* Add all your routes above this line */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Routes>
       
-      {/* Add all your routes above this line */}
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+      {/* Floating chat is rendered outside the routes */}
+      <FloatingChatWrapper />
+    </RootLayout>
   );
 }
