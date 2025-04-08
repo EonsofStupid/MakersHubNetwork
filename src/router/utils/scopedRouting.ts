@@ -85,11 +85,11 @@ export function navigateToScope(scope: RouteScope, path: string, options?: {
     fullPath = `/chat${path.startsWith('/') ? path : `/${path}`}`;
   }
   
-  // Navigate using the router
+  // Navigate using the router with correct type assertions
   router.navigate({
-    to: fullPath as any, // Type assertion needed for TanStack Router
-    params: params,
-    search: search as any, // Type assertion needed for TanStack Router
+    to: fullPath,
+    params: params || {},
+    search: search || {},
     replace
   });
 }
