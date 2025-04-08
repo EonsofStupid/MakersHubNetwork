@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { useThemeStore } from '@/stores/theme/store';
@@ -12,7 +12,11 @@ export function AppInitializer({ children }: AppInitializerProps) {
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
   const [isInitialized, setIsInitialized] = useState(false);
   const initializationAttempted = useRef(false);
-  const { loadStatus } = useThemeStore();
+  
+  // Use stable selector to prevent re-renders
+  const loadStatus = useThemeStore(
+    useMemo(() => (state) => state.loadStatus, [])
+  );
 
   useEffect(() => {
     // Only attempt initialization once
@@ -25,10 +29,13 @@ export function AppInitializer({ children }: AppInitializerProps) {
         initializationAttempted.current = true;
         logger.info('Initializing application...');
 
-        logger.info('Application initialized successfully', {
-          details: { themeLoaded: loadStatus === 'success' }
-        });
-        setIsInitialized(true);
+        // Just a small delay to ensure other systems have settled
+        setTimeout(() => {
+          logger.info('Application initialized successfully', {
+            details: { themeLoaded: loadStatus === 'success' }
+          });
+          setIsInitialized(true);
+        }, 50);
       } catch (error) {
         logger.error('Failed to initialize application', {
           details: { error: error instanceof Error ? error.message : String(error) }

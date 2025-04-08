@@ -2,7 +2,7 @@
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { errorToObject } from '@/shared/utils/render';
 
 /**
@@ -17,20 +17,24 @@ export function useAuth() {
   const stableIsAdmin = useRef(useAuthStore.getState().isAdmin).current;
   const stableLogout = useRef(useAuthStore.getState().logout).current;
   
-  // Extract only what we need from the store using a stable selector
-  // This helps prevent re-renders caused by unstable selector functions
-  const selectorRef = useRef((state: ReturnType<typeof useAuthStore.getState>) => ({
-    user: state.user,
-    session: state.session,
-    roles: state.roles,
-    status: state.status,
-    isLoading: state.isLoading,
-    error: state.error,
-    initialized: state.initialized,
-    isAuthenticated: state.isAuthenticated
-  }));
+  // Create a stable selector function using useMemo
+  const selector = useMemo(() => {
+    return (state: ReturnType<typeof useAuthStore.getState>) => ({
+      user: state.user,
+      session: state.session,
+      roles: state.roles,
+      status: state.status,
+      isLoading: state.isLoading,
+      error: state.error,
+      initialized: state.initialized,
+      isAuthenticated: state.isAuthenticated
+    });
+  }, []);
   
-  const authState = useAuthStore(selectorRef.current);
+  // Use the stable selector to extract state
+  const authState = useAuthStore(selector);
+  
+  // Get initialize function with separate selector to avoid re-renders
   const initialize = useAuthStore(state => state.initialize);
   
   // Auto-initialize auth if needed - with guard against infinite loops

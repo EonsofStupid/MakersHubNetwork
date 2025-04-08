@@ -13,11 +13,12 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { getLogger } from '@/logging';
 import { ThemeContext } from '@/types/theme';
 import { adminRoutes } from './routes/admin';
-import { chatRoutes } from './routes/chat';
+import { chatRoutes } from './routes/site';
 import { siteRoutes } from './routes/site';
 import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
 import { safeSSR } from '@/lib/utils/safeSSR';
 import { isValidThemeContext } from '@/utils/typeGuards';
+import CircuitBreaker from '@/utils/CircuitBreaker';
 
 const logger = getLogger('Router');
 
@@ -32,6 +33,9 @@ const getCurrentPathname = () => {
   return safeSSR(() => window.location.pathname, '/');
 };
 
+// Initialize circuit breaker for router component
+CircuitBreaker.init('AppRouter', 15, 1000);
+
 // Initial context for the router
 const initialPathname = getCurrentPathname();
 const initialScope = (() => {
@@ -42,69 +46,86 @@ const initialScope = (() => {
 const initialThemeContext = getThemeContextForRoute(initialPathname);
 
 // Create router instance once to prevent recreating on every render
-// Use a factory function to ensure clean initialization
-const createRouterInstance = () => {
-  try {
-    // Build route tree once
-    const routeTree = (() => {
-      const tree = siteRoutes.root;
-      
-      if (adminRoutes?.tree) {
-        tree.addChildren([adminRoutes.tree]);
-      }
-      
-      if (chatRoutes?.tree) {
-        tree.addChildren([chatRoutes.tree]);
-      }
-      
-      return tree;
-    })();
-
-    return createRouter({ 
-      routeTree,
-      defaultPreload: 'intent',
-      defaultPreloadStaleTime: 0,
-      defaultComponent: () => null,
-      defaultPendingComponent: () => (
-        <div className="flex items-center justify-center h-screen">
-          <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-        </div>
-      ),
-      defaultErrorComponent: ({ error }) => (
-        <div className="flex items-center justify-center h-screen flex-col">
-          <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
-          <pre className="bg-red-50 p-4 rounded border border-red-200 max-w-md overflow-auto">
-            {error instanceof Error ? error.message : String(error)}
-          </pre>
-        </div>
-      ),
-      context: {
-        scope: initialScope,
-        themeContext: initialThemeContext
-      } as RouterContext
-    });
-  } catch (error) {
-    logger.error('Failed to create router', { 
-      details: { error: error instanceof Error ? error.message : String(error) }
-    });
+// Use a function to create the router but wrap it with a singleton pattern
+const createRouterSingleton = (() => {
+  let router: ReturnType<typeof createRouter> | null = null;
+  
+  return () => {
+    if (router) return router;
     
-    // Return a minimal router that at least won't crash the app
-    return createRouter({
-      routeTree: rootRoute,
-      defaultComponent: () => null,
-      context: {
-        scope: 'site',
-        themeContext: 'site' as ThemeContext
-      }
-    });
-  }
-};
+    try {
+      // Build route tree once
+      const routeTree = (() => {
+        const tree = siteRoutes.root;
+        
+        if (adminRoutes?.tree) {
+          tree.addChildren([adminRoutes.tree]);
+        }
+        
+        if (chatRoutes?.tree) {
+          tree.addChildren([chatRoutes.tree]);
+        }
+        
+        return tree;
+      })();
+
+      router = createRouter({ 
+        routeTree,
+        defaultPreload: 'intent',
+        defaultPreloadStaleTime: 0,
+        defaultComponent: () => null,
+        defaultPendingComponent: () => (
+          <div className="flex items-center justify-center h-screen">
+            <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          </div>
+        ),
+        defaultErrorComponent: ({ error }) => (
+          <div className="flex items-center justify-center h-screen flex-col">
+            <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+            <pre className="bg-red-50 p-4 rounded border border-red-200 max-w-md overflow-auto">
+              {error instanceof Error ? error.message : String(error)}
+            </pre>
+          </div>
+        ),
+        context: {
+          scope: initialScope,
+          themeContext: initialThemeContext
+        } as RouterContext
+      });
+      
+      return router;
+    } catch (error) {
+      logger.error('Failed to create router', { 
+        details: { error: error instanceof Error ? error.message : String(error) }
+      });
+      
+      // Return a minimal router that at least won't crash the app
+      router = createRouter({
+        routeTree: rootRoute,
+        defaultComponent: () => null,
+        context: {
+          scope: 'site',
+          themeContext: 'site' as ThemeContext
+        }
+      });
+      
+      return router;
+    }
+  };
+})();
 
 // Create the router instance at module level - do this only once
-const router = createRouterInstance();
+const router = createRouterSingleton();
 
 // Router provider component with global logging components
 export function AppRouter() {
+  // Monitor for infinite loops
+  useEffect(() => {
+    if (CircuitBreaker.count('AppRouter')) {
+      console.error('Breaking potential infinite loop in AppRouter component');
+    }
+  });
+  
   const [currentScope, setCurrentScope] = useState<'site' | 'admin' | 'chat'>(initialScope);
   const [isClient, setIsClient] = useState(false);
   const { showLogConsole } = useLoggingContext();
@@ -117,7 +138,7 @@ export function AppRouter() {
     setIsClient(true);
   }, []);
   
-  // Use a consistent initial context for SSR
+  // Use a consistent initial context for SSR - memoized to prevent recreation
   const routerContext = useMemo(() => {
     return {
       scope: currentScope,

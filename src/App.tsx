@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/auth/components/AuthProvider";
 import { AdminProvider } from "@/admin/context/AdminContext";
 import { LoggingProvider } from "@/logging/context/LoggingContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { initializeLogger, getLogger } from "@/logging";
 import { SiteThemeProvider } from "@/components/theme/SiteThemeProvider";
 import { ThemeEffectProvider } from "@/components/theme/effects/ThemeEffectProvider";
@@ -48,11 +48,16 @@ const defaultFallbackTheme = {
 
 function App() {
   const [appReady, setAppReady] = useState(false);
+  const appReadyRef = useRef(false);
   
   // Mark app as ready to allow progressive rendering, but do this only once
   useEffect(() => {
-    if (appReady) return; // Early return if already marked ready
+    // Skip if already marked ready
+    if (appReadyRef.current || appReady) return;
     
+    appReadyRef.current = true;
+    
+    // Small delay to ensure initial rendering is complete
     const timer = setTimeout(() => {
       setAppReady(true);
       safeSSR(() => {
@@ -62,16 +67,16 @@ function App() {
     }, 100);
     
     return () => clearTimeout(timer);
-  }, [appReady]); // Add appReady to dependencies
+  }, []); // Empty dependency array - only run once
   
   return (
     <LoggingProvider>
-      <ThemeEffectProvider>
-        {/* Critical: Theme initialization happens FIRST with fallback theme */}
-        <ThemeInitializer 
-          fallbackTheme={defaultFallbackTheme}
-          applyImmediately={true}
-        >
+      {/* Important: theme initialization happens before everything else */}
+      <ThemeInitializer 
+        fallbackTheme={defaultFallbackTheme}
+        applyImmediately={true}
+      >
+        <ThemeEffectProvider>
           <SiteThemeProvider>
             <AuthProvider>
               <AppInitializer>
@@ -84,8 +89,8 @@ function App() {
               </AppInitializer>
             </AuthProvider>
           </SiteThemeProvider>
-        </ThemeInitializer>
-      </ThemeEffectProvider>
+        </ThemeEffectProvider>
+      </ThemeInitializer>
     </LoggingProvider>
   );
 }
