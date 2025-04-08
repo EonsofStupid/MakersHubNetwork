@@ -1,62 +1,46 @@
 
-import { z } from 'zod';
+import { Database } from "@/integrations/supabase/types"
 
-// Define UserRole enum
-export const UserRoleEnum = z.enum([
-  'admin',
-  'super_admin',
-  'editor',
-  'viewer',
-  'user',
-  'maker',
-  'builder',
-  'moderator',
-  'service'
-]);
+// Base role type from database
+export type UserRole = Database["public"]["Enums"]["user_role"]
 
-export type UserRole = z.infer<typeof UserRoleEnum>;
+// Auth Event Types
+export type AuthEventType = 
+  | 'SIGNED_IN'
+  | 'SIGNED_OUT'
+  | 'USER_UPDATED'
+  | 'SESSION_UPDATED'
+  | 'INITIALIZED';
 
-// Define Auth Status enum
-export const AuthStatusEnum = z.enum([
-  'idle',
-  'loading',
-  'authenticated',
-  'unauthenticated',
-  'error',
-]);
-
-export type AuthStatus = z.infer<typeof AuthStatusEnum>;
-
-// Define Auth Event types
-export const AuthEventTypeEnum = z.enum([
-  'SIGNED_IN',
-  'SIGNED_OUT',
-  'USER_UPDATED',
-  'SESSION_REFRESHED',
-  'PASSWORD_RECOVERY',
-  'TOKEN_REFRESHED',
-  'USER_DELETED',
-  'AUTH_SIGNED_IN',
-  'AUTH_SIGNED_OUT'
-]);
-
-export type AuthEventType = z.infer<typeof AuthEventTypeEnum>;
-
+// Auth Event Interface
 export interface AuthEvent {
   type: AuthEventType;
-  payload?: Record<string, unknown>;
+  payload?: any;
 }
 
+// Auth Event Listener Type
 export type AuthEventListener = (event: AuthEvent) => void;
 
-export const ADMIN_ROLES: UserRole[] = ['admin', 'super_admin'];
-
-export function hasRequiredRole(userRoles: UserRole[], requiredRole: UserRole): boolean {
-  // Allow admin roles to access any role's permissions
-  if (userRoles.some(role => ADMIN_ROLES.includes(role))) {
-    return true;
-  }
-  
-  // Check if the user has the specific required role
-  return userRoles.includes(requiredRole);
+// Authentication-specific interfaces
+export interface AuthUser {
+  id: string
+  display_name: string | null
+  avatar_url: string | null
+  primary_role_id: string | null
+  user_roles: Array<{
+    id: string
+    role: UserRole
+  }>
 }
+
+export interface AdminAccess {
+  isAdmin: boolean
+  hasAdminAccess: boolean
+}
+
+export interface WithAdminAccess {
+  hasAdminAccess: boolean
+}
+
+// Re-export for backward compatibility
+export type { UserRole as AuthUserRole }

@@ -8,6 +8,7 @@ import { useAuthState } from '@/auth/hooks/useAuthState';
 import { getLogger } from '@/logging';
 import { withDetails } from '@/logging/utils/log-helpers';
 import CircuitBreaker from '@/utils/CircuitBreaker';
+import { subscribeToAuthEvents } from '@/auth/bridge';
 
 export function FloatingChat() {
   const logger = getLogger('FloatingChat');
@@ -24,7 +25,7 @@ export function FloatingChat() {
   const canShow = useMemo(() => isAuthenticated && hasAdminAccess && !inChatRoute, 
     [isAuthenticated, hasAdminAccess, inChatRoute]);
   
-  // Handle initial render and prevent render loops
+  // Handle initial render with circuit breaker to prevent render loops
   useEffect(() => {
     // Initialize the circuit breaker for this component
     CircuitBreaker.init('floating-chat-render', 3, 500);
@@ -43,13 +44,38 @@ export function FloatingChat() {
         path: pathname 
       }));
     
+    // Subscribe to auth events
+    const unsubscribe = subscribeToAuthEvents(() => {
+      // Just check the conditions again - don't update state directly from auth events
+      const shouldShow = isAuthenticated && hasAdminAccess && !pathname.startsWith('/chat');
+      if (shouldShow !== shouldRender) {
+        setShouldRender(shouldShow);
+      }
+    });
+    
     // Safely update state based on props
     setShouldRender(canShow);
     
     return () => {
       CircuitBreaker.reset('floating-chat-render');
+      unsubscribe();
     };
-  }, [canShow, isAuthenticated, hasAdminAccess, pathname, logger]);
+  }, []);
+  
+  // Separate effect for updates to prevent re-render loops
+  useEffect(() => {
+    if (!renderedRef.current) return;
+    
+    // Only update if the component has already done its first render
+    // and if we have a true circuit breaker count
+    if (CircuitBreaker.getCount('floating-chat-render') > 0) {
+      // Update the render state based on latest values, but don't cause a loop
+      const newShouldRender = canShow;
+      if (newShouldRender !== shouldRender) {
+        setShouldRender(newShouldRender);
+      }
+    }
+  }, [canShow, shouldRender]);
   
   // Check for render loops
   if (CircuitBreaker.count('floating-chat-render')) {

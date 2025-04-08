@@ -1,5 +1,5 @@
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoggingProvider } from '@/logging/context/LoggingContext';
 import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
@@ -40,7 +40,25 @@ const fallbackTheme = {
   effectSecondary: "#FF2D6E",
 };
 
+// Reset CircuitBreaker on route change to prevent false positives
+export function useRouterCircuitBreakerReset() {
+  useEffect(() => {
+    // Reset router-specific circuit breakers on mount
+    CircuitBreaker.reset('router-renders');
+    CircuitBreaker.reset('floating-chat-render');
+    
+    logger.debug('Router circuit breakers reset');
+    
+    return () => {
+      // Optional: Reset on unmount if needed
+    };
+  }, []);
+}
+
 export function AppRouter() {
+  // Use our custom hook to reset circuit breakers
+  useRouterCircuitBreakerReset();
+  
   // Check for excessive re-rendering
   if (CircuitBreaker.count('router-renders')) {
     logger.warn('Circuit breaker triggered in AppRouter - too many renders');

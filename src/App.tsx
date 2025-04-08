@@ -45,9 +45,6 @@ const queryClient = new QueryClient({
   }
 });
 
-// Create a single FloatingChat component reference to avoid multiple instances
-const FloatingChatLazy = React.lazy(() => import('@/chat/components/FloatingChatWrapper'));
-
 function App() {
   const [appReady, setAppReady] = useState(false);
   const appReadyRef = useRef(false);
