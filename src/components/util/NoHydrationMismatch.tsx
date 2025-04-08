@@ -20,7 +20,6 @@ export const NoHydrationMismatch = ({
   const isMountedRef = useRef(false);
   const [isMounted, setIsMounted] = useState(false);
   const logger = getLogger('NoHydrationMismatch');
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Use a simpler approach with useState for better reliability
   useEffect(() => {
@@ -30,22 +29,14 @@ export const NoHydrationMismatch = ({
     // Mark as having run the effect
     isMountedRef.current = true;
     
-    // Small timeout to ensure hydration is complete
-    timerRef.current = setTimeout(() => {
-      setIsMounted(true);
-      
-      // Mark hydration complete on document for global state tracking
-      if (typeof document !== 'undefined') {
-        document.documentElement.setAttribute('data-hydrated', 'true');
-        logger.debug('NoHydrationMismatch mounted and ready');
-      }
-    }, 50);
+    // Immediately set to mounted to prevent delays
+    setIsMounted(true);
     
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
+    // Mark hydration complete on document for global state tracking
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-hydrated', 'true');
+      logger.debug('NoHydrationMismatch mounted and ready');
+    }
   }, []); // No dependencies needed - run once on mount
   
   // Return null during SSR to prevent hydration mismatches

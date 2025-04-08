@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useAuthState } from '@/auth/hooks/useAuthState';
@@ -51,10 +52,10 @@ export function useAuthRedirect(options: RedirectOptions) {
         }
       });
       
-      // Use TanStack Router compatible navigation with properly typed search params
+      // Use TanStack Router compatible navigation
       navigate({
-        to: to,
-        search: createSearchParams({ from: location.pathname })
+        to,
+        search: { from: location.pathname }
       });
     }
   }, [status, roles, navigate, to, allowRoles, redirectAuthenticated, redirectUnauthenticated, location.pathname, logger]);

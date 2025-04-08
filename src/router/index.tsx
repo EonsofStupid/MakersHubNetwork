@@ -2,8 +2,10 @@
 import { 
   RouterProvider,
   createRouter,
-  type AnyRoute,
-  type TrailingSlashOption,
+  Router,
+  RouterState,
+  AnyRoute,
+  AnyRouteMatch,
 } from '@tanstack/react-router';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { rootRoute } from '@/router/routes/site';
@@ -24,8 +26,8 @@ import CircuitBreaker from '@/utils/CircuitBreaker';
 
 const logger = getLogger('Router');
 
-// Define the explicit router type for export
-export type AppRouter = ReturnType<typeof createRouter<AnyRoute, TrailingSlashOption, boolean>>;
+// Define app router type explicitly without generics
+export type AppRouter = Router<any>;
 
 // Define router context type properly
 interface RouterContext {
@@ -96,10 +98,11 @@ const createRouterSingleton = (() => {
           scope: initialScope,
           themeContext: initialThemeContext
         } as RouterContext
-      }) as AppRouter; // Explicit casting to our defined router type
+      });
       
-      routerInstance = createdRouter;
-      return createdRouter as AppRouter;
+      // Cast the router to our AppRouter type
+      routerInstance = createdRouter as unknown as AppRouter;
+      return routerInstance;
     } catch (error) {
       logger.error('Failed to create router', { 
         details: { error: error instanceof Error ? error.message : String(error) }
@@ -113,10 +116,11 @@ const createRouterSingleton = (() => {
           scope: 'site',
           themeContext: 'site' as ThemeContext
         }
-      }) as AppRouter; // Explicit casting to our defined router type
+      });
       
-      routerInstance = fallbackRouter;
-      return fallbackRouter as AppRouter;
+      // Cast the fallback router to our AppRouter type
+      routerInstance = fallbackRouter as unknown as AppRouter;
+      return routerInstance;
     }
   };
 })();
@@ -202,7 +206,7 @@ export function AppRouter() {
         }
       >
         <RouterProvider 
-          router={router as any} // Type assertion needed for TanStack Router compatibility
+          router={router} 
           context={routerContext} 
         />
         {isClient && showLogConsole && <LogConsole />}

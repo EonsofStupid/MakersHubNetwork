@@ -50,7 +50,12 @@ export const AuthGuard = ({
       logger.info("AuthGuard - Redirecting to login: Not authenticated")
       // Keep track of the current path to redirect back after login
       const currentPath = pathname
-      navigate({ to: "/login", search: { from: encodeURIComponent(currentPath) }})
+      
+      // Use navigate with proper typing
+      navigate({ 
+        to: "/login", 
+        search: { from: encodeURIComponent(currentPath) } 
+      })
       return
     }
 
