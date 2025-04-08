@@ -13,9 +13,26 @@ import { LogToggleButton } from '@/logging/components/LogToggleButton';
 import { LogConsole } from '@/logging/components/LogConsole';
 import { useLoggingContext } from '@/logging/context/LoggingContext';
 
+// Loading component for lazy-loaded routes
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-screen">
+    <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+  </div>
+);
+
+// Safe wrapper for lazy-loaded components
+const safeComponent = <T extends React.ComponentType<Record<string, unknown>>>(LazyComp: React.LazyExoticComponent<T>) => {
+  const Component = (props: React.ComponentProps<T>) => (
+    <React.Suspense fallback={<PageLoader />}>
+      <LazyComp {...props} />
+    </React.Suspense>
+  );
+  return Component;
+};
+
 // Import pages
-import Index from '@/pages/Index';
-import Login from '@/pages/Login';
+const Index = React.lazy(() => import('@/pages/Index'));
+const Login = React.lazy(() => import('@/pages/Login'));
 
 // Login search params schema
 export const loginSearchSchema = z.object({
@@ -74,11 +91,7 @@ export const siteBaseRoute = createRoute({
 const indexRoute = createRoute({
   getParentRoute: () => siteBaseRoute,
   path: '',
-  component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
-      <Index />
-    </React.Suspense>
-  )
+  component: safeComponent(Index)
 });
 
 // Login route with search param validation
@@ -86,11 +99,7 @@ const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
   validateSearch: (search) => loginSearchSchema.parse(search),
-  component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
-      <Login />
-    </React.Suspense>
-  )
+  component: safeComponent(Login)
 });
 
 // Create a complete site route tree

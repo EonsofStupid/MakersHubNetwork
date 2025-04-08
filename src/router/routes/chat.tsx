@@ -8,11 +8,6 @@ export const chatParamsSchema = {
   sessionId: z.string()
 };
 
-// Lazy load the chat components
-const ChatLayout = React.lazy(() => import('@/chat/components/layouts/ChatLayout'));
-const ChatHome = React.lazy(() => import('@/chat/pages/ChatHome'));
-const ChatSession = React.lazy(() => import('@/chat/pages/ChatSession'));
-
 // Loading component
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
@@ -20,26 +15,33 @@ const PageLoader = () => (
   </div>
 );
 
+// Safe wrapper for lazy-loaded components
+const safeComponent = <T extends React.ComponentType<Record<string, unknown>>>(LazyComp: React.LazyExoticComponent<T>) => {
+  const Component = (props: React.ComponentProps<T>) => (
+    <React.Suspense fallback={<PageLoader />}>
+      <LazyComp {...props} />
+    </React.Suspense>
+  );
+  return Component;
+};
+
+// Lazy load the chat components
+const ChatLayout = React.lazy(() => import('@/chat/components/layouts/ChatLayout'));
+const ChatHome = React.lazy(() => import('@/chat/pages/ChatHome'));
+const ChatSession = React.lazy(() => import('@/chat/pages/ChatSession'));
+
 // Chat base route
 const chatBaseRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/chat',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <ChatLayout />
-    </React.Suspense>
-  )
+  component: safeComponent(ChatLayout)
 });
 
 // Chat home route
 const chatHomeRoute = createRoute({
   getParentRoute: () => chatBaseRoute,
   path: '/',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <ChatHome />
-    </React.Suspense>
-  )
+  component: safeComponent(ChatHome)
 });
 
 // Chat session route with Zod parameter validation
@@ -49,11 +51,14 @@ const chatSessionRoute = createRoute({
   parseParams: (params) => ({ 
     sessionId: chatParamsSchema.sessionId.parse(params.sessionId) 
   }),
-  component: ({ params }) => (
-    <React.Suspense fallback={<PageLoader />}>
-      <ChatSession sessionId={params.sessionId} />
-    </React.Suspense>
-  )
+  component: ({ params }) => {
+    const SessionComponent = () => (
+      <React.Suspense fallback={<PageLoader />}>
+        <ChatSession sessionId={params.sessionId} />
+      </React.Suspense>
+    );
+    return <SessionComponent />;
+  }
 });
 
 // Create a complete chat route tree

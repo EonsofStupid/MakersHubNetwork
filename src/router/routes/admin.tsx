@@ -2,7 +2,7 @@ import { createRoute } from '@tanstack/react-router';
 import { rootRoute } from './site';
 import React from 'react';
 import { z } from 'zod';
-import { AdminLayout } from '@/admin/components/layouts/AdminLayout'; // Correct import
+import { AdminLayout } from '@/admin/components/layouts/AdminLayout';
 
 // Zod schema for admin route params
 export const adminParamsSchema = {
@@ -18,7 +18,17 @@ const PageLoader = () => (
   </div>
 );
 
-// Lazy load the admin components - fixed incorrect import
+// Safe wrapper for lazy-loaded components
+const safeComponent = <T extends React.ComponentType<Record<string, unknown>>>(LazyComp: React.LazyExoticComponent<T>) => {
+  const Component = (props: React.ComponentProps<T>) => (
+    <React.Suspense fallback={<PageLoader />}>
+      <LazyComp {...props} />
+    </React.Suspense>
+  );
+  return Component;
+};
+
+// Lazy load the admin components
 const Dashboard = React.lazy(() => import('@/admin/routes/dashboard/DashboardPage'));
 const BuildsPage = React.lazy(() => import('@/admin/routes/builds/BuildsPage'));
 const UsersPage = React.lazy(() => import('@/admin/routes/users/UsersPage'));
@@ -35,132 +45,84 @@ const NotFoundPage = React.lazy(() => import('@/admin/routes/NotFoundPage'));
 const adminBaseRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <AdminLayout />
-    </React.Suspense>
-  )
+  component: AdminLayout
 });
 
 // Dashboard route
 const dashboardRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/dashboard',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <Dashboard />
-    </React.Suspense>
-  )
+  component: safeComponent(Dashboard)
 });
 
 // Users route
 const usersRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/users',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <UsersPage />
-    </React.Suspense>
-  )
+  component: safeComponent(UsersPage)
 });
 
 // Parts route
 const partsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/parts',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <PartsPage />
-    </React.Suspense>
-  )
+  component: safeComponent(PartsPage)
 });
 
 // Builds route
 const buildsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/builds',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <BuildsPage />
-    </React.Suspense>
-  )
+  component: safeComponent(BuildsPage)
 });
 
 // Themes route
 const themesRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/themes',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <ThemesPage />
-    </React.Suspense>
-  )
+  component: safeComponent(ThemesPage)
 });
 
 // Content route
 const contentRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/content',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <ContentPage />
-    </React.Suspense>
-  )
+  component: safeComponent(ContentPage)
 });
 
 // Settings route
 const settingsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/settings',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <SettingsPage />
-    </React.Suspense>
-  )
+  component: safeComponent(SettingsPage)
 });
 
 // Permissions route
 const permissionsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/permissions',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <PermissionsPage />
-    </React.Suspense>
-  )
+  component: safeComponent(PermissionsPage)
 });
 
 // Logs route
 const logsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/logs',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <LogsPage />
-    </React.Suspense>
-  )
+  component: safeComponent(LogsPage)
 });
 
 // Unauthorized route
 const unauthorizedRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/unauthorized',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <UnauthorizedPage />
-    </React.Suspense>
-  )
+  component: safeComponent(UnauthorizedPage)
 });
 
 // Admin not found route
 const adminNotFoundRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '*',
-  component: () => (
-    <React.Suspense fallback={<PageLoader />}>
-      <NotFoundPage />
-    </React.Suspense>
-  )
+  component: safeComponent(NotFoundPage)
 });
 
 // Create a complete admin route tree
