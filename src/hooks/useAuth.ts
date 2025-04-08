@@ -11,6 +11,8 @@ import { errorToObject } from '@/shared/utils/render';
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
+  
+  // Store stable function references to prevent re-renders
   const stableHasRole = useRef(useAuthStore.getState().hasRole).current;
   const stableIsAdmin = useRef(useAuthStore.getState().isAdmin).current;
   const stableLogout = useRef(useAuthStore.getState().logout).current;

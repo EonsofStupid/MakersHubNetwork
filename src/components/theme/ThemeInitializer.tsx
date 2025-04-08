@@ -30,7 +30,13 @@ export function ThemeInitializer({
   applyImmediately = true,
   fallbackTheme
 }: ThemeInitializerProps) {
-  const { loadTheme, loadStatus, error, currentTheme } = useThemeStore();
+  const { loadTheme, loadStatus, error, currentTheme } = useThemeStore(state => ({
+    loadTheme: state.loadTheme,
+    loadStatus: state.loadStatus,
+    error: state.error,
+    currentTheme: state.currentTheme
+  }));
+  
   const initAttemptedRef = useRef(false);
   const themeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [appliedFallback, setAppliedFallback] = useState(false);
