@@ -14,7 +14,7 @@ import { mapRolesToPermissions } from '@/auth/rbac/roles';
  * Implements memoization to prevent unnecessary re-renders
  */
 export function useAdminPermissions() {
-  const { status, roles } = useAuthState();
+  const { status = 'loading', roles = [] } = useAuthState();
   const adminStore = useAdminStore();
   const permissions = adminStore.permissions;
   const isLoadingPermissions = adminStore.isLoadingPermissions || false;

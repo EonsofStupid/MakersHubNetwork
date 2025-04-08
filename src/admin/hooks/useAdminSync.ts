@@ -13,7 +13,7 @@ export function useAdminSync() {
   const [isSyncingState, setIsSyncing] = useState(false);
   const syncAttemptedRef = useRef(false);
   const adminStore = useAdminStore();
-  const { user, status, isAuthenticated } = useAuthState();
+  const { user, status = 'loading', isAuthenticated } = useAuthState();
   const logger = useLogger('useAdminSync', LogCategory.ADMIN);
 
   // Use proper debouncing for syncing state
