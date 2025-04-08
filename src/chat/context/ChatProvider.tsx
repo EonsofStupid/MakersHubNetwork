@@ -74,8 +74,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   
   // Toggle chat visibility with circuit breaker protection
   const toggleChat = () => {
-    if (CircuitBreaker.isTripped('ChatProvider')) {
-      logger.warn('Circuit breaker tripped, ignoring toggle action');
+    if (CircuitBreaker.count('ChatProvider') > 3) {
+      logger.warn('Circuit breaker triggered, ignoring toggle action');
       return;
     }
     

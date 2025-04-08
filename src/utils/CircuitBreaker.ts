@@ -100,6 +100,31 @@ class CircuitBreakerImpl {
       this.reset(id);
     });
   }
+
+  /**
+   * Get the current count for a circuit breaker
+   * @param id Breaker identifier
+   * @returns The current count or 0 if breaker doesn't exist
+   */
+  getCount(id: string): number {
+    if (!this.breakers.has(id)) {
+      return 0;
+    }
+    return this.breakers.get(id)!.counter;
+  }
+
+  /**
+   * Check if a circuit breaker is tripped
+   * @param id Breaker identifier
+   * @returns true if breaker is tripped, false otherwise
+   */
+  isTripped(id: string): boolean {
+    if (!this.breakers.has(id)) {
+      return false;
+    }
+    const breaker = this.breakers.get(id)!;
+    return breaker.broken || breaker.counter > breaker.threshold;
+  }
 }
 
 // Export singleton
