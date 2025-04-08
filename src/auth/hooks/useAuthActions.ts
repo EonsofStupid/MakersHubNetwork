@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthState } from './useAuthState';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { useAuthStore } from '@/auth/store/auth.store';
 
 /**
  * Hook for auth-related actions
@@ -11,6 +12,8 @@ import { LogCategory } from '@/logging';
 export function useAuthActions() {
   const { status } = useAuthState();
   const logger = useLogger('AuthActions', LogCategory.AUTH);
+  // Get logout function directly from store to avoid circular dependencies
+  const storeLogout = useAuthStore(state => state.logout);
   
   const logout = useCallback(async () => {
     try {
@@ -20,23 +23,15 @@ export function useAuthActions() {
       }
       
       logger.info('Logging out user');
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        logger.error('Error during logout', { details: { error: error.message } });
-        throw error;
-      }
+      await storeLogout();
       
       logger.info('User logged out successfully');
-      
-      // Reload the page to clear all state
-      window.location.href = '/';
     } catch (error) {
       logger.error('Failed to logout', { 
         details: { error: error instanceof Error ? error.message : String(error) } 
       });
     }
-  }, [status, logger]);
+  }, [status, logger, storeLogout]);
   
   return { logout };
 }

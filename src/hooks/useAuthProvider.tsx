@@ -9,29 +9,33 @@ export function useAuthProvider() {
   const auth = useAuthState();
   const logger = useLogger('useAuthProvider', LogCategory.AUTH);
   const initialized = useRef(false);
+  const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
 
-  // Only run once on mount
+  // Only set up listener once on mount, don't recreate
   useEffect(() => {
-    if (initialized.current) return;
+    if (initialized.current || subscriptionRef.current) return;
     initialized.current = true;
     
-    // Get initial auth state without triggering additional initialization
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        logger.info('Initial session retrieved');
-      }
-    });
+    // Avoid calling getSession which might trigger state changes during render
+    // We're using the auth store's initialization instead
     
     // Set up auth state change listener
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      logger.info(`Auth state changed: ${event}`, {
-        details: { event, userId: session?.user?.id }
+    if (!subscriptionRef.current) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        logger.info(`Auth state changed: ${event}`, {
+          details: { event, userId: session?.user?.id }
+        });
       });
-    });
+      
+      subscriptionRef.current = subscription;
+    }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
+      }
+    };
   }, [logger]);
 
   return auth;

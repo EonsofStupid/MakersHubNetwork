@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getLogger } from '@/logging';
 
 interface NoHydrationMismatchProps {
@@ -15,27 +15,38 @@ export const NoHydrationMismatch = ({
   children, 
   fallback = null 
 }: NoHydrationMismatchProps) => {
+  // Use ref to track if we've ever set the mounted state to true
+  // This prevents toggling the state which could cause multiple renders
+  const isMountedRef = useRef(false);
   const [isMounted, setIsMounted] = useState(false);
   const logger = getLogger('NoHydrationMismatch');
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Use a simpler approach with useState for better reliability
   useEffect(() => {
-    // Only set mounted state once and never again
-    if (!isMounted) {
-      // Small timeout to ensure hydration is complete
-      const timer = setTimeout(() => {
-        setIsMounted(true);
-        
-        // Mark hydration complete on document for global state tracking
-        if (typeof document !== 'undefined') {
-          document.documentElement.setAttribute('data-hydrated', 'true');
-          logger.debug('NoHydrationMismatch mounted and ready');
-        }
-      }, 50);
+    // Only run this effect once per component instance
+    if (isMountedRef.current) return;
+    
+    // Mark as having run the effect
+    isMountedRef.current = true;
+    
+    // Small timeout to ensure hydration is complete
+    timerRef.current = setTimeout(() => {
+      setIsMounted(true);
       
-      return () => clearTimeout(timer);
-    }
-  }, [isMounted]); // Only depend on isMounted
+      // Mark hydration complete on document for global state tracking
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-hydrated', 'true');
+        logger.debug('NoHydrationMismatch mounted and ready');
+      }
+    }, 50);
+    
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []); // No dependencies needed - run once on mount
   
   // Return null during SSR to prevent hydration mismatches
   if (typeof window === 'undefined') {
