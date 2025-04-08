@@ -6,6 +6,7 @@ import { useChat } from '../context/ChatProvider';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { getLogger } from '@/logging';
+import { withDetails } from '@/logging/utils/log-helpers';
 import CircuitBreaker from '@/utils/CircuitBreaker';
 
 export function FloatingChat() {
@@ -34,12 +35,13 @@ export function FloatingChat() {
     
     // Record first render
     renderedRef.current = true;
-    logger.debug('FloatingChat rendered with state:', { 
-      canShow, 
-      isAuthenticated, 
-      hasAdminAccess, 
-      path: pathname 
-    });
+    logger.debug('FloatingChat rendered with state:', 
+      withDetails({
+        canShow, 
+        isAuthenticated, 
+        hasAdminAccess, 
+        path: pathname 
+      }));
     
     // Safely update state based on props
     setShouldRender(canShow);
