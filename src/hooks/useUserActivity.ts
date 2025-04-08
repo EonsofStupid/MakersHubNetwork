@@ -31,8 +31,7 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
             role
           )
         `)
-        .order("display_name")
-        .returns<ProfileWithRoles[]>();
+        .order("display_name");
 
       if (error) {
         console.error("useUserActivity - Error fetching user activity:", error);

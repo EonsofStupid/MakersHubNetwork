@@ -5,7 +5,7 @@ import { AdminPermissionValue } from '@/admin/types/permissions';
 import { mapRolesToPermissions } from '@/auth/rbac/roles';
 
 export function useAdminRoles() {
-  const { roles } = useAuthState();
+  const { roles = [] } = useAuthState();
   
   const adminPermissions = useMemo(() => {
     return mapRolesToPermissions(roles);

@@ -24,7 +24,7 @@ export const AdminProvider = React.memo(({ children }: { children: React.ReactNo
   const logger = useLogger('AdminContext', LogCategory.ADMIN);
   
   // Get permissions directly from auth state to avoid circular dependencies
-  const { roles, status } = useAuthState();
+  const { roles = [], status = 'loading' } = useAuthState();
   
   // Initialize admin context only once
   useEffect(() => {

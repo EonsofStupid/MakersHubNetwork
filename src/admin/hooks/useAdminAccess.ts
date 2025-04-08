@@ -13,7 +13,7 @@ interface AdminAccessOptions {
  * Uses useAuthState directly to avoid circular dependencies
  */
 export function useAdminAccess(options: AdminAccessOptions = { requireAuth: true }) {
-  const { user, roles, status, isAuthenticated } = useAuthState();
+  const { user, roles = [], status = 'loading', isAuthenticated } = useAuthState();
   
   // Use memoization to prevent recalculations on every render
   const hasAdminAccess = useMemo(() => {
