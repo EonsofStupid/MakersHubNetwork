@@ -9,16 +9,6 @@ export function safeSSR<T>(fn: () => T, fallback: T): T {
       return fallback;
     }
     
-    // Check if we're in a hydration phase
-    if (document.readyState === 'loading') {
-      return fallback;
-    }
-    
-    // Check if we're in a hydration phase using our custom attribute
-    if (!document.documentElement.hasAttribute('data-hydrated')) {
-      return fallback;
-    }
-    
     return fn();
   } catch (error) {
     console.error('Error in safeSSR:', error);
@@ -45,12 +35,13 @@ export function isHydrated(): boolean {
 
 /**
  * Execute a function only after hydration is complete
+ * Returns a cleanup function
  */
 export function afterHydration(callback: () => void): () => void {
   if (!isBrowser()) return () => {};
   
   if (isHydrated()) {
-    // If already hydrated, execute immediately
+    // If already hydrated, execute immediately but async
     setTimeout(callback, 0);
     return () => {};
   }
@@ -59,7 +50,7 @@ export function afterHydration(callback: () => void): () => void {
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.attributeName === 'data-hydrated') {
-        callback();
+        setTimeout(callback, 0);
         observer.disconnect();
         break;
       }

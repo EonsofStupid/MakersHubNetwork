@@ -11,6 +11,7 @@ import { SiteThemeProvider } from "@/components/theme/SiteThemeProvider";
 import { ThemeEffectProvider } from "@/components/theme/effects/ThemeEffectProvider";
 import { AppRouter } from "@/router";
 import { ChatProvider } from '@/chat/context/ChatProvider';
+import { safeSSR } from "@/lib/utils/safeSSR";
 
 // Import styles
 import "./App.css";
@@ -34,13 +35,27 @@ initLogging();
 
 const logger = getLogger('App');
 
+// Default fallback theme to use if theme loading fails
+const defaultFallbackTheme = {
+  primary: "186 100% 50%",
+  secondary: "334 100% 59%",
+  background: "228 47% 8%",
+  foreground: "210 40% 98%",
+  card: "228 47% 11%",
+  effectColor: "#00F0FF",
+  effectSecondary: "#FF2D6E",
+};
+
 function App() {
   const [appReady, setAppReady] = useState(false);
   
-  // Set app as ready after a short timeout to ensure all providers are initialized
+  // Mark app as ready to allow progressive rendering
   useEffect(() => {
     const timer = setTimeout(() => {
       setAppReady(true);
+      safeSSR(() => {
+        document.documentElement.setAttribute('data-app-ready', 'true');
+      }, undefined);
       logger.info('App marked as ready');
     }, 100);
     return () => clearTimeout(timer);
@@ -49,33 +64,26 @@ function App() {
   return (
     <LoggingProvider>
       <ThemeEffectProvider>
-        {/* Critical: Theme initialization happens FIRST */}
-        <ThemeInitializer>
+        {/* Critical: Theme initialization happens FIRST with fallback theme */}
+        <ThemeInitializer 
+          fallbackTheme={defaultFallbackTheme}
+          applyImmediately={true}
+        >
           <SiteThemeProvider>
             <AuthProvider>
               <AppInitializer>
-                {/* Wrap AdminProvider in error boundary */}
-                <AdminProviderWithErrorBoundary>
+                <AdminProvider>
                   <ChatProvider>
                     <AppRouter />
                     <Toaster />
                   </ChatProvider>
-                </AdminProviderWithErrorBoundary>
+                </AdminProvider>
               </AppInitializer>
             </AuthProvider>
           </SiteThemeProvider>
         </ThemeInitializer>
       </ThemeEffectProvider>
     </LoggingProvider>
-  );
-}
-
-// Simple error boundary wrapper for AdminProvider
-function AdminProviderWithErrorBoundary({ children }: { children: React.ReactNode }) {
-  return (
-    <AdminProvider>
-      {children}
-    </AdminProvider>
   );
 }
 
