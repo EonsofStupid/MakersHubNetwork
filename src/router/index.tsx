@@ -105,8 +105,13 @@ export function AppRouter() {
   
   // Mark when we're on the client to prevent hydration issues
   useEffect(() => {
-    setIsClient(true);
-    document.documentElement.setAttribute('data-hydrated', 'true');
+    // Use a timeout to ensure we're fully hydrated
+    const timer = setTimeout(() => {
+      setIsClient(true);
+      document.documentElement.setAttribute('data-hydrated', 'true');
+    }, 0);
+    
+    return () => clearTimeout(timer);
   }, []);
   
   // Update the current scope when the pathname changes
