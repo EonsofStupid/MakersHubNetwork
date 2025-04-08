@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { useAuthStore } from "@/stores/auth/store";
+import { useAuthStore } from "@/auth/store/auth.store";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
