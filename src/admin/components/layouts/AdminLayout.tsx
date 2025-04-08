@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from "react";
-import { Outlet, useNavigate } from "@tanstack/react-router";
+import { Outlet, useNavigate } from "react-router-dom";
 import { AdminHeader } from "../AdminHeader";
 import { AdminSidebar } from "../AdminSidebar";
 import { useAdminStore } from "../../store/admin.store";
@@ -65,9 +65,9 @@ export function AdminLayout({
         variant: "destructive"
       });
       
-      navigate({ to: "/" });
+      navigate("/");
     }
-  }, [isAuthenticated, hasAdminAccess]);
+  }, [isAuthenticated, hasAdminAccess, navigate, toast, permissions, isEditMode, logger]);
 
   if (!isAuthenticated || !hasAdminAccess) {
     return null;

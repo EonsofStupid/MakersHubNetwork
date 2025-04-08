@@ -4,7 +4,7 @@ import React from 'react';
 // Re-export the AdminRoutes component
 export { AdminRoutes } from './AdminRoutes';
 
-// Export a dummy path mapping for legacy code support
+// Export a path mapping for easy reference throughout the app
 export const adminRoutes = {
   base: '/admin',
   dashboard: '/admin/dashboard',
