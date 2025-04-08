@@ -7,7 +7,7 @@ import { useAuthState } from "@/auth/hooks/useAuthState"
 import { useAdminAccess } from "@/admin/hooks/useAdminAccess"
 import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/logging"
-import { router } from "@/router"
+import { useRouter } from "@/router"
 
 interface AuthGuardProps {
   children: ReactNode
@@ -23,6 +23,7 @@ export const AuthGuard = ({
   fallback = <div>Loading authentication...</div> 
 }: AuthGuardProps) => {
   const navigate = useNavigate()
+  const router = useRouter()
   const pathname = router?.state?.location?.pathname ?? '/'
   const { toast } = useToast()
   const logger = useLogger("AuthGuard", LogCategory.AUTH)

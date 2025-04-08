@@ -20,7 +20,7 @@ export function navigateTo(path: string, options?: NavigateOptions) {
   if (!router) return;
   
   router.navigate({
-    to: path as any, 
+    to: path, 
     replace: options?.replace,
     // Handle state properly for TanStack Router
     state: options?.state ? options.state : undefined
