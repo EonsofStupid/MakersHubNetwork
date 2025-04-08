@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from 'react';
 import { useImpulsivityTheme } from '@/hooks/useImpulsivityTheme';
 import { useLogger } from '@/hooks/use-logger';
@@ -43,6 +44,12 @@ export function ImpulsivityInit({
       
       const applyWithPriority = async () => {
         try {
+          // Apply default theme immediately to ensure basic styling
+          const root = document.documentElement;
+          root.style.setProperty('--site-effect-color', '#00F0FF');
+          root.style.setProperty('--site-effect-secondary', '#FF2D6E');
+          root.style.setProperty('--site-effect-tertiary', '#8B5CF6');
+          
           // If priority is high, apply immediately
           // Otherwise, use a small timeout to not block rendering
           if (priority) {
@@ -58,7 +65,7 @@ export function ImpulsivityInit({
             }, 100);
           }
           
-          logger.info('Impulsivity theme auto-applied', {
+          logger.info('Impulsivity theme applied', {
             details: {
               priority,
               success: true,
@@ -67,7 +74,7 @@ export function ImpulsivityInit({
             }
           });
         } catch (error) {
-          logger.error('Failed to auto-apply Impulsivity theme', { 
+          logger.error('Failed to apply Impulsivity theme', { 
             details: { 
               error: error instanceof Error ? error.message : String(error),
               priority,
@@ -76,7 +83,13 @@ export function ImpulsivityInit({
             }
           });
           
-          // Mark as applied to prevent retries
+          // Mark as applied to prevent retries but ensure basic styling
+          const root = document.documentElement;
+          root.style.setProperty('--site-effect-color', '#00F0FF');
+          root.style.setProperty('--site-effect-secondary', '#FF2D6E');
+          root.style.setProperty('--site-background', '#080F1E');
+          root.style.setProperty('--site-foreground', '#F9FAFB');
+          
           setIsApplied(true);
           setIsApplying(false);
         }

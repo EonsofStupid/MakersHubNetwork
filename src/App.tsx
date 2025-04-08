@@ -79,7 +79,7 @@ function App() {
       setAppReady(true);
       safeSSR(() => {
         document.documentElement.setAttribute('data-app-ready', 'true');
-      });
+      }, undefined);
       logger.info('App marked as ready');
     }, 100);
     

@@ -42,7 +42,7 @@ export function FloatingChat() {
       }));
     
     // Subscribe to auth events
-    const unsubscribe = subscribeToAuthEvents(() => {
+    const unsubscribe = subscribeToAuthEvents((event) => {
       // Just check the conditions again - don't update state directly from auth events
       const shouldShow = isAuthenticated && hasAdminAccess && !pathname.startsWith('/chat');
       if (shouldShow !== shouldRender) {
