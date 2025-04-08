@@ -28,7 +28,7 @@ function FloatingChatWrapper() {
   }, []);
   
   // Use circuit breaker to detect potential render loops
-  if (CircuitBreaker.count('floating-chat')) {
+  if (CircuitBreaker.isTripped('floating-chat')) {
     logger.warn('CircuitBreaker detected potential infinite loop in FloatingChatWrapper');
     return null;
   }

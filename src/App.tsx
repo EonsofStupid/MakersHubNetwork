@@ -57,8 +57,8 @@ function App() {
     // Skip if already marked ready
     if (appReadyRef.current || appReady) return;
     
-    // Check circuit breaker to prevent infinite loops
-    if (CircuitBreaker.count('app-init')) {
+    // Check circuit breaker to detect potential render loops
+    if (CircuitBreaker.isTripped('app-init')) {
       logger.warn('CircuitBreaker detected potential infinite loop in App initialization');
       return;
     }
