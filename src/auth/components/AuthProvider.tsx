@@ -14,9 +14,8 @@ interface AuthProviderProps {
  * Initializes auth, listens for auth state changes, and provides auth state via Zustand
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { initialize } = useAuthStore(state => ({
-    initialize: state.initialize
-  }));
+  // Use separate getters to avoid triggering re-renders with multiple selectors
+  const initialize = useAuthStore(state => state.initialize);
   const setSession = useAuthStore(state => state.setSession);
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   const hasInitialized = useRef(false);
@@ -54,7 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             details: error instanceof Error ? { message: error.message } : { error }
           });
         });
-      }, 10);
+      }, 100);
       
       return () => clearTimeout(timeoutId);
     }
