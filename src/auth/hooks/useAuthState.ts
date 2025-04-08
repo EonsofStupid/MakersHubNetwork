@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { getLogger } from '@/logging';
@@ -13,6 +13,10 @@ import { UserRole } from '@/types/common.types';
 // Hardcoded admin user for testing purposes
 const SYSTEM_ADMIN_ID = '00000000-0000-0000-0000-000000000003';
 
+/**
+ * Hook for managing the authentication state
+ * Enhanced with better initialization handling and circuit breakers
+ */
 export function useAuthState() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -22,9 +26,28 @@ export function useAuthState() {
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [status, setStatus] = useState<'loading' | 'authenticated' | 'unauthenticated' | 'error'>('loading');
   const logger = getLogger('useAuthState');
+  const initAttemptedRef = useRef(false);
   
   // Initialize circuit breaker for this component
   CircuitBreaker.init('auth-state', 5, 1000);
+
+  const processUserRoles = useCallback((user: User | null): UserRole[] => {
+    // Extract roles from user metadata
+    const userRoles: UserRole[] = [];
+    
+    if (user?.app_metadata?.roles && Array.isArray(user.app_metadata.roles)) {
+      userRoles.push(...user.app_metadata.roles as UserRole[]);
+    }
+    
+    // Special case for system admin user
+    if (user?.id === SYSTEM_ADMIN_ID) {
+      logger.info('System admin user detected');
+      if (!userRoles.includes('super_admin')) userRoles.push('super_admin');
+      if (!userRoles.includes('admin')) userRoles.push('admin');
+    }
+    
+    return userRoles;
+  }, [logger]);
 
   const initialize = useCallback(async () => {
     try {
@@ -35,6 +58,13 @@ export function useAuthState() {
         setStatus('error');
         return;
       }
+      
+      // Skip if initialization already attempted
+      if (initAttemptedRef.current) {
+        return;
+      }
+      
+      initAttemptedRef.current = true;
       
       // Increment circuit breaker counter
       CircuitBreaker.count('auth-state');
@@ -48,38 +78,29 @@ export function useAuthState() {
         throw error;
       }
       
-      const session = data?.session;
+      const currentSession = data?.session;
+      const currentUser = currentSession?.user || null;
       
       // Update state based on session
-      setSession(session);
-      setUser(session?.user || null);
-      setIsAuthenticated(!!session);
+      setSession(currentSession);
+      setUser(currentUser);
       
-      // Determine status based on session
-      setStatus(session ? 'authenticated' : 'unauthenticated');
+      // Determine authentication status
+      const isUserAuthenticated = !!currentSession || (currentUser?.id === SYSTEM_ADMIN_ID);
+      setIsAuthenticated(isUserAuthenticated);
       
-      // Extract roles from user metadata
-      const userRoles: UserRole[] = [];
-      if (session?.user?.app_metadata?.roles && Array.isArray(session.user.app_metadata.roles)) {
-        userRoles.push(...session.user.app_metadata.roles as UserRole[]);
-      }
+      // Determine status
+      setStatus(isUserAuthenticated ? 'authenticated' : 'unauthenticated');
       
-      // Special case for system admin user
-      if (session?.user?.id === SYSTEM_ADMIN_ID) {
-        logger.info('System admin user detected');
-        // Force isAuthenticated and add admin roles for system admin
-        setIsAuthenticated(true);
-        if (!userRoles.includes('super_admin')) userRoles.push('super_admin');
-        if (!userRoles.includes('admin')) userRoles.push('admin');
-      }
-      
+      // Process roles
+      const userRoles = processUserRoles(currentUser);
       setRoles(userRoles);
       
       logger.info('Auth state initialized', {
         details: {
-          isAuthenticated: !!session,
-          hasUser: !!session?.user,
-          userId: session?.user?.id || null,
+          isAuthenticated: isUserAuthenticated,
+          hasUser: !!currentUser,
+          userId: currentUser?.id || null,
           roles: userRoles
         }
       });
@@ -94,7 +115,7 @@ export function useAuthState() {
       // Always mark initialization as complete
       setIsInitializing(false);
     }
-  }, [logger]);
+  }, [logger, processUserRoles]);
 
   // Set up authentication state change listener
   useEffect(() => {
@@ -104,12 +125,14 @@ export function useAuthState() {
       return;
     }
     
-    // Initialize auth state
-    initialize().catch(error => {
-      logger.error('Error in auth initialization', {
-        details: { error: error instanceof Error ? error.message : String(error) }
+    // Initialize auth state if not done before
+    if (!initAttemptedRef.current) {
+      initialize().catch(error => {
+        logger.error('Error in auth initialization', {
+          details: { error: error instanceof Error ? error.message : String(error) }
+        });
       });
-    });
+    }
     
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -117,41 +140,33 @@ export function useAuthState() {
         details: { event, userId: session?.user?.id }
       });
       
+      const currentUser = session?.user || null;
+      
       // Update state based on session
       setSession(session);
-      setUser(session?.user || null);
-      setIsAuthenticated(!!session);
+      setUser(currentUser);
+      
+      // Determine authentication status
+      const isUserAuthenticated = !!session || (currentUser?.id === SYSTEM_ADMIN_ID);
+      setIsAuthenticated(isUserAuthenticated);
       
       // Only update status if not 'loading' (to prevent flickering during initial load)
-      // This fixes the comparison error in redirect.ts
       if (status !== 'loading') {
-        setStatus(session ? 'authenticated' : 'unauthenticated');
+        setStatus(isUserAuthenticated ? 'authenticated' : 'unauthenticated');
       }
       
-      // Extract roles from user metadata
-      const userRoles: UserRole[] = [];
-      if (session?.user?.app_metadata?.roles && Array.isArray(session.user.app_metadata.roles)) {
-        userRoles.push(...session.user.app_metadata.roles as UserRole[]);
-      }
-      
-      // Special case for system admin user
-      if (session?.user?.id === SYSTEM_ADMIN_ID) {
-        logger.info('System admin user detected in auth change');
-        // Force isAuthenticated for system admin
-        setIsAuthenticated(true);
-        if (!userRoles.includes('super_admin')) userRoles.push('super_admin');
-        if (!userRoles.includes('admin')) userRoles.push('admin');
-      }
-      
+      // Process roles
+      const userRoles = processUserRoles(currentUser);
       setRoles(userRoles);
     });
     
     return () => {
       subscription.unsubscribe();
     };
-  }, [initialize, logger, status]);
+  }, [initialize, logger, status, processUserRoles]);
 
-  return {
+  // Memoize the return value to prevent unnecessary renders
+  return useMemo(() => ({
     isInitializing,
     isAuthenticated,
     user,
@@ -159,5 +174,5 @@ export function useAuthState() {
     error,
     roles,
     status
-  };
+  }), [isInitializing, isAuthenticated, user, session, error, roles, status]);
 }

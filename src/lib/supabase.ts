@@ -14,14 +14,27 @@ const fallbackLogger = {
   debug: (message: string, details?: any) => console.debug(message, details),
 };
 
-// Define a dummy client to use when credentials are missing
+// Define a complete dummy client to use when credentials are missing
 const dummyClient = {
   auth: {
     getSession: () => Promise.resolve({ data: { session: null }, error: null }),
     onAuthStateChange: () => ({ 
-      data: { subscription: { unsubscribe: () => {} } }
+      data: { subscription: { unsubscribe: () => {} } } 
     }),
+    getUser: () => Promise.resolve({ data: { user: null }, error: null }),
     signOut: () => Promise.resolve({ error: null }),
+    signIn: () => Promise.resolve({ 
+      data: { session: null, user: null }, 
+      error: { message: 'Dummy client - no Supabase connection' } 
+    }),
+    signUp: () => Promise.resolve({ 
+      data: { session: null, user: null }, 
+      error: { message: 'Dummy client - no Supabase connection' } 
+    }),
+    refreshSession: () => Promise.resolve({ 
+      data: { session: null }, 
+      error: { message: 'Dummy client - no Supabase connection' } 
+    }),
   },
   functions: {
     invoke: (name: string, options?: any) => Promise.resolve({ 
@@ -29,18 +42,54 @@ const dummyClient = {
       error: { message: 'Dummy client - no Supabase connection' }
     }),
   },
-  from: () => ({
-    select: () => ({
-      eq: () => ({
-        order: () => ({
-          limit: () => ({
+  storage: {
+    from: (bucket: string) => ({
+      upload: () => Promise.resolve({ data: null, error: { message: 'Dummy client - no Supabase connection' } }),
+      download: () => Promise.resolve({ data: null, error: { message: 'Dummy client - no Supabase connection' } }),
+      list: () => Promise.resolve({ data: [], error: null }),
+      remove: () => Promise.resolve({ data: null, error: null }),
+      getPublicUrl: () => ({ data: { publicUrl: '' } }),
+    }),
+    getBucket: () => Promise.resolve({ data: null, error: null }),
+    listBuckets: () => Promise.resolve({ data: [], error: null }),
+  },
+  from: (tableName: string) => ({
+    select: (columns: string = '*') => ({
+      eq: (column: string, value: any) => ({
+        order: (column: string, options?: { ascending?: boolean }) => ({
+          limit: (limit: number) => ({
             single: () => Promise.resolve({ data: null, error: null }),
-            maybeSingle: () => Promise.resolve({ data: null, error: null })
-          })
+            maybeSingle: () => Promise.resolve({ data: null, error: null }),
+          }),
+          range: (from: number, to: number) => Promise.resolve({ data: [], error: null }),
         }),
-        limit: () => Promise.resolve({ data: [], error: null }),
-      })
-    })
+        limit: (limit: number) => Promise.resolve({ data: [], error: null }),
+      }),
+      in: (column: string, values: any[]) => ({
+        limit: (limit: number) => Promise.resolve({ data: [], error: null }),
+      }),
+      is: (column: string, value: any) => ({
+        limit: (limit: number) => Promise.resolve({ data: [], error: null }),
+      }),
+      match: (query: Record<string, any>) => ({
+        limit: (limit: number) => Promise.resolve({ data: [], error: null }),
+      }),
+      order: (column: string, options?: { ascending?: boolean }) => ({
+        limit: (limit: number) => Promise.resolve({ data: [], error: null }),
+      }),
+      limit: (limit: number) => Promise.resolve({ data: [], error: null }),
+      single: () => Promise.resolve({ data: null, error: null }),
+      maybeSingle: () => Promise.resolve({ data: null, error: null }),
+    }),
+    insert: (values: any) => Promise.resolve({ data: null, error: null }),
+    update: (values: any) => ({
+      eq: (column: string, value: any) => Promise.resolve({ data: null, error: null }),
+      match: (query: Record<string, any>) => Promise.resolve({ data: null, error: null }),
+    }),
+    delete: () => ({
+      eq: (column: string, value: any) => Promise.resolve({ data: null, error: null }),
+      match: (query: Record<string, any>) => Promise.resolve({ data: null, error: null }),
+    }),
   }),
 };
 

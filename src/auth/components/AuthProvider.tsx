@@ -16,6 +16,7 @@ interface AuthProviderProps {
  * AuthProvider component
  * Initializes auth, listens for auth state changes, and provides auth state via Zustand
  * Uses the AuthBridge to notify other components of auth state changes
+ * Enhanced with better initialization handling and circuit breakers
  */
 export function AuthProvider({ children, onError }: AuthProviderProps) {
   // Use separate getters to avoid triggering re-renders with multiple selectors
