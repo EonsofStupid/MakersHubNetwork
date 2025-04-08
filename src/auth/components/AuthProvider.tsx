@@ -1,5 +1,5 @@
 
-import { useEffect, ReactNode } from 'react';
+import { useEffect, ReactNode, useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/hooks/use-logger';
@@ -16,6 +16,7 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const { initialize, setSession } = useAuthStore();
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
+  const hasInitialized = useRef(false);
   
   useEffect(() => {
     logger.info('AuthProvider mounting');
@@ -36,8 +37,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setSession(session);
     });
     
-    // Initialize auth on mount
-    initialize();
+    // Initialize auth on mount, only once
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      
+      // Add a small timeout to avoid immediate state updates
+      setTimeout(() => {
+        initialize().catch(error => {
+          logger.error('Error initializing auth', {
+            details: error instanceof Error ? { message: error.message } : { error }
+          });
+        });
+      }, 10);
+    }
     
     // Clean up auth listener on unmount
     return () => {

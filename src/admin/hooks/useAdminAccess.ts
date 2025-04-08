@@ -1,6 +1,7 @@
 
 import { useAuthState } from "@/auth/hooks/useAuthState";
 import { UserRole } from "@/auth/types/auth.types";
+import { useMemo } from "react";
 
 interface AdminAccessOptions {
   requireAuth?: boolean;
@@ -14,7 +15,8 @@ interface AdminAccessOptions {
 export function useAdminAccess(options: AdminAccessOptions = { requireAuth: true }) {
   const { user, roles, status, isAuthenticated } = useAuthState();
   
-  const hasAdminAccess = (): boolean => {
+  // Use memoization to prevent recalculations on every render
+  const hasAdminAccess = useMemo(() => {
     // If authentication is required and user is not logged in
     if (options.requireAuth && !isAuthenticated) {
       return false;
@@ -30,10 +32,10 @@ export function useAdminAccess(options: AdminAccessOptions = { requireAuth: true
     
     // Default to admin check
     return isAdmin;
-  };
+  }, [isAuthenticated, roles, options.requireAuth, options.allowedRoles]);
   
   return {
-    hasAdminAccess: hasAdminAccess(),
+    hasAdminAccess,
     user,
     isAuthenticated,
     isLoading: status === 'loading'

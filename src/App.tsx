@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/auth/components/AuthProvider";
 import { AdminProvider } from "@/admin/context/AdminContext";
@@ -31,20 +32,19 @@ function initLogging(): void {
 // Initialize immediately
 initLogging();
 
+const logger = getLogger('App');
+
 function App() {
-  const logger = getLogger();
   const [appReady, setAppReady] = useState(false);
   
   // Set app as ready after a short timeout to ensure all providers are initialized
   useEffect(() => {
     const timer = setTimeout(() => {
       setAppReady(true);
-      logger.info('App marked as ready', {
-        details: { timestamp: new Date().toISOString() }
-      });
+      logger.info('App marked as ready');
     }, 100);
     return () => clearTimeout(timer);
-  }, [logger]);
+  }, []);
   
   return (
     <LoggingProvider>
@@ -54,18 +54,28 @@ function App() {
           <SiteThemeProvider>
             <AuthProvider>
               <AppInitializer>
-                <AdminProvider>
+                {/* Wrap AdminProvider in error boundary */}
+                <AdminProviderWithErrorBoundary>
                   <ChatProvider>
                     <AppRouter />
                     <Toaster />
                   </ChatProvider>
-                </AdminProvider>
+                </AdminProviderWithErrorBoundary>
               </AppInitializer>
             </AuthProvider>
           </SiteThemeProvider>
         </ThemeInitializer>
       </ThemeEffectProvider>
     </LoggingProvider>
+  );
+}
+
+// Simple error boundary wrapper for AdminProvider
+function AdminProviderWithErrorBoundary({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminProvider>
+      {children}
+    </AdminProvider>
   );
 }
 
