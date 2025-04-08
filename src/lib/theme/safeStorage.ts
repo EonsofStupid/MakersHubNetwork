@@ -1,3 +1,4 @@
+
 import { getLogger } from '@/logging';
 import { ThemeTokens, ThemeTokensSchema } from '@/theme/tokenSchema';
 import { z } from 'zod';
@@ -18,7 +19,8 @@ export function safeLocalStorage<T>(key: string, fallback: T, parse = true): T {
     // Safe parsing with type checking
     if (parse) {
       try {
-        return JSON.parse(value) as T;
+        const parsed = JSON.parse(value);
+        return parsed as T;
       } catch (error) {
         logger.warn('Error parsing localStorage value:', { 
           details: { error: error instanceof Error ? error.message : String(error) }

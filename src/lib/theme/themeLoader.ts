@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { getLogger } from '@/logging';
 import { Theme, ThemeContext } from '@/types/theme';
@@ -38,7 +39,7 @@ export async function loadThemeTokens(context: ThemeContext = 'site'): Promise<T
       throw new Error('Invalid result from Supabase');
     }
     
-    // Cast to unknown first, then to our expected type
+    // Cast to unknown first, then to our expected type with proper safety checks
     const functionResult = raceResult as unknown as { 
       data?: { tokens?: unknown }; 
       error?: { message?: string } | null;
@@ -110,7 +111,7 @@ export async function getThemeWithFallback(options: {
     // Try to fetch from Supabase
     // Implementation would vary based on your setup
     
-    // For now, we'll just use default theme
+    // For now, we'll just use default theme with safe boolean handling
     return {
       ...defaultTheme,
       id: options.id || 'default',
