@@ -1,44 +1,61 @@
 
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { ChatWidget } from './ChatWidget';
 import { useLocation } from 'react-router-dom';
 import { useChat } from '../context/ChatProvider';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useAuthState } from '@/auth/hooks/useAuthState';
+import { getLogger } from '@/logging';
+import CircuitBreaker from '@/utils/CircuitBreaker';
 
 export function FloatingChat() {
+  const logger = getLogger('FloatingChat');
   const location = useLocation();
   const { isAuthenticated } = useAuthState();
   const { hasAdminAccess } = useAdminAccess();
   const { isOpen } = useChat();
   const renderedRef = useRef(false);
+  const [shouldRender, setShouldRender] = useState(false);
   
-  // Memoize the check to prevent unnecessary re-renders
-  const shouldShow = useMemo(() => {
-    // Only check if we're authenticated and have admin access
-    if (!isAuthenticated || !hasAdminAccess) {
-      return false;
+  // Use memoized values with stable references
+  const pathname = useMemo(() => location.pathname, [location.pathname]);
+  const inChatRoute = useMemo(() => pathname.startsWith('/chat'), [pathname]);
+  const canShow = useMemo(() => isAuthenticated && hasAdminAccess && !inChatRoute, 
+    [isAuthenticated, hasAdminAccess, inChatRoute]);
+  
+  // Handle initial render and prevent render loops
+  useEffect(() => {
+    // Initialize the circuit breaker for this component
+    CircuitBreaker.init('floating-chat-render', 3, 500);
+    
+    if (renderedRef.current) {
+      return;
     }
     
-    // Don't show on chat routes to avoid duplication
-    const pathname = location.pathname;
-    return !pathname.startsWith('/chat');
-  }, [isAuthenticated, hasAdminAccess, location.pathname]);
+    // Record first render
+    renderedRef.current = true;
+    logger.debug('FloatingChat rendered with state:', { 
+      canShow, 
+      isAuthenticated, 
+      hasAdminAccess, 
+      path: pathname 
+    });
+    
+    // Safely update state based on props
+    setShouldRender(canShow);
+    
+    return () => {
+      CircuitBreaker.reset('floating-chat-render');
+    };
+  }, [canShow, isAuthenticated, hasAdminAccess, pathname, logger]);
   
-  // Add debug logging
-  useEffect(() => {
-    if (!renderedRef.current) {
-      console.log('FloatingChat rendered with state:', { 
-        shouldShow, 
-        isAuthenticated, 
-        hasAdminAccess, 
-        path: location.pathname 
-      });
-      renderedRef.current = true;
-    }
-  }, [shouldShow, isAuthenticated, hasAdminAccess, location.pathname]);
+  // Check for render loops
+  if (CircuitBreaker.count('floating-chat-render')) {
+    logger.warn('Circuit breaker triggered in FloatingChat - preventing render loop');
+    return null;
+  }
   
-  if (!shouldShow) {
+  if (!shouldRender) {
     return null;
   }
   
