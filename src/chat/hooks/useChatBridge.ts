@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { chatBridge } from '../lib/ChatBridge';
+import { chatBridge, ChatBridgeChannel } from '../lib/ChatBridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
@@ -8,7 +8,7 @@ type MessageHandler = (message: any) => void;
 
 interface UseChatBridgeOptions {
   onMessage?: MessageHandler;
-  channel: string;
+  channel: ChatBridgeChannel;
 }
 
 export function useChatBridge({ onMessage, channel }: UseChatBridgeOptions) {

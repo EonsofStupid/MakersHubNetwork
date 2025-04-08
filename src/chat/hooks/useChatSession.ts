@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuthState } from '@/auth/hooks/useAuthState';
-import { chatBridge } from '../lib/ChatBridge';
+import { chatBridge, ChatBridgeChannel } from '../lib/ChatBridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { v4 as uuidv4 } from 'uuid';
@@ -52,7 +52,10 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
   useEffect(() => {
     if (!sessionId) return;
     
-    const unsubscribe = chatBridge.subscribe(`session:${sessionId}`, (message) => {
+    // Create a session-specific channel
+    const sessionChannel: ChatBridgeChannel = `session:${sessionId}`;
+    
+    const unsubscribe = chatBridge.subscribe(sessionChannel, (message) => {
       if (message.type === 'new-message') {
         setMessages(prev => [...prev, message.message]);
       }
