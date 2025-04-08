@@ -33,7 +33,7 @@ export function navigateTo(path: string, options?: NavigateOptions): void {
   if (!router) return;
   
   router.navigate({
-    to: path,
+    to: path as any, // Type assertion needed for TanStack Router
     replace: options?.replace,
     state: options?.state
   });
@@ -46,8 +46,8 @@ export function navigateWithParams(path: string, params: Record<string, any>, op
   if (!router) return;
   
   router.navigate({
-    to: path,
-    search: params,
+    to: path as any, // Type assertion needed for TanStack Router
+    search: params as any, // Type assertion needed for TanStack Router
     replace: options?.replace,
     state: options?.state
   });

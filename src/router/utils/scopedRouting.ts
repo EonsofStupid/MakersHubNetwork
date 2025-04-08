@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { useRouter, router } from '../index';
+import { router, useRouter } from '../index';
 import { getThemeContextForRoute, isPathInScope } from '@/router/routeRegistry';
 import { ThemeContext } from '@/types/theme';
 
@@ -87,9 +87,9 @@ export function navigateToScope(scope: RouteScope, path: string, options?: {
   
   // Navigate using the router
   router.navigate({
-    to: fullPath,
+    to: fullPath as any, // Type assertion needed for TanStack Router
     params: params,
-    search: search,
+    search: search as any, // Type assertion needed for TanStack Router
     replace
   });
 }

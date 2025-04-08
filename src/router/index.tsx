@@ -3,6 +3,7 @@ import {
   RouterProvider,
   createRouter,
   type AnyRoute,
+  type TrailingSlashOption,
 } from '@tanstack/react-router';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { rootRoute } from '@/router/routes/site';
@@ -22,6 +23,9 @@ import { isValidThemeContext } from '@/utils/typeGuards';
 import CircuitBreaker from '@/utils/CircuitBreaker';
 
 const logger = getLogger('Router');
+
+// Define the explicit router type for export
+export type AppRouter = ReturnType<typeof createRouter<AnyRoute, TrailingSlashOption, boolean>>;
 
 // Define router context type properly
 interface RouterContext {
@@ -49,7 +53,7 @@ const initialThemeContext = getThemeContextForRoute(initialPathname);
 // Create router instance once to prevent recreating on every render
 // Use a function to create the router but wrap it with a singleton pattern
 const createRouterSingleton = (() => {
-  let routerInstance: ReturnType<typeof createRouter> | null = null;
+  let routerInstance: AppRouter | null = null;
   
   return () => {
     if (routerInstance) return routerInstance;
@@ -92,10 +96,10 @@ const createRouterSingleton = (() => {
           scope: initialScope,
           themeContext: initialThemeContext
         } as RouterContext
-      });
+      }) as AppRouter; // Explicit casting to our defined router type
       
       routerInstance = createdRouter;
-      return createdRouter;
+      return createdRouter as AppRouter;
     } catch (error) {
       logger.error('Failed to create router', { 
         details: { error: error instanceof Error ? error.message : String(error) }
@@ -109,10 +113,10 @@ const createRouterSingleton = (() => {
           scope: 'site',
           themeContext: 'site' as ThemeContext
         }
-      });
+      }) as AppRouter; // Explicit casting to our defined router type
       
       routerInstance = fallbackRouter;
-      return fallbackRouter;
+      return fallbackRouter as AppRouter;
     }
   };
 })();
@@ -198,7 +202,7 @@ export function AppRouter() {
         }
       >
         <RouterProvider 
-          router={router} 
+          router={router as any} // Type assertion needed for TanStack Router compatibility
           context={routerContext} 
         />
         {isClient && showLogConsole && <LogConsole />}
