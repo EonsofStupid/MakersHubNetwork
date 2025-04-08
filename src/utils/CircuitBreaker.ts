@@ -12,6 +12,7 @@ class CircuitBreaker {
   private static thresholds = new Map<string, number>();
   private static timeWindows = new Map<string, number>();
   private static tripped = new Map<string, boolean>();
+  private static initialized = new Set<string>();
   
   /**
    * Initialize a circuit breaker with a specific threshold
@@ -20,11 +21,17 @@ class CircuitBreaker {
    * @param timeWindowMs Time window in milliseconds to count renders
    */
   static init(key: string, threshold: number = 10, timeWindowMs: number = 500): void {
+    // Only initialize once
+    if (this.initialized.has(key)) return;
+    
     this.counters.set(key, 0);
     this.timestamps.set(key, Date.now());
     this.thresholds.set(key, threshold);
     this.timeWindows.set(key, timeWindowMs);
     this.tripped.set(key, false);
+    this.initialized.add(key);
+    
+    console.debug(`[CircuitBreaker] Initialized ${key} with threshold ${threshold} in ${timeWindowMs}ms`);
   }
   
   /**
@@ -35,6 +42,7 @@ class CircuitBreaker {
     this.counters.set(key, 0);
     this.timestamps.set(key, Date.now());
     this.tripped.set(key, false);
+    console.debug(`[CircuitBreaker] Reset ${key}`);
   }
   
   /**
@@ -44,7 +52,7 @@ class CircuitBreaker {
    */
   static count(key: string): boolean {
     // Initialize if not already done
-    if (!this.counters.has(key)) {
+    if (!this.initialized.has(key)) {
       this.init(key);
     }
     
@@ -89,6 +97,25 @@ class CircuitBreaker {
    */
   static isTripped(key: string): boolean {
     return this.tripped.get(key) || false;
+  }
+  
+  /**
+   * Get the current count for a circuit breaker
+   * Useful for debugging
+   */
+  static getCount(key: string): number {
+    return this.counters.get(key) || 0;
+  }
+  
+  /**
+   * Reset all circuit breakers
+   * Useful when navigating to a new page
+   */
+  static resetAll(): void {
+    this.initialized.forEach(key => {
+      this.reset(key);
+    });
+    console.debug(`[CircuitBreaker] Reset all circuit breakers`);
   }
 }
 

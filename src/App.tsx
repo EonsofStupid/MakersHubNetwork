@@ -4,13 +4,13 @@ import { AdminProvider } from "@/admin/context/AdminContext";
 import { useEffect, useState, useRef } from "react";
 import { initializeLogger, getLogger } from "@/logging";
 import { ChatProvider } from '@/chat/context/ChatProvider';
-import { FloatingChat } from '@/chat/components/FloatingChat';
 import { safeSSR } from "@/lib/utils/safeSSR";
 import { AppInitializer } from "@/components/AppInitializer";
 import { BrowserRouter as Router } from "react-router-dom";
 import { AppRouter } from "@/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Import styles
 import "./App.css";
@@ -44,6 +44,9 @@ const queryClient = new QueryClient({
   }
 });
 
+// Create a single FloatingChat component reference to avoid multiple instances
+const FloatingChatLazy = React.lazy(() => import('@/chat/components/FloatingChatWrapper'));
+
 function App() {
   const [appReady, setAppReady] = useState(false);
   const appReadyRef = useRef(false);
@@ -68,21 +71,22 @@ function App() {
   }, []); // Empty dependency array - only run once
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <AuthProvider>
-          <AppInitializer>
-            <AdminProvider>
-              <ChatProvider>
-                <AppRouter />
-                <FloatingChat />
-                <Toaster />
-              </ChatProvider>
-            </AdminProvider>
-          </AppInitializer>
-        </AuthProvider>
-      </Router>
-    </QueryClientProvider>
+    <ErrorBoundary fallback={<div className="p-6">Something went wrong. Please try refreshing.</div>}>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <AuthProvider>
+            <AppInitializer>
+              <AdminProvider>
+                <ChatProvider>
+                  <AppRouter />
+                  <Toaster />
+                </ChatProvider>
+              </AdminProvider>
+            </AppInitializer>
+          </AuthProvider>
+        </Router>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
