@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getLogger } from '@/logging';
 
 interface NoHydrationMismatchProps {
@@ -20,24 +20,22 @@ export const NoHydrationMismatch = ({
   
   // Use a simpler approach with useState for better reliability
   useEffect(() => {
-    // Set timeout to ensure hydration is complete
-    const timer = setTimeout(() => {
-      setIsMounted(true);
+    // Only set mounted state once and never again
+    if (!isMounted) {
+      // Small timeout to ensure hydration is complete
+      const timer = setTimeout(() => {
+        setIsMounted(true);
+        
+        // Mark hydration complete on document for global state tracking
+        if (typeof document !== 'undefined') {
+          document.documentElement.setAttribute('data-hydrated', 'true');
+          logger.debug('NoHydrationMismatch mounted and ready');
+        }
+      }, 50);
       
-      // Mark hydration complete on document for global state tracking
-      if (typeof document !== 'undefined') {
-        document.documentElement.setAttribute('data-hydrated', 'true');
-        logger.debug('NoHydrationMismatch mounted and ready');
-      }
-    }, 50);
-    
-    // Only log once on initial mount
-    logger.debug('NoHydrationMismatch initializing');
-    
-    return () => {
-      clearTimeout(timer);
-    };
-  }, []); // Empty deps array ensures this only runs once
+      return () => clearTimeout(timer);
+    }
+  }, [isMounted]); // Only depend on isMounted
   
   // Return null during SSR to prevent hydration mismatches
   if (typeof window === 'undefined') {

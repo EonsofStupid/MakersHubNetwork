@@ -49,8 +49,10 @@ const defaultFallbackTheme = {
 function App() {
   const [appReady, setAppReady] = useState(false);
   
-  // Mark app as ready to allow progressive rendering
+  // Mark app as ready to allow progressive rendering, but do this only once
   useEffect(() => {
+    if (appReady) return; // Early return if already marked ready
+    
     const timer = setTimeout(() => {
       setAppReady(true);
       safeSSR(() => {
@@ -58,8 +60,9 @@ function App() {
       }, undefined);
       logger.info('App marked as ready');
     }, 100);
+    
     return () => clearTimeout(timer);
-  }, []);
+  }, [appReady]); // Add appReady to dependencies
   
   return (
     <LoggingProvider>
