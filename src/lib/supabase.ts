@@ -42,8 +42,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       'x-application-name': 'lovable-web-app',
     },
   },
-  // Improved logging for development and debugging
-  debug: import.meta.env.DEV,
+  // Removed the unsupported 'debug' option
 });
 
 // Re-export Supabase types for easier access

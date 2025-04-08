@@ -27,15 +27,12 @@ export function FloatingChat() {
   
   // Handle initial render with circuit breaker to prevent render loops
   useEffect(() => {
-    // Initialize the circuit breaker for this component
+    if (renderedRef.current) return;
+    renderedRef.current = true;
+    
+    // Initialize circuit breaker for this component
     CircuitBreaker.init('floating-chat-render', 3, 500);
     
-    if (renderedRef.current) {
-      return;
-    }
-    
-    // Record first render
-    renderedRef.current = true;
     logger.debug('FloatingChat rendered with state:', 
       withDetails({
         canShow, 

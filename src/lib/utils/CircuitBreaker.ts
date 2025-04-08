@@ -51,6 +51,15 @@ class CircuitBreaker {
   }
 
   /**
+   * Get current count without incrementing
+   * @param id Unique identifier for the circuit breaker
+   * @returns Current count
+   */
+  static getCount(id: string): number {
+    return this.counters[id] || 0;
+  }
+
+  /**
    * Check if circuit breaker is tripped
    * @param id Unique identifier for the circuit breaker
    * @returns True if circuit breaker is tripped

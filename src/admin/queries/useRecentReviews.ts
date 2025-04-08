@@ -37,7 +37,18 @@ export const useRecentReviews = () => {
         throw new Error(error.message)
       }
 
-      return (data || []) as RecentReview[]
+      // Fix type conversion by properly mapping the response to match the expected type
+      return (data || []).map(item => ({
+        title: item.title,
+        rating: item.rating,
+        created_at: item.created_at,
+        part_id: item.part_id,
+        printer_parts: {
+          name: Array.isArray(item.printer_parts) && item.printer_parts[0] 
+            ? item.printer_parts[0].name 
+            : (item.printer_parts as any)?.name || 'Unknown'
+        }
+      })) as RecentReview[]
     },
   })
 }
