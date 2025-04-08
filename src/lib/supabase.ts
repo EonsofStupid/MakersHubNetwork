@@ -14,7 +14,41 @@ const fallbackLogger = {
   debug: (message: string, details?: any) => console.debug(message, details),
 };
 
-// Check if Supabase configuration is available
+// Define a dummy client to use when credentials are missing
+const dummyClient = {
+  auth: {
+    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+    onAuthStateChange: () => ({ 
+      data: { subscription: { unsubscribe: () => {} } }
+    }),
+    signOut: () => Promise.resolve({ error: null }),
+  },
+  functions: {
+    invoke: (name: string) => Promise.resolve({ 
+      data: null, 
+      error: { message: 'Dummy client - no Supabase connection' }
+    }),
+  },
+};
+
+// Create Supabase client with optimized configuration if credentials exist
+export const supabase = (supabaseUrl && supabaseAnonKey) ? 
+  createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'supabase.auth.token',
+    },
+    global: {
+      headers: { 
+        'x-application-name': 'lovable-web-app',
+      },
+    },
+  }) : 
+  dummyClient as any; // Cast to any to satisfy TypeScript
+
+// Check if Supabase configuration is available and log warning if not
 if (!supabaseUrl || !supabaseAnonKey) {
   try {
     const logger = getLogger('supabase');
@@ -28,22 +62,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
     fallbackLogger.warn('Missing Supabase configuration, using dummy client');
   }
 }
-
-// Create Supabase client with optimized configuration
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storageKey: 'supabase.auth.token',
-  },
-  global: {
-    headers: { 
-      'x-application-name': 'lovable-web-app',
-    },
-  },
-  // Removed the unsupported 'debug' option
-});
 
 // Re-export Supabase types for easier access
 export type { 
@@ -62,19 +80,5 @@ export function createDummyClient() {
     fallbackLogger.warn('Creating dummy Supabase client');
   }
   
-  return {
-    auth: {
-      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-      onAuthStateChange: () => ({ 
-        data: { subscription: { unsubscribe: () => {} } }
-      }),
-      signOut: () => Promise.resolve({ error: null }),
-    },
-    functions: {
-      invoke: (name: string) => Promise.resolve({ 
-        data: null, 
-        error: { message: 'Dummy client - no Supabase connection' }
-      }),
-    },
-  };
+  return dummyClient;
 }

@@ -24,7 +24,7 @@ export function AppRouter() {
     <RootLayout>
       <Routes>
         <Route element={<SiteLayout />}>
-          {/* Main site routes - marked as public to render even if auth isn't initialized */}
+          {/* Main site routes - explicitly marked as public to render even if auth isn't initialized */}
           <Route path="/" element={
             <AuthGuard publicRoute={true}>
               <HomePage />

@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserRole } from "@/auth/types/auth.types";
@@ -13,7 +12,7 @@ interface AuthGuardProps {
   requiredRoles?: UserRole[];
   adminOnly?: boolean;
   fallback?: ReactNode;
-  publicRoute?: boolean; // Add option for public routes that don't require authentication
+  publicRoute?: boolean; // Option for public routes that don't require authentication
 }
 
 export const AuthGuard = ({ 
@@ -29,7 +28,7 @@ export const AuthGuard = ({
   const { toast } = useToast();
   const logger = useLogger("AuthGuard", LogCategory.AUTH);
   
-  // Use centralized auth state - avoid initialization loops
+  // Use centralized auth state
   const { isLoading, status, roles, user, initialized } = useAuthState();
   const { hasAdminAccess } = useAdminAccess();
 
@@ -51,7 +50,9 @@ export const AuthGuard = ({
     if (!initialized) return;
     
     if (!isLoading && !isAuthenticated) {
-      logger.info("AuthGuard - Redirecting to login: Not authenticated");
+      logger.info("AuthGuard - Redirecting to login: Not authenticated", {
+        details: { path: pathname }
+      });
       // Keep track of the current path to redirect back after login
       const currentPath = pathname;
       
@@ -106,11 +107,11 @@ export const AuthGuard = ({
     return <>{children}</>;
   }
 
-  // Show a fallback while loading
-  if (isLoading) return <>{fallback}</>;
+  // For protected routes, show fallback while loading
+  if (isLoading && !initialized) return <>{fallback}</>;
   
-  // Early return for authenticated-only content
-  if (initialized && !isAuthenticated) return null;
+  // If auth is initialized and it's a protected route that requires auth
+  if (initialized && !publicRoute && !isAuthenticated) return null;
   
   // Check role requirements
   if (initialized && requiredRoles && !hasRequiredRole) return null;
@@ -118,6 +119,6 @@ export const AuthGuard = ({
   // Check admin requirements
   if (initialized && adminOnly && !hasAdminPermission) return null;
 
-  // If we're still initializing auth, render children to avoid flash
+  // Otherwise render children
   return <>{children}</>;
 };
