@@ -1,93 +1,117 @@
 
 /**
- * CircuitBreaker utility to detect and prevent infinite loops
- * and protect against excessive rerenders or circular dependencies
+ * Simple circuit breaker for preventing infinite loops and rendering issues
+ * Works by counting calls to a named circuit and tripping after a threshold
  */
 class CircuitBreaker {
-  private static counters: Record<string, number> = {};
-  private static limits: Record<string, number> = {};
-  private static resetTimers: Record<string, NodeJS.Timeout> = {};
-  private static resetIntervals: Record<string, number> = {};
+  private static instances: Record<string, { 
+    count: number;
+    limit: number;
+    resetTime: number;
+    lastReset: number;
+    tripped: boolean 
+  }> = {};
 
   /**
    * Initialize a circuit breaker
-   * @param id Unique identifier for the circuit breaker
-   * @param limit Number of counts before tripping
-   * @param resetInterval Time in ms before counter resets
+   * @param name Unique name for this circuit
+   * @param limit Maximum calls before circuit trips
+   * @param resetTime Time in ms before circuit resets count
    */
-  static init(id: string, limit: number = 10, resetInterval: number = 10000): void {
-    // Only initialize if not already initialized or if parameters changed
-    if (!this.limits[id] || this.limits[id] !== limit || this.resetIntervals[id] !== resetInterval) {
-      this.limits[id] = limit;
-      this.resetIntervals[id] = resetInterval;
-      this.counters[id] = 0;
-      
-      // Clear existing timer if any
-      if (this.resetTimers[id]) {
-        clearTimeout(this.resetTimers[id]);
-      }
-      
-      // Set reset timer
-      this.resetTimers[id] = setTimeout(() => {
-        this.counters[id] = 0;
-      }, resetInterval);
+  public static init(name: string, limit = 10, resetTime = 5000): void {
+    if (!this.instances[name]) {
+      this.instances[name] = {
+        count: 0,
+        limit,
+        resetTime,
+        lastReset: Date.now(),
+        tripped: false
+      };
     }
   }
 
   /**
-   * Increment counter for a circuit breaker
-   * @param id Unique identifier for the circuit breaker
+   * Increment the counter for the named circuit
+   * @param name Circuit name
    * @returns Current count
    */
-  static count(id: string): number {
-    // Initialize if not already initialized with default values
-    if (this.limits[id] === undefined) {
-      this.init(id);
+  public static count(name: string): number {
+    // Initialize with defaults if not exists
+    if (!this.instances[name]) {
+      this.init(name);
     }
+
+    const instance = this.instances[name];
     
+    // Check if it's time to reset
+    if (Date.now() - instance.lastReset > instance.resetTime) {
+      instance.count = 0;
+      instance.lastReset = Date.now();
+      instance.tripped = false;
+    }
+
     // Increment counter
-    this.counters[id] = (this.counters[id] || 0) + 1;
-    return this.counters[id];
+    instance.count++;
+
+    // Trip the circuit if we hit the limit
+    if (instance.count >= instance.limit) {
+      instance.tripped = true;
+      console.warn(`Circuit breaker [${name}] tripped: reached limit of ${instance.limit} calls`);
+    }
+
+    return instance.count;
   }
 
   /**
-   * Get current count without incrementing
-   * @param id Unique identifier for the circuit breaker
-   * @returns Current count
+   * Check if the circuit has been tripped
+   * @param name Circuit name
+   * @returns True if tripped, false otherwise
    */
-  static getCount(id: string): number {
-    return this.counters[id] || 0;
-  }
-
-  /**
-   * Check if circuit breaker is tripped
-   * @param id Unique identifier for the circuit breaker
-   * @returns True if circuit breaker is tripped
-   */
-  static isTripped(id: string): boolean {
-    // If not initialized, not tripped
-    if (this.limits[id] === undefined) {
+  public static isTripped(name: string): boolean {
+    if (!this.instances[name]) {
       return false;
     }
+
+    const instance = this.instances[name];
     
-    return (this.counters[id] || 0) >= this.limits[id];
+    // Check if it's time to reset
+    if (Date.now() - instance.lastReset > instance.resetTime) {
+      instance.count = 0;
+      instance.lastReset = Date.now();
+      instance.tripped = false;
+    }
+    
+    return instance.tripped;
   }
 
   /**
-   * Reset circuit breaker
-   * @param id Unique identifier for the circuit breaker
+   * Reset a specific circuit
+   * @param name Circuit name
    */
-  static reset(id: string): void {
-    this.counters[id] = 0;
+  public static reset(name: string): void {
+    if (this.instances[name]) {
+      this.instances[name].count = 0;
+      this.instances[name].lastReset = Date.now();
+      this.instances[name].tripped = false;
+    }
   }
 
   /**
-   * Reset all circuit breakers
+   * Reset all circuits
    */
-  static resetAll(): void {
-    Object.keys(this.counters).forEach(id => {
-      this.counters[id] = 0;
+  public static resetAll(): void {
+    Object.keys(this.instances).forEach(name => {
+      this.reset(name);
     });
+  }
+
+  /**
+   * Get the current count for a circuit
+   * @param name Circuit name
+   * @returns Current count or 0 if circuit doesn't exist
+   */
+  public static getCount(name: string): number {
+    return this.instances[name]?.count || 0;
   }
 }
 

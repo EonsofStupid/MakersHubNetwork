@@ -121,7 +121,12 @@ export function useAuthState() {
       setSession(session);
       setUser(session?.user || null);
       setIsAuthenticated(!!session);
-      setStatus(session ? 'authenticated' : 'unauthenticated');
+      
+      // Only update status if not 'loading' (to prevent flickering during initial load)
+      // This fixes the comparison error in redirect.ts
+      if (status !== 'loading') {
+        setStatus(session ? 'authenticated' : 'unauthenticated');
+      }
       
       // Extract roles from user metadata
       const userRoles: UserRole[] = [];
@@ -144,7 +149,7 @@ export function useAuthState() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [initialize, logger]);
+  }, [initialize, logger, status]);
 
   return {
     isInitializing,
