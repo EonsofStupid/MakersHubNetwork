@@ -82,21 +82,12 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <Router>
           {/* 
-            One-Way Data Flow Provider Architecture:
-            
-            AuthProvider: Top-level, serves as the single source of truth for auth state
-            - Broadcasts auth events through Zustand store + AuthBridge
+            Bridge Architecture:
+            AuthProvider -> AdminProvider -> ChatProvider -> AppRouter
+            Each provider should only consume from providers above it
           */}
           <AuthProvider>
-            {/* 
-              AppInitializer: Handles app setup tasks that don't require multiple auth checks
-              - Must NOT trigger auth state updates
-            */}
             <AppInitializer>
-              {/* 
-                SystemProviders: Consume auth state passively, don't trigger auth updates
-                - Each has circuit breakers to prevent infinite render loops
-              */}
               <AdminProvider>
                 <ChatProvider>
                   <AppRouter />

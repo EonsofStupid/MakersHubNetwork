@@ -8,7 +8,7 @@
  * CircuitBreaker.init('componentName', 10, 1000);
  * 
  * // Check before performing an operation
- * if (CircuitBreaker.count('componentName')) {
+ * if (CircuitBreaker.isTripped('componentName')) {
  *   console.warn('Breaking potential infinite loop');
  *   return;
  * }
