@@ -17,24 +17,36 @@ export const NoHydrationMismatch = ({
 }: NoHydrationMismatchProps) => {
   const isMountedRef = useRef(false);
   const logger = getLogger('NoHydrationMismatch');
+  const forceUpdateRef = useRef(() => {});
   
   // Use ref instead of state to prevent re-renders
   useEffect(() => {
+    // Set up force update mechanism that doesn't cause infinite loops
+    const forceUpdateEvent = new Event('forceUpdateNoHydration');
+    
+    // Simple helper function to force a re-render by dispatching event
+    forceUpdateRef.current = () => {
+      window.dispatchEvent(forceUpdateEvent);
+    };
+    
     // Use a timeout to ensure we're fully hydrated
     const timer = setTimeout(() => {
-      isMountedRef.current = true;
-      // Force re-render after setting the ref
-      forceUpdate();
+      // Only set if not already mounted to prevent loops
+      if (!isMountedRef.current) {
+        isMountedRef.current = true;
+        // Force re-render after setting the ref
+        forceUpdateRef.current();
+        logger.debug('NoHydrationMismatch mounted and ready');
+      }
     }, 50);
     
-    // Helper function to force a re-render
-    function forceUpdate() {
-      const event = new Event('forceUpdateNoHydration');
-      window.dispatchEvent(event);
-    }
+    // Only log once on initial mount
+    logger.debug('NoHydrationMismatch initializing');
     
-    // Only log once on mount
-    logger.debug('NoHydrationMismatch mounting');
+    // Mark hydration complete on document for global state tracking
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-hydrated', 'true');
+    }
     
     return () => {
       clearTimeout(timer);

@@ -25,3 +25,51 @@ export function safeSSR<T>(fn: () => T, fallback: T): T {
     return fallback;
   }
 }
+
+/**
+ * Safe way to check if we're in a browser environment
+ */
+export function isBrowser(): boolean {
+  return typeof window !== 'undefined' && typeof document !== 'undefined';
+}
+
+/**
+ * Safe way to check if hydration is complete
+ */
+export function isHydrated(): boolean {
+  if (!isBrowser()) return false;
+  
+  // Check for our custom data attribute
+  return document.documentElement.hasAttribute('data-hydrated');
+}
+
+/**
+ * Execute a function only after hydration is complete
+ */
+export function afterHydration(callback: () => void): () => void {
+  if (!isBrowser()) return () => {};
+  
+  if (isHydrated()) {
+    // If already hydrated, execute immediately
+    setTimeout(callback, 0);
+    return () => {};
+  }
+  
+  // Otherwise wait for hydration
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.attributeName === 'data-hydrated') {
+        callback();
+        observer.disconnect();
+        break;
+      }
+    }
+  });
+  
+  observer.observe(document.documentElement, { attributes: true });
+  
+  // Return cleanup function
+  return () => {
+    observer.disconnect();
+  };
+}
