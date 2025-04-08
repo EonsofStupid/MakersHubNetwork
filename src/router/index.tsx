@@ -1,15 +1,11 @@
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoggingProvider } from '@/logging/context/LoggingContext';
-import { LogConsole } from '@/logging/components/LogConsole';
-import { LogToggleButton } from '@/logging/components/LogToggleButton';
-import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
-import { ThemeEffectProvider } from '@/components/theme/effects/ThemeEffectProvider';
-import { SiteThemeProvider } from '@/components/theme/SiteThemeProvider';
 import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
 import { getLogger } from '@/logging';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
 
 // Lazy load route components
 const Index = React.lazy(() => import('@/pages/Index'));
@@ -19,6 +15,7 @@ const Admin = React.lazy(() => import('@/pages/Admin'));
 const ChatLayout = React.lazy(() => import('@/chat/components/layouts/ChatLayout'));
 const ChatHome = React.lazy(() => import('@/chat/pages/ChatHome'));
 const ChatSession = React.lazy(() => import('@/chat/pages/ChatSession'));
+const FloatingChat = React.lazy(() => import('@/chat/components/FloatingChatWrapper'));
 
 // Common loading component for lazy-loaded routes
 const SuspenseLoading = () => (
@@ -29,18 +26,18 @@ const SuspenseLoading = () => (
 
 const logger = getLogger('Router');
 
-export function AppRouter() {
-  // Default fallback theme to use if theme loading fails
-  const defaultFallbackTheme = {
-    primary: "186 100% 50%",
-    secondary: "334 100% 59%",
-    background: "228 47% 8%",
-    foreground: "210 40% 98%",
-    card: "228 47% 11%",
-    effectColor: "#00F0FF",
-    effectSecondary: "#FF2D6E",
-  };
+// Default fallback theme to use if theme loading fails
+const fallbackTheme = {
+  primary: "186 100% 50%",
+  secondary: "334 100% 59%",
+  background: "228 47% 8%",
+  foreground: "210 40% 98%",
+  card: "228 47% 11%",
+  effectColor: "#00F0FF",
+  effectSecondary: "#FF2D6E",
+};
 
+export function AppRouter() {
   return (
     <ErrorBoundary
       fallback={
@@ -56,70 +53,55 @@ export function AppRouter() {
         </div>
       }
     >
-      <LoggingProvider>
-        <ThemeInitializer 
-          fallbackTheme={defaultFallbackTheme}
-          applyImmediately={true}
-        >
-          <ThemeEffectProvider>
-            <SiteThemeProvider>
-              <NoHydrationMismatch
-                fallback={<SuspenseLoading />}
-              >
-                <Routes>
-                  {/* Site Routes */}
-                  <Route path="/" element={
-                    <React.Suspense fallback={<SuspenseLoading />}>
-                      <Index />
-                    </React.Suspense>
-                  } />
-                  <Route path="/login" element={
-                    <React.Suspense fallback={<SuspenseLoading />}>
-                      <Login />
-                    </React.Suspense>
-                  } />
-                  
-                  {/* Admin Routes */}
-                  <Route path="/admin/*" element={
-                    <React.Suspense fallback={<SuspenseLoading />}>
-                      <Admin />
-                    </React.Suspense>
-                  } />
-                  
-                  {/* Chat Routes */}
-                  <Route path="/chat" element={
-                    <React.Suspense fallback={<SuspenseLoading />}>
-                      <ChatLayout />
-                    </React.Suspense>
-                  }>
-                    <Route index element={
-                      <React.Suspense fallback={<SuspenseLoading />}>
-                        <ChatHome />
-                      </React.Suspense>
-                    } />
-                    <Route path="session/:sessionId" element={
-                      <React.Suspense fallback={<SuspenseLoading />}>
-                        <ChatSession />
-                      </React.Suspense>
-                    } />
-                  </Route>
-                  
-                  {/* 404 Page */}
-                  <Route path="*" element={
-                    <React.Suspense fallback={<SuspenseLoading />}>
-                      <NotFound />
-                    </React.Suspense>
-                  } />
-                </Routes>
-                
-                {/* Floating UI elements */}
-                <LogConsole />
-                <LogToggleButton />
-              </NoHydrationMismatch>
-            </SiteThemeProvider>
-          </ThemeEffectProvider>
-        </ThemeInitializer>
-      </LoggingProvider>
+      <ThemeInitializer fallbackTheme={fallbackTheme} applyImmediately={true}>
+        <NoHydrationMismatch fallback={<SuspenseLoading />}>
+          <Routes>
+            {/* Site Routes */}
+            <Route path="/" element={
+              <React.Suspense fallback={<SuspenseLoading />}>
+                <Index />
+              </React.Suspense>
+            } />
+            <Route path="/login" element={
+              <React.Suspense fallback={<SuspenseLoading />}>
+                <Login />
+              </React.Suspense>
+            } />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/*" element={
+              <React.Suspense fallback={<SuspenseLoading />}>
+                <Admin />
+              </React.Suspense>
+            } />
+            
+            {/* Chat Routes */}
+            <Route path="/chat" element={
+              <React.Suspense fallback={<SuspenseLoading />}>
+                <ChatLayout />
+              </React.Suspense>
+            }>
+              <Route index element={
+                <React.Suspense fallback={<SuspenseLoading />}>
+                  <ChatHome />
+                </React.Suspense>
+              } />
+              <Route path="session/:sessionId" element={
+                <React.Suspense fallback={<SuspenseLoading />}>
+                  <ChatSession />
+                </React.Suspense>
+              } />
+            </Route>
+            
+            {/* 404 Page */}
+            <Route path="*" element={
+              <React.Suspense fallback={<SuspenseLoading />}>
+                <NotFound />
+              </React.Suspense>
+            } />
+          </Routes>
+        </NoHydrationMismatch>
+      </ThemeInitializer>
     </ErrorBoundary>
   );
 }

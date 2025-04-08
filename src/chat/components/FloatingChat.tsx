@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { ChatWidget } from './ChatWidget';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useChat } from '../context/ChatProvider';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useAuthState } from '@/auth/hooks/useAuthState';
@@ -11,21 +11,34 @@ export function FloatingChat() {
   const { isAuthenticated } = useAuthState();
   const { hasAdminAccess } = useAdminAccess();
   const { isOpen } = useChat();
+  const renderedRef = useRef(false);
   
-  // Only show in certain paths and for authenticated users with admin access
-  const shouldShowChat = () => {
-    if (!isAuthenticated) return false;
-    if (!hasAdminAccess) return false;
-    
-    const pathname = location.pathname;
+  // Memoize the check to prevent unnecessary re-renders
+  const shouldShow = useMemo(() => {
+    // Only check if we're authenticated and have admin access
+    if (!isAuthenticated || !hasAdminAccess) {
+      return false;
+    }
     
     // Don't show on chat routes to avoid duplication
-    if (pathname.startsWith('/chat')) return false;
-    
-    return true;
-  };
+    const pathname = location.pathname;
+    return !pathname.startsWith('/chat');
+  }, [isAuthenticated, hasAdminAccess, location.pathname]);
   
-  if (!shouldShowChat()) {
+  // Add debug logging
+  useEffect(() => {
+    if (!renderedRef.current) {
+      console.log('FloatingChat rendered with state:', { 
+        shouldShow, 
+        isAuthenticated, 
+        hasAdminAccess, 
+        path: location.pathname 
+      });
+      renderedRef.current = true;
+    }
+  }, [shouldShow, isAuthenticated, hasAdminAccess, location.pathname]);
+  
+  if (!shouldShow) {
     return null;
   }
   
