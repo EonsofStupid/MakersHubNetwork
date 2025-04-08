@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -35,7 +35,7 @@ export function AuthSection({ className }: AuthSectionProps) {
         title: 'Logged out',
         description: 'You have been successfully logged out',
       });
-      navigate({ to: '/' });
+      navigate('/');
     } catch (error) {
       toast({
         title: 'Logout failed',
@@ -63,9 +63,7 @@ export function AuthSection({ className }: AuthSectionProps) {
       {isAdmin && (
         <Button 
           variant="outline" 
-          onClick={() => navigate({ 
-            to: validateAdminPath('/admin/dashboard')
-          })}
+          onClick={() => navigate(validateAdminPath('/admin/dashboard'))}
         >
           Admin
         </Button>
