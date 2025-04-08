@@ -1,5 +1,3 @@
-
-import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/auth/components/AuthProvider";
 import { AdminProvider } from "@/admin/context/AdminContext";
@@ -49,27 +47,25 @@ function App() {
   }, [logger]);
   
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
-      <LoggingProvider>
-        <ThemeEffectProvider>
-          {/* Critical: Theme initialization happens FIRST */}
-          <ThemeInitializer>
-            <SiteThemeProvider>
-              <AuthProvider>
-                <AppInitializer>
-                  <AdminProvider>
-                    <ChatProvider>
-                      <AppRouter />
-                      <Toaster />
-                    </ChatProvider>
-                  </AdminProvider>
-                </AppInitializer>
-              </AuthProvider>
-            </SiteThemeProvider>
-          </ThemeInitializer>
-        </ThemeEffectProvider>
-      </LoggingProvider>
-    </ThemeProvider>
+    <LoggingProvider>
+      <ThemeEffectProvider>
+        {/* Critical: Theme initialization happens FIRST */}
+        <ThemeInitializer>
+          <SiteThemeProvider>
+            <AuthProvider>
+              <AppInitializer>
+                <AdminProvider>
+                  <ChatProvider>
+                    <AppRouter />
+                    <Toaster />
+                  </ChatProvider>
+                </AdminProvider>
+              </AppInitializer>
+            </AuthProvider>
+          </SiteThemeProvider>
+        </ThemeInitializer>
+      </ThemeEffectProvider>
+    </LoggingProvider>
   );
 }
 

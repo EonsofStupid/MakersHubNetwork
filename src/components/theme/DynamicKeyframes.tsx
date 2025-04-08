@@ -1,8 +1,8 @@
-
 import React, { useEffect, useRef } from 'react';
 import { useSiteTheme } from './SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
 
 /**
  * Component that dynamically injects CSS keyframes from the theme
@@ -76,6 +76,7 @@ export function DynamicKeyframes() {
     };
   }, [animations, isLoaded, logger]);
   
-  // This component doesn't render anything
-  return null;
+  // This component doesn't render anything visible, but we wrap it in NoHydrationMismatch
+  // to prevent hydration issues since it manipulates the DOM directly
+  return <NoHydrationMismatch>{null}</NoHydrationMismatch>;
 }
