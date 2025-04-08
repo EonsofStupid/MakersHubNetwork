@@ -13,24 +13,7 @@ import { Footer } from '@/components/Footer';
 import { LogToggleButton } from '@/logging/components/LogToggleButton';
 import { LogConsole } from '@/logging/components/LogConsole';
 import { useLoggingContext } from '@/logging/context/LoggingContext';
-
-// Loading component for lazy-loaded routes
-const PageLoader = () => (
-  <div className="flex items-center justify-center h-screen">
-    <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-  </div>
-);
-
-// Safe wrapper for lazy-loaded components
-const safeComponent = <T extends React.ComponentType<any>>(LazyComp: React.LazyExoticComponent<T>) => {
-  return function SafeComponent() {
-    return (
-      <React.Suspense fallback={<PageLoader />}>
-        <LazyComp />
-      </React.Suspense>
-    );
-  };
-};
+import { withSafeSuspense } from '@/router/utils/safeRouteRegistration';
 
 // Import pages
 const Index = React.lazy(() => import('@/pages/Index'));
@@ -93,7 +76,7 @@ export const siteBaseRoute = createRoute({
 const indexRoute = createRoute({
   getParentRoute: () => siteBaseRoute,
   path: '',
-  component: safeComponent(Index)
+  component: withSafeSuspense(Index)
 });
 
 // Login route with search param validation
@@ -101,7 +84,7 @@ const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
   validateSearch: (search) => loginSearchSchema.parse(search),
-  component: safeComponent(Login)
+  component: withSafeSuspense(Login)
 });
 
 // Create a complete site route tree

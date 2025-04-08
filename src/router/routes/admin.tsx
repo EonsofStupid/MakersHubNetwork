@@ -4,30 +4,13 @@ import { rootRoute } from './site';
 import React from 'react';
 import { z } from 'zod';
 import { AdminLayout } from '@/admin/components/layouts/AdminLayout';
+import { withSafeSuspense } from '@/router/utils/safeRouteRegistration';
 
 // Zod schema for admin route params
 export const adminParamsSchema = {
   buildId: z.string(),
   userId: z.string(),
   themeId: z.string()
-};
-
-// Loading component for lazy-loaded routes
-const PageLoader = () => (
-  <div className="flex items-center justify-center h-screen">
-    <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-  </div>
-);
-
-// Safe wrapper for lazy-loaded components
-const safeComponent = <T extends React.ComponentType<any>>(LazyComp: React.LazyExoticComponent<T>) => {
-  return function SafeComponent() {
-    return (
-      <React.Suspense fallback={<PageLoader />}>
-        <LazyComp />
-      </React.Suspense>
-    );
-  };
 };
 
 // Lazy load the admin components
@@ -54,77 +37,77 @@ const adminBaseRoute = createRoute({
 const dashboardRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/dashboard',
-  component: safeComponent(Dashboard)
+  component: withSafeSuspense(Dashboard)
 });
 
 // Users route
 const usersRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/users',
-  component: safeComponent(UsersPage)
+  component: withSafeSuspense(UsersPage)
 });
 
 // Parts route
 const partsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/parts',
-  component: safeComponent(PartsPage)
+  component: withSafeSuspense(PartsPage)
 });
 
 // Builds route
 const buildsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/builds',
-  component: safeComponent(BuildsPage)
+  component: withSafeSuspense(BuildsPage)
 });
 
 // Themes route
 const themesRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/themes',
-  component: safeComponent(ThemesPage)
+  component: withSafeSuspense(ThemesPage)
 });
 
 // Content route
 const contentRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/content',
-  component: safeComponent(ContentPage)
+  component: withSafeSuspense(ContentPage)
 });
 
 // Settings route
 const settingsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/settings',
-  component: safeComponent(SettingsPage)
+  component: withSafeSuspense(SettingsPage)
 });
 
 // Permissions route
 const permissionsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/permissions',
-  component: safeComponent(PermissionsPage)
+  component: withSafeSuspense(PermissionsPage)
 });
 
 // Logs route
 const logsRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/logs',
-  component: safeComponent(LogsPage)
+  component: withSafeSuspense(LogsPage)
 });
 
 // Unauthorized route
 const unauthorizedRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '/unauthorized',
-  component: safeComponent(UnauthorizedPage)
+  component: withSafeSuspense(UnauthorizedPage)
 });
 
 // Admin not found route
 const adminNotFoundRoute = createRoute({
   getParentRoute: () => adminBaseRoute,
   path: '*',
-  component: safeComponent(NotFoundPage)
+  component: withSafeSuspense(NotFoundPage)
 });
 
 // Create a complete admin route tree
