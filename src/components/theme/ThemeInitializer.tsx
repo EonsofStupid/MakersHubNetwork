@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
@@ -12,10 +12,16 @@ import { safeSSR } from '@/lib/utils/safeSSR';
 export function ThemeInitializer({ children }: { children: React.ReactNode }) {
   const { loadTheme, isLoading, currentTheme } = useThemeStore();
   const logger = useLogger('ThemeInitializer', LogCategory.UI);
+  const isInitialized = useRef(false);
   
   // Load theme on mount
   useEffect(() => {
     const initializeTheme = async () => {
+      // Skip if already initialized or theme is already loaded
+      if (isInitialized.current || currentTheme) {
+        return;
+      }
+
       try {
         // Check if theme is already loaded
         const savedTheme = safeSSR(() => localStorage.getItem('theme-mode'), null);
@@ -23,12 +29,14 @@ export function ThemeInitializer({ children }: { children: React.ReactNode }) {
           logger.debug('Theme already loaded', {
             details: { theme: savedTheme }
           });
+          isInitialized.current = true;
           return;
         }
         
         // Load theme
         await loadTheme();
         logger.debug('Theme loaded successfully');
+        isInitialized.current = true;
       } catch (error) {
         logger.error('Failed to load theme', {
           details: { 
@@ -39,7 +47,7 @@ export function ThemeInitializer({ children }: { children: React.ReactNode }) {
     };
     
     initializeTheme();
-  }, [loadTheme, logger]);
+  }, [loadTheme, logger, currentTheme]);
   
   // Apply immediate fallback styles while theme is loading
   useEffect(() => {
