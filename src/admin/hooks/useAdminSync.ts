@@ -64,7 +64,7 @@ export function useAdminSync() {
     const timeoutId = setTimeout(() => {
       syncData().catch(err => {
         logger.error('Failed to sync admin data', {
-          details: error instanceof Error ? { message: error.message } : { message: String(error) }
+          details: err instanceof Error ? { message: err.message } : { message: String(err) }
         });
       });
     }, 100);
