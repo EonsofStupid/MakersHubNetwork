@@ -50,24 +50,21 @@ export function dispatchAuthEvent(event: AuthEvent): void {
     details: { type: event.type }
   } as LogOptions);
   
-  // Convert AuthEvent to Record<string, unknown> for logging compatibility
-  const eventForLogging = {
-    type: event.type,
-    payload: event.payload
-  } as Record<string, unknown>;
-  
-  authEventListeners.forEach(listener => {
-    try {
-      listener(event);
-    } catch (error) {
-      getLogger().error('Error in auth event listener', {
-        category: LogCategory.AUTH,
-        source: 'AuthBridge',
-        details: {
-          error,
-          eventType: event.type
-        }
-      } as LogOptions);
-    }
-  });
+  // Use setTimeout to prevent circular dependencies
+  setTimeout(() => {
+    authEventListeners.forEach(listener => {
+      try {
+        listener(event);
+      } catch (error) {
+        getLogger().error('Error in auth event listener', {
+          category: LogCategory.AUTH,
+          source: 'AuthBridge',
+          details: {
+            error,
+            eventType: event.type
+          }
+        } as LogOptions);
+      }
+    });
+  }, 0);
 }

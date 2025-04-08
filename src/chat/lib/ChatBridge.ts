@@ -1,113 +1,85 @@
 
+import { getLogger } from '@/logging';
+import { LogCategory, LogOptions } from '@/logging/types';
+
+export type ChatBridgeMessage = {
+  type: string;
+  [key: string]: any;
+};
+
+export type ChatBridgeChannel = 'system' | 'message' | 'admin' | 'events';
+
+export type ChatBridgeListener = (message: ChatBridgeMessage) => void;
+
 /**
- * ChatBridge - Communication channel for chat functionality
- * Isolates communication between modules and provides registry-based access
+ * ChatBridge - Implements a centralized messaging system for the chat module
+ * This prevents circular dependencies by creating a one-way communication flow
  */
-
-type MessageHandler = (message: any) => void;
-type MessageChannel = string;
-
-class ChatBridge {
-  private handlers: Map<MessageChannel, Set<MessageHandler>>;
-  private readonly prefix = 'makers-impulse-chat';
-  private static instance: ChatBridge;
-  
-  private constructor() {
-    this.handlers = new Map();
-  }
-  
-  public static getInstance(): ChatBridge {
-    if (!ChatBridge.instance) {
-      ChatBridge.instance = new ChatBridge();
-    }
-    return ChatBridge.instance;
-  }
+class ChatBridgeImpl {
+  private listeners: Map<ChatBridgeChannel, ChatBridgeListener[]> = new Map();
+  private logger = getLogger('ChatBridge', LogCategory.CHAT);
   
   /**
-   * Subscribe to chat messages
+   * Subscribe to a channel
+   * @param channel The channel to subscribe to
+   * @param listener The listener callback
    * @returns Unsubscribe function
    */
-  subscribe(channel: MessageChannel, handler: MessageHandler): () => void {
-    const channelKey = `${this.prefix}:${channel}`;
-    
-    if (!this.handlers.has(channelKey)) {
-      this.handlers.set(channelKey, new Set());
+  subscribe(channel: ChatBridgeChannel, listener: ChatBridgeListener): () => void {
+    if (!this.listeners.has(channel)) {
+      this.listeners.set(channel, []);
     }
     
-    this.handlers.get(channelKey)?.add(handler);
+    const channelListeners = this.listeners.get(channel)!;
+    channelListeners.push(listener);
+    
+    this.logger.debug(`Listener added to ${channel} channel`, { 
+      details: { listenersCount: channelListeners.length }
+    } as LogOptions);
     
     // Return unsubscribe function
     return () => {
-      const handlers = this.handlers.get(channelKey);
-      if (handlers) {
-        handlers.delete(handler);
-        if (handlers.size === 0) {
-          this.handlers.delete(channelKey);
-        }
+      const index = channelListeners.indexOf(listener);
+      if (index > -1) {
+        channelListeners.splice(index, 1);
+        this.logger.debug(`Listener removed from ${channel} channel`, { 
+          details: { listenersCount: channelListeners.length }
+        } as LogOptions);
       }
     };
   }
   
   /**
-   * Publish message to channel
+   * Publish a message to a channel
+   * @param channel The channel to publish to
+   * @param message The message to publish
    */
-  publish(channel: MessageChannel, message: any): void {
-    const channelKey = `${this.prefix}:${channel}`;
-    const handlers = this.handlers.get(channelKey);
+  publish(channel: ChatBridgeChannel, message: ChatBridgeMessage): void {
+    if (!this.listeners.has(channel)) {
+      return;
+    }
     
-    if (handlers) {
-      handlers.forEach(handler => {
+    const channelListeners = this.listeners.get(channel)!;
+    
+    this.logger.debug(`Publishing to ${channel} channel`, {
+      details: { message, listenersCount: channelListeners.length }
+    } as LogOptions);
+    
+    // Use setTimeout to break potential circular dependencies
+    setTimeout(() => {
+      channelListeners.forEach(listener => {
         try {
-          handler(message);
+          listener(message);
         } catch (error) {
-          console.error(`Error in chat handler for ${channel}:`, error);
+          this.logger.error(`Error in ${channel} channel listener`, {
+            details: { error, messageType: message.type },
+            error: true
+          } as LogOptions);
         }
       });
-    }
-  }
-  
-  /**
-   * Create a dedicated channel with controlled scope
-   */
-  createChannel(name: string) {
-    const channel = `${name}-${Date.now()}`;
-    
-    return {
-      publish: (message: any) => this.publish(channel, message),
-      subscribe: (handler: MessageHandler) => this.subscribe(channel, handler),
-      name: channel
-    };
+    }, 0);
   }
 }
 
 // Export singleton instance
-export const chatBridge = ChatBridge.getInstance();
-
-// Create hook for using the chat bridge
-import { useEffect, useState } from 'react';
-
-export function useChatBridge(channel: string, initialHandler?: MessageHandler) {
-  const [messages, setMessages] = useState<any[]>([]);
-  
-  useEffect(() => {
-    if (!initialHandler) return;
-    
-    // Subscribe to the channel
-    const unsubscribe = chatBridge.subscribe(channel, initialHandler);
-    
-    // Cleanup subscription
-    return () => {
-      unsubscribe();
-    };
-  }, [channel, initialHandler]);
-  
-  // Helper to publish messages
-  const publish = (message: any) => {
-    chatBridge.publish(channel, message);
-  };
-  
-  return {
-    publish,
-    messages
-  };
-}
+export const chatBridge = new ChatBridgeImpl();

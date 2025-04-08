@@ -4,6 +4,7 @@ import { useAuthStore } from '@/auth/store/auth.store';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { dispatchAuthEvent } from '@/auth/bridge';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -12,6 +13,7 @@ interface AuthProviderProps {
 /**
  * AuthProvider component
  * Initializes auth, listens for auth state changes, and provides auth state via Zustand
+ * Uses the AuthBridge to notify other components of auth state changes
  */
 export function AuthProvider({ children }: AuthProviderProps) {
   // Use separate getters to avoid triggering re-renders with multiple selectors
@@ -39,6 +41,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Update session in the store - avoid unnecessary store updates
         if (event !== 'INITIAL_SESSION') {
           setSession(session);
+          
+          // Dispatch event to AuthBridge for other components
+          dispatchAuthEvent({
+            type: session ? 'SESSION_UPDATED' : 'SIGNED_OUT',
+            payload: { session }
+          });
         }
       });
       
@@ -56,7 +64,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       
       authInitTimeoutRef.current = setTimeout(() => {
-        initialize().catch(error => {
+        initialize().then(() => {
+          // Notify via bridge that auth is initialized
+          dispatchAuthEvent({ type: 'INITIALIZED' });
+        }).catch(error => {
           logger.error('Error initializing auth', {
             details: error instanceof Error ? { message: error.message } : { error }
           });

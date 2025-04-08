@@ -3,8 +3,8 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { chatBridge } from '../lib/ChatBridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useAuthState } from '@/auth/hooks/useAuthState';
 import CircuitBreaker from '@/utils/CircuitBreaker';
+import { useAuthState } from '@/auth/hooks/useAuthState';
 
 // Define the shape of our chat context
 interface ChatContextValue {
@@ -28,7 +28,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const logger = useLogger('ChatProvider', LogCategory.CHAT);
-  const { user, isAuthenticated } = useAuthState();
+  const { user } = useAuthState();
   const initRef = useRef(false);
   
   // Initialize circuit breaker
@@ -41,8 +41,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     };
   }, [logger]);
   
-  // Set up chat bridge listener - only once
+  // Set up chat bridge listener - only once and without dependencies 
+  // that can trigger render loops
   useEffect(() => {
+    // Prevent multiple initializations
     if (initRef.current) return;
     initRef.current = true;
     
@@ -68,9 +70,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return () => {
       unsubscribe();
     };
-  }, [logger]);
+  }, []); // Empty dependencies - only run once
   
-  // Toggle chat visibility
+  // Toggle chat visibility with circuit breaker protection
   const toggleChat = () => {
     if (CircuitBreaker.isTripped('ChatProvider')) {
       logger.warn('Circuit breaker tripped, ignoring toggle action');
@@ -80,6 +82,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setIsOpen(prev => !prev);
   };
   
+  // Simple open/close functions with stable references
   const openChat = () => setIsOpen(true);
   const closeChat = () => setIsOpen(false);
   
@@ -103,11 +106,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       // Add to local messages
       setMessages(prev => [...prev, message]);
       
-      // Send through bridge
-      chatBridge.publish('message', {
-        type: 'user-message',
-        message
-      });
+      // Send through bridge - asynchronously
+      setTimeout(() => {
+        chatBridge.publish('message', {
+          type: 'user-message',
+          message
+        });
+      }, 0);
       
       // Simulate response for now
       setTimeout(() => {
@@ -131,6 +136,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   };
   
+  // Create the context value - use stable references
   const value = {
     isOpen,
     toggleChat,
