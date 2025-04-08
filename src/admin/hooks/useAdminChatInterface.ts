@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { adminChatBridge } from '../utils/chatBridge';
-import { chatBridge, ChatBridgeChannel } from '@/chat/lib/ChatBridge';
+import { chatBridge } from '@/chat/lib/ChatBridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 

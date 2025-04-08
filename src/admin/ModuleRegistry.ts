@@ -58,11 +58,9 @@ function registerEventHandlers(): void {
     // Handle auth events specific to admin functionality
     switch (event.type) {
       case 'SIGNED_IN':
-      case 'AUTH_SIGNED_IN':
         // Handle sign in if needed
         break;
       case 'SIGNED_OUT':
-      case 'AUTH_SIGNED_OUT':
         // Handle sign out if needed
         break;
     }
