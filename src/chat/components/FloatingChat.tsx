@@ -64,7 +64,7 @@ export function FloatingChat() {
     if (!renderedRef.current) return;
     
     // Only update if the component has already done its first render
-    if (CircuitBreaker.getCount('floating-chat-render') > 1) {
+    if (CircuitBreaker.count('floating-chat-render') > 1) {
       // Update the render state based on latest values, but don't cause a loop
       const newShouldRender = canShow;
       if (newShouldRender !== shouldRender) {

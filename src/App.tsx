@@ -11,7 +11,7 @@ import { AppRouter } from "@/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import CircuitBreaker from "@/lib/utils/CircuitBreaker";
+import CircuitBreaker from "@/utils/CircuitBreaker";
 
 // Import styles
 import "./App.css";
@@ -55,6 +55,7 @@ const queryClient = new QueryClient({
 function App() {
   const [appReady, setAppReady] = useState(false);
   const appReadyRef = useRef(false);
+  const [authInitError, setAuthInitError] = useState<string | null>(null);
   
   // Mark app as ready to allow progressive rendering, but do this only once
   useEffect(() => {
@@ -78,12 +79,18 @@ function App() {
       setAppReady(true);
       safeSSR(() => {
         document.documentElement.setAttribute('data-app-ready', 'true');
-      }, undefined);
+      });
       logger.info('App marked as ready');
     }, 100);
     
     return () => clearTimeout(timer);
   }, []); // Empty dependency array - only run once
+  
+  // Handle auth initialization errors gracefully
+  const handleAuthError = (error: Error) => {
+    logger.error('Auth initialization error:', { error: error.message });
+    setAuthInitError(error.message);
+  };
   
   return (
     <ErrorBoundary fallback={<div className="p-6">Something went wrong. Please try refreshing.</div>}>
@@ -97,7 +104,7 @@ function App() {
             We've configured AuthProvider to not block rendering of public routes,
             so users can see content even if auth is still initializing
           */}
-          <AuthProvider>
+          <AuthProvider onError={handleAuthError}>
             <AppInitializer>
               <AdminProvider>
                 <ChatProvider>
