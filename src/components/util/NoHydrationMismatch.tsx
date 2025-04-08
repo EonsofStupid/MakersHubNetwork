@@ -19,7 +19,7 @@ export const NoHydrationMismatch = ({
     // Use a timeout to ensure we're fully hydrated
     const timer = setTimeout(() => {
       setIsMounted(true);
-    }, 0);
+    }, 50); // Slightly longer timeout for better hydration
     
     return () => clearTimeout(timer);
   }, []);
