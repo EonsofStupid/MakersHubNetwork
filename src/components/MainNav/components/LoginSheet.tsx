@@ -8,10 +8,17 @@ import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { useEffect, useState } from "react";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
+import { isObject, isString, ClipPath, isValidClipPath } from "@/utils/typeGuards";
 
 interface LoginSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+interface SheetStyles {
+  container?: string;
+  transform?: string;
+  heading?: string;
 }
 
 export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
@@ -19,12 +26,15 @@ export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
   const logger = useLogger("LoginSheet", LogCategory.AUTH);
   const [isStylesApplied, setIsStylesApplied] = useState(false);
   
-  // Get styles for LoginSheet from the theme
-  const sheetStyles = componentStyles?.LoginSheet || {
-    container: "backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]",
-    transform: "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
-    heading: "text-2xl font-heading text-primary mb-6"
-  };
+  // Get styles for LoginSheet from the theme with proper type safety
+  const sheetStyles: SheetStyles = isObject(componentStyles) && 
+    isObject(componentStyles.LoginSheet) ? 
+    componentStyles.LoginSheet as SheetStyles : 
+    {
+      container: "backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]",
+      transform: "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
+      heading: "text-2xl font-heading text-primary mb-6"
+    };
 
   // Use CSS custom properties for auth UI styling
   useEffect(() => {
@@ -145,6 +155,14 @@ export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
     }
   }, [isOpen, variables, isStylesApplied, logger]);
 
+  // Safe access to transform with proper typing
+  const clipPathValue: ClipPath | undefined = isString(sheetStyles.transform) 
+    ? sheetStyles.transform
+    : "polygon(20px 0, 100% 0, 100% 100%, 0 100%)";
+    
+  // Safe transform style with proper typing
+  const transformStyle: string | undefined = "translateX(0) skew(-10deg)";
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
@@ -154,15 +172,15 @@ export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
       </SheetTrigger>
       <SheetContent 
         side="right" 
-        className={`w-[400px] ${sheetStyles.container} transform-gpu before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5 before:pointer-events-none`}
+        className={`w-[400px] ${isString(sheetStyles.container) ? sheetStyles.container : "backdrop-blur-xl bg-background/80 border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]"} transform-gpu before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5 before:pointer-events-none`}
         style={{
-          clipPath: sheetStyles.transform || "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
-          transform: "translateX(0) skew(-10deg)",
+          clipPath: clipPathValue,
+          transform: transformStyle,
           transformOrigin: "100% 50%",
         }}
       >
         <div className="transform skew-[10deg] origin-top-right">
-          <h2 className={sheetStyles.heading || "text-2xl font-heading text-primary mb-6"}>Welcome Back</h2>
+          <h2 className={isString(sheetStyles.heading) ? sheetStyles.heading : "text-2xl font-heading text-primary mb-6"}>Welcome Back</h2>
           <Auth
             supabaseClient={supabase}
             appearance={{
@@ -170,18 +188,18 @@ export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
               variables: {
                 default: {
                   colors: {
-                    brand: variables?.effectColor || '#00F0FF',
-                    brandAccent: variables?.effectSecondary || '#FF2D6E',
+                    brand: isString(variables?.effectColor) ? variables.effectColor : '#00F0FF',
+                    brandAccent: isString(variables?.effectSecondary) ? variables.effectSecondary : '#FF2D6E',
                     brandButtonText: 'white',
                     defaultButtonBackground: 'transparent',
                     defaultButtonBackgroundHover: 'rgba(0, 240, 255, 0.1)',
-                    defaultButtonBorder: variables?.effectColor || '#00F0FF',
-                    defaultButtonText: variables?.effectColor || '#00F0FF',
+                    defaultButtonBorder: isString(variables?.effectColor) ? variables.effectColor : '#00F0FF',
+                    defaultButtonText: isString(variables?.effectColor) ? variables.effectColor : '#00F0FF',
                   },
                   radii: {
-                    borderRadiusButton: variables?.radiusMd || '0.5rem',
-                    buttonBorderRadius: variables?.radiusMd || '0.5rem',
-                    inputBorderRadius: variables?.radiusMd || '0.5rem',
+                    borderRadiusButton: isString(variables?.radiusMd) ? variables.radiusMd : '0.5rem',
+                    buttonBorderRadius: isString(variables?.radiusMd) ? variables.radiusMd : '0.5rem',
+                    inputBorderRadius: isString(variables?.radiusMd) ? variables.radiusMd : '0.5rem',
                   },
                 },
               },

@@ -1,3 +1,4 @@
+
 import { createRoute } from '@tanstack/react-router';
 import { rootRoute } from './site';
 import React from 'react';
@@ -16,13 +17,25 @@ const PageLoader = () => (
 );
 
 // Safe wrapper for lazy-loaded components
-const safeComponent = <T extends React.ComponentType<Record<string, unknown>>>(LazyComp: React.LazyExoticComponent<T>) => {
-  const Component = (props: React.ComponentProps<T>) => (
-    <React.Suspense fallback={<PageLoader />}>
-      <LazyComp {...props} />
-    </React.Suspense>
-  );
-  return Component;
+const safeComponent = <T extends React.ComponentType<any>>(LazyComp: React.LazyExoticComponent<T>) => {
+  return function SafeComponent() {
+    return (
+      <React.Suspense fallback={<PageLoader />}>
+        <LazyComp />
+      </React.Suspense>
+    );
+  };
+};
+
+// Safe wrapper for components with params
+const safeComponentWithParams = <P extends object>(Component: React.ComponentType<P>) => {
+  return function SafeComponentWithParams(props: P) {
+    return (
+      <React.Suspense fallback={<PageLoader />}>
+        <Component {...props} />
+      </React.Suspense>
+    );
+  };
 };
 
 // Lazy load the chat components
@@ -52,12 +65,11 @@ const chatSessionRoute = createRoute({
     sessionId: chatParamsSchema.sessionId.parse(params.sessionId) 
   }),
   component: ({ params }) => {
-    const SessionComponent = () => (
+    return (
       <React.Suspense fallback={<PageLoader />}>
         <ChatSession sessionId={params.sessionId} />
       </React.Suspense>
     );
-    return <SessionComponent />;
   }
 });
 

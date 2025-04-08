@@ -89,3 +89,26 @@ export function isValidHexColor(value: unknown): value is string {
 export function isValidThemeContext(value: unknown): value is 'site' | 'admin' | 'chat' | 'app' | 'training' {
   return isString(value) && ['site', 'admin', 'chat', 'app', 'training'].includes(value);
 }
+
+/**
+ * Type guard to ensure a value is an object with a specific property
+ */
+export function hasProperty<K extends string>(obj: unknown, prop: K): obj is { [P in K]: unknown } {
+  return isObject(obj) && prop in obj;
+}
+
+/**
+ * Type guard for clip path values
+ */
+export type ClipPath = string;
+
+export function isValidClipPath(value: unknown): value is ClipPath {
+  return isString(value);
+}
+
+/**
+ * Safely convert to string or undefined
+ */
+export function toStringOrUndefined(value: unknown): string | undefined {
+  return isString(value) ? value : undefined;
+}

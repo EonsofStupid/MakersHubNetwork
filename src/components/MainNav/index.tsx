@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
+import { isObject, isString } from "@/utils/typeGuards";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -22,8 +23,8 @@ export function MainNav() {
   const dataStreamRef = useRef<HTMLDivElement>(null);
   const glitchParticlesRef = useRef<HTMLDivElement>(null);
   
-  // Get MainNav styles from theme
-  const styles = componentStyles?.MainNav || {
+  // Get MainNav styles from theme with proper type checking
+  const styles = isObject(componentStyles?.MainNav) ? componentStyles.MainNav : {
     container: {
       base: 'fixed top-0 w-full z-50 transition-all duration-300',
       animated: 'animate-morph-header'
@@ -92,6 +93,11 @@ export function MainNav() {
     };
   }, [logger, variables, componentStyles, themeIsLoaded]);
 
+  // Safely access the animated property with proper type checking
+  const containerAnimated = isObject(styles.container) && isString(styles.container.animated) 
+    ? styles.container.animated 
+    : "animate-morph-header";
+
   return (
     <header
       className={cn(
@@ -103,7 +109,7 @@ export function MainNav() {
         "right-0",
         "top-0",
         "fixed",
-        isLoaded && (styles.container?.animated || "animate-morph-header"),
+        isLoaded && containerAnimated,
         isScrolled && "mainnav-scrolled transform-gpu"
       )}
       style={{
@@ -126,14 +132,14 @@ export function MainNav() {
           ref={dataStreamRef}
           className={cn(
             "absolute inset-0 w-full h-full pointer-events-none", 
-            styles.dataStreamEffect || "mainnav-data-stream"
+            isString(styles.dataStreamEffect) ? styles.dataStreamEffect : "mainnav-data-stream"
           )} 
         />
         <div 
           ref={glitchParticlesRef}
           className={cn(
             "absolute inset-0 w-full h-full pointer-events-none",
-            styles.glitchParticles || "mainnav-glitch-particles"
+            isString(styles.glitchParticles) ? styles.glitchParticles : "mainnav-glitch-particles"
           )} 
         />
       </div>
