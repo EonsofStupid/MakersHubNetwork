@@ -15,10 +15,10 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 const Index = React.lazy(() => import('@/pages/Index'));
 const Login = React.lazy(() => import('@/pages/Login'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
+const Admin = React.lazy(() => import('@/pages/Admin')); 
 const ChatLayout = React.lazy(() => import('@/chat/components/layouts/ChatLayout'));
 const ChatHome = React.lazy(() => import('@/chat/pages/ChatHome'));
 const ChatSession = React.lazy(() => import('@/chat/pages/ChatSession'));
-const AdminRoutes = React.lazy(() => import('@/admin/routes/AdminRoutes').then(module => ({ default: module.AdminRoutes })));
 
 // Common loading component for lazy-loaded routes
 const SuspenseLoading = () => (
@@ -82,7 +82,7 @@ export function AppRouter() {
                   {/* Admin Routes */}
                   <Route path="/admin/*" element={
                     <React.Suspense fallback={<SuspenseLoading />}>
-                      <AdminRoutes />
+                      <Admin />
                     </React.Suspense>
                   } />
                   

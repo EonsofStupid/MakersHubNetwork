@@ -1,23 +1,13 @@
 
-import { 
-  createRoute,
-  createRootRoute,
-  Outlet
-} from '@tanstack/react-router';
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
+import { Outlet } from 'react-router-dom';
 import { z } from 'zod';
-import React from 'react';
 
 import { MainNav } from '@/components/MainNav';
 import { Footer } from '@/components/Footer';
 import { LogToggleButton } from '@/logging/components/LogToggleButton';
 import { LogConsole } from '@/logging/components/LogConsole';
 import { useLoggingContext } from '@/logging/context/LoggingContext';
-import { withSafeSuspense } from '@/router/utils/safeRouteRegistration';
-
-// Import pages
-const Index = React.lazy(() => import('@/pages/Index'));
-const Login = React.lazy(() => import('@/pages/Login'));
 
 // Login search params schema
 export const loginSearchSchema = z.object({
@@ -26,7 +16,7 @@ export const loginSearchSchema = z.object({
 });
 
 // Root layout component that includes site-wide UI elements
-function RootLayout({ children }: { children: ReactNode }) {
+export function RootLayout({ children }: { children: ReactNode }) {
   return (
     <div className="app-root w-full max-w-full min-h-screen flex flex-col">
       {children}
@@ -48,7 +38,7 @@ function LoggingComponents() {
 }
 
 // Site layout with nav and footer
-function SiteLayout() {
+export function SiteLayout() {
   return (
     <>
       <MainNav />
@@ -60,46 +50,11 @@ function SiteLayout() {
   );
 }
 
-// Define routes with proper search param validation
-export const rootRoute = createRootRoute({
-  component: RootLayout
-});
+// Export React Router DOM Outlet
+export { Outlet } from 'react-router-dom';
 
-// Site route with navigation and footer
-export const siteBaseRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/',
-  component: SiteLayout
-});
-
-// Index page route
-const indexRoute = createRoute({
-  getParentRoute: () => siteBaseRoute,
-  path: '',
-  component: withSafeSuspense(Index)
-});
-
-// Login route with search param validation
-const loginRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/login',
-  validateSearch: (search) => loginSearchSchema.parse(search),
-  component: withSafeSuspense(Login)
-});
-
-// Create a complete site route tree
-const siteRouteTree = rootRoute.addChildren([
-  siteBaseRoute.addChildren([indexRoute]),
-  loginRoute
-]);
-
-// Export individual routes and the complete tree
+// Export route paths for reference
 export const siteRoutes = {
-  root: rootRoute,
-  base: siteBaseRoute,
-  index: indexRoute,
-  login: loginRoute,
-  tree: siteRouteTree
+  index: '/',
+  login: '/login',
 };
-
-export { Outlet } from '@tanstack/react-router';
