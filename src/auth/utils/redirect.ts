@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { UserRole } from '@/auth/types/userRoles';
+import { UserRole } from '@/types/common.types';
 
 export interface RedirectOptions {
   to: string;
@@ -25,7 +25,7 @@ export function useAuthRedirect(options: RedirectOptions) {
   
   useEffect(() => {
     // Wait until auth is not in loading state
-    if (status === 'loading' || status === 'idle') {
+    if (status === 'loading') {
       return;
     }
     

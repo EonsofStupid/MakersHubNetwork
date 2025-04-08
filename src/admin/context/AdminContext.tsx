@@ -8,6 +8,7 @@ import { PERMISSIONS } from '@/auth/permissions';
 import { AdminPermissionValue } from '@/admin/types/permissions';
 import { mapRolesToPermissions } from '@/auth/rbac/roles';
 import CircuitBreaker from '@/utils/CircuitBreaker';
+import { UserRole } from '@/types/common.types';
 
 // Create context
 interface AdminContextValue {
@@ -54,7 +55,7 @@ export const AdminProvider = React.memo(({ children }: { children: React.ReactNo
         
         // Use the proper role mapping function to get typed permissions
         const adminPermissions: AdminPermissionValue[] = 
-          mapRolesToPermissions(roles);
+          mapRolesToPermissions(roles as UserRole[]);
         
         // Update permissions in store
         setPermissions(adminPermissions);

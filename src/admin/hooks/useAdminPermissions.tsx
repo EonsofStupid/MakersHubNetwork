@@ -7,6 +7,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { AdminPermissionValue } from '@/admin/types/permissions';
 import { mapRolesToPermissions } from '@/auth/rbac/roles';
+import { UserRole } from '@/types/common.types';
 
 /**
  * Hook for accessing and checking admin permissions
@@ -37,7 +38,7 @@ export function useAdminPermissions() {
       logger.debug('Initializing permissions from roles in useAdminPermissions');
       
       // Map roles to permissions without triggering the admin store loading
-      const mappedPermissions = mapRolesToPermissions(roles);
+      const mappedPermissions = mapRolesToPermissions(roles as UserRole[]);
       
       // Only update if needed (avoid cycles)
       if (mappedPermissions.length > 0 && permissions.length === 0) {

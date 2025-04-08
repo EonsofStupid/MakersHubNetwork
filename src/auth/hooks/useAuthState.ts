@@ -5,9 +5,10 @@ import { supabase } from '@/lib/supabase';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import CircuitBreaker from '@/utils/CircuitBreaker';
+import { UserRole } from '@/types/common.types';
 
 // Default user roles for fallback
-type UserRole = 'admin' | 'super_admin' | 'user' | 'editor' | 'viewer';
+// Using our unified UserRole type from common.types.ts
 
 // Hardcoded admin user for testing purposes
 const SYSTEM_ADMIN_ID = '00000000-0000-0000-0000-000000000003';
@@ -60,7 +61,7 @@ export function useAuthState() {
       // Extract roles from user metadata
       const userRoles: UserRole[] = [];
       if (session?.user?.app_metadata?.roles && Array.isArray(session.user.app_metadata.roles)) {
-        userRoles.push(...session.user.app_metadata.roles);
+        userRoles.push(...session.user.app_metadata.roles as UserRole[]);
       }
       
       // Special case for system admin user
@@ -68,7 +69,8 @@ export function useAuthState() {
         logger.info('System admin user detected');
         // Force isAuthenticated and add admin roles for system admin
         setIsAuthenticated(true);
-        userRoles.push('super_admin', 'admin');
+        if (!userRoles.includes('super_admin')) userRoles.push('super_admin');
+        if (!userRoles.includes('admin')) userRoles.push('admin');
       }
       
       setRoles(userRoles);
@@ -124,7 +126,7 @@ export function useAuthState() {
       // Extract roles from user metadata
       const userRoles: UserRole[] = [];
       if (session?.user?.app_metadata?.roles && Array.isArray(session.user.app_metadata.roles)) {
-        userRoles.push(...session.user.app_metadata.roles);
+        userRoles.push(...session.user.app_metadata.roles as UserRole[]);
       }
       
       // Special case for system admin user
@@ -132,7 +134,8 @@ export function useAuthState() {
         logger.info('System admin user detected in auth change');
         // Force isAuthenticated for system admin
         setIsAuthenticated(true);
-        userRoles.push('super_admin', 'admin');
+        if (!userRoles.includes('super_admin')) userRoles.push('super_admin');
+        if (!userRoles.includes('admin')) userRoles.push('admin');
       }
       
       setRoles(userRoles);
