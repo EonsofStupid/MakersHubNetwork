@@ -5,13 +5,13 @@ import { AdminProvider } from "@/admin/context/AdminContext";
 import { LoggingProvider } from "@/logging/context/LoggingContext";
 import { useEffect, useState } from "react";
 import { initializeLogger, getLogger } from "@/logging";
-import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
-import { AppInitializer } from "@/components/AppInitializer";
 import { SiteThemeProvider } from "@/components/theme/SiteThemeProvider";
 import { ThemeEffectProvider } from "@/components/theme/effects/ThemeEffectProvider";
 import { AppRouter } from "@/router";
 import { ChatProvider } from '@/chat/context/ChatProvider';
 import { safeSSR } from "@/lib/utils/safeSSR";
+import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
+import { AppInitializer } from "@/components/AppInitializer";
 
 // Import styles
 import "./App.css";

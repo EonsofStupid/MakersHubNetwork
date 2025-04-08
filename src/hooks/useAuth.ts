@@ -11,10 +11,13 @@ import { errorToObject } from '@/shared/utils/render';
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
+  const stableHasRole = useRef(useAuthStore.getState().hasRole).current;
+  const stableIsAdmin = useRef(useAuthStore.getState().isAdmin).current;
+  const stableLogout = useRef(useAuthStore.getState().logout).current;
   
-  // Extract only what we need from the store to prevent unnecessary re-renders
-  // Use a selector function to stabilize the returned values
-  const authState = useAuthStore(state => ({
+  // Extract only what we need from the store using a stable selector
+  // This helps prevent re-renders caused by unstable selector functions
+  const selectorRef = useRef((state: ReturnType<typeof useAuthStore.getState>) => ({
     user: state.user,
     session: state.session,
     roles: state.roles,
@@ -25,8 +28,8 @@ export function useAuth() {
     isAuthenticated: state.isAuthenticated
   }));
   
-  // Get functions separately to avoid state updates causing loops
-  const { hasRole, isAdmin, logout, initialize } = useAuthStore();
+  const authState = useAuthStore(selectorRef.current);
+  const initialize = useAuthStore(state => state.initialize);
   
   // Auto-initialize auth if needed - with guard against infinite loops
   useEffect(() => {
@@ -61,14 +64,14 @@ export function useAuth() {
         details: { userId: authState.user.id }
       });
     }
-    return logout();
+    return stableLogout();
   };
 
   return {
     ...authState,
-    isAdmin: isAdmin(),
+    isAdmin: stableIsAdmin(),
     isSuperAdmin,
-    hasRole,
+    hasRole: stableHasRole,
     logout: handleLogout,
     // Don't expose initialize directly as it should be handled automatically
   };

@@ -9,7 +9,7 @@ import { getThemeContextForRoute } from '@/router/routeRegistry';
 import { useLoggingContext } from '@/logging/context/LoggingContext';
 import { LogConsole } from '@/logging/components/LogConsole';
 import { LogToggleButton } from '@/logging/components/LogToggleButton';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { getLogger } from '@/logging';
 import { ThemeContext } from '@/types/theme';
 import { adminRoutes } from './routes/admin';
@@ -42,8 +42,8 @@ const initialScope = (() => {
 const initialThemeContext = getThemeContextForRoute(initialPathname);
 
 // Create router instance once to prevent recreating on every render
-// Only recreate when needed for route changes
-const createAppRouter = () => {
+// Use a factory function to ensure clean initialization
+const createRouterInstance = () => {
   try {
     // Build route tree once
     const routeTree = (() => {
@@ -89,9 +89,8 @@ const createAppRouter = () => {
     });
     
     // Return a minimal router that at least won't crash the app
-    const minimalTree = rootRoute;
     return createRouter({
-      routeTree: minimalTree,
+      routeTree: rootRoute,
       defaultComponent: () => null,
       context: {
         scope: 'site',
@@ -101,20 +100,22 @@ const createAppRouter = () => {
   }
 };
 
-// Create the router instance at module level
-export const router = createAppRouter();
+// Create the router instance at module level - do this only once
+const router = createRouterInstance();
 
-// Router provider component with global logging components - wrapped with memo
+// Router provider component with global logging components
 export function AppRouter() {
   const [currentScope, setCurrentScope] = useState<'site' | 'admin' | 'chat'>(initialScope);
   const [isClient, setIsClient] = useState(false);
   const { showLogConsole } = useLoggingContext();
+  const initialRenderRef = useRef(true);
   
   // Mark when we're on the client to prevent hydration issues
   useEffect(() => {
-    if (isClient) return; // Only run once
+    if (!initialRenderRef.current) return;
+    initialRenderRef.current = false;
     setIsClient(true);
-  }, [isClient]);
+  }, []);
   
   // Use a consistent initial context for SSR
   const routerContext = useMemo(() => {
@@ -182,6 +183,9 @@ export function AppRouter() {
     </ErrorBoundary>
   );
 }
+
+// Export router instance for use in other components
+export { router };
 
 // Create a hook to use the router for safer access
 export function useRouter() {
