@@ -20,7 +20,7 @@ export const getSectionFromPath = (path: string): string => {
   }
   
   // Check for search parameters
-  const search = router.state.location.search;
+  const search = router?.state?.location?.search ?? {};
   const parsedSearch = searchParamsSchema.parse(search);
   if (parsedSearch.tab) {
     return parsedSearch.tab;

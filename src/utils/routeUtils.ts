@@ -17,6 +17,8 @@ const searchParamsSchema = z.record(z.unknown());
  * @param options Optional navigation options
  */
 export function navigateTo(path: string, options?: NavigateOptions) {
+  if (!router) return;
+  
   router.navigate({
     to: path as any, 
     replace: options?.replace,
@@ -36,14 +38,14 @@ export function navigateBack() {
  * Get the current route path
  */
 export function getCurrentRoute() {
-  return router.state.location.pathname;
+  return router?.state?.location?.pathname ?? '/';
 }
 
 /**
  * Get URL search parameters
  */
 export function getSearchParams() {
-  return router.state.location.search;
+  return router?.state?.location?.search ?? {};
 }
 
 /**
@@ -51,7 +53,7 @@ export function getSearchParams() {
  * @param key The search parameter key
  */
 export function getSearchParam(key: string) {
-  return router.state.location.search[key];
+  return router?.state?.location?.search?.[key];
 }
 
 /**
@@ -59,5 +61,5 @@ export function getSearchParam(key: string) {
  * @param path The path to check against
  */
 export function isCurrentRoute(path: string) {
-  return router.state.location.pathname === path;
+  return router?.state?.location?.pathname === path;
 }

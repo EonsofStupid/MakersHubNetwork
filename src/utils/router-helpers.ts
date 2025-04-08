@@ -30,6 +30,8 @@ export function createSearchParams<T extends Record<string, any>>(params: T): Re
  * @param options Optional navigation options
  */
 export function navigateTo(path: string, options?: NavigateOptions): void {
+  if (!router) return;
+  
   router.navigate({
     to: path as any, // Type cast to avoid TanStack Router type issues
     replace: options?.replace,
@@ -41,6 +43,8 @@ export function navigateTo(path: string, options?: NavigateOptions): void {
  * Navigate to a route with search parameters
  */
 export function navigateWithParams(path: string, params: Record<string, any>, options?: NavigateOptions): void {
+  if (!router) return;
+  
   router.navigate({
     to: path as any, // Type cast to avoid TanStack Router type issues
     search: params as any, // Changed this line to fix typing issues
@@ -71,14 +75,14 @@ export function navigateBack() {
  * Get the current route path
  */
 export function getCurrentRoute() {
-  return router.state.location.pathname;
+  return router?.state?.location?.pathname ?? '/';
 }
 
 /**
  * Get URL search parameters
  */
 export function getSearchParams() {
-  return router.state.location.search;
+  return router?.state?.location?.search ?? {};
 }
 
 /**
@@ -86,7 +90,7 @@ export function getSearchParams() {
  * @param key The search parameter key
  */
 export function getSearchParam(key: string) {
-  return router.state.location.search[key];
+  return router?.state?.location?.search?.[key];
 }
 
 /**
@@ -94,14 +98,14 @@ export function getSearchParam(key: string) {
  * @param path The path to check against
  */
 export function isCurrentRoute(path: string) {
-  return router.state.location.pathname === path;
+  return router?.state?.location?.pathname === path;
 }
 
 /**
  * Check if the current route is within a specific scope
  */
 export function isInScope(scope: RouteScope): boolean {
-  const pathname = router.state.location.pathname;
+  const pathname = router?.state?.location?.pathname ?? '';
   
   switch (scope) {
     case 'admin':
