@@ -1,6 +1,6 @@
 
 import { useAuthState } from "@/auth/hooks/useAuthState";
-import { UserRole } from "@/auth/types/auth.types";
+import { UserRole } from "@/types/common.types";
 import { useMemo } from "react";
 
 interface AdminAccessOptions {
@@ -23,7 +23,7 @@ export function useAdminAccess(options: AdminAccessOptions = { requireAuth: true
     }
     
     // Check if user has admin or super_admin role
-    const isAdmin = roles.includes('admin' as UserRole) || roles.includes('super_admin' as UserRole);
+    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
     
     // If specific roles are required
     if (options.allowedRoles && options.allowedRoles.length > 0) {
