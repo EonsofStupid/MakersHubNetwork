@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { dispatchAuthEvent, dispatchSignInEvent, dispatchSignOutEvent } from '@/auth/bridge';
+import CircuitBreaker from '@/utils/CircuitBreaker';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -25,6 +26,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const authInitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
+    // Initialize circuit breaker to prevent infinite loops
+    CircuitBreaker.init('AuthProvider-effect', 10, 1000); 
+    
+    // Check if we're caught in an infinite loop
+    if (CircuitBreaker.count('AuthProvider-effect')) {
+      logger.warn('Breaking potential infinite loop in AuthProvider');
+      return;
+    }
+    
     logger.info('AuthProvider mounting');
     
     // Set up Supabase auth state change listener only once

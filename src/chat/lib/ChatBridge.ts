@@ -7,7 +7,7 @@ export type ChatBridgeMessage = {
   [key: string]: any;
 };
 
-// Updated to support both fixed channels and dynamic patterns like 'session:123'
+// Updated to accept any string channel, including dynamic patterns like 'session:123'
 export type ChatBridgeChannel = string;
 
 export type ChatBridgeListener = (message: ChatBridgeMessage) => void;

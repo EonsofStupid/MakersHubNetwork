@@ -1,53 +1,45 @@
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useThemeStore } from '@/stores/theme/store';
+import CircuitBreaker from '@/utils/CircuitBreaker';
 
 interface AppInitializerProps {
   children: React.ReactNode;
 }
 
 export function AppInitializer({ children }: AppInitializerProps) {
+  const [initialized, setInitialized] = useState(false);
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const initializationAttempted = useRef(false);
-  
-  // Use stable selector to prevent re-renders
-  const loadStatus = useThemeStore(
-    useMemo(() => (state) => state.loadStatus, [])
-  );
 
   useEffect(() => {
-    // Only attempt initialization once
-    if (initializationAttempted.current) {
+    // Initialize circuit breaker
+    CircuitBreaker.init('AppInitializer', 5, 1000);
+    
+    // Check for infinite loops
+    if (CircuitBreaker.count('AppInitializer')) {
+      logger.warn('Breaking potential infinite loop in AppInitializer');
       return;
     }
+    
+    // Don't re-initialize
+    if (initialized) return;
+    
+    // Do any initialization that needs to happen once
+    logger.info('Initializing application');
+    
+    try {
+      // Add any specific initialization logic here
+      // This is a safe place for one-time setup that doesn't depend on auth state
+      
+      logger.info('Application initialization complete');
+      setInitialized(true);
+    } catch (error) {
+      logger.error('Error during application initialization', {
+        details: { error: error instanceof Error ? error.message : String(error) }
+      });
+    }
+  }, [initialized, logger]);
 
-    const initializeApp = async () => {
-      try {
-        initializationAttempted.current = true;
-        logger.info('Initializing application...');
-
-        // Just a small delay to ensure other systems have settled
-        setTimeout(() => {
-          logger.info('Application initialized successfully', {
-            details: { themeLoaded: loadStatus === 'success' }
-          });
-          setIsInitialized(true);
-        }, 50);
-      } catch (error) {
-        logger.error('Failed to initialize application', {
-          details: { error: error instanceof Error ? error.message : String(error) }
-        });
-        // Still mark as initialized to prevent blocking the UI
-        setIsInitialized(true);
-      }
-    };
-
-    initializeApp();
-  }, [logger, loadStatus]);
-
-  // Always render children - initialization happens in the background
   return <>{children}</>;
 }
