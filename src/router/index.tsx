@@ -15,7 +15,7 @@ import { getLogger } from '@/logging';
 import { ThemeContext } from '@/types/theme';
 import { adminRoutes } from './routes/admin';
 import { siteRoutes } from './routes/site';
-import { chatRoutes } from './routes/chat'; // Import from the correct path
+import { chatRoutes } from './routes/chat';
 import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
 import { safeSSR } from '@/lib/utils/safeSSR';
 import { isValidThemeContext } from '@/utils/typeGuards';
@@ -49,10 +49,10 @@ const initialThemeContext = getThemeContextForRoute(initialPathname);
 // Create router instance once to prevent recreating on every render
 // Use a function to create the router but wrap it with a singleton pattern
 const createRouterSingleton = (() => {
-  let router: ReturnType<typeof createRouter> | null = null;
+  let routerInstance: ReturnType<typeof createRouter> | null = null;
   
   return () => {
-    if (router) return router;
+    if (routerInstance) return routerInstance;
     
     try {
       // Build route tree once
@@ -94,8 +94,8 @@ const createRouterSingleton = (() => {
         } as RouterContext
       });
       
-      router = createdRouter;
-      return createdRouter as any; // Type assertion to fix TypeScript errors
+      routerInstance = createdRouter;
+      return createdRouter;
     } catch (error) {
       logger.error('Failed to create router', { 
         details: { error: error instanceof Error ? error.message : String(error) }
@@ -111,8 +111,8 @@ const createRouterSingleton = (() => {
         }
       });
       
-      router = fallbackRouter;
-      return fallbackRouter as any; // Type assertion to fix TypeScript errors
+      routerInstance = fallbackRouter;
+      return fallbackRouter;
     }
   };
 })();
@@ -198,7 +198,7 @@ export function AppRouter() {
         }
       >
         <RouterProvider 
-          router={router as any} // Type assertion to fix TypeScript errors
+          router={router} 
           context={routerContext} 
         />
         {isClient && showLogConsole && <LogConsole />}
@@ -208,12 +208,7 @@ export function AppRouter() {
   );
 }
 
-// Export router instance for use in other components
-export { router };
-
-// Create a hook to use the router for safer access
+// Export the hook to use the router
 export function useRouter() {
   return router;
 }
-
-export default router;
