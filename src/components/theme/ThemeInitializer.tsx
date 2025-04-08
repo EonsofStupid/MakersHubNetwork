@@ -25,11 +25,22 @@ interface ThemeInitializerProps {
 
 const logger = getLogger('ThemeInitializer');
 
+// Default fallback theme to always have something to show
+const defaultFallbackTheme = {
+  primary: '186 100% 50%',
+  secondary: '334 100% 59%',
+  background: '228 47% 8%',
+  foreground: '210 40% 98%',
+  effectColor: '#00F0FF',
+  effectSecondary: '#FF2D6E',
+  effectTertiary: '#8B5CF6',
+};
+
 export function ThemeInitializer({ 
   children, 
   themeContext = 'site', 
   applyImmediately = true,
-  fallbackTheme
+  fallbackTheme = defaultFallbackTheme
 }: ThemeInitializerProps) {
   // Initialize circuit breaker to prevent infinite loops
   CircuitBreaker.init('ThemeInitializer-effect', 5, 1000);
@@ -51,19 +62,29 @@ export function ThemeInitializer({
   const [appliedFallback, setAppliedFallback] = useState(false);
   const [initializationComplete, setInitializationComplete] = useState(false);
 
-  // Apply fallback theme immediately if provided - only once
+  // Apply fallback theme immediately to ensure something is always visible
   useEffect(() => {
-    if (!isBrowser() || !fallbackTheme || !applyImmediately || appliedFallback) {
+    if (!isBrowser() || appliedFallback) {
       return;
     }
     
     try {
+      // Apply fallback theme immediately
       const root = document.documentElement;
-      Object.entries(fallbackTheme).forEach(([key, value]) => {
+      
+      // Use our combined fallback theme with any user provided values
+      const finalFallback = { ...defaultFallbackTheme, ...fallbackTheme };
+      
+      Object.entries(finalFallback).forEach(([key, value]) => {
         if (value) {
           root.style.setProperty(`--site-${key}`, value);
         }
       });
+      
+      // Also set standard CSS variables
+      root.style.setProperty('--primary', finalFallback.primary || defaultFallbackTheme.primary);
+      root.style.setProperty('--secondary', finalFallback.secondary || defaultFallbackTheme.secondary);
+      
       setAppliedFallback(true);
       logger.info('Applied fallback theme');
     } catch (err) {
@@ -71,13 +92,15 @@ export function ThemeInitializer({
         details: { error: err instanceof Error ? err.message : String(err) }
       });
     }
-  }, [fallbackTheme, applyImmediately, appliedFallback]);
+  }, [fallbackTheme, appliedFallback]);
 
   // Memoize the theme load function to prevent excessive re-renders
   const loadThemeSafely = useCallback(() => {
     return async () => {
       try {
-        await loadTheme(themeContext);
+        if (typeof loadTheme === 'function') {
+          await loadTheme(themeContext);
+        }
         setInitializationComplete(true);
       } catch (err) {
         logger.error('Theme load error handled safely', { 
@@ -86,7 +109,7 @@ export function ThemeInitializer({
         setInitializationComplete(true); // Still mark as complete to prevent blocking UI
       }
     };
-  }, [loadTheme, themeContext]);
+  }, [loadTheme, themeContext, logger]);
 
   // Initialize theme loading with timeout protection - only once
   useEffect(() => {
@@ -134,6 +157,25 @@ export function ThemeInitializer({
   const handleRetryLoading = () => {
     loadThemeSafely()();
   };
+
+  // Always use the fallback theme to ensure something is visible
+  useEffect(() => {
+    if (!appliedFallback && loadStatus === 'error') {
+      // Apply fallback theme if there's an error
+      try {
+        const root = document.documentElement;
+        Object.entries(defaultFallbackTheme).forEach(([key, value]) => {
+          if (value) {
+            root.style.setProperty(`--site-${key}`, value);
+          }
+        });
+      } catch (err) {
+        logger.error('Failed to apply error fallback theme', { 
+          details: { error: err instanceof Error ? err.message : String(err) }
+        });
+      }
+    }
+  }, [loadStatus, appliedFallback]);
 
   // If we have a fallback applied or initialization is complete, don't block rendering
   if ((appliedFallback || initializationComplete) && loadStatus !== 'loading') {

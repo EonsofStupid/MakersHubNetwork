@@ -35,7 +35,7 @@ export function useImpulsivityTheme() {
         if (storedConfig) {
           setConfig({ ...defaultConfig, ...JSON.parse(storedConfig) });
         }
-      });
+      }, undefined);
       
       logger.debug('Impulsivity theme initialized');
     } catch (error) {
@@ -51,7 +51,7 @@ export function useImpulsivityTheme() {
       const newConfig = { ...prev, [key]: value };
       safeSSR(() => {
         localStorage.setItem('impulsivity-theme', JSON.stringify(newConfig));
-      });
+      }, undefined);
       return newConfig;
     });
   }, []);

@@ -24,11 +24,24 @@ const dummyClient = {
     signOut: () => Promise.resolve({ error: null }),
   },
   functions: {
-    invoke: (name: string) => Promise.resolve({ 
+    invoke: (name: string, options?: any) => Promise.resolve({ 
       data: null, 
       error: { message: 'Dummy client - no Supabase connection' }
     }),
   },
+  from: () => ({
+    select: () => ({
+      eq: () => ({
+        order: () => ({
+          limit: () => ({
+            single: () => Promise.resolve({ data: null, error: null }),
+            maybeSingle: () => Promise.resolve({ data: null, error: null })
+          })
+        }),
+        limit: () => Promise.resolve({ data: [], error: null }),
+      })
+    })
+  }),
 };
 
 // Create Supabase client with optimized configuration if credentials exist

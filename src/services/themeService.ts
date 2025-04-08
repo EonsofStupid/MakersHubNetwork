@@ -52,6 +52,7 @@ const fallbackTheme: Theme = {
 
 /**
  * Get a theme from the database or Supabase edge function
+ * Always returns fallback data if edge function fails
  */
 export async function getTheme(options: GetThemeOptions = {}): Promise<GetThemeResponse> {
   try {
@@ -81,53 +82,69 @@ export async function getTheme(options: GetThemeOptions = {}): Promise<GetThemeR
         const url = `${supabaseUrl}/functions/v1/theme-service?${params.toString()}`;
         logger.info('Calling theme service edge function', { details: { url } });
         
-        const response = await fetch(url);
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
         
-        if (!response.ok) {
-          throw new Error(`Theme service responded with ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.theme) {
-          logger.info('Theme loaded from edge function', { 
-            details: { 
-              themeName: data.theme.name,
+        try {
+          const response = await fetch(url, { 
+            signal: controller.signal 
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            throw new Error(`Theme service responded with ${response.status}: ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.theme) {
+            logger.info('Theme loaded from edge function', { 
+              details: { 
+                themeName: data.theme.name,
+                isFallback: data.isFallback
+              } 
+            });
+            
+            return {
+              theme: data.theme,
               isFallback: data.isFallback
-            } 
-          });
+            };
+          }
           
-          return {
-            theme: data.theme,
-            isFallback: data.isFallback
-          };
-        }
-        
-        // If theme not found but tokens are returned, create a fallback theme with those tokens
-        if (data.tokens) {
-          const fallbackWithTokens = {
-            ...fallbackTheme,
-            design_tokens: {
-              colors: data.tokens,
-              effects: {
-                shadows: {},
-                blurs: {},
-                gradients: {},
-                primary: data.tokens.effectPrimary || '#00F0FF',
-                secondary: data.tokens.effectSecondary || '#FF2D6E',
-                tertiary: data.tokens.effectTertiary || '#8B5CF6',
+          // If theme not found but tokens are returned, create a fallback theme with those tokens
+          if (data.tokens) {
+            const fallbackWithTokens = {
+              ...fallbackTheme,
+              design_tokens: {
+                colors: data.tokens,
+                effects: {
+                  shadows: {},
+                  blurs: {},
+                  gradients: {},
+                  primary: data.tokens.effectPrimary || '#00F0FF',
+                  secondary: data.tokens.effectSecondary || '#FF2D6E',
+                  tertiary: data.tokens.effectTertiary || '#8B5CF6',
+                }
               }
-            }
-          };
-          
-          logger.warn('Using fallback theme with edge function tokens', { 
-            details: { isFallback: true } 
+            };
+            
+            logger.warn('Using fallback theme with edge function tokens', { 
+              details: { isFallback: true } 
+            });
+            
+            return {
+              theme: fallbackWithTokens,
+              isFallback: true
+            };
+          }
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          logger.error('Edge function fetch error', { 
+            details: { error: fetchError instanceof Error ? fetchError.message : String(fetchError) } 
           });
-          
-          return {
-            theme: fallbackWithTokens,
-            isFallback: true
-          };
+          // Continue to fallback implementation
         }
       }
     } catch (error) {
