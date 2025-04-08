@@ -10,7 +10,10 @@ export type AuthEventType =
   | 'SIGNED_OUT'
   | 'USER_UPDATED'
   | 'SESSION_UPDATED'
-  | 'INITIALIZED';
+  | 'INITIALIZED'
+  // Legacy event types needed for backward compatibility
+  | 'AUTH_SIGNED_IN'
+  | 'AUTH_SIGNED_OUT';
 
 // Auth Event Interface
 export interface AuthEvent {

@@ -68,3 +68,18 @@ export function dispatchAuthEvent(event: AuthEvent): void {
     });
   }, 0);
 }
+
+/**
+ * Helper functions to dispatch specific auth events with legacy type support
+ */
+export function dispatchSignInEvent(payload?: any): void {
+  // Dispatch both current and legacy event types for backward compatibility
+  dispatchAuthEvent({ type: 'SIGNED_IN', payload });
+  dispatchAuthEvent({ type: 'AUTH_SIGNED_IN' as AuthEventType, payload });
+}
+
+export function dispatchSignOutEvent(payload?: any): void {
+  // Dispatch both current and legacy event types for backward compatibility
+  dispatchAuthEvent({ type: 'SIGNED_OUT', payload });
+  dispatchAuthEvent({ type: 'AUTH_SIGNED_OUT' as AuthEventType, payload });
+}

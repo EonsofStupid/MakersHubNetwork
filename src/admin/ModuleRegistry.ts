@@ -2,6 +2,7 @@
 import { subscribeToAuthEvents } from '@/auth/bridge';
 import { getLogger } from '@/logging';
 import { LogCategory, LogOptions } from '@/logging/types';
+import { AuthEventType } from '@/auth/types/auth.types';
 
 // Module state type
 interface ModuleState {

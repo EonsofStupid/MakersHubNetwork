@@ -4,7 +4,7 @@ import { useAuthStore } from '@/auth/store/auth.store';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { dispatchAuthEvent } from '@/auth/bridge';
+import { dispatchAuthEvent, dispatchSignInEvent, dispatchSignOutEvent } from '@/auth/bridge';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -43,10 +43,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setSession(session);
           
           // Dispatch event to AuthBridge for other components
-          dispatchAuthEvent({
-            type: session ? 'SESSION_UPDATED' : 'SIGNED_OUT',
-            payload: { session }
-          });
+          if (session) {
+            // User signed in or session updated
+            dispatchAuthEvent({
+              type: 'SESSION_UPDATED',
+              payload: { session }
+            });
+            
+            if (event === 'SIGNED_IN') {
+              dispatchSignInEvent({ session });
+            }
+          } else {
+            // User signed out
+            dispatchSignOutEvent();
+          }
         }
       });
       

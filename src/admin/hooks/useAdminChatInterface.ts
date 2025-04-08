@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { adminChatBridge } from '../utils/chatBridge';
-import { chatBridge } from '@/chat/lib/ChatBridge';
+import { chatBridge, ChatBridgeChannel } from '@/chat/lib/ChatBridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
@@ -77,8 +77,11 @@ export function useAdminChatInterface() {
       isAdminMessage: true
     };
     
+    // Create a session-specific channel
+    const sessionChannel: ChatBridgeChannel = `session:${sessionId}`;
+    
     // Publish to specific session channel
-    chatBridge.publish(`session:${sessionId}`, {
+    chatBridge.publish(sessionChannel, {
       type: 'new-message',
       message: adminMessage
     });

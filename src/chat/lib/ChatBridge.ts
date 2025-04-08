@@ -7,7 +7,8 @@ export type ChatBridgeMessage = {
   [key: string]: any;
 };
 
-export type ChatBridgeChannel = 'system' | 'message' | 'admin' | 'events';
+// Updated to support both fixed channels and dynamic patterns like 'session:123'
+export type ChatBridgeChannel = string | 'system' | 'message' | 'admin' | 'events';
 
 export type ChatBridgeListener = (message: ChatBridgeMessage) => void;
 
