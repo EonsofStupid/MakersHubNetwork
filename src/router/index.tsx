@@ -6,6 +6,10 @@ import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
 import { getLogger } from '@/logging';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
+import CircuitBreaker from '@/utils/CircuitBreaker';
+
+// Initialize router circuit breaker
+CircuitBreaker.init('router-renders', 10, 1000);
 
 // Lazy load route components
 const Index = React.lazy(() => import('@/pages/Index'));
@@ -15,7 +19,6 @@ const Admin = React.lazy(() => import('@/pages/Admin'));
 const ChatLayout = React.lazy(() => import('@/chat/components/layouts/ChatLayout'));
 const ChatHome = React.lazy(() => import('@/chat/pages/ChatHome'));
 const ChatSession = React.lazy(() => import('@/chat/pages/ChatSession'));
-const FloatingChat = React.lazy(() => import('@/chat/components/FloatingChatWrapper'));
 
 // Common loading component for lazy-loaded routes
 const SuspenseLoading = () => (
@@ -38,6 +41,17 @@ const fallbackTheme = {
 };
 
 export function AppRouter() {
+  // Check for excessive re-rendering
+  if (CircuitBreaker.count('router-renders')) {
+    logger.warn('Circuit breaker triggered in AppRouter - too many renders');
+    return (
+      <div className="p-4 text-center">
+        <h2 className="text-lg font-bold">Loading error</h2>
+        <p>Please refresh the page</p>
+      </div>
+    );
+  }
+  
   return (
     <ErrorBoundary
       fallback={
@@ -58,46 +72,46 @@ export function AppRouter() {
           <Routes>
             {/* Site Routes */}
             <Route path="/" element={
-              <React.Suspense fallback={<SuspenseLoading />}>
+              <Suspense fallback={<SuspenseLoading />}>
                 <Index />
-              </React.Suspense>
+              </Suspense>
             } />
             <Route path="/login" element={
-              <React.Suspense fallback={<SuspenseLoading />}>
+              <Suspense fallback={<SuspenseLoading />}>
                 <Login />
-              </React.Suspense>
+              </Suspense>
             } />
             
             {/* Admin Routes */}
             <Route path="/admin/*" element={
-              <React.Suspense fallback={<SuspenseLoading />}>
+              <Suspense fallback={<SuspenseLoading />}>
                 <Admin />
-              </React.Suspense>
+              </Suspense>
             } />
             
             {/* Chat Routes */}
             <Route path="/chat" element={
-              <React.Suspense fallback={<SuspenseLoading />}>
+              <Suspense fallback={<SuspenseLoading />}>
                 <ChatLayout />
-              </React.Suspense>
+              </Suspense>
             }>
               <Route index element={
-                <React.Suspense fallback={<SuspenseLoading />}>
+                <Suspense fallback={<SuspenseLoading />}>
                   <ChatHome />
-                </React.Suspense>
+                </Suspense>
               } />
               <Route path="session/:sessionId" element={
-                <React.Suspense fallback={<SuspenseLoading />}>
+                <Suspense fallback={<SuspenseLoading />}>
                   <ChatSession />
-                </React.Suspense>
+                </Suspense>
               } />
             </Route>
             
             {/* 404 Page */}
             <Route path="*" element={
-              <React.Suspense fallback={<SuspenseLoading />}>
+              <Suspense fallback={<SuspenseLoading />}>
                 <NotFound />
-              </React.Suspense>
+              </Suspense>
             } />
           </Routes>
         </NoHydrationMismatch>

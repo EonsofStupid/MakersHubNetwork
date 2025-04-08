@@ -1,7 +1,7 @@
 
+import React, { useEffect, useState, useRef } from "react";
 import { AuthProvider } from "@/auth/components/AuthProvider";
 import { AdminProvider } from "@/admin/context/AdminContext";
-import { useEffect, useState, useRef } from "react";
 import { initializeLogger, getLogger } from "@/logging";
 import { ChatProvider } from '@/chat/context/ChatProvider';
 import { safeSSR } from "@/lib/utils/safeSSR";
@@ -11,6 +11,7 @@ import { AppRouter } from "@/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import CircuitBreaker from "@/utils/CircuitBreaker";
 
 // Import styles
 import "./App.css";
@@ -55,6 +56,12 @@ function App() {
   useEffect(() => {
     // Skip if already marked ready
     if (appReadyRef.current || appReady) return;
+    
+    // Check circuit breaker to prevent infinite loops
+    if (CircuitBreaker.count('app-init')) {
+      logger.warn('CircuitBreaker detected potential infinite loop in App initialization');
+      return;
+    }
     
     appReadyRef.current = true;
     

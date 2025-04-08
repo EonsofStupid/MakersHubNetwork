@@ -13,6 +13,7 @@ class CircuitBreaker {
   private static timeWindows = new Map<string, number>();
   private static tripped = new Map<string, boolean>();
   private static initialized = new Set<string>();
+  private static debugMode = false;
   
   /**
    * Initialize a circuit breaker with a specific threshold
@@ -31,7 +32,9 @@ class CircuitBreaker {
     this.tripped.set(key, false);
     this.initialized.add(key);
     
-    console.debug(`[CircuitBreaker] Initialized ${key} with threshold ${threshold} in ${timeWindowMs}ms`);
+    if (this.debugMode) {
+      console.debug(`[CircuitBreaker] Initialized ${key} with threshold ${threshold} in ${timeWindowMs}ms`);
+    }
   }
   
   /**
@@ -42,7 +45,10 @@ class CircuitBreaker {
     this.counters.set(key, 0);
     this.timestamps.set(key, Date.now());
     this.tripped.set(key, false);
-    console.debug(`[CircuitBreaker] Reset ${key}`);
+    
+    if (this.debugMode) {
+      console.debug(`[CircuitBreaker] Reset ${key}`);
+    }
   }
   
   /**
@@ -115,7 +121,17 @@ class CircuitBreaker {
     this.initialized.forEach(key => {
       this.reset(key);
     });
-    console.debug(`[CircuitBreaker] Reset all circuit breakers`);
+    
+    if (this.debugMode) {
+      console.debug(`[CircuitBreaker] Reset all circuit breakers`);
+    }
+  }
+  
+  /**
+   * Enable/disable debug mode
+   */
+  static setDebugMode(enabled: boolean): void {
+    this.debugMode = enabled;
   }
 }
 
