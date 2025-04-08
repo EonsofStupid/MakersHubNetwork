@@ -43,11 +43,14 @@ export function useAuth() {
   
   // Auto-initialize auth if needed - with guard against infinite loops
   useEffect(() => {
-    // Check for infinite loops
-    if (CircuitBreaker.count('useAuth')) {
+    // Skip initialization in case we detect a potential infinite loop
+    if (CircuitBreaker.isTripped('useAuth')) {
       logger.warn('Breaking potential infinite loop in useAuth');
       return;
     }
+    
+    // Increment counter for circuit breaker
+    CircuitBreaker.count('useAuth');
     
     // Prevent multiple initialization attempts
     if (initAttemptedRef.current) {

@@ -1,7 +1,7 @@
 
 import { useEffect, ReactNode, useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { dispatchAuthEvent, dispatchSignInEvent, dispatchSignOutEvent } from '@/auth/bridge';
@@ -30,17 +30,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     CircuitBreaker.init('AuthProvider-effect', 10, 1000); 
     
     // Check if we're caught in an infinite loop
-    if (CircuitBreaker.count('AuthProvider-effect')) {
+    if (CircuitBreaker.isTripped('AuthProvider-effect')) {
       logger.warn('Breaking potential infinite loop in AuthProvider');
       return;
     }
+    
+    // Increment counter for circuit breaker
+    CircuitBreaker.count('AuthProvider-effect');
     
     logger.info('AuthProvider mounting');
     
     // Set up Supabase auth state change listener only once
     if (!subscriptionRef.current) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        // Log auth state changes
+        // Log auth state changes but don't act on initial session
         logger.info(`Auth state change: ${event}`, {
           details: {
             event,
@@ -48,7 +51,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         });
         
-        // Update session in the store - avoid unnecessary store updates
+        // Update session in the store - avoid unnecessary store updates on INITIAL_SESSION
         if (event !== 'INITIAL_SESSION') {
           setSession(session);
           
@@ -63,7 +66,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             if (event === 'SIGNED_IN') {
               dispatchSignInEvent({ session });
             }
-          } else {
+          } else if (event === 'SIGNED_OUT') {
             // User signed out
             dispatchSignOutEvent();
           }
@@ -73,7 +76,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       subscriptionRef.current = subscription;
     }
     
-    // Initialize auth on mount, only once
+    // Initialize auth on mount, only once, with a delay to break potential cycles
     if (!hasInitialized.current) {
       hasInitialized.current = true;
       
