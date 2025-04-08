@@ -20,6 +20,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   const hasInitialized = useRef(false);
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
+  const authInitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
     logger.info('AuthProvider mounting');
@@ -35,8 +36,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         });
         
-        // Update session in the store
-        setSession(session);
+        // Update session in the store - avoid unnecessary store updates
+        if (event !== 'INITIAL_SESSION') {
+          setSession(session);
+        }
       });
       
       subscriptionRef.current = subscription;
@@ -47,19 +50,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
       hasInitialized.current = true;
       
       // Add a small timeout to avoid immediate state updates
-      const timeoutId = setTimeout(() => {
+      // Clear any existing timeout to prevent duplicates
+      if (authInitTimeoutRef.current) {
+        clearTimeout(authInitTimeoutRef.current);
+      }
+      
+      authInitTimeoutRef.current = setTimeout(() => {
         initialize().catch(error => {
           logger.error('Error initializing auth', {
             details: error instanceof Error ? { message: error.message } : { error }
           });
         });
       }, 100);
-      
-      return () => clearTimeout(timeoutId);
     }
     
     // Clean up auth listener on unmount
     return () => {
+      if (authInitTimeoutRef.current) {
+        clearTimeout(authInitTimeoutRef.current);
+        authInitTimeoutRef.current = null;
+      }
+      
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe();
         logger.info('Auth subscription removed');

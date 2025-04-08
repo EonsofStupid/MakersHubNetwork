@@ -1,5 +1,5 @@
 
-import React, { ReactNode, useEffect, useRef, useState, useMemo } from 'react';
+import React, { ReactNode, useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { ThemeContext } from '@/types/theme';
 import { useThemeStore } from '@/stores/theme/store';
 import { getLogger } from '@/logging';
@@ -30,19 +30,24 @@ export function ThemeInitializer({
   applyImmediately = true,
   fallbackTheme
 }: ThemeInitializerProps) {
-  const { loadTheme, loadStatus, error, currentTheme } = useThemeStore(state => ({
-    loadTheme: state.loadTheme,
-    loadStatus: state.loadStatus,
-    error: state.error,
-    currentTheme: state.currentTheme
-  }));
+  // Use a stable selector to prevent recreation on each render
+  const themeState = useMemo(() => {
+    return (state: ReturnType<typeof useThemeStore.getState>) => ({
+      loadTheme: state.loadTheme,
+      loadStatus: state.loadStatus,
+      error: state.error,
+      currentTheme: state.currentTheme
+    });
+  }, []);
+  
+  const { loadTheme, loadStatus, error, currentTheme } = useThemeStore(themeState);
   
   const initAttemptedRef = useRef(false);
   const themeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [appliedFallback, setAppliedFallback] = useState(false);
   const [initializationComplete, setInitializationComplete] = useState(false);
 
-  // Apply fallback theme immediately if provided
+  // Apply fallback theme immediately if provided - only once
   useEffect(() => {
     if (!isBrowser() || !fallbackTheme || !applyImmediately || appliedFallback) {
       return;
@@ -65,7 +70,7 @@ export function ThemeInitializer({
   }, [fallbackTheme, applyImmediately, appliedFallback]);
 
   // Memoize the theme load function to prevent excessive re-renders
-  const loadThemeSafely = useMemo(() => {
+  const loadThemeSafely = useCallback(() => {
     return async () => {
       try {
         await loadTheme(themeContext);
@@ -77,9 +82,9 @@ export function ThemeInitializer({
         setInitializationComplete(true); // Still mark as complete to prevent blocking UI
       }
     };
-  }, [loadTheme, themeContext]);
+  }, [loadTheme, themeContext, logger]);
 
-  // Initialize theme loading with timeout protection
+  // Initialize theme loading with timeout protection - only once
   useEffect(() => {
     // Skip if already initialized
     if (initAttemptedRef.current) {
@@ -99,8 +104,10 @@ export function ThemeInitializer({
       }
     }, 3000); // 3 second timeout
 
-    // Load theme from store
-    loadThemeSafely();
+    // Load theme from store - wrapped in setTimeout to break potential cycles
+    setTimeout(() => {
+      loadThemeSafely()();
+    }, 0);
 
     return () => {
       if (themeTimeoutRef.current) {
@@ -111,7 +118,7 @@ export function ThemeInitializer({
 
   // Handle retry loading
   const handleRetryLoading = () => {
-    loadThemeSafely();
+    loadThemeSafely()();
   };
 
   // Don't use hydration protection for SSR-safe components

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useMemo, useState, useRef } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
@@ -5,6 +6,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { DynamicKeyframes } from './DynamicKeyframes';
 import { safeSSR } from '@/lib/utils/safeSSR';
+import CircuitBreaker from '@/utils/CircuitBreaker';
 
 // Define types for component styles and animations
 interface ComponentStyle {
@@ -42,34 +44,48 @@ interface SiteThemeProviderProps {
   isInitializing?: boolean;
 }
 
+// Initialize circuit breaker for this component
+CircuitBreaker.init('SiteThemeProvider', 20, 1000);
+
 export function SiteThemeProvider({ children, isInitializing = false }: SiteThemeProviderProps) {
-  const { currentTheme, isLoading } = useThemeStore();
+  // Use stable selector to prevent re-renders
+  const currentTheme = useThemeStore(
+    useMemo(() => (state) => state.currentTheme, [])
+  );
+  
+  const isLoading = useThemeStore(
+    useMemo(() => (state) => state.isLoading, [])
+  );
+  
   const variables = useThemeVariables(currentTheme);
   const logger = useLogger('SiteThemeProvider', LogCategory.UI);
   const [isLoaded, setIsLoaded] = useState(false);
   const cssVarsApplied = useRef(false);
+  const darkModeInitialized = useRef(false);
   
   // Get UI theme mode from localStorage or default to dark - using safeSSR to prevent hydration issues
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => 
-    safeSSR(() => localStorage.getItem('theme-mode') !== 'light', true)
-  );
+  // Only initialize once to prevent render loops
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    if (darkModeInitialized.current) {
+      return true; // Default to dark if already initialized
+    }
+    
+    darkModeInitialized.current = true;
+    return safeSSR(() => localStorage.getItem('theme-mode') !== 'light', true);
+  });
   
-  // Toggle dark mode
-  const toggleDarkMode = () => {
+  // Toggle dark mode - with stable reference
+  const toggleDarkMode = useRef(() => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
     safeSSR(() => {
       localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
     }, undefined);
-  };
+  }).current;
 
   // Get component styles from theme - memoized to prevent unnecessary recalculations
   const componentStyles = useMemo(() => {
     if (!currentTheme || !Array.isArray(currentTheme.component_tokens)) {
-      logger.debug('No component styles found in theme', { 
-        error: true,
-        details: { reason: 'No component tokens found in theme' }
-      });
       return {};
     }
 
@@ -86,7 +102,6 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       return styles;
     } catch (error) {
       logger.error('Error processing component styles', { 
-        error: true,
         details: { errorMessage: error instanceof Error ? error.message : String(error) }
       });
       return {};
@@ -106,14 +121,13 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       return themeAnimations || defaultAnimations;
     } catch (error) {
       logger.error('Error processing animations', { 
-        error: true,
         details: { errorMessage: error instanceof Error ? error.message : String(error) }
       });
       return defaultAnimations;
     }
   }, [currentTheme, logger]);
 
-  // Mark theme as loaded when everything is ready
+  // Mark theme as loaded when everything is ready - only once
   useEffect(() => {
     if (!isLoading && currentTheme && !isInitializing && !isLoaded) {
       // Small delay to ensure CSS variables are applied
@@ -135,6 +149,12 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
 
   // Apply CSS variables when the theme changes - using refs to prevent multiple applications
   useEffect(() => {
+    // Check for render loops
+    if (CircuitBreaker.count('SiteThemeProvider-cssVars')) {
+      console.error('Breaking infinite loop in SiteThemeProvider CSS variables');
+      return;
+    }
+    
     if (cssVarsApplied.current) return;
     
     // Always apply our CSS variables even if theme is loading or missing
@@ -215,7 +235,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     componentStyles,
     animations,
     isLoaded
-  }), [variables, isDarkMode, componentStyles, animations, isLoaded]);
+  }), [variables, isDarkMode, componentStyles, animations, isLoaded, toggleDarkMode]);
   
   return (
     <SiteThemeContext.Provider value={contextValue}>
