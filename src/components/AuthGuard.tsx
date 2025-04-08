@@ -23,7 +23,7 @@ export const AuthGuard = ({
   fallback = <div>Loading authentication...</div> 
 }: AuthGuardProps) => {
   const navigate = useNavigate()
-  const { pathname } = router.state.location
+  const pathname = router?.state?.location?.pathname ?? '/'
   const { toast } = useToast()
   const logger = useLogger("AuthGuard", LogCategory.AUTH)
   

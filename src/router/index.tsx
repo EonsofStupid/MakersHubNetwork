@@ -2,6 +2,7 @@
 import { 
   RouterProvider,
   createRouter,
+  type AnyRoute,
 } from '@tanstack/react-router';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { rootRoute } from '@/router/routes/site';
@@ -13,8 +14,8 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { getLogger } from '@/logging';
 import { ThemeContext } from '@/types/theme';
 import { adminRoutes } from './routes/admin';
-import { chatRoutes } from './routes/site';
 import { siteRoutes } from './routes/site';
+import { chatRoutes } from './routes/chat'; // Import from the correct path
 import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
 import { safeSSR } from '@/lib/utils/safeSSR';
 import { isValidThemeContext } from '@/utils/typeGuards';
@@ -69,7 +70,7 @@ const createRouterSingleton = (() => {
         return tree;
       })();
 
-      router = createRouter({ 
+      const createdRouter = createRouter({ 
         routeTree,
         defaultPreload: 'intent',
         defaultPreloadStaleTime: 0,
@@ -93,14 +94,15 @@ const createRouterSingleton = (() => {
         } as RouterContext
       });
       
-      return router;
+      router = createdRouter;
+      return createdRouter as any; // Type assertion to fix TypeScript errors
     } catch (error) {
       logger.error('Failed to create router', { 
         details: { error: error instanceof Error ? error.message : String(error) }
       });
       
       // Return a minimal router that at least won't crash the app
-      router = createRouter({
+      const fallbackRouter = createRouter({
         routeTree: rootRoute,
         defaultComponent: () => null,
         context: {
@@ -109,13 +111,14 @@ const createRouterSingleton = (() => {
         }
       });
       
-      return router;
+      router = fallbackRouter;
+      return fallbackRouter as any; // Type assertion to fix TypeScript errors
     }
   };
 })();
 
 // Create the router instance at module level - do this only once
-const router = createRouterSingleton();
+export const router = createRouterSingleton();
 
 // Router provider component with global logging components
 export function AppRouter() {
@@ -195,7 +198,7 @@ export function AppRouter() {
         }
       >
         <RouterProvider 
-          router={router}
+          router={router as any} // Type assertion to fix TypeScript errors
           context={routerContext} 
         />
         {isClient && showLogConsole && <LogConsole />}

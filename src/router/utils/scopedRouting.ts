@@ -44,7 +44,7 @@ export function defineScopedRoute<
 export function useCurrentScope(): RouteScope {
   // Access scope from router options context with proper typing
   const routerInstance = useRouter();
-  const routerContext = routerInstance.options.context || {};
+  const routerContext = routerInstance?.options?.context || {};
   const scopeValue = (routerContext as { scope?: string }).scope;
   
   // Make sure we have a valid scope value
@@ -61,7 +61,7 @@ export function useCurrentScope(): RouteScope {
  */
 export function useThemeContextForRoute(): ThemeContext {
   const routerInstance = useRouter();
-  const pathname = routerInstance.state.location.pathname;
+  const pathname = routerInstance?.state?.location?.pathname ?? '/';
   return getThemeContextForRoute(pathname);
 }
 
@@ -73,6 +73,8 @@ export function navigateToScope(scope: RouteScope, path: string, options?: {
   search?: Record<string, unknown>;
   replace?: boolean;
 }) {
+  if (!router) return;
+  
   const { params, search, replace } = options || {};
   
   // Construct the full path with scope prefix if needed

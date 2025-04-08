@@ -9,6 +9,7 @@ import { SiteThemeProvider } from "@/components/theme/SiteThemeProvider";
 import { ThemeEffectProvider } from "@/components/theme/effects/ThemeEffectProvider";
 import { AppRouter } from "@/router";
 import { ChatProvider } from '@/chat/context/ChatProvider';
+import { FloatingChat } from '@/chat/components/FloatingChat';
 import { safeSSR } from "@/lib/utils/safeSSR";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { AppInitializer } from "@/components/AppInitializer";
@@ -83,6 +84,7 @@ function App() {
                 <AdminProvider>
                   <ChatProvider>
                     <AppRouter />
+                    <FloatingChat />
                     <Toaster />
                   </ChatProvider>
                 </AdminProvider>
