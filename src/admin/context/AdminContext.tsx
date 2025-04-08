@@ -7,6 +7,7 @@ import { useAuthState } from '@/auth/hooks/useAuthState';
 import { PERMISSIONS } from '@/auth/permissions';
 import { AdminPermissionValue } from '@/admin/types/permissions';
 import { mapRolesToPermissions } from '@/auth/rbac/roles';
+import CircuitBreaker from '@/utils/CircuitBreaker';
 
 // Create context
 interface AdminContextValue {
@@ -27,6 +28,15 @@ export const AdminProvider = React.memo(({ children }: { children: React.ReactNo
   
   // Initialize admin context only once
   useEffect(() => {
+    // Initialize circuit breaker
+    CircuitBreaker.init('AdminContext-init', 5, 1000);
+    
+    // Check for infinite loops
+    if (CircuitBreaker.count('AdminContext-init')) {
+      logger.warn('Breaking potential infinite loop in AdminContext initialization');
+      return;
+    }
+    
     // Guard against multiple initialization attempts and wait until auth is ready
     if (initAttemptedRef.current || status === 'loading') {
       return;

@@ -51,6 +51,9 @@ function App() {
   
   // Mark app as ready to allow progressive rendering, but do this only once
   useEffect(() => {
+    // Initialize circuit breaker to prevent infinite loops
+    CircuitBreaker.init('app-init', 5, 1000);
+    
     // Skip if already marked ready
     if (appReadyRef.current || appReady) return;
     
@@ -78,8 +81,22 @@ function App() {
     <ErrorBoundary fallback={<div className="p-6">Something went wrong. Please try refreshing.</div>}>
       <QueryClientProvider client={queryClient}>
         <Router>
+          {/* 
+            One-Way Data Flow Provider Architecture:
+            
+            AuthProvider: Top-level, serves as the single source of truth for auth state
+            - Broadcasts auth events through Zustand store + AuthBridge
+          */}
           <AuthProvider>
+            {/* 
+              AppInitializer: Handles app setup tasks that don't require multiple auth checks
+              - Must NOT trigger auth state updates
+            */}
             <AppInitializer>
+              {/* 
+                SystemProviders: Consume auth state passively, don't trigger auth updates
+                - Each has circuit breakers to prevent infinite render loops
+              */}
               <AdminProvider>
                 <ChatProvider>
                   <AppRouter />

@@ -4,6 +4,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { useEffect, useRef, useMemo } from 'react';
 import { errorToObject } from '@/shared/utils/render';
+import CircuitBreaker from '@/utils/CircuitBreaker';
 
 /**
  * Hook for accessing authentication state with initialization guard
@@ -11,6 +12,9 @@ import { errorToObject } from '@/shared/utils/render';
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
+  
+  // Initialize circuit breaker
+  CircuitBreaker.init('useAuth', 5, 1000);
   
   // Store stable function references to prevent re-renders
   const stableHasRole = useRef(useAuthStore.getState().hasRole).current;
@@ -39,6 +43,12 @@ export function useAuth() {
   
   // Auto-initialize auth if needed - with guard against infinite loops
   useEffect(() => {
+    // Check for infinite loops
+    if (CircuitBreaker.count('useAuth')) {
+      logger.warn('Breaking potential infinite loop in useAuth');
+      return;
+    }
+    
     // Prevent multiple initialization attempts
     if (initAttemptedRef.current) {
       return;
