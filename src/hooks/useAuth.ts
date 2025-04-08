@@ -8,6 +8,7 @@ import CircuitBreaker from '@/utils/CircuitBreaker';
 
 /**
  * Hook for accessing authentication state with initialization guard
+ * Enhanced with stable references and memoization to prevent unnecessary re-renders
  */
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
@@ -15,11 +16,6 @@ export function useAuth() {
   
   // Initialize circuit breaker
   CircuitBreaker.init('useAuth', 5, 1000);
-  
-  // Store stable function references to prevent re-renders
-  const stableHasRole = useRef(useAuthStore.getState().hasRole).current;
-  const stableIsAdmin = useRef(useAuthStore.getState().isAdmin).current;
-  const stableLogout = useRef(useAuthStore.getState().logout).current;
   
   // Create a stable selector function using useMemo
   const selector = useMemo(() => {
@@ -37,6 +33,11 @@ export function useAuth() {
   
   // Use the stable selector to extract state
   const authState = useAuthStore(selector);
+
+  // Store stable function references to prevent re-renders
+  const stableHasRole = useRef(useAuthStore.getState().hasRole).current;
+  const stableIsAdmin = useRef(useAuthStore.getState().isAdmin).current;
+  const stableLogout = useRef(useAuthStore.getState().logout).current;
   
   // Get initialize function with separate selector to avoid re-renders
   const initialize = useAuthStore(state => state.initialize);
@@ -73,8 +74,11 @@ export function useAuth() {
     }
   }, [authState.status, authState.initialized, initialize, logger]);
   
-  // Derived state
-  const isSuperAdmin = authState.roles.includes('super_admin');
+  // Derived state (memoized to prevent unnecessary re-renders)
+  const isSuperAdmin = useMemo(() => 
+    authState.roles.includes('super_admin'), 
+    [authState.roles]
+  );
 
   // Log wrapper for logout to capture info before state is cleared
   const handleLogout = async () => {

@@ -79,7 +79,7 @@ function App() {
       setAppReady(true);
       safeSSR(() => {
         document.documentElement.setAttribute('data-app-ready', 'true');
-      }, undefined);
+      }, undefined); // Fixed by passing undefined as fallback
       logger.info('App marked as ready');
     }, 100);
     

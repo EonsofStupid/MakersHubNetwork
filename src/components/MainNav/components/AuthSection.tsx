@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -16,16 +16,50 @@ import { useToast } from '@/hooks/use-toast';
 import { LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { validateAdminPath } from '@/admin/utils/adminRoutes';
 import { cn } from '@/lib/utils';
+import CircuitBreaker from '@/utils/CircuitBreaker';
 
 interface AuthSectionProps {
   className?: string;
 }
 
 export function AuthSection({ className }: AuthSectionProps) {
-  const { user, isAdmin, logout, isAuthenticated } = useAuth();
+  // Initialize circuit breaker for this component
+  CircuitBreaker.init('auth-section', 3, 1000);
+  
+  // Use stable references to auth values to prevent unnecessary re-renders
+  const { user, isAdmin, logout, isAuthenticated, status } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  // Memoize avatar info to prevent unnecessary re-renders
+  const avatarInfo = useMemo(() => {
+    if (!user) return { url: '', fallback: '?' };
+    
+    return {
+      url: user.user_metadata?.avatar_url || '',
+      fallback: (user.user_metadata?.display_name || user.email || '?')
+        .charAt(0)
+        .toUpperCase()
+    };
+  }, [user]);
+  
+  // Prevent interaction if auth is still initializing
+  const isInitializing = useMemo(() => status === 'loading', [status]);
+  
+  // Check for infinite render loop
+  if (CircuitBreaker.isTripped('auth-section')) {
+    console.warn('CircuitBreaker detected potential infinite loop in AuthSection');
+    // Return a minimal fallback to break the loop
+    return (
+      <div className={cn("flex gap-4 items-center", className)}>
+        <Button variant="outline" disabled>Loading...</Button>
+      </div>
+    );
+  }
+  
+  // Increment the circuit breaker counter
+  CircuitBreaker.count('auth-section');
   
   const handleLogout = async () => {
     try {
@@ -46,6 +80,14 @@ export function AuthSection({ className }: AuthSectionProps) {
       setIsLoggingOut(false);
     }
   };
+
+  if (isInitializing) {
+    return (
+      <div className={cn("flex gap-4 items-center", className)}>
+        <Button variant="outline" disabled>Loading...</Button>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user) {
     return (
@@ -74,14 +116,10 @@ export function AuthSection({ className }: AuthSectionProps) {
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-8 w-8">
               <AvatarImage 
-                src={user.user_metadata?.avatar_url} 
+                src={avatarInfo.url} 
                 alt={user.user_metadata?.display_name || user.email || ''}
               />
-              <AvatarFallback>
-                {(user.user_metadata?.display_name || user.email || '?')
-                  .charAt(0)
-                  .toUpperCase()}
-              </AvatarFallback>
+              <AvatarFallback>{avatarInfo.fallback}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
