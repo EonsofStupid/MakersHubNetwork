@@ -9,7 +9,7 @@ import { getThemeContextForRoute } from '@/router/routeRegistry';
 import { useLoggingContext } from '@/logging/context/LoggingContext';
 import { LogConsole } from '@/logging/components/LogConsole';
 import { LogToggleButton } from '@/logging/components/LogToggleButton';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getLogger } from '@/logging';
 import { ThemeContext } from '@/types/theme';
 import { adminRoutes } from './routes/admin';
@@ -17,7 +17,7 @@ import { chatRoutes } from './routes/chat';
 import { siteRoutes } from './routes/site';
 import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
 import { safeSSR } from '@/lib/utils/safeSSR';
-import { isValidThemeContext, stringToBoolean } from '@/utils/typeGuards';
+import { isValidThemeContext } from '@/utils/typeGuards';
 
 const logger = getLogger('Router');
 
@@ -27,53 +27,33 @@ interface RouterContext {
   themeContext: ThemeContext;
 }
 
-// Try to build a safe route tree with error handling
-const buildRouteTree = () => {
+// Create router instance once to prevent recreating on every render
+// Only recreate when needed for route changes
+const createAppRouter = (pathname: string) => {
   try {
-    const routeTree = siteRoutes.root;
+    // Build route tree once
+    const routeTree = (() => {
+      const tree = siteRoutes.root;
+      
+      if (adminRoutes?.tree) {
+        tree.addChildren([adminRoutes.tree]);
+      }
+      
+      if (chatRoutes?.tree) {
+        tree.addChildren([chatRoutes.tree]);
+      }
+      
+      return tree;
+    })();
     
-    if (adminRoutes?.tree) {
-      routeTree.addChildren([adminRoutes.tree]);
-    }
-    
-    if (chatRoutes?.tree) {
-      routeTree.addChildren([chatRoutes.tree]);
-    }
-    
-    return routeTree;
-  } catch (error) {
-    logger.error('Failed to build route tree', { 
-      details: { error: error instanceof Error ? error.message : String(error) }
-    });
-    throw error;
-  }
-};
-
-// Get the current pathname safely (works in SSR and client)
-const getCurrentPathname = () => {
-  return safeSSR(() => window.location.pathname, '/');
-};
-
-// Determine scope from pathname
-const getScopeFromPathname = (pathname: string): 'site' | 'admin' | 'chat' => {
-  if (pathname.startsWith('/admin')) return 'admin';
-  if (pathname.startsWith('/chat')) return 'chat';
-  return 'site';
-};
-
-// Create the router instance with error handling and proper typings
-export const router = (() => {
-  try {
-    const routeTree = buildRouteTree();
-    const pathname = getCurrentPathname();
     const themeContext = getThemeContextForRoute(pathname);
     const scope = getScopeFromPathname(pathname);
-    
+
     return createRouter({ 
       routeTree,
       defaultPreload: 'intent',
       defaultPreloadStaleTime: 0,
-      defaultComponent: () => null, // Prevent hydration issues with default component
+      defaultComponent: () => null,
       defaultPendingComponent: () => (
         <div className="flex items-center justify-center h-screen">
           <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
@@ -101,48 +81,63 @@ export const router = (() => {
     const minimalTree = rootRoute;
     return createRouter({
       routeTree: minimalTree,
-      defaultComponent: () => null, // Prevent hydration issues with default component
+      defaultComponent: () => null,
       context: {
         scope: 'site',
         themeContext: 'site' as ThemeContext
       }
     });
   }
-})();
+};
 
-// Router provider component with global logging components
+// Determine scope from pathname
+const getScopeFromPathname = (pathname: string): 'site' | 'admin' | 'chat' => {
+  if (pathname.startsWith('/admin')) return 'admin';
+  if (pathname.startsWith('/chat')) return 'chat';
+  return 'site';
+};
+
+// Get the current pathname safely (works in SSR and client)
+const getCurrentPathname = () => {
+  return safeSSR(() => window.location.pathname, '/');
+};
+
+// Create the router instance at module level with initial pathname
+export const router = createAppRouter(getCurrentPathname());
+
+// Router provider component with global logging components - wrapped with memo
 export function AppRouter() {
   const [currentScope, setCurrentScope] = useState<'site' | 'admin' | 'chat'>('site');
   const [isClient, setIsClient] = useState(false);
+  const { showLogConsole } = useLoggingContext();
+  
+  // Get current pathname safely
   const pathname = safeSSR(() => router.state.location.pathname, '/');
-  const logger = getLogger('AppRouter');
   
   // Mark when we're on the client to prevent hydration issues
   useEffect(() => {
-    // Use a timeout to ensure we're fully hydrated
-    const timer = setTimeout(() => {
-      setIsClient(true);
-      document.documentElement.setAttribute('data-hydrated', 'true');
-    }, 0);
-    
-    return () => clearTimeout(timer);
+    // Just mark as client, no need for a timeout
+    setIsClient(true);
+    document.documentElement.setAttribute('data-hydrated', 'true');
   }, []);
   
-  // Update the current scope when the pathname changes
+  // Update the current scope when the pathname changes - with memoization
+  const routerContext = useMemo(() => {
+    const scope = getScopeFromPathname(pathname);
+    const themeContext = getThemeContextForRoute(pathname);
+    
+    return {
+      scope,
+      themeContext
+    } as RouterContext;
+  }, [pathname]);
+  
+  // Update scope state when pathname changes, for components that might need it
   useEffect(() => {
     if (!isClient) return; // Skip during SSR
-    
-    try {
-      const newScope = getScopeFromPathname(pathname);
-      setCurrentScope(newScope);
-      logger.info(`Set scope to ${newScope}`);
-    } catch (error) {
-      logger.error('Error setting scope', { details: { error, pathname } });
-      // Default to site scope on error for resilience
-      setCurrentScope('site');
-    }
-  }, [pathname, logger, isClient]);
-
+    setCurrentScope(getScopeFromPathname(pathname));
+  }, [pathname, isClient]);
+  
   // Use a consistent initial context for SSR
   const initialContext: RouterContext = {
     scope: 'site',
@@ -173,26 +168,12 @@ export function AppRouter() {
       >
         <RouterProvider 
           router={router}
-          context={isClient ? {
-            scope: currentScope,
-            themeContext: getThemeContextForRoute(pathname)
-          } : initialContext} 
+          context={isClient ? routerContext : initialContext} 
         />
-        {isClient && <GlobalLoggingComponents />}
+        {isClient && showLogConsole && <LogConsole />}
+        {isClient && <LogToggleButton />}
       </NoHydrationMismatch>
     </ErrorBoundary>
-  );
-}
-
-// Logging components wrapper - always available regardless of route
-function GlobalLoggingComponents() {
-  const { showLogConsole } = useLoggingContext();
-  
-  return (
-    <>
-      {showLogConsole && <LogConsole />}
-      <LogToggleButton />
-    </>
   );
 }
 

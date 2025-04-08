@@ -6,15 +6,13 @@ import { useEffect, useRef } from 'react';
 import { errorToObject } from '@/shared/utils/render';
 
 /**
- * Hook for accessing authentication state
- * Uses ref to track initialization to prevent infinite loops
+ * Hook for accessing authentication state with initialization guard
  */
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
   
   // Extract only what we need from the store to prevent unnecessary re-renders
-  // Use selector function pattern for better performance
   const authState = useAuthStore(state => ({
     user: state.user,
     session: state.session,

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAdminStore } from '@/admin/store/admin.store';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';
@@ -11,6 +11,7 @@ import { useDebounce } from '@/hooks/useDebounce';
  */
 export function useAdminSync() {
   const [isSyncingState, setIsSyncing] = useState(false);
+  const syncAttemptedRef = useRef(false);
   const adminStore = useAdminStore();
   const { user, status, isAuthenticated } = useAuthState();
   const logger = useLogger('useAdminSync', LogCategory.ADMIN);
@@ -49,16 +50,26 @@ export function useAdminSync() {
     }
   }, [user, isAuthenticated, isSyncingState, adminStore, logger]);
   
-  // Initialize and sync when auth status changes
+  // Initialize and sync when auth status changes - with circuit breaker
   useEffect(() => {
-    if (status === 'authenticated' && user) {
-      logger.info('User authenticated, initializing admin data');
-      
-      // Use setTimeout to avoid potential React batching issues
-      setTimeout(() => {
-        syncData();
-      }, 0);
+    // Skip if already attempted sync or if not authenticated
+    if (syncAttemptedRef.current || status !== 'authenticated' || !user) {
+      return;
     }
+    
+    logger.info('User authenticated, initializing admin data');
+    syncAttemptedRef.current = true;
+    
+    // Use setTimeout to avoid potential React batching issues
+    const timeoutId = setTimeout(() => {
+      syncData().catch(err => {
+        logger.error('Failed to sync admin data', {
+          details: error instanceof Error ? { message: error.message } : { message: String(error) }
+        });
+      });
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [status, user, syncData, logger]);
   
   // Return proper interface
