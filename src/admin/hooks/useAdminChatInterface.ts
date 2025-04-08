@@ -78,7 +78,7 @@ export function useAdminChatInterface() {
     };
     
     // Create a session-specific channel
-    const sessionChannel: ChatBridgeChannel = `session:${sessionId}`;
+    const sessionChannel = `session:${sessionId}`;
     
     // Publish to specific session channel
     chatBridge.publish(sessionChannel, {

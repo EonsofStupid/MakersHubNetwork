@@ -8,7 +8,7 @@ export type ChatBridgeMessage = {
 };
 
 // Updated to support both fixed channels and dynamic patterns like 'session:123'
-export type ChatBridgeChannel = string | 'system' | 'message' | 'admin' | 'events';
+export type ChatBridgeChannel = string;
 
 export type ChatBridgeListener = (message: ChatBridgeMessage) => void;
 
@@ -18,7 +18,7 @@ export type ChatBridgeListener = (message: ChatBridgeMessage) => void;
  */
 class ChatBridgeImpl {
   private listeners: Map<ChatBridgeChannel, ChatBridgeListener[]> = new Map();
-  private logger = getLogger('ChatBridge', LogCategory.CHAT);
+  private logger = getLogger('ChatBridge');
   
   /**
    * Subscribe to a channel
@@ -35,6 +35,7 @@ class ChatBridgeImpl {
     channelListeners.push(listener);
     
     this.logger.debug(`Listener added to ${channel} channel`, { 
+      category: LogCategory.CHAT,
       details: { listenersCount: channelListeners.length }
     } as LogOptions);
     
@@ -44,6 +45,7 @@ class ChatBridgeImpl {
       if (index > -1) {
         channelListeners.splice(index, 1);
         this.logger.debug(`Listener removed from ${channel} channel`, { 
+          category: LogCategory.CHAT,
           details: { listenersCount: channelListeners.length }
         } as LogOptions);
       }
@@ -63,6 +65,7 @@ class ChatBridgeImpl {
     const channelListeners = this.listeners.get(channel)!;
     
     this.logger.debug(`Publishing to ${channel} channel`, {
+      category: LogCategory.CHAT,
       details: { message, listenersCount: channelListeners.length }
     } as LogOptions);
     
@@ -73,6 +76,7 @@ class ChatBridgeImpl {
           listener(message);
         } catch (error) {
           this.logger.error(`Error in ${channel} channel listener`, {
+            category: LogCategory.CHAT,
             details: { error, messageType: message.type },
             error: true
           } as LogOptions);
