@@ -1,18 +1,29 @@
-
 import React, { createContext, useContext, useEffect, useMemo, useState, useRef } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { DynamicKeyframes } from './DynamicKeyframes';
+import { safeSSR } from '@/lib/utils/safeSSR';
+
+// Define types for component styles and animations
+interface ComponentStyle {
+  [key: string]: string | number | boolean;
+}
+
+interface AnimationKeyframe {
+  [key: string]: {
+    [key: string]: string | number;
+  };
+}
 
 // Create context
 const SiteThemeContext = createContext<{
   variables: ThemeVariables;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
-  componentStyles: Record<string, any>;
-  animations: Record<string, any>;
+  componentStyles: Record<string, ComponentStyle>;
+  animations: Record<string, AnimationKeyframe>;
   isLoaded: boolean;
 }>({
   variables: {} as ThemeVariables,
@@ -38,16 +49,18 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   const [isLoaded, setIsLoaded] = useState(false);
   const cssVarsApplied = useRef(false);
   
-  // Get UI theme mode from localStorage or default to dark
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(
-    localStorage.getItem('theme-mode') !== 'light'
+  // Get UI theme mode from localStorage or default to dark - using safeSSR to prevent hydration issues
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => 
+    safeSSR(() => localStorage.getItem('theme-mode') !== 'light', true)
   );
   
   // Toggle dark mode
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-    localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
+    safeSSR(() => {
+      localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
+    }, undefined);
   };
 
   // Get component styles from theme - memoized to prevent unnecessary recalculations
@@ -61,7 +74,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     }
 
     try {
-      const styles: Record<string, any> = {};
+      const styles: Record<string, ComponentStyle> = {};
       
       // Convert component tokens array to a map of component name -> styles
       currentTheme.component_tokens.forEach((component) => {
@@ -82,7 +95,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   
   // Get animations from theme - memoized to prevent unnecessary recalculations
   const animations = useMemo(() => {
-    const defaultAnimations = {}; // Safe fallback
+    const defaultAnimations: Record<string, AnimationKeyframe> = {}; // Safe fallback
     
     if (!currentTheme?.design_tokens?.animation?.keyframes) {
       return defaultAnimations;
@@ -196,15 +209,14 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   
   // Create the theme context value - memoized to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
-    variables, 
-    isDarkMode, 
-    toggleDarkMode, 
-    componentStyles, 
+    variables,
+    isDarkMode,
+    toggleDarkMode,
+    componentStyles,
     animations,
     isLoaded
   }), [variables, isDarkMode, componentStyles, animations, isLoaded]);
-
-  // Always render the children; let individual components handle loading states
+  
   return (
     <SiteThemeContext.Provider value={contextValue}>
       <DynamicKeyframes />
