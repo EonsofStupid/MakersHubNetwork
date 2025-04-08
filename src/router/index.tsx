@@ -1,3 +1,4 @@
+
 import { 
   RouterProvider,
   createRouter,
@@ -16,7 +17,7 @@ import { chatRoutes } from './routes/chat';
 import { siteRoutes } from './routes/site';
 import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
 import { safeSSR } from '@/lib/utils/safeSSR';
-import { stringToBoolean } from '@/utils/typeGuards';
+import { isValidThemeContext, stringToBoolean } from '@/utils/typeGuards';
 
 const logger = getLogger('Router');
 
@@ -73,6 +74,19 @@ export const router = (() => {
       defaultPreload: 'intent',
       defaultPreloadStaleTime: 0,
       defaultComponent: () => null, // Prevent hydration issues with default component
+      defaultPendingComponent: () => (
+        <div className="flex items-center justify-center h-screen">
+          <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+        </div>
+      ),
+      defaultErrorComponent: ({ error }) => (
+        <div className="flex items-center justify-center h-screen flex-col">
+          <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+          <pre className="bg-red-50 p-4 rounded border border-red-200 max-w-md overflow-auto">
+            {error instanceof Error ? error.message : String(error)}
+          </pre>
+        </div>
+      ),
       context: {
         scope,
         themeContext
@@ -163,19 +177,6 @@ export function AppRouter() {
             scope: currentScope,
             themeContext: getThemeContextForRoute(pathname)
           } : initialContext} 
-          defaultPendingComponent={() => (
-            <div className="flex items-center justify-center h-screen">
-              <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-            </div>
-          )}
-          defaultErrorComponent={({ error }) => (
-            <div className="flex items-center justify-center h-screen flex-col">
-              <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
-              <pre className="bg-red-50 p-4 rounded border border-red-200 max-w-md overflow-auto">
-                {error instanceof Error ? error.message : String(error)}
-              </pre>
-            </div>
-          )}
         />
         {isClient && <GlobalLoggingComponents />}
       </NoHydrationMismatch>
