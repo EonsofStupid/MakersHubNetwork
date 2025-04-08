@@ -1,12 +1,23 @@
 
 import React, { Suspense, useEffect } from 'react';
-import { Outlet, useNavigate } from '@tanstack/react-router';
+import { Routes, Route, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useThemeStore } from '@/stores/theme/themeStore';
-import { adminRoutes } from './index';
-import { commonSearchParamsSchema } from '@/router/searchParams';
+
+// Lazy-loaded admin components
+const Dashboard = React.lazy(() => import('@/admin/routes/dashboard/DashboardPage'));
+const BuildsPage = React.lazy(() => import('@/admin/routes/builds/BuildsPage'));
+const UsersPage = React.lazy(() => import('@/admin/routes/users/UsersPage'));
+const PartsPage = React.lazy(() => import('@/admin/routes/parts/PartsPage'));
+const ThemesPage = React.lazy(() => import('@/admin/routes/themes/ThemesPage'));
+const ContentPage = React.lazy(() => import('@/admin/routes/content/ContentPage'));
+const SettingsPage = React.lazy(() => import('@/admin/routes/settings/SettingsPage'));
+const PermissionsPage = React.lazy(() => import('@/admin/routes/permissions/PermissionsPage'));
+const LogsPage = React.lazy(() => import('@/admin/pages/LogsPage'));
+const UnauthorizedPage = React.lazy(() => import('@/admin/routes/UnauthorizedPage'));
+const NotFoundPage = React.lazy(() => import('@/admin/routes/NotFoundPage'));
 
 // Loading component for lazy-loaded routes
 const PageLoader = () => (
@@ -18,6 +29,7 @@ const PageLoader = () => (
 export function AdminRoutes() {
   const logger = useLogger('AdminRoutes', LogCategory.ADMIN);
   const navigate = useNavigate();
+  const location = useLocation();
   const { hasAdminAccess, isAuthenticated, isLoading: authLoading } = useAdminAccess();
   const { loadStatus } = useThemeStore();
   const themeLoading = loadStatus === 'loading';
@@ -29,13 +41,14 @@ export function AdminRoutes() {
         isAuthenticated,
         authLoading,
         themeLoading,
-        themeStatus: loadStatus
+        themeStatus: loadStatus,
+        path: location.pathname
       }
     });
     
     // Automatically redirect to dashboard if on /admin root
     if (location.pathname === '/admin') {
-      navigate({ to: '/admin/dashboard' as any });
+      navigate('/admin/dashboard');
     }
     
     // Redirect unauthorized users
@@ -43,7 +56,7 @@ export function AdminRoutes() {
       logger.warn('Unauthorized access attempt to admin routes', {
         details: { path: location.pathname }
       });
-      navigate({ to: '/admin/unauthorized' as any });
+      navigate('/admin/unauthorized');
     }
     
     // Redirect unauthenticated users
@@ -52,12 +65,11 @@ export function AdminRoutes() {
         details: { path: location.pathname }
       });
       
-      navigate({ 
-        to: '/login',
-        search: { returnTo: location.pathname }
-      });
+      const searchParams = new URLSearchParams();
+      searchParams.set('returnTo', location.pathname);
+      navigate(`/login?${searchParams.toString()}`);
     }
-  }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate, loadStatus]);
+  }, [logger, isAuthenticated, hasAdminAccess, authLoading, navigate, location.pathname, loadStatus]);
   
   // Show a loading state while checking permissions
   if (authLoading) {
@@ -66,10 +78,21 @@ export function AdminRoutes() {
   
   return (
     <Suspense fallback={<PageLoader />}>
-      <Outlet />
+      <Routes>
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="users" element={<UsersPage />} />
+        <Route path="parts" element={<PartsPage />} />
+        <Route path="builds" element={<BuildsPage />} />
+        <Route path="themes" element={<ThemesPage />} />
+        <Route path="content" element={<ContentPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="permissions" element={<PermissionsPage />} />
+        <Route path="logs" element={<LogsPage />} />
+        <Route path="unauthorized" element={<UnauthorizedPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
     </Suspense>
   );
 }
 
-// Export the routes for registration
-export { adminRoutes };
+export default { AdminRoutes };

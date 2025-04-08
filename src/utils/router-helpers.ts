@@ -1,27 +1,15 @@
 
-/**
- * Navigation helper functions for handling TanStack Router type safety issues
- */
-import { router } from '@/router';
-import type { AnyRoute } from '@tanstack/react-router';
-import { z } from 'zod';
-import { RouteScope, navigateToScope } from '@/router/utils/scopedRouting';
-import { routeRegistry } from '@/router/routeRegistry';
-
-// Define type for navigation options
-interface NavigateOptions {
-  replace?: boolean;
-  state?: Record<string, any>;
-}
-
-// Schema for search parameters
-const searchParamsSchema = z.record(z.unknown());
+import { NavigateOptions, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 /**
- * Create properly formatted search params for TanStack Router
+ * Create properly formatted search params for React Router
  */
-export function createSearchParams<T extends Record<string, any>>(params: T): Record<string, unknown> {
-  return params as Record<string, unknown>;
+export function createSearchParams<T extends Record<string, any>>(params: T): URLSearchParams {
+  return new URLSearchParams(
+    Object.entries(params)
+      .filter(([_, value]) => value !== undefined && value !== null)
+      .map(([key, value]) => [key, String(value)])
+  );
 }
 
 /**
@@ -30,38 +18,47 @@ export function createSearchParams<T extends Record<string, any>>(params: T): Re
  * @param options Optional navigation options
  */
 export function navigateTo(path: string, options?: NavigateOptions): void {
-  if (!router) return;
-  
-  router.navigate({
-    to: path,
-    replace: options?.replace,
-    state: options?.state
-  });
+  window.location.href = path;
 }
 
 /**
  * Navigate to a route with search parameters
  */
 export function navigateWithParams(path: string, params: Record<string, any>, options?: NavigateOptions): void {
-  if (!router) return;
-  
-  router.navigate({
-    to: path,
-    search: params,
-    replace: options?.replace,
-    state: options?.state
-  });
+  const searchParams = createSearchParams(params);
+  const url = `${path}?${searchParams.toString()}`;
+  window.location.href = url;
 }
 
 /**
  * Navigate within a specific scope (site, admin, chat)
  */
-export function navigateWithinScope(scope: RouteScope, path: string, options?: {
+export function navigateWithinScope(scope: 'site' | 'admin' | 'chat', path: string, options?: {
   params?: Record<string, string>;
   search?: Record<string, unknown>;
   replace?: boolean;
 }): void {
-  navigateToScope(scope, path, options);
+  // Build the path based on scope
+  let fullPath = path;
+  if (scope === 'admin' && !path.startsWith('/admin')) {
+    fullPath = `/admin${path.startsWith('/') ? path : `/${path}`}`;
+  } else if (scope === 'chat' && !path.startsWith('/chat')) {
+    fullPath = `/chat${path.startsWith('/') ? path : `/${path}`}`;
+  }
+  
+  // Build search params if needed
+  let url = fullPath;
+  if (options?.search) {
+    const searchParams = createSearchParams(options.search);
+    url = `${fullPath}?${searchParams.toString()}`;
+  }
+  
+  // Navigate
+  if (options?.replace) {
+    window.location.replace(url);
+  } else {
+    window.location.href = url;
+  }
 }
 
 /**
@@ -75,14 +72,14 @@ export function navigateBack() {
  * Get the current route path
  */
 export function getCurrentRoute() {
-  return router?.state?.location?.pathname ?? '/';
+  return window.location.pathname;
 }
 
 /**
  * Get URL search parameters
  */
 export function getSearchParams() {
-  return router?.state?.location?.search ?? {};
+  return Object.fromEntries(new URLSearchParams(window.location.search).entries());
 }
 
 /**
@@ -90,7 +87,7 @@ export function getSearchParams() {
  * @param key The search parameter key
  */
 export function getSearchParam(key: string) {
-  return router?.state?.location?.search?.[key];
+  return new URLSearchParams(window.location.search).get(key);
 }
 
 /**
@@ -98,14 +95,14 @@ export function getSearchParam(key: string) {
  * @param path The path to check against
  */
 export function isCurrentRoute(path: string) {
-  return router?.state?.location?.pathname === path;
+  return window.location.pathname === path;
 }
 
 /**
  * Check if the current route is within a specific scope
  */
-export function isInScope(scope: RouteScope): boolean {
-  const pathname = router?.state?.location?.pathname ?? '';
+export function isInScope(scope: 'site' | 'admin' | 'chat'): boolean {
+  const pathname = window.location.pathname;
   
   switch (scope) {
     case 'admin':
@@ -119,34 +116,29 @@ export function isInScope(scope: RouteScope): boolean {
   }
 }
 
-// Helper function for creating strongly-typed route objects with proper TanStack Router compatibility
-export function createTypedRoute(path: string) {
-  return {
-    path,
-    to: path
-  };
-}
-
-// Common routes for easy access - updated with scope awareness
+// Common routes for easy access
 export const ROUTES = {
   // Site routes
-  HOME: createTypedRoute('/'),
-  LOGIN: createTypedRoute('/login'),
-  PROFILE: createTypedRoute('/profile'),
-  SETTINGS: createTypedRoute('/settings'),
+  HOME: '/',
+  LOGIN: '/login',
+  PROFILE: '/profile',
+  SETTINGS: '/settings',
   
   // Admin routes
-  ADMIN_DASHBOARD: createTypedRoute('/admin/dashboard'),
-  ADMIN_USERS: createTypedRoute('/admin/users'),
-  ADMIN_PARTS: createTypedRoute('/admin/parts'),
-  ADMIN_BUILDS: createTypedRoute('/admin/builds'),
-  ADMIN_THEMES: createTypedRoute('/admin/themes'),
-  ADMIN_CONTENT: createTypedRoute('/admin/content'),
-  ADMIN_SETTINGS: createTypedRoute('/admin/settings'),
-  ADMIN_PERMISSIONS: createTypedRoute('/admin/permissions'),
-  ADMIN_LOGS: createTypedRoute('/admin/logs'),
+  ADMIN_DASHBOARD: '/admin/dashboard',
+  ADMIN_USERS: '/admin/users',
+  ADMIN_PARTS: '/admin/parts',
+  ADMIN_BUILDS: '/admin/builds',
+  ADMIN_THEMES: '/admin/themes',
+  ADMIN_CONTENT: '/admin/content',
+  ADMIN_SETTINGS: '/admin/settings',
+  ADMIN_PERMISSIONS: '/admin/permissions',
+  ADMIN_LOGS: '/admin/logs',
   
   // Chat routes
-  CHAT: createTypedRoute('/chat'),
-  CHAT_SESSION: (sessionId: string) => createTypedRoute(`/chat/session/${sessionId}`),
+  CHAT: '/chat',
+  CHAT_SESSION: (sessionId: string) => `/chat/session/${sessionId}`,
 };
+
+// Hook exports for components
+export { useNavigate, useLocation, useSearchParams, useParams };

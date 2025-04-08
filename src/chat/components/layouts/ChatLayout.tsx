@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { Outlet } from '@tanstack/react-router';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { AuthGuard } from '@/components/AuthGuard';
-import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Home, Settings } from 'lucide-react';
 
@@ -18,13 +17,13 @@ export default function ChatLayout() {
               <h1 className="text-lg font-bold">Chat Module</h1>
               
               <nav className="hidden md:flex gap-4">
-                <Button variant="ghost" onClick={() => navigate({ to: '/chat' })}>Home</Button>
-                <Button variant="ghost" onClick={() => navigate({ to: '/chat/dev' })}>Dev Mode</Button>
+                <Button variant="ghost" onClick={() => navigate('/chat')}>Home</Button>
+                <Button variant="ghost" onClick={() => navigate('/chat/dev')}>Dev Mode</Button>
               </nav>
             </div>
             
             <div className="flex gap-2">
-              <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/' })}>
+              <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
                 <Home size={20} />
               </Button>
               <Button variant="ghost" size="icon">

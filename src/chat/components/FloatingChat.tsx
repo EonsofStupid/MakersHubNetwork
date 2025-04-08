@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { ChatWidget } from './ChatWidget';
-import { useRouter } from '@/router';
+import { useLocation } from 'react-router-dom';
 import { useChat } from '../context/ChatProvider';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 
 export function FloatingChat() {
-  const router = useRouter();
+  const location = useLocation();
   const { isAuthenticated } = useAuthState();
   const { hasAdminAccess } = useAdminAccess();
   const { isOpen } = useChat();
@@ -17,7 +17,7 @@ export function FloatingChat() {
     if (!isAuthenticated) return false;
     if (!hasAdminAccess) return false;
     
-    const pathname = router?.state?.location?.pathname || '';
+    const pathname = location.pathname;
     
     // Don't show on chat routes to avoid duplication
     if (pathname.startsWith('/chat')) return false;

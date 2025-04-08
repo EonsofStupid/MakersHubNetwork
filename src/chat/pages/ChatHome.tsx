@@ -3,7 +3,7 @@ import React from 'react';
 import { useChatSession } from '../hooks/useChatSession';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate } from 'react-router-dom';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Plus } from 'lucide-react';
 import { useAuthState } from '@/auth/hooks/useAuthState';
@@ -24,7 +24,7 @@ export default function ChatHome() {
   // Create new chat session
   const createNewSession = () => {
     const sessionId = uuidv4();
-    navigate({ to: `/chat/session/${sessionId}` });
+    navigate(`/chat/session/${sessionId}`);
   };
   
   // Handle message submission
@@ -47,7 +47,7 @@ export default function ChatHome() {
             </CardDescription>
           </CardHeader>
           <CardFooter>
-            <Button onClick={() => navigate({ to: '/login' })}>Login</Button>
+            <Button onClick={() => navigate('/login')}>Login</Button>
           </CardFooter>
         </Card>
       </div>

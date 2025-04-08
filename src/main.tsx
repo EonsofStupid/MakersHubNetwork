@@ -19,7 +19,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
-      {import.meta.env.DEV && <div className="tanstack-router-dev-tools" />}
     </QueryClientProvider>
   </React.StrictMode>,
 )

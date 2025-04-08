@@ -1,30 +1,17 @@
 
-import { router } from '@/router';
-import { z } from 'zod';
-
-// Define type for navigation options
-interface NavigateOptions {
-  replace?: boolean;
-  state?: Record<string, any>;
-}
-
-// Schema for search parameters
-const searchParamsSchema = z.record(z.unknown());
+import { createSearchParams } from "./router-helpers";
 
 /**
  * Navigate to a specific route
  * @param path The path to navigate to
  * @param options Optional navigation options
  */
-export function navigateTo(path: string, options?: NavigateOptions) {
-  if (!router) return;
-  
-  router.navigate({
-    to: path,
-    replace: options?.replace,
-    // Handle state properly for TanStack Router
-    state: options?.state ? options.state : undefined
-  });
+export function navigateTo(path: string, options?: { replace?: boolean; state?: Record<string, any> }) {
+  if (options?.replace) {
+    window.location.replace(path);
+  } else {
+    window.location.href = path;
+  }
 }
 
 /**
@@ -38,14 +25,14 @@ export function navigateBack() {
  * Get the current route path
  */
 export function getCurrentRoute() {
-  return router?.state?.location?.pathname ?? '/';
+  return window.location.pathname;
 }
 
 /**
  * Get URL search parameters
  */
 export function getSearchParams() {
-  return router?.state?.location?.search ?? {};
+  return Object.fromEntries(new URLSearchParams(window.location.search).entries());
 }
 
 /**
@@ -53,7 +40,7 @@ export function getSearchParams() {
  * @param key The search parameter key
  */
 export function getSearchParam(key: string) {
-  return router?.state?.location?.search?.[key];
+  return new URLSearchParams(window.location.search).get(key);
 }
 
 /**
@@ -61,5 +48,5 @@ export function getSearchParam(key: string) {
  * @param path The path to check against
  */
 export function isCurrentRoute(path: string) {
-  return router?.state?.location?.pathname === path;
+  return window.location.pathname === path;
 }
