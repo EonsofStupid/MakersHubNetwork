@@ -3,18 +3,17 @@ import React from 'react';
 import { useChatSession } from '../hooks/useChatSession';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, ArrowLeft } from 'lucide-react';
 
-export interface ChatSessionProps {
-  sessionId: string;
-}
-
-export default function ChatSession({ sessionId }: ChatSessionProps) {
+export default function ChatSession() {
   const navigate = useNavigate();
+  const { sessionId } = useParams<{ sessionId: string }>();
   const [inputMessage, setInputMessage] = React.useState('');
-  const { messages, sendMessage, isLoading } = useChatSession({ sessionId });
+  const { messages, sendMessage, isLoading } = useChatSession({ 
+    sessionId: sessionId || '' 
+  });
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   
   // Scroll to bottom when messages change
@@ -36,7 +35,7 @@ export default function ChatSession({ sessionId }: ChatSessionProps) {
       <Button 
         variant="ghost" 
         className="mb-4 flex items-center gap-2"
-        onClick={() => navigate({ to: '/chat' })}
+        onClick={() => navigate('/chat')}
       >
         <ArrowLeft size={16} /> Back to Chat Home
       </Button>

@@ -1,15 +1,7 @@
 
-import { router } from '@/router';
-import { z } from 'zod';
-
 /**
- * Utility for handling admin routing with TanStack Router
+ * Utility for handling admin routing with React Router
  */
-
-// Define the search params schema
-const searchParamsSchema = z.object({
-  tab: z.string().optional()
-});
 
 // Get the current section from a path
 export const getSectionFromPath = (path: string): string => {
@@ -20,10 +12,10 @@ export const getSectionFromPath = (path: string): string => {
   }
   
   // Check for search parameters
-  const search = router?.state?.location?.search ?? {};
-  const parsedSearch = searchParamsSchema.parse(search);
-  if (parsedSearch.tab) {
-    return parsedSearch.tab;
+  const search = new URLSearchParams(window.location.search);
+  const tab = search.get('tab');
+  if (tab) {
+    return tab;
   }
   
   return 'overview';

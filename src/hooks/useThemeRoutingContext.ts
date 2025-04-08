@@ -1,9 +1,19 @@
 
 import { useEffect, useState } from 'react';
-import { useLocation } from '@tanstack/react-router';
-import { getThemeContextForRoute } from '@/router/routeRegistry';
+import { useLocation } from 'react-router-dom';
 import { ThemeContext } from '@/types/theme';
 import { parseThemeContext } from '@/types/themeContext';
+
+// Determine theme context based on route path
+function getThemeContextForRoute(pathname: string): ThemeContext {
+  if (pathname.startsWith('/admin')) {
+    return 'admin';
+  }
+  if (pathname.startsWith('/chat')) {
+    return 'chat';
+  }
+  return 'app';
+}
 
 export function useThemeRoutingContext() {
   const location = useLocation();

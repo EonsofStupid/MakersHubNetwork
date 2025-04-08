@@ -1,19 +1,17 @@
-
-import { ReactNode, useEffect } from "react"
-import { useNavigate } from "@tanstack/react-router"
-import { UserRole } from "@/auth/types/auth.types"
-import { useToast } from "@/hooks/use-toast"
-import { useAuthState } from "@/auth/hooks/useAuthState"
-import { useAdminAccess } from "@/admin/hooks/useAdminAccess"
-import { useLogger } from "@/hooks/use-logger"
-import { LogCategory } from "@/logging"
-import { useRouter } from "@/router"
+import { ReactNode, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { UserRole } from "@/auth/types/auth.types";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthState } from "@/auth/hooks/useAuthState";
+import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging";
 
 interface AuthGuardProps {
-  children: ReactNode
-  requiredRoles?: UserRole[]
-  adminOnly?: boolean
-  fallback?: ReactNode
+  children: ReactNode;
+  requiredRoles?: UserRole[];
+  adminOnly?: boolean;
+  fallback?: ReactNode;
 }
 
 export const AuthGuard = ({ 
@@ -22,65 +20,64 @@ export const AuthGuard = ({
   adminOnly,
   fallback = <div>Loading authentication...</div> 
 }: AuthGuardProps) => {
-  const navigate = useNavigate()
-  const router = useRouter()
-  const pathname = router?.state?.location?.pathname ?? '/'
-  const { toast } = useToast()
-  const logger = useLogger("AuthGuard", LogCategory.AUTH)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
+  const { toast } = useToast();
+  const logger = useLogger("AuthGuard", LogCategory.AUTH);
   
   // Use centralized auth state - avoid initialization loops
-  const { isLoading, status, roles, user, initialized } = useAuthState()
-  const { hasAdminAccess } = useAdminAccess()
+  const { isLoading, status, roles, user, initialized } = useAuthState();
+  const { hasAdminAccess } = useAdminAccess();
 
-  const isAuthenticated = status === "authenticated" && !!user?.id
+  const isAuthenticated = status === "authenticated" && !!user?.id;
 
   // Check if user has required roles or admin access when needed
   const hasRequiredRole = requiredRoles 
     ? requiredRoles.some(r => roles.includes(r)) || hasAdminAccess
-    : true
+    : true;
 
   // Special check for admin routes
-  const hasAdminPermission = adminOnly ? hasAdminAccess : true
+  const hasAdminPermission = adminOnly ? hasAdminAccess : true;
 
   useEffect(() => {
     // Only perform checks after auth is initialized
     if (!initialized) return;
     
     if (!isLoading && !isAuthenticated) {
-      logger.info("AuthGuard - Redirecting to login: Not authenticated")
+      logger.info("AuthGuard - Redirecting to login: Not authenticated");
       // Keep track of the current path to redirect back after login
-      const currentPath = pathname
+      const currentPath = pathname;
       
-      // Use navigate with proper typing
-      navigate({ 
-        to: "/login", 
-        search: { from: encodeURIComponent(currentPath) } 
-      })
-      return
+      // Redirect to login page with return path in search params
+      const loginParams = new URLSearchParams();
+      loginParams.set('from', encodeURIComponent(currentPath));
+      navigate(`/login?${loginParams.toString()}`);
+      return;
     }
 
     if (!isLoading && isAuthenticated && requiredRoles && !hasRequiredRole) {
       logger.info("AuthGuard - Redirecting to unauthorized: Missing required roles", {
         details: { requiredRoles, userRoles: roles }
-      })
+      });
       toast({
         variant: "destructive",
         title: "Access Denied",
         description: "You don't have permission to access this page"
-      })
-      navigate({ to: "/" })
+      });
+      navigate('/');
     }
 
     if (!isLoading && isAuthenticated && adminOnly && !hasAdminPermission) {
       logger.info("AuthGuard - Redirecting: Not an admin", {
         details: { userRoles: roles }
-      })
+      });
       toast({
         variant: "destructive",
         title: "Admin Access Required",
         description: "You need admin privileges to access this section"
-      })
-      navigate({ to: "/" })
+      });
+      navigate('/');
     }
   }, [
     isLoading, 
@@ -95,20 +92,20 @@ export const AuthGuard = ({
     toast,
     logger,
     initialized
-  ])
+  ]);
 
   // Show a fallback while loading
-  if (isLoading) return <>{fallback}</>
+  if (isLoading) return <>{fallback}</>;
   
   // Early return for authenticated-only content
-  if (initialized && !isAuthenticated) return null
+  if (initialized && !isAuthenticated) return null;
   
   // Check role requirements
-  if (initialized && requiredRoles && !hasRequiredRole) return null
+  if (initialized && requiredRoles && !hasRequiredRole) return null;
   
   // Check admin requirements
-  if (initialized && adminOnly && !hasAdminPermission) return null
+  if (initialized && adminOnly && !hasAdminPermission) return null;
 
   // If we're still initializing auth, render children to avoid flash
-  return <>{children}</>
-}
+  return <>{children}</>;
+};

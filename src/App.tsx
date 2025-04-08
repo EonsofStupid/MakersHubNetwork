@@ -1,18 +1,15 @@
 
-import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/auth/components/AuthProvider";
 import { AdminProvider } from "@/admin/context/AdminContext";
-import { LoggingProvider } from "@/logging/context/LoggingContext";
 import { useEffect, useState, useRef } from "react";
 import { initializeLogger, getLogger } from "@/logging";
-import { SiteThemeProvider } from "@/components/theme/SiteThemeProvider";
-import { ThemeEffectProvider } from "@/components/theme/effects/ThemeEffectProvider";
-import { AppRouter } from "@/router";
 import { ChatProvider } from '@/chat/context/ChatProvider';
 import { FloatingChat } from '@/chat/components/FloatingChat';
 import { safeSSR } from "@/lib/utils/safeSSR";
-import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { AppInitializer } from "@/components/AppInitializer";
+import { AppRouter } from "@/router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
 
 // Import styles
 import "./App.css";
@@ -36,16 +33,15 @@ initLogging();
 
 const logger = getLogger('App');
 
-// Default fallback theme to use if theme loading fails
-const defaultFallbackTheme = {
-  primary: "186 100% 50%",
-  secondary: "334 100% 59%",
-  background: "228 47% 8%",
-  foreground: "210 40% 98%",
-  card: "228 47% 11%",
-  effectColor: "#00F0FF",
-  effectSecondary: "#FF2D6E",
-};
+// Create QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      retry: 1
+    }
+  }
+});
 
 function App() {
   const [appReady, setAppReady] = useState(false);
@@ -71,29 +67,19 @@ function App() {
   }, []); // Empty dependency array - only run once
   
   return (
-    <LoggingProvider>
-      {/* Important: theme initialization happens before everything else */}
-      <ThemeInitializer 
-        fallbackTheme={defaultFallbackTheme}
-        applyImmediately={true}
-      >
-        <ThemeEffectProvider>
-          <SiteThemeProvider>
-            <AuthProvider>
-              <AppInitializer>
-                <AdminProvider>
-                  <ChatProvider>
-                    <AppRouter />
-                    <FloatingChat />
-                    <Toaster />
-                  </ChatProvider>
-                </AdminProvider>
-              </AppInitializer>
-            </AuthProvider>
-          </SiteThemeProvider>
-        </ThemeEffectProvider>
-      </ThemeInitializer>
-    </LoggingProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AppInitializer>
+          <AdminProvider>
+            <ChatProvider>
+              <AppRouter />
+              <FloatingChat />
+              <Toaster />
+            </ChatProvider>
+          </AdminProvider>
+        </AppInitializer>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
