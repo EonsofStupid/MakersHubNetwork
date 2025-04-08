@@ -45,8 +45,9 @@ class CircuitBreakerImpl {
   
   /**
    * Increment counter for this breaker and check if threshold is exceeded
+   * Returns true if the circuit breaker has tripped (counter > threshold)
    * @param id Breaker identifier
-   * @returns true if breaker has tripped, false otherwise
+   * @returns boolean indicating if circuit is tripped
    */
   count(id: string): boolean {
     // If breaker doesn't exist, create it with defaults
@@ -114,7 +115,7 @@ class CircuitBreakerImpl {
   }
 
   /**
-   * Check if a circuit breaker is tripped
+   * Check if a circuit breaker is tripped without incrementing the counter
    * @param id Breaker identifier
    * @returns true if breaker is tripped, false otherwise
    */
