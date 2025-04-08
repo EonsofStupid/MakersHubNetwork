@@ -27,9 +27,23 @@ interface RouterContext {
   themeContext: ThemeContext;
 }
 
+// Get the current pathname safely (works in SSR and client)
+const getCurrentPathname = () => {
+  return safeSSR(() => window.location.pathname, '/');
+};
+
+// Initial context for the router
+const initialPathname = getCurrentPathname();
+const initialScope = (() => {
+  if (initialPathname.startsWith('/admin')) return 'admin';
+  if (initialPathname.startsWith('/chat')) return 'chat';
+  return 'site';
+})();
+const initialThemeContext = getThemeContextForRoute(initialPathname);
+
 // Create router instance once to prevent recreating on every render
 // Only recreate when needed for route changes
-const createAppRouter = (pathname: string) => {
+const createAppRouter = () => {
   try {
     // Build route tree once
     const routeTree = (() => {
@@ -45,9 +59,6 @@ const createAppRouter = (pathname: string) => {
       
       return tree;
     })();
-    
-    const themeContext = getThemeContextForRoute(pathname);
-    const scope = getScopeFromPathname(pathname);
 
     return createRouter({ 
       routeTree,
@@ -68,8 +79,8 @@ const createAppRouter = (pathname: string) => {
         </div>
       ),
       context: {
-        scope,
-        themeContext
+        scope: initialScope,
+        themeContext: initialThemeContext
       } as RouterContext
     });
   } catch (error) {
@@ -90,59 +101,54 @@ const createAppRouter = (pathname: string) => {
   }
 };
 
-// Determine scope from pathname
-const getScopeFromPathname = (pathname: string): 'site' | 'admin' | 'chat' => {
-  if (pathname.startsWith('/admin')) return 'admin';
-  if (pathname.startsWith('/chat')) return 'chat';
-  return 'site';
-};
-
-// Get the current pathname safely (works in SSR and client)
-const getCurrentPathname = () => {
-  return safeSSR(() => window.location.pathname, '/');
-};
-
-// Create the router instance at module level with initial pathname
-export const router = createAppRouter(getCurrentPathname());
+// Create the router instance at module level
+export const router = createAppRouter();
 
 // Router provider component with global logging components - wrapped with memo
 export function AppRouter() {
-  const [currentScope, setCurrentScope] = useState<'site' | 'admin' | 'chat'>('site');
+  const [currentScope, setCurrentScope] = useState<'site' | 'admin' | 'chat'>(initialScope);
   const [isClient, setIsClient] = useState(false);
   const { showLogConsole } = useLoggingContext();
   
-  // Get current pathname safely
-  const pathname = safeSSR(() => router.state.location.pathname, '/');
-  
   // Mark when we're on the client to prevent hydration issues
   useEffect(() => {
-    // Just mark as client, no need for a timeout
+    if (isClient) return; // Only run once
     setIsClient(true);
-    document.documentElement.setAttribute('data-hydrated', 'true');
-  }, []);
+  }, [isClient]);
   
-  // Update the current scope when the pathname changes - with memoization
+  // Use a consistent initial context for SSR
   const routerContext = useMemo(() => {
-    const scope = getScopeFromPathname(pathname);
-    const themeContext = getThemeContextForRoute(pathname);
-    
     return {
-      scope,
-      themeContext
+      scope: currentScope,
+      themeContext: initialThemeContext
     } as RouterContext;
-  }, [pathname]);
+  }, [currentScope]); // Only depend on currentScope
   
   // Update scope state when pathname changes, for components that might need it
   useEffect(() => {
     if (!isClient) return; // Skip during SSR
-    setCurrentScope(getScopeFromPathname(pathname));
-  }, [pathname, isClient]);
-  
-  // Use a consistent initial context for SSR
-  const initialContext: RouterContext = {
-    scope: 'site',
-    themeContext: 'site' as ThemeContext
-  };
+    
+    const handleLocationChange = () => {
+      const pathname = safeSSR(() => window.location.pathname, '/');
+      const newScope = (() => {
+        if (pathname.startsWith('/admin')) return 'admin';
+        if (pathname.startsWith('/chat')) return 'chat';
+        return 'site';
+      })();
+      
+      setCurrentScope(prev => {
+        if (prev !== newScope) return newScope;
+        return prev; // Don't cause re-render if unchanged
+      });
+    };
+    
+    // Set up event listener for route changes
+    window.addEventListener('popstate', handleLocationChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, [isClient]);
 
   return (
     <ErrorBoundary
@@ -168,7 +174,7 @@ export function AppRouter() {
       >
         <RouterProvider 
           router={router}
-          context={isClient ? routerContext : initialContext} 
+          context={routerContext} 
         />
         {isClient && showLogConsole && <LogConsole />}
         {isClient && <LogToggleButton />}

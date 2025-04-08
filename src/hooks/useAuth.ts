@@ -13,6 +13,7 @@ export function useAuth() {
   const initAttemptedRef = useRef<boolean>(false);
   
   // Extract only what we need from the store to prevent unnecessary re-renders
+  // Use a selector function to stabilize the returned values
   const authState = useAuthStore(state => ({
     user: state.user,
     session: state.session,
@@ -20,13 +21,12 @@ export function useAuth() {
     status: state.status,
     isLoading: state.isLoading,
     error: state.error,
-    hasRole: state.hasRole,
-    isAdmin: state.isAdmin,
-    logout: state.logout,
-    initialize: state.initialize,
     initialized: state.initialized,
     isAuthenticated: state.isAuthenticated
   }));
+  
+  // Get functions separately to avoid state updates causing loops
+  const { hasRole, isAdmin, logout, initialize } = useAuthStore();
   
   // Auto-initialize auth if needed - with guard against infinite loops
   useEffect(() => {
@@ -42,14 +42,14 @@ export function useAuth() {
       
       // Use setTimeout to break potential circular dependencies
       const timeoutId = setTimeout(() => {
-        authState.initialize().catch(err => {
+        initialize().catch(err => {
           logger.error('Failed to initialize auth', { details: errorToObject(err) });
         });
       }, 50);
       
       return () => clearTimeout(timeoutId);
     }
-  }, [authState.status, authState.initialized]); // We deliberately omit initialize and logger
+  }, [authState.status, authState.initialized, initialize, logger]);
   
   // Derived state
   const isSuperAdmin = authState.roles.includes('super_admin');
@@ -61,14 +61,15 @@ export function useAuth() {
         details: { userId: authState.user.id }
       });
     }
-    return authState.logout();
+    return logout();
   };
 
   return {
     ...authState,
-    isAdmin: authState.isAdmin(),
+    isAdmin: isAdmin(),
     isSuperAdmin,
+    hasRole,
     logout: handleLogout,
-    isAuthenticated: authState.isAuthenticated
+    // Don't expose initialize directly as it should be handled automatically
   };
 }
