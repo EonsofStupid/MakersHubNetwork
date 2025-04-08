@@ -1,3 +1,4 @@
+
 import { 
   createRoute,
   createRootRoute,
@@ -21,13 +22,14 @@ const PageLoader = () => (
 );
 
 // Safe wrapper for lazy-loaded components
-const safeComponent = <T extends React.ComponentType<Record<string, unknown>>>(LazyComp: React.LazyExoticComponent<T>) => {
-  const Component = (props: React.ComponentProps<T>) => (
-    <React.Suspense fallback={<PageLoader />}>
-      <LazyComp {...props} />
-    </React.Suspense>
-  );
-  return Component;
+const safeComponent = <T extends React.ComponentType<any>>(LazyComp: React.LazyExoticComponent<T>) => {
+  return function SafeComponent() {
+    return (
+      <React.Suspense fallback={<PageLoader />}>
+        <LazyComp />
+      </React.Suspense>
+    );
+  };
 };
 
 // Import pages
