@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { useAuthStore } from "@/stores/auth/store";
+import { useAuthStore } from "@/auth/store/auth.store";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

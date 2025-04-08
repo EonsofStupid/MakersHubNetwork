@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useEffect, useState } from "react";
-import { useAuthStore } from "@/stores/auth/store";
+import { useAuthStore } from "@/auth/store/auth.store";
 
 /**
  * Service to handle admin data operations
