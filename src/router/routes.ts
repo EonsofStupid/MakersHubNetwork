@@ -10,8 +10,8 @@ export const ROUTES = {
   ADMIN: '/admin/*',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_SETTINGS: '/admin/settings',
-  CHAT: '/chat',
-  CHAT_DEV: '/chat/dev'
+  CHAT: '/chat', //
+  CHAT_DEV: '/chat/dev' //
 };
 
 // Define Zod schemas for route parameters and search params
