@@ -1,7 +1,6 @@
 
 import { z } from 'zod';
-import { router, useRouter } from '../index';
-import { getThemeContextForRoute, isPathInScope } from '@/router/routeRegistry';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '@/types/theme';
 
 // Type for scope
@@ -42,17 +41,15 @@ export function defineScopedRoute<
  * Get the current scope from the router context
  */
 export function useCurrentScope(): RouteScope {
-  // Access scope from router options context with proper typing
-  const routerInstance = useRouter();
-  const routerContext = routerInstance?.options?.context || {};
-  const scopeValue = (routerContext as { scope?: string }).scope;
+  const location = useLocation();
+  const pathname = location.pathname;
   
-  // Make sure we have a valid scope value
-  if (typeof scopeValue === 'string' && ['site', 'admin', 'chat'].includes(scopeValue)) {
-    return scopeValue as RouteScope;
+  if (pathname.startsWith('/admin')) {
+    return 'admin';
+  } else if (pathname.startsWith('/chat')) {
+    return 'chat';
   }
   
-  // Default to site if scope is invalid
   return 'site';
 }
 
@@ -60,9 +57,16 @@ export function useCurrentScope(): RouteScope {
  * Get the theme context for the current route
  */
 export function useThemeContextForRoute(): ThemeContext {
-  const routerInstance = useRouter();
-  const pathname = routerInstance?.state?.location?.pathname ?? '/';
-  return getThemeContextForRoute(pathname);
+  const location = useLocation();
+  const pathname = location.pathname;
+  
+  if (pathname.startsWith('/admin')) {
+    return 'admin';
+  } else if (pathname.startsWith('/chat')) {
+    return 'chat';
+  }
+  
+  return 'site';
 }
 
 /**
@@ -73,9 +77,8 @@ export function navigateToScope(scope: RouteScope, path: string, options?: {
   search?: Record<string, unknown>;
   replace?: boolean;
 }) {
-  if (!router) return;
-  
-  const { params, search, replace } = options || {};
+  const navigate = useNavigate();
+  const { replace } = options || {};
   
   // Construct the full path with scope prefix if needed
   let fullPath = path;
@@ -86,10 +89,5 @@ export function navigateToScope(scope: RouteScope, path: string, options?: {
   }
   
   // Navigate using the router with correct type assertions
-  router.navigate({
-    to: fullPath,
-    params: params || {},
-    search: search || {},
-    replace
-  });
+  navigate(fullPath, { replace });
 }

@@ -1,66 +1,18 @@
 
-import { createRoute } from '@tanstack/react-router';
-import { rootRoute } from './site';
 import React from 'react';
 import { z } from 'zod';
-import { withSafeSuspense } from '@/router/utils/safeRouteRegistration';
 
 // Zod schema for chat route params
 export const chatParamsSchema = {
   sessionId: z.string()
 };
 
-// Lazy load the chat components
-const ChatLayout = React.lazy(() => import('@/chat/components/layouts/ChatLayout'));
-const ChatHome = React.lazy(() => import('@/chat/pages/ChatHome'));
-const ChatSession = React.lazy(() => import('@/chat/pages/ChatSession'));
+// These routes are now kept for reference but not actively used in the main routing system
+// We've migrated to React Router DOM instead
 
-// Chat base route
-const chatBaseRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/chat',
-  component: withSafeSuspense(ChatLayout)
-});
-
-// Chat home route
-const chatHomeRoute = createRoute({
-  getParentRoute: () => chatBaseRoute,
-  path: '/',
-  component: withSafeSuspense(ChatHome)
-});
-
-// Chat session route with Zod parameter validation
-const chatSessionRoute = createRoute({
-  getParentRoute: () => chatBaseRoute,
-  path: '/session/$sessionId',
-  parseParams: (params) => ({ 
-    sessionId: chatParamsSchema.sessionId.parse(params.sessionId) 
-  }),
-  component: ({ params }) => {
-    return React.createElement(
-      React.Suspense,
-      { 
-        fallback: (
-          <div className="flex items-center justify-center h-screen">
-            <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-          </div>
-        ) 
-      },
-      React.createElement(ChatSession, { sessionId: params.sessionId })
-    );
-  }
-});
-
-// Create a complete chat route tree
-const chatRouteTree = chatBaseRoute.addChildren([
-  chatHomeRoute,
-  chatSessionRoute
-]);
-
-// Export individual routes and the complete tree
+// Export the schema for use in components
 export const chatRoutes = {
-  base: chatBaseRoute,
-  tree: chatRouteTree,
-  home: chatHomeRoute,
-  session: chatSessionRoute
+  basePath: '/chat',
+  homePath: '/chat',
+  sessionPath: (sessionId: string) => `/chat/session/${sessionId}`
 };

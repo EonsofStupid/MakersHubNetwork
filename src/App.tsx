@@ -7,6 +7,7 @@ import { ChatProvider } from '@/chat/context/ChatProvider';
 import { FloatingChat } from '@/chat/components/FloatingChat';
 import { safeSSR } from "@/lib/utils/safeSSR";
 import { AppInitializer } from "@/components/AppInitializer";
+import { BrowserRouter as Router } from "react-router-dom";
 import { AppRouter } from "@/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -68,17 +69,19 @@ function App() {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppInitializer>
-          <AdminProvider>
-            <ChatProvider>
-              <AppRouter />
-              <FloatingChat />
-              <Toaster />
-            </ChatProvider>
-          </AdminProvider>
-        </AppInitializer>
-      </AuthProvider>
+      <Router>
+        <AuthProvider>
+          <AppInitializer>
+            <AdminProvider>
+              <ChatProvider>
+                <AppRouter />
+                <FloatingChat />
+                <Toaster />
+              </ChatProvider>
+            </AdminProvider>
+          </AppInitializer>
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 }
