@@ -4,14 +4,18 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAtom } from "jotai";
 import { showAdminButtonAtom, showAdminWrenchAtom } from "@/admin/atoms/ui.atoms";
-import { Wrench } from "lucide-react";
+import { Wrench, User } from "lucide-react";
 import { useAuthAtoms } from "@/hooks/useAuthAtoms";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { LoginSheet } from "../components/LoginSheet";
+import { useState } from "react";
 
 // AuthSection with Jotai for reactivity
 export const AuthSection = () => {
   const [showAdminButton] = useAtom(showAdminButtonAtom);
   const [showAdminWrench] = useAtom(showAdminWrenchAtom);
-  const { hasAdminAccess } = useAuthAtoms();
+  const { hasAdminAccess, user, isAuthenticated } = useAuthAtoms();
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   return (
     <div className="flex items-center gap-2">
@@ -41,6 +45,34 @@ export const AuthSection = () => {
           </Button>
         </Link>
       )}
+
+      {/* Avatar Login Button with Cyberpunk Effect */}
+      {isAuthenticated ? (
+        <Avatar 
+          className="h-8 w-8 border-2 border-primary/50 hover:border-primary transition-all duration-300 cursor-pointer site-glow-hover cyber-effect-text"
+          onClick={() => setIsLoginOpen(true)}
+        >
+          <AvatarFallback className="bg-primary/20 text-primary">
+            {user?.email?.charAt(0).toUpperCase() || 'U'}
+          </AvatarFallback>
+        </Avatar>
+      ) : (
+        <Button 
+          size="sm" 
+          variant="outline"
+          className="flex items-center gap-2 border-primary/40 text-primary bg-background/40 hover:bg-primary/20 cyber-effect-text site-glow-hover"
+          onClick={() => setIsLoginOpen(true)}
+        >
+          <User className="h-4 w-4" />
+          <span>Login</span>
+        </Button>
+      )}
+
+      {/* Login Sheet with all auth options */}
+      <LoginSheet 
+        isOpen={isLoginOpen}
+        onOpenChange={setIsLoginOpen}
+      />
     </div>
   );
 };

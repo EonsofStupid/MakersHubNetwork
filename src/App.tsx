@@ -37,7 +37,7 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
         <ThemeInitializer defaultTheme="Impulsivity">
-          {/* MainNav is now always visible */}
+          {/* MainNav is now always visible with all animations restored */}
           <MainNav />
           <div className="pt-16">
             <Routes>

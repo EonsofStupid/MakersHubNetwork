@@ -5,7 +5,6 @@ import { Logo } from "./components/Logo";
 import { NavigationItems } from "./components/NavigationItems";
 import { SearchButton } from "./components/SearchButton";
 import { AuthSection } from "./components/AuthSection";
-import { LoginButton } from "@/components/auth/LoginButton";
 import { useAuthAtoms } from "@/hooks/useAuthAtoms";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { useLogger } from "@/hooks/use-logger";
@@ -131,9 +130,7 @@ export function MainNav() {
           <NavigationItems />
           <div className="flex items-center gap-2">
             <SearchButton />
-            
-            {/* Show Auth Section for authenticated users, Login Button otherwise */}
-            {isAuthenticated ? <AuthSection /> : <LoginButton />}
+            <AuthSection />
           </div>
         </div>
       </div>
