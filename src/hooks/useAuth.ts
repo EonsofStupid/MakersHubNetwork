@@ -6,6 +6,20 @@ import { useCallback, useEffect, useRef, useMemo } from 'react';
 import { errorToObject } from '@/shared/utils/render';
 import CircuitBreaker from '@/utils/CircuitBreaker';
 
+// Create stable selectors outside the component to prevent regeneration
+const selectAuthState = (state: ReturnType<typeof useAuthStore.getState>) => ({
+  user: state.user,
+  session: state.session,
+  roles: state.roles,
+  status: state.status,
+  isLoading: state.isLoading,
+  error: state.error,
+  initialized: state.initialized,
+  isAuthenticated: state.isAuthenticated
+});
+
+const selectInitialize = (state: ReturnType<typeof useAuthStore.getState>) => state.initialize;
+
 /**
  * Hook for accessing authentication state with initialization guard
  * Enhanced with stable references and memoization to prevent unnecessary re-renders
@@ -13,34 +27,31 @@ import CircuitBreaker from '@/utils/CircuitBreaker';
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
+  const hasRoleRef = useRef<typeof useAuthStore.getState().hasRole>();
+  const isAdminRef = useRef<() => boolean>();
+  const logoutRef = useRef<typeof useAuthStore.getState().logout>();
   
   // Initialize circuit breaker with a lower threshold
   CircuitBreaker.init('useAuth', 3, 1000);
   
-  // Create a stable selector function using useMemo
-  const selector = useMemo(() => {
-    return (state: ReturnType<typeof useAuthStore.getState>) => ({
-      user: state.user,
-      session: state.session,
-      roles: state.roles,
-      status: state.status,
-      isLoading: state.isLoading,
-      error: state.error,
-      initialized: state.initialized,
-      isAuthenticated: state.isAuthenticated
-    });
-  }, []);
-  
   // Use the stable selector to extract state
-  const authState = useAuthStore(selector);
-
-  // Store stable function references with useRef + useMemo to prevent re-renders
-  const stableHasRole = useMemo(() => useAuthStore.getState().hasRole, []);
-  const stableIsAdmin = useMemo(() => useAuthStore.getState().isAdmin, []);
-  const stableLogout = useMemo(() => useAuthStore.getState().logout, []);
+  const authState = useAuthStore(selectAuthState);
   
   // Get initialize function with separate selector to avoid re-renders
-  const initialize = useAuthStore(state => state.initialize);
+  const initialize = useAuthStore(selectInitialize);
+  
+  // Initialize stable function references if needed
+  if (!hasRoleRef.current) {
+    hasRoleRef.current = useAuthStore.getState().hasRole;
+  }
+  
+  if (!isAdminRef.current) {
+    isAdminRef.current = useAuthStore.getState().isAdmin;
+  }
+  
+  if (!logoutRef.current) {
+    logoutRef.current = useAuthStore.getState().logout;
+  }
   
   // Auto-initialize auth if needed - with guard against infinite loops
   useEffect(() => {
@@ -87,15 +98,16 @@ export function useAuth() {
         details: { userId: authState.user.id }
       });
     }
-    return stableLogout();
-  }, [authState.user, logger, stableLogout]);
+    return logoutRef.current?.();
+  }, [authState.user, logger]);
 
+  // Return stable object reference to prevent unnecessary re-renders
   return useMemo(() => ({
     ...authState,
-    isAdmin: stableIsAdmin(),
+    isAdmin: isAdminRef.current?.() || false,
     isSuperAdmin,
-    hasRole: stableHasRole,
+    hasRole: hasRoleRef.current,
     logout: handleLogout,
     // Don't expose initialize directly as it should be handled automatically
-  }), [authState, stableIsAdmin, isSuperAdmin, stableHasRole, handleLogout]);
+  }), [authState, isSuperAdmin, handleLogout]);
 }

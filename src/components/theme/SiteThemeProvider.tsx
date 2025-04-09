@@ -1,11 +1,11 @@
 
-import React, { createContext, useContext, useEffect, useMemo, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { DynamicKeyframes } from './DynamicKeyframes';
-import { safeSSR } from '@/lib/utils/safeSSR';
+import { safeSSR, safeSSREffect } from '@/lib/utils/safeSSR';
 import CircuitBreaker from '@/utils/CircuitBreaker';
 
 // Define types for component styles and animations
@@ -75,13 +75,15 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   });
   
   // Toggle dark mode - with stable reference
-  const toggleDarkMode = useRef(() => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    safeSSR(() => {
-      localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
-    }, false);
-  }).current;
+  const toggleDarkMode = useCallback(() => {
+    setIsDarkMode((prevMode) => {
+      const newMode = !prevMode;
+      safeSSREffect(() => {
+        localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
+      });
+      return newMode;
+    });
+  }, []);
 
   // Get component styles from theme - memoized to prevent unnecessary recalculations
   const componentStyles = useMemo(() => {
