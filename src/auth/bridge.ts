@@ -2,18 +2,8 @@
 import { useAuthStore } from './store/auth.store';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
-import { atom } from 'jotai';
-import { UserRole } from '@/types/auth.types';
 import { User } from '@supabase/supabase-js';
-
-// Import atoms from central source of truth
-import { 
-  userAtom,
-  rolesAtom,
-  isAuthenticatedAtom,
-  isAdminAtom,
-  hasAdminAccessAtom
-} from './atoms/auth.atoms';
+import { UserRole } from '@/types/auth.types';
 
 // Define the event types
 export type AuthEventType = 
@@ -99,10 +89,15 @@ export const AuthBridge = {
         full_name: 'Cyber User',
         avatar_url: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${email}`,
       }
-    };
+    } as User;
     
     // Save to localStorage for persistence
     localStorage.setItem('impulse_user', JSON.stringify(mockUser));
+    
+    // Update the auth store directly
+    const store = useAuthStore.getState();
+    store.setUser(mockUser);
+    store.setRoles(['viewer']);
     
     // Publish auth event
     publishAuthEvent({
@@ -123,6 +118,9 @@ export const AuthBridge = {
     // In a real app, this would call supabase.auth.signOut
     localStorage.removeItem('impulse_user');
     
+    // Update store directly
+    await useAuthStore.getState().logout();
+    
     // Publish auth event
     publishAuthEvent({
       type: 'AUTH_SIGNED_OUT'
@@ -131,44 +129,17 @@ export const AuthBridge = {
   
   // Role checking
   hasRole: (role: UserRole) => {
-    const roles = useAuthStore.getState().roles;
-    return roles.includes(role);
+    return useAuthStore.getState().hasRole(role);
   },
   
   isAdmin: () => {
-    const roles = useAuthStore.getState().roles;
-    return roles.includes('admin') || roles.includes('super_admin');
+    return useAuthStore.getState().isAdmin();
   }
 };
 
-// Helper function to safely update atom values - fixed implementation
-function updateAtomValue<T>(atomToUpdate: any, value: T) {
-  try {
-    // Use jotai's setAtom utility or access the store directly
-    const jotaiStore = document.jotaiStore;
-    if (jotaiStore && typeof jotaiStore.set === 'function') {
-      jotaiStore.set(atomToUpdate, value);
-    } else {
-      // Fallback using console error
-      const logger = getLogger();
-      logger.warn('Jotai store not available for direct update', {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge'
-      });
-    }
-  } catch (err) {
-    const logger = getLogger();
-    logger.error('Error updating atom:', {
-      category: LogCategory.AUTH,
-      source: 'auth/bridge',
-      details: { err }
-    });
-  }
-}
-
 /**
  * Initialize auth bridge by subscribing to auth store changes
- * and syncing with Jotai atoms
+ * and broadcasting events
  */
 export function initializeAuthBridge(): void {
   const logger = getLogger();
@@ -177,99 +148,51 @@ export function initializeAuthBridge(): void {
     source: 'auth/bridge'
   });
   
-  // Initialize atoms from store on startup
-  const syncAtomsFromStore = () => {
-    const { user, roles, status } = useAuthStore.getState();
-    const isAuthenticated = status === 'authenticated';
-    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-    const hasAdminAccess = isAdmin;
-    
+  // Check for stored user on startup
+  const storedUser = localStorage.getItem('impulse_user');
+  if (storedUser) {
     try {
-      // Update atoms with current values from store
-      if (window.jotaiState) {
-        window.jotaiState.set(userAtom, user);
-        window.jotaiState.set(rolesAtom, roles);
-        window.jotaiState.set(isAuthenticatedAtom, isAuthenticated);
-        window.jotaiState.set(isAdminAtom, isAdmin);
-        window.jotaiState.set(hasAdminAccessAtom, hasAdminAccess);
-      } else {
-        // Manual updates - less reliable but may work
-        userAtom.onMount = (setAtom) => {
-          setAtom(user);
-          return () => {};
-        };
-        
-        rolesAtom.onMount = (setAtom) => {
-          setAtom(roles);
-          return () => {};
-        };
-        
-        isAuthenticatedAtom.onMount = (setAtom) => {
-          setAtom(isAuthenticated);
-          return () => {};
-        };
-        
-        isAdminAtom.onMount = (setAtom) => {
-          setAtom(isAdmin);
-          return () => {};
-        };
-        
-        hasAdminAccessAtom.onMount = (setAtom) => {
-          setAtom(hasAdminAccess);
-          return () => {};
-        };
-      }
+      const user = JSON.parse(storedUser) as User;
       
-      // Log successful sync
-      logger.debug('Atoms synced from store', {
+      // Update the store with the stored user
+      const store = useAuthStore.getState();
+      store.setUser(user);
+      store.setRoles(['viewer']); // Default role
+      store.setInitialized(true);
+      
+      logger.info('Restored user from local storage', {
         category: LogCategory.AUTH,
-        source: 'auth/bridge',
-        details: { 
-          hasUser: !!user, 
-          roles, 
-          isAuthenticated,
-          isAdmin
-        }
+        source: 'auth/bridge'
       });
     } catch (err) {
-      logger.error('Error syncing atoms', {
+      logger.error('Failed to parse stored user', {
         category: LogCategory.AUTH,
         source: 'auth/bridge',
         details: { err }
       });
     }
-  };
-  
-  // Initial sync with error handling
-  try {
-    syncAtomsFromStore();
-  } catch (err) {
-    logger.error('Failed to sync atoms from store', {
-      category: LogCategory.AUTH,
-      source: 'auth/bridge',
-      details: { err }
-    });
   }
   
-  // Setup auth state listener
+  // Subscribe to auth store changes to broadcast events
   const unsubscribe = useAuthStore.subscribe(
-    state => ({ user: state.user, roles: state.roles, status: state.status }),
+    (state) => ({ user: state.user, status: state.status }),
     (current, prev) => {
-      // Only update atoms if actual changes occurred
-      if (
-        current.user !== prev.user || 
-        current.roles !== prev.roles || 
-        current.status !== prev.status
-      ) {
-        try {
-          syncAtomsFromStore();
-        } catch (err) {
-          logger.error('Failed to sync atoms on state change', {
-            category: LogCategory.AUTH,
-            source: 'auth/bridge',
-            details: { err }
+      // If user changed
+      if (current.user !== prev.user) {
+        if (current.user) {
+          publishAuthEvent({
+            type: 'AUTH_USER_UPDATED',
+            payload: { user: current.user }
           });
         }
+      }
+      
+      // If status changed
+      if (current.status !== prev.status) {
+        publishAuthEvent({
+          type: 'AUTH_STATE_CHANGED',
+          payload: { status: current.status }
+        });
       }
     }
   );
