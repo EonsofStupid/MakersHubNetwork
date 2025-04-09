@@ -4,6 +4,7 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { User } from '@supabase/supabase-js';
 import { UserRole } from '@/auth/types/auth.types';
+import { CircuitBreaker } from '@/utils/circuitBreaker';
 
 // Define the event types
 export type AuthEventType = 
@@ -24,6 +25,9 @@ type AuthEventHandler = (event: AuthEvent) => void;
 
 // Create a simple event system
 const eventHandlers: AuthEventHandler[] = [];
+
+// Create a circuit breaker to prevent infinite loops
+const authCircuitBreaker = new CircuitBreaker('auth-bridge', 5, 5000);
 
 /**
  * Subscribe to auth events
@@ -47,16 +51,31 @@ export function subscribeToAuthEvents(handler: AuthEventHandler): () => void {
  */
 export function publishAuthEvent(event: AuthEvent): void {
   const logger = getLogger();
+  
+  // Check if the circuit breaker is open to prevent excessive events
+  if (authCircuitBreaker.isOpen) {
+    logger.warn(`Auth event publishing stopped by circuit breaker: ${event.type}`, {
+      category: LogCategory.AUTH,
+      source: 'auth/bridge',
+    });
+    return;
+  }
+  
+  // Log the event
   logger.debug(`Auth event published: ${event.type}`, {
     category: LogCategory.AUTH,
     source: 'auth/bridge',
     details: event
   });
   
+  // Loop through all handlers and call them with the event
   eventHandlers.forEach(handler => {
     try {
       handler(event);
     } catch (error) {
+      // Record failure on circuit breaker
+      authCircuitBreaker.recordFailure();
+      
       logger.error('Error in auth event handler', {
         category: LogCategory.AUTH,
         source: 'auth/bridge',
@@ -64,6 +83,9 @@ export function publishAuthEvent(event: AuthEvent): void {
       });
     }
   });
+  
+  // Record successful publishing
+  authCircuitBreaker.recordSuccess();
 }
 
 /**
@@ -142,7 +164,24 @@ export const AuthBridge = {
     });
   },
   
-  // Role checking
+  // Read-only getter methods
+  getUser: () => {
+    return useAuthStore.getState().user;
+  },
+  
+  getSession: () => {
+    return useAuthStore.getState().session;
+  },
+  
+  getRoles: () => {
+    return useAuthStore.getState().roles;
+  },
+  
+  getStatus: () => {
+    return useAuthStore.getState().status;
+  },
+  
+  // Role checking methods
   hasRole: (role: UserRole | UserRole[]) => {
     return useAuthStore.getState().hasRole(role);
   },
@@ -151,19 +190,18 @@ export const AuthBridge = {
     return useAuthStore.getState().isAdmin();
   },
   
-  // Add new method to check for super admin role
   isSuperAdmin: () => {
     return useAuthStore.getState().roles.includes('super_admin');
-  },
-  
-  // Add method to get all roles
-  getRoles: () => {
-    return useAuthStore.getState().roles;
   },
   
   // Add method to check debug access
   hasDebugAccess: () => {
     return useAuthStore.getState().roles.includes('super_admin');
+  },
+  
+  // Check authentication status
+  isAuthenticated: () => {
+    return useAuthStore.getState().isAuthenticated;
   }
 };
 
@@ -203,10 +241,22 @@ export function initializeAuthBridge(): void {
     }
   }
   
+  // Use a timestamp to track the last update we processed
+  // This helps prevent event loops
+  let lastUpdateProcessed = Date.now();
+  
   // Subscribe to auth store changes to broadcast events
-  // Fix: Update the subscribe call to match the current Zustand API
-  // Only pass one callback function that receives the new state
   const unsubscribe = useAuthStore.subscribe((state) => {
+    // Skip if this update is too close to the last one we processed
+    // This helps prevent cascading events or infinite loops
+    if (state.lastUpdated <= lastUpdateProcessed) {
+      return;
+    }
+    
+    // Update our timestamp
+    lastUpdateProcessed = state.lastUpdated;
+    
+    // Publish appropriate events based on state changes
     const { user, status } = state;
     
     // If user exists, publish user updated event
@@ -217,7 +267,7 @@ export function initializeAuthBridge(): void {
       });
     }
     
-    // If status changed, publish state changed event
+    // Publish state changed event
     publishAuthEvent({
       type: 'AUTH_STATE_CHANGED',
       payload: { status }

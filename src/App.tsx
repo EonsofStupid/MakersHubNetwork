@@ -32,19 +32,18 @@ import "@/admin/styles/cyber-effects.css";
 
 function App() {
   const location = useLocation();
-  const initAttemptedRef = useRef<boolean>(false);
-  const authInitializedRef = useRef<boolean>(false);
+  const bridgesInitializedRef = useRef<boolean>(false);
   const logger = getLogger();
 
-  // Initialize bridges on app mount with guard against infinite loops
+  // Initialize bridges only once on app mount
   useEffect(() => {
     // Guard against multiple initialization attempts
-    if (initAttemptedRef.current) {
+    if (bridgesInitializedRef.current) {
       return;
     }
     
-    // Mark as attempted immediately
-    initAttemptedRef.current = true;
+    // Mark as initialized immediately to prevent race conditions
+    bridgesInitializedRef.current = true;
     
     logger.info('Initializing app bridges', {
       category: LogCategory.SYSTEM,
@@ -52,28 +51,22 @@ function App() {
     });
     
     try {
-      // Initialize bridges with error handling
+      // Initialize logging bridge first
       initializeLoggingBridge();
       
-      // Initialize auth bridge with slight delay to avoid timing issues
-      // and only if not already initialized
-      if (!authInitializedRef.current) {
-        authInitializedRef.current = true;
-        
-        // Use setTimeout to defer auth initialization to next event loop
-        // This prevents potential circular dependencies and timing issues
-        setTimeout(() => {
-          try {
-            initializeAuthBridge();
-          } catch (error) {
-            logger.error('Auth bridge initialization error', {
-              category: LogCategory.SYSTEM,
-              source: 'App',
-              details: { error }
-            });
-          }
-        }, 100);
-      }
+      // Initialize auth bridge with slight delay
+      // This prevents timing issues with other initializations
+      setTimeout(() => {
+        try {
+          initializeAuthBridge();
+        } catch (error) {
+          logger.error('Auth bridge initialization error', {
+            category: LogCategory.SYSTEM,
+            source: 'App',
+            details: { error }
+          });
+        }
+      }, 100);
     } catch (error) {
       logger.error('Bridge initialization error', {
         category: LogCategory.SYSTEM,
@@ -81,7 +74,7 @@ function App() {
         details: { error }
       });
     }
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">

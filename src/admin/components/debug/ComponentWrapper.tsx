@@ -1,5 +1,5 @@
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -15,13 +15,20 @@ export const ComponentWrapper = forwardRef<HTMLDivElement, ComponentWrapperProps
   ({ children, componentName, className, id, onClick, ...props }, ref) => {
     const { isSuperAdmin } = useAuth();
     
+    // Generate a stable component ID that won't change on re-renders
+    const stableId = useMemo(() => {
+      return id || `${componentName}-${Math.random().toString(36).substring(2, 9)}`;
+    }, [componentName, id]);
+    
     // Only add debug-related attributes if user is a super admin
-    const debugAttributes = isSuperAdmin 
-      ? {
-          'data-component': componentName,
-          'data-component-id': id || `${componentName}-${Math.random().toString(36).substring(2, 9)}`
-        }
-      : {};
+    const debugAttributes = useMemo(() => {
+      if (!isSuperAdmin) return {};
+      
+      return {
+        'data-component': componentName,
+        'data-component-id': stableId
+      };
+    }, [isSuperAdmin, componentName, stableId]);
     
     return (
       <div

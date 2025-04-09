@@ -5,16 +5,17 @@ import {
   rolesAtom, 
   isAuthenticatedAtom, 
   isAdminAtom, 
-  hasAdminAccessAtom
+  hasAdminAccessAtom,
+  hasRoleAtom
 } from '@/auth/atoms/auth.atoms';
 import { AuthBridge } from '@/auth/bridge';
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
+import { UserRole } from '@/auth/types/auth.types';
 
 /**
  * Custom hook that provides access to auth state via Jotai atoms
- * This avoids circular dependencies with the useAuth hook
- * Includes initialization guard to prevent infinite loops
+ * Use this for components that already use Jotai for other state
  */
 export const useAuthAtoms = () => {
   const initialized = useRef(false);
@@ -25,31 +26,32 @@ export const useAuthAtoms = () => {
   const isAdmin = useAtomValue(isAdminAtom);
   const hasAdminAccess = useAtomValue(hasAdminAccessAtom);
   const roles = useAtomValue(rolesAtom);
+  const hasRoleFn = useAtomValue(hasRoleAtom);
   
   // Initialize auth store if needed
-  useEffect(() => {
-    if (initialized.current) {
-      return; // Prevent multiple initializations
-    }
-    
+  if (!initialized.current) {
     const authStore = useAuthStore.getState();
     if (!authStore.initialized) {
-      authStore.initialize().catch(err => {
-        console.error("Failed to initialize auth store:", err);
-      });
+      // Use setTimeout to avoid triggering during render
+      setTimeout(() => {
+        authStore.initialize().catch(err => {
+          console.error("Failed to initialize auth store:", err);
+        });
+      }, 0);
     }
     
     initialized.current = true;
-  }, []);
+  }
   
   // Return atoms and auth methods from AuthBridge
   return {
-    // Atoms
+    // Atoms 
     user,
     isAuthenticated,
     isAdmin,
     hasAdminAccess,
     roles,
+    hasRole: hasRoleFn,
     
     // Auth methods from central AuthBridge
     signIn: AuthBridge.signIn,

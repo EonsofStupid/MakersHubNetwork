@@ -1,74 +1,47 @@
 
-import { useEffect, useRef } from 'react';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { useCallback, useMemo } from 'react';
+import { useAuthStore, selectUser, selectSession, selectRoles, selectStatus, selectIsAuthenticated, selectAuthError, selectIsLoading } from '@/auth/store/auth.store';
 import { AuthBridge } from '@/auth/bridge';
+import { UserRole } from '@/auth/types/auth.types';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
 /**
  * Hook for accessing authentication state
- * Uses ref to track initialization to prevent infinite loops
+ * Uses Zustand's selector pattern for efficient updates
  */
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
-  const initAttemptedRef = useRef<boolean>(false);
   
-  // Extract only what we need from the store to prevent unnecessary re-renders
-  // Use selector function pattern for better performance
-  const {
-    user,
-    session,
-    roles,
-    status,
-    isLoading,
-    error,
-    initialized,
-  } = useAuthStore(state => ({
-    user: state.user,
-    session: state.session,
-    roles: state.roles,
-    status: state.status,
-    isLoading: state.isLoading,
-    error: state.error,
-    initialized: state.initialized,
-  }));
+  // Use selectors for each piece of state to prevent unnecessary re-renders
+  const user = useAuthStore(selectUser);
+  const session = useAuthStore(selectSession);
+  const roles = useAuthStore(selectRoles);
+  const status = useAuthStore(selectStatus);
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const error = useAuthStore(selectAuthError);
+  const isLoading = useAuthStore(selectIsLoading);
   
-  const hasRole = useAuthStore(state => state.hasRole);
-  const isAdmin = useAuthStore(state => state.isAdmin);
+  // Access methods directly from the store
+  const initialize = useAuthStore((state) => state.initialize);
+  const initialized = useAuthStore((state) => state.initialized);
   
-  // Auto-initialize auth if needed - with guard against infinite loops
-  useEffect(() => {
-    // Prevent multiple initialization attempts
-    if (initAttemptedRef.current) {
-      return;
-    }
-    
-    // Only initialize if needed
-    if (!initialized && status === 'idle') {
-      logger.info('Auto-initializing auth from useAuth hook');
-      initAttemptedRef.current = true;
-      
-      // Use setTimeout to break potential circular dependencies
-      const timeoutId = setTimeout(() => {
-        useAuthStore.getState().initialize().catch(err => {
-          logger.error('Failed to initialize auth', { 
-            details: {
-              message: err instanceof Error ? err.message : String(err)
-            }
-          });
-        });
-      }, 50);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [status, initialized, logger]); // We deliberately omit initialize
+  // Memoize role checking functions to prevent recreation on each render
+  const hasRole = useCallback((role: UserRole | UserRole[]) => {
+    return useAuthStore.getState().hasRole(role);
+  }, []);
   
-  // Derived state
-  const isSuperAdmin = roles.includes('super_admin');
-  const isAuthenticated = status === 'authenticated';
-
+  // Use memoization for derived values
+  const isAdmin = useMemo(() => {
+    return roles.includes('admin') || roles.includes('super_admin');
+  }, [roles]);
+  
+  const isSuperAdmin = useMemo(() => {
+    return roles.includes('super_admin');
+  }, [roles]);
+  
   // Use AuthBridge for logout to ensure consistent behavior
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     if (user) {
       logger.info('User logging out', { 
         details: { userId: user.id }
@@ -77,8 +50,9 @@ export function useAuth() {
     
     // Use AuthBridge for logout
     return AuthBridge.logout();
-  };
+  }, [user, logger]);
 
+  // Return all required auth state and methods
   return {
     user,
     session,
@@ -87,10 +61,11 @@ export function useAuth() {
     isLoading,
     error,
     hasRole,
-    isAdmin: isAdmin(),
+    isAdmin,
     isSuperAdmin,
     isAuthenticated,
     logout: handleLogout,
+    initialize,
     initialized
   };
 }
