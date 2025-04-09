@@ -1,18 +1,21 @@
 
 import { useState, useEffect, createContext, useContext } from 'react';
+import { User } from '@/types/auth.types';
 
-interface User {
-  id: string;
-  email?: string;
-  user_metadata?: {
-    full_name?: string;
-    avatar_url?: string;
-  };
+interface UserMetadata {
+  full_name?: string;
+  avatar_url?: string;
 }
 
-interface AuthContextType {
-  user: User | null;
-  signIn: (email: string, password: string) => Promise<User>;
+export interface AuthUser {
+  id: string;
+  email?: string;
+  user_metadata?: UserMetadata;
+}
+
+export interface AuthContextType {
+  user: AuthUser | null;
+  signIn: (email: string, password: string) => Promise<AuthUser>;
   signOut: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
@@ -29,7 +32,7 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -46,8 +49,8 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     setIsLoading(false);
   }, []);
   
-  // Mock sign in function
-  const signIn = async (email: string, password: string): Promise<User> => {
+  // Sign in function
+  const signIn = async (email: string, password: string): Promise<AuthUser> => {
     setIsLoading(true);
     setError(null);
     
@@ -75,7 +78,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     }
   };
   
-  // Mock sign out function
+  // Sign out function
   const signOut = async (): Promise<void> => {
     setIsLoading(true);
     try {

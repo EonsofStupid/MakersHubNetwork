@@ -10,8 +10,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LoginSheet } from "./LoginSheet";
 import { useState } from "react";
 
-// AuthSection with Jotai for reactivity
-export const AuthSection = () => {
+/**
+ * AuthSection Component
+ * 
+ * Displays authentication controls in the MainNav, including:
+ * - Login/Avatar button
+ * - Admin access links (when authorized)
+ * 
+ * Uses Jotai for reactive state management and integrates with the auth system.
+ */
+export const AuthSection: React.FC = () => {
   const [showAdminButton] = useAtom(showAdminButtonAtom);
   const [showAdminWrench] = useAtom(showAdminWrenchAtom);
   const { hasAdminAccess, user, isAuthenticated } = useAuthAtoms();
@@ -40,6 +48,7 @@ export const AuthSection = () => {
             variant="ghost"
             size="icon"
             className="relative ml-2 text-primary hover:text-white hover:bg-primary/20"
+            aria-label="Admin Dashboard"
           >
             <Wrench className="h-4 w-4" />
             <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full animate-pulse"></span>
@@ -53,7 +62,7 @@ export const AuthSection = () => {
           className="h-8 w-8 border-2 border-primary/50 hover:border-primary transition-all duration-300 cursor-pointer site-glow-hover cyber-effect-text"
           onClick={() => setIsLoginOpen(true)}
         >
-          <AvatarImage src={user?.user_metadata?.avatar_url} />
+          <AvatarImage src={user?.user_metadata?.avatar_url} alt="User avatar" />
           <AvatarFallback className="bg-primary/20 text-primary">
             {user?.email?.charAt(0).toUpperCase() || 'U'}
           </AvatarFallback>
