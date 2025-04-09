@@ -1,6 +1,6 @@
 
 import { useCallback, useMemo } from 'react';
-import { useAuthStore, selectUser, selectSession, selectRoles, selectStatus, selectIsAuthenticated, selectAuthError, selectIsLoading } from '@/auth/store/auth.store';
+import { useAuthStore, selectUser, selectSession, selectProfile, selectRoles, selectStatus, selectIsAuthenticated, selectAuthError, selectIsLoading } from '@/auth/store/auth.store';
 import { AuthBridge } from '@/auth/bridge';
 import { UserRole } from '@/auth/types/auth.types';
 import { useLogger } from '@/hooks/use-logger';
@@ -15,6 +15,7 @@ export function useAuth() {
   
   // Use selectors for each piece of state to prevent unnecessary re-renders
   const user = useAuthStore(selectUser);
+  const profile = useAuthStore(selectProfile);
   const session = useAuthStore(selectSession);
   const roles = useAuthStore(selectRoles);
   const status = useAuthStore(selectStatus);
@@ -28,19 +29,33 @@ export function useAuth() {
   
   // Memoize role checking functions to prevent recreation on each render
   const hasRole = useCallback((role: UserRole | UserRole[]) => {
-    return useAuthStore.getState().hasRole(role);
+    return AuthBridge.hasRole(role);
   }, []);
   
   // Use memoization for derived values
   const isAdmin = useMemo(() => {
-    return roles.includes('admin') || roles.includes('super_admin');
+    return AuthBridge.isAdmin();
   }, [roles]);
   
   const isSuperAdmin = useMemo(() => {
-    return roles.includes('super_admin');
+    return AuthBridge.isSuperAdmin();
   }, [roles]);
   
-  // Use AuthBridge for logout to ensure consistent behavior
+  // Use AuthBridge for auth operations to ensure consistent behavior
+  const handleLogin = useCallback(async (email: string, password: string) => {
+    logger.info('User logging in', { 
+      details: { email }
+    });
+    
+    return AuthBridge.signIn(email, password);
+  }, [logger]);
+  
+  const handleGoogleLogin = useCallback(async () => {
+    logger.info('User logging in with Google');
+    
+    return AuthBridge.signInWithGoogle();
+  }, [logger]);
+  
   const handleLogout = useCallback(async () => {
     if (user) {
       logger.info('User logging out', { 
@@ -55,6 +70,7 @@ export function useAuth() {
   // Return all required auth state and methods
   return {
     user,
+    profile,
     session,
     roles,
     status,
@@ -64,6 +80,8 @@ export function useAuth() {
     isAdmin,
     isSuperAdmin,
     isAuthenticated,
+    signIn: handleLogin,
+    signInWithGoogle: handleGoogleLogin,
     logout: handleLogout,
     initialize,
     initialized

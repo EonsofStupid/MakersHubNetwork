@@ -8,9 +8,20 @@ import { LogCategory } from "@/logging";
 import { persist } from "zustand/middleware";
 import { v4 as uuidv4 } from 'uuid';
 
+// Define user profile interface
+export interface UserProfile {
+  id: string;
+  username?: string;
+  display_name?: string;
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface AuthState {
   user: User | null;
   session: Session | null;
+  profile: UserProfile | null;
   roles: UserRole[];
   status: AuthStatus;
   isLoading: boolean;
@@ -31,13 +42,16 @@ export interface AuthActions {
   // State setters
   setSession: (session: Session | null) => void;
   setUser: (user: User | null) => void;
+  setProfile: (profile: UserProfile | null) => void;
   setRoles: (roles: UserRole[]) => void;
   setError: (error: string | null) => void;
   setLoading: (isLoading: boolean) => void;
   setInitialized: (initialized: boolean) => void;
+  setStatus: (status: AuthStatus) => void;
   
   // Operations
   initialize: () => Promise<void>;
+  loadUserProfile: (userId: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -50,6 +64,7 @@ export const useAuthStore = create<AuthStore>()(
       // Initial state
       user: null,
       session: null,
+      profile: null,
       roles: [],
       status: "idle",
       isLoading: false,
@@ -86,6 +101,20 @@ export const useAuthStore = create<AuthStore>()(
           user,
           lastUpdated: Date.now()
         });
+        
+        // If user is set, attempt to load their profile
+        if (user) {
+          get().loadUserProfile(user.id);
+        } else {
+          set({ profile: null });
+        }
+      },
+      
+      setProfile: (profile: UserProfile | null) => {
+        set({
+          profile,
+          lastUpdated: Date.now()
+        });
       },
 
       setRoles: (roles: UserRole[]) => {
@@ -116,6 +145,13 @@ export const useAuthStore = create<AuthStore>()(
         });
       },
       
+      setStatus: (status: AuthStatus) => {
+        set({
+          status,
+          lastUpdated: Date.now()
+        });
+      },
+      
       // Session setter - updates multiple related fields
       setSession: (session: Session | null) => {
         const currentUser = session?.user || null;
@@ -133,6 +169,68 @@ export const useAuthStore = create<AuthStore>()(
           isAuthenticated: !!session,
           lastUpdated: Date.now()
         });
+      },
+      
+      // Load user profile from database
+      loadUserProfile: async (userId: string) => {
+        const logger = getLogger();
+        
+        try {
+          // Try to get profile from profiles table if it exists
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+            
+          if (error) {
+            // If the query failed (e.g., table doesn't exist), create a basic profile from user metadata
+            logger.warn('Failed to load user profile from database', {
+              category: LogCategory.AUTH,
+              source: 'auth.store',
+              details: { error: error.message }
+            });
+            
+            // Get user from current state
+            const user = get().user;
+            if (user) {
+              // Create profile from user metadata
+              const profile: UserProfile = {
+                id: user.id,
+                display_name: user.user_metadata?.full_name as string || null,
+                avatar_url: user.user_metadata?.avatar_url as string || null,
+              };
+              
+              set({ 
+                profile,
+                lastUpdated: Date.now()
+              });
+            }
+            
+            return;
+          }
+          
+          // If we got data from the database, use it
+          set({ 
+            profile: data as UserProfile,
+            lastUpdated: Date.now()
+          });
+          
+          logger.info('User profile loaded successfully', {
+            category: LogCategory.AUTH,
+            source: 'auth.store'
+          });
+          
+        } catch (error) {
+          logger.error('Error loading user profile', {
+            category: LogCategory.AUTH,
+            source: 'auth.store',
+            details: { 
+              error: error instanceof Error ? error.message : String(error),
+              userId 
+            }
+          });
+        }
       },
       
       // Initialize auth - loads session from supabase
@@ -170,6 +268,11 @@ export const useAuthStore = create<AuthStore>()(
           
           // Update session state
           get().setSession(data.session);
+          
+          // If we have a user, load their profile
+          if (data.session?.user) {
+            await get().loadUserProfile(data.session.user.id);
+          }
           
           logger.info('Auth initialization completed', {
             category: LogCategory.AUTH,
@@ -223,6 +326,7 @@ export const useAuthStore = create<AuthStore>()(
           
           set({
             user: null,
+            profile: null,
             session: null,
             roles: [],
             status: "unauthenticated",
@@ -259,6 +363,7 @@ export const useAuthStore = create<AuthStore>()(
         // Only persist these fields
         user: state.user,
         session: state.session,
+        profile: state.profile,
         roles: state.roles,
         status: state.status,
         isAuthenticated: state.isAuthenticated,
@@ -270,6 +375,7 @@ export const useAuthStore = create<AuthStore>()(
 // Export selectors for optimized component usage
 export const selectUser = (state: AuthStore) => state.user;
 export const selectSession = (state: AuthStore) => state.session;
+export const selectProfile = (state: AuthStore) => state.profile;
 export const selectRoles = (state: AuthStore) => state.roles;
 export const selectStatus = (state: AuthStore) => state.status;
 export const selectIsAuthenticated = (state: AuthStore) => state.isAuthenticated;

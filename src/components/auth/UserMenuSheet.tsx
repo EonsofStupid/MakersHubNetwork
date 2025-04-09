@@ -1,3 +1,4 @@
+
 import React from "react"
 import { Link } from "react-router-dom"
 import { Menu, User, Settings, LayoutDashboard, LogOut, Shield, Crown } from "lucide-react"
@@ -10,6 +11,8 @@ interface UserMenuSheetProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   userEmail?: string
+  userDisplayName?: string
+  userAvatar?: string | null
   isLoadingLogout: boolean
   onShowProfile: () => void
   onLogout: () => void
@@ -21,6 +24,8 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   isOpen,
   onOpenChange,
   userEmail,
+  userDisplayName,
+  userAvatar,
   isLoadingLogout,
   onShowProfile,
   onLogout,
@@ -69,9 +74,23 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
       >
         <div className="transform skew-x-[10deg] origin-top-right space-y-4 pt-6">
           <div className="px-4 space-y-2">
+            {userAvatar && (
+              <div className="h-12 w-12 rounded-full bg-primary/10 border 
+                             border-primary/30 flex items-center justify-center 
+                             overflow-hidden mb-3">
+                <img 
+                  src={userAvatar} 
+                  alt={userDisplayName || "User"} 
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            )}
             <h2 className="text-lg font-heading font-bold text-primary">
-              {userEmail || "My Account"}
+              {userDisplayName || userEmail || "My Account"}
             </h2>
+            {userEmail && userDisplayName && (
+              <p className="text-sm text-muted-foreground">{userEmail}</p>
+            )}
             <div className="flex flex-wrap gap-2">
               {roles.map((role) => (
                 <Badge
