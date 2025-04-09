@@ -48,18 +48,10 @@ const AuthSection = memo(function AuthSection({ className }: AuthSectionProps) {
     };
   }, [user]);
   
-  // Prevent interaction if auth is still initializing
-  const isInitializing = useMemo(() => status === 'loading', [status]);
-  
-  // Check for infinite render loop
+  // Skip rendering while auth is initializing
   if (CircuitBreaker.isTripped('auth-section')) {
     console.warn('CircuitBreaker detected potential infinite loop in AuthSection');
-    // Return a minimal fallback to break the loop
-    return (
-      <div className={cn("flex gap-4 items-center", className)}>
-        <Button variant="outline" disabled>Loading...</Button>
-      </div>
-    );
+    return null; // Don't render anything to break potential loops
   }
   
   const handleLogout = useCallback(async () => {
@@ -82,14 +74,7 @@ const AuthSection = memo(function AuthSection({ className }: AuthSectionProps) {
     }
   }, [logout, toast, navigate]);
 
-  if (isInitializing) {
-    return (
-      <div className={cn("flex gap-4 items-center", className)}>
-        <Button variant="outline" disabled>Loading...</Button>
-      </div>
-    );
-  }
-
+  // For non-authenticated users, show login button
   if (!isAuthenticated || !user) {
     return (
       <div className={cn("flex gap-4 items-center", className)}>

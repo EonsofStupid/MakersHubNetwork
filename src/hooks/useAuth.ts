@@ -67,6 +67,11 @@ export function useAuth() {
   
   // Auto-initialize auth if needed - with guard against infinite loops
   useEffect(() => {
+    // Only try to initialize once and don't block content rendering
+    if (initAttemptedRef.current) {
+      return;
+    }
+    
     // Skip initialization in case we detect a potential infinite loop
     if (CircuitBreaker.isTripped('useAuth')) {
       logger.warn('Breaking potential infinite loop in useAuth');
@@ -77,25 +82,17 @@ export function useAuth() {
     CircuitBreaker.count('useAuth');
     
     // Prevent multiple initialization attempts
-    if (initAttemptedRef.current) {
-      return;
-    }
+    initAttemptedRef.current = true;
     
-    // Only initialize if needed
-    if (!authState.initialized && authState.status === 'idle') {
-      logger.info('Auto-initializing auth from useAuth hook');
-      initAttemptedRef.current = true;
-      
-      // Use setTimeout to break potential circular dependencies
-      const timeoutId = setTimeout(() => {
-        initialize().catch(err => {
-          logger.error('Failed to initialize auth', { details: errorToObject(err) });
-        });
-      }, 50);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [authState.status, authState.initialized, initialize, logger]);
+    // Initialize auth in background without blocking UI
+    const timeoutId = setTimeout(() => {
+      initialize().catch(err => {
+        logger.error('Failed to initialize auth', { details: errorToObject(err) });
+      });
+    }, 50);
+    
+    return () => clearTimeout(timeoutId);
+  }, [initialize, logger]);
   
   // Derived state (memoized to prevent unnecessary re-renders)
   const isSuperAdmin = useMemo(() => 

@@ -22,6 +22,9 @@ export function FloatingChat() {
   // Use memoized values with stable references
   const pathname = useMemo(() => location.pathname, [location.pathname]);
   const inChatRoute = useMemo(() => pathname.startsWith('/chat'), [pathname]);
+  
+  // Show chat only for authenticated admin users and not in chat route
+  // But don't block rendering of other content on the page
   const canShow = useMemo(() => isAuthenticated && hasAdminAccess && !inChatRoute, 
     [isAuthenticated, hasAdminAccess, inChatRoute]);
   
