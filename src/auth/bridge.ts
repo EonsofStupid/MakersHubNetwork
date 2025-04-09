@@ -6,6 +6,15 @@ import { atom } from 'jotai';
 import { UserRole } from '@/types/auth.types';
 import { User } from '@supabase/supabase-js';
 
+// Import atoms from central source of truth
+import { 
+  userAtom,
+  rolesAtom,
+  isAuthenticatedAtom,
+  isAdminAtom,
+  hasAdminAccessAtom
+} from './atoms/auth.atoms';
+
 // Define the event types
 export type AuthEventType = 
   | 'AUTH_SIGNED_IN'
@@ -25,15 +34,6 @@ type AuthEventHandler = (event: AuthEvent) => void;
 
 // Create a simple event system
 const eventHandlers: AuthEventHandler[] = [];
-
-// Import atoms from central location instead of redefining
-import { 
-  userAtom,
-  rolesAtom,
-  isAuthenticatedAtom,
-  isAdminAtom,
-  hasAdminAccessAtom
-} from './atoms/auth.atoms';
 
 /**
  * Subscribe to auth events
@@ -141,13 +141,13 @@ export const AuthBridge = {
   }
 };
 
-// Helper function to safely update atom values
+// Helper function to safely update atom values - fixed type signature
 function updateAtomValue<T>(atom: any, value: T) {
   try {
     const setter = atom.write;
     if (setter && typeof setter === 'function') {
-      // Use correct atom setter signature
-      setter(value);
+      // Use correct atom setter signature for jotai
+      setter((get: any, set: any) => set(atom, value));
     }
   } catch (err) {
     const logger = getLogger();

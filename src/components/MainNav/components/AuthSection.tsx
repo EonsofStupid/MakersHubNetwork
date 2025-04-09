@@ -62,9 +62,9 @@ export const AuthSection: React.FC = () => {
           className="h-8 w-8 border-2 border-primary/50 hover:border-primary transition-all duration-300 cursor-pointer site-glow-hover cyber-effect-text"
           onClick={() => setIsLoginOpen(true)}
         >
-          <AvatarImage src={user?.user_metadata?.avatar_url} alt="User avatar" />
+          <AvatarImage src={user?.user_metadata?.avatar_url as string | undefined} alt="User avatar" />
           <AvatarFallback className="bg-primary/20 text-primary">
-            {user?.email?.charAt(0).toUpperCase() || 'U'}
+            {(user?.email?.charAt(0).toUpperCase() || 'U') as string}
           </AvatarFallback>
         </Avatar>
       ) : (
