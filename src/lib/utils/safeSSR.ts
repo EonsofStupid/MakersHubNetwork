@@ -2,7 +2,7 @@
  * Execute a function safely in a browser environment
  * Returns fallback value if window is not defined (SSR environment)
  */
-export function safeSSR<T>(fn: () => T, fallback: T | undefined): T | undefined {
+export function safeSSR<T>(fn: () => T, fallback: T): T {
   try {
     // Check if we're in a browser environment
     if (typeof window === 'undefined' || typeof document === 'undefined') {
