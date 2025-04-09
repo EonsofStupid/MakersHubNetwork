@@ -7,11 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Github, Mail, AtSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthAtoms } from "@/hooks/useAuthAtoms";
 import { publishAuthEvent } from "@/auth/bridge";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 
+/**
+ * LoginSheet Component
+ * 
+ * Modal component for user authentication, providing login and registration options.
+ * Uses the cyberpunk styling and integrates with the auth system.
+ */
 interface LoginSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -22,7 +28,7 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { signIn } = useAuth();
+  const { signIn } = useAuthAtoms();
   const logger = useLogger("LoginSheet", LogCategory.AUTH);
 
   const handleLogin = async (e: React.FormEvent) => {

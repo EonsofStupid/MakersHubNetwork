@@ -1,87 +1,34 @@
 
-import { useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { 
-  userAtom, 
-  rolesAtom, 
-  isAuthenticatedAtom, 
-  isAdminAtom,
-  hasAdminAccessAtom,
-  authStatusAtom,
-  AuthStatusType 
-} from '@/admin/atoms/auth.atoms';
-import { subscribeToAuthEvents } from '@/auth/bridge';
+import { userAtom, isAuthenticatedAtom, isAdminAtom, hasAdminAccessAtom, rolesAtom } from '@/admin/atoms/auth.atoms';
+import { useAuth } from '@/hooks/useAuth';
+import { UserRole } from '@/types/auth.types';
 
 /**
- * Hook for syncing auth store with Jotai atoms
- * This keeps UI components reactive to auth changes
+ * Custom hook that combines Jotai atoms for auth state with the useAuth hook
+ * This provides a unified interface for auth-related functionality
  */
-export function useAuthAtoms() {
-  const [user, setUser] = useAtom(userAtom);
-  const [roles, setRoles] = useAtom(rolesAtom);
-  const [isAuthenticated, setIsAuthenticated] = useAtom(isAuthenticatedAtom);
-  const [isAdmin, setIsAdmin] = useAtom(isAdminAtom);
-  const [hasAdminAccess, setHasAdminAccess] = useAtom(hasAdminAccessAtom);
-  const [authStatus, setAuthStatus] = useAtom(authStatusAtom);
+export const useAuthAtoms = () => {
+  // Get atoms from Jotai store
+  const [user] = useAtom(userAtom);
+  const [isAuthenticated] = useAtom(isAuthenticatedAtom);
+  const [isAdmin] = useAtom(isAdminAtom);
+  const [hasAdminAccess] = useAtom(hasAdminAccessAtom);
+  const [roles] = useAtom(rolesAtom);
   
-  // Sync auth store with atoms
-  useEffect(() => {
-    const authState = useAuthStore.getState();
-    
-    // Initial sync with store
-    setUser(authState.user);
-    setRoles(authState.roles);
-    setIsAuthenticated(authState.isAuthenticated);
-    setIsAdmin(authState.isAdmin());
-    setHasAdminAccess(authState.roles.includes('admin') || authState.roles.includes('super_admin'));
-    
-    // Convert auth store status to atom status type
-    const statusMapping: Record<string, AuthStatusType> = {
-      'idle': 'idle',
-      'loading': 'loading',
-      'authenticated': 'authenticated',
-      'unauthenticated': 'unauthenticated',
-      'error': 'error'
-    };
-    
-    setAuthStatus(statusMapping[authState.status] || 'idle');
-    
-    // Subscribe to store changes
-    const unsubscribe = useAuthStore.subscribe(
-      (state) => {
-        setUser(state.user);
-        setRoles(state.roles);
-        setIsAuthenticated(state.isAuthenticated);
-        setIsAdmin(state.isAdmin());
-        setHasAdminAccess(state.roles.includes('admin') || state.roles.includes('super_admin'));
-        setAuthStatus(statusMapping[state.status] || 'idle');
-      }
-    );
-    
-    // Subscribe to auth events 
-    const unsubscribeEvents = subscribeToAuthEvents((event) => {
-      // Update atoms based on auth events if needed
-      if (event.type === 'AUTH_ROLES_UPDATED') {
-        const roles = event.payload?.roles || [];
-        setRoles(roles);
-        setIsAdmin(roles.includes('admin') || roles.includes('super_admin'));
-        setHasAdminAccess(roles.includes('admin') || roles.includes('super_admin'));
-      }
-    });
-    
-    return () => {
-      unsubscribe();
-      unsubscribeEvents();
-    };
-  }, []);
+  // Get additional auth functionality from useAuth
+  const auth = useAuth();
   
   return {
+    // Atoms
     user,
-    roles,
     isAuthenticated,
     isAdmin,
     hasAdminAccess,
-    authStatus
+    roles,
+    
+    // Direct auth methods
+    signIn: auth.signIn,
+    logout: auth.signOut,
   };
-}
+};
