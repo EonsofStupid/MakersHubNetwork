@@ -5,10 +5,9 @@ import {
   rolesAtom, 
   isAuthenticatedAtom, 
   isAdminAtom, 
-  hasAdminAccessAtom, 
-  AuthBridge 
-} from '@/auth/bridge';
-import { User } from '@supabase/supabase-js';
+  hasAdminAccessAtom
+} from '@/auth/atoms/auth.atoms';
+import { AuthBridge } from '@/auth/bridge';
 import { useRef, useEffect } from 'react';
 
 /**
