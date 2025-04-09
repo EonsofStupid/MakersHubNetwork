@@ -1,11 +1,9 @@
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { supabase } from "@/integrations/supabase/client";
-import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
+import Login from "@/pages/Login";
 import { useEffect, useState } from "react";
+import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 
@@ -147,69 +145,29 @@ export const LoginSheet = ({ isOpen, onOpenChange }: LoginSheetProps) => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        <Button className="mad-scientist-hover">
-          Login
-        </Button>
-      </SheetTrigger>
       <SheetContent 
         side="right" 
-        className={`w-[400px] ${sheetStyles.container} transform-gpu before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5 before:pointer-events-none`}
+        className={`w-[400px] ${sheetStyles.container} transform-gpu cyber-effect-text before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-secondary/5 before:pointer-events-none`}
         style={{
           clipPath: sheetStyles.transform || "polygon(20px 0, 100% 0, 100% 100%, 0 100%)",
-          transform: "translateX(0) skew(-10deg)",
+          transform: "translateX(0) skew(-5deg)",
           transformOrigin: "100% 50%",
         }}
       >
-        <div className="transform skew-[10deg] origin-top-right">
-          <h2 className={sheetStyles.heading || "text-2xl font-heading text-primary mb-6"}>Welcome Back</h2>
-          <Auth
-            supabaseClient={supabase}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: variables?.effectColor || '#00F0FF',
-                    brandAccent: variables?.effectSecondary || '#FF2D6E',
-                    brandButtonText: 'white',
-                    defaultButtonBackground: 'transparent',
-                    defaultButtonBackgroundHover: 'rgba(0, 240, 255, 0.1)',
-                    defaultButtonBorder: variables?.effectColor || '#00F0FF',
-                    defaultButtonText: variables?.effectColor || '#00F0FF',
-                  },
-                  radii: {
-                    borderRadiusButton: variables?.radiusMd || '0.5rem',
-                    buttonBorderRadius: variables?.radiusMd || '0.5rem',
-                    inputBorderRadius: variables?.radiusMd || '0.5rem',
-                  },
-                },
-              },
-              className: {
-                container: 'auth-container',
-                button: 'auth-button',
-                input: 'auth-input',
-                divider: 'auth-divider',
-                anchor: 'auth-anchor text-primary hover:text-primary/80',
-              },
-              style: {
-                button: {
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                },
-                container: {
-                  animation: 'fade-in 0.3s ease-out'
-                },
-                divider: {
-                  background: 'rgba(0, 240, 255, 0.2)'
-                }
-              },
-            }}
-            theme="dark"
-            providers={["github", "google"]}
-          />
+        <div className="transform skew-[5deg] origin-top-right">
+          <h2 className={cn(sheetStyles.heading, "text-gradient-primary")} style={{
+            background: `linear-gradient(to right, ${variables?.effectColor || '#00F0FF'}, ${variables?.effectSecondary || '#FF2D6E'})`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>Welcome Back</h2>
+          <Login onSuccess={() => onOpenChange(false)} />
         </div>
       </SheetContent>
     </Sheet>
   );
 };
+
+// Helper function to combine class names
+function cn(...classes: (string | undefined)[]) {
+  return classes.filter(Boolean).join(' ');
+}

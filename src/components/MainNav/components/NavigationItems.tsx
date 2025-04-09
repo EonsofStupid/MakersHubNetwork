@@ -43,7 +43,7 @@ export const NavigationItems = () => {
             className={cn(
               styles.navItem,
               isActive && styles.navItemActive,
-              "group"
+              "group cyber-text relative overflow-hidden"
             )}
           >
             {item.name}
@@ -61,11 +61,14 @@ export const NavigationItems = () => {
               />
             )}
             
-            {/* Hover effect */}
-            <span className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-md" />
+            {/* Enhanced cyberpunk hover effect */}
+            <span className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-md" />
             
-            {/* Bottom border on hover */}
-            <span className="absolute bottom-0 left-0 w-full h-[1px] bg-primary/30 scale-x-0 group-hover:scale-x-100 transition-transform origin-center" />
+            {/* Bottom border on hover with glow */}
+            <span className="absolute bottom-0 left-0 w-full h-[1px] bg-primary/50 scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-300 shadow-glow" />
+            
+            {/* Glitch effect on hover */}
+            <span className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 group-hover:animate-pulse-slow pointer-events-none" />
           </Link>
         );
       })}
