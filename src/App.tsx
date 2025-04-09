@@ -9,6 +9,8 @@ import { initializeAuthBridge } from "@/auth/bridge";
 import { initializeLoggingBridge } from "@/logging/bridge";
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { AppInitializer } from "@/components/AppInitializer";
+import { AuthProvider } from "@/auth/components/AuthProvider";
 
 // Import pages
 import Index from "./pages/Index";
@@ -83,17 +85,21 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
         <ThemeInitializer defaultTheme="Impulsivity">
-          {/* MainNav is now always visible with all animations restored */}
-          <MainNav />
-          <div className="pt-16">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/admin/*" element={<Admin />} />
-            </Routes>
-          </div>
-          <Footer />
-          <Toaster />
+          <AuthProvider>
+            <AppInitializer>
+              {/* MainNav is now always visible with all animations restored */}
+              <MainNav />
+              <div className="pt-16">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/admin/*" element={<Admin />} />
+                </Routes>
+              </div>
+              <Footer />
+              <Toaster />
+            </AppInitializer>
+          </AuthProvider>
         </ThemeInitializer>
       </LoggingProvider>
     </ThemeProvider>
