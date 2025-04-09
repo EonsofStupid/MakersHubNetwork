@@ -1,17 +1,19 @@
 
-import { createContext } from 'react';
+import React, { createContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { AuthStatus } from '../store/auth.store';
 
-export interface AuthContextState {
+interface AuthContextValue {
   user: User | null;
   session: Session | null;
   status: AuthStatus;
 }
 
-// Default context value
-export const AuthContext = createContext<AuthContextState>({
+// Create the context with default values
+export const AuthContext = createContext<AuthContextValue>({
   user: null,
   session: null,
-  status: 'idle',
+  status: 'idle'
 });
+
+// No provider implementation here - the provider is implemented in AuthProvider.tsx

@@ -20,6 +20,11 @@ interface AuthState {
   hasRole: (role: UserRole) => boolean;
   isAdmin: () => boolean;
   setSession: (session: Session | null) => void;
+  setUser: (user: User | null) => void;
+  setRoles: (roles: UserRole[]) => void;
+  setError: (error: string | null) => void;
+  setLoading: (isLoading: boolean) => void;
+  setInitialized: (initialized: boolean) => void;
   initialize: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -41,6 +46,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAdmin: () => {
     const roles = get().roles;
     return roles.includes("admin") || roles.includes("super_admin");
+  },
+
+  setUser: (user: User | null) => {
+    set({ user });
+  },
+
+  setRoles: (roles: UserRole[]) => {
+    set({ roles });
+  },
+
+  setError: (error: string | null) => {
+    set({ error });
+  },
+
+  setLoading: (isLoading: boolean) => {
+    set({ isLoading });
+  },
+
+  setInitialized: (initialized: boolean) => {
+    set({ initialized });
   },
   
   setSession: (session: Session | null) => {

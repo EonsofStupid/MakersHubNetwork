@@ -22,8 +22,6 @@ export function useAuth() {
     status,
     isLoading,
     error,
-    hasRole,
-    isAdmin,
     initialized,
   } = useAuthStore(state => ({
     user: state.user,
@@ -32,10 +30,11 @@ export function useAuth() {
     status: state.status,
     isLoading: state.isLoading,
     error: state.error,
-    hasRole: state.hasRole,
-    isAdmin: state.isAdmin,
     initialized: state.initialized,
   }));
+  
+  const hasRole = useAuthStore(state => state.hasRole);
+  const isAdmin = useAuthStore(state => state.isAdmin);
   
   // Auto-initialize auth if needed - with guard against infinite loops
   useEffect(() => {
@@ -62,7 +61,7 @@ export function useAuth() {
       
       return () => clearTimeout(timeoutId);
     }
-  }, [status, initialized]); // We deliberately omit initialize and logger
+  }, [status, initialized, logger]); // We deliberately omit initialize
   
   // Derived state
   const isSuperAdmin = roles.includes('super_admin');
