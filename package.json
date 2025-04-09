@@ -73,6 +73,7 @@
     "recharts": "^2.12.7",
     "rxjs": "^7.8.2",
     "sonner": "^1.5.0",
+    "styled-components": "^6.1.17",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "unplugin-auto-import": "^19.0.0",
