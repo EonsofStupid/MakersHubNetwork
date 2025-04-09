@@ -178,28 +178,25 @@ export function initializeAuthBridge(): void {
   }
   
   // Subscribe to auth store changes to broadcast events
-  const unsubscribe = useAuthStore.subscribe(
-    (state) => ({ user: state.user, status: state.status }),
-    (current, prev) => {
-      // If user changed
-      if (current.user !== prev.user) {
-        if (current.user) {
-          publishAuthEvent({
-            type: 'AUTH_USER_UPDATED',
-            payload: { user: current.user }
-          });
-        }
-      }
-      
-      // If status changed
-      if (current.status !== prev.status) {
-        publishAuthEvent({
-          type: 'AUTH_STATE_CHANGED',
-          payload: { status: current.status }
-        });
-      }
+  // Fix: Update the subscribe call to match the current Zustand API
+  // Only pass one callback function that receives the new state
+  const unsubscribe = useAuthStore.subscribe((state) => {
+    const { user, status } = state;
+    
+    // If user exists, publish user updated event
+    if (user) {
+      publishAuthEvent({
+        type: 'AUTH_USER_UPDATED',
+        payload: { user }
+      });
     }
-  );
+    
+    // If status changed, publish state changed event
+    publishAuthEvent({
+      type: 'AUTH_STATE_CHANGED',
+      payload: { status }
+    });
+  });
   
   // Clean up on window unload
   window.addEventListener('beforeunload', unsubscribe);
