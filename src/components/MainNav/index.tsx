@@ -5,9 +5,8 @@ import { Logo } from "./components/Logo";
 import { NavigationItems } from "./components/NavigationItems";
 import { SearchButton } from "./components/SearchButton";
 import { AuthSection } from "./components/AuthSection";
-import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Link } from "react-router-dom";
-import { Shield, Wrench, Settings } from "lucide-react";
+import { Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { useLogger } from "@/hooks/use-logger";
@@ -16,7 +15,6 @@ import { LogCategory } from "@/logging";
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { hasAdminAccess } = useAdminAccess();
   const { componentStyles, animations, variables, isLoaded: themeIsLoaded } = useSiteTheme();
   const logger = useLogger("MainNav", LogCategory.UI);
   const dataStreamRef = useRef<HTMLDivElement>(null);
@@ -93,6 +91,7 @@ export function MainNav() {
         "mainnav-container",
         "mainnav-header",
         "mainnav-gradient",
+        "fixed top-0 left-0 right-0 w-full z-50",
         isLoaded && (styles.container?.animated || "animate-morph-header"),
         isScrolled && "mainnav-scrolled transform-gpu"
       )}
@@ -125,28 +124,26 @@ export function MainNav() {
         />
       </div>
       
-      {/* Main navigation content - properly centered */}
-      <div className="container mx-auto flex items-center justify-between h-16 px-4 relative z-10">
+      {/* Main navigation content - now full width with padding */}
+      <div className="w-full flex items-center justify-between h-16 px-4 relative z-10">
         <div className="flex items-center justify-between w-full">
           <Logo />
           <NavigationItems />
           <div className="flex items-center gap-2">
             <SearchButton />
             
-            {/* Admin access button with wrench icon */}
-            {hasAdminAccess && (
-              <Link to="/admin">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-1 group text-primary hover:text-white hover:bg-primary/30 border-primary/40 relative overflow-hidden"
-                >
-                  <Wrench className="h-4 w-4 group-hover:animate-pulse" />
-                  <span>Admin</span>
-                  <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-                </Button>
-              </Link>
-            )}
+            {/* Admin access button with wrench icon - always visible now */}
+            <Link to="/admin">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-1 group text-primary hover:text-white hover:bg-primary/30 border-primary/40 relative overflow-hidden"
+              >
+                <Wrench className="h-4 w-4 group-hover:animate-pulse" />
+                <span>Admin</span>
+                <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+              </Button>
+            </Link>
             
             <AuthSection />
           </div>

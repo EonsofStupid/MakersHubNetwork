@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeContext } from '@/types/theme';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { themeServiceBreaker } from '@/utils/circuitBreaker';
 
 // Create a logger instance for the theme service
 const logger = getLogger();
@@ -78,33 +79,60 @@ interface GetThemeOptions {
 }
 
 /**
- * Get a theme from the database
+ * Get a theme from the database with circuit breaker protection
  */
 export async function getTheme(options: GetThemeOptions = { isDefault: true }): Promise<{ theme: Theme, isFallback: boolean }> {
-  try {
-    logger.info("Fetching theme from service", {
-      category: LogCategory.DATABASE,
-      details: options,
-      source: 'themeService'
-    });
-    
-    const { id, name, isDefault = true, context = 'site' } = options;
-    
-    // Use edge function to get theme
-    const { data, error } = await supabase.functions.invoke('theme-service', {
-      body: { 
-        operation: 'get-theme', 
-        themeId: id,
-        themeName: name,
-        isDefault,
-        context
-      }
-    });
-
-    if (error) {
-      logger.error("Error fetching theme from service", { 
+  return themeServiceBreaker.execute(
+    // Try to get the theme from the database
+    async () => {
+      logger.info("Fetching theme from service", {
         category: LogCategory.DATABASE,
-        details: { error, options },
+        details: options,
+        source: 'themeService'
+      });
+      
+      const { id, name, isDefault = true, context = 'site' } = options;
+      
+      // Use edge function to get theme
+      const { data, error } = await supabase.functions.invoke('theme-service', {
+        body: { 
+          operation: 'get-theme', 
+          themeId: id,
+          themeName: name,
+          isDefault,
+          context
+        }
+      });
+
+      if (error) {
+        logger.error("Error fetching theme from service", { 
+          category: LogCategory.DATABASE,
+          details: { error, options },
+          source: 'themeService'
+        });
+        
+        throw error;
+      }
+      
+      logger.info("Theme set successfully", { 
+        category: LogCategory.DATABASE,
+        details: {
+          themeId: data.theme?.id || 'unknown',
+          isFallback: data.isFallback || false,
+          componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
+        },
+        source: 'themeService'
+      });
+
+      return { 
+        theme: data.theme, 
+        isFallback: data.isFallback || false 
+      };
+    },
+    // Fallback function that returns the local fallback theme
+    () => {
+      logger.warn("Using local fallback theme due to circuit breaker", { 
+        category: LogCategory.DATABASE,
         source: 'themeService'
       });
       
@@ -113,33 +141,5 @@ export async function getTheme(options: GetThemeOptions = { isDefault: true }): 
         isFallback: true 
       };
     }
-    
-    logger.info("Theme set successfully", { 
-      category: LogCategory.DATABASE,
-      details: {
-        themeId: data.theme?.id || 'unknown',
-        isFallback: data.isFallback || false,
-        componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
-      },
-      source: 'themeService'
-    });
-
-    return { 
-      theme: data.theme, 
-      isFallback: data.isFallback || false 
-    };
-    
-  } catch (error) {
-    logger.error("Error fetching theme from service", { 
-      category: LogCategory.DATABASE,
-      details: error,
-      source: 'themeService'
-    });
-    
-    // Return local fallback theme as emergency backup
-    return { 
-      theme: fallbackTheme, 
-      isFallback: true 
-    };
-  }
+  );
 }
