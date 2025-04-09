@@ -9,7 +9,8 @@ export type UserRole =
   | 'maker' 
   | 'builder' 
   | 'moderator'
-  | 'service';
+  | 'service'
+  | 'guest';
 
 // Define auth event types for consistent messaging
 export type AuthEventType = 
