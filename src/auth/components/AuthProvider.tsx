@@ -1,7 +1,6 @@
 
 import React, { ReactNode, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthContext } from '../context/AuthContext';
 import { useLogger } from '@/hooks/use-logger';
@@ -14,7 +13,8 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { user, session, setSession, initialize, initialized, status } = useAuthStore();
+  // Get the store state and methods
+  const { user, session, status, setSession, initialize, initialized } = useAuthStore();
   
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
