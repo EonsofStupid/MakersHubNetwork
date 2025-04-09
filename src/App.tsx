@@ -29,6 +29,7 @@ import "@/admin/styles/cyber-effects.css";
 function App() {
   const location = useLocation();
   const initAttemptedRef = useRef<boolean>(false);
+  const authInitializedRef = useRef<boolean>(false);
   const logger = getLogger();
 
   // Initialize bridges on app mount with guard against infinite loops
@@ -51,9 +52,21 @@ function App() {
       initializeLoggingBridge();
       
       // Initialize auth bridge with slight delay to avoid timing issues
-      setTimeout(() => {
-        initializeAuthBridge();
-      }, 100);
+      // and only if not already initialized
+      if (!authInitializedRef.current) {
+        authInitializedRef.current = true;
+        setTimeout(() => {
+          try {
+            initializeAuthBridge();
+          } catch (error) {
+            logger.error('Auth bridge initialization error', {
+              category: LogCategory.SYSTEM,
+              source: 'App',
+              details: { error }
+            });
+          }
+        }, 100);
+      }
     } catch (error) {
       logger.error('Bridge initialization error', {
         category: LogCategory.SYSTEM,
