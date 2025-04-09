@@ -58,6 +58,13 @@ export function ComponentInspector() {
     setIsVisible(false);
     setComponentId(null);
   };
+  
+  // Handle tab change with proper type casting
+  const handleTabChange = (value: string) => {
+    if (value === 'styles' || value === 'data' || value === 'rules') {
+      setActiveTab(value);
+    }
+  };
 
   // Add global mouse event handlers for dragging
   useEffect(() => {
@@ -113,7 +120,7 @@ export function ComponentInspector() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="w-full">
           <TabsTrigger value="styles" className="flex-1">
             <Paintbrush className="h-4 w-4 mr-1" />
