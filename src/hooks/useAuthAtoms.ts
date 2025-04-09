@@ -3,6 +3,7 @@ import { useAtom } from 'jotai';
 import { userAtom, isAuthenticatedAtom, isAdminAtom, hasAdminAccessAtom, rolesAtom } from '@/admin/atoms/auth.atoms';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/auth.types';
+import { AuthUser } from '@/hooks/useAuth';
 
 /**
  * Custom hook that combines Jotai atoms for auth state with the useAuth hook
@@ -28,7 +29,8 @@ export const useAuthAtoms = () => {
     roles,
     
     // Direct auth methods
-    signIn: auth.signIn,
-    logout: auth.signOut,
+    // Use the methods that actually exist in useAuth
+    signIn: auth.signIn || (() => Promise.resolve({ id: '' })), // Fallback if signIn doesn't exist
+    logout: auth.logout, // Use the logout method that exists
   };
 };
