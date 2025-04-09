@@ -5,6 +5,10 @@ import { LogCategory } from '@/logging';
 import { useCallback, useEffect, useRef, useMemo } from 'react';
 import { errorToObject } from '@/shared/utils/render';
 import CircuitBreaker from '@/utils/CircuitBreaker';
+import { UserRole } from '@/types/auth.types';
+
+// Define utility type for refs that may be initialized later
+type RefInit<T> = React.MutableRefObject<T | undefined>;
 
 // Create stable selectors outside the component to prevent regeneration
 const selectAuthState = (state: ReturnType<typeof useAuthStore.getState>) => ({
@@ -27,9 +31,9 @@ const selectInitialize = (state: ReturnType<typeof useAuthStore.getState>) => st
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
-  const hasRoleRef = useRef<typeof useAuthStore.getState().hasRole | undefined>();
-  const isAdminRef = useRef<(() => boolean) | undefined>();
-  const logoutRef = useRef<typeof useAuthStore.getState().logout | undefined>();
+  const hasRoleRef: RefInit<(role: UserRole | UserRole[]) => boolean> = useRef();
+  const isAdminRef: RefInit<() => boolean> = useRef();
+  const logoutRef: RefInit<() => Promise<void>> = useRef();
   
   // Initialize circuit breaker with a lower threshold
   CircuitBreaker.init('useAuth', 3, 1000);
