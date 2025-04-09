@@ -1,38 +1,25 @@
 
-import React, { useEffect, useRef } from 'react';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import CircuitBreaker from '@/utils/CircuitBreaker';
+import React, { useEffect, useState } from 'react';
+import { getLogger } from '@/logging';
 
 interface AppInitializerProps {
   children: React.ReactNode;
 }
 
+const logger = getLogger('AppInitializer');
+
 export function AppInitializer({ children }: AppInitializerProps) {
-  const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
-  const initializedRef = useRef(false);
-
+  const [initialized, setInitialized] = useState(false);
+  
   useEffect(() => {
-    CircuitBreaker.init('AppInitializer', 5, 1000);
-
-    if (CircuitBreaker.count('AppInitializer')) {
-      logger.warn('Breaking potential infinite loop in AppInitializer');
-      return;
-    }
-
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-
-    try {
-      logger.info('Initializing application');
-      // Add any one-time startup logic here
-      logger.info('Application initialization complete');
-    } catch (error) {
-      logger.error('Error during application initialization', {
-        details: { error: error instanceof Error ? error.message : String(error) },
-      });
-    }
+    // Perform any app initialization here
+    logger.info('Initializing application...');
+    
+    // Mark as initialized
+    setInitialized(true);
+    logger.info('Application initialized successfully');
   }, []);
-
-  return <>{children}</>;
+  
+  // Show children once initialized
+  return <>{initialized ? children : null}</>;
 }

@@ -1,58 +1,31 @@
 
 import { useCallback } from 'react';
-import { getLogger } from '@/logging';
-import { LogCategory, LogOptions, LogLevel } from '@/logging/types';
-import { createLogOptions } from '@/logging/utils/log-helpers';
-import { ReactNode } from 'react';
+import { getLogger, LogCategory, LogLevel } from '@/logging';
 
 /**
- * Hook for logging from React components
+ * Custom hook to create a logger with a consistent name and default category
+ * @param name Logger name (component or feature name)
+ * @param defaultCategory Default category for log messages
+ * @returns Logger object with consistent methods
  */
-export function useLogger(source: string, defaultCategory: LogCategory = LogCategory.UI) {
-  const logger = getLogger(source);
+export function useLogger(name: string, defaultCategory: LogCategory = LogCategory.UI) {
+  const logger = getLogger(name);
   
-  const debug = useCallback((message: string | ReactNode, options?: Partial<Omit<LogOptions, 'category'>>) => {
-    logger.debug(message, createLogOptions(defaultCategory, {
-      ...options,
-      source
-    }));
-  }, [logger, defaultCategory, source]);
+  const debug = useCallback((message: string, meta?: Record<string, any>) => {
+    logger.debug(message, { category: defaultCategory, ...meta });
+  }, [logger, defaultCategory]);
   
-  const info = useCallback((message: string | ReactNode, options?: Partial<Omit<LogOptions, 'category'>>) => {
-    logger.info(message, createLogOptions(defaultCategory, {
-      ...options,
-      source
-    }));
-  }, [logger, defaultCategory, source]);
+  const info = useCallback((message: string, meta?: Record<string, any>) => {
+    logger.info(message, { category: defaultCategory, ...meta });
+  }, [logger, defaultCategory]);
   
-  const warn = useCallback((message: string | ReactNode, options?: Partial<Omit<LogOptions, 'category'>>) => {
-    logger.warn(message, createLogOptions(defaultCategory, {
-      ...options,
-      source
-    }));
-  }, [logger, defaultCategory, source]);
+  const warn = useCallback((message: string, meta?: Record<string, any>) => {
+    logger.warn(message, { category: defaultCategory, ...meta });
+  }, [logger, defaultCategory]);
   
-  const error = useCallback((message: string | ReactNode, options?: Partial<Omit<LogOptions, 'category'>>) => {
-    logger.error(message, createLogOptions(defaultCategory, {
-      ...options,
-      source,
-      error: true
-    }));
-  }, [logger, defaultCategory, source]);
+  const error = useCallback((message: string, meta?: Record<string, any>) => {
+    logger.error(message, { category: defaultCategory, ...meta });
+  }, [logger, defaultCategory]);
   
-  const critical = useCallback((message: string | ReactNode, options?: Partial<Omit<LogOptions, 'category'>>) => {
-    logger.critical(message, createLogOptions(defaultCategory, {
-      ...options,
-      source,
-      error: true
-    }));
-  }, [logger, defaultCategory, source]);
-  
-  return {
-    debug,
-    info,
-    warn,
-    error,
-    critical
-  };
+  return { debug, info, warn, error };
 }

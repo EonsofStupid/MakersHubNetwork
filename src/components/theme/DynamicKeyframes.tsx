@@ -1,82 +1,49 @@
-import React, { useEffect, useRef } from 'react';
-import { useSiteTheme } from './SiteThemeProvider';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { NoHydrationMismatch } from '@/components/util/NoHydrationMismatch';
 
-/**
- * Component that dynamically injects CSS keyframes from the theme
- * Ensures animations are available in the DOM
- */
+import React from 'react';
+import { useSiteTheme } from './SiteThemeProvider';
+import { createGlobalStyle } from 'styled-components';
+
+// Create global styled component for keyframes
+const GlobalKeyframes = createGlobalStyle<{ css: string }>`
+  ${props => props.css}
+`;
+
 export function DynamicKeyframes() {
-  const { animations, isLoaded } = useSiteTheme();
-  const logger = useLogger('DynamicKeyframes', LogCategory.UI);
-  const styleElementRef = useRef<HTMLStyleElement | null>(null);
+  const { animations } = useSiteTheme();
   
-  // Inject keyframes CSS
-  useEffect(() => {
-    if (!isLoaded || !animations) return;
-    
-    try {
-      // Create a style element if it doesn't exist yet
-      if (!styleElementRef.current) {
-        const styleElement = document.createElement('style');
-        styleElement.id = 'dynamic-keyframes';
-        document.head.appendChild(styleElement);
-        styleElementRef.current = styleElement;
-      }
-      
-      // Generate keyframes CSS
-      let keyframesCss = '';
-      
-      Object.entries(animations).forEach(([name, keyframeConfig]) => {
-        if (name && keyframeConfig) {
-          keyframesCss += `@keyframes ${name} {`;
-          
-          Object.entries(keyframeConfig).forEach(([step, properties]) => {
-            keyframesCss += `${step} {`;
-            
-            if (typeof properties === 'object' && properties !== null) {
-              Object.entries(properties).forEach(([prop, value]) => {
-                keyframesCss += `${prop}: ${value};`;
-              });
-            }
-            
-            keyframesCss += `}`;
-          });
-          
-          keyframesCss += `}`;
-        }
-      });
-      
-      // Apply the CSS
-      if (styleElementRef.current) {
-        styleElementRef.current.textContent = keyframesCss;
-      }
-      
-      logger.debug('Applied dynamic keyframes', {
-        details: { 
-          keyframesCount: Object.keys(animations).length 
-        }
-      });
-    } catch (error) {
-      logger.error('Failed to apply dynamic keyframes', {
-        details: { 
-          error: error instanceof Error ? error.message : String(error)
-        }
-      });
-    }
-    
-    // Clean up on unmount
-    return () => {
-      if (styleElementRef.current && styleElementRef.current.parentNode) {
-        styleElementRef.current.parentNode.removeChild(styleElementRef.current);
-        styleElementRef.current = null;
-      }
-    };
-  }, [animations, isLoaded, logger]);
+  // If no animations defined, return null
+  if (!animations || Object.keys(animations).length === 0) {
+    return null;
+  }
   
-  // This component doesn't render anything visible, but we wrap it in NoHydrationMismatch
-  // to prevent hydration issues since it manipulates the DOM directly
-  return <NoHydrationMismatch>{null}</NoHydrationMismatch>;
+  // Convert animation definitions to CSS
+  let css = '';
+  
+  try {
+    // Build keyframes CSS
+    Object.entries(animations).forEach(([name, keyframes]) => {
+      if (!keyframes) return;
+      
+      css += `@keyframes ${name} {\n`;
+      
+      Object.entries(keyframes).forEach(([position, styles]) => {
+        css += `  ${position} {\n`;
+        
+        Object.entries(styles).forEach(([property, value]) => {
+          if (typeof value === 'string' || typeof value === 'number') {
+            css += `    ${property}: ${value};\n`;
+          }
+        });
+        
+        css += '  }\n';
+      });
+      
+      css += '}\n';
+    });
+  } catch (error) {
+    console.error('Error generating dynamic keyframes:', error);
+    return null;
+  }
+  
+  return css ? <GlobalKeyframes css={css} /> : null;
 }

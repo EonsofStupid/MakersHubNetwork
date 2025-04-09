@@ -1,45 +1,51 @@
 
-import React, { Suspense, useEffect, useRef } from 'react';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import React, { useState } from 'react';
 import CircuitBreaker from '@/utils/CircuitBreaker';
-import { getLogger } from '@/logging';
 
-// Lazy load the actual FloatingChat component
-const FloatingChat = React.lazy(() => 
-  import('./FloatingChat').then(module => ({ default: module.FloatingChat }))
-);
+const FloatingChatWrapper: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
 
-function FloatingChatWrapper() {
-  const logger = getLogger('FloatingChatWrapper');
-  const mountedRef = useRef(false);
-  
-  // Use a circuit breaker to prevent excessive renders
-  useEffect(() => {
-    if (mountedRef.current) return;
-    mountedRef.current = true;
-    
-    // Initialize circuit breaker for this component
+  // Initialize circuit breaker
+  React.useEffect(() => {
     CircuitBreaker.init('floating-chat', 5, 1000);
-    
-    return () => {
-      // Reset the circuit breaker on unmount
-      CircuitBreaker.reset('floating-chat');
-    };
   }, []);
-  
-  // Use circuit breaker to detect potential render loops
-  if (CircuitBreaker.isTripped('floating-chat')) {
-    logger.warn('CircuitBreaker detected potential infinite loop in FloatingChatWrapper');
-    return null;
-  }
-  
+
+  const toggleChat = () => {
+    setIsOpen(!isOpen);
+  };
+
   return (
-    <ErrorBoundary fallback={null}>
-      <Suspense fallback={null}>
-        <FloatingChat />
-      </Suspense>
-    </ErrorBoundary>
+    <div className="fixed bottom-4 right-4 z-50">
+      {isOpen ? (
+        <div className="w-80 h-96 bg-card rounded-lg shadow-lg border border-primary/20 flex flex-col">
+          <div className="p-3 border-b border-primary/20 flex justify-between items-center">
+            <h3 className="text-sm font-medium">Chat Support</h3>
+            <button 
+              className="text-muted-foreground hover:text-foreground" 
+              onClick={toggleChat}
+            >
+              Close
+            </button>
+          </div>
+          <div className="flex-grow p-3 overflow-y-auto">
+            <div className="text-center text-muted-foreground text-sm">
+              Chat functionality coming soon
+            </div>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={toggleChat}
+          className="bg-primary text-primary-foreground h-12 w-12 rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+        >
+          <span className="sr-only">Open Chat</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </button>
+      )}
+    </div>
   );
-}
+};
 
 export default FloatingChatWrapper;
