@@ -27,9 +27,9 @@ const selectInitialize = (state: ReturnType<typeof useAuthStore.getState>) => st
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
-  const hasRoleRef = useRef<typeof useAuthStore.getState().hasRole>();
-  const isAdminRef = useRef<() => boolean>();
-  const logoutRef = useRef<typeof useAuthStore.getState().logout>();
+  const hasRoleRef = useRef<typeof useAuthStore.getState().hasRole | undefined>();
+  const isAdminRef = useRef<(() => boolean) | undefined>();
+  const logoutRef = useRef<typeof useAuthStore.getState().logout | undefined>();
   
   // Initialize circuit breaker with a lower threshold
   CircuitBreaker.init('useAuth', 3, 1000);
