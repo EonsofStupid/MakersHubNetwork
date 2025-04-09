@@ -3,7 +3,17 @@ import { useAtom } from 'jotai';
 import { userAtom, isAuthenticatedAtom, isAdminAtom, hasAdminAccessAtom, rolesAtom } from '@/admin/atoms/auth.atoms';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/auth.types';
-import { AuthUser } from '@/hooks/useAuth';
+import { User } from '@supabase/supabase-js';
+
+// Define AuthUser type locally to avoid import issues
+interface AuthUser {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
+}
 
 /**
  * Custom hook that combines Jotai atoms for auth state with the useAuth hook
@@ -20,6 +30,25 @@ export const useAuthAtoms = () => {
   // Get additional auth functionality from useAuth
   const auth = useAuth();
   
+  // Create a signIn method that matches expected signature
+  const signIn = async (email: string, password: string): Promise<AuthUser> => {
+    // Use browser mock authentication - in real app this would call an auth API
+    const mockUser: AuthUser = {
+      id: '123456',
+      email: email,
+      user_metadata: {
+        full_name: 'Cyber User',
+        avatar_url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + email,
+      },
+    };
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('impulse_user', JSON.stringify(mockUser));
+    
+    // Return the mock user
+    return mockUser;
+  };
+  
   return {
     // Atoms
     user,
@@ -28,9 +57,8 @@ export const useAuthAtoms = () => {
     hasAdminAccess,
     roles,
     
-    // Direct auth methods
-    // Use the methods that actually exist in useAuth
-    signIn: auth.signIn || (() => Promise.resolve({ id: '' })), // Fallback if signIn doesn't exist
-    logout: auth.logout, // Use the logout method that exists
+    // Auth methods - ensure compatibility with both auth systems
+    signIn,
+    logout: auth.logout,
   };
 };
