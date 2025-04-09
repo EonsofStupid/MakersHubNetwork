@@ -10,7 +10,8 @@ export type AuthEventType =
   | 'AUTH_STATE_CHANGED'
   | 'AUTH_SESSION_REFRESH'
   | 'AUTH_USER_UPDATED'
-  | 'AUTH_ROLES_UPDATED';
+  | 'AUTH_ROLES_UPDATED'
+  | 'AUTH_PERMISSION_CHANGED';
 
 export interface AuthEvent {
   type: AuthEventType;
@@ -114,6 +115,14 @@ export function initializeAuthBridge(): void {
       if (prevState.roles !== state.roles) {
         publishAuthEvent({
           type: 'AUTH_ROLES_UPDATED',
+          payload: { roles: state.roles }
+        });
+      }
+      
+      // Permissions might have changed
+      if (prevState.roles !== state.roles) {
+        publishAuthEvent({
+          type: 'AUTH_PERMISSION_CHANGED',
           payload: { roles: state.roles }
         });
       }

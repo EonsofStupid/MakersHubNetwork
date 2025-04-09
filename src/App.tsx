@@ -1,9 +1,12 @@
 
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { LoggingProvider } from "@/logging/context/LoggingContext";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
+import { useEffect } from "react";
+import { initializeAuthBridge } from "@/auth/bridge";
+import { initializeLoggingBridge } from "@/logging/bridge";
 
 // Import pages
 import Index from "./pages/Index";
@@ -22,6 +25,14 @@ import "@/logging/styles/logging.css";
 import "@/admin/styles/cyber-effects.css";
 
 function App() {
+  const location = useLocation();
+
+  // Initialize bridges on app mount
+  useEffect(() => {
+    initializeAuthBridge();
+    initializeLoggingBridge();
+  }, []);
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
