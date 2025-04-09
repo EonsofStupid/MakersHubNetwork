@@ -1,7 +1,7 @@
 
 import React, { createContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { AuthStatus } from '../store/auth.store';
+import { AuthStatus } from '../types/auth.types';
 
 interface AuthContextValue {
   user: User | null;
