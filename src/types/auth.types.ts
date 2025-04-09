@@ -1,7 +1,7 @@
 
 import { Database } from "@/integrations/supabase/types"
 
-// Base role type from database
+// Base role type from database, including "viewer" role
 export type UserRole = Database["public"]["Enums"]["user_role"] | "viewer"
 
 // Authentication-specific interfaces

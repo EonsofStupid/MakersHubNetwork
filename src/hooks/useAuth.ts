@@ -26,7 +26,8 @@ export function useAuth() {
     isAdmin: state.isAdmin,
     logout: state.logout,
     initialize: state.initialize,
-    initialized: state.initialized
+    initialized: state.initialized,
+    isAuthenticated: state.status === 'authenticated'
   }));
   
   // Auto-initialize auth if needed - with guard against infinite loops
@@ -54,6 +55,7 @@ export function useAuth() {
   
   // Derived state
   const isSuperAdmin = authState.roles.includes('super_admin');
+  const isAuthenticated = authState.status === 'authenticated';
 
   // Log wrapper for logout to capture info before state is cleared
   const handleLogout = async () => {
@@ -69,6 +71,7 @@ export function useAuth() {
     ...authState,
     isAdmin: authState.isAdmin(),
     isSuperAdmin,
+    isAuthenticated,
     logout: handleLogout
   };
 }

@@ -1,8 +1,8 @@
 
 import { User, Session } from "@supabase/supabase-js";
-import { Database } from "@/integrations/supabase/types";
+import { UserRole as BaseUserRole } from "@/types/auth.types";
 
-export type UserRole = Database["public"]["Enums"]["user_role"];
+export type UserRole = BaseUserRole;
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -14,6 +14,7 @@ export interface AuthState {
   error: string | null;
   status: AuthStatus;
   initialized: boolean;
+  isAuthenticated: boolean;
 }
 
 export interface AuthActions {
