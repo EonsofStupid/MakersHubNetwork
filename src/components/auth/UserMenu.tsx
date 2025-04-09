@@ -3,10 +3,11 @@ import { useState, memo, useCallback, useMemo } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
 import { UserMenuSheet } from "@/components/auth/UserMenuSheet"
-import { useAuthState } from "@/auth/hooks/useAuthState"
+import { useAuthStore } from "@/auth/store/auth.store"
 import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/logging"
 import { errorToObject } from "@/shared/utils/render"
+import { AuthBridge } from "@/auth/bridge"
 
 export const UserMenu = memo(() => {
   const [isSheetOpen, setSheetOpen] = useState(false)
@@ -16,9 +17,10 @@ export const UserMenu = memo(() => {
   const { toast } = useToast()
   const logger = useLogger("UserMenu", LogCategory.AUTH)
   
-  // Get auth data from centralized hook
-  // Important: Using useAuthState to avoid initialization cycles
-  const { user, roles, logout, isAdmin } = useAuthState()
+  // Get auth data from centralized store using selectors for performance
+  const user = useAuthStore(state => state.user)
+  const profile = useAuthStore(state => state.profile)
+  const roles = useAuthStore(state => state.roles)
   
   // Memoize handlers to prevent recreating functions on each render
   const handleOpenSheet = useCallback(() => {
@@ -38,12 +40,17 @@ export const UserMenu = memo(() => {
     setProfileDialogOpen(false)
   }, [])
 
+  // Get isAdmin function from AuthBridge to ensure consistent role checks
+  const isAdmin = useCallback(() => {
+    return AuthBridge.isAdmin()
+  }, [])
+
   // Logout handler - memoized to prevent recreation
   const handleLogout = useCallback(async () => {
     try {
       setIsLoading(true)
       logger.info("User logging out")
-      await logout()
+      await AuthBridge.logout()
       logger.info("User logged out successfully")
       window.location.reload()
     } catch (error) {
@@ -56,13 +63,15 @@ export const UserMenu = memo(() => {
     } finally {
       setIsLoading(false)
     }
-  }, [logout, toast, logger])
+  }, [toast, logger])
 
   // Memoize props to prevent object recreation on each render
   const sheetProps = useMemo(() => ({
     isOpen: isSheetOpen,
     onOpenChange: setSheetOpen,
     userEmail: user?.email,
+    userDisplayName: profile?.display_name || user?.user_metadata?.full_name,
+    userAvatar: profile?.avatar_url || user?.user_metadata?.avatar_url,
     isLoadingLogout: isLoading,
     onShowProfile: handleOpenProfileDialog,
     onLogout: handleLogout,
@@ -70,7 +79,8 @@ export const UserMenu = memo(() => {
     roles: roles
   }), [
     isSheetOpen, 
-    user?.email, 
+    user, 
+    profile,
     isLoading, 
     handleOpenProfileDialog, 
     handleLogout, 
@@ -95,3 +105,5 @@ export const UserMenu = memo(() => {
     </>
   )
 })
+
+UserMenu.displayName = "UserMenu"

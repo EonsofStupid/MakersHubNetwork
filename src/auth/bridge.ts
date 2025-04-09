@@ -2,7 +2,8 @@
 import { useAuthStore } from './store/auth.store';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
-import { User } from '@supabase/supabase-js';
+import { User, Provider } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/auth/types/auth.types';
 import { CircuitBreaker } from '@/utils/circuitBreaker';
 
@@ -14,7 +15,10 @@ export type AuthEventType =
   | 'AUTH_SESSION_REFRESH'
   | 'AUTH_USER_UPDATED'
   | 'AUTH_ROLES_UPDATED'
-  | 'AUTH_PERMISSION_CHANGED';
+  | 'AUTH_PERMISSION_CHANGED'
+  | 'AUTH_SOCIAL_LOGIN_STARTED'
+  | 'AUTH_SOCIAL_LOGIN_SUCCESS'
+  | 'AUTH_SOCIAL_LOGIN_ERROR';
 
 export interface AuthEvent {
   type: AuthEventType;
@@ -102,36 +106,42 @@ export const AuthBridge = {
       details: { email }
     });
     
-    // Create mock user for demo purposes with proper type casting
-    // In a real app, this would call supabase.auth.signInWithPassword
-    const mockUser = {
-      id: '123456',
-      email: email,
-      app_metadata: { provider: 'email' },
-      aud: 'authenticated',
-      created_at: new Date().toISOString(),
-      role: '',
-      user_metadata: {
-        full_name: 'Cyber User',
-        avatar_url: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${email}`,
-      }
-    } as User;
+    // In a real app, use supabase auth
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
     
-    // Save to localStorage for persistence
-    localStorage.setItem('impulse_user', JSON.stringify(mockUser));
+    if (error) {
+      logger.error('AuthBridge: signIn error', {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge',
+        details: { error }
+      });
+      throw error;
+    }
+    
+    if (!data.user || !data.session) {
+      const err = new Error('Authentication failed - no user or session returned');
+      logger.error('AuthBridge: signIn failed', {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge',
+        details: { error: err }
+      });
+      throw err;
+    }
     
     // Update the auth store directly
     const store = useAuthStore.getState();
-    store.setUser(mockUser);
+    store.setUser(data.user);
+    store.setSession(data.session);
     
-    // Assign appropriate roles based on email 
-    // For demo purposes, we'll give super_admin privileges to emails containing 'admin'
-    let roles: UserRole[] = ['viewer'];
+    // Determine roles - for now we'll use any roles in app_metadata
+    // or assign default viewer role if none exist
+    let roles: UserRole[] = ['viewer']; 
     
-    if (email.includes('admin')) {
-      roles = ['viewer', 'admin', 'super_admin'];
-    } else if (email.includes('editor')) {
-      roles = ['viewer', 'editor'];
+    if (data.user.app_metadata?.roles && Array.isArray(data.user.app_metadata.roles)) {
+      roles = [...roles, ...data.user.app_metadata.roles];
     }
     
     store.setRoles(roles);
@@ -139,10 +149,80 @@ export const AuthBridge = {
     // Publish auth event
     publishAuthEvent({
       type: 'AUTH_SIGNED_IN',
-      payload: { user: mockUser, roles }
+      payload: { user: data.user, session: data.session, roles }
     });
     
-    return mockUser;
+    return data.user;
+  },
+  
+  // Social provider login with styled popup
+  signInWithSocialProvider: async (provider: Provider) => {
+    const logger = getLogger();
+    logger.info(`AuthBridge: social sign-in attempt with ${provider}`, {
+      category: LogCategory.AUTH,
+      source: 'auth/bridge'
+    });
+    
+    publishAuthEvent({
+      type: 'AUTH_SOCIAL_LOGIN_STARTED',
+      payload: { provider }
+    });
+    
+    try {
+      // Use Supabase OAuth signin with popup
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          // Using popup mode for the WMPULSE styled experience
+          redirectTo: window.location.origin,
+          queryParams: {
+            prompt: 'select_account'
+          }
+        }
+      });
+      
+      if (error) {
+        logger.error(`AuthBridge: ${provider} sign-in error`, {
+          category: LogCategory.AUTH,
+          source: 'auth/bridge',
+          details: { error }
+        });
+        
+        publishAuthEvent({
+          type: 'AUTH_SOCIAL_LOGIN_ERROR',
+          payload: { provider, error }
+        });
+        
+        throw error;
+      }
+      
+      // Provider auth is async - user will be redirected
+      // But we still return the URL data
+      logger.info(`AuthBridge: ${provider} sign-in redirect initiated`, {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge'
+      });
+      
+      return data;
+    } catch (error) {
+      logger.error(`AuthBridge: ${provider} sign-in failed`, {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge',
+        details: { error }
+      });
+      
+      publishAuthEvent({
+        type: 'AUTH_SOCIAL_LOGIN_ERROR',
+        payload: { provider, error }
+      });
+      
+      throw error;
+    }
+  },
+  
+  // Specifically for Google login
+  signInWithGoogle: async () => {
+    return AuthBridge.signInWithSocialProvider('google');
   },
   
   logout: async () => {
@@ -152,8 +232,17 @@ export const AuthBridge = {
       source: 'auth/bridge'
     });
     
-    // In a real app, this would call supabase.auth.signOut
-    localStorage.removeItem('impulse_user');
+    // In a real app, use supabase auth
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      logger.error('AuthBridge: logout error', {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge',
+        details: { error }
+      });
+      throw error;
+    }
     
     // Update store directly
     await useAuthStore.getState().logout();
@@ -171,6 +260,10 @@ export const AuthBridge = {
   
   getSession: () => {
     return useAuthStore.getState().session;
+  },
+  
+  getProfile: () => {
+    return useAuthStore.getState().profile;
   },
   
   getRoles: () => {
@@ -216,30 +309,72 @@ export function initializeAuthBridge(): void {
     source: 'auth/bridge'
   });
   
-  // Check for stored user on startup
-  const storedUser = localStorage.getItem('impulse_user');
-  if (storedUser) {
-    try {
-      const user = JSON.parse(storedUser) as User;
-      
-      // Update the store with the stored user
-      const store = useAuthStore.getState();
-      store.setUser(user);
-      store.setRoles(['viewer']); // Default role
-      store.setInitialized(true);
-      
-      logger.info('Restored user from local storage', {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge'
-      });
-    } catch (err) {
-      logger.error('Failed to parse stored user', {
+  // Subscribe to supabase auth changes
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    (event, session) => {
+      logger.info('Auth state changed from Supabase', {
         category: LogCategory.AUTH,
         source: 'auth/bridge',
-        details: { err }
+        details: { event }
       });
+      
+      const store = useAuthStore.getState();
+      
+      if (event === 'SIGNED_IN' && session) {
+        store.setSession(session);
+        
+        // Assign role if needed
+        if (store.roles.length === 0) {
+          store.setRoles(['viewer']);
+        }
+        
+        publishAuthEvent({
+          type: 'AUTH_SIGNED_IN',
+          payload: { user: session.user, session }
+        });
+      } else if (event === 'SIGNED_OUT') {
+        store.setUser(null);
+        store.setSession(null);
+        store.setRoles([]);
+        
+        publishAuthEvent({
+          type: 'AUTH_SIGNED_OUT'
+        });
+      } else if (event === 'USER_UPDATED' && session) {
+        store.setUser(session.user);
+        
+        publishAuthEvent({
+          type: 'AUTH_USER_UPDATED',
+          payload: { user: session.user }
+        });
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        store.setSession(session);
+        
+        publishAuthEvent({
+          type: 'AUTH_SESSION_REFRESH',
+          payload: { session }
+        });
+      }
     }
-  }
+  );
+  
+  // Check for stored user on startup
+  const checkForExistingSession = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      // Update the store with the session
+      const store = useAuthStore.getState();
+      store.setSession(data.session);
+      
+      // Load user profile
+      if (data.session.user) {
+        store.loadUserProfile(data.session.user.id);
+      }
+    }
+  };
+  
+  // Use setTimeout to avoid initialization cycles
+  setTimeout(checkForExistingSession, 0);
   
   // Use a timestamp to track the last update we processed
   // This helps prevent event loops
@@ -248,7 +383,6 @@ export function initializeAuthBridge(): void {
   // Subscribe to auth store changes to broadcast events
   const unsubscribe = useAuthStore.subscribe((state) => {
     // Skip if this update is too close to the last one we processed
-    // This helps prevent cascading events or infinite loops
     if (state.lastUpdated <= lastUpdateProcessed) {
       return;
     }
@@ -256,24 +390,21 @@ export function initializeAuthBridge(): void {
     // Update our timestamp
     lastUpdateProcessed = state.lastUpdated;
     
-    // Publish appropriate events based on state changes
-    const { user, status } = state;
-    
-    // If user exists, publish user updated event
-    if (user) {
-      publishAuthEvent({
-        type: 'AUTH_USER_UPDATED',
-        payload: { user }
-      });
-    }
-    
     // Publish state changed event
     publishAuthEvent({
       type: 'AUTH_STATE_CHANGED',
-      payload: { status }
+      payload: { status: state.status }
     });
   });
   
   // Clean up on window unload
-  window.addEventListener('beforeunload', unsubscribe);
+  window.addEventListener('beforeunload', () => {
+    subscription?.unsubscribe();
+    unsubscribe();
+  });
+  
+  logger.info('Auth bridge initialized', {
+    category: LogCategory.AUTH,
+    source: 'auth/bridge'
+  });
 }

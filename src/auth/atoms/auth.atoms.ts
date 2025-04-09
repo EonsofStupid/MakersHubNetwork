@@ -4,7 +4,7 @@ import { User } from '@supabase/supabase-js';
 import { UserRole } from '@/types/auth.types';
 
 // Import the auth store as the single source of truth
-import { useAuthStore } from '../store/auth.store';
+import { useAuthStore, UserProfile } from '../store/auth.store';
 
 /**
  * Create a helper function to create atoms that are synchronized with the store
@@ -20,6 +20,7 @@ function atomWithStoreSync<T>(selector: (state: any) => T) {
 // Core state atoms - all derived from Zustand store
 export const userAtom = atomWithStoreSync((state) => state.user);
 export const sessionAtom = atomWithStoreSync((state) => state.session);
+export const profileAtom = atomWithStoreSync((state) => state.profile);
 export const rolesAtom = atomWithStoreSync((state) => state.roles);
 export const statusAtom = atomWithStoreSync((state) => state.status);
 export const isAuthenticatedAtom = atomWithStoreSync((state) => state.isAuthenticated);
@@ -33,13 +34,17 @@ export const hasAdminAccessAtom = atomWithStoreSync((state) => state.isAdmin());
 
 // UI-specific derived atoms
 export const userNameAtom = atom((get) => {
+  const profile = get(profileAtom);
   const user = get(userAtom);
-  return user?.user_metadata?.full_name || user?.email || 'User';
+  
+  return profile?.display_name || user?.user_metadata?.full_name || user?.email || 'User';
 });
 
 export const userAvatarAtom = atom((get) => {
+  const profile = get(profileAtom);
   const user = get(userAtom);
-  return user?.user_metadata?.avatar_url || null;
+  
+  return profile?.avatar_url || user?.user_metadata?.avatar_url || null;
 });
 
 // For backward compatibility

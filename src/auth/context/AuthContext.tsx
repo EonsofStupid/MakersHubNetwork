@@ -2,11 +2,12 @@
 import React, { createContext, ReactNode, useMemo } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { AuthStatus } from '../types/auth.types';
-import { useAuthStore, selectUser, selectSession, selectStatus } from '../store/auth.store';
+import { useAuthStore, selectUser, selectSession, selectStatus, selectProfile, UserProfile } from '../store/auth.store';
 
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
+  profile: UserProfile | null;
   status: AuthStatus;
 }
 
@@ -14,6 +15,7 @@ interface AuthContextValue {
 export const AuthContext = createContext<AuthContextValue>({
   user: null,
   session: null,
+  profile: null,
   status: 'idle'
 });
 
@@ -23,13 +25,15 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
   const user = useAuthStore(selectUser);
   const session = useAuthStore(selectSession);
   const status = useAuthStore(selectStatus);
+  const profile = useAuthStore(selectProfile);
   
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
     user,
     session,
+    profile,
     status
-  }), [user, session, status]);
+  }), [user, session, profile, status]);
   
   return (
     <AuthContext.Provider value={contextValue}>
