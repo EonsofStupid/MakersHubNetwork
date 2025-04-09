@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,14 +45,7 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
     try {
       setIsLoading(true);
       
-      // Use the auth context for login
       await signIn(email, password);
-      
-      // Notify system of login through bridge
-      publishAuthEvent({
-        type: 'AUTH_SIGNED_IN',
-        payload: { email }
-      });
       
       toast({
         title: "Login successful",

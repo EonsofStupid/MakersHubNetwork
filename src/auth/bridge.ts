@@ -2,6 +2,9 @@
 import { useAuthStore } from './store/auth.store';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
+import { atom } from 'jotai';
+import { UserRole } from '@/types/auth.types';
+import { User } from '@supabase/supabase-js';
 
 // Define the event types
 export type AuthEventType = 
@@ -22,6 +25,14 @@ type AuthEventHandler = (event: AuthEvent) => void;
 
 // Create a simple event system
 const eventHandlers: AuthEventHandler[] = [];
+
+// Define central Jotai atoms for auth state
+// These will be the single source of truth for UI components
+export const userAtom = atom<User | null>(null);
+export const rolesAtom = atom<UserRole[]>([]);
+export const isAuthenticatedAtom = atom<boolean>(false);
+export const isAdminAtom = atom<boolean>(false);
+export const hasAdminAccessAtom = atom<boolean>(false);
 
 /**
  * Subscribe to auth events
@@ -65,7 +76,73 @@ export function publishAuthEvent(event: AuthEvent): void {
 }
 
 /**
+ * Export auth methods that will be available through AuthBridge
+ * This provides a centralized API for authentication
+ */
+export const AuthBridge = {
+  // Authentication methods
+  signIn: async (email: string, password: string) => {
+    const logger = getLogger();
+    logger.info('AuthBridge: signIn attempt', {
+      category: LogCategory.AUTH,
+      source: 'auth/bridge',
+      details: { email }
+    });
+    
+    // Create mock user for demo purposes
+    // In a real app, this would call supabase.auth.signInWithPassword
+    const mockUser = {
+      id: '123456',
+      email: email,
+      user_metadata: {
+        full_name: 'Cyber User',
+        avatar_url: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${email}`,
+      }
+    };
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('impulse_user', JSON.stringify(mockUser));
+    
+    // Publish auth event
+    publishAuthEvent({
+      type: 'AUTH_SIGNED_IN',
+      payload: { user: mockUser }
+    });
+    
+    return mockUser;
+  },
+  
+  logout: async () => {
+    const logger = getLogger();
+    logger.info('AuthBridge: logout', {
+      category: LogCategory.AUTH,
+      source: 'auth/bridge'
+    });
+    
+    // In a real app, this would call supabase.auth.signOut
+    localStorage.removeItem('impulse_user');
+    
+    // Publish auth event
+    publishAuthEvent({
+      type: 'AUTH_SIGNED_OUT'
+    });
+  },
+  
+  // Role checking
+  hasRole: (role: UserRole) => {
+    const roles = useAuthStore.getState().roles;
+    return roles.includes(role);
+  },
+  
+  isAdmin: () => {
+    const roles = useAuthStore.getState().roles;
+    return roles.includes('admin') || roles.includes('super_admin');
+  }
+};
+
+/**
  * Initialize auth bridge by subscribing to auth store changes
+ * and syncing with Jotai atoms
  */
 export function initializeAuthBridge(): void {
   const logger = getLogger();
@@ -74,57 +151,45 @@ export function initializeAuthBridge(): void {
     source: 'auth/bridge'
   });
   
+  // Initialize atoms from store on startup
+  const syncAtomsFromStore = () => {
+    const { user, roles, status } = useAuthStore.getState();
+    const isAuthenticated = status === 'authenticated';
+    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+    const hasAdminAccess = isAdmin;
+    
+    // Use an atomic update to prevent re-renders
+    const atomUpdatePromises = [
+      Promise.resolve(userAtom.write(undefined as any, user)),
+      Promise.resolve(rolesAtom.write(undefined as any, roles)),
+      Promise.resolve(isAuthenticatedAtom.write(undefined as any, isAuthenticated)),
+      Promise.resolve(isAdminAtom.write(undefined as any, isAdmin)),
+      Promise.resolve(hasAdminAccessAtom.write(undefined as any, hasAdminAccess))
+    ];
+    
+    return Promise.all(atomUpdatePromises);
+  };
+  
+  // Initial sync
+  syncAtomsFromStore().catch(err => {
+    logger.error('Failed to sync atoms from store', {
+      category: LogCategory.AUTH,
+      source: 'auth/bridge',
+      details: { err }
+    });
+  });
+  
   // Setup auth state listener
   const unsubscribe = useAuthStore.subscribe(
-    (state, prevState) => {
-      // User signed in
-      if (!prevState.user && state.user) {
-        publishAuthEvent({
-          type: 'AUTH_SIGNED_IN',
-          payload: { user: state.user }
-        });
-      }
-      
-      // User signed out
-      if (prevState.user && !state.user) {
-        publishAuthEvent({
-          type: 'AUTH_SIGNED_OUT'
-        });
-      }
-      
-      // Session changed
-      if (prevState.session !== state.session) {
-        publishAuthEvent({
-          type: 'AUTH_SESSION_REFRESH',
-          payload: { session: state.session }
-        });
-      }
-      
-      // User updated
-      if (prevState.user !== state.user && prevState.user && state.user) {
-        publishAuthEvent({
-          type: 'AUTH_USER_UPDATED',
-          payload: { 
-            previous: prevState.user,
-            current: state.user
-          }
-        });
-      }
-      
-      // Roles updated
-      if (prevState.roles !== state.roles) {
-        publishAuthEvent({
-          type: 'AUTH_ROLES_UPDATED',
-          payload: { roles: state.roles }
-        });
-      }
-      
-      // Permissions might have changed
-      if (prevState.roles !== state.roles) {
-        publishAuthEvent({
-          type: 'AUTH_PERMISSION_CHANGED',
-          payload: { roles: state.roles }
-        });
+    state => ({ user: state.user, roles: state.roles, status: state.status }),
+    async (current, prev) => {
+      // Only update atoms if actual changes occurred
+      if (
+        current.user !== prev.user || 
+        current.roles !== prev.roles || 
+        current.status !== prev.status
+      ) {
+        await syncAtomsFromStore();
       }
     }
   );

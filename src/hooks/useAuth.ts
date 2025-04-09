@@ -1,8 +1,9 @@
 
+import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
+import { AuthBridge } from '@/auth/bridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useEffect, useRef } from 'react';
 import { errorToObject } from '@/shared/utils/render';
 
 /**
@@ -15,7 +16,19 @@ export function useAuth() {
   
   // Extract only what we need from the store to prevent unnecessary re-renders
   // Use selector function pattern for better performance
-  const authState = useAuthStore(state => ({
+  const {
+    user,
+    session,
+    roles,
+    status,
+    isLoading,
+    error,
+    hasRole,
+    isAdmin,
+    logout,
+    initialize,
+    initialized,
+  } = useAuthStore(state => ({
     user: state.user,
     session: state.session,
     roles: state.roles,
@@ -27,7 +40,6 @@ export function useAuth() {
     logout: state.logout,
     initialize: state.initialize,
     initialized: state.initialized,
-    isAuthenticated: state.status === 'authenticated'
   }));
   
   // Auto-initialize auth if needed - with guard against infinite loops
@@ -38,40 +50,49 @@ export function useAuth() {
     }
     
     // Only initialize if needed
-    if (!authState.initialized && authState.status === 'idle') {
+    if (!initialized && status === 'idle') {
       logger.info('Auto-initializing auth from useAuth hook');
       initAttemptedRef.current = true;
       
       // Use setTimeout to break potential circular dependencies
       const timeoutId = setTimeout(() => {
-        authState.initialize().catch(err => {
+        initialize().catch(err => {
           logger.error('Failed to initialize auth', { details: errorToObject(err) });
         });
       }, 50);
       
       return () => clearTimeout(timeoutId);
     }
-  }, [authState.status, authState.initialized]); // We deliberately omit initialize and logger
+  }, [status, initialized]); // We deliberately omit initialize and logger
   
   // Derived state
-  const isSuperAdmin = authState.roles.includes('super_admin');
-  const isAuthenticated = authState.status === 'authenticated';
+  const isSuperAdmin = roles.includes('super_admin');
+  const isAuthenticated = status === 'authenticated';
 
   // Log wrapper for logout to capture info before state is cleared
   const handleLogout = async () => {
-    if (authState.user) {
+    if (user) {
       logger.info('User logging out', { 
-        details: { userId: authState.user.id }
+        details: { userId: user.id }
       });
     }
-    return authState.logout();
+    
+    // Use AuthBridge for logout
+    return AuthBridge.logout();
   };
 
   return {
-    ...authState,
-    isAdmin: authState.isAdmin(),
+    user,
+    session,
+    roles,
+    status,
+    isLoading,
+    error,
+    hasRole,
+    isAdmin: isAdmin(),
     isSuperAdmin,
     isAuthenticated,
-    logout: handleLogout
+    logout: handleLogout,
+    initialized
   };
 }
