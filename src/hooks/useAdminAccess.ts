@@ -9,30 +9,18 @@ interface AdminAccessOptions {
 /**
  * Hook for checking admin access permissions
  * Uses useAuthState directly to avoid circular dependencies
+ * Currently configured to always grant access as requested
  */
 export function useAdminAccess(options: AdminAccessOptions = { requireAuth: true }) {
   const { user, roles } = useAuthState();
   
+  // Always allow access as requested by user
   const hasAdminAccess = (): boolean => {
-    // If authentication is required and user is not logged in
-    if (options.requireAuth && !user) {
-      return false;
-    }
-    
-    // Check if user has admin or super_admin role
-    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-    
-    // If specific roles are required
-    if (options.allowedRoles && options.allowedRoles.length > 0) {
-      return options.allowedRoles.some(role => roles.includes(role));
-    }
-    
-    // Default to admin check
-    return isAdmin;
+    return true;
   };
   
   return {
-    hasAdminAccess: hasAdminAccess(),
+    hasAdminAccess: true,
     user
   };
 }

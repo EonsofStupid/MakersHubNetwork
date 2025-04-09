@@ -83,13 +83,6 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Enforced component initialization order to prevent infinite loops:
-  // 1. ThemeProvider (shadcn)
-  // 2. LoggingProvider
-  // 3. ThemeInitializer (site theme)
-  // 4. AuthProvider
-  // 5. AppInitializer
-  // 6. AdminProvider
   return (
     <ThemeProvider defaultTheme="dark" storageKey="makers-impulse-theme">
       <LoggingProvider>
@@ -97,12 +90,15 @@ function App() {
           <AuthProvider>
             <AppInitializer>
               <AdminProvider>
-                {!isAdminRoute && appReady && <MainNav />}
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/admin/*" element={<Admin />} />
-                </Routes>
+                {/* MainNav is now always visible */}
+                <MainNav />
+                <div className="pt-16">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/admin/*" element={<Admin />} />
+                  </Routes>
+                </div>
                 {!isAdminRoute && appReady && <Footer />}
                 <Toaster />
                 <LoggingComponents />
