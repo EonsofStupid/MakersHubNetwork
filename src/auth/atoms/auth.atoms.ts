@@ -4,6 +4,7 @@ import { User } from '@supabase/supabase-js';
 import { UserRole } from '@/types/auth.types';
 
 // Define central Jotai atoms for auth state
+// These are the single source of truth for all auth state in the app
 export const userAtom = atom<User | null>(null);
 export const rolesAtom = atom<UserRole[]>([]);
 export const isAuthenticatedAtom = atom<boolean>(false);
