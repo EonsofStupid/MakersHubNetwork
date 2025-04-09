@@ -11,6 +11,8 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { AppInitializer } from "@/components/AppInitializer";
 import { AuthProvider } from "@/auth/components/AuthProvider";
+import { DebugOverlay } from '@/admin/components/debug/DebugOverlay';
+import { ComponentInspector } from '@/admin/components/debug/ComponentInspector';
 
 // Import pages
 import Index from "./pages/Index";
@@ -98,6 +100,10 @@ function App() {
               </div>
               <Footer />
               <Toaster />
+              
+              {/* Add debug overlay and component inspector */}
+              <DebugOverlay />
+              <ComponentInspector />
             </AppInitializer>
           </AuthProvider>
         </ThemeInitializer>

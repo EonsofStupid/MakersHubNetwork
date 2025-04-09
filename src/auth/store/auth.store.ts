@@ -17,8 +17,9 @@ interface AuthState {
   error: string | null;
   initialized: boolean;
   isAuthenticated: boolean;
-  hasRole: (role: UserRole) => boolean;
+  hasRole: (role: UserRole | UserRole[]) => boolean;
   isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
   setSession: (session: Session | null) => void;
   setUser: (user: User | null) => void;
   setRoles: (roles: UserRole[]) => void;
@@ -39,13 +40,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialized: false,
   isAuthenticated: false,
   
-  hasRole: (role: UserRole) => {
-    return get().roles.includes(role);
+  hasRole: (role: UserRole | UserRole[]) => {
+    const userRoles = get().roles;
+    
+    if (Array.isArray(role)) {
+      return role.some(r => userRoles.includes(r));
+    }
+    
+    return userRoles.includes(role);
   },
   
   isAdmin: () => {
     const roles = get().roles;
     return roles.includes("admin") || roles.includes("super_admin");
+  },
+  
+  isSuperAdmin: () => {
+    return get().roles.includes("super_admin");
   },
 
   setUser: (user: User | null) => {
