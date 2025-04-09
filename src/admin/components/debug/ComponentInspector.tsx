@@ -113,7 +113,7 @@ export function ComponentInspector() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={(value: 'styles' | 'data' | 'rules') => setActiveTab(value)}>
         <TabsList className="w-full">
           <TabsTrigger value="styles" className="flex-1">
             <Paintbrush className="h-4 w-4 mr-1" />

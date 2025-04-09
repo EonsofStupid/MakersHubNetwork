@@ -1,8 +1,9 @@
+
 import { useAuthStore } from './store/auth.store';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { User } from '@supabase/supabase-js';
-import { UserRole } from '@/types/auth.types';
+import { UserRole } from '@/auth/types/auth.types';
 
 // Define the event types
 export type AuthEventType = 
@@ -142,7 +143,7 @@ export const AuthBridge = {
   },
   
   // Role checking
-  hasRole: (role: UserRole) => {
+  hasRole: (role: UserRole | UserRole[]) => {
     return useAuthStore.getState().hasRole(role);
   },
   
