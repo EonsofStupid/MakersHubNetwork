@@ -1,28 +1,33 @@
-import { Database } from "@/integrations/supabase/types"
 
-// Base role type from database
-export type UserRole = Database["public"]["Enums"]["user_role"]
+// Define user roles that are recognized by the system
+export type UserRole = 
+  | 'user' 
+  | 'admin' 
+  | 'super_admin' 
+  | 'editor' 
+  | 'viewer' 
+  | 'maker' 
+  | 'builder' 
+  | 'moderator'
+  | 'service';
 
-// Authentication-specific interfaces
-export interface AuthUser {
-  id: string
-  display_name: string | null
-  avatar_url: string | null
-  primary_role_id: string | null
-  user_roles: Array<{
-    id: string
-    role: UserRole
-  }>
+// Define auth event types for consistent messaging
+export type AuthEventType = 
+  | 'SIGNED_IN'
+  | 'SIGNED_OUT'
+  | 'USER_UPDATED'
+  | 'PASSWORD_RECOVERY'
+  | 'TOKEN_REFRESHED'
+  | 'INITIALIZED'
+  | 'SESSION_UPDATED'
+  | 'AUTH_SIGNED_IN' // Legacy event type
+  | 'AUTH_SIGNED_OUT'; // Legacy event type
+
+// Define the structure of auth events
+export interface AuthEvent {
+  type: AuthEventType;
+  payload?: any;
 }
 
-export interface AdminAccess {
-  isAdmin: boolean
-  hasAdminAccess: boolean
-}
-
-export interface WithAdminAccess {
-  hasAdminAccess: boolean
-}
-
-// Re-export for backward compatibility
-export type { UserRole as AuthUserRole }
+// Define the structure of auth event listener
+export type AuthEventListener = (event: AuthEvent) => void;

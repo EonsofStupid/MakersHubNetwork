@@ -20,7 +20,7 @@ export function AuthGuard({
   adminRequired = false,
   fallback 
 }: AuthGuardProps) {
-  const { isAuthenticated, isInitializing } = useAuthState();
+  const { isAuthenticated, isInitializing, roles } = useAuthState();
   
   // For public routes, always render children regardless of auth state
   if (publicRoute) {
@@ -33,6 +33,19 @@ export function AuthGuard({
     return fallback || (
       <div className="w-full h-40 flex items-center justify-center">
         <CircularProgress size="md" />
+      </div>
+    );
+  }
+  
+  // For admin-required routes, check both authentication and admin role
+  if (adminRequired && (!isAuthenticated || !roles.includes('admin'))) {
+    logger.debug('AuthGuard blocking admin route due to missing admin role');
+    return fallback || (
+      <div className="p-4">
+        <h2 className="text-lg font-medium">Admin Access Required</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Please sign in with an admin account to view this content.
+        </p>
       </div>
     );
   }

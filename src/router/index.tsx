@@ -10,7 +10,11 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { AuthGuard } from '@/components/AuthGuard';
 
-export function AppRouter() {
+interface AppRouterProps {
+  show404?: boolean;
+}
+
+export function AppRouter({ show404 = true }: AppRouterProps) {
   // Use the route circuit breaker to reset circuit breakers on route changes
   useRouteCircuitBreaker();
   const logger = useLogger('AppRouter', LogCategory.SYSTEM);
