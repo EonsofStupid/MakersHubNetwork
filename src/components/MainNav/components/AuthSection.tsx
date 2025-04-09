@@ -6,8 +6,8 @@ import { useAtom } from "jotai";
 import { showAdminButtonAtom, showAdminWrenchAtom } from "@/admin/atoms/ui.atoms";
 import { Wrench, User } from "lucide-react";
 import { useAuthAtoms } from "@/hooks/useAuthAtoms";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LoginSheet } from "../components/LoginSheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LoginSheet } from "./LoginSheet";
 import { useState } from "react";
 
 // AuthSection with Jotai for reactivity
@@ -42,6 +42,7 @@ export const AuthSection = () => {
             className="relative ml-2 text-primary hover:text-white hover:bg-primary/20"
           >
             <Wrench className="h-4 w-4" />
+            <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full animate-pulse"></span>
           </Button>
         </Link>
       )}
@@ -52,6 +53,7 @@ export const AuthSection = () => {
           className="h-8 w-8 border-2 border-primary/50 hover:border-primary transition-all duration-300 cursor-pointer site-glow-hover cyber-effect-text"
           onClick={() => setIsLoginOpen(true)}
         >
+          <AvatarImage src={user?.user_metadata?.avatar_url} />
           <AvatarFallback className="bg-primary/20 text-primary">
             {user?.email?.charAt(0).toUpperCase() || 'U'}
           </AvatarFallback>
