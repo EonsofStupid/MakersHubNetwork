@@ -1,11 +1,13 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAtom } from "jotai";
+import { isSearchingAtom } from "@/admin/atoms/ui.atoms";
 
 export const SearchButton = () => {
-  const [isSearching, setIsSearching] = useState(false);
+  const [isSearching, setIsSearching] = useAtom(isSearchingAtom);
   
   const handleSearchClick = () => {
     // Add glitch effect when clicked

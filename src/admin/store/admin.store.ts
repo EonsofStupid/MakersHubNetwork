@@ -1,133 +1,121 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { createAdminPersistMiddleware } from '@/admin/middleware/persist.middleware';
-import { AdminPermissionValue } from '@/admin/types/permissions';
-import { ROLE_PERMISSIONS } from '@/admin/constants/permissions';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { PermissionValue, PERMISSIONS } from '@/auth/permissions';
+import { publishAuthEvent } from '@/auth/bridge';
+import { mapRolesToPermissions } from '@/auth/rbac/roles';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 
 interface AdminState {
-  // UI state
-  sidebarExpanded: boolean;
-  dashboardCollapsed: boolean;
-  isDarkMode: boolean;
-  
-  // Dashboard items
-  dashboardItems: string[];
-  
-  // Preferences
-  defaultView: 'cards' | 'list' | 'table';
-  
-  // Permissions
-  permissions: AdminPermissionValue[];
+  permissions: PermissionValue[];
   isLoadingPermissions: boolean;
+  isInitialized: boolean;
+  sidebarExpanded: boolean;
 }
 
 interface AdminActions {
-  // UI actions
-  setSidebarExpanded: (expanded: boolean) => void;
-  setDashboardCollapsed: (collapsed: boolean) => void;
-  toggleSidebar: () => void;
-  toggleDarkMode: () => void;
-  
-  // Preferences actions
-  setDefaultView: (view: 'cards' | 'list' | 'table') => void;
-  setDashboardItems: (items: string[]) => void;
-  
-  // Permissions actions
-  setPermissions: (permissions: AdminPermissionValue[]) => void;
+  setPermissions: (permissions: PermissionValue[]) => void;
   loadPermissions: () => Promise<void>;
-  
-  // Misc actions
+  toggleSidebar: () => void;
   savePreferences: () => Promise<void>;
 }
 
-export type AdminStore = AdminState & AdminActions;
+type AdminStore = AdminState & AdminActions;
 
-// Use the persist middleware
 export const useAdminStore = create<AdminStore>()(
   persist(
     (set, get) => ({
-      // Initial state
-      sidebarExpanded: true,
-      dashboardCollapsed: false,
-      isDarkMode: false,
-      defaultView: 'cards',
-      dashboardItems: ['users', 'builds', 'content', 'settings'],
+      // State
       permissions: [],
       isLoadingPermissions: false,
-
-      // Methods
-      setSidebarExpanded: (expanded) => set({ sidebarExpanded: expanded }),
-      setDashboardCollapsed: (collapsed) => set({ dashboardCollapsed: collapsed }),
-      toggleSidebar: () => set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
-      toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
-      setDefaultView: (view) => set({ defaultView: view }),
-      setDashboardItems: (items) => set({ dashboardItems: items }),
-      setPermissions: (permissions) => set({ permissions }),
+      isInitialized: false,
+      sidebarExpanded: true,
       
-      // Load permissions from auth store roles
+      // Actions
+      setPermissions: (permissions) => {
+        set({ permissions, isInitialized: true });
+        
+        // Notify through bridge
+        publishAuthEvent({
+          type: 'AUTH_PERMISSION_CHANGED',
+          payload: { permissions }
+        });
+      },
+      
       loadPermissions: async () => {
         const logger = getLogger();
-        set({ isLoadingPermissions: true });
-
+        
         try {
-          // Get current user roles from auth store
-          const authState = useAuthStore.getState();
-          const { roles } = authState;
+          set({ isLoadingPermissions: true });
           
-          logger.info('Loading admin permissions', {
-            category: LogCategory.ADMIN,
-            source: 'admin/store',
-            details: { userRoles: roles }
+          // In real app, this would load from API
+          // For now, just simulate using the auth store
+          const authStore = (await import('@/auth/store/auth.store')).useAuthStore;
+          const roles = authStore.getState().roles;
+          
+          // Map roles to permissions
+          const permissions = mapRolesToPermissions(roles);
+          
+          // Update state
+          set({ 
+            permissions,
+            isLoadingPermissions: false,
+            isInitialized: true
           });
-          
-          // Map roles to admin permissions
-          let allPermissions: AdminPermissionValue[] = [];
-          
-          roles.forEach(role => {
-            const rolePermissions = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS];
-            if (rolePermissions) {
-              rolePermissions.forEach(permission => {
-                if (!allPermissions.includes(permission)) {
-                  allPermissions.push(permission);
-                }
-              });
-            }
-          });
-          
-          set({ permissions: allPermissions });
           
           logger.info('Admin permissions loaded', {
             category: LogCategory.ADMIN,
-            source: 'admin/store',
-            details: { 
-              permissionsCount: allPermissions.length,
-              permissions: allPermissions
-            }
+            source: 'admin.store',
+            details: { permissionsCount: permissions.length }
           });
           
-          return Promise.resolve();
+          return permissions;
         } catch (error) {
-          logger.error('Error loading admin permissions', {
+          logger.error('Failed to load admin permissions', {
             category: LogCategory.ADMIN,
-            source: 'admin/store',
+            source: 'admin.store',
             details: { error }
           });
-          return Promise.reject(error);
-        } finally {
+          
           set({ isLoadingPermissions: false });
+          throw error;
         }
       },
       
+      toggleSidebar: () => {
+        set(state => ({ sidebarExpanded: !state.sidebarExpanded }));
+      },
+      
       savePreferences: async () => {
-        // Simulate saving to backend
-        await new Promise(resolve => setTimeout(resolve, 100));
-        return Promise.resolve();
+        const logger = getLogger();
+        const { sidebarExpanded } = get();
+        
+        try {
+          // In real app, save to backend
+          logger.info('Admin preferences saved', {
+            category: LogCategory.ADMIN,
+            source: 'admin.store',
+            details: { sidebarExpanded }
+          });
+          
+          return true;
+        } catch (error) {
+          logger.error('Failed to save admin preferences', {
+            category: LogCategory.ADMIN,
+            source: 'admin.store',
+            details: { error }
+          });
+          
+          return false;
+        }
       }
     }),
-    createAdminPersistMiddleware('admin-store')
+    {
+      name: 'admin-store',
+      partialize: (state) => ({
+        sidebarExpanded: state.sidebarExpanded
+      }),
+    }
   )
 );
