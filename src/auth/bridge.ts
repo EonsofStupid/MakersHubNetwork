@@ -141,13 +141,20 @@ export const AuthBridge = {
   }
 };
 
-// Helper function to safely update atom values - fixed type signature
-function updateAtomValue<T>(atom: any, value: T) {
+// Helper function to safely update atom values - fixed implementation
+function updateAtomValue<T>(atomToUpdate: any, value: T) {
   try {
-    const setter = atom.write;
-    if (setter && typeof setter === 'function') {
-      // Use correct atom setter signature for jotai
-      setter((get: any, set: any) => set(atom, value));
+    // Use jotai's setAtom utility or access the store directly
+    const jotaiStore = document.jotaiStore;
+    if (jotaiStore && typeof jotaiStore.set === 'function') {
+      jotaiStore.set(atomToUpdate, value);
+    } else {
+      // Fallback using console error
+      const logger = getLogger();
+      logger.warn('Jotai store not available for direct update', {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge'
+      });
     }
   } catch (err) {
     const logger = getLogger();
@@ -178,12 +185,40 @@ export function initializeAuthBridge(): void {
     const hasAdminAccess = isAdmin;
     
     try {
-      // Use simpler approach with a custom helper function
-      updateAtomValue(userAtom, user);
-      updateAtomValue(rolesAtom, roles);
-      updateAtomValue(isAuthenticatedAtom, isAuthenticated);
-      updateAtomValue(isAdminAtom, isAdmin);
-      updateAtomValue(hasAdminAccessAtom, hasAdminAccess);
+      // Update atoms with current values from store
+      if (window.jotaiState) {
+        window.jotaiState.set(userAtom, user);
+        window.jotaiState.set(rolesAtom, roles);
+        window.jotaiState.set(isAuthenticatedAtom, isAuthenticated);
+        window.jotaiState.set(isAdminAtom, isAdmin);
+        window.jotaiState.set(hasAdminAccessAtom, hasAdminAccess);
+      } else {
+        // Manual updates - less reliable but may work
+        userAtom.onMount = (setAtom) => {
+          setAtom(user);
+          return () => {};
+        };
+        
+        rolesAtom.onMount = (setAtom) => {
+          setAtom(roles);
+          return () => {};
+        };
+        
+        isAuthenticatedAtom.onMount = (setAtom) => {
+          setAtom(isAuthenticated);
+          return () => {};
+        };
+        
+        isAdminAtom.onMount = (setAtom) => {
+          setAtom(isAdmin);
+          return () => {};
+        };
+        
+        hasAdminAccessAtom.onMount = (setAtom) => {
+          setAtom(hasAdminAccess);
+          return () => {};
+        };
+      }
       
       // Log successful sync
       logger.debug('Atoms synced from store', {

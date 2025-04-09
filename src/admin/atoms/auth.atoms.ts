@@ -23,7 +23,7 @@ export {
 };
 
 // Re-export type definitions for backward compatibility
-export { AuthStatusType };
+export type { AuthStatusType };
 
 // Auth status atom (legacy)
 export { isAuthenticatedAtom as authStatusAtom };
