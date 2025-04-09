@@ -16,7 +16,7 @@ export interface AuthGuardProps {
 
 export function AuthGuard({ 
   children, 
-  publicRoute = false,
+  publicRoute = true, // Changed to true by default to ensure all routes are public
   adminRequired = false,
   fallback 
 }: AuthGuardProps) {
