@@ -46,7 +46,15 @@ export function useAuth() {
   
   // Initialize stable function references if needed
   if (!hasRoleRef.current) {
-    hasRoleRef.current = useAuthStore.getState().hasRole;
+    // Create a function that can handle both single roles and arrays
+    hasRoleRef.current = (role: UserRole | UserRole[]): boolean => {
+      if (Array.isArray(role)) {
+        // Check if user has any role from the array
+        return role.some(r => useAuthStore.getState().hasRole(r));
+      }
+      // Handle single role
+      return useAuthStore.getState().hasRole(role);
+    };
   }
   
   if (!isAdminRef.current) {
