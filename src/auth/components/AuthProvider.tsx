@@ -93,7 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   
   // Provide the current auth state, whether authenticated or not
   return (
-    <AuthContext.Provider value={{ user, session: session as Session | null, status }}>
+    <AuthContext.Provider value={{ user, session, status }}>
       {children}
     </AuthContext.Provider>
   );

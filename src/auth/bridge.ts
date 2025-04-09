@@ -80,11 +80,15 @@ export const AuthBridge = {
       details: { email }
     });
     
-    // Create mock user for demo purposes
+    // Create mock user for demo purposes with proper type casting
     // In a real app, this would call supabase.auth.signInWithPassword
     const mockUser = {
       id: '123456',
       email: email,
+      app_metadata: { provider: 'email' },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+      role: '',
       user_metadata: {
         full_name: 'Cyber User',
         avatar_url: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${email}`,
