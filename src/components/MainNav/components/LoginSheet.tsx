@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,8 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Github, Mail, AtSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuthAtoms } from "@/hooks/useAuthAtoms";
-import { publishAuthEvent } from "@/auth/bridge";
+import { AuthBridge } from "@/auth/bridge";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 
@@ -27,7 +27,6 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { signIn } = useAuthAtoms();
   const logger = useLogger("LoginSheet", LogCategory.AUTH);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -45,7 +44,8 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
     try {
       setIsLoading(true);
       
-      await signIn(email, password);
+      // Use AuthBridge directly to avoid circular dependencies
+      await AuthBridge.signIn(email, password);
       
       toast({
         title: "Login successful",

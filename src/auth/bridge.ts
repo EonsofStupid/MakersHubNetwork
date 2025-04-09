@@ -158,44 +158,60 @@ export function initializeAuthBridge(): void {
     const isAdmin = roles.includes('admin') || roles.includes('super_admin');
     const hasAdminAccess = isAdmin;
     
-    // Use an atomic update to prevent re-renders
-    const atomUpdatePromises = [
-      Promise.resolve(userAtom.write(undefined as any, user)),
-      Promise.resolve(rolesAtom.write(undefined as any, roles)),
-      Promise.resolve(isAuthenticatedAtom.write(undefined as any, isAuthenticated)),
-      Promise.resolve(isAdminAtom.write(undefined as any, isAdmin)),
-      Promise.resolve(hasAdminAccessAtom.write(undefined as any, hasAdminAccess))
-    ];
+    // Set atom values - fix for incorrect arguments
+    userAtom.write(null, user);
+    rolesAtom.write(null, roles);
+    isAuthenticatedAtom.write(null, isAuthenticated);
+    isAdminAtom.write(null, isAdmin);
+    hasAdminAccessAtom.write(null, hasAdminAccess);
     
-    return Promise.all(atomUpdatePromises);
+    // Log successful sync
+    logger.debug('Atoms synced from store', {
+      category: LogCategory.AUTH,
+      source: 'auth/bridge',
+      details: { 
+        hasUser: !!user, 
+        roles, 
+        isAuthenticated,
+        isAdmin
+      }
+    });
   };
   
-  // Initial sync
-  syncAtomsFromStore().catch(err => {
+  // Initial sync with error handling
+  try {
+    syncAtomsFromStore();
+  } catch (err) {
     logger.error('Failed to sync atoms from store', {
       category: LogCategory.AUTH,
       source: 'auth/bridge',
       details: { err }
     });
-  });
+  }
   
   // Setup auth state listener
   const unsubscribe = useAuthStore.subscribe(
     state => ({ user: state.user, roles: state.roles, status: state.status }),
-    async (current, prev) => {
+    (current, prev) => {
       // Only update atoms if actual changes occurred
       if (
         current.user !== prev.user || 
         current.roles !== prev.roles || 
         current.status !== prev.status
       ) {
-        await syncAtomsFromStore();
+        try {
+          syncAtomsFromStore();
+        } catch (err) {
+          logger.error('Failed to sync atoms on state change', {
+            category: LogCategory.AUTH,
+            source: 'auth/bridge',
+            details: { err }
+          });
+        }
       }
     }
   );
   
   // Clean up on window unload
-  window.addEventListener('beforeunload', () => {
-    unsubscribe();
-  });
+  window.addEventListener('beforeunload', unsubscribe);
 }
