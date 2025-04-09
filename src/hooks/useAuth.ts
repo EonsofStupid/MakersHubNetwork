@@ -4,7 +4,6 @@ import { useAuthStore } from '@/auth/store/auth.store';
 import { AuthBridge } from '@/auth/bridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { errorToObject } from '@/shared/utils/render';
 
 /**
  * Hook for accessing authentication state
@@ -25,8 +24,6 @@ export function useAuth() {
     error,
     hasRole,
     isAdmin,
-    logout,
-    initialize,
     initialized,
   } = useAuthStore(state => ({
     user: state.user,
@@ -37,8 +34,6 @@ export function useAuth() {
     error: state.error,
     hasRole: state.hasRole,
     isAdmin: state.isAdmin,
-    logout: state.logout,
-    initialize: state.initialize,
     initialized: state.initialized,
   }));
   
@@ -56,8 +51,10 @@ export function useAuth() {
       
       // Use setTimeout to break potential circular dependencies
       const timeoutId = setTimeout(() => {
-        initialize().catch(err => {
-          logger.error('Failed to initialize auth', { details: errorToObject(err) });
+        useAuthStore.getState().initialize().catch(err => {
+          logger.error('Failed to initialize auth', { 
+            details: err instanceof Error ? err.message : String(err) 
+          });
         });
       }, 50);
       
@@ -69,7 +66,7 @@ export function useAuth() {
   const isSuperAdmin = roles.includes('super_admin');
   const isAuthenticated = status === 'authenticated';
 
-  // Log wrapper for logout to capture info before state is cleared
+  // Use AuthBridge for logout to ensure consistent behavior
   const handleLogout = async () => {
     if (user) {
       logger.info('User logging out', { 

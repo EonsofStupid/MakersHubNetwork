@@ -4,9 +4,11 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { LoggingProvider } from "@/logging/context/LoggingContext";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { initializeAuthBridge } from "@/auth/bridge";
 import { initializeLoggingBridge } from "@/logging/bridge";
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
 
 // Import pages
 import Index from "./pages/Index";
@@ -26,12 +28,39 @@ import "@/admin/styles/cyber-effects.css";
 
 function App() {
   const location = useLocation();
+  const initAttemptedRef = useRef<boolean>(false);
+  const logger = getLogger();
 
-  // Initialize bridges on app mount
+  // Initialize bridges on app mount with guard against infinite loops
   useEffect(() => {
-    // Initialize authBridge first
-    initializeAuthBridge();
-    initializeLoggingBridge();
+    // Guard against multiple initialization attempts
+    if (initAttemptedRef.current) {
+      return;
+    }
+    
+    // Mark as attempted immediately
+    initAttemptedRef.current = true;
+    
+    logger.info('Initializing app bridges', {
+      category: LogCategory.SYSTEM,
+      source: 'App'
+    });
+    
+    try {
+      // Initialize bridges with error handling
+      initializeLoggingBridge();
+      
+      // Initialize auth bridge with slight delay to avoid timing issues
+      setTimeout(() => {
+        initializeAuthBridge();
+      }, 100);
+    } catch (error) {
+      logger.error('Bridge initialization error', {
+        category: LogCategory.SYSTEM,
+        source: 'App',
+        details: { error }
+      });
+    }
   }, []);
 
   return (

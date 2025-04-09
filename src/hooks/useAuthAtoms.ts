@@ -8,18 +8,7 @@ import {
   hasAdminAccessAtom, 
   AuthBridge 
 } from '@/auth/bridge';
-import { UserRole } from '@/types/auth.types';
 import { User } from '@supabase/supabase-js';
-
-// Define AuthUser type locally to avoid import issues
-interface AuthUser {
-  id: string;
-  email?: string;
-  user_metadata?: {
-    full_name?: string;
-    avatar_url?: string;
-  };
-}
 
 /**
  * Custom hook that provides access to auth state via Jotai atoms
