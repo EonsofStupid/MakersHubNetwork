@@ -4,7 +4,7 @@ import { AuthProvider } from "@/auth/components/AuthProvider";
 import { AdminProvider } from "@/admin/context/AdminContext";
 import { initializeLogger, getLogger } from "@/logging";
 import { ChatProvider } from '@/chat/context/ChatProvider';
-import { safeSSR } from "@/lib/utils/safeSSR";
+import { safeSSR, safeSSREffect } from "@/lib/utils/safeSSR";
 import { AppInitializer } from "@/components/AppInitializer";
 import { BrowserRouter as Router } from "react-router-dom";
 import { AppRouter } from "@/router";
@@ -77,9 +77,9 @@ function App() {
     // Small delay to ensure initial rendering is complete
     const timer = setTimeout(() => {
       setAppReady(true);
-      safeSSR(() => {
+      safeSSREffect(() => {
         document.documentElement.setAttribute('data-app-ready', 'true');
-      }, false);
+      });
       logger.info('App marked as ready');
     }, 100);
     

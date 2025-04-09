@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -23,24 +23,18 @@ interface AuthSectionProps {
 }
 
 // Use React.memo to prevent unnecessary re-renders
-export const AuthSection = React.memo(function AuthSection({ className }: AuthSectionProps) {
+const AuthSection = memo(function AuthSection({ className }: AuthSectionProps) {
   // Initialize circuit breaker for this component
   CircuitBreaker.init('auth-section', 3, 1000);
   
   // Use stable references to auth values to prevent unnecessary re-renders
-  const auth = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   
-  // Destructure values from auth to avoid re-renders
-  const { user, isAdmin, logout, isAuthenticated, status } = useMemo(() => ({
-    user: auth.user,
-    isAdmin: auth.isAdmin,
-    logout: auth.logout,
-    isAuthenticated: auth.isAuthenticated,
-    status: auth.status
-  }), [auth]);
+  // Get auth state with explicit destructuring to avoid object spreading
+  const auth = useAuth();
+  const { user, isAdmin, logout, isAuthenticated, status } = auth;
   
   // Memoize avatar info to prevent unnecessary re-renders
   const avatarInfo = useMemo(() => {
@@ -68,7 +62,7 @@ export const AuthSection = React.memo(function AuthSection({ className }: AuthSe
     );
   }
   
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       setIsLoggingOut(true);
       await logout();
@@ -86,7 +80,7 @@ export const AuthSection = React.memo(function AuthSection({ className }: AuthSe
     } finally {
       setIsLoggingOut(false);
     }
-  };
+  }, [logout, toast, navigate]);
 
   if (isInitializing) {
     return (
@@ -168,3 +162,5 @@ export const AuthSection = React.memo(function AuthSection({ className }: AuthSe
     </div>
   );
 });
+
+export { AuthSection };
