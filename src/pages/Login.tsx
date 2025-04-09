@@ -1,21 +1,8 @@
 
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useAuth } from "@/hooks/useAuth";
-import { useAdminAccess } from "@/admin/hooks/useAdminAccess";
-import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface LoginProps {
   onSuccess?: () => void;
@@ -23,106 +10,36 @@ interface LoginProps {
 
 const Login = ({ onSuccess }: LoginProps) => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
-  const { hasAdminAccess } = useAdminAccess();
-  const logger = useLogger("LoginPage", LogCategory.AUTH);
   
-  const from = new URLSearchParams(location.search).get("from") || "/";
-
+  // Just redirect to home page, no authentication needed
   useEffect(() => {
-    if (isAuthenticated) {
-      logger.info("User authenticated, redirecting", { details: { redirectTo: from } });
+    // Auto redirect after a small delay
+    const timer = setTimeout(() => {
       onSuccess?.();
-      
-      // Check if user was trying to access admin section or has admin access
-      const goingToAdmin = from.includes("/admin");
-      
-      if (goingToAdmin) {
-        if (hasAdminAccess) {
-          logger.info("User has admin access, redirecting to admin");
-          toast({
-            title: "Admin Access",
-            description: "Welcome to the admin dashboard",
-          });
-          navigate("/admin"); 
-        } else {
-          logger.info("User lacks admin access, redirecting to home");
-          toast({
-            title: "Access Denied",
-            description: "You don't have permission to access the admin section",
-            variant: "destructive"
-          });
-          navigate("/");
-        }
-      } else if (from === "/login" && hasAdminAccess) {
-        // If coming directly to login page and has admin access, suggest admin
-        logger.info("User has admin access, suggesting admin panel");
-        toast({
-          title: "Admin Access Available",
-          description: "You can access the admin dashboard",
-        });
-        navigate("/"); 
-      } else {
-        // Normal redirect to requested page
-        logger.info("Standard redirect after login");
-        navigate(from);
-      }
-    }
-  }, [isAuthenticated, navigate, onSuccess, hasAdminAccess, from, toast, logger]);
+      navigate("/");
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [navigate, onSuccess]);
 
   return (
     <div className="container mx-auto flex items-center justify-center min-h-screen p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-heading text-primary">
-            Welcome Back
+            Welcome
           </CardTitle>
-          <CardDescription>Sign in to access your account</CardDescription>
+          <CardDescription>Public access enabled for all users</CardDescription>
         </CardHeader>
 
-        <CardContent>
-          <Auth
-            supabaseClient={supabase}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: '#00F0FF',
-                    brandAccent: '#FF2D6E',
-                    brandButtonText: 'white',
-                    defaultButtonBackground: 'transparent',
-                    defaultButtonBackgroundHover: 'rgba(0, 240, 255, 0.1)',
-                    defaultButtonBorder: '#00F0FF',
-                    defaultButtonText: '#00F0FF',
-                  },
-                  radii: {
-                    borderRadiusButton: '0.5rem',
-                    buttonBorderRadius: '0.5rem',
-                    inputBorderRadius: '0.5rem',
-                  },
-                },
-              },
-              className: {
-                container: 'auth-container',
-                button: 'auth-button',
-                input: 'auth-input',
-                divider: 'auth-divider',
-                anchor: 'auth-anchor text-primary hover:text-primary/80',
-              },
-              style: {
-                button: {
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                },
-              },
-            }}
-            theme="dark"
-            providers={["github", "google"]}
-            redirectTo={window.location.origin}
-          />
+        <CardContent className="flex flex-col items-center">
+          <p className="mb-6 text-center">
+            All features are publicly accessible. You'll be redirected automatically.
+          </p>
+          
+          <Button onClick={() => navigate("/")}>
+            Continue to Home
+          </Button>
         </CardContent>
       </Card>
     </div>
