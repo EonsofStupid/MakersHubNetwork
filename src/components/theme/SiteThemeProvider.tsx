@@ -80,7 +80,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     setIsDarkMode(newMode);
     safeSSR(() => {
       localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
-    }, undefined);
+    }, false);
   }).current;
 
   // Get component styles from theme - memoized to prevent unnecessary recalculations

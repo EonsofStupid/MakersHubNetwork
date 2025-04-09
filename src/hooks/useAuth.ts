@@ -2,7 +2,7 @@
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useEffect, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useMemo } from 'react';
 import { errorToObject } from '@/shared/utils/render';
 import CircuitBreaker from '@/utils/CircuitBreaker';
 
@@ -14,8 +14,8 @@ export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   const initAttemptedRef = useRef<boolean>(false);
   
-  // Initialize circuit breaker
-  CircuitBreaker.init('useAuth', 5, 1000);
+  // Initialize circuit breaker with a lower threshold
+  CircuitBreaker.init('useAuth', 3, 1000);
   
   // Create a stable selector function using useMemo
   const selector = useMemo(() => {
@@ -34,10 +34,10 @@ export function useAuth() {
   // Use the stable selector to extract state
   const authState = useAuthStore(selector);
 
-  // Store stable function references to prevent re-renders
-  const stableHasRole = useRef(useAuthStore.getState().hasRole).current;
-  const stableIsAdmin = useRef(useAuthStore.getState().isAdmin).current;
-  const stableLogout = useRef(useAuthStore.getState().logout).current;
+  // Store stable function references with useRef + useMemo to prevent re-renders
+  const stableHasRole = useMemo(() => useAuthStore.getState().hasRole, []);
+  const stableIsAdmin = useMemo(() => useAuthStore.getState().isAdmin, []);
+  const stableLogout = useMemo(() => useAuthStore.getState().logout, []);
   
   // Get initialize function with separate selector to avoid re-renders
   const initialize = useAuthStore(state => state.initialize);
@@ -81,21 +81,21 @@ export function useAuth() {
   );
 
   // Log wrapper for logout to capture info before state is cleared
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     if (authState.user) {
       logger.info('User logging out', { 
         details: { userId: authState.user.id }
       });
     }
     return stableLogout();
-  };
+  }, [authState.user, logger, stableLogout]);
 
-  return {
+  return useMemo(() => ({
     ...authState,
     isAdmin: stableIsAdmin(),
     isSuperAdmin,
     hasRole: stableHasRole,
     logout: handleLogout,
     // Don't expose initialize directly as it should be handled automatically
-  };
+  }), [authState, stableIsAdmin, isSuperAdmin, stableHasRole, handleLogout]);
 }

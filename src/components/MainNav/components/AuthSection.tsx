@@ -22,15 +22,25 @@ interface AuthSectionProps {
   className?: string;
 }
 
-export function AuthSection({ className }: AuthSectionProps) {
+// Use React.memo to prevent unnecessary re-renders
+export const AuthSection = React.memo(function AuthSection({ className }: AuthSectionProps) {
   // Initialize circuit breaker for this component
   CircuitBreaker.init('auth-section', 3, 1000);
   
   // Use stable references to auth values to prevent unnecessary re-renders
-  const { user, isAdmin, logout, isAuthenticated, status } = useAuth();
+  const auth = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  // Destructure values from auth to avoid re-renders
+  const { user, isAdmin, logout, isAuthenticated, status } = useMemo(() => ({
+    user: auth.user,
+    isAdmin: auth.isAdmin,
+    logout: auth.logout,
+    isAuthenticated: auth.isAuthenticated,
+    status: auth.status
+  }), [auth]);
   
   // Memoize avatar info to prevent unnecessary re-renders
   const avatarInfo = useMemo(() => {
@@ -57,9 +67,6 @@ export function AuthSection({ className }: AuthSectionProps) {
       </div>
     );
   }
-  
-  // Increment the circuit breaker counter
-  CircuitBreaker.count('auth-section');
   
   const handleLogout = async () => {
     try {
@@ -160,4 +167,4 @@ export function AuthSection({ className }: AuthSectionProps) {
       </DropdownMenu>
     </div>
   );
-}
+});
