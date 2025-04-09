@@ -104,7 +104,7 @@ function App() {
             We've configured AuthProvider to not block rendering of public routes,
             so users can see content even if auth is still initializing
           */}
-          <AuthProvider onError={handleAuthError}>
+          <AuthProvider onError={handleAuthError} blockRendering={false}>
             <AppInitializer>
               <AdminProvider>
                 <ChatProvider>
