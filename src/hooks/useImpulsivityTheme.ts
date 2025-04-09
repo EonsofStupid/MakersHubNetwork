@@ -32,6 +32,12 @@ export function useImpulsivityTheme() {
       rootElement.style.setProperty('--site-background', '#080F1E');
       rootElement.style.setProperty('--site-foreground', '#F9FAFB');
       
+      // Enhanced colors for better visual experience
+      rootElement.style.setProperty('--site-accent', '271 100% 69%'); // #7B61FF
+      rootElement.style.setProperty('--site-muted', '228 47% 15%');
+      rootElement.style.setProperty('--site-border', '228 47% 15%');
+      rootElement.style.setProperty('--site-effect-tertiary', '#8B5CF6');
+      
       // Simulate success
       setIsSyncing(false);
       return true;

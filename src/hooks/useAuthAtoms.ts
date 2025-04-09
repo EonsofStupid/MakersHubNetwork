@@ -8,7 +8,8 @@ import {
   isAuthenticatedAtom, 
   isAdminAtom,
   hasAdminAccessAtom,
-  authStatusAtom 
+  authStatusAtom,
+  AuthStatusType 
 } from '@/admin/atoms/auth.atoms';
 import { subscribeToAuthEvents } from '@/auth/bridge';
 
@@ -34,7 +35,17 @@ export function useAuthAtoms() {
     setIsAuthenticated(authState.isAuthenticated);
     setIsAdmin(authState.isAdmin());
     setHasAdminAccess(authState.roles.includes('admin') || authState.roles.includes('super_admin'));
-    setAuthStatus(authState.status);
+    
+    // Convert auth store status to atom status type
+    const statusMapping: Record<string, AuthStatusType> = {
+      'idle': 'idle',
+      'loading': 'loading',
+      'authenticated': 'authenticated',
+      'unauthenticated': 'unauthenticated',
+      'error': 'error'
+    };
+    
+    setAuthStatus(statusMapping[authState.status] || 'idle');
     
     // Subscribe to store changes
     const unsubscribe = useAuthStore.subscribe(
@@ -44,7 +55,7 @@ export function useAuthAtoms() {
         setIsAuthenticated(state.isAuthenticated);
         setIsAdmin(state.isAdmin());
         setHasAdminAccess(state.roles.includes('admin') || state.roles.includes('super_admin'));
-        setAuthStatus(state.status);
+        setAuthStatus(statusMapping[state.status] || 'idle');
       }
     );
     

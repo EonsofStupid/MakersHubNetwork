@@ -70,7 +70,6 @@ export const useAdminStore = create<AdminStore>()(
             details: { permissionsCount: permissions.length }
           });
           
-          // No return value needed since return type is Promise<void>
         } catch (error) {
           logger.error('Failed to load admin permissions', {
             category: LogCategory.ADMIN,
@@ -99,7 +98,6 @@ export const useAdminStore = create<AdminStore>()(
             details: { sidebarExpanded }
           });
           
-          // No return value needed since return type is Promise<void>
         } catch (error) {
           logger.error('Failed to save admin preferences', {
             category: LogCategory.ADMIN,

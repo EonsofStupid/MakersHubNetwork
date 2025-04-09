@@ -10,6 +10,10 @@ export const effectsPanelVisibleAtom = atom<boolean>(false);
 export const recordingAtom = atom<boolean>(false);
 export const frozenZonesAtom = atom<string[]>([]);
 
+// Panel and overlay atoms
+export const activePanelAtom = atom<string | null>(null);
+export const panelPositionAtom = atom<{ x: number, y: number }>({ x: 0, y: 0 });
+
 // Admin UI visibility - derived from auth state
 export const showAdminButtonAtom = atom(
   (get) => get(hasAdminAccessAtom)
@@ -29,7 +33,3 @@ export const quickBarItemsAtom = atom<string[]>(["Users", "Roles", "Themes", "Se
 export const dragSourceAtom = atom<string | null>(null);
 export const showDragOverlayAtom = atom<boolean>(false);
 export const hoveredIconAtom = atom<string | null>(null);
-
-// Panel and overlay atoms
-export const activePanelAtom = atom<string | null>(null);
-export const panelPositionAtom = atom<{ x: number, y: number }>({ x: 0, y: 0 });
