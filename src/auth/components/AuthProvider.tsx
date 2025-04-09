@@ -14,7 +14,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   // Get the store state and methods
-  const { user, session, status, setSession, initialize, initialized } = useAuthStore();
+  const { user, session, profile, status, setSession, initialize, initialized } = useAuthStore();
   
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
@@ -92,8 +92,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [initialize, initialized, logger, themeLoaded]); 
   
   // Provide the current auth state, whether authenticated or not
+  // Fix: Include profile in the context value to match the AuthContextValue interface
   return (
-    <AuthContext.Provider value={{ user, session, status }}>
+    <AuthContext.Provider value={{ user, session, profile, status }}>
       {children}
     </AuthContext.Provider>
   );

@@ -42,7 +42,9 @@ export function AppBootstrap() {
           logger.info('Auth service initialized successfully');
         } catch (error) {
           logger.error('Auth initialization failed', { 
-            details: error instanceof Error ? error.message : { message: String(error) }
+            details: error instanceof Error 
+              ? { message: error.message } // Fix: Properly format error as Record<string, unknown>
+              : { message: String(error) }
           });
           throw error;
         }
