@@ -10,6 +10,7 @@ import CircuitBreaker from '@/utils/CircuitBreaker';
 interface AuthProviderProps {
   children: ReactNode;
   onError?: (error: Error) => void;
+  blockRendering?: boolean;
 }
 
 /**
@@ -18,7 +19,7 @@ interface AuthProviderProps {
  * Uses the AuthBridge to notify other components of auth state changes
  * Enhanced with better initialization handling and circuit breakers
  */
-export function AuthProvider({ children, onError }: AuthProviderProps) {
+export function AuthProvider({ children, onError, blockRendering = false }: AuthProviderProps) {
   // Use separate getters to avoid triggering re-renders with multiple selectors
   const initialize = useAuthStore(state => state.initialize);
   const setSession = useAuthStore(state => state.setSession);
