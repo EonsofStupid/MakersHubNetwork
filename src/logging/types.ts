@@ -7,6 +7,7 @@ import { LogLevel } from './constants/log-level';
 import React from 'react';
 
 export enum LogCategory {
+  DEFAULT = 'default',
   SYSTEM = 'system',
   NETWORK = 'network',
   AUTH = 'auth',
@@ -15,7 +16,7 @@ export enum LogCategory {
   CHAT = 'chat',
   DATABASE = 'database',
   PERFORMANCE = 'performance',
-  CONTENT = 'content'  // Added this new category
+  CONTENT = 'content'
 }
 
 export interface LogEntry {

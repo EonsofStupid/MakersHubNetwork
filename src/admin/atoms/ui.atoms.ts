@@ -29,3 +29,7 @@ export const quickBarItemsAtom = atom<string[]>(["Users", "Roles", "Themes", "Se
 export const dragSourceAtom = atom<string | null>(null);
 export const showDragOverlayAtom = atom<boolean>(false);
 export const hoveredIconAtom = atom<string | null>(null);
+
+// Panel and overlay atoms
+export const activePanelAtom = atom<string | null>(null);
+export const panelPositionAtom = atom<{ x: number, y: number }>({ x: 0, y: 0 });

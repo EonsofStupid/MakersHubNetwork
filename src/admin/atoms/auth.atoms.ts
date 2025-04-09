@@ -2,6 +2,9 @@
 import { atom } from 'jotai';
 import { UserRole } from '@/types/auth.types';
 
+// Auth status type definition
+export type AuthStatusType = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+
 // Auth-related atoms for reactive UI components
 export const userAtom = atom<any | null>(null);
 export const rolesAtom = atom<UserRole[]>([]);
@@ -15,4 +18,4 @@ export const isSuperAdminAtom = atom(
 );
 
 // Auth status atom
-export const authStatusAtom = atom<'idle' | 'loading' | 'authenticated' | 'unauthenticated'>('idle');
+export const authStatusAtom = atom<AuthStatusType>('idle');
