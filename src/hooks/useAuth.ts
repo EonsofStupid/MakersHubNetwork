@@ -53,7 +53,9 @@ export function useAuth() {
       const timeoutId = setTimeout(() => {
         useAuthStore.getState().initialize().catch(err => {
           logger.error('Failed to initialize auth', { 
-            details: err instanceof Error ? err.message : String(err) 
+            details: {
+              message: err instanceof Error ? err.message : String(err)
+            }
           });
         });
       }, 50);

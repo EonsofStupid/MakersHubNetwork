@@ -140,6 +140,21 @@ export const AuthBridge = {
   }
 };
 
+// Atom setters that properly wraps Jotai atom updates to prevent errors
+const setAtomValue = <T>(atomObj: any, value: T) => {
+  try {
+    // Get the proper setter function for the atom
+    const setter = atomObj.write || atomObj.set;
+    if (setter && typeof setter === 'function') {
+      setter(value);
+    } else {
+      console.error('No setter found for atom:', atomObj);
+    }
+  } catch (err) {
+    console.error('Error updating atom:', err);
+  }
+};
+
 /**
  * Initialize auth bridge by subscribing to auth store changes
  * and syncing with Jotai atoms
@@ -158,24 +173,32 @@ export function initializeAuthBridge(): void {
     const isAdmin = roles.includes('admin') || roles.includes('super_admin');
     const hasAdminAccess = isAdmin;
     
-    // Set atom values - fix for incorrect arguments
-    userAtom.write(null, user);
-    rolesAtom.write(null, roles);
-    isAuthenticatedAtom.write(null, isAuthenticated);
-    isAdminAtom.write(null, isAdmin);
-    hasAdminAccessAtom.write(null, hasAdminAccess);
-    
-    // Log successful sync
-    logger.debug('Atoms synced from store', {
-      category: LogCategory.AUTH,
-      source: 'auth/bridge',
-      details: { 
-        hasUser: !!user, 
-        roles, 
-        isAuthenticated,
-        isAdmin
-      }
-    });
+    try {
+      // Use the atom primitive methods from jotai
+      userAtom.write = (get, set) => set(userAtom, user);
+      rolesAtom.write = (get, set) => set(rolesAtom, roles);
+      isAuthenticatedAtom.write = (get, set) => set(isAuthenticatedAtom, isAuthenticated);
+      isAdminAtom.write = (get, set) => set(isAdminAtom, isAdmin);
+      hasAdminAccessAtom.write = (get, set) => set(hasAdminAccessAtom, hasAdminAccess);
+      
+      // Log successful sync
+      logger.debug('Atoms synced from store', {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge',
+        details: { 
+          hasUser: !!user, 
+          roles, 
+          isAuthenticated,
+          isAdmin
+        }
+      });
+    } catch (err) {
+      logger.error('Error syncing atoms', {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge',
+        details: { err }
+      });
+    }
   };
   
   // Initial sync with error handling
