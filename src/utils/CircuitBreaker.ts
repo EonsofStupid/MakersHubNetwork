@@ -1,92 +1,94 @@
 
 /**
- * Circuit Breaker utility to prevent infinite loops and excessive renders
+ * CircuitBreaker - A utility to prevent infinite loops and excessive rerenders
  */
+
+type CircuitBreakerState = {
+  count: number;
+  limit: number;
+  timestamp: number;
+  ttl: number;
+};
+
 class CircuitBreaker {
-  private static instances: Record<string, { count: number; threshold: number; resetTimeout?: NodeJS.Timeout; resetTime: number }> = {};
+  private static circuits: Record<string, CircuitBreakerState> = {};
 
   /**
-   * Initialize a circuit breaker for a specific key
-   * @param key Unique identifier for this circuit breaker
-   * @param threshold Maximum number of calls before tripping
-   * @param resetTime Time in ms after which to reset the counter
+   * Initialize a circuit breaker
+   * @param name - Unique name for the circuit
+   * @param limit - Max count before tripping
+   * @param ttl - Time to live in ms
    */
-  static init(key: string, threshold: number = 10, resetTime: number = 5000): void {
-    if (!this.instances[key]) {
-      this.instances[key] = {
+  static init(name: string, limit = 10, ttl = 2000): void {
+    if (!this.circuits[name]) {
+      this.circuits[name] = {
         count: 0,
-        threshold,
-        resetTime
+        limit,
+        timestamp: Date.now(),
+        ttl
       };
     }
   }
 
   /**
-   * Increment the counter for a specific key
-   * @param key Unique identifier for this circuit breaker
-   * @returns True if the circuit is not tripped, false if it is
+   * Increment count and return if circuit is tripped
    */
-  static count(key: string): boolean {
-    if (!this.instances[key]) {
-      this.init(key);
+  static count(name: string): boolean {
+    if (!this.circuits[name]) {
+      this.init(name);
     }
 
-    const instance = this.instances[key];
-    instance.count += 1;
+    const circuit = this.circuits[name];
+    const now = Date.now();
 
-    // Set up auto-reset if not already set
-    if (!instance.resetTimeout) {
-      instance.resetTimeout = setTimeout(() => {
-        this.reset(key);
-      }, instance.resetTime);
-    }
-
-    return !this.isTripped(key);
-  }
-
-  /**
-   * Check if the circuit breaker has tripped
-   * @param key Unique identifier for this circuit breaker
-   * @returns True if the circuit has tripped (exceeded threshold)
-   */
-  static isTripped(key: string): boolean {
-    if (!this.instances[key]) {
+    // Reset if TTL expired
+    if (now - circuit.timestamp > circuit.ttl) {
+      circuit.count = 1;
+      circuit.timestamp = now;
       return false;
     }
-    return this.instances[key].count >= this.instances[key].threshold;
+
+    // Increment and check if tripped
+    circuit.count += 1;
+    return circuit.count > circuit.limit;
   }
 
   /**
-   * Reset the counter for a specific key
-   * @param key Unique identifier for this circuit breaker
+   * Check if circuit is tripped without incrementing
    */
-  static reset(key: string): void {
-    if (this.instances[key]) {
-      if (this.instances[key].resetTimeout) {
-        clearTimeout(this.instances[key].resetTimeout);
-      }
-      this.instances[key].count = 0;
-      this.instances[key].resetTimeout = undefined;
+  static isTripped(name: string): boolean {
+    if (!this.circuits[name]) {
+      return false;
+    }
+
+    const circuit = this.circuits[name];
+    const now = Date.now();
+
+    // Reset if TTL expired
+    if (now - circuit.timestamp > circuit.ttl) {
+      circuit.count = 0;
+      circuit.timestamp = now;
+      return false;
+    }
+
+    return circuit.count > circuit.limit;
+  }
+
+  /**
+   * Reset a circuit
+   */
+  static reset(name: string): void {
+    if (this.circuits[name]) {
+      this.circuits[name].count = 0;
+      this.circuits[name].timestamp = Date.now();
     }
   }
 
   /**
-   * Reset all circuit breakers
+   * Get current count for a circuit
    */
-  static resetAll(): void {
-    Object.keys(this.instances).forEach(key => this.reset(key));
-  }
-
-  /**
-   * Get the current count for a specific key
-   * @param key Unique identifier for this circuit breaker
-   * @returns Current count
-   */
-  static getCount(key: string): number {
-    if (!this.instances[key]) {
-      return 0;
-    }
-    return this.instances[key].count;
+  static getCount(name: string): number {
+    return this.circuits[name]?.count || 0;
   }
 }
 

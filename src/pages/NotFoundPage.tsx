@@ -1,28 +1,32 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { ThemeInitializer } from '@/components/theme/ThemeInitializer';
+import { SiteThemeProvider } from '@/components/theme/SiteThemeProvider';
+import { MainNav } from '@/components/MainNav';
+import { Footer } from '@/components/Footer';
 
-export const NotFoundPage: React.FC = () => {
-  const logger = useLogger('NotFoundPage', LogCategory.SYSTEM);
-  
-  React.useEffect(() => {
-    logger.warn('User accessed non-existent route');
-  }, [logger]);
-  
+export function NotFoundPage() {
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center p-4">
-      <h1 className="text-4xl font-bold mb-4">Page Not Found</h1>
-      <p className="text-lg text-muted-foreground mb-6">
-        The page you are looking for does not exist or has been moved.
-      </p>
-      <Link 
-        to="/" 
-        className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-      >
-        Return Home
-      </Link>
-    </div>
+    <ThemeInitializer>
+      <SiteThemeProvider>
+        <div className="flex flex-col min-h-screen">
+          <MainNav />
+          <main className="flex-grow flex items-center justify-center">
+            <div className="text-center p-10">
+              <h1 className="text-4xl font-bold cyber-gradient-text mb-4">404 - Page Not Found</h1>
+              <p className="text-muted-foreground mb-6">The page you're looking for doesn't exist.</p>
+              <Link 
+                to="/" 
+                className="bg-primary/10 hover:bg-primary/20 text-primary px-6 py-2 rounded-md border border-primary/30 transition-all hover:shadow-glow"
+              >
+                Return Home
+              </Link>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </SiteThemeProvider>
+    </ThemeInitializer>
   );
-};
+}

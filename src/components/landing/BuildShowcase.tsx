@@ -1,136 +1,71 @@
 
 import React from 'react';
-import { useComponentTokens } from '@/hooks/useComponentTokens';
-import { cn } from '@/lib/utils';
-import { Eye, ThumbsUp, MessageSquare } from 'lucide-react';
+import { PlaceholderImage } from '@/components/PlaceholderImage';
 
-interface Build {
-  id: string;
-  title: string;
-  creator: string;
-  imageUrl: string;
-  likes: number;
-  views: number;
-  comments: number;
-  category: string;
-}
-
-interface BuildShowcaseProps {
-  title?: string;
-  subtitle?: string;
-  builds?: Build[];
-}
-
-export function BuildShowcase({ 
-  title = "Community Builds", 
-  subtitle = "Check out these amazing 3D printer builds from our community",
-  builds = [] 
-}: BuildShowcaseProps) {
-  const styles = useComponentTokens('BuildShowcase');
-  
-  // Ensure we have default styles to prevent TS errors
-  const defaultStyles = {
-    container: "py-16 bg-background/20 backdrop-blur-sm",
-    heading: "text-3xl font-bold text-center mb-4",
-    subheading: "text-xl text-muted-foreground text-center mb-12 max-w-3xl mx-auto",
-    grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto px-4",
-    card: "build-card overflow-hidden rounded-lg border border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300",
-    cardImage: "w-full h-full object-cover transition-transform duration-500",
-    cardOverlay: "absolute inset-0 bg-gradient-to-t from-background to-transparent",
-    cardContent: "p-4",
-    cardTitle: "font-bold text-lg mb-1 line-clamp-1",
-    cardCreator: "text-sm text-muted-foreground mb-2",
-    cardStats: "flex items-center justify-between text-xs text-muted-foreground"
-  };
-  
-  const defaultBuilds: Build[] = [
+export function BuildShowcase() {
+  const builds = [
     {
-      id: '1',
-      title: 'VORON 2.4 Tophat Mod',
-      creator: 'MakerD',
-      imageUrl: 'https://via.placeholder.com/400x300/121218/00F0FF?text=VORON+2.4',
-      likes: 124,
-      views: 1420,
-      comments: 32,
-      category: 'Mod'
+      title: "Voron 2.4 350mm",
+      description: "Core XY printer with linear rails on all axes and a moving bed.",
+      image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
+      author: "Michael Chen"
     },
     {
-      id: '2',
-      title: 'Ender 3 V2 Enclosure',
-      creator: 'PrintMaster',
-      imageUrl: 'https://via.placeholder.com/400x300/121218/FF2D6E?text=Ender+3+V2',
-      likes: 89,
-      views: 950,
-      comments: 24,
-      category: 'Enclosure'
+      title: "Prusa i3 MK3S+",
+      description: "Ultimate tool for all makers featuring improved frame rigidity.",
+      image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
+      author: "Sarah Johnson"
     },
     {
-      id: '3',
-      title: 'Prusa MK3S+ Custom Toolhead',
-      creator: 'FilamentFan',
-      imageUrl: 'https://via.placeholder.com/400x300/121218/8B5CF6?text=Prusa+MK3S%2B',
-      likes: 215,
-      views: 2380,
-      comments: 47,
-      category: 'Custom Part'
+      title: "RatRig V-Core 3",
+      description: "Open source CoreXY 3D printer with heavy focus on customization.",
+      image: "https://images.unsplash.com/photo-1518770660439-4636190af475",
+      author: "David Miller"
     }
   ];
-  
-  const displayBuilds = builds.length > 0 ? builds : defaultBuilds;
-  
-  // Merge component tokens with default styles
-  const mergedStyles = { ...defaultStyles, ...styles };
-  
+
   return (
-    <section className={cn(mergedStyles.container)}>
-      <div className="w-full max-w-[2000px] mx-auto">
-        <h2 className={cn(mergedStyles.heading)}>
-          {title}
+    <section className="py-16 px-4 bg-card relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="mainnav-data-stream animate-data-stream"></div>
+        <div className="mainnav-glitch-particles animate-pulse-slow"></div>
+      </div>
+      
+      <div className="container mx-auto relative z-10">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 cyber-gradient-text">
+          Community Builds
         </h2>
-        <p className={cn(mergedStyles.subheading)}>
-          {subtitle}
-        </p>
         
-        <div className={cn(mergedStyles.grid)}>
-          {displayBuilds.map((build) => (
-            <div key={build.id} className={cn(mergedStyles.card)}>
-              <div className="build-card-image-container relative aspect-video overflow-hidden">
-                <img 
-                  src={build.imageUrl} 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {builds.map((build, index) => (
+            <div 
+              key={index} 
+              className="rounded-lg overflow-hidden border border-primary/20 bg-background/40 backdrop-blur-xl hover:border-primary/40 transition-all hover:shadow-glow"
+            >
+              <div className="h-48 overflow-hidden">
+                <PlaceholderImage 
+                  src={build.image} 
                   alt={build.title}
-                  className={cn(mergedStyles.cardImage)}
+                  className="w-full h-full object-cover"
+                  fallbackText={build.title.charAt(0)}
                 />
-                <div className={cn(mergedStyles.cardOverlay)}></div>
-                <span className="build-card-category absolute bottom-2 left-2 inline-block px-2 py-1 text-xs rounded-md backdrop-blur-md bg-primary/30 text-primary-foreground border border-primary/40">
-                  {build.category}
-                </span>
               </div>
-              
-              <div className={cn(mergedStyles.cardContent)}>
-                <h3 className={cn(mergedStyles.cardTitle)}>
-                  {build.title}
-                </h3>
-                <p className={cn(mergedStyles.cardCreator)}>
-                  by {build.creator}
-                </p>
-                
-                <div className={cn(mergedStyles.cardStats)}>
-                  <span className="flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    {build.views}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <ThumbsUp className="w-3 h-3" />
-                    {build.likes}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MessageSquare className="w-3 h-3" />
-                    {build.comments}
-                  </span>
+              <div className="p-5">
+                <h3 className="text-xl font-bold mb-2">{build.title}</h3>
+                <p className="text-muted-foreground mb-4">{build.description}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">By {build.author}</span>
+                  <button className="text-primary text-sm hover:underline">View Details</button>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+        
+        <div className="mt-12 text-center">
+          <button className="px-6 py-3 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-md transition-all hover:shadow-glow">
+            Explore More Builds
+          </button>
         </div>
       </div>
     </section>
