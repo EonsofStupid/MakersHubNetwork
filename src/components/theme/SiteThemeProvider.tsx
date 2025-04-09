@@ -1,31 +1,19 @@
 
-import React, { createContext, useContext, useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useRef } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { useThemeVariables, ThemeVariables } from '@/hooks/useThemeVariables';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { DynamicKeyframes } from './DynamicKeyframes';
-import { safeSSR, safeSSREffect } from '@/lib/utils/safeSSR';
-import CircuitBreaker from '@/utils/CircuitBreaker';
-
-// Define types for component styles and animations
-interface ComponentStyle {
-  [key: string]: string | number | boolean;
-}
-
-interface AnimationKeyframe {
-  [key: string]: {
-    [key: string]: string | number;
-  };
-}
+import { ThemeLogDetails } from '@/types/theme';
 
 // Create context
 const SiteThemeContext = createContext<{
   variables: ThemeVariables;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
-  componentStyles: Record<string, ComponentStyle>;
-  animations: Record<string, AnimationKeyframe>;
+  componentStyles: Record<string, any>;
+  animations: Record<string, any>;
   isLoaded: boolean;
 }>({
   variables: {} as ThemeVariables,
@@ -44,55 +32,37 @@ interface SiteThemeProviderProps {
   isInitializing?: boolean;
 }
 
-// Initialize circuit breaker for this component
-CircuitBreaker.init('SiteThemeProvider', 20, 1000);
-
 export function SiteThemeProvider({ children, isInitializing = false }: SiteThemeProviderProps) {
-  // Use stable selector to prevent re-renders
-  const currentTheme = useThemeStore(
-    useMemo(() => (state) => state.currentTheme, [])
-  );
-  
-  const isLoading = useThemeStore(
-    useMemo(() => (state) => state.isLoading, [])
-  );
-  
+  const { currentTheme, isLoading } = useThemeStore();
   const variables = useThemeVariables(currentTheme);
   const logger = useLogger('SiteThemeProvider', LogCategory.UI);
   const [isLoaded, setIsLoaded] = useState(false);
   const cssVarsApplied = useRef(false);
-  const darkModeInitialized = useRef(false);
   
-  // Get UI theme mode from localStorage or default to dark - using safeSSR to prevent hydration issues
-  // Only initialize once to prevent render loops
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    if (darkModeInitialized.current) {
-      return true; // Default to dark if already initialized
-    }
-    
-    darkModeInitialized.current = true;
-    return safeSSR(() => localStorage.getItem('theme-mode') !== 'light', true);
-  });
+  // Get UI theme mode from localStorage or default to dark
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(
+    localStorage.getItem('theme-mode') !== 'light'
+  );
   
-  // Toggle dark mode - with stable reference
-  const toggleDarkMode = useCallback(() => {
-    setIsDarkMode((prevMode) => {
-      const newMode = !prevMode;
-      safeSSREffect(() => {
-        localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
-      });
-      return newMode;
-    });
-  }, []);
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
+  };
 
   // Get component styles from theme - memoized to prevent unnecessary recalculations
   const componentStyles = useMemo(() => {
     if (!currentTheme || !Array.isArray(currentTheme.component_tokens)) {
+      logger.debug('No component styles found in theme', { 
+        error: true,
+        details: { reason: 'No component tokens found in theme' } 
+      } as ThemeLogDetails);
       return {};
     }
 
     try {
-      const styles: Record<string, ComponentStyle> = {};
+      const styles: Record<string, any> = {};
       
       // Convert component tokens array to a map of component name -> styles
       currentTheme.component_tokens.forEach((component) => {
@@ -104,15 +74,16 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       return styles;
     } catch (error) {
       logger.error('Error processing component styles', { 
+        error: true,
         details: { errorMessage: error instanceof Error ? error.message : String(error) }
-      });
+      } as ThemeLogDetails);
       return {};
     }
   }, [currentTheme, logger]);
   
   // Get animations from theme - memoized to prevent unnecessary recalculations
   const animations = useMemo(() => {
-    const defaultAnimations: Record<string, AnimationKeyframe> = {}; // Safe fallback
+    const defaultAnimations = {}; // Safe fallback
     
     if (!currentTheme?.design_tokens?.animation?.keyframes) {
       return defaultAnimations;
@@ -123,13 +94,14 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
       return themeAnimations || defaultAnimations;
     } catch (error) {
       logger.error('Error processing animations', { 
+        error: true,
         details: { errorMessage: error instanceof Error ? error.message : String(error) }
-      });
+      } as ThemeLogDetails);
       return defaultAnimations;
     }
   }, [currentTheme, logger]);
 
-  // Mark theme as loaded when everything is ready - only once
+  // Mark theme as loaded when everything is ready
   useEffect(() => {
     if (!isLoading && currentTheme && !isInitializing && !isLoaded) {
       // Small delay to ensure CSS variables are applied
@@ -142,7 +114,7 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
             hasAnimations: Boolean(animations && Object.keys(animations).length > 0),
             hasComponentStyles: Boolean(componentStyles && Object.keys(componentStyles).length > 0)
           }
-        });
+        } as ThemeLogDetails);
       }, 100);
       
       return () => clearTimeout(timer);
@@ -151,12 +123,6 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
 
   // Apply CSS variables when the theme changes - using refs to prevent multiple applications
   useEffect(() => {
-    // Check for render loops
-    if (CircuitBreaker.count('SiteThemeProvider-cssVars')) {
-      console.error('Breaking infinite loop in SiteThemeProvider CSS variables');
-      return;
-    }
-    
     if (cssVarsApplied.current) return;
     
     // Always apply our CSS variables even if theme is loading or missing
@@ -165,54 +131,54 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
     
     try {
       // Apply the CSS variables
-      rootElement.style.setProperty('--site-background', variables.background || '');
-      rootElement.style.setProperty('--site-foreground', variables.foreground || '');
-      rootElement.style.setProperty('--site-card', variables.card || '');
-      rootElement.style.setProperty('--site-card-foreground', variables.cardForeground || '');
-      rootElement.style.setProperty('--site-primary', variables.primary || '');
-      rootElement.style.setProperty('--site-primary-foreground', variables.primaryForeground || '');
-      rootElement.style.setProperty('--site-secondary', variables.secondary || '');
-      rootElement.style.setProperty('--site-secondary-foreground', variables.secondaryForeground || '');
-      rootElement.style.setProperty('--site-muted', variables.muted || '');
-      rootElement.style.setProperty('--site-muted-foreground', variables.mutedForeground || '');
-      rootElement.style.setProperty('--site-accent', variables.accent || '');
-      rootElement.style.setProperty('--site-accent-foreground', variables.accentForeground || '');
-      rootElement.style.setProperty('--site-destructive', variables.destructive || '');
-      rootElement.style.setProperty('--site-destructive-foreground', variables.destructiveForeground || '');
-      rootElement.style.setProperty('--site-border', variables.border || '');
-      rootElement.style.setProperty('--site-input', variables.input || '');
-      rootElement.style.setProperty('--site-ring', variables.ring || '');
+      rootElement.style.setProperty('--site-background', variables.background);
+      rootElement.style.setProperty('--site-foreground', variables.foreground);
+      rootElement.style.setProperty('--site-card', variables.card);
+      rootElement.style.setProperty('--site-card-foreground', variables.cardForeground);
+      rootElement.style.setProperty('--site-primary', variables.primary);
+      rootElement.style.setProperty('--site-primary-foreground', variables.primaryForeground);
+      rootElement.style.setProperty('--site-secondary', variables.secondary);
+      rootElement.style.setProperty('--site-secondary-foreground', variables.secondaryForeground);
+      rootElement.style.setProperty('--site-muted', variables.muted);
+      rootElement.style.setProperty('--site-muted-foreground', variables.mutedForeground);
+      rootElement.style.setProperty('--site-accent', variables.accent);
+      rootElement.style.setProperty('--site-accent-foreground', variables.accentForeground);
+      rootElement.style.setProperty('--site-destructive', variables.destructive);
+      rootElement.style.setProperty('--site-destructive-foreground', variables.destructiveForeground);
+      rootElement.style.setProperty('--site-border', variables.border);
+      rootElement.style.setProperty('--site-input', variables.input);
+      rootElement.style.setProperty('--site-ring', variables.ring);
       
       // Apply effect colors
-      rootElement.style.setProperty('--site-effect-color', variables.effectColor || '');
-      rootElement.style.setProperty('--site-effect-secondary', variables.effectSecondary || '');
-      rootElement.style.setProperty('--site-effect-tertiary', variables.effectTertiary || '');
+      rootElement.style.setProperty('--site-effect-color', variables.effectColor);
+      rootElement.style.setProperty('--site-effect-secondary', variables.effectSecondary);
+      rootElement.style.setProperty('--site-effect-tertiary', variables.effectTertiary);
       
       // Apply timing values
-      rootElement.style.setProperty('--site-transition-fast', variables.transitionFast || '');
-      rootElement.style.setProperty('--site-transition-normal', variables.transitionNormal || '');
-      rootElement.style.setProperty('--site-transition-slow', variables.transitionSlow || '');
-      rootElement.style.setProperty('--site-animation-fast', variables.animationFast || '');
-      rootElement.style.setProperty('--site-animation-normal', variables.animationNormal || '');
-      rootElement.style.setProperty('--site-animation-slow', variables.animationSlow || '');
+      rootElement.style.setProperty('--site-transition-fast', variables.transitionFast);
+      rootElement.style.setProperty('--site-transition-normal', variables.transitionNormal);
+      rootElement.style.setProperty('--site-transition-slow', variables.transitionSlow);
+      rootElement.style.setProperty('--site-animation-fast', variables.animationFast);
+      rootElement.style.setProperty('--site-animation-normal', variables.animationNormal);
+      rootElement.style.setProperty('--site-animation-slow', variables.animationSlow);
       
       // Apply radius values
-      rootElement.style.setProperty('--site-radius-sm', variables.radiusSm || '');
-      rootElement.style.setProperty('--site-radius-md', variables.radiusMd || '');
-      rootElement.style.setProperty('--site-radius-lg', variables.radiusLg || '');
-      rootElement.style.setProperty('--site-radius-full', variables.radiusFull || '');
+      rootElement.style.setProperty('--site-radius-sm', variables.radiusSm);
+      rootElement.style.setProperty('--site-radius-md', variables.radiusMd);
+      rootElement.style.setProperty('--site-radius-lg', variables.radiusLg);
+      rootElement.style.setProperty('--site-radius-full', variables.radiusFull);
       
       cssVarsApplied.current = true;
       
       logger.debug('Applied theme CSS variables', { 
         success: true,
         details: { themeName: currentTheme?.name || 'default' }
-      });
+      } as ThemeLogDetails);
     } catch (error) {
       logger.error('Failed to apply CSS variables', { 
         error: true,
         details: { errorMessage: error instanceof Error ? error.message : String(error) }
-      });
+      } as ThemeLogDetails);
     }
   }, [variables, currentTheme, logger]);
   
@@ -231,14 +197,15 @@ export function SiteThemeProvider({ children, isInitializing = false }: SiteThem
   
   // Create the theme context value - memoized to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
-    variables,
-    isDarkMode,
-    toggleDarkMode,
-    componentStyles,
+    variables, 
+    isDarkMode, 
+    toggleDarkMode, 
+    componentStyles, 
     animations,
     isLoaded
-  }), [variables, isDarkMode, componentStyles, animations, isLoaded, toggleDarkMode]);
-  
+  }), [variables, isDarkMode, componentStyles, animations, isLoaded]);
+
+  // Always render the children; let individual components handle loading states
   return (
     <SiteThemeContext.Provider value={contextValue}>
       <DynamicKeyframes />

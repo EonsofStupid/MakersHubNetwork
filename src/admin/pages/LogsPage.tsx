@@ -4,8 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogsDashboard } from '@/admin/components/dashboard/LogsDashboard';
 import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
 import { CyberCard } from '@/admin/components/ui/CyberCard';
-import { LogCategory } from '@/logging/types';
-import { LogLevel } from '@/logging/types';
+import { LogCategory } from '@/logging';
+import { LogLevel } from '@/logging/constants/log-level';
 
 export function LogsPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -32,7 +32,7 @@ export function LogsPage() {
             <div className="lg:col-span-1">
               <CyberCard title="System Logs" className="p-4">
                 <LogActivityStream 
-                  maxHeight="400px"
+                  height="400px"
                   level={LogLevel.INFO}
                   categories={[LogCategory.SYSTEM]}
                   showSource={true}
@@ -43,7 +43,7 @@ export function LogsPage() {
             <div className="lg:col-span-3">
               <CyberCard title="All Activity" className="p-4">
                 <LogActivityStream 
-                  maxHeight="400px"
+                  height="400px"
                   level={LogLevel.DEBUG}
                   showSource={true}
                 />
@@ -53,7 +53,7 @@ export function LogsPage() {
             <div className="lg:col-span-2">
               <CyberCard title="Errors & Warnings" className="p-4">
                 <LogActivityStream 
-                  maxHeight="300px"
+                  height="300px"
                   level={LogLevel.WARN}
                   showSource={true}
                 />
@@ -63,7 +63,7 @@ export function LogsPage() {
             <div className="lg:col-span-2">
               <CyberCard title="Network Activity" className="p-4">
                 <LogActivityStream 
-                  maxHeight="300px"
+                  height="300px"
                   level={LogLevel.INFO}
                   categories={[LogCategory.NETWORK]}
                   showSource={true}

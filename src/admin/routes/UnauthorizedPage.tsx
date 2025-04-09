@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "react-router-dom";
 import { Shield, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,10 +26,10 @@ export default function UnauthorizedPage() {
           </p>
         </CardContent>
         <CardFooter className="flex justify-center gap-4">
-          <Button variant="outline" onClick={() => navigate({ to: "/" })}>
+          <Button variant="outline" onClick={() => navigate("/")}>
             Return to Home
           </Button>
-          <Button onClick={() => navigate({ to: ".." })}>
+          <Button onClick={() => navigate(-1)}>
             Go Back
           </Button>
         </CardFooter>

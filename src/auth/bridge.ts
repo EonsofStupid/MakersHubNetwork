@@ -1,85 +1,127 @@
 
+import { useAuthStore } from './store/auth.store';
 import { getLogger } from '@/logging';
-import { LogCategory, LogOptions } from '@/logging/types';
-import { AuthEvent, AuthEventListener, AuthEventType } from './types/auth.types';
+import { LogCategory } from '@/logging';
 
-// Event listeners registry
-const authEventListeners: AuthEventListener[] = [];
+// Define the event types
+export type AuthEventType = 
+  | 'AUTH_SIGNED_IN'
+  | 'AUTH_SIGNED_OUT'
+  | 'AUTH_STATE_CHANGED'
+  | 'AUTH_SESSION_REFRESH'
+  | 'AUTH_USER_UPDATED'
+  | 'AUTH_ROLES_UPDATED';
+
+export interface AuthEvent {
+  type: AuthEventType;
+  payload?: any;
+}
+
+type AuthEventHandler = (event: AuthEvent) => void;
+
+// Create a simple event system
+const eventHandlers: AuthEventHandler[] = [];
 
 /**
- * Subscribe to authentication events
- * @param listener The listener function to call when auth events occur
- * @returns A function to unsubscribe the listener
+ * Subscribe to auth events
+ * @param handler The handler function to call when an event occurs
+ * @returns Unsubscribe function
  */
-export function subscribeToAuthEvents(listener: AuthEventListener): () => void {
-  authEventListeners.push(listener);
+export function subscribeToAuthEvents(handler: AuthEventHandler): () => void {
+  eventHandlers.push(handler);
   
-  getLogger().debug('Auth listener registered', {
-    category: LogCategory.AUTH,
-    source: 'AuthBridge',
-    details: {
-      listenersCount: authEventListeners.length
-    }
-  } as LogOptions);
-  
-  // Return unsubscribe function
   return () => {
-    const index = authEventListeners.indexOf(listener);
-    if (index > -1) {
-      authEventListeners.splice(index, 1);
-      
-      getLogger().debug('Auth listener unregistered', {
-        category: LogCategory.AUTH,
-        source: 'AuthBridge',
-        details: {
-          listenersCount: authEventListeners.length
-        }
-      } as LogOptions);
+    const index = eventHandlers.indexOf(handler);
+    if (index !== -1) {
+      eventHandlers.splice(index, 1);
     }
   };
 }
 
 /**
- * Dispatch an authentication event to all listeners
- * @param event The auth event to dispatch
+ * Publish an auth event
+ * @param event The event to publish
  */
-export function dispatchAuthEvent(event: AuthEvent): void {
-  getLogger().info(`Auth event dispatched: ${event.type}`, {
+export function publishAuthEvent(event: AuthEvent): void {
+  const logger = getLogger();
+  logger.debug(`Auth event published: ${event.type}`, {
     category: LogCategory.AUTH,
-    source: 'AuthBridge',
-    details: { type: event.type }
-  } as LogOptions);
+    source: 'auth/bridge',
+    details: event
+  });
   
-  // Use setTimeout to prevent circular dependencies
-  setTimeout(() => {
-    authEventListeners.forEach(listener => {
-      try {
-        listener(event);
-      } catch (error) {
-        getLogger().error('Error in auth event listener', {
-          category: LogCategory.AUTH,
-          source: 'AuthBridge',
-          details: {
-            error,
-            eventType: event.type
-          }
-        } as LogOptions);
-      }
-    });
-  }, 0);
+  eventHandlers.forEach(handler => {
+    try {
+      handler(event);
+    } catch (error) {
+      logger.error('Error in auth event handler', {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge',
+        details: { error, eventType: event.type }
+      });
+    }
+  });
 }
 
 /**
- * Helper functions to dispatch specific auth events with legacy type support
+ * Initialize auth bridge by subscribing to auth store changes
  */
-export function dispatchSignInEvent(payload?: any): void {
-  // Dispatch both current and legacy event types for backward compatibility
-  dispatchAuthEvent({ type: 'SIGNED_IN', payload });
-  dispatchAuthEvent({ type: 'AUTH_SIGNED_IN' as AuthEventType, payload });
-}
-
-export function dispatchSignOutEvent(payload?: any): void {
-  // Dispatch both current and legacy event types for backward compatibility
-  dispatchAuthEvent({ type: 'SIGNED_OUT', payload });
-  dispatchAuthEvent({ type: 'AUTH_SIGNED_OUT' as AuthEventType, payload });
+export function initializeAuthBridge(): void {
+  const logger = getLogger();
+  logger.info('Initializing auth bridge', {
+    category: LogCategory.AUTH,
+    source: 'auth/bridge'
+  });
+  
+  // Setup auth state listener
+  const unsubscribe = useAuthStore.subscribe(
+    (state, prevState) => {
+      // User signed in
+      if (!prevState.user && state.user) {
+        publishAuthEvent({
+          type: 'AUTH_SIGNED_IN',
+          payload: { user: state.user }
+        });
+      }
+      
+      // User signed out
+      if (prevState.user && !state.user) {
+        publishAuthEvent({
+          type: 'AUTH_SIGNED_OUT'
+        });
+      }
+      
+      // Session changed
+      if (prevState.session !== state.session) {
+        publishAuthEvent({
+          type: 'AUTH_SESSION_REFRESH',
+          payload: { session: state.session }
+        });
+      }
+      
+      // User updated
+      if (prevState.user !== state.user && prevState.user && state.user) {
+        publishAuthEvent({
+          type: 'AUTH_USER_UPDATED',
+          payload: { 
+            previous: prevState.user,
+            current: state.user
+          }
+        });
+      }
+      
+      // Roles updated
+      if (prevState.roles !== state.roles) {
+        publishAuthEvent({
+          type: 'AUTH_ROLES_UPDATED',
+          payload: { roles: state.roles }
+        });
+      }
+    }
+  );
+  
+  // Clean up on window unload
+  window.addEventListener('beforeunload', () => {
+    unsubscribe();
+  });
 }

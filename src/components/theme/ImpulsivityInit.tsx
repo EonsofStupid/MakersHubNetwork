@@ -3,114 +3,104 @@ import { useEffect, useState, useRef } from 'react';
 import { useImpulsivityTheme } from '@/hooks/useImpulsivityTheme';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useThemeStore } from '@/stores/theme/themeStore';
-import { ThemeLoadingState } from './info/ThemeLoadingState';
+import { Loader } from 'lucide-react';
+import { useThemeStore } from '@/stores/theme/store';
+import { ThemeLogDetails } from '@/types/theme';
 
 interface ImpulsivityInitProps {
-  children: React.ReactNode;
-  priority?: boolean;
   autoApply?: boolean;
-  showLoadingState?: boolean;
+  children?: React.ReactNode;
+  showLoader?: boolean;
 }
 
-export function ImpulsivityInit({ 
-  children, 
-  priority = false, 
-  autoApply = false,
-  showLoadingState = false
-}: ImpulsivityInitProps) {
-  const { applyToMainSite } = useImpulsivityTheme();
+export function ImpulsivityInit({ autoApply = true, children, showLoader = false }: ImpulsivityInitProps) {
+  const { applyTheme, isSyncing } = useImpulsivityTheme();
+  const { isLoading: themeStoreLoading } = useThemeStore();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isError, setIsError] = useState(false);
   const logger = useLogger('ImpulsivityInit', LogCategory.UI);
-  const [isApplied, setIsApplied] = useState(false);
-  const [isApplying, setIsApplying] = useState(false);
-  const { loadStatus, currentTheme } = useThemeStore();
-  const applyAttempted = useRef(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const initAttempted = useRef(false);
   
-  // Apply the theme if autoApply is true - using refs to track state
   useEffect(() => {
-    // Skip if we've already applied or are currently applying
-    if (isApplied || isApplying || !autoApply || applyAttempted.current) {
-      return;
-    }
+    // Apply immediate styles to ensure something is visible
+    const applyImmediateStyles = () => {
+      // Set essential CSS variables directly for fast visual feedback
+      const rootElement = document.documentElement;
+      rootElement.style.setProperty('--site-primary', '186 100% 50%'); // #00F0FF in HSL  
+      rootElement.style.setProperty('--site-secondary', '334 100% 59%'); // #FF2D6E in HSL
+      rootElement.style.setProperty('--site-effect-color', '#00F0FF');
+      rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
+      rootElement.style.setProperty('--site-background', '#080F1E');
+      rootElement.style.setProperty('--site-foreground', '#F9FAFB');
+    };
     
-    // Only apply theme when we have a successful load status or after a timeout
-    if ((autoApply && loadStatus === 'success') || 
-        (autoApply && !applyAttempted.current)) {
-      
-      // Mark as attempted to prevent multiple attempts
-      applyAttempted.current = true;
-      setIsApplying(true);
-      
-      const applyWithPriority = async () => {
+    // Apply immediate styles regardless of theme system state
+    applyImmediateStyles();
+    
+    // Only initialize once to prevent infinite loops
+    if (autoApply && !isInitialized && !isSyncing && !themeStoreLoading && !initAttempted.current) {
+      const initTheme = async () => {
         try {
-          // Apply default theme immediately to ensure basic styling
-          const root = document.documentElement;
-          root.style.setProperty('--site-effect-color', '#00F0FF');
-          root.style.setProperty('--site-effect-secondary', '#FF2D6E');
-          root.style.setProperty('--site-effect-tertiary', '#8B5CF6');
+          initAttempted.current = true;
+          logger.info('Initializing Impulsivity theme');
+          setIsError(false);
           
-          // If priority is high, apply immediately
-          // Otherwise, use a small timeout to not block rendering
-          if (priority) {
-            await applyToMainSite();
-            setIsApplied(true);
-            setIsApplying(false);
+          const result = await applyTheme();
+          
+          if (result) {
+            setIsInitialized(true);
+            logger.info('Impulsivity theme initialized successfully');
           } else {
-            // Use ref to track timeout and clean up
-            timeoutRef.current = setTimeout(async () => {
-              await applyToMainSite();
-              setIsApplied(true);
-              setIsApplying(false);
-            }, 100);
+            setIsError(true);
+            logger.warn('Impulsivity theme initialization incomplete');
+            // Still allow the app to load, but in a potentially inconsistent state
+            setIsInitialized(true);
           }
-          
-          logger.info('Impulsivity theme applied', {
-            details: {
-              priority,
-              success: true,
-              themePresent: !!currentTheme,
-              loadStatus
-            }
-          });
         } catch (error) {
-          logger.error('Failed to apply Impulsivity theme', { 
-            details: { 
-              error: error instanceof Error ? error.message : String(error),
-              priority,
-              themePresent: !!currentTheme,
-              loadStatus
-            }
-          });
+          setIsError(true);
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'Unknown error initializing theme';
           
-          // Mark as applied to prevent retries but ensure basic styling
-          const root = document.documentElement;
-          root.style.setProperty('--site-effect-color', '#00F0FF');
-          root.style.setProperty('--site-effect-secondary', '#FF2D6E');
-          root.style.setProperty('--site-background', '#080F1E');
-          root.style.setProperty('--site-foreground', '#F9FAFB');
+          const logDetails: ThemeLogDetails = { 
+            errorMessage
+          };
           
-          setIsApplied(true);
-          setIsApplying(false);
+          logger.error('Failed to initialize Impulsivity theme', logDetails);
+          
+          // Still mark as initialized to avoid blocking the app
+          setIsInitialized(true);
         }
       };
       
-      applyWithPriority();
+      initTheme();
     }
     
-    // Cleanup timeout to prevent memory leaks
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+    // Force initialization timeout after 3 seconds (reduced from 5 to make app more responsive)
+    const timeout = setTimeout(() => {
+      if (!isInitialized) {
+        logger.warn('Impulsivity theme initialization timed out, continuing anyway');
+        setIsInitialized(true);
+        
+        // Reapply immediate styles as fallback
+        applyImmediateStyles();
       }
-    };
-  }, [autoApply, applyToMainSite, priority, logger, isApplied, isApplying, loadStatus, currentTheme]);
+    }, 3000);
+    
+    return () => clearTimeout(timeout);
+  }, [autoApply, applyTheme, isInitialized, logger, isSyncing, themeStoreLoading]);
   
-  // Show loading state if requested and still applying theme
-  if (showLoadingState && isApplying) {
-    return <ThemeLoadingState message="Applying Impulsivity Theme..." subMessage="Please wait while we finalize your experience" />;
+  // If showing loader and still initializing, render a loading indicator
+  if (showLoader && (isSyncing || themeStoreLoading) && !isInitialized) {
+    return (
+      <div className="fixed inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-card p-6 rounded-lg shadow-lg border border-border flex flex-col items-center">
+          <Loader className="animate-spin h-8 w-8 text-primary mb-4" />
+          <p className="text-foreground font-medium">Initializing Impulsivity Theme...</p>
+        </div>
+      </div>
+    );
   }
   
-  // Always render children - the theme is applied in the background
   return <>{children}</>;
 }

@@ -1,22 +1,33 @@
 
-// Import existing exports
-import { getLogger, initializeLogger } from './logger';
-import { memoryTransport } from './transports/memory-transport';
+import { LoggerService, getLogger } from './logger.service';
+import { LogCategory, LogEntry, LogTransport } from './types';
+import { LogLevel } from './constants/log-level';
+import { getLoggingConfig, memoryTransport } from './config';
 
-// Update LogCategory enum to include ALL needed categories
-import { LogCategory, LogLevel } from './types';
+// Initialize the logger with appropriate config
+export function initializeLogger(): void {
+  const config = getLoggingConfig();
+  LoggerService.getInstance(config);
+  
+  // Log initialization
+  const logger = getLogger();
+  logger.info('Logging system initialized', {
+    category: LogCategory.SYSTEM,
+    details: { config },
+    source: 'logging/index.ts'
+  });
+}
 
-// Re-export everything
+// Export everything needed for the logging system
 export {
+  LoggerService,
   getLogger,
-  initializeLogger,
   LogLevel,
   LogCategory,
-  memoryTransport // Export memoryTransport
+  memoryTransport
 };
 
-// Use export type for types when 'isolatedModules' is enabled
-export type { LogEntry, LogOptions, Logger, LogMessage, Transport } from './types';
-export * from './context/LoggingContext';
-export * from './components/LogConsole';
-export * from './components/LogToggleButton';
+export type {
+  LogEntry,
+  LogTransport
+};

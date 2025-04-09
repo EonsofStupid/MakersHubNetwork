@@ -1,96 +1,66 @@
 
-import React, { useMemo } from 'react';
-import { useAuth } from '@/auth/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
-import { Shield } from 'lucide-react';
-import { UserRole } from '@/auth/hooks/useAuth';
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuthState } from '../hooks/useAuthState';
+import { hasPermission } from '../rbac/enforce';
+import { PermissionValue } from '../permissions';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
 
 interface RequirePermissionProps {
-  permission?: string;
-  role?: UserRole | UserRole[];
   children: React.ReactNode;
+  permission: PermissionValue;
   fallback?: React.ReactNode;
   redirectTo?: string;
-  showMessage?: boolean;
 }
 
-export const RequirePermission: React.FC<RequirePermissionProps> = ({
-  permission,
-  role,
+/**
+ * Component that checks if the current user has the required permission
+ * and either renders the children or redirects/renders fallback
+ */
+export function RequirePermission({
   children,
+  permission,
   fallback,
-  redirectTo = '/auth/login',
-  showMessage = true
-}) => {
-  const { isAuthenticated, isLoading, user, hasRole } = useAuth();
-  const navigate = useNavigate();
+  redirectTo = '/admin/unauthorized'
+}: RequirePermissionProps) {
+  const { roles, isLoading } = useAuthState();
+  const logger = getLogger();
   
-  // Extract roles for safety - always return an array
-  const userRoles = useMemo(() => {
-    if (!user || !user.role) return [];
-    return [user.role as UserRole];
-  }, [user]);
-
-  // Check permissions
-  const hasPermission = useMemo(() => {
-    // If no permission or role is required, allow access
-    if (!permission && !role) return true;
-    
-    // Must be authenticated first
-    if (!isAuthenticated || !user) return false;
-    
-    // Check role requirement if specified
-    if (role) {
-      return hasRole(role);
-    }
-    
-    // Check permission if specified
-    if (permission) {
-      // Currently permissions are not implemented, so fall back to admin check
-      return userRoles.includes('admin') || userRoles.includes('super_admin');
-    }
-    
-    return false;
-  }, [isAuthenticated, user, role, permission, hasRole, userRoles]);
-
-  // If still loading, don't render anything yet
+  // Show loading state while permissions are being determined
   if (isLoading) {
-    return null;
+    return (
+      <div className="flex items-center justify-center h-full p-6">
+        <div className="h-6 w-6 border-t-2 border-primary animate-spin rounded-full" />
+      </div>
+    );
   }
   
-  // If user doesn't have permission, handle according to props
-  if (!hasPermission) {
-    // Redirect if specified
-    if (redirectTo) {
-      navigate(redirectTo, { 
-        replace: true,
-        state: { from: window.location.pathname }
-      });
-      return null;
+  // Check permission
+  const allowed = hasPermission(roles, permission);
+  
+  // Log permission check
+  logger.info(`Permission check for ${permission}`, {
+    category: LogCategory.AUTH,
+    source: "RequirePermission",
+    details: { 
+      permission,
+      allowed,
+      redirectTo: !allowed ? redirectTo : null 
     }
-    
-    // Show fallback content if provided
+  });
+  
+  // If permission check fails
+  if (!allowed) {
+    // Return fallback if provided
     if (fallback) {
       return <>{fallback}</>;
     }
     
-    // Show default permission error message
-    if (showMessage) {
-      return (
-        <div className="flex flex-col items-center justify-center p-8 text-center">
-          <Shield className="h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Permission Required</h2>
-          <p className="text-muted-foreground mb-6">
-            You don't have the necessary permissions to access this content.
-          </p>
-        </div>
-      );
-    }
-    
-    // Return nothing if no fallback and showMessage is false
-    return null;
+    // Otherwise redirect
+    return <Navigate to={redirectTo} replace />;
   }
   
-  // User has permission, render children
+  // Render children if permission check passes
   return <>{children}</>;
-};
+}

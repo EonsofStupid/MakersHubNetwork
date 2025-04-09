@@ -16,7 +16,7 @@ import '@/admin/theme/impulse/impulse-theme.css';
 export { AdminDashboard } from './components/dashboard/AdminDashboard';
 
 // Export routes
-export { AdminRoutes } from './routes/AdminRoutes';
+export { AdminRoutes } from './routes';
 
 // Export components
 import { AdminLayout } from './components/AdminLayout';
@@ -28,6 +28,7 @@ import { useAdminChat, useAdminChatListener } from './hooks/useAdminChat';
 import { useAdminPermissions } from './hooks/useAdminPermissions';
 import { DashboardShortcuts } from './components/dashboard/DashboardShortcuts';
 import { DragIndicator } from './components/ui/DragIndicator';
+import React from 'react';
 
 // Export admin UI components
 export { AdminLayout };

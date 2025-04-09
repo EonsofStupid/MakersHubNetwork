@@ -1,12 +1,9 @@
 
-export type ThemeStatus = 'draft' | 'published' | 'archived';
-export type ThemeContext = 'site' | 'admin' | 'chat' | 'app' | 'training';
-
 export interface Theme {
   id: string;
   name: string;
   description?: string;
-  status: ThemeStatus;
+  status: 'draft' | 'published' | 'archived';
   is_default: boolean;
   created_by?: string;
   created_at: string;
@@ -22,21 +19,7 @@ export interface Theme {
 }
 
 export interface DesignTokensStructure {
-  colors?: {
-    primary: string;
-    secondary: string;
-    accent?: string;
-    background?: string;
-    foreground?: string;
-    card?: string;
-    cardForeground?: string;
-    muted?: string;
-    mutedForeground?: string;
-    border?: string;
-    input?: string;
-    ring?: string;
-    [key: string]: string | undefined;
-  };
+  colors?: Record<string, string>;
   spacing?: Record<string, any>;
   typography?: TypographyTokens;
   effects: {
@@ -46,7 +29,6 @@ export interface DesignTokensStructure {
     primary?: string;
     secondary?: string;
     tertiary?: string;
-    [key: string]: string | Record<string, any> | undefined;
   };
   animation?: AnimationTokens;
   admin?: Record<string, any>;
@@ -73,7 +55,7 @@ export interface ComponentTokens {
   theme_id?: string;
   created_at?: string;
   updated_at?: string;
-  context?: ThemeContext;
+  context?: 'site' | 'admin' | 'chat';
 }
 
 export interface ThemeToken {
@@ -84,51 +66,34 @@ export interface ThemeToken {
   theme_id: string;
 }
 
-// Updated to be compatible with logger options
-import { LogCategory } from '@/logging';
-
 export interface ThemeLogDetails {
-  // Status indicators
-  success?: boolean;
   error?: boolean;
+  success?: boolean;
   warning?: boolean;
-  
-  // Error information
   errorMessage?: string;
-  errorCode?: string;
   errorDetails?: Record<string, any>;
+  errorCode?: string;
   errorHint?: string;
-  errorName?: string;
-  
-  // Theme information
   themeId?: string;
   themeName?: string;
   theme?: string;
-  defaultTheme?: string;
+  isFallback?: boolean;
   originalTheme?: string;
-  
-  // Component information
-  component?: string;
-  componentCount?: number;
+  hasAnimations?: boolean;
+  hasComponentStyles?: boolean;
   componentTokensCount?: number;
-  
-  // Operation status
   mainSite?: boolean;
   admin?: boolean;
   database?: boolean;
-  isFallback?: boolean;
-  
-  // Additional context
+  details?: Record<string, unknown>;
+  // Added for the TypeScript errors
+  errorName?: string;
   reason?: string;
   source?: string;
-  details?: Record<string, unknown>;
-  hasAnimations?: boolean;
-  hasComponentStyles?: boolean;
-  category?: LogCategory;
-  
-  // Allow for additional properties
-  [key: string]: unknown;
+  component?: string;
 }
+
+export type ThemeContext = 'site' | 'admin' | 'chat';
 
 export interface ThemeAnimation {
   name: string;
@@ -146,31 +111,4 @@ export interface ThemeEffect {
   type: 'glitch' | 'gradient' | 'cyber' | 'pulse' | 'particle' | 'morph';
   enabled: boolean;
   [key: string]: any; // Allow for type-specific properties
-}
-
-// Fixed ThemeTokens type for the store
-export interface StoreThemeTokens {
-  primary: string;
-  secondary: string;
-  accent: string;
-  background: string;
-  foreground: string;
-  card: string;
-  cardForeground: string;
-  muted: string;
-  mutedForeground: string;
-  border: string;
-  input: string;
-  ring: string;
-  effectPrimary: string;
-  effectSecondary: string;
-  effectTertiary: string;
-  transitionFast: string;
-  transitionNormal: string;
-  transitionSlow: string;
-  radiusSm: string;
-  radiusMd: string;
-  radiusLg: string;
-  radiusFull: string;
-  [key: string]: string;
 }

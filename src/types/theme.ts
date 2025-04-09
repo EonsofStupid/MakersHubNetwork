@@ -5,7 +5,7 @@ import { Json } from "@/integrations/supabase/types";
 export type ThemeStatus = 'draft' | 'published' | 'archived';
 
 // Define the theme context type to ensure consistent usage
-export type ThemeContext = 'site' | 'admin' | 'chat' | 'app' | 'training';
+export type ThemeContext = 'site' | 'admin' | 'chat';
 
 export interface ThemeToken {
   id: string;
@@ -30,43 +30,27 @@ export interface ComponentTokens {
   context?: ThemeContext;
 }
 
-// Fixed DesignTokensStructure with required properties
 export interface DesignTokensStructure {
-  colors: {
-    primary: string;
-    secondary: string;
-    accent?: string;
-    background?: string;
-    foreground?: string;
-    card?: string;
-    cardForeground?: string;
-    muted?: string;
-    mutedForeground?: string;
-    border?: string;
-    input?: string;
-    ring?: string;
-    [key: string]: string | undefined;
-  };
+  colors?: Record<string, any>;
   spacing?: Record<string, any>;
   typography?: {
-    fontSizes?: Record<string, any>;
-    fontFamilies?: Record<string, any>;
-    lineHeights?: Record<string, any>;
-    letterSpacing?: Record<string, any>;
+    fontSizes: Record<string, any>;
+    fontFamilies: Record<string, any>;
+    lineHeights: Record<string, any>;
+    letterSpacing: Record<string, any>;
   };
-  effects: {
+  effects?: {
     shadows: Record<string, any>;
     blurs: Record<string, any>;
     gradients: Record<string, any>;
     primary?: string;
     secondary?: string;
     tertiary?: string;
-    [key: string]: string | Record<string, any> | undefined;
   };
   animation?: {
-    keyframes?: Record<string, any>;
-    transitions?: Record<string, any>;
-    durations?: Record<string, string | number>;
+    keyframes: Record<string, any>;
+    transitions: Record<string, any>;
+    durations: Record<string, any>;
   };
   admin?: Record<string, any>;
 }
@@ -90,7 +74,7 @@ export interface Theme {
   cached_styles?: Record<string, any>;
 }
 
-// Comprehensive ThemeLogDetails interface with all possible properties
+// Updated ThemeLogDetails interface with more specific types
 export interface ThemeLogDetails {
   // Status indicators
   success?: boolean;
@@ -100,13 +84,11 @@ export interface ThemeLogDetails {
   // Error information
   errorMessage?: string;
   errorCode?: string;
-  errorDetails?: unknown;
+  errorDetails?: string;
   errorHint?: string;
-  errorName?: string;
   
   // Theme information
   themeId?: string;
-  themeName?: string;
   theme?: string;
   defaultTheme?: string;
   originalTheme?: string;
@@ -114,21 +96,15 @@ export interface ThemeLogDetails {
   // Component information
   component?: string;
   componentCount?: number;
-  componentTokensCount?: number;
   
   // Operation status
   mainSite?: boolean;
   admin?: boolean;
   database?: boolean;
-  isFallback?: boolean;
   
   // Additional context
   reason?: string;
   details?: Record<string, unknown>;
-  hasAnimations?: boolean;
-  hasComponentStyles?: boolean;
-  source?: string;
-  category?: string;
   
   // Allow for additional properties
   [key: string]: unknown;
@@ -141,31 +117,4 @@ export interface ThemeContextType {
   isLoading: boolean;
   error: Error | null;
   setTheme: (themeId: string) => Promise<void>;
-}
-
-// Fixed ThemeTokens type for the store
-export interface StoreThemeTokens {
-  primary: string;
-  secondary: string;
-  accent: string;
-  background: string;
-  foreground: string;
-  card: string;
-  cardForeground: string;
-  muted: string;
-  mutedForeground: string;
-  border: string;
-  input: string;
-  ring: string;
-  effectPrimary: string;
-  effectSecondary: string;
-  effectTertiary: string;
-  transitionFast: string;
-  transitionNormal: string;
-  transitionSlow: string;
-  radiusSm: string;
-  radiusMd: string;
-  radiusLg: string;
-  radiusFull: string;
-  [key: string]: string;
 }

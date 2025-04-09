@@ -1,68 +1,89 @@
 
-import React from 'react';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { CircularProgress } from './CircularProgress';
-import { getLogger } from '@/logging';
+import { ReactNode, useEffect } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
+import { UserRole } from "@/types/auth.types"
+import { useToast } from "@/hooks/use-toast"
+import { useAuthState } from "@/auth/hooks/useAuthState"
+import { useAdminAccess } from "@/hooks/useAdminAccess"
+import { useLogger } from "@/hooks/use-logger"
+import { LogCategory } from "@/logging"
 
-// Create logger
-const logger = getLogger('AuthGuard');
-
-export interface AuthGuardProps {
-  children: React.ReactNode;
-  publicRoute?: boolean;
-  adminRequired?: boolean;
-  fallback?: React.ReactNode;
+interface AuthGuardProps {
+  children: ReactNode
+  requiredRoles?: UserRole[]
+  adminOnly?: boolean
 }
 
-export function AuthGuard({ 
-  children, 
-  publicRoute = true, // Changed to true by default to ensure all routes are public
-  adminRequired = false,
-  fallback 
-}: AuthGuardProps) {
-  const { isAuthenticated, isInitializing, roles } = useAuthState();
+export const AuthGuard = ({ children, requiredRoles, adminOnly }: AuthGuardProps) => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { toast } = useToast()
+  const logger = useLogger("AuthGuard", LogCategory.AUTH)
   
-  // For public routes, always render children regardless of auth state
-  if (publicRoute) {
-    logger.debug('AuthGuard rendering public route content');
-    return <>{children}</>;
-  }
-  
-  // If we're still initializing and it's not a public route, show loading state
-  if (isInitializing && !publicRoute) {
-    return fallback || (
-      <div className="w-full h-40 flex items-center justify-center">
-        <CircularProgress size="md" />
-      </div>
-    );
-  }
-  
-  // For admin-required routes, check both authentication and admin role
-  if (adminRequired && (!isAuthenticated || !roles.includes('admin'))) {
-    logger.debug('AuthGuard blocking admin route due to missing admin role');
-    return fallback || (
-      <div className="p-4">
-        <h2 className="text-lg font-medium">Admin Access Required</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Please sign in with an admin account to view this content.
-        </p>
-      </div>
-    );
-  }
-  
-  // For protected routes, check authentication
-  if (!isInitializing && !isAuthenticated && !publicRoute) {
-    logger.debug('AuthGuard blocking protected route due to missing authentication');
-    return fallback || (
-      <div className="p-4">
-        <h2 className="text-lg font-medium">Authentication Required</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Please sign in to view this content.
-        </p>
-      </div>
-    );
-  }
-  
-  // User is authenticated or route is public, render children
-  return <>{children}</>;
+  // Use centralized auth state - avoid initialization loops
+  const { isLoading, status, roles, user } = useAuthState()
+  const { hasAdminAccess } = useAdminAccess()
+
+  const isAuthenticated = status === "authenticated" && !!user?.id
+
+  // Check if user has required roles or admin access when needed
+  const hasRequiredRole = requiredRoles 
+    ? requiredRoles.some(r => roles.includes(r)) || hasAdminAccess
+    : true
+
+  // Special check for admin routes
+  const hasAdminPermission = adminOnly ? hasAdminAccess : true
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      logger.info("AuthGuard - Redirecting to login: Not authenticated")
+      // Keep track of the current path to redirect back after login
+      const currentPath = location.pathname
+      navigate(`/login?from=${encodeURIComponent(currentPath)}`)
+      return
+    }
+
+    if (!isLoading && isAuthenticated && requiredRoles && !hasRequiredRole) {
+      logger.info("AuthGuard - Redirecting to unauthorized: Missing required roles", {
+        details: { requiredRoles, userRoles: roles }
+      })
+      toast({
+        variant: "destructive",
+        title: "Access Denied",
+        description: "You don't have permission to access this page"
+      })
+      navigate("/")
+    }
+
+    if (!isLoading && isAuthenticated && adminOnly && !hasAdminPermission) {
+      logger.info("AuthGuard - Redirecting: Not an admin", {
+        details: { userRoles: roles }
+      })
+      toast({
+        variant: "destructive",
+        title: "Admin Access Required",
+        description: "You need admin privileges to access this section"
+      })
+      navigate("/")
+    }
+  }, [
+    isLoading, 
+    isAuthenticated, 
+    roles, 
+    requiredRoles, 
+    adminOnly, 
+    hasRequiredRole, 
+    hasAdminPermission, 
+    navigate, 
+    location.pathname, 
+    toast,
+    logger
+  ])
+
+  if (isLoading) return <div>Loading...</div>
+  if (!isAuthenticated) return null
+  if (requiredRoles && !hasRequiredRole) return null
+  if (adminOnly && !hasAdminPermission) return null
+
+  return <>{children}</>
 }

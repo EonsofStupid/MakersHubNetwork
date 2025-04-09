@@ -1,221 +1,145 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeContext } from '@/types/theme';
-import { z } from 'zod';
-import { ThemeContextSchema } from '@/types/themeContext';
 import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
 
-// Use Zod to validate service options
-const GetThemeOptionsSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().optional(),
-  status: z.enum(['draft', 'published', 'archived'] as const).optional(),
-  isDefault: z.boolean().optional(),
-  context: ThemeContextSchema.optional(),
-});
+// Create a logger instance for the theme service
+const logger = getLogger();
 
-export type GetThemeOptions = z.infer<typeof GetThemeOptionsSchema>;
-
-interface GetThemeResponse {
-  theme: Theme;
-  isFallback: boolean;
-}
-
-// Fallback theme to use when no theme is found
+// Local fallback theme for when the database is unavailable
 const fallbackTheme: Theme = {
-  id: 'default',
-  name: 'Default',
-  description: 'Default theme',
+  id: "00000000-0000-0000-0000-000000000001",
+  name: "Local Fallback Theme",
+  description: "Local emergency fallback theme used when theme service is unavailable",
   status: 'published',
   is_default: true,
-  created_by: 'system',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   version: 1,
   design_tokens: {
     colors: {
-      primary: '186 100% 50%',
-      secondary: '334 100% 59%',
-      background: '228 47% 8%',
-      foreground: '210 40% 98%',
+      background: "#080F1E",
+      foreground: "#F9FAFB",
+      card: "#0E172A",
+      cardForeground: "#F9FAFB", 
+      primary: "#00F0FF",
+      primaryForeground: "#F9FAFB",
+      secondary: "#FF2D6E",
+      secondaryForeground: "#F9FAFB",
+      muted: "#131D35",
+      mutedForeground: "#94A3B8",
+      accent: "#131D35",
+      accentForeground: "#F9FAFB",
+      destructive: "#EF4444",
+      destructiveForeground: "#F9FAFB",
+      border: "#131D35",
+      input: "#131D35",
+      ring: "#1E293B",
     },
     effects: {
       shadows: {},
       blurs: {},
       gradients: {},
-      primary: '#00F0FF',
-      secondary: '#FF2D6E',
-      tertiary: '#8B5CF6',
+      primary: "#00F0FF",
+      secondary: "#FF2D6E",
+      tertiary: "#8B5CF6",
     },
+    animation: {
+      keyframes: {},
+      transitions: {},
+      durations: {
+        fast: "150ms",
+        normal: "300ms",
+        slow: "500ms",
+        animationFast: "1s",
+        animationNormal: "2s",
+        animationSlow: "3s",
+      }
+    },
+    spacing: {
+      radius: {
+        sm: "0.25rem",
+        md: "0.5rem",
+        lg: "0.75rem",
+        full: "9999px",
+      }
+    }
   },
   component_tokens: [],
 };
 
-/**
- * Get a theme from the database or Supabase edge function
- * Always returns fallback data if edge function fails
- */
-export async function getTheme(options: GetThemeOptions = {}): Promise<GetThemeResponse> {
-  try {
-    const logger = getLogger('ThemeService');
-    // Validate options with Zod
-    const validOptions = GetThemeOptionsSchema.parse(options);
-    logger.info('Fetching theme', { 
-      details: { 
-        options: validOptions,
-        hasId: !!validOptions.id,
-        hasContext: !!validOptions.context 
-      } 
-    });
-    
-    // Try to fetch from Supabase edge function if available
-    try {
-      if (import.meta.env.VITE_SUPABASE_URL) {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        
-        // Build the query parameters
-        const params = new URLSearchParams();
-        if (validOptions.id) params.append('themeId', validOptions.id);
-        if (validOptions.name) params.append('themeName', validOptions.name);
-        if (validOptions.context) params.append('context', validOptions.context);
-        if (validOptions.isDefault !== undefined) params.append('isDefault', validOptions.isDefault.toString());
-        
-        const url = `${supabaseUrl}/functions/v1/theme-service?${params.toString()}`;
-        logger.info('Calling theme service edge function', { details: { url } });
-        
-        // Add timeout to prevent hanging
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
-        try {
-          const response = await fetch(url, { 
-            signal: controller.signal 
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (!response.ok) {
-            throw new Error(`Theme service responded with ${response.status}: ${response.statusText}`);
-          }
-          
-          const data = await response.json();
-          
-          if (data.theme) {
-            logger.info('Theme loaded from edge function', { 
-              details: { 
-                themeName: data.theme.name,
-                isFallback: data.isFallback
-              } 
-            });
-            
-            return {
-              theme: data.theme,
-              isFallback: data.isFallback
-            };
-          }
-          
-          // If theme not found but tokens are returned, create a fallback theme with those tokens
-          if (data.tokens) {
-            const fallbackWithTokens = {
-              ...fallbackTheme,
-              design_tokens: {
-                colors: data.tokens,
-                effects: {
-                  shadows: {},
-                  blurs: {},
-                  gradients: {},
-                  primary: data.tokens.effectPrimary || '#00F0FF',
-                  secondary: data.tokens.effectSecondary || '#FF2D6E',
-                  tertiary: data.tokens.effectTertiary || '#8B5CF6',
-                }
-              }
-            };
-            
-            logger.warn('Using fallback theme with edge function tokens', { 
-              details: { isFallback: true } 
-            });
-            
-            return {
-              theme: fallbackWithTokens,
-              isFallback: true
-            };
-          }
-        } catch (fetchError) {
-          clearTimeout(timeoutId);
-          logger.error('Edge function fetch error', { 
-            details: { error: fetchError instanceof Error ? fetchError.message : String(fetchError) } 
-          });
-          // Continue to fallback implementation
-        }
-      }
-    } catch (error) {
-      logger.error('Failed to fetch theme from edge function', { 
-        details: { error: error instanceof Error ? error.message : String(error) } 
-      });
-      // Continue to fallback implementation
-    }
-    
-    // Fallback implementation
-    logger.warn('Using memory fallback theme', { details: { reason: 'No edge function or API available' } });
-    
-    // Create a context-appropriate theme
-    const contextTheme = {
-      ...fallbackTheme,
-      id: validOptions.id || fallbackTheme.id,
-      name: validOptions.name || `Default ${validOptions.context || 'App'} Theme`,
-      status: validOptions.status || fallbackTheme.status,
-      is_default: validOptions.isDefault ?? fallbackTheme.is_default,
-      design_tokens: {
-        ...fallbackTheme.design_tokens,
-        // Customize colors based on context
-        colors: {
-          ...fallbackTheme.design_tokens.colors,
-          ...(validOptions.context === 'admin' ? {
-            primary: '186 100% 50%', // Cyan for admin
-            secondary: '334 100% 59%', // Hot pink for admin
-          } : validOptions.context === 'chat' ? {
-            primary: '262 80% 50%', // Purple for chat
-            secondary: '160 100% 50%', // Green for chat
-          } : {})
-        },
-        // Customize effects based on context
-        effects: {
-          ...fallbackTheme.design_tokens.effects,
-          ...(validOptions.context === 'admin' ? {
-            primary: '#00F0FF', // Cyan for admin
-            secondary: '#FF2D6E', // Hot pink for admin
-          } : validOptions.context === 'chat' ? {
-            primary: '#8B5CF6', // Purple for chat
-            secondary: '#10B981', // Green for chat
-          } : {})
-        }
-      }
-    };
-    
-    return {
-      theme: contextTheme,
-      isFallback: true
-    };
-  } catch (error) {
-    console.error('Error fetching theme:', error);
-    
-    return {
-      theme: fallbackTheme,
-      isFallback: true
-    };
-  }
+interface GetThemeOptions {
+  id?: string;
+  name?: string;
+  isDefault?: boolean;
+  context?: ThemeContext;
+  enableFallback?: boolean;
 }
 
 /**
- * Helper function to remove undefined values from an object
+ * Get a theme from the database
  */
-export function removeUndefineds<T extends Record<string, any>>(obj: T): T {
-  const result = {} as T;
-  
-  Object.keys(obj).forEach(key => {
-    if (obj[key] !== undefined) {
-      result[key as keyof T] = obj[key];
+export async function getTheme(options: GetThemeOptions = { isDefault: true }): Promise<{ theme: Theme, isFallback: boolean }> {
+  try {
+    logger.info("Fetching theme from service", {
+      category: LogCategory.DATABASE,
+      details: options,
+      source: 'themeService'
+    });
+    
+    const { id, name, isDefault = true, context = 'site' } = options;
+    
+    // Use edge function to get theme
+    const { data, error } = await supabase.functions.invoke('theme-service', {
+      body: { 
+        operation: 'get-theme', 
+        themeId: id,
+        themeName: name,
+        isDefault,
+        context
+      }
+    });
+
+    if (error) {
+      logger.error("Error fetching theme from service", { 
+        category: LogCategory.DATABASE,
+        details: { error, options },
+        source: 'themeService'
+      });
+      
+      return { 
+        theme: fallbackTheme, 
+        isFallback: true 
+      };
     }
-  });
-  
-  return result;
+    
+    logger.info("Theme set successfully", { 
+      category: LogCategory.DATABASE,
+      details: {
+        themeId: data.theme?.id || 'unknown',
+        isFallback: data.isFallback || false,
+        componentTokensCount: Array.isArray(data.theme?.component_tokens) ? data.theme?.component_tokens.length : 0
+      },
+      source: 'themeService'
+    });
+
+    return { 
+      theme: data.theme, 
+      isFallback: data.isFallback || false 
+    };
+    
+  } catch (error) {
+    logger.error("Error fetching theme from service", { 
+      category: LogCategory.DATABASE,
+      details: error,
+      source: 'themeService'
+    });
+    
+    // Return local fallback theme as emergency backup
+    return { 
+      theme: fallbackTheme, 
+      isFallback: true 
+    };
+  }
 }

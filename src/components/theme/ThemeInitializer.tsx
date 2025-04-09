@@ -1,204 +1,179 @@
 
-import React, { ReactNode, useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { ThemeContext } from '@/types/theme';
+import { useEffect, useState, useRef } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
-import { getLogger } from '@/logging';
+import { ImpulsivityInit } from './ImpulsivityInit';
+import { SiteThemeProvider } from './SiteThemeProvider';
+import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import NoHydrationMismatch from '../util/NoHydrationMismatch';
 import { ThemeLoadingState } from './info/ThemeLoadingState';
 import { ThemeErrorState } from './info/ThemeErrorState';
-import { safeSSR, isBrowser } from '@/lib/utils/safeSSR';
-import CircuitBreaker from '@/lib/utils/CircuitBreaker';
+import { ThemeLogDetails } from '@/types/theme';
 
 interface ThemeInitializerProps {
-  children: ReactNode;
-  themeContext?: ThemeContext;
-  applyImmediately?: boolean;
-  fallbackTheme?: {
-    primary?: string;
-    secondary?: string;
-    background?: string;
-    foreground?: string;
-    [key: string]: string | undefined;
-  };
+  children: React.ReactNode;
+  defaultTheme?: string;
 }
 
-const logger = getLogger('ThemeInitializer');
-
-// Default fallback theme to always have something to show
-const defaultFallbackTheme = {
-  primary: '186 100% 50%',
-  secondary: '334 100% 59%',
-  background: '228 47% 8%',
-  foreground: '210 40% 98%',
-  effectColor: '#00F0FF',
-  effectSecondary: '#FF2D6E',
-  effectTertiary: '#8B5CF6',
-};
-
-export function ThemeInitializer({ 
-  children, 
-  themeContext = 'site', 
-  applyImmediately = true,
-  fallbackTheme = defaultFallbackTheme
-}: ThemeInitializerProps) {
-  // Initialize circuit breaker to prevent infinite loops
-  CircuitBreaker.init('ThemeInitializer-effect', 5, 1000);
+export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: ThemeInitializerProps) {
+  const { setTheme, isLoading, error } = useThemeStore();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [initError, setInitError] = useState<Error | null>(null);
+  const logger = useLogger('ThemeInitializer', LogCategory.UI);
+  const initAttempted = useRef(false);
   
-  // Use a stable selector to prevent recreation on each render
-  const themeState = useMemo(() => {
-    return (state: ReturnType<typeof useThemeStore.getState>) => ({
-      loadTheme: state.loadTheme,
-      loadStatus: state.loadStatus,
-      error: state.error,
-      currentTheme: state.currentTheme
-    });
+  // Apply fallback styles immediately to ensure something is visible
+  useEffect(() => {
+    const rootElement = document.documentElement;
+    rootElement.style.setProperty('--site-primary', '186 100% 50%'); // #00F0FF in HSL  
+    rootElement.style.setProperty('--site-secondary', '334 100% 59%'); // #FF2D6E in HSL
+    rootElement.style.setProperty('--site-effect-color', '#00F0FF');
+    rootElement.style.setProperty('--site-effect-secondary', '#FF2D6E');
+    rootElement.style.setProperty('--site-background', '#080F1E');
+    rootElement.style.setProperty('--site-foreground', '#F9FAFB');
   }, []);
   
-  const { loadTheme, loadStatus, error, currentTheme } = useThemeStore(themeState);
+  // Initialize theme on component mount
+  useEffect(() => {
+    // Skip if already initialized or loading
+    if (isInitialized || isLoading || initAttempted.current) {
+      return;
+    }
+    
+    const initializeTheme = async () => {
+      try {
+        initAttempted.current = true;
+        const logDetails: ThemeLogDetails = { 
+          details: { defaultTheme } 
+        };
+        
+        logger.info('Initializing theme system', logDetails);
+        
+        // Clear any previous errors
+        setInitError(null);
+        
+        // Attempt to set the theme
+        await setTheme(defaultTheme);
+        
+        // Mark as initialized only if successful
+        setIsInitialized(true);
+        
+        const successDetails: ThemeLogDetails = { 
+          success: true,
+          theme: defaultTheme
+        };
+        
+        logger.info('Theme system initialized successfully', successDetails);
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        const errorObj = e instanceof Error ? e : new Error(errorMessage);
+        
+        setInitError(errorObj);
+        
+        const errorDetails: ThemeLogDetails = { 
+          errorMessage,
+          details: { themeId: defaultTheme }
+        };
+        
+        logger.error('Failed to initialize theme system', errorDetails);
+        
+        // Try to load a fallback theme silently
+        try {
+          await setTheme('fallback-theme');
+          
+          const fallbackDetails: ThemeLogDetails = { 
+            originalTheme: defaultTheme 
+          };
+          
+          logger.warn('Using fallback theme after initialization error', fallbackDetails);
+          
+          // Still mark as initialized so the app can proceed
+          setIsInitialized(true);
+        } catch (fallbackError) {
+          logger.error('Fallback theme also failed', {
+            errorMessage: String(fallbackError)
+          } as ThemeLogDetails);
+          
+          // As a last resort, we'll just let the app continue
+          // even without properly initialized theme - the CSS fallbacks
+          // will be used
+          setIsInitialized(true);
+        }
+      }
+    };
+    
+    initializeTheme();
+  }, [defaultTheme, isInitialized, isLoading, setTheme, logger]);
   
-  const initAttemptedRef = useRef(false);
-  const themeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [appliedFallback, setAppliedFallback] = useState(false);
-  const [initializationComplete, setInitializationComplete] = useState(false);
-
-  // Apply fallback theme immediately to ensure something is always visible
-  useEffect(() => {
-    if (!isBrowser() || appliedFallback) {
-      return;
-    }
-    
+  // Handle retry logic
+  const handleRetry = async () => {
     try {
-      // Apply fallback theme immediately
-      const root = document.documentElement;
+      const retryDetails: ThemeLogDetails = { 
+        details: { defaultTheme }
+      };
       
-      // Use our combined fallback theme with any user provided values
-      const finalFallback = { ...defaultFallbackTheme, ...fallbackTheme };
+      logger.info('Retrying theme initialization', retryDetails);
       
-      Object.entries(finalFallback).forEach(([key, value]) => {
-        if (value) {
-          root.style.setProperty(`--site-${key}`, value);
-        }
-      });
+      initAttempted.current = false;
+      await setTheme(defaultTheme);
       
-      // Also set standard CSS variables
-      root.style.setProperty('--primary', finalFallback.primary || defaultFallbackTheme.primary);
-      root.style.setProperty('--secondary', finalFallback.secondary || defaultFallbackTheme.secondary);
+      setIsInitialized(true);
+      setInitError(null);
       
-      setAppliedFallback(true);
-      logger.info('Applied fallback theme');
-    } catch (err) {
-      logger.error('Failed to apply fallback theme', { 
-        details: { error: err instanceof Error ? err.message : String(err) }
-      });
+      const successDetails: ThemeLogDetails = { 
+        theme: defaultTheme 
+      };
+      
+      logger.info('Theme system successfully initialized on retry', successDetails);
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      const errorObj = e instanceof Error ? e : new Error(errorMessage);
+      
+      setInitError(errorObj);
+      
+      const errorDetails: ThemeLogDetails = { 
+        errorMessage 
+      };
+      
+      logger.error('Failed to retry theme initialization', errorDetails);
     }
-  }, [fallbackTheme, appliedFallback]);
-
-  // Memoize the theme load function to prevent excessive re-renders
-  const loadThemeSafely = useCallback(() => {
-    return async () => {
-      try {
-        if (typeof loadTheme === 'function') {
-          await loadTheme(themeContext);
-        }
-        setInitializationComplete(true);
-      } catch (err) {
-        logger.error('Theme load error handled safely', { 
-          details: { error: err instanceof Error ? err.message : String(err) }
-        });
-        setInitializationComplete(true); // Still mark as complete to prevent blocking UI
-      }
-    };
-  }, [loadTheme, themeContext, logger]);
-
-  // Initialize theme loading with timeout protection - only once
-  useEffect(() => {
-    // Check if we're caught in an infinite loop
-    if (CircuitBreaker.isTripped('ThemeInitializer-effect')) {
-      logger.warn('Breaking potential infinite loop in ThemeInitializer');
-      setInitializationComplete(true); // Force to complete to avoid blocking UI
-      return;
-    }
-    
-    // Increment counter for circuit breaker
-    CircuitBreaker.count('ThemeInitializer-effect');
-    
-    // Skip if already initialized
-    if (initAttemptedRef.current) {
-      return;
-    }
-    
-    initAttemptedRef.current = true;
-    logger.info('Initializing theme', { details: { context: themeContext } });
-
-    // Set up timeout to enforce maximum loading time
-    themeTimeoutRef.current = setTimeout(() => {
-      if (loadStatus === 'loading') {
-        logger.warn('Theme loading timeout reached, continuing with fallback', {
-          details: { themeContext }
-        });
-        setInitializationComplete(true); // Continue with or without theme
-      }
-    }, 3000); // 3 second timeout
-
-    // Load theme from store - wrapped in setTimeout to break potential cycles
-    setTimeout(() => {
-      loadThemeSafely()();
-    }, 0);
-
-    return () => {
-      if (themeTimeoutRef.current) {
-        clearTimeout(themeTimeoutRef.current);
-      }
-    };
-  }, [themeContext, loadThemeSafely, loadStatus]);
-
-  // Handle retry loading
-  const handleRetryLoading = () => {
-    loadThemeSafely()();
   };
-
-  // Always use the fallback theme to ensure something is visible
+  
+  // Show loading state during initialization, but with a timeout
+  // to prevent hanging indefinitely
   useEffect(() => {
-    if (!appliedFallback && loadStatus === 'error') {
-      // Apply fallback theme if there's an error
-      try {
-        const root = document.documentElement;
-        Object.entries(defaultFallbackTheme).forEach(([key, value]) => {
-          if (value) {
-            root.style.setProperty(`--site-${key}`, value);
-          }
-        });
-      } catch (err) {
-        logger.error('Failed to apply error fallback theme', { 
-          details: { error: err instanceof Error ? err.message : String(err) }
-        });
-      }
+    if (isLoading && !isInitialized) {
+      // If loading takes too long, force continue anyway
+      const timer = setTimeout(() => {
+        if (!isInitialized) {
+          logger.warn('Theme initialization timeout, continuing with default styles');
+          setIsInitialized(true);
+        }
+      }, 2000); // 2 second timeout (reduced from 3)
+      
+      return () => clearTimeout(timer);
     }
-  }, [loadStatus, appliedFallback]);
-
-  // If we have a fallback applied or initialization is complete, don't block rendering
-  if ((appliedFallback || initializationComplete) && loadStatus !== 'loading') {
-    return <>{children}</>;
+  }, [isLoading, isInitialized, logger]);
+  
+  // If there's an initialization error or store error, show error state
+  if (initError || error) {
+    return (
+      <ThemeErrorState 
+        error={initError || error || new Error('Unknown theme initialization error')}
+        onRetry={handleRetry}
+      />
+    );
   }
-
-  // Show error state if there's an error
-  if (loadStatus === 'error' && error) {
-    return <ThemeErrorState error={error} onRetry={handleRetryLoading} />;
-  }
-
-  // Only show loading state if theme is loading and we don't have a theme yet
-  // This prevents unnecessary flashing of loading state
-  if (loadStatus === 'loading' && !currentTheme && !appliedFallback && !initializationComplete) {
+  
+  // Show loading state while initializing, but only briefly
+  if (isLoading && !isInitialized) {
     return <ThemeLoadingState />;
   }
-
-  // Use NoHydrationMismatch for the children to prevent hydration issues
+  
   return (
-    <NoHydrationMismatch
-      fallback={<ThemeLoadingState message="Preparing interface..." />}
-    >
-      {children}
-    </NoHydrationMismatch>
+    <SiteThemeProvider isInitializing={isLoading || !isInitialized}>
+      <ImpulsivityInit autoApply={true}>
+        {children}
+      </ImpulsivityInit>
+    </SiteThemeProvider>
   );
 }

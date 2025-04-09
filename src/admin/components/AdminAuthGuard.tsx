@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useLogger } from '@/hooks/use-logger';
@@ -29,7 +29,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
       });
       navigate('/');
     }
-  }, [isLoading, isAuthenticated, hasAdminAccess, toast, logger, navigate]);
+  }, [isLoading, isAuthenticated, hasAdminAccess, navigate, toast, logger]);
   
   if (isLoading) {
     return (
@@ -44,7 +44,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   }
   
   if (!hasAdminAccess) {
-    return null;
+    return <Navigate to="/" replace />;
   }
   
   return <>{children}</>;

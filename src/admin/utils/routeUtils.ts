@@ -11,9 +11,9 @@ export const getSectionFromPath = (path: string): string => {
     return matches[1];
   }
   
-  // Check for search parameters
-  const search = new URLSearchParams(window.location.search);
-  const tab = search.get('tab');
+  // Check for legacy tab parameter
+  const url = new URL(path, window.location.origin);
+  const tab = url.searchParams.get('tab');
   if (tab) {
     return tab;
   }
