@@ -1,39 +1,50 @@
 
-import { Session, User } from "@supabase/supabase-js";
-import { UserRole as BaseUserRole } from "@/types/auth.types";
+/**
+ * Core auth types for the application
+ */
 
-export type UserRole = BaseUserRole;
+// User roles available in the system
+export type UserRole = 
+  | 'viewer'       // Basic read-only access
+  | 'editor'       // Can edit but not publish
+  | 'publisher'    // Can edit and publish
+  | 'admin'        // Full access to admin features
+  | 'super_admin'; // Full access + debug features
 
-export interface UserProfile {
+// Authentication status
+export type AuthStatus = 
+  | 'idle'           // Initial state
+  | 'loading'        // Authentication in progress
+  | 'authenticated'  // User is logged in
+  | 'unauthenticated' // User is not logged in
+  | 'error';         // Authentication error occurred
+
+// User with basic profile information
+export interface User {
   id: string;
+  email?: string;
   username?: string;
-  full_name?: string;
-  avatar_url?: string;
-  website?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export type AuthUser = User;
-
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
-
-export interface AuthState {
-  user: AuthUser | null;
-  session: Session | null;
+  fullName?: string;
+  avatarUrl?: string;
   roles: UserRole[];
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-  status: AuthStatus;
-  initialized?: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
 }
 
-export interface AdminAccess {
-  isAdmin: boolean;
-  hasAdminAccess: boolean;
+// Authentication session
+export interface AuthSession {
+  userId: string;
+  token: string;
+  expires: Date;
+  isValid: boolean;
 }
 
-export interface WithAdminAccess {
-  hasAdminAccess: boolean;
-}
+// Auth provider types
+export type AuthProvider =
+  | 'email'
+  | 'google'
+  | 'github'
+  | 'twitter'
+  | 'facebook'
+  | 'apple';

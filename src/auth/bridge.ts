@@ -1,4 +1,3 @@
-
 import { useAuthStore } from './store/auth.store';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
@@ -101,12 +100,23 @@ export const AuthBridge = {
     // Update the auth store directly
     const store = useAuthStore.getState();
     store.setUser(mockUser);
-    store.setRoles(['viewer']);
+    
+    // Assign appropriate roles based on email 
+    // For demo purposes, we'll give super_admin privileges to emails containing 'admin'
+    let roles: UserRole[] = ['viewer'];
+    
+    if (email.includes('admin')) {
+      roles = ['viewer', 'admin', 'super_admin'];
+    } else if (email.includes('editor')) {
+      roles = ['viewer', 'editor'];
+    }
+    
+    store.setRoles(roles);
     
     // Publish auth event
     publishAuthEvent({
       type: 'AUTH_SIGNED_IN',
-      payload: { user: mockUser }
+      payload: { user: mockUser, roles }
     });
     
     return mockUser;
@@ -138,6 +148,21 @@ export const AuthBridge = {
   
   isAdmin: () => {
     return useAuthStore.getState().isAdmin();
+  },
+  
+  // Add new method to check for super admin role
+  isSuperAdmin: () => {
+    return useAuthStore.getState().roles.includes('super_admin');
+  },
+  
+  // Add method to get all roles
+  getRoles: () => {
+    return useAuthStore.getState().roles;
+  },
+  
+  // Add method to check debug access
+  hasDebugAccess: () => {
+    return useAuthStore.getState().roles.includes('super_admin');
   }
 };
 

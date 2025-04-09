@@ -1,15 +1,17 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Github, Mail, AtSign } from "lucide-react";
+import { Github, Mail, AtSign, Wrench, LayoutDashboard, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AuthBridge } from "@/auth/bridge";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
+import { useAuth } from "@/hooks/useAuth";
 
 /**
  * LoginSheet Component
@@ -28,6 +30,7 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const logger = useLogger("LoginSheet", LogCategory.AUTH);
+  const { isAdmin, isAuthenticated, user, roles } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,128 +70,233 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
     }
   };
 
+  // Determine if the user has admin access
+  const hasAdminAccess = roles.includes('admin') || roles.includes('super_admin');
+  const isSuperAdmin = roles.includes('super_admin');
+
+  // Render content based on authentication status
+  const renderContent = () => {
+    if (isAuthenticated) {
+      return (
+        <div className="space-y-6 py-4">
+          <div className="flex items-center space-x-4">
+            <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center overflow-hidden">
+              {user?.user_metadata?.avatar_url ? (
+                <img 
+                  src={user.user_metadata.avatar_url as string} 
+                  alt="Profile" 
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-xl font-bold text-primary">
+                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+                </span>
+              )}
+            </div>
+            <div>
+              <p className="text-lg font-medium">{user?.user_metadata?.full_name || 'User'}</p>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            {roles.map((role) => (
+              <div 
+                key={role}
+                className="flex items-center space-x-2 text-xs bg-primary/5 border border-primary/20 rounded px-2 py-1"
+              >
+                {role === 'super_admin' && <Shield className="h-3 w-3 text-primary" />}
+                {role === 'admin' && <Wrench className="h-3 w-3 text-primary" />}
+                <span>{role}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link to="/profile">
+                <Mail className="mr-2 h-4 w-4" />
+                My Profile
+              </Link>
+            </Button>
+            
+            {hasAdminAccess && (
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link to="/admin" onClick={() => onOpenChange(false)}>
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Admin Dashboard
+                </Link>
+              </Button>
+            )}
+
+            <Button 
+              variant="destructive" 
+              className="w-full mt-6" 
+              onClick={async () => {
+                try {
+                  await AuthBridge.logout();
+                  toast({
+                    title: "Logged out",
+                    description: "You have been successfully logged out"
+                  });
+                  onOpenChange(false);
+                } catch (error) {
+                  logger.error("Logout failed", { details: { error } });
+                  toast({
+                    title: "Logout failed",
+                    description: "An error occurred while logging out",
+                    variant: "destructive"
+                  });
+                }
+              }}
+            >
+              Log Out
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <Tabs defaultValue="login" className="cyber-text">
+        <TabsList className="grid grid-cols-2">
+          <TabsTrigger value="login">Login</TabsTrigger>
+          <TabsTrigger value="register">Register</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="login" className="space-y-6 py-4">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="border-primary/30 focus:border-primary"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input 
+                id="password" 
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="border-primary/30 focus:border-primary"
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full cyber-effect-text" 
+              disabled={isLoading}
+            >
+              {isLoading ? "Authenticating..." : "Login"}
+            </Button>
+          </form>
+          
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-primary/30" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-background px-2 text-muted-foreground">or continue with</span>
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            <Button variant="outline" type="button" className="cyber-effect-text">
+              <Github className="mr-2 h-4 w-4" />
+              GitHub
+            </Button>
+            
+            <Button variant="outline" type="button" className="cyber-effect-text">
+              <AtSign className="mr-2 h-4 w-4" />
+              Google
+            </Button>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="register" className="space-y-6 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="register-email">Email</Label>
+            <Input 
+              id="register-email" 
+              type="email" 
+              placeholder="you@example.com"
+              className="border-primary/30 focus:border-primary"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="register-password">Password</Label>
+            <Input 
+              id="register-password" 
+              type="password"
+              placeholder="Create a strong password"
+              className="border-primary/30 focus:border-primary"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="confirm-password">Confirm Password</Label>
+            <Input 
+              id="confirm-password" 
+              type="password"
+              placeholder="Confirm your password"
+              className="border-primary/30 focus:border-primary"
+            />
+          </div>
+          
+          <Button className="w-full cyber-effect-text">
+            Create Account
+          </Button>
+          
+          <div className="text-center text-sm text-muted-foreground">
+            By creating an account, you agree to our{" "}
+            <a href="#" className="text-primary hover:underline">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="#" className="text-primary hover:underline">
+              Privacy Policy
+            </a>
+          </div>
+        </TabsContent>
+      </Tabs>
+    );
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:w-[450px] border-primary/20 bg-background/95 backdrop-blur-xl">
-        <SheetHeader className="space-y-2 mb-8">
-          <SheetTitle className="text-2xl font-heading text-primary">
-            Welcome
+      <SheetContent 
+        side="right" 
+        className="w-full sm:w-[450px] border-primary/20 bg-background/20 backdrop-blur-xl"
+      >
+        <div className="absolute inset-0 z-[-1] overflow-hidden">
+          <div className="absolute inset-0 bg-[#102030] opacity-90"></div>
+          <div className="absolute inset-0 mainnav-data-stream animate-data-stream"></div>
+          <div className="absolute inset-0 mainnav-glitch-particles"></div>
+        </div>
+        
+        <SheetHeader className="space-y-2 mb-8 relative z-10">
+          <SheetTitle className="text-2xl font-heading text-primary cyber-effect-text">
+            {isAuthenticated ? "Dashboard" : "Welcome"}
           </SheetTitle>
-          <SheetDescription>
-            Login to access your account or create a new one
+          <SheetDescription className="text-primary/80">
+            {isAuthenticated 
+              ? `Logged in as ${user?.email}`
+              : "Login to access your account or create a new one"}
           </SheetDescription>
         </SheetHeader>
 
-        <Tabs defaultValue="login" className="cyber-text">
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="login" className="space-y-6 py-4">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="border-primary/30 focus:border-primary"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="border-primary/30 focus:border-primary"
-                />
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full cyber-effect-text" 
-                disabled={isLoading}
-              >
-                {isLoading ? "Authenticating..." : "Login"}
-              </Button>
-            </form>
-            
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-primary/30" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-background px-2 text-muted-foreground">or continue with</span>
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-2">
-              <Button variant="outline" type="button" className="cyber-effect-text">
-                <Github className="mr-2 h-4 w-4" />
-                GitHub
-              </Button>
-              
-              <Button variant="outline" type="button" className="cyber-effect-text">
-                <AtSign className="mr-2 h-4 w-4" />
-                Google
-              </Button>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="register" className="space-y-6 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="register-email">Email</Label>
-              <Input 
-                id="register-email" 
-                type="email" 
-                placeholder="you@example.com"
-                className="border-primary/30 focus:border-primary"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="register-password">Password</Label>
-              <Input 
-                id="register-password" 
-                type="password"
-                placeholder="Create a strong password"
-                className="border-primary/30 focus:border-primary"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input 
-                id="confirm-password" 
-                type="password"
-                placeholder="Confirm your password"
-                className="border-primary/30 focus:border-primary"
-              />
-            </div>
-            
-            <Button className="w-full cyber-effect-text">
-              Create Account
-            </Button>
-            
-            <div className="text-center text-sm text-muted-foreground">
-              By creating an account, you agree to our{" "}
-              <a href="#" className="text-primary hover:underline">
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a href="#" className="text-primary hover:underline">
-                Privacy Policy
-              </a>
-            </div>
-          </TabsContent>
-        </Tabs>
+        <div className="relative z-10">
+          {renderContent()}
+        </div>
         
         <SheetFooter className="mt-8 flex flex-col text-center">
           <p className="text-xs text-muted-foreground">
