@@ -108,7 +108,7 @@ function App() {
             <AppInitializer>
               <AdminProvider>
                 <ChatProvider>
-                  <AppRouter show404={true} />
+                  <AppRouter />
                   <Toaster />
                 </ChatProvider>
               </AdminProvider>

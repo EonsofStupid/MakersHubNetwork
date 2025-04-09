@@ -1,7 +1,7 @@
 
-import React, { useState, useMemo, useCallback, memo } from 'react';
+import React, { useState, useMemo, useCallback, memo, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthState } from '@/auth/hooks/useAuthState';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -27,14 +27,13 @@ const AuthSection = memo(function AuthSection({ className }: AuthSectionProps) {
   // Initialize circuit breaker for this component
   CircuitBreaker.init('auth-section', 3, 1000);
   
-  // Use stable references to auth values to prevent unnecessary re-renders
+  // Use AuthState directly instead of useAuth to avoid circular dependencies
+  const { isAuthenticated, user, status, roles } = useAuthState();
+  const isAdmin = useMemo(() => roles.includes('admin'), [roles]);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  
-  // Get auth state with explicit destructuring to avoid object spreading
-  const auth = useAuth();
-  const { user, isAdmin, logout, isAuthenticated, status } = auth;
+  const renderCountRef = useRef(0);
   
   // Memoize avatar info to prevent unnecessary re-renders
   const avatarInfo = useMemo(() => {
@@ -48,16 +47,29 @@ const AuthSection = memo(function AuthSection({ className }: AuthSectionProps) {
     };
   }, [user]);
   
+  // Debug render count
+  useEffect(() => {
+    renderCountRef.current += 1;
+    // Only log every few renders to avoid console spam
+    if (renderCountRef.current % 5 === 0) {
+      console.log(`AuthSection rendered ${renderCountRef.current} times`);
+    }
+  });
+  
   // Skip rendering while auth is initializing
   if (CircuitBreaker.isTripped('auth-section')) {
     console.warn('CircuitBreaker detected potential infinite loop in AuthSection');
     return null; // Don't render anything to break potential loops
   }
   
+  // Get logout function directly from supabase to avoid dependency cycle
   const handleLogout = useCallback(async () => {
     try {
       setIsLoggingOut(true);
-      await logout();
+      // Import and use supabase directly to avoid hooks dependency cycle
+      const { supabase } = await import('@/lib/supabase');
+      await supabase.auth.signOut();
+      
       toast({
         title: 'Logged out',
         description: 'You have been successfully logged out',
@@ -72,7 +84,7 @@ const AuthSection = memo(function AuthSection({ className }: AuthSectionProps) {
     } finally {
       setIsLoggingOut(false);
     }
-  }, [logout, toast, navigate]);
+  }, [toast, navigate]);
 
   // For non-authenticated users, show login button
   if (!isAuthenticated || !user) {
