@@ -3,19 +3,20 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAtom } from "jotai";
-import { showAdminButtonAtom } from "@/admin/atoms/ui.atoms";
+import { showAdminButtonAtom, showAdminWrenchAtom } from "@/admin/atoms/ui.atoms";
 import { Wrench } from "lucide-react";
 import { useAuthAtoms } from "@/hooks/useAuthAtoms";
 
 // AuthSection with Jotai for reactivity
 export const AuthSection = () => {
   const [showAdminButton] = useAtom(showAdminButtonAtom);
+  const [showAdminWrench] = useAtom(showAdminWrenchAtom);
   const { hasAdminAccess } = useAuthAtoms();
 
-  // Always show the link, but conditionally style it based on admin access
   return (
-    <>
-      {hasAdminAccess && (
+    <div className="flex items-center gap-2">
+      {/* Only show Admin button if user has admin access */}
+      {hasAdminAccess && showAdminButton && (
         <Link to="/admin">
           <Button 
             variant="outline" 
@@ -28,7 +29,8 @@ export const AuthSection = () => {
         </Link>
       )}
       
-      {hasAdminAccess && (
+      {/* Only show Admin wrench if user has admin access */}
+      {hasAdminAccess && showAdminWrench && (
         <Link to="/admin">
           <Button
             variant="ghost"
@@ -39,6 +41,6 @@ export const AuthSection = () => {
           </Button>
         </Link>
       )}
-    </>
+    </div>
   );
 };

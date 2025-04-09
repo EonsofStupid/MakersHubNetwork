@@ -5,9 +5,8 @@ import { Logo } from "./components/Logo";
 import { NavigationItems } from "./components/NavigationItems";
 import { SearchButton } from "./components/SearchButton";
 import { AuthSection } from "./components/AuthSection";
-import { Link } from "react-router-dom";
-import { Wrench } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LoginButton } from "@/components/auth/LoginButton";
+import { useAuthAtoms } from "@/hooks/useAuthAtoms";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
@@ -19,6 +18,7 @@ export function MainNav() {
   const logger = useLogger("MainNav", LogCategory.UI);
   const dataStreamRef = useRef<HTMLDivElement>(null);
   const glitchParticlesRef = useRef<HTMLDivElement>(null);
+  const { isAuthenticated } = useAuthAtoms();
   
   // Get MainNav styles from theme
   const styles = componentStyles?.MainNav || {
@@ -132,20 +132,8 @@ export function MainNav() {
           <div className="flex items-center gap-2">
             <SearchButton />
             
-            {/* Admin access button with wrench icon - always visible now */}
-            <Link to="/admin">
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="flex items-center gap-1 group text-primary hover:text-white hover:bg-primary/30 border-primary/40 relative overflow-hidden"
-              >
-                <Wrench className="h-4 w-4 group-hover:animate-pulse" />
-                <span>Admin</span>
-                <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-              </Button>
-            </Link>
-            
-            <AuthSection />
+            {/* Show Auth Section for authenticated users, Login Button otherwise */}
+            {isAuthenticated ? <AuthSection /> : <LoginButton />}
           </div>
         </div>
       </div>
