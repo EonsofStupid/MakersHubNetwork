@@ -1,12 +1,9 @@
-
 import { create } from "zustand";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { UserRole } from "../types/auth.types";
+import { UserRole, AuthStatus } from "../types/auth.types";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
-
-export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated" | "error";
 
 interface AuthState {
   user: User | null;
@@ -82,7 +79,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setSession: (session: Session | null) => {
     const currentUser = session?.user || null;
     
-    // Derive roles from user metadata when available
     const roles: UserRole[] = [];
     if (currentUser?.app_metadata?.roles && Array.isArray(currentUser.app_metadata.roles)) {
       roles.push(...currentUser.app_metadata.roles);
@@ -104,7 +100,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       source: 'auth.store'
     });
     
-    // Don't initialize multiple times
     if (get().initialized) {
       logger.info('Auth already initialized, skipping', {
         category: LogCategory.AUTH,
@@ -119,7 +114,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
       
-      // Set the session from the response
       get().setSession(data.session);
       
       logger.info('Auth initialization completed', {
@@ -131,7 +125,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       });
 
-      // Mark as initialized
       set({ initialized: true, isLoading: false });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Authentication failed";
@@ -146,7 +139,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error: errorMessage, 
         status: "error",
         isLoading: false,
-        initialized: true // Still mark as initialized even if there's an error
+        initialized: true
       });
     }
   },

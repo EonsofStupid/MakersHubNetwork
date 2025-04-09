@@ -9,7 +9,9 @@ export type UserRole =
   | 'editor'       // Can edit but not publish
   | 'publisher'    // Can edit and publish
   | 'admin'        // Full access to admin features
-  | 'super_admin'; // Full access + debug features
+  | 'super_admin'  // Full access + debug features
+  | 'maker'        // For backward compatibility 
+  | 'builder';     // For backward compatibility
 
 // Authentication status
 export type AuthStatus = 
@@ -48,3 +50,4 @@ export type AuthProvider =
   | 'twitter'
   | 'facebook'
   | 'apple';
+
