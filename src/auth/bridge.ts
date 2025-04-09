@@ -26,13 +26,14 @@ type AuthEventHandler = (event: AuthEvent) => void;
 // Create a simple event system
 const eventHandlers: AuthEventHandler[] = [];
 
-// Define central Jotai atoms for auth state
-// These will be the single source of truth for UI components
-export const userAtom = atom<User | null>(null);
-export const rolesAtom = atom<UserRole[]>([]);
-export const isAuthenticatedAtom = atom<boolean>(false);
-export const isAdminAtom = atom<boolean>(false);
-export const hasAdminAccessAtom = atom<boolean>(false);
+// Import atoms from central location instead of redefining
+import { 
+  userAtom,
+  rolesAtom,
+  isAuthenticatedAtom,
+  isAdminAtom,
+  hasAdminAccessAtom
+} from './atoms/auth.atoms';
 
 /**
  * Subscribe to auth events
@@ -140,20 +141,23 @@ export const AuthBridge = {
   }
 };
 
-// Atom setters that properly wraps Jotai atom updates to prevent errors
-const setAtomValue = <T>(atomObj: any, value: T) => {
+// Helper function to safely update atom values
+function updateAtomValue<T>(atom: any, value: T) {
   try {
-    // Get the proper setter function for the atom
-    const setter = atomObj.write || atomObj.set;
+    const setter = atom.write;
     if (setter && typeof setter === 'function') {
+      // Use correct atom setter signature
       setter(value);
-    } else {
-      console.error('No setter found for atom:', atomObj);
     }
   } catch (err) {
-    console.error('Error updating atom:', err);
+    const logger = getLogger();
+    logger.error('Error updating atom:', {
+      category: LogCategory.AUTH,
+      source: 'auth/bridge',
+      details: { err }
+    });
   }
-};
+}
 
 /**
  * Initialize auth bridge by subscribing to auth store changes
@@ -174,12 +178,12 @@ export function initializeAuthBridge(): void {
     const hasAdminAccess = isAdmin;
     
     try {
-      // Use the atom primitive methods from jotai
-      userAtom.write = (get, set) => set(userAtom, user);
-      rolesAtom.write = (get, set) => set(rolesAtom, roles);
-      isAuthenticatedAtom.write = (get, set) => set(isAuthenticatedAtom, isAuthenticated);
-      isAdminAtom.write = (get, set) => set(isAdminAtom, isAdmin);
-      hasAdminAccessAtom.write = (get, set) => set(hasAdminAccessAtom, hasAdminAccess);
+      // Use simpler approach with a custom helper function
+      updateAtomValue(userAtom, user);
+      updateAtomValue(rolesAtom, roles);
+      updateAtomValue(isAuthenticatedAtom, isAuthenticated);
+      updateAtomValue(isAdminAtom, isAdmin);
+      updateAtomValue(hasAdminAccessAtom, hasAdminAccess);
       
       // Log successful sync
       logger.debug('Atoms synced from store', {

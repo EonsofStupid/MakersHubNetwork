@@ -55,6 +55,9 @@ function App() {
       // and only if not already initialized
       if (!authInitializedRef.current) {
         authInitializedRef.current = true;
+        
+        // Use setTimeout to defer auth initialization to next event loop
+        // This prevents potential circular dependencies and timing issues
         setTimeout(() => {
           try {
             initializeAuthBridge();
