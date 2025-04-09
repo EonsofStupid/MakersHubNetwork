@@ -1,23 +1,41 @@
 
-import { useMemo } from 'react';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { AdminPermissionValue } from '@/admin/types/permissions';
-import { mapRolesToPermissions } from '@/auth/rbac/roles';
-import { UserRole } from '@/types/common.types';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { useAdminStore } from '@/admin/store/admin.store';
+import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
+/**
+ * Maps user roles to admin permissions
+ * This hook bridges the auth store with the admin store
+ */
 export function useAdminRoles() {
-  const { roles = [] } = useAuthState();
+  const { user, roles, status } = useAuthStore();
+  const { loadPermissions, permissions } = useAdminStore();
+  const logger = useLogger('useAdminRoles', LogCategory.ADMIN);
   
-  const adminPermissions = useMemo(() => {
-    return mapRolesToPermissions(roles as UserRole[]);
-  }, [roles]);
-  
-  const hasPermission = (permission: AdminPermissionValue): boolean => {
-    return adminPermissions.includes(permission);
-  };
+  useEffect(() => {
+    // Only load permissions when user is authenticated and roles are loaded
+    if (status === 'authenticated' && roles && roles.length > 0) {
+      logger.info('Loading admin permissions for user roles', {
+        details: { 
+          userId: user?.id,
+          roles 
+        }
+      });
+      
+      loadPermissions().catch(error => {
+        logger.error('Error loading admin permissions', {
+          details: { error }
+        });
+      });
+    }
+  }, [status, roles, loadPermissions, user, logger]);
   
   return {
-    permissions: adminPermissions,
-    hasPermission
+    isAdmin: Boolean(roles?.includes('admin') || roles?.includes('super_admin')),
+    isSuperAdmin: Boolean(roles?.includes('super_admin')),
+    permissions
   };
 }

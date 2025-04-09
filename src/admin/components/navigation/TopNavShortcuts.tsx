@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate } from 'react-router-dom';
 import { FileText, Users, Box, Settings, Palette } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
@@ -23,7 +23,7 @@ export function TopNavShortcuts() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => navigate({ to: shortcut.path as any })}
+            onClick={() => navigate(shortcut.path)}
             className="p-2 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
           >
             {shortcut.icon}
@@ -33,3 +33,4 @@ export function TopNavShortcuts() {
     </div>
   );
 }
+

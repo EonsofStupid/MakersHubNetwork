@@ -1,49 +1,38 @@
 
-import { Database } from "@/integrations/supabase/types"
+import { Session, User } from "@supabase/supabase-js";
 
-// Base role type from database
-export type UserRole = Database["public"]["Enums"]["user_role"]
+export type UserRole = 'super_admin' | 'admin' | 'maker' | 'builder';
 
-// Auth Event Types
-export type AuthEventType = 
-  | 'SIGNED_IN'
-  | 'SIGNED_OUT'
-  | 'USER_UPDATED'
-  | 'SESSION_UPDATED'
-  | 'INITIALIZED'
-  // Legacy event types needed for backward compatibility
-  | 'AUTH_SIGNED_IN'
-  | 'AUTH_SIGNED_OUT';
-
-// Auth Event Interface
-export interface AuthEvent {
-  type: AuthEventType;
-  payload?: any;
+export interface UserProfile {
+  id: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+  website?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-// Auth Event Listener Type
-export type AuthEventListener = (event: AuthEvent) => void;
+export type AuthUser = User;
 
-// Authentication-specific interfaces
-export interface AuthUser {
-  id: string
-  display_name: string | null
-  avatar_url: string | null
-  primary_role_id: string | null
-  user_roles: Array<{
-    id: string
-    role: UserRole
-  }>
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
+
+export interface AuthState {
+  user: AuthUser | null;
+  session: Session | null;
+  roles: UserRole[];
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  status: AuthStatus;
+  initialized?: boolean;
 }
 
 export interface AdminAccess {
-  isAdmin: boolean
-  hasAdminAccess: boolean
+  isAdmin: boolean;
+  hasAdminAccess: boolean;
 }
 
 export interface WithAdminAccess {
-  hasAdminAccess: boolean
+  hasAdminAccess: boolean;
 }
-
-// Re-export for backward compatibility
-export type { UserRole as AuthUserRole }

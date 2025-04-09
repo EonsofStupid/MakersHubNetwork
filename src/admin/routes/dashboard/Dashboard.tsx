@@ -1,118 +1,187 @@
 
-import React from 'react';
+import React, { useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  PaintBucket,
-  CheckCircle,
-  AlertTriangle
-} from 'lucide-react';
-import { InlineLogIndicator } from '@/logging/components/InlineLogIndicator';
-import { LogEntry, LogLevel } from '@/logging/types';
-import { LogCategory } from '@/logging/types';
+import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
+import { AdminLayout } from '@/admin/components/AdminLayout';
+import { motion } from "framer-motion";
+import { useAtom } from "jotai";
+import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
+import { cn } from "@/lib/utils";
+import { BarChart3, Users, Activity, Zap } from "lucide-react";
+import { ActiveUsersList } from "@/admin/components/dashboard/ActiveUsersList";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging/types";
+import { InlineLogIndicator } from "@/logging/components/InlineLogIndicator";
 
-export const Dashboard: React.FC = () => {
+export default function Dashboard() {
   const navigate = useNavigate();
-
-  // Use these sample logs for the log indicators
-  const sampleLogs: LogEntry[] = [
-    {
-      id: '1',
-      timestamp: new Date(),
-      level: LogLevel.SUCCESS,
-      category: LogCategory.THEME,
-      message: 'Theme applied successfully',
-      source: 'ThemeManager',
-      details: { themeName: 'Cyberpunk', appliedTo: 'global' }
-    },
-    {
-      id: '2',
-      timestamp: new Date(),
-      level: LogLevel.WARN,
-      category: LogCategory.AUTH,
-      message: 'User login attempt failed',
-      source: 'AuthService',
-      details: { reason: 'Invalid credentials', attempts: 2 }
-    }
-  ];
+  const [isEditMode] = useAtom(adminEditModeAtom);
+  const logger = useLogger('Dashboard', LogCategory.ADMIN);
+  
+  // Log dashboard access on mount
+  useEffect(() => {
+    logger.info("Admin dashboard accessed", {
+      details: { editMode: isEditMode }
+    });
+  }, [logger, isEditMode]);
   
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Users</CardTitle>
-            <Users className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">143</div>
-            <p className="text-xs text-muted-foreground">+2 this week</p>
-            <div className="flex items-center mt-4">
-              <InlineLogIndicator log={sampleLogs[1]} />
-              <span className="text-xs ml-2">Recent login activity</span>
+    <AdminLayout title="Admin Dashboard">
+      <motion.div 
+        className="space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <motion.div className="flex justify-between items-center">
+          <motion.h1 
+            className="text-2xl font-bold"
+            layoutId="dashboard-title"
+          >
+            Admin Dashboard
+          </motion.h1>
+          
+          {isEditMode && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="px-3 py-1.5 bg-primary/20 rounded-full text-sm font-medium text-primary flex items-center gap-1"
+            >
+              <span>Drag & Drop Mode</span>
+            </motion.div>
+          )}
+        </motion.div>
+        
+        {/* System status indicator */}
+        <div className="flex flex-wrap gap-2">
+          <InlineLogIndicator 
+            message="System logs enabled" 
+            variant="info"
+            onClick={() => navigate('/admin/settings')}
+          />
+        </div>
+        
+        {/* Dashboard Shortcuts - Draggable area */}
+        <DashboardShortcuts />
+        
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatsCard 
+            title="Total Users" 
+            value="1,234"
+            icon={Users}
+            trend={12.5}
+            delay={0}
+          />
+          <StatsCard 
+            title="Active Now" 
+            value="56"
+            icon={Activity}
+            trend={-3.2}
+            delay={1}
+          />
+          <StatsCard 
+            title="Builds This Week" 
+            value="87"
+            icon={BarChart3}
+            trend={24.8}
+            delay={2}
+          />
+          <StatsCard 
+            title="System Status" 
+            value="Operational"
+            icon={Zap}
+            trend={0}
+            delay={3}
+          />
+        </div>
+        
+        {/* Performance Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="lg:col-span-2"
+          >
+            <div className={cn(
+              "glassmorphism p-6 rounded-lg border border-[var(--impulse-border-normal)]",
+              "cyber-effect-1 hover-glow transition-all duration-300",
+              isEditMode && "border-dashed"
+            )}>
+              <h2 className="font-medium text-lg mb-3 cyber-text">Performance Metrics</h2>
+              <div className="h-[240px] flex items-center justify-center text-[var(--impulse-text-secondary)]">
+                Graph coming soon
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <ActiveUsersList />
+          </motion.div>
+        </div>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Theme</CardTitle>
-            <PaintBucket className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Cyberpunk</div>
-            <p className="text-xs text-muted-foreground">Active theme</p>
-            <div className="flex items-center mt-4">
-              <InlineLogIndicator log={sampleLogs[0]} />
-              <span className="text-xs ml-2">Theme applied</span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>System Status</CardTitle>
-            <CheckCircle className="h-5 w-5 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">All Systems Operational</div>
-            <p className="text-xs text-muted-foreground">Last checked: 2m ago</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Alerts</CardTitle>
-            <AlertTriangle className="h-5 w-5 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2 Active</div>
-            <p className="text-xs text-muted-foreground">View all alerts</p>
-          </CardContent>
-        </Card>
+        {isEditMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-center text-sm text-muted-foreground my-8 p-4 border border-dashed border-primary/20 rounded-lg bg-primary/5"
+          >
+            <p>
+              You're in edit mode. Drag items from the sidebar to add shortcuts to your dashboard or top navigation.
+              Click the edit button again to save your changes.
+            </p>
+          </motion.div>
+        )}
+      </motion.div>
+    </AdminLayout>
+  );
+}
+
+interface StatsCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  trend?: number;
+  delay?: number;
+}
+
+const StatsCard = ({ title, value, icon: Icon, trend = 0, delay = 0 }: StatsCardProps) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: delay * 0.1, duration: 0.5 }}
+  >
+    <div className={cn(
+      "glassmorphism p-5 rounded-lg border border-[var(--impulse-border-normal)]",
+      "hover-glow transition-all duration-300 h-32"
+    )}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium text-[var(--impulse-text-secondary)]">{title}</h3>
+        <Icon className="w-5 h-5 text-[var(--impulse-text-accent)]" />
       </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* More dashboard content can be added here */}
-      </div>
-      
-      <div className="flex space-x-2 mt-6">
-        <Button onClick={() => navigate('/admin/users')}>
-          <Users className="mr-2 h-4 w-4" /> Manage Users
-        </Button>
-        <Button variant="outline" onClick={() => navigate('/admin/settings')}>
-          <Settings className="mr-2 h-4 w-4" /> Settings
-        </Button>
-        <Button variant="outline" onClick={() => navigate('/admin/dashboard')}>
-          <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
-        </Button>
+      <div className="mt-2">
+        <p className="text-2xl font-bold text-[var(--impulse-text-primary)]">{value}</p>
+        {typeof trend === 'number' && (
+          <div className="flex items-center mt-1">
+            <span 
+              className={
+                trend > 0 
+                  ? "text-emerald-400" 
+                  : "text-red-400"
+              }
+            >
+              {trend > 0 ? '+' : ''}{trend}%
+            </span>
+            <span className="text-xs ml-1 text-[var(--impulse-text-secondary)]">vs last month</span>
+          </div>
+        )}
       </div>
     </div>
-  );
-};
+  </motion.div>
+);

@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/integrations/supabase/client"
 import { adminKeys } from "@/admin/types/queries"
 
 export interface RecentReview {
@@ -17,46 +17,27 @@ export const useRecentReviews = () => {
   return useQuery({
     queryKey: [...adminKeys.all, 'reviews', 'recent'],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('part_reviews')
-          .select(`
-            title,
-            rating,
-            created_at,
-            part_id,
-            printer_parts:part_id (
-              name
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(5)
+      // Fix the table name from 'reviews' to 'part_reviews'
+      const { data, error } = await supabase
+        .from('part_reviews')
+        .select(`
+          title,
+          rating,
+          created_at,
+          part_id,
+          printer_parts:part_id (
+            name
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5)
 
-        if (error) {
-          console.error("Supabase error:", error)
-          throw new Error(error.message)
-        }
-
-        // Properly map the response to match the expected type
-        return (data || []).map(item => ({
-          title: item.title,
-          rating: item.rating,
-          created_at: item.created_at,
-          part_id: item.part_id,
-          printer_parts: {
-            name: item.printer_parts?.name || 'Unknown'
-          }
-        })) as RecentReview[]
-      } catch (error) {
-        console.error("Error fetching recent reviews:", error);
-        // Return empty array as fallback when there's an error
-        return [] as RecentReview[];
+      if (error) {
+        console.error("Supabase error:", error)
+        throw new Error(error.message)
       }
+
+      return (data || []) as RecentReview[]
     },
-    // Add fallback options to prevent crashes
-    retry: 1,
-    retryDelay: 1000,
-    // Default to empty array if query fails
-    placeholderData: [],
   })
 }

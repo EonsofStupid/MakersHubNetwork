@@ -1,132 +1,125 @@
 
-import { LogEntry, Transport } from '../types';
-import { nodeToSearchableString } from '@/shared/rendering';
+import { LogCategory, LogEntry, LogLevel, LogTransport } from '../types';
+import { nodeToSearchableString } from '@/shared/utils/render';
+import { isLogLevelAtLeast } from '../utils/map-log-level';
 
 /**
- * Memory transport that stores log entries in memory
+ * Options for filtering logs in memory transport
  */
-export class MemoryTransport implements Transport {
+interface LogFilterOptions {
+  level?: LogLevel;
+  category?: LogCategory;
+  source?: string;
+  userId?: string;
+  search?: string;
+  fromDate?: Date;
+  toDate?: Date;
+  limit?: number;
+}
+
+/**
+ * Memory transport stores logs in memory for display in UI components
+ */
+export class MemoryTransport implements LogTransport {
   private logs: LogEntry[] = [];
-  private subscribers: ((logs: LogEntry[]) => void)[] = [];
-  private options: { maxLogs?: number } = { maxLogs: 1000 };
+  private maxEntries: number;
   
-  constructor(options: { maxLogs?: number } = {}) {
-    this.options = { ...this.options, ...options };
+  constructor(maxEntries = 1000) {
+    this.maxEntries = maxEntries;
   }
   
+  /**
+   * Log an entry to memory
+   */
   log(entry: LogEntry): void {
-    // Store searchable versions of message and details
-    const entryWithSearch = {
-      ...entry,
-      searchableMessage: nodeToSearchableString(entry.message),
-      searchableDetails: entry.details ? JSON.stringify(entry.details) : undefined
-    };
+    this.logs.unshift(entry); // Add to beginning for most recent first
     
-    // Add to logs
-    this.logs.unshift(entryWithSearch as LogEntry);
-    
-    // Limit size
-    if (this.options.maxLogs && this.logs.length > this.options.maxLogs) {
-      this.logs = this.logs.slice(0, this.options.maxLogs);
+    // Trim if we exceed max entries
+    if (this.logs.length > this.maxEntries) {
+      this.logs = this.logs.slice(0, this.maxEntries);
     }
-    
-    // Notify subscribers
-    this.notifySubscribers();
   }
   
+  /**
+   * Get all logs in memory
+   */
   getLogs(): LogEntry[] {
-    return this.logs;
+    return [...this.logs];
   }
   
-  getFilteredLogs(options: {
-    search?: string;
-    level?: string;
-    category?: string;
-    source?: string;
-    startTime?: Date;
-    endTime?: Date;
-  } = {}): LogEntry[] {
-    let filtered = [...this.logs];
+  /**
+   * Get logs filtered by specified criteria
+   */
+  getFilteredLogs(options: LogFilterOptions = {}): LogEntry[] {
+    let filteredLogs = [...this.logs];
     
     // Filter by level
-    if (options.level) {
-      filtered = filtered.filter(log => log.level === options.level);
+    if (options.level !== undefined) {
+      filteredLogs = filteredLogs.filter(log => isLogLevelAtLeast(log.level, options.level!));
     }
     
     // Filter by category
     if (options.category) {
-      filtered = filtered.filter(log => log.category === options.category);
+      filteredLogs = filteredLogs.filter(log => log.category === options.category);
     }
     
     // Filter by source
     if (options.source) {
-      filtered = filtered.filter(log => log.source === options.source);
-    }
-    
-    // Filter by time range
-    if (options.startTime) {
-      filtered = filtered.filter(log => 
-        log.timestamp instanceof Date 
-          ? log.timestamp >= options.startTime! 
-          : new Date(log.timestamp) >= options.startTime!
+      filteredLogs = filteredLogs.filter(log => 
+        log.source && log.source.includes(options.source!)
       );
     }
     
-    if (options.endTime) {
-      filtered = filtered.filter(log => 
-        log.timestamp instanceof Date 
-          ? log.timestamp <= options.endTime! 
-          : new Date(log.timestamp) <= options.endTime!
+    // Filter by user ID
+    if (options.userId) {
+      filteredLogs = filteredLogs.filter(log => 
+        log.userId && log.userId === options.userId
       );
     }
     
-    // Filter by search term
+    // Filter by search text
     if (options.search) {
       const searchLower = options.search.toLowerCase();
-      filtered = filtered.filter(log => {
-        // Search in message
-        const searchableMessage = (log as any).searchableMessage || 
-          nodeToSearchableString(log.message);
+      filteredLogs = filteredLogs.filter(log => {
+        // Convert message to searchable string
+        const messageStr = nodeToSearchableString(log.message).toLowerCase();
+        const sourceStr = log.source ? log.source.toLowerCase() : '';
+        const categoryStr = log.category.toLowerCase();
         
-        if (searchableMessage.toLowerCase().includes(searchLower)) {
-          return true;
-        }
-        
-        // Search in details
-        if (log.details) {
-          const searchableDetails = (log as any).searchableDetails || 
-            JSON.stringify(log.details);
-          
-          if (searchableDetails.toLowerCase().includes(searchLower)) {
-            return true;
-          }
-        }
-        
-        return false;
+        return messageStr.includes(searchLower) || 
+               sourceStr.includes(searchLower) || 
+               categoryStr.includes(searchLower);
       });
     }
     
-    return filtered;
+    // Filter by date range
+    if (options.fromDate) {
+      filteredLogs = filteredLogs.filter(log => 
+        log.timestamp >= options.fromDate!
+      );
+    }
+    
+    if (options.toDate) {
+      filteredLogs = filteredLogs.filter(log => 
+        log.timestamp <= options.toDate!
+      );
+    }
+    
+    // Apply limit
+    if (options.limit && options.limit > 0) {
+      filteredLogs = filteredLogs.slice(0, options.limit);
+    }
+    
+    return filteredLogs;
   }
   
+  /**
+   * Clear all logs from memory
+   */
   clear(): void {
     this.logs = [];
-    this.notifySubscribers();
-  }
-  
-  subscribe(callback: (logs: LogEntry[]) => void): () => void {
-    this.subscribers.push(callback);
-    
-    // Return unsubscribe function
-    return () => {
-      this.subscribers = this.subscribers.filter(sub => sub !== callback);
-    };
-  }
-  
-  private notifySubscribers(): void {
-    this.subscribers.forEach(callback => callback(this.logs));
   }
 }
 
-// Create a singleton instance for global use
+// Create singleton instance
 export const memoryTransport = new MemoryTransport();

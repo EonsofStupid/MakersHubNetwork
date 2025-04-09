@@ -1,31 +1,73 @@
 
 import { useCallback } from 'react';
-import { getLogger, LogCategory, LogLevel } from '@/logging';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/logging';
+import { LogLevel } from '@/logging/constants/log-level';
+
+// Extended options type for logger
+interface LogOptions {
+  category?: LogCategory;
+  details?: Record<string, unknown>;
+  tags?: string[];
+  success?: boolean;
+  error?: boolean;
+  warning?: boolean;
+  errorMessage?: string;
+  originalTheme?: string;
+  theme?: string;
+}
 
 /**
- * Custom hook to create a logger with a consistent name and default category
- * @param name Logger name (component or feature name)
- * @param defaultCategory Default category for log messages
- * @returns Logger object with consistent methods
+ * Hook for logging from React components
  */
-export function useLogger(name: string, defaultCategory: LogCategory = LogCategory.UI) {
-  const logger = getLogger(name);
+export function useLogger(source: string, defaultCategory: LogCategory = LogCategory.UI) {
+  const logger = getLogger();
   
-  const debug = useCallback((message: string, meta?: Record<string, any>) => {
-    logger.debug(message, { category: defaultCategory, ...meta });
-  }, [logger, defaultCategory]);
+  const debug = useCallback((message: string, options?: LogOptions) => {
+    logger.debug(message, {
+      ...options,
+      source,
+      category: options?.category || defaultCategory,
+    });
+  }, [logger, source, defaultCategory]);
   
-  const info = useCallback((message: string, meta?: Record<string, any>) => {
-    logger.info(message, { category: defaultCategory, ...meta });
-  }, [logger, defaultCategory]);
+  const info = useCallback((message: string, options?: LogOptions) => {
+    logger.info(message, {
+      ...options,
+      source,
+      category: options?.category || defaultCategory,
+    });
+  }, [logger, source, defaultCategory]);
   
-  const warn = useCallback((message: string, meta?: Record<string, any>) => {
-    logger.warn(message, { category: defaultCategory, ...meta });
-  }, [logger, defaultCategory]);
+  const warn = useCallback((message: string, options?: LogOptions) => {
+    logger.warn(message, {
+      ...options,
+      source,
+      category: options?.category || defaultCategory,
+    });
+  }, [logger, source, defaultCategory]);
   
-  const error = useCallback((message: string, meta?: Record<string, any>) => {
-    logger.error(message, { category: defaultCategory, ...meta });
-  }, [logger, defaultCategory]);
+  const error = useCallback((message: string, options?: LogOptions) => {
+    logger.error(message, {
+      ...options,
+      source,
+      category: options?.category || defaultCategory,
+    });
+  }, [logger, source, defaultCategory]);
   
-  return { debug, info, warn, error };
+  const critical = useCallback((message: string, options?: LogOptions) => {
+    logger.critical(message, {
+      ...options,
+      source,
+      category: options?.category || defaultCategory,
+    });
+  }, [logger, source, defaultCategory]);
+  
+  return {
+    debug,
+    info,
+    warn,
+    error,
+    critical
+  };
 }

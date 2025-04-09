@@ -81,14 +81,18 @@ export default function ContentPage() {
         <div className="flex flex-wrap gap-4">
           <button 
             className="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-md text-sm"
-            onClick={() => logger.info("Create article button clicked")}
+            onClick={() => logger.info("Create article button clicked", {
+              category: LogCategory.ADMIN
+            })}
           >
             <FilePlus className="h-4 w-4" />
             Create new article
           </button>
           <button 
             className="flex items-center gap-2 bg-muted hover:bg-muted/80 text-muted-foreground px-4 py-2 rounded-md text-sm"
-            onClick={() => logger.info("Upload media button clicked")}
+            onClick={() => logger.info("Upload media button clicked", {
+              category: LogCategory.ADMIN
+            })}
           >
             <Image className="h-4 w-4" />
             Upload media
@@ -96,6 +100,7 @@ export default function ContentPage() {
           <button 
             className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 px-4 py-2 rounded-md text-sm"
             onClick={() => logger.warn("Viewing trash content", {
+              category: LogCategory.ADMIN,
               details: { source: "ContentPage" }
             })}
           >

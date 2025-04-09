@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { AdminLayout } from '@/admin/components/layouts/AdminLayout';
+import { AdminLayout } from '@/admin/components/AdminLayout';
 import { cn } from '@/lib/utils';
 
 interface ImpulseAdminLayoutProps {
-  children?: React.ReactNode;
+  children: React.ReactNode;
   title?: string;
   fullWidth?: boolean;
   className?: string;
