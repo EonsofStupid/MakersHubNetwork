@@ -29,6 +29,7 @@ function App() {
 
   // Initialize bridges on app mount
   useEffect(() => {
+    // Initialize authBridge first
     initializeAuthBridge();
     initializeLoggingBridge();
   }, []);
