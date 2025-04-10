@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { chatBridge } from '../lib/ChatBridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { CircuitBreaker } from '@/utils/circuitBreaker';
+import { CircuitBreaker } from '@/utils/CircuitBreaker';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 
 interface ChatContextValue {

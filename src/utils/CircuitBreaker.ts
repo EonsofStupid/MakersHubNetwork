@@ -115,7 +115,18 @@ class CircuitBreakerImpl {
   }
 }
 
-// Export as singleton
+// Create the singleton instance
 const CircuitBreaker = new CircuitBreakerImpl();
+
+// Add static methods for backward compatibility
+(CircuitBreaker as any).init = (id: string, maxCount: number = 5, resetTimeMs: number = 5000): void => {
+  CircuitBreaker.init(id, maxCount, resetTimeMs);
+};
+
+(CircuitBreaker as any).count = (id: string, amount: number = 1): number => {
+  return CircuitBreaker.count(id, amount);
+};
+
+// Export as singleton
 export { CircuitBreaker };
 export default CircuitBreaker;

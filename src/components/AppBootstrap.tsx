@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { CircuitBreaker } from '@/utils/circuitBreaker';
+import { CircuitBreaker } from '@/utils/CircuitBreaker';
 
 // Create a circuit breaker specifically for bootstrap operations
 const bootstrapBreaker = new CircuitBreaker('app-bootstrap', 2, 10000);

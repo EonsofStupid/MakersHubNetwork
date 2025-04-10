@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
-import { CircuitBreaker } from '@/utils/circuitBreaker';
+import { CircuitBreaker } from '@/utils/CircuitBreaker';
 
 const FloatingChatWrapper: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   // Initialize circuit breaker
   React.useEffect(() => {
-    // Use the correct method from the CircuitBreaker instance (not class)
+    // Use the correct method from the CircuitBreaker instance
     CircuitBreaker.init('floating-chat', 5, 1000);
   }, []);
 
