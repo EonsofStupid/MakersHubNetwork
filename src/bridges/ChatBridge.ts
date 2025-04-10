@@ -21,15 +21,15 @@ export type ChatEventType =
   | 'CHAT_DISCONNECTED'
   | 'CHAT_ERROR';
 
-// Create chat messaging interface
-const chatMessaging = messageBus.createInterface('chat');
-
 // Chat context type
 export interface ChatContext {
   userId?: string;
   printerContext?: Record<string, any>;
   projectContext?: Record<string, any>;
 }
+
+// Create chat messaging interface
+const chatMessaging = messageBus.createInterface('chat');
 
 // ChatBridge singleton - Central contract for chat operations
 export const ChatBridge = {
