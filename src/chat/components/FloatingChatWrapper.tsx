@@ -7,7 +7,7 @@ const FloatingChatWrapper: React.FC = () => {
 
   // Initialize circuit breaker
   React.useEffect(() => {
-    // Use the correct method from the CircuitBreaker instance
+    // Use static method to initialize the breaker
     CircuitBreaker.init('floating-chat', 5, 1000);
   }, []);
 
