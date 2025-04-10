@@ -1,6 +1,6 @@
 
 import { useAuthStore } from '../store/auth.store';
-import { UserRole } from '../types/roles';
+import { UserRole, ROLES } from '../types/roles';
 import { useMemo } from 'react';
 
 /**
@@ -27,7 +27,10 @@ export function useHasRole(role: UserRole | UserRole[]): boolean {
  * @returns Boolean indicating if user has admin access
  */
 export function useHasAdminAccess(): boolean {
-  return useHasRole(['admin', 'super_admin']);
+  const roles = useAuthStore((state) => state.roles);
+  return useMemo(() => {
+    return roles.includes('admin') || roles.includes('super_admin');
+  }, [roles]);
 }
 
 /**
@@ -35,5 +38,8 @@ export function useHasAdminAccess(): boolean {
  * @returns Boolean indicating if user is a super admin
  */
 export function useIsSuperAdmin(): boolean {
-  return useHasRole('super_admin');
+  const roles = useAuthStore((state) => state.roles);
+  return useMemo(() => {
+    return roles.includes('super_admin');
+  }, [roles]);
 }
