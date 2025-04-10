@@ -7,19 +7,14 @@ import { useAuthStore } from '../store/auth.store';
  * @param role Single role or array of roles to check against
  * @returns Boolean indicating if user has at least one of the specified roles
  */
-export const hasRole = (role: UserRole | UserRole[] | string | string[]): boolean => {
+export const hasRole = (role: UserRole | UserRole[]): boolean => {
   const userRoles = useAuthStore.getState().roles || [];
-  
-  // Handle the case where role is a string or array of strings
-  if (typeof role === 'string') {
-    return userRoles.includes(role);
-  }
   
   if (Array.isArray(role)) {
     return role.some(r => userRoles.includes(r));
   }
   
-  return false;
+  return userRoles.includes(role);
 };
 
 /**

@@ -1,11 +1,14 @@
+
 import { create } from "zustand";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { UserRole, AuthStatus } from "../types/auth.types";
+import { AuthStatus } from "../types/auth.types";
+import { UserRole } from "../types/roles";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
 import { persist } from "zustand/middleware";
 import { v4 as uuidv4 } from 'uuid';
+import { mapRoleStringsToEnums } from "../types/roles";
 
 // Define user profile interface
 export interface UserProfile {
@@ -81,11 +84,11 @@ export const useAuthStore = create<AuthStore>()(
       
       isAdmin: () => {
         const roles = get().roles;
-        return roles.includes("admin") || roles.includes("super_admin");
+        return roles.includes(UserRole.ADMIN) || roles.includes(UserRole.SUPER_ADMIN);
       },
       
       isSuperAdmin: () => {
-        return get().roles.includes("super_admin");
+        return get().roles.includes(UserRole.SUPER_ADMIN);
       },
       
       setUser: (user: User | null) => {
@@ -146,9 +149,11 @@ export const useAuthStore = create<AuthStore>()(
       setSession: (session: Session | null) => {
         const currentUser = session?.user || null;
         
-        const roles: UserRole[] = [];
+        let roles: UserRole[] = [];
         if (currentUser?.app_metadata?.roles && Array.isArray(currentUser.app_metadata.roles)) {
-          roles.push(...currentUser.app_metadata.roles);
+          // Convert string roles to enum roles
+          const roleStrings = currentUser.app_metadata.roles as string[];
+          roles = mapRoleStringsToEnums(roleStrings);
         }
         
         set({
