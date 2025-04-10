@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { AuthBridge } from "@/auth/bridge";
 import { useAuthStore } from "@/auth/store/auth.store";
+import { useAuthState } from "@/auth/hooks/useAuthState";
 
 /**
  * AuthSection Component
@@ -20,16 +22,16 @@ import { useAuthStore } from "@/auth/store/auth.store";
  * - Admin access links (when authorized)
  */
 export const AuthSection: React.FC = () => {
-  // Use Zustand with selectors to minimize re-renders
-  const user = useAuthStore(state => state.user);
-  const profile = useAuthStore(state => state.profile);
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const status = useAuthStore(state => state.status);
-  const roles = useAuthStore(state => state.roles);
-  
-  // Get admin access directly from the AuthBridge
-  const hasAdminRole = useMemo(() => AuthBridge.isAdmin(), []);
-  const isSuperAdmin = useMemo(() => AuthBridge.isSuperAdmin(), []);
+  // Use our consolidated auth state hook
+  const { 
+    user, 
+    profile, 
+    roles, 
+    isAuthenticated, 
+    status,
+    isAdmin,
+    isSuperAdmin 
+  } = useAuthState();
   
   // Local UI state
   const [showAdminButton, setShowAdminButton] = useAtom(showAdminButtonAtom);
@@ -40,7 +42,7 @@ export const AuthSection: React.FC = () => {
 
   React.useEffect(() => {
     // Make sure admin buttons are visible if the user has admin access
-    if (hasAdminRole || isSuperAdmin) {
+    if (isAdmin || isSuperAdmin) {
       setShowAdminButton(true);
       setShowAdminWrench(true);
       
@@ -48,13 +50,13 @@ export const AuthSection: React.FC = () => {
       logger.info('Admin user detected', { 
         details: { 
           userId: user?.id,
-          hasAdminAccess: hasAdminRole,
+          hasAdminAccess: isAdmin,
           isSuperAdmin,
           roles
         }
       });
     }
-  }, [hasAdminRole, isSuperAdmin, user?.id, roles, setShowAdminButton, setShowAdminWrench, logger]);
+  }, [isAdmin, isSuperAdmin, user?.id, roles, setShowAdminButton, setShowAdminWrench, logger]);
 
   // Memoized values to prevent recalculations
   const avatarUrl = useMemo(() => {
@@ -90,7 +92,7 @@ export const AuthSection: React.FC = () => {
   return (
     <ComponentWrapper componentName="AuthSection" className="flex items-center gap-2">
       {/* Show Admin button if user has admin access */}
-      {hasAdminRole && (
+      {isAdmin && (
         <ComponentWrapper componentName="AdminButton">
           <Link to="/admin">
             <Button 
@@ -113,7 +115,7 @@ export const AuthSection: React.FC = () => {
       )}
       
       {/* Show Admin wrench if user has admin access */}
-      {hasAdminRole && showAdminWrench && (
+      {isAdmin && showAdminWrench && (
         <ComponentWrapper componentName="AdminWrench">
           <Link to="/admin">
             <Button
