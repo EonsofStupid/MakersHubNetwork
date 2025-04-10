@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { AccessDenied } from './auth/AccessDenied';
-import { UserRole } from '@/auth/types/roles';
+import { UserRole } from '@/types/shared';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useHasRole, useHasAdminAccess } from '@/auth/hooks/useHasRole';

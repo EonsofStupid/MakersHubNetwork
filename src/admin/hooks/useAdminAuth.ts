@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { UserRole, ROLES } from '@/auth/types/roles';
+import { UserRole, ROLES } from '@/types/shared';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 

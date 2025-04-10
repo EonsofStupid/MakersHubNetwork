@@ -12,7 +12,7 @@ import { useAuthStore } from "@/auth/store/auth.store";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { useHasRole, useHasAdminAccess, useIsSuperAdmin } from "@/auth/hooks/useHasRole";
-import { ROLES } from "@/auth/types/roles";
+import { ROLES } from "@/types/shared";
 
 /**
  * AuthSection Component

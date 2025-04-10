@@ -1,6 +1,7 @@
+
 import { atom } from 'jotai';
 import { User } from '@supabase/supabase-js';
-import { UserRole, ROLES } from '@/auth/types/roles';
+import { UserRole, ROLES } from '@/types/shared';
 
 // Import the auth store as the single source of truth
 import { useAuthStore } from '../store/auth.store';
