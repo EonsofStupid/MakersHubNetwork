@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/logging';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { UserRole } from '@/auth/types/roles';
+import { UserRole, ROLES } from '@/auth/types/roles';
 
 // Event system for auth events
 export type AuthEventType = 
@@ -198,7 +198,7 @@ export const AuthBridge = {
    */
   isAdmin: (): boolean => {
     const { roles } = useAuthStore.getState();
-    return roles.includes('admin') || roles.includes('super_admin');
+    return roles.includes(ROLES.ADMIN) || roles.includes(ROLES.SUPER_ADMIN);
   },
   
   /**
@@ -206,7 +206,7 @@ export const AuthBridge = {
    */
   isSuperAdmin: (): boolean => {
     const { roles } = useAuthStore.getState();
-    return roles.includes('super_admin');
+    return roles.includes(ROLES.SUPER_ADMIN);
   }
 };
 

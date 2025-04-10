@@ -11,7 +11,7 @@ import {
 import { AuthBridge } from '@/auth/bridge';
 import { useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { UserRole } from '@/auth/types/auth.types';
+import { UserRole } from '@/auth/types/roles';
 
 /**
  * Custom hook that provides access to auth state via Jotai atoms

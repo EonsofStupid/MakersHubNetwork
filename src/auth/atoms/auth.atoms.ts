@@ -1,10 +1,10 @@
 
 import { atom } from 'jotai';
 import { User } from '@supabase/supabase-js';
-import { UserRole } from '@/types/auth.types';
+import { UserRole, ROLES } from '@/auth/types/roles';
 
 // Import the auth store as the single source of truth
-import { useAuthStore, UserProfile } from '../store/auth.store';
+import { useAuthStore } from '../store/auth.store';
 
 /**
  * Create a helper function to create atoms that are synchronized with the store
@@ -51,9 +51,9 @@ export const userAvatarAtom = atom((get) => {
 export type AuthStatusType = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 export { isAuthenticatedAtom as authStatusAtom };
 
-// Has role utility atom
+// Has role utility function atom - returns a function
 export const hasRoleAtom = atom(
-  (get) => (role: UserRole | UserRole[]) => {
+  (get) => (role: UserRole | UserRole[]): boolean => {
     const roles = get(rolesAtom);
     
     if (Array.isArray(role)) {
