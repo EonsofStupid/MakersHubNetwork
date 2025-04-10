@@ -9,7 +9,7 @@ export type UserRoleArray = UserRole[];
 /**
  * Re-export ROLES from shared types
  */
-export { ROLES };
+export { UserRole, ROLES };
 
 /**
  * Map from string roles to typed UserRole - used only for external APIs
