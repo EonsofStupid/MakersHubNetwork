@@ -8,21 +8,17 @@ import { useMemo } from 'react';
  * @param role Role or array of roles to check
  * @returns Boolean indicating if user has at least one of the specified roles
  */
-export function useHasRole(role: UserRole | UserRole[] | string | string[]) {
+export function useHasRole(role: UserRole | UserRole[]) {
   const roles = useAuthStore((state) => state.roles);
   
-  return useMemo(() => {
-    // Handle string roles for backward compatibility
-    if (typeof role === 'string') {
-      return roles.includes(role);
-    }
-    
-    // Handle array of roles (either enum or string)
+  return useMemo(() => {    
+    // Handle array of roles
     if (Array.isArray(role)) {
       return role.some(r => roles.includes(r));
     }
     
-    return false;
+    // Handle single role
+    return roles.includes(role);
   }, [roles, role]);
 }
 

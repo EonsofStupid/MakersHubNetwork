@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useLogger } from '@/hooks/use-logger';
@@ -73,7 +74,7 @@ export function AdminAuthGuard({
         }
       });
     }
-  }, []);
+  }, [isAuthenticated, hasAdminAccess, logger, roles, requiredRole, toast, user]);
   
   // Show nothing while authenticating
   if (status === 'loading' || status === 'idle') {
