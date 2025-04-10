@@ -35,11 +35,11 @@ export function useAuth() {
   // Use memoization for derived values
   const isAdmin = useMemo(() => {
     return AuthBridge.isAdmin();
-  }, [roles]);
+  }, []);
   
   const isSuperAdmin = useMemo(() => {
     return AuthBridge.isSuperAdmin();
-  }, [roles]);
+  }, []);
   
   // Use AuthBridge for auth operations to ensure consistent behavior
   const handleLogin = useCallback(async (email: string, password: string) => {
@@ -88,5 +88,5 @@ export function useAuth() {
   };
 }
 
-// Replace the existing useAuth.tsx with the new implementation
+// Default export for backward compatibility
 export default useAuth;
