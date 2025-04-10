@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/auth.store';
 import { UserRole } from '../types/roles';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useHasRole } from '../hooks/useHasRole';
+import { useHasRole, useHasAdminAccess } from '../hooks/useHasRole';
 
 interface AdminOnlyProps {
   children: React.ReactNode;
@@ -32,11 +32,4 @@ export function AdminOnly({ children, role, fallback = null }: AdminOnlyProps) {
   }
   
   return <>{children}</>;
-}
-
-/**
- * Hook to check if the current user has admin access
- */
-function useHasAdminAccess(): boolean {
-  return useHasRole(['admin', 'super_admin']);
 }
