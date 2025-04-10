@@ -9,6 +9,7 @@
 import { useCallback } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { UserRole } from '@/types/shared';
+import { AuthBridge } from '@/auth/bridge';
 
 /**
  * Check if the current user has a specific role
@@ -30,8 +31,7 @@ export function useHasRole(role: UserRole | UserRole[]): boolean {
  * @returns Boolean indicating if user has admin access
  */
 export function useHasAdminAccess(): boolean {
-  const roles = useAuthStore(state => state.roles);
-  return roles.some(role => role === 'admin' || role === 'super_admin');
+  return AuthBridge.isAdmin();
 }
 
 /**
@@ -39,8 +39,7 @@ export function useHasAdminAccess(): boolean {
  * @returns Boolean indicating if user is a super admin
  */
 export function useIsSuperAdmin(): boolean {
-  const roles = useAuthStore(state => state.roles);
-  return roles.includes('super_admin');
+  return AuthBridge.isSuperAdmin();
 }
 
 /**

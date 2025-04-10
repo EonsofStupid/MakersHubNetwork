@@ -11,8 +11,8 @@ import { ComponentWrapper } from "@/admin/components/debug/ComponentWrapper";
 import { useAuthStore } from "@/auth/store/auth.store";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
-import { useHasAdminAccess, useIsSuperAdmin } from "@/auth/hooks/useHasRole";
 import { ROLES } from "@/types/shared";
+import { AuthBridge } from "@/auth/bridge";
 
 /**
  * AuthSection Component
@@ -29,9 +29,9 @@ export const AuthSection: React.FC = () => {
   const status = useAuthStore(state => state.status);
   const roles = useAuthStore(state => state.roles);
   
-  // Use the role checking hooks - these return boolean values, not functions
-  const hasAdminRole = useHasAdminAccess();
-  const isSuperAdmin = useIsSuperAdmin();
+  // Get admin access directly from the AuthBridge
+  const hasAdminRole = useMemo(() => AuthBridge.isAdmin(), []);
+  const isSuperAdmin = useMemo(() => AuthBridge.isSuperAdmin(), []);
   
   // Local UI state
   const [showAdminButton, setShowAdminButton] = useAtom(showAdminButtonAtom);
