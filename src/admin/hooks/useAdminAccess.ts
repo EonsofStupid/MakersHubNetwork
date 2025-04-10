@@ -1,48 +1,40 @@
 
-import { useEffect, useState } from 'react';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { hasAdminAccess } from '@/auth/rbac/roles';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { useHasAdminAccess, useIsSuperAdmin } from '@/auth/hooks/useHasRole';
+import { getLogger } from '@/logging';
+import { ROLES } from '@/types/shared';
 
 /**
  * Hook for checking admin access permissions
- * Simplified to avoid circular dependencies
+ * Uses the standardized role checking system
  */
 export function useAdminAccess() {
-  const { status, roles, user } = useAuthState();
-  const [isChecking, setIsChecking] = useState(true);
-  const logger = useLogger("useAdminAccess", LogCategory.ADMIN);
+  const logger = getLogger();
+  const user = useAuthStore(state => state.user);
+  const roles = useAuthStore(state => state.roles);
   
-  // Derived state
-  const isAuthenticated = status === 'authenticated' && !!user;
-  const adminAccessResult = hasAdminAccess(roles);
+  // Use our standardized hooks
+  const isAdmin = useHasAdminAccess();
+  const isSuperAdmin = useIsSuperAdmin();
+  const hasAdminAccess = isAdmin;
   
-  useEffect(() => {
-    if (status !== 'loading') {
-      setIsChecking(false);
+  // Log authentication status for debugging
+  logger.debug('Admin access check', { 
+    details: { 
+      hasAdminAccess,
+      isAdmin,
+      isSuperAdmin,
+      roles,
+      userId: user?.id
     }
-  }, [status]);
-  
-  // Log access attempts only once
-  useEffect(() => {
-    if (!isChecking && isAuthenticated) {
-      const logLevel = adminAccessResult ? 'info' : 'warn';
-      
-      logger[logLevel]('Admin access check', {
-        details: {
-          userId: user?.id,
-          hasAccess: adminAccessResult,
-          roles
-        }
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isChecking, isAuthenticated, adminAccessResult]);
+  });
   
   return {
-    isLoading: isChecking,
-    isAuthenticated,
-    hasAdminAccess: adminAccessResult
+    hasAdminAccess,
+    isAdmin,
+    isSuperAdmin,
+    isAuthenticated: !!user,
+    user,
+    roles
   };
 }

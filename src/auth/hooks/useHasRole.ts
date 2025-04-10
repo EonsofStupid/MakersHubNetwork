@@ -3,13 +3,12 @@
  * auth/hooks/useHasRole.ts
  * 
  * Custom hooks for role-based access control
- * These utilize the AuthBridge for consistent behavior
+ * These utilize the consolidated useAuth hook
  */
 
 import { useCallback } from 'react';
-import { UserRole } from '@/types/shared';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { AuthBridge } from '@/bridges/AuthBridge';
+import { UserRole } from '@/types/shared';
 
 /**
  * Check if the current user has a specific role
@@ -31,7 +30,8 @@ export function useHasRole(role: UserRole | UserRole[]): boolean {
  * @returns Boolean indicating if user has admin access
  */
 export function useHasAdminAccess(): boolean {
-  return AuthBridge.isAdmin();
+  const roles = useAuthStore(state => state.roles);
+  return roles.some(role => role === 'admin' || role === 'super_admin');
 }
 
 /**
@@ -39,7 +39,8 @@ export function useHasAdminAccess(): boolean {
  * @returns Boolean indicating if user is a super admin
  */
 export function useIsSuperAdmin(): boolean {
-  return AuthBridge.isSuperAdmin();
+  const roles = useAuthStore(state => state.roles);
+  return roles.includes('super_admin');
 }
 
 /**
@@ -48,6 +49,13 @@ export function useIsSuperAdmin(): boolean {
  */
 export function useRoleChecker() {
   return useCallback((role: UserRole | UserRole[]): boolean => {
-    return AuthBridge.hasRole(role);
+    const store = useAuthStore.getState();
+    const roles = store.roles;
+    
+    if (Array.isArray(role)) {
+      return role.some(r => roles.includes(r));
+    }
+    
+    return roles.includes(role);
   }, []);
 }
