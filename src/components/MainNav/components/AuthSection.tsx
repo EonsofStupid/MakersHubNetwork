@@ -29,7 +29,7 @@ export const AuthSection: React.FC = () => {
   const status = useAuthStore(state => state.status);
   const roles = useAuthStore(state => state.roles);
   
-  // Use the hooks directly to check for admin access
+  // Use the hooks directly to check for admin access (fixed: not calling as functions)
   const hasAdminRole = useHasAdminAccess();
   const isSuperAdmin = useIsSuperAdmin();
   

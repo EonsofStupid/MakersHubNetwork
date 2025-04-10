@@ -1,33 +1,13 @@
 
 /**
- * Import and re-export the UserRole from the central roles.ts file
+ * Import and re-export the types from our central shared types
  */
-import { UserRole } from './roles';
-export type { UserRole };
+import { UserRole, AuthStatus, AuthProvider, AuthEventType } from '@/types/shared';
+
+export type { UserRole, AuthStatus, AuthProvider, AuthEventType };
 
 /**
- * Authentication status types
- */
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
-
-/**
- * Login provider types
- */
-export type AuthProvider = 'email' | 'google' | 'github' | 'twitter' | 'facebook';
-
-/**
- * Auth event types for event system
- */
-export type AuthEventType = 
-  'AUTH_STATE_CHANGE' | 
-  'AUTH_ERROR' | 
-  'AUTH_LINKING_REQUIRED' |
-  'AUTH_SIGNED_IN' | 
-  'AUTH_SIGNED_OUT' |
-  'AUTH_PERMISSION_CHANGED';
-
-/**
- * User authentication options
+ * Auth options interface
  */
 export interface AuthOptions {
   /**

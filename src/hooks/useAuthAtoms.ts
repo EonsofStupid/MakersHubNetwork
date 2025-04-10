@@ -7,11 +7,11 @@ import {
   isAdminAtom, 
   hasAdminAccessAtom,
   hasRoleAtom
-} from '@/auth/atoms/auth.atoms';
-import { AuthBridge } from '@/auth/bridge';
+} from '@/atoms/auth.atoms';
+import { AuthBridge } from '@/bridges/AuthBridge';
 import { useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { UserRole } from '@/auth/types/roles';
+import { UserRole } from '@/types/shared';
 
 /**
  * Custom hook that provides access to auth state via Jotai atoms

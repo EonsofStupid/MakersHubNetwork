@@ -1,8 +1,8 @@
 
 import { useCallback, useMemo } from 'react';
-import { useAuthStore, selectUser, selectSession, selectProfile, selectRoles, selectStatus, selectIsAuthenticated, selectAuthError, selectIsLoading } from '@/auth/store/auth.store';
-import { AuthBridge } from '@/auth/bridge';
-import { UserRole } from '@/auth/types/auth.types';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { AuthBridge } from '@/bridges/AuthBridge';
+import { UserRole } from '@/types/shared';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
@@ -14,18 +14,18 @@ export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   
   // Use selectors for each piece of state to prevent unnecessary re-renders
-  const user = useAuthStore(selectUser);
-  const profile = useAuthStore(selectProfile);
-  const session = useAuthStore(selectSession);
-  const roles = useAuthStore(selectRoles);
-  const status = useAuthStore(selectStatus);
-  const isAuthenticated = useAuthStore(selectIsAuthenticated);
-  const error = useAuthStore(selectAuthError);
-  const isLoading = useAuthStore(selectIsLoading);
+  const user = useAuthStore(state => state.user);
+  const profile = useAuthStore(state => state.profile);
+  const session = useAuthStore(state => state.session);
+  const roles = useAuthStore(state => state.roles);
+  const status = useAuthStore(state => state.status);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const error = useAuthStore(state => state.error);
+  const isLoading = useAuthStore(state => state.isLoading);
   
   // Access methods directly from the store
-  const initialize = useAuthStore((state) => state.initialize);
-  const initialized = useAuthStore((state) => state.initialized);
+  const initialize = useAuthStore(state => state.initialize);
+  const initialized = useAuthStore(state => state.initialized);
   
   // Memoize role checking functions to prevent recreation on each render
   const hasRole = useCallback((role: UserRole | UserRole[]) => {
@@ -87,3 +87,6 @@ export function useAuth() {
     initialized
   };
 }
+
+// Replace the existing useAuth.tsx with the new implementation
+export default useAuth;
