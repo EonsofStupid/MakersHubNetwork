@@ -1,7 +1,7 @@
 
 import { useAuthStore } from '../store/auth.store';
-import { UserRole, ROLES } from '../types/roles';
 import { useMemo } from 'react';
+import { UserRole, ROLES } from '@/types/shared';
 
 /**
  * Hook to check if the current user has any of the specified roles

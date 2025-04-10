@@ -1,9 +1,5 @@
 
-/**
- * User roles in the application - string literal union type
- * This is the central source of truth for all roles across the application
- */
-export type UserRole = 'super_admin' | 'admin' | 'editor' | 'moderator' | 'builder' | 'maker' | 'viewer' | 'user';
+import { UserRole, ROLES } from '@/types/shared';
 
 /**
  * Type for role array - used for strict type checking
@@ -11,18 +7,9 @@ export type UserRole = 'super_admin' | 'admin' | 'editor' | 'moderator' | 'build
 export type UserRoleArray = UserRole[];
 
 /**
- * Constants for role values - used for convenience and type safety
+ * Re-export ROLES from shared types
  */
-export const ROLES = {
-  SUPER_ADMIN: 'super_admin' as UserRole,
-  ADMIN: 'admin' as UserRole,
-  EDITOR: 'editor' as UserRole,
-  MODERATOR: 'moderator' as UserRole,
-  BUILDER: 'builder' as UserRole,
-  MAKER: 'maker' as UserRole,
-  VIEWER: 'viewer' as UserRole,
-  USER: 'user' as UserRole
-} as const;
+export { ROLES };
 
 /**
  * Map from string roles to typed UserRole - used only for external APIs
