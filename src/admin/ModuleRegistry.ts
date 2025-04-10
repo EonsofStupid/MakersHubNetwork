@@ -45,7 +45,7 @@ function registerEventHandlers(): void {
   const logger = getLogger();
   
   // Subscribe to auth events
-  subscribeToAuthEvents((event) => {
+  subscribeToAuthEvents('AUTH_STATE_CHANGE', (event) => {
     logger.info(`Admin module received auth event: ${event.type}`, {
       category: LogCategory.ADMIN,
       source: 'ModuleRegistry',

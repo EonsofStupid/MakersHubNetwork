@@ -2,7 +2,7 @@
 import React from 'react';
 
 /**
- * Convert an error object to a plain object for logging
+ * Converts an error object to a plain object for safe serialization
  */
 export function errorToObject(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
@@ -10,7 +10,8 @@ export function errorToObject(error: unknown): Record<string, unknown> {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      ...(error as any), // Capture any custom properties
+      // Using optional chaining to avoid error on older JS versions
+      cause: error['cause'] ? errorToObject(error['cause']) : undefined,
     };
   }
   

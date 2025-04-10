@@ -11,6 +11,7 @@ export class CircuitBreaker {
   private resetIntervalMs: number;
   private counts: Map<string, number> = new Map();
   private lastReset: number = Date.now();
+  public isOpen: boolean = false;
 
   /**
    * Create a new CircuitBreaker
@@ -45,9 +46,31 @@ export class CircuitBreaker {
     // Log warning if we've exceeded the threshold
     if (currentCount > this.maxCount) {
       console.warn(`CircuitBreaker: ${this.source} exceeded ${this.maxCount} calls for "${key}".`);
+      this.isOpen = true;
     }
     
     return currentCount;
+  }
+
+  /**
+   * Execute a function with circuit breaking protection
+   * 
+   * @param key Identifier for this operation
+   * @param fn Function to execute
+   * @param defaultValue Default value to return if circuit is open
+   */
+  execute<T>(key: string, fn: () => T, defaultValue: T): T {
+    if (this.isOpen) {
+      console.warn(`CircuitBreaker: ${this.source} circuit open for "${key}", skipping execution.`);
+      return defaultValue;
+    }
+    
+    const count = this.count(key);
+    if (count > this.maxCount) {
+      return defaultValue;
+    }
+    
+    return fn();
   }
 
   /**
@@ -58,6 +81,7 @@ export class CircuitBreaker {
     if (now - this.lastReset > this.resetIntervalMs) {
       this.counts.clear();
       this.lastReset = now;
+      this.isOpen = false;
     }
   }
 
@@ -67,5 +91,13 @@ export class CircuitBreaker {
   reset(): void {
     this.counts.clear();
     this.lastReset = Date.now();
+    this.isOpen = false;
+  }
+  
+  /**
+   * Static initializer for convenience
+   */
+  static init(source: string, maxCount: number = 5, resetIntervalMs: number = 1000): CircuitBreaker {
+    return new CircuitBreaker(source, maxCount, resetIntervalMs);
   }
 }
