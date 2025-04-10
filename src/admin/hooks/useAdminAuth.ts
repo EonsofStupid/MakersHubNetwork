@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { UserRole } from '@/types/auth.types';
+import { UserRole } from '@/auth/types/roles';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,9 +23,15 @@ export function useAdminAuth() {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const status = useAuthStore(state => state.status);
   
-  // Derive admin status
-  const isAdmin = useAuthStore(state => state.isAdmin());
-  const isSuperAdmin = useAuthStore(state => state.isSuperAdmin());
+  // Check if user has admin role
+  const isAdmin = useMemo(() => {
+    return roles.includes('admin') || roles.includes('super_admin');
+  }, [roles]);
+  
+  // Check if user has super admin role
+  const isSuperAdmin = useMemo(() => {
+    return roles.includes('super_admin');
+  }, [roles]);
   
   // Compute additional admin-specific derived state
   const hasAdminAccess = useMemo(() => {

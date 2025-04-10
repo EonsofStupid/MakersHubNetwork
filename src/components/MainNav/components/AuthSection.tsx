@@ -29,7 +29,7 @@ export const AuthSection: React.FC = () => {
   const roles = useAuthStore(state => state.roles);
   
   // Use our role checking hooks
-  const isAdmin = useHasAdminAccess();
+  const hasAdminAccess = useHasAdminAccess();
   const isSuperAdmin = useIsSuperAdmin();
   
   // Local UI state
@@ -41,7 +41,7 @@ export const AuthSection: React.FC = () => {
 
   React.useEffect(() => {
     // Make sure admin buttons are visible if the user has admin access
-    if (isAdmin || isSuperAdmin) {
+    if (hasAdminAccess || isSuperAdmin) {
       setShowAdminButton(true);
       setShowAdminWrench(true);
       
@@ -49,16 +49,15 @@ export const AuthSection: React.FC = () => {
       logger.info('Admin user detected', { 
         details: { 
           userId: user?.id,
-          isAdmin,
+          hasAdminAccess,
           isSuperAdmin,
           roles
         }
       });
     }
-  }, [isAdmin, isSuperAdmin, user?.id, roles, setShowAdminButton, setShowAdminWrench, logger]);
+  }, [hasAdminAccess, isSuperAdmin, user?.id, roles, setShowAdminButton, setShowAdminWrench, logger]);
 
   // Memoized values to prevent recalculations
-  const hasAdminAccess = useMemo(() => isAdmin || isSuperAdmin, [isAdmin, isSuperAdmin]);
   const avatarUrl = useMemo(() => {
     return profile?.avatar_url || user?.user_metadata?.avatar_url as string | undefined;
   }, [profile?.avatar_url, user?.user_metadata?.avatar_url]);

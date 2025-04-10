@@ -27,7 +27,7 @@ export function useHasRole(role: UserRole | UserRole[]) {
  * @returns Boolean indicating if user has admin access
  */
 export function useHasAdminAccess() {
-  return useHasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  return useHasRole(['admin', 'super_admin']);
 }
 
 /**
@@ -35,5 +35,5 @@ export function useHasAdminAccess() {
  * @returns Boolean indicating if user is a super admin
  */
 export function useIsSuperAdmin() {
-  return useHasRole(UserRole.SUPER_ADMIN);
+  return useHasRole('super_admin');
 }

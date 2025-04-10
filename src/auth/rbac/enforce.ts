@@ -39,12 +39,12 @@ export const createPermissionChecker = (userRoles: UserRole[] = []) => {
  * Check if user has admin access
  */
 export const canAccessAdmin = (userRoles: UserRole[] = []): boolean => {
-  return userRoles.includes(UserRole.ADMIN) || userRoles.includes(UserRole.SUPER_ADMIN);
+  return userRoles.includes('admin') || userRoles.includes('super_admin');
 };
 
 /**
  * Check if user can use development features
  */
 export const canAccessDevFeatures = (userRoles: UserRole[] = []): boolean => {
-  return userRoles.includes(UserRole.ADMIN) || userRoles.includes(UserRole.SUPER_ADMIN);
+  return userRoles.includes('admin') || userRoles.includes('super_admin');
 };
