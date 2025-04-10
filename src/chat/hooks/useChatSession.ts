@@ -1,20 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { useAuthState } from '@/auth/hooks/useAuthState';
-import { chatBridge } from '../lib/ChatBridge';
+import { ChatBridge } from '@/bridges/ChatBridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { v4 as uuidv4 } from 'uuid';
 import { CircuitBreaker } from '@/utils/CircuitBreaker';
-
-interface ChatMessage {
-  id: string;
-  content: string;
-  sender: 'user' | 'assistant' | 'system';
-  timestamp: Date;
-  sessionId?: string;
-  metadata?: Record<string, any>;
-}
+import { ChatMessage } from '@/types';
 
 interface UseChatSessionProps {
   sessionId?: string;
@@ -40,16 +32,13 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
       setSessionId(externalSessionId);
     } else if (!sessionId) {
       // Generate new session ID if none provided
-      const newSessionId = uuidv4();
-      setSessionId(newSessionId);
-      
-      // Publish session creation event through bridge
-      chatBridge.publish('system', {
-        type: 'session-created',
-        sessionId: newSessionId,
+      const newSessionId = ChatBridge.createSession({
+        userId: user?.id,
         mode,
-        userId: user?.id
+        metadata: { source: 'useChatSession' }
       });
+      
+      setSessionId(newSessionId);
       
       logger.info('Created new chat session', {
         details: { sessionId: newSessionId, mode }
@@ -61,11 +50,9 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
     if (!sessionId) return;
     
     // Subscribe to session events via the bridge
-    const sessionChannel = `session:${sessionId}`;
-    
-    const unsubscribe = chatBridge.subscribe(sessionChannel, (message) => {
-      if (message.type === 'new-message') {
-        setMessages(prev => [...prev, message.message]);
+    const unsubscribe = ChatBridge.subscribeToSession(sessionId, (event) => {
+      if (event.type === 'new-message') {
+        setMessages(prev => [...prev, event.message]);
       }
     });
     
@@ -91,12 +78,8 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
       
       setMessages(prev => [...prev, userMessage]);
       
-      // Use the bridge to publish the message
-      chatBridge.publish('message', {
-        type: 'send-message',
-        message: userMessage,
-        sessionId
-      });
+      // Use the bridge to send the message
+      ChatBridge.sendMessage(sessionId, content, metadata);
       
       // Simulate assistant response for now
       setTimeout(() => {
@@ -128,3 +111,4 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
     sessionId
   };
 }
+

@@ -1,96 +1,34 @@
 
+/**
+ * Internal implementation of the Chat Bridge for the chat module
+ */
+import { chatBridgeImpl } from '@/bridges/ChatBridge';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 
-// Define LogOptions type to match the expected type in logging system
-interface LogOptions {
-  category?: LogCategory;
-  details?: Record<string, any>;
-  source?: string;
-  tags?: string[];
+// Re-export the bridge for use in the chat module
+export const chatBridge = chatBridgeImpl;
+
+// Re-export the types
+export type { ChatEvent, ChatEventType, ChatMessage, ChatMessageType, ChatSessionOptions } from '@/bridges/ChatBridge';
+
+// Provide utility functions specific to the chat module
+export function createChatSession(userId?: string, mode: 'normal' | 'dev' | 'admin' = 'normal') {
+  const logger = getLogger();
+  const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+  
+  logger.debug('Creating new chat session', {
+    category: LogCategory.CHAT,
+    details: { sessionId, userId, mode }
+  });
+  
+  chatBridge.publish('system', {
+    type: 'session-created',
+    sessionId,
+    mode,
+    userId
+  });
+  
+  return sessionId;
 }
 
-export type ChatBridgeMessage = {
-  type: string;
-  [key: string]: any;
-};
-
-// Updated to accept any string channel, including dynamic patterns like 'session:123'
-export type ChatBridgeChannel = string;
-
-export type ChatBridgeListener = (message: ChatBridgeMessage) => void;
-
-/**
- * ChatBridge - Implements a centralized messaging system for the chat module
- * This prevents circular dependencies by creating a one-way communication flow
- */
-class ChatBridgeImpl {
-  private listeners: Map<ChatBridgeChannel, ChatBridgeListener[]> = new Map();
-  private logger = getLogger();
-  
-  /**
-   * Subscribe to a channel
-   * @param channel The channel to subscribe to
-   * @param listener The listener callback
-   * @returns Unsubscribe function
-   */
-  subscribe(channel: ChatBridgeChannel, listener: ChatBridgeListener): () => void {
-    if (!this.listeners.has(channel)) {
-      this.listeners.set(channel, []);
-    }
-    
-    const channelListeners = this.listeners.get(channel)!;
-    channelListeners.push(listener);
-    
-    this.logger.debug(`Listener added to ${channel} channel`, { 
-      category: LogCategory.CHAT,
-      details: { listenersCount: channelListeners.length }
-    });
-    
-    // Return unsubscribe function
-    return () => {
-      const index = channelListeners.indexOf(listener);
-      if (index !== -1) {
-        channelListeners.splice(index, 1);
-        if (channelListeners.length === 0) {
-          this.listeners.delete(channel);
-        }
-      }
-    };
-  }
-  
-  /**
-   * Publish a message to a channel
-   * @param channel The channel to publish to
-   * @param message The message to publish
-   */
-  publish(channel: ChatBridgeChannel, message: ChatBridgeMessage): void {
-    if (!this.listeners.has(channel)) {
-      return;
-    }
-    
-    const channelListeners = this.listeners.get(channel)!;
-    
-    this.logger.debug(`Publishing to ${channel} channel`, {
-      category: LogCategory.CHAT,
-      details: { message, listenersCount: channelListeners.length }
-    });
-    
-    // Use setTimeout to break potential circular dependencies
-    setTimeout(() => {
-      channelListeners.forEach(listener => {
-        try {
-          listener(message);
-        } catch (error) {
-          this.logger.error(`Error in ${channel} channel listener`, {
-            category: LogCategory.CHAT,
-            details: { error, messageType: message.type }
-          });
-        }
-      });
-    }, 0);
-  }
-}
-
-// Export singleton instance
-export const chatBridge = new ChatBridgeImpl();

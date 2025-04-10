@@ -1,9 +1,19 @@
 
+/**
+ * AuthBridge.ts
+ * 
+ * Bridge for the Auth module - provides a clean interface for other modules to
+ * interact with the Auth module without direct dependencies.
+ */
+
 import { User, Session } from '@supabase/supabase-js';
-import { LogCategory } from '@/logging';
+import { createModuleBridge } from '@/core/MessageBus';
 import { getLogger } from '@/logging';
-import { UserProfile } from '@/auth/types/shared';
-import { UserRole } from '@/auth/types/shared';
+import { LogCategory } from '@/logging';
+import { UserProfile, UserRole } from '@/types/auth.types';
+
+// Create a module-specific bridge
+const authBridgeImpl = createModuleBridge('auth');
 
 // Define event types for typesafety
 export type AuthEventType = 
@@ -42,7 +52,6 @@ type AuthEventListener = (payload: AuthEventPayload) => void;
  * the Auth module without direct dependencies.
  */
 class AuthBridgeImpl {
-  private listeners: Map<string, AuthEventListener[]> = new Map();
   private logger = getLogger();
   private initialized: boolean = false;
   private userRoles: UserRole[] = [];
@@ -61,6 +70,18 @@ class AuthBridgeImpl {
       source: 'AuthBridge'
     });
     
+    // Subscribe to auth events
+    authBridgeImpl.subscribe('state', (payload: AuthEventPayload) => {
+      if (payload.user) {
+        this.currentUser = payload.user;
+      }
+      
+      if (payload.type === 'AUTH_SIGNED_OUT') {
+        this.currentUser = null;
+        this.userRoles = [];
+      }
+    });
+    
     this.initialized = true;
     return true;
   }
@@ -69,46 +90,14 @@ class AuthBridgeImpl {
    * Subscribe to auth events
    */
   subscribe(event: AuthEventType, listener: AuthEventListener): () => void {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, []);
-    }
-    
-    const eventListeners = this.listeners.get(event)!;
-    eventListeners.push(listener);
-    
-    // Return unsubscribe function
-    return () => {
-      const index = eventListeners.indexOf(listener);
-      if (index !== -1) {
-        eventListeners.splice(index, 1);
-      }
-    };
+    return authBridgeImpl.subscribe(event, listener);
   }
   
   /**
    * Publish an auth event
    */
   publish(event: AuthEventType, payload: Omit<AuthEventPayload, 'type'>) {
-    if (!this.listeners.has(event)) {
-      return;
-    }
-    
-    const eventListeners = this.listeners.get(event)!;
-    const fullPayload = { type: event, ...payload };
-    
-    // Use setTimeout to avoid blocking
-    setTimeout(() => {
-      eventListeners.forEach(listener => {
-        try {
-          listener(fullPayload);
-        } catch (error) {
-          this.logger.error(`Error in auth event listener for ${event}`, {
-            category: LogCategory.AUTH,
-            details: { error }
-          });
-        }
-      });
-    }, 0);
+    authBridgeImpl.publish(event, { type: event, ...payload });
   }
   
   /**
@@ -152,19 +141,34 @@ class AuthBridgeImpl {
    */
   setRoles(roles: UserRole[]): void {
     this.userRoles = roles;
+    
+    // Publish role change event
+    this.publish('AUTH_PERMISSION_CHANGED', { roles });
   }
   
   /**
    * Set current user
    */
   setCurrentUser(user: User | null): void {
+    const hadUser = !!this.currentUser;
+    const hasNewUser = !!user;
+    
     this.currentUser = user;
+    
+    // Publish appropriate events
+    if (!hadUser && hasNewUser) {
+      this.publish('AUTH_SIGNED_IN', { user });
+    } else if (hadUser && !hasNewUser) {
+      this.publish('AUTH_SIGNED_OUT', {});
+    } else if (user) {
+      this.publish('AUTH_USER_UPDATED', { user });
+    }
   }
   
   /**
    * Log in a user with email and password
    */
-  signIn(email: string, password: string): Promise<{ user: User; session: Session } | { error: Error }> {
+  async signIn(email: string, password: string): Promise<{ user: User; session: Session } | { error: Error }> {
     // This would be implemented with actual auth logic
     // For now just publish the event
     this.publish('login', { user: null, session: null });
@@ -174,7 +178,7 @@ class AuthBridgeImpl {
   /**
    * Sign in with Google
    */
-  signInWithGoogle(): Promise<{ user: User; session: Session } | { error: Error }> {
+  async signInWithGoogle(): Promise<{ user: User; session: Session } | { error: Error }> {
     // This would be implemented with actual auth logic
     // For now just publish the event
     this.publish('login', { user: null, session: null });
@@ -184,7 +188,7 @@ class AuthBridgeImpl {
   /**
    * Link a social account to an existing account
    */
-  linkSocialAccount(provider: string): Promise<void> {
+  async linkSocialAccount(provider: string): Promise<void> {
     // This would be implemented with actual auth logic
     return Promise.resolve();
   }
@@ -192,7 +196,7 @@ class AuthBridgeImpl {
   /**
    * Log out the current user
    */
-  logout() {
+  async logout() {
     // This would be implemented with actual auth logic
     this.publish('logout', {});
     return Promise.resolve();
@@ -219,3 +223,7 @@ export function subscribeToAuthEvents(event: AuthEventType, listener: AuthEventL
 export function publishAuthEvent(payload: AuthEventPayload) {
   AuthBridge.publish(payload.type, payload);
 }
+
+// Export the internal bridge for auth module use only
+export { authBridgeImpl };
+

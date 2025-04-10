@@ -1,11 +1,12 @@
+
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { LoggingProvider } from "@/logging/context/LoggingContext";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { useEffect, useRef } from "react";
-import { initializeAuthBridge } from "@/auth/bridge";
-import { initializeLoggingBridge } from "@/logging/bridge";
+import { initializeAuthBridge } from "@/bridges";
+import { initializeLoggingBridge } from "@/bridges";
 import { initializeChatBridge } from "@/bridges";
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
@@ -13,6 +14,8 @@ import { AppInitializer } from "@/app/components/AppInitializer";
 import { AuthProvider } from "@/auth/components/AuthProvider";
 import { DebugOverlay } from '@/admin/components/debug/DebugOverlay';
 import { ComponentInspector } from '@/admin/components/debug/ComponentInspector';
+import { initializeAdminModule } from "@/admin/ModuleRegistry";
+import { messageBus } from '@/core/MessageBus';
 
 // Import app module
 import App from "./app/App";
@@ -34,6 +37,17 @@ function RootApp() {
   const location = useLocation();
   const bridgesInitializedRef = useRef<boolean>(false);
   const logger = getLogger();
+
+  // Enable debug mode in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      messageBus.setDebugMode(true);
+      logger.info('MessageBus debug mode enabled', {
+        category: LogCategory.SYSTEM,
+        source: 'App'
+      });
+    }
+  }, [logger]);
 
   // Initialize bridges only once on app mount
   useEffect(() => {
@@ -62,6 +76,19 @@ function RootApp() {
       setTimeout(() => {
         try {
           initializeAuthBridge();
+          
+          // Initialize admin module after auth is ready
+          setTimeout(() => {
+            try {
+              initializeAdminModule();
+            } catch (error) {
+              logger.error('Admin module initialization error', {
+                category: LogCategory.SYSTEM,
+                source: 'App',
+                details: { error }
+              });
+            }
+          }, 100);
         } catch (error) {
           logger.error('Auth bridge initialization error', {
             category: LogCategory.SYSTEM,
@@ -110,3 +137,4 @@ function RootApp() {
 }
 
 export default RootApp;
+

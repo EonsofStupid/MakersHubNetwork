@@ -1,6 +1,17 @@
 
+/**
+ * logging/bridge.ts
+ * 
+ * Bridge for the Logging module - provides a clean interface for other modules to
+ * interact with the Logging module without direct dependencies.
+ */
+
+import { createModuleBridge } from '@/core/MessageBus';
 import { getLogger } from './index';
 import { LogCategory } from './types';
+
+// Create a module-specific bridge
+const loggingBridgeImpl = createModuleBridge('logging');
 
 // Define log event types for typesafety
 export type LogEventType = 'log' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
@@ -25,7 +36,6 @@ type LogEventListener = (payload: LogEventPayload) => void;
  * the Logging module without direct dependencies.
  */
 class LoggingBridgeImpl {
-  private listeners: Map<string, LogEventListener[]> = new Map();
   private logger = getLogger();
   private initialized: boolean = false;
   
@@ -50,47 +60,18 @@ class LoggingBridgeImpl {
    * Subscribe to log events
    */
   subscribe(event: LogEventType, listener: LogEventListener): () => void {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, []);
-    }
-    
-    const eventListeners = this.listeners.get(event)!;
-    eventListeners.push(listener);
-    
-    // Return unsubscribe function
-    return () => {
-      const index = eventListeners.indexOf(listener);
-      if (index !== -1) {
-        eventListeners.splice(index, 1);
-      }
-    };
+    return loggingBridgeImpl.subscribe(event, listener);
   }
   
   /**
    * Publish a log event
    */
   publish(event: LogEventType, payload: Omit<LogEventPayload, 'type' | 'timestamp'>) {
-    if (!this.listeners.has(event)) {
-      return;
-    }
-    
-    const eventListeners = this.listeners.get(event)!;
-    const fullPayload = { 
+    loggingBridgeImpl.publish(event, { 
       type: event, 
       timestamp: Date.now(), 
       ...payload 
-    };
-    
-    // Use setTimeout to avoid blocking
-    setTimeout(() => {
-      eventListeners.forEach(listener => {
-        try {
-          listener(fullPayload);
-        } catch (error) {
-          console.error(`Error in log event listener for ${event}`, error);
-        }
-      });
-    }, 0);
+    });
   }
   
   /**
@@ -129,3 +110,7 @@ export function subscribeToLoggingEvents(event: LogEventType, listener: LogEvent
 export function publishLoggingEvent(event: LogEventType, payload: Omit<LogEventPayload, 'type' | 'timestamp'>) {
   LoggingBridge.publish(event, payload);
 }
+
+// Export the internal bridge for logging module use only
+export { loggingBridgeImpl };
+

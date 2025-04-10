@@ -1,37 +1,41 @@
 
 /**
- * shared.ts - Shared types used across the auth module
+ * Shared auth types
  * 
- * These types are shared internally within the auth module and exposed
- * to other modules as needed.
+ * Define types that are shared between the auth module and other modules.
+ * These are re-exported from the central auth.types.ts.
  */
 
-// Define common user roles
-export enum UserRole {
-  USER = 'user',
-  MODERATOR = 'moderator',
-  ADMIN = 'admin',
-  SUPER_ADMIN = 'super_admin',
-}
-
-// Simple user authentication token type
-export interface AuthToken {
-  accessToken: string;
-  refreshToken?: string;
-  expiresAt: number;
-}
-
-// Define a common user profile type used across the app
+// User profile type
 export interface UserProfile {
   id: string;
-  userId: string;
-  email: string;
-  username?: string;
-  displayName?: string;
+  user_id: string;
+  display_name?: string;
+  avatar_url?: string;
   bio?: string;
-  avatarUrl?: string;
-  roles: UserRole[];
-  created_at: string;
-  updated_at: string;
-  preferences?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+  [key: string]: any;
 }
+
+// User role enum
+export type UserRole = 
+  | 'user' 
+  | 'admin' 
+  | 'super_admin' 
+  | 'moderator' 
+  | 'editor' 
+  | 'viewer' 
+  | 'developer';
+
+// Auth user type (combined with profile)
+export interface AuthUser {
+  id: string;
+  email?: string;
+  display_name?: string;
+  avatar_url?: string;
+  roles: UserRole[];
+  profile?: UserProfile;
+  metadata?: Record<string, any>;
+}
+

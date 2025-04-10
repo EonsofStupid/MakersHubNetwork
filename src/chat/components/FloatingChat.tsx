@@ -4,7 +4,7 @@ import { ChatWidget } from './ChatWidget';
 import { useLocation } from 'react-router-dom';
 import { useChat } from '../context/ChatProvider';
 import { useHasAdminAccess } from '@/auth/hooks/useHasRole';
-import { AuthBridge } from '@/bridges/AuthBridge';
+import { AuthBridge } from '@/bridges';
 import { getLogger } from '@/logging';
 import { withDetails } from '@/logging/utils/log-helpers';
 import { CircuitBreaker } from '@/utils/CircuitBreaker';
@@ -61,3 +61,4 @@ export function FloatingChat() {
     </div>
   );
 }
+

@@ -2,6 +2,10 @@
 import { subscribeToAuthEvents } from '@/auth/bridge';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
+import { createModuleBridge } from '@/core/MessageBus';
+
+// Create admin module bridge
+export const adminBridge = createModuleBridge('admin');
 
 // Module state type
 interface ModuleState {
@@ -62,4 +66,26 @@ function registerEventHandlers(): void {
         break;
     }
   });
+  
+  // Publish admin module initialized event
+  adminBridge.publish('system', {
+    type: 'module-initialized',
+    module: 'admin',
+    timestamp: new Date()
+  });
 }
+
+/**
+ * Subscribe to admin events
+ */
+export function subscribeToAdminEvents(channel: string, listener: (message: any) => void) {
+  return adminBridge.subscribe(channel, listener);
+}
+
+/**
+ * Publish admin event
+ */
+export function publishAdminEvent(channel: string, message: any) {
+  return adminBridge.publish(channel, message);
+}
+

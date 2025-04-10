@@ -1,46 +1,33 @@
 
-/**
- * auth/hooks/useHasRole.ts
- * 
- * Custom hooks for role-based access control
- * These utilize the consolidated AuthBridge
- */
-
-import { useCallback } from 'react';
-import { AuthBridge } from '@/auth/bridge';
-import { UserRole } from '@/types/shared';
+import { useMemo } from 'react';
+import { AuthBridge } from '@/bridges';
+import { UserRole } from '@/types';
 
 /**
- * Check if the current user has a specific role
- * @param role Single role or array of roles to check against
- * @returns Boolean indicating if user has the role
+ * Custom hook to check if the current user has a specific role
  */
-export function useHasRole(role: UserRole | UserRole[]): boolean {
-  return AuthBridge.hasRole(role);
-}
-
-/**
- * Check if the current user has admin access (admin or super_admin)
- * @returns Boolean indicating if user has admin access
- */
-export function useHasAdminAccess(): boolean {
-  return AuthBridge.isAdmin();
-}
-
-/**
- * Check if the current user is a super admin
- * @returns Boolean indicating if user is a super admin
- */
-export function useIsSuperAdmin(): boolean {
-  return AuthBridge.isSuperAdmin();
-}
-
-/**
- * Get a role checking function that can be used in callbacks
- * @returns Function that checks if user has a specific role
- */
-export function useRoleChecker() {
-  return useCallback((role: UserRole | UserRole[]): boolean => {
+export function useHasRole(role: UserRole | UserRole[] | undefined) {
+  return useMemo(() => {
+    if (!role) return false;
     return AuthBridge.hasRole(role);
+  }, [role]);
+}
+
+/**
+ * Custom hook to check if the current user has admin access
+ */
+export function useHasAdminAccess() {
+  return useMemo(() => {
+    return AuthBridge.isAdmin();
   }, []);
 }
+
+/**
+ * Custom hook to check if the current user is a super admin
+ */
+export function useIsSuperAdmin() {
+  return useMemo(() => {
+    return AuthBridge.isSuperAdmin();
+  }, []);
+}
+

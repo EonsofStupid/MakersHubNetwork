@@ -10,7 +10,7 @@ import { LoginSheet } from "./LoginSheet";
 import { ComponentWrapper } from "@/admin/components/debug/ComponentWrapper";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
-import { AuthBridge } from "@/auth/bridge";
+import { AuthBridge } from "@/bridges";
 import { useAuthStore } from "@/auth/store/auth.store";
 import { useAuthState } from "@/auth/hooks/useAuthState";
 
@@ -184,3 +184,4 @@ export const AuthSection: React.FC = () => {
     </ComponentWrapper>
   );
 };
+
