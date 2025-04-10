@@ -6,6 +6,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { Link as LinkIcon, X } from 'lucide-react';
 import { AuthBridge, subscribeToAuthEvents } from '@/auth/bridge';
 import { useToast } from '@/hooks/use-toast';
+import { AuthEventType } from '@/types/shared';
 
 export function LinkedAccountAlert() {
   const [show, setShow] = useState(false);

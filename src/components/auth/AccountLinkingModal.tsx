@@ -12,6 +12,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { User, Mail, Key } from 'lucide-react';
 import { AuthBridge, subscribeToAuthEvents } from '@/auth/bridge';
 import { useToast } from '@/hooks/use-toast';
+import { AuthEventType } from '@/types/shared';
 
 export function AccountLinkingModal() {
   const [open, setOpen] = useState(false);
