@@ -4,7 +4,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthStatus } from "../types/auth.types";
 import { UserRole, ROLES } from "@/types/shared";
-import { mapRoleStringsToEnums } from "../types/roles";
+import { mapRoleStringsToEnums } from "@/auth/types/roles";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
 import { persist } from "zustand/middleware";

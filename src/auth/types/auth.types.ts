@@ -1,41 +1,18 @@
 
 /**
- * Import and re-export the types from our central shared types
+ * auth/types/auth.types.ts
+ * 
+ * Core authentication type definitions
  */
-import { UserRole, AuthStatus, AuthProvider, AuthEventType } from '@/types/shared';
 
-export type { UserRole, AuthStatus, AuthProvider, AuthEventType };
+import { User, Session } from '@supabase/supabase-js';
 
-/**
- * Auth options interface
- */
-export interface AuthOptions {
-  /**
-   * Redirect URL after successful authentication
-   */
-  redirectTo?: string;
-  
-  /**
-   * Whether to remember the user's session
-   */
-  rememberMe?: boolean;
-  
-  /**
-   * Data to pass to the authentication provider
-   */
-  data?: Record<string, any>;
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+
+export interface AuthUser extends User {
+  // Any additional properties needed for the user object
 }
 
-/**
- * Auth profile interface
- */
-export interface AuthProfile {
-  id: string;
-  username?: string;
-  display_name?: string;
-  avatar_url?: string;
-  bio?: string;
-  website?: string;
-  created_at?: string;
-  updated_at?: string;
+export interface AuthSession extends Session {
+  // Any additional properties needed for the session object
 }

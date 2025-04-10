@@ -1,43 +1,25 @@
 
-import React, { createContext, ReactNode, useMemo } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { AuthStatus } from '../types/auth.types';
-import { useAuthStore, selectUser, selectSession, selectStatus, selectProfile, UserProfile } from '../store/auth.store';
+/**
+ * auth/context/AuthContext.tsx
+ * 
+ * React context for auth state
+ */
 
-interface AuthContextValue {
+import { User } from '@supabase/supabase-js';
+import { createContext } from 'react';
+import { UserProfile } from '@/auth/store/auth.store';
+import { AuthStatus } from '@/auth/types/auth.types';
+
+interface AuthContextState {
   user: User | null;
-  session: Session | null;
+  session: any | null;
   profile: UserProfile | null;
   status: AuthStatus;
 }
 
-// Create context with default values
-export const AuthContext = createContext<AuthContextValue>({
+export const AuthContext = createContext<AuthContextState>({
   user: null,
   session: null,
   profile: null,
-  status: 'idle'
+  status: 'idle',
 });
-
-// Create provider component that uses our Zustand store
-export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
-  // Use selectors for efficient updates
-  const user = useAuthStore(selectUser);
-  const session = useAuthStore(selectSession);
-  const status = useAuthStore(selectStatus);
-  const profile = useAuthStore(selectProfile);
-  
-  // Memoize the context value to prevent unnecessary re-renders
-  const contextValue = useMemo(() => ({
-    user,
-    session,
-    profile,
-    status
-  }), [user, session, profile, status]);
-  
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
-};

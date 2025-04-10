@@ -5,7 +5,7 @@ import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { ROLES } from '@/auth/types/roles';
+import { ROLES } from '@/types/shared';
 
 /**
  * Maps user roles to admin permissions
