@@ -7,6 +7,7 @@ import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { useEffect, useRef } from "react";
 import { initializeAuthBridge } from "@/auth/bridge";
 import { initializeLoggingBridge } from "@/logging/bridge";
+import { initializeChatBridge } from "@/bridges";
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { AppInitializer } from "@/components/AppInitializer";
@@ -14,23 +15,23 @@ import { AuthProvider } from "@/auth/components/AuthProvider";
 import { DebugOverlay } from '@/admin/components/debug/DebugOverlay';
 import { ComponentInspector } from '@/admin/components/debug/ComponentInspector';
 
-// Import pages
-import Index from "./pages/Index";
-import Admin from "./pages/Admin";
-import Login from "./pages/Login";
+// Import app module
+import App from "./app/App";
 
-// Import UI components
-import { MainNav } from "@/components/MainNav";
-import { Footer } from "@/components/Footer";
+// Import admin module
+import Admin from "./pages/Admin";
+
+// Import auth pages
+import Login from "./pages/Login";
 
 // Import styles
 import "./App.css";
 import "@/theme/site-theme.css";
-import "@/components/MainNav/styles/cyber-effects.css";
+import "@/app/components/MainNav/styles/cyber-effects.css";
 import "@/logging/styles/logging.css";
 import "@/admin/styles/cyber-effects.css";
 
-function App() {
+function RootApp() {
   const location = useLocation();
   const bridgesInitializedRef = useRef<boolean>(false);
   const logger = getLogger();
@@ -53,6 +54,9 @@ function App() {
     try {
       // Initialize logging bridge first
       initializeLoggingBridge();
+      
+      // Initialize chat bridge
+      initializeChatBridge();
       
       // Initialize auth bridge with slight delay
       // This prevents timing issues with other initializations
@@ -82,16 +86,17 @@ function App() {
         <ThemeInitializer defaultTheme="Impulsivity">
           <AuthProvider>
             <AppInitializer>
-              {/* MainNav is now always visible with all animations restored */}
-              <MainNav />
-              <div className="pt-16">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/admin/*" element={<Admin />} />
-                </Routes>
-              </div>
-              <Footer />
+              <Routes>
+                {/* App module routes */}
+                <Route path="/*" element={<App />} />
+                
+                {/* Auth routes */}
+                <Route path="/login" element={<Login />} />
+                
+                {/* Admin module routes */}
+                <Route path="/admin/*" element={<Admin />} />
+              </Routes>
+              
               <Toaster />
               
               {/* Add debug overlay and component inspector */}
@@ -105,4 +110,4 @@ function App() {
   );
 }
 
-export default App;
+export default RootApp;

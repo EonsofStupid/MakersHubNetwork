@@ -1,0 +1,43 @@
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Additional cyberpunk button styles */
+.button-cyber {
+  @apply relative border border-primary/30 bg-background/80 text-primary 
+         hover:border-primary hover:bg-primary/10 hover:text-white transition-all
+         py-2 px-4 rounded overflow-hidden;
+}
+
+.button-cyber:before {
+  content: '';
+  @apply absolute inset-0 w-0 h-full bg-primary/10 transition-all duration-300;
+}
+
+.button-cyber:hover:before {
+  @apply w-full;
+}
+
+.button-cyber-glow {
+  box-shadow: 0 0 10px theme('colors.primary.DEFAULT');
+  text-shadow: 0 0 5px theme('colors.primary.DEFAULT');
+}
+
+.button-cyber-pulse:before {
+  content: '';
+  @apply absolute inset-0 opacity-0 bg-primary/20 scale-90 transition-all duration-300;
+}
+
+.button-cyber-pulse:hover:before {
+  @apply opacity-100 scale-100;
+}
