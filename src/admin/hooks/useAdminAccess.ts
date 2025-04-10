@@ -1,40 +1,46 @@
 
-import { useAuthStore } from '@/auth/store/auth.store';
-import { useHasAdminAccess, useIsSuperAdmin } from '@/auth/hooks/useHasRole';
-import { getLogger } from '@/logging';
-import { ROLES } from '@/types/shared';
+import { useAuth } from '@/hooks/useAuth';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
+import { useMemo } from 'react';
 
 /**
  * Hook for checking admin access permissions
- * Uses the standardized role checking system
+ * Centralizes admin access logic and provides useful derived values
  */
 export function useAdminAccess() {
-  const logger = getLogger();
-  const user = useAuthStore(state => state.user);
-  const roles = useAuthStore(state => state.roles);
+  const { isAuthenticated, isAdmin, isSuperAdmin, roles, isLoading } = useAuth();
+  const logger = useLogger('useAdminAccess', LogCategory.ADMIN);
   
-  // Use our standardized hooks
-  const isAdmin = useHasAdminAccess();
-  const isSuperAdmin = useIsSuperAdmin();
-  const hasAdminAccess = isAdmin;
-  
-  // Log authentication status for debugging
-  logger.debug('Admin access check', { 
-    details: { 
-      hasAdminAccess,
-      isAdmin,
-      isSuperAdmin,
-      roles,
-      userId: user?.id
+  // Calculate derived permissions based on roles
+  const hasAdminAccess = useMemo(() => {
+    const hasAccess = isAdmin || isSuperAdmin;
+    
+    if (hasAccess) {
+      logger.debug('User has admin access', { 
+        details: { 
+          isAdmin, 
+          isSuperAdmin,
+          roles 
+        } 
+      });
     }
-  });
+    
+    return hasAccess;
+  }, [isAdmin, isSuperAdmin, roles, logger]);
   
+  // Determine debug access - only super_admin can access debugging tools
+  const hasDebugAccess = useMemo(() => {
+    return isSuperAdmin;
+  }, [isSuperAdmin]);
+
   return {
-    hasAdminAccess,
+    isAuthenticated,
     isAdmin,
     isSuperAdmin,
-    isAuthenticated: !!user,
-    user,
+    hasAdminAccess,
+    hasDebugAccess,
+    isLoading,
     roles
   };
 }
