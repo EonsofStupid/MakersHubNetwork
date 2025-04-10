@@ -1,10 +1,11 @@
+
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthContext } from '../context/AuthContext';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
+import { useSiteTheme } from '@/app/components/theme/SiteThemeProvider';
 import { errorToObject } from '@/shared/utils/render';
 import { publishAuthEvent } from '@/auth/bridge';
 

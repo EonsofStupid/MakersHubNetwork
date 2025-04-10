@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useThemeStore } from '@/stores/theme/store';
 import { ImpulsivityInit } from './ImpulsivityInit';
-import { SiteThemeProvider } from './SiteThemeProvider';
+import { SiteThemeProvider } from '@/app/components/theme/SiteThemeProvider';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { ThemeLoadingState } from './info/ThemeLoadingState';

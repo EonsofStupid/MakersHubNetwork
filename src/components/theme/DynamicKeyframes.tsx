@@ -1,6 +1,5 @@
-
 import React, { useMemo } from 'react';
-import { useSiteTheme } from './SiteThemeProvider';
+import { useSiteTheme } from '@/app/components/theme/SiteThemeProvider';
 
 /**
  * Generates CSS for keyframe animations from theme

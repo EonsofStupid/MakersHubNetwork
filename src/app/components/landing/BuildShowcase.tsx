@@ -1,40 +1,64 @@
 
 import React from 'react';
+import { useSiteTheme } from '@/app/components/theme/SiteThemeProvider';
+import { cn } from '@/lib/utils';
 
 export const BuildShowcase: React.FC = () => {
+  const { componentStyles } = useSiteTheme();
+  
+  const styles = componentStyles?.BuildShowcase || {
+    container: "py-16 bg-background/50 backdrop-blur-sm relative",
+    title: "text-3xl font-bold text-center mb-12",
+    grid: "grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4",
+    card: "bg-card border border-border rounded-lg overflow-hidden shadow-lg",
+    imageContainer: "h-48 overflow-hidden",
+    image: "object-cover w-full h-full",
+    content: "p-4",
+    buildTitle: "text-xl font-semibold mb-2",
+    buildDescription: "text-muted-foreground text-sm"
+  };
+  
+  // Sample showcase data
+  const showcaseBuilds = [
+    {
+      id: 1,
+      title: "Voron 2.4",
+      description: "High-speed CoreXY 3D printer with exceptional print quality",
+      imageUrl: "https://via.placeholder.com/800x600?text=Voron+2.4"
+    },
+    {
+      id: 2,
+      title: "Prusa i3 MK3S+",
+      description: "Reliable workhorse with excellent print quality and ease of use",
+      imageUrl: "https://via.placeholder.com/800x600?text=Prusa+i3"
+    },
+    {
+      id: 3,
+      title: "Ender 3 Neo",
+      description: "Budget-friendly printer with extensive community mods",
+      imageUrl: "https://via.placeholder.com/800x600?text=Ender+3+Neo"
+    }
+  ];
+
   return (
-    <section className="py-16 bg-background">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-10">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-            Latest Builds
-          </span>
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((item) => (
-            <div 
-              key={item} 
-              className="rounded-lg overflow-hidden border border-primary/30 bg-background/20 backdrop-blur-xl transition-all hover:shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]"
-            >
-              <div className="aspect-video bg-muted relative">
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                  Build Image {item}
-                </div>
-              </div>
-              <div className="p-4">
-                <h3 className="font-medium text-lg mb-2">Amazing 3D Print #{item}</h3>
-                <p className="text-muted-foreground text-sm">Created by Community Member</p>
-              </div>
+    <section className={cn(styles.container)}>
+      <h2 className={cn(styles.title)}>Featured Community Builds</h2>
+      <div className={cn(styles.grid)}>
+        {showcaseBuilds.map(build => (
+          <div key={build.id} className={cn(styles.card)}>
+            <div className={cn(styles.imageContainer)}>
+              <img
+                src={build.imageUrl}
+                alt={build.title}
+                className={cn(styles.image)}
+              />
             </div>
-          ))}
-        </div>
-        
-        <div className="flex justify-center mt-8">
-          <a href="/builds" className="px-6 py-2 rounded-md border border-primary/30 text-primary hover:bg-primary/10">
-            View All Builds
-          </a>
-        </div>
+            <div className={cn(styles.content)}>
+              <h3 className={cn(styles.buildTitle)}>{build.title}</h3>
+              <p className={cn(styles.buildDescription)}>{build.description}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
