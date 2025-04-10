@@ -1,7 +1,6 @@
 
-import { useAuthStore } from '../store/auth.store';
 import { useMemo } from 'react';
-import { UserRole, ROLES } from '@/types/shared';
+import { UserRole } from '@/types/shared';
 import { AuthBridge } from '@/bridges/AuthBridge';
 
 /**
@@ -10,12 +9,10 @@ import { AuthBridge } from '@/bridges/AuthBridge';
  * @returns Boolean indicating if user has at least one of the specified roles
  */
 export function useHasRole(role: UserRole | UserRole[]): boolean {
-  const roles = useAuthStore(state => state.roles);
-  
   return useMemo(() => {
     // Use AuthBridge for consistent behavior
     return AuthBridge.hasRole(role);
-  }, [role, roles]);
+  }, [role]);
 }
 
 /**
@@ -23,12 +20,10 @@ export function useHasRole(role: UserRole | UserRole[]): boolean {
  * @returns Boolean indicating if user has admin access
  */
 export function useHasAdminAccess(): boolean {
-  const roles = useAuthStore(state => state.roles);
-  
   return useMemo(() => {
     // Use AuthBridge for consistent behavior
     return AuthBridge.isAdmin();
-  }, [roles]);
+  }, []);
 }
 
 /**
@@ -36,10 +31,8 @@ export function useHasAdminAccess(): boolean {
  * @returns Boolean indicating if user is a super admin
  */
 export function useIsSuperAdmin(): boolean {
-  const roles = useAuthStore(state => state.roles);
-  
   return useMemo(() => {
     // Use AuthBridge for consistent behavior
     return AuthBridge.isSuperAdmin();
-  }, [roles]);
+  }, []);
 }

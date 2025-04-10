@@ -1,10 +1,14 @@
 
-import { atom } from 'jotai';
-import { User } from '@supabase/supabase-js';
-import { UserRole, ROLES } from '@/types/shared';
+/**
+ * auth.atoms.ts
+ * 
+ * Jotai atoms that read from Zustand store but never write back.
+ * These are used for derived state or UI components that need reactivity.
+ */
 
-// Import the auth store as the single source of truth
-import { useAuthStore } from '../store/auth.store';
+import { atom } from 'jotai';
+import { UserRole, ROLES } from '@/types/shared';
+import { useAuthStore } from '@/auth/store/auth.store';
 
 /**
  * Create a helper function to create atoms that are synchronized with the store
@@ -51,7 +55,7 @@ export const userAvatarAtom = atom((get) => {
 export type AuthStatusType = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 export { isAuthenticatedAtom as authStatusAtom };
 
-// Has role utility atom - returns a boolean, not a function
+// Has role utility atom - returns a function that checks if the user has a specific role
 export const hasRoleAtom = atom(
   (get) => (role: UserRole | UserRole[]): boolean => {
     const roles = get(rolesAtom);
