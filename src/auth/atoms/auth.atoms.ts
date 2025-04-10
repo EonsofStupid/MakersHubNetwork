@@ -32,9 +32,17 @@ export const authErrorAtom = atomWithStoreSync((state) => state.error);
 export const isLoadingAtom = atomWithStoreSync((state) => state.isLoading);
 
 // Derived state atoms
-export const isAdminAtom = atomWithStoreSync((state) => state.isAdmin());
-export const isSuperAdminAtom = atomWithStoreSync((state) => state.isSuperAdmin());
-export const hasAdminAccessAtom = atomWithStoreSync((state) => state.isAdmin() || state.isSuperAdmin());
+export const isAdminAtom = atomWithStoreSync((state) => 
+  state.roles.includes(ROLES.ADMIN) || state.roles.includes(ROLES.SUPER_ADMIN)
+);
+
+export const isSuperAdminAtom = atomWithStoreSync((state) => 
+  state.roles.includes(ROLES.SUPER_ADMIN)
+);
+
+export const hasAdminAccessAtom = atomWithStoreSync((state) => 
+  state.roles.includes(ROLES.ADMIN) || state.roles.includes(ROLES.SUPER_ADMIN)
+);
 
 // UI-specific derived atoms
 export const userNameAtom = atom((get) => {
@@ -55,7 +63,7 @@ export const userAvatarAtom = atom((get) => {
 export type AuthStatusType = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 export { isAuthenticatedAtom as authStatusAtom };
 
-// Has role utility atom - returns a function that checks if the user has a specific role
+// Has role utility function atom - returns a function
 export const hasRoleAtom = atom(
   (get) => (role: UserRole | UserRole[]): boolean => {
     const roles = get(rolesAtom);

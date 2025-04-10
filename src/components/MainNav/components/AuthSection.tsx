@@ -11,7 +11,7 @@ import { ComponentWrapper } from "@/admin/components/debug/ComponentWrapper";
 import { useAuthStore } from "@/auth/store/auth.store";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
-import { useHasRole, useHasAdminAccess, useIsSuperAdmin } from "@/auth/hooks/useHasRole";
+import { useHasAdminAccess, useIsSuperAdmin } from "@/auth/hooks/useHasRole";
 import { ROLES } from "@/types/shared";
 
 /**
