@@ -5,7 +5,14 @@ import { useAuthStore } from '@/auth/store/auth.store';
 import { UserRole } from '@/auth/types/auth.types';
 
 // Event system for auth events
-type AuthEventType = 'AUTH_STATE_CHANGE' | 'AUTH_ERROR' | 'AUTH_LINKING_REQUIRED';
+export type AuthEventType = 
+  'AUTH_STATE_CHANGE' | 
+  'AUTH_ERROR' | 
+  'AUTH_LINKING_REQUIRED' |
+  'AUTH_SIGNED_IN' | 
+  'AUTH_SIGNED_OUT' |
+  'AUTH_PERMISSION_CHANGED';
+
 type AuthEventPayload = Record<string, any>;
 type AuthEventHandler = (event: AuthEvent) => void;
 

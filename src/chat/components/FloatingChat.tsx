@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { ChatWidget } from './ChatWidget';
 import { useLocation } from 'react-router-dom';
@@ -6,7 +7,7 @@ import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { getLogger } from '@/logging';
 import { withDetails } from '@/logging/utils/log-helpers';
-import CircuitBreaker from '@/utils/circuitBreaker';
+import { CircuitBreaker } from '@/utils/circuitBreaker';
 import { subscribeToAuthEvents } from '@/auth/bridge';
 
 export function FloatingChat() {

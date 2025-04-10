@@ -2,9 +2,9 @@
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 
-// Define LogOptions locally to avoid dependency issues
+// Define LogOptions locally with correct types
 interface LogOptions {
-  category?: string;
+  category?: LogCategory;
   details?: Record<string, any>;
   error?: boolean;
 }
@@ -44,7 +44,7 @@ class ChatBridgeImpl {
     this.logger.debug(`Listener added to ${channel} channel`, { 
       category: LogCategory.CHAT,
       details: { listenersCount: channelListeners.length }
-    } as LogOptions);
+    });
     
     // Return unsubscribe function
     return () => {
@@ -54,7 +54,7 @@ class ChatBridgeImpl {
         this.logger.debug(`Listener removed from ${channel} channel`, { 
           category: LogCategory.CHAT,
           details: { listenersCount: channelListeners.length }
-        } as LogOptions);
+        });
       }
     };
   }
@@ -74,7 +74,7 @@ class ChatBridgeImpl {
     this.logger.debug(`Publishing to ${channel} channel`, {
       category: LogCategory.CHAT,
       details: { message, listenersCount: channelListeners.length }
-    } as LogOptions);
+    });
     
     // Use setTimeout to break potential circular dependencies
     setTimeout(() => {
@@ -86,7 +86,7 @@ class ChatBridgeImpl {
             category: LogCategory.CHAT,
             details: { error, messageType: message.type },
             error: true
-          } as LogOptions);
+          });
         }
       });
     }, 0);

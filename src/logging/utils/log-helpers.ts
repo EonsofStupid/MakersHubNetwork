@@ -31,7 +31,7 @@ export function withError(error: Error | unknown): { error: Record<string, any> 
     };
   }
   
-  return { error: String(error) };
+  return { error: { message: String(error) } };
 }
 
 /**
