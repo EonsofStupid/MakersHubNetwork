@@ -1,89 +1,85 @@
 
-import { useMemo, useState, useEffect, useRef } from 'react';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { PERMISSIONS } from '@/auth/permissions';
+import { useState, useEffect } from 'react';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { PermissionValue, PERMISSIONS } from '@/auth/permissions';
+import { mapRolesToPermissions } from '@/auth/rbac/roles';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { AdminPermissionValue } from '@/admin/types/permissions';
-import { mapRolesToPermissions } from '@/auth/rbac/roles';
+import { AuthBridge } from '@/auth/bridge';
 
 /**
- * Hook for accessing and checking admin permissions
- * Uses both auth store (for user/roles) and admin store (for permissions)
- * Implements memoization to prevent unnecessary re-renders
+ * Hook to check admin permissions
+ * Provides admin-specific permissions and management
  */
 export function useAdminPermissions() {
-  const { status, roles } = useAuthState();
-  const adminStore = useAdminStore();
-  const permissions = adminStore.permissions;
-  const isLoadingPermissions = adminStore.isLoadingPermissions;
-  
-  const isLoading = status === 'loading' || isLoadingPermissions;
+  const [permissions, setPermissions] = useState<PermissionValue[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
-  const permissionsLoadedRef = useRef(false);
-  const initializedRef = useRef(false);
   
-  // If admin store permissions are empty but we have roles, initialize permissions
-  useEffect(() => {
-    // Only run this effect once and only if permissions are empty
-    if (initializedRef.current || permissions.length > 0 || !roles.length || isLoading) {
-      return;
-    }
+  // Get roles from auth store
+  const roles = useAuthStore(state => state.roles);
+  const isAdmin = AuthBridge.isAdmin();
+  const isSuperAdmin = AuthBridge.isSuperAdmin();
 
-    initializedRef.current = true;
-    
-    try {
-      logger.debug('Initializing permissions from roles in useAdminPermissions');
-      
-      // Map roles to permissions without triggering the admin store loading
-      const mappedPermissions = mapRolesToPermissions(roles);
-      
-      // Only update if needed (avoid cycles)
-      if (mappedPermissions.length > 0 && permissions.length === 0) {
-        adminStore.setPermissions(mappedPermissions);
+  // Load permissions when roles change
+  useEffect(() => {
+    const loadPermissions = async () => {
+      try {
+        logger.info('Loading admin permissions', {
+          details: { roles }
+        });
+        
+        setIsLoading(true);
+        
+        // Map roles to permissions
+        const mappedPermissions = mapRolesToPermissions(roles);
+        
+        // Super admins get all permissions
+        const finalPermissions = isSuperAdmin
+          ? Object.values(PERMISSIONS)
+          : mappedPermissions;
+        
+        setPermissions(finalPermissions);
+        
+        logger.info('Admin permissions loaded', {
+          details: { 
+            permissionCount: finalPermissions.length,
+            isSuperAdmin
+          }
+        });
+      } catch (error) {
+        logger.error('Failed to load admin permissions', {
+          details: { error }
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      logger.error('Failed to initialize permissions in useAdminPermissions', {
-        details: { error }
-      });
-    }
-  }, [roles, permissions.length, isLoading, adminStore, logger]);
-  
-  // Memoize the hasPermission function to prevent recreating on each render
-  const hasPermission = useMemo(() => {
-    return (permission: AdminPermissionValue): boolean => {
-      // If loading, be conservative and deny access
-      if (isLoading) {
-        return false;
-      }
-      
-      // Super admin permission grants access to everything
-      if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) {
-        return true;
-      }
-      
-      return permissions.includes(permission);
     };
-  }, [permissions, isLoading]);
-  
-  // Log permissions calculation only once
-  useEffect(() => {
-    if (!permissionsLoadedRef.current && !isLoading && permissions.length > 0) {
-      permissionsLoadedRef.current = true;
-      
-      logger.debug('Admin permissions computed', { 
-        details: { 
-          permissionsCount: permissions.length,
-          userRoles: roles
-        } 
-      });
+    
+    // Only load permissions for admin users
+    if (isAdmin || isSuperAdmin) {
+      loadPermissions();
+    } else {
+      setPermissions([]);
+      setIsLoading(false);
     }
-  }, [isLoading, permissions, roles, logger]);
-
+  }, [roles, isAdmin, isSuperAdmin, logger]);
+  
+  // Check if user has a specific permission
+  const hasPermission = (permission: PermissionValue): boolean => {
+    // Super admins have all permissions
+    if (isSuperAdmin) {
+      return true;
+    }
+    
+    return permissions.includes(permission);
+  };
+  
   return {
     permissions,
     hasPermission,
-    isLoading
+    isLoading,
+    isAdmin,
+    isSuperAdmin
   };
 }

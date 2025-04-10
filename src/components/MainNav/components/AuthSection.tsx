@@ -2,17 +2,16 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { showAdminButtonAtom, showAdminWrenchAtom } from "@/admin/atoms/ui.atoms";
 import { Wrench, User, Shield, Crown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LoginSheet } from "./LoginSheet";
 import { ComponentWrapper } from "@/admin/components/debug/ComponentWrapper";
-import { useAuthStore } from "@/auth/store/auth.store";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
-import { ROLES } from "@/types/shared";
 import { AuthBridge } from "@/auth/bridge";
+import { useAuthStore } from "@/auth/store/auth.store";
 
 /**
  * AuthSection Component
@@ -81,6 +80,11 @@ export const AuthSection: React.FC = () => {
     logger.info("Closing login sheet");
     setIsLoginOpen(false);
   }, [logger]);
+
+  // Get logout function from AuthBridge to avoid "never" type error
+  const handleLogout = useCallback(() => {
+    return AuthBridge.logout();
+  }, []);
 
   const isLoading = status === 'loading';
 
