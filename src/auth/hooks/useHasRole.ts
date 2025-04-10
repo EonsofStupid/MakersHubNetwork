@@ -8,7 +8,7 @@ import { useMemo } from 'react';
  * @param role Role or array of roles to check
  * @returns Boolean indicating if user has at least one of the specified roles
  */
-export function useHasRole(role: UserRole | UserRole[]) {
+export function useHasRole(role: UserRole | UserRole[]): boolean {
   const roles = useAuthStore((state) => state.roles);
   
   return useMemo(() => {    
@@ -26,7 +26,7 @@ export function useHasRole(role: UserRole | UserRole[]) {
  * Hook to check if the current user has admin access
  * @returns Boolean indicating if user has admin access
  */
-export function useHasAdminAccess() {
+export function useHasAdminAccess(): boolean {
   return useHasRole(['admin', 'super_admin']);
 }
 
@@ -34,6 +34,6 @@ export function useHasAdminAccess() {
  * Hook to check if the current user is a super admin
  * @returns Boolean indicating if user is a super admin
  */
-export function useIsSuperAdmin() {
+export function useIsSuperAdmin(): boolean {
   return useHasRole('super_admin');
 }
