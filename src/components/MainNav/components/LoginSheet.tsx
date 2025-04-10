@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Github, Mail, AtSign, Wrench, LayoutDashboard, Shield } from "lucide-react";
+import { Github, Mail, AtSign, Wrench, LayoutDashboard, Shield, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AuthBridge } from "@/auth/bridge";
 import { useLogger } from "@/hooks/use-logger";
@@ -43,6 +43,8 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
   const profile = useAuthStore(state => state.profile);
   const roles = useAuthStore(state => state.roles);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const isAdmin = useAuthStore(state => state.isAdmin());
+  const isSuperAdmin = useAuthStore(state => state.isSuperAdmin());
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,8 +109,22 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
   };
 
   // Determine if the user has admin access
-  const hasAdminAccess = roles.includes('admin') || roles.includes('super_admin');
-  const isSuperAdmin = roles.includes('super_admin');
+  const hasAdminAccess = isAdmin || isSuperAdmin;
+
+  // Log the admin status for debugging
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      logger.info('User authenticated status', { 
+        details: { 
+          userId: user?.id,
+          isAdmin,
+          isSuperAdmin,
+          hasAdminAccess,
+          roles 
+        }
+      });
+    }
+  }, [isAuthenticated, user?.id, isAdmin, isSuperAdmin, hasAdminAccess, roles, logger]);
 
   // Render content based on authentication status
   if (isAuthenticated) {
@@ -126,7 +142,7 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
           
           <SheetHeader className="space-y-2 mb-8 relative z-10">
             <SheetTitle className="text-2xl font-heading text-primary cyber-effect-text">
-              Dashboard
+              {isSuperAdmin ? "Super Admin Dashboard" : (isAdmin ? "Admin Dashboard" : "Dashboard")}
             </SheetTitle>
             <SheetDescription className="text-primary/80">
               {`Logged in as ${user?.email}`}
@@ -157,15 +173,15 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1 flex flex-wrap gap-2">
                 {roles.map((role) => (
                   <div 
                     key={role}
                     className="flex items-center space-x-2 text-xs bg-primary/5 border border-primary/20 rounded px-2 py-1"
                   >
-                    {role === 'super_admin' && <Shield className="h-3 w-3 text-primary" />}
-                    {role === 'admin' && <Wrench className="h-3 w-3 text-primary" />}
-                    <span>{role}</span>
+                    {role === 'super_admin' && <Crown className="h-3 w-3 text-secondary" />}
+                    {role === 'admin' && <Shield className="h-3 w-3 text-primary" />}
+                    <span>{role.replace("_", " ")}</span>
                   </div>
                 ))}
               </div>
@@ -179,9 +195,17 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
                 </Button>
                 
                 {hasAdminAccess && (
-                  <Button variant="outline" className="w-full justify-start" asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start bg-primary/5 border-primary/30 hover:bg-primary/10" 
+                    asChild
+                  >
                     <Link to="/admin" onClick={() => onOpenChange(false)}>
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      {isSuperAdmin ? (
+                        <Crown className="mr-2 h-4 w-4 text-secondary" />
+                      ) : (
+                        <Shield className="mr-2 h-4 w-4 text-primary" />
+                      )}
                       Admin Dashboard
                     </Link>
                   </Button>

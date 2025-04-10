@@ -13,7 +13,7 @@ import { subscribeToAuthEvents } from '@/auth/bridge';
 export function FloatingChat() {
   const logger = getLogger();
   const location = useLocation();
-  const { isAuthenticated } = useAuthState();
+  const { isAuthenticated, isSuperAdmin, isAdmin } = useAuthState();
   const { hasAdminAccess } = useAdminAccess();
   const { isOpen } = useChat();
   const renderedRef = useRef(false);
@@ -22,8 +22,11 @@ export function FloatingChat() {
   const pathname = useMemo(() => location.pathname, [location.pathname]);
   const inChatRoute = useMemo(() => pathname.startsWith('/chat'), [pathname]);
   
-  const canShow = useMemo(() => isAuthenticated && hasAdminAccess && !inChatRoute, 
-    [isAuthenticated, hasAdminAccess, inChatRoute]);
+  // Check both admin and super admin status
+  const canShow = useMemo(() => 
+    isAuthenticated && hasAdminAccess && !inChatRoute, 
+    [isAuthenticated, hasAdminAccess, inChatRoute]
+  );
   
   useEffect(() => {
     if (renderedRef.current) return;
@@ -37,6 +40,8 @@ export function FloatingChat() {
         canShow, 
         isAuthenticated, 
         hasAdminAccess, 
+        isAdmin,
+        isSuperAdmin,
         path: pathname 
       }));
     

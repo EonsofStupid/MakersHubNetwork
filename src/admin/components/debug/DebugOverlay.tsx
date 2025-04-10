@@ -6,7 +6,7 @@ import { Wrench } from 'lucide-react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthState } from '@/auth/hooks/useAuthState';
 import { inspectorVisibleAtom } from '@/admin/store/atoms/inspector.atoms';
 
 export function DebugOverlay() {
@@ -14,36 +14,65 @@ export function DebugOverlay() {
   const [isInspectorVisible, setInspectorVisible] = useAtom(inspectorVisibleAtom);
   const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
   const [isAltPressed, setIsAltPressed] = useState(false);
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin } = useAuthState();
   const logger = useLogger('DebugOverlay', LogCategory.ADMIN);
 
   // Add keyboard listener for Alt key to toggle component inspection
   useEffect(() => {
-    if (!isSuperAdmin) return;
+    if (!isSuperAdmin && !isDebugMode) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Alt') {
         setIsAltPressed(true);
+        logger.debug('Alt key pressed - debug inspection active', {
+          details: { isDebugMode }
+        });
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Alt') {
         setIsAltPressed(false);
+        logger.debug('Alt key released - debug inspection inactive');
+      }
+    };
+
+    // Add global click handler for component inspection when Alt is pressed
+    const handleClick = (e: MouseEvent) => {
+      if (isAltPressed && isDebugMode) {
+        // Find closest element with data-component attribute
+        let target = e.target as HTMLElement | null;
+        while (target && !target.dataset.component) {
+          target = target.parentElement;
+        }
+
+        if (target?.dataset.component) {
+          e.preventDefault();
+          e.stopPropagation();
+          setInspectorVisible(true);
+          logger.info('Component inspected', { 
+            details: { 
+              component: target.dataset.component,
+              componentId: target.dataset.componentId
+            }
+          });
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('click', handleClick, true);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('click', handleClick, true);
     };
-  }, [isSuperAdmin]);
+  }, [isSuperAdmin, isDebugMode, isAltPressed, logger, setInspectorVisible]);
 
-  // Don't render anything if user is not a super admin
-  if (!isSuperAdmin) {
+  // Don't render anything if user is not a super admin and debug mode is not enabled
+  if (!isSuperAdmin && !isDebugMode) {
     return null;
   }
 
@@ -81,7 +110,7 @@ export function DebugOverlay() {
         </div>
       )}
       
-      {/* Add debug wrench to components */}
+      {/* Add debug indicators to components */}
       {isDebugMode && (
         <style>{`
           [data-component]:hover::after {
@@ -105,8 +134,9 @@ export function DebugOverlay() {
           
           ${isAltPressed ? `
           [data-component] {
-            outline: 1px dashed var(--impulse-primary);
+            outline: 2px dashed var(--impulse-primary);
             position: relative;
+            z-index: 1;
           }
           ` : ''}
           
