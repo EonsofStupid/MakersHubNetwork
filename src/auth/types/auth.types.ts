@@ -1,53 +1,55 @@
 
 /**
- * Core auth types for the application
+ * User roles within the application
  */
+export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor' | 'viewer';
 
-// User roles available in the system
-export type UserRole = 
-  | 'viewer'       // Basic read-only access
-  | 'editor'       // Can edit but not publish
-  | 'publisher'    // Can edit and publish
-  | 'admin'        // Full access to admin features
-  | 'super_admin'  // Full access + debug features
-  | 'maker'        // For backward compatibility 
-  | 'builder';     // For backward compatibility
+/**
+ * Authentication status types
+ */
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 
-// Authentication status
-export type AuthStatus = 
-  | 'idle'           // Initial state
-  | 'loading'        // Authentication in progress
-  | 'authenticated'  // User is logged in
-  | 'unauthenticated' // User is not logged in
-  | 'error';         // Authentication error occurred
+/**
+ * Login provider types
+ */
+export type AuthProvider = 'email' | 'google' | 'github' | 'twitter' | 'facebook';
 
-// User with basic profile information
-export interface User {
+/**
+ * Auth event types for event system
+ */
+export type AuthEventType = 'AUTH_STATE_CHANGE' | 'AUTH_ERROR' | 'AUTH_LINKING_REQUIRED';
+
+/**
+ * User authentication options
+ */
+export interface AuthOptions {
+  /**
+   * Redirect URL after successful authentication
+   */
+  redirectTo?: string;
+  
+  /**
+   * Whether to remember the user's session
+   */
+  rememberMe?: boolean;
+  
+  /**
+   * Data to pass to the authentication provider
+   */
+  data?: Record<string, any>;
+}
+
+/**
+ * Auth profile interface
+ */
+export interface AuthProfile {
   id: string;
-  email?: string;
   username?: string;
-  fullName?: string;
-  avatarUrl?: string;
-  roles: UserRole[];
-  isActive: boolean;
-  createdAt: string;
-  updatedAt?: string;
+  display_name?: string;
+  avatar_url?: string;
+  bio?: string;
+  website?: string;
+  created_at?: string;
+  updated_at?: string;
 }
-
-// Authentication session
-export interface AuthSession {
-  userId: string;
-  token: string;
-  expires: Date;
-  isValid: boolean;
-}
-
-// Auth provider types
-export type AuthProvider =
-  | 'email'
-  | 'google'
-  | 'github'
-  | 'twitter'
-  | 'facebook'
-  | 'apple';
 

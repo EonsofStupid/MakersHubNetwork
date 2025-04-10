@@ -12,6 +12,7 @@ interface GoogleLoginButtonProps {
   onError?: (error: Error) => void;
   fullWidth?: boolean;
   variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
+  cyberpunk?: boolean;
 }
 
 export function GoogleLoginButton({
@@ -19,7 +20,8 @@ export function GoogleLoginButton({
   onSuccess,
   onError,
   fullWidth = false,
-  variant = 'outline'
+  variant = 'outline',
+  cyberpunk = false
 }: GoogleLoginButtonProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
@@ -41,6 +43,26 @@ export function GoogleLoginButton({
       setIsLoading(false);
     }
   };
+  
+  if (cyberpunk) {
+    return (
+      <button
+        onClick={handleGoogleLogin}
+        disabled={isLoading}
+        className={cn(
+          'relative w-full flex items-center justify-center gap-2 border border-primary/30 bg-background/80 text-primary',
+          'hover:border-primary hover:bg-primary/10 hover:text-white transition-all',
+          'py-2 px-4 rounded overflow-hidden group cyber-effect-text',
+          fullWidth ? 'w-full' : 'w-auto',
+          className
+        )}
+      >
+        <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-primary/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
+        <FcGoogle className="h-5 w-5" />
+        <span>{isLoading ? 'Connecting...' : 'Sign in with Google'}</span>
+      </button>
+    );
+  }
   
   return (
     <Button

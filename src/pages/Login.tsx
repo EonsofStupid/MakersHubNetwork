@@ -26,9 +26,15 @@ const Login = ({ onSuccess }: LoginProps) => {
 
   return (
     <div className="container mx-auto flex items-center justify-center min-h-screen p-4">
-      <Card className="w-full max-w-md">
+      <div className="absolute inset-0 z-[-1] overflow-hidden">
+        <div className="absolute inset-0 bg-[#102030] opacity-80"></div>
+        <div className="absolute inset-0 mainnav-data-stream animate-data-stream"></div>
+        <div className="absolute inset-0 mainnav-glitch-particles"></div>
+      </div>
+      
+      <Card className="w-full max-w-md border-primary/20 bg-background/20 backdrop-blur-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-heading text-primary">
+          <CardTitle className="text-2xl font-heading text-primary cyber-effect-text">
             Welcome
           </CardTitle>
           <CardDescription>Public access enabled for all users</CardDescription>
@@ -40,7 +46,11 @@ const Login = ({ onSuccess }: LoginProps) => {
           </p>
           
           <div className="flex flex-col w-full gap-4">
-            <Button onClick={() => navigate("/")} className="w-full">
+            <Button 
+              onClick={() => navigate("/")} 
+              className="w-full cyber-effect-text relative group overflow-hidden"
+            >
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-primary/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
               Continue to Home
             </Button>
             
@@ -55,6 +65,7 @@ const Login = ({ onSuccess }: LoginProps) => {
               fullWidth
               onSuccess={() => navigate("/")}
               variant="outline"
+              cyberpunk={true}
             />
           </div>
         </CardContent>

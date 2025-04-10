@@ -1,554 +1,200 @@
 
-import { useAuthStore } from './store/auth.store';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
-import { User, Provider } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { getLogger } from '@/logging';
+import { useAuthStore } from '@/auth/store/auth.store';
 import { UserRole } from '@/auth/types/auth.types';
-import { CircuitBreaker } from '@/utils/CircuitBreaker';
-import { withDetails } from '@/logging/utils/log-helpers';
 
-// Define the event types
-export type AuthEventType = 
-  | 'AUTH_SIGNED_IN'
-  | 'AUTH_SIGNED_OUT'
-  | 'AUTH_STATE_CHANGED'
-  | 'AUTH_SESSION_REFRESH'
-  | 'AUTH_USER_UPDATED'
-  | 'AUTH_ROLES_UPDATED'
-  | 'AUTH_PERMISSION_CHANGED'
-  | 'AUTH_SOCIAL_LOGIN_STARTED'
-  | 'AUTH_SOCIAL_LOGIN_SUCCESS'
-  | 'AUTH_SOCIAL_LOGIN_ERROR'
-  | 'AUTH_ACCOUNT_LINKED'
-  | 'AUTH_LINKING_REQUIRED';
-
-export interface AuthEvent {
-  type: AuthEventType;
-  payload?: any;
-}
-
+// Event system for auth events
+type AuthEventType = 'AUTH_STATE_CHANGE' | 'AUTH_ERROR' | 'AUTH_LINKING_REQUIRED';
+type AuthEventPayload = Record<string, any>;
 type AuthEventHandler = (event: AuthEvent) => void;
 
-// Create a simple event system
-const eventHandlers: AuthEventHandler[] = [];
+interface AuthEvent {
+  type: AuthEventType;
+  payload?: AuthEventPayload;
+}
 
-// Create a circuit breaker to prevent infinite loops
-const authCircuitBreaker = new CircuitBreaker('auth-bridge', 5, 5000);
+const authEventHandlers: AuthEventHandler[] = [];
 
-/**
- * Subscribe to auth events
- * @param handler The handler function to call when an event occurs
- * @returns Unsubscribe function
- */
-export function subscribeToAuthEvents(handler: AuthEventHandler): () => void {
-  eventHandlers.push(handler);
+// Subscribe to auth events
+export const subscribeToAuthEvents = (handler: AuthEventHandler): (() => void) => {
+  authEventHandlers.push(handler);
   
+  // Return unsubscribe function
   return () => {
-    const index = eventHandlers.indexOf(handler);
+    const index = authEventHandlers.indexOf(handler);
     if (index !== -1) {
-      eventHandlers.splice(index, 1);
+      authEventHandlers.splice(index, 1);
     }
   };
-}
-
-/**
- * Publish an auth event
- * @param event The event to publish
- */
-export function publishAuthEvent(event: AuthEvent): void {
-  const logger = getLogger();
-  
-  // Check if the circuit breaker is open to prevent excessive events
-  if (authCircuitBreaker.isTripped('auth-events')) {
-    logger.warn(`Auth event publishing stopped by circuit breaker: ${event.type}`, {
-      category: LogCategory.AUTH,
-      source: 'auth/bridge',
-    });
-    return;
-  }
-  
-  // Log the event
-  logger.debug(`Auth event published: ${event.type}`, {
-    category: LogCategory.AUTH,
-    source: 'auth/bridge',
-    details: event
-  });
-  
-  // Loop through all handlers and call them with the event
-  eventHandlers.forEach(handler => {
-    try {
-      handler(event);
-    } catch (error) {
-      // Record failure on circuit breaker
-      authCircuitBreaker.recordFailure('auth-events');
-      
-      logger.error('Error in auth event handler', {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge',
-        details: { error, eventType: event.type }
-      });
-    }
-  });
-  
-  // Record successful publishing
-  authCircuitBreaker.recordSuccess('auth-events');
-}
-
-/**
- * Export auth methods that will be available through AuthBridge
- * This provides a centralized API for authentication
- */
-export const AuthBridge = {
-  // Authentication methods
-  signIn: async (email: string, password: string) => {
-    const logger = getLogger();
-    logger.info('AuthBridge: signIn attempt', {
-      category: LogCategory.AUTH,
-      source: 'auth/bridge',
-      details: { email }
-    });
-    
-    // In a real app, use supabase auth
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    
-    if (error) {
-      logger.error('AuthBridge: signIn error', {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge',
-        details: { error }
-      });
-      throw error;
-    }
-    
-    if (!data.user || !data.session) {
-      const err = new Error('Authentication failed - no user or session returned');
-      logger.error('AuthBridge: signIn failed', {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge',
-        details: { error: err }
-      });
-      throw err;
-    }
-    
-    // Update the auth store directly
-    const store = useAuthStore.getState();
-    store.setUser(data.user);
-    store.setSession(data.session);
-    
-    // Determine roles - for now we'll use any roles in app_metadata
-    // or assign default viewer role if none exist
-    let roles: UserRole[] = ['viewer']; 
-    
-    if (data.user.app_metadata?.roles && Array.isArray(data.user.app_metadata.roles)) {
-      roles = [...roles, ...data.user.app_metadata.roles];
-    }
-    
-    store.setRoles(roles);
-    
-    // Publish auth event
-    publishAuthEvent({
-      type: 'AUTH_SIGNED_IN',
-      payload: { user: data.user, session: data.session, roles }
-    });
-    
-    return data.user;
-  },
-  
-  // Social provider login with styled popup
-  signInWithSocialProvider: async (provider: Provider) => {
-    const logger = getLogger();
-    logger.info(`AuthBridge: social sign-in attempt with ${provider}`, {
-      category: LogCategory.AUTH,
-      source: 'auth/bridge'
-    });
-    
-    publishAuthEvent({
-      type: 'AUTH_SOCIAL_LOGIN_STARTED',
-      payload: { provider }
-    });
-    
-    try {
-      // Use Supabase OAuth signin with popup
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          // Using popup mode for the WM styled experience
-          redirectTo: window.location.origin,
-          queryParams: {
-            prompt: 'select_account',
-            access_type: 'offline',
-            // Styling options for the popup
-            theme: 'dark', // Google supports themes
-            response_type: 'code', // For OAuth2
-            layout_default: 'theme_purple_withbg', // Custom theme styling
-            hl: 'en' // Language setting
-          },
-          skipBrowserRedirect: false, // Will use popup
-          scopes: 'email profile', // Request email and basic profile
-        }
-      });
-      
-      if (error) {
-        logger.error(`AuthBridge: ${provider} sign-in error`, {
-          category: LogCategory.AUTH,
-          source: 'auth/bridge',
-          details: { error }
-        });
-        
-        publishAuthEvent({
-          type: 'AUTH_SOCIAL_LOGIN_ERROR',
-          payload: { provider, error }
-        });
-        
-        throw error;
-      }
-      
-      // Check for user with same email to trigger linking flow
-      if (data?.url) {
-        // Store the OAuth state for potential account linking
-        localStorage.setItem('wm_oauth_provider', provider);
-        localStorage.setItem('wm_oauth_initiated', Date.now().toString());
-      }
-      
-      // Provider auth is async - user will be redirected
-      // But we still return the URL data
-      logger.info(`AuthBridge: ${provider} sign-in redirect initiated`, {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge'
-      });
-      
-      return data;
-    } catch (error) {
-      logger.error(`AuthBridge: ${provider} sign-in failed`, {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge',
-        details: { error }
-      });
-      
-      publishAuthEvent({
-        type: 'AUTH_SOCIAL_LOGIN_ERROR',
-        payload: { provider, error }
-      });
-      
-      throw error;
-    }
-  },
-  
-  // Specifically for Google login with styled popup
-  signInWithGoogle: async () => {
-    return AuthBridge.signInWithSocialProvider('google');
-  },
-  
-  // Link a social account to an existing account
-  linkSocialAccount: async (provider: Provider) => {
-    const logger = getLogger();
-    const user = useAuthStore.getState().user;
-    
-    if (!user) {
-      const err = new Error('Cannot link account - user not logged in');
-      logger.error('AuthBridge: linkSocialAccount failed', {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge',
-        details: { error: err }
-      });
-      throw err;
-    }
-    
-    try {
-      const { data, error } = await supabase.auth.linkIdentity({
-        provider
-      });
-      
-      if (error) {
-        logger.error(`AuthBridge: ${provider} linking error`, {
-          category: LogCategory.AUTH,
-          source: 'auth/bridge',
-          details: { error }
-        });
-        throw error;
-      }
-      
-      logger.info(`AuthBridge: ${provider} account linked successfully`, {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge'
-      });
-      
-      publishAuthEvent({
-        type: 'AUTH_ACCOUNT_LINKED',
-        payload: { provider, user: data }
-      });
-      
-      return data;
-    } catch (error) {
-      logger.error(`AuthBridge: ${provider} linking failed`, {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge',
-        details: { error }
-      });
-      throw error;
-    }
-  },
-  
-  // Check for account linking opportunity and prompt the user
-  promptAccountLinking: async (email: string, provider: Provider) => {
-    const logger = getLogger();
-    
-    try {
-      // Check if an account with this email exists
-      const { data, error } = await supabase.rpc('check_email_exists', {
-        check_email: email
-      });
-      
-      if (error) throw error;
-      
-      // If email exists, prompt for linking
-      if (data && data.exists) {
-        publishAuthEvent({
-          type: 'AUTH_LINKING_REQUIRED',
-          payload: { email, provider }
-        });
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      logger.error('Error checking for account linking', {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge',
-        details: withDetails({ error })
-      });
-      return false;
-    }
-  },
-  
-  logout: async () => {
-    const logger = getLogger();
-    logger.info('AuthBridge: logout', {
-      category: LogCategory.AUTH,
-      source: 'auth/bridge'
-    });
-    
-    // In a real app, use supabase auth
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      logger.error('AuthBridge: logout error', {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge',
-        details: { error }
-      });
-      throw error;
-    }
-    
-    // Update store directly
-    await useAuthStore.getState().logout();
-    
-    // Publish auth event
-    publishAuthEvent({
-      type: 'AUTH_SIGNED_OUT'
-    });
-  },
-  
-  // Read-only getter methods
-  getUser: () => {
-    return useAuthStore.getState().user;
-  },
-  
-  getSession: () => {
-    return useAuthStore.getState().session;
-  },
-  
-  getProfile: () => {
-    return useAuthStore.getState().profile;
-  },
-  
-  getRoles: () => {
-    return useAuthStore.getState().roles;
-  },
-  
-  getStatus: () => {
-    return useAuthStore.getState().status;
-  },
-  
-  // Role checking methods
-  hasRole: (role: UserRole | UserRole[]) => {
-    return useAuthStore.getState().hasRole(role);
-  },
-  
-  isAdmin: () => {
-    return useAuthStore.getState().isAdmin();
-  },
-  
-  isSuperAdmin: () => {
-    return useAuthStore.getState().roles.includes('super_admin');
-  },
-  
-  // Add method to check debug access
-  hasDebugAccess: () => {
-    return useAuthStore.getState().roles.includes('super_admin');
-  },
-  
-  // Check authentication status
-  isAuthenticated: () => {
-    return useAuthStore.getState().isAuthenticated;
-  }
 };
 
-/**
- * Initialize auth bridge by subscribing to auth store changes
- * and broadcasting events
- */
-export function initializeAuthBridge(): void {
-  const logger = getLogger();
-  logger.info('Initializing auth bridge', {
-    category: LogCategory.AUTH,
-    source: 'auth/bridge'
-  });
-  
-  // Subscribe to supabase auth changes
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    (event, session) => {
-      logger.info('Auth state changed from Supabase', {
-        category: LogCategory.AUTH,
-        source: 'auth/bridge',
-        details: { event }
+// Dispatch auth events
+export const dispatchAuthEvent = (event: AuthEvent): void => {
+  authEventHandlers.forEach(handler => handler(event));
+};
+
+// AuthBridge singleton
+export const AuthBridge = {
+  /**
+   * Sign in with email and password
+   */
+  signIn: async (email: string, password: string) => {
+    const logger = getLogger();
+    
+    try {
+      logger.info('Signing in with email', { details: { email } });
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
       
-      const store = useAuthStore.getState();
-      
-      if (event === 'SIGNED_IN' && session) {
-        store.setSession(session);
-        
-        // Assign role if needed
-        if (store.roles.length === 0) {
-          store.setRoles(['viewer']);
-        }
-        
-        publishAuthEvent({
-          type: 'AUTH_SIGNED_IN',
-          payload: { user: session.user, session }
-        });
-        
-        // Check for account linking opportunity
-        checkAccountLinkingOpportunities(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        store.setUser(null);
-        store.setSession(null);
-        store.setRoles([]);
-        
-        publishAuthEvent({
-          type: 'AUTH_SIGNED_OUT'
-        });
-      } else if (event === 'USER_UPDATED' && session) {
-        store.setUser(session.user);
-        
-        publishAuthEvent({
-          type: 'AUTH_USER_UPDATED',
-          payload: { user: session.user }
-        });
-      } else if (event === 'TOKEN_REFRESHED' && session) {
-        store.setSession(session);
-        
-        publishAuthEvent({
-          type: 'AUTH_SESSION_REFRESH',
-          payload: { session }
-        });
+      if (error) {
+        throw error;
       }
-    }
-  );
-  
-  // Check for stored user on startup
-  const checkForExistingSession = async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      // Update the store with the session
+      
       const store = useAuthStore.getState();
       store.setSession(data.session);
       
-      // Load user profile
-      if (data.session.user) {
-        store.loadUserProfile(data.session.user.id);
-        
-        // Check for account linking opportunities
-        checkAccountLinkingOpportunities(data.session.user);
+      return data;
+    } catch (error) {
+      logger.error('Sign in error', { details: { error } });
+      dispatchAuthEvent({ 
+        type: 'AUTH_ERROR', 
+        payload: { error, method: 'password' }
+      });
+      throw error;
+    }
+  },
+  
+  /**
+   * Sign in with Google
+   */
+  signInWithGoogle: async () => {
+    const logger = getLogger();
+    
+    try {
+      logger.info('Signing in with Google');
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        }
+      });
+      
+      if (error) {
+        throw error;
       }
+      
+      return data;
+    } catch (error) {
+      logger.error('Google sign in error', { details: { error } });
+      dispatchAuthEvent({ 
+        type: 'AUTH_ERROR', 
+        payload: { error, method: 'google' }
+      });
+      throw error;
     }
-  };
+  },
   
-  // Use setTimeout to avoid initialization cycles
-  setTimeout(checkForExistingSession, 0);
+  /**
+   * Link social account
+   */
+  linkSocialAccount: async (provider: string) => {
+    const logger = getLogger();
+    
+    try {
+      logger.info('Linking social account', { details: { provider } });
+      
+      // For future implementation when Supabase supports account linking
+      // Currently this would need to be implemented manually
+      
+      return true;
+    } catch (error) {
+      logger.error('Account linking error', { details: { error } });
+      throw error;
+    }
+  },
   
-  // Use a timestamp to track the last update we processed
-  // This helps prevent event loops
-  let lastUpdateProcessed = Date.now();
+  /**
+   * Sign out
+   */
+  logout: async () => {
+    const logger = getLogger();
+    
+    try {
+      logger.info('Logging out');
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Clear auth store
+      const store = useAuthStore.getState();
+      store.setSession(null);
+      
+      return true;
+    } catch (error) {
+      logger.error('Logout error', { details: { error } });
+      throw error;
+    }
+  },
   
-  // Subscribe to auth store changes to broadcast events
-  const unsubscribe = useAuthStore.subscribe((state) => {
-    // Skip if this update is too close to the last one we processed
-    if (state.lastUpdated <= lastUpdateProcessed) {
-      return;
+  /**
+   * Check if user has specific role
+   */
+  hasRole: (role: UserRole | UserRole[]): boolean => {
+    const { roles } = useAuthStore.getState();
+    
+    if (Array.isArray(role)) {
+      return role.some(r => roles.includes(r));
     }
     
-    // Update our timestamp
-    lastUpdateProcessed = state.lastUpdated;
+    return roles.includes(role);
+  },
+  
+  /**
+   * Check if user is admin
+   */
+  isAdmin: (): boolean => {
+    const { roles } = useAuthStore.getState();
+    return roles.includes("admin") || roles.includes("super_admin");
+  },
+  
+  /**
+   * Check if user is super admin
+   */
+  isSuperAdmin: (): boolean => {
+    const { roles } = useAuthStore.getState();
+    return roles.includes("super_admin");
+  }
+};
+
+// Setup auth state change listener
+supabase.auth.onAuthStateChange((event, session) => {
+  const store = useAuthStore.getState();
+  
+  // Handle auth state change
+  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+    store.setSession(session);
     
-    // Publish state changed event
-    publishAuthEvent({
-      type: 'AUTH_STATE_CHANGED',
-      payload: { status: state.status }
-    });
-  });
-  
-  // Clean up on window unload
-  window.addEventListener('beforeunload', () => {
-    subscription?.unsubscribe();
-    unsubscribe();
-  });
-  
-  logger.info('Auth bridge initialized', {
-    category: LogCategory.AUTH,
-    source: 'auth/bridge'
-  });
-}
-
-// Check for account linking opportunity and prompt the user
-export async function checkAccountLinkingOpportunities(user: User): Promise<boolean> {
-  if (!user) return false;
-
-  const logger = getLogger();
-  const hasPasswordAuth = user.app_metadata?.provider === 'email';
-  const hasGoogleAuth = user.identities?.some(i => i.provider === 'google');
-  
-  // Check if there could be opportunities for linking with social providers
-  // This is a simplified check - in a real app, you might want to check against known email domains
-  if (hasPasswordAuth && !hasGoogleAuth) {
-    logger.info('User could potentially link Google account', {
-      category: LogCategory.AUTH,
-      source: 'auth/bridge'
-    });
-
-    // Publish event that could be used by UI to prompt user
-    publishAuthEvent({
-      type: 'AUTH_LINKING_REQUIRED',
-      payload: { user, provider: 'google' }
-    });
-    
-    return true;
+    if (session?.user) {
+      store.loadUserProfile(session.user.id);
+    }
   }
   
-  if (hasGoogleAuth && !hasPasswordAuth) {
-    logger.info('Google user could set up password', {
-      category: LogCategory.AUTH,
-      source: 'auth/bridge'
-    });
-    
-    // Could prompt user to set up password
-    return true;
+  if (event === 'SIGNED_OUT') {
+    store.setSession(null);
   }
   
-  return false;
-}
+  // Dispatch to event system
+  dispatchAuthEvent({
+    type: 'AUTH_STATE_CHANGE',
+    payload: { event, session }
+  });
+});
+
