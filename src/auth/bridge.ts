@@ -36,7 +36,7 @@ export const subscribeToAuthEvents = (handler: AuthEventHandler): (() => void) =
   };
 };
 
-// Dispatch auth events - renamed to publishAuthEvent to match imports
+// Dispatch auth events
 export const publishAuthEvent = (event: AuthEvent): void => {
   authEventHandlers.forEach(handler => handler(event));
 };
@@ -50,8 +50,28 @@ export const initializeAuthBridge = (): void => {
   // Any additional initialization can be added here
 };
 
-// AuthBridge singleton
+// AuthBridge singleton - Central contract for auth operations
 export const AuthBridge = {
+  /**
+   * Get current user
+   */
+  getUser: () => useAuthStore.getState().user,
+  
+  /**
+   * Get user profile
+   */
+  getProfile: () => useAuthStore.getState().profile,
+  
+  /**
+   * Get user roles
+   */
+  getRoles: () => useAuthStore.getState().roles,
+  
+  /**
+   * Check if user is authenticated
+   */
+  isAuthenticated: () => useAuthStore.getState().isAuthenticated,
+  
   /**
    * Sign in with email and password
    */

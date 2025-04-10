@@ -175,4 +175,3 @@ export const AuthSection: React.FC = () => {
     </ComponentWrapper>
   );
 };
-

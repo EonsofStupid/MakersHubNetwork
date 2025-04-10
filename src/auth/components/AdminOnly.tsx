@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/auth.store';
 import { UserRole } from '../types/roles';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { useHasRole } from '../hooks/useHasRole';
 
 interface AdminOnlyProps {
   children: React.ReactNode;
@@ -34,30 +35,8 @@ export function AdminOnly({ children, role, fallback = null }: AdminOnlyProps) {
 }
 
 /**
- * Hook to check if the current user has any of the specified roles
- * Imported here to avoid circular dependencies
- */
-function useHasRole(role: UserRole | UserRole[]) {
-  const roles = useAuthStore((state) => state.roles);
-  
-  return React.useMemo(() => {
-    if (Array.isArray(role)) {
-      return role.some(r => roles.includes(r));
-    }
-    return roles.includes(role);
-  }, [roles, role]);
-}
-
-/**
  * Hook to check if the current user has admin access
- * Imported here to avoid circular dependencies
  */
-function useHasAdminAccess() {
-  const roles = useAuthStore((state) => state.roles);
-  const hasAdminRole = roles.includes('admin');
-  const hasSuperAdminRole = roles.includes('super_admin');
-  
-  return React.useMemo(() => {
-    return hasAdminRole || hasSuperAdminRole;
-  }, [hasAdminRole, hasSuperAdminRole]);
+function useHasAdminAccess(): boolean {
+  return useHasRole(['admin', 'super_admin']);
 }
