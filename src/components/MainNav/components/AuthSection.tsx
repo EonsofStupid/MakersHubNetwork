@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ export const AuthSection: React.FC = () => {
   const status = useAuthStore(state => state.status);
   const roles = useAuthStore(state => state.roles);
   
-  // Use the hooks directly to check for admin access (fixed: not calling as functions)
+  // Use the hooks directly to check for admin access - as values, not function calls
   const hasAdminRole = useHasAdminAccess();
   const isSuperAdmin = useIsSuperAdmin();
   
