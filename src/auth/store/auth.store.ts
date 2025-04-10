@@ -1,14 +1,12 @@
-
 import { create } from "zustand";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthStatus } from "../types/auth.types";
-import { UserRole } from "../types/roles";
+import { UserRole, ROLES, mapRoleStringsToEnums } from "../types/roles";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
 import { persist } from "zustand/middleware";
 import { v4 as uuidv4 } from 'uuid';
-import { mapRoleStringsToEnums } from "../types/roles";
 
 // Define user profile interface
 export interface UserProfile {
@@ -84,11 +82,11 @@ export const useAuthStore = create<AuthStore>()(
       
       isAdmin: () => {
         const roles = get().roles;
-        return roles.includes(UserRole.ADMIN) || roles.includes(UserRole.SUPER_ADMIN);
+        return roles.includes(ROLES.ADMIN) || roles.includes(ROLES.SUPER_ADMIN);
       },
       
       isSuperAdmin: () => {
-        return get().roles.includes(UserRole.SUPER_ADMIN);
+        return get().roles.includes(ROLES.SUPER_ADMIN);
       },
       
       setUser: (user: User | null) => {

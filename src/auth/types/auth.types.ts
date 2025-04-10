@@ -3,7 +3,7 @@
  * Import and re-export the UserRole from the central roles.ts file
  */
 import { UserRole } from './roles';
-export { UserRole };
+export type { UserRole };
 
 /**
  * Authentication status types
