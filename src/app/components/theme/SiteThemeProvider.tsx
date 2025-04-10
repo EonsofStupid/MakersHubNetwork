@@ -7,6 +7,7 @@ type SiteThemeContextType = {
   variables: Record<string, string>;
   animations: Record<string, any> | null;
   isLoaded: boolean;
+  isInitializing?: boolean;
 };
 
 const defaultThemeContext: SiteThemeContextType = {
@@ -14,6 +15,7 @@ const defaultThemeContext: SiteThemeContextType = {
   variables: {},
   animations: null,
   isLoaded: false,
+  isInitializing: false,
 };
 
 const SiteThemeContext = createContext<SiteThemeContextType>(defaultThemeContext);
@@ -22,9 +24,13 @@ export const useSiteTheme = () => useContext(SiteThemeContext);
 
 interface SiteThemeProviderProps {
   children: ReactNode;
+  isInitializing?: boolean;
 }
 
-export const SiteThemeProvider: React.FC<SiteThemeProviderProps> = ({ children }) => {
+export const SiteThemeProvider: React.FC<SiteThemeProviderProps> = ({ 
+  children,
+  isInitializing = false
+}) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [componentStyles, setComponentStyles] = useState<Record<string, any> | null>(null);
   const [variables, setVariables] = useState<Record<string, string>>({});
@@ -39,15 +45,30 @@ export const SiteThemeProvider: React.FC<SiteThemeProviderProps> = ({ children }
         ? themeStore.themeTokens[0] || {}
         : {};
         
-      setComponentStyles(tokensObj.components || {});
-      setVariables(tokensObj.variables || {});
-      setAnimations(tokensObj.animations || {});
+      if (tokensObj.components) {
+        setComponentStyles(tokensObj.components);
+      }
+      
+      if (tokensObj.variables) {
+        setVariables(tokensObj.variables);
+      }
+      
+      if (tokensObj.animations) {
+        setAnimations(tokensObj.animations);
+      }
+      
       setIsLoaded(true);
     }
   }, [themeStore?.themeTokens]);
 
   return (
-    <SiteThemeContext.Provider value={{ componentStyles, variables, animations, isLoaded }}>
+    <SiteThemeContext.Provider value={{ 
+      componentStyles, 
+      variables, 
+      animations, 
+      isLoaded,
+      isInitializing 
+    }}>
       {children}
     </SiteThemeContext.Provider>
   );

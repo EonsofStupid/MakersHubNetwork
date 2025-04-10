@@ -1,22 +1,28 @@
 
-/**
- * auth/types/auth.types.ts
- * 
- * Core authentication type definitions
- */
-
 import { User, Session } from '@supabase/supabase-js';
+import { UserRole } from '@/types/shared';
+import { UserProfile } from '@/auth/store/auth.store';
 
+// Auth status types
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 
-export interface AuthUser extends User {
-  // Any additional properties needed for the user object
+// Auth context interface
+export interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  profile: UserProfile | null;
+  status: AuthStatus;
 }
 
-export interface AuthSession extends Session {
-  // Any additional properties needed for the session object  
+// Auth state interface
+export interface AuthState {
+  user: User | null;
+  session: Session | null;
+  profile: UserProfile | null;
+  roles: UserRole[];
+  status: AuthStatus;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  initialized: boolean;
 }
-
-// Re-export UserRole type for backward compatibility
-export type { UserRole } from '@/types/shared';
-

@@ -1,4 +1,3 @@
-
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,7 +9,7 @@ import { initializeLoggingBridge } from "@/logging/bridge";
 import { initializeChatBridge } from "@/bridges";
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
-import { AppInitializer } from "@/components/AppInitializer";
+import { AppInitializer } from "@/app/components/AppInitializer";
 import { AuthProvider } from "@/auth/components/AuthProvider";
 import { DebugOverlay } from '@/admin/components/debug/DebugOverlay';
 import { ComponentInspector } from '@/admin/components/debug/ComponentInspector';

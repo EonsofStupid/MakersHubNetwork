@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +12,7 @@ import { toast } from 'sonner';
 import { Save, Eye, Code, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner } from '@/app/components/ui/spinner';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 
@@ -40,7 +39,6 @@ export function LayoutEditor({ layout, onSave, onCancel, readOnly = false }: Lay
   const { useSaveLayout } = useLayoutSkeleton();
   const { mutate: saveLayout, isPending } = useSaveLayout();
   
-  // Update layout when prop changes
   useEffect(() => {
     if (layout) {
       setCurrentLayout(layout);
@@ -54,14 +52,12 @@ export function LayoutEditor({ layout, onSave, onCancel, readOnly = false }: Lay
     }
   }, [layout]);
   
-  // Enable edit mode when opening JSON tab
   useEffect(() => {
     if (activeTab === 'json' && !editMode) {
       setEditMode(true);
     }
   }, [activeTab, editMode, setEditMode]);
   
-  // Handle JSON changes
   const handleJsonChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditingJson(e.target.value);
     try {
@@ -79,15 +75,12 @@ export function LayoutEditor({ layout, onSave, onCancel, readOnly = false }: Lay
     }
   };
   
-  // Handle saving the layout
   const handleSave = () => {
     if (!currentLayout) return;
     
     try {
-      // Validate JSON
       const components = JSON.parse(editingJson);
       
-      // Prepare layout for saving
       const layoutToSave: Partial<LayoutSkeleton> = {
         id: currentLayout.id,
         name: layoutMeta.name,
@@ -103,7 +96,6 @@ export function LayoutEditor({ layout, onSave, onCancel, readOnly = false }: Lay
         version: currentLayout.version || 1,
       };
       
-      // Save layout to database
       saveLayout(layoutToSave, {
         onSuccess: (response) => {
           if (response.success && onSave && currentLayout) {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +16,7 @@ import { Plus, FileText, Edit, Trash2, Eye } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { RequirePermission } from '@/admin/components/auth/RequirePermission';
 import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner } from '@/app/components/ui/spinner';
 
 function LayoutsPage() {
   const [selectedLayoutId, setSelectedLayoutId] = useState<string | null>(null);
