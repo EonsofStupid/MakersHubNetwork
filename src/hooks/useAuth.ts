@@ -28,7 +28,8 @@ export function useAuth() {
   const initialized = useAuthStore(state => state.initialized);
   
   // Wrap hasRole function with useCallback to prevent recreation on each render
-  const hasRole = useCallback((role: UserRole | UserRole[]): boolean => {
+  const hasRole = useCallback((role: UserRole | UserRole[] | undefined): boolean => {
+    if (!role) return false;
     return AuthBridge.hasRole(role);
   }, []);
   

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useLogger } from '@/hooks/use-logger';
@@ -10,7 +11,7 @@ import { useHasRole, useHasAdminAccess } from '@/auth/hooks/useHasRole';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
-  requiredRole?: UserRole | UserRole[];
+  requiredRole?: UserRole | UserRole[] | undefined;
 }
 
 /**

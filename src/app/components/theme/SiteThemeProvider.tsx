@@ -52,7 +52,9 @@ export const SiteThemeProvider: React.FC<SiteThemeProviderProps> = ({
       
       // Safely access variables property
       if (tokensObj && typeof tokensObj === 'object' && 'variables' in tokensObj) {
-        setVariables(tokensObj.variables || {});
+        // Use type assertion to ensure proper type
+        const vars = tokensObj.variables || {};
+        setVariables(vars as Record<string, string>);
       }
       
       // Safely access animations property

@@ -1,7 +1,7 @@
 
 import { useMemo } from 'react';
 import { AuthBridge } from '@/bridges';
-import { UserRole } from '@/types';
+import { UserRole } from '@/types/shared';
 
 /**
  * Custom hook to check if the current user has a specific role
@@ -30,4 +30,3 @@ export function useIsSuperAdmin() {
     return AuthBridge.isSuperAdmin();
   }, []);
 }
-

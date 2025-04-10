@@ -10,7 +10,8 @@ import { User, Session } from '@supabase/supabase-js';
 import { createModuleBridge } from '@/core/MessageBus';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
-import { UserProfile, UserRole } from '@/types/auth.types';
+import { UserProfile } from '@/types/auth.types';
+import { UserRole } from '@/types/shared';
 
 // Create a module-specific bridge
 const authBridgeImpl = createModuleBridge('auth');
@@ -103,7 +104,9 @@ class AuthBridgeImpl {
   /**
    * Check if the current user has a specific role
    */
-  hasRole(role: UserRole | UserRole[]): boolean {
+  hasRole(role: UserRole | UserRole[] | undefined): boolean {
+    if (!role) return false;
+    
     if (!this.userRoles || this.userRoles.length === 0) {
       return false;
     }
@@ -226,4 +229,3 @@ export function publishAuthEvent(payload: AuthEventPayload) {
 
 // Export the internal bridge for auth module use only
 export { authBridgeImpl };
-
