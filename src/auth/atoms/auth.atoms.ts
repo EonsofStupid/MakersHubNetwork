@@ -1,4 +1,3 @@
-
 import { atom } from 'jotai';
 import { User } from '@supabase/supabase-js';
 import { UserRole, ROLES } from '@/auth/types/roles';
