@@ -1,8 +1,6 @@
 
 import { User, Session } from "@supabase/supabase-js";
-import { UserRole as BaseUserRole } from "@/types/auth.types";
-
-export type UserRole = BaseUserRole;
+import { UserRole } from "@/auth/types/roles";
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 
