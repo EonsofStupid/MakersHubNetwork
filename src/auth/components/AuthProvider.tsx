@@ -1,4 +1,3 @@
-
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,7 +54,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         // Publish the auth event so other systems can react to it
         publishAuthEvent({
-          type: 'AUTH_STATE_CHANGED',
+          type: 'AUTH_STATE_CHANGE',
           payload: { event, session: currentSession }
         });
 

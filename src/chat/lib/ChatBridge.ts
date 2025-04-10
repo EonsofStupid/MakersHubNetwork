@@ -1,6 +1,13 @@
 
 import { getLogger } from '@/logging';
-import { LogCategory, LogOptions } from '@/logging/types';
+import { LogCategory } from '@/logging/types';
+
+// Define LogOptions locally to avoid dependency issues
+interface LogOptions {
+  category?: string;
+  details?: Record<string, any>;
+  error?: boolean;
+}
 
 export type ChatBridgeMessage = {
   type: string;
@@ -18,7 +25,7 @@ export type ChatBridgeListener = (message: ChatBridgeMessage) => void;
  */
 class ChatBridgeImpl {
   private listeners: Map<ChatBridgeChannel, ChatBridgeListener[]> = new Map();
-  private logger = getLogger('ChatBridge');
+  private logger = getLogger();
   
   /**
    * Subscribe to a channel
@@ -42,7 +49,7 @@ class ChatBridgeImpl {
     // Return unsubscribe function
     return () => {
       const index = channelListeners.indexOf(listener);
-      if (index > -1) {
+      if (index !== -1) {
         channelListeners.splice(index, 1);
         this.logger.debug(`Listener removed from ${channel} channel`, { 
           category: LogCategory.CHAT,
