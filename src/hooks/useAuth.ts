@@ -1,122 +1,89 @@
 
-import { useAuthStore } from '@/auth/store/auth.store';
+import { useCallback, useMemo } from 'react';
+import { useAuthStore, selectUser, selectSession, selectProfile, selectRoles, selectStatus, selectIsAuthenticated, selectAuthError, selectIsLoading } from '@/auth/store/auth.store';
+import { AuthBridge } from '@/auth/bridge';
+import { UserRole } from '@/auth/types/auth.types';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useCallback, useEffect, useRef, useMemo } from 'react';
-import { errorToObject } from '@/shared/utils/render';
-import CircuitBreaker from '@/utils/CircuitBreaker';
-import { UserRole } from '@/types/auth.types';
-
-// Define utility type for refs that may be initialized later
-type RefInit<T> = React.MutableRefObject<T | undefined>;
-
-// Create stable selectors outside the component to prevent regeneration
-const selectAuthState = (state: ReturnType<typeof useAuthStore.getState>) => ({
-  user: state.user,
-  session: state.session,
-  roles: state.roles,
-  status: state.status,
-  isLoading: state.isLoading,
-  error: state.error,
-  initialized: state.initialized,
-  isAuthenticated: state.isAuthenticated
-});
-
-const selectInitialize = (state: ReturnType<typeof useAuthStore.getState>) => state.initialize;
 
 /**
- * Hook for accessing authentication state with initialization guard
- * Enhanced with stable references and memoization to prevent unnecessary re-renders
+ * Hook for accessing authentication state
+ * Uses Zustand's selector pattern for efficient updates
  */
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
-  const initAttemptedRef = useRef<boolean>(false);
-  const hasRoleRef: RefInit<(role: UserRole | UserRole[]) => boolean> = useRef();
-  const isAdminRef: RefInit<() => boolean> = useRef();
-  const logoutRef: RefInit<() => Promise<void>> = useRef();
   
-  // Initialize circuit breaker with a lower threshold
-  CircuitBreaker.init('useAuth', 3, 1000);
+  // Use selectors for each piece of state to prevent unnecessary re-renders
+  const user = useAuthStore(selectUser);
+  const profile = useAuthStore(selectProfile);
+  const session = useAuthStore(selectSession);
+  const roles = useAuthStore(selectRoles);
+  const status = useAuthStore(selectStatus);
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const error = useAuthStore(selectAuthError);
+  const isLoading = useAuthStore(selectIsLoading);
   
-  // Use the stable selector to extract state
-  const authState = useAuthStore(selectAuthState);
+  // Access methods directly from the store
+  const initialize = useAuthStore((state) => state.initialize);
+  const initialized = useAuthStore((state) => state.initialized);
   
-  // Get initialize function with separate selector to avoid re-renders
-  const initialize = useAuthStore(selectInitialize);
+  // Memoize role checking functions to prevent recreation on each render
+  const hasRole = useCallback((role: UserRole | UserRole[]) => {
+    return AuthBridge.hasRole(role);
+  }, []);
   
-  // Initialize stable function references if needed
-  if (!hasRoleRef.current) {
-    // Create a function that can handle both single roles and arrays
-    hasRoleRef.current = (role: UserRole | UserRole[]): boolean => {
-      if (Array.isArray(role)) {
-        // Check if user has any role from the array
-        return role.some(r => useAuthStore.getState().hasRole(r));
-      }
-      // Handle single role
-      return useAuthStore.getState().hasRole(role);
-    };
-  }
+  // Use memoization for derived values
+  const isAdmin = useMemo(() => {
+    return AuthBridge.isAdmin();
+  }, [roles]);
   
-  if (!isAdminRef.current) {
-    isAdminRef.current = useAuthStore.getState().isAdmin;
-  }
+  const isSuperAdmin = useMemo(() => {
+    return AuthBridge.isSuperAdmin();
+  }, [roles]);
   
-  if (!logoutRef.current) {
-    logoutRef.current = useAuthStore.getState().logout;
-  }
-  
-  // Auto-initialize auth if needed - with guard against infinite loops
-  useEffect(() => {
-    // Only try to initialize once and don't block content rendering
-    if (initAttemptedRef.current) {
-      return;
-    }
+  // Use AuthBridge for auth operations to ensure consistent behavior
+  const handleLogin = useCallback(async (email: string, password: string) => {
+    logger.info('User logging in', { 
+      details: { email }
+    });
     
-    // Skip initialization in case we detect a potential infinite loop
-    if (CircuitBreaker.isTripped('useAuth')) {
-      logger.warn('Breaking potential infinite loop in useAuth');
-      return;
-    }
-    
-    // Increment counter for circuit breaker
-    CircuitBreaker.count('useAuth');
-    
-    // Prevent multiple initialization attempts
-    initAttemptedRef.current = true;
-    
-    // Initialize auth in background without blocking UI
-    const timeoutId = setTimeout(() => {
-      initialize().catch(err => {
-        logger.error('Failed to initialize auth', { details: errorToObject(err) });
-      });
-    }, 50);
-    
-    return () => clearTimeout(timeoutId);
-  }, [initialize, logger]);
+    return AuthBridge.signIn(email, password);
+  }, [logger]);
   
-  // Derived state (memoized to prevent unnecessary re-renders)
-  const isSuperAdmin = useMemo(() => 
-    authState.roles.includes('super_admin'), 
-    [authState.roles]
-  );
-
-  // Log wrapper for logout to capture info before state is cleared
+  const handleGoogleLogin = useCallback(async () => {
+    logger.info('User logging in with Google');
+    
+    return AuthBridge.signInWithGoogle();
+  }, [logger]);
+  
   const handleLogout = useCallback(async () => {
-    if (authState.user) {
+    if (user) {
       logger.info('User logging out', { 
-        details: { userId: authState.user.id }
+        details: { userId: user.id }
       });
     }
-    return logoutRef.current?.();
-  }, [authState.user, logger]);
+    
+    // Use AuthBridge for logout
+    return AuthBridge.logout();
+  }, [user, logger]);
 
-  // Return stable object reference to prevent unnecessary re-renders
-  return useMemo(() => ({
-    ...authState,
-    isAdmin: isAdminRef.current?.() || false,
+  // Return all required auth state and methods
+  return {
+    user,
+    profile,
+    session,
+    roles,
+    status,
+    isLoading,
+    error,
+    hasRole,
+    isAdmin,
     isSuperAdmin,
-    hasRole: hasRoleRef.current,
+    isAuthenticated,
+    signIn: handleLogin,
+    signInWithGoogle: handleGoogleLogin,
     logout: handleLogout,
-    // Don't expose initialize directly as it should be handled automatically
-  }), [authState, isSuperAdmin, handleLogout]);
+    initialize,
+    initialized
+  };
 }

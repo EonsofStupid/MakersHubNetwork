@@ -1,113 +1,52 @@
+import React from "react"
+import { motion } from "framer-motion"
+import { X } from "lucide-react"
 
-import { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { ProfileEditor } from "./ProfileEditor"
 
 interface ProfileDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onClose: () => void
 }
 
-export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
-  const { user } = useAuthState();
-  const { toast } = useToast();
-  const [username, setUsername] = useState(user?.user_metadata?.username || '');
-  const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    
-    setIsLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          username,
-          full_name: fullName,
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully."
-      });
-      
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        title: "Profile update failed",
-        description: error instanceof Error ? error.message : "Could not update profile",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (!user) {
-    return null;
-  }
-
+export const ProfileDialog: React.FC<ProfileDialogProps> = ({
+  open,
+  onClose,
+}) => {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Profile</DialogTitle>
-          <DialogDescription>
-            Update your profile information.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">Email</label>
-            <Input id="email" value={user.email || ''} disabled />
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent
+        className="sm:max-w-[425px] backdrop-blur-xl bg-background/80
+                   border-primary/20 shadow-[0_0_20px_rgba(0,240,255,0.15)]
+                   p-6 overflow-hidden"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
+          className="relative"
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-0 top-0"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+
+          <div className="space-y-6">
+            <h2 className="text-2xl font-heading font-bold text-primary">
+              Edit Profile
+            </h2>
+
+            <ProfileEditor onClose={onClose} />
           </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="username" className="text-sm font-medium">Username</label>
-            <Input 
-              id="username" 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username" 
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="fullName" className="text-sm font-medium">Full Name</label>
-            <Input 
-              id="fullName" 
-              value={fullName} 
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Full Name" 
-            />
-          </div>
-          
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
-        </form>
+        </motion.div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

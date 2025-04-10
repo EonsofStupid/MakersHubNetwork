@@ -1,40 +1,35 @@
 
 import { atom } from 'jotai';
+import { hasAdminAccessAtom } from './auth.atoms';
 
-// UI state atoms
-export const sidebarWidthAtom = atom<number>(240);
-export const contentWidthAtom = atom<number>(0);
-export const showNotificationsAtom = atom<boolean>(false);
-export const modalOpenAtom = atom<boolean>(false);
-export const currentModalAtom = atom<string | null>(null);
-export const adminActionAtom = atom<string | null>(null);
-export const isMobileAtom = atom<boolean>(false);
-export const showQuickBarAtom = atom<boolean>(false);
+// UI visibility state
+export const mainNavHiddenAtom = atom<boolean>(false);
+export const iconOnlyModeAtom = atom<boolean>(false);
+export const aiPanelVisibleAtom = atom<boolean>(false);
+export const effectsPanelVisibleAtom = atom<boolean>(false);
+export const recordingAtom = atom<boolean>(false);
+export const frozenZonesAtom = atom<string[]>([]);
 
-// Missing atoms needed for SmartOverlay
+// Panel and overlay atoms
 export const activePanelAtom = atom<string | null>(null);
-export const panelPositionAtom = atom<{ x: number, y: number }>({ x: 100, y: 100 });
+export const panelPositionAtom = atom<{ x: number, y: number }>({ x: 0, y: 0 });
 
-// UI appearance atoms
-export const uiScaleAtom = atom<number>(1);
-export const fontSizeAtom = atom<number>(16);
-export const reducedMotionAtom = atom<boolean>(false);
-export const highContrastAtom = atom<boolean>(false);
-export const uiDensityAtom = atom<'compact' | 'comfortable' | 'spacious'>('comfortable');
+// Admin UI visibility - derived from auth state
+export const showAdminButtonAtom = atom(
+  (get) => get(hasAdminAccessAtom)
+);
 
-// Layout atoms
-export const layoutGridAtom = atom<boolean>(false);
-export const showGridAtom = atom<boolean>(false);
-export const gridSizeAtom = atom<number>(8);
-export const snapToGridAtom = atom<boolean>(false);
+export const showAdminWrenchAtom = atom(
+  (get) => get(hasAdminAccessAtom)
+);
 
-// Color scheme atoms
-export const primaryColorAtom = atom<string>('#00F0FF');
-export const secondaryColorAtom = atom<string>('#FF2D6E');
-export const accentColorAtom = atom<string>('#F97316');
-export const backgroundColorAtom = atom<string>('#12121A');
+// Search state
+export const isSearchingAtom = atom<boolean>(false);
 
-// Dynamic layout atoms
-export const activeColumnsAtom = atom<number>(12);
-export const activePanelSizeAtom = atom<Record<string, number>>({});
-export const panelSnapPositionsAtom = atom<Record<string, { x: number, y: number }>>({});
+// Quick bar state
+export const quickBarItemsAtom = atom<string[]>(["Users", "Roles", "Themes", "Settings"]);
+
+// Drag and drop atoms
+export const dragSourceAtom = atom<string | null>(null);
+export const showDragOverlayAtom = atom<boolean>(false);
+export const hoveredIconAtom = atom<string | null>(null);

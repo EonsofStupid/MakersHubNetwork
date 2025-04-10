@@ -1,5 +1,5 @@
 
-import { UserRole } from "@/types/common.types";
+import { UserRole } from "../types/auth.types";
 import { PermissionValue, PERMISSIONS, ROLE_PERMISSIONS } from "../permissions";
 
 /**

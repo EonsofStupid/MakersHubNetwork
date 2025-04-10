@@ -23,15 +23,15 @@ export const hasPermission = (
  * @returns Object with hasPermission boolean and loading state
  */
 export const usePermissionCheck = (requiredPermission?: PermissionValue) => {
-  const { hasPermission, isLoaded } = useAdminPermissions();
+  const { hasPermission, isLoading } = useAdminPermissions();
   
   if (!requiredPermission) {
-    return { hasPermission: true, isLoading: !isLoaded };
+    return { hasPermission: true, isLoading };
   }
   
   return {
     hasPermission: hasPermission(requiredPermission),
-    isLoading: !isLoaded
+    isLoading
   };
 };
 

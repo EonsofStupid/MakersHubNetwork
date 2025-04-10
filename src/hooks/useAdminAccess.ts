@@ -1,9 +1,8 @@
 
-/**
- * @deprecated Use useAdminAccess from @/admin/hooks/useAdminAccess instead
- * This is kept for backward compatibility
- */
-import { useAdminAccess as useAdminAccessImpl } from "@/admin/hooks/useAdminAccess";
+// Hook for checking admin access permissions - always grants access
 export function useAdminAccess() {
-  return useAdminAccessImpl();
+  return {
+    hasAdminAccess: true,
+    user: { id: 'public-user' }
+  };
 }

@@ -2,42 +2,47 @@
 import React from 'react';
 
 /**
- * Converts an Error object to a plain object for logging and serialization
+ * Convert an error object to a plain object for logging
  */
-export function errorToObject(error: unknown): Record<string, any> {
+export function errorToObject(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
     return {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      // Use optional chaining to avoid Error.cause error
-      cause: (error as any).cause ? errorToObject((error as any).cause) : undefined
+      ...(error as any), // Capture any custom properties
     };
   }
   
-  return {
-    error: String(error)
-  };
+  if (typeof error === 'object' && error !== null) {
+    try {
+      // Try to spread the error object safely
+      return { ...error as object };
+    } catch (e) {
+      // Fallback if spreading fails
+      return { value: String(error) };
+    }
+  }
+  
+  return { value: error };
 }
 
 /**
- * Renders unknown values as React nodes
+ * Safely renders any unknown value as a React node
  */
 export function renderUnknownAsNode(value: unknown): React.ReactNode {
   if (value === null || value === undefined) {
-    return <span className="text-muted-foreground italic">null</span>;
+    return null;
   }
   
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-  
-  if (value instanceof Error) {
-    return <span className="text-destructive">{value.message}</span>;
-  }
-  
+  // Handle React elements directly
   if (React.isValidElement(value)) {
     return value;
+  }
+  
+  // Handle primitive types
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
   }
   
   // Handle arrays by mapping each item through renderUnknownAsNode
@@ -54,6 +59,7 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
     );
   }
   
+  // Handle objects with safe stringification
   if (typeof value === 'object') {
     try {
       // Use a replacer function to handle circular references
@@ -70,10 +76,11 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
       
       return safeString;
     } catch (e) {
-      return <span className="text-destructive">[Circular Object]</span>;
+      return '[Complex Object]';
     }
   }
   
+  // Default fallback for any other types
   return String(value);
 }
 
@@ -122,4 +129,3 @@ export function nodeToSearchableString(value: unknown): string {
   // Default fallback
   return String(value);
 }
-

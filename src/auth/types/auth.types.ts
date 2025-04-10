@@ -1,49 +1,53 @@
 
-import { Database } from "@/integrations/supabase/types"
+/**
+ * Core auth types for the application
+ */
 
-// Base role type from database
-export type UserRole = Database["public"]["Enums"]["user_role"]
+// User roles available in the system
+export type UserRole = 
+  | 'viewer'       // Basic read-only access
+  | 'editor'       // Can edit but not publish
+  | 'publisher'    // Can edit and publish
+  | 'admin'        // Full access to admin features
+  | 'super_admin'  // Full access + debug features
+  | 'maker'        // For backward compatibility 
+  | 'builder';     // For backward compatibility
 
-// Auth Event Types
-export type AuthEventType = 
-  | 'SIGNED_IN'
-  | 'SIGNED_OUT'
-  | 'USER_UPDATED'
-  | 'SESSION_UPDATED'
-  | 'INITIALIZED'
-  // Legacy event types needed for backward compatibility
-  | 'AUTH_SIGNED_IN'
-  | 'AUTH_SIGNED_OUT';
+// Authentication status
+export type AuthStatus = 
+  | 'idle'           // Initial state
+  | 'loading'        // Authentication in progress
+  | 'authenticated'  // User is logged in
+  | 'unauthenticated' // User is not logged in
+  | 'error';         // Authentication error occurred
 
-// Auth Event Interface
-export interface AuthEvent {
-  type: AuthEventType;
-  payload?: any;
+// User with basic profile information
+export interface User {
+  id: string;
+  email?: string;
+  username?: string;
+  fullName?: string;
+  avatarUrl?: string;
+  roles: UserRole[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
 }
 
-// Auth Event Listener Type
-export type AuthEventListener = (event: AuthEvent) => void;
-
-// Authentication-specific interfaces
-export interface AuthUser {
-  id: string
-  display_name: string | null
-  avatar_url: string | null
-  primary_role_id: string | null
-  user_roles: Array<{
-    id: string
-    role: UserRole
-  }>
+// Authentication session
+export interface AuthSession {
+  userId: string;
+  token: string;
+  expires: Date;
+  isValid: boolean;
 }
 
-export interface AdminAccess {
-  isAdmin: boolean
-  hasAdminAccess: boolean
-}
+// Auth provider types
+export type AuthProvider =
+  | 'email'
+  | 'google'
+  | 'github'
+  | 'twitter'
+  | 'facebook'
+  | 'apple';
 
-export interface WithAdminAccess {
-  hasAdminAccess: boolean
-}
-
-// Re-export for backward compatibility
-export type { UserRole as AuthUserRole }

@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { AdminHeader } from "./AdminHeader";
 import { AdminSidebar } from "./AdminSidebar";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "react-router-dom";
 import { EditModeToggle } from "./ui/EditModeToggle";
 import { useAtom } from "jotai";
 import { adminEditModeAtom } from "../atoms/tools.atoms";
@@ -58,7 +58,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         description: "You don't have permission to access the admin panel",
         variant: "destructive"
       });
-      navigate({ to: "/" });
+      navigate("/");
     }
 
     // Notify when admin panel is initializing

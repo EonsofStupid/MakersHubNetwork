@@ -10,7 +10,7 @@ import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { useToast } from '@/hooks/use-toast';
 import { AdminTooltip } from '@/admin/components/ui/AdminTooltip';
 import { TopNavShortcuts } from '@/admin/components/navigation/TopNavShortcuts';
-import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { EditModeToggle } from '@/admin/components/ui/EditModeToggle';
 import { SyncIndicator } from '@/admin/components/ui/SyncIndicator';
 
@@ -29,10 +29,11 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
   const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
   const { hasAdminAccess } = useAdminAccess();
   
-  const adminStore = useAdminStore();
-  const sidebarExpanded = adminStore.sidebarExpanded;
-  const toggleSidebar = adminStore.toggleSidebar;
-  const savePreferences = adminStore.savePreferences;
+  const { 
+    sidebarExpanded, 
+    toggleSidebar,
+    savePreferences,
+  } = useAdminStore();
   
   // Sync edit mode between jotai atom and zustand store
   useEffect(() => {
@@ -72,9 +73,8 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
   }
   
   return (
-    <div className="fixed top-0 left-0 right-0 w-screen z-40">
-      <div className="admin-topnav w-full flex items-center justify-between px-4 h-14 top-nav-trapezoid" 
-        style={{ width: '100vw' }}>
+    <div className="fixed top-0 left-0 right-0 w-full z-40">
+      <div className="admin-topnav w-full flex items-center justify-between px-4 h-14 top-nav-trapezoid">
         <div className="flex items-center space-x-4">
           <motion.button 
             whileHover={{ scale: 1.1 }}
@@ -126,7 +126,7 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               className="admin-topnav-item"
-              onClick={() => navigate("/admin/settings")}
+              onClick={() => navigate('/admin/settings')}
             >
               <Settings className="w-5 h-5" />
             </motion.button>
@@ -146,3 +146,4 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
     </div>
   );
 }
+

@@ -17,14 +17,12 @@ import { useAdminAccess } from "../../hooks/useAdminAccess";
 import { EditModeToggle } from "../ui/EditModeToggle";
 
 interface AdminLayoutProps {
-  children?: React.ReactNode;
   title?: string;
   fullWidth?: boolean;
   className?: string;
 }
 
 export function AdminLayout({ 
-  children,
   title = "Admin Dashboard",
   fullWidth = false,
   className
@@ -40,6 +38,7 @@ export function AdminLayout({
   const loggedInitRef = useRef<boolean>(false);
 
   useEffect(() => {
+    // Log the admin layout initialization - only once
     if (!loggedInitRef.current) {
       loggedInitRef.current = true;
       logger.info("Admin layout rendered", {
@@ -52,6 +51,7 @@ export function AdminLayout({
       });
     }
 
+    // If somehow a non-admin user got here, redirect them - but only once
     if (!hasAdminAccess && isAuthenticated && !redirectAttemptedRef.current) {
       redirectAttemptedRef.current = true;
       
@@ -67,8 +67,9 @@ export function AdminLayout({
       
       navigate("/");
     }
-  }, [isAuthenticated, hasAdminAccess, navigate, toast, permissions, isEditMode, logger]);
+  }, [isAuthenticated, hasAdminAccess]); // Reduced dependencies to prevent excessive re-renders
 
+  // If user is not authenticated or doesn't have admin access, don't render the layout
   if (!isAuthenticated || !hasAdminAccess) {
     return null;
   }
@@ -81,7 +82,7 @@ export function AdminLayout({
         <AdminHeader title={title} />
         
         <main className={`flex-1 overflow-auto p-4 sm:p-6 ${fullWidth ? 'max-w-full' : ''}`}>
-          {children || <Outlet />}
+          <Outlet />
         </main>
       </div>
       
@@ -92,6 +93,3 @@ export function AdminLayout({
     </div>
   );
 }
-
-// This default export is critical for dynamic imports in routes
-export default AdminLayout;
