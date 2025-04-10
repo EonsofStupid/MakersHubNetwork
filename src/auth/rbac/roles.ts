@@ -1,5 +1,5 @@
 
-import { UserRole } from "../types/roles";
+import { UserRole } from "@/types/shared";
 import { PermissionValue, PERMISSIONS } from "../permissions";
 
 /**
