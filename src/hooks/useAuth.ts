@@ -7,7 +7,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
 /**
- * Hook for accessing authentication state
+ * Consolidated hook for accessing authentication state
  * Uses Zustand's selector pattern for efficient updates
  */
 export function useAuth() {
@@ -27,12 +27,12 @@ export function useAuth() {
   const initialize = useAuthStore(state => state.initialize);
   const initialized = useAuthStore(state => state.initialized);
   
-  // Memoize role checking functions to prevent recreation on each render
-  const hasRole = useCallback((role: UserRole | UserRole[]) => {
+  // Wrap hasRole function with useCallback to prevent recreation on each render
+  const hasRole = useCallback((role: UserRole | UserRole[]): boolean => {
     return AuthBridge.hasRole(role);
   }, []);
   
-  // Use memoization for derived values
+  // Memoize admin status checks to prevent recalculation
   const isAdmin = useMemo(() => {
     return AuthBridge.isAdmin();
   }, []);
@@ -41,29 +41,21 @@ export function useAuth() {
     return AuthBridge.isSuperAdmin();
   }, []);
   
-  // Use AuthBridge for auth operations to ensure consistent behavior
+  // Memoize auth operations with logging
   const handleLogin = useCallback(async (email: string, password: string) => {
-    logger.info('User logging in', { 
-      details: { email }
-    });
-    
+    logger.info('User logging in', { details: { email } });
     return AuthBridge.signIn(email, password);
   }, [logger]);
   
   const handleGoogleLogin = useCallback(async () => {
     logger.info('User logging in with Google');
-    
     return AuthBridge.signInWithGoogle();
   }, [logger]);
   
   const handleLogout = useCallback(async () => {
-    if (user) {
-      logger.info('User logging out', { 
-        details: { userId: user.id }
-      });
-    }
-    
-    // Use AuthBridge for logout
+    logger.info('User logging out', { 
+      details: { userId: user?.id }
+    });
     return AuthBridge.logout();
   }, [user, logger]);
 

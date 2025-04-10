@@ -19,7 +19,8 @@ export type AuthEventType =
   | 'AUTH_SESSION_REFRESHED'
   | 'AUTH_USER_UPDATED'
   | 'AUTH_TOKEN_REFRESHED'
-  | 'AUTH_PERMISSION_CHANGED';
+  | 'AUTH_PERMISSION_CHANGED'
+  | 'AUTH_LINKING_REQUIRED';
 
 // Role constants
 export const ROLES = {
