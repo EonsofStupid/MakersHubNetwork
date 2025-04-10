@@ -37,7 +37,7 @@ export const ADMIN_PERMISSIONS = {
   SYSTEM_LOGS: PERMISSIONS.SYSTEM_LOGS,
   SYSTEM_RESTART: PERMISSIONS.SYSTEM_RESTART,
   
-  // Add missing permissions that were referenced in the codebase
+  // Add missing permissions
   THEMES_VIEW: PERMISSIONS.THEMES_VIEW,
   THEMES_EDIT: PERMISSIONS.THEMES_EDIT,
   THEMES_DELETE: PERMISSIONS.THEMES_DELETE,
@@ -51,10 +51,11 @@ export const ADMIN_PERMISSIONS = {
   
   // Super admin
   SUPER_ADMIN: PERMISSIONS.SUPER_ADMIN
-};
+} as const;
 
 // Type for admin permission values
 export type AdminPermissionValue = PermissionValue;
 
 // Re-export the role permissions mapping
 export { ROLE_PERMISSIONS } from '@/auth/permissions';
+

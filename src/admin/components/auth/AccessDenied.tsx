@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, AlertTriangle, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserRole } from '@/auth/types/auth.types';
+import { UserRole } from '@/types/shared';
 
 interface AccessDeniedProps {
   missingRole?: UserRole | UserRole[];

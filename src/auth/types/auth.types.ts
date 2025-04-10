@@ -14,5 +14,9 @@ export interface AuthUser extends User {
 }
 
 export interface AuthSession extends Session {
-  // Any additional properties needed for the session object
+  // Any additional properties needed for the session object  
 }
+
+// Re-export UserRole type for backward compatibility
+export type { UserRole } from '@/types/shared';
+
