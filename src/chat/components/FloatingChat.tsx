@@ -34,7 +34,7 @@ export function FloatingChat() {
     renderedRef.current = true;
     
     // Initialize circuit breaker for this component
-    CircuitBreaker.init('floating-chat-render', 3, 500);
+    const breakerInstance = new CircuitBreaker('floating-chat-render', 3, 500);
     
     logger.debug('FloatingChat rendered with state:', 
       withDetails({
@@ -57,7 +57,8 @@ export function FloatingChat() {
     setShouldRender(canShow);
     
     return () => {
-      CircuitBreaker.reset('floating-chat-render');
+      // Use direct instantiation instead of static methods
+      breakerInstance.reset();
       unsubscribe();
     };
   }, []);
@@ -67,7 +68,8 @@ export function FloatingChat() {
     if (!renderedRef.current) return;
     
     // Only update if the component has already done its first render
-    if (CircuitBreaker.getCount('floating-chat-render') > 1) {
+    const breaker = new CircuitBreaker('floating-chat-render', 3, 500);
+    if (breaker.count > 1) {
       // Update the render state based on latest values, but don't cause a loop
       const newShouldRender = canShow;
       if (newShouldRender !== shouldRender) {
@@ -77,7 +79,8 @@ export function FloatingChat() {
   }, [canShow, shouldRender]);
   
   // Check for render loops
-  if (CircuitBreaker.isTripped('floating-chat-render')) {
+  const tripBreaker = new CircuitBreaker('floating-chat-render', 3, 500);
+  if (tripBreaker.isOpen) {
     logger.warn('Circuit breaker triggered in FloatingChat - preventing render loop');
     return null;
   }

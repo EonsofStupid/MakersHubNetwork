@@ -5,7 +5,7 @@ import { chatBridge } from '../lib/ChatBridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { v4 as uuidv4 } from 'uuid';
-import CircuitBreaker from '@/utils/CircuitBreaker';
+import { CircuitBreaker } from '@/utils/circuitBreaker';
 
 interface ChatMessage {
   id: string;
@@ -26,13 +26,11 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuthState();
   const logger = useLogger('useChatSession', LogCategory.CHAT);
-  
-  // Initialize circuit breaker
-  CircuitBreaker.init('useChatSession', 5, 1000);
+  const chatBreaker = new CircuitBreaker('useChatSession', 5, 1000);
   
   // Create or use session ID
   useEffect(() => {
-    if (CircuitBreaker.count('useChatSession-init')) {
+    if (chatBreaker.count('useChatSession-init')) {
       logger.warn('Breaking potential infinite loop in useChatSession initialization');
       return;
     }

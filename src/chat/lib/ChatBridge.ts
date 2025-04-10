@@ -2,11 +2,12 @@
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 
-// Define LogOptions locally with correct types
+// Define LogOptions type to match the expected type in logging system
 interface LogOptions {
   category?: LogCategory;
   details?: Record<string, any>;
-  error?: boolean;
+  source?: string;
+  tags?: string[];
 }
 
 export type ChatBridgeMessage = {
@@ -84,8 +85,7 @@ class ChatBridgeImpl {
         } catch (error) {
           this.logger.error(`Error in ${channel} channel listener`, {
             category: LogCategory.CHAT,
-            details: { error, messageType: message.type },
-            error: true
+            details: { error, messageType: message.type }
           });
         }
       });

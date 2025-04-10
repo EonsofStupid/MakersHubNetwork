@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CircuitBreaker } from '@/utils/circuitBreaker';
 
@@ -6,6 +7,7 @@ const FloatingChatWrapper: React.FC = () => {
 
   // Initialize circuit breaker
   React.useEffect(() => {
+    // Use the correct method from the CircuitBreaker instance (not class)
     CircuitBreaker.init('floating-chat', 5, 1000);
   }, []);
 
