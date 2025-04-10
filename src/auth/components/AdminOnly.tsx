@@ -3,6 +3,7 @@ import { useHasAdminAccess } from '../hooks/useHasRole';
 import { UserRole } from '../types/roles';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { useAuthStore } from '../store/auth.store';
 
 interface AdminOnlyProps {
   children: React.ReactNode;
@@ -47,6 +48,3 @@ function useHasRole(role: UserRole | UserRole[]) {
     return roles.includes(role);
   }, [roles, role]);
 }
-
-// Import at the component level to avoid circular dependencies
-import { useAuthStore } from '../store/auth.store';

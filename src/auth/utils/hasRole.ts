@@ -22,7 +22,7 @@ export const hasRole = (role: UserRole | UserRole[]): boolean => {
  * @returns Boolean indicating if user has admin access
  */
 export const hasAdminAccess = (): boolean => {
-  return hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  return hasRole(['admin', 'super_admin']);
 };
 
 /**
@@ -30,5 +30,5 @@ export const hasAdminAccess = (): boolean => {
  * @returns Boolean indicating if user is a super admin
  */
 export const isSuperAdmin = (): boolean => {
-  return hasRole(UserRole.SUPER_ADMIN);
+  return hasRole('super_admin');
 };

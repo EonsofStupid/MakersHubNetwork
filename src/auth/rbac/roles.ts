@@ -12,7 +12,7 @@ export const mapRolesToPermissions = (roles: UserRole[] = []): PermissionValue[]
   }
   
   // Super admins get all permissions
-  if (roles.includes(UserRole.SUPER_ADMIN)) {
+  if (roles.includes('super_admin')) {
     return [PERMISSIONS.SUPER_ADMIN];
   }
   
@@ -47,22 +47,22 @@ export const hasRole = (userRoles: UserRole[] = [], role: UserRole | UserRole[])
  * Helper function to check if a user has admin access
  */
 export const hasAdminAccess = (userRoles: UserRole[] = []): boolean => {
-  return userRoles.includes(UserRole.ADMIN) || userRoles.includes(UserRole.SUPER_ADMIN);
+  return userRoles.includes('admin') || userRoles.includes('super_admin');
 };
 
 /**
  * Helper function to check if a user is a super admin
  */
 export const isSuperAdmin = (userRoles: UserRole[] = []): boolean => {
-  return userRoles.includes(UserRole.SUPER_ADMIN);
+  return userRoles.includes('super_admin');
 };
 
 /**
  * Map roles to permissions
  */
 export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
-  [UserRole.SUPER_ADMIN]: [PERMISSIONS.SUPER_ADMIN],
-  [UserRole.ADMIN]: [
+  'super_admin': [PERMISSIONS.SUPER_ADMIN],
+  'admin': [
     PERMISSIONS.ADMIN_ACCESS,
     PERMISSIONS.ADMIN_VIEW,
     PERMISSIONS.ADMIN_EDIT,
@@ -75,30 +75,30 @@ export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
     PERMISSIONS.THEMES_VIEW,
     PERMISSIONS.SYSTEM_LOGS
   ],
-  [UserRole.MAKER]: [
+  'maker': [
     PERMISSIONS.CONTENT_VIEW,
     PERMISSIONS.CONTENT_EDIT,
     PERMISSIONS.CONTENT_CREATE,
     PERMISSIONS.BUILDS_VIEW
   ],
-  [UserRole.BUILDER]: [
+  'builder': [
     PERMISSIONS.BUILDS_VIEW,
     PERMISSIONS.BUILDS_CREATE,
     PERMISSIONS.CONTENT_VIEW
   ],
-  [UserRole.EDITOR]: [
+  'editor': [
     PERMISSIONS.CONTENT_VIEW,
     PERMISSIONS.CONTENT_EDIT,
     PERMISSIONS.CONTENT_CREATE
   ],
-  [UserRole.MODERATOR]: [
+  'moderator': [
     PERMISSIONS.CONTENT_VIEW,
     PERMISSIONS.REVIEWS_VIEW,
     PERMISSIONS.REVIEWS_APPROVE,
     PERMISSIONS.REVIEWS_REJECT
   ],
-  [UserRole.VIEWER]: [
+  'viewer': [
     PERMISSIONS.CONTENT_VIEW
   ],
-  [UserRole.USER]: []
+  'user': []
 };

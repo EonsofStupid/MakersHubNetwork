@@ -1,8 +1,9 @@
 
 /**
- * User roles within the application
+ * Import and re-export the UserRole from the central roles.ts file
  */
-export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor' | 'viewer' | 'builder' | 'maker';
+import { UserRole } from './roles';
+export { UserRole };
 
 /**
  * Authentication status types
