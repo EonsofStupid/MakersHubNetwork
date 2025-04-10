@@ -121,6 +121,7 @@ export default defineConfig(({ mode }) => ({
       eslintrc: {
         enabled: true,
         filepath: "./.eslintrc-auto-import.json",
+        globalsPropValue: true,  // This ensures var is used instead of const in the generated types
       },
       defaultExportByFilename: true,
       include: [
