@@ -1,9 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeContext } from '@/types/theme';
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
-import { themeServiceBreaker } from '@/utils/circuitBreaker';
+import { CircuitBreaker } from '@/utils/CircuitBreaker';
 
 // Create a logger instance for the theme service
 const logger = getLogger();
