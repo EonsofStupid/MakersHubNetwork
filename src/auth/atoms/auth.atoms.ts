@@ -51,7 +51,7 @@ export const userAvatarAtom = atom((get) => {
 export type AuthStatusType = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 export { isAuthenticatedAtom as authStatusAtom };
 
-// Has role utility function atom - returns a function
+// Has role utility atom - returns a boolean, not a function
 export const hasRoleAtom = atom(
   (get) => (role: UserRole | UserRole[]): boolean => {
     const roles = get(rolesAtom);
