@@ -2,12 +2,12 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { Menu, User, Settings, LayoutDashboard, LogOut, Shield, Crown, Link as LinkIcon } from "lucide-react"
-import { UserRole } from "@/auth/types/auth.types"
+import { UserRole } from "@/types/shared"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { FcGoogle } from "react-icons/fc"
-import { AuthBridge } from "@/auth/bridge"
+import { AuthBridge } from "@/bridges/AuthBridge"
 import { useToast } from "@/hooks/use-toast"
 
 interface UserMenuSheetProps {
