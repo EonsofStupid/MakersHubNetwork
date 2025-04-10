@@ -30,7 +30,7 @@ export const AuthSection: React.FC = () => {
   const roles = useAuthStore(state => state.roles);
   
   // Use the useHasRole hook directly to check for admin access
-  const hasAdminAccess = useHasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+  const hasAdminRole = useHasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   const isSuperAdmin = useHasRole(ROLES.SUPER_ADMIN);
   
   // Local UI state
@@ -42,7 +42,7 @@ export const AuthSection: React.FC = () => {
 
   React.useEffect(() => {
     // Make sure admin buttons are visible if the user has admin access
-    if (hasAdminAccess || isSuperAdmin) {
+    if (hasAdminRole || isSuperAdmin) {
       setShowAdminButton(true);
       setShowAdminWrench(true);
       
@@ -50,13 +50,13 @@ export const AuthSection: React.FC = () => {
       logger.info('Admin user detected', { 
         details: { 
           userId: user?.id,
-          hasAdminAccess,
+          hasAdminAccess: hasAdminRole,
           isSuperAdmin,
           roles
         }
       });
     }
-  }, [hasAdminAccess, isSuperAdmin, user?.id, roles, setShowAdminButton, setShowAdminWrench, logger]);
+  }, [hasAdminRole, isSuperAdmin, user?.id, roles, setShowAdminButton, setShowAdminWrench, logger]);
 
   // Memoized values to prevent recalculations
   const avatarUrl = useMemo(() => {
@@ -87,7 +87,7 @@ export const AuthSection: React.FC = () => {
   return (
     <ComponentWrapper componentName="AuthSection" className="flex items-center gap-2">
       {/* Show Admin button if user has admin access */}
-      {hasAdminAccess && (
+      {hasAdminRole && (
         <ComponentWrapper componentName="AdminButton">
           <Link to="/admin">
             <Button 
@@ -110,7 +110,7 @@ export const AuthSection: React.FC = () => {
       )}
       
       {/* Show Admin wrench if user has admin access */}
-      {hasAdminAccess && showAdminWrench && (
+      {hasAdminRole && showAdminWrench && (
         <ComponentWrapper componentName="AdminWrench">
           <Link to="/admin">
             <Button
@@ -175,3 +175,4 @@ export const AuthSection: React.FC = () => {
     </ComponentWrapper>
   );
 };
+
