@@ -10,6 +10,17 @@ export type UserRole = 'super_admin' | 'admin' | 'editor' | 'moderator' | 'build
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 export type AuthProvider = 'email' | 'google' | 'github' | 'twitter' | 'facebook';
 
+// Auth event types
+export type AuthEventType = 
+  | 'AUTH_SIGNED_IN' 
+  | 'AUTH_SIGNED_OUT' 
+  | 'AUTH_STATE_CHANGE' 
+  | 'AUTH_ERROR'
+  | 'AUTH_SESSION_REFRESHED'
+  | 'AUTH_USER_UPDATED'
+  | 'AUTH_TOKEN_REFRESHED'
+  | 'AUTH_PERMISSION_CHANGED';
+
 // Role constants
 export const ROLES = {
   SUPER_ADMIN: 'super_admin' as UserRole,
@@ -24,4 +35,3 @@ export const ROLES = {
 
 // Re-export for convenience
 export type { PermissionValue } from '@/auth/permissions';
-
