@@ -1,16 +1,22 @@
 
-/**
- * bridges/index.ts
- * 
- * Central export point for all application bridges
- * This helps maintain a clean dependency graph
- */
+// Re-export all bridge functionality
+export { 
+  AuthBridge,
+  subscribeToAuthEvents,
+  publishAuthEvent,
+  initializeAuthBridge 
+} from '@/bridges/AuthBridge';
 
-// Export message bus core
-export { messageBus, type MessageHandler, type MessageChannel, type UnsubscribeFn } from './MessageBus';
+export {
+  ChatBridge,
+  subscribeToChatEvents,
+  publishChatEvent,
+  initializeChatBridge
+} from '@/bridges/ChatBridge';
 
-// Export auth bridge
-export { AuthBridge, subscribeToAuthEvents, publishAuthEvent, initializeAuthBridge } from './AuthBridge';
-
-// Export chat bridge
-export { ChatBridge, initializeChatBridge, type ChatContext, type ChatEventType } from './ChatBridge';
+export {
+  LoggingBridge,
+  subscribeToLoggingEvents,
+  publishLoggingEvent,
+  initializeLoggingBridge
+} from '@/logging/bridge';
