@@ -2,7 +2,7 @@
 /**
  * User roles within the application
  */
-export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor' | 'viewer';
+export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor' | 'viewer' | 'builder' | 'maker';
 
 /**
  * Authentication status types
@@ -17,7 +17,13 @@ export type AuthProvider = 'email' | 'google' | 'github' | 'twitter' | 'facebook
 /**
  * Auth event types for event system
  */
-export type AuthEventType = 'AUTH_STATE_CHANGE' | 'AUTH_ERROR' | 'AUTH_LINKING_REQUIRED';
+export type AuthEventType = 
+  'AUTH_STATE_CHANGE' | 
+  'AUTH_ERROR' | 
+  'AUTH_LINKING_REQUIRED' |
+  'AUTH_SIGNED_IN' | 
+  'AUTH_SIGNED_OUT' |
+  'AUTH_PERMISSION_CHANGED';
 
 /**
  * User authentication options
@@ -52,4 +58,3 @@ export interface AuthProfile {
   created_at?: string;
   updated_at?: string;
 }
-

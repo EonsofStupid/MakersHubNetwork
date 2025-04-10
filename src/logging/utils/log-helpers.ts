@@ -1,4 +1,3 @@
-
 /**
  * Log helper utilities for enhancing log messages
  */
@@ -8,9 +7,13 @@
  * @param details Object containing details to log
  * @returns Formatted log object
  */
-export function withDetails(details: Record<string, any>): { details: Record<string, any> } {
-  return { details };
-}
+export const withDetails = (details: any): Record<string, any> => {
+  if (details && typeof details === 'object') {
+    return details;
+  } else {
+    return { message: String(details) };
+  }
+};
 
 /**
  * Formats an error object for logging
