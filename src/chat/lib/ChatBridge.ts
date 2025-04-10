@@ -52,10 +52,9 @@ class ChatBridgeImpl {
       const index = channelListeners.indexOf(listener);
       if (index !== -1) {
         channelListeners.splice(index, 1);
-        this.logger.debug(`Listener removed from ${channel} channel`, { 
-          category: LogCategory.CHAT,
-          details: { listenersCount: channelListeners.length }
-        });
+        if (channelListeners.size === 0) {
+          this.listeners.delete(channel);
+        }
       }
     };
   }
