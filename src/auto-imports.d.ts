@@ -1,4 +1,3 @@
-
 /* eslint-disable */
 /* prettier-ignore */
 // @ts-nocheck
@@ -361,9 +360,13 @@ declare global {
   var selectCurrentTheme: typeof import('@/stores/theme/store')['selectCurrentTheme']
   var selectError: typeof import('@/stores/auth/store')['selectError']
   var selectIsAuthenticated: typeof import('@/stores/auth/store')['selectIsAuthenticated']
+  var selectIsAdmin: typeof import('@/stores/auth/store')['selectIsAdmin']
+  var selectIsSuperAdmin: typeof import('@/stores/auth/store')['selectIsSuperAdmin']
+  var selectAuthError: typeof import('@/stores/auth/store')['selectAuthError']
   var selectIsLoading: typeof import('@/stores/auth/store')['selectIsLoading']
   var selectLayout: typeof import('@/stores/ui/store')['selectLayout']
   var selectPreferences: typeof import('@/stores/ui/store')['selectPreferences']
+  var selectRoles: typeof import('@/stores/auth/store')['selectRoles']
   var selectStatus: typeof import('@/stores/auth/store')['selectStatus']
   var selectThemeComponents: typeof import('@/stores/theme/store')['selectThemeComponents']
   var selectThemeMode: typeof import('@/stores/ui/store')['selectThemeMode']
