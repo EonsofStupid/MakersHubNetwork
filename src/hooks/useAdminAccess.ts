@@ -2,6 +2,7 @@
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useHasAdminAccess, useIsSuperAdmin } from '@/auth/hooks/useHasRole';
 import { getLogger } from '@/logging';
+import { ROLES } from '@/auth/types/roles';
 
 /**
  * Hook for checking admin access permissions
