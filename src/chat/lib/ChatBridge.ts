@@ -52,7 +52,7 @@ class ChatBridgeImpl {
       const index = channelListeners.indexOf(listener);
       if (index !== -1) {
         channelListeners.splice(index, 1);
-        if (channelListeners.size === 0) {
+        if (channelListeners.length === 0) {
           this.listeners.delete(channel);
         }
       }
