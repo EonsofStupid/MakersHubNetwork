@@ -27,9 +27,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const logger = useLogger('ChatProvider', LogCategory.CHAT);
   const { user } = useAuthState();
   const initRef = useRef(false);
+  const chatBreaker = useRef(new CircuitBreaker('ChatProvider', 5, 1000));
   
   useEffect(() => {
-    CircuitBreaker.init('ChatProvider', 5, 1000);
+    // Create instance instead of using static method
+    chatBreaker.current = new CircuitBreaker('ChatProvider', 5, 1000);
     
     return () => {
       logger.info('Chat provider unmounting');
@@ -63,7 +65,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, []);
   
   const toggleChat = () => {
-    if (CircuitBreaker.isTripped('ChatProvider')) {
+    if (chatBreaker.current.isOpen) {
       logger.warn('Circuit breaker tripped, ignoring toggle action');
       return;
     }
