@@ -11,9 +11,10 @@ import { AuthBridge } from '@/auth/bridge';
  * Centralizes admin access logic and provides useful derived values
  */
 export function useAdminAccess() {
-  const { isAuthenticated, roles } = useAuthStore(state => ({
+  const { isAuthenticated, roles, isLoading } = useAuthStore(state => ({
     isAuthenticated: state.isAuthenticated,
-    roles: state.roles
+    roles: state.roles,
+    isLoading: state.isLoading
   }));
   const logger = useLogger('useAdminAccess', LogCategory.ADMIN);
   
@@ -59,6 +60,7 @@ export function useAdminAccess() {
     hasAdminAccess,
     hasDebugAccess,
     hasRole,
-    roles
+    roles,
+    isLoading
   };
 }

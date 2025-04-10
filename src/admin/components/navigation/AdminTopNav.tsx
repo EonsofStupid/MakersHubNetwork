@@ -34,7 +34,6 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
     savePreferences,
   } = useAdminStore();
   
-  // Sync edit mode between jotai atom and zustand store
   useEffect(() => {
     const handleSyncStore = async () => {
       if (isEditMode) {
@@ -45,7 +44,6 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
     handleSyncStore();
   }, [isEditMode, savePreferences]);
   
-  // Generate random glitch effect
   useEffect(() => {
     const applyRandomGlitch = () => {
       const nav = document.querySelector('.admin-topnav');
@@ -66,7 +64,6 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
     return () => clearInterval(interval);
   }, []);
   
-  // Restrict access to admin/super_admin only
   if (!hasAdminAccess) {
     return null;
   }
@@ -96,16 +93,13 @@ export function AdminTopNav({ title = "Admin Dashboard", className, readonly = f
           </div>
         </div>
         
-        {/* Shortcuts in the top navigation */}
         <TopNavShortcuts />
         
         <div className="flex items-center space-x-3">
-          {/* Sync indicator */}
           <div className="mr-2">
             <SyncIndicator />
           </div>
           
-          {/* Edit mode toggle - only show if not readonly */}
           {!readonly && (
             <EditModeToggle />
           )}

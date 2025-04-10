@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useChat } from '../context/ChatProvider';
 import { MessageCircle, X, Send } from 'lucide-react';
@@ -11,9 +10,9 @@ import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
 import { useMobile } from '@/hooks/use-mobile';
 
 export function ChatWidget() {
-  const { isOpen, toggleChat, messages, sendMessage, isLoading } = useChat();
+  const { isOpen, toggleChat, messages, sendMessage, isLoading: chatIsLoading } = useChat();
   const { user } = useAuthState();
-  const { hasAdminAccess, isLoading: adminLoading } = useAdminAccess();
+  const { hasAdminAccess, isAdmin } = useAdminAccess();
   const [input, setInput] = React.useState('');
   const messagesRef = React.useRef<HTMLDivElement>(null);
   const isMobile = useMobile();
@@ -28,7 +27,7 @@ export function ChatWidget() {
   // Handle input submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() && !isLoading) {
+    if (input.trim() && !chatIsLoading) {
       sendMessage(input);
       setInput('');
     }
@@ -87,7 +86,7 @@ export function ChatWidget() {
           ))
         )}
         
-        {isLoading && (
+        {chatIsLoading && (
           <div className="flex justify-start">
             <div className="bg-muted text-muted-foreground rounded-2xl rounded-tl-none px-4 py-2">
               <div className="flex space-x-1">
@@ -108,12 +107,12 @@ export function ChatWidget() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             className="flex-1 min-h-[60px] max-h-[120px]"
-            disabled={isLoading}
+            disabled={chatIsLoading}
           />
           <Button 
             type="submit" 
             size="icon"
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || chatIsLoading}
             className="h-10 w-10"
           >
             <Send size={18} />
