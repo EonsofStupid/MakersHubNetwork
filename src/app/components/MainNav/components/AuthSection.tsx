@@ -1,11 +1,11 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/app/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { useAtom } from "jotai";
 import { showAdminButtonAtom, showAdminWrenchAtom } from "@/admin/atoms/ui.atoms";
 import { Wrench, User, Shield, Crown } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LoginSheet } from "./LoginSheet";
 import { ComponentWrapper } from "@/admin/components/debug/ComponentWrapper";
 import { useLogger } from "@/hooks/use-logger";
@@ -84,8 +84,12 @@ export const AuthSection: React.FC = () => {
 
   // Get logout function from AuthBridge
   const handleLogout = useCallback(() => {
-    AuthBridge.logout();
-  }, []);
+    if (AuthBridge && typeof AuthBridge.logout === 'function') {
+      AuthBridge.logout();
+    } else {
+      logger.error('AuthBridge.logout is not a function');
+    }
+  }, [logger]);
 
   const isLoading = status === 'loading';
 

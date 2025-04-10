@@ -1,52 +1,79 @@
 
 import React from 'react';
-import { CubeIcon, Share2Icon, UsersIcon, BookOpenIcon } from 'lucide-react';
+import { FeatureCta, FeatureCtaProps } from './FeatureCta';
+import { Box, Globe, Code, Rocket, Zap, Gem } from 'lucide-react';
+import { useSiteTheme } from '@/app/components/theme/SiteThemeProvider';
+import { cn } from '@/lib/utils';
 
-export const FeaturesSection: React.FC = () => {
-  const features = [
+export const FeaturesSection = () => {
+  const { componentStyles } = useSiteTheme();
+  
+  const styles = componentStyles?.FeaturesSection || {
+    container: "py-16 bg-background/30 backdrop-blur-sm relative",
+    title: "text-3xl font-bold text-center mb-12",
+    grid: "grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4",
+  };
+  
+  const features: Omit<FeatureCtaProps, 'id'>[] = [
     {
-      icon: <CubeIcon className="w-10 h-10 text-primary" />,
-      title: "3D Models Library",
-      description: "Access thousands of free and premium 3D models ready to print."
+      title: "Build Showcase",
+      description: "Show off your 3D printer builds with detailed specifications and high-quality images.",
+      icon: <Box className="h-6 w-6" />,
+      ctaText: "Show Your Build",
+      ctaLink: "/builds/create"
     },
     {
-      icon: <Share2Icon className="w-10 h-10 text-primary" />,
-      title: "Share Your Creations",
-      description: "Upload and share your builds with our supportive community."
-    },
-    {
-      icon: <UsersIcon className="w-10 h-10 text-primary" />,
       title: "Community Support",
-      description: "Get help, feedback, and inspiration from fellow makers."
+      description: "Get help with your builds from a community of passionate makers.",
+      icon: <Globe className="h-6 w-6" />,
+      ctaText: "Join Community",
+      ctaLink: "/community"
     },
     {
-      icon: <BookOpenIcon className="w-10 h-10 text-primary" />,
-      title: "Tutorials & Guides",
-      description: "Learn from experts with our comprehensive resources and guides."
+      title: "Firmware Customization",
+      description: "Share and discover custom firmware configurations for popular 3D printers.",
+      icon: <Code className="h-6 w-6" />,
+      ctaText: "Explore Firmware",
+      ctaLink: "/firmware"
+    },
+    {
+      title: "Part Marketplace",
+      description: "Find upgrades and replacement parts specifically for your printer model.",
+      icon: <Gem className="h-6 w-6" />,
+      ctaText: "Find Parts",
+      ctaLink: "/parts"
+    },
+    {
+      title: "Print Troubleshooting",
+      description: "Solve common printing issues with our troubleshooting guides and community advice.",
+      icon: <Zap className="h-6 w-6" />,
+      ctaText: "Fix Issues",
+      ctaLink: "/troubleshooting"
+    },
+    {
+      title: "Build Guides",
+      description: "Step-by-step guides for popular printer builds and modifications.",
+      icon: <Rocket className="h-6 w-6" />,
+      ctaText: "View Guides",
+      ctaLink: "/guides"
     }
   ];
 
   return (
-    <section className="py-16 bg-background/50">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-            Why Join Our Community
-          </span>
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((feature, index) => (
-            <div 
-              key={index}
-              className="flex flex-col items-center text-center p-6 rounded-lg border border-primary/30 bg-background/20 backdrop-blur-xl transition-all hover:shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]"
-            >
-              <div className="mb-4">{feature.icon}</div>
-              <h3 className="text-lg font-medium mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
-            </div>
-          ))}
-        </div>
+    <section className={cn(styles.container)}>
+      <h2 className={cn(styles.title)}>Unleash Your 3D Printing Potential</h2>
+      <div className={cn(styles.grid)}>
+        {features.map((feature, index) => (
+          <FeatureCta
+            key={index}
+            id={`feature-${index}`}
+            title={feature.title}
+            description={feature.description}
+            icon={feature.icon}
+            ctaText={feature.ctaText}
+            ctaLink={feature.ctaLink}
+          />
+        ))}
       </div>
     </section>
   );
