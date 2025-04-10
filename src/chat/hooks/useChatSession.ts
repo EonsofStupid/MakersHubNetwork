@@ -13,6 +13,7 @@ interface ChatMessage {
   sender: 'user' | 'assistant' | 'system';
   timestamp: Date;
   sessionId?: string;
+  metadata?: Record<string, any>;
 }
 
 interface UseChatSessionProps {
@@ -29,8 +30,8 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
   const chatBreaker = new CircuitBreaker('useChatSession', 5, 1000);
   
   useEffect(() => {
-    // Fix: Pass numeric value instead of string for count method
-    if (chatBreaker.count(1) > 3) {
+    // Prevent potential infinite loops with circuit breaker
+    if (chatBreaker.count('init') > 3) {
       logger.warn('Breaking potential infinite loop in useChatSession initialization');
       return;
     }
@@ -38,9 +39,11 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
     if (externalSessionId) {
       setSessionId(externalSessionId);
     } else if (!sessionId) {
+      // Generate new session ID if none provided
       const newSessionId = uuidv4();
       setSessionId(newSessionId);
       
+      // Publish session creation event through bridge
       chatBridge.publish('system', {
         type: 'session-created',
         sessionId: newSessionId,
@@ -57,6 +60,7 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
   useEffect(() => {
     if (!sessionId) return;
     
+    // Subscribe to session events via the bridge
     const sessionChannel = `session:${sessionId}`;
     
     const unsubscribe = chatBridge.subscribe(sessionChannel, (message) => {
@@ -70,7 +74,7 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
     };
   }, [sessionId]);
   
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, metadata: Record<string, any> = {}) => {
     if (!sessionId || !content.trim() || isLoading) return;
     
     try {
@@ -81,24 +85,28 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
         content,
         sender: 'user',
         timestamp: new Date(),
-        sessionId
+        sessionId,
+        metadata
       };
       
       setMessages(prev => [...prev, userMessage]);
       
+      // Use the bridge to publish the message
       chatBridge.publish('message', {
         type: 'send-message',
         message: userMessage,
         sessionId
       });
       
+      // Simulate assistant response for now
       setTimeout(() => {
         const assistantMessage: ChatMessage = {
           id: `assistant-${Date.now()}`,
           content: `This is a response to: "${content}"`,
           sender: 'assistant',
           timestamp: new Date(),
-          sessionId
+          sessionId,
+          metadata: {}
         };
         
         setMessages(prev => [...prev, assistantMessage]);
