@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { showAdminButtonAtom, showAdminWrenchAtom } from "@/admin/atoms/ui.atoms";
 import { Wrench, User, Shield, Crown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
