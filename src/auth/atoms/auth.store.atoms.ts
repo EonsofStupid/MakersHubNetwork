@@ -14,17 +14,10 @@ import { UserProfile } from '@/auth/store/auth.store';
 
 // Create a helper function to create atoms that are synchronized with the store
 function atomWithStoreSync<T>(selector: (state: any) => T) {
-  // Create a basic atom that reads from the store
-  const baseAtom = atom(selector(useAuthStore.getState()));
-  
   // Create a derived atom that updates when the store updates
-  const derivedAtom = atom(
-    (get) => {
-      return selector(useAuthStore.getState());
-    }
-  );
-  
-  return derivedAtom;
+  return atom((get) => {
+    return selector(useAuthStore.getState());
+  });
 }
 
 // Core state atoms - all derived from Zustand store
@@ -74,9 +67,11 @@ export type AuthStatusType = 'idle' | 'loading' | 'authenticated' | 'unauthentic
 export { isAuthenticatedAtom as authStatusAtom };
 
 // Function atoms with proper typing
-export const logoutAtom = atom<() => Promise<void>>((get) => {
-  return useAuthStore.getState().logout;
-});
+export const logoutAtom = atom<() => Promise<void>>(
+  (get) => {
+    return useAuthStore.getState().logout;
+  }
+);
 
 // Has role utility function atom - returns a function
 export const hasRoleAtom = atom<(role: UserRole | UserRole[]) => boolean>(
