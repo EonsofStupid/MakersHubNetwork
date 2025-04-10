@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Theme, ThemeContext } from '@/types/theme';
 import { getLogger } from '@/logging';
@@ -6,6 +7,9 @@ import { CircuitBreaker } from '@/utils/CircuitBreaker';
 
 // Create a logger instance for the theme service
 const logger = getLogger();
+
+// Create a circuit breaker for theme service operations
+const themeServiceBreaker = new CircuitBreaker('theme-service', 3, 10000);
 
 // Local fallback theme for when the database is unavailable
 const fallbackTheme: Theme = {

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { ChatWidget } from './ChatWidget';
 import { useLocation } from 'react-router-dom';
@@ -28,6 +29,7 @@ export function FloatingChat() {
     if (renderedRef.current) return;
     renderedRef.current = true;
     
+    // Use static method or create an instance once
     const breakerInstance = new CircuitBreaker('floating-chat-render', 3, 500);
     
     logger.debug('FloatingChat rendered with state:', 
@@ -56,8 +58,9 @@ export function FloatingChat() {
   useEffect(() => {
     if (!renderedRef.current) return;
     
-    const breaker = new CircuitBreaker('floating-chat-render', 3, 500);
-    if (breaker.count('floating-chat-render') > 1) {
+    // Use CircuitBreaker static method
+    CircuitBreaker.init('floating-chat-render', 3, 500);
+    if (CircuitBreaker.getCount('floating-chat-render') > 1) {
       const newShouldRender = canShow;
       if (newShouldRender !== shouldRender) {
         setShouldRender(newShouldRender);
@@ -65,6 +68,7 @@ export function FloatingChat() {
     }
   }, [canShow, shouldRender]);
   
+  // Create a circuit breaker to prevent render loops
   const tripBreaker = new CircuitBreaker('floating-chat-render', 3, 500);
   if (tripBreaker.isOpen) {
     logger.warn('Circuit breaker triggered in FloatingChat - preventing render loop');

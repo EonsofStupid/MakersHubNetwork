@@ -30,7 +30,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const chatBreaker = useRef(new CircuitBreaker('ChatProvider', 5, 1000));
   
   useEffect(() => {
-    // Create instance instead of using static method
+    // Initialize circuit breaker
     chatBreaker.current = new CircuitBreaker('ChatProvider', 5, 1000);
     
     return () => {
