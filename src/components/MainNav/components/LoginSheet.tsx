@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
@@ -8,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Github, Mail, AtSign, Wrench, LayoutDashboard, Shield, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { AuthBridge } from "@/auth/bridge";
+import { AuthBridge } from '@/auth/bridge';
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { useAuthStore } from "@/auth/store/auth.store";

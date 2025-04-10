@@ -1,4 +1,3 @@
-
 import { useState, memo, useCallback, useMemo } from "react" 
 import { useToast } from "@/hooks/use-toast"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
