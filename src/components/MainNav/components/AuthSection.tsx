@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { ComponentWrapper } from "@/admin/components/debug/ComponentWrapper";
 import { useAuthStore } from "@/auth/store/auth.store";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
+import { useHasAdminAccess, useIsSuperAdmin } from "@/auth/hooks/useHasRole";
 
 /**
  * AuthSection Component
@@ -24,10 +24,12 @@ export const AuthSection: React.FC = () => {
   const user = useAuthStore(state => state.user);
   const profile = useAuthStore(state => state.profile);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const isAdmin = useAuthStore(state => state.isAdmin());
-  const isSuperAdmin = useAuthStore(state => state.isSuperAdmin());
   const status = useAuthStore(state => state.status);
   const roles = useAuthStore(state => state.roles);
+  
+  // Use our role checking hooks
+  const isAdmin = useHasAdminAccess();
+  const isSuperAdmin = useIsSuperAdmin();
   
   // Local UI state
   const [showAdminButton, setShowAdminButton] = useAtom(showAdminButtonAtom);

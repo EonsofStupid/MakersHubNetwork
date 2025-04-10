@@ -13,9 +13,9 @@ export function useAdminAccess() {
   const roles = useAuthStore(state => state.roles);
   
   // Use our standardized hooks
-  const isAdmin = useAuthStore(state => state.isAdmin());
-  const isSuperAdmin = useAuthStore(state => state.isSuperAdmin());
-  const hasAdminAccess = isAdmin || isSuperAdmin;
+  const isAdmin = useHasAdminAccess();
+  const isSuperAdmin = useIsSuperAdmin();
+  const hasAdminAccess = isAdmin;
   
   // Log authentication status for debugging
   logger.debug('Admin access check', { 
