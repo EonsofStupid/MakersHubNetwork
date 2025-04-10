@@ -8,7 +8,9 @@ import { Wrench, User, Shield } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LoginSheet } from "./LoginSheet";
 import { ComponentWrapper } from "@/admin/components/debug/ComponentWrapper";
-import { useAuthStore, selectUser, selectIsAuthenticated } from "@/auth/store/auth.store";
+import { useAuthStore } from "@/auth/store/auth.store";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging";
 
 /**
  * AuthSection Component
@@ -16,29 +18,49 @@ import { useAuthStore, selectUser, selectIsAuthenticated } from "@/auth/store/au
  * Displays authentication controls in the MainNav, including:
  * - Login/Avatar button
  * - Admin access links (when authorized)
- * 
- * Uses Zustand for state management with selectors for performance.
  */
 export const AuthSection: React.FC = () => {
   // Use Zustand with selectors to minimize re-renders
-  const user = useAuthStore(selectUser);
-  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const user = useAuthStore(state => state.user);
+  const profile = useAuthStore(state => state.profile);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const isAdmin = useAuthStore(state => state.isAdmin());
   const isSuperAdmin = useAuthStore(state => state.isSuperAdmin());
+  const status = useAuthStore(state => state.status);
   
   // Local UI state
   const [showAdminButton] = useAtom(showAdminButtonAtom);
   const [showAdminWrench] = useAtom(showAdminWrenchAtom);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  
+  const logger = useLogger("AuthSection", LogCategory.AUTH);
 
   // Memoized values to prevent recalculations
-  const hasAdminAccess = useMemo(() => isAdmin, [isAdmin]);
-  const avatarUrl = useMemo(() => user?.user_metadata?.avatar_url as string | undefined, [user]);
-  const userInitial = useMemo(() => (user?.email?.charAt(0).toUpperCase() || 'U') as string, [user]);
+  const hasAdminAccess = useMemo(() => isAdmin || isSuperAdmin, [isAdmin, isSuperAdmin]);
+  const avatarUrl = useMemo(() => {
+    return profile?.avatar_url || user?.user_metadata?.avatar_url as string | undefined;
+  }, [profile?.avatar_url, user?.user_metadata?.avatar_url]);
+  
+  const userInitial = useMemo(() => {
+    return (user?.email?.charAt(0).toUpperCase() || 'U') as string;
+  }, [user?.email]);
+  
+  const displayName = useMemo(() => {
+    return profile?.display_name || user?.user_metadata?.full_name || user?.email || 'User';
+  }, [profile?.display_name, user?.user_metadata?.full_name, user?.email]);
   
   // Memoized handlers to prevent recreating functions
-  const handleOpenLogin = useCallback(() => setIsLoginOpen(true), []);
-  const handleCloseLogin = useCallback(() => setIsLoginOpen(false), []);
+  const handleOpenLogin = useCallback(() => {
+    logger.info("Opening login sheet");
+    setIsLoginOpen(true);
+  }, [logger]);
+  
+  const handleCloseLogin = useCallback(() => {
+    logger.info("Closing login sheet");
+    setIsLoginOpen(false);
+  }, [logger]);
+
+  const isLoading = status === 'loading';
 
   return (
     <ComponentWrapper componentName="AuthSection" className="flex items-center gap-2">
@@ -78,12 +100,23 @@ export const AuthSection: React.FC = () => {
 
       {/* Avatar Login Button with Cyberpunk Effect */}
       <ComponentWrapper componentName="UserAvatar">
-        {isAuthenticated ? (
+        {isLoading ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex items-center gap-2 border-primary/40 text-primary bg-background/40"
+            disabled
+          >
+            <span className="h-4 w-4 animate-spin border-2 border-primary border-t-transparent rounded-full"></span>
+            <span>Loading</span>
+          </Button>
+        ) : isAuthenticated ? (
           <Avatar 
             className="h-8 w-8 border-2 border-primary/50 hover:border-primary transition-all duration-300 cursor-pointer site-glow-hover cyber-effect-text"
             onClick={handleOpenLogin}
+            title={displayName}
           >
-            <AvatarImage src={avatarUrl} alt="User avatar" />
+            <AvatarImage src={avatarUrl} alt={displayName} />
             <AvatarFallback className="bg-primary/20 text-primary">
               {userInitial}
             </AvatarFallback>

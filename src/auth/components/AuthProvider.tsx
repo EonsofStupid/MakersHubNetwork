@@ -1,5 +1,5 @@
 
-import React, { ReactNode, useEffect, useRef } from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthContext } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
 import { errorToObject } from '@/shared/utils/render';
+import { publishAuthEvent } from '@/auth/bridge';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -14,7 +15,17 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   // Get the store state and methods
-  const { user, session, profile, status, setSession, initialize, initialized } = useAuthStore();
+  const { 
+    user, 
+    session, 
+    profile, 
+    status, 
+    setSession, 
+    initialize, 
+    initialized 
+  } = useAuthStore();
+  
+  const [isInitializing, setIsInitializing] = useState(false);
   
   const logger = useLogger('AuthProvider', LogCategory.AUTH);
   const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
@@ -40,6 +51,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
             event,
             userId: currentSession?.user?.id 
           }
+        });
+
+        // Publish the auth event so other systems can react to it
+        publishAuthEvent({
+          type: 'AUTH_STATE_CHANGED',
+          payload: { event, session: currentSession }
         });
 
         // Only update session state, avoid triggering other effects
@@ -72,12 +89,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     
     // Prevent multiple initialization attempts with ref guard
-    if (initAttemptedRef.current || initialized) {
+    if (initAttemptedRef.current || initialized || isInitializing) {
       return;
     }
     
     // Mark initialization as attempted immediately to prevent race conditions
     initAttemptedRef.current = true;
+    setIsInitializing(true);
     
     // Initialize auth state asynchronously with a small delay
     // This delay helps break potential circular dependencies
@@ -86,13 +104,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       initialize().catch(err => {
         logger.error('Failed to initialize auth', { details: errorToObject(err) });
+      }).finally(() => {
+        setIsInitializing(false);
       });
     }, 50); // Small delay to help with timing issues
     
-  }, [initialize, initialized, logger, themeLoaded]); 
+  }, [initialize, initialized, logger, themeLoaded, isInitializing]); 
   
   // Provide the current auth state, whether authenticated or not
-  // Fix: Include profile in the context value to match the AuthContextValue interface
   return (
     <AuthContext.Provider value={{ user, session, profile, status }}>
       {children}

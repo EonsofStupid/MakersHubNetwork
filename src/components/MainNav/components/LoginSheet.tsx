@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
@@ -11,7 +12,7 @@ import { AuthBridge } from "@/auth/bridge";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { useAuthStore } from "@/auth/store/auth.store";
-import { FcGoogle } from "react-icons/fc";
+import { Google } from "lucide-react";
 
 /**
  * LoginSheet Component
@@ -305,7 +306,7 @@ export const LoginSheet: React.FC<LoginSheetProps> = ({ isOpen, onOpenChange }) 
                   disabled={isSocialLoading.google}
                 >
                   <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-primary/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
-                  <FcGoogle className="mr-2 h-4 w-4" />
+                  <Google className="mr-2 h-4 w-4" />
                   {isSocialLoading.google ? "Connecting..." : "Google"}
                 </Button>
                 
