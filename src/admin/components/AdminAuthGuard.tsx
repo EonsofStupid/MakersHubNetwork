@@ -5,10 +5,11 @@ import { useAdminAuth } from '@/admin/hooks/useAdminAuth';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { AccessDenied } from './auth/AccessDenied';
+import { UserRole } from '@/types/auth.types';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
-  requiredRole?: string | string[];
+  requiredRole?: UserRole | UserRole[];
 }
 
 /**
@@ -40,7 +41,7 @@ export function AdminAuthGuard({
   }, [status, hasAdminAccess, roles, requiredRole, logger]);
   
   // Show nothing while authenticating
-  if (status === 'loading') {
+  if (status === 'loading' || status === 'idle') {
     return (
       <div className="flex items-center justify-center h-screen w-full">
         <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
@@ -49,7 +50,7 @@ export function AdminAuthGuard({
   }
   
   // Redirect to login if not authenticated
-  if (status !== 'loading' && !isAuthenticated) {
+  if (status !== 'loading' && status !== 'idle' && !isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
@@ -59,7 +60,7 @@ export function AdminAuthGuard({
   }
   
   // Check for specific roles if required
-  if (requiredRole && !hasRole(requiredRole)) {
+  if (requiredRole && !hasRole(requiredRole as UserRole | UserRole[])) {
     return <AccessDenied missingRole={requiredRole} />;
   }
   

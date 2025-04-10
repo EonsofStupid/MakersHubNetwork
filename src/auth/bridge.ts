@@ -18,7 +18,9 @@ export type AuthEventType =
   | 'AUTH_PERMISSION_CHANGED'
   | 'AUTH_SOCIAL_LOGIN_STARTED'
   | 'AUTH_SOCIAL_LOGIN_SUCCESS'
-  | 'AUTH_SOCIAL_LOGIN_ERROR';
+  | 'AUTH_SOCIAL_LOGIN_ERROR'
+  | 'AUTH_ACCOUNT_LINKED'
+  | 'AUTH_LINKING_REQUIRED';
 
 export interface AuthEvent {
   type: AuthEventType;
@@ -176,8 +178,10 @@ export const AuthBridge = {
           // Using popup mode for the WMPULSE styled experience
           redirectTo: window.location.origin,
           queryParams: {
-            prompt: 'select_account'
-          }
+            prompt: 'select_account',
+            access_type: 'offline'
+          },
+          skipBrowserRedirect: false, // Will still redirect in a popup
         }
       });
       
@@ -223,6 +227,56 @@ export const AuthBridge = {
   // Specifically for Google login
   signInWithGoogle: async () => {
     return AuthBridge.signInWithSocialProvider('google');
+  },
+  
+  // Link a social account to an existing account
+  linkSocialAccount: async (provider: Provider) => {
+    const logger = getLogger();
+    const user = useAuthStore.getState().user;
+    
+    if (!user) {
+      const err = new Error('Cannot link account - user not logged in');
+      logger.error('AuthBridge: linkSocialAccount failed', {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge',
+        details: { error: err }
+      });
+      throw err;
+    }
+    
+    try {
+      const { data, error } = await supabase.auth.linkIdentity({
+        provider
+      });
+      
+      if (error) {
+        logger.error(`AuthBridge: ${provider} linking error`, {
+          category: LogCategory.AUTH,
+          source: 'auth/bridge',
+          details: { error }
+        });
+        throw error;
+      }
+      
+      logger.info(`AuthBridge: ${provider} account linked successfully`, {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge'
+      });
+      
+      publishAuthEvent({
+        type: 'AUTH_ACCOUNT_LINKED',
+        payload: { provider, user: data }
+      });
+      
+      return data;
+    } catch (error) {
+      logger.error(`AuthBridge: ${provider} linking failed`, {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge',
+        details: { error }
+      });
+      throw error;
+    }
   },
   
   logout: async () => {
@@ -407,4 +461,31 @@ export function initializeAuthBridge(): void {
     category: LogCategory.AUTH,
     source: 'auth/bridge'
   });
+}
+
+// Check for account linking opportunity and prompt the user
+export async function checkAccountLinkingOpportunities(user: User): Promise<boolean> {
+  if (!user) return false;
+
+  const logger = getLogger();
+  const hasPasswordAuth = user.app_metadata?.provider === 'email';
+  
+  // Check if there could be opportunities for linking with social providers
+  // This is a simplified check - in a real app, you might want to check against known email domains
+  if (hasPasswordAuth) {
+    logger.info('User could potentially link social accounts', {
+      category: LogCategory.AUTH,
+      source: 'auth/bridge'
+    });
+
+    // Publish event that could be used by UI to prompt user
+    publishAuthEvent({
+      type: 'AUTH_LINKING_REQUIRED',
+      payload: { user }
+    });
+    
+    return true;
+  }
+  
+  return false;
 }
