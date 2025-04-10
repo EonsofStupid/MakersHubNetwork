@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '@/admin/hooks/useAdminAuth';
@@ -7,6 +6,7 @@ import { LogCategory } from '@/logging';
 import { AccessDenied } from './auth/AccessDenied';
 import { UserRole } from '@/auth/types/auth.types';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/auth/store/auth.store';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
@@ -23,17 +23,44 @@ export function AdminAuthGuard({
   children, 
   requiredRole 
 }: AdminAuthGuardProps) {
-  const { 
-    isAuthenticated, 
-    hasAdminAccess, 
-    status, 
-    hasRole, 
-    roles,
-    guardAdminAccess
-  } = useAdminAuth();
+  // Get auth status directly from authStore to ensure consistency
+  const user = useAuthStore(state => state.user);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const status = useAuthStore(state => state.status);
+  const roles = useAuthStore(state => state.roles);
+  const isAdmin = useAuthStore(state => state.isAdmin());
+  const isSuperAdmin = useAuthStore(state => state.isSuperAdmin());
   
+  const hasAdminAccess = isAdmin || isSuperAdmin;
+  
+  // Other hooks
   const logger = useLogger('AdminAuthGuard', LogCategory.ADMIN);
   const { toast } = useToast();
+  
+  // Check if user has required role
+  const hasRole = (role: UserRole | UserRole[]): boolean => {
+    if (Array.isArray(role)) {
+      return role.some(r => roles.includes(r));
+    }
+    return roles.includes(role);
+  };
+  
+  // Guard function - integrated directly here for simplicity
+  const guardAdminAccess = () => {
+    if (!isAuthenticated) {
+      logger.warn('Unauthenticated user attempted to access admin route');
+      return false;
+    }
+    
+    if (!hasAdminAccess) {
+      logger.warn('Non-admin user attempted to access admin route', {
+        details: { roles, requiredRole }
+      });
+      return false;
+    }
+    
+    return true;
+  };
   
   useEffect(() => {
     if (status === 'authenticated' && !hasAdminAccess) {
@@ -47,12 +74,25 @@ export function AdminAuthGuard({
         variant: 'destructive'
       });
     }
-  }, [status, hasAdminAccess, roles, requiredRole, logger, toast]);
+    
+    // Always log admin access attempts for debugging
+    if (status === 'authenticated' && hasAdminAccess) {
+      logger.info('Admin user accessing protected route', {
+        details: { 
+          userId: user?.id,
+          roles,
+          isAdmin,
+          isSuperAdmin,
+          requiredRole
+        }
+      });
+    }
+  }, [status, hasAdminAccess, roles, requiredRole, isAdmin, isSuperAdmin, user?.id, logger, toast]);
   
   // Execute guard check on mount
   useEffect(() => {
     guardAdminAccess();
-  }, [guardAdminAccess]);
+  }, []);
   
   // Show nothing while authenticating
   if (status === 'loading' || status === 'idle') {
@@ -86,4 +126,3 @@ export function AdminAuthGuard({
   // User has access, render children
   return <>{children}</>;
 }
-

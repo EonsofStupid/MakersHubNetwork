@@ -30,7 +30,7 @@ export const isLoadingAtom = atomWithStoreSync((state) => state.isLoading);
 // Derived state atoms
 export const isAdminAtom = atomWithStoreSync((state) => state.isAdmin());
 export const isSuperAdminAtom = atomWithStoreSync((state) => state.isSuperAdmin());
-export const hasAdminAccessAtom = atomWithStoreSync((state) => state.isAdmin());
+export const hasAdminAccessAtom = atomWithStoreSync((state) => state.isAdmin() || state.isSuperAdmin());
 
 // UI-specific derived atoms
 export const userNameAtom = atom((get) => {

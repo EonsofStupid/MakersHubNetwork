@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAtom } from "jotai";
 import { showAdminButtonAtom, showAdminWrenchAtom } from "@/admin/atoms/ui.atoms";
-import { Wrench, User, Shield } from "lucide-react";
+import { Wrench, User, Shield, Crown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LoginSheet } from "./LoginSheet";
 import { ComponentWrapper } from "@/admin/components/debug/ComponentWrapper";
@@ -27,13 +27,32 @@ export const AuthSection: React.FC = () => {
   const isAdmin = useAuthStore(state => state.isAdmin());
   const isSuperAdmin = useAuthStore(state => state.isSuperAdmin());
   const status = useAuthStore(state => state.status);
+  const roles = useAuthStore(state => state.roles);
   
   // Local UI state
-  const [showAdminButton] = useAtom(showAdminButtonAtom);
-  const [showAdminWrench] = useAtom(showAdminWrenchAtom);
+  const [showAdminButton, setShowAdminButton] = useAtom(showAdminButtonAtom);
+  const [showAdminWrench, setShowAdminWrench] = useAtom(showAdminWrenchAtom);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   
   const logger = useLogger("AuthSection", LogCategory.AUTH);
+
+  React.useEffect(() => {
+    // Make sure admin buttons are visible if the user has admin access
+    if (isAdmin || isSuperAdmin) {
+      setShowAdminButton(true);
+      setShowAdminWrench(true);
+      
+      // Log the admin status for debugging
+      logger.info('Admin user detected', { 
+        details: { 
+          userId: user?.id,
+          isAdmin,
+          isSuperAdmin,
+          roles
+        }
+      });
+    }
+  }, [isAdmin, isSuperAdmin, user?.id, roles, setShowAdminButton, setShowAdminWrench, logger]);
 
   // Memoized values to prevent recalculations
   const hasAdminAccess = useMemo(() => isAdmin || isSuperAdmin, [isAdmin, isSuperAdmin]);
@@ -64,8 +83,8 @@ export const AuthSection: React.FC = () => {
 
   return (
     <ComponentWrapper componentName="AuthSection" className="flex items-center gap-2">
-      {/* Only show Admin button if user has admin access */}
-      {hasAdminAccess && showAdminButton && (
+      {/* Show Admin button if user has admin access */}
+      {hasAdminAccess && (
         <ComponentWrapper componentName="AdminButton">
           <Link to="/admin">
             <Button 
@@ -73,15 +92,21 @@ export const AuthSection: React.FC = () => {
               size="sm"
               className="site-border-glow cyber-effect-text group"
             >
-              <Shield className="mr-2 h-4 w-4" />
-              <span className="relative z-10">Admin</span>
+              {isSuperAdmin ? (
+                <Crown className="mr-2 h-4 w-4 text-secondary" />
+              ) : (
+                <Shield className="mr-2 h-4 w-4" />
+              )}
+              <span className="relative z-10">
+                {isSuperAdmin ? "Super Admin" : "Admin"}
+              </span>
               <span className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md"></span>
             </Button>
           </Link>
         </ComponentWrapper>
       )}
       
-      {/* Only show Admin wrench if user has admin access */}
+      {/* Show Admin wrench if user has admin access */}
       {hasAdminAccess && showAdminWrench && (
         <ComponentWrapper componentName="AdminWrench">
           <Link to="/admin">
@@ -92,7 +117,9 @@ export const AuthSection: React.FC = () => {
               aria-label="Admin Dashboard"
             >
               <Wrench className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full animate-pulse"></span>
+              {isSuperAdmin && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 bg-secondary rounded-full animate-pulse"></span>
+              )}
             </Button>
           </Link>
         </ComponentWrapper>
