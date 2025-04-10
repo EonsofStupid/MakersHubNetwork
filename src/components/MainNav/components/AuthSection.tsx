@@ -11,7 +11,7 @@ import { ComponentWrapper } from "@/admin/components/debug/ComponentWrapper";
 import { useAuthStore } from "@/auth/store/auth.store";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
-import { useHasRole } from "@/auth/hooks/useHasRole";
+import { useHasRole, useHasAdminAccess, useIsSuperAdmin } from "@/auth/hooks/useHasRole";
 import { ROLES } from "@/auth/types/roles";
 
 /**
@@ -30,8 +30,8 @@ export const AuthSection: React.FC = () => {
   const roles = useAuthStore(state => state.roles);
   
   // Use the useHasRole hook directly to check for admin access
-  const hasAdminRole = useHasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
-  const isSuperAdmin = useHasRole(ROLES.SUPER_ADMIN);
+  const hasAdminRole = useHasAdminAccess();
+  const isSuperAdmin = useIsSuperAdmin();
   
   // Local UI state
   const [showAdminButton, setShowAdminButton] = useAtom(showAdminButtonAtom);
