@@ -29,9 +29,18 @@ export const subscribeToAuthEvents = (handler: AuthEventHandler): (() => void) =
   };
 };
 
-// Dispatch auth events
-export const dispatchAuthEvent = (event: AuthEvent): void => {
+// Dispatch auth events - renamed to publishAuthEvent to match imports
+export const publishAuthEvent = (event: AuthEvent): void => {
   authEventHandlers.forEach(handler => handler(event));
+};
+
+// Add missing function used in App.tsx
+export const initializeAuthBridge = (): void => {
+  const logger = getLogger();
+  logger.info('Initializing auth bridge');
+  
+  // Initialize auth event system
+  // Any additional initialization can be added here
 };
 
 // AuthBridge singleton
@@ -60,7 +69,7 @@ export const AuthBridge = {
       return data;
     } catch (error) {
       logger.error('Sign in error', { details: { error } });
-      dispatchAuthEvent({ 
+      publishAuthEvent({ 
         type: 'AUTH_ERROR', 
         payload: { error, method: 'password' }
       });
@@ -91,7 +100,7 @@ export const AuthBridge = {
       return data;
     } catch (error) {
       logger.error('Google sign in error', { details: { error } });
-      dispatchAuthEvent({ 
+      publishAuthEvent({ 
         type: 'AUTH_ERROR', 
         payload: { error, method: 'google' }
       });
@@ -192,9 +201,8 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
   
   // Dispatch to event system
-  dispatchAuthEvent({
+  publishAuthEvent({
     type: 'AUTH_STATE_CHANGE',
     payload: { event, session }
   });
 });
-
