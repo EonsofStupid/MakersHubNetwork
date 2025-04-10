@@ -28,8 +28,9 @@ export function useHasRole(role: UserRole | UserRole[]): boolean {
  */
 export function useHasAdminAccess(): boolean {
   const roles = useAuthStore((state) => state.roles);
+  
   return useMemo(() => {
-    return roles.includes('admin') || roles.includes('super_admin');
+    return roles.includes(ROLES.ADMIN) || roles.includes(ROLES.SUPER_ADMIN);
   }, [roles]);
 }
 
@@ -39,7 +40,8 @@ export function useHasAdminAccess(): boolean {
  */
 export function useIsSuperAdmin(): boolean {
   const roles = useAuthStore((state) => state.roles);
+  
   return useMemo(() => {
-    return roles.includes('super_admin');
+    return roles.includes(ROLES.SUPER_ADMIN);
   }, [roles]);
 }

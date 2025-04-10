@@ -1,5 +1,5 @@
 
-import { UserRole } from '../types/roles';
+import { UserRole, ROLES } from '../types/roles';
 import { useAuthStore } from '../store/auth.store';
 
 /**
@@ -22,7 +22,8 @@ export const hasRole = (role: UserRole | UserRole[]): boolean => {
  * @returns Boolean indicating if user has admin access
  */
 export const hasAdminAccess = (): boolean => {
-  return hasRole(['admin', 'super_admin']);
+  const userRoles = useAuthStore.getState().roles || [];
+  return userRoles.includes(ROLES.ADMIN) || userRoles.includes(ROLES.SUPER_ADMIN);
 };
 
 /**
@@ -30,5 +31,6 @@ export const hasAdminAccess = (): boolean => {
  * @returns Boolean indicating if user is a super admin
  */
 export const isSuperAdmin = (): boolean => {
-  return hasRole('super_admin');
+  const userRoles = useAuthStore.getState().roles || [];
+  return userRoles.includes(ROLES.SUPER_ADMIN);
 };
