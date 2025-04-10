@@ -6,20 +6,24 @@ import { Wrench } from 'lucide-react';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { cn } from '@/lib/utils';
-import { useAuthState } from '@/auth/hooks/useAuthState';
+import { useHasAdminAccess, useIsSuperAdmin } from '@/auth/hooks/useHasRole';
 import { inspectorVisibleAtom } from '@/admin/store/atoms/inspector.atoms';
 
 export function DebugOverlay() {
+  // Use our new role checking hooks
+  const hasAdminAccess = useHasAdminAccess();
+  const isSuperAdmin = useIsSuperAdmin();
+  
   const [isDebugMode, setDebugMode] = useAtom(adminDebugModeAtom);
   const [isInspectorVisible, setInspectorVisible] = useAtom(inspectorVisibleAtom);
   const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
   const [isAltPressed, setIsAltPressed] = useState(false);
-  const { isSuperAdmin } = useAuthState();
+  
   const logger = useLogger('DebugOverlay', LogCategory.ADMIN);
 
   // Add keyboard listener for Alt key to toggle component inspection
   useEffect(() => {
-    if (!isSuperAdmin && !isDebugMode) return;
+    if (!hasAdminAccess && !isDebugMode) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Alt') {
@@ -69,10 +73,10 @@ export function DebugOverlay() {
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('click', handleClick, true);
     };
-  }, [isSuperAdmin, isDebugMode, isAltPressed, logger, setInspectorVisible]);
+  }, [hasAdminAccess, isDebugMode, isAltPressed, logger, setInspectorVisible]);
 
-  // Don't render anything if user is not a super admin and debug mode is not enabled
-  if (!isSuperAdmin && !isDebugMode) {
+  // Don't render anything if user doesn't have admin access and debug mode is not enabled
+  if (!hasAdminAccess && !isDebugMode) {
     return null;
   }
 

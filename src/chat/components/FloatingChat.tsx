@@ -3,8 +3,8 @@ import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { ChatWidget } from './ChatWidget';
 import { useLocation } from 'react-router-dom';
 import { useChat } from '../context/ChatProvider';
-import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
-import { useAuthState } from '@/auth/hooks/useAuthState';
+import { useHasAdminAccess } from '@/auth/hooks/useHasRole';
+import { useAuthStore } from '@/auth/store/auth.store';
 import { getLogger } from '@/logging';
 import { withDetails } from '@/logging/utils/log-helpers';
 import { CircuitBreaker } from '@/utils/CircuitBreaker';
@@ -13,8 +13,13 @@ import { subscribeToAuthEvents } from '@/auth/bridge';
 export function FloatingChat() {
   const logger = getLogger();
   const location = useLocation();
-  const { isAuthenticated, isSuperAdmin, isAdmin } = useAuthState();
-  const { hasAdminAccess } = useAdminAccess();
+  const { isAuthenticated } = useAuthStore(state => ({ 
+    isAuthenticated: state.isAuthenticated
+  }));
+  
+  // Use our standardized hook
+  const hasAdminAccess = useHasAdminAccess();
+  
   const { isOpen } = useChat();
   const renderedRef = useRef(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -22,7 +27,7 @@ export function FloatingChat() {
   const pathname = useMemo(() => location.pathname, [location.pathname]);
   const inChatRoute = useMemo(() => pathname.startsWith('/chat'), [pathname]);
   
-  // Check both admin and super admin status
+  // Check for admin access
   const canShow = useMemo(() => 
     isAuthenticated && hasAdminAccess && !inChatRoute, 
     [isAuthenticated, hasAdminAccess, inChatRoute]
@@ -40,8 +45,6 @@ export function FloatingChat() {
         canShow, 
         isAuthenticated, 
         hasAdminAccess, 
-        isAdmin,
-        isSuperAdmin,
         path: pathname 
       }));
     
