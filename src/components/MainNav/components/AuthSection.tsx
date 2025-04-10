@@ -70,7 +70,7 @@ export const AuthSection: React.FC = () => {
     return profile?.display_name || user?.user_metadata?.full_name || user?.email || 'User';
   }, [profile?.display_name, user?.user_metadata?.full_name, user?.email]);
   
-  // Memoized handlers to prevent recreating functions
+  // Memoized handlers to prevent recreating functions on each render
   const handleOpenLogin = useCallback(() => {
     logger.info("Opening login sheet");
     setIsLoginOpen(true);
