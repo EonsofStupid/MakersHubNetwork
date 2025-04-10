@@ -1,125 +1,91 @@
 
 import React from 'react';
 import { useChat } from '../context/ChatProvider';
-import { MessageCircle, X, Send } from 'lucide-react';
-import { useThemeStore } from '@/stores/theme/store';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
-import { useMobile } from '@/hooks/use-mobile';
+import { MessageCircle, X } from 'lucide-react';
 
 export function ChatWidget() {
-  const { isOpen, toggleChat, messages, sendMessage, isLoading: chatIsLoading } = useChat();
-  const { user } = useAuthState();
-  const { hasAdminAccess, isAdmin } = useAdminAccess();
-  const [input, setInput] = React.useState('');
-  const messagesRef = React.useRef<HTMLDivElement>(null);
-  const isMobile = useMobile();
+  const { isOpen, toggleChat, messages, sendMessage } = useChat();
+  const [inputValue, setInputValue] = React.useState('');
   
-  // Scroll to bottom when messages change
-  React.useEffect(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-    }
-  }, [messages]);
-  
-  // Handle input submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() && !chatIsLoading) {
-      sendMessage(input);
-      setInput('');
+    if (inputValue.trim()) {
+      sendMessage(inputValue);
+      setInputValue('');
     }
   };
   
-  // If not open, show the floating button
   if (!isOpen) {
     return (
       <Button
         onClick={toggleChat}
-        className="fixed bottom-4 right-4 rounded-full w-12 h-12 p-0 shadow-lg z-50 bg-primary hover:bg-primary/90"
+        variant="default"
+        size="icon"
+        className="h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-all"
       >
-        <MessageCircle size={24} />
+        <MessageCircle className="h-6 w-6" />
       </Button>
     );
   }
   
   return (
-    <Card className="fixed bottom-4 right-4 w-80 md:w-96 shadow-xl z-50 flex flex-col overflow-hidden max-h-[70vh] rounded-lg border border-border bg-card text-card-foreground">
-      {/* Chat header */}
-      <div className="flex items-center justify-between p-3 border-b bg-muted/50">
-        <h3 className="font-medium">Chat Assistant</h3>
-        <Button variant="ghost" size="icon" onClick={toggleChat}>
-          <X size={18} />
+    <div className="bg-background border border-border rounded-lg shadow-xl w-[350px] max-h-[500px] flex flex-col">
+      <div className="flex items-center justify-between p-3 border-b">
+        <h3 className="font-medium">Chat Support</h3>
+        <Button
+          onClick={toggleChat}
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
+        >
+          <X className="h-4 w-4" />
         </Button>
       </div>
       
-      {/* Messages area */}
-      <div 
-        ref={messagesRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px] max-h-[50vh]"
-      >
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px]">
         {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            <p>How can I help you today?</p>
+          <div className="flex items-center justify-center h-full">
+            <p className="text-muted-foreground text-sm">
+              Start a conversation...
+            </p>
           </div>
         ) : (
-          messages.map((msg) => (
-            <div 
-              key={msg.id}
-              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+          messages.map(message => (
+            <div
+              key={message.id}
+              className={`max-w-[80%] p-3 rounded-lg ${
+                message.sender === 'user'
+                  ? 'ml-auto bg-primary text-primary-foreground'
+                  : 'bg-muted'
+              }`}
             >
-              <div 
-                className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                  msg.sender === 'user' 
-                    ? 'bg-primary text-primary-foreground rounded-tr-none' 
-                    : 'bg-muted text-muted-foreground rounded-tl-none'
-                }`}
-              >
-                <p>{msg.content}</p>
-                <div className="text-xs opacity-70 text-right mt-1">
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
+              <p className="text-sm">{message.content}</p>
+              <span className="text-xs opacity-70 block mt-1">
+                {new Date(message.timestamp).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
             </div>
           ))
         )}
-        
-        {chatIsLoading && (
-          <div className="flex justify-start">
-            <div className="bg-muted text-muted-foreground rounded-2xl rounded-tl-none px-4 py-2">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
       
-      {/* Input area */}
-      <form onSubmit={handleSubmit} className="border-t p-3 bg-background">
-        <div className="flex items-end gap-2">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 min-h-[60px] max-h-[120px]"
-            disabled={chatIsLoading}
-          />
-          <Button 
-            type="submit" 
-            size="icon"
-            disabled={!input.trim() || chatIsLoading}
-            className="h-10 w-10"
-          >
-            <Send size={18} />
-          </Button>
-        </div>
+      <form onSubmit={handleSubmit} className="p-3 border-t flex">
+        <input
+          type="text"
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          placeholder="Type a message..."
+          className="flex-1 px-3 py-2 bg-background border rounded-l-md focus-visible:outline-none focus-visible:ring-1"
+        />
+        <Button type="submit" className="rounded-l-none">
+          Send
+        </Button>
       </form>
-    </Card>
+    </div>
   );
 }
+
+export default ChatWidget;

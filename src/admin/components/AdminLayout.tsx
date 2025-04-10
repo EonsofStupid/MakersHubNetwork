@@ -90,8 +90,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       
       {isEditMode && <FrozenZones />}
       {isEditMode && <EditModeToggle />}
-      <LogToggleButton />
+      
+      {/* Log console */}
       {showLogConsole && <LogConsole />}
+      <LogToggleButton />
     </div>
   );
-}
+};

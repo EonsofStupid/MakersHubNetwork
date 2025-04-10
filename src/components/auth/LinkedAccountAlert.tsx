@@ -6,7 +6,6 @@ import { FcGoogle } from 'react-icons/fc';
 import { Link as LinkIcon, X } from 'lucide-react';
 import { AuthBridge, subscribeToAuthEvents } from '@/auth/bridge';
 import { useToast } from '@/hooks/use-toast';
-import { AuthEventType } from '@/types/shared';
 
 export function LinkedAccountAlert() {
   const [show, setShow] = useState(false);
@@ -16,8 +15,8 @@ export function LinkedAccountAlert() {
   
   useEffect(() => {
     // Listen for AUTH_LINKING_REQUIRED events
-    const unsubscribe = subscribeToAuthEvents((event) => {
-      if (event.type === 'AUTH_LINKING_REQUIRED' && event.payload?.provider) {
+    const unsubscribe = subscribeToAuthEvents('AUTH_LINKING_REQUIRED', (event) => {
+      if (event.payload?.provider) {
         setProvider(event.payload.provider);
         setShow(true);
       }

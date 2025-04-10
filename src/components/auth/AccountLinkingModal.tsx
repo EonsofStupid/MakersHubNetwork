@@ -12,7 +12,6 @@ import { FcGoogle } from 'react-icons/fc';
 import { User, Mail, Key } from 'lucide-react';
 import { AuthBridge, subscribeToAuthEvents } from '@/auth/bridge';
 import { useToast } from '@/hooks/use-toast';
-import { AuthEventType } from '@/types/shared';
 
 export function AccountLinkingModal() {
   const [open, setOpen] = useState(false);
@@ -23,14 +22,12 @@ export function AccountLinkingModal() {
 
   useEffect(() => {
     // Listen for AUTH_LINKING_REQUIRED events
-    const unsubscribe = subscribeToAuthEvents((event) => {
-      if (event.type === 'AUTH_LINKING_REQUIRED') {
-        // Only show if we have email and provider
-        if (event.payload?.email && event.payload?.provider) {
-          setEmail(event.payload.email);
-          setProvider(event.payload.provider);
-          setOpen(true);
-        }
+    const unsubscribe = subscribeToAuthEvents('AUTH_LINKING_REQUIRED', (event) => {
+      // Only show if we have email and provider
+      if (event.payload?.email && event.payload?.provider) {
+        setEmail(event.payload.email);
+        setProvider(event.payload.provider);
+        setOpen(true);
       }
     });
     

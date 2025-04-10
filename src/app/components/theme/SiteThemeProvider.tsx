@@ -40,21 +40,24 @@ export const SiteThemeProvider: React.FC<SiteThemeProviderProps> = ({
   useEffect(() => {
     // Initialize theme styles and variables from the store
     if (themeStore?.themeTokens) {
-      // Changed to check individual properties safely
+      // Ensure themeTokens is an array with at least one item
       const tokensObj = Array.isArray(themeStore.themeTokens) && themeStore.themeTokens.length > 0
         ? themeStore.themeTokens[0] || {}
         : {};
         
-      if (tokensObj.components) {
-        setComponentStyles(tokensObj.components);
+      // Safely access components property
+      if (tokensObj && typeof tokensObj === 'object' && 'components' in tokensObj) {
+        setComponentStyles(tokensObj.components || {});
       }
       
-      if (tokensObj.variables) {
-        setVariables(tokensObj.variables);
+      // Safely access variables property
+      if (tokensObj && typeof tokensObj === 'object' && 'variables' in tokensObj) {
+        setVariables(tokensObj.variables || {});
       }
       
-      if (tokensObj.animations) {
-        setAnimations(tokensObj.animations);
+      // Safely access animations property
+      if (tokensObj && typeof tokensObj === 'object' && 'animations' in tokensObj) {
+        setAnimations(tokensObj.animations || {});
       }
       
       setIsLoaded(true);

@@ -26,12 +26,16 @@ export const AuthSection: React.FC = () => {
   const { 
     user, 
     profile, 
-    roles, 
-    isAuthenticated, 
-    status,
-    isAdmin,
-    isSuperAdmin 
+    roles 
   } = useAuthState();
+  
+  // Directly check status
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const status = useAuthStore(state => state.status);
+  
+  // Use AuthBridge for role checks
+  const isAdmin = AuthBridge.isAdmin();
+  const isSuperAdmin = AuthBridge.isSuperAdmin();
   
   // Local UI state
   const [showAdminButton, setShowAdminButton] = useAtom(showAdminButtonAtom);
@@ -84,12 +88,8 @@ export const AuthSection: React.FC = () => {
 
   // Get logout function from AuthBridge
   const handleLogout = useCallback(() => {
-    if (AuthBridge && typeof AuthBridge.logout === 'function') {
-      AuthBridge.logout();
-    } else {
-      logger.error('AuthBridge.logout is not a function');
-    }
-  }, [logger]);
+    AuthBridge.logout();
+  }, []);
 
   const isLoading = status === 'loading';
 
