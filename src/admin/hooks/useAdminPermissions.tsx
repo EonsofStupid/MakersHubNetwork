@@ -7,7 +7,6 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { AdminPermissionValue } from '@/admin/types/permissions';
 import { mapRolesToPermissions } from '@/auth/rbac/roles';
-import { UserRole } from '@/types/common.types';
 
 /**
  * Hook for accessing and checking admin permissions
@@ -15,10 +14,10 @@ import { UserRole } from '@/types/common.types';
  * Implements memoization to prevent unnecessary re-renders
  */
 export function useAdminPermissions() {
-  const { status = 'loading', roles = [] } = useAuthState();
+  const { status, roles } = useAuthState();
   const adminStore = useAdminStore();
   const permissions = adminStore.permissions;
-  const isLoadingPermissions = adminStore.isLoadingPermissions || false;
+  const isLoadingPermissions = adminStore.isLoadingPermissions;
   
   const isLoading = status === 'loading' || isLoadingPermissions;
   const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
@@ -38,7 +37,7 @@ export function useAdminPermissions() {
       logger.debug('Initializing permissions from roles in useAdminPermissions');
       
       // Map roles to permissions without triggering the admin store loading
-      const mappedPermissions = mapRolesToPermissions(roles as UserRole[]);
+      const mappedPermissions = mapRolesToPermissions(roles);
       
       // Only update if needed (avoid cycles)
       if (mappedPermissions.length > 0 && permissions.length === 0) {
@@ -85,17 +84,6 @@ export function useAdminPermissions() {
   return {
     permissions,
     hasPermission,
-    isLoading,
-    isLoaded: permissions.length > 0 && !isLoading,
-    isSuperAdmin: permissions.includes(PERMISSIONS.SUPER_ADMIN),
-    isAdmin: permissions.includes(PERMISSIONS.ADMIN_ACCESS),
-    hasAllPermissions: (requiredPermissions: AdminPermissionValue[]) => {
-      if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) return true;
-      return requiredPermissions.every(p => permissions.includes(p));
-    },
-    hasAnyPermission: (requiredPermissions: AdminPermissionValue[]) => {
-      if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) return true;
-      return requiredPermissions.some(p => permissions.includes(p));
-    }
+    isLoading
   };
 }

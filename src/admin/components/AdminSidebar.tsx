@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAtom } from 'jotai';
@@ -33,7 +32,6 @@ export function AdminSidebar() {
     setExpanded(!expanded);
   };
 
-  // Navigation items with permission checks
   const navItems = [
     {
       group: 'Core',
@@ -126,7 +124,6 @@ export function AdminSidebar() {
         "bg-[var(--impulse-bg-sidebar)] flex flex-col"
       )}
     >
-      {/* Sidebar header */}
       <div className="p-4 h-16 flex items-center justify-between border-b border-[var(--impulse-border-normal)]">
         <AnimatePresence mode="wait">
           {expanded ? (
@@ -168,15 +165,12 @@ export function AdminSidebar() {
         </button>
       </div>
 
-      {/* Navigation items */}
       <div className="flex-grow overflow-y-auto py-4 px-2">
         {navItems.map((group) => {
-          // Filter items by permission
           const visibleItems = group.items.filter(item => 
             hasPermission(item.permission)
           );
           
-          // Skip empty groups
           if (visibleItems.length === 0) return null;
           
           return (

@@ -1,56 +1,45 @@
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useAdminStore } from '@/admin/store/admin.store';
-import { AdminPermissionValue } from '@/admin/constants/permissions';
-import { useAuth } from '@/hooks/useAuth';
+import { PERMISSIONS } from '@/auth/permissions';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
+import { AdminPermissionValue } from '@/admin/types/permissions';
 
 /**
  * Hook for checking admin permissions
+ * Uses both auth store (for user/roles) and admin store (for permissions)
  */
 export function useAdminPermissions() {
-  const { permissions, setPermissions } = useAdminStore();
-  const { roles, isAuthenticated } = useAuth();
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { status, roles } = useAuthState();
+  const adminStore = useAdminStore();
+  const permissions = adminStore.permissions;
+  const isLoadingPermissions = adminStore.isLoadingPermissions;
   
-  // Derived state
-  const isSuperAdmin = roles.includes('super_admin');
-  const isAdmin = isSuperAdmin || roles.includes('admin');
+  const isLoading = status === 'loading' || isLoadingPermissions;
+  const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
   
-  // Check if user has specific permission
-  const hasPermission = (permission: AdminPermissionValue): boolean => {
-    if (!isAuthenticated) return false;
-    if (isSuperAdmin) return true;
-    
-    return permissions.includes(permission);
-  };
-  
-  // Check if user has all of the required permissions
-  const hasAllPermissions = (requiredPermissions: AdminPermissionValue[]): boolean => {
-    if (!isAuthenticated) return false;
-    if (isSuperAdmin) return true;
-    
-    return requiredPermissions.every(permission => permissions.includes(permission));
-  };
-  
-  // Check if user has any of the required permissions
-  const hasAnyPermission = (requiredPermissions: AdminPermissionValue[]): boolean => {
-    if (!isAuthenticated) return false;
-    if (isSuperAdmin) return true;
-    
-    return requiredPermissions.some(permission => permissions.includes(permission));
-  };
-  
-  useEffect(() => {
-    setIsLoaded(permissions.length > 0);
-  }, [permissions]);
-  
+  // Memoize the hasPermission function to prevent recreating on each render
+  const hasPermission = useMemo(() => {
+    return (permission: AdminPermissionValue): boolean => {
+      // If loading, be conservative and deny access
+      if (isLoading) {
+        return false;
+      }
+      
+      // Super admin permission grants access to everything
+      if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) {
+        return true;
+      }
+      
+      return permissions.includes(permission);
+    };
+  }, [permissions, isLoading]);
+
   return {
     permissions,
-    isLoaded,
-    isSuperAdmin,
-    isAdmin,
     hasPermission,
-    hasAllPermissions,
-    hasAnyPermission
+    isLoading
   };
 }

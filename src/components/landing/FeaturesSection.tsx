@@ -1,50 +1,80 @@
 
 import React from 'react';
+import { FeatureCta, FeatureCtaProps } from './FeatureCta';
+import { Sparkles, Code, Rocket, Globe, Zap, Gem } from 'lucide-react';
+import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
+import { cn } from '@/lib/utils';
 
-export function FeaturesSection() {
-  const features = [
+export const FeaturesSection = () => {
+  const { componentStyles } = useSiteTheme();
+  
+  const styles = componentStyles?.FeaturesSection || {
+    container: "py-16 bg-background/30 backdrop-blur-sm relative",
+    title: "text-3xl font-bold text-center mb-12",
+    grid: "grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4",
+  };
+  
+  const features: Omit<FeatureCtaProps, 'id'>[] = [
     {
-      title: "Premium Quality Parts",
-      description: "All our 3D printer parts are manufactured to the highest standards for reliability and performance.",
-      icon: "⚙️"
+      title: "Build Showcase",
+      description: "Show off your 3D printer builds with detailed specifications and high-quality images.",
+      icon: <Sparkles className="h-6 w-6" />,
+      ctaText: "Show Your Build",
+      ctaLink: "/builds/create"
     },
     {
-      title: "Custom Build Support",
-      description: "Get personalized assistance for your custom 3D printer build from our community of experts.",
-      icon: "🛠️"
+      title: "Community Support",
+      description: "Get help with your builds from a community of passionate makers.",
+      icon: <Globe className="h-6 w-6" />,
+      ctaText: "Join Community",
+      ctaLink: "/community"
     },
     {
-      title: "Worldwide Shipping",
-      description: "We ship our high-quality 3D printer components to makers around the globe.",
-      icon: "🌎"
+      title: "Firmware Customization",
+      description: "Share and discover custom firmware configurations for popular 3D printers.",
+      icon: <Code className="h-6 w-6" />,
+      ctaText: "Explore Firmware",
+      ctaLink: "/firmware"
     },
     {
-      title: "Community Projects",
-      description: "Join our community of makers and share your 3D printing projects and innovations.",
-      icon: "👥"
+      title: "Part Marketplace",
+      description: "Find upgrades and replacement parts specifically for your printer model.",
+      icon: <Gem className="h-6 w-6" />,
+      ctaText: "Find Parts",
+      ctaLink: "/parts"
+    },
+    {
+      title: "Print Troubleshooting",
+      description: "Solve common printing issues with our troubleshooting guides and community advice.",
+      icon: <Zap className="h-6 w-6" />,
+      ctaText: "Fix Issues",
+      ctaLink: "/troubleshooting"
+    },
+    {
+      title: "Build Guides",
+      description: "Step-by-step guides for popular printer builds and modifications.",
+      icon: <Rocket className="h-6 w-6" />,
+      ctaText: "View Guides",
+      ctaLink: "/guides"
     }
   ];
 
   return (
-    <section className="py-16 px-4 bg-background">
-      <div className="container mx-auto">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 cyber-gradient-text">
-          Powering Your 3D Printing Journey
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <div 
-              key={index} 
-              className="p-6 rounded-lg cyber-card hover:border-glow transition-all duration-300"
-            >
-              <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
-            </div>
-          ))}
-        </div>
+    <section className={cn(styles.container)}>
+      <h2 className={cn(styles.title)}>Unleash Your 3D Printing Potential</h2>
+      <div className={cn(styles.grid)}>
+        {features.map((feature, index) => (
+          <FeatureCta
+            key={index}
+            id={`feature-${index}`}
+            title={feature.title}
+            description={feature.description}
+            icon={feature.icon}
+            ctaText={feature.ctaText}
+            ctaLink={feature.ctaLink}
+          />
+        ))}
       </div>
     </section>
   );
-}
+};

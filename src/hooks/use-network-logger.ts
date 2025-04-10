@@ -1,6 +1,8 @@
+
 import { useCallback, useRef } from 'react';
 import { getLogger } from '@/logging';
-import { LogCategory, LogLevel } from '@/logging/types';
+import { LogCategory } from '@/logging/types';
+import { LogLevel } from '@/logging/constants/log-level';
 
 interface RequestLogOptions {
   url: string;

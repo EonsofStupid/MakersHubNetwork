@@ -1,25 +1,45 @@
 
-import React, { useEffect, useState } from 'react';
-import { getLogger } from '@/logging';
+import { ReactNode, useEffect } from "react";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging";
+import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
+import { useAuthStore } from "@/auth/store/auth.store";
+import { AppBootstrap } from "./AppBootstrap";
 
 interface AppInitializerProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-const logger = getLogger('AppInitializer');
-
 export function AppInitializer({ children }: AppInitializerProps) {
-  const [initialized, setInitialized] = useState(false);
+  const logger = useLogger("AppInitializer", LogCategory.SYSTEM);
+  const { isLoaded: themeLoaded } = useSiteTheme();
   
+  // Use selectors from auth store for better performance
+  const status = useAuthStore(state => state.status);
+  const initialized = useAuthStore(state => state.initialized);
+  
+  // Log app initialization status
   useEffect(() => {
-    // Perform any app initialization here
-    logger.info('Initializing application...');
+    logger.info("App initializing, auth status:", {
+      details: {
+        status,
+        themeLoaded,
+        authInitialized: initialized
+      },
+    });
     
-    // Mark as initialized
-    setInitialized(true);
-    logger.info('Application initialized successfully');
-  }, []);
-  
-  // Show children once initialized
-  return <>{initialized ? children : null}</>;
+    if (initialized && themeLoaded) {
+      logger.info("All systems initialized, rendering application");
+    }
+  }, [status, themeLoaded, initialized, logger]);
+
+  return (
+    <>
+      {/* Add the AppBootstrap component to handle initialization */}
+      <AppBootstrap />
+      
+      {/* Render children regardless of initialization status */}
+      {children}
+    </>
+  );
 }

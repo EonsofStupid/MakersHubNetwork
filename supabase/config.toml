@@ -1,5 +1,22 @@
 
 project_id = "kxeffcclfvecdvqpljbh"
 
+[api]
+enabled = true
+
+[api.cors]
+enabled = true
+origins = ["*"]
+
+[auth]
+# These variables are used in the client side React application
+site_url = "https://kxeffcclfvecdvqpljbh.lovable.app"  # Replace with your site URL
+additional_redirect_urls = ["https://kxeffcclfvecdvqpljbh.lovable.app", "https://kxeffcclfvecdvqpljbh.lovable.app/auth/callback"]
+
+[auth.external.google]
+enabled = true
+
+[functions]
+
 [functions.theme-service]
 verify_jwt = false

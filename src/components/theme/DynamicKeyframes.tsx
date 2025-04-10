@@ -1,49 +1,58 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSiteTheme } from './SiteThemeProvider';
-import { createGlobalStyle } from 'styled-components';
 
-// Create global styled component for keyframes
-const GlobalKeyframes = createGlobalStyle<{ css: string }>`
-  ${props => props.css}
-`;
-
-export function DynamicKeyframes() {
+/**
+ * Generates CSS for keyframe animations from theme
+ */
+export const DynamicKeyframes: React.FC = () => {
   const { animations } = useSiteTheme();
   
-  // If no animations defined, return null
-  if (!animations || Object.keys(animations).length === 0) {
+  const keyframesStyles = useMemo(() => {
+    if (!animations || Object.keys(animations).length === 0) {
+      return '';
+    }
+    
+    // Generate CSS keyframes from the animation definitions
+    return Object.entries(animations).map(([name, keyframeObj]) => {
+      // Skip if the keyframeObj is not properly structured
+      if (!keyframeObj || typeof keyframeObj !== 'object') return '';
+      
+      // Convert the keyframe object to CSS
+      const keyframeContent = Object.entries(keyframeObj)
+        .map(([percent, styles]) => {
+          // Normalize percentage format
+          const normalizedPercent = percent.endsWith('%') 
+            ? percent
+            : isNaN(Number(percent)) 
+              ? percent // Keywords like 'from', 'to'
+              : `${percent}%`;
+              
+          // Skip if styles is missing or not an object
+          if (!styles || typeof styles !== 'object') return '';
+          
+          // Convert style object to CSS string
+          const styleString = Object.entries(styles as Record<string, string>)
+            .map(([prop, value]) => {
+              // Convert camelCase to kebab-case
+              const cssProperty = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+              return `${cssProperty}: ${value};`;
+            })
+            .join(' ');
+            
+          return `${normalizedPercent} { ${styleString} }`;
+        })
+        .join(' ');
+        
+      return `@keyframes ${name} { ${keyframeContent} }`;
+    }).join('\n');
+  }, [animations]);
+  
+  if (!keyframesStyles) {
     return null;
   }
   
-  // Convert animation definitions to CSS
-  let css = '';
-  
-  try {
-    // Build keyframes CSS
-    Object.entries(animations).forEach(([name, keyframes]) => {
-      if (!keyframes) return;
-      
-      css += `@keyframes ${name} {\n`;
-      
-      Object.entries(keyframes).forEach(([position, styles]) => {
-        css += `  ${position} {\n`;
-        
-        Object.entries(styles).forEach(([property, value]) => {
-          if (typeof value === 'string' || typeof value === 'number') {
-            css += `    ${property}: ${value};\n`;
-          }
-        });
-        
-        css += '  }\n';
-      });
-      
-      css += '}\n';
-    });
-  } catch (error) {
-    console.error('Error generating dynamic keyframes:', error);
-    return null;
-  }
-  
-  return css ? <GlobalKeyframes css={css} /> : null;
-}
+  return (
+    <style>{keyframesStyles}</style>
+  );
+};

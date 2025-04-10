@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { getLogger } from '@/logging';
-import { LogCategory, LogOptions } from '@/logging/types';
+import { LogCategory } from '@/logging/types';
 import { ErrorInfo } from 'react';
 
 /**
@@ -20,7 +20,7 @@ export function useErrorLogger(source: string) {
         componentStack: errorInfo?.componentStack,
         error // Pass the full error object
       }
-    } as LogOptions);
+    });
   }, [logger, source]);
 
   const logErrorWithContext = useCallback((error: Error, context: Record<string, unknown> = {}) => {
@@ -32,7 +32,7 @@ export function useErrorLogger(source: string) {
         stack: error.stack,
         context
       }
-    } as LogOptions);
+    });
   }, [logger, source]);
 
   const logApiError = useCallback((error: unknown, endpoint: string, params?: unknown) => {
@@ -48,7 +48,7 @@ export function useErrorLogger(source: string) {
         endpoint,
         params
       }
-    } as LogOptions);
+    });
   }, [logger, source]);
 
   return {

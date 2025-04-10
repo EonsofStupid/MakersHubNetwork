@@ -1,73 +1,82 @@
-
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { UserRole } from "../types/auth.types";
+import { UserRole, AuthStatus } from "../types/auth.types";
 import { getLogger } from "@/logging";
 import { LogCategory } from "@/logging";
-import { errorToObject } from "@/shared/utils/render";
+import { persist } from "zustand/middleware";
+import { v4 as uuidv4 } from 'uuid';
 
-// Define storage for persistence
-const authStorage = createJSONStorage(() => {
-  return {
-    getItem: (name: string): string | null => {
-      try {
-        return sessionStorage.getItem(name);
-      } catch (error) {
-        console.error('Error accessing sessionStorage:', error);
-        return null;
-      }
-    },
-    setItem: (name: string, value: string): void => {
-      try {
-        sessionStorage.setItem(name, value);
-      } catch (error) {
-        console.error('Error setting sessionStorage:', error);
-      }
-    },
-    removeItem: (name: string): void => {
-      try {
-        sessionStorage.removeItem(name);
-      } catch (error) {
-        console.error('Error removing from sessionStorage:', error);
-      }
-    },
-  };
-});
+// Define user profile interface
+export interface UserProfile {
+  id: string;
+  username?: string;
+  display_name?: string;
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
-export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated" | "error";
-
-interface AuthState {
+export interface AuthState {
   user: User | null;
   session: Session | null;
+  profile: UserProfile | null;
   roles: UserRole[];
   status: AuthStatus;
   isLoading: boolean;
   error: string | null;
   initialized: boolean;
   isAuthenticated: boolean;
-  hasRole: (role: UserRole) => boolean;
+  storeId: string;
+  lastUpdated: number;
+  hydrationAttempted: boolean;
+}
+
+export interface AuthActions {
+  hasRole: (role: UserRole | UserRole[]) => boolean;
   isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
+  
   setSession: (session: Session | null) => void;
+  setUser: (user: User | null) => void;
+  setProfile: (profile: UserProfile | null) => void;
+  setRoles: (roles: UserRole[]) => void;
+  setError: (error: string | null) => void;
+  setLoading: (isLoading: boolean) => void;
+  setInitialized: (initialized: boolean) => void;
+  setStatus: (status: AuthStatus) => void;
+  
   initialize: () => Promise<void>;
+  loadUserProfile: (userId: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()(
+type AuthStore = AuthState & AuthActions;
+
+export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
       user: null,
       session: null,
+      profile: null,
       roles: [],
       status: "idle",
       isLoading: false,
       error: null,
       initialized: false,
       isAuthenticated: false,
+      storeId: uuidv4(),
+      lastUpdated: Date.now(),
+      hydrationAttempted: false,
       
-      hasRole: (role: UserRole) => {
-        return get().roles.includes(role);
+      hasRole: (role: UserRole | UserRole[]) => {
+        const userRoles = get().roles;
+        
+        if (Array.isArray(role)) {
+          return role.some(r => userRoles.includes(r));
+        }
+        
+        return userRoles.includes(role);
       },
       
       isAdmin: () => {
@@ -75,10 +84,68 @@ export const useAuthStore = create<AuthState>()(
         return roles.includes("admin") || roles.includes("super_admin");
       },
       
+      isSuperAdmin: () => {
+        return get().roles.includes("super_admin");
+      },
+      
+      setUser: (user: User | null) => {
+        set({ 
+          user,
+          lastUpdated: Date.now()
+        });
+        
+        if (user) {
+          get().loadUserProfile(user.id);
+        } else {
+          set({ profile: null });
+        }
+      },
+      
+      setProfile: (profile: UserProfile | null) => {
+        set({
+          profile,
+          lastUpdated: Date.now()
+        });
+      },
+      
+      setRoles: (roles: UserRole[]) => {
+        set({ 
+          roles,
+          lastUpdated: Date.now()
+        });
+      },
+      
+      setError: (error: string | null) => {
+        set({ 
+          error,
+          lastUpdated: Date.now()
+        });
+      },
+      
+      setLoading: (isLoading: boolean) => {
+        set({ 
+          isLoading,
+          lastUpdated: Date.now()
+        });
+      },
+      
+      setInitialized: (initialized: boolean) => {
+        set({ 
+          initialized,
+          lastUpdated: Date.now()
+        });
+      },
+      
+      setStatus: (status: AuthStatus) => {
+        set({
+          status,
+          lastUpdated: Date.now()
+        });
+      },
+      
       setSession: (session: Session | null) => {
         const currentUser = session?.user || null;
         
-        // Derive roles from user metadata when available
         const roles: UserRole[] = [];
         if (currentUser?.app_metadata?.roles && Array.isArray(currentUser.app_metadata.roles)) {
           roles.push(...currentUser.app_metadata.roles);
@@ -90,107 +157,201 @@ export const useAuthStore = create<AuthState>()(
           roles,
           status: session ? "authenticated" : "unauthenticated",
           isAuthenticated: !!session,
+          lastUpdated: Date.now()
         });
       },
       
-      initialize: async () => {
-        const logger = getLogger('AuthStore');
-        logger.info('Auth store initialization started', {
-          category: LogCategory.AUTH
-        });
+      loadUserProfile: async (userId: string) => {
+        const logger = getLogger();
         
-        // Don't initialize multiple times
-        if (get().initialized) {
-          logger.info('Auth already initialized, skipping', {
-            category: LogCategory.AUTH
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+            
+          if (error) {
+            logger.warn('Failed to load user profile from database', {
+              category: LogCategory.AUTH,
+              source: 'auth.store',
+              details: { error: error.message }
+            });
+            
+            const user = get().user;
+            if (user) {
+              const profile: UserProfile = {
+                id: user.id,
+                display_name: user.user_metadata?.full_name as string || undefined,
+                avatar_url: user.user_metadata?.avatar_url as string || undefined,
+              };
+              
+              set({ 
+                profile,
+                lastUpdated: Date.now()
+              });
+            }
+            
+            return;
+          }
+          
+          set({ 
+            profile: data as UserProfile,
+            lastUpdated: Date.now()
+          });
+          
+          logger.info('User profile loaded successfully', {
+            category: LogCategory.AUTH,
+            source: 'auth.store'
+          });
+          
+        } catch (error) {
+          logger.error('Error loading user profile', {
+            category: LogCategory.AUTH,
+            source: 'auth.store',
+            details: { 
+              error: error instanceof Error ? error.message : String(error),
+              userId 
+            }
+          });
+        }
+      },
+      
+      initialize: async () => {
+        const logger = getLogger();
+        
+        if (get().initialized || get().hydrationAttempted) {
+          logger.info('Auth already initialized or attempted, skipping', {
+            category: LogCategory.AUTH,
+            source: 'auth.store'
           });
           return;
         }
 
         try {
-          set({ isLoading: true, status: "loading" });
+          set({ 
+            isLoading: true, 
+            status: "loading", 
+            hydrationAttempted: true,
+            lastUpdated: Date.now()
+          });
+          
+          logger.info('Auth store initialization started', {
+            category: LogCategory.AUTH,
+            source: 'auth.store'
+          });
           
           const { data, error } = await supabase.auth.getSession();
           if (error) throw error;
           
-          // Set the session from the response
           get().setSession(data.session);
+          
+          if (data.session?.user) {
+            await get().loadUserProfile(data.session.user.id);
+          }
           
           logger.info('Auth initialization completed', {
             category: LogCategory.AUTH,
+            source: 'auth.store',
             details: { 
               hasSession: !!data.session,
               status: data.session ? 'authenticated' : 'unauthenticated'
             }
           });
 
-          // Mark as initialized
-          set({ initialized: true, isLoading: false });
+          set({ 
+            initialized: true, 
+            isLoading: false,
+            lastUpdated: Date.now()
+          });
         } catch (error) {
-          const errorDetails = errorToObject(error);
+          const errorMessage = error instanceof Error ? error.message : "Authentication failed";
           
           logger.error('Auth initialization error', {
             category: LogCategory.AUTH,
-            details: errorDetails,
-            error: true
+            source: 'auth.store',
+            details: error
           });
           
           set({ 
-            error: error instanceof Error ? error.message : String(error), 
+            error: errorMessage, 
             status: "error",
             isLoading: false,
-            initialized: true // Still mark as initialized even if there's an error
+            initialized: true,
+            lastUpdated: Date.now()
           });
         }
       },
       
       logout: async () => {
-        const logger = getLogger('AuthStore');
+        const logger = getLogger();
         try {
-          set({ isLoading: true });
+          set({ 
+            isLoading: true,
+            lastUpdated: Date.now()
+          });
           
           logger.info('User logging out', {
-            category: LogCategory.AUTH
+            category: LogCategory.AUTH,
+            source: 'auth.store'
           });
           
           await supabase.auth.signOut();
           
           set({
             user: null,
+            profile: null,
             session: null,
             roles: [],
             status: "unauthenticated",
             isLoading: false,
-            isAuthenticated: false
+            isAuthenticated: false,
+            lastUpdated: Date.now()
           });
           
           logger.info('User logged out successfully', {
-            category: LogCategory.AUTH
+            category: LogCategory.AUTH,
+            source: 'auth.store'
           });
         } catch (error) {
-          const errorDetails = errorToObject(error);
+          const errorMessage = error instanceof Error ? error.message : "Logout failed";
           
           logger.error('Logout error', {
             category: LogCategory.AUTH,
-            details: errorDetails,
-            error: true
+            source: 'auth.store',
+            details: error
           });
           
-          set({ error: error instanceof Error ? error.message : String(error), isLoading: false });
+          set({ 
+            error: errorMessage, 
+            isLoading: false,
+            lastUpdated: Date.now()
+          });
           throw error;
         }
       }
     }),
     {
-      name: 'auth-storage',
-      storage: authStorage,
+      name: 'auth-store',
       partialize: (state) => ({
         user: state.user,
         session: state.session,
+        profile: state.profile,
         roles: state.roles,
         status: state.status,
-        isAuthenticated: state.isAuthenticated
-      })
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );
+
+export const selectUser = (state: AuthStore) => state.user;
+export const selectSession = (state: AuthStore) => state.session;
+export const selectProfile = (state: AuthStore) => state.profile;
+export const selectRoles = (state: AuthStore) => state.roles;
+export const selectStatus = (state: AuthStore) => state.status;
+export const selectIsAuthenticated = (state: AuthStore) => state.isAuthenticated;
+export const selectIsAdmin = (state: AuthStore) => state.isAdmin();
+export const selectIsSuperAdmin = (state: AuthStore) => state.isSuperAdmin();
+export const selectAuthError = (state: AuthStore) => state.error;
+export const selectIsLoading = (state: AuthStore) => state.isLoading;

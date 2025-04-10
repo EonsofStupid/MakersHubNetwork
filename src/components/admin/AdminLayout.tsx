@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "react-router-dom";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 

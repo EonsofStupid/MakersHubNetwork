@@ -1,37 +1,16 @@
 
 import React from 'react';
-import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
-import { PermissionValue } from '@/auth/permissions';
-import { AccessDenied } from './AccessDenied';
 
 interface RequirePermissionProps {
-  permission: PermissionValue;
+  permission: string;
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
 
+// RequirePermission that doesn't actually check permissions
 export function RequirePermission({ 
-  permission, 
-  children, 
-  fallback 
+  children 
 }: RequirePermissionProps) {
-  const { hasPermission, isLoaded } = useAdminPermissions();
-  
-  // Check if permissions are still loading
-  if (!isLoaded) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="h-6 w-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-  
-  // Check if user has the required permission
-  if (!hasPermission(permission)) {
-    // If fallback is provided, show it, otherwise show AccessDenied
-    return fallback ? <>{fallback}</> : <AccessDenied permission={permission} />;
-  }
-  
-  // User has permission, render children
+  // Always render the children, no permission checks
   return <>{children}</>;
 }
