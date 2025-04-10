@@ -1,11 +1,7 @@
 
-import { useCallback } from 'react';
-import { useThemeEffects } from '@/hooks/useThemeEffects';
-import { useThemeEffect } from '@/components/theme/effects/ThemeEffectProvider';
-import { EffectRenderer } from '@/components/theme/effects/EffectRenderer';
-import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
+import React, { useCallback } from 'react';
+import { useSiteTheme } from '@/app/components/theme/SiteThemeProvider';
 import { cn } from '@/lib/utils';
-import { CyberEffect } from '@/theme/types/effects';
 
 export interface FeatureCtaProps {
   title: string;
@@ -16,16 +12,14 @@ export interface FeatureCtaProps {
   id: string;
 }
 
-export const FeatureCta = ({
+export const FeatureCta: React.FC<FeatureCtaProps> = ({
   title,
   description,
   icon,
   ctaText = "Learn More",
   ctaLink = "#",
   id
-}: FeatureCtaProps) => {
-  const { applyRandomEffect, removeEffect } = useThemeEffects();
-  const { addEffect, removeEffect: removeThemeEffect, getEffectForElement } = useThemeEffect();
+}) => {
   const { componentStyles } = useSiteTheme();
 
   const styles = componentStyles?.FeatureCta || {
@@ -36,46 +30,16 @@ export const FeatureCta = ({
   };
 
   const handleHover = useCallback(() => {
-    const elementId = `feature-${id}`;
-    const effectId = `${elementId}-glow`;
-    
-    // Cast to the specific effect type
-    const cyberEffect: CyberEffect = {
-      id: effectId,
-      type: 'cyber',
-      enabled: true,
-      duration: 2000,
-      glowColor: '#00F0FF',
-      textShadow: true,
-      scanLines: false
-    };
-    
-    addEffect(elementId, cyberEffect);
-    
-    applyRandomEffect(elementId, {
-      types: ['cyber'],
-      colors: ['#00F0FF'],
-      duration: 2000
-    });
-    
-    return () => {
-      removeThemeEffect(effectId);
-      removeEffect(elementId);
-    };
-  }, [id, addEffect, applyRandomEffect, removeThemeEffect, removeEffect]);
-
-  const effect = getEffectForElement(`feature-${id}`);
+    // Simplified hover handler without theme effects
+    return () => {};
+  }, [id]);
 
   return (
-    <EffectRenderer 
-      effect={effect} 
-      className={cn(styles.container)}
-    >
+    <div className={cn(styles.container)}>
       <div 
         id={`feature-${id}`} 
         className="relative z-10"
         onMouseEnter={handleHover}
-        onMouseLeave={() => removeThemeEffect(`feature-${id}-glow`)}
       >
         {icon && <div className="mb-4 text-primary">{icon}</div>}
         <h3 className={cn(styles.title)}>{title}</h3>
@@ -98,6 +62,6 @@ export const FeatureCta = ({
           </svg>
         </a>
       </div>
-    </EffectRenderer>
+    </div>
   );
 };

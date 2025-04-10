@@ -33,10 +33,17 @@ export const SiteThemeProvider: React.FC<SiteThemeProviderProps> = ({ children }
   
   useEffect(() => {
     // Initialize theme styles and variables from the store
-    setComponentStyles(themeStore?.themeTokens?.components || {});
-    setVariables(themeStore?.themeTokens?.variables || {});
-    setAnimations(themeStore?.themeTokens?.animations || {});
-    setIsLoaded(true);
+    if (themeStore?.themeTokens) {
+      // Changed to check individual properties safely
+      const tokensObj = Array.isArray(themeStore.themeTokens) && themeStore.themeTokens.length > 0
+        ? themeStore.themeTokens[0] || {}
+        : {};
+        
+      setComponentStyles(tokensObj.components || {});
+      setVariables(tokensObj.variables || {});
+      setAnimations(tokensObj.animations || {});
+      setIsLoaded(true);
+    }
   }, [themeStore?.themeTokens]);
 
   return (
