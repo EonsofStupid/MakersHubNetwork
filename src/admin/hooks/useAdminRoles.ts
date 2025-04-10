@@ -5,6 +5,7 @@ import { useAdminStore } from '@/admin/store/admin.store';
 import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { ROLES } from '@/auth/types/roles';
 
 /**
  * Maps user roles to admin permissions
@@ -34,8 +35,8 @@ export function useAdminRoles() {
   }, [status, roles, loadPermissions, user, logger]);
   
   return {
-    isAdmin: Boolean(roles?.includes('admin') || roles?.includes('super_admin')),
-    isSuperAdmin: Boolean(roles?.includes('super_admin')),
+    isAdmin: Boolean(roles?.includes(ROLES.ADMIN) || roles?.includes(ROLES.SUPER_ADMIN)),
+    isSuperAdmin: Boolean(roles?.includes(ROLES.SUPER_ADMIN)),
     permissions
   };
 }
