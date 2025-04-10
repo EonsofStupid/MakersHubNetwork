@@ -50,7 +50,7 @@ export function AdminAuthGuard({
   }
   
   // Redirect to login if not authenticated
-  if (status !== 'loading' && status !== 'idle' && !isAuthenticated) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
@@ -60,7 +60,7 @@ export function AdminAuthGuard({
   }
   
   // Check for specific roles if required
-  if (requiredRole && !hasRole(requiredRole as UserRole | UserRole[])) {
+  if (requiredRole && !hasRole(requiredRole)) {
     return <AccessDenied missingRole={requiredRole} />;
   }
   

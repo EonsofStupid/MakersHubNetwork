@@ -1,11 +1,14 @@
 
 import React from "react"
 import { Link } from "react-router-dom"
-import { Menu, User, Settings, LayoutDashboard, LogOut, Shield, Crown } from "lucide-react"
+import { Menu, User, Settings, LayoutDashboard, LogOut, Shield, Crown, Link as LinkIcon } from "lucide-react"
 import { UserRole } from "@/auth/types/auth.types"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
+import { FcGoogle } from "react-icons/fc"
+import { AuthBridge } from "@/auth/bridge"
+import { useToast } from "@/hooks/use-toast"
 
 interface UserMenuSheetProps {
   isOpen: boolean
@@ -43,6 +46,31 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
         return null
     }
   }
+
+  const { toast } = useToast();
+  const [linking, setLinking] = React.useState(false);
+
+  // Function to handle linking Google account
+  const handleLinkGoogle = async () => {
+    try {
+      setLinking(true);
+      await AuthBridge.linkSocialAccount('google');
+      toast({
+        title: "Account linked",
+        description: "Your Google account has been linked successfully",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error linking account:", error);
+      toast({
+        title: "Error linking account",
+        description: error instanceof Error ? error.message : "Failed to link Google account",
+        variant: "destructive"
+      });
+    } finally {
+      setLinking(false);
+    }
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -124,6 +152,20 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
               <Settings className="h-4 w-4 text-primary group-hover:animate-pulse" />
               Settings
             </Link>
+
+            {/* Link Google Account button for users with password auth */}
+            <button
+              onClick={handleLinkGoogle}
+              disabled={linking}
+              className="group flex w-full items-center gap-2 px-4 py-2 text-sm
+                       transition-colors rounded-md hover:bg-primary/10"
+            >
+              <div className="flex items-center gap-2">
+                <LinkIcon className="h-4 w-4 text-primary group-hover:animate-pulse" />
+                <FcGoogle className="h-4 w-4" />
+              </div>
+              {linking ? "Linking Account..." : "Link Google Account"}
+            </button>
 
             {hasAdminAccess && (
               <Link

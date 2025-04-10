@@ -5,7 +5,8 @@ import { LogCategory } from '@/logging';
 import { User, Provider } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/auth/types/auth.types';
-import { CircuitBreaker } from '@/utils/circuitBreaker';
+import { CircuitBreaker } from '@/utils/CircuitBreaker';
+import { withDetails } from '@/logging/utils/log-helpers';
 
 // Define the event types
 export type AuthEventType = 
@@ -59,7 +60,7 @@ export function publishAuthEvent(event: AuthEvent): void {
   const logger = getLogger();
   
   // Check if the circuit breaker is open to prevent excessive events
-  if (authCircuitBreaker.isOpen) {
+  if (authCircuitBreaker.isTripped('auth-events')) {
     logger.warn(`Auth event publishing stopped by circuit breaker: ${event.type}`, {
       category: LogCategory.AUTH,
       source: 'auth/bridge',
@@ -80,7 +81,7 @@ export function publishAuthEvent(event: AuthEvent): void {
       handler(event);
     } catch (error) {
       // Record failure on circuit breaker
-      authCircuitBreaker.recordFailure();
+      authCircuitBreaker.recordFailure('auth-events');
       
       logger.error('Error in auth event handler', {
         category: LogCategory.AUTH,
@@ -91,7 +92,7 @@ export function publishAuthEvent(event: AuthEvent): void {
   });
   
   // Record successful publishing
-  authCircuitBreaker.recordSuccess();
+  authCircuitBreaker.recordSuccess('auth-events');
 }
 
 /**
@@ -175,13 +176,19 @@ export const AuthBridge = {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          // Using popup mode for the WMPULSE styled experience
+          // Using popup mode for the WM styled experience
           redirectTo: window.location.origin,
           queryParams: {
             prompt: 'select_account',
-            access_type: 'offline'
+            access_type: 'offline',
+            // Styling options for the popup
+            theme: 'dark', // Google supports themes
+            response_type: 'code', // For OAuth2
+            layout_default: 'theme_purple_withbg', // Custom theme styling
+            hl: 'en' // Language setting
           },
-          skipBrowserRedirect: false, // Will still redirect in a popup
+          skipBrowserRedirect: false, // Will use popup
+          scopes: 'email profile', // Request email and basic profile
         }
       });
       
@@ -198,6 +205,13 @@ export const AuthBridge = {
         });
         
         throw error;
+      }
+      
+      // Check for user with same email to trigger linking flow
+      if (data?.url) {
+        // Store the OAuth state for potential account linking
+        localStorage.setItem('wm_oauth_provider', provider);
+        localStorage.setItem('wm_oauth_initiated', Date.now().toString());
       }
       
       // Provider auth is async - user will be redirected
@@ -224,7 +238,7 @@ export const AuthBridge = {
     }
   },
   
-  // Specifically for Google login
+  // Specifically for Google login with styled popup
   signInWithGoogle: async () => {
     return AuthBridge.signInWithSocialProvider('google');
   },
@@ -276,6 +290,38 @@ export const AuthBridge = {
         details: { error }
       });
       throw error;
+    }
+  },
+  
+  // Check for account linking opportunity and prompt the user
+  promptAccountLinking: async (email: string, provider: Provider) => {
+    const logger = getLogger();
+    
+    try {
+      // Check if an account with this email exists
+      const { data, error } = await supabase.rpc('check_email_exists', {
+        check_email: email
+      });
+      
+      if (error) throw error;
+      
+      // If email exists, prompt for linking
+      if (data && data.exists) {
+        publishAuthEvent({
+          type: 'AUTH_LINKING_REQUIRED',
+          payload: { email, provider }
+        });
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      logger.error('Error checking for account linking', {
+        category: LogCategory.AUTH,
+        source: 'auth/bridge',
+        details: withDetails({ error })
+      });
+      return false;
     }
   },
   
@@ -386,6 +432,9 @@ export function initializeAuthBridge(): void {
           type: 'AUTH_SIGNED_IN',
           payload: { user: session.user, session }
         });
+        
+        // Check for account linking opportunity
+        checkAccountLinkingOpportunities(session.user);
       } else if (event === 'SIGNED_OUT') {
         store.setUser(null);
         store.setSession(null);
@@ -423,6 +472,9 @@ export function initializeAuthBridge(): void {
       // Load user profile
       if (data.session.user) {
         store.loadUserProfile(data.session.user.id);
+        
+        // Check for account linking opportunities
+        checkAccountLinkingOpportunities(data.session.user);
       }
     }
   };
@@ -469,11 +521,12 @@ export async function checkAccountLinkingOpportunities(user: User): Promise<bool
 
   const logger = getLogger();
   const hasPasswordAuth = user.app_metadata?.provider === 'email';
+  const hasGoogleAuth = user.identities?.some(i => i.provider === 'google');
   
   // Check if there could be opportunities for linking with social providers
   // This is a simplified check - in a real app, you might want to check against known email domains
-  if (hasPasswordAuth) {
-    logger.info('User could potentially link social accounts', {
+  if (hasPasswordAuth && !hasGoogleAuth) {
+    logger.info('User could potentially link Google account', {
       category: LogCategory.AUTH,
       source: 'auth/bridge'
     });
@@ -481,9 +534,19 @@ export async function checkAccountLinkingOpportunities(user: User): Promise<bool
     // Publish event that could be used by UI to prompt user
     publishAuthEvent({
       type: 'AUTH_LINKING_REQUIRED',
-      payload: { user }
+      payload: { user, provider: 'google' }
     });
     
+    return true;
+  }
+  
+  if (hasGoogleAuth && !hasPasswordAuth) {
+    logger.info('Google user could set up password', {
+      category: LogCategory.AUTH,
+      source: 'auth/bridge'
+    });
+    
+    // Could prompt user to set up password
     return true;
   }
   

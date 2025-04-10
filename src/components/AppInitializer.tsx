@@ -5,6 +5,8 @@ import { LogCategory } from "@/logging";
 import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { useAuthStore } from "@/auth/store/auth.store";
 import { AppBootstrap } from "./AppBootstrap";
+import { LinkedAccountAlert } from "./auth/LinkedAccountAlert";
+import { AccountLinkingModal } from "./auth/AccountLinkingModal";
 
 interface AppInitializerProps {
   children: ReactNode;
@@ -37,6 +39,10 @@ export function AppInitializer({ children }: AppInitializerProps) {
     <>
       {/* Add the AppBootstrap component to handle initialization */}
       <AppBootstrap />
+      
+      {/* Account linking components */}
+      <LinkedAccountAlert />
+      <AccountLinkingModal />
       
       {/* Render children regardless of initialization status */}
       {children}

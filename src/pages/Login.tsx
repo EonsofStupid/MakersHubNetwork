@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Divider } from "@/components/ui/divider";
+import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 
 interface LoginProps {
   onSuccess?: () => void;
@@ -37,9 +39,24 @@ const Login = ({ onSuccess }: LoginProps) => {
             All features are publicly accessible. You'll be redirected automatically.
           </p>
           
-          <Button onClick={() => navigate("/")}>
-            Continue to Home
-          </Button>
+          <div className="flex flex-col w-full gap-4">
+            <Button onClick={() => navigate("/")} className="w-full">
+              Continue to Home
+            </Button>
+            
+            <div className="relative flex items-center justify-center">
+              <Divider className="absolute w-full" />
+              <span className="relative bg-card px-2 text-xs text-muted-foreground">
+                or
+              </span>
+            </div>
+            
+            <GoogleLoginButton
+              fullWidth
+              onSuccess={() => navigate("/")}
+              variant="outline"
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
