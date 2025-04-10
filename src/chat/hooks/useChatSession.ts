@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { chatBridge } from '../lib/ChatBridge';
@@ -28,7 +29,8 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
   const chatBreaker = new CircuitBreaker('useChatSession', 5, 1000);
   
   useEffect(() => {
-    if (chatBreaker.count('useChatSession-init')) {
+    // Fix: Pass numeric value instead of string for count method
+    if (chatBreaker.count(1) > 3) {
       logger.warn('Breaking potential infinite loop in useChatSession initialization');
       return;
     }
