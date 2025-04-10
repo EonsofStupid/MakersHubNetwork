@@ -10,7 +10,7 @@ export function errorToObject(error: unknown): Record<string, unknown> {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      // Using optional chaining to avoid error on older JS versions
+      // Use optional chaining to avoid error on older JS versions
       cause: error['cause'] ? errorToObject(error['cause']) : undefined,
     };
   }

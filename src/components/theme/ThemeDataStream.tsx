@@ -1,72 +1,67 @@
-import React from 'react';
-import { useSiteTheme } from '@/app/components/theme/SiteThemeProvider';
 
-interface ThemeDataStreamProps {
-  children?: React.ReactNode;
-  propertyPath?: string;
-  fallback?: React.ReactNode;
+import React, { useEffect, useState } from 'react';
+import { useSiteTheme } from '@/app/components/theme/SiteThemeProvider';
+import { cn } from '@/lib/utils';
+
+export interface ThemeDataStreamProps {
+  className?: string;
+  speed?: number;
+  size?: 'sm' | 'md' | 'lg';
+  colors?: string[];
+  content?: string;
 }
 
 /**
- * ThemeDataStream component
+ * ThemeDataStream
  * 
- * This component allows accessing theme data from the SiteThemeProvider
- * and renders it or passes it to children
+ * A visual effect that mimics a data stream with animated text
  */
-export const ThemeDataStream: React.FC<ThemeDataStreamProps> = ({ 
-  children, 
-  propertyPath, 
-  fallback 
+export const ThemeDataStream: React.FC<ThemeDataStreamProps> = ({
+  className,
+  speed = 20,
+  size = 'md',
+  colors = ['text-primary', 'text-secondary', 'text-accent', 'text-muted-foreground'],
+  content = "01001001 01110100 00100111 01110011 00100000 01100001 01101100 01101001 01110110 01100101 00100001"
 }) => {
-  const { componentStyles, variables, animations, isLoaded } = useSiteTheme();
+  const { variables } = useSiteTheme();
+  const [stream, setStream] = useState<string[]>([]);
   
-  if (!isLoaded) {
-    return fallback ? <>{fallback}</> : null;
-  }
+  // Generate random binary stream
+  useEffect(() => {
+    const streamArray = content.split(' ');
+    setStream(streamArray);
+  }, [content]);
   
-  // If no property path is provided, provide all theme data
-  if (!propertyPath) {
-    const themeData = {
-      componentStyles,
-      variables,
-      animations
-    };
-    
-    // If children is a function, call it with theme data
-    if (typeof children === 'function') {
-      return children(themeData);
-    }
-    
-    // Otherwise just render children
-    return <>{children}</>;
-  }
+  // Set size class
+  const sizeClass = {
+    sm: 'text-xs tracking-tight',
+    md: 'text-sm tracking-normal',
+    lg: 'text-base tracking-wide',
+  }[size];
   
-  // Get data from specified path
-  const parts = propertyPath.split('.');
-  const dataType = parts[0];
+  // Log info for debugging
+  useEffect(() => {
+    console.log('ThemeDataStream variables:', variables);
+  }, [variables]);
   
-  let value: any = null;
-  
-  if (dataType === 'component' && componentStyles) {
-    value = parts.slice(1).reduce((obj, key) => obj?.[key], componentStyles);
-  } else if (dataType === 'variable' && variables) {
-    value = variables[parts[1]];
-  } else if (dataType === 'animation' && animations) {
-    value = parts.slice(1).reduce((obj, key) => obj?.[key], animations);
-  }
-  
-  // If children is a function, call it with the value
-  if (typeof children === 'function') {
-    return children(value);
-  }
-  
-  // Otherwise render the value if it's renderable
-  if (typeof value === 'string' || typeof value === 'number') {
-    return <>{value}</>;
-  }
-  
-  // Return fallback if value isn't renderable
-  return fallback ? <>{fallback}</> : null;
+  return (
+    <div className={cn("overflow-hidden font-mono", className)}>
+      <div className="animate-stream flex flex-wrap gap-1">
+        {stream.map((binary, index) => (
+          <span
+            key={index}
+            className={cn(
+              sizeClass,
+              colors[index % colors.length],
+              `animate-pulse-${(index % 5) + 1}`
+            )}
+          >
+            {binary}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default ThemeDataStream;

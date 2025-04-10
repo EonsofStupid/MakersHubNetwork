@@ -26,16 +26,14 @@ export const AuthSection: React.FC = () => {
   const { 
     user, 
     profile, 
-    roles 
+    roles,
+    isAdmin,
+    isSuperAdmin
   } = useAuthState();
   
   // Directly check status
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const status = useAuthStore(state => state.status);
-  
-  // Use AuthBridge for role checks
-  const isAdmin = AuthBridge.isAdmin();
-  const isSuperAdmin = AuthBridge.isSuperAdmin();
   
   // Local UI state
   const [showAdminButton, setShowAdminButton] = useAtom(showAdminButtonAtom);
@@ -184,4 +182,3 @@ export const AuthSection: React.FC = () => {
     </ComponentWrapper>
   );
 };
-

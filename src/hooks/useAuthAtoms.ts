@@ -15,6 +15,7 @@ export function useAuthAtoms() {
     user: authState.user,
     profile: authState.profile,
     roles: authState.roles,
-    status: authState.status
+    status: authState.status,
+    isLoading: authState.isLoading
   };
 }

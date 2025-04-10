@@ -6,7 +6,17 @@
  */
 
 // Auth related types
-export type UserRole = 'super_admin' | 'admin' | 'editor' | 'moderator' | 'builder' | 'maker' | 'viewer' | 'user';
+export type UserRole = 
+  | 'super_admin' 
+  | 'admin' 
+  | 'editor' 
+  | 'moderator' 
+  | 'builder' 
+  | 'maker' 
+  | 'viewer' 
+  | 'user'
+  | 'developer';
+
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 export type AuthProvider = 'email' | 'google' | 'github' | 'twitter' | 'facebook';
 
@@ -31,7 +41,8 @@ export const ROLES = {
   BUILDER: 'builder' as UserRole,
   MAKER: 'maker' as UserRole,
   VIEWER: 'viewer' as UserRole,
-  USER: 'user' as UserRole
+  USER: 'user' as UserRole,
+  DEVELOPER: 'developer' as UserRole
 } as const;
 
 // Re-export for convenience

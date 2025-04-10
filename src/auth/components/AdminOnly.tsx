@@ -8,7 +8,7 @@ import { useHasRole, useHasAdminAccess } from '../hooks/useHasRole';
 
 interface AdminOnlyProps {
   children: React.ReactNode;
-  role?: UserRole | UserRole[];
+  role?: UserRole | UserRole[] | undefined;
   fallback?: React.ReactNode;
 }
 

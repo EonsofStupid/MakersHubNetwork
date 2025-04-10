@@ -1,7 +1,13 @@
 
 /**
  * Centralized auth types
+ * 
+ * Single source of truth for auth types across the application
  */
+
+// Import and re-export from shared
+import { UserRole, AuthStatus } from './shared';
+export { UserRole, AuthStatus };
 
 // User profile type
 export interface UserProfile {
@@ -15,16 +21,6 @@ export interface UserProfile {
   [key: string]: any;
 }
 
-// User role enum
-export type UserRole = 
-  | 'user' 
-  | 'admin' 
-  | 'super_admin' 
-  | 'moderator' 
-  | 'editor' 
-  | 'viewer' 
-  | 'developer';
-
 // Auth user type (combined with profile)
 export interface AuthUser {
   id: string;
@@ -36,9 +32,5 @@ export interface AuthUser {
   metadata?: Record<string, any>;
 }
 
-// Auth state type
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
-
 // Re-export any shared types
 export * from '@/auth/types/shared';
-
