@@ -1,47 +1,22 @@
 
-import { useEffect } from 'react';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { AuthStatus } from '@/auth/types/auth.types';
-import { UserRole } from '@/types/shared';
-import { UserProfile } from '@/auth/store/auth.store';
-import { User } from '@supabase/supabase-js';
+import { useAuthStore } from '../store/auth.store';
 
 /**
- * Consolidated hook for accessing auth state across the app
- * This provides a consistent interface that bridges modules
+ * Hook to access auth state without triggering unnecessary re-renders
  */
-export const useAuthState = () => {
-  const {
-    user,
-    session,
-    profile,
-    roles,
-    status,
-    isAuthenticated,
-    error,
-    isLoading,
-    initialized,
-    hasRole,
-    isAdmin: checkIsAdmin,
-    isSuperAdmin: checkIsSuperAdmin
-  } = useAuthStore();
-
-  // Computed state
-  const isAdmin = checkIsAdmin();
-  const isSuperAdmin = checkIsSuperAdmin();
-
+export function useAuthState() {
+  const user = useAuthStore(state => state.user);
+  const profile = useAuthStore(state => state.profile);
+  const roles = useAuthStore(state => state.roles);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const status = useAuthStore(state => state.status);
+  
   return {
     user,
-    session,
     profile,
     roles,
-    status,
     isAuthenticated,
-    error,
-    isLoading,
-    initialized,
-    isAdmin,
-    isSuperAdmin,
-    hasRole
+    status
   };
-};
+}
+
