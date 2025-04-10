@@ -36,7 +36,9 @@ export const PERMISSIONS = {
   
   // System management
   SYSTEM_VIEW: 'system:view',
+  VIEW_SYSTEM: 'system:view', // Alias for backward compatibility
   SYSTEM_EDIT: 'system:edit',
+  EDIT_SYSTEM: 'system:edit', // Alias for backward compatibility
   SYSTEM_SETTINGS: 'system:settings',
   SYSTEM_LOGS: 'system:logs',
   SYSTEM_RESTART: 'system:restart',
@@ -91,4 +93,3 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.CONTENT_VIEW
   ]
 } as const;
-

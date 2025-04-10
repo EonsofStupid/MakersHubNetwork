@@ -16,7 +16,7 @@ const rolePermissionsMap: Record<UserRole, PermissionValue[]> = {
     PERMISSIONS.ADMIN_ACCESS,
     PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT, PERMISSIONS.EDIT_CONTENT, PERMISSIONS.DELETE_CONTENT,
     PERMISSIONS.VIEW_USERS, PERMISSIONS.EDIT_USERS,
-    PERMISSIONS.VIEW_SYSTEM, 
+    PERMISSIONS.SYSTEM_VIEW, 
   ],
   editor: [
     PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT, PERMISSIONS.EDIT_CONTENT,
@@ -51,4 +51,22 @@ export function mapRolesToPermissions(roles: UserRole[]): PermissionValue[] {
   
   // Remove duplicates
   return [...new Set(permissions)];
+}
+
+/**
+ * Check if user has admin access based on roles
+ * @param roles User roles to check
+ * @returns Boolean indicating if the user has admin access
+ */
+export function hasAdminAccess(roles: UserRole[]): boolean {
+  return roles.some(role => role === ROLES.ADMIN || role === ROLES.SUPER_ADMIN);
+}
+
+/**
+ * Check if user is a super admin
+ * @param roles User roles to check
+ * @returns Boolean indicating if the user is a super admin
+ */
+export function isSuperAdmin(roles: UserRole[]): boolean {
+  return roles.includes(ROLES.SUPER_ADMIN);
 }
