@@ -3,6 +3,7 @@ import React from 'react';
 
 /**
  * Converts an error object to a plain object for safe serialization
+ * This is a utility function that can be used across modules
  */
 export function errorToObject(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
@@ -30,6 +31,7 @@ export function errorToObject(error: unknown): Record<string, unknown> {
 
 /**
  * Safely renders any unknown value as a React node
+ * This is a utility function that can be used across modules
  */
 export function renderUnknownAsNode(value: unknown): React.ReactNode {
   if (value === null || value === undefined) {
@@ -87,6 +89,7 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
 
 /**
  * Converts any value to a searchable string
+ * This is a utility function that can be used across modules
  */
 export function nodeToSearchableString(value: unknown): string {
   if (value === null || value === undefined) {

@@ -3,6 +3,7 @@
  * useAuthAtoms.ts
  * 
  * Custom hook to provide convenient access to auth-related atoms
+ * This establishes a clean boundary with read-only Jotai atoms derived from Zustand
  */
 
 import { useAtom } from 'jotai';
@@ -14,14 +15,16 @@ import {
   isAuthenticatedAtom,
   isAdminAtom,
   isSuperAdminAtom,
-  logoutAtom,
   hasRoleAtom,
   userNameAtom,
-  userAvatarAtom
+  userAvatarAtom,
+  logoutAtom
 } from '@/auth/atoms/auth.store.atoms';
 
 /**
  * Custom hook that provides access to auth-related atoms
+ * Follows the hybrid state pattern with Jotai atoms serving as read-only views
+ * into the auth store state
  */
 export function useAuthAtoms() {
   const [user] = useAtom(userAtom);
@@ -37,6 +40,7 @@ export function useAuthAtoms() {
   const [hasRole] = useAtom(hasRoleAtom);
 
   // Return all atoms in a single object
+  // The consuming components should never directly modify these values
   return {
     user,
     profile,
