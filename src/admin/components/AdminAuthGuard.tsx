@@ -1,54 +1,112 @@
 
-import React, { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { authBridge } from '@/bridges/AuthBridge';
-import { UserRole } from '@/shared/types/user';
+import React, { useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
+import { AccessDenied } from './auth/AccessDenied';
+import { UserRole } from '@/types/shared';
+import { useToast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { AuthBridge } from '@/bridges/AuthBridge';
+import { useHasRole, useHasAdminAccess } from '@/auth/hooks/useHasRole';
+import { User } from '@/types/user';
 
 interface AdminAuthGuardProps {
-  children: ReactNode;
-  requiredRole?: UserRole | UserRole[];
-  redirectTo?: string;
+  children: React.ReactNode;
+  requiredRole?: UserRole | UserRole[] | undefined;
 }
 
 /**
- * A component that guards access to admin routes based on user role
+ * AdminAuthGuard
+ * 
+ * Protects admin routes to ensure only authorized users can access them.
+ * Redirects unauthenticated users to login and unauthorized users to access denied.
+ * Uses the standardized role checking system through bridges.
  */
-export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({
-  children,
-  requiredRole = ['admin', 'superadmin'],
-  redirectTo = '/admin/unauthorized'
-}) => {
-  const location = useLocation();
-
-  // Check if the user is authenticated
-  if (!authBridge.status.isAuthenticated) {
+export function AdminAuthGuard({ 
+  children, 
+  requiredRole 
+}: AdminAuthGuardProps) {
+  // Get auth status directly from authStore to ensure consistency
+  const user = useAuthStore(state => state.user as User | null);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const status = useAuthStore(state => state.status);
+  const roles = useAuthStore(state => state.roles);
+  
+  // Use our standardized hooks
+  const hasAdminAccess = useHasAdminAccess();
+  
+  // Other hooks
+  const logger = useLogger('AdminAuthGuard', LogCategory.ADMIN);
+  const { toast } = useToast();
+  
+  // Check if user has required role using our hook
+  const hasRequiredRole = requiredRole 
+    ? useHasRole(requiredRole)
+    : true;
+  
+  // Execute guard check on mount
+  useEffect(() => {
+    if (!isAuthenticated) {
+      logger.warn('Unauthenticated user attempted to access admin route');
+      return;
+    }
+    
+    if (!hasAdminAccess) {
+      logger.warn('Non-admin user attempted to access admin route', {
+        details: { roles, requiredRole }
+      });
+      
+      toast({
+        title: 'Access Denied',
+        description: 'You do not have permission to access this admin area',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Always log admin access attempts for debugging
+    if (hasAdminAccess) {
+      logger.info('Admin user accessing protected route', {
+        details: { 
+          userId: user?.id,
+          roles,
+          hasAdminAccess,
+          requiredRole
+        }
+      });
+    }
+  }, [isAuthenticated, hasAdminAccess, logger, roles, requiredRole, toast, user]);
+  
+  // Show nothing while authenticating
+  if (status === 'loading' || status === 'idle') {
     return (
-      <Navigate
-        to="/auth/login"
-        state={{ from: location }}
-        replace
-      />
+      <div className="flex items-center justify-center h-screen w-full">
+        <div className="relative">
+          <div className="h-32 w-32 rounded-full border-t-2 border-b-2 border-primary animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-16 w-16 rounded-full border-r-2 border-l-2 border-secondary animate-spin animate-reverse"></div>
+          </div>
+        </div>
+      </div>
     );
   }
   
-  // Check if the authentication is still loading
-  if (authBridge.status.isLoading) {
-    return <div>Loading...</div>;
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
-
-  // Check if user has the required role
-  if (!authBridge.hasRole(requiredRole)) {
-    return (
-      <Navigate
-        to={redirectTo}
-        state={{ from: location }}
-        replace
-      />
-    );
+  
+  // Check for admin access
+  if (!hasAdminAccess) {
+    return <AccessDenied />;
   }
-
-  // User is authenticated and has the required role
+  
+  // Check for specific roles if required
+  if (requiredRole && !hasRequiredRole) {
+    return <AccessDenied missingRole={requiredRole} />;
+  }
+  
+  // User has access, render children
   return <>{children}</>;
-};
-
-export default AdminAuthGuard;
+}

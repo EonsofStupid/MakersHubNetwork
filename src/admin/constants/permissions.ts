@@ -1,70 +1,61 @@
 
-// Define admin-specific permissions
+import { PERMISSIONS, PermissionValue } from '@/auth/permissions';
+import { ROLE_PERMISSIONS } from '@/auth/rbac/roles';
+
+// Re-export central permissions as admin-specific types
 export const ADMIN_PERMISSIONS = {
-  // Access permissions
-  ACCESS: 'admin:access',
-  ADMIN_ACCESS: 'admin:full-access',
+  // Admin dashboard access
+  ADMIN_ACCESS: PERMISSIONS.ADMIN.ACCESS,
+  ADMIN_VIEW: PERMISSIONS.ADMIN.VIEW,
+  ADMIN_EDIT: PERMISSIONS.ADMIN.EDIT,
   
-  // User profile permissions
-  USER_PROFILE_READ: 'user-profile:read',
-  USER_PROFILE_WRITE: 'user-profile:write',
+  // User management 
+  USERS_VIEW: PERMISSIONS.USERS.VIEW,
+  USERS_CREATE: PERMISSIONS.USERS.CREATE,
+  USERS_EDIT: PERMISSIONS.USERS.EDIT,
+  USERS_DELETE: PERMISSIONS.USERS.DELETE,
   
-  // User management permissions
-  USERS_READ: 'users:read',
-  USERS_WRITE: 'users:write',
-  USERS_VIEW: 'users:view',
-  USERS_EDIT: 'users:edit',
-  USERS_DELETE: 'users:delete',
+  // Content management
+  CONTENT_VIEW: PERMISSIONS.CONTENT.VIEW,
+  CONTENT_CREATE: PERMISSIONS.CONTENT.CREATE,
+  CONTENT_EDIT: PERMISSIONS.CONTENT.EDIT,
+  CONTENT_DELETE: PERMISSIONS.CONTENT.DELETE,
+  CONTENT_PUBLISH: PERMISSIONS.CONTENT.PUBLISH,
   
-  // Theme permissions
-  THEMES_READ: 'themes:read',
-  THEMES_WRITE: 'themes:write',
-  THEMES_VIEW: 'themes:view',
-  THEMES_EDIT: 'themes:edit',
-  THEMES_DELETE: 'themes:delete',
+  // Build management
+  BUILDS_VIEW: PERMISSIONS.BUILDS_VIEW,
+  BUILDS_CREATE: PERMISSIONS.BUILDS_CREATE,
+  BUILDS_EDIT: PERMISSIONS.BUILDS_EDIT,
+  BUILDS_APPROVE: PERMISSIONS.BUILDS_APPROVE,
   
-  // Layout permissions
-  LAYOUTS_READ: 'layouts:read',
-  LAYOUTS_WRITE: 'layouts:write',
+  // Settings management
+  SETTINGS_VIEW: PERMISSIONS.SETTINGS.VIEW,
+  SETTINGS_EDIT: PERMISSIONS.SETTINGS.EDIT,
   
-  // Settings permissions
-  SETTINGS_READ: 'settings:read',
-  SETTINGS_WRITE: 'settings:write',
-  SETTINGS_VIEW: 'settings:view',
-  SETTINGS_EDIT: 'settings:edit',
+  // System management
+  SYSTEM_VIEW: PERMISSIONS.SYSTEM.VIEW,
+  SYSTEM_SETTINGS: PERMISSIONS.SYSTEM.SETTINGS,
+  SYSTEM_LOGS: PERMISSIONS.SYSTEM.LOGS,
+  SYSTEM_RESTART: PERMISSIONS.SYSTEM.RESTART,
   
-  // Content permissions
-  CONTENT_READ: 'content:read',
-  CONTENT_WRITE: 'content:write',
-  CONTENT_VIEW: 'content:view',
-  CONTENT_EDIT: 'content:edit',
-  CONTENT_DELETE: 'content:delete',
+  // Add missing permissions
+  THEMES_VIEW: PERMISSIONS.THEMES_VIEW,
+  THEMES_EDIT: PERMISSIONS.THEMES_EDIT,
+  THEMES_DELETE: PERMISSIONS.THEMES_DELETE,
   
-  // Build permissions
-  BUILDS_READ: 'builds:read',
-  BUILDS_WRITE: 'builds:write',
-  BUILDS_VIEW: 'builds:view',
-  BUILDS_APPROVE: 'builds:approve',
-  BUILDS_REJECT: 'builds:reject',
+  DATA_VIEW: PERMISSIONS.DATA_VIEW,
+  DATA_EDIT: PERMISSIONS.DATA_EDIT,
+  DATA_IMPORT: PERMISSIONS.DATA_IMPORT,
+  DATA_EXPORT: PERMISSIONS.DATA_EXPORT,
   
-  // Data permissions
-  DATA_READ: 'data:read',
-  DATA_WRITE: 'data:write',
-  DATA_VIEW: 'data:view',
-  DATA_IMPORT: 'data:import',
+  ANALYTICS_VIEW: PERMISSIONS.ANALYTICS_VIEW,
   
-  // System permissions
-  SYSTEM_LOGS: 'system:logs',
-  SYSTEM_SETTINGS: 'system:settings',
-  SYSTEM_WRITE: 'system:write',
-  
-  // Analytics permissions
-  ANALYTICS_VIEW: 'analytics:view',
-  
-  // Super admin permission
-  SUPER_ADMIN: 'admin:super',
-  
-  // Admin mode permissions
-  ADMIN_VIEW: 'admin:view',
-  ADMIN_EDIT: 'admin:edit',
-};
+  // Super admin
+  SUPER_ADMIN: PERMISSIONS.SUPER_ADMIN
+} as const;
+
+// Type for admin permission values
+export type AdminPermissionValue = PermissionValue;
+
+// Re-export the role permissions mapping
+export { ROLE_PERMISSIONS } from '@/auth/rbac/roles';

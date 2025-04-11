@@ -1,80 +1,79 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useLogger } from '@/shared/hooks/use-logger';
-import { authBridge } from '@/bridges/AuthBridge';
-import { LogCategory } from '@/logging/types';
-import { usePermissions } from '@/admin/hooks/useAdminPermissions';
-import { UserRole } from '@/shared/types/auth.types';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useAdminStore } from '@/admin/store/admin.store';
+import { useAdminSync } from '@/admin/hooks/useAdminSync';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
+import { useAuthState } from '@/auth/hooks/useAuthState';
+import { PERMISSIONS } from '@/auth/permissions';
+import { AdminPermissionValue } from '@/admin/types/permissions';
+import { mapRolesToPermissions } from '@/auth/rbac/roles';
 
-interface AdminContextProps {
-  isAdmin: boolean;
-  isSuperAdmin: boolean;
-  isLoading: boolean;
-  error: string | null;
-  validateAccess: (role: UserRole | UserRole[]) => boolean;
+// Create context
+interface AdminContextValue {
+  initialized: boolean;
 }
 
-const AdminContext = createContext<AdminContextProps>({
-  isAdmin: false,
-  isSuperAdmin: false,
-  isLoading: true,
-  error: null,
-  validateAccess: () => false,
-});
+const AdminContext = createContext<AdminContextValue | undefined>(undefined);
 
-export const useAdminContext = () => useContext(AdminContext);
-
-export const AdminProvider = ({ children }: { children: ReactNode }) => {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { hasPermission } = usePermissions();
-  const logger = useLogger('AdminProvider', LogCategory.ADMIN);
-
+// Provider component
+export function AdminProvider({ children }: { children: React.ReactNode }) {
+  const { setPermissions } = useAdminStore();
+  const { isSyncing } = useAdminSync();
+  const [initialized, setInitialized] = useState(false);
+  const initAttemptedRef = useRef<boolean>(false);
+  const logger = useLogger('AdminContext', LogCategory.ADMIN);
+  
+  // Get permissions directly from auth state to avoid circular dependencies
+  const { roles, status } = useAuthState();
+  
+  // Initialize admin context only once
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Check if user is authenticated and has admin role
-        const hasAdminRole = authBridge.hasRole(['admin', 'super_admin'] as UserRole[]);
-        const hasSuperAdminRole = authBridge.hasRole('super_admin' as UserRole);
-        
-        setIsAdmin(hasAdminRole);
-        setIsSuperAdmin(hasSuperAdminRole);
-        
-        logger.info('Admin status checked', { isAdmin: hasAdminRole, isSuperAdmin: hasSuperAdminRole });
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to validate admin status';
-        logger.error('Error checking admin status', { error: errorMessage });
-        setError(errorMessage);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    checkAdminStatus();
-  }, [logger]);
-
-  const validateAccess = (role: UserRole | UserRole[]) => {
-    if (isLoading || error) return false;
-    
-    // Super admins have access to everything
-    if (isSuperAdmin) return true;
-    
-    // For regular admins, check specific permissions if needed
-    if (isAdmin) {
-      return hasPermission(role);
+    // Guard against multiple initialization attempts and wait until auth is ready
+    if (initAttemptedRef.current || initialized || status === 'loading') {
+      return;
     }
     
-    return false;
-  };
-
+    // Mark initialization as attempted immediately to prevent multiple attempts
+    initAttemptedRef.current = true;
+    
+    try {
+      logger.info('Initializing admin context', {
+        details: { userRoles: roles, authStatus: status }
+      });
+      
+      // Use the proper role mapping function to get typed permissions
+      const adminPermissions: AdminPermissionValue[] = 
+        mapRolesToPermissions(roles);
+      
+      // Update permissions in store
+      setPermissions(adminPermissions);
+      setInitialized(true);
+      
+      logger.info('Admin context initialized successfully', {
+        details: { permissionsCount: adminPermissions.length }
+      });
+    } catch (error) {
+      logger.error('Failed to initialize admin context', {
+        details: { error }
+      });
+    }
+  }, [logger, roles, initialized, setPermissions, status]);
+  
+  const value = { initialized };
+  
   return (
-    <AdminContext.Provider value={{ isAdmin, isSuperAdmin, isLoading, error, validateAccess }}>
+    <AdminContext.Provider value={value}>
       {children}
     </AdminContext.Provider>
   );
-};
+}
+
+// Hook to use admin context
+export function useAdminContext() {
+  const context = useContext(AdminContext);
+  if (context === undefined) {
+    throw new Error('useAdminContext must be used within an AdminProvider');
+  }
+  return context;
+}

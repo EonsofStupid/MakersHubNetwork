@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
-import { Button } from '@/ui/core/button';
+import { Button } from '@/components/ui/button';
 
 export function BuildApprovalWidget() {
   // Sample data for pending approvals

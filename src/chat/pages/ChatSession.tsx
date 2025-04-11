@@ -1,84 +1,103 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
-import { SendHorizontal } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/core/card';
-import { Button } from '@/ui/core/button';
-import { motion } from 'framer-motion';
-import { Textarea } from '@/ui/core/textarea';
+import { useChatSession } from '../hooks/useChatSession';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Textarea } from '@/components/ui/textarea';
+import { Send, ArrowLeft } from 'lucide-react';
 
-export function ChatSession() {
-  const { sessionId } = useParams<{ sessionId: string }>();
-  const [message, setMessage] = React.useState('');
-
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
-    console.log('Sending message:', message);
-    setMessage('');
+export default function ChatSession() {
+  const navigate = useNavigate();
+  const params = useParams<{ sessionId: string }>();
+  const sessionId = params.sessionId || '';
+  const [inputMessage, setInputMessage] = React.useState('');
+  const { messages, sendMessage, isLoading } = useChatSession({ 
+    sessionId 
+  });
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  
+  // Scroll to bottom when messages change
+  React.useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+  
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputMessage.trim() && !isLoading) {
+      sendMessage(inputMessage);
+      setInputMessage('');
+    }
   };
-
+  
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 p-4 overflow-auto">
-        <div className="space-y-4">
-          {/* AI Message */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex gap-3"
-          >
-            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-              <span className="text-xs font-semibold text-primary">AI</span>
+    <div className="container mx-auto p-4 max-w-5xl min-h-[90vh]">
+      <Button 
+        variant="ghost" 
+        className="mb-4 flex items-center gap-2"
+        onClick={() => navigate('/chat')}
+      >
+        <ArrowLeft size={16} /> Back to Chat Home
+      </Button>
+      
+      <Card className="min-h-[80vh] flex flex-col">
+        <CardHeader>
+          <CardTitle>Chat Session</CardTitle>
+          <CardDescription>
+            Session ID: {sessionId}
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="flex-1 overflow-auto">
+          <div className="space-y-4">
+            {messages.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  Send a message to start the conversation
+                </p>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${
+                    message.sender === 'user' ? 'justify-end' : 'justify-start'
+                  }`}
+                >
+                  <div
+                    className={`max-w-[80%] px-4 py-2 rounded-lg ${
+                      message.sender === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    <div>{message.content}</div>
+                  </div>
+                </div>
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </CardContent>
+        
+        <CardFooter>
+          <form onSubmit={handleSubmit} className="w-full">
+            <div className="flex gap-2">
+              <Textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Type your message..."
+                className="flex-1"
+                disabled={isLoading}
+              />
+              <Button type="submit" disabled={!inputMessage.trim() || isLoading}>
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
-            <Card className="max-w-[80%]">
-              <CardContent className="p-3">
-                <p className="text-sm">Hello! How can I assist you today?</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* User Message */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex gap-3 justify-end"
-          >
-            <Card className="max-w-[80%] bg-primary/10">
-              <CardContent className="p-3">
-                <p className="text-sm">I'd like to discuss a new project idea.</p>
-              </CardContent>
-            </Card>
-            <div className="h-8 w-8 rounded-full bg-secondary/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-xs font-semibold">ME</span>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      <div className="p-4 border-t">
-        <div className="flex gap-2">
-          <Textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="min-h-[60px] resize-none"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-          />
-          <Button 
-            onClick={handleSendMessage} 
-            size="icon" 
-            className="h-[60px] w-[60px]"
-          >
-            <SendHorizontal className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
+          </form>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

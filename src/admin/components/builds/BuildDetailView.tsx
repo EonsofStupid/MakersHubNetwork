@@ -7,12 +7,12 @@ import {
   CardFooter, 
   CardHeader, 
   CardTitle 
-} from '@/ui/core/card';
-import { Button } from '@/ui/core/button';
-import { Label } from '@/ui/core/label';
-import { Textarea } from '@/ui/core/textarea';
-import { Badge } from '@/ui/core/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBuildAdminStore } from "@/admin/store/buildAdmin.store";
 import { AlertCircle, ArrowLeft, Clock, Package, ThumbsDown, ThumbsUp, Wrench, MessageSquare } from "lucide-react";
 import { formatDistance } from "date-fns";

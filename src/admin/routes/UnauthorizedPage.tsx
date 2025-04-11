@@ -2,8 +2,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, AlertTriangle } from "lucide-react";
-import { Button } from '@/ui/core/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/ui/core/card';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function UnauthorizedPage() {
   const navigate = useNavigate();

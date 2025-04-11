@@ -113,3 +113,4 @@ export function publishLoggingEvent(event: LogEventType, payload: Omit<LogEventP
 
 // Export the internal bridge for logging module use only
 export { loggingBridgeImpl };
+

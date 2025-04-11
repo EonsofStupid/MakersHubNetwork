@@ -1,42 +1,94 @@
 
-import { Permission, UserRole } from '@/shared/types/user';
+import { UserRole, ROLES } from '@/types/shared';
+import { PERMISSIONS, PermissionValue } from '@/auth/permissions';
 
-// Define role permissions
-export const rolePermissions: Record<UserRole, Permission[]> = {
-  user: ['user:profile:read', 'user:profile:write'],
-  admin: [
-    'admin:access',
-    'admin:users:read',
-    'admin:users:write',
-    'admin:content:read',
-    'admin:content:write',
+/**
+ * Map of roles to permissions
+ * 
+ * This is the central configuration for role-based access control.
+ * Each role is assigned a set of permissions that determine what actions
+ * users with that role can perform.
+ */
+export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
+  [ROLES.SUPER_ADMIN]: [
+    ...Object.values(PERMISSIONS)
+      .flatMap(section => {
+        if (typeof section === 'string') return section;
+        return Object.values(section).filter(p => typeof p === 'string');
+      })
+      .filter((p): p is string => typeof p === 'string')
   ],
-  superadmin: [
-    'admin:access',
-    'admin:users:read',
-    'admin:users:write',
-    'admin:themes:read',
-    'admin:themes:write',
-    'admin:layouts:read',
-    'admin:layouts:write',
-    'admin:content:read',
-    'admin:content:write',
-    'admin:system:read',
-    'admin:system:write',
+  [ROLES.ADMIN]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.CREATE,
+    PERMISSIONS.CONTENT.EDIT,
+    PERMISSIONS.CONTENT.DELETE,
+    PERMISSIONS.CONTENT.PUBLISH,
+    
+    PERMISSIONS.USERS.VIEW,
+    PERMISSIONS.USERS.CREATE,
+    PERMISSIONS.USERS.EDIT,
+    
+    PERMISSIONS.SETTINGS.VIEW,
+    PERMISSIONS.SETTINGS.EDIT,
+    
+    PERMISSIONS.ANALYTICS.VIEW,
   ],
-  moderator: ['admin:access', 'admin:content:read'],
-  builder: ['admin:access', 'admin:themes:read', 'admin:themes:write', 'admin:layouts:read', 'admin:layouts:write'],
+  [ROLES.EDITOR]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.CREATE,
+    PERMISSIONS.CONTENT.EDIT,
+    PERMISSIONS.CONTENT.PUBLISH,
+    
+    PERMISSIONS.USERS.VIEW,
+  ],
+  [ROLES.MODERATOR]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.EDIT,
+    
+    PERMISSIONS.USERS.VIEW,
+  ],
+  [ROLES.BUILDER]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.CREATE,
+    PERMISSIONS.CONTENT.EDIT,
+  ],
+  [ROLES.MAKER]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.CREATE,
+  ],
+  [ROLES.VIEWER]: [
+    PERMISSIONS.CONTENT.VIEW,
+  ],
+  [ROLES.USER]: [
+    PERMISSIONS.CONTENT.VIEW,
+  ],
+  [ROLES.DEVELOPER]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.CREATE,
+    PERMISSIONS.CONTENT.EDIT,
+    
+    PERMISSIONS.SYSTEM.VIEW,
+    PERMISSIONS.SYSTEM.EDIT,
+    PERMISSIONS.SYSTEM.DEBUG,
+  ]
 };
 
-// Map roles to their permissions
-export function mapRolesToPermissions(roles: UserRole[]): Permission[] {
-  const permissions: Permission[] = [];
+/**
+ * Maps user roles to their corresponding permissions
+ */
+export function mapRolesToPermissions(roles: UserRole[]): PermissionValue[] {
+  if (!roles || roles.length === 0) {
+    return [];
+  }
   
-  roles.forEach(role => {
-    if (rolePermissions[role]) {
-      permissions.push(...rolePermissions[role]);
-    }
-  });
+  // Get all permissions for all roles
+  const permissionSets = roles.map(role => ROLE_PERMISSIONS[role] || []);
   
-  return [...new Set(permissions)]; // Remove duplicates
+  // Flatten and deduplicate
+  const allPermissions = Array.from(
+    new Set(permissionSets.flat())
+  ) as PermissionValue[];
+  
+  return allPermissions;
 }

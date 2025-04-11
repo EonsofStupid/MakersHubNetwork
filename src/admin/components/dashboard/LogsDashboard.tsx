@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { LogCategory } from '@/logging/types';
+import { LogCategory } from '@/logging';
 import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
 import { LogLevel } from '@/logging/constants/log-level';
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/core/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 /**
@@ -20,7 +20,7 @@ export function LogsDashboard() {
     LogCategory.AUTH,
     LogCategory.SYSTEM,
     LogCategory.UI,
-    LogCategory.NETWORK, // Now exists in LogCategory
+    LogCategory.NETWORK,
     LogCategory.CHAT,
     LogCategory.DATABASE
   ];

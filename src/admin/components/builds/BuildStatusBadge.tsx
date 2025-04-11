@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Badge } from "@/ui/core/badge";
+import { Badge } from "@/components/ui/badge";
 import { BuildStatus } from "@/admin/types/build.types";
 import { AlertCircle, CheckCircle, XCircle, RotateCcw } from "lucide-react";
 

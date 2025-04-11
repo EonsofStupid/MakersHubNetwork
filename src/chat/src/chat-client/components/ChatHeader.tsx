@@ -15,8 +15,8 @@ import {
   Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/core/tooltip';
-import { Button } from '@/ui/core/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from '@/components/ui/button';
 import { useChatStore } from '../state/chatStore';
 
 interface ModeOption {

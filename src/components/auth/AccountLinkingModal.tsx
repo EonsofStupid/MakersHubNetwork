@@ -6,8 +6,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/ui/core/dialog';
-import { Button } from '@/ui/core/button';
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { FcGoogle } from 'react-icons/fc';
 import { User, Mail, Key } from 'lucide-react';
 import { AuthBridge, subscribeToAuthEvents } from '@/auth/bridge';
