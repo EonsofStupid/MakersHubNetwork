@@ -1,6 +1,5 @@
 
-import { User } from "@/types";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/ui/core/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/ui/core/dialog";
 import { ProfileEditor } from "./ProfileEditor";
 
 interface ProfileDialogProps {

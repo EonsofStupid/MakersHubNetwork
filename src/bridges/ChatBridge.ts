@@ -1,143 +1,63 @@
 
-import { User } from "@/shared/types";
-import { authBridge } from "./AuthBridge";
-
 export interface ChatMessage {
   id: string;
   content: string;
-  sender: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  timestamp: Date;
+  sender_id: string;
+  session_id: string;
+  created_at: string;
+  metadata?: Record<string, any>;
 }
 
 export interface ChatSession {
   id: string;
-  messages: ChatMessage[];
-  participants: {
-    id: string;
-    name: string;
-    avatar?: string;
-  }[];
-  status: 'active' | 'archived' | 'pending';
+  title: string;
+  created_at: string;
+  updated_at: string;
+  members: string[];
+  status: 'active' | 'archived' | 'deleted';
+  metadata?: Record<string, any>;
 }
 
-export interface ChatBridgeClass {
-  getActiveSessions: () => ChatSession[];
-  sendMessage: (sessionId: string, content: string) => Promise<ChatMessage>;
-  createSession: (participants: string[]) => Promise<ChatSession>;
-  archiveSession: (sessionId: string) => Promise<boolean>;
-  subscribeToMessages: (sessionId: string, callback: (message: ChatMessage) => void) => () => void;
+export type ChatEventType = 
+  | 'MESSAGE_SENT' 
+  | 'MESSAGE_RECEIVED'
+  | 'SESSION_CREATED'
+  | 'SESSION_UPDATED'
+  | 'SESSION_DELETED'
+  | 'USER_JOINED'
+  | 'USER_LEFT';
+
+export interface ChatEvent {
+  type: ChatEventType;
+  payload: any;
 }
 
-class ChatBridgeImplementation implements ChatBridgeClass {
-  private sessions: ChatSession[] = [];
-  private messageListeners: Record<string, ((message: ChatMessage) => void)[]> = {};
-
-  constructor() {
-    // Initialize with empty sessions
-    this.sessions = [];
-  }
-
-  getActiveSessions() {
-    return this.sessions.filter(session => session.status === 'active');
-  }
-
-  async sendMessage(sessionId: string, content: string): Promise<ChatMessage> {
-    const user = authBridge.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated to send messages');
-    }
-    
-    const session = this.sessions.find(s => s.id === sessionId);
-    if (!session) {
-      throw new Error(`Session ${sessionId} not found`);
-    }
-
-    const message: ChatMessage = {
-      id: Math.random().toString(36).substring(7),
-      content,
-      sender: {
-        id: user.id,
-        name: user.displayName || 'Unknown User',
-        avatar: user.avatarUrl
-      },
-      timestamp: new Date()
-    };
-
-    session.messages.push(message);
-    
-    // Notify listeners
-    if (this.messageListeners[sessionId]) {
-      this.messageListeners[sessionId].forEach(listener => listener(message));
-    }
-    
-    return message;
-  }
-
-  async createSession(participantIds: string[]): Promise<ChatSession> {
-    const user = authBridge.getUser();
-    if (!user) {
-      throw new Error('User must be authenticated to create sessions');
-    }
-
-    // Generate a simple session
-    const session: ChatSession = {
-      id: Math.random().toString(36).substring(7),
-      messages: [],
-      participants: [
-        {
-          id: user.id,
-          name: user.displayName || 'Unknown User',
-          avatar: user.avatarUrl
-        },
-        // Mock additional participants
-        ...participantIds.map(id => ({
-          id,
-          name: `User ${id}`,
-        }))
-      ],
-      status: 'active'
-    };
-
-    this.sessions.push(session);
-    return session;
-  }
-
-  async archiveSession(sessionId: string): Promise<boolean> {
-    const session = this.sessions.find(s => s.id === sessionId);
-    if (!session) {
-      return false;
-    }
-    
-    session.status = 'archived';
-    return true;
-  }
-
-  subscribeToMessages(sessionId: string, callback: (message: ChatMessage) => void): () => void {
-    if (!this.messageListeners[sessionId]) {
-      this.messageListeners[sessionId] = [];
-    }
-    
-    this.messageListeners[sessionId].push(callback);
-    
-    // Return unsubscribe function
-    return () => {
-      if (this.messageListeners[sessionId]) {
-        this.messageListeners[sessionId] = this.messageListeners[sessionId].filter(
-          listener => listener !== callback
-        );
-      }
-    };
-  }
+export interface ChatSessionOptions {
+  members?: string[];
+  metadata?: Record<string, any>;
 }
 
-// Export a singleton instance
-export const chatBridge = new ChatBridgeImplementation();
+export interface ChatBridgeImplementation {
+  createSession: (title: string, options?: ChatSessionOptions) => Promise<ChatSession>;
+  getSession: (sessionId: string) => Promise<ChatSession>;
+  listSessions: () => Promise<ChatSession[]>;
+  sendMessage: (sessionId: string, content: string, metadata?: Record<string, any>) => Promise<ChatMessage>;
+  getMessages: (sessionId: string) => Promise<ChatMessage[]>;
+  subscribe: (event: ChatEventType, callback: (data: any) => void) => () => void;
+  subscribeToSession: (sessionId: string, callback: (message: ChatMessage) => void) => () => void;
+  publish: (event: ChatEventType, data: any) => void;
+}
 
-// For backwards compatibility
-export const chatBridgeImpl = chatBridge;
-export const ChatBridge = chatBridge;
+export const ChatBridge: ChatBridgeImplementation = {
+  createSession: async () => ({ id: '', title: '', created_at: '', updated_at: '', members: [], status: 'active' }),
+  getSession: async () => ({ id: '', title: '', created_at: '', updated_at: '', members: [], status: 'active' }),
+  listSessions: async () => [],
+  sendMessage: async () => ({ id: '', content: '', sender_id: '', session_id: '', created_at: '' }),
+  getMessages: async () => [],
+  subscribe: () => () => {},
+  subscribeToSession: () => () => {},
+  publish: () => {},
+};
+
+// Export for use in application
+export const chatBridge = ChatBridge;

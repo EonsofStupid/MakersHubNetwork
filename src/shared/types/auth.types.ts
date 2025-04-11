@@ -1,47 +1,76 @@
 
-/**
- * Auth related types 
- */
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
-import { BaseEntity, UserMetadata } from "./shared.types";
+export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor' | 'maker';
 
-export type UserRole = 'user' | 'admin' | 'super_admin' | 'builder' | 'content_manager';
+export type UserStatus = 'active' | 'inactive' | 'suspended' | 'pending';
 
 export type Permission = 
-  | 'create:users' 
-  | 'read:users' 
-  | 'update:users' 
-  | 'delete:users'
-  | 'manage:content'
-  | 'manage:layouts'
-  | 'manage:settings'
-  | 'view:admin'
-  | 'view:analytics'
-  | 'manage:builds';
-
-export interface User extends BaseEntity {
-  email: string;
-  displayName?: string;
-  avatarUrl?: string;
-  roles?: UserRole[];
-  metadata: UserMetadata;
-}
+  | 'users:read'
+  | 'users:write' 
+  | 'users:delete'
+  | 'content:read' 
+  | 'content:write' 
+  | 'content:delete'
+  | 'builds:read'
+  | 'builds:write'
+  | 'builds:delete'
+  | 'builds:approve'
+  | 'builds:reject'
+  | 'settings:read'
+  | 'settings:write'
+  | 'admin:access'
+  | 'admin:super'
+  | 'themes:read'
+  | 'themes:write'
+  | 'themes:delete'
+  | 'layouts:read'
+  | 'layouts:write'
+  | 'layouts:delete'
+  | 'chats:read'
+  | 'chats:write'
+  | 'chats:delete'
+  | 'chats:moderate';
 
 export interface UserProfile {
-  displayName: string;
+  id: string;
+  user_id: string;
+  display_name?: string;
+  avatar_url?: string;
   bio?: string;
-  avatarUrl?: string;
-  socialLinks?: {
-    twitter?: string;
-    github?: string;
-    linkedin?: string;
-    website?: string;
-  };
-  preferences?: Record<string, any>;
+  website?: string;
+  roles?: UserRole[];
+  status?: UserStatus;
+  created_at?: string;
+  updated_at?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface User extends SupabaseUser {
+  profile?: UserProfile;
 }
 
 export interface AuthState {
   user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
+  status: {
+    isAuthenticated: boolean;
+    isLoading: boolean;
+  };
+  signIn: (email: string, password: string) => Promise<null>;
+  signInWithGoogle: () => Promise<null>;
+  logout: () => Promise<void>;
+  hasRole: (role: UserRole | UserRole[]) => boolean;
+  isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
+}
+
+export interface AuthEvent {
+  type: 'SIGNED_IN' | 'SIGNED_OUT' | 'USER_UPDATED' | 'PASSWORD_RECOVERY';
+  payload?: any;
+}
+
+export interface UserMetadata {
+  full_name?: string;
+  avatar_url?: string;
+  [key: string]: any;
 }

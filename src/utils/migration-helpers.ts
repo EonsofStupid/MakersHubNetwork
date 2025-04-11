@@ -3,17 +3,19 @@ import * as path from 'path';
 
 // Define mappings for import path migrations
 export const importPathMappings: Record<string, string> = {
-  '@/components/ui/': '@/ui/core/',
+  '@/components/ui/': '@/shared/ui/core/',
+  '@/ui/core/': '@/shared/ui/core/',
   '@/stores/auth/store': '@/auth/store',
-  '@/components/theme/': '@/ui/theme/',
-  '@/components/profile/': '@/ui/profile/',
+  '@/components/theme/': '@/shared/ui/theme/',
+  '@/components/profile/': '@/shared/ui/profile/',
   '@/components/admin/': '@/admin/components/',
-  '@/layouts/': '@/ui/layouts/',
-  '@/hooks/': '@/ui/hooks/',
-  '@/components/KeyboardNavigation/types/': '@/ui/keyboard/types/',
+  '@/layouts/': '@/shared/ui/layouts/',
+  '@/hooks/': '@/shared/hooks/',
+  '@/hooks/use-toast': '@/shared/hooks/use-toast',
+  '@/components/KeyboardNavigation/types/': '@/shared/ui/keyboard/types/',
   '@/auth/hooks/useUser': '@/auth/hooks/useAuth',
-  '@/hooks/use-toast': '@/ui/hooks/use-toast',
-  '@/components/ui/use-toast': '@/ui/hooks/use-toast'
+  '@/ui/hooks/use-toast': '@/shared/hooks/use-toast',
+  '@/components/ui/use-toast': '@/shared/hooks/use-toast'
 };
 
 /**
