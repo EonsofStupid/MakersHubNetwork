@@ -1,6 +1,7 @@
 
 export interface UserMetadata {
   full_name?: string;
+  name?: string;
   avatar_url?: string;
   [key: string]: any;
 }
@@ -38,6 +39,7 @@ export interface UserProfile {
   updated_at?: string;
 }
 
+// Update to match the case in different parts of the app
 export type UserRole = 'user' | 'admin' | 'superadmin' | 'moderator' | 'builder';
 
 export type Permission = string;
