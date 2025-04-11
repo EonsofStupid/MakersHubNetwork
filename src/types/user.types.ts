@@ -15,4 +15,4 @@ export interface UserMetadata {
 }
 
 // For backward compatibility - the main User type is now in src/types/user.ts
-export { User, UserProfile, UserPreferences } from './user';
+export type { User, UserProfile, UserPreferences } from './user';
