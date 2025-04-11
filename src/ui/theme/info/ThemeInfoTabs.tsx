@@ -1,39 +1,37 @@
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/core/tabs";
-import { TextWithPopup } from "./TextWithPopup";
-import { useTheme } from "@/ui/theme/theme-provider";
-import { ThemeToken } from "@/types/theme.types";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/ui/core/tabs";
+import { ThemeInfoTab } from "./ThemeInfoTab";
+import { ThemeTokenTab } from "./ThemeTokenTab";
 import { ThemeComponentPreview } from "../ThemeComponentPreview";
+import { useThemeStore } from "@/stores/theme/store";
 
 export function ThemeInfoTabs() {
-  const { theme, tokens } = useTheme();
+  const { theme } = useThemeStore();
 
   return (
-    <Tabs defaultValue="about">
-      <TabsList className="w-full">
-        <TabsTrigger value="about">About</TabsTrigger>
+    <Tabs defaultValue="info" className="w-full">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="info">Info</TabsTrigger>
         <TabsTrigger value="tokens">Tokens</TabsTrigger>
+        <TabsTrigger value="components">Components</TabsTrigger>
       </TabsList>
-      <TabsContent value="about" className="space-y-4">
-        <div className="pt-4">
-          <h3 className="font-medium">Current Theme</h3>
-          <p className="text-sm text-muted-foreground">{theme?.name || 'Default'}</p>
+      
+      <TabsContent value="info" className="space-y-4 mt-2">
+        <div className="text-sm space-y-2">
+          <h3 className="font-medium">Current Theme: {theme.name}</h3>
+          <p className="text-muted-foreground">
+            The current theme defines the visual appearance of the UI.
+          </p>
+          <ThemeInfoTab />
         </div>
-        <ThemeComponentPreview />
       </TabsContent>
-      <TabsContent value="tokens" className="space-y-2">
-        <div className="pt-4">
-          <h3 className="font-medium mb-2">Theme Tokens</h3>
-          <div className="space-y-1">
-            {tokens && Object.entries(tokens).map(([key, token]) => (
-              <TextWithPopup 
-                key={key} 
-                label={key} 
-                text={String(token.value)} 
-              />
-            ))}
-          </div>
-        </div>
+      
+      <TabsContent value="tokens" className="mt-2">
+        <ThemeTokenTab />
+      </TabsContent>
+      
+      <TabsContent value="components" className="mt-2">
+        <ThemeComponentPreview />
       </TabsContent>
     </Tabs>
   );

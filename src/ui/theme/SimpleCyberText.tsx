@@ -1,47 +1,47 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface SimpleCyberTextProps {
   text: string;
   className?: string;
   glitch?: boolean;
+  color?: 'default' | 'primary' | 'secondary' | 'accent';
+  glow?: boolean;
 }
 
-export function SimpleCyberText({ text, className = '', glitch = false }: SimpleCyberTextProps) {
-  const letters = text.split('');
-
-  if (glitch) {
-    return (
-      <motion.span 
-        className={`inline-block relative ${className}`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        {letters.map((letter, index) => (
-          <motion.span
-            key={index}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05, duration: 0.3 }}
-            className="inline-block"
-            style={{ 
-              textShadow: '0 0 2px rgba(0, 240, 255, 0.5), 0 0 5px rgba(0, 240, 255, 0.3)'
-            }}
-          >
-            {letter === ' ' ? '\u00A0' : letter}
-          </motion.span>
-        ))}
-      </motion.span>
-    );
-  }
+export function SimpleCyberText({ 
+  text, 
+  className, 
+  glitch = false, 
+  color = 'primary',
+  glow = true 
+}: SimpleCyberTextProps) {
+  const colorClasses = {
+    default: 'text-foreground',
+    primary: 'text-primary',
+    secondary: 'text-secondary',
+    accent: 'text-accent',
+  };
 
   return (
-    <span className={className} style={{ 
-      textShadow: '0 0 2px rgba(0, 240, 255, 0.5), 0 0 5px rgba(0, 240, 255, 0.3)'
-    }}>
+    <span 
+      className={cn(
+        'font-mono tracking-wider uppercase font-bold',
+        colorClasses[color],
+        glow && 'drop-shadow-[0_0_5px_currentColor]',
+        glitch && 'relative',
+        className
+      )}
+      data-text={glitch ? text : undefined}
+    >
       {text}
+      {glitch && (
+        <>
+          <span className="absolute left-[2px] top-0 w-full h-full opacity-70 text-red-500 filter blur-[0.5px]">{text}</span>
+          <span className="absolute left-[-2px] top-0 w-full h-full opacity-70 text-cyan-500 filter blur-[0.5px]">{text}</span>
+        </>
+      )}
     </span>
   );
 }

@@ -1,78 +1,126 @@
 
-import { User } from "@/types";
+import React, { useState } from 'react';
 import { Button } from "@/ui/core/button";
 import { Input } from "@/ui/core/input";
 import { Label } from "@/ui/core/label";
 import { Textarea } from "@/ui/core/textarea";
-import { useState } from "react";
-import { useAuth } from "@/auth/hooks/useAuth";
+import { useToast } from '@/hooks/use-toast';
+import { useAuthState } from '@/auth/hooks/useAuthState';
+import { useLogger } from '@/logging/hooks/useLogger';
+import { LogCategory } from '@/logging/types';
+import { User } from '@/types/user.types';
 
 interface ProfileEditorProps {
-  user: User;
-  onSave: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-export function ProfileEditor({ user, onSave, onCancel }: ProfileEditorProps) {
-  const { updateProfile } = useAuth();
-  const [formState, setFormState] = useState({
-    displayName: user.displayName || '',
-    avatarUrl: user.avatarUrl || '',
-    bio: user.bio || ''
+export function ProfileEditor({ onClose }: ProfileEditorProps) {
+  const { toast } = useToast();
+  const { user, profile, updateProfile } = useAuthState();
+  const logger = useLogger('ProfileEditor', LogCategory.USER);
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Initialize form with existing data
+  const [formData, setFormData] = useState({
+    displayName: profile?.displayName || user?.displayName || '',
+    bio: profile?.bio || '',
+    avatarUrl: profile?.avatarUrl || user?.avatarUrl || '',
   });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormState(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (updateProfile) {
-      await updateProfile(formState);
+    setIsSubmitting(true);
+    
+    try {
+      logger.info('Submitting profile update', {
+        details: { userId: user?.id }
+      });
+      
+      // Update the profile using the auth state
+      await updateProfile({
+        displayName: formData.displayName,
+        bio: formData.bio,
+        avatarUrl: formData.avatarUrl,
+      });
+      
+      // Show success message
+      toast({
+        title: 'Profile Updated',
+        description: 'Your profile has been updated successfully.',
+      });
+      
+      // Close the dialog
+      onClose();
+    } catch (error) {
+      logger.error('Error updating profile', {
+        details: { error }
+      });
+      
+      toast({
+        title: 'Update Failed',
+        description: 'There was an error updating your profile.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-    onSave();
   };
   
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="displayName">Display Name</Label>
-        <Input 
+        <Input
           id="displayName"
           name="displayName"
-          value={formState.displayName}
+          value={formData.displayName}
           onChange={handleChange}
         />
       </div>
       
       <div className="space-y-2">
         <Label htmlFor="avatarUrl">Avatar URL</Label>
-        <Input 
+        <Input
           id="avatarUrl"
           name="avatarUrl"
-          value={formState.avatarUrl}
+          value={formData.avatarUrl}
           onChange={handleChange}
+          placeholder="https://example.com/avatar.jpg"
         />
+        {formData.avatarUrl && (
+          <div className="mt-2">
+            <img
+              src={formData.avatarUrl}
+              alt="Avatar preview"
+              className="h-16 w-16 rounded-full object-cover"
+            />
+          </div>
+        )}
       </div>
       
       <div className="space-y-2">
         <Label htmlFor="bio">Bio</Label>
-        <Textarea 
+        <Textarea
           id="bio"
           name="bio"
-          value={formState.bio}
+          value={formData.bio}
           onChange={handleChange}
-          rows={3}
+          placeholder="Tell us about yourself..."
         />
       </div>
       
       <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button type="submit">
-          Save Changes
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
     </form>
