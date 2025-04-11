@@ -1,47 +1,72 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { authBridge } from '@/bridges/AuthBridge';
-import { User, UserRole } from '@/shared/types/auth.types';
+import { User, UserProfile } from '@/shared/types/user';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(authBridge.getUser());
-  const [status, setStatus] = useState(authBridge.getStatus());
-
+  const [status, setStatus] = useState({
+    isAuthenticated: !!authBridge.getUser(),
+    isLoading: authBridge.status.isLoading
+  });
+  
   useEffect(() => {
-    const unsubscribe = authBridge.subscribeToAuthEvents((updatedUser) => {
-      setUser(updatedUser);
-      setStatus(authBridge.getStatus());
+    // Subscribe to auth events
+    const unsubscribe = authBridge.subscribeToAuthEvents((event, data) => {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        setUser(data);
+        setStatus(prev => ({ ...prev, isAuthenticated: true, isLoading: false }));
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setStatus(prev => ({ ...prev, isAuthenticated: false, isLoading: false }));
+      }
     });
-
-    return () => {
-      unsubscribe();
-    };
+    
+    return unsubscribe;
   }, []);
-
+  
+  // Authentication methods
   const signIn = async (email: string, password: string) => {
-    return await authBridge.signIn(email, password);
+    setStatus(prev => ({ ...prev, isLoading: true }));
+    try {
+      const user = await authBridge.signIn(email, password);
+      return user;
+    } finally {
+      setStatus(prev => ({ ...prev, isLoading: false }));
+    }
   };
-
+  
   const signInWithGoogle = async () => {
-    return await authBridge.signInWithGoogle();
+    setStatus(prev => ({ ...prev, isLoading: true }));
+    try {
+      const user = await authBridge.signInWithGoogle();
+      return user;
+    } finally {
+      setStatus(prev => ({ ...prev, isLoading: false }));
+    }
   };
-
+  
   const logout = async () => {
-    return await authBridge.logout();
+    setStatus(prev => ({ ...prev, isLoading: true }));
+    try {
+      await authBridge.logout();
+    } finally {
+      setStatus(prev => ({ ...prev, isLoading: false }));
+    }
   };
-
+  
   const hasRole = (role: UserRole | UserRole[]) => {
     return authBridge.hasRole(role);
   };
-
+  
   const isAdmin = () => {
     return authBridge.isAdmin();
   };
-
+  
   const isSuperAdmin = () => {
     return authBridge.isSuperAdmin();
   };
-
+  
   return {
     user,
     status,
@@ -50,8 +75,6 @@ export function useAuth() {
     logout,
     hasRole,
     isAdmin,
-    isSuperAdmin,
+    isSuperAdmin
   };
 }
-
-export default useAuth;

@@ -1,50 +1,57 @@
 
-/**
- * useAuthState.ts
- * 
- * Hook to access auth state without triggering unnecessary re-renders
- * Uses selectors and bridges for consistent behavior and module isolation
- */
+import { useState, useEffect } from 'react';
+import { authBridge } from '@/bridges/AuthBridge';
+import { User, UserProfile, UserRole } from '@/shared/types/user';
 
-import { useAuthStore } from '../store/auth.store';
-import { AuthBridge } from '@/bridges/AuthBridge';
-import { UserRole } from '@/types/shared';
-
-/**
- * Hook to access auth state without triggering unnecessary re-renders
- * Uses selectors for performance optimization and AuthBridge for consistent behavior
- */
 export function useAuthState() {
-  // Use selectors to only subscribe to the specific state pieces needed
-  const user = useAuthStore(state => state.user);
-  const profile = useAuthStore(state => state.profile);
-  const roles = useAuthStore(state => state.roles);
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const status = useAuthStore(state => state.status);
-  const isLoading = useAuthStore(state => state.isLoading);
-  const error = useAuthStore(state => state.error);
+  const [user, setUser] = useState<User | null>(authBridge.getUser());
+  const [profile, setProfile] = useState<UserProfile | null>(authBridge.getProfile());
+  const [roles, setRoles] = useState<UserRole[]>(authBridge.getUserRoles());
+  const [status, setStatus] = useState({
+    isAuthenticated: !!authBridge.getUser(),
+    isLoading: authBridge.status.isLoading
+  });
   
-  // Use AuthBridge for role checks to ensure consistency
-  // This ensures all role checking goes through the bridge
-  const hasRole = (role: UserRole | UserRole[] | undefined): boolean => {
-    return AuthBridge.hasRole(role);
+  useEffect(() => {
+    // Subscribe to auth events
+    const unsubscribe = authBridge.subscribeToAuthEvents((event, data) => {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        setUser(data);
+        setRoles(authBridge.getUserRoles());
+        setStatus(prev => ({ ...prev, isAuthenticated: true, isLoading: false }));
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setProfile(null);
+        setRoles([]);
+        setStatus(prev => ({ ...prev, isAuthenticated: false, isLoading: false }));
+      } else if (event === 'PROFILE_FETCHED') {
+        setProfile(data);
+      }
+    });
+    
+    return unsubscribe;
+  }, []);
+  
+  const hasRole = (role: UserRole | UserRole[] | undefined) => {
+    if (!role) return false;
+    return authBridge.hasRole(role);
   };
   
-  // Get admin status through bridge methods to ensure consistency
-  const isAdmin = AuthBridge.isAdmin();
-  const isSuperAdmin = AuthBridge.isSuperAdmin();
+  const isAdmin = () => {
+    return authBridge.isAdmin();
+  };
+  
+  const isSuperAdmin = () => {
+    return authBridge.isSuperAdmin();
+  };
   
   return {
-    // Read-only state
     user,
     profile,
     roles,
-    isAuthenticated,
     status,
-    isLoading,
-    error,
-    
-    // Role checking functions
+    isAuthenticated: status.isAuthenticated,
+    isLoading: status.isLoading,
     hasRole,
     isAdmin,
     isSuperAdmin

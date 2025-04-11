@@ -6,11 +6,12 @@ import { authBridge } from '@/bridges/AuthBridge';
 export function usePermissions() {
   // Get the user's roles from auth bridge
   const userRoles = useMemo(() => {
-    if (!authBridge.user?.app_metadata?.roles) {
+    const user = authBridge.getUser();
+    if (!user?.app_metadata?.roles) {
       return [];
     }
-    return authBridge.user.app_metadata.roles as UserRole[];
-  }, [authBridge.user?.app_metadata?.roles]);
+    return user.app_metadata.roles as UserRole[];
+  }, []);
   
   const hasPermission = (permission: Permission): boolean => {
     return checkPermission(userRoles, permission);

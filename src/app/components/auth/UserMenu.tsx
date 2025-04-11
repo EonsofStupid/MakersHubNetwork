@@ -1,51 +1,82 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/shared/ui/core/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/core/avatar";
+} from '@/shared/ui/core/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/core/avatar';
+import { useToast } from '@/shared/hooks/use-toast';
+import { User as UserIcon, Settings, LogOut } from 'lucide-react';
 import { User } from '@/shared/types/user';
-import { AuthBridge } from '@/bridges/AuthBridge';
+import { authBridge } from '@/bridges/AuthBridge';
 
-export function UserMenu({ user }: { user: User }) {
-  const initials = user.email 
-    ? user.email.substring(0, 2).toUpperCase() 
-    : "U";
+interface UserMenuProps {
+  user: User;
+}
+
+export function UserMenu({ user }: UserMenuProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
-  const displayName = user.user_metadata?.full_name || user.email || "User";
+  const handleLogout = async () => {
+    try {
+      await authBridge.logout();
+      navigate('/');
+      toast({
+        title: 'Logged out',
+        description: 'You have been logged out successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to log out. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const displayName = user.user_metadata?.name || user.user_metadata?.full_name || user.email || 'User';
+  const initials = displayName.substring(0, 2).toUpperCase();
+  const avatarUrl = user.user_metadata?.avatar_url;
   
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="relative h-8 w-8 rounded-full">
+        <button className="flex items-center space-x-2 rounded-full hover:bg-accent p-1">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.user_metadata?.avatar_url} alt={displayName} />
+            <AvatarImage src={avatarUrl} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          {displayName}
+          <div className="flex flex-col space-y-1">
+            <span className="font-normal text-sm">{displayName}</span>
+            <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
+          </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a href="/profile">Profile</a>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <a href="/settings">Settings</a>
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => navigate('/profile')}>
+            <UserIcon className="mr-2 h-4 w-4" />
+            <span>Profile</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/settings')}>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          className="text-red-500 cursor-pointer" 
-          onClick={() => AuthBridge.logout()}
-        >
-          Logout
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

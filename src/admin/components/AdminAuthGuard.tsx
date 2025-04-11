@@ -2,7 +2,7 @@
 import React, { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { authBridge } from '@/bridges/AuthBridge';
-import { UserRole } from '@/shared/types/auth.types';
+import { UserRole } from '@/shared/types/user';
 
 interface AdminAuthGuardProps {
   children: ReactNode;
@@ -15,7 +15,7 @@ interface AdminAuthGuardProps {
  */
 export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({
   children,
-  requiredRole = ['admin', 'super_admin'],
+  requiredRole = ['admin', 'superadmin'],
   redirectTo = '/admin/unauthorized'
 }) => {
   const location = useLocation();
