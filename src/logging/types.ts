@@ -29,7 +29,12 @@ export enum LogCategory {
   SECURITY = 'security',
   USER = 'user',
   PERFORMANCE = 'performance',
-  CONTENT = 'content'
+  CONTENT = 'content',
+  THEME = 'theme',
+  NOTIFICATION = 'notification',
+  ANALYTICS = 'analytics',
+  PAYMENT = 'payment',
+  MEDIA = 'media'
 }
 
 /**

@@ -2,7 +2,7 @@
 import React from 'react';
 import { PageHeader } from '@/admin/components/ui/PageHeader';
 import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
-import { LogLevel } from '@/logging/constants/log-level';
+import { LogLevel } from '@/logging/types';
 import { LogCategory } from '@/logging/types'; 
 import { useAdminAuth } from '@/admin/hooks/useAdminAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +34,7 @@ export function ContentPage() {
           <LogActivityStream 
             height="400px"
             level={LogLevel.INFO}
-            categories={[LogCategory.ADMIN, LogCategory.SYSTEM]} 
+            categories={[LogCategory.ADMIN, LogCategory.CONTENT]} 
             showSource={true}
           />
         </div>

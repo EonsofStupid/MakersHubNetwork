@@ -13,7 +13,6 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   
   if (value instanceof Error) {
-    // Handle error objects without using the 'cause' property to avoid TypeScript errors
     return (
       <div className="text-destructive">
         <p className="font-semibold">{value.name}: {value.message}</p>

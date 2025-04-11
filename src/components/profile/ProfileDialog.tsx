@@ -8,13 +8,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ProfileEditor } from './ProfileEditor';
+import { User } from '@/types/user';
 
 interface ProfileDialogProps {
   open: boolean;
   onClose: () => void;
+  user?: User;
 }
 
-export function ProfileDialog({ open, onClose }: ProfileDialogProps) {
+export function ProfileDialog({ open, onClose, user }: ProfileDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
@@ -25,7 +27,7 @@ export function ProfileDialog({ open, onClose }: ProfileDialogProps) {
           </DialogDescription>
         </DialogHeader>
         
-        <ProfileEditor onClose={onClose} />
+        <ProfileEditor onClose={onClose} user={user} />
       </DialogContent>
     </Dialog>
   );
