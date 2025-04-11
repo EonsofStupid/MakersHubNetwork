@@ -1,13 +1,11 @@
 
 import { useEffect, useState, useRef } from 'react';
-import { useThemeStore } from '@/stores/theme/store';
+import { useThemeStore } from '@/shared/stores/theme/store';
 import { ImpulsivityInit } from './ImpulsivityInit';
 import { SiteThemeProvider } from '@/app/components/theme/SiteThemeProvider';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { ThemeLoadingState } from './info/ThemeLoadingState';
-import { ThemeErrorState } from './info/ThemeErrorState';
-import { ThemeLogDetails } from '@/types/theme';
+import { useLogger } from '@/shared/hooks/use-logger';
+import { LogCategory } from '@/shared/types/logging';
+import { ThemeLogDetails } from '@/shared/types/theme';
 
 interface ThemeInitializerProps {
   children: React.ReactNode;
@@ -118,25 +116,6 @@ export function ThemeInitializer({ children, defaultTheme = 'Impulsivity' }: The
     
     return () => clearTimeout(timeout);
   }, [defaultTheme, isInitialized, isLoading, setTheme, logger]);
-  
-  // Handle retry logic
-  const handleRetry = async () => {
-    try {
-      logger.info('Retrying theme initialization');
-      
-      initAttempted.current = false;
-      await setTheme(defaultTheme);
-      
-      setIsInitialized(true);
-      setInitError(null);
-      
-      logger.info('Theme system successfully initialized on retry');
-    } catch (e) {
-      // Continue anyway with fallback styles
-      setIsInitialized(true);
-      logger.error('Failed to retry theme initialization, using fallbacks');
-    }
-  };
   
   // Show error state but with continue option
   if (error) {
