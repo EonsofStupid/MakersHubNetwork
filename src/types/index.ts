@@ -1,10 +1,9 @@
 
 /**
  * Central types exports
+ * 
+ * This is a legacy file that re-exports from the new location
+ * All new code should import directly from @/shared/types
  */
 
-// Re-export all types
-export * from './theme.types';
-export * from './auth.types';
-export * from './user.types';
-export * from './shared.types';
+export * from '@/shared/types';

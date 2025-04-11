@@ -1,108 +1,33 @@
 
-import { UserRole, ROLES } from '@/types/shared';
-import { PERMISSIONS, PermissionValue } from '@/auth/permissions';
+import { UserRole } from '@/shared/types';
 
-/**
- * Map of roles to permissions
- * 
- * This is the central configuration for role-based access control.
- * Each role is assigned a set of permissions that determine what actions
- * users with that role can perform.
- */
-export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
-  [ROLES.SUPER_ADMIN]: [
-    // Super admins have all permissions
-    PERMISSIONS.ADMIN.SUPER,
-    PERMISSIONS.ADMIN.ACCESS,
-    PERMISSIONS.ADMIN.VIEW,
-    PERMISSIONS.ADMIN.EDIT,
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.CREATE,
-    PERMISSIONS.CONTENT.EDIT,
-    PERMISSIONS.CONTENT.DELETE,
-    PERMISSIONS.CONTENT.PUBLISH,
-    PERMISSIONS.USERS.VIEW,
-    PERMISSIONS.USERS.CREATE,
-    PERMISSIONS.USERS.EDIT,
-    PERMISSIONS.USERS.DELETE,
-    PERMISSIONS.SYSTEM.VIEW,
-    PERMISSIONS.SYSTEM.EDIT,
-    PERMISSIONS.SYSTEM.SETTINGS,
-    PERMISSIONS.SYSTEM.LOGS,
-    PERMISSIONS.SYSTEM.RESTART,
-    PERMISSIONS.SYSTEM.DEBUG,
-    PERMISSIONS.SETTINGS.VIEW,
-    PERMISSIONS.SETTINGS.EDIT,
-    PERMISSIONS.ANALYTICS.VIEW
+// Define permissions
+export type Permission =
+  | 'content:view' | 'content:create' | 'content:edit' | 'content:delete' | 'content:publish'
+  | 'users:view' | 'users:create' | 'users:edit' | 'users:delete'
+  | 'admin:access' | 'admin:super' | 'admin:settings' | 'admin:logs'
+  | 'themes:view' | 'themes:edit' | 'themes:create'
+  | 'analytics:view';
+
+// Define role permissions
+export const rolePermissions: Record<UserRole, Permission[]> = {
+  user: ['content:view'],
+  admin: [
+    'content:view', 'content:create', 'content:edit', 'content:delete', 'content:publish',
+    'users:view', 'admin:access', 'themes:view', 'analytics:view'
   ],
-  [ROLES.ADMIN]: [
-    PERMISSIONS.ADMIN.ACCESS,
-    PERMISSIONS.ADMIN.VIEW,
-    PERMISSIONS.ADMIN.EDIT,
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.CREATE,
-    PERMISSIONS.CONTENT.EDIT,
-    PERMISSIONS.CONTENT.DELETE,
-    PERMISSIONS.CONTENT.PUBLISH,
-    PERMISSIONS.USERS.VIEW,
-    PERMISSIONS.USERS.CREATE,
-    PERMISSIONS.USERS.EDIT,
-    PERMISSIONS.SETTINGS.VIEW,
-    PERMISSIONS.SETTINGS.EDIT,
-    PERMISSIONS.ANALYTICS.VIEW,
+  super_admin: [
+    'content:view', 'content:create', 'content:edit', 'content:delete', 'content:publish',
+    'users:view', 'users:create', 'users:edit', 'users:delete',
+    'admin:access', 'admin:super', 'admin:settings', 'admin:logs',
+    'themes:view', 'themes:edit', 'themes:create',
+    'analytics:view'
   ],
-  [ROLES.EDITOR]: [
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.CREATE,
-    PERMISSIONS.CONTENT.EDIT,
-    PERMISSIONS.CONTENT.PUBLISH,
-    PERMISSIONS.USERS.VIEW,
-  ],
-  [ROLES.MODERATOR]: [
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.EDIT,
-    PERMISSIONS.USERS.VIEW,
-  ],
-  [ROLES.BUILDER]: [
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.CREATE,
-    PERMISSIONS.CONTENT.EDIT,
-  ],
-  [ROLES.MAKER]: [
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.CREATE,
-  ],
-  [ROLES.VIEWER]: [
-    PERMISSIONS.CONTENT.VIEW,
-  ],
-  [ROLES.USER]: [
-    PERMISSIONS.CONTENT.VIEW,
-  ],
-  [ROLES.DEVELOPER]: [
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.CREATE,
-    PERMISSIONS.CONTENT.EDIT,
-    PERMISSIONS.SYSTEM.VIEW,
-    PERMISSIONS.SYSTEM.EDIT,
-    PERMISSIONS.SYSTEM.DEBUG,
-  ]
+  editor: ['content:view', 'content:create', 'content:edit'],
+  content_manager: ['content:view', 'content:create', 'content:edit', 'content:delete', 'content:publish'],
+  designer: ['content:view', 'themes:view', 'themes:edit'],
+  support: ['content:view', 'users:view'],
+  moderator: ['content:view', 'content:edit'],
+  guest: ['content:view'],
+  builder: ['content:view', 'content:create', 'content:edit', 'themes:view']
 };
-
-/**
- * Maps user roles to their corresponding permissions
- */
-export function mapRolesToPermissions(roles: UserRole[]): PermissionValue[] {
-  if (!roles || roles.length === 0) {
-    return [];
-  }
-  
-  // Get all permissions for all roles
-  const permissionSets = roles.map(role => ROLE_PERMISSIONS[role] || []);
-  
-  // Flatten and deduplicate
-  const allPermissions = Array.from(
-    new Set(permissionSets.flat())
-  );
-  
-  return allPermissions;
-}
