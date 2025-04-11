@@ -14,23 +14,5 @@ export interface UserMetadata {
   [key: string]: any;
 }
 
-// For backward compatibility - the main User type is now in src/types/user.ts
+// Re-export the User interface - remove duplicated definition to fix conflicts
 export type { User, UserProfile, UserPreferences } from './user';
-
-// Re-export the User interface for direct access
-export interface User {
-  id: string;
-  email?: string;
-  user_metadata?: UserMetadata;
-  app_metadata?: Record<string, any>;
-  created_at?: string;
-  updated_at?: string;
-  role?: string;
-  roles?: string[];
-  displayName?: string;
-  isAnonymous?: boolean;
-  permissions?: string[];
-  lastLoginAt?: string;
-  status?: 'active' | 'inactive' | 'suspended' | 'pending';
-  [key: string]: any;
-}

@@ -1,16 +1,5 @@
 
-/**
- * Logging levels as a proper enum
- */
-export enum LogLevel {
-  DEBUG = 'debug',
-  TRACE = 'trace',
-  INFO = 'info',
-  SUCCESS = 'success',
-  WARN = 'warn',
-  ERROR = 'error',
-  CRITICAL = 'critical',
-}
+import { LogLevel } from '../types';
 
 /**
  * Define log level values for numeric comparison
@@ -31,3 +20,6 @@ export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
 export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
   return LOG_LEVEL_VALUES[level] >= LOG_LEVEL_VALUES[minLevel];
 }
+
+// Re-export LogLevel from types for convenience
+export { LogLevel };

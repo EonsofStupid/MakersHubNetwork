@@ -10,22 +10,12 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
 import { UserRole } from '@/types/shared';
 
+// Re-export types from AuthBridge
+export type { AuthEventType, AuthEventPayload } from '@/bridges/AuthBridge';
+
 // Create a type-safe proxy to the authBridgeImpl
 const extendedBridge = {
   ...authBridgeImpl,
-  
-  // Add missing methods with proper typing
-  hasRole: (role: UserRole | UserRole[] | undefined): boolean => {
-    return authBridgeImpl.hasRole ? authBridgeImpl.hasRole(role) : false;
-  },
-  
-  isAdmin: (): boolean => {
-    return authBridgeImpl.isAdmin ? authBridgeImpl.isAdmin() : false;
-  },
-  
-  isSuperAdmin: (): boolean => {
-    return authBridgeImpl.isSuperAdmin ? authBridgeImpl.isSuperAdmin() : false;
-  }
 };
 
 // Re-export the extended bridge for use in the auth module
@@ -38,9 +28,6 @@ export {
   publishAuthEvent, 
   initializeAuthBridge
 } from '@/bridges/AuthBridge';
-
-// Re-export types
-export type { AuthEventType, AuthEventPayload } from '@/bridges/AuthBridge';
 
 /**
  * Register a listener for auth events
@@ -61,7 +48,7 @@ export function registerAuthEventListener(event: string, handler: (payload: any)
  * This is a convenience function for auth module internal use
  */
 export function hasRole(role: UserRole | UserRole[] | undefined): boolean {
-  return authBridge.hasRole(role);
+  return authBridge.hasRole ? authBridge.hasRole(role) : false;
 }
 
 /**
@@ -69,7 +56,7 @@ export function hasRole(role: UserRole | UserRole[] | undefined): boolean {
  * This is a convenience function for auth module internal use
  */
 export function isAdmin(): boolean {
-  return authBridge.isAdmin();
+  return authBridge.isAdmin ? authBridge.isAdmin() : false;
 }
 
 /**
@@ -77,5 +64,5 @@ export function isAdmin(): boolean {
  * This is a convenience function for auth module internal use
  */
 export function isSuperAdmin(): boolean {
-  return authBridge.isSuperAdmin();
+  return authBridge.isSuperAdmin ? authBridge.isSuperAdmin() : false;
 }

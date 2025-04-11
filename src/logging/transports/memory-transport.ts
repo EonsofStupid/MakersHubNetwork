@@ -1,94 +1,123 @@
 
-import { LogEntry, LogFilterOptions, LogTransport } from '@/logging/types';
+import { LogEntry, LogTransport, LogCategory, LogLevel, LogFilterOptions } from '../types';
 import { nodeToSearchableString } from '@/shared/utils/render';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
- * In-memory log storage transport
+ * In-memory log transport for retrieving logs in UI components
  */
 export class MemoryTransport implements LogTransport {
-  private logs: LogEntry[] = [];
+  private entries: LogEntry[] = [];
   private maxEntries: number;
   
-  constructor(maxEntries = 1000) {
-    this.maxEntries = maxEntries;
+  constructor(options: { maxEntries?: number } = {}) {
+    this.maxEntries = options.maxEntries || 1000;
   }
   
+  /**
+   * Log an entry
+   */
   log(entry: LogEntry): void {
     // Ensure entry has an ID
     if (!entry.id) {
-      entry.id = uuidv4();
+      entry = { ...entry, id: uuidv4() };
     }
     
-    this.logs.unshift(entry);
+    // Add to the beginning of the array (newest first)
+    this.entries.unshift(entry);
     
-    // Trim logs to max capacity
-    if (this.logs.length > this.maxEntries) {
-      this.logs = this.logs.slice(0, this.maxEntries);
+    // Trim if needed
+    if (this.entries.length > this.maxEntries) {
+      this.entries = this.entries.slice(0, this.maxEntries);
     }
   }
   
-  getEntries(filter?: LogFilterOptions): LogEntry[] {
-    if (!filter) {
-      return [...this.logs];
+  /**
+   * Get entries matching criteria
+   */
+  getEntries(options: LogFilterOptions = {}): LogEntry[] {
+    let result = [...this.entries];
+    
+    // Filter by level
+    if (options.level !== undefined) {
+      result = result.filter(entry => entry.level === options.level);
     }
     
-    return this.logs.filter(entry => {
-      // Filter by level
-      if (filter.level && entry.level !== filter.level) return false;
-      if (filter.levels && filter.levels.length > 0 && !filter.levels.includes(entry.level)) return false;
-      
-      // Filter by category
-      if (filter.category && entry.category !== filter.category) return false;
-      if (filter.categories && filter.categories.length > 0 && !filter.categories.includes(entry.category)) return false;
-      
-      // Filter by source
-      if (filter.source && entry.source !== filter.source) return false;
-      if (filter.sources && filter.sources.length > 0 && !filter.sources.includes(entry.source || '')) return false;
-      
-      // Filter by date range
-      if (filter.from) {
-        const entryDate = entry.timestamp instanceof Date 
-          ? entry.timestamp 
-          : new Date(entry.timestamp);
-        if (entryDate < filter.from) return false;
-      }
-      
-      if (filter.to) {
-        const entryDate = entry.timestamp instanceof Date 
-          ? entry.timestamp 
-          : new Date(entry.timestamp);
-        if (entryDate > filter.to) return false;
-      }
-      
-      // Filter by userId
-      if (filter.userId && entry.userId !== filter.userId) return false;
-      
-      // Filter by sessionId
-      if (filter.sessionId && entry.sessionId !== filter.sessionId) return false;
-      
-      // Filter by tags
-      if (filter.tags && filter.tags.length > 0 && 
-         (!entry.tags || !filter.tags.some(tag => entry.tags?.includes(tag)))) {
+    // Filter by categories
+    if (options.categories && options.categories.length > 0) {
+      result = result.filter(entry => 
+        entry.category !== undefined && options.categories?.includes(entry.category)
+      );
+    }
+    
+    // Filter by source
+    if (options.source) {
+      result = result.filter(entry => 
+        entry.source && entry.source.includes(options.source as string)
+      );
+    }
+    
+    // Filter by date range
+    if (options.fromDate) {
+      result = result.filter(entry => entry.timestamp >= options.fromDate!);
+    }
+    
+    if (options.toDate) {
+      result = result.filter(entry => entry.timestamp <= options.toDate!);
+    }
+    
+    // Filter by search term
+    if (options.search) {
+      const term = options.search.toLowerCase();
+      result = result.filter(entry => {
+        // Check message
+        if (typeof entry.message === 'string') {
+          if (entry.message.toLowerCase().includes(term)) return true;
+        } else {
+          const text = nodeToSearchableString(entry.message);
+          if (text.toLowerCase().includes(term)) return true;
+        }
+        
+        // Check details
+        if (entry.details) {
+          try {
+            const detailsStr = JSON.stringify(entry.details).toLowerCase();
+            if (detailsStr.includes(term)) return true;
+          } catch {
+            // Ignore stringify errors
+          }
+        }
+        
+        // Check source
+        if (entry.source && entry.source.toLowerCase().includes(term)) return true;
+        
         return false;
-      }
-      
-      // Filter by search term
-      if (filter.search) {
-        const searchable = nodeToSearchableString(entry.message) + 
-                         nodeToSearchableString(entry.details) +
-                         entry.level + entry.category + (entry.source || '');
-        if (!searchable.toLowerCase().includes(filter.search.toLowerCase())) return false;
-      }
-      
-      return true;
-    }).slice(0, filter.limit || this.logs.length);
+      });
+    }
+    
+    // Apply limit
+    if (options.limit && options.limit > 0 && options.limit < result.length) {
+      result = result.slice(0, options.limit);
+    }
+    
+    return result;
   }
   
+  /**
+   * Clear entries
+   */
   clear(): void {
-    this.logs = [];
+    this.entries = [];
+  }
+  
+  /**
+   * Check if this transport supports the given log level & category
+   */
+  supports(level: LogLevel, category?: LogCategory): boolean {
+    // Support all levels and categories
+    return true;
   }
 }
 
-// Create and export a singleton instance
+// Export a singleton instance for global use
 export const memoryTransport = new MemoryTransport();

@@ -1,10 +1,39 @@
 
 import { create } from 'zustand';
-import { AuthState, AuthActions } from '@/types/auth.types';
-import { createSessionSlice } from '@/stores/auth/slices/session.slice';
-import { createUserSlice } from '@/stores/auth/slices/user.slice';
-import { AuthStatus } from '@/types/shared';
-import { UserProfile } from '@/types/user';
+import { UserRole, AuthStatus } from '@/types/shared';
+import { User, UserProfile } from '@/types/user';
+
+// Define the store state and actions explicitly to avoid missing types
+export interface AuthState {
+  user: User | null;
+  session: unknown | null;
+  profile: UserProfile | null;
+  roles: UserRole[];
+  status: AuthStatus;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  initialized: boolean;
+}
+
+export interface AuthActions {
+  hasRole: (role: UserRole | UserRole[] | undefined) => boolean;
+  isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
+  
+  setSession: (session: unknown | null) => void;
+  setUser: (user: User | null) => void;
+  setProfile: (profile: UserProfile | null) => void;
+  setRoles: (roles: UserRole[]) => void;
+  setError: (error: string | null) => void;
+  setLoading: (isLoading: boolean) => void;
+  setInitialized: (initialized: boolean) => void;
+  setStatus: (status: AuthStatus) => void;
+  
+  initialize: () => Promise<void>;
+  loadUserProfile: (userId: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
 
 // Initial state
 const initialState: AuthState = {
@@ -22,9 +51,15 @@ const initialState: AuthState = {
 export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   ...initialState,
   
-  // Add the slices
-  ...createUserSlice(set, get),
-  ...createSessionSlice(set, get),
+  // User state management
+  setUser: (user) => set({ user }),
+  setRoles: (roles) => set({ roles }),
+  
+  // Session state management
+  session: null,
+  initialized: false,
+  setSession: (session) => set({ session }),
+  setInitialized: (initialized) => set({ initialized }),
   
   // Profile management
   profile: null,
@@ -49,7 +84,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
       return role.some(r => roles.includes(r));
     }
     
-    return roles.includes(role);
+    return role ? roles.includes(role) : false;
   },
   
   isAdmin: () => {
@@ -87,7 +122,10 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
         id: `profile-${userId}`,
         user_id: userId,
         display_name: 'User',
-        avatar_url: null,
+        avatar_url: '',
+        bio: '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
       
       set({ profile });
@@ -122,3 +160,6 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
 
 // Export type to help with imports
 export type AuthStore = ReturnType<typeof useAuthStore>;
+
+// Export UserProfile type to fix import errors
+export type { UserProfile };

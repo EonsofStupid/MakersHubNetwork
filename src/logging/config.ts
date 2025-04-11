@@ -1,6 +1,5 @@
 
-import { LoggingConfig, LogCategory } from './types';
-import { LogLevel } from './constants/log-level';
+import { LoggingConfig, LogCategory, LogLevel } from './types';
 import { ConsoleTransport } from './transports/console-transport';
 import { UITransport } from './transports/ui-transport';
 import { MemoryTransport, memoryTransport } from './transports/memory-transport';

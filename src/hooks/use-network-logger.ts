@@ -1,8 +1,7 @@
 
 import { useCallback, useRef } from 'react';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
-import { LogLevel } from '@/logging/constants/log-level';
+import { LogCategory, LogLevel } from '@/logging/types';
 
 interface RequestLogOptions {
   url: string;
@@ -44,7 +43,7 @@ export function useNetworkLogger(source: string) {
     
     // Log the request
     logger.info(`Request: ${options.method} ${options.url}`, {
-      category: LogCategory.NETWORK,
+      category: LogCategory.NETWORK, // Now uses the valid NETWORK category
       source,
       details: {
         requestId,
@@ -78,7 +77,7 @@ export function useNetworkLogger(source: string) {
     // Log the response using the appropriate level method
     if (level === LogLevel.WARN) {
       logger.warn(`Response (${options.status}): ${options.duration.toFixed(0)}ms`, {
-        category: LogCategory.NETWORK,
+        category: LogCategory.NETWORK, // Now uses the valid NETWORK category
         source,
         details: {
           requestId,
@@ -92,7 +91,7 @@ export function useNetworkLogger(source: string) {
       });
     } else if (level === LogLevel.ERROR) {
       logger.error(`Response (${options.status}): ${options.duration.toFixed(0)}ms`, {
-        category: LogCategory.NETWORK,
+        category: LogCategory.NETWORK, // Now uses the valid NETWORK category
         source,
         details: {
           requestId,
@@ -106,7 +105,7 @@ export function useNetworkLogger(source: string) {
       });
     } else {
       logger.info(`Response (${options.status}): ${options.duration.toFixed(0)}ms`, {
-        category: LogCategory.NETWORK,
+        category: LogCategory.NETWORK, // Now uses the valid NETWORK category
         source,
         details: {
           requestId,
@@ -134,7 +133,7 @@ export function useNetworkLogger(source: string) {
     
     // Log the error
     logger.error(`Network Error: ${options.method} ${options.url}`, {
-      category: LogCategory.NETWORK,
+      category: LogCategory.NETWORK, // Now uses the valid NETWORK category
       source,
       details: {
         requestId,

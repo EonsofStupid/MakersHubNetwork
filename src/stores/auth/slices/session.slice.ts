@@ -1,9 +1,8 @@
 
 import { StateCreator } from "zustand";
-import { AuthState, AuthActions, AuthStore, AuthStatus } from "../types/auth.types";
+import { AuthState, AuthActions } from "@/auth/store/auth.store";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthError, AuthApiError } from "@supabase/supabase-js";
-import { AuthStateSchema } from "../schemas/state.schema";
 
 export const createSessionSlice: StateCreator<
   AuthState & AuthActions,
