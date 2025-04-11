@@ -35,4 +35,3 @@ export {
   messageBus,
   createModuleBridge
 } from '@/core/MessageBus';
-

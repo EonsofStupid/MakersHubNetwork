@@ -1,5 +1,6 @@
 
 import { useAuthStore } from '../store/auth.store';
+import { AuthBridge } from '@/bridges/AuthBridge';
 
 /**
  * Hook to access auth state without triggering unnecessary re-renders
@@ -14,10 +15,14 @@ export function useAuthState() {
   const isLoading = useAuthStore(state => state.isLoading);
   const error = useAuthStore(state => state.error);
   
-  // Use auth store methods for role checks
-  const hasRole = useAuthStore(state => state.hasRole);
-  const isAdmin = useAuthStore(state => state.isAdmin);
-  const isSuperAdmin = () => roles.includes('super_admin');
+  // Use AuthBridge for role checks to ensure consistency
+  const hasRole = (role: UserRole | UserRole[] | undefined) => {
+    if (!role) return false;
+    return AuthBridge.hasRole(role);
+  };
+  
+  const isAdmin = AuthBridge.isAdmin();
+  const isSuperAdmin = AuthBridge.isSuperAdmin();
   
   return {
     user,
@@ -28,7 +33,7 @@ export function useAuthState() {
     isLoading,
     error,
     hasRole,
-    isAdmin: isAdmin(),
-    isSuperAdmin: isSuperAdmin()
+    isAdmin,
+    isSuperAdmin
   };
 }
