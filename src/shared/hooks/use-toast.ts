@@ -1,3 +1,6 @@
 
-// Re-export from the shared location
-export { useToast, toast } from '@/shared/hooks/use-toast';
+// Re-export from the UI core component
+import { useToast as useToastCore, toast as toastCore } from "@/shared/ui/core/use-toast";
+
+export const useToast = useToastCore;
+export const toast = toastCore;

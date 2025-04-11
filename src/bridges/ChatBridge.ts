@@ -1,145 +1,149 @@
 
-// Chat message type
-export interface ChatMessage {
-  id: string;
-  sessionId: string;
-  content: string;
-  role: 'user' | 'assistant' | 'system';
-  timestamp: number;
-  metadata?: Record<string, any>;
-}
+import { ChatBridge, ChatBridgeImplementation, ChatMessage, ChatSession } from '@/chat/types/bridge.types';
+import { nanoid } from 'nanoid';
 
-// Chat session type
-export interface ChatSession {
-  id: string;
-  title: string;
-  createdAt: number;
-  updatedAt: number;
-  messages: ChatMessage[];
-  metadata?: Record<string, any>;
-}
+/**
+ * Event listeners for chat events
+ */
+const listeners: ((event: any) => void)[] = [];
 
-// Chat session options
-export interface ChatSessionOptions {
-  title?: string;
-  metadata?: Record<string, any>;
-}
-
-// Chat event types
-export type ChatEventType = 
-  | 'MESSAGE_ADDED'
-  | 'SESSION_CREATED'
-  | 'SESSION_UPDATED'
-  | 'SESSION_DELETED';
-
-// Chat event
-export interface ChatEvent {
-  type: ChatEventType;
-  sessionId: string;
-  data?: any;
-}
-
-// Chat event listener
-export type ChatEventListener = (event: ChatEvent) => void;
-
-// Basic Chat Bridge Implementation
-class ChatBridgeImplementation {
-  private isInitialized = false;
-  private sessions: Map<string, ChatSession> = new Map();
-  private eventListeners: ChatEventListener[] = [];
-  
-  // Initialize the chat bridge
-  async initialize(): Promise<void> {
-    if (this.isInitialized) return;
-    this.isInitialized = true;
-    console.log('Chat Bridge initialized');
-  }
-  
-  // Subscribe to chat events
-  subscribeToSession(sessionId: string, listener: ChatEventListener): () => void {
-    this.eventListeners.push(listener);
-    return () => {
-      this.eventListeners = this.eventListeners.filter(l => l !== listener);
-    };
-  }
-  
-  // Publish chat events
-  private publishEvent(event: ChatEvent): void {
-    this.eventListeners.forEach(listener => {
-      listener(event);
-    });
-  }
-  
-  // Create a new session
-  async createSession(options?: ChatSessionOptions): Promise<ChatSession> {
-    const id = Math.random().toString(36).substring(2, 15);
+/**
+ * ChatBridge implementation for handling chat functionality
+ */
+export const chatBridge: ChatBridgeImplementation = {
+  async createSession(options = {}) {
+    const sessionId = nanoid();
+    
     const session: ChatSession = {
-      id,
-      title: options?.title || `Chat ${new Date().toLocaleString()}`,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      messages: [],
-      metadata: options?.metadata
+      id: sessionId,
+      title: options.title || 'New Chat',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: 'active',
+      messages: []
     };
-    
-    this.sessions.set(id, session);
-    
-    this.publishEvent({
-      type: 'SESSION_CREATED',
-      sessionId: id,
-      data: session
-    });
     
     return session;
-  }
+  },
   
-  // Get a session by ID
-  getSession(id: string): ChatSession | undefined {
-    return this.sessions.get(id);
-  }
+  async getSession(sessionId) {
+    // Mock implementation
+    console.log('[ChatBridge] Get session', sessionId);
+    return {
+      id: sessionId,
+      title: 'Retrieved Chat',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: 'active',
+      messages: []
+    };
+  },
   
-  // Get all sessions
-  listSessions(): ChatSession[] {
-    return Array.from(this.sessions.values());
-  }
+  async listSessions() {
+    // Mock implementation
+    console.log('[ChatBridge] List sessions');
+    return [
+      {
+        id: 'session-1',
+        title: 'Chat 1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        status: 'active',
+        messages: []
+      },
+      {
+        id: 'session-2',
+        title: 'Chat 2',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        status: 'active',
+        messages: []
+      }
+    ];
+  },
   
-  // Send a message
-  async sendMessage(sessionId: string, content: string, role: 'user' | 'assistant' | 'system' = 'user'): Promise<ChatMessage> {
-    if (!this.sessions.has(sessionId)) {
-      await this.createSession({ title: 'New Chat' });
-    }
-    
-    const session = this.sessions.get(sessionId)!;
+  async sendMessage(sessionId, content, role = 'user') {
+    const messageId = nanoid();
+    const timestamp = new Date();
     
     const message: ChatMessage = {
-      id: Math.random().toString(36).substring(2, 15),
+      id: messageId,
       sessionId,
       content,
       role,
-      timestamp: Date.now(),
+      timestamp
     };
     
-    session.messages.push(message);
-    session.updatedAt = Date.now();
-    
-    this.publishEvent({
-      type: 'MESSAGE_ADDED',
-      sessionId,
-      data: message
+    // Publish message event
+    publishChatEvent({
+      type: 'MESSAGE_SENT',
+      payload: message,
+      sessionId
     });
     
+    // Mock AI response
+    setTimeout(() => {
+      const responseId = nanoid();
+      const responseMessage: ChatMessage = {
+        id: responseId,
+        sessionId,
+        content: `Response to: ${content}`,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+      
+      publishChatEvent({
+        type: 'MESSAGE_RECEIVED',
+        payload: responseMessage,
+        sessionId
+      });
+    }, 1000);
+    
     return message;
-  }
+  },
   
-  // Get messages for a session
-  getMessages(sessionId: string): ChatMessage[] {
-    const session = this.sessions.get(sessionId);
-    return session ? session.messages : [];
+  async updateSession(sessionId, updates) {
+    // Mock implementation
+    console.log('[ChatBridge] Update session', sessionId, updates);
+    return {
+      id: sessionId,
+      ...updates,
+      updatedAt: new Date()
+    };
+  },
+  
+  async deleteSession(sessionId) {
+    // Mock implementation
+    console.log('[ChatBridge] Delete session', sessionId);
+    return true;
   }
+};
+
+/**
+ * Subscribe to chat events
+ */
+export function subscribeToChatEvents(listener: (event: any) => void) {
+  listeners.push(listener);
+  return () => {
+    const index = listeners.indexOf(listener);
+    if (index > -1) {
+      listeners.splice(index, 1);
+    }
+  };
 }
 
-// Create and export a singleton instance
-export const chatBridge = new ChatBridgeImplementation();
+/**
+ * Publish chat event to subscribers
+ */
+export function publishChatEvent(event: any) {
+  listeners.forEach(listener => {
+    try {
+      listener(event);
+    } catch (error) {
+      console.error('[ChatBridge] Error in chat event listener', error);
+    }
+  });
+}
 
-// For compatibility with existing code
-export const ChatBridge = chatBridge;
+// Export the ChatBridge implementation
+export { chatBridge as ChatBridge };
