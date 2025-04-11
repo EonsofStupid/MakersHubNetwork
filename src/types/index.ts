@@ -9,6 +9,9 @@
 // Auth types
 export * from './auth.types';
 
+// User types
+export * from './user';
+
 // Logging types
 export * from '@/logging/types';
 
@@ -27,4 +30,3 @@ export type {
   MessageChannel,
   UnsubscribeFn
 } from '@/core/MessageBus';
-

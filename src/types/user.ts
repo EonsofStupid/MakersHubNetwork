@@ -3,6 +3,8 @@
  * Central type definitions for user data
  */
 
+import { UserRole } from './shared';
+
 export interface UserMetadata {
   full_name?: string;
   avatar_url?: string;
@@ -23,8 +25,8 @@ export interface User {
  * Extended user type with additional fields
  */
 export interface ExtendedUser extends User {
-  role?: string;
-  roles?: string[];
+  role?: UserRole;
+  roles?: UserRole[];
   displayName?: string;
   isAnonymous?: boolean;
   permissions?: string[];
