@@ -1,36 +1,37 @@
 
-import { useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { ReactNode, useEffect } from "react";
+import { useToast } from "@/ui/hooks/use-toast";
 import { useThemeStore } from "@/stores/theme/store";
-import { useLogger } from "@/logging/hooks/useLogger";
 import { ThemeLoadingState } from "./info/ThemeLoadingState";
 import { ThemeErrorState } from "./info/ThemeErrorState";
 
-export function ThemeInitializer() {
+interface ThemeInitializerProps {
+  children: ReactNode;
+  defaultTheme?: string;
+}
+
+export function ThemeInitializer({ children, defaultTheme = "Impulsivity" }: ThemeInitializerProps) {
   const { toast } = useToast();
-  const logger = useLogger("ThemeInitializer");
-  const { isLoading, error, isInitialized, loadTheme, theme } = useThemeStore();
+  const { isLoading, error, setTheme } = useThemeStore();
 
   useEffect(() => {
-    if (!isInitialized && !isLoading) {
-      logger.debug("Initializing theme", { themeId: theme?.id });
-      loadTheme();
-    }
-  }, [isInitialized, isLoading, loadTheme, theme, logger]);
-
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: "Theme Error",
-        description: error.message,
-        variant: "destructive",
-      });
-      
-      logger.error("Theme initialization failed", {
-        error: error.message,
-      });
-    }
-  }, [error, toast, logger]);
+    // Initialize theme
+    const initTheme = async () => {
+      try {
+        await setTheme(defaultTheme);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        toast({
+          title: "Theme Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        console.error("Theme initialization failed:", errorMessage);
+      }
+    };
+    
+    initTheme();
+  }, [defaultTheme, setTheme, toast]);
 
   if (isLoading) {
     return <ThemeLoadingState />;
@@ -41,14 +42,10 @@ export function ThemeInitializer() {
       <ThemeErrorState 
         message="Theme Error" 
         subMessage={error.message} 
-        onRetry={() => loadTheme()}
+        onRetry={() => setTheme(defaultTheme)}
       />
     );
   }
 
-  if (!isInitialized) {
-    return <ThemeLoadingState />;
-  }
-
-  return null;
+  return children;
 }

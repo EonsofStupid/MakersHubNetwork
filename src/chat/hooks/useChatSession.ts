@@ -2,11 +2,11 @@
 import { useState, useEffect } from 'react';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { ChatBridge } from '@/bridges/ChatBridge';
-import { useLogger } from '@/hooks/use-logger';
+import { useLogger } from '@/ui/hooks/useLogger';
 import { LogCategory } from '@/logging';
 import { v4 as uuidv4 } from 'uuid';
+import { ChatMessage } from '@/types/shared.types';
 import { CircuitBreaker } from '@/utils/CircuitBreaker';
-import { ChatMessage } from '@/types';
 
 interface UseChatSessionProps {
   sessionId?: string;
