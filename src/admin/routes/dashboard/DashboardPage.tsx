@@ -3,8 +3,8 @@ import React from 'react';
 import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
 import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 import { RequirePermission } from '@/admin/components/auth/RequirePermission';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/core/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
 
 export default function DashboardPage() {
   return (

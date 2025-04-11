@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from "react"
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from "@/admin/queries/useContentCategories"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Input } from '@/ui/core/input'
+import { Button } from '@/ui/core/button'
 import { useToast } from "@/hooks/use-toast"
 import {
   Table,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/ui/core/table'
 import { slugify } from "@/lib/utils"
 
 const CategoryManagement = () => {

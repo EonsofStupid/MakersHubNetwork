@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/ui/core/button';
+import { Input } from '@/ui/core/input';
+import { Label } from '@/ui/core/label';
+import { Textarea } from '@/ui/core/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';

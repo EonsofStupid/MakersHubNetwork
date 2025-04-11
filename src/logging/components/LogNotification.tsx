@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AlertCircle, Info, AlertTriangle, XCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/ui/core/alert';
 import { LogCategory, LogLevel } from '@/logging/types';
 import { renderUnknownAsNode } from '@/shared/utils/render';
 

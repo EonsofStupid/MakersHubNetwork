@@ -1,13 +1,13 @@
 
 import React, { useEffect } from "react";
 import { useReviewAdminStore } from "@/admin/store/reviewAdmin.store";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui/core/card';
 import { ReviewCard } from "./ReviewCard";
 import { Loader2 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription } from '@/ui/core/alert';
 import { AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from '@/ui/core/button';
 import { PackageCheck } from "lucide-react";
 
 export function PendingReviewsList() {

@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/ui/core/input';
+import { Button } from '@/ui/core/button';
+import { Label } from '@/ui/core/label';
+import { Card, CardContent } from '@/ui/core/card';
 import { UserProfile } from '@/types/user';
 
 export interface ProfileEditorProps {

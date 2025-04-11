@@ -5,8 +5,8 @@ import { cn } from '@/lib/utils';
 import { LogOut, Sun, Moon, User, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminTooltip } from './ui/AdminTooltip';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useTheme } from '@/components/ui/theme-provider';
+import { Avatar, AvatarFallback, AvatarImage } from '@/ui/core/avatar';
+import { useTheme } from '@/ui/theme/theme-provider';
 import { useToast } from '@/hooks/use-toast';
 import { User as UserType } from '@/types/user';
 import {

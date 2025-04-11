@@ -1,11 +1,11 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from '@/ui/core/button';
 import { useAtom } from "jotai";
 import { showAdminButtonAtom, showAdminWrenchAtom } from "@/admin/atoms/ui.atoms";
 import { Wrench, User, Shield, Crown } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from '@/ui/core/avatar';
 import { LoginSheet } from "./LoginSheet";
 import { ComponentWrapper } from "@/admin/components/debug/ComponentWrapper";
 import { useLogger } from "@/hooks/use-logger";

@@ -2,8 +2,8 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from '@/ui/core/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/ui/core/dialog';
 import { ThemeInfoPopup } from "@/components/theme/ThemeInfoPopup";
 import { Terminal } from "lucide-react";
 import { useThemeStore } from "@/stores/theme/store";

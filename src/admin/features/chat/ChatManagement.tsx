@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/ui/core/card';
+import { Button } from '@/ui/core/button';
+import { Input } from '@/ui/core/input';
 import { MessageSquare, Send, User, Clock, Search, Bot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -189,5 +189,5 @@ export default function ChatManagement() {
 }
 
 // Import Badge component
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/ui/core/badge';
 import { Plus } from "lucide-react";

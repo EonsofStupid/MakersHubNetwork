@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui/core/card';
 import { ReviewStats } from "@/admin/types/review.types";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from '@/ui/core/progress';
 import { cn } from "@/lib/utils";
 
 interface ReviewStatsDisplayProps {

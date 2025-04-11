@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/ui/core/badge';
 import { ReviewCategory } from "@/admin/types/review.types";
 import { cn } from "@/lib/utils";
 

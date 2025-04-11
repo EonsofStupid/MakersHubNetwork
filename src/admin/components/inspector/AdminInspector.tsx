@@ -5,10 +5,10 @@ import { useAtom } from "jotai";
 import { cn } from "@/lib/utils";
 import { useAdminStore } from "@/admin/store/admin.store";
 import { X, Code, LayoutPanelLeft, Terminal, Eye, EyeOff } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
+import { Button } from '@/ui/core/button';
+import { Separator } from '@/ui/core/separator';
+import { ScrollArea } from '@/ui/core/scroll-area';
 
 // Component tree item interface
 interface ComponentTreeItem {

@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/ui/core/button';
+import { Textarea } from '@/ui/core/textarea';
+import { Input } from '@/ui/core/input';
 import { FormLabel } from '@/components/ui/form';
 import { RatingStars, ReviewRating } from './RatingStars';
 import { CategorySelector } from './CategorySelector';

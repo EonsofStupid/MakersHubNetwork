@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/core/card';
 import { useTrendingParts } from '@/admin/queries/useTrendingParts';
 
 export const TrendingParts = () => {
