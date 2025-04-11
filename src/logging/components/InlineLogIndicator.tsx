@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LogLevel } from '../constants/log-level';
+import { LogLevel } from '@/logging/types';
 import { renderUnknownAsNode } from '@/shared/utils/render';
 
 // Define indicator variants
@@ -109,7 +109,7 @@ export const InlineLogIndicator: React.FC<InlineLogIndicatorProps> = ({
       whileTap={onClick ? { scale: 0.98 } : undefined}
     >
       {showIcon && <Icon className="w-3 h-3" />}
-      <span>{renderUnknownAsNode(message)}</span>
+      <span>{typeof message === 'string' ? message : renderUnknownAsNode(message)}</span>
       {children}
     </motion.div>
   );

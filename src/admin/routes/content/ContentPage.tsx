@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { PageHeader } from '@/admin/components/ui/PageHeader';
-import { LogLevel } from '@/logging/types';
-import { LogCategory } from '@/logging/types'; 
+import { LogLevel, LogCategory } from '@/logging/types';
 import { useAdminAuth } from '@/admin/hooks/useAdminAuth';
 import { useToast } from '@/hooks/use-toast';
 

@@ -5,11 +5,13 @@ import { ReactNode } from 'react';
  * Logging levels with increasing severity
  */
 export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-  CRITICAL = 4
+  DEBUG = 'debug',
+  TRACE = 'trace',
+  INFO = 'info',
+  SUCCESS = 'success',
+  WARN = 'warn',
+  ERROR = 'error',
+  CRITICAL = 'critical'
 }
 
 /**
@@ -35,13 +37,15 @@ export enum LogCategory {
   THEME = 'theme',
   TESTING = 'testing',
   NOTIFICATION = 'notification',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
+  NETWORK = 'network' // Added missing NETWORK category
 }
 
 /**
  * Full log entry structure
  */
 export interface LogEntry {
+  id?: string;
   level: LogLevel;
   message: string | ReactNode;
   category?: LogCategory;
@@ -50,7 +54,23 @@ export interface LogEntry {
   source?: string;
   sessionId?: string;
   userId?: string;
+  duration?: number;
+  tags?: string[];
   [key: string]: any;
+}
+
+/**
+ * Filter options for log queries
+ */
+export interface LogFilterOptions {
+  level?: LogLevel;
+  categories?: LogCategory[];
+  source?: string;
+  fromDate?: Date;
+  toDate?: Date;
+  search?: string;
+  tags?: string[];
+  limit?: number;
 }
 
 /**

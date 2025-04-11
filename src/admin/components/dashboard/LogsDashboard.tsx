@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
 import { LogLevel } from '@/logging/constants/log-level';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,7 @@ export function LogsDashboard() {
     LogCategory.AUTH,
     LogCategory.SYSTEM,
     LogCategory.UI,
-    LogCategory.NETWORK,
+    LogCategory.NETWORK, // Now exists in LogCategory
     LogCategory.CHAT,
     LogCategory.DATABASE
   ];

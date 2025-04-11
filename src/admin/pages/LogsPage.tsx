@@ -4,8 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogsDashboard } from '@/admin/components/dashboard/LogsDashboard';
 import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
 import { CyberCard } from '@/admin/components/ui/CyberCard';
-import { LogCategory } from '@/logging';
-import { LogLevel } from '@/logging/constants/log-level';
+import { LogCategory, LogLevel } from '@/logging/types';
 
 export function LogsPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -65,7 +64,7 @@ export function LogsPage() {
                 <LogActivityStream 
                   height="300px"
                   level={LogLevel.INFO}
-                  categories={[LogCategory.NETWORK]}
+                  categories={[LogCategory.NETWORK]} // Now uses the valid NETWORK category
                   showSource={true}
                 />
               </CyberCard>
@@ -82,7 +81,7 @@ export function LogsPage() {
             <pre className="bg-[var(--impulse-bg-overlay)] p-4 rounded-md text-xs overflow-x-auto">
               {`// Example of updating logging configuration
 import { getLogger } from '@/logging';
-import { LogLevel } from '@/logging/constants/log-level';
+import { LogLevel } from '@/logging/types';
 
 const logger = getLogger();
 logger.updateConfig({

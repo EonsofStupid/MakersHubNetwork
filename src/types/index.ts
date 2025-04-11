@@ -9,8 +9,11 @@
 // Auth types
 export * from './auth.types';
 
-// User types
-export * from './user.types';
+// User types - explicitly resolve conflicts
+export type { User } from './user';
+export type { UserMetadata } from './user.types';
+
+// Re-export from user.ts to avoid conflicts
 export * from './user';
 
 // Shared types
