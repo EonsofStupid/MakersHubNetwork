@@ -17,7 +17,7 @@ export function ImpulseAdminLayout({
 }) {
   return (
     <AdminLayout title={title} className="impulse-admin-layout">
-      {children || <Outlet />}
+      {children}
     </AdminLayout>
   );
 }

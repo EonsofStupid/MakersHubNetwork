@@ -43,7 +43,7 @@ export function registerAuthEventListener(event: string, handler: (payload: any)
  * This is a convenience function for auth module internal use
  */
 export function hasRole(role: UserRole | UserRole[] | undefined): boolean {
-  return AuthBridge.hasRole(role);
+  return authBridge.hasRole(role);
 }
 
 /**
@@ -51,7 +51,7 @@ export function hasRole(role: UserRole | UserRole[] | undefined): boolean {
  * This is a convenience function for auth module internal use
  */
 export function isAdmin(): boolean {
-  return AuthBridge.isAdmin();
+  return authBridge.isAdmin();
 }
 
 /**
@@ -59,5 +59,5 @@ export function isAdmin(): boolean {
  * This is a convenience function for auth module internal use
  */
 export function isSuperAdmin(): boolean {
-  return AuthBridge.isSuperAdmin();
+  return authBridge.isSuperAdmin();
 }

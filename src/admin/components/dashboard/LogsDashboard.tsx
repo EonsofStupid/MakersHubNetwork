@@ -5,7 +5,6 @@ import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
 import { LogLevel } from '@/logging/constants/log-level';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { renderUnknownAsNode } from '@/shared/utils/render';
 
 /**
  * LogsDashboard component
@@ -21,7 +20,7 @@ export function LogsDashboard() {
     LogCategory.AUTH,
     LogCategory.SYSTEM,
     LogCategory.UI,
-    LogCategory.API,
+    LogCategory.NETWORK,
     LogCategory.CHAT,
     LogCategory.DATABASE
   ];
@@ -64,7 +63,7 @@ export function LogsDashboard() {
             <SelectContent>
               {categories.map((category) => (
                 <SelectItem key={category} value={category}>
-                  {renderUnknownAsNode(category)}
+                  {category}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -1,53 +1,75 @@
 
 /**
- * Logging system type definitions
+ * Core logging types
  */
 
-import { LogLevel } from './constants/log-level';
-import React from 'react';
-
-export enum LogCategory {
-  DEFAULT = 'default',
-  SYSTEM = 'system',
-  NETWORK = 'network',
-  AUTH = 'auth',
-  UI = 'ui',
-  ADMIN = 'admin',
-  CHAT = 'chat',
-  DATABASE = 'database',
-  PERFORMANCE = 'performance',
-  CONTENT = 'content'
+export enum LogLevel {
+  TRACE = 'trace',
+  DEBUG = 'debug',
+  INFO = 'info',
+  SUCCESS = 'success',
+  WARN = 'warn',
+  ERROR = 'error',
+  CRITICAL = 'critical'
 }
 
+/**
+ * LogCategory enum for consistent categorization across the app
+ */
+export enum LogCategory {
+  SYSTEM = 'system',
+  AUTH = 'auth',
+  UI = 'ui',
+  API = 'api',
+  DATABASE = 'database',
+  CHAT = 'chat',
+  ADMIN = 'admin',
+  NETWORK = 'network',
+  PERF = 'performance',
+  SECURITY = 'security',
+  USER = 'user'
+}
+
+/**
+ * Core log entry structure
+ */
 export interface LogEntry {
   id: string;
-  timestamp: Date;
+  timestamp: string | Date;
   level: LogLevel;
+  message: string | React.ReactNode | unknown;
   category: LogCategory;
-  message: string | React.ReactNode;
-  details?: Record<string, unknown>;
   source?: string;
+  details?: Record<string, unknown> | unknown;
   userId?: string;
   sessionId?: string;
-  duration?: number; // For performance logs
   tags?: string[];
 }
 
+/**
+ * Log filter options
+ */
+export interface LogFilterOptions {
+  level?: LogLevel;
+  levels?: LogLevel[];
+  category?: LogCategory;
+  categories?: LogCategory[];
+  source?: string;
+  sources?: string[];
+  from?: Date;
+  to?: Date;
+  limit?: number;
+  search?: string;
+  userId?: string;
+  sessionId?: string;
+  tags?: string[];
+}
+
+/**
+ * Log transport interface
+ */
 export interface LogTransport {
   log(entry: LogEntry): void;
-  flush?(): Promise<void>;
+  getEntries(filter?: LogFilterOptions): LogEntry[];
+  clear(): void;
 }
-
-export interface LoggingConfig {
-  minLevel: LogLevel;
-  enabledCategories?: LogCategory[];
-  transports: LogTransport[];
-  bufferSize?: number;
-  flushInterval?: number;
-  includeSource?: boolean;
-  includeUser?: boolean;
-  includeSession?: boolean;
-}
-
-// Re-export LogLevel for backward compatibility
-export { LogLevel } from './constants/log-level';
