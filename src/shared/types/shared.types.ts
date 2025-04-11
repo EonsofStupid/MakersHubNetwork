@@ -1,46 +1,32 @@
 
 /**
- * Shared types used across modules
+ * Common shared types used across the application
  */
 
-// Auth status types
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+/**
+ * A generic status type used throughout the application
+ */
+export type Status = 'idle' | 'loading' | 'success' | 'error';
 
-// Common result types
-export interface Result<T> {
-  data?: T;
-  error?: Error;
-  success: boolean;
+/**
+ * A generic sort direction
+ */
+export type SortDirection = 'asc' | 'desc';
+
+/**
+ * A generic pagination state
+ */
+export interface PaginationState {
+  page: number;
+  perPage: number;
+  total: number;
 }
 
-// Theme related types
-export interface ThemeLogDetails {
-  success?: boolean;
-  error?: Error;
-  errorMessage?: string;
-  theme?: string;
-  details?: Record<string, unknown>;
+/**
+ * A generic API response
+ */
+export interface ApiResponse<T = any> {
+  data: T | null;
+  error: string | null;
+  status: number;
 }
-
-// Chat message type
-export interface ChatMessage {
-  id: string;
-  content: string;
-  sender: 'user' | 'assistant' | 'system';
-  timestamp: Date;
-  sessionId: string;
-  metadata?: Record<string, any>;
-}
-
-// User role type
-export type UserRole = 
-  | 'user'
-  | 'admin'
-  | 'super_admin'
-  | 'editor'
-  | 'content_manager'
-  | 'designer'
-  | 'support'
-  | 'moderator'
-  | 'guest'
-  | 'builder';

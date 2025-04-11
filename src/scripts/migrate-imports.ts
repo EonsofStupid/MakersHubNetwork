@@ -52,3 +52,42 @@ export function processMigrationFile(filePath: string, content: string): string 
 function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+// Main function to run migration
+async function runMigration() {
+  const srcDir = path.join(process.cwd(), 'src');
+  
+  // Process files recursively
+  function processDir(dir: string) {
+    const files = fs.readdirSync(dir);
+    
+    for (const file of files) {
+      const filePath = path.join(dir, file);
+      const stat = fs.statSync(filePath);
+      
+      if (stat.isDirectory()) {
+        processDir(filePath);
+        continue;
+      }
+      
+      if (['.ts', '.tsx', '.js', '.jsx'].some(ext => filePath.endsWith(ext))) {
+        console.log(`Processing ${filePath}`);
+        const content = fs.readFileSync(filePath, 'utf8');
+        const updatedContent = processMigrationFile(filePath, content);
+        
+        if (content !== updatedContent) {
+          console.log(`Updating imports in ${filePath}`);
+          fs.writeFileSync(filePath, updatedContent, 'utf8');
+        }
+      }
+    }
+  }
+  
+  processDir(srcDir);
+  console.log('Import migration complete!');
+}
+
+// Run the migration if this file is executed directly
+if (require.main === module) {
+  runMigration().catch(console.error);
+}

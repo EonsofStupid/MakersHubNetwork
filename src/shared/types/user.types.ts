@@ -1,43 +1,86 @@
 
+import { UserRole } from './auth.types';
+
 /**
- * User types definitions
+ * User profile and metadata types
  */
 
-import { UserRole } from './shared.types';
+/**
+ * User metadata that can be stored in Supabase auth.user_metadata
+ */
+export interface UserMetadata {
+  full_name?: string;
+  avatar_url?: string;
+  username?: string;
+  bio?: string;
+  website?: string;
+  location?: string;
+  role?: UserRole;
+  provider?: string;
+}
 
-// Basic user type
-export interface User {
-  id: string;
-  email?: string;
-  displayName?: string;
-  avatarUrl?: string;
+/**
+ * User settings for application preferences
+ */
+export interface UserSettings {
+  userId: string;
+  notifications: NotificationPreferences;
+  appearance: AppearancePreferences;
+  privacy: PrivacyPreferences;
   createdAt?: string;
   updatedAt?: string;
-  isAnonymous?: boolean;
-  emailVerified?: boolean;
-  user_metadata?: UserMetadata; // Added this field based on usage in the codebase
 }
 
-// User profile extends user with additional information
-export interface UserProfile {
+/**
+ * Notification preferences
+ */
+export interface NotificationPreferences {
+  email: boolean;
+  push: boolean;
+  marketing: boolean;
+  newsletter: boolean;
+}
+
+/**
+ * Appearance preferences
+ */
+export interface AppearancePreferences {
+  theme: string;
+  fontSize: 'small' | 'medium' | 'large';
+  reducedMotion: boolean;
+  highContrast: boolean;
+}
+
+/**
+ * Privacy preferences
+ */
+export interface PrivacyPreferences {
+  publicProfile: boolean;
+  showActivity: boolean;
+  allowDataCollection: boolean;
+}
+
+/**
+ * User activity types
+ */
+export type UserActivityType = 
+  | 'login' 
+  | 'signup' 
+  | 'profile_update' 
+  | 'content_create' 
+  | 'content_update'
+  | 'comment'
+  | 'build_submit'
+  | 'build_approve'
+  | 'build_reject';
+
+/**
+ * User activity record
+ */
+export interface UserActivity {
   id: string;
-  user_id: string;
-  display_name?: string;
-  avatar_url?: string;
-  bio?: string;
-  created_at: string;
-  updated_at: string;
-  theme_preference?: string;
-  motion_enabled?: boolean;
-}
-
-// User metadata for storage in auth providers
-export interface UserMetadata {
-  display_name?: string;
-  avatar_url?: string;
-  bio?: string;
-  theme_preference?: string;
-  motion_enabled?: boolean;
-  full_name?: string; // Added this field based on usage in the codebase
-  name?: string; // Added this field based on usage in the codebase
+  userId: string;
+  type: UserActivityType;
+  details?: Record<string, any>;
+  createdAt: string;
 }
