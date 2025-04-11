@@ -1,162 +1,117 @@
+
+import { authBridge } from './AuthBridge';
+
 /**
- * ChatBridge.ts
- * 
- * Bridge for the Chat module - provides a clean interface for other modules to
- * interact with the Chat module without direct dependencies.
+ * ChatEvent types for inter-module communication
  */
-
-import { createModuleBridge } from '@/core/MessageBus';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
-
-// Create a module-specific bridge
-const chatBridgeImpl = createModuleBridge('chat');
-
-// Define types for chat messages and events
 export type ChatEventType = 
-  | 'message'
-  | 'notification'
-  | 'system'
-  | 'session';
-
-export type ChatMessageType =
-  | 'text'
-  | 'image'
-  | 'file'
-  | 'system';
-
-export type ChatMessage = {
-  id: string;
-  content: string;
-  sender: 'user' | 'assistant' | 'system';
-  timestamp: Date;
-  sessionId?: string;
-  type?: ChatMessageType;
-  metadata?: Record<string, any>;
-};
-
-export type ChatEvent = {
-  type: string;
-  message?: ChatMessage;
-  sessionId?: string;
-  [key: string]: any;
-};
-
-export type ChatSessionOptions = {
-  userId?: string;
-  mode?: 'normal' | 'dev' | 'admin';
-  metadata?: Record<string, any>;
-};
+  | 'CHAT_INITIALIZED'
+  | 'CHAT_OPENED'
+  | 'CHAT_CLOSED'
+  | 'MESSAGE_SENT'
+  | 'MESSAGE_RECEIVED'
+  | 'CONVERSATION_UPDATED'
+  | 'ERROR';
 
 /**
- * ChatBridge - Public API for the Chat module
- * 
- * This bridge provides a clean interface for other modules to interact with 
- * the Chat module without direct dependencies.
+ * ChatEvent interface
  */
-export const ChatBridge = {
+export interface ChatEvent {
+  type: ChatEventType;
+  payload?: any;
+}
+
+/**
+ * ChatEventHandler function type
+ */
+export type ChatEventHandler = (event: ChatEvent) => void;
+
+/**
+ * ChatBridge - Communication bridge for chat-related events
+ * Allows modules to communicate without direct dependencies
+ */
+class ChatBridgeClass {
+  private eventHandlers: ChatEventHandler[] = [];
+  private initialized = false;
+
   /**
-   * Send a message to a chat session
+   * Initialize the chat system
    */
-  sendMessage: (sessionId: string, content: string, metadata: Record<string, any> = {}) => {
-    chatBridgeImpl.publish('message', {
-      type: 'send-message',
-      message: {
-        id: `user-${Date.now()}`,
-        content,
-        sender: 'user',
-        timestamp: new Date(),
-        sessionId,
-        metadata
-      },
-      sessionId
-    });
-  },
-  
-  /**
-   * Subscribe to chat events for a specific session
-   */
-  subscribeToSession: (sessionId: string, callback: (event: ChatEvent) => void) => {
-    return chatBridgeImpl.subscribe(`session:${sessionId}`, callback);
-  },
-  
-  /**
-   * Create a new chat session
-   */
-  createSession: (options: ChatSessionOptions = {}) => {
-    const { userId, mode = 'normal', metadata = {} } = options;
-    const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+  initialize(): void {
+    if (this.initialized) return;
     
-    chatBridgeImpl.publish('system', {
-      type: 'session-created',
-      sessionId,
-      mode,
-      userId,
-      metadata
-    });
-    
-    return sessionId;
-  },
-  
-  /**
-   * Close a chat session
-   */
-  closeSession: (sessionId: string) => {
-    chatBridgeImpl.publish(`session:${sessionId}`, {
-      type: 'session-closed',
-      sessionId
-    });
-  },
-  
-  /**
-   * Subscribe to all messages from the chat system
-   */
-  subscribeToChannel: (channel: ChatEventType, callback: (event: ChatEvent) => void) => {
-    return chatBridgeImpl.subscribe(channel, callback);
-  },
-  
-  /**
-   * Publish an event to a chat channel
-   */
-  publishEvent: (channel: ChatEventType, event: ChatEvent) => {
-    chatBridgeImpl.publish(channel, event);
+    this.initialized = true;
+    this.publishChatEvent({ type: 'CHAT_INITIALIZED' });
   }
-};
 
-/**
- * Initialize the Chat bridge
- */
-export function initializeChatBridge() {
-  const logger = getLogger();
-  
-  logger.info('Initializing ChatBridge', {
-    category: LogCategory.SYSTEM,
-    source: 'ChatBridge'
-  });
-  
-  // Subscribe to system events
-  chatBridgeImpl.subscribe('system', (message) => {
-    if (message.type === 'session-created') {
-      logger.debug('Chat session created', {
-        category: LogCategory.CHAT,
-        details: { sessionId: message.sessionId, mode: message.mode }
+  /**
+   * Subscribe to chat events
+   * @param handler The event handler function
+   * @returns Unsubscribe function
+   */
+  subscribeToChatEvents(handler: ChatEventHandler): () => void {
+    this.eventHandlers.push(handler);
+    return () => {
+      this.eventHandlers = this.eventHandlers.filter(h => h !== handler);
+    };
+  }
+
+  /**
+   * Publish chat events to all subscribers
+   * @param event The chat event to publish
+   */
+  publishChatEvent(event: ChatEvent): void {
+    this.eventHandlers.forEach(handler => {
+      try {
+        handler(event);
+      } catch (error) {
+        console.error('Error in chat event handler:', error);
+      }
+    });
+  }
+
+  /**
+   * Send a message
+   * @param message The message to send
+   */
+  sendMessage(message: string): void {
+    // Check authentication
+    if (!authBridge.isAuthenticated()) {
+      this.publishChatEvent({ 
+        type: 'ERROR', 
+        payload: { message: 'Authentication required to send messages' } 
       });
+      return;
     }
-  });
-  
-  return true;
+
+    const userId = authBridge.getUserId();
+    
+    // Publish message event
+    this.publishChatEvent({
+      type: 'MESSAGE_SENT',
+      payload: {
+        id: Date.now().toString(),
+        content: message,
+        userId,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  /**
+   * Open the chat interface
+   */
+  openChat(): void {
+    this.publishChatEvent({ type: 'CHAT_OPENED' });
+  }
+
+  /**
+   * Close the chat interface
+   */
+  closeChat(): void {
+    this.publishChatEvent({ type: 'CHAT_CLOSED' });
+  }
 }
 
-/**
- * Export ChatBridge functionality for direct use
- */
-export function subscribeToChatEvents(channel: string, listener: (message: any) => void) {
-  return chatBridgeImpl.subscribe(channel, listener);
-}
-
-export function publishChatEvent(channel: string, message: any) {
-  chatBridgeImpl.publish(channel, message);
-}
-
-// Export the internal bridge for chat module use only
-export { chatBridgeImpl };
+// Export a singleton instance
+export const chatBridge = new ChatBridgeClass();

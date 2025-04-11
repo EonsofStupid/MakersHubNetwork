@@ -15,6 +15,10 @@ This project follows a modular architecture with clear boundaries between differ
     /types           # String literal types, enums, interfaces
     /utils           # Composable shared logic
     /ui              # Truly shared components (Button, Dialog, etc)
+      /core          # Basic UI elements (buttons, inputs, etc.)
+      /data          # Data display components (tables, lists, etc.)
+      /feedback      # Feedback components (notifications, loaders, etc.)
+      /layout        # Layout components (containers, grids, etc.)
 ```
 
 ## Module Boundaries
