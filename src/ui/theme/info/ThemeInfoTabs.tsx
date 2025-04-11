@@ -2,43 +2,56 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
 import { ThemeInfoTab } from './ThemeInfoTab';
-import { SettingsIcon, PaletteIcon, SearchCodeIcon } from 'lucide-react';
-import { ThemeComponentPreview } from '../ThemeComponentPreview';
+import { ThemeToken } from '@/types/theme';
+import { ThemeComponentPreview } from '@/ui/theme/ThemeComponentPreview';
 
-export function ThemeInfoTabs() {
+interface ThemeInfoTabsProps {
+  componentTokens?: ThemeToken[];
+}
+
+export function ThemeInfoTabs({ componentTokens = [] }: ThemeInfoTabsProps) {
+  // Filter tokens by component
+  const getComponentTokens = (component: string) => {
+    return componentTokens.filter(token => token.component === component);
+  };
+
   return (
-    <Tabs defaultValue="config" className="w-full">
-      <TabsList className="grid grid-cols-3 mb-4">
-        <TabsTrigger value="config" className="flex gap-1 items-center">
-          <SettingsIcon className="w-4 h-4" />
-          <span>Configuration</span>
-        </TabsTrigger>
-        <TabsTrigger value="colors" className="flex gap-1 items-center">
-          <PaletteIcon className="w-4 h-4" />
-          <span>Color Palette</span>
-        </TabsTrigger>
-        <TabsTrigger value="components" className="flex gap-1 items-center">
-          <SearchCodeIcon className="w-4 h-4" />
-          <span>Components</span>
-        </TabsTrigger>
+    <Tabs defaultValue="info" className="w-full">
+      <TabsList className="grid grid-cols-3">
+        <TabsTrigger value="info">Info</TabsTrigger>
+        <TabsTrigger value="components">Components</TabsTrigger>
+        <TabsTrigger value="colors">Colors</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="config" className="space-y-4">
+      <TabsContent value="info">
         <ThemeInfoTab />
       </TabsContent>
       
-      <TabsContent value="colors" className="space-y-4">
-        {/* Color palette information */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <div className="p-4 rounded bg-primary text-primary-foreground flex items-center justify-center">Primary</div>
-          <div className="p-4 rounded bg-secondary text-secondary-foreground flex items-center justify-center">Secondary</div>
-          <div className="p-4 rounded bg-accent text-accent-foreground flex items-center justify-center">Accent</div>
-          <div className="p-4 rounded bg-muted text-muted-foreground flex items-center justify-center">Muted</div>
-        </div>
+      <TabsContent value="components" className="space-y-6">
+        <ThemeComponentPreview component="Button" componentTokens={getComponentTokens('button')} />
+        <ThemeComponentPreview component="Card" componentTokens={getComponentTokens('card')} />
+        <ThemeComponentPreview component="Input" componentTokens={getComponentTokens('input')} />
       </TabsContent>
       
-      <TabsContent value="components" className="space-y-4">
-        <ThemeComponentPreview />
+      <TabsContent value="colors">
+        <div className="grid grid-cols-2 gap-4 p-4">
+          <div className="flex flex-col space-y-2">
+            <div className="w-full h-12 rounded-md bg-primary" />
+            <span className="text-xs">Primary</span>
+          </div>
+          <div className="flex flex-col space-y-2">
+            <div className="w-full h-12 rounded-md bg-secondary" />
+            <span className="text-xs">Secondary</span>
+          </div>
+          <div className="flex flex-col space-y-2">
+            <div className="w-full h-12 rounded-md bg-muted" />
+            <span className="text-xs">Muted</span>
+          </div>
+          <div className="flex flex-col space-y-2">
+            <div className="w-full h-12 rounded-md bg-accent" />
+            <span className="text-xs">Accent</span>
+          </div>
+        </div>
       </TabsContent>
     </Tabs>
   );

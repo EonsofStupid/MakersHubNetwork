@@ -1,22 +1,22 @@
 
 import React from 'react';
-import { Loader } from 'lucide-react';
+import { Skeleton } from '@/ui/core/skeleton';
 
-interface ThemeLoadingStateProps {
-  message?: string;
-  subMessage?: string;
-}
-
-export function ThemeLoadingState({ 
-  message = "Loading theme...", 
-  subMessage = "Preparing your visual experience" 
-}: ThemeLoadingStateProps) {
+export function ThemeLoadingState() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-3">
-        <Loader className="h-10 w-10 animate-spin text-primary" />
-        <div className="text-foreground font-medium">{message}</div>
-        <p className="text-muted-foreground text-sm">{subMessage}</p>
+    <div className="space-y-4 p-4">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-[250px]" />
+        <Skeleton className="h-4 w-[300px]" />
+      </div>
+      
+      <div className="space-y-2 py-4">
+        <Skeleton className="h-[100px] w-full" />
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <Skeleton className="h-[120px] w-full" />
+        <Skeleton className="h-[120px] w-full" />
       </div>
     </div>
   );
