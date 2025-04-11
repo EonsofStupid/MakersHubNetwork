@@ -17,16 +17,18 @@ import { useAdminAccess } from "../hooks/useAdminAccess";
 import { EditModeToggle } from "./ui/EditModeToggle";
 import { AuthBridge } from "@/bridges/AuthBridge";
 
-interface AdminLayoutProps {
+export interface AdminLayoutProps {
   title?: string;
   fullWidth?: boolean;
   className?: string;
+  children?: React.ReactNode;
 }
 
 export function AdminLayout({ 
   title = "Admin Dashboard",
   fullWidth = false,
-  className
+  className,
+  children
 }: AdminLayoutProps) {
   const { permissions } = useAdminStore();
   const [isEditMode] = useAtom(adminEditModeAtom);
@@ -83,7 +85,7 @@ export function AdminLayout({
         <AdminHeader title={title} />
         
         <main className={`flex-1 overflow-auto p-4 sm:p-6 ${fullWidth ? 'max-w-full' : ''}`}>
-          <Outlet />
+          {children || <Outlet />}
         </main>
       </div>
       
