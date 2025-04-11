@@ -1,3 +1,5 @@
 
-// Re-export from the original location
-export { useToast, toast } from '@/shared/ui/core/use-toast';
+// Re-export from the shared UI toast
+import { useToast, toast } from "../ui/core/toast";
+
+export { useToast, toast };

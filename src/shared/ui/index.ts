@@ -1,10 +1,18 @@
 
 /**
- * Shared UI component exports
+ * Main UI exports
+ * 
+ * Re-exports all UI components for easier imports across the application
  */
 
-// Re-export all UI components
+// Core UI components
 export * from './core';
+
+// Data display components
 export * from './data';
+
+// Layout components
 export * from './layout';
+
+// Feedback components
 export * from './feedback';

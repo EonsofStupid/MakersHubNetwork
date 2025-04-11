@@ -1,126 +1,111 @@
 
-import { User } from '@supabase/supabase-js';
-import { AuthEvent, AuthEventHandler, UserRole } from '@/shared/types';
-
 /**
- * AuthBridge - Communication bridge for auth-related events and operations
- * This allows cross-module communication without direct dependencies
+ * AuthBridge - Core authentication bridge used across the application
+ * Provides a central point for authentication events and operations
  */
-class AuthBridgeClass {
-  private eventHandlers: AuthEventHandler[] = [];
-  private _user: User | null = null;
-  private _isReady = false;
+import { User } from '@supabase/supabase-js';
+import { AuthEvent, AuthEventHandler, UserProfile } from '@/shared/types/auth.types';
 
-  /**
-   * Subscribe to auth events
-   * @param handler The event handler function
-   * @returns Unsubscribe function
-   */
-  subscribeToAuthEvents(handler: AuthEventHandler): () => void {
-    this.eventHandlers.push(handler);
+// Define the AuthBridge class
+export class AuthBridgeClass {
+  private eventHandlers: Map<string, Set<AuthEventHandler>> = new Map();
+  private user: User | null = null;
+  private profile: UserProfile | null = null;
+  private status: 'loading' | 'authenticated' | 'unauthenticated' = 'loading';
+  
+  // Auth state management
+  getUserId(): string | undefined {
+    return this.user?.id;
+  }
+  
+  getUser(): User | null {
+    return this.user;
+  }
+  
+  getProfile(): UserProfile | null {
+    return this.profile;
+  }
+  
+  isAuthenticated(): boolean {
+    return this.status === 'authenticated' && !!this.user;
+  }
+  
+  // Event handling
+  subscribe(channel: string, handler: AuthEventHandler): () => void {
+    if (!this.eventHandlers.has(channel)) {
+      this.eventHandlers.set(channel, new Set());
+    }
+    
+    const handlers = this.eventHandlers.get(channel)!;
+    handlers.add(handler);
+    
+    // Return unsubscribe function
     return () => {
-      this.eventHandlers = this.eventHandlers.filter(h => h !== handler);
+      handlers.delete(handler);
+      if (handlers.size === 0) {
+        this.eventHandlers.delete(channel);
+      }
     };
   }
-
-  /**
-   * Publish auth events to all subscribers
-   * @param event The auth event to publish
-   */
-  publishAuthEvent(event: AuthEvent): void {
-    this.eventHandlers.forEach(handler => {
-      try {
-        handler(event);
-      } catch (error) {
-        console.error('Error in auth event handler:', error);
-      }
-    });
-
-    // Update internal state on certain events
-    if (event.type === 'SIGNED_IN' && event.payload?.user) {
-      this._user = event.payload.user;
-    } else if (event.type === 'SIGNED_OUT') {
-      this._user = null;
-    } else if (event.type === 'USER_UPDATED' && event.payload?.user) {
-      this._user = event.payload.user;
+  
+  publish(channel: string, event: AuthEvent): void {
+    const handlers = this.eventHandlers.get(channel);
+    if (handlers) {
+      handlers.forEach(handler => handler(event));
     }
   }
-
-  /**
-   * Set the current user
-   */
-  setUser(user: User | null): void {
-    this._user = user;
-    this._isReady = true;
+  
+  // Auth operations
+  async signIn(email: string, password: string) {
+    // Implementation would connect to actual auth provider
+    console.log('Sign in with:', email, password);
+    return null;
   }
-
-  /**
-   * Get the current user
-   */
-  getUser(): User | null {
-    return this._user;
+  
+  async signInWithGoogle() {
+    // Implementation would connect to actual auth provider
+    console.log('Sign in with Google');
+    return null;
   }
-
-  /**
-   * Get user ID
-   */
-  getUserId(): string | null {
-    return this._user?.id || null;
+  
+  async signOut() {
+    // Implementation would connect to actual auth provider
+    console.log('Sign out');
+    this.user = null;
+    this.status = 'unauthenticated';
+    this.publish('auth', { type: 'SIGNED_OUT' });
   }
-
-  /**
-   * Check if the user is authenticated
-   */
-  isAuthenticated(): boolean {
-    return !!this._user;
-  }
-
-  /**
-   * Check if auth is ready
-   */
-  isReady(): boolean {
-    return this._isReady;
-  }
-
-  /**
-   * Check if user has a specific role
-   */
-  hasRole(role: UserRole | UserRole[]): boolean {
-    if (!this._user) return false;
-    
-    const userRole = this._user.user_metadata?.role as UserRole | undefined;
-    if (!userRole) return false;
-    
-    if (Array.isArray(role)) {
-      return role.includes(userRole);
+  
+  // For testing/debug
+  setUser(user: User | null) {
+    this.user = user;
+    this.status = user ? 'authenticated' : 'unauthenticated';
+    if (user) {
+      this.publish('auth', { type: 'SIGNED_IN', payload: { user } });
+    } else {
+      this.publish('auth', { type: 'SIGNED_OUT' });
     }
-    
-    return role === userRole;
   }
-
-  /**
-   * Check if the user is an admin
-   */
-  isAdmin(): boolean {
-    return this.hasRole(['admin', 'super_admin']);
-  }
-
-  /**
-   * Check if the user is a super admin
-   */
-  isSuperAdmin(): boolean {
-    return this.hasRole('super_admin');
-  }
-
-  /**
-   * Logout the current user
-   */
-  async logout(): Promise<void> {
-    this.publishAuthEvent({
-      type: 'SIGNED_OUT'
-    });
+  
+  setProfile(profile: UserProfile | null) {
+    this.profile = profile;
+    if (profile) {
+      this.publish('auth', { 
+        type: 'PROFILE_FETCHED', 
+        payload: { profile } 
+      });
+    }
   }
 }
 
-// Export a singleton instance
+// Create and export a singleton instance
 export const authBridge = new AuthBridgeClass();
+
+// Helper functions for event handling
+export const subscribeToAuthEvents = (handler: AuthEventHandler): () => void => {
+  return authBridge.subscribe('auth', handler);
+};
+
+export const publishAuthEvent = (event: AuthEvent): void => {
+  authBridge.publish('auth', event);
+};
