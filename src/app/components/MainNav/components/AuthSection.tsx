@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Button } from "@/ui/core/button";
+import { Button } from "@/shared/ui/core/button";
 import { useNavigate } from "react-router-dom";
 import { User, LogIn } from "lucide-react";
 import { useAuthState } from "@/auth/hooks/useAuthState";
