@@ -445,4 +445,3 @@ declare global {
   var workflowKeys: typeof import('./components/admin/tabs/ContentTab/queries/workflow.queries')['workflowKeys'];
   var AuthUser: typeof import('@/auth/types/shared')['AuthUser'];
 }
-

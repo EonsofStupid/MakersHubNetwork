@@ -18,3 +18,28 @@ export interface User {
   updated_at?: string;
   [key: string]: any;
 }
+
+/**
+ * Extended user type with additional fields
+ */
+export interface ExtendedUser extends User {
+  role?: string;
+  roles?: string[];
+  displayName?: string;
+  isAnonymous?: boolean;
+  permissions?: string[];
+  lastLoginAt?: string;
+  status?: 'active' | 'inactive' | 'suspended' | 'pending';
+}
+
+/**
+ * User preferences type
+ */
+export interface UserPreferences {
+  theme?: 'light' | 'dark' | 'system';
+  notifications?: boolean;
+  emailNotifications?: boolean;
+  language?: string;
+  timezone?: string;
+  [key: string]: any;
+}
