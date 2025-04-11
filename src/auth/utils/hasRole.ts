@@ -1,32 +1,23 @@
-
-import { UserRole, ROLES } from '@/types/shared';
-import { AuthBridge } from '@/bridges/AuthBridge';
+import { authBridge } from '@/bridges/AuthBridge';
+import { UserRole } from '@/shared/types';
 
 /**
- * Check if user has one of the specified roles
- * Use AuthBridge to ensure consistent behavior across the app
- * @param role Single role or array of roles to check against
- * @returns Boolean indicating if user has at least one of the specified roles
+ * Utility to check if the current user has a specific role
+ * @param role The role or roles to check
+ * @returns Boolean indicating if the user has the required role
  */
-export const hasRole = (role: UserRole | UserRole[] | undefined): boolean => {
+export function hasRole(role: UserRole | UserRole[]): boolean {
   if (!role) return false;
-  return AuthBridge.hasRole(role);
-};
-
-/**
- * Check if user has admin access (admin or super_admin)
- * Use AuthBridge to ensure consistent behavior across the app
- * @returns Boolean indicating if user has admin access
- */
-export const hasAdminAccess = (): boolean => {
-  return AuthBridge.isAdmin();
-};
-
-/**
- * Check if user is a super admin
- * Use AuthBridge to ensure consistent behavior across the app
- * @returns Boolean indicating if user is a super admin
- */
-export const isSuperAdmin = (): boolean => {
-  return AuthBridge.isSuperAdmin();
-};
+  
+  // If checking for admin roles, use the specialized methods
+  if (role === 'admin') {
+    return authBridge.isAdmin();
+  }
+  
+  if (role === 'super_admin') {
+    return authBridge.isSuperAdmin();
+  }
+  
+  // Otherwise, use the general hasRole method
+  return authBridge.hasRole(role);
+}

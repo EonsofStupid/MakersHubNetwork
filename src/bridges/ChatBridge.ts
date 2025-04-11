@@ -1,4 +1,3 @@
-
 /**
  * ChatBridge.ts
  * 
@@ -161,4 +160,3 @@ export function publishChatEvent(channel: string, message: any) {
 
 // Export the internal bridge for chat module use only
 export { chatBridgeImpl };
-
