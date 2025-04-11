@@ -1,13 +1,12 @@
 
 import React from 'react';
 import { PageHeader } from '@/admin/components/ui/PageHeader';
-import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
 import { LogLevel } from '@/logging/types';
 import { LogCategory } from '@/logging/types'; 
 import { useAdminAuth } from '@/admin/hooks/useAdminAuth';
 import { useToast } from '@/hooks/use-toast';
 
-export function ContentPage() {
+export function ContentPageComponent() {
   const { hasAdminAccess } = useAdminAuth();
   const { toast } = useToast();
   
@@ -31,14 +30,11 @@ export function ContentPage() {
       <div className="grid gap-6">
         <div className="space-y-4">
           <h2 className="text-lg font-medium">Content Activity Log</h2>
-          <LogActivityStream 
-            height="400px"
-            level={LogLevel.INFO}
-            categories={[LogCategory.ADMIN, LogCategory.CONTENT]} 
-            showSource={true}
-          />
         </div>
       </div>
     </div>
   );
 }
+
+// Export as default for React.lazy()
+export default ContentPageComponent;

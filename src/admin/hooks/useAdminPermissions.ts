@@ -34,20 +34,19 @@ export function useAdminPermissions() {
         // Map roles to permissions
         const mappedPermissions = mapRolesToPermissions(roles);
         
-        // Super admins get all permissions - handle this carefully to ensure correct typing
-        const allPermissionsFlat = Object.values(PERMISSIONS)
+        // Super admins get all permissions
+        const allPermissions = Object.values(PERMISSIONS)
           .flatMap(section => {
             if (typeof section === 'string') return section;
-            return Object.values(section).filter(p => typeof p === 'string');
+            return Object.values(section);
           })
-          .filter((p): p is string => typeof p === 'string');
+          .filter(Boolean);
         
         const finalPermissions = isSuperAdmin
-          ? allPermissionsFlat 
+          ? allPermissions 
           : mappedPermissions;
         
-        // Use type assertion to handle the complex type situation
-        setPermissions(finalPermissions as PermissionValue[]);
+        setPermissions(finalPermissions);
         
         logger.info('Admin permissions loaded', {
           details: { 

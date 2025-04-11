@@ -1,20 +1,12 @@
 
 import { create } from 'zustand';
-import { AuthState, AuthActions, UserRole } from '@/types/auth.types';
-import { LogCategory } from '@/logging';
-import { getLogger } from '@/logging';
+import { AuthState, AuthActions } from '@/types/auth.types';
+import { createSessionSlice } from '@/stores/auth/slices/session.slice';
+import { createUserSlice } from '@/stores/auth/slices/user.slice';
+import { AuthStatus } from '@/types/shared';
+import { UserProfile } from '@/types/user';
 
-export type UserProfile = {
-  id: string;
-  user_id: string;
-  display_name?: string;
-  avatar_url?: string;
-  bio?: string;
-  created_at?: string;
-  updated_at?: string;
-  [key: string]: any;
-};
-
+// Initial state
 const initialState: AuthState = {
   user: null,
   session: null,
@@ -24,35 +16,40 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
-  initialized: false,
+  initialized: false
 };
 
 export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   ...initialState,
-
-  // Setters
-  setUser: (user) => set({ user }),
-  setSession: (session) => set({ session }),
+  
+  // Add the slices
+  ...createUserSlice(set, get),
+  ...createSessionSlice(set, get),
+  
+  // Profile management
+  profile: null,
   setProfile: (profile) => set({ profile }),
-  setRoles: (roles) => set({ roles }),
+  
+  // State management
+  status: 'idle' as AuthStatus,
+  setStatus: (status) => set({ status }),
+  
+  isAuthenticated: false,
+  isLoading: false,
+  error: null,
+  
   setError: (error) => set({ error }),
   setLoading: (isLoading) => set({ isLoading }),
-  setInitialized: (initialized) => set({ initialized }),
-  setStatus: (status) => set({ 
-    status,
-    isAuthenticated: status === 'authenticated'
-  }),
   
-  // Authentication methods
+  // Role management
   hasRole: (role) => {
     const roles = get().roles;
-    if (!roles || roles.length === 0) return false;
     
     if (Array.isArray(role)) {
       return role.some(r => roles.includes(r));
     }
     
-    return roles.includes(role as UserRole);
+    return roles.includes(role);
   },
   
   isAdmin: () => {
@@ -67,98 +64,61 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   
   // Initialization
   initialize: async () => {
-    const logger = getLogger();
     set({ isLoading: true });
     
     try {
-      logger.info("Initializing auth store", { 
-        category: LogCategory.AUTH 
-      });
-      
-      // Implement your actual auth initialization logic here
-      set({ 
-        isLoading: false,
-        initialized: true,
-        status: 'unauthenticated'
-      });
+      // Just set initialized for now - real implementation would check for session
+      set({ initialized: true });
       
     } catch (error) {
-      logger.error("Error initializing auth store", { 
-        category: LogCategory.AUTH,
-        details: error instanceof Error ? error.message : String(error)
-      });
-      
-      set({ 
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Unknown error during authentication initialization",
-        status: 'error'
-      });
+      set({ error: error instanceof Error ? error.message : 'Unknown error during initialization' });
+    } finally {
+      set({ isLoading: false });
     }
   },
   
-  // User profile loading
-  loadUserProfile: async (userId) => {
-    const logger = getLogger();
-    
-    if (!userId) {
-      logger.warn("Cannot load user profile without user ID", {
-        category: LogCategory.AUTH
-      });
-      return;
-    }
+  // Profile loading
+  loadUserProfile: async (userId: string) => {
+    set({ isLoading: true });
     
     try {
-      logger.info("Loading user profile", { 
-        category: LogCategory.AUTH,
-        details: { userId } 
-      });
+      // Mock profile loading for now
+      const profile: UserProfile = {
+        id: `profile-${userId}`,
+        user_id: userId,
+        display_name: 'User',
+        avatar_url: null,
+      };
       
-      // Implement your actual profile loading logic here
-      
+      set({ profile });
     } catch (error) {
-      logger.error("Error loading user profile", { 
-        category: LogCategory.AUTH,
-        details: error instanceof Error ? error.message : String(error)
-      });
-      
-      set({ error: error instanceof Error ? error.message : "Failed to load user profile" });
+      set({ error: error instanceof Error ? error.message : 'Unknown error loading profile' });
+    } finally {
+      set({ isLoading: false });
     }
   },
   
   // Logout
   logout: async () => {
-    const logger = getLogger();
+    set({ isLoading: true });
     
     try {
-      logger.info("User logging out", {
-        category: LogCategory.AUTH
-      });
-      
-      // Implement your actual logout logic here
-      
-      // Reset state
+      // Reset state on logout
       set({
-        ...initialState,
-        initialized: true,
-        status: 'unauthenticated'
+        user: null,
+        session: null,
+        profile: null,
+        roles: [],
+        status: 'idle',
+        isAuthenticated: false,
       });
-      
     } catch (error) {
-      logger.error("Error during logout", { 
-        category: LogCategory.AUTH,
-        details: error instanceof Error ? error.message : String(error)
-      });
-      
-      set({ error: error instanceof Error ? error.message : "Failed to logout" });
+      set({ error: error instanceof Error ? error.message : 'Unknown error during logout' });
+    } finally {
+      set({ isLoading: false });
     }
   }
 }));
 
-// Selectors for efficient state access
-export const selectUser = (state: AuthState) => state.user;
-export const selectProfile = (state: AuthState) => state.profile;
-export const selectIsAuthenticated = (state: AuthState) => state.isAuthenticated;
-export const selectUserRoles = (state: AuthState) => state.roles;
-export const selectStatus = (state: AuthState) => state.status;
-export const selectError = (state: AuthState) => state.error;
-export const selectIsLoading = (state: AuthState) => state.isLoading;
+// Export type to help with imports
+export type AuthStore = ReturnType<typeof useAuthStore>;
