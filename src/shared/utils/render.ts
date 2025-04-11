@@ -1,115 +1,87 @@
 
-import React from 'react';
-import { LogEntry } from '@/logging/types';
-
 /**
- * Utility to render unknown data types as React nodes
+ * Utility functions for rendering and error handling
  */
-export function renderUnknownAsNode(value: unknown): React.ReactNode {
-  if (value === undefined) return <span className="text-muted-foreground">undefined</span>;
-  if (value === null) return <span className="text-muted-foreground">null</span>;
-  
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-  
-  if (value instanceof Error) {
-    return (
-      <div className="text-destructive">
-        <p className="font-semibold">{value.name}: {value.message}</p>
-        {value.stack && (
-          <pre className="text-xs mt-1 p-2 bg-destructive/10 rounded overflow-auto max-h-40">
-            {value.stack}
-          </pre>
-        )}
-      </div>
-    );
-  }
-  
-  if (React.isValidElement(value)) return value;
-  
-  if (Array.isArray(value)) {
-    return (
-      <div className="space-y-1">
-        {value.map((item, index) => (
-          <div key={index} className="pl-2 border-l-2 border-muted">
-            {renderUnknownAsNode(item)}
-          </div>
-        ))}
-      </div>
-    );
-  }
-  
-  if (typeof value === 'object' && value !== null) {
-    try {
-      return (
-        <pre className="text-xs p-1 bg-muted/50 rounded overflow-auto max-h-40">
-          {JSON.stringify(value, null, 2)}
-        </pre>
-      );
-    } catch (e) {
-      return <span className="text-destructive">[Circular Object]</span>;
-    }
-  }
-  
-  return <span className="text-muted-foreground">[Unknown: {typeof value}]</span>;
-}
-
-/**
- * Convert React nodes or any data to searchable string for filtering
- */
-export function nodeToSearchableString(value: unknown): string {
-  if (value === undefined) return 'undefined';
-  if (value === null) return 'null';
-  
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-  
-  if (value instanceof Error) {
-    return `${value.name}: ${value.message} ${value.stack || ''}`;
-  }
-  
-  if (React.isValidElement(value)) {
-    // Extracting text content from React elements is complex
-    // Just return a basic identification for now
-    return '[React Element]';
-  }
-  
-  if (Array.isArray(value)) {
-    return value.map(item => nodeToSearchableString(item)).join(' ');
-  }
-  
-  if (typeof value === 'object' && value !== null) {
-    try {
-      return JSON.stringify(value);
-    } catch (e) {
-      return '[Object]';
-    }
-  }
-  
-  return String(value);
-}
 
 /**
  * Convert an error object to a plain object for logging
+ * @param error Any error object or unknown value
+ * @returns A plain object representation of the error
  */
-export function errorToObject(error: unknown): Record<string, unknown> {
-  if (!(error instanceof Error)) {
-    return { message: String(error) };
+export function errorToObject(error: unknown): Record<string, any> {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      cause: error.cause ? errorToObject(error.cause) : undefined,
+    };
   }
   
-  const errorObject: Record<string, unknown> = {
-    name: error.name,
-    message: error.message,
-    stack: error.stack,
-  };
-  
-  // Add any custom properties from the error
-  Object.getOwnPropertyNames(error).forEach(prop => {
-    if (prop !== 'name' && prop !== 'message' && prop !== 'stack') {
-      const key = prop as keyof typeof error;
-      errorObject[prop] = error[key];
+  if (typeof error === 'object' && error !== null) {
+    try {
+      // Try to convert the object to a plain object
+      return JSON.parse(JSON.stringify(error));
+    } catch (e) {
+      // If serialization fails, return a simple representation
+      return { type: typeof error, toString: String(error) };
     }
-  });
+  }
   
-  return errorObject;
+  return {
+    type: typeof error,
+    value: String(error)
+  };
+}
+
+/**
+ * Safely serialize an object to JSON, handling circular references
+ * @param obj Object to serialize
+ * @returns JSON string representation of the object
+ */
+export function safeStringify(obj: any): string {
+  const seen = new WeakSet();
+  
+  return JSON.stringify(obj, (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return '[Circular Reference]';
+      }
+      seen.add(value);
+    }
+    return value;
+  }, 2);
+}
+
+/**
+ * Convert React error boundaries caught errors to a readable format
+ * @param error Error from React error boundary
+ * @param info React component stack info
+ * @returns Formatted error object
+ */
+export function formatErrorBoundaryError(error: Error, info: { componentStack: string }): Record<string, any> {
+  return {
+    error: errorToObject(error),
+    componentStack: info.componentStack.split('\n').filter(Boolean)
+  };
+}
+
+/**
+ * Check if a value is a promise
+ * @param value Value to check
+ * @returns Whether the value is a promise
+ */
+export function isPromise(value: any): value is Promise<any> {
+  return value && typeof value.then === 'function';
+}
+
+/**
+ * Truncate a string to a maximum length with ellipsis
+ * @param str String to truncate
+ * @param maxLength Maximum length
+ * @returns Truncated string
+ */
+export function truncate(str: string, maxLength: number = 100): string {
+  if (str.length <= maxLength) return str;
+  return str.substring(0, maxLength - 3) + '...';
 }

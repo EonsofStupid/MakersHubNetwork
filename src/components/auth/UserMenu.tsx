@@ -1,4 +1,3 @@
-
 import { useState, memo, useCallback, useMemo } from "react" 
 import { useToast } from "@/hooks/use-toast"
 import { ProfileDialog } from "@/components/profile/ProfileDialog"
@@ -8,7 +7,6 @@ import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/logging"
 import { errorToObject } from "@/shared/utils/render"
 import { AuthBridge } from "@/auth/bridge"
-import { User } from "@/types/user"
 
 export const UserMenu = memo(() => {
   const [isSheetOpen, setSheetOpen] = useState(false)
@@ -19,12 +17,9 @@ export const UserMenu = memo(() => {
   const logger = useLogger("UserMenu", LogCategory.AUTH)
   
   // Get auth data from centralized store using selectors for performance
-  const rawUser = useAuthStore(state => state.user)
+  const user = useAuthStore(state => state.user)
   const profile = useAuthStore(state => state.profile)
   const roles = useAuthStore(state => state.roles)
-  
-  // Cast user to proper type
-  const user = rawUser as User | null;
   
   // Memoize handlers to prevent recreating functions on each render
   const handleOpenSheet = useCallback(() => {

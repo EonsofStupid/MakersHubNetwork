@@ -52,7 +52,7 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
     // Subscribe to session events via the bridge
     const unsubscribe = ChatBridge.subscribeToSession(sessionId, (event) => {
       if (event.type === 'new-message' && event.message) {
-        setMessages(prev => [...prev, event.message as ChatMessage]);
+        setMessages(prev => [...prev, event.message]);
       }
     });
     

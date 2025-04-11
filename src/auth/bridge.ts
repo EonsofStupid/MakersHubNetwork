@@ -10,36 +10,8 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { UserRole } from '@/types/shared';
 
-// Manually extend the authBridgeImpl with the methods we need
-// This is a workaround for the TS error and ensures type safety
-const extendedBridge = {
-  ...authBridgeImpl,
-  
-  // Add missing methods
-  hasRole: (role: UserRole | UserRole[] | undefined): boolean => {
-    // Forward to the AuthBridge implementation
-    return authBridgeImpl.module === 'auth' 
-      ? false 
-      : (authBridgeImpl as any).hasRole(role);
-  },
-  
-  isAdmin: (): boolean => {
-    // Forward to the AuthBridge implementation
-    return authBridgeImpl.module === 'auth'
-      ? false
-      : (authBridgeImpl as any).isAdmin();
-  },
-  
-  isSuperAdmin: (): boolean => {
-    // Forward to the AuthBridge implementation
-    return authBridgeImpl.module === 'auth'
-      ? false
-      : (authBridgeImpl as any).isSuperAdmin();
-  }
-};
-
-// Re-export the extended bridge for use in the auth module
-export const authBridge = extendedBridge;
+// Re-export the bridge for use in the auth module
+export const authBridge = authBridgeImpl;
 
 // Re-export the bridge API for convenience
 export { 
@@ -71,7 +43,7 @@ export function registerAuthEventListener(event: string, handler: (payload: any)
  * This is a convenience function for auth module internal use
  */
 export function hasRole(role: UserRole | UserRole[] | undefined): boolean {
-  return authBridge.hasRole(role);
+  return AuthBridge.hasRole(role);
 }
 
 /**
@@ -79,7 +51,7 @@ export function hasRole(role: UserRole | UserRole[] | undefined): boolean {
  * This is a convenience function for auth module internal use
  */
 export function isAdmin(): boolean {
-  return authBridge.isAdmin();
+  return AuthBridge.isAdmin();
 }
 
 /**
@@ -87,5 +59,5 @@ export function isAdmin(): boolean {
  * This is a convenience function for auth module internal use
  */
 export function isSuperAdmin(): boolean {
-  return authBridge.isSuperAdmin();
+  return AuthBridge.isSuperAdmin();
 }

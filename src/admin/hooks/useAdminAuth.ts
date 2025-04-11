@@ -6,7 +6,6 @@ import { LogCategory } from '@/logging';
 import { UserRole, ROLES } from '@/types/shared';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { User } from '@/types/user';
 
 /**
  * Specialized hook for admin authentication
@@ -18,7 +17,7 @@ export function useAdminAuth() {
   const navigate = useNavigate();
   
   // Access auth state
-  const user = useAuthStore(state => state.user as User);
+  const user = useAuthStore(state => state.user);
   const profile = useAuthStore(state => state.profile);
   const roles = useAuthStore(state => state.roles);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);

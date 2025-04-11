@@ -6,7 +6,6 @@ import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permi
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { ROLES } from '@/types/shared';
-import { User } from '@/types/user';
 
 /**
  * Maps user roles to admin permissions
@@ -17,15 +16,12 @@ export function useAdminRoles() {
   const { loadPermissions, permissions } = useAdminStore();
   const logger = useLogger('useAdminRoles', LogCategory.ADMIN);
   
-  // Cast user to proper type
-  const typedUser = user as User | null;
-  
   useEffect(() => {
     // Only load permissions when user is authenticated and roles are loaded
     if (status === 'authenticated' && roles && roles.length > 0) {
       logger.info('Loading admin permissions for user roles', {
         details: { 
-          userId: typedUser?.id,
+          userId: user?.id,
           roles 
         }
       });
@@ -36,7 +32,7 @@ export function useAdminRoles() {
         });
       });
     }
-  }, [status, roles, loadPermissions, typedUser, logger]);
+  }, [status, roles, loadPermissions, user, logger]);
   
   return {
     isAdmin: Boolean(roles?.includes(ROLES.ADMIN) || roles?.includes(ROLES.SUPER_ADMIN)),

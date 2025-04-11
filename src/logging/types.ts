@@ -1,95 +1,53 @@
 
 /**
- * Core logging types
+ * Logging system type definitions
  */
 
-export enum LogLevel {
-  TRACE = 'trace',
-  DEBUG = 'debug',
-  INFO = 'info',
-  SUCCESS = 'success',
-  WARN = 'warn',
-  ERROR = 'error',
-  CRITICAL = 'critical'
-}
+import { LogLevel } from './constants/log-level';
+import React from 'react';
 
-/**
- * LogCategory enum for consistent categorization across the app
- */
 export enum LogCategory {
+  DEFAULT = 'default',
   SYSTEM = 'system',
+  NETWORK = 'network',
   AUTH = 'auth',
   UI = 'ui',
-  API = 'api',
-  DATABASE = 'database',
-  CHAT = 'chat',
   ADMIN = 'admin',
-  NETWORK = 'network',
-  PERF = 'performance',
-  SECURITY = 'security',
-  USER = 'user',
+  CHAT = 'chat',
+  DATABASE = 'database',
   PERFORMANCE = 'performance',
-  CONTENT = 'content',
-  THEME = 'theme',
-  NOTIFICATION = 'notification',
-  ANALYTICS = 'analytics',
-  PAYMENT = 'payment',
-  MEDIA = 'media'
+  CONTENT = 'content'
 }
 
-/**
- * Core log entry structure
- */
 export interface LogEntry {
   id: string;
-  timestamp: string | Date;
+  timestamp: Date;
   level: LogLevel;
-  message: string | React.ReactNode | unknown;
   category: LogCategory;
+  message: string | React.ReactNode;
+  details?: Record<string, unknown>;
   source?: string;
-  details?: Record<string, unknown> | unknown;
   userId?: string;
   sessionId?: string;
-  tags?: string[];
-  duration?: number; // Add duration field for performance metrics
-}
-
-/**
- * Log filter options
- */
-export interface LogFilterOptions {
-  level?: LogLevel;
-  levels?: LogLevel[];
-  category?: LogCategory;
-  categories?: LogCategory[];
-  source?: string;
-  sources?: string[];
-  from?: Date;
-  to?: Date;
-  limit?: number;
-  search?: string;
-  userId?: string;
-  sessionId?: string;
+  duration?: number; // For performance logs
   tags?: string[];
 }
 
-/**
- * Log transport interface
- */
 export interface LogTransport {
   log(entry: LogEntry): void;
-  getEntries(filter?: LogFilterOptions): LogEntry[];
-  clear(): void;
+  flush?(): Promise<void>;
 }
 
-/**
- * Logging configuration
- */
 export interface LoggingConfig {
-  level: LogLevel;
-  enabled: boolean;
-  consoleTransport: boolean;
-  memoryTransport: boolean;
-  uiTransport: boolean;
-  memoryLimit: number;
+  minLevel: LogLevel;
+  enabledCategories?: LogCategory[];
+  transports: LogTransport[];
+  bufferSize?: number;
+  flushInterval?: number;
+  includeSource?: boolean;
+  includeUser?: boolean;
+  includeSession?: boolean;
 }
+
+// Re-export LogLevel for backward compatibility
+export { LogLevel } from './constants/log-level';

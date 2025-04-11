@@ -12,7 +12,6 @@ import { AuthBridge } from '@/bridges';
 import { UserRole } from '@/types/shared';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { User } from '@/types/user';
 
 /**
  * Consolidated hook for accessing authentication state and actions
@@ -24,8 +23,7 @@ export function useAuth() {
   
   // Use selectors for each piece of state to prevent unnecessary re-renders
   // By using selectors, we only access the store state but never write directly
-  const rawUser = useAuthStore(state => state.user);
-  const user = rawUser as User | null;
+  const user = useAuthStore(state => state.user);
   const profile = useAuthStore(state => state.profile);
   const session = useAuthStore(state => state.session);
   const roles = useAuthStore(state => state.roles);
