@@ -1,3 +1,3 @@
 
-// Export toast hooks directly from shared
-export { useToast, toast } from "@/shared/hooks/use-toast";
+// Re-export from shared UI
+export { useToast, toast } from "@/shared/ui/core/use-toast";

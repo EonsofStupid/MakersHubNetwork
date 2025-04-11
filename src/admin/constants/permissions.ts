@@ -5,6 +5,10 @@ export const ADMIN_PERMISSIONS = {
   ACCESS: 'admin:access',
   ADMIN_ACCESS: 'admin:full-access',
   
+  // User profile permissions
+  USER_PROFILE_READ: 'user-profile:read',
+  USER_PROFILE_WRITE: 'user-profile:write',
+  
   // User management permissions
   USERS_READ: 'users:read',
   USERS_WRITE: 'users:write',
@@ -26,6 +30,7 @@ export const ADMIN_PERMISSIONS = {
   // Settings permissions
   SETTINGS_READ: 'settings:read',
   SETTINGS_WRITE: 'settings:write',
+  SETTINGS_VIEW: 'settings:view',
   SETTINGS_EDIT: 'settings:edit',
   
   // Content permissions
@@ -38,6 +43,7 @@ export const ADMIN_PERMISSIONS = {
   // Build permissions
   BUILDS_READ: 'builds:read',
   BUILDS_WRITE: 'builds:write',
+  BUILDS_VIEW: 'builds:view',
   BUILDS_APPROVE: 'builds:approve',
   BUILDS_REJECT: 'builds:reject',
   
@@ -46,6 +52,14 @@ export const ADMIN_PERMISSIONS = {
   DATA_WRITE: 'data:write',
   DATA_VIEW: 'data:view',
   DATA_IMPORT: 'data:import',
+  
+  // System permissions
+  SYSTEM_LOGS: 'system:logs',
+  SYSTEM_SETTINGS: 'system:settings',
+  SYSTEM_WRITE: 'system:write',
+  
+  // Analytics permissions
+  ANALYTICS_VIEW: 'analytics:view',
   
   // Super admin permission
   SUPER_ADMIN: 'admin:super',

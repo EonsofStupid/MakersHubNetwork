@@ -3,7 +3,7 @@ import React from 'react';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { Card } from '@/shared/ui/core/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/core/avatar';
-import { useLogger } from '@/shared/hooks/use-logger';
+import { useLogger } from '@/shared/hooks/useLogger';
 import { LogCategory } from '@/shared/types/logging';
 import { User, UserMetadata } from '@/shared/types/auth.types';
 

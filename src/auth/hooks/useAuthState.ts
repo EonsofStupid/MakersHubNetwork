@@ -1,39 +1,49 @@
 
 import { useState, useEffect } from 'react';
+import { User, UserProfile } from '@/shared/types/auth.types';
 import { authBridge } from '@/bridges/AuthBridge';
-import { User, UserProfile, UserRole } from '@/shared/types/user';
+import { useLogger } from '@/shared/hooks/useLogger';
+import { LogCategory } from '@/shared/types/logging';
 
 export function useAuthState() {
   const [user, setUser] = useState<User | null>(authBridge.getUser());
   const [profile, setProfile] = useState<UserProfile | null>(authBridge.getProfile());
-  const [roles, setRoles] = useState<UserRole[]>(authBridge.getUserRoles());
-  const [status, setStatus] = useState({
-    isAuthenticated: !!authBridge.getUser(),
-    isLoading: authBridge.status.isLoading
-  });
-  
+  const [roles, setRoles] = useState<string[]>(authBridge.getUserRoles());
+  const logger = useLogger('useAuthState', LogCategory.AUTH);
+
   useEffect(() => {
-    // Subscribe to auth events
-    const unsubscribe = authBridge.subscribeToAuthEvents((event, data) => {
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-        setUser(data);
+    logger.debug('Setting up auth state listeners');
+
+    // Listen for auth state changes
+    const unsubscribe = authBridge.subscribe((event) => {
+      logger.debug(`Auth event received: ${event.type}`);
+
+      if (event.type === 'AUTH_SIGNED_IN' || event.type === 'AUTH_USER_UPDATED' || event.type === 'AUTH_STATE_CHANGED') {
+        setUser(authBridge.getUser());
         setRoles(authBridge.getUserRoles());
-        setStatus(prev => ({ ...prev, isAuthenticated: true, isLoading: false }));
-      } else if (event === 'SIGNED_OUT') {
+      } 
+      else if (event.type === 'AUTH_PROFILE_UPDATED') {
+        setProfile(authBridge.getProfile());
+      }
+      else if (event.type === 'AUTH_SIGNED_OUT') {
         setUser(null);
         setProfile(null);
         setRoles([]);
-        setStatus(prev => ({ ...prev, isAuthenticated: false, isLoading: false }));
-      } else if (event === 'PROFILE_FETCHED') {
-        setProfile(data);
       }
     });
+
+    // Initial state fetch
+    setUser(authBridge.getUser());
+    setProfile(authBridge.getProfile());
+    setRoles(authBridge.getUserRoles());
     
-    return unsubscribe;
-  }, []);
+    return () => {
+      logger.debug('Cleaning up auth state listeners');
+      unsubscribe();
+    };
+  }, [logger]);
   
-  const hasRole = (role: UserRole | UserRole[] | undefined) => {
-    if (!role) return false;
+  const hasRole = (role: string | string[]) => {
     return authBridge.hasRole(role);
   };
   
@@ -44,14 +54,12 @@ export function useAuthState() {
   const isSuperAdmin = () => {
     return authBridge.isSuperAdmin();
   };
-  
+
   return {
     user,
     profile,
     roles,
-    status,
-    isAuthenticated: status.isAuthenticated,
-    isLoading: status.isLoading,
+    status: authBridge.status,
     hasRole,
     isAdmin,
     isSuperAdmin
