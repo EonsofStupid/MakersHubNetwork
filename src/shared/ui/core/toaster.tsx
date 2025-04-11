@@ -10,7 +10,7 @@ import {
 import { useToast } from "@/shared/hooks/use-toast";
 
 export function Toaster() {
-  const { toast, toasts } = useToast();
+  const { toasts } = useToast();
 
   return (
     <ToastProvider>

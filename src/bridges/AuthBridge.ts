@@ -21,17 +21,17 @@ export const authBridge: AuthBridgeImplementation = {
   async signIn(email: string, password: string) {
     console.log('[AuthBridge] Sign in', email);
     // Mock implementation
-    const mockUser = {
+    const mockUser: User = {
       id: 'user-123',
       email,
       user_metadata: {
         name: 'Test User',
-        avatar_url: null
+        avatar_url: ''
       },
       app_metadata: {
         roles: ['user']
       }
-    } as User;
+    };
 
     authBridge.user = mockUser;
     authBridge.status.isAuthenticated = true;
@@ -46,17 +46,17 @@ export const authBridge: AuthBridgeImplementation = {
   async signInWithGoogle() {
     console.log('[AuthBridge] Sign in with Google');
     // Mock implementation
-    const mockUser = {
+    const mockUser: User = {
       id: 'user-123',
       email: 'google-user@example.com',
       user_metadata: {
         name: 'Google User',
-        avatar_url: null
+        avatar_url: ''
       },
       app_metadata: {
         roles: ['user']
       }
-    } as User;
+    };
 
     authBridge.user = mockUser;
     authBridge.status.isAuthenticated = true;

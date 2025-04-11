@@ -1,5 +1,5 @@
 
-import { ChatBridge, ChatBridgeImplementation, ChatMessage, ChatSession } from '@/chat/types/bridge.types';
+import { ChatBridgeImplementation, ChatMessage, ChatSession, ChatSessionUpdates } from '@/chat/types/bridge.types';
 import { nanoid } from 'nanoid';
 
 /**
@@ -105,10 +105,14 @@ export const chatBridge: ChatBridgeImplementation = {
   async updateSession(sessionId, updates) {
     // Mock implementation
     console.log('[ChatBridge] Update session', sessionId, updates);
+    // Create a complete ChatSession object to return
     return {
       id: sessionId,
-      ...updates,
-      updatedAt: new Date()
+      title: updates.title || 'Updated Chat',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: updates.status || 'active',
+      messages: []
     };
   },
   
@@ -144,6 +148,3 @@ export function publishChatEvent(event: any) {
     }
   });
 }
-
-// Export the ChatBridge implementation
-export { chatBridge as ChatBridge };
