@@ -2,9 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authBridge } from '@/bridges/AuthBridge';
-import { useLogger } from '@/shared/hooks/use-logger';
-import { LogCategory } from '@/logging/types';
-import { UserRole } from '@/shared/types/auth.types';
+import { UserRole } from '@/shared/types/user';
 
 interface AdminAccessOptions {
   redirectTo?: string;
@@ -12,14 +10,15 @@ interface AdminAccessOptions {
 }
 
 export function useAdminAccess(options: AdminAccessOptions = {}) {
-  const { redirectTo = '/admin/unauthorized', requiredRoles = ['admin', 'super_admin'] } = options;
+  const { redirectTo = '/admin/unauthorized', requiredRoles = ['admin', 'superadmin'] } = options;
   const navigate = useNavigate();
   const location = useLocation();
-  const logger = useLogger('useAdminAccess', LogCategory.ADMIN);
   
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -28,30 +27,27 @@ export function useAdminAccess(options: AdminAccessOptions = {}) {
         setError(null);
         
         // First check if user is authenticated
-        if (!authBridge.status.isAuthenticated) {
-          logger.warn('User not authenticated, redirecting to login');
+        const authenticated = authBridge.status.isAuthenticated;
+        setIsAuthenticated(authenticated);
+        
+        if (!authenticated) {
           navigate('/auth/login', { state: { from: location } });
           return;
         }
 
         // Check for required roles
-        const hasRequiredRole = authBridge.hasRole(requiredRoles as UserRole | UserRole[]);
+        const hasRequiredRole = authBridge.hasRole(requiredRoles);
+        setHasAdminAccess(hasRequiredRole);
         
         if (!hasRequiredRole) {
-          logger.warn('User does not have required role(s)', { 
-            requiredRoles, 
-            userRoles: authBridge.user?.profile?.roles 
-          });
           navigate(redirectTo);
           return;
         }
 
         // User has the required role
         setIsAuthorized(true);
-        logger.info('User authorized for admin access');
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Unknown error checking admin access');
-        logger.error('Error checking admin access', { error: error.message });
         setError(error);
         navigate(redirectTo);
       } finally {
@@ -60,7 +56,7 @@ export function useAdminAccess(options: AdminAccessOptions = {}) {
     };
 
     checkAccess();
-  }, [location.pathname, navigate, redirectTo, requiredRoles, logger, location]);
+  }, [location.pathname, navigate, redirectTo, requiredRoles, location]);
 
-  return { isAuthorized, isLoading, error };
+  return { isAuthorized, isLoading, error, hasAdminAccess, isAuthenticated };
 }
