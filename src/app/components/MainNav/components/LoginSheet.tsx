@@ -1,14 +1,14 @@
 
 import React, { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from '@/ui/core/button';
+import { Input } from '@/ui/core/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
 import { Separator } from "@/app/components/ui/separator";
 import { Mail, Lock, User, Github, Twitter } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from '@/hooks/use-toast';
 import { AuthBridge } from "@/auth/bridge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from '@/ui/core/skeleton';
 
 interface LoginSheetProps {
   isOpen: boolean;

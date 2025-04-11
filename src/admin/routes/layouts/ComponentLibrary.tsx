@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/ui/core/scroll-area';
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui/core/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui/core/accordion';
+import { Button } from '@/ui/core/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
 import { Palette, Grid3X3, Layers, Layout, TextCursorInput, FileText } from 'lucide-react';
 import componentRegistry from '@/admin/services/componentRegistry';
 import { Component } from '@/admin/types/layout.types';

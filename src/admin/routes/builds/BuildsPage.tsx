@@ -1,9 +1,9 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from '@/ui/core/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
 import { Package, CheckCircle, XCircle, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/ui/core/badge';
 
 export default function BuildsPage() {
   return (

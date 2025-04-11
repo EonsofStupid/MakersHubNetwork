@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { LogCategory } from '@/logging/types';
 import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
 import { LogLevel } from '@/logging/constants/log-level';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui/core/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 /**

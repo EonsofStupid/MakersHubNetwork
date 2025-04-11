@@ -5,7 +5,7 @@ import { ReviewCard } from "./ReviewCard";
 import { ReviewStatsDisplay } from "./ReviewStats";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription } from '@/ui/core/alert';
 import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 

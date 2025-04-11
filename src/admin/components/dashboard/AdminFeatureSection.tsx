@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui/core/card';
+import { Button } from '@/ui/core/button';
 import { Zap, FileText, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

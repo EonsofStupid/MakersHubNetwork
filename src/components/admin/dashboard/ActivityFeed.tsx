@@ -1,9 +1,9 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/core/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/ui/core/avatar';
+import { Badge } from '@/ui/core/badge';
+import { Button } from '@/ui/core/button';
 import { CheckCircle, XCircle, User, Package, Wrench, Settings, Clock } from "lucide-react";
 
 // Activity types with different colors

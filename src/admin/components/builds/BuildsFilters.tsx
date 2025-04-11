@@ -11,9 +11,9 @@ import {
   Popover, 
   PopoverContent, 
   PopoverTrigger 
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+} from '@/ui/core/popover';
+import { Button } from '@/ui/core/button';
+import { Calendar } from '@/ui/core/calendar';
 import { useBuildAdminStore } from "@/admin/store/buildAdmin.store";
 import { BuildStatus } from "@/admin/types/build.types";
 import { format } from "date-fns";

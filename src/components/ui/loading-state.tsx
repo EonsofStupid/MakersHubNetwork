@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from '@/ui/core/skeleton';
 import { cn } from "@/lib/utils";
 
 interface LoadingStateProps {

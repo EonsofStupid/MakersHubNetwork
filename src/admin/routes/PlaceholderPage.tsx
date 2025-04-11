@@ -2,8 +2,8 @@
 import React, { ReactNode } from "react";
 import { ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
 import { RequirePermission } from "@/admin/components/auth/RequirePermission";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from '@/ui/core/card';
+import { Button } from '@/ui/core/button';
 import { AdminPermissionValue } from "@/admin/types/permissions";
 
 interface PlaceholderPageProps {

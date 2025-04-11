@@ -1,5 +1,5 @@
 import { Info, Palette, Box, Zap } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui/core/tabs';
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeInfoTab } from "./ThemeInfoTab";
 import { ThemeColorSystem } from "../ThemeColorSystem";

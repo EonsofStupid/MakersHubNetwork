@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Component, Layout } from '@/admin/types/layout.types';
 import componentRegistry from '@/admin/services/componentRegistry';
 import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/ui/core/skeleton';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 import { PermissionValue } from '@/auth/permissions';

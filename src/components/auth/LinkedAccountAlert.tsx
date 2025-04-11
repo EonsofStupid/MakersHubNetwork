@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/ui/core/alert';
+import { Button } from '@/ui/core/button';
 import { FcGoogle } from 'react-icons/fc';
 import { Link as LinkIcon, X } from 'lucide-react';
 import { AuthBridge, subscribeToAuthEvents } from '@/auth/bridge';

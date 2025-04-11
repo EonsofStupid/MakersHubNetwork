@@ -1,10 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useActiveUsers } from '@/admin/hooks/useActiveUsers';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/core/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/ui/core/avatar';
+import { Badge } from '@/ui/core/badge';
+import { Button } from '@/ui/core/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 

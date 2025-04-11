@@ -1,12 +1,12 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/ui/core/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
+import { Button } from '@/ui/core/button';
+import { Badge } from '@/ui/core/badge';
 import { Database, ArrowDownToLine, ArrowUpFromLine, Plus, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from '@/ui/core/progress';
 
 export default function DataMaestroManager() {
   const { toast } = useToast();

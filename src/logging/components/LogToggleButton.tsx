@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Terminal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/ui/core/button';
 import { useLoggingContext } from '../context/LoggingContext';
 import { cn } from '@/lib/utils';
 

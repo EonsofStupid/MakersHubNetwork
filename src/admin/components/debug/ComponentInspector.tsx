@@ -8,8 +8,8 @@ import {
   inspectorTabAtom
 } from '@/admin/store/atoms/inspector.atoms';
 import { X, Code, Paintbrush, Database } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
+import { Button } from '@/ui/core/button';
 import { cn } from '@/lib/utils';
 
 export function ComponentInspector() {

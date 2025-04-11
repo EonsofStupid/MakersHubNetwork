@@ -4,7 +4,7 @@ import {
   Dialog, 
   DialogContent, 
   DialogTrigger 
-} from "@/components/ui/dialog";
+} from '@/ui/core/dialog';
 import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 

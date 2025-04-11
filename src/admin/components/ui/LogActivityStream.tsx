@@ -4,7 +4,7 @@ import { LogLevel } from '@/logging/types';
 import { LogCategory, LogEntry } from '@/logging/types';
 import { useLogger } from '@/hooks/use-logger';
 import { getLogger } from '@/logging';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/ui/core/card';
 import { memoryTransport } from '@/logging/config';
 
 interface LogActivityStreamProps {

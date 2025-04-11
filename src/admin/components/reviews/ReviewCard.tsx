@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/ui/core/card';
+import { Button } from '@/ui/core/button';
 import { RatingStars } from './RatingStars';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/ui/core/badge';
 import { ThumbsUp, ThumbsDown, Flag, Edit, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ReviewCategory, BuildReview } from '@/admin/types/review.types';

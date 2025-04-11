@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
 import { LogsDashboard } from '@/admin/components/dashboard/LogsDashboard';
 import { LogActivityStream } from '@/admin/components/ui/LogActivityStream';
 import { CyberCard } from '@/admin/components/ui/CyberCard';

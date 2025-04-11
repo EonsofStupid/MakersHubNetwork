@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, AlertTriangle, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/ui/core/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui/core/card';
 import { UserRole } from '@/types/shared';
 
 interface AccessDeniedProps {

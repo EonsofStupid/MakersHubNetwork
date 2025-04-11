@@ -2,7 +2,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { MainNav } from '@/app/components/MainNav';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from '@/ui/core/toaster';
 import { LoggingProvider } from '@/logging/context/LoggingContext';
 
 // App-specific pages would be imported here

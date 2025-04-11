@@ -1,11 +1,11 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui/core/card';
+import { Input } from '@/ui/core/input';
+import { Button } from '@/ui/core/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
+import { Checkbox } from '@/ui/core/checkbox';
+import { Badge } from '@/ui/core/badge';
 import { Search, UserPlus, Filter, MoreHorizontal, Trash2, UserCog, Shield } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";

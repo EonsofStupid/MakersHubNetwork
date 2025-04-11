@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui/core/card';
+import { Badge } from '@/ui/core/badge';
+import { Button } from '@/ui/core/button';
 import { useNavigate } from "react-router-dom";
 import { Package, AlertCircle, CheckCircle, XCircle, Clock } from "lucide-react";
 import { BuildStatus } from "@/admin/types/build.types";

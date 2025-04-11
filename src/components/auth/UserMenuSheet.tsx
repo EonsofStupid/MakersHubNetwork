@@ -3,9 +3,9 @@ import React from "react"
 import { Link } from "react-router-dom"
 import { Menu, User, Settings, LayoutDashboard, LogOut, Shield, Crown, Link as LinkIcon } from "lucide-react"
 import { UserRole } from "@/types/shared"
-import { Button } from "@/components/ui/button"
+import { Button } from '@/ui/core/button'
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from '@/ui/core/badge'
 import { FcGoogle } from "react-icons/fc"
 import { AuthBridge } from "@/bridges/AuthBridge"
 import { useToast } from "@/hooks/use-toast"
