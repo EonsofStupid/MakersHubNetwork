@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/ui/core/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/ui/core/avatar";
+import { Badge } from "@/ui/core/badge";
 
 type ActiveUser = {
   id: string;
