@@ -2,10 +2,11 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/shared/ui/core/button";
 import { UserMenu } from "@/app/components/auth/UserMenu";
-import { useAuthState } from "@/auth/hooks/useAuthState";
+import { authBridge } from "@/bridges/AuthBridge";
 
 export function MainNav() {
-  const { user, status } = useAuthState();
+  const user = authBridge.getUser();
+  const isAuthenticated = authBridge.status.isAuthenticated;
 
   return (
     <div className="flex w-full items-center justify-between">
@@ -26,7 +27,7 @@ export function MainNav() {
         </nav>
       </div>
       <div className="flex items-center gap-2">
-        {status.isAuthenticated ? (
+        {isAuthenticated ? (
           <UserMenu user={user!} />
         ) : (
           <>

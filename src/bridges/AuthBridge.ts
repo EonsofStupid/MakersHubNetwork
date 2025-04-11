@@ -75,7 +75,7 @@ class AuthBridgeImplementation {
   }
   
   // Login method
-  async login(email: string, password: string): Promise<User | null> {
+  async signIn(email: string, password: string): Promise<User | null> {
     // Implementation would go here
     // For now just mock a successful login
     const mockUser: User = {
@@ -98,11 +98,39 @@ class AuthBridgeImplementation {
     return mockUser;
   }
   
+  // Google login method
+  async signInWithGoogle(): Promise<User | null> {
+    // Mock implementation
+    const mockUser: User = {
+      id: '456',
+      email: 'google@example.com',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      user_metadata: {
+        full_name: 'Google User',
+        avatar_url: 'https://example.com/google-avatar.png'
+      },
+      app_metadata: {
+        roles: ['user']
+      },
+      aud: 'authenticated'
+    };
+    
+    this.setUser(mockUser);
+    this.publishAuthEvent('SIGNED_IN', mockUser);
+    return mockUser;
+  }
+  
   // Logout method
   async logout(): Promise<void> {
     this.setUser(null);
     this.setProfile(null);
     this.publishAuthEvent('SIGNED_OUT');
+  }
+
+  // Alias for logout for compatibility
+  async signOut(): Promise<void> {
+    return this.logout();
   }
   
   // Get user roles

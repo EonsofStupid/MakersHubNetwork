@@ -1,30 +1,37 @@
 
 /**
- * Common shared types used across the application
+ * Shared type definitions used across the application
  */
 
-export interface BaseEntity {
-  id: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+// User role types
+export type UserRole = 
+  | 'user'
+  | 'admin'
+  | 'superadmin'
+  | 'moderator'
+  | 'builder';
 
-export interface Paginated<T> {
-  data: T[];
-  meta: {
-    currentPage: number;
-    lastPage: number;
-    perPage: number;
-    total: number;
-  }
-}
+// Authentication status
+export type AuthStatus = 
+  | 'idle' 
+  | 'loading' 
+  | 'authenticated' 
+  | 'unauthenticated' 
+  | 'error';
 
-export type SortDirection = 'asc' | 'desc';
-export type SortOptions = Record<string, SortDirection>;
+// Authentication event types
+export type AuthEventType = 
+  | 'SIGNED_IN' 
+  | 'SIGNED_OUT' 
+  | 'USER_UPDATED' 
+  | 'PASSWORD_RECOVERY'
+  | 'PROFILE_FETCHED';
 
-export type UserMetadata = {
-  full_name?: string;
-  name?: string;
-  avatarUrl?: string;
-  [key: string]: any;
-};
+// Role constants
+export const ROLES = {
+  SUPERADMIN: 'superadmin' as UserRole,
+  ADMIN: 'admin' as UserRole,
+  MODERATOR: 'moderator' as UserRole,
+  BUILDER: 'builder' as UserRole,
+  USER: 'user' as UserRole
+} as const;
