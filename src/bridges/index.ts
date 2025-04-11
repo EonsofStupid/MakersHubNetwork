@@ -1,22 +1,37 @@
 
-export { 
-  authBridge, 
-  subscribeToAuthEvents, 
-  publishAuthEvent,
-  type AuthEvent,
-  type AuthEventType,
-  type AuthEventHandler,
-  type AuthBridgeImplementation
-} from './AuthBridge';
+/**
+ * bridges/index.ts
+ * 
+ * Central export point for all bridges.
+ * This file helps avoid circular dependencies by providing a single source of truth.
+ */
 
+// Export Auth bridge
+export { 
+  AuthBridge,
+  subscribeToAuthEvents,
+  publishAuthEvent,
+  initializeAuthBridge 
+} from '@/bridges/AuthBridge';
+
+// Export Chat bridge
 export {
-  chatBridge,
+  ChatBridge,
   subscribeToChatEvents,
   publishChatEvent,
-  type ChatEvent,
-  type ChatEventType,
-  type ChatEventHandler,
-  type ChatBridgeImplementation
-} from './ChatBridge';
+  initializeChatBridge
+} from '@/bridges/ChatBridge';
 
-// Export other bridges as they're created
+// Export Logging bridge
+export {
+  LoggingBridge,
+  subscribeToLoggingEvents,
+  publishLoggingEvent,
+  initializeLoggingBridge
+} from '@/logging/bridge';
+
+// Export the core message bus
+export {
+  messageBus,
+  createModuleBridge
+} from '@/core/MessageBus';

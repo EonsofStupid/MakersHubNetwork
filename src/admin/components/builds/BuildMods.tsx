@@ -1,7 +1,7 @@
 
 import React from "react";
-import { Card } from "@/ui/core/card";
-import { Badge } from "@/ui/core/badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Wrench } from "lucide-react";
 import { BuildMod } from "@/admin/types/build.types";
 

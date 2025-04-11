@@ -12,7 +12,7 @@ import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { LogConsole } from "@/logging/components/LogConsole";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging/types";
+import { LogCategory } from "@/logging";
 import { useAdminAccess } from "../../hooks/useAdminAccess";
 import { EditModeToggle } from "../ui/EditModeToggle";
 import { AuthBridge } from "@/bridges/AuthBridge";
@@ -21,14 +21,12 @@ interface AdminLayoutProps {
   title?: string;
   fullWidth?: boolean;
   className?: string;
-  children?: React.ReactNode;
 }
 
 export function AdminLayout({ 
   title = "Admin Dashboard",
   fullWidth = false,
-  className,
-  children
+  className
 }: AdminLayoutProps) {
   const { permissions } = useAdminStore();
   const [isEditMode] = useAtom(adminEditModeAtom);
@@ -85,7 +83,7 @@ export function AdminLayout({
         <AdminHeader title={title} />
         
         <main className={`flex-1 overflow-auto p-4 sm:p-6 ${fullWidth ? 'max-w-full' : ''}`}>
-          {children || <Outlet />}
+          <Outlet />
         </main>
       </div>
       

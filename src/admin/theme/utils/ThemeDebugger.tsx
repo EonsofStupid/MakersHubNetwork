@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { useThemeStore } from '@/stores/theme/store';
-import { Badge } from '@/ui/core/badge';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui/core/accordion';
-import { Button } from '@/ui/core/button';
+import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
 import { Theme } from '@/types/theme';
 
 export function ThemeDebugger() {

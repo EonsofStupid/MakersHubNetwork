@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { getLogger } from '@/logging';
-import { LogCategory, LogLevel } from '@/logging/types';
+import { LogCategory } from '@/logging/types';
 import { ErrorInfo } from 'react';
 
 /**
@@ -12,7 +12,7 @@ export function useErrorLogger(source: string) {
   
   const logError = useCallback((error: Error, errorInfo?: ErrorInfo) => {
     logger.error(error.message, {
-      category: LogCategory.ERROR,
+      category: LogCategory.SYSTEM,
       source,
       details: {
         errorName: error.name,
@@ -25,7 +25,7 @@ export function useErrorLogger(source: string) {
 
   const logErrorWithContext = useCallback((error: Error, context: Record<string, unknown> = {}) => {
     logger.error(error.message, {
-      category: LogCategory.ERROR,
+      category: LogCategory.SYSTEM,
       source,
       details: {
         errorName: error.name,
@@ -41,7 +41,7 @@ export function useErrorLogger(source: string) {
       : 'Unknown API error';
     
     logger.error(`API Error: ${endpoint}`, {
-      category: LogCategory.NETWORK, // Now uses the valid NETWORK category
+      category: LogCategory.NETWORK,
       source,
       details: {
         error,

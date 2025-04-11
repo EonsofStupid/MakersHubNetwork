@@ -1,11 +1,11 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/ui/core/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
-import { Button } from '@/ui/core/button';
-import { Input } from '@/ui/core/input';
-import { Label } from '@/ui/core/label';
-import { Switch } from '@/ui/core/switch';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
 export default function SettingsManager() {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/ui/core/button';
+import { Button } from '@/components/ui/button';
 import { FcGoogle } from 'react-icons/fc';
 import { AuthBridge } from '@/auth/bridge';
 import { useToast } from '@/hooks/use-toast';

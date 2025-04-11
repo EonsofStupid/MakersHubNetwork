@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { useChatStore } from '../state/chatStore';
-import { Button } from '@/ui/core/button';
+import { Button } from '@/components/ui/button';
 import { PanelLeftClose, MessageSquarePlus, PlusCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ScrollArea } from '@/ui/core/scroll-area';
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/ui/core/tooltip';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { formatDistanceToNow } from 'date-fns';
 import { chatTheme } from '../styles/theme';
 import { ChatMode } from '../types';

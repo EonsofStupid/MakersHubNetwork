@@ -1,87 +1,74 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/core/card';
-import { Badge } from '@/shared/ui/core/badge';
-import { FeatureCard } from "./FeatureCard";
-import { 
-  Package, Users, FileText, Settings, Database, 
-  PaintBucket, LayoutDashboard 
-} from "lucide-react";
+import React from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Zap, FileText, Settings } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function AdminFeatureSection() {
-  const features = [
-    {
-      id: "overview",
-      title: "Dashboard",
-      description: "Platform overview and statistics",
-      icon: <LayoutDashboard className="h-5 w-5" />,
-      path: "/admin/overview",
-      color: "bg-blue-500/10 text-blue-500 border-blue-500/20"
-    },
-    {
-      id: "users",
-      title: "User Management",
-      description: "Manage user accounts and permissions",
-      icon: <Users className="h-5 w-5" />,
-      path: "/admin/users",
-      color: "bg-green-500/10 text-green-500 border-green-500/20"
-    },
-    {
-      id: "content",
-      title: "Content Manager",
-      description: "Edit and publish content across the platform",
-      icon: <FileText className="h-5 w-5" />,
-      path: "/admin/content",
-      color: "bg-purple-500/10 text-purple-500 border-purple-500/20"
-    },
-    {
-      id: "builds",
-      title: "Builds",
-      description: "Review and manage build submissions",
-      icon: <Package className="h-5 w-5" />,
-      path: "/admin/builds",
-      color: "bg-amber-500/10 text-amber-500 border-amber-500/20"
-    },
-    {
-      id: "data",
-      title: "Data Maestro",
-      description: "Database management and data tools",
-      icon: <Database className="h-5 w-5" />,
-      path: "/admin/data-maestro",
-      color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20"
-    },
-    {
-      id: "themes",
-      title: "Themes",
-      description: "Customize platform appearance",
-      icon: <PaintBucket className="h-5 w-5" />,
-      path: "/admin/themes",
-      color: "bg-pink-500/10 text-pink-500 border-pink-500/20"
-    },
-  ];
+interface AdminFeatureSectionProps {
+  className?: string;
+}
 
+export function AdminFeatureSection({ className }: AdminFeatureSectionProps) {
   return (
-    <Card className="bg-card/80 backdrop-blur-md border border-primary/10">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Admin Features</span>
-          <Badge variant="outline" className="font-normal text-xs">Impulse Admin</Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {features.map(feature => (
-            <FeatureCard
-              key={feature.id}
-              title={feature.title}
-              description={feature.description}
-              icon={feature.icon}
-              path={feature.path}
-              colorClass={feature.color}
-            />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className={cn("grid grid-cols-1 md:grid-cols-3 gap-6", className)}>
+      <Card>
+        <CardHeader>
+          <Zap className="h-5 w-5 text-primary mb-2" />
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>Frequently used admin tools</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Button variant="outline" className="w-full justify-start">
+              <FileText className="mr-2 h-4 w-4" />
+              Create New Content
+            </Button>
+            <Button variant="outline" className="w-full justify-start">
+              <Settings className="mr-2 h-4 w-4" />
+              Configuration
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+          <CardDescription>Latest system events</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 text-sm">
+            <div className="border-b pb-2">
+              <div className="font-medium">User Registration</div>
+              <div className="text-muted-foreground">johndoe@example.com</div>
+              <div className="text-xs text-muted-foreground">10 minutes ago</div>
+            </div>
+            <div className="border-b pb-2">
+              <div className="font-medium">New Build Submitted</div>
+              <div className="text-muted-foreground">Ultimate Voron V2.4</div>
+              <div className="text-xs text-muted-foreground">1 hour ago</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Documentation</CardTitle>
+          <CardDescription>Admin system guides</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 text-sm">
+            <a href="#" className="block text-primary hover:underline">Admin Dashboard Guide</a>
+            <a href="#" className="block text-primary hover:underline">Content Management</a>
+            <a href="#" className="block text-primary hover:underline">User Management</a>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button variant="ghost" size="sm" className="w-full">View All Guides</Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }

@@ -12,7 +12,7 @@ import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { LogConsole } from "@/logging/components/LogConsole";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging/types";
+import { LogCategory } from "@/logging";
 import { useAdminAccess } from "../hooks/useAdminAccess";
 import { EditModeToggle } from "./ui/EditModeToggle";
 import { AuthBridge } from "@/bridges/AuthBridge";

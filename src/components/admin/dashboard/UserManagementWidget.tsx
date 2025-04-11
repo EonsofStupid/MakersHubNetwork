@@ -1,11 +1,11 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/core/card';
-import { Badge } from '@/ui/core/badge';
-import { Button } from '@/ui/core/button';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Users, UserPlus, UserCheck, ShieldAlert, Award } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from '@/ui/core/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface UserItem {
   id: string;

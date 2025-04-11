@@ -1,69 +1,50 @@
 
-import { UserRole, Permission } from "@/shared/types/user";
-import { ADMIN_PERMISSIONS } from "@/admin/constants/permissions";
-
-// The core permission checking functions
-
-/**
- * Check if user has admin access based on roles
- */
-export function canAccessAdmin(roles: UserRole[]): boolean {
-  return roles.includes('admin') || roles.includes('superadmin');
-}
+import { PermissionValue, PERMISSIONS } from "../permissions";
+import { UserRole } from "@/types/shared";
+import { mapRolesToPermissions } from "./roles";
 
 /**
- * Check if a user has a specific permission based on their roles
+ * Check if a user has the required permission based on their roles
+ * @param userRoles Array of user roles
+ * @param permission Permission to check
+ * @returns Boolean indicating if the user has the permission
  */
-export function checkPermission(roles: UserRole[], permission: Permission): boolean {
-  // Superadmin has all permissions
-  if (roles.includes('superadmin')) {
+export const hasPermission = (
+  userRoles: UserRole[] = [],
+  permission: PermissionValue
+): boolean => {
+  const permissions = mapRolesToPermissions(userRoles);
+  
+  // Super admin permission grants access to everything
+  if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) {
     return true;
   }
   
-  // Admin has access to admin permissions
-  if (permission.startsWith('admin.') && roles.includes('admin')) {
-    // Special case: some admin permissions might be restricted to superadmin only
-    if (permission === ADMIN_PERMISSIONS.SYSTEM_WRITE) {
-      return false;
-    }
-    return true;
-  }
-  
-  // For other roles, specific permissions need to be defined
-  // This is a simplified implementation that can be extended
-  // with a more sophisticated permission matrix
-  
-  // Return false by default
-  return false;
-}
+  // Check for specific permission
+  return permissions.includes(permission);
+};
 
 /**
- * Check if a user has all of the given permissions
+ * Higher-order function to create a permission checker with preset roles
+ * @param userRoles Array of user roles
+ * @returns A function that checks if the user has a specific permission
  */
-export function checkAllPermissions(roles: UserRole[], permissions: Permission[]): boolean {
-  return permissions.every(permission => checkPermission(roles, permission));
-}
+export const createPermissionChecker = (userRoles: UserRole[] = []) => {
+  return (permission: PermissionValue): boolean => {
+    return hasPermission(userRoles, permission);
+  };
+};
 
 /**
- * Check if a user has any of the given permissions
+ * Check if user has admin access
  */
-export function checkAnyPermission(roles: UserRole[], permissions: Permission[]): boolean {
-  return permissions.some(permission => checkPermission(roles, permission));
-}
+export const canAccessAdmin = (userRoles: UserRole[] = []): boolean => {
+  return userRoles.includes('admin') || userRoles.includes('super_admin');
+};
 
 /**
- * Check if user has a role or any of the roles
+ * Check if user can use development features
  */
-export function hasPermission(roles: UserRole[], role: UserRole | UserRole[]): boolean {
-  if (Array.isArray(role)) {
-    return role.some(r => roles.includes(r));
-  }
-  return roles.includes(role);
-}
-
-/**
- * Check if roles include a moderator or admin role
- */
-export function hasModeratorAccess(roles: UserRole[]): boolean {
-  return roles.includes('moderator') || canAccessAdmin(roles);
-}
+export const canAccessDevFeatures = (userRoles: UserRole[] = []): boolean => {
+  return userRoles.includes('admin') || userRoles.includes('super_admin');
+};

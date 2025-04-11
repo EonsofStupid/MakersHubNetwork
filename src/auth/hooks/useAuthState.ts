@@ -1,65 +1,50 @@
 
-import { useState, useEffect } from 'react';
-import { User, UserProfile } from '@/shared/types/auth.types';
-import { authBridge } from '@/bridges/AuthBridge';
-import { useLogger } from '@/shared/hooks/useLogger';
-import { LogCategory } from '@/shared/types/logging';
+/**
+ * useAuthState.ts
+ * 
+ * Hook to access auth state without triggering unnecessary re-renders
+ * Uses selectors and bridges for consistent behavior and module isolation
+ */
 
+import { useAuthStore } from '../store/auth.store';
+import { AuthBridge } from '@/bridges/AuthBridge';
+import { UserRole } from '@/types/shared';
+
+/**
+ * Hook to access auth state without triggering unnecessary re-renders
+ * Uses selectors for performance optimization and AuthBridge for consistent behavior
+ */
 export function useAuthState() {
-  const [user, setUser] = useState<User | null>(authBridge.getUser());
-  const [profile, setProfile] = useState<UserProfile | null>(authBridge.getProfile());
-  const [roles, setRoles] = useState<string[]>(authBridge.getUserRoles());
-  const logger = useLogger('useAuthState', LogCategory.AUTH);
-
-  useEffect(() => {
-    logger.debug('Setting up auth state listeners');
-
-    // Listen for auth state changes
-    const unsubscribe = authBridge.subscribe((event) => {
-      logger.debug(`Auth event received: ${event.type}`);
-
-      if (event.type === 'AUTH_SIGNED_IN' || event.type === 'AUTH_USER_UPDATED' || event.type === 'AUTH_STATE_CHANGED') {
-        setUser(authBridge.getUser());
-        setRoles(authBridge.getUserRoles());
-      } 
-      else if (event.type === 'AUTH_PROFILE_UPDATED') {
-        setProfile(authBridge.getProfile());
-      }
-      else if (event.type === 'AUTH_SIGNED_OUT') {
-        setUser(null);
-        setProfile(null);
-        setRoles([]);
-      }
-    });
-
-    // Initial state fetch
-    setUser(authBridge.getUser());
-    setProfile(authBridge.getProfile());
-    setRoles(authBridge.getUserRoles());
-    
-    return () => {
-      logger.debug('Cleaning up auth state listeners');
-      unsubscribe();
-    };
-  }, [logger]);
+  // Use selectors to only subscribe to the specific state pieces needed
+  const user = useAuthStore(state => state.user);
+  const profile = useAuthStore(state => state.profile);
+  const roles = useAuthStore(state => state.roles);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const status = useAuthStore(state => state.status);
+  const isLoading = useAuthStore(state => state.isLoading);
+  const error = useAuthStore(state => state.error);
   
-  const hasRole = (role: string | string[]) => {
-    return authBridge.hasRole(role);
+  // Use AuthBridge for role checks to ensure consistency
+  // This ensures all role checking goes through the bridge
+  const hasRole = (role: UserRole | UserRole[] | undefined): boolean => {
+    return AuthBridge.hasRole(role);
   };
   
-  const isAdmin = () => {
-    return authBridge.isAdmin();
-  };
+  // Get admin status through bridge methods to ensure consistency
+  const isAdmin = AuthBridge.isAdmin();
+  const isSuperAdmin = AuthBridge.isSuperAdmin();
   
-  const isSuperAdmin = () => {
-    return authBridge.isSuperAdmin();
-  };
-
   return {
+    // Read-only state
     user,
     profile,
     roles,
-    status: authBridge.status,
+    isAuthenticated,
+    status,
+    isLoading,
+    error,
+    
+    // Role checking functions
     hasRole,
     isAdmin,
     isSuperAdmin

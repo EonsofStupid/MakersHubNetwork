@@ -1,11 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
-import { LogLevel } from '@/logging/types';
+import { LogLevel } from '@/logging/constants/log-level';
 import { LogCategory, LogEntry } from '@/logging/types';
 import { useLogger } from '@/hooks/use-logger';
 import { getLogger } from '@/logging';
-import { Card } from '@/ui/core/card';
-import { memoryTransport } from '@/logging/config';
+import { Card } from '@/components/ui/card';
 
 interface LogActivityStreamProps {
   height?: string;
@@ -30,44 +29,49 @@ export function LogActivityStream({
   const logger = useLogger('LogActivityStream', LogCategory.ADMIN);
   
   useEffect(() => {
-    // Initialize with current logs from memory transport
+    // Initialize with current logs
+    const loggerInstance = getLogger();
+    // Use a try-catch to handle potential missing methods
     try {
-      const initialLogs = memoryTransport.getEntries({
+      const initialLogs = (loggerInstance as any).getEntries?.({
         level,
         categories,
         limit: maxEntries
-      });
+      }) || [];
       
       setLogs(initialLogs);
     } catch (error) {
       logger.error('Failed to get initial logs', { details: { error } });
     }
     
-    // Set up interval to refresh logs
-    const intervalId = setInterval(() => {
-      try {
-        const updatedLogs = memoryTransport.getEntries({
-          level,
-          categories,
-          limit: maxEntries
-        });
+    // Subscribe to new log entries
+    try {
+      const unsubscribe = (loggerInstance as any).subscribe?.((entry: LogEntry) => {
+        // Filter based on level and categories
+        if (level && entry.level !== level) return;
+        if (categories && categories.length > 0 && !categories.includes(entry.category)) return;
         
-        setLogs(updatedLogs);
-      } catch (error) {
-        // Silently fail on interval
-      }
-    }, 2000);
-    
-    logger.debug('LogActivityStream initialized', {
-      details: {
-        level,
-        categories
-      }
-    });
-    
-    return () => {
-      clearInterval(intervalId);
-    };
+        setLogs(prev => [entry, ...prev].slice(0, maxEntries));
+      }) || (() => {});
+      
+      logger.debug('LogActivityStream initialized', {
+        details: {
+          level,
+          categories
+        }
+      });
+      
+      return () => {
+        try {
+          unsubscribe();
+        } catch (error) {
+          // Ignore unsubscribe errors
+        }
+      };
+    } catch (error) {
+      logger.error('Failed to subscribe to logs', { details: { error } });
+      return () => {};
+    }
   }, [level, categories, maxEntries, logger]);
   
   if (logs.length === 0) {
@@ -119,7 +123,7 @@ export function LogActivityStream({
 }
 
 function LogLevelBadge({ level }: { level: LogLevel }) {
-  const colors: Record<string, string> = {
+  const colors: Record<LogLevel, string> = {
     [LogLevel.DEBUG]: 'bg-gray-100 text-gray-800',
     [LogLevel.INFO]: 'bg-blue-100 text-blue-800',
     [LogLevel.SUCCESS]: 'bg-green-100 text-green-800',

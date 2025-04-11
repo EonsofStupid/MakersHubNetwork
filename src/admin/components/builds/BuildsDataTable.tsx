@@ -8,10 +8,10 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from '@/ui/core/table';
-import { Card } from '@/ui/core/card';
-import { Badge } from '@/ui/core/badge';
-import { Button } from '@/ui/core/button';
+} from "@/components/ui/table";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useBuildAdminStore } from "@/admin/store/buildAdmin.store";
 import { formatDistance } from "date-fns";
 import { Eye, AlertCircle, CheckCircle, XCircle, RotateCcw } from "lucide-react";

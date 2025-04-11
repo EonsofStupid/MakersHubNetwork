@@ -1,12 +1,11 @@
 
-import { ReactNode } from 'react';
-
 /**
- * Logging levels with increasing severity
+ * Core logging types
  */
+
 export enum LogLevel {
-  DEBUG = 'debug',
   TRACE = 'trace',
+  DEBUG = 'debug',
   INFO = 'info',
   SUCCESS = 'success',
   WARN = 'warn',
@@ -15,89 +14,82 @@ export enum LogLevel {
 }
 
 /**
- * Log categories for grouping logs
+ * LogCategory enum for consistent categorization across the app
  */
 export enum LogCategory {
   SYSTEM = 'system',
-  APP = 'app',
-  UI = 'ui',
   AUTH = 'auth',
+  UI = 'ui',
   API = 'api',
   DATABASE = 'database',
-  ADMIN = 'admin',
-  USER = 'user',
-  CONTENT = 'content',
-  MIGRATION = 'migration',
   CHAT = 'chat',
-  PERFORMANCE = 'performance',
-  ERROR = 'error',
+  ADMIN = 'admin',
+  NETWORK = 'network',
+  PERF = 'performance',
   SECURITY = 'security',
-  ANALYTICS = 'analytics',
-  INTEGRATION = 'integration',
+  USER = 'user',
+  PERFORMANCE = 'performance',
+  CONTENT = 'content',
   THEME = 'theme',
-  TESTING = 'testing',
   NOTIFICATION = 'notification',
-  UNKNOWN = 'unknown',
-  NETWORK = 'network' // Added missing NETWORK category
+  ANALYTICS = 'analytics',
+  PAYMENT = 'payment',
+  MEDIA = 'media'
 }
 
 /**
- * Full log entry structure
+ * Core log entry structure
  */
 export interface LogEntry {
-  id?: string;
+  id: string;
+  timestamp: string | Date;
   level: LogLevel;
-  message: string | ReactNode;
-  category?: LogCategory;
-  timestamp: Date;
-  details?: Record<string, any>;
+  message: string | React.ReactNode | unknown;
+  category: LogCategory;
   source?: string;
-  sessionId?: string;
+  details?: Record<string, unknown> | unknown;
   userId?: string;
-  duration?: number;
+  sessionId?: string;
   tags?: string[];
-  [key: string]: any;
+  duration?: number; // Add duration field for performance metrics
 }
 
 /**
- * Filter options for log queries
+ * Log filter options
  */
 export interface LogFilterOptions {
   level?: LogLevel;
+  levels?: LogLevel[];
+  category?: LogCategory;
   categories?: LogCategory[];
   source?: string;
-  fromDate?: Date;
-  toDate?: Date;
-  search?: string;
-  tags?: string[];
+  sources?: string[];
+  from?: Date;
+  to?: Date;
   limit?: number;
+  search?: string;
+  userId?: string;
+  sessionId?: string;
+  tags?: string[];
 }
 
 /**
- * Transport interface for log outputs
+ * Log transport interface
  */
 export interface LogTransport {
   log(entry: LogEntry): void;
-  supports(level: LogLevel, category?: LogCategory): boolean;
+  getEntries(filter?: LogFilterOptions): LogEntry[];
+  clear(): void;
 }
 
 /**
- * Configuration options for the logging system
+ * Logging configuration
  */
 export interface LoggingConfig {
-  minLevel?: LogLevel;
-  transports?: LogTransport[];
-  bufferSize?: number;
-  flushInterval?: number;
-  includeSource?: boolean;
-  includeUser?: boolean;
-  includeSession?: boolean;
-  enabledCategories?: LogCategory[];
-  uiTransport?: {
-    showDebug?: boolean;
-    showInfo?: boolean;
-    showWarning?: boolean;
-    showError?: boolean;
-    showCritical?: boolean;
-  };
+  level: LogLevel;
+  enabled: boolean;
+  consoleTransport: boolean;
+  memoryTransport: boolean;
+  uiTransport: boolean;
+  memoryLimit: number;
 }

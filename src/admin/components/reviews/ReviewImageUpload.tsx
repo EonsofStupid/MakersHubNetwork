@@ -1,7 +1,7 @@
 
 import React from "react";
-import { Card } from '@/ui/core/card';
-import { Button } from '@/ui/core/button';
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { X, Plus, Image, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 

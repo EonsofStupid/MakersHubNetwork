@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Play, RotateCcw, Code } from "lucide-react";
-import { Button } from '@/ui/core/button';
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface EffectDemoProps {

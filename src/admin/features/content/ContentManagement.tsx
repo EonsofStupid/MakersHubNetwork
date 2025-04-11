@@ -1,10 +1,10 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/core/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
-import { Button } from '@/ui/core/button';
-import { Input } from '@/ui/core/input';
-import { Badge } from '@/ui/core/badge';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { PlusCircle, FileText, Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 

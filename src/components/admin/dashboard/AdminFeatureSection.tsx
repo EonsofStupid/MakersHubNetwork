@@ -1,7 +1,7 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/core/card';
-import { Badge } from '@/ui/core/badge';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { FeatureCard } from "@/components/admin/dashboard/FeatureCard";
 import { 
   Package, Users, FileText, Settings, Database, 

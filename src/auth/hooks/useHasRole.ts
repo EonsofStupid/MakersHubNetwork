@@ -1,58 +1,56 @@
 
-import { useEffect, useState } from 'react';
-import { authBridge } from '@/bridges';
-import { UserRole } from '@/shared/types/auth.types';
+/**
+ * useHasRole.ts
+ * 
+ * Hook to check if the current user has specific roles
+ * Uses AuthBridge to ensure consistent role checking across the application
+ */
+
+import { useCallback } from 'react';
+import { UserRole } from '@/types/shared';
+import { AuthBridge } from '@/bridges/AuthBridge';
 
 /**
- * Hook to check if the current user has a specific role or roles
+ * Hook to check if the current user has a specific role
+ * @param role Role or roles to check
+ * @returns Boolean indicating if user has the role
  */
-export function useHasRole(role?: UserRole | UserRole[]) {
-  const [hasRole, setHasRole] = useState(() => {
-    return role ? authBridge.hasRole(role) : false;
-  });
-
-  useEffect(() => {
-    // Update whenever auth state changes
-    const unsubscribe = authBridge.subscribeToAuthEvents(() => {
-      setHasRole(role ? authBridge.hasRole(role) : false);
-    });
-    
-    return unsubscribe;
-  }, [role]);
-
-  return hasRole;
+export function useHasRole(role: UserRole | UserRole[]) {
+  return AuthBridge.hasRole(role);
 }
 
+/**
+ * Hook to check if the current user has admin access
+ * @returns Boolean indicating if user has admin access
+ */
 export function useHasAdminAccess() {
-  const [hasAccess, setHasAccess] = useState(() => {
-    return authBridge.isAdmin();
-  });
-
-  useEffect(() => {
-    // Update whenever auth state changes
-    const unsubscribe = authBridge.subscribeToAuthEvents(() => {
-      setHasAccess(authBridge.isAdmin());
-    });
-    
-    return unsubscribe;
-  }, []);
-
-  return hasAccess;
+  return AuthBridge.isAdmin();
 }
 
+/**
+ * Hook to check if the current user is a super admin
+ * @returns Boolean indicating if user is a super admin
+ */
 export function useIsSuperAdmin() {
-  const [isSuperAdmin, setIsSuperAdmin] = useState(() => {
-    return authBridge.isSuperAdmin();
-  });
+  return AuthBridge.isSuperAdmin();
+}
 
-  useEffect(() => {
-    // Update whenever auth state changes
-    const unsubscribe = authBridge.subscribeToAuthEvents(() => {
-      setIsSuperAdmin(authBridge.isSuperAdmin());
-    });
-    
-    return unsubscribe;
+/**
+ * Hook to check multiple roles at once
+ * @returns Object with role checking functions
+ */
+export function useRoleChecks() {
+  const hasRole = useCallback((checkRole: UserRole | UserRole[]) => {
+    return AuthBridge.hasRole(checkRole);
   }, []);
-
-  return isSuperAdmin;
+  
+  const isAdmin = AuthBridge.isAdmin();
+  const isSuperAdmin = AuthBridge.isSuperAdmin();
+  
+  return {
+    hasRole,
+    isAdmin,
+    isSuperAdmin,
+    hasAdminAccess: isAdmin || isSuperAdmin
+  };
 }

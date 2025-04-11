@@ -1,11 +1,14 @@
 
-import { UserRole } from './shared';
-import { UserMetadata } from './user.types';
-
 /**
- * Core User type definition
- * This is the central user type used throughout the application
+ * Central type definitions for user data
  */
+
+export interface UserMetadata {
+  full_name?: string;
+  avatar_url?: string;
+  [key: string]: any;
+}
+
 export interface User {
   id: string;
   email?: string;
@@ -13,33 +16,24 @@ export interface User {
   app_metadata?: Record<string, any>;
   created_at?: string;
   updated_at?: string;
-  role?: UserRole;
-  roles?: UserRole[];
+  [key: string]: any;
+}
+
+/**
+ * Extended user type with additional fields
+ */
+export interface ExtendedUser extends User {
+  role?: string;
+  roles?: string[];
   displayName?: string;
   isAnonymous?: boolean;
   permissions?: string[];
   lastLoginAt?: string;
   status?: 'active' | 'inactive' | 'suspended' | 'pending';
-  [key: string]: any;
 }
 
 /**
- * Basic user profile information
- */
-export interface UserProfile {
-  id: string;
-  user_id: string;
-  display_name?: string;
-  full_name?: string;
-  avatar_url?: string;
-  bio?: string;
-  website?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-/**
- * Preferences for user configuration
+ * User preferences type
  */
 export interface UserPreferences {
   theme?: 'light' | 'dark' | 'system';

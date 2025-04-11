@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/ui/core/table';
+} from "@/components/ui/table";
 import { Package } from "lucide-react";
 import { BuildPart } from "@/admin/types/build.types";
 

@@ -1,67 +1,93 @@
 
-import { useMemo } from 'react';
-import { Permission, UserRole } from '@/shared/types/user';
-import { authBridge } from '@/bridges/AuthBridge';
+import { useState, useEffect } from 'react';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { PermissionValue, PERMISSIONS } from '@/auth/permissions';
+import { mapRolesToPermissions } from '@/auth/rbac/roles';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
+import { AuthBridge } from '@/bridges/AuthBridge';
 
-export function usePermissions() {
-  // Get the user's roles from auth bridge
-  const userRoles = useMemo(() => {
-    const user = authBridge.getUser();
-    if (!user?.app_metadata?.roles) {
-      return [];
-    }
-    return user.app_metadata.roles as UserRole[];
-  }, []);
+/**
+ * Hook to check admin permissions
+ * Provides admin-specific permissions and management
+ */
+export function useAdminPermissions() {
+  const [permissions, setPermissions] = useState<PermissionValue[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
   
-  const hasPermission = (permission: Permission): boolean => {
-    return checkPermission(userRoles, permission);
-  };
-  
-  const hasAllPermissions = (permissions: Permission[]): boolean => {
-    return checkAllPermissions(userRoles, permissions);
-  };
-  
-  const hasAnyPermission = (permissions: Permission[]): boolean => {
-    return checkAnyPermission(userRoles, permissions);
-  };
-  
-  const hasRole = (role: UserRole | UserRole[]): boolean => {
-    const rolesToCheck = Array.isArray(role) ? role : [role];
+  // Get roles from auth store
+  const roles = useAuthStore(state => state.roles);
+  const isAdmin = AuthBridge.isAdmin();
+  const isSuperAdmin = AuthBridge.isSuperAdmin();
+
+  // Load permissions when roles change
+  useEffect(() => {
+    const loadPermissions = async () => {
+      try {
+        logger.info('Loading admin permissions', {
+          details: { roles }
+        });
+        
+        setIsLoading(true);
+        
+        // Map roles to permissions
+        const mappedPermissions = mapRolesToPermissions(roles);
+        
+        // Super admins get all permissions - handle this carefully to ensure correct typing
+        const allPermissionsFlat = Object.values(PERMISSIONS)
+          .flatMap(section => {
+            if (typeof section === 'string') return section;
+            return Object.values(section).filter(p => typeof p === 'string');
+          })
+          .filter((p): p is string => typeof p === 'string');
+        
+        const finalPermissions = isSuperAdmin
+          ? allPermissionsFlat 
+          : mappedPermissions;
+        
+        // Use type assertion to handle the complex type situation
+        setPermissions(finalPermissions as PermissionValue[]);
+        
+        logger.info('Admin permissions loaded', {
+          details: { 
+            permissionCount: finalPermissions.length,
+            isSuperAdmin
+          }
+        });
+      } catch (error) {
+        logger.error('Failed to load admin permissions', {
+          details: { error }
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    if (userRoles.length === 0) {
-      return false;
+    // Only load permissions for admin users
+    if (isAdmin || isSuperAdmin) {
+      loadPermissions();
+    } else {
+      setPermissions([]);
+      setIsLoading(false);
+    }
+  }, [roles, isAdmin, isSuperAdmin, logger]);
+  
+  // Check if user has a specific permission
+  const hasPermission = (permission: PermissionValue): boolean => {
+    // Super admins have all permissions
+    if (isSuperAdmin) {
+      return true;
     }
     
-    return rolesToCheck.some(r => userRoles.includes(r));
+    return permissions.includes(permission);
   };
   
   return {
+    permissions,
     hasPermission,
-    hasAllPermissions,
-    hasAnyPermission,
-    hasRole,
-    userRoles
+    isLoading,
+    isAdmin,
+    isSuperAdmin
   };
 }
-
-// Simple permission checking functions
-export function checkPermission(userRoles: UserRole[], permission: Permission): boolean {
-  // Admin and superadmin have all permissions
-  if (userRoles.includes('admin') || userRoles.includes('superadmin')) {
-    return true;
-  }
-
-  // For other roles, implement specific permission logic
-  return false;
-}
-
-export function checkAllPermissions(userRoles: UserRole[], permissions: Permission[]): boolean {
-  return permissions.every(permission => checkPermission(userRoles, permission));
-}
-
-export function checkAnyPermission(userRoles: UserRole[], permissions: Permission[]): boolean {
-  return permissions.some(permission => checkPermission(userRoles, permission));
-}
-
-// Export compatibility alias for existing code
-export const useAdminPermissions = usePermissions;

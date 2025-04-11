@@ -1,15 +1,7 @@
 
 /**
- * Auth module specific types
+ * Re-export types from the central auth types
+ * This ensures consistency across the codebase
  */
 
-import { User, UserRole } from '@/shared/types';
-
-export interface AuthContextType {
-  user: User | null;
-  status: string;
-  signIn: (email: string, password: string) => Promise<any>;
-  signInWithGoogle: () => Promise<any>;
-  logout: () => Promise<void>;
-  hasRole: (role: UserRole | UserRole[]) => boolean;
-}
+export * from '@/types/auth.types';

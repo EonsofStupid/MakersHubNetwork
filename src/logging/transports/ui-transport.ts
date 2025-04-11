@@ -1,181 +1,108 @@
 
-import { LogEntry, LogTransport, LogCategory, LogLevel, LogFilterOptions } from '../types';
-import { toast } from '@/hooks/use-toast';
-import { renderUnknownAsNode, nodeToSearchableString } from '@/shared/utils/render';
+import { LogEntry, LogLevel, LogTransport, LogFilterOptions } from '@/logging/types';
+import { v4 as uuidv4 } from 'uuid';
+import { nodeToSearchableString } from '@/shared/utils/render';
+
+type LogCallback = (entry: LogEntry) => void;
 
 /**
- * UI Transport for showing logs in the UI
+ * UI notification log transport
  */
 export class UITransport implements LogTransport {
-  private options: {
-    showDebug?: boolean;
-    showInfo?: boolean;
-    showWarning?: boolean; 
-    showError?: boolean;
-    showCritical?: boolean;
-  };
+  private subscribers: LogCallback[] = [];
+  private logs: LogEntry[] = [];
+  private maxEntries: number;
   
-  constructor(options: {
-    showDebug?: boolean;
-    showInfo?: boolean;
-    showWarning?: boolean; 
-    showError?: boolean;
-    showCritical?: boolean;
-  } = {}) {
-    this.options = {
-      showDebug: false,
-      showInfo: true,
-      showWarning: true,
-      showError: true,
-      showCritical: true,
-      ...options
+  constructor(maxEntries = 100) {
+    this.maxEntries = maxEntries;
+  }
+  
+  log(entry: LogEntry): void {
+    // Ensure entry has an ID
+    if (!entry.id) {
+      entry.id = uuidv4();
+    }
+    
+    // Store the log
+    this.logs.unshift(entry);
+    
+    // Trim logs to max capacity
+    if (this.logs.length > this.maxEntries) {
+      this.logs = this.logs.slice(0, this.maxEntries);
+    }
+    
+    // Notify subscribers
+    this.subscribers.forEach(callback => callback(entry));
+  }
+  
+  // Subscribe to new log entries
+  subscribe(callback: LogCallback): () => void {
+    this.subscribers.push(callback);
+    return () => {
+      this.subscribers = this.subscribers.filter(cb => cb !== callback);
     };
   }
   
-  /**
-   * Log entry to UI
-   */
-  log(entry: LogEntry): void {
-    const { level, message, category, details } = entry;
-    
-    // Only show certain log levels in UI
-    if (!this.shouldShowLevel(level)) {
-      return;
+  // Implement required interface methods
+  getEntries(filter?: LogFilterOptions): LogEntry[] {
+    if (!filter) {
+      return [...this.logs];
     }
     
-    // Format message for toast
-    const formattedMessage = typeof message === 'string' ? message : nodeToSearchableString(message);
-    
-    // Don't show UI notifications for certain categories
-    if (this.shouldSkipCategory(category)) {
-      return;
-    }
-    
-    // Show toast with appropriate variant
-    this.showToast(level, formattedMessage, category, details);
+    return this.logs.filter(entry => {
+      // Filter by level
+      if (filter.level && entry.level !== filter.level) return false;
+      if (filter.levels && filter.levels.length > 0 && !filter.levels.includes(entry.level)) return false;
+      
+      // Filter by category
+      if (filter.category && entry.category !== filter.category) return false;
+      if (filter.categories && filter.categories.length > 0 && !filter.categories.includes(entry.category)) return false;
+      
+      // Filter by source
+      if (filter.source && entry.source !== filter.source) return false;
+      if (filter.sources && filter.sources.length > 0 && !filter.sources.includes(entry.source || '')) return false;
+      
+      // Filter by date range
+      if (filter.from) {
+        const entryDate = entry.timestamp instanceof Date 
+          ? entry.timestamp 
+          : new Date(entry.timestamp);
+        if (entryDate < filter.from) return false;
+      }
+      
+      if (filter.to) {
+        const entryDate = entry.timestamp instanceof Date 
+          ? entry.timestamp 
+          : new Date(entry.timestamp);
+        if (entryDate > filter.to) return false;
+      }
+      
+      // Filter by userId
+      if (filter.userId && entry.userId !== filter.userId) return false;
+      
+      // Filter by sessionId
+      if (filter.sessionId && entry.sessionId !== filter.sessionId) return false;
+      
+      // Filter by tags
+      if (filter.tags && filter.tags.length > 0 && 
+         (!entry.tags || !filter.tags.some(tag => entry.tags?.includes(tag)))) {
+        return false;
+      }
+      
+      // Filter by search term
+      if (filter.search) {
+        const searchable = nodeToSearchableString(entry.message) + 
+                         nodeToSearchableString(entry.details) +
+                         entry.level + entry.category + (entry.source || '');
+        if (!searchable.toLowerCase().includes(filter.search.toLowerCase())) return false;
+      }
+      
+      return true;
+    }).slice(0, filter.limit || this.logs.length);
   }
   
-  /**
-   * Determine if this level should be shown
-   */
-  private shouldShowLevel(level: LogLevel): boolean {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return !!this.options.showDebug;
-      case LogLevel.INFO:
-      case LogLevel.SUCCESS:
-      case LogLevel.TRACE:
-        return !!this.options.showInfo;
-      case LogLevel.WARN:
-        return !!this.options.showWarning;
-      case LogLevel.ERROR:
-        return !!this.options.showError;
-      case LogLevel.CRITICAL:
-        return !!this.options.showCritical;
-      default:
-        return true;
-    }
-  }
-  
-  /**
-   * Determine if we should skip showing this category
-   */
-  private shouldSkipCategory(category?: LogCategory): boolean {
-    // Skip certain categories from UI notifications
-    const silentCategories = [
-      LogCategory.PERFORMANCE,
-      LogCategory.ANALYTICS
-    ];
-    
-    return !!category && silentCategories.includes(category);
-  }
-  
-  /**
-   * Show a toast with the log message
-   */
-  private showToast(level: LogLevel, message: string, category?: LogCategory, details?: Record<string, any>): void {
-    const title = this.getLevelTitle(level);
-    const variant = this.getLevelVariant(level);
-    const icon = this.getLevelIcon(level);
-    
-    // Only show toast for non-debug logs
-    toast({
-      title,
-      description: renderUnknownAsNode(message),
-      variant,
-      icon
-    });
-  }
-  
-  /**
-   * Get title for the given log level
-   */
-  private getLevelTitle(level: LogLevel): string {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return 'Debug';
-      case LogLevel.INFO:
-        return 'Information';
-      case LogLevel.SUCCESS:
-        return 'Success';
-      case LogLevel.WARN:
-        return 'Warning';
-      case LogLevel.ERROR:
-        return 'Error';
-      case LogLevel.CRITICAL:
-        return 'Critical Error';
-      default:
-        return 'Log';
-    }
-  }
-  
-  /**
-   * Get variant for the given log level
-   */
-  private getLevelVariant(level: LogLevel): 'default' | 'destructive' | null {
-    switch (level) {
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-        return 'destructive';
-      default:
-        return 'default';
-    }
-  }
-  
-  /**
-   * Get icon for the given log level
-   */
-  private getLevelIcon(level: LogLevel): string {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return 'bug';
-      case LogLevel.INFO:
-        return 'info';
-      case LogLevel.SUCCESS:
-        return 'check-circle';
-      case LogLevel.WARN:
-        return 'alert-triangle';
-      case LogLevel.ERROR:
-        return 'alert-circle';
-      case LogLevel.CRITICAL:
-        return 'x-circle';
-      default:
-        return 'message-square';
-    }
-  }
-  
-  /**
-   * Check if this transport supports the given log level & category
-   */
-  supports(level: LogLevel, category?: LogCategory): boolean {
-    if (!this.shouldShowLevel(level)) {
-      return false;
-    }
-    
-    if (category && this.shouldSkipCategory(category)) {
-      return false;
-    }
-    
-    return true;
+  clear(): void {
+    this.logs = [];
+    // Optionally notify subscribers about clearing
   }
 }
