@@ -15,7 +15,6 @@ import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { useAdminAccess } from "../../hooks/useAdminAccess";
 import { EditModeToggle } from "../ui/EditModeToggle";
-import { AuthBridge } from "@/bridges/AuthBridge";
 
 interface AdminLayoutProps {
   title?: string;
@@ -68,7 +67,7 @@ export function AdminLayout({
       
       navigate("/");
     }
-  }, [isAuthenticated, hasAdminAccess, toast, navigate, permissions, logger, isEditMode]); 
+  }, [isAuthenticated, hasAdminAccess]); // Reduced dependencies to prevent excessive re-renders
 
   // If user is not authenticated or doesn't have admin access, don't render the layout
   if (!isAuthenticated || !hasAdminAccess) {

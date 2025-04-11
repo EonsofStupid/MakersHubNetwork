@@ -1,114 +1,148 @@
 
-import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { chatBridge } from '../lib/ChatBridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { CircuitBreaker } from '@/utils/CircuitBreaker';
+import { useAuthState } from '@/auth/hooks/useAuthState';
 
-interface ChatContextType {
+interface ChatContextValue {
   isOpen: boolean;
+  toggleChat: () => void;
   openChat: () => void;
   closeChat: () => void;
-  toggleChat: () => void;
   messages: any[];
-  sendMessage: (content: string) => void;
+  sendMessage: (content: string) => Promise<void>;
   activeSessionId: string | null;
+  isLoading: boolean;
 }
 
-const defaultContext: ChatContextType = {
-  isOpen: false,
-  openChat: () => {},
-  closeChat: () => {},
-  toggleChat: () => {},
-  messages: [],
-  sendMessage: () => {},
-  activeSessionId: null,
-};
+const ChatContext = createContext<ChatContextValue | null>(null);
 
-const ChatContext = createContext<ChatContextType>(defaultContext);
-
-export const useChat = () => useContext(ChatContext);
-
-interface ChatProviderProps {
-  children: React.ReactNode;
-}
-
-export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
+export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  
+  const [isLoading, setIsLoading] = useState(false);
   const logger = useLogger('ChatProvider', LogCategory.CHAT);
+  const { user } = useAuthState();
+  const initRef = useRef(false);
+  const chatBreaker = useRef(new CircuitBreaker('ChatProvider', 5, 1000));
   
-  // Create circuit breaker
-  const breakerRef = useRef(new CircuitBreaker('chat-provider', 5, 1000));
-  
-  // Initialize the chat session when the component mounts
   useEffect(() => {
-    // Use the circuit breaker to prevent infinite initialization loops
-    const count = breakerRef.current.count('init');
-    if (count > 3) {
-      logger.warn('Circuit breaker triggered in ChatProvider - aborting initialization');
-      return;
-    }
+    // Initialize circuit breaker
+    chatBreaker.current = new CircuitBreaker('ChatProvider', 5, 1000);
     
-    // Create a new chat session
-    const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-    setActiveSessionId(sessionId);
+    return () => {
+      logger.info('Chat provider unmounting');
+    };
+  }, [logger]);
+  
+  useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
     
-    logger.info('Created new chat session', {
-      details: { sessionId }
-    });
+    logger.info('Initializing chat bridge listener');
     
-    // Subscribe to messages for this session
-    const unsubscribe = chatBridge.subscribe(`session:${sessionId}`, (message) => {
-      if (message.type === 'new-message') {
-        setMessages(prev => [...prev, message.message]);
+    const unsubscribe = chatBridge.subscribe('system', (message) => {
+      logger.info('Received system message', {
+        details: { type: message.type }
+      });
+      
+      switch (message.type) {
+        case 'session-created':
+          setActiveSessionId(message.sessionId);
+          break;
+        case 'message-received':
+          setMessages(prev => [...prev, message.message]);
+          break;
       }
     });
     
     return () => {
       unsubscribe();
-      breakerRef.current.reset();
     };
-  }, [logger]);
+  }, []);
+  
+  const toggleChat = () => {
+    if (chatBreaker.current.isOpen) {
+      logger.warn('Circuit breaker tripped, ignoring toggle action');
+      return;
+    }
+    
+    setIsOpen(prev => !prev);
+  };
   
   const openChat = () => setIsOpen(true);
   const closeChat = () => setIsOpen(false);
-  const toggleChat = () => setIsOpen(prev => !prev);
   
-  const sendMessage = (content: string) => {
-    if (!activeSessionId) return;
+  const sendMessage = async (content: string) => {
+    if (!content.trim()) return;
     
-    const userMessage = {
-      id: `user-${Date.now()}`,
-      content,
-      sender: 'user',
-      timestamp: new Date(),
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    
-    chatBridge.publish('message', {
-      type: 'send-message',
-      message: userMessage,
-      sessionId: activeSessionId
-    });
+    try {
+      setIsLoading(true);
+      
+      const message = {
+        id: `msg-${Date.now()}`,
+        content,
+        sender: 'user',
+        timestamp: new Date(),
+        sessionId: activeSessionId,
+        userId: user?.id
+      };
+      
+      setMessages(prev => [...prev, message]);
+      
+      setTimeout(() => {
+        chatBridge.publish('message', {
+          type: 'user-message',
+          message
+        });
+      }, 0);
+      
+      setTimeout(() => {
+        const responseMessage = {
+          id: `msg-${Date.now()}`,
+          content: `Echo: ${content}`,
+          sender: 'assistant',
+          timestamp: new Date(),
+          sessionId: activeSessionId
+        };
+        
+        setMessages(prev => [...prev, responseMessage]);
+        setIsLoading(false);
+      }, 1000);
+      
+    } catch (error) {
+      logger.error('Error sending message', {
+        details: { error: error instanceof Error ? error.message : String(error) }
+      });
+      setIsLoading(false);
+    }
+  };
+  
+  const value = {
+    isOpen,
+    toggleChat,
+    openChat,
+    closeChat,
+    messages,
+    sendMessage,
+    activeSessionId,
+    isLoading
   };
   
   return (
-    <ChatContext.Provider value={{
-      isOpen,
-      openChat,
-      closeChat,
-      toggleChat,
-      messages,
-      sendMessage,
-      activeSessionId
-    }}>
+    <ChatContext.Provider value={value}>
       {children}
     </ChatContext.Provider>
   );
-};
+}
 
-export default ChatProvider;
+export function useChat() {
+  const context = useContext(ChatContext);
+  if (context === null) {
+    throw new Error('useChat must be used within a ChatProvider');
+  }
+  return context;
+}

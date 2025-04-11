@@ -2,8 +2,7 @@
 import React from 'react';
 
 /**
- * Converts an error object to a plain object for safe serialization
- * This is a utility function that can be used across modules
+ * Convert an error object to a plain object for logging
  */
 export function errorToObject(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
@@ -11,8 +10,7 @@ export function errorToObject(error: unknown): Record<string, unknown> {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      // Use optional chaining to avoid error on older JS versions
-      cause: error['cause'] ? errorToObject(error['cause']) : undefined,
+      ...(error as any), // Capture any custom properties
     };
   }
   
@@ -31,7 +29,6 @@ export function errorToObject(error: unknown): Record<string, unknown> {
 
 /**
  * Safely renders any unknown value as a React node
- * This is a utility function that can be used across modules
  */
 export function renderUnknownAsNode(value: unknown): React.ReactNode {
   if (value === null || value === undefined) {
@@ -89,7 +86,6 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
 
 /**
  * Converts any value to a searchable string
- * This is a utility function that can be used across modules
  */
 export function nodeToSearchableString(value: unknown): string {
   if (value === null || value === undefined) {

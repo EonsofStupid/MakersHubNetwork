@@ -3,8 +3,7 @@
  * auth.store.atoms.ts
  *
  * Properly typed Jotai atoms that read from Zustand store
- * This is the boundary layer that ensures components can only read from the store
- * but never write directly to it
+ * Follows best practices for typing function atoms
  */
 
 import { atom } from 'jotai';
@@ -12,14 +11,20 @@ import { UserRole } from '@/types/shared';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '@/auth/store/auth.store';
-import { AuthBridge } from '@/bridges/AuthBridge';
 
 // Create a helper function to create atoms that are synchronized with the store
 function atomWithStoreSync<T>(selector: (state: any) => T) {
+  // Create a basic atom that reads from the store
+  const baseAtom = atom(selector(useAuthStore.getState()));
+  
   // Create a derived atom that updates when the store updates
-  return atom((get) => {
-    return selector(useAuthStore.getState());
-  });
+  const derivedAtom = atom(
+    (get) => {
+      return selector(useAuthStore.getState());
+    }
+  );
+  
+  return derivedAtom;
 }
 
 // Core state atoms - all derived from Zustand store
@@ -32,15 +37,15 @@ export const isAuthenticatedAtom = atomWithStoreSync((state) => state.isAuthenti
 export const authErrorAtom = atomWithStoreSync((state) => state.error);
 export const isLoadingAtom = atomWithStoreSync((state) => state.isLoading);
 
-// Derived state atoms that use AuthBridge to ensure consistent role checks
+// Derived state atoms
 export const isAdminAtom = atom<boolean>((get) => {
-  // Use AuthBridge to ensure consistent role checks across the app
-  return AuthBridge.isAdmin();
+  const roles = get(rolesAtom);
+  return roles.includes('admin') || roles.includes('super_admin');
 });
 
 export const isSuperAdminAtom = atom<boolean>((get) => {
-  // Use AuthBridge to ensure consistent role checks across the app
-  return AuthBridge.isSuperAdmin();
+  const roles = get(rolesAtom);
+  return roles.includes('super_admin');
 });
 
 export const hasAdminAccessAtom = atom<boolean>((get) => {
@@ -65,20 +70,23 @@ export const userAvatarAtom = atom<string | null>((get) => {
 });
 
 // For backward compatibility
+export type AuthStatusType = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 export { isAuthenticatedAtom as authStatusAtom };
 
 // Function atoms with proper typing
-export const logoutAtom = atom<() => Promise<void>>(
-  (get) => {
-    // Use AuthBridge for auth actions to ensure consistent behavior
-    return AuthBridge.logout;
-  }
-);
+export const logoutAtom = atom<() => Promise<void>>((get) => {
+  return useAuthStore.getState().logout;
+});
 
 // Has role utility function atom - returns a function
 export const hasRoleAtom = atom<(role: UserRole | UserRole[]) => boolean>(
   (get) => (role: UserRole | UserRole[]): boolean => {
-    // Use AuthBridge for role checks to ensure consistent behavior
-    return AuthBridge.hasRole(role);
+    const roles = get(rolesAtom);
+    
+    if (Array.isArray(role)) {
+      return role.some(r => roles.includes(r));
+    }
+    
+    return roles.includes(role);
   }
 );

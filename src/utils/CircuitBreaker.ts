@@ -1,123 +1,239 @@
 
 /**
- * CircuitBreaker
- * 
- * Utility to prevent infinite loops and cascading failures
+ * CircuitBreaker - A utility to prevent infinite loops and recursion
+ * Supports both static and instance usage patterns
  */
 
+interface BreakerState {
+  count: number;
+  maxCount: number;
+  resetTime: number;
+  lastTripped: number;
+  isOpen: boolean;
+}
+
+// Define the CircuitBreaker class
 export class CircuitBreaker {
-  private counters: Map<string, number>;
-  private lastResetTime: Map<string, number>;
-  private readonly name: string;
-  private readonly maxAttempts: number;
-  private readonly resetIntervalMs: number;
+  private static breakers: Map<string, BreakerState> = new Map();
+  private breakerId: string;
+  private maxTriggerCount: number;
+  private resetTimeMs: number;
   
   /**
-   * Create a new CircuitBreaker
-   * 
-   * @param name Unique name for this circuit breaker instance
-   * @param maxAttempts Maximum attempts before the circuit trips
-   * @param resetIntervalMs Time in milliseconds before counters are reset
+   * Create a new circuit breaker instance
    */
-  constructor(name: string, maxAttempts: number = 5, resetIntervalMs: number = 5000) {
-    this.name = name;
-    this.maxAttempts = maxAttempts;
-    this.resetIntervalMs = resetIntervalMs;
-    this.counters = new Map<string, number>();
-    this.lastResetTime = new Map<string, number>();
-  }
-  
-  /**
-   * Count an attempt and check if the circuit should trip
-   * Returns the current count
-   * 
-   * @param operationName Name of the operation being performed
-   * @returns Current count for this operation
-   */
-  count(operationName: string): number {
-    const key = `${this.name}:${operationName}`;
-    const now = Date.now();
+  constructor(id: string, maxCount: number = 5, resetTimeMs: number = 5000) {
+    this.breakerId = id;
+    this.maxTriggerCount = maxCount;
+    this.resetTimeMs = resetTimeMs;
     
-    // Check if we should reset
-    const lastReset = this.lastResetTime.get(key) || 0;
-    if (now - lastReset > this.resetIntervalMs) {
-      this.counters.set(key, 0);
-      this.lastResetTime.set(key, now);
+    // Initialize the breaker if it doesn't exist in the static collection
+    if (!CircuitBreaker.breakers.has(id)) {
+      CircuitBreaker.breakers.set(id, {
+        count: 0,
+        maxCount,
+        resetTime: resetTimeMs,
+        lastTripped: 0,
+        isOpen: false
+      });
     }
-    
-    // Get current count and increment
-    const currentCount = (this.counters.get(key) || 0) + 1;
-    this.counters.set(key, currentCount);
-    
-    return currentCount;
   }
   
   /**
-   * Check if the circuit would trip without incrementing the counter
-   * 
-   * @param operationName Name of the operation being performed
-   * @returns True if next count would trip the circuit
+   * Check if this breaker is currently open/tripped
    */
-  wouldTrip(operationName: string): boolean {
-    const key = `${this.name}:${operationName}`;
-    return (this.counters.get(key) || 0) >= this.maxAttempts;
+  get isOpen(): boolean {
+    return CircuitBreaker.isTripped(this.breakerId);
   }
   
   /**
-   * Check if the circuit is already tripped
-   * 
-   * @param operationName Name of the operation being performed
-   * @returns True if the circuit is already tripped
+   * Get current count for this breaker
    */
-  isTripped(operationName: string): boolean {
-    const key = `${this.name}:${operationName}`;
-    return (this.counters.get(key) || 0) > this.maxAttempts;
+  get currentCount(): number {
+    return CircuitBreaker.getCount(this.breakerId);
   }
   
   /**
-   * Reset all counters for this circuit breaker
+   * Increment count for this breaker
+   * @param amount Amount to increment (default 1)
+   * @returns Current count after increment
+   */
+  count(amount: number = 1): number {
+    return CircuitBreaker.count(this.breakerId, amount);
+  }
+  
+  /**
+   * Reset this breaker
    */
   reset(): void {
-    this.counters.clear();
-    this.lastResetTime.clear();
+    CircuitBreaker.reset(this.breakerId);
   }
   
   /**
-   * Reset a specific operation counter
-   * 
-   * @param operationName Name of the operation to reset
+   * Record a successful operation - reduces count
    */
-  resetOperation(operationName: string): void {
-    const key = `${this.name}:${operationName}`;
-    this.counters.set(key, 0);
-    this.lastResetTime.set(key, Date.now());
+  recordSuccess(): void {
+    CircuitBreaker.recordSuccess(this.breakerId);
   }
   
   /**
-   * Execute a function only if the circuit is not tripped
-   * 
-   * @param operationName Name of the operation being performed
+   * Record a failure - increases count
+   */
+  recordFailure(): void {
+    CircuitBreaker.recordFailure(this.breakerId);
+  }
+  
+  /**
+   * Execute a function with circuit breaker protection
    * @param fn Function to execute
-   * @param fallback Optional fallback value if circuit is tripped
-   * @returns Result of fn or fallback
+   * @param fallbackFn Fallback function if circuit is open
+   * @returns Result of fn or fallbackFn
    */
-  execute<T>(operationName: string, fn: () => T, fallback?: T): T {
-    if (this.isTripped(operationName)) {
-      if (fallback !== undefined) {
-        return fallback;
-      }
-      throw new Error(`Circuit ${this.name} tripped for operation ${operationName}`);
+  execute<T>(fn: () => T | Promise<T>, fallbackFn?: () => T | Promise<T>): Promise<T> {
+    return CircuitBreaker.execute(this.breakerId, fn, fallbackFn);
+  }
+  
+  // Static methods
+  
+  /**
+   * Initialize a circuit breaker
+   * @param id Unique identifier for this breaker
+   * @param maxCount Maximum count before tripping (default 5)
+   * @param resetTimeMs Time in ms before auto-resetting (default 5000ms)
+   */
+  static init(id: string, maxCount: number = 5, resetTimeMs: number = 5000): void {
+    if (!CircuitBreaker.breakers.has(id)) {
+      CircuitBreaker.breakers.set(id, {
+        count: 0,
+        maxCount,
+        resetTime: resetTimeMs,
+        lastTripped: 0,
+        isOpen: false
+      });
+    }
+  }
+  
+  /**
+   * Check if breaker is tripped/open
+   * @param id Unique identifier
+   */
+  static isTripped(id: string): boolean {
+    const breaker = CircuitBreaker.breakers.get(id);
+    if (!breaker) return false;
+    
+    // Auto-reset if reset time has passed
+    if (breaker.isOpen && Date.now() - breaker.lastTripped > breaker.resetTime) {
+      breaker.isOpen = false;
+      breaker.count = 0;
     }
     
-    const count = this.count(operationName);
-    if (count > this.maxAttempts) {
-      if (fallback !== undefined) {
-        return fallback;
-      }
-      throw new Error(`Circuit ${this.name} tripped for operation ${operationName}`);
+    return breaker.isOpen;
+  }
+  
+  /**
+   * Increment count for this breaker
+   * @param id Unique identifier
+   * @param amount Amount to increment (default 1)
+   */
+  static count(id: string, amount: number = 1): number {
+    const breaker = CircuitBreaker.breakers.get(id);
+    if (!breaker) {
+      CircuitBreaker.init(id);
+      return CircuitBreaker.count(id, amount);
     }
     
-    return fn();
+    breaker.count += amount;
+    
+    // Trip the breaker if count exceeds max
+    if (breaker.count >= breaker.maxCount && !breaker.isOpen) {
+      breaker.isOpen = true;
+      breaker.lastTripped = Date.now();
+      console.warn(`Circuit breaker ${id} tripped at count ${breaker.count}`);
+    }
+    
+    return breaker.count;
+  }
+  
+  /**
+   * Get current count for this breaker
+   * @param id Unique identifier
+   */
+  static getCount(id: string): number {
+    return CircuitBreaker.breakers.get(id)?.count || 0;
+  }
+  
+  /**
+   * Reset this breaker
+   * @param id Unique identifier
+   */
+  static reset(id: string): void {
+    const breaker = CircuitBreaker.breakers.get(id);
+    if (breaker) {
+      breaker.count = 0;
+      breaker.isOpen = false;
+    }
+  }
+  
+  /**
+   * Record a successful operation - reduces count
+   * @param id Unique identifier
+   */
+  static recordSuccess(id: string): void {
+    const breaker = CircuitBreaker.breakers.get(id);
+    if (breaker && breaker.count > 0) {
+      // Gradually decrease count on successful operations
+      breaker.count = Math.max(0, breaker.count - 0.5);
+    }
+  }
+  
+  /**
+   * Record a failure - increases count
+   * @param id Unique identifier
+   */
+  static recordFailure(id: string): void {
+    CircuitBreaker.count(id);
+  }
+  
+  /**
+   * Execute a function with circuit breaker protection
+   * @param id Unique identifier
+   * @param fn Function to execute
+   * @param fallbackFn Fallback function if circuit is open
+   * @returns Result of fn or fallbackFn
+   */
+  static async execute<T>(id: string, fn: () => T | Promise<T>, fallbackFn?: () => T | Promise<T>): Promise<T> {
+    // Initialize the breaker if it doesn't exist
+    if (!CircuitBreaker.breakers.has(id)) {
+      CircuitBreaker.init(id);
+    }
+    
+    // If circuit is open, use fallback if provided
+    if (CircuitBreaker.isTripped(id)) {
+      console.warn(`Circuit ${id} is open, using fallback`);
+      if (fallbackFn) {
+        return Promise.resolve(fallbackFn());
+      }
+      throw new Error(`Circuit ${id} is open and no fallback provided`);
+    }
+    
+    try {
+      // Execute the function
+      const result = await Promise.resolve(fn());
+      // Record success
+      CircuitBreaker.recordSuccess(id);
+      return result;
+    } catch (error) {
+      // Record failure
+      CircuitBreaker.recordFailure(id);
+      // Re-throw or use fallback
+      if (fallbackFn) {
+        console.warn(`Function execution failed for ${id}, using fallback`, error);
+        return Promise.resolve(fallbackFn());
+      }
+      throw error;
+    }
   }
 }
 
+// Export default instance for backward compatibility with singleton usage pattern
+export default CircuitBreaker;

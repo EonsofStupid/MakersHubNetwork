@@ -2,51 +2,67 @@
 /**
  * useAuthState.ts
  * 
- * Hook to access auth state without triggering unnecessary re-renders
- * Uses selectors and bridges for consistent behavior and module isolation
+ * Consolidated hook for accessing authentication state
+ * Uses AuthBridge as the single source of truth
  */
 
-import { useAuthStore } from '../store/auth.store';
-import { AuthBridge } from '@/bridges/AuthBridge';
+import { useCallback, useMemo } from 'react';
+import { AuthBridge } from '@/auth/bridge';
+import { useAuthStore } from '@/auth/store/auth.store';
 import { UserRole } from '@/types/shared';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging';
 
 /**
- * Hook to access auth state without triggering unnecessary re-renders
- * Uses selectors for performance optimization and AuthBridge for consistent behavior
+ * A unified hook for accessing auth state
+ * Ensures consistent access to authentication properties and methods
  */
 export function useAuthState() {
-  // Use selectors to only subscribe to the specific state pieces needed
+  const logger = useLogger('useAuthState', LogCategory.AUTH);
+  
+  // Use selectors to prevent unnecessary re-renders
   const user = useAuthStore(state => state.user);
   const profile = useAuthStore(state => state.profile);
+  const session = useAuthStore(state => state.session);
   const roles = useAuthStore(state => state.roles);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const status = useAuthStore(state => state.status);
   const isLoading = useAuthStore(state => state.isLoading);
   const error = useAuthStore(state => state.error);
   
-  // Use AuthBridge for role checks to ensure consistency
-  // This ensures all role checking goes through the bridge
-  const hasRole = (role: UserRole | UserRole[] | undefined): boolean => {
-    return AuthBridge.hasRole(role);
-  };
+  // Use AuthBridge for derived state to ensure consistency
+  const isAdmin = useMemo(() => AuthBridge.isAdmin(), []);
+  const isSuperAdmin = useMemo(() => AuthBridge.isSuperAdmin(), []);
   
-  // Get admin status through bridge methods to ensure consistency
-  const isAdmin = AuthBridge.isAdmin();
-  const isSuperAdmin = AuthBridge.isSuperAdmin();
+  // Get functions from AuthBridge
+  const hasRole = useCallback((role: UserRole | UserRole[]): boolean => {
+    return AuthBridge.hasRole(role);
+  }, []);
+  
+  const logout = useCallback(async () => {
+    logger.info('User logging out');
+    return AuthBridge.logout();
+  }, [logger]);
   
   return {
-    // Read-only state
+    // User state
     user,
     profile,
+    session,
     roles,
+    
+    // Authentication status
     isAuthenticated,
+    isAdmin,
+    isSuperAdmin,
     status,
     isLoading,
     error,
     
-    // Role checking functions
+    // Auth methods
     hasRole,
-    isAdmin,
-    isSuperAdmin
+    logout,
   };
 }
+
+export default useAuthState;
