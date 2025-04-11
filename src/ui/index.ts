@@ -33,6 +33,7 @@ export * from './core/skeleton';
 export * from './core/slider';
 export * from './core/switch';
 export * from './core/tabs';
+export * from './core/table';
 export * from './core/textarea';
 export * from './core/toast';
 export * from './core/toaster';
