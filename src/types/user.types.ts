@@ -1,18 +1,19 @@
 
-/**
- * Core user types for the application
- * These are exported from types/user.ts and should be used throughout the application
- */
-
-export interface UserMetadata {
-  full_name?: string;
-  avatar_url?: string;
-  display_name?: string;
+export interface User {
+  id: string;
+  email: string;
+  displayName?: string;
+  avatarUrl?: string;
+  role?: string;
   bio?: string;
-  theme_preference?: string;
-  motion_enabled?: boolean;
-  [key: string]: any;
 }
 
-// Re-export the User interface - remove duplicated definition to fix conflicts
-export type { User, UserProfile, UserPreferences } from './user';
+export interface UserProfile {
+  id: string;
+  userId: string;
+  displayName: string;
+  avatarUrl?: string;
+  bio?: string;
+  createdAt: string;
+  updatedAt: string;
+}

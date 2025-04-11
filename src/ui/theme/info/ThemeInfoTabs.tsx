@@ -1,55 +1,37 @@
 
-import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/core/tabs';
-import { ThemeInfoTab } from './ThemeInfoTab';
-import { ThemeToken } from '@/types/theme';
-import { ThemeComponentPreview } from '@/ui/theme/ThemeComponentPreview';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/core/tabs";
+import { TextWithPopup } from "./TextWithPopup";
+import { useTheme } from "@/ui/theme/theme-provider";
+import { ThemeToken } from "@/types/theme.types";
+import { ThemeComponentPreview } from "../ThemeComponentPreview";
 
-interface ThemeInfoTabsProps {
-  componentTokens?: ThemeToken[];
-}
-
-export function ThemeInfoTabs({ componentTokens = [] }: ThemeInfoTabsProps) {
-  // Filter tokens by component
-  const getComponentTokens = (component: string) => {
-    return componentTokens.filter(token => token.component === component);
-  };
+export function ThemeInfoTabs() {
+  const { theme, tokens } = useTheme();
 
   return (
-    <Tabs defaultValue="info" className="w-full">
-      <TabsList className="grid grid-cols-3">
-        <TabsTrigger value="info">Info</TabsTrigger>
-        <TabsTrigger value="components">Components</TabsTrigger>
-        <TabsTrigger value="colors">Colors</TabsTrigger>
+    <Tabs defaultValue="about">
+      <TabsList className="w-full">
+        <TabsTrigger value="about">About</TabsTrigger>
+        <TabsTrigger value="tokens">Tokens</TabsTrigger>
       </TabsList>
-      
-      <TabsContent value="info">
-        <ThemeInfoTab />
+      <TabsContent value="about" className="space-y-4">
+        <div className="pt-4">
+          <h3 className="font-medium">Current Theme</h3>
+          <p className="text-sm text-muted-foreground">{theme?.name || 'Default'}</p>
+        </div>
+        <ThemeComponentPreview />
       </TabsContent>
-      
-      <TabsContent value="components" className="space-y-6">
-        <ThemeComponentPreview component="Button" componentTokens={getComponentTokens('button')} />
-        <ThemeComponentPreview component="Card" componentTokens={getComponentTokens('card')} />
-        <ThemeComponentPreview component="Input" componentTokens={getComponentTokens('input')} />
-      </TabsContent>
-      
-      <TabsContent value="colors">
-        <div className="grid grid-cols-2 gap-4 p-4">
-          <div className="flex flex-col space-y-2">
-            <div className="w-full h-12 rounded-md bg-primary" />
-            <span className="text-xs">Primary</span>
-          </div>
-          <div className="flex flex-col space-y-2">
-            <div className="w-full h-12 rounded-md bg-secondary" />
-            <span className="text-xs">Secondary</span>
-          </div>
-          <div className="flex flex-col space-y-2">
-            <div className="w-full h-12 rounded-md bg-muted" />
-            <span className="text-xs">Muted</span>
-          </div>
-          <div className="flex flex-col space-y-2">
-            <div className="w-full h-12 rounded-md bg-accent" />
-            <span className="text-xs">Accent</span>
+      <TabsContent value="tokens" className="space-y-2">
+        <div className="pt-4">
+          <h3 className="font-medium mb-2">Theme Tokens</h3>
+          <div className="space-y-1">
+            {tokens && Object.entries(tokens).map(([key, token]) => (
+              <TextWithPopup 
+                key={key} 
+                label={key} 
+                text={String(token.value)} 
+              />
+            ))}
           </div>
         </div>
       </TabsContent>
