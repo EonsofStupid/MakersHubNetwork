@@ -2,10 +2,10 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/shared/ui/core/button";
 import { UserMenu } from "@/app/components/auth/UserMenu";
-import { useAuth } from "@/auth/hooks/useAuth";
+import { useAuthState } from "@/auth/hooks/useAuthState";
 
 export function MainNav() {
-  const { user, status } = useAuth();
+  const { user, status } = useAuthState();
 
   return (
     <div className="flex w-full items-center justify-between">

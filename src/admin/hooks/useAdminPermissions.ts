@@ -1,17 +1,16 @@
 
 import { useMemo } from 'react';
-import { checkPermission, checkAllPermissions, checkAnyPermission } from '@/auth/rbac/enforce';
+import { Permission, UserRole } from '@/shared/types/user';
 import { authBridge } from '@/bridges/AuthBridge';
-import { Permission, UserRole } from '@/shared/types/auth.types';
 
 export function usePermissions() {
   // Get the user's roles from auth bridge
   const userRoles = useMemo(() => {
-    if (!authBridge.user?.profile?.roles) {
+    if (!authBridge.user?.app_metadata?.roles) {
       return [];
     }
-    return authBridge.user.profile.roles as UserRole[];
-  }, [authBridge.user?.profile?.roles]);
+    return authBridge.user.app_metadata.roles as UserRole[];
+  }, [authBridge.user?.app_metadata?.roles]);
   
   const hasPermission = (permission: Permission): boolean => {
     return checkPermission(userRoles, permission);
@@ -43,3 +42,25 @@ export function usePermissions() {
     userRoles
   };
 }
+
+// Simple permission checking functions
+export function checkPermission(userRoles: UserRole[], permission: Permission): boolean {
+  // Admin and superadmin have all permissions
+  if (userRoles.includes('admin') || userRoles.includes('superadmin')) {
+    return true;
+  }
+
+  // For other roles, implement specific permission logic
+  return false;
+}
+
+export function checkAllPermissions(userRoles: UserRole[], permissions: Permission[]): boolean {
+  return permissions.every(permission => checkPermission(userRoles, permission));
+}
+
+export function checkAnyPermission(userRoles: UserRole[], permissions: Permission[]): boolean {
+  return permissions.some(permission => checkPermission(userRoles, permission));
+}
+
+// Export compatibility alias for existing code
+export const useAdminPermissions = usePermissions;
