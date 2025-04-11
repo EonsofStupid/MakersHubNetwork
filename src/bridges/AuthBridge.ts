@@ -1,176 +1,132 @@
 
-import { User, UserProfile, UserRole } from "@/shared/types/user";
-import { canAccessAdmin, checkPermission, hasPermission } from "@/auth/rbac/enforce";
+import { AuthBridge, AuthBridgeImplementation, AuthEvent } from '@/auth/types/bridge.types';
+import { User } from '@/shared/types/user';
+import { UserRole } from '@/shared/types/shared.types';
 
-// Auth event types
-export type AuthEventType = 
-  | 'SIGNED_IN'
-  | 'SIGNED_OUT'
-  | 'USER_UPDATED'
-  | 'PASSWORD_RECOVERY'
-  | 'PROFILE_FETCHED';
+/**
+ * Event listeners for auth events
+ */
+const listeners: ((event: AuthEvent) => void)[] = [];
 
-// Auth event listener type
-export type AuthEventListener = (event: AuthEventType, data?: any) => void;
-
-// Auth status type
-export type AuthStatus = {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-};
-
-// Implementation of the Auth Bridge
-class AuthBridgeImplementation {
-  private user: User | null = null;
-  private profile: UserProfile | null = null;
-  private eventListeners: AuthEventListener[] = [];
-  
-  status: AuthStatus = {
+/**
+ * AuthBridge implementation for handling authentication
+ */
+export const authBridge: AuthBridgeImplementation = {
+  user: null,
+  status: {
     isAuthenticated: false,
-    isLoading: true
-  };
-  
-  // Method to subscribe to auth events
-  subscribeToAuthEvents(listener: AuthEventListener): () => void {
-    this.eventListeners.push(listener);
-    return () => {
-      this.eventListeners = this.eventListeners.filter(l => l !== listener);
-    };
-  }
-  
-  // Method to publish auth events
-  publishAuthEvent(event: AuthEventType, data?: any): void {
-    this.eventListeners.forEach(listener => {
-      listener(event, data);
-    });
-  }
-  
-  // Set the current user
-  setUser(user: User | null): void {
-    this.user = user;
-    this.status.isAuthenticated = !!user;
-    this.status.isLoading = false;
-    
-    if (user) {
-      this.publishAuthEvent('USER_UPDATED', user);
-    } else {
-      this.publishAuthEvent('SIGNED_OUT');
-    }
-  }
-  
-  // Set the current user profile
-  setProfile(profile: UserProfile | null): void {
-    this.profile = profile;
-    this.publishAuthEvent('PROFILE_FETCHED', profile);
-  }
-  
-  // Get the current user
-  getUser(): User | null {
-    return this.user;
-  }
-  
-  // Get the current user profile
-  getProfile(): UserProfile | null {
-    return this.profile;
-  }
-  
-  // Login method
-  async signIn(email: string, password: string): Promise<User | null> {
-    // Implementation would go here
-    // For now just mock a successful login
-    const mockUser: User = {
-      id: '123',
-      email,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user_metadata: {
-        full_name: 'Test User',
-        avatar_url: 'https://example.com/avatar.png'
-      },
-      app_metadata: {
-        roles: ['user']
-      },
-      aud: 'authenticated'
-    };
-    
-    this.setUser(mockUser);
-    this.publishAuthEvent('SIGNED_IN', mockUser);
-    return mockUser;
-  }
-  
-  // Google login method
-  async signInWithGoogle(): Promise<User | null> {
-    // Mock implementation
-    const mockUser: User = {
-      id: '456',
-      email: 'google@example.com',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user_metadata: {
-        full_name: 'Google User',
-        avatar_url: 'https://example.com/google-avatar.png'
-      },
-      app_metadata: {
-        roles: ['user']
-      },
-      aud: 'authenticated'
-    };
-    
-    this.setUser(mockUser);
-    this.publishAuthEvent('SIGNED_IN', mockUser);
-    return mockUser;
-  }
-  
-  // Logout method
-  async logout(): Promise<void> {
-    this.setUser(null);
-    this.setProfile(null);
-    this.publishAuthEvent('SIGNED_OUT');
-  }
+    isLoading: true,
+  },
 
-  // Alias for logout for compatibility
-  async signOut(): Promise<void> {
-    return this.logout();
-  }
-  
-  // Get user roles
-  getUserRoles(): UserRole[] {
-    if (!this.user || !this.user.app_metadata?.roles) {
-      return [];
-    }
+  async signIn(email: string, password: string) {
+    console.log('[AuthBridge] Sign in', email);
+    // Mock implementation
+    const mockUser = {
+      id: 'user-123',
+      email,
+      user_metadata: {
+        name: 'Test User',
+        avatar_url: null
+      },
+      app_metadata: {
+        roles: ['user']
+      }
+    } as User;
+
+    authBridge.user = mockUser;
+    authBridge.status.isAuthenticated = true;
+    authBridge.status.isLoading = false;
+
+    // Publish auth event
+    publishAuthEvent({ type: 'SIGNED_IN', payload: mockUser });
+
+    return mockUser;
+  },
+
+  async signInWithGoogle() {
+    console.log('[AuthBridge] Sign in with Google');
+    // Mock implementation
+    const mockUser = {
+      id: 'user-123',
+      email: 'google-user@example.com',
+      user_metadata: {
+        name: 'Google User',
+        avatar_url: null
+      },
+      app_metadata: {
+        roles: ['user']
+      }
+    } as User;
+
+    authBridge.user = mockUser;
+    authBridge.status.isAuthenticated = true;
+    authBridge.status.isLoading = false;
+
+    // Publish auth event
+    publishAuthEvent({ type: 'SIGNED_IN', payload: mockUser });
+
+    return mockUser;
+  },
+
+  async logout() {
+    console.log('[AuthBridge] Logout');
+    const prevUser = authBridge.user;
+    authBridge.user = null;
+    authBridge.status.isAuthenticated = false;
+
+    // Publish auth event
+    publishAuthEvent({ type: 'SIGNED_OUT', payload: prevUser });
     
-    return this.user.app_metadata.roles as UserRole[];
-  }
-  
-  // Check if user has role
-  hasRole(role: UserRole | UserRole[]): boolean {
-    const userRoles = this.getUserRoles();
+    return true;
+  },
+
+  getUser() {
+    return authBridge.user;
+  },
+
+  hasRole(role: UserRole | UserRole[]) {
+    if (!authBridge.user) return false;
+    
+    const userRoles = authBridge.user.app_metadata?.roles || [];
     
     if (Array.isArray(role)) {
-      return role.some(r => hasPermission(userRoles, r));
+      return role.some(r => userRoles.includes(r));
     }
     
-    return hasPermission(userRoles, role);
-  }
-  
-  // Check if user has admin access
-  isAdmin(): boolean {
-    return canAccessAdmin(this.getUserRoles());
-  }
-  
-  // Check if user has super admin access
-  isSuperAdmin(): boolean {
+    return userRoles.includes(role);
+  },
+
+  isAdmin() {
+    return this.hasRole('admin') || this.hasRole('superadmin');
+  },
+
+  isSuperAdmin() {
     return this.hasRole('superadmin');
   }
-  
-  // Check if user has permission
-  hasPermission(permission: string): boolean {
-    return checkPermission(this.getUserRoles(), permission);
-  }
+};
+
+/**
+ * Subscribe to auth events
+ */
+export function subscribeToAuthEvents(listener: (event: AuthEvent) => void) {
+  listeners.push(listener);
+  return () => {
+    const index = listeners.indexOf(listener);
+    if (index > -1) {
+      listeners.splice(index, 1);
+    }
+  };
 }
 
-// Create and export a singleton instance
-export const authBridge = new AuthBridgeImplementation();
-
-// For compatibility with existing code
-export const AuthBridge = authBridge;
+/**
+ * Publish auth event to subscribers
+ */
+export function publishAuthEvent(event: AuthEvent) {
+  listeners.forEach(listener => {
+    try {
+      listener(event);
+    } catch (error) {
+      console.error('[AuthBridge] Error in auth event listener', error);
+    }
+  });
+}
