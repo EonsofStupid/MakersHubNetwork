@@ -7,7 +7,7 @@
 
 // Import and re-export from shared
 import { UserRole, AuthStatus } from './shared';
-export { UserRole, AuthStatus };
+export type { UserRole, AuthStatus };
 
 // User profile type
 export interface UserProfile {

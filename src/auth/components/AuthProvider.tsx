@@ -8,6 +8,7 @@ import { LogCategory } from '@/logging';
 import { useSiteTheme } from '@/app/components/theme/SiteThemeProvider';
 import { errorToObject } from '@/shared/utils/render';
 import { publishAuthEvent } from '@/auth/bridge';
+import { UserProfile } from '@/types/auth.types';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -113,7 +114,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   
   // Provide the current auth state, whether authenticated or not
   return (
-    <AuthContext.Provider value={{ user, session, profile, status }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        session, 
+        profile: profile as UserProfile | null, 
+        status 
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

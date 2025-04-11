@@ -5,7 +5,7 @@ import { Logo } from "./components/Logo";
 import { NavigationItems } from "./components/NavigationItems";
 import { SearchButton } from "./components/SearchButton";
 import { AuthSection } from "./components/AuthSection";
-import { useAuthAtoms } from "@/hooks/useAuthAtoms";
+import { useAuthState } from "@/auth/hooks/useAuthState";
 import { useSiteTheme } from "@/app/components/theme/SiteThemeProvider";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
@@ -17,7 +17,7 @@ export function MainNav() {
   const logger = useLogger("MainNav", LogCategory.UI);
   const dataStreamRef = useRef<HTMLDivElement>(null);
   const glitchParticlesRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated } = useAuthAtoms();
+  const { isAuthenticated } = useAuthState();
   
   // Get MainNav styles from theme
   const styles = componentStyles?.MainNav || {

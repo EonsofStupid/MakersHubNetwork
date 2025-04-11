@@ -1,72 +1,89 @@
 
-/**
- * auth/rbac/roles.ts
- * 
- * Role-based access control mapping
- * Maps roles to permissions
- */
-
 import { UserRole, ROLES } from '@/types/shared';
-import { PermissionValue, PERMISSIONS } from '@/auth/permissions';
+import { PERMISSIONS, PermissionValue } from '@/auth/permissions';
 
-// Map roles to their allowed permissions
-const rolePermissionsMap: Record<UserRole, PermissionValue[]> = {
-  super_admin: Object.values(PERMISSIONS),
-  admin: [
-    PERMISSIONS.ADMIN_ACCESS,
-    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT, PERMISSIONS.EDIT_CONTENT, PERMISSIONS.DELETE_CONTENT,
-    PERMISSIONS.VIEW_USERS, PERMISSIONS.EDIT_USERS,
-    PERMISSIONS.SYSTEM_VIEW, 
+/**
+ * Map of roles to permissions
+ * 
+ * This is the central configuration for role-based access control.
+ * Each role is assigned a set of permissions that determine what actions
+ * users with that role can perform.
+ */
+export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
+  [ROLES.SUPER_ADMIN]: [
+    ...Object.values(PERMISSIONS).flat(),
   ],
-  editor: [
-    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT, PERMISSIONS.EDIT_CONTENT,
-    PERMISSIONS.VIEW_USERS,
+  [ROLES.ADMIN]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.CREATE,
+    PERMISSIONS.CONTENT.EDIT,
+    PERMISSIONS.CONTENT.DELETE,
+    PERMISSIONS.CONTENT.PUBLISH,
+    
+    PERMISSIONS.USERS.VIEW,
+    PERMISSIONS.USERS.CREATE,
+    PERMISSIONS.USERS.EDIT,
+    
+    PERMISSIONS.SETTINGS.VIEW,
+    PERMISSIONS.SETTINGS.EDIT,
+    
+    PERMISSIONS.ANALYTICS.VIEW,
   ],
-  moderator: [
-    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.EDIT_CONTENT,
-    PERMISSIONS.VIEW_USERS,
+  [ROLES.EDITOR]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.CREATE,
+    PERMISSIONS.CONTENT.EDIT,
+    PERMISSIONS.CONTENT.PUBLISH,
+    
+    PERMISSIONS.USERS.VIEW,
   ],
-  builder: [
-    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT,
+  [ROLES.MODERATOR]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.EDIT,
+    
+    PERMISSIONS.USERS.VIEW,
   ],
-  maker: [
-    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT,
+  [ROLES.BUILDER]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.CREATE,
+    PERMISSIONS.CONTENT.EDIT,
   ],
-  viewer: [
-    PERMISSIONS.VIEW_CONTENT,
+  [ROLES.MAKER]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.CREATE,
   ],
-  user: [
-    PERMISSIONS.VIEW_CONTENT,
+  [ROLES.VIEWER]: [
+    PERMISSIONS.CONTENT.VIEW,
   ],
+  [ROLES.USER]: [
+    PERMISSIONS.CONTENT.VIEW,
+  ],
+  [ROLES.DEVELOPER]: [
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.CREATE,
+    PERMISSIONS.CONTENT.EDIT,
+    
+    PERMISSIONS.SYSTEM.VIEW,
+    PERMISSIONS.SYSTEM.EDIT,
+    PERMISSIONS.SYSTEM.DEBUG,
+  ]
 };
 
 /**
- * Map user roles to their corresponding permissions
- * @param roles Array of user roles
- * @returns Array of permissions granted to the user
+ * Maps user roles to their corresponding permissions
  */
 export function mapRolesToPermissions(roles: UserRole[]): PermissionValue[] {
-  // Get all permissions for the user's roles
-  const permissions = roles.flatMap(role => rolePermissionsMap[role] || []);
+  if (!roles || roles.length === 0) {
+    return [];
+  }
   
-  // Remove duplicates
-  return [...new Set(permissions)];
-}
-
-/**
- * Check if user has admin access based on roles
- * @param roles User roles to check
- * @returns Boolean indicating if the user has admin access
- */
-export function hasAdminAccess(roles: UserRole[]): boolean {
-  return roles.some(role => role === ROLES.ADMIN || role === ROLES.SUPER_ADMIN);
-}
-
-/**
- * Check if user is a super admin
- * @param roles User roles to check
- * @returns Boolean indicating if the user is a super admin
- */
-export function isSuperAdmin(roles: UserRole[]): boolean {
-  return roles.includes(ROLES.SUPER_ADMIN);
+  // Get all permissions for all roles
+  const permissionSets = roles.map(role => ROLE_PERMISSIONS[role] || []);
+  
+  // Flatten and deduplicate
+  const allPermissions = Array.from(
+    new Set(permissionSets.flat())
+  ) as PermissionValue[];
+  
+  return allPermissions;
 }
