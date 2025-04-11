@@ -3,7 +3,8 @@
  * auth.store.atoms.ts
  *
  * Properly typed Jotai atoms that read from Zustand store
- * Follows best practices for typing function atoms
+ * This is the boundary layer that ensures components can only read from the store
+ * but never write directly to it
  */
 
 import { atom } from 'jotai';
@@ -11,6 +12,7 @@ import { UserRole } from '@/types/shared';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '@/auth/store/auth.store';
+import { AuthBridge } from '@/bridges/AuthBridge';
 
 // Create a helper function to create atoms that are synchronized with the store
 function atomWithStoreSync<T>(selector: (state: any) => T) {
@@ -32,13 +34,13 @@ export const isLoadingAtom = atomWithStoreSync((state) => state.isLoading);
 
 // Derived state atoms
 export const isAdminAtom = atom<boolean>((get) => {
-  const roles = get(rolesAtom);
-  return roles.includes('admin') || roles.includes('super_admin');
+  // Use AuthBridge to ensure consistent role checks across the app
+  return AuthBridge.isAdmin();
 });
 
 export const isSuperAdminAtom = atom<boolean>((get) => {
-  const roles = get(rolesAtom);
-  return roles.includes('super_admin');
+  // Use AuthBridge to ensure consistent role checks across the app
+  return AuthBridge.isSuperAdmin();
 });
 
 export const hasAdminAccessAtom = atom<boolean>((get) => {
@@ -63,25 +65,20 @@ export const userAvatarAtom = atom<string | null>((get) => {
 });
 
 // For backward compatibility
-export type AuthStatusType = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 export { isAuthenticatedAtom as authStatusAtom };
 
 // Function atoms with proper typing
 export const logoutAtom = atom<() => Promise<void>>(
   (get) => {
-    return useAuthStore.getState().logout;
+    // Use AuthBridge for auth actions to ensure consistent behavior
+    return AuthBridge.logout;
   }
 );
 
 // Has role utility function atom - returns a function
 export const hasRoleAtom = atom<(role: UserRole | UserRole[]) => boolean>(
   (get) => (role: UserRole | UserRole[]): boolean => {
-    const roles = get(rolesAtom);
-    
-    if (Array.isArray(role)) {
-      return role.some(r => roles.includes(r));
-    }
-    
-    return roles.includes(role);
+    // Use AuthBridge for role checks to ensure consistent behavior
+    return AuthBridge.hasRole(role);
   }
 );

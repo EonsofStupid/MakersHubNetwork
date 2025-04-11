@@ -1,18 +1,28 @@
 
+/**
+ * useAuth.ts
+ * 
+ * Consolidated hook for accessing authentication state and actions
+ * Uses bridges for all operations to ensure module isolation
+ */
+
 import { useCallback, useMemo } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { AuthBridge } from '@/bridges';
-import { UserRole } from '@/types';
+import { UserRole } from '@/types/shared';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 
 /**
  * Consolidated hook for accessing authentication state and actions
+ * Bridges the gap between the auth store and components while ensuring
+ * proper module boundaries
  */
 export function useAuth() {
   const logger = useLogger('useAuth', LogCategory.AUTH);
   
   // Use selectors for each piece of state to prevent unnecessary re-renders
+  // By using selectors, we only access the store state but never write directly
   const user = useAuthStore(state => state.user);
   const profile = useAuthStore(state => state.profile);
   const session = useAuthStore(state => state.session);
@@ -26,7 +36,7 @@ export function useAuth() {
   const initialize = useAuthStore(state => state.initialize);
   const initialized = useAuthStore(state => state.initialized);
   
-  // Wrap hasRole function with useCallback to prevent recreation on each render
+  // All role checking functions use AuthBridge to ensure consistent behavior
   const hasRole = useCallback((role: UserRole | UserRole[]): boolean => {
     return AuthBridge.hasRole(role);
   }, []);
@@ -40,7 +50,7 @@ export function useAuth() {
     return AuthBridge.isSuperAdmin();
   }, []);
   
-  // Memoize auth operations with logging
+  // All auth operations use AuthBridge to ensure consistent behavior
   const handleLogin = useCallback(async (email: string, password: string) => {
     logger.info('User logging in', { details: { email } });
     return AuthBridge.signIn(email, password);
@@ -60,6 +70,7 @@ export function useAuth() {
 
   // Return all required auth state and methods
   return {
+    // Read-only state
     user,
     profile,
     session,
@@ -67,18 +78,21 @@ export function useAuth() {
     status,
     isLoading,
     error,
+    initialized,
+    isAuthenticated,
+    
+    // Role checking functions
     hasRole,
     isAdmin,
     isSuperAdmin,
-    isAuthenticated,
+    
+    // Auth operations
     signIn: handleLogin,
     signInWithGoogle: handleGoogleLogin,
     logout: handleLogout,
-    initialize,
-    initialized
+    initialize
   };
 }
 
 // Default export for backward compatibility
 export default useAuth;
-
