@@ -11,7 +11,7 @@ export function errorToObject(error: unknown): Record<string, unknown> {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      // Handle error cause in a way that's compatible with older JS versions
+      // Use optional chaining to avoid error on older JS versions
       cause: error['cause'] ? errorToObject(error['cause']) : undefined,
     };
   }
@@ -132,38 +132,4 @@ export function nodeToSearchableString(value: unknown): string {
   
   // Default fallback
   return String(value);
-}
-
-// Add additional helper for safe JSON stringify
-export function safeStringify(obj: any): string {
-  const seen = new WeakSet();
-  
-  return JSON.stringify(obj, (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return '[Circular Reference]';
-      }
-      seen.add(value);
-    }
-    return value;
-  }, 2);
-}
-
-// Helper for formatting error boundary errors
-export function formatErrorBoundaryError(error: Error, info: { componentStack: string }): Record<string, any> {
-  return {
-    error: errorToObject(error),
-    componentStack: info.componentStack.split('\n').filter(Boolean)
-  };
-}
-
-// Check if a value is a promise
-export function isPromise(value: any): value is Promise<any> {
-  return value && typeof value.then === 'function';
-}
-
-// Truncate a string to a maximum length with ellipsis
-export function truncate(str: string, maxLength: number = 100): string {
-  if (str.length <= maxLength) return str;
-  return str.substring(0, maxLength - 3) + '...';
 }

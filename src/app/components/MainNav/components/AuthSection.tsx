@@ -12,7 +12,6 @@ import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { AuthBridge } from "@/bridges";
 import { useAuthState } from "@/auth/hooks/useAuthState";
-import { User as UserType } from "@/types/user";
 
 /**
  * AuthSection Component
@@ -24,7 +23,7 @@ import { User as UserType } from "@/types/user";
 export const AuthSection: React.FC = () => {
   // Use our consolidated auth state hook that leverages the hybrid state pattern
   const { 
-    user: rawUser, 
+    user, 
     profile, 
     roles,
     isAdmin,
@@ -32,9 +31,6 @@ export const AuthSection: React.FC = () => {
     isAuthenticated,
     isLoading
   } = useAuthState();
-  
-  // Cast user to proper type
-  const user = rawUser as UserType | null;
   
   // State atoms - Jotai atoms for UI state
   const [showAdminButton, setShowAdminButton] = useAtom(showAdminButtonAtom);
@@ -180,4 +176,4 @@ export const AuthSection: React.FC = () => {
       />
     </ComponentWrapper>
   );
-}
+};
