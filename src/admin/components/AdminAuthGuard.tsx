@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { AuthBridge } from '@/bridges/AuthBridge';
 import { useHasRole, useHasAdminAccess } from '@/auth/hooks/useHasRole';
+import { User } from '@/types/user';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
@@ -27,7 +28,7 @@ export function AdminAuthGuard({
   requiredRole 
 }: AdminAuthGuardProps) {
   // Get auth status directly from authStore to ensure consistency
-  const user = useAuthStore(state => state.user);
+  const user = useAuthStore(state => state.user as User | null);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const status = useAuthStore(state => state.status);
   const roles = useAuthStore(state => state.roles);

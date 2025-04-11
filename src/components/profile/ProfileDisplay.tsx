@@ -5,15 +5,19 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
+import { User } from '@/types/user';
 
 export function ProfileDisplay() {
   const { user, profile, isAuthenticated, isLoading } = useAuthState();
   const logger = useLogger('ProfileDisplay', LogCategory.UI);
   
+  // Cast user to proper type
+  const typedUser = user as User | null;
+  
   // Display avatar and basic user info
-  const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email || 'User';
-  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url as string;
-  const userInitial = (user?.email as string || 'U').charAt(0).toUpperCase();
+  const displayName = profile?.display_name || typedUser?.user_metadata?.full_name || typedUser?.email || 'User';
+  const avatarUrl = profile?.avatar_url || typedUser?.user_metadata?.avatar_url as string;
+  const userInitial = (typedUser?.email as string || 'U').charAt(0).toUpperCase();
   
   if (isLoading) {
     return <div>Loading profile...</div>;
@@ -35,7 +39,7 @@ export function ProfileDisplay() {
         
         <div>
           <h3 className="font-medium">{displayName}</h3>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
+          <p className="text-sm text-muted-foreground">{typedUser?.email}</p>
         </div>
       </div>
       

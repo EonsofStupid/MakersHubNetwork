@@ -1,115 +1,123 @@
 
-import React from 'react';
-import { useAuthState } from '@/auth/hooks/useAuthState';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useToast } from '@/hooks/use-toast';
+import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
-import { useToast } from '@/hooks/use-toast';
 
-const profileSchema = z.object({
-  displayName: z.string().min(2, 'Display name must be at least 2 characters'),
-  avatarUrl: z.string().url('Please enter a valid URL').or(z.string().length(0)),
-  bio: z.string().max(160, 'Bio must be 160 characters or less').optional(),
-});
+interface ProfileEditorProps {
+  onClose: () => void;
+}
 
-type ProfileFormValues = z.infer<typeof profileSchema>;
-
-export function ProfileEditor() {
-  const { user, profile } = useAuthState();
+export function ProfileEditor({ onClose }: ProfileEditorProps) {
   const { toast } = useToast();
-  const logger = useLogger('ProfileEditor', LogCategory.UI);
+  const { user, profile } = useAuthState();
+  const logger = useLogger('ProfileEditor', LogCategory.USER);
   
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      displayName: profile?.display_name || user?.user_metadata?.full_name as string || '',
-      avatarUrl: profile?.avatar_url || user?.user_metadata?.avatar_url as string || '',
-      bio: profile?.bio || '',
-    },
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Initialize form with existing data
+  const [formData, setFormData] = useState({
+    displayName: profile?.display_name || user?.user_metadata?.full_name || '',
+    bio: profile?.bio || '',
+    avatarUrl: profile?.avatar_url || user?.user_metadata?.avatar_url || '',
   });
   
-  const onSubmit = async (values: ProfileFormValues) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
     try {
-      logger.info('Updating profile', { details: values });
-      
-      // Here you would actually update the profile
-      // For now, just simulate success
-      
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile has been successfully updated',
+      logger.info('Submitting profile update', {
+        details: { userId: user?.id }
       });
+      
+      // Here you would update the profile in the database
+      
+      // Show success message
+      toast({
+        title: 'Profile Updated',
+        description: 'Your profile has been updated successfully.',
+      });
+      
+      // Close the dialog
+      onClose();
     } catch (error) {
-      logger.error('Error updating profile', { 
-        details: error instanceof Error ? error.message : String(error) 
+      logger.error('Error updating profile', {
+        details: { error }
       });
       
       toast({
+        title: 'Update Failed',
+        description: 'There was an error updating your profile.',
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update profile. Please try again.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="displayName">Display Name</Label>
+        <Input
+          id="displayName"
           name="displayName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Display Name</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          value={formData.displayName}
+          onChange={handleChange}
         />
-        
-        <FormField
-          control={form.control}
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="avatarUrl">Avatar URL</Label>
+        <Input
+          id="avatarUrl"
           name="avatarUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Avatar URL</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          value={formData.avatarUrl}
+          onChange={handleChange}
+          placeholder="https://example.com/avatar.jpg"
         />
-        
-        <FormField
-          control={form.control}
+        {formData.avatarUrl && (
+          <div className="mt-2">
+            <img
+              src={formData.avatarUrl}
+              alt="Avatar preview"
+              className="h-16 w-16 rounded-full object-cover"
+            />
+          </div>
+        )}
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="bio">Bio</Label>
+        <Textarea
+          id="bio"
           name="bio"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bio</FormLabel>
-              <FormControl>
-                <Textarea 
-                  {...field} 
-                  placeholder="Tell us a little about yourself" 
-                  className="resize-none"
-                  maxLength={160}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          value={formData.bio}
+          onChange={handleChange}
+          placeholder="Tell us about yourself"
+          rows={4}
         />
-        
-        <Button type="submit">Save Profile</Button>
-      </form>
-    </Form>
+      </div>
+      
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+    </form>
   );
 }

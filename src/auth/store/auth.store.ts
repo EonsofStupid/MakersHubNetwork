@@ -67,11 +67,13 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   
   // Initialization
   initialize: async () => {
-    const logger = getLogger("AuthStore", LogCategory.AUTH);
+    const logger = getLogger();
     set({ isLoading: true });
     
     try {
-      logger.info("Initializing auth store");
+      logger.info("Initializing auth store", { 
+        category: LogCategory.AUTH 
+      });
       
       // Implement your actual auth initialization logic here
       set({ 
@@ -82,6 +84,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
       
     } catch (error) {
       logger.error("Error initializing auth store", { 
+        category: LogCategory.AUTH,
         details: error instanceof Error ? error.message : String(error)
       });
       
@@ -95,20 +98,26 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   
   // User profile loading
   loadUserProfile: async (userId) => {
-    const logger = getLogger("AuthStore", LogCategory.AUTH);
+    const logger = getLogger();
     
     if (!userId) {
-      logger.warn("Cannot load user profile without user ID");
+      logger.warn("Cannot load user profile without user ID", {
+        category: LogCategory.AUTH
+      });
       return;
     }
     
     try {
-      logger.info("Loading user profile", { details: { userId } });
+      logger.info("Loading user profile", { 
+        category: LogCategory.AUTH,
+        details: { userId } 
+      });
       
       // Implement your actual profile loading logic here
       
     } catch (error) {
       logger.error("Error loading user profile", { 
+        category: LogCategory.AUTH,
         details: error instanceof Error ? error.message : String(error)
       });
       
@@ -118,10 +127,12 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   
   // Logout
   logout: async () => {
-    const logger = getLogger("AuthStore", LogCategory.AUTH);
+    const logger = getLogger();
     
     try {
-      logger.info("User logging out");
+      logger.info("User logging out", {
+        category: LogCategory.AUTH
+      });
       
       // Implement your actual logout logic here
       
@@ -134,6 +145,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
       
     } catch (error) {
       logger.error("Error during logout", { 
+        category: LogCategory.AUTH,
         details: error instanceof Error ? error.message : String(error)
       });
       

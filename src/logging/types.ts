@@ -27,7 +27,9 @@ export enum LogCategory {
   NETWORK = 'network',
   PERF = 'performance',
   SECURITY = 'security',
-  USER = 'user'
+  USER = 'user',
+  PERFORMANCE = 'performance',
+  CONTENT = 'content'
 }
 
 /**
@@ -44,6 +46,7 @@ export interface LogEntry {
   userId?: string;
   sessionId?: string;
   tags?: string[];
+  duration?: number; // Add duration field for performance metrics
 }
 
 /**
@@ -72,4 +75,16 @@ export interface LogTransport {
   log(entry: LogEntry): void;
   getEntries(filter?: LogFilterOptions): LogEntry[];
   clear(): void;
+}
+
+/**
+ * Logging configuration
+ */
+export interface LoggingConfig {
+  level: LogLevel;
+  enabled: boolean;
+  consoleTransport: boolean;
+  memoryTransport: boolean;
+  uiTransport: boolean;
+  memoryLimit: number;
 }

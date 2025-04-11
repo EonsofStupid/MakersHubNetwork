@@ -1,61 +1,54 @@
 
-import { LogEntry, LogTransport } from "../types";
-import { LogLevel } from "../constants/log-level";
+import { LogEntry, LogLevel, LogTransport, LogFilterOptions } from '@/logging/types';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Transport for logging to the browser console
+ * Browser console log transport
  */
 export class ConsoleTransport implements LogTransport {
   log(entry: LogEntry): void {
-    const timestamp = entry.timestamp.toISOString();
-    const source = entry.source ? ` [${entry.source}]` : '';
-    const category = entry.category ? `(${entry.category})` : '';
-    const message = `${timestamp} ${this.getLevelPrefix(entry.level)}${category}${source}: ${entry.message}`;
+    const timestamp = typeof entry.timestamp === 'string' 
+      ? entry.timestamp 
+      : entry.timestamp.toISOString();
+      
+    const prefix = `[${timestamp.split('T')[1].split('.')[0]}] [${entry.category}]`;
     
-    // Log with appropriate console method based on level
+    // Map log levels to console methods
     switch (entry.level) {
+      case LogLevel.TRACE:
+        console.trace(`${prefix} TRACE:`, entry.message, entry.details || '');
+        break;
       case LogLevel.DEBUG:
-        console.debug(message, entry.details || '');
+        console.debug(`${prefix} DEBUG:`, entry.message, entry.details || '');
         break;
       case LogLevel.INFO:
-        console.info(message, entry.details || '');
-        break;
-      case LogLevel.WARN:
-        console.warn(message, entry.details || '');
-        break;
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-        console.error(message, entry.details || '');
+        console.info(`${prefix} INFO:`, entry.message, entry.details || '');
         break;
       case LogLevel.SUCCESS:
-        console.info(message, entry.details || '');
+        console.log(`%c${prefix} SUCCESS: ${entry.message}`, 'color: green', entry.details || '');
         break;
-      case LogLevel.TRACE:
-        console.debug(message, entry.details || '');
+      case LogLevel.WARN:
+        console.warn(`${prefix} WARN:`, entry.message, entry.details || '');
+        break;
+      case LogLevel.ERROR:
+        console.error(`${prefix} ERROR:`, entry.message, entry.details || '');
+        break;
+      case LogLevel.CRITICAL:
+        console.error(`%c${prefix} CRITICAL: ${entry.message}`, 'color: red; font-weight: bold', entry.details || '');
         break;
       default:
-        console.log(message, entry.details || '');
+        console.log(`${prefix}:`, entry.message, entry.details || '');
     }
   }
   
-  private getLevelPrefix(level: LogLevel): string {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return '[DEBUG] ';
-      case LogLevel.INFO:
-        return '[INFO] ';
-      case LogLevel.WARN:
-        return '[WARN] ';
-      case LogLevel.ERROR:
-        return '[ERROR] ';
-      case LogLevel.CRITICAL:
-        return '[CRITICAL] ';
-      case LogLevel.SUCCESS:
-        return '[SUCCESS] ';
-      case LogLevel.TRACE:
-        return '[TRACE] ';
-      default:
-        return '[LOG] ';
-    }
+  // Implement required interface methods with minimal functionality
+  getEntries(filter?: LogFilterOptions): LogEntry[] {
+    // Console transport doesn't store logs, so return empty array
+    return [];
+  }
+  
+  clear(): void {
+    // Clear the console
+    console.clear();
   }
 }
