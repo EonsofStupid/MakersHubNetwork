@@ -13,6 +13,9 @@ export * from './auth.types';
 export * from './user.types';
 export * from './user';
 
+// Shared types
+export * from './shared';
+
 // Logging types
 export * from '@/logging/types';
 

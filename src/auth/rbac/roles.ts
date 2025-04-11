@@ -12,27 +12,43 @@ import { PERMISSIONS, PermissionValue } from '@/auth/permissions';
 export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
   [ROLES.SUPER_ADMIN]: [
     // Super admins have all permissions
-    ...Object.values(PERMISSIONS)
-      .flatMap(section => {
-        if (typeof section === 'string') return section;
-        return Object.values(section).filter(p => typeof p === 'string');
-      })
-      .filter((p): p is string => typeof p === 'string')
-  ],
-  [ROLES.ADMIN]: [
+    PERMISSIONS.ADMIN.SUPER,
+    PERMISSIONS.ADMIN.ACCESS,
+    PERMISSIONS.ADMIN.VIEW,
+    PERMISSIONS.ADMIN.EDIT,
     PERMISSIONS.CONTENT.VIEW,
     PERMISSIONS.CONTENT.CREATE,
     PERMISSIONS.CONTENT.EDIT,
     PERMISSIONS.CONTENT.DELETE,
     PERMISSIONS.CONTENT.PUBLISH,
-    
     PERMISSIONS.USERS.VIEW,
     PERMISSIONS.USERS.CREATE,
     PERMISSIONS.USERS.EDIT,
-    
+    PERMISSIONS.USERS.DELETE,
+    PERMISSIONS.SYSTEM.VIEW,
+    PERMISSIONS.SYSTEM.EDIT,
+    PERMISSIONS.SYSTEM.SETTINGS,
+    PERMISSIONS.SYSTEM.LOGS,
+    PERMISSIONS.SYSTEM.RESTART,
+    PERMISSIONS.SYSTEM.DEBUG,
     PERMISSIONS.SETTINGS.VIEW,
     PERMISSIONS.SETTINGS.EDIT,
-    
+    PERMISSIONS.ANALYTICS.VIEW
+  ],
+  [ROLES.ADMIN]: [
+    PERMISSIONS.ADMIN.ACCESS,
+    PERMISSIONS.ADMIN.VIEW,
+    PERMISSIONS.ADMIN.EDIT,
+    PERMISSIONS.CONTENT.VIEW,
+    PERMISSIONS.CONTENT.CREATE,
+    PERMISSIONS.CONTENT.EDIT,
+    PERMISSIONS.CONTENT.DELETE,
+    PERMISSIONS.CONTENT.PUBLISH,
+    PERMISSIONS.USERS.VIEW,
+    PERMISSIONS.USERS.CREATE,
+    PERMISSIONS.USERS.EDIT,
+    PERMISSIONS.SETTINGS.VIEW,
+    PERMISSIONS.SETTINGS.EDIT,
     PERMISSIONS.ANALYTICS.VIEW,
   ],
   [ROLES.EDITOR]: [
@@ -40,13 +56,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
     PERMISSIONS.CONTENT.CREATE,
     PERMISSIONS.CONTENT.EDIT,
     PERMISSIONS.CONTENT.PUBLISH,
-    
     PERMISSIONS.USERS.VIEW,
   ],
   [ROLES.MODERATOR]: [
     PERMISSIONS.CONTENT.VIEW,
     PERMISSIONS.CONTENT.EDIT,
-    
     PERMISSIONS.USERS.VIEW,
   ],
   [ROLES.BUILDER]: [
@@ -68,7 +82,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
     PERMISSIONS.CONTENT.VIEW,
     PERMISSIONS.CONTENT.CREATE,
     PERMISSIONS.CONTENT.EDIT,
-    
     PERMISSIONS.SYSTEM.VIEW,
     PERMISSIONS.SYSTEM.EDIT,
     PERMISSIONS.SYSTEM.DEBUG,
@@ -89,7 +102,7 @@ export function mapRolesToPermissions(roles: UserRole[]): PermissionValue[] {
   // Flatten and deduplicate
   const allPermissions = Array.from(
     new Set(permissionSets.flat())
-  ) as PermissionValue[];
+  );
   
   return allPermissions;
 }
