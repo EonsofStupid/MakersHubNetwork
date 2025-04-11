@@ -3,30 +3,28 @@
  * Common shared types used across the application
  */
 
-/**
- * A generic status type used throughout the application
- */
-export type Status = 'idle' | 'loading' | 'success' | 'error';
+export interface BaseEntity {
+  id: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-/**
- * A generic sort direction
- */
+export interface Paginated<T> {
+  data: T[];
+  meta: {
+    currentPage: number;
+    lastPage: number;
+    perPage: number;
+    total: number;
+  }
+}
+
 export type SortDirection = 'asc' | 'desc';
+export type SortOptions = Record<string, SortDirection>;
 
-/**
- * A generic pagination state
- */
-export interface PaginationState {
-  page: number;
-  perPage: number;
-  total: number;
-}
-
-/**
- * A generic API response
- */
-export interface ApiResponse<T = any> {
-  data: T | null;
-  error: string | null;
-  status: number;
-}
+export type UserMetadata = {
+  full_name?: string;
+  name?: string;
+  avatarUrl?: string;
+  [key: string]: any;
+};

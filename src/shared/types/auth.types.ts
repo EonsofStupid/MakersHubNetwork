@@ -1,77 +1,47 @@
 
-import { User } from '@supabase/supabase-js';
-
 /**
- * User roles in the application
+ * Auth related types 
  */
-export type UserRole = 'user' | 'admin' | 'super_admin' | 'maker' | 'editor' | 'moderator';
 
-/**
- * User permissions in the application
- */
+import { BaseEntity, UserMetadata } from "./shared.types";
+
+export type UserRole = 'user' | 'admin' | 'super_admin' | 'builder' | 'content_manager';
+
 export type Permission = 
+  | 'create:users' 
   | 'read:users' 
-  | 'write:users' 
+  | 'update:users' 
   | 'delete:users'
-  | 'read:content' 
-  | 'write:content' 
-  | 'delete:content'
-  | 'read:builds' 
-  | 'approve:builds' 
-  | 'reject:builds'
-  | 'manage:settings' 
-  | 'view:admin' 
-  | 'manage:admin';
+  | 'manage:content'
+  | 'manage:layouts'
+  | 'manage:settings'
+  | 'view:admin'
+  | 'view:analytics'
+  | 'manage:builds';
 
-/**
- * User profile data structure
- */
-export interface UserProfile {
-  id: string;
-  username?: string;
-  full_name?: string;
-  avatar_url?: string;
-  bio?: string;
-  website?: string;
-  location?: string;
-  role?: UserRole;
-  created_at?: string;
-  updated_at?: string;
+export interface User extends BaseEntity {
+  email: string;
+  displayName?: string;
+  avatarUrl?: string;
+  roles?: UserRole[];
+  metadata: UserMetadata;
 }
 
-/**
- * Auth state interface
- */
+export interface UserProfile {
+  displayName: string;
+  bio?: string;
+  avatarUrl?: string;
+  socialLinks?: {
+    twitter?: string;
+    github?: string;
+    linkedin?: string;
+    website?: string;
+  };
+  preferences?: Record<string, any>;
+}
+
 export interface AuthState {
   user: User | null;
-  profile: UserProfile | null;
-  status: 'loading' | 'authenticated' | 'unauthenticated';
-  isReady: boolean;
-  error: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }
-
-/**
- * Auth event types for bridge communication
- */
-export type AuthEventType = 
-  | 'SIGNED_IN' 
-  | 'SIGNED_OUT' 
-  | 'USER_UPDATED' 
-  | 'PASSWORD_RECOVERY' 
-  | 'TOKEN_REFRESHED'
-  | 'PROFILE_FETCHED'
-  | 'PROFILE_UPDATED'
-  | 'SESSION_EXPIRED';
-  
-/**
- * Auth event payload
- */
-export interface AuthEvent {
-  type: AuthEventType;
-  payload?: any;
-}
-
-/**
- * Auth event handler type
- */
-export type AuthEventHandler = (event: AuthEvent) => void;

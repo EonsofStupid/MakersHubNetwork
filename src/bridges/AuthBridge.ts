@@ -1,111 +1,117 @@
 
-/**
- * AuthBridge - Core authentication bridge used across the application
- * Provides a central point for authentication events and operations
- */
-import { User } from '@supabase/supabase-js';
-import { AuthEvent, AuthEventHandler, UserProfile } from '@/shared/types/auth.types';
+import { User, UserRole } from "@/shared/types";
 
-// Define the AuthBridge class
-export class AuthBridgeClass {
-  private eventHandlers: Map<string, Set<AuthEventHandler>> = new Map();
+export interface AuthBridgeClass {
+  getUser: () => User | null;
+  getStatus: () => { isAuthenticated: boolean; isLoading: boolean };
+  signIn: (email: string, password: string) => Promise<null>;
+  signInWithGoogle: () => Promise<null>;
+  logout: () => Promise<any>;
+  hasRole: (role: UserRole | UserRole[]) => boolean;
+  isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
+  subscribeToAuthEvents: (callback: (user: User | null) => void) => () => void;
+}
+
+// Create a shared instance of the auth bridge
+export class AuthBridgeImplementation implements AuthBridgeClass {
   private user: User | null = null;
-  private profile: UserProfile | null = null;
-  private status: 'loading' | 'authenticated' | 'unauthenticated' = 'loading';
-  
-  // Auth state management
-  getUserId(): string | undefined {
-    return this.user?.id;
+  private listeners: ((user: User | null) => void)[] = [];
+
+  constructor() {
+    // Initialize with default values
+    this.user = null;
   }
-  
-  getUser(): User | null {
+
+  getUser() {
     return this.user;
   }
-  
-  getProfile(): UserProfile | null {
-    return this.profile;
-  }
-  
-  isAuthenticated(): boolean {
-    return this.status === 'authenticated' && !!this.user;
-  }
-  
-  // Event handling
-  subscribe(channel: string, handler: AuthEventHandler): () => void {
-    if (!this.eventHandlers.has(channel)) {
-      this.eventHandlers.set(channel, new Set());
-    }
-    
-    const handlers = this.eventHandlers.get(channel)!;
-    handlers.add(handler);
-    
-    // Return unsubscribe function
-    return () => {
-      handlers.delete(handler);
-      if (handlers.size === 0) {
-        this.eventHandlers.delete(channel);
-      }
+
+  getStatus() {
+    return {
+      isAuthenticated: !!this.user,
+      isLoading: false
     };
   }
-  
-  publish(channel: string, event: AuthEvent): void {
-    const handlers = this.eventHandlers.get(channel);
-    if (handlers) {
-      handlers.forEach(handler => handler(event));
-    }
-  }
-  
-  // Auth operations
+
   async signIn(email: string, password: string) {
-    // Implementation would connect to actual auth provider
-    console.log('Sign in with:', email, password);
+    console.log('Sign in with email/password', email);
+    // Mock implementation
+    this.user = {
+      id: '1',
+      email,
+      displayName: email.split('@')[0],
+      roles: ['user'],
+      metadata: {}
+    };
+    this.notifyListeners();
     return null;
   }
-  
+
   async signInWithGoogle() {
-    // Implementation would connect to actual auth provider
     console.log('Sign in with Google');
+    // Mock implementation
+    this.user = {
+      id: '1',
+      email: 'google@example.com',
+      displayName: 'Google User',
+      roles: ['user'],
+      metadata: {}
+    };
+    this.notifyListeners();
     return null;
   }
-  
-  async signOut() {
-    // Implementation would connect to actual auth provider
-    console.log('Sign out');
+
+  async logout() {
     this.user = null;
-    this.status = 'unauthenticated';
-    this.publish('auth', { type: 'SIGNED_OUT' });
+    this.notifyListeners();
+    return null;
   }
-  
-  // For testing/debug
-  setUser(user: User | null) {
+
+  hasRole(role: UserRole | UserRole[]) {
+    if (!this.user) return false;
+    
+    const userRoles = this.user.roles || [];
+    if (Array.isArray(role)) {
+      return role.some(r => userRoles.includes(r));
+    }
+    
+    return userRoles.includes(role);
+  }
+
+  isAdmin() {
+    return this.hasRole(['admin', 'super_admin']);
+  }
+
+  isSuperAdmin() {
+    return this.hasRole('super_admin');
+  }
+
+  subscribeToAuthEvents(callback: (user: User | null) => void) {
+    this.listeners.push(callback);
+    // Return unsubscribe function
+    return () => {
+      this.listeners = this.listeners.filter(listener => listener !== callback);
+    };
+  }
+
+  private notifyListeners() {
+    this.listeners.forEach(listener => listener(this.user));
+  }
+
+  // For testing and event triggering
+  publishAuthEvent(user: User | null) {
     this.user = user;
-    this.status = user ? 'authenticated' : 'unauthenticated';
-    if (user) {
-      this.publish('auth', { type: 'SIGNED_IN', payload: { user } });
-    } else {
-      this.publish('auth', { type: 'SIGNED_OUT' });
-    }
-  }
-  
-  setProfile(profile: UserProfile | null) {
-    this.profile = profile;
-    if (profile) {
-      this.publish('auth', { 
-        type: 'PROFILE_FETCHED', 
-        payload: { profile } 
-      });
-    }
+    this.notifyListeners();
   }
 }
 
-// Create and export a singleton instance
-export const authBridge = new AuthBridgeClass();
+// Export a singleton instance
+export const authBridge = new AuthBridgeImplementation();
 
-// Helper functions for event handling
-export const subscribeToAuthEvents = (handler: AuthEventHandler): () => void => {
-  return authBridge.subscribe('auth', handler);
-};
+// For backwards compatibility 
+export const AuthBridge = authBridge;
 
-export const publishAuthEvent = (event: AuthEvent): void => {
-  authBridge.publish('auth', event);
-};
+// Helper method for publishing auth events
+export const publishAuthEvent = (user: User | null) => authBridge.publishAuthEvent(user);
+export const subscribeToAuthEvents = (callback: (user: User | null) => void) => authBridge.subscribeToAuthEvents(callback);

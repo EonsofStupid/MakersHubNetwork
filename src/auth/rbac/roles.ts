@@ -1,33 +1,61 @@
 
-import { UserRole } from '@/shared/types';
+import { Permission, UserRole } from '@/shared/types/auth.types';
 
-// Define permissions
-export type Permission =
-  | 'content:view' | 'content:create' | 'content:edit' | 'content:delete' | 'content:publish'
-  | 'users:view' | 'users:create' | 'users:edit' | 'users:delete'
-  | 'admin:access' | 'admin:super' | 'admin:settings' | 'admin:logs'
-  | 'themes:view' | 'themes:edit' | 'themes:create'
-  | 'analytics:view';
-
-// Define role permissions
+// Define permissions for each role
 export const rolePermissions: Record<UserRole, Permission[]> = {
-  user: ['content:view'],
+  user: [
+    'read:users',
+  ],
+  
+  builder: [
+    'read:users',
+    'manage:builds',
+    'manage:content',
+  ],
+  
   admin: [
-    'content:view', 'content:create', 'content:edit', 'content:delete', 'content:publish',
-    'users:view', 'admin:access', 'themes:view', 'analytics:view'
+    'create:users',
+    'read:users',
+    'update:users',
+    'delete:users',
+    'manage:content',
+    'manage:layouts',
+    'manage:settings',
+    'view:admin',
+    'view:analytics',
+    'manage:builds',
   ],
+  
   super_admin: [
-    'content:view', 'content:create', 'content:edit', 'content:delete', 'content:publish',
-    'users:view', 'users:create', 'users:edit', 'users:delete',
-    'admin:access', 'admin:super', 'admin:settings', 'admin:logs',
-    'themes:view', 'themes:edit', 'themes:create',
-    'analytics:view'
+    'create:users',
+    'read:users',
+    'update:users',
+    'delete:users',
+    'manage:content',
+    'manage:layouts',
+    'manage:settings',
+    'view:admin',
+    'view:analytics',
+    'manage:builds',
   ],
-  editor: ['content:view', 'content:create', 'content:edit'],
-  content_manager: ['content:view', 'content:create', 'content:edit', 'content:delete', 'content:publish'],
-  designer: ['content:view', 'themes:view', 'themes:edit'],
-  support: ['content:view', 'users:view'],
-  moderator: ['content:view', 'content:edit'],
-  guest: ['content:view'],
-  builder: ['content:view', 'content:create', 'content:edit', 'themes:view']
+
+  content_manager: [
+    'read:users',
+    'manage:content',
+    'view:admin',
+  ],
+};
+
+// Helper function to map roles to permissions
+export const mapRolesToPermissions = (roles: UserRole[] = []): Permission[] => {
+  const permissions: Set<Permission> = new Set();
+  
+  // Add permissions for each role
+  roles.forEach(role => {
+    if (rolePermissions[role]) {
+      rolePermissions[role].forEach(permission => permissions.add(permission));
+    }
+  });
+
+  return Array.from(permissions);
 };

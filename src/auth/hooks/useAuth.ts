@@ -1,38 +1,46 @@
 
-import { useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { authBridge } from '@/bridges/AuthBridge';
-import { User, UserRole } from '@/shared/types';
+import { User, UserRole } from '@/shared/types/auth.types';
 
-/**
- * Hook to access authentication state and methods
- */
 export function useAuth() {
-  const user = authBridge.getUser();
-  const status = authBridge.getStatus();
+  const [user, setUser] = useState<User | null>(authBridge.getUser());
+  const [status, setStatus] = useState(authBridge.getStatus());
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    return authBridge.signIn(email, password);
+  useEffect(() => {
+    const unsubscribe = authBridge.subscribeToAuthEvents((updatedUser) => {
+      setUser(updatedUser);
+      setStatus(authBridge.getStatus());
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
-  const signInWithGoogle = useCallback(async () => {
-    return authBridge.signInWithGoogle();
-  }, []);
+  const signIn = async (email: string, password: string) => {
+    return await authBridge.signIn(email, password);
+  };
 
-  const logout = useCallback(async () => {
-    return authBridge.logout();
-  }, []);
+  const signInWithGoogle = async () => {
+    return await authBridge.signInWithGoogle();
+  };
 
-  const hasRole = useCallback((role: UserRole | UserRole[]) => {
+  const logout = async () => {
+    return await authBridge.logout();
+  };
+
+  const hasRole = (role: UserRole | UserRole[]) => {
     return authBridge.hasRole(role);
-  }, []);
+  };
 
-  const isAdmin = useCallback(() => {
+  const isAdmin = () => {
     return authBridge.isAdmin();
-  }, []);
+  };
 
-  const isSuperAdmin = useCallback(() => {
+  const isSuperAdmin = () => {
     return authBridge.isSuperAdmin();
-  }, []);
+  };
 
   return {
     user,
@@ -45,3 +53,5 @@ export function useAuth() {
     isSuperAdmin,
   };
 }
+
+export default useAuth;
