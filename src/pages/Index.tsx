@@ -1,267 +1,117 @@
 
-import { Footer } from "@/components/Footer";
-import { useEffect, useState, useCallback, Suspense, memo } from "react";
-import { ThemeDataStream } from "@/app/components/theme/ThemeDataStream";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { SimpleCyberText } from "@/components/theme/SimpleCyberText";
-import { useThemeEffects } from "@/hooks/useThemeEffects";
-import { EffectRenderer } from "@/components/theme/effects/EffectRenderer";
-import { FeaturesSection } from "@/app/components/landing/FeaturesSection";
-import { BuildShowcase } from "@/app/components/landing/BuildShowcase";
-import { useSiteTheme } from "@/app/components/theme/SiteThemeProvider";
-import { cn } from "@/lib/utils";
-import { useThemeEffect } from "@/components/theme/effects/ThemeEffectProvider";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
+import { ErrorBoundary } from '@/ui/core/error-boundary';
+import { SimpleCyberText } from '@/ui/theme/SimpleCyberText';
+import { Button } from '@/ui/core/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui/core/card';
+import { Footer } from '@/ui/core/Footer';
+import { useUser } from '@/auth/hooks/useUser';
+import { Divider } from '@/ui/core/divider';
+import { ThemeEffectProvider } from '@/ui/theme/info/ThemeEffectProvider';
 
-// Memoize components that don't need to re-render often
-const MemoizedThemeDataStream = memo(ThemeDataStream);
-
-// Create a separate component for the CTA buttons to prevent unnecessary re-renders
-const ActionButtons = memo(({ onHover, onLeave }: { 
-  onHover: (id: string) => void, 
-  onLeave: (id: string) => void 
-}) => {
-  const { componentStyles } = useSiteTheme();
-  const { getEffectForElement } = useThemeEffect();
+const HomePage = () => {
+  const { user } = useUser();
   
-  const ctaStyles = componentStyles?.ActionButtons || {
-    buildCta: "cyber-card inline-flex h-12 items-center justify-center rounded-md bg-primary/20 px-8 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(0,240,255,0.15)] transition-all duration-300 hover:scale-105 hover:bg-primary/30 hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden",
-    browseCta: "glass-morphism inline-flex h-12 items-center justify-center rounded-md border border-primary/30 bg-background/30 backdrop-blur-xl px-8 text-sm font-medium ring-offset-background transition-colors hover:bg-accent/10 hover:text-accent-foreground hover:border-primary/50 hover:shadow-[0_0_15px_rgba(0,240,255,0.15)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden",
-    communityCta: "neo-blur inline-flex h-12 items-center justify-center rounded-md border border-secondary/30 bg-background/30 backdrop-blur-xl px-8 text-sm font-medium transition-colors hover:bg-secondary/10 hover:text-secondary-foreground hover:border-secondary/50 hover:shadow-[0_0_15px_rgba(255,45,110,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 disabled:pointer-events-none disabled:opacity-50 group relative overflow-hidden"
-  };
-
-  const buildEffect = getEffectForElement('build-cta');
-  const browseEffect = getEffectForElement('browse-cta');
-  const communityEffect = getEffectForElement('community-cta');
-
   return (
-    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-      <EffectRenderer effect={buildEffect} className={cn(ctaStyles.buildCta)}>
-        <a 
-          href="/builder" 
-          className="relative z-10 w-full h-full flex items-center justify-center"
-          onMouseEnter={() => onHover('build-cta')}
-          onMouseLeave={() => onLeave('build-cta')}
-          id="build-cta"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <span className="relative z-10">Start Building</span>
-        </a>
-      </EffectRenderer>
-      
-      <EffectRenderer effect={browseEffect} className={cn(ctaStyles.browseCta)}>
-        <a 
-          href="/builds" 
-          className="relative z-10 w-full h-full flex items-center justify-center"
-          onMouseEnter={() => onHover('browse-cta')}
-          onMouseLeave={() => onLeave('browse-cta')}
-          id="browse-cta"
-        >
-          <span className="relative z-10">Browse Builds</span>
-        </a>
-      </EffectRenderer>
-      
-      <EffectRenderer effect={communityEffect} className={cn(ctaStyles.communityCta)}>
-        <a 
-          href="/community" 
-          className="relative z-10 w-full h-full flex items-center justify-center"
-          onMouseEnter={() => onHover('community-cta')}
-          onMouseLeave={() => onLeave('community-cta')}
-          id="community-cta"
-        >
-          <span className="relative z-10">Community Hub</span>
-        </a>
-      </EffectRenderer>
-    </div>
-  );
-});
-
-// Prevent unnecessary re-renders by memoizing the title
-const PageTitle = memo(() => {
-  const { componentStyles } = useSiteTheme();
-  const titleStyles = componentStyles?.PageTitle || {
-    title: "text-4xl md:text-5xl lg:text-6xl font-bold mb-6 relative",
-    gradient: "bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mad-scientist-hover"
-  };
-
-  return (
-    <h1 className={cn(titleStyles.title)}>
-      <span className={cn(titleStyles.gradient)}>
-        MakersImpulse
-      </span>
-    </h1>
-  );
-});
-
-// Memoize the subtitle section
-const PageSubtitle = memo(() => (
-  <>
-    <h2 className="text-2xl md:text-3xl lg:text-4xl font-heading relative mb-2">
-      <SimpleCyberText text="Build.Share.Brag" />
-    </h2>
-    <div className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8 relative z-10">
-      A hub for passionate makers building, customizing, and sharing their 3D printer builds
-    </div>
-  </>
-));
-
-// Memoize the subscription form to prevent unnecessary re-renders
-const SubscriptionForm = memo(() => {
-  const { componentStyles } = useSiteTheme();
-  const formStyles = componentStyles?.SubscriptionForm || {
-    container: "subscribe-banner cyber-card p-4 md:p-6 max-w-xl mx-auto my-8 relative overflow-hidden",
-    gradient: "absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10"
-  };
-
-  return (
-    <div className={cn(formStyles.container)}>
-      <div className={cn(formStyles.gradient)}></div>
-      <h3 className="text-xl font-bold text-primary mb-2 relative z-10">Join Our Maker Community</h3>
-      <p className="text-muted-foreground mb-4 relative z-10">Get early access to new features and showcase your builds</p>
-      
-      <div className="flex flex-col sm:flex-row gap-2 relative z-10">
-        <input 
-          type="email" 
-          placeholder="Your email" 
-          className="flex h-10 w-full rounded-md border border-primary/20 bg-background/30 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-        />
-        <button className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30">
-          Subscribe
-        </button>
-      </div>
-    </div>
-  );
-});
-
-const IndexPage = () => {
-  const { 
-    effects, 
-    isLoading, 
-    error,
-    applyRandomEffect,
-    removeEffect
-  } = useThemeEffects(undefined, {
-    debounceDelay: 100, 
-    maxActiveEffects: 5
-  });
-  
-  const { addEffect, removeEffect: removeThemeEffect } = useThemeEffect();
-
-  // Function to apply random effect to a CTA on hover
-  const handleHover = useCallback((id: string) => {
-    const effectTypes = ['glitch', 'gradient', 'cyber', 'pulse', 'particle', 'morph'];
-    const effectType = effectTypes[Math.floor(Math.random() * effectTypes.length)] as any;
-    const effectId = `${id}-${effectType}`;
-    
-    const effect = {
-      id: effectId,
-      type: effectType,
-      enabled: true,
-      duration: 2000
-    };
-    
-    let enhancedEffect;
-    switch (effectType) {
-      case 'glitch':
-        enhancedEffect = {
-          ...effect,
-          color: '#00F0FF',
-          frequency: Math.random() * 0.5 + 0.5,
-          amplitude: Math.random() * 0.5 + 0.5
-        };
-        break;
-      case 'gradient':
-        enhancedEffect = {
-          ...effect,
-          colors: ['#00F0FF', '#FF2D6E'],
-          direction: 'to-right',
-          speed: Math.random() * 2 + 1
-        };
-        break;
-      case 'cyber':
-        enhancedEffect = {
-          ...effect,
-          glowColor: '#00F0FF',
-          textShadow: true,
-          scanLines: Math.random() > 0.5
-        };
-        break;
-      case 'pulse':
-        enhancedEffect = {
-          ...effect,
-          color: '#00F0FF',
-          minOpacity: 0.2,
-          maxOpacity: 0.8
-        };
-        break;
-      case 'particle':
-        enhancedEffect = {
-          ...effect,
-          color: '#00F0FF',
-          count: Math.floor(Math.random() * 10) + 5
-        };
-        break;
-      case 'morph':
-        enhancedEffect = {
-          ...effect,
-          intensity: Math.random() * 2 + 1,
-          speed: Math.random() * 3 + 2
-        };
-        break;
-      default:
-        enhancedEffect = effect;
-    }
-    
-    addEffect(id, enhancedEffect);
-    
-    applyRandomEffect(id, {
-      types: [effectType],
-      colors: ['#00F0FF', '#FF2D6E', '#8B5CF6'],
-      duration: 2000
-    });
-    
-    setTimeout(() => {
-      removeThemeEffect(effectId);
-    }, 2000);
-  }, [applyRandomEffect, addEffect, removeThemeEffect]);
-
-  // Clear effects when mouse leaves
-  const handleLeave = useCallback((id: string) => {
-    ['glitch', 'gradient', 'cyber', 'pulse', 'particle', 'morph'].forEach(type => {
-      removeEffect(`${id}-${type}`);
-      removeThemeEffect(`${id}-${type}`);
-    });
-  }, [removeEffect, removeThemeEffect]);
-
-  return (
-    <div className="min-h-screen relative overflow-hidden">
-      <div className="container px-4 py-24 mx-auto relative">
-        <ErrorBoundary fallback={<div>Something went wrong with the data stream.</div>}>
-          <Suspense fallback={<div className="opacity-10">Loading...</div>}>
-            <MemoizedThemeDataStream className="opacity-10" />
-          </Suspense>
-        </ErrorBoundary>
-        
-        <div className="text-center">
-          <PageTitle />
+    <ErrorBoundary>
+      <ThemeEffectProvider>
+        <div className="flex flex-col min-h-screen">
+          <main className="flex-1">
+            <section className="py-12 md:py-24 lg:py-32 xl:py-48">
+              <div className="container px-4 md:px-6">
+                <div className="flex flex-col items-center space-y-4 text-center">
+                  <div className="space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                      <SimpleCyberText text="Welcome to Impulse" glitch />
+                    </h1>
+                    <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                      The next-generation platform for creating amazing digital experiences
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center justify-center gap-4">
+                    <Button asChild className="button-cyber-glow">
+                      <Link to={user ? "/dashboard" : "/login"}>
+                        {user ? "Go to Dashboard" : "Get Started"} <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <Link to="/about">Learn More</Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </section>
           
-          <div className="my-8 relative overflow-hidden">
-            <PageSubtitle />
-            <SubscriptionForm />
-          </div>
+            <section className="py-12 md:py-24 lg:py-32 bg-muted/50">
+              <div className="container px-4 md:px-6">
+                <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
+                  <div className="space-y-4">
+                    <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">
+                      Core Features
+                    </div>
+                    <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
+                      Everything you need to build amazing products
+                    </h2>
+                    <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
+                      Our platform provides all the tools you need to create, deploy, and scale your next big idea.
+                    </p>
+                  </div>
+                  <div className="grid gap-6">
+                    {features.map((feature) => (
+                      <Card key={feature.title}>
+                        <CardHeader>
+                          <CardTitle>{feature.title}</CardTitle>
+                          <CardDescription>{feature.description}</CardDescription>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+            
+            <section className="py-12 md:py-24 lg:py-32">
+              <div className="container px-4 md:px-6">
+                <div className="mx-auto max-w-3xl space-y-4 text-center">
+                  <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">Ready to get started?</h2>
+                  <p className="text-gray-500 md:text-xl dark:text-gray-400">
+                    Join thousands of developers building the future with Impulse.
+                  </p>
+                  <div className="flex justify-center">
+                    <Button asChild size="lg">
+                      <Link to="/signup">Create Your Account</Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </main>
           
-          <ActionButtons onHover={handleHover} onLeave={handleLeave} />
+          <Footer />
         </div>
-      </div>
-
-      {/* Features Section */}
-      <FeaturesSection />
-      
-      {/* Build Showcase Section */}
-      <BuildShowcase />
-
-      <Footer />
-    </div>
+      </ThemeEffectProvider>
+    </ErrorBoundary>
   );
-};
+}
 
-export default IndexPage;
+// Sample features data
+const features = [
+  {
+    title: "Intuitive Design",
+    description: "Create beautiful interfaces with our easy-to-use design system"
+  },
+  {
+    title: "Powerful API",
+    description: "Connect your application with our robust API endpoints"
+  },
+  {
+    title: "Advanced Analytics",
+    description: "Gain insights with comprehensive analytics tools"
+  },
+];
+
+export default HomePage;

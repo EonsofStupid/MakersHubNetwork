@@ -5,7 +5,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/ui/core/tooltip';
 
 interface AdminTooltipProps {
   children: React.ReactNode;
