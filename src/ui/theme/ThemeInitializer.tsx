@@ -1,59 +1,54 @@
 
-import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useThemeStore } from '@/stores/theme/store';
-import { LogLevel } from '@/logging/types';
-import { useLogger } from '@/logging/hooks/useLogger';
-import { ErrorBoundary } from '@/ui/core/error-boundary';
-import { ThemeLoadingState } from '@/ui/theme/info/ThemeLoadingState';
-import { ThemeErrorState } from '@/ui/theme/info/ThemeErrorState';
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useThemeStore } from "@/stores/theme/store";
+import { useLogger } from "@/logging/hooks/useLogger";
+import { ThemeLoadingState } from "./info/ThemeLoadingState";
+import { ThemeErrorState } from "./info/ThemeErrorState";
 
-interface ThemeInitializerProps {
-  children: React.ReactNode;
-}
+export function ThemeInitializer() {
+  const { toast } = useToast();
+  const logger = useLogger("ThemeInitializer");
+  const { isLoading, error, isInitialized, loadTheme, theme } = useThemeStore();
 
-export function ThemeInitializer({ children }: ThemeInitializerProps) {
-  const { pathname } = useLocation();
-  const { loadTheme, theme, isLoading, error } = useThemeStore();
-  const logger = useLogger('ThemeInitializer');
-  const [isThemeAvailable, setIsThemeAvailable] = useState<boolean>(false);
-
-  // Load the theme when the component mounts
   useEffect(() => {
-    logger.info('Initializing theme', { pathname });
-    
-    async function initTheme() {
-      try {
-        await loadTheme();
-        setIsThemeAvailable(true);
-        logger.info('Theme loaded successfully');
-      } catch (err) {
-        logger.error('Failed to load theme', { error: err }, LogLevel.ERROR);
-        setIsThemeAvailable(false);
-      }
+    if (!isInitialized && !isLoading) {
+      logger.debug("Initializing theme", { themeId: theme?.id });
+      loadTheme();
     }
-    
-    initTheme();
-  }, [loadTheme, logger, pathname]);
+  }, [isInitialized, isLoading, loadTheme, theme, logger]);
 
-  // Show loading state
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Theme Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      
+      logger.error("Theme initialization failed", {
+        error: error.message,
+      });
+    }
+  }, [error, toast, logger]);
+
   if (isLoading) {
     return <ThemeLoadingState />;
   }
 
-  // Show error state if there's an error
-  if (error || !theme) {
-    return <ThemeErrorState error={error} />;
+  if (error) {
+    return (
+      <ThemeErrorState 
+        message="Theme Error" 
+        subMessage={error.message} 
+        onRetry={() => loadTheme()}
+      />
+    );
   }
 
-  // Render children when theme is available
-  return (
-    <ErrorBoundary>
-      {isThemeAvailable ? (
-        children
-      ) : (
-        <ThemeLoadingState message="Applying theme..." subMessage="This won't take long" />
-      )}
-    </ErrorBoundary>
-  );
+  if (!isInitialized) {
+    return <ThemeLoadingState />;
+  }
+
+  return null;
 }

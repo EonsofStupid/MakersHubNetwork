@@ -1,28 +1,31 @@
 
-import React from 'react';
-import { Alert, AlertTitle, AlertDescription } from '@/ui/core/alert';
-import { Button } from '@/ui/core/button';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle } from "lucide-react";
+import { Button } from "@/ui/core/button";
+import { Alert, AlertTitle, AlertDescription } from "@/ui/core/alert";
 
 interface ThemeErrorStateProps {
-  error: Error;
-  onRetry: () => void;
+  message: string;
+  subMessage: string;
+  onRetry?: () => void;
 }
 
-export function ThemeErrorState({ error, onRetry }: ThemeErrorStateProps) {
+export function ThemeErrorState({ 
+  message = "Failed to load theme", 
+  subMessage = "There was an error loading the theme configuration.", 
+  onRetry 
+}: ThemeErrorStateProps) {
   return (
-    <div className="p-4 space-y-4">
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Theme Loading Error</AlertTitle>
-        <AlertDescription>{error.message}</AlertDescription>
-      </Alert>
-      
-      <div className="flex justify-center">
-        <Button onClick={onRetry} variant="outline" size="sm">
-          <RefreshCw className="mr-2 h-4 w-4" /> Try Again
-        </Button>
-      </div>
-    </div>
+    <Alert variant="destructive" className="mt-4">
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>{message}</AlertTitle>
+      <AlertDescription className="flex flex-col gap-2">
+        <p>{subMessage}</p>
+        {onRetry && (
+          <Button variant="outline" size="sm" onClick={onRetry} className="self-start">
+            Retry
+          </Button>
+        )}
+      </AlertDescription>
+    </Alert>
   );
 }
