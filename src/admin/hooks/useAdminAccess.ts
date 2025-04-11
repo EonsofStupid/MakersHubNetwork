@@ -2,9 +2,9 @@
 import { useCallback, useMemo } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { UserRole, ROLES } from '@/types/shared';
-import { AuthBridge } from '@/auth/bridge';
+import { AuthBridge } from '@/bridges/AuthBridge';
 
 /**
  * Hook for checking admin access permissions

@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging";
+import { LogCategory } from "@/logging/types";
 
 /**
  * @deprecated Use AdminLayout from @/admin/components/layouts/AdminLayout instead

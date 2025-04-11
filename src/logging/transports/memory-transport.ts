@@ -89,3 +89,6 @@ export class MemoryTransport implements LogTransport {
     this.logs = [];
   }
 }
+
+// Create and export a singleton instance
+export const memoryTransport = new MemoryTransport();
