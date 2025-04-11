@@ -128,4 +128,3 @@ export const messageBus = new MessageBus();
 export function createModuleBridge(moduleName: string) {
   return messageBus.createInterface(moduleName);
 }
-

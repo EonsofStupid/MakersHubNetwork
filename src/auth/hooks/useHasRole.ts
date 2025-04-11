@@ -1,6 +1,6 @@
 
 import { useMemo } from 'react';
-import { AuthBridge } from '@/bridges';
+import { AuthBridge } from '@/bridges/AuthBridge';
 import { UserRole } from '@/types/shared';
 
 /**

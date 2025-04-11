@@ -32,5 +32,53 @@ export interface AuthUser {
   metadata?: Record<string, any>;
 }
 
-// Re-export any shared types
-export * from '@/auth/types/shared';
+// Auth context interface
+export interface AuthContextType {
+  user: unknown | null;
+  session: unknown | null;
+  profile: UserProfile | null;
+  status: AuthStatus;
+}
+
+// Auth state interface
+export interface AuthState {
+  user: unknown | null;
+  session: unknown | null;
+  profile: UserProfile | null;
+  roles: UserRole[];
+  status: AuthStatus;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  initialized: boolean;
+}
+
+// Auth actions interface
+export interface AuthActions {
+  hasRole: (role: UserRole | UserRole[]) => boolean;
+  isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
+  
+  setSession: (session: unknown | null) => void;
+  setUser: (user: unknown | null) => void;
+  setProfile: (profile: UserProfile | null) => void;
+  setRoles: (roles: UserRole[]) => void;
+  setError: (error: string | null) => void;
+  setLoading: (isLoading: boolean) => void;
+  setInitialized: (initialized: boolean) => void;
+  setStatus: (status: AuthStatus) => void;
+  
+  initialize: () => Promise<void>;
+  loadUserProfile: (userId: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+// Admin access types
+export interface AdminAccess {
+  isAdmin: boolean;
+  hasAdminAccess: boolean;
+}
+
+export interface WithAdminAccess {
+  hasAdminAccess: boolean;
+}
