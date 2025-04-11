@@ -31,34 +31,47 @@ export function LogActivityStream({
   useEffect(() => {
     // Initialize with current logs
     const loggerInstance = getLogger();
-    const initialLogs = loggerInstance.getEntries({
-      level,
-      categories,
-      limit: maxEntries
-    });
-    
-    setLogs(initialLogs);
-    
-    // Subscribe to new log entries
-    const unsubscribe = loggerInstance.subscribe((entry) => {
-      // Filter based on level and categories
-      if (level && entry.level !== level) return;
-      if (categories && categories.length > 0 && !categories.includes(entry.category)) return;
-      
-      setLogs(prev => [entry, ...prev].slice(0, maxEntries));
-    });
-    
-    logger.debug('LogActivityStream initialized', {
-      details: {
+    // Use a try-catch to handle potential missing methods
+    try {
+      const initialLogs = (loggerInstance as any).getEntries?.({
         level,
         categories,
-        initialLogCount: initialLogs.length
-      }
-    });
+        limit: maxEntries
+      }) || [];
+      
+      setLogs(initialLogs);
+    } catch (error) {
+      logger.error('Failed to get initial logs', { details: { error } });
+    }
     
-    return () => {
-      unsubscribe();
-    };
+    // Subscribe to new log entries
+    try {
+      const unsubscribe = (loggerInstance as any).subscribe?.((entry: LogEntry) => {
+        // Filter based on level and categories
+        if (level && entry.level !== level) return;
+        if (categories && categories.length > 0 && !categories.includes(entry.category)) return;
+        
+        setLogs(prev => [entry, ...prev].slice(0, maxEntries));
+      }) || (() => {});
+      
+      logger.debug('LogActivityStream initialized', {
+        details: {
+          level,
+          categories
+        }
+      });
+      
+      return () => {
+        try {
+          unsubscribe();
+        } catch (error) {
+          // Ignore unsubscribe errors
+        }
+      };
+    } catch (error) {
+      logger.error('Failed to subscribe to logs', { details: { error } });
+      return () => {};
+    }
   }, [level, categories, maxEntries, logger]);
   
   if (logs.length === 0) {

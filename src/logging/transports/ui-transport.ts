@@ -1,168 +1,108 @@
 
-import { toast } from '@/hooks/use-toast';
-import { LogEntry, LogTransport } from '../types';
-import { LogLevel } from '../constants/log-level';
+import { LogEntry, LogLevel, LogTransport, LogFilterOptions } from '@/logging/types';
+import { v4 as uuidv4 } from 'uuid';
 import { nodeToSearchableString } from '@/shared/utils/render';
 
-interface UITransportOptions {
-  showDebug?: boolean;
-  showInfo?: boolean;
-  showWarning?: boolean;
-  showError?: boolean;
-  showCritical?: boolean;
-  throttleMs?: number;
-}
+type LogCallback = (entry: LogEntry) => void;
 
 /**
- * Transport for showing logs as UI toasts
+ * UI notification log transport
  */
 export class UITransport implements LogTransport {
-  private options: UITransportOptions;
-  private recentMessages: Map<string, { timestamp: number, count: number }> = new Map();
+  private subscribers: LogCallback[] = [];
+  private logs: LogEntry[] = [];
+  private maxEntries: number;
   
-  constructor(options: UITransportOptions = {}) {
-    this.options = {
-      showDebug: false,
-      showInfo: true,
-      showWarning: true,
-      showError: true,
-      showCritical: true,
-      throttleMs: 5000,
-      ...options
-    };
+  constructor(maxEntries = 100) {
+    this.maxEntries = maxEntries;
   }
   
   log(entry: LogEntry): void {
-    // Check if we should show a toast for this log level
-    if (!this.shouldShowToast(entry.level)) {
-      return;
+    // Ensure entry has an ID
+    if (!entry.id) {
+      entry.id = uuidv4();
     }
     
-    // Create a key for this message to track duplicates
-    const messageStr = nodeToSearchableString(entry.message);
-    const messageKey = `${entry.level}-${entry.category}-${messageStr}`;
+    // Store the log
+    this.logs.unshift(entry);
     
-    // Check if we're throttling this message
-    if (this.isThrottled(messageKey)) {
-      return;
+    // Trim logs to max capacity
+    if (this.logs.length > this.maxEntries) {
+      this.logs = this.logs.slice(0, this.maxEntries);
     }
     
-    // Show the toast
-    this.showToast(entry);
+    // Notify subscribers
+    this.subscribers.forEach(callback => callback(entry));
   }
   
-  private shouldShowToast(level: LogLevel): boolean {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return !!this.options.showDebug;
-      case LogLevel.INFO:
-        return !!this.options.showInfo;
-      case LogLevel.WARN:
-        return !!this.options.showWarning;
-      case LogLevel.ERROR:
-        return !!this.options.showError;
-      case LogLevel.CRITICAL:
-        return !!this.options.showCritical;
-      default:
+  // Subscribe to new log entries
+  subscribe(callback: LogCallback): () => void {
+    this.subscribers.push(callback);
+    return () => {
+      this.subscribers = this.subscribers.filter(cb => cb !== callback);
+    };
+  }
+  
+  // Implement required interface methods
+  getEntries(filter?: LogFilterOptions): LogEntry[] {
+    if (!filter) {
+      return [...this.logs];
+    }
+    
+    return this.logs.filter(entry => {
+      // Filter by level
+      if (filter.level && entry.level !== filter.level) return false;
+      if (filter.levels && filter.levels.length > 0 && !filter.levels.includes(entry.level)) return false;
+      
+      // Filter by category
+      if (filter.category && entry.category !== filter.category) return false;
+      if (filter.categories && filter.categories.length > 0 && !filter.categories.includes(entry.category)) return false;
+      
+      // Filter by source
+      if (filter.source && entry.source !== filter.source) return false;
+      if (filter.sources && filter.sources.length > 0 && !filter.sources.includes(entry.source || '')) return false;
+      
+      // Filter by date range
+      if (filter.from) {
+        const entryDate = entry.timestamp instanceof Date 
+          ? entry.timestamp 
+          : new Date(entry.timestamp);
+        if (entryDate < filter.from) return false;
+      }
+      
+      if (filter.to) {
+        const entryDate = entry.timestamp instanceof Date 
+          ? entry.timestamp 
+          : new Date(entry.timestamp);
+        if (entryDate > filter.to) return false;
+      }
+      
+      // Filter by userId
+      if (filter.userId && entry.userId !== filter.userId) return false;
+      
+      // Filter by sessionId
+      if (filter.sessionId && entry.sessionId !== filter.sessionId) return false;
+      
+      // Filter by tags
+      if (filter.tags && filter.tags.length > 0 && 
+         (!entry.tags || !filter.tags.some(tag => entry.tags?.includes(tag)))) {
         return false;
-    }
-  }
-  
-  private isThrottled(messageKey: string): boolean {
-    const now = Date.now();
-    const recent = this.recentMessages.get(messageKey);
-    
-    if (recent) {
-      // If the message was seen recently
-      if (now - recent.timestamp < (this.options.throttleMs || 5000)) {
-        // Update count and timestamp
-        this.recentMessages.set(messageKey, {
-          timestamp: now,
-          count: recent.count + 1
-        });
-        return true;
       }
-    }
-    
-    // Not throttled, record it
-    this.recentMessages.set(messageKey, {
-      timestamp: now,
-      count: 1
-    });
-    
-    // Clean up old messages
-    this.cleanupOldMessages(now);
-    
-    return false;
-  }
-  
-  private cleanupOldMessages(now: number): void {
-    const expiryTime = now - ((this.options.throttleMs || 5000) * 2);
-    
-    for (const [key, data] of this.recentMessages.entries()) {
-      if (data.timestamp < expiryTime) {
-        this.recentMessages.delete(key);
+      
+      // Filter by search term
+      if (filter.search) {
+        const searchable = nodeToSearchableString(entry.message) + 
+                         nodeToSearchableString(entry.details) +
+                         entry.level + entry.category + (entry.source || '');
+        if (!searchable.toLowerCase().includes(filter.search.toLowerCase())) return false;
       }
-    }
+      
+      return true;
+    }).slice(0, filter.limit || this.logs.length);
   }
   
-  private showToast(entry: LogEntry): void {
-    let iconName: string;
-    let variant: "default" | "destructive" | undefined;
-    const title = this.getTitle(entry);
-    const messageStr = nodeToSearchableString(entry.message);
-    
-    switch (entry.level) {
-      case LogLevel.DEBUG:
-        iconName = "info";
-        variant = "default";
-        break;
-      case LogLevel.INFO:
-        iconName = "info";
-        variant = "default";
-        break;
-      case LogLevel.WARN:
-        iconName = "alert-triangle";
-        variant = "default";
-        break;
-      case LogLevel.ERROR:
-        iconName = "alert-circle";
-        variant = "destructive";
-        break;
-      case LogLevel.CRITICAL:
-        iconName = "x-circle";
-        variant = "destructive";
-        break;
-      default:
-        iconName = "info";
-        variant = "default";
-    }
-    
-    // Show toast with appropriate styling
-    toast({
-      title,
-      description: messageStr,
-      variant,
-      // Use plain strings for icon names - the toast component will handle rendering
-      icon: iconName,
-      duration: entry.level === LogLevel.ERROR || entry.level === LogLevel.CRITICAL ? 7000 : 4000,
-    });
-  }
-  
-  private getTitle(entry: LogEntry): string {
-    switch (entry.level) {
-      case LogLevel.DEBUG:
-        return `Debug [${entry.category}]`;
-      case LogLevel.INFO:
-        return `Info [${entry.category}]`;
-      case LogLevel.WARN:
-        return `Warning [${entry.category}]`;
-      case LogLevel.ERROR:
-        return `Error [${entry.category}]`;
-      case LogLevel.CRITICAL:
-        return `Critical Error [${entry.category}]`;
-      default:
-        return `Log [${entry.category}]`;
-    }
+  clear(): void {
+    this.logs = [];
+    // Optionally notify subscribers about clearing
   }
 }

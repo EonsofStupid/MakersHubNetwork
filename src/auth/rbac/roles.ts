@@ -11,7 +11,12 @@ import { PERMISSIONS, PermissionValue } from '@/auth/permissions';
  */
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   [ROLES.SUPER_ADMIN]: [
-    ...Object.values(PERMISSIONS).flat().filter(p => typeof p === 'string'),
+    ...Object.values(PERMISSIONS)
+      .flatMap(section => {
+        if (typeof section === 'string') return section;
+        return Object.values(section).filter(p => typeof p === 'string');
+      })
+      .filter((p): p is string => typeof p === 'string')
   ],
   [ROLES.ADMIN]: [
     PERMISSIONS.CONTENT.VIEW,

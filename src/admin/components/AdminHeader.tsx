@@ -8,6 +8,7 @@ import { AdminTooltip } from './ui/AdminTooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from '@/components/ui/theme-provider';
 import { useToast } from '@/hooks/use-toast';
+import { User as UserType } from '@/types/user';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,8 @@ export function AdminHeader({ title = 'Dashboard' }: AdminHeaderProps) {
   const { setTheme, theme } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  const typedUser = user as UserType | null;
   
   const handleLogout = async () => {
     try {
@@ -49,7 +52,7 @@ export function AdminHeader({ title = 'Dashboard' }: AdminHeaderProps) {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
   
-  const displayName = user?.user_metadata?.name || user?.email || 'User';
+  const displayName = typedUser?.user_metadata?.name || typedUser?.email || 'User';
   const initials = displayName
     .split(' ')
     .map(n => n[0])
@@ -95,7 +98,7 @@ export function AdminHeader({ title = 'Dashboard' }: AdminHeaderProps) {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center space-x-2 rounded-full hover:bg-[var(--impulse-bg-hover)] p-1">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.user_metadata?.avatar_url} />
+                <AvatarImage src={typedUser?.user_metadata?.avatar_url} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             </button>
@@ -104,7 +107,7 @@ export function AdminHeader({ title = 'Dashboard' }: AdminHeaderProps) {
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
                 <span className="font-normal text-sm">{displayName}</span>
-                <span className="text-xs font-normal text-muted-foreground">{user?.email}</span>
+                <span className="text-xs font-normal text-muted-foreground">{typedUser?.email}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

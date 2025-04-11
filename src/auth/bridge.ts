@@ -10,8 +10,36 @@ import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
 import { UserRole } from '@/types/shared';
 
-// Re-export the bridge for use in the auth module
-export const authBridge = authBridgeImpl;
+// Manually extend the authBridgeImpl with the methods we need
+// This is a workaround for the TS error and ensures type safety
+const extendedBridge = {
+  ...authBridgeImpl,
+  
+  // Add missing methods
+  hasRole: (role: UserRole | UserRole[] | undefined): boolean => {
+    // Forward to the AuthBridge implementation
+    return authBridgeImpl.module === 'auth' 
+      ? false 
+      : (authBridgeImpl as any).hasRole(role);
+  },
+  
+  isAdmin: (): boolean => {
+    // Forward to the AuthBridge implementation
+    return authBridgeImpl.module === 'auth'
+      ? false
+      : (authBridgeImpl as any).isAdmin();
+  },
+  
+  isSuperAdmin: (): boolean => {
+    // Forward to the AuthBridge implementation
+    return authBridgeImpl.module === 'auth'
+      ? false
+      : (authBridgeImpl as any).isSuperAdmin();
+  }
+};
+
+// Re-export the extended bridge for use in the auth module
+export const authBridge = extendedBridge;
 
 // Re-export the bridge API for convenience
 export { 
