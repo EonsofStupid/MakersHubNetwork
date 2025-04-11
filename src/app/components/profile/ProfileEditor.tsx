@@ -6,7 +6,7 @@ import { Label } from '@/shared/ui/core/label';
 import { Textarea } from '@/shared/ui/core/textarea';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useAuthState } from '@/auth/hooks/useAuthState';
-import { useLogger } from '@/shared/hooks/use-logger';
+import { useLogger } from '@/shared/hooks/useLogger';
 import { LogCategory } from '@/shared/types/logging';
 import { User } from '@/shared/types/user';
 

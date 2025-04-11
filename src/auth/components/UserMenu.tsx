@@ -9,9 +9,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/ui/core/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/ui/core/avatar';
-import { useToast } from '@/hooks/use-toast';
+} from '@/shared/ui/core/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/core/avatar';
+import { useToast } from '@/shared/hooks/use-toast';
 import { User as UserIcon, Settings, LogOut } from 'lucide-react';
 import { User } from '@/shared/types/shared.types';
 import { authBridge } from '@/bridges';
