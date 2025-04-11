@@ -48,9 +48,8 @@ class MessageBus {
       this.handlers.set(fullChannel, new Set());
     }
     
-    this.handlers.get(fullChannel)?.add(handler);
+    this.handlers.get(fullChannel)!.add(handler);
     
-    // Return unsubscribe function
     return () => {
       const handlers = this.handlers.get(fullChannel);
       if (handlers) {
@@ -63,40 +62,66 @@ class MessageBus {
   }
   
   /**
-   * Publish message to a specific channel
+   * Publish a message to a channel
    */
   publish(module: string, channel: string, message: any): void {
     const fullChannel = this.getChannelName(module, channel);
-    const handlers = this.handlers.get(fullChannel);
     
+    const handlers = this.handlers.get(fullChannel);
     if (handlers) {
       handlers.forEach(handler => {
         try {
           handler(message);
         } catch (error) {
-          console.error(`Error in message handler for ${fullChannel}:`, error);
+          console.error(`Error in message handler for channel ${fullChannel}:`, error);
         }
       });
     }
   }
   
   /**
-   * Create a module-specific messaging interface
+   * Clear all handlers for a module
    */
-  createInterface(module: string) {
-    return {
-      publish: (channel: string, message: any) => this.publish(module, channel, message),
-      subscribe: (channel: string, handler: MessageHandler) => this.subscribe(module, channel, handler),
-      module
-    };
+  clearModule(module: string): void {
+    const prefix = this.channelPrefixes.get(module) || module;
+    
+    this.handlers.forEach((_, channel) => {
+      if (channel.startsWith(`${prefix}:`)) {
+        this.handlers.delete(channel);
+      }
+    });
   }
 }
 
-// Singleton instance
+/**
+ * Export singleton instance of MessageBus
+ */
 export const messageBus = new MessageBus();
 
-// Initialize standard modules
-messageBus.registerPrefix('auth', 'auth');
-messageBus.registerPrefix('admin', 'admin');
-messageBus.registerPrefix('chat', 'chat');
-messageBus.registerPrefix('app', 'app');
+/**
+ * Create a module-specific bridge
+ * @param module Module name
+ * @returns Module bridge
+ */
+export function createModuleBridge(module: string) {
+  return {
+    /**
+     * Subscribe to messages on a channel
+     * @param channel Channel to subscribe to
+     * @param handler Message handler
+     * @returns Unsubscribe function
+     */
+    subscribe(channel: string, handler: MessageHandler): UnsubscribeFn {
+      return messageBus.subscribe(module, channel, handler);
+    },
+    
+    /**
+     * Publish a message to a channel
+     * @param channel Channel to publish to
+     * @param message Message to publish
+     */
+    publish(channel: string, message: any): void {
+      messageBus.publish(module, channel, message);
+    }
+  };
+}

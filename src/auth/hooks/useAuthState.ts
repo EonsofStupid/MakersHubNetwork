@@ -25,10 +25,12 @@ export function useAuthState() {
   const error = useAuthStore(state => state.error);
   
   // Use AuthBridge for role checks to ensure consistency
+  // This ensures all role checking goes through the bridge
   const hasRole = (role: UserRole | UserRole[] | undefined): boolean => {
     return AuthBridge.hasRole(role);
   };
   
+  // Get admin status through bridge methods to ensure consistency
   const isAdmin = AuthBridge.isAdmin();
   const isSuperAdmin = AuthBridge.isSuperAdmin();
   
