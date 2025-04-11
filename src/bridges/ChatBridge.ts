@@ -1,117 +1,114 @@
 
-import { authBridge } from './AuthBridge';
-
 /**
- * ChatEvent types for inter-module communication
+ * ChatBridge - Core chat communication bridge
+ * Provides a central point for chat events and operations
  */
+
+// Define types
 export type ChatEventType = 
-  | 'CHAT_INITIALIZED'
-  | 'CHAT_OPENED'
-  | 'CHAT_CLOSED'
-  | 'MESSAGE_SENT'
-  | 'MESSAGE_RECEIVED'
-  | 'CONVERSATION_UPDATED'
-  | 'ERROR';
+  | 'message'
+  | 'session-created'
+  | 'typing'
+  | 'read'
+  | 'user-joined'
+  | 'user-left'
+  | 'error';
 
-/**
- * ChatEvent interface
- */
+export interface ChatMessage {
+  id: string;
+  content: string;
+  sender: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
+  timestamp: string;
+  type: ChatMessageType;
+}
+
+export type ChatMessageType = 'text' | 'image' | 'file' | 'system';
+
 export interface ChatEvent {
   type: ChatEventType;
-  payload?: any;
+  sessionId?: string;
+  message?: ChatMessage;
+  userId?: string;
+  mode?: 'normal' | 'dev' | 'admin';
+  timestamp?: string;
+  error?: string;
 }
 
-/**
- * ChatEventHandler function type
- */
-export type ChatEventHandler = (event: ChatEvent) => void;
+export interface ChatSessionOptions {
+  mode: 'normal' | 'dev' | 'admin';
+  userId?: string;
+}
 
-/**
- * ChatBridge - Communication bridge for chat-related events
- * Allows modules to communicate without direct dependencies
- */
+// Define the ChatBridge class
 class ChatBridgeClass {
-  private eventHandlers: ChatEventHandler[] = [];
-  private initialized = false;
-
-  /**
-   * Initialize the chat system
-   */
-  initialize(): void {
-    if (this.initialized) return;
+  private eventHandlers: Map<string, Set<(event: ChatEvent) => void>> = new Map();
+  
+  // Subscribe to a channel
+  subscribe(channel: string, handler: (event: ChatEvent) => void): () => void {
+    if (!this.eventHandlers.has(channel)) {
+      this.eventHandlers.set(channel, new Set());
+    }
     
-    this.initialized = true;
-    this.publishChatEvent({ type: 'CHAT_INITIALIZED' });
-  }
-
-  /**
-   * Subscribe to chat events
-   * @param handler The event handler function
-   * @returns Unsubscribe function
-   */
-  subscribeToChatEvents(handler: ChatEventHandler): () => void {
-    this.eventHandlers.push(handler);
+    const handlers = this.eventHandlers.get(channel)!;
+    handlers.add(handler);
+    
+    // Return unsubscribe function
     return () => {
-      this.eventHandlers = this.eventHandlers.filter(h => h !== handler);
+      handlers.delete(handler);
+      if (handlers.size === 0) {
+        this.eventHandlers.delete(channel);
+      }
     };
   }
-
-  /**
-   * Publish chat events to all subscribers
-   * @param event The chat event to publish
-   */
-  publishChatEvent(event: ChatEvent): void {
-    this.eventHandlers.forEach(handler => {
-      try {
-        handler(event);
-      } catch (error) {
-        console.error('Error in chat event handler:', error);
-      }
-    });
-  }
-
-  /**
-   * Send a message
-   * @param message The message to send
-   */
-  sendMessage(message: string): void {
-    // Check authentication
-    if (!authBridge.isAuthenticated()) {
-      this.publishChatEvent({ 
-        type: 'ERROR', 
-        payload: { message: 'Authentication required to send messages' } 
-      });
-      return;
+  
+  // Publish to a channel
+  publish(channel: string, event: ChatEvent): void {
+    const handlers = this.eventHandlers.get(channel);
+    if (handlers) {
+      handlers.forEach(handler => handler(event));
     }
-
-    const userId = authBridge.getUserId();
+  }
+  
+  // Send a message to a chat session
+  sendMessage(sessionId: string, message: Omit<ChatMessage, 'id' | 'timestamp'>): string {
+    const id = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const timestamp = new Date().toISOString();
     
-    // Publish message event
-    this.publishChatEvent({
-      type: 'MESSAGE_SENT',
-      payload: {
-        id: Date.now().toString(),
-        content: message,
-        userId,
-        timestamp: new Date().toISOString()
-      }
+    const fullMessage: ChatMessage = {
+      ...message,
+      id,
+      timestamp
+    };
+    
+    this.publish(sessionId, {
+      type: 'message',
+      sessionId,
+      message: fullMessage,
+      timestamp
     });
+    
+    return id;
   }
-
-  /**
-   * Open the chat interface
-   */
-  openChat(): void {
-    this.publishChatEvent({ type: 'CHAT_OPENED' });
-  }
-
-  /**
-   * Close the chat interface
-   */
-  closeChat(): void {
-    this.publishChatEvent({ type: 'CHAT_CLOSED' });
+  
+  // Create a new chat session
+  createSession(options: ChatSessionOptions): string {
+    const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    
+    this.publish('system', {
+      type: 'session-created',
+      sessionId,
+      userId: options.userId,
+      mode: options.mode,
+      timestamp: new Date().toISOString()
+    });
+    
+    return sessionId;
   }
 }
 
-// Export a singleton instance
+// Create and export a singleton instance
 export const chatBridge = new ChatBridgeClass();

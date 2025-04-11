@@ -1,128 +1,147 @@
 
-import React, { ReactNode, useEffect, useRef, useState } from 'react';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { supabase } from '@/integrations/supabase/client';
-import { AuthContext } from '../context/AuthContext';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { useSiteTheme } from '@/app/components/theme/SiteThemeProvider';
-import { errorToObject } from '@/shared/utils/render';
-import { publishAuthEvent } from '@/auth/bridge';
-import { UserProfile } from '@/types/auth.types';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User } from '@supabase/supabase-js';
+import { authBridge, subscribeToAuthEvents, publishAuthEvent } from '@/bridges/AuthBridge';
+import { AuthEvent, UserProfile, UserRole } from '@/shared/types/auth.types';
+
+export interface AuthContextType {
+  user: User | null;
+  profile: UserProfile | null;
+  status: 'loading' | 'authenticated' | 'unauthenticated';
+  isReady: boolean;
+  signIn: (email: string, password: string) => Promise<any>;
+  signInWithGoogle: () => Promise<any>;
+  logout: () => Promise<void>;
+  hasRole: (role: UserRole | UserRole[] | undefined) => boolean;
+  isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
+}
+
+// Create the auth context with default values
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  profile: null,
+  status: 'loading',
+  isReady: false,
+  signIn: async () => null,
+  signInWithGoogle: async () => null,
+  logout: async () => {},
+  hasRole: () => false,
+  isAdmin: () => false,
+  isSuperAdmin: () => false,
+});
+
+export const useAuth = () => useContext(AuthContext);
 
 interface AuthProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
+  initialUser?: User | null;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  // Get the store state and methods
-  const { 
-    user, 
-    session, 
-    profile, 
-    status, 
-    setSession, 
-    initialize, 
-    initialized 
-  } = useAuthStore();
-  
-  const [isInitializing, setIsInitializing] = useState(false);
-  
-  const logger = useLogger('AuthProvider', LogCategory.AUTH);
-  const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
-  const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const initAttemptedRef = useRef<boolean>(false);
-  
-  // Get theme loading status to ensure correct initialization order
-  const { isLoaded: themeLoaded } = useSiteTheme();
-  
-  // Setup auth state change listener only once
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUser = null }) => {
+  const [user, setUser] = useState<User | null>(initialUser);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [status, setStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>(
+    initialUser ? 'authenticated' : 'loading'
+  );
+  const [isReady, setIsReady] = useState(false);
+
   useEffect(() => {
-    // Only run once 
-    if (authSubscriptionRef.current !== null) {
-      return;
-    }
-
-    logger.info('Setting up auth state change listener');
-      
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        logger.info(`Auth state change: ${event}`, {
-          details: { 
-            event,
-            userId: currentSession?.user?.id 
-          }
-        });
-
-        // Publish the auth event so other systems can react to it
-        publishAuthEvent({
-          type: 'AUTH_STATE_CHANGE',
-          payload: { event, session: currentSession }
-        });
-
-        // Only update session state, avoid triggering other effects
-        setSession(currentSession);
-      }
-    );
-      
-    // Store subscription to avoid creating multiple listeners
-    authSubscriptionRef.current = subscription;
-      
-    // Clean up subscription on unmount
-    return () => {
-      if (authSubscriptionRef.current) {
-        authSubscriptionRef.current.unsubscribe();
-        authSubscriptionRef.current = null;
-      }
-      
-      if (initTimeoutRef.current) {
-        clearTimeout(initTimeoutRef.current);
-        initTimeoutRef.current = null;
+    // Initialize auth state
+    const initAuth = async () => {
+      try {
+        // Try to get current session
+        const currentUser = authBridge.getUser();
+        if (currentUser) {
+          setUser(currentUser);
+          setStatus('authenticated');
+        } else {
+          setStatus('unauthenticated');
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setStatus('unauthenticated');
+      } finally {
+        setIsReady(true);
       }
     };
-  }, []); // Empty deps to ensure it runs only once
-  
-  // Initialize auth only once after theme is loaded
-  useEffect(() => {
-    // Wait for theme to be loaded first
-    if (!themeLoaded) {
-      return;
+
+    initAuth();
+    
+    // Subscribe to auth events
+    const unsubscribe = subscribeToAuthEvents((event: AuthEvent) => {
+      switch (event.type) {
+        case 'SIGNED_IN':
+          if (event.payload?.user) {
+            setUser(event.payload.user as User);
+            setStatus('authenticated');
+          }
+          break;
+          
+        case 'SIGNED_OUT':
+          setUser(null);
+          setProfile(null);
+          setStatus('unauthenticated');
+          break;
+          
+        case 'PROFILE_FETCHED':
+          if (event.payload?.profile) {
+            setProfile(event.payload.profile as UserProfile);
+          }
+          break;
+          
+        case 'USER_UPDATED':
+          if (event.payload?.user) {
+            setUser(event.payload.user as User);
+          }
+          break;
+          
+        default:
+          break;
+      }
+    });
+    
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // Check if user has a specific role
+  const hasRole = (role: UserRole | UserRole[] | undefined): boolean => {
+    if (!role || !profile) return false;
+    
+    const userRole = profile.role || 'user';
+    
+    if (Array.isArray(role)) {
+      return role.includes(userRole);
     }
     
-    // Prevent multiple initialization attempts with ref guard
-    if (initAttemptedRef.current || initialized || isInitializing) {
-      return;
-    }
-    
-    // Mark initialization as attempted immediately to prevent race conditions
-    initAttemptedRef.current = true;
-    setIsInitializing(true);
-    
-    // Initialize auth state asynchronously with a small delay
-    // This delay helps break potential circular dependencies
-    initTimeoutRef.current = setTimeout(() => {
-      logger.info('Initializing auth state');
-      
-      initialize().catch(err => {
-        logger.error('Failed to initialize auth', { details: errorToObject(err) });
-      }).finally(() => {
-        setIsInitializing(false);
-      });
-    }, 50); // Small delay to help with timing issues
-    
-  }, [initialize, initialized, logger, themeLoaded, isInitializing]); 
+    return userRole === role;
+  };
   
-  // Provide the current auth state, whether authenticated or not
-  return (
-    <AuthContext.Provider 
-      value={{ 
-        user, 
-        session, 
-        profile: profile as UserProfile | null, 
-        status 
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-}
+  const isAdmin = (): boolean => {
+    return hasRole(['admin', 'super_admin']);
+  };
+  
+  const isSuperAdmin = (): boolean => {
+    return hasRole('super_admin');
+  };
+
+  const contextValue: AuthContextType = {
+    user,
+    profile,
+    status,
+    isReady,
+    signIn: authBridge.signIn.bind(authBridge),
+    signInWithGoogle: authBridge.signInWithGoogle.bind(authBridge),
+    logout: async () => {
+      await authBridge.signOut();
+    },
+    hasRole,
+    isAdmin,
+    isSuperAdmin,
+  };
+
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+};
