@@ -2,6 +2,7 @@
 /**
  * Core logging types
  */
+import React from 'react';
 
 export enum LogLevel {
   TRACE = 'trace',
