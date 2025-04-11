@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
+import { User } from '@/types/user.types';
 
 interface ProfileEditorProps {
   onClose: () => void;
@@ -22,9 +23,9 @@ export function ProfileEditor({ onClose }: ProfileEditorProps) {
   
   // Initialize form with existing data
   const [formData, setFormData] = useState({
-    displayName: profile?.display_name || user?.user_metadata?.full_name || '',
+    displayName: profile?.display_name || (user as User | null)?.user_metadata?.full_name || '',
     bio: profile?.bio || '',
-    avatarUrl: profile?.avatar_url || user?.user_metadata?.avatar_url || '',
+    avatarUrl: profile?.avatar_url || (user as User | null)?.user_metadata?.avatar_url || '',
   });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -38,7 +39,7 @@ export function ProfileEditor({ onClose }: ProfileEditorProps) {
     
     try {
       logger.info('Submitting profile update', {
-        details: { userId: user?.id }
+        details: { userId: (user as User | null)?.id }
       });
       
       // Here you would update the profile in the database
@@ -105,13 +106,12 @@ export function ProfileEditor({ onClose }: ProfileEditorProps) {
           name="bio"
           value={formData.bio}
           onChange={handleChange}
-          placeholder="Tell us about yourself"
-          rows={4}
+          placeholder="Tell us about yourself..."
         />
       </div>
       
-      <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onClose}>
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
           Cancel
         </Button>
         <Button type="submit" disabled={isSubmitting}>

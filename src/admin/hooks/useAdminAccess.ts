@@ -5,6 +5,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
 import { UserRole, ROLES } from '@/types/shared';
 import { AuthBridge } from '@/bridges/AuthBridge';
+import { User } from '@/types/user.types';
 
 /**
  * Hook for checking admin access permissions

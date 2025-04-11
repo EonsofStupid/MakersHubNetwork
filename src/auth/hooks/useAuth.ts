@@ -11,8 +11,8 @@ import { useAuthStore } from '@/auth/store/auth.store';
 import { AuthBridge } from '@/bridges';
 import { UserRole } from '@/types/shared';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { User } from '@/types/user';
+import { LogCategory } from '@/logging/types';
+import { User } from '@/types/user.types';
 
 /**
  * Consolidated hook for accessing authentication state and actions

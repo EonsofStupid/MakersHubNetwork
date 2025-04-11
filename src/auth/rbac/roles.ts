@@ -9,8 +9,9 @@ import { PERMISSIONS, PermissionValue } from '@/auth/permissions';
  * Each role is assigned a set of permissions that determine what actions
  * users with that role can perform.
  */
-export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
+export const ROLE_PERMISSIONS: Record<UserRole, PermissionValue[]> = {
   [ROLES.SUPER_ADMIN]: [
+    // Super admins have all permissions
     ...Object.values(PERMISSIONS)
       .flatMap(section => {
         if (typeof section === 'string') return section;
