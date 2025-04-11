@@ -9,7 +9,7 @@
 import { User, Session } from '@supabase/supabase-js';
 import { createModuleBridge } from '@/core/MessageBus';
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/logging/types';
 import { UserProfile } from '@/types/auth.types';
 import { UserRole } from '@/types/shared';
 
