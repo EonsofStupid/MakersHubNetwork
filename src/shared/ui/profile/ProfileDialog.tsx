@@ -1,5 +1,5 @@
 
-import { User } from "@/shared/types/auth.types";
+import { User } from "@/shared/types/user";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/ui/core/dialog";
 import { ProfileEditor } from "./ProfileEditor";
 

@@ -38,3 +38,6 @@ export interface AuthState {
   status: AuthStatus;
   error: string | null;
 }
+
+// Re-export UserRole and Permission types for backward compatibility
+export type { UserRole, Permission } from './shared.types';
