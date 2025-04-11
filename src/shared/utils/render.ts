@@ -1,12 +1,12 @@
 
 /**
- * Utility functions for rendering and converting between different formats
+ * Utility functions for rendering and error handling
  */
-
-import React from 'react';
 
 /**
  * Convert an error object to a plain object for logging
+ * @param error Any error object or unknown value
+ * @returns A plain object representation of the error
  */
 export function errorToObject(error: unknown): Record<string, any> {
   if (error instanceof Error) {
@@ -14,71 +14,74 @@ export function errorToObject(error: unknown): Record<string, any> {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      causeMessage: (error as any).cause?.message,
-      causeStack: (error as any).cause?.stack,
+      cause: error.cause ? errorToObject(error.cause) : undefined,
     };
   }
   
   if (typeof error === 'object' && error !== null) {
-    return { ...error as Record<string, any> };
-  }
-  
-  return { value: String(error) };
-}
-
-/**
- * Convert a React node to a searchable string
- */
-export function nodeToSearchableString(node: React.ReactNode): string {
-  if (node === null || node === undefined) {
-    return '';
-  }
-  
-  if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
-    return String(node);
-  }
-  
-  if (Array.isArray(node)) {
-    return node.map(nodeToSearchableString).join(' ');
-  }
-  
-  if (React.isValidElement(node)) {
-    const children = node.props.children;
-    return nodeToSearchableString(children);
-  }
-  
-  return String(node);
-}
-
-/**
- * Render any value as a React node
- */
-export function renderUnknownAsNode(value: unknown): React.ReactNode {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-  
-  if (React.isValidElement(value)) {
-    return value;
-  }
-  
-  if (Array.isArray(value)) {
-    return value.map((item, index) => (
-      <span key={index}>{renderUnknownAsNode(item)}</span>
-    ));
-  }
-  
-  if (typeof value === 'object') {
     try {
-      return JSON.stringify(value);
+      // Try to convert the object to a plain object
+      return JSON.parse(JSON.stringify(error));
     } catch (e) {
-      return '[Object]';
+      // If serialization fails, return a simple representation
+      return { type: typeof error, toString: String(error) };
     }
   }
   
-  return String(value);
+  return {
+    type: typeof error,
+    value: String(error)
+  };
+}
+
+/**
+ * Safely serialize an object to JSON, handling circular references
+ * @param obj Object to serialize
+ * @returns JSON string representation of the object
+ */
+export function safeStringify(obj: any): string {
+  const seen = new WeakSet();
+  
+  return JSON.stringify(obj, (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return '[Circular Reference]';
+      }
+      seen.add(value);
+    }
+    return value;
+  }, 2);
+}
+
+/**
+ * Convert React error boundaries caught errors to a readable format
+ * @param error Error from React error boundary
+ * @param info React component stack info
+ * @returns Formatted error object
+ */
+export function formatErrorBoundaryError(error: Error, info: { componentStack: string }): Record<string, any> {
+  return {
+    error: errorToObject(error),
+    componentStack: info.componentStack.split('\n').filter(Boolean)
+  };
+}
+
+/**
+ * Check if a value is a promise
+ * @param value Value to check
+ * @returns Whether the value is a promise
+ */
+export function isPromise(value: any): value is Promise<any> {
+  return value && typeof value.then === 'function';
+}
+
+/**
+ * Truncate a string to a maximum length with ellipsis
+ * @param str String to truncate
+ * @param maxLength Maximum length
+ * @returns Truncated string
+ */
+export function truncate(str: string, maxLength: number = 100): string {
+  if (str.length <= maxLength) return str;
+  return str.substring(0, maxLength - 3) + '...';
 }

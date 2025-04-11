@@ -21,16 +21,18 @@ import { useAuthState } from "@/auth/hooks/useAuthState";
  * - Admin access links (when authorized)
  */
 export const AuthSection: React.FC = () => {
-  // Use our consolidated auth state hook
+  // Use our consolidated auth state hook that leverages the hybrid state pattern
   const { 
     user, 
     profile, 
     roles,
     isAdmin,
-    isSuperAdmin
+    isSuperAdmin,
+    isAuthenticated,
+    isLoading
   } = useAuthState();
   
-  // State atoms
+  // State atoms - Jotai atoms for UI state
   const [showAdminButton, setShowAdminButton] = useAtom(showAdminButtonAtom);
   const [showAdminWrench, setShowAdminWrench] = useAtom(showAdminWrenchAtom);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -130,7 +132,7 @@ export const AuthSection: React.FC = () => {
 
       {/* Avatar Login Button with Cyberpunk Effect */}
       <ComponentWrapper componentName="UserAvatar">
-        {useAuthState().isLoading ? (
+        {isLoading ? (
           <Button
             size="sm"
             variant="outline"
@@ -140,7 +142,7 @@ export const AuthSection: React.FC = () => {
             <span className="h-4 w-4 animate-spin border-2 border-primary border-t-transparent rounded-full"></span>
             <span>Loading</span>
           </Button>
-        ) : useAuthState().isAuthenticated ? (
+        ) : isAuthenticated ? (
           <Avatar 
             className="h-8 w-8 border-2 border-primary/50 hover:border-primary transition-all duration-300 cursor-pointer site-glow-hover cyber-effect-text"
             onClick={handleOpenLogin}

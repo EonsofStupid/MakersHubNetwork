@@ -56,7 +56,9 @@ class AuthBridgeImpl {
   private logger = getLogger();
   private initialized: boolean = false;
   private userRoles: UserRole[] = [];
-  private currentUser: User | null = null;
+  
+  // Expose currentUser as a property that can be accessed by modules
+  public currentUser: User | null = null;
   
   /**
    * Initialize the Auth bridge
@@ -199,7 +201,7 @@ class AuthBridgeImpl {
   /**
    * Log out the current user
    */
-  async logout() {
+  async logout(): Promise<void> {
     // This would be implemented with actual auth logic
     this.publish('logout', {});
     return Promise.resolve();

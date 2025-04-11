@@ -32,7 +32,7 @@ export const isAuthenticatedAtom = atomWithStoreSync((state) => state.isAuthenti
 export const authErrorAtom = atomWithStoreSync((state) => state.error);
 export const isLoadingAtom = atomWithStoreSync((state) => state.isLoading);
 
-// Derived state atoms
+// Derived state atoms that use AuthBridge to ensure consistent role checks
 export const isAdminAtom = atom<boolean>((get) => {
   // Use AuthBridge to ensure consistent role checks across the app
   return AuthBridge.isAdmin();
