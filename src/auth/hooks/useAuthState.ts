@@ -1,6 +1,7 @@
 
 import { useAuthStore } from '../store/auth.store';
 import { AuthBridge } from '@/bridges/AuthBridge';
+import { UserRole } from '@/types/shared';
 
 /**
  * Hook to access auth state without triggering unnecessary re-renders

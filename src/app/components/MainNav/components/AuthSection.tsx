@@ -11,7 +11,6 @@ import { ComponentWrapper } from "@/admin/components/debug/ComponentWrapper";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/logging";
 import { AuthBridge } from "@/bridges";
-import { useAuthStore } from "@/auth/store/auth.store";
 import { useAuthState } from "@/auth/hooks/useAuthState";
 
 /**
@@ -31,11 +30,7 @@ export const AuthSection: React.FC = () => {
     isSuperAdmin
   } = useAuthState();
   
-  // Directly check status
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const status = useAuthStore(state => state.status);
-  
-  // Local UI state
+  // State atoms
   const [showAdminButton, setShowAdminButton] = useAtom(showAdminButtonAtom);
   const [showAdminWrench, setShowAdminWrench] = useAtom(showAdminWrenchAtom);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -58,7 +53,7 @@ export const AuthSection: React.FC = () => {
         }
       });
     }
-  }, [isAdmin, isSuperAdmin, user?.id, roles, setShowAdminButton, setShowAdminWrench, logger]);
+  }, [isAdmin, isSuperAdmin, user, roles, setShowAdminButton, setShowAdminWrench, logger]);
 
   // Memoized values to prevent recalculations
   const avatarUrl = useMemo(() => {
@@ -88,8 +83,6 @@ export const AuthSection: React.FC = () => {
   const handleLogout = useCallback(() => {
     AuthBridge.logout();
   }, []);
-
-  const isLoading = status === 'loading';
 
   return (
     <ComponentWrapper componentName="AuthSection" className="flex items-center gap-2">
@@ -137,7 +130,7 @@ export const AuthSection: React.FC = () => {
 
       {/* Avatar Login Button with Cyberpunk Effect */}
       <ComponentWrapper componentName="UserAvatar">
-        {isLoading ? (
+        {useAuthState().isLoading ? (
           <Button
             size="sm"
             variant="outline"
@@ -147,7 +140,7 @@ export const AuthSection: React.FC = () => {
             <span className="h-4 w-4 animate-spin border-2 border-primary border-t-transparent rounded-full"></span>
             <span>Loading</span>
           </Button>
-        ) : isAuthenticated ? (
+        ) : useAuthState().isAuthenticated ? (
           <Avatar 
             className="h-8 w-8 border-2 border-primary/50 hover:border-primary transition-all duration-300 cursor-pointer site-glow-hover cyber-effect-text"
             onClick={handleOpenLogin}
