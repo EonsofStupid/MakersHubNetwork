@@ -1,12 +1,19 @@
 
 import { useState, useEffect } from 'react';
 import { useAuthState } from '@/auth/hooks/useAuthState';
-import { ChatBridge } from '@/bridges/ChatBridge';
+import { chatBridge } from '../lib/ChatBridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
 import { v4 as uuidv4 } from 'uuid';
 import { CircuitBreaker } from '@/utils/CircuitBreaker';
-import { ChatMessage } from '@/types';
+
+interface ChatMessage {
+  id: string;
+  content: string;
+  sender: 'user' | 'assistant' | 'system';
+  timestamp: Date;
+  sessionId?: string;
+}
 
 interface UseChatSessionProps {
   sessionId?: string;
@@ -22,8 +29,8 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
   const chatBreaker = new CircuitBreaker('useChatSession', 5, 1000);
   
   useEffect(() => {
-    // Prevent potential infinite loops with circuit breaker
-    if (chatBreaker.count('init') > 3) {
+    // Fix: Pass numeric value instead of string for count method
+    if (chatBreaker.count(1) > 3) {
       logger.warn('Breaking potential infinite loop in useChatSession initialization');
       return;
     }
@@ -31,14 +38,15 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
     if (externalSessionId) {
       setSessionId(externalSessionId);
     } else if (!sessionId) {
-      // Generate new session ID if none provided
-      const newSessionId = ChatBridge.createSession({
-        userId: user?.id,
-        mode,
-        metadata: { source: 'useChatSession' }
-      });
-      
+      const newSessionId = uuidv4();
       setSessionId(newSessionId);
+      
+      chatBridge.publish('system', {
+        type: 'session-created',
+        sessionId: newSessionId,
+        mode,
+        userId: user?.id
+      });
       
       logger.info('Created new chat session', {
         details: { sessionId: newSessionId, mode }
@@ -49,10 +57,11 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
   useEffect(() => {
     if (!sessionId) return;
     
-    // Subscribe to session events via the bridge
-    const unsubscribe = ChatBridge.subscribeToSession(sessionId, (event) => {
-      if (event.type === 'new-message' && event.message) {
-        setMessages(prev => [...prev, event.message]);
+    const sessionChannel = `session:${sessionId}`;
+    
+    const unsubscribe = chatBridge.subscribe(sessionChannel, (message) => {
+      if (message.type === 'new-message') {
+        setMessages(prev => [...prev, message.message]);
       }
     });
     
@@ -61,7 +70,7 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
     };
   }, [sessionId]);
   
-  const sendMessage = async (content: string, metadata: Record<string, any> = {}) => {
+  const sendMessage = async (content: string) => {
     if (!sessionId || !content.trim() || isLoading) return;
     
     try {
@@ -72,24 +81,24 @@ export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }
         content,
         sender: 'user',
         timestamp: new Date(),
-        sessionId,
-        metadata
+        sessionId
       };
       
       setMessages(prev => [...prev, userMessage]);
       
-      // Use the bridge to send the message
-      ChatBridge.sendMessage(sessionId, content, metadata);
+      chatBridge.publish('message', {
+        type: 'send-message',
+        message: userMessage,
+        sessionId
+      });
       
-      // Simulate assistant response for now
       setTimeout(() => {
         const assistantMessage: ChatMessage = {
           id: `assistant-${Date.now()}`,
           content: `This is a response to: "${content}"`,
           sender: 'assistant',
           timestamp: new Date(),
-          sessionId,
-          metadata: {}
+          sessionId
         };
         
         setMessages(prev => [...prev, assistantMessage]);

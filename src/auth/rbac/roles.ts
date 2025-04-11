@@ -1,89 +1,72 @@
 
-import { UserRole, ROLES } from '@/types/shared';
-import { PERMISSIONS, PermissionValue } from '@/auth/permissions';
-
 /**
- * Map of roles to permissions
+ * auth/rbac/roles.ts
  * 
- * This is the central configuration for role-based access control.
- * Each role is assigned a set of permissions that determine what actions
- * users with that role can perform.
+ * Role-based access control mapping
+ * Maps roles to permissions
  */
-export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  [ROLES.SUPER_ADMIN]: [
-    ...Object.values(PERMISSIONS).flat(),
+
+import { UserRole, ROLES } from '@/types/shared';
+import { PermissionValue, PERMISSIONS } from '@/auth/permissions';
+
+// Map roles to their allowed permissions
+const rolePermissionsMap: Record<UserRole, PermissionValue[]> = {
+  super_admin: Object.values(PERMISSIONS),
+  admin: [
+    PERMISSIONS.ADMIN_ACCESS,
+    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT, PERMISSIONS.EDIT_CONTENT, PERMISSIONS.DELETE_CONTENT,
+    PERMISSIONS.VIEW_USERS, PERMISSIONS.EDIT_USERS,
+    PERMISSIONS.SYSTEM_VIEW, 
   ],
-  [ROLES.ADMIN]: [
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.CREATE,
-    PERMISSIONS.CONTENT.EDIT,
-    PERMISSIONS.CONTENT.DELETE,
-    PERMISSIONS.CONTENT.PUBLISH,
-    
-    PERMISSIONS.USERS.VIEW,
-    PERMISSIONS.USERS.CREATE,
-    PERMISSIONS.USERS.EDIT,
-    
-    PERMISSIONS.SETTINGS.VIEW,
-    PERMISSIONS.SETTINGS.EDIT,
-    
-    PERMISSIONS.ANALYTICS.VIEW,
+  editor: [
+    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT, PERMISSIONS.EDIT_CONTENT,
+    PERMISSIONS.VIEW_USERS,
   ],
-  [ROLES.EDITOR]: [
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.CREATE,
-    PERMISSIONS.CONTENT.EDIT,
-    PERMISSIONS.CONTENT.PUBLISH,
-    
-    PERMISSIONS.USERS.VIEW,
+  moderator: [
+    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.EDIT_CONTENT,
+    PERMISSIONS.VIEW_USERS,
   ],
-  [ROLES.MODERATOR]: [
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.EDIT,
-    
-    PERMISSIONS.USERS.VIEW,
+  builder: [
+    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT,
   ],
-  [ROLES.BUILDER]: [
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.CREATE,
-    PERMISSIONS.CONTENT.EDIT,
+  maker: [
+    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT,
   ],
-  [ROLES.MAKER]: [
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.CREATE,
+  viewer: [
+    PERMISSIONS.VIEW_CONTENT,
   ],
-  [ROLES.VIEWER]: [
-    PERMISSIONS.CONTENT.VIEW,
+  user: [
+    PERMISSIONS.VIEW_CONTENT,
   ],
-  [ROLES.USER]: [
-    PERMISSIONS.CONTENT.VIEW,
-  ],
-  [ROLES.DEVELOPER]: [
-    PERMISSIONS.CONTENT.VIEW,
-    PERMISSIONS.CONTENT.CREATE,
-    PERMISSIONS.CONTENT.EDIT,
-    
-    PERMISSIONS.SYSTEM.VIEW,
-    PERMISSIONS.SYSTEM.EDIT,
-    PERMISSIONS.SYSTEM.DEBUG,
-  ]
 };
 
 /**
- * Maps user roles to their corresponding permissions
+ * Map user roles to their corresponding permissions
+ * @param roles Array of user roles
+ * @returns Array of permissions granted to the user
  */
 export function mapRolesToPermissions(roles: UserRole[]): PermissionValue[] {
-  if (!roles || roles.length === 0) {
-    return [];
-  }
+  // Get all permissions for the user's roles
+  const permissions = roles.flatMap(role => rolePermissionsMap[role] || []);
   
-  // Get all permissions for all roles
-  const permissionSets = roles.map(role => ROLE_PERMISSIONS[role] || []);
-  
-  // Flatten and deduplicate
-  const allPermissions = Array.from(
-    new Set(permissionSets.flat())
-  ) as PermissionValue[];
-  
-  return allPermissions;
+  // Remove duplicates
+  return [...new Set(permissions)];
+}
+
+/**
+ * Check if user has admin access based on roles
+ * @param roles User roles to check
+ * @returns Boolean indicating if the user has admin access
+ */
+export function hasAdminAccess(roles: UserRole[]): boolean {
+  return roles.some(role => role === ROLES.ADMIN || role === ROLES.SUPER_ADMIN);
+}
+
+/**
+ * Check if user is a super admin
+ * @param roles User roles to check
+ * @returns Boolean indicating if the user is a super admin
+ */
+export function isSuperAdmin(roles: UserRole[]): boolean {
+  return roles.includes(ROLES.SUPER_ADMIN);
 }

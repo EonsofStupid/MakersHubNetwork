@@ -1,0 +1,292 @@
+
+/* Cyber and electric effects for the MainNav */
+
+/* Base style for MakersImpulse logo */
+.cyber-logo {
+  color: #00F0FF;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
+  filter: brightness(1.1) contrast(1.1);
+  letter-spacing: 0.02em;
+  transition: all 0.3s ease;
+}
+
+/* Data stream effect */
+.mainnav-data-stream {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    0deg, 
+    rgba(0, 240, 255, 0) 80%, 
+    rgba(0, 240, 255, 0.05) 85%,
+    rgba(0, 240, 255, 0.1) 90%,
+    rgba(0, 240, 255, 0.05) 95%,
+    rgba(0, 240, 255, 0) 100%
+  );
+  background-size: 100% 50px;
+  z-index: 0;
+  opacity: 0.3;
+}
+
+.mainnav-data-stream::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, 
+    rgba(16, 20, 24, 0) 0%,
+    rgba(0, 240, 255, 0.5) 20%,
+    rgba(255, 45, 110, 0.5) 40%,
+    rgba(239, 68, 68, 0.5) 60%,
+    rgba(139, 92, 246, 0.5) 80%,
+    rgba(16, 20, 24, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: mainnav-stream 8s linear infinite;
+}
+
+/* Glitch particles effect */
+.mainnav-glitch-particles {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(0, 240, 255, 0.15) 0%, rgba(0, 240, 255, 0) 20%),
+    radial-gradient(circle at 75% 60%, rgba(255, 45, 110, 0.1) 0%, rgba(255, 45, 110, 0) 20%);
+  z-index: 0;
+  opacity: 0.5;
+}
+
+.mainnav-glitch-particles::before {
+  content: '';
+  position: absolute;
+  opacity: 0.5;
+  width: 3px;
+  height: 3px;
+  box-shadow: 
+    20px 10px rgba(0, 240, 255, 0.8),
+    -40px 30px rgba(239, 68, 68, 0.8),
+    80px -20px rgba(255, 45, 110, 0.8),
+    -100px -40px rgba(139, 92, 246, 0.8),
+    120px 60px rgba(209, 213, 219, 0.8),
+    -140px 20px rgba(16, 20, 24, 0.8),
+    200px 10px rgba(0, 240, 255, 0.8),
+    -240px 30px rgba(239, 68, 68, 0.8),
+    280px -20px rgba(255, 45, 110, 0.8),
+    -300px -40px rgba(139, 92, 246, 0.8),
+    320px 60px rgba(209, 213, 219, 0.8),
+    -340px 20px rgba(16, 20, 24, 0.8);
+  animation: mainnav-particles-1 6s linear infinite;
+}
+
+.mainnav-glitch-particles::after {
+  content: '';
+  position: absolute;
+  opacity: 0.3;
+  width: 4px;
+  height: 4px;
+  box-shadow: 
+    -10px -20px rgba(0, 240, 255, 0.6),
+    30px 40px rgba(239, 68, 68, 0.6),
+    -60px -30px rgba(255, 45, 110, 0.6),
+    90px 50px rgba(139, 92, 246, 0.6),
+    -110px -70px rgba(209, 213, 219, 0.6),
+    130px -30px rgba(16, 20, 24, 0.6),
+    210px -20px rgba(0, 240, 255, 0.6),
+    -230px 40px rgba(239, 68, 68, 0.6),
+    260px -30px rgba(255, 45, 110, 0.6),
+    -290px 50px rgba(139, 92, 246, 0.6),
+    310px -70px rgba(209, 213, 219, 0.6),
+    -330px -30px rgba(16, 20, 24, 0.6);
+  animation: mainnav-particles-2 8s linear infinite;
+}
+
+/* Morph header effect */
+.animate-morph-header {
+  animation: morph-header 3s ease-in-out infinite alternate;
+}
+
+@keyframes morph-header {
+  0% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+    transform: translateZ(0px);
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%);
+    transform: translateZ(10px);
+  }
+}
+
+/* Data stream animation */
+@keyframes mainnav-stream {
+  0% { background-position: 200% 0%; }
+  100% { background-position: -200% 0%; }
+}
+
+/* Particle animations */
+@keyframes mainnav-particles-1 {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100vh); }
+}
+
+@keyframes mainnav-particles-2 {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100vh); }
+}
+
+/* Glitch effect */
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-3px, 3px); }
+  40% { transform: translate(-3px, -3px); }
+  60% { transform: translate(3px, 3px); }
+  80% { transform: translate(3px, -3px); }
+  100% { transform: translate(0); }
+}
+
+.glitch-effect {
+  animation: glitch 0.2s linear;
+}
+
+/* Scrolled state with glass effect */
+.mainnav-scrolled {
+  backdrop-filter: blur(16px);
+  background-color: rgba(18, 18, 24, 0.85);
+  box-shadow: 0 4px 30px rgba(0, 240, 255, 0.15);
+}
+
+/* Gradient borders */
+.mainnav-gradient::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--site-effect-color), transparent);
+  opacity: 0.6;
+  z-index: 1;
+}
+
+.mainnav-gradient::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--site-effect-color), var(--site-effect-secondary), transparent);
+  opacity: 0.8;
+  z-index: 1;
+}
+
+/* Cyber glow effect */
+.cyber-glow {
+  box-shadow: 0 0 15px var(--site-effect-color, #00F0FF);
+}
+
+/* Hover effects for CTA buttons */
+.cta-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: #00F0FF;
+}
+
+.cta-button:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 240, 255, 0.2),
+    transparent
+  );
+  transition: all 0.3s ease;
+}
+
+.cta-button:hover:before {
+  left: 100%;
+}
+
+.cta-button:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: rgba(0, 240, 255, 0.5);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+}
+
+/* Animation for particles */
+.animate-particles-1 {
+  animation: particles-1 6s linear infinite;
+}
+
+.animate-particles-2 {
+  animation: particles-2 8s linear infinite;
+}
+
+@keyframes particles-1 {
+  0%, 100% {
+    opacity: 0.5;
+    transform: translate(0, 0);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(-50px, -50px) rotate(180deg);
+  }
+}
+
+@keyframes particles-2 {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translate(0, 0);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translate(80px, -30px) rotate(-180deg);
+  }
+}
+
+/* Pulse slow animation */
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Float animation */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Data stream animation */
+.animate-data-stream {
+  animation: data-stream 15s linear infinite;
+}
+
+@keyframes data-stream {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 1000px;
+  }
+}

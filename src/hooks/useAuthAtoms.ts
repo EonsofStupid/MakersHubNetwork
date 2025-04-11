@@ -1,57 +1,62 @@
 
-/**
- * useAuthAtoms.ts
- * 
- * Custom hook to provide convenient access to auth-related atoms
- * This establishes a clean boundary with read-only Jotai atoms derived from Zustand
- */
-
-import { useAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { 
-  userAtom,
-  profileAtom,
-  rolesAtom,
-  statusAtom,
-  isAuthenticatedAtom,
-  isAdminAtom,
-  isSuperAdminAtom,
+  userAtom, 
+  rolesAtom, 
+  isAuthenticatedAtom, 
+  isAdminAtom, 
+  hasAdminAccessAtom,
   hasRoleAtom,
-  userNameAtom,
-  userAvatarAtom,
   logoutAtom
 } from '@/auth/atoms/auth.store.atoms';
+import { AuthBridge } from '@/auth/bridge';
+import { useRef } from 'react';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { UserRole } from '@/types/shared';
 
 /**
- * Custom hook that provides access to auth-related atoms
- * Follows the hybrid state pattern with Jotai atoms serving as read-only views
- * into the auth store state
+ * Custom hook that provides access to auth state via Jotai atoms
+ * Use this for components that already use Jotai for other state
  */
-export function useAuthAtoms() {
-  const [user] = useAtom(userAtom);
-  const [profile] = useAtom(profileAtom);
-  const [roles] = useAtom(rolesAtom);
-  const [status] = useAtom(statusAtom);
-  const [isAuthenticated] = useAtom(isAuthenticatedAtom);
-  const [isAdmin] = useAtom(isAdminAtom);
-  const [isSuperAdmin] = useAtom(isSuperAdminAtom);
-  const [userName] = useAtom(userNameAtom);
-  const [userAvatar] = useAtom(userAvatarAtom);
-  const [logout] = useAtom(logoutAtom);
-  const [hasRole] = useAtom(hasRoleAtom);
+export const useAuthAtoms = () => {
+  const initialized = useRef(false);
 
-  // Return all atoms in a single object
-  // The consuming components should never directly modify these values
+  // Get atoms from Jotai store with proper typing
+  const user = useAtomValue(userAtom);
+  const isAuthenticated = useAtomValue(isAuthenticatedAtom);
+  const isAdmin = useAtomValue(isAdminAtom);
+  const hasAdminAccess = useAtomValue(hasAdminAccessAtom);
+  const roles = useAtomValue(rolesAtom);
+  const hasRoleFn = useAtomValue(hasRoleAtom);
+  const logout = useAtomValue(logoutAtom);
+  
+  // Initialize auth store if needed
+  if (!initialized.current) {
+    const authStore = useAuthStore.getState();
+    if (!authStore.initialized) {
+      // Use setTimeout to avoid triggering during render
+      setTimeout(() => {
+        authStore.initialize().catch(err => {
+          console.error("Failed to initialize auth store:", err);
+        });
+      }, 0);
+    }
+    
+    initialized.current = true;
+  }
+  
+  // Return atoms and auth methods from AuthBridge
   return {
+    // Atoms 
     user,
-    profile,
-    roles,
-    status,
     isAuthenticated,
     isAdmin,
-    isSuperAdmin,
-    userName,
-    userAvatar,
-    logout,
-    hasRole
+    hasAdminAccess,
+    roles,
+    hasRole: hasRoleFn,
+    
+    // Auth methods from central AuthBridge
+    signIn: AuthBridge.signIn,
+    logout, // Now properly typed
   };
-}
+};

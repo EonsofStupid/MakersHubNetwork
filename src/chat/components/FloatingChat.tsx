@@ -4,7 +4,7 @@ import { ChatWidget } from './ChatWidget';
 import { useLocation } from 'react-router-dom';
 import { useChat } from '../context/ChatProvider';
 import { useHasAdminAccess } from '@/auth/hooks/useHasRole';
-import { AuthBridge } from '@/bridges';
+import { AuthBridge } from '@/bridges/AuthBridge';
 import { getLogger } from '@/logging';
 import { withDetails } from '@/logging/utils/log-helpers';
 import { CircuitBreaker } from '@/utils/CircuitBreaker';
@@ -24,12 +24,12 @@ export function FloatingChat() {
   const pathname = useMemo(() => location.pathname, [location.pathname]);
   const inChatRoute = useMemo(() => pathname.startsWith('/chat'), [pathname]);
   
-  // Create a circuit breaker once and reuse it
-  const breakerRef = useRef(new CircuitBreaker('floating-chat-render', 3, 500));
-  
   useEffect(() => {
     if (renderedRef.current) return;
     renderedRef.current = true;
+    
+    // Use static method or create an instance once
+    const breakerInstance = new CircuitBreaker('floating-chat-render', 3, 500);
     
     logger.debug('FloatingChat rendered with state:', 
       withDetails({
@@ -40,12 +40,13 @@ export function FloatingChat() {
       }));
     
     return () => {
-      breakerRef.current.reset();
+      breakerInstance.reset();
     };
   }, []);
   
-  // Use the circuit breaker to prevent render loops
-  if (breakerRef.current.count('render') > 3) {
+  // Create a circuit breaker to prevent render loops
+  const tripBreaker = new CircuitBreaker('floating-chat-render', 3, 500);
+  if (tripBreaker.isOpen) {
     logger.warn('Circuit breaker triggered in FloatingChat - preventing render loop');
     return null;
   }
@@ -61,4 +62,3 @@ export function FloatingChat() {
     </div>
   );
 }
-

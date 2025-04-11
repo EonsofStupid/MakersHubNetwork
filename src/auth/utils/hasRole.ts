@@ -8,8 +8,7 @@ import { AuthBridge } from '@/bridges/AuthBridge';
  * @param role Single role or array of roles to check against
  * @returns Boolean indicating if user has at least one of the specified roles
  */
-export const hasRole = (role: UserRole | UserRole[] | undefined): boolean => {
-  if (!role) return false;
+export const hasRole = (role: UserRole | UserRole[]): boolean => {
   return AuthBridge.hasRole(role);
 };
 

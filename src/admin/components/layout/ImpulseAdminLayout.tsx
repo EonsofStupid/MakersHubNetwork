@@ -1,23 +1,28 @@
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 import { AdminLayout } from '@/admin/components/AdminLayout';
+import { cn } from '@/lib/utils';
 
-/**
- * ImpulseAdminLayout - A specialized version of AdminLayout for the Impulse theme
- * 
- * This is a wrapper around AdminLayout that adds Impulse-specific styling and functionality
- */
-export function ImpulseAdminLayout({ 
-  title = "Impulse Admin",
-  children
-}: { 
+interface ImpulseAdminLayoutProps {
+  children: React.ReactNode;
   title?: string;
-  children?: React.ReactNode;
-}) {
+  fullWidth?: boolean;
+  className?: string;
+}
+
+export function ImpulseAdminLayout({ 
+  children, 
+  title = 'Admin Dashboard',
+  fullWidth = false,
+  className 
+}: ImpulseAdminLayoutProps) {
   return (
-    <AdminLayout title={title} className="impulse-admin-layout">
-      {children || <Outlet />}
+    <AdminLayout 
+      title={title}
+      fullWidth={fullWidth}
+      className={cn("impulse-admin-content", className)}
+    >
+      {children}
     </AdminLayout>
   );
 }

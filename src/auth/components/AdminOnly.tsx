@@ -1,4 +1,6 @@
+
 import React from 'react';
+import { useAuthStore } from '../store/auth.store';
 import { UserRole } from '@/types/shared';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/logging';
@@ -6,7 +8,7 @@ import { useHasRole, useHasAdminAccess } from '../hooks/useHasRole';
 
 interface AdminOnlyProps {
   children: React.ReactNode;
-  role?: UserRole | UserRole[] | undefined;
+  role?: UserRole | UserRole[];
   fallback?: React.ReactNode;
 }
 

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useLogger } from '@/hooks/use-logger';
@@ -7,12 +6,11 @@ import { AccessDenied } from './auth/AccessDenied';
 import { UserRole } from '@/types/shared';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { AuthBridge } from '@/bridges/AuthBridge';
 import { useHasRole, useHasAdminAccess } from '@/auth/hooks/useHasRole';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
-  requiredRole?: UserRole | UserRole[] | undefined;
+  requiredRole?: UserRole | UserRole[];
 }
 
 /**
@@ -20,7 +18,7 @@ interface AdminAuthGuardProps {
  * 
  * Protects admin routes to ensure only authorized users can access them.
  * Redirects unauthenticated users to login and unauthorized users to access denied.
- * Uses the standardized role checking system through bridges.
+ * Uses the standardized role checking system.
  */
 export function AdminAuthGuard({ 
   children, 

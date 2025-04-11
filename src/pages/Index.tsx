@@ -1,14 +1,13 @@
-
 import { Footer } from "@/components/Footer";
 import { useEffect, useState, useCallback, Suspense, memo } from "react";
-import { ThemeDataStream } from "@/app/components/theme/ThemeDataStream";
+import { ThemeDataStream } from "@/components/theme/ThemeDataStream";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SimpleCyberText } from "@/components/theme/SimpleCyberText";
 import { useThemeEffects } from "@/hooks/useThemeEffects";
 import { EffectRenderer } from "@/components/theme/effects/EffectRenderer";
-import { FeaturesSection } from "@/app/components/landing/FeaturesSection";
-import { BuildShowcase } from "@/app/components/landing/BuildShowcase";
-import { useSiteTheme } from "@/app/components/theme/SiteThemeProvider";
+import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { BuildShowcase } from "@/components/landing/BuildShowcase";
+import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
 import { cn } from "@/lib/utils";
 import { useThemeEffect } from "@/components/theme/effects/ThemeEffectProvider";
 

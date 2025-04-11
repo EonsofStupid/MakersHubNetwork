@@ -1,7 +1,22 @@
 
 /**
- * Re-export types from the central auth types
- * This ensures consistency across the codebase
+ * auth/types/auth.types.ts
+ * 
+ * Core authentication type definitions
  */
 
-export * from '@/types/auth.types';
+import { User, Session } from '@supabase/supabase-js';
+
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+
+export interface AuthUser extends User {
+  // Any additional properties needed for the user object
+}
+
+export interface AuthSession extends Session {
+  // Any additional properties needed for the session object  
+}
+
+// Re-export UserRole type for backward compatibility
+export type { UserRole } from '@/types/shared';
+

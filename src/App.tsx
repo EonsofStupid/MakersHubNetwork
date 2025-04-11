@@ -5,49 +5,35 @@ import { Toaster } from "@/components/ui/toaster";
 import { LoggingProvider } from "@/logging/context/LoggingContext";
 import { ThemeInitializer } from "@/components/theme/ThemeInitializer";
 import { useEffect, useRef } from "react";
-import { initializeAuthBridge } from "@/bridges";
-import { initializeLoggingBridge } from "@/bridges";
-import { initializeChatBridge } from "@/bridges";
+import { initializeAuthBridge } from "@/auth/bridge";
+import { initializeLoggingBridge } from "@/logging/bridge";
 import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging';
-import { AppInitializer } from "@/app/components/AppInitializer";
+import { AppInitializer } from "@/components/AppInitializer";
 import { AuthProvider } from "@/auth/components/AuthProvider";
 import { DebugOverlay } from '@/admin/components/debug/DebugOverlay';
 import { ComponentInspector } from '@/admin/components/debug/ComponentInspector';
-import { initializeAdminModule } from "@/admin/ModuleRegistry";
-import { messageBus } from '@/core/MessageBus';
 
-// Import app module
-import App from "./app/App";
-
-// Import admin module
+// Import pages
+import Index from "./pages/Index";
 import Admin from "./pages/Admin";
-
-// Import auth pages
 import Login from "./pages/Login";
+
+// Import UI components
+import { MainNav } from "@/components/MainNav";
+import { Footer } from "@/components/Footer";
 
 // Import styles
 import "./App.css";
 import "@/theme/site-theme.css";
-import "@/app/components/MainNav/styles/cyber-effects.css";
+import "@/components/MainNav/styles/cyber-effects.css";
 import "@/logging/styles/logging.css";
 import "@/admin/styles/cyber-effects.css";
 
-function RootApp() {
+function App() {
   const location = useLocation();
   const bridgesInitializedRef = useRef<boolean>(false);
   const logger = getLogger();
-
-  // Enable debug mode in development
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      messageBus.setDebugMode(true);
-      logger.info('MessageBus debug mode enabled', {
-        category: LogCategory.SYSTEM,
-        source: 'App'
-      });
-    }
-  }, [logger]);
 
   // Initialize bridges only once on app mount
   useEffect(() => {
@@ -68,27 +54,11 @@ function RootApp() {
       // Initialize logging bridge first
       initializeLoggingBridge();
       
-      // Initialize chat bridge
-      initializeChatBridge();
-      
       // Initialize auth bridge with slight delay
       // This prevents timing issues with other initializations
       setTimeout(() => {
         try {
           initializeAuthBridge();
-          
-          // Initialize admin module after auth is ready
-          setTimeout(() => {
-            try {
-              initializeAdminModule();
-            } catch (error) {
-              logger.error('Admin module initialization error', {
-                category: LogCategory.SYSTEM,
-                source: 'App',
-                details: { error }
-              });
-            }
-          }, 100);
         } catch (error) {
           logger.error('Auth bridge initialization error', {
             category: LogCategory.SYSTEM,
@@ -112,17 +82,16 @@ function RootApp() {
         <ThemeInitializer defaultTheme="Impulsivity">
           <AuthProvider>
             <AppInitializer>
-              <Routes>
-                {/* App module routes */}
-                <Route path="/*" element={<App />} />
-                
-                {/* Auth routes */}
-                <Route path="/login" element={<Login />} />
-                
-                {/* Admin module routes */}
-                <Route path="/admin/*" element={<Admin />} />
-              </Routes>
-              
+              {/* MainNav is now always visible with all animations restored */}
+              <MainNav />
+              <div className="pt-16">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/admin/*" element={<Admin />} />
+                </Routes>
+              </div>
+              <Footer />
               <Toaster />
               
               {/* Add debug overlay and component inspector */}
@@ -136,5 +105,4 @@ function RootApp() {
   );
 }
 
-export default RootApp;
-
+export default App;
