@@ -1,63 +1,25 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/ui/core/dialog';
-import { ProfileEditor } from '@/admin/components/profile/ProfileEditor';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/auth/hooks/useAuth';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging/types';
-import { UserProfile } from '@/types/user';
+import { User } from "@/types";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/ui/core/dialog";
+import { ProfileEditor } from "./ProfileEditor";
 
 interface ProfileDialogProps {
+  user: User;
   open: boolean;
   onClose: () => void;
 }
 
-export function ProfileDialog({ open, onClose }: ProfileDialogProps) {
-  const { user, profile } = useAuth();
-  const { toast } = useToast();
-  const logger = useLogger('ProfileDialog', LogCategory.UI);
-  
-  const handleSave = async (updatedProfile: Partial<UserProfile>) => {
-    try {
-      logger.info('Saving profile', { 
-        details: { updatedProfile } 
-      });
-      
-      // In a real implementation, you would save to the database here
-      
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile changes have been saved.',
-        variant: 'default',
-      });
-      
-      onClose();
-    } catch (error) {
-      logger.error('Failed to save profile', { 
-        details: { error }
-      });
-      
-      toast({
-        title: 'Error saving profile',
-        description: 'Your profile changes could not be saved.',
-        variant: 'destructive',
-      });
-    }
-  };
-  
+export function ProfileDialog({ user, open, onClose }: ProfileDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={isOpen => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
+          <DialogDescription>
+            Make changes to your profile here.
+          </DialogDescription>
         </DialogHeader>
-        
-        <ProfileEditor 
-          profile={profile as UserProfile} 
-          onSave={handleSave}
-          onCancel={onClose}
-        />
+        <ProfileEditor user={user} onSave={onClose} onCancel={onClose} />
       </DialogContent>
     </Dialog>
   );

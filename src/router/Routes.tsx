@@ -1,7 +1,7 @@
 
 import { BrowserRouter as Router, Routes as RouterRoutes, Route } from "react-router-dom"
 import { lazy, Suspense } from "react"
-import { MainLayout } from "@/layouts/MainLayout"
+import { MainLayout } from "@/ui/layouts/MainLayout"
 
 const Index = lazy(() => import("@/pages/Index"))
 const NotFound = lazy(() => import("@/pages/NotFound"))
