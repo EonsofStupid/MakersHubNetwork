@@ -1,11 +1,11 @@
 
 import { useEffect, useState, useRef } from 'react';
-import { useImpulsivityTheme } from '@/hooks/useImpulsivityTheme';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { useImpulsivityTheme } from '@/shared/hooks/useImpulsivityTheme';
+import { useLogger } from '@/shared/hooks/use-logger';
+import { LogCategory } from '@/shared/types/logging';
 import { Loader } from 'lucide-react';
-import { useThemeStore } from '@/stores/theme/store';
-import { ThemeLogDetails } from '@/types/theme';
+import { useThemeStore } from '@/shared/stores/theme/store';
+import { ThemeLogDetails } from '@/shared/types/theme';
 
 interface ImpulsivityInitProps {
   autoApply?: boolean;

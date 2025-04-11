@@ -1,7 +1,7 @@
 
 import React, { useMemo, memo } from 'react';
-import { ThemeEffect } from '@/theme/types/effects';
-import { cn } from '@/lib/utils';
+import { ThemeEffect } from '@/shared/types/theme';
+import { cn } from '@/shared/lib/utils';
 
 interface EffectRendererProps {
   effect?: ThemeEffect;

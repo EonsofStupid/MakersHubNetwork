@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/shared/ui/core/button";
-import { UserMenu } from "@/ui/auth/UserMenu";
+import { UserMenu } from "@/app/components/auth/UserMenu";
 import { useAuth } from "@/auth/hooks/useAuth";
 
 export function MainNav() {

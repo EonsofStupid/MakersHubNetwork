@@ -1,12 +1,12 @@
 
 import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 import { useState, useEffect } from "react";
-import { Button } from '@/ui/core/button';
-import { Dialog, DialogContent, DialogTrigger } from '@/ui/core/dialog';
-import { ThemeInfoPopup } from "@/components/theme/ThemeInfoPopup";
+import { Button } from '@/shared/ui/core/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/shared/ui/core/dialog';
+import { ThemeInfoPopup } from "@/shared/ui/theme/info/ThemeInfoPopup";
 import { Terminal } from "lucide-react";
-import { useThemeStore } from "@/stores/theme/store";
+import { useThemeStore } from "@/shared/stores/theme/store";
 
 export function Footer() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -130,14 +130,6 @@ export function Footer() {
               <ul className="space-y-2">
                 <li>
                   <Link 
-                    to="/legal/privacy" 
-                    className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
-                  >
-                    Privacy
-                  </Link>
-                </li>
-                <li>
-                  <Link 
                     to="/legal/terms" 
                     className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
                   >
@@ -146,56 +138,42 @@ export function Footer() {
                 </li>
                 <li>
                   <Link 
-                    to="/legal/licenses" 
+                    to="/legal/privacy" 
                     className="text-muted-foreground hover:text-primary transition-colors mad-scientist-hover"
                   >
-                    Licenses
+                    Privacy
                   </Link>
                 </li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t border-primary/30 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-              <p className="text-sm text-muted-foreground">
-                © 2025 MakersImpulse. All rights reserved.
-              </p>
-
+          <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-border">
+            <p className="text-sm text-muted-foreground mb-4 md:mb-0">
+              &copy; {new Date().getFullYear()} Your Company. All rights reserved.
+            </p>
+            
+            <div className="flex items-center space-x-4">
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="relative group overflow-hidden px-4 py-2 bg-background/20 backdrop-blur-xl border border-primary/30 hover:bg-primary/5 transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-primary/30 focus:outline-none"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 animate-pulse-slow" />
-                    <Terminal className="w-4 h-4 mr-2 text-primary group-hover:animate-pulse relative z-10" />
-                    <span className="text-sm group-hover:text-primary transition-colors relative z-10">Theme Info</span>
-                    <div className="absolute -inset-px bg-gradient-to-r from-primary via-secondary to-primary opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500" />
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <Terminal className="h-4 w-4" />
+                    <span>Debug Console</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent 
-                  className="p-0 bg-transparent border-none"
-                  onOpenAutoFocus={(e) => e.preventDefault()}
-                  onPointerDownOutside={(e) => e.preventDefault()}
-                >
-                  <ThemeInfoPopup onClose={() => setIsDialogOpen(false)} />
+                <DialogContent className="sm:max-w-md">
+                  <div className="bg-black text-green-400 p-4 font-mono text-sm h-[300px] overflow-auto">
+                    {/* Debug console content would go here */}
+                    <p>System initialized</p>
+                    <p>Checking environment...</p>
+                    <p>Environment: production</p>
+                    <p>Loading modules...</p>
+                    <p>All systems operational</p>
+                  </div>
                 </DialogContent>
               </Dialog>
-
-              <p className="text-sm text-muted-foreground">
-                Designed by{" "}
-                <a
-                  href="https://onemanwho.design"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:text-secondary transition-colors duration-300"
-                >
-                  onemanwho Designs
-                </a>
-              </p>
+              
+              <ThemeInfoPopup />
             </div>
           </div>
         </div>
