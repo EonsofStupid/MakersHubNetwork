@@ -1,30 +1,29 @@
 
-import { Maximize2 } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/ui/core/dialog";
-import { ScrollArea } from "@/ui/core/scroll-area";
+import React from "react";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/ui/core/hover-card";
+import { InfoIcon } from "lucide-react";
 
 interface TextWithPopupProps {
   text: string;
-  label: string;
+  label?: string;
 }
 
 export function TextWithPopup({ text, label }: TextWithPopupProps) {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <div className="group relative cursor-pointer">
-          <p className="truncate text-sm text-muted-foreground">
-            {label}: {text}
-          </p>
-          <Maximize2 className="w-4 h-4 absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
-        </div>
-      </DialogTrigger>
-      <DialogContent className="bg-background/95 backdrop-blur-xl border border-primary/20">
-        <ScrollArea className="h-[300px] w-full p-4">
-          <h4 className="font-medium mb-2">{label}</h4>
-          <pre className="whitespace-pre-wrap break-words text-sm">{text}</pre>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+    <div className="flex items-center gap-1">
+      {label && <span className="text-sm text-muted-foreground">{label}:</span>}
+      <span className="text-sm truncate max-w-[200px]">{text}</span>
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <InfoIcon className="h-3 w-3 cursor-help text-muted-foreground hover:text-foreground" />
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80">
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold">{label || "Details"}</h4>
+            <p className="text-sm break-all">{text}</p>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+    </div>
   );
 }
