@@ -1,5 +1,3 @@
 
-import { authBridge } from '@/bridges/AuthBridge';
-
-// Re-export the auth bridge for use within the auth module
-export { authBridge };
+// Re-export bridge implementation from central bridge location
+export * from "@/bridges/AuthBridge";

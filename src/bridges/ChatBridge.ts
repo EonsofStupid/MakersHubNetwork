@@ -1,18 +1,6 @@
 
-/**
- * ChatBridge - Core chat communication bridge
- * Provides a central point for chat events and operations
- */
-
-// Define types
-export type ChatEventType = 
-  | 'message'
-  | 'session-created'
-  | 'typing'
-  | 'read'
-  | 'user-joined'
-  | 'user-left'
-  | 'error';
+import { User } from "@/shared/types";
+import { authBridge } from "./AuthBridge";
 
 export interface ChatMessage {
   id: string;
@@ -22,93 +10,134 @@ export interface ChatMessage {
     name: string;
     avatar?: string;
   };
-  timestamp: string;
-  type: ChatMessageType;
+  timestamp: Date;
 }
 
-export type ChatMessageType = 'text' | 'image' | 'file' | 'system';
-
-export interface ChatEvent {
-  type: ChatEventType;
-  sessionId?: string;
-  message?: ChatMessage;
-  userId?: string;
-  mode?: 'normal' | 'dev' | 'admin';
-  timestamp?: string;
-  error?: string;
+export interface ChatSession {
+  id: string;
+  messages: ChatMessage[];
+  participants: {
+    id: string;
+    name: string;
+    avatar?: string;
+  }[];
+  status: 'active' | 'archived' | 'pending';
 }
 
-export interface ChatSessionOptions {
-  mode: 'normal' | 'dev' | 'admin';
-  userId?: string;
+export interface ChatBridgeClass {
+  getActiveSessions: () => ChatSession[];
+  sendMessage: (sessionId: string, content: string) => Promise<ChatMessage>;
+  createSession: (participants: string[]) => Promise<ChatSession>;
+  archiveSession: (sessionId: string) => Promise<boolean>;
+  subscribeToMessages: (sessionId: string, callback: (message: ChatMessage) => void) => () => void;
 }
 
-// Define the ChatBridge class
-class ChatBridgeClass {
-  private eventHandlers: Map<string, Set<(event: ChatEvent) => void>> = new Map();
-  
-  // Subscribe to a channel
-  subscribe(channel: string, handler: (event: ChatEvent) => void): () => void {
-    if (!this.eventHandlers.has(channel)) {
-      this.eventHandlers.set(channel, new Set());
+class ChatBridgeImplementation implements ChatBridgeClass {
+  private sessions: ChatSession[] = [];
+  private messageListeners: Record<string, ((message: ChatMessage) => void)[]> = {};
+
+  constructor() {
+    // Initialize with empty sessions
+    this.sessions = [];
+  }
+
+  getActiveSessions() {
+    return this.sessions.filter(session => session.status === 'active');
+  }
+
+  async sendMessage(sessionId: string, content: string): Promise<ChatMessage> {
+    const user = authBridge.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to send messages');
     }
     
-    const handlers = this.eventHandlers.get(channel)!;
-    handlers.add(handler);
+    const session = this.sessions.find(s => s.id === sessionId);
+    if (!session) {
+      throw new Error(`Session ${sessionId} not found`);
+    }
+
+    const message: ChatMessage = {
+      id: Math.random().toString(36).substring(7),
+      content,
+      sender: {
+        id: user.id,
+        name: user.displayName || 'Unknown User',
+        avatar: user.avatarUrl
+      },
+      timestamp: new Date()
+    };
+
+    session.messages.push(message);
+    
+    // Notify listeners
+    if (this.messageListeners[sessionId]) {
+      this.messageListeners[sessionId].forEach(listener => listener(message));
+    }
+    
+    return message;
+  }
+
+  async createSession(participantIds: string[]): Promise<ChatSession> {
+    const user = authBridge.getUser();
+    if (!user) {
+      throw new Error('User must be authenticated to create sessions');
+    }
+
+    // Generate a simple session
+    const session: ChatSession = {
+      id: Math.random().toString(36).substring(7),
+      messages: [],
+      participants: [
+        {
+          id: user.id,
+          name: user.displayName || 'Unknown User',
+          avatar: user.avatarUrl
+        },
+        // Mock additional participants
+        ...participantIds.map(id => ({
+          id,
+          name: `User ${id}`,
+        }))
+      ],
+      status: 'active'
+    };
+
+    this.sessions.push(session);
+    return session;
+  }
+
+  async archiveSession(sessionId: string): Promise<boolean> {
+    const session = this.sessions.find(s => s.id === sessionId);
+    if (!session) {
+      return false;
+    }
+    
+    session.status = 'archived';
+    return true;
+  }
+
+  subscribeToMessages(sessionId: string, callback: (message: ChatMessage) => void): () => void {
+    if (!this.messageListeners[sessionId]) {
+      this.messageListeners[sessionId] = [];
+    }
+    
+    this.messageListeners[sessionId].push(callback);
     
     // Return unsubscribe function
     return () => {
-      handlers.delete(handler);
-      if (handlers.size === 0) {
-        this.eventHandlers.delete(channel);
+      if (this.messageListeners[sessionId]) {
+        this.messageListeners[sessionId] = this.messageListeners[sessionId].filter(
+          listener => listener !== callback
+        );
       }
     };
   }
-  
-  // Publish to a channel
-  publish(channel: string, event: ChatEvent): void {
-    const handlers = this.eventHandlers.get(channel);
-    if (handlers) {
-      handlers.forEach(handler => handler(event));
-    }
-  }
-  
-  // Send a message to a chat session
-  sendMessage(sessionId: string, message: Omit<ChatMessage, 'id' | 'timestamp'>): string {
-    const id = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    const timestamp = new Date().toISOString();
-    
-    const fullMessage: ChatMessage = {
-      ...message,
-      id,
-      timestamp
-    };
-    
-    this.publish(sessionId, {
-      type: 'message',
-      sessionId,
-      message: fullMessage,
-      timestamp
-    });
-    
-    return id;
-  }
-  
-  // Create a new chat session
-  createSession(options: ChatSessionOptions): string {
-    const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-    
-    this.publish('system', {
-      type: 'session-created',
-      sessionId,
-      userId: options.userId,
-      mode: options.mode,
-      timestamp: new Date().toISOString()
-    });
-    
-    return sessionId;
-  }
 }
 
-// Create and export a singleton instance
-export const chatBridge = new ChatBridgeClass();
+// Export a singleton instance
+export const chatBridge = new ChatBridgeImplementation();
+
+// For backwards compatibility
+export const chatBridgeImpl = chatBridge;
+export const ChatBridge = chatBridge;
