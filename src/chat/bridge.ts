@@ -36,7 +36,7 @@ export function createChatSession(userId?: string, mode: 'normal' | 'dev' | 'adm
   
   // Use userId from AuthBridge if not provided
   const effectiveUserId = userId || (AuthBridge.isAuthenticated() ? 
-    AuthBridge.currentUser?.id : undefined);
+    AuthBridge.getUserId() : undefined);
   
   logger.debug('Creating new chat session', {
     category: LogCategory.CHAT,

@@ -3,125 +3,94 @@
  * MessageBus.ts
  * 
  * Core message bus implementation for inter-module communication
- * Provides a central pub/sub mechanism for the entire application
+ * This provides isolation between modules while allowing controlled communication.
  */
 
-export type MessageHandler = (message: any) => void;
-export type MessageChannel = string;
-export type UnsubscribeFn = () => void;
+type MessageHandler = (message: any) => void;
 
-/**
- * MessageBus singleton
- * Facilitates communication between isolated modules
- */
+interface Subscription {
+  id: string;
+  handler: MessageHandler;
+  channel: string;
+}
+
+interface ModuleInterface {
+  publish: (channel: string, message: any) => void;
+  subscribe: (channel: string, handler: MessageHandler) => () => void;
+  unsubscribe: (id: string) => void;
+}
+
 class MessageBus {
-  private handlers: Map<MessageChannel, Set<MessageHandler>>;
-  private channelPrefixes: Map<string, string>;
-  
-  constructor() {
-    this.handlers = new Map();
-    this.channelPrefixes = new Map();
-  }
-  
-  /**
-   * Register a module prefix to namespace its channels
-   */
-  registerPrefix(module: string, prefix: string): void {
-    this.channelPrefixes.set(module, prefix);
-  }
-  
-  /**
-   * Get full channel name with prefix
-   */
-  private getChannelName(module: string, channel: string): string {
-    const prefix = this.channelPrefixes.get(module) || module;
-    return `${prefix}:${channel}`;
-  }
-  
-  /**
-   * Subscribe to messages on a specific channel
-   */
-  subscribe(module: string, channel: string, handler: MessageHandler): UnsubscribeFn {
-    const fullChannel = this.getChannelName(module, channel);
-    
-    if (!this.handlers.has(fullChannel)) {
-      this.handlers.set(fullChannel, new Set());
+  private subscriptions: Record<string, Subscription[]> = {};
+  private moduleInterfaces: Record<string, ModuleInterface> = {};
+
+  // Create a module-specific interface to the message bus
+  public createInterface(moduleName: string): ModuleInterface {
+    if (this.moduleInterfaces[moduleName]) {
+      console.warn(`Module interface ${moduleName} already exists, returning existing interface`);
+      return this.moduleInterfaces[moduleName];
     }
-    
-    this.handlers.get(fullChannel)!.add(handler);
-    
-    return () => {
-      const handlers = this.handlers.get(fullChannel);
-      if (handlers) {
-        handlers.delete(handler);
-        if (handlers.size === 0) {
-          this.handlers.delete(fullChannel);
-        }
+
+    const moduleInterface: ModuleInterface = {
+      publish: (channel: string, message: any) => {
+        this.publish(`${moduleName}:${channel}`, message);
+      },
+      subscribe: (channel: string, handler: MessageHandler) => {
+        return this.subscribe(`${moduleName}:${channel}`, handler);
+      },
+      unsubscribe: (id: string) => {
+        this.unsubscribe(id);
       }
     };
+
+    this.moduleInterfaces[moduleName] = moduleInterface;
+    return moduleInterface;
   }
-  
-  /**
-   * Publish a message to a channel
-   */
-  publish(module: string, channel: string, message: any): void {
-    const fullChannel = this.getChannelName(module, channel);
-    
-    const handlers = this.handlers.get(fullChannel);
-    if (handlers) {
-      handlers.forEach(handler => {
-        try {
-          handler(message);
-        } catch (error) {
-          console.error(`Error in message handler for channel ${fullChannel}:`, error);
-        }
-      });
+
+  // Main message bus methods
+  public publish(channel: string, message: any): void {
+    if (!this.subscriptions[channel]) {
+      return;
+    }
+
+    for (const subscription of this.subscriptions[channel]) {
+      try {
+        subscription.handler(message);
+      } catch (error) {
+        console.error(`Error in message handler for channel ${channel}:`, error);
+      }
     }
   }
-  
-  /**
-   * Clear all handlers for a module
-   */
-  clearModule(module: string): void {
-    const prefix = this.channelPrefixes.get(module) || module;
-    
-    this.handlers.forEach((_, channel) => {
-      if (channel.startsWith(`${prefix}:`)) {
-        this.handlers.delete(channel);
-      }
-    });
+
+  public subscribe(channel: string, handler: MessageHandler): () => void {
+    if (!this.subscriptions[channel]) {
+      this.subscriptions[channel] = [];
+    }
+
+    const id = this.generateId();
+    const subscription: Subscription = { id, handler, channel };
+    this.subscriptions[channel].push(subscription);
+
+    return () => this.unsubscribe(id);
+  }
+
+  public unsubscribe(id: string): void {
+    for (const channel in this.subscriptions) {
+      this.subscriptions[channel] = this.subscriptions[channel].filter(
+        (subscription) => subscription.id !== id
+      );
+    }
+  }
+
+  private generateId(): string {
+    return Math.random().toString(36).substring(2, 15);
   }
 }
 
-/**
- * Export singleton instance of MessageBus
- */
+// Create a singleton instance
 export const messageBus = new MessageBus();
 
-/**
- * Create a module-specific bridge
- * @param module Module name
- * @returns Module bridge
- */
-export function createModuleBridge(module: string) {
-  return {
-    /**
-     * Subscribe to messages on a channel
-     * @param channel Channel to subscribe to
-     * @param handler Message handler
-     * @returns Unsubscribe function
-     */
-    subscribe(channel: string, handler: MessageHandler): UnsubscribeFn {
-      return messageBus.subscribe(module, channel, handler);
-    },
-    
-    /**
-     * Publish a message to a channel
-     * @param channel Channel to publish to
-     * @param message Message to publish
-     */
-    publish(channel: string, message: any): void {
-      messageBus.publish(module, channel, message);
-    }
-  };
+// Helper to create a module bridge
+export function createModuleBridge(moduleName: string): ModuleInterface {
+  return messageBus.createInterface(moduleName);
 }

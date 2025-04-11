@@ -11,7 +11,9 @@ export const importPathMappings: Record<string, string> = {
   '@/layouts/': '@/ui/layouts/',
   '@/hooks/': '@/ui/hooks/',
   '@/components/KeyboardNavigation/types/': '@/ui/keyboard/types/',
-  '@/auth/hooks/useUser': '@/auth/hooks/useAuth'
+  '@/auth/hooks/useUser': '@/auth/hooks/useAuth',
+  '@/hooks/use-toast': '@/ui/hooks/use-toast',
+  '@/components/ui/use-toast': '@/ui/hooks/use-toast'
 };
 
 /**
