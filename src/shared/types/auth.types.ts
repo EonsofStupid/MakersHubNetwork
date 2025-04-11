@@ -1,41 +1,36 @@
 
-import { User, UserProfile, UserRole } from './user';
+// Define auth-specific types
+import { User, UserMetadata, UserAppMetadata, UserProfile, UserRole, AuthStatus, Permission } from "./shared.types";
 
-// Auth related types for interfaces across the application
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
+export type { User, UserMetadata, UserAppMetadata, UserProfile, UserRole, AuthStatus, Permission };
 
-// Re-export User, UserProfile, UserRole for convenience
-export { User, UserProfile, UserRole };
+// Auth event types
+export type AuthEventType = 
+  | 'AUTH_SIGNED_IN'
+  | 'AUTH_SIGNED_OUT'
+  | 'AUTH_STATE_CHANGED'
+  | 'AUTH_PROFILE_UPDATED'
+  | 'AUTH_SESSION_REFRESHED'
+  | 'AUTH_USER_UPDATED'
+  | 'AUTH_LINKING_REQUIRED'
+  | 'AUTH_ERROR';
 
-// Auth event type
 export interface AuthEvent {
   type: AuthEventType;
   payload?: any;
 }
 
-// Auth event types
-export type AuthEventType = 
-  | 'SIGNED_IN'
-  | 'SIGNED_OUT'
-  | 'USER_UPDATED'
-  | 'PASSWORD_RECOVERY'
-  | 'PROFILE_FETCHED';
+export type AuthEventHandler = (event: AuthEvent) => void;
 
-// User metadata
-export interface UserMetadata {
-  name?: string;
-  full_name?: string;
-  avatar_url?: string;
-  [key: string]: any;
-}
+export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 
-// User app metadata
-export interface UserAppMetadata {
-  roles?: string[];
-  [key: string]: any;
+export interface AuthState {
+  user: User | null;
+  profile: UserProfile | null;
+  status: {
+    isAuthenticated: boolean;
+    isLoading: boolean;
+  };
+  roles: UserRole[];
+  permissions: Permission[];
 }
