@@ -1,6 +1,6 @@
 
 // Simple script to run the import migration
-const { runMigration } = require('./scripts/migrate-imports.ts');
+const { runMigration } = require('./scripts/migrate-imports');
 
 console.log('Starting import migration...');
 runMigration()

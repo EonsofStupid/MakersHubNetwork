@@ -1,113 +1,104 @@
 
-import { useState, useEffect } from 'react';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { ChatBridge } from '@/bridges/ChatBridge';
-import { useLogger } from '@/ui/hooks/useLogger';
-import { LogCategory } from '@/logging';
-import { v4 as uuidv4 } from 'uuid';
-import { ChatMessage } from '@/types/shared.types';
-import { CircuitBreaker } from '@/utils/CircuitBreaker';
+import { useState, useEffect, useCallback } from 'react';
+import { chatBridge } from '@/bridges/ChatBridge';
+import { ChatMessage, ChatSession } from '@/bridges/ChatBridge';
+import { useLogger } from '@/shared/hooks/use-logger';
+import { LogCategory } from '@/logging/types';
 
-interface UseChatSessionProps {
-  sessionId?: string;
-  mode?: 'normal' | 'dev' | 'admin';
+interface UseChatSessionOptions {
+  autoLoad?: boolean;
 }
 
-export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }: UseChatSessionProps = {}) {
+export function useChatSession(sessionId: string, options: UseChatSessionOptions = {}) {
+  const { autoLoad = true } = options;
+  
+  const [session, setSession] = useState<ChatSession | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [sessionId, setSessionId] = useState<string>(externalSessionId || '');
-  const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuthState();
-  const logger = useLogger('useChatSession', LogCategory.CHAT);
-  const chatBreaker = new CircuitBreaker('useChatSession', 5, 1000);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
   
-  useEffect(() => {
-    // Prevent potential infinite loops with circuit breaker
-    if (chatBreaker.count('init') > 3) {
-      logger.warn('Breaking potential infinite loop in useChatSession initialization');
-      return;
-    }
-    
-    if (externalSessionId) {
-      setSessionId(externalSessionId);
-    } else if (!sessionId) {
-      // Generate new session ID if none provided
-      const newSessionId = ChatBridge.createSession({
-        userId: user?.id,
-        mode,
-        metadata: { source: 'useChatSession' }
-      });
-      
-      setSessionId(newSessionId);
-      
-      logger.info('Created new chat session', {
-        details: { sessionId: newSessionId, mode }
-      });
-    }
-  }, [externalSessionId, sessionId, user?.id, logger, mode]);
+  const logger = useLogger(`ChatSession:${sessionId}`, LogCategory.CHAT);
   
+  // Load session data
+  const loadSession = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      logger.info('Loading chat session', { sessionId });
+      
+      // Load session details
+      const sessionData = await chatBridge.getSession(sessionId);
+      setSession(sessionData);
+      
+      // Load messages
+      const messageData = await chatBridge.getMessages(sessionId);
+      setMessages(messageData);
+      
+      logger.info('Chat session loaded', { 
+        sessionId,
+        messageCount: messageData.length 
+      });
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to load chat session');
+      logger.error('Error loading chat session', { error: error.message });
+      setError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [sessionId, logger]);
+  
+  // Subscribe to new messages
   useEffect(() => {
     if (!sessionId) return;
     
-    // Subscribe to session events via the bridge
-    const unsubscribe = ChatBridge.subscribeToSession(sessionId, (event) => {
-      if (event.type === 'new-message' && event.message) {
-        setMessages(prev => [...prev, event.message as ChatMessage]);
-      }
+    logger.debug('Subscribing to chat session', { sessionId });
+    
+    const unsubscribe = chatBridge.subscribeToSession(sessionId, (newMessage) => {
+      setMessages(prev => [...prev, newMessage]);
+      logger.debug('New message received', { messageId: newMessage.id });
     });
     
     return () => {
+      logger.debug('Unsubscribing from chat session', { sessionId });
       unsubscribe();
     };
-  }, [sessionId]);
+  }, [sessionId, logger]);
   
-  const sendMessage = async (content: string, metadata: Record<string, any> = {}) => {
-    if (!sessionId || !content.trim() || isLoading) return;
-    
-    try {
-      setIsLoading(true);
-      
-      const userMessage: ChatMessage = {
-        id: `user-${Date.now()}`,
-        content,
-        sender: 'user',
-        timestamp: new Date(),
-        sessionId,
-        metadata
-      };
-      
-      setMessages(prev => [...prev, userMessage]);
-      
-      // Use the bridge to send the message
-      ChatBridge.sendMessage(sessionId, content, metadata);
-      
-      // Simulate assistant response for now
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: `assistant-${Date.now()}`,
-          content: `This is a response to: "${content}"`,
-          sender: 'assistant',
-          timestamp: new Date(),
-          sessionId,
-          metadata: {}
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-        setIsLoading(false);
-      }, 1000);
-      
-    } catch (error) {
-      logger.error('Error sending message', { 
-        details: { error: error instanceof Error ? error.message : String(error) }
-      });
-      setIsLoading(false);
+  // Auto-load session data
+  useEffect(() => {
+    if (autoLoad && sessionId) {
+      loadSession();
     }
-  };
+  }, [autoLoad, sessionId, loadSession]);
+  
+  // Send a new message
+  const sendMessage = useCallback(async (content: string, metadata?: Record<string, any>) => {
+    try {
+      if (!sessionId) {
+        throw new Error('Cannot send message: No active session');
+      }
+      
+      logger.debug('Sending message', { sessionId, contentLength: content.length });
+      const message = await chatBridge.sendMessage(sessionId, content, metadata);
+      
+      // Optimistically update the messages list
+      setMessages(prev => [...prev, message]);
+      
+      return message;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to send message');
+      logger.error('Error sending message', { error: error.message });
+      throw error;
+    }
+  }, [sessionId, logger]);
   
   return {
+    session,
     messages,
-    sendMessage,
     isLoading,
-    sessionId
+    error,
+    sendMessage,
+    refreshSession: loadSession
   };
 }

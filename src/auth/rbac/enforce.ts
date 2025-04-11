@@ -1,50 +1,45 @@
 
-import { PermissionValue, PERMISSIONS } from "../permissions";
-import { UserRole } from "@/types/shared";
-import { mapRolesToPermissions } from "./roles";
+import { Permission, UserRole } from '@/shared/types/auth.types';
+import { getPermissionsForRole } from './roles';
 
 /**
- * Check if a user has the required permission based on their roles
- * @param userRoles Array of user roles
- * @param permission Permission to check
- * @returns Boolean indicating if the user has the permission
+ * Check if a user with the given roles has the required permission
+ * 
+ * @param userRoles - The roles assigned to the user
+ * @param requiredPermission - The permission to check for
+ * @returns boolean - Whether the user has the permission
  */
-export const hasPermission = (
-  userRoles: UserRole[] = [],
-  permission: PermissionValue
-): boolean => {
-  const permissions = mapRolesToPermissions(userRoles);
+export function checkPermission(userRoles: UserRole[], requiredPermission: Permission): boolean {
+  // Get all permissions for the user's roles
+  const userPermissions = getPermissionsForRole(userRoles);
   
-  // Super admin permission grants access to everything
-  if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) {
+  // Admin super permission grants access to everything
+  if (userPermissions.includes('admin:super')) {
     return true;
   }
   
-  // Check for specific permission
-  return permissions.includes(permission);
-};
+  // Check if the required permission exists in the user's permissions
+  return userPermissions.includes(requiredPermission as Permission);
+}
 
 /**
- * Higher-order function to create a permission checker with preset roles
- * @param userRoles Array of user roles
- * @returns A function that checks if the user has a specific permission
+ * Check if a user with the given roles has all of the required permissions
+ * 
+ * @param userRoles - The roles assigned to the user
+ * @param requiredPermissions - The permissions to check for
+ * @returns boolean - Whether the user has all the permissions
  */
-export const createPermissionChecker = (userRoles: UserRole[] = []) => {
-  return (permission: PermissionValue): boolean => {
-    return hasPermission(userRoles, permission);
-  };
-};
+export function checkAllPermissions(userRoles: UserRole[], requiredPermissions: Permission[]): boolean {
+  return requiredPermissions.every(permission => checkPermission(userRoles, permission));
+}
 
 /**
- * Check if user has admin access
+ * Check if a user with the given roles has any of the required permissions
+ * 
+ * @param userRoles - The roles assigned to the user
+ * @param requiredPermissions - The permissions to check for
+ * @returns boolean - Whether the user has any of the permissions
  */
-export const canAccessAdmin = (userRoles: UserRole[] = []): boolean => {
-  return userRoles.includes('admin') || userRoles.includes('super_admin');
-};
-
-/**
- * Check if user can use development features
- */
-export const canAccessDevFeatures = (userRoles: UserRole[] = []): boolean => {
-  return userRoles.includes('admin') || userRoles.includes('super_admin');
-};
+export function checkAnyPermission(userRoles: UserRole[], requiredPermissions: Permission[]): boolean {
+  return requiredPermissions.some(permission => checkPermission(userRoles, permission));
+}

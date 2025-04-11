@@ -1,91 +1,98 @@
 
-import { subscribeToAuthEvents } from '@/auth/bridge';
-import { getLogger } from '@/logging';
 import { LogCategory } from '@/logging/types';
-import { createModuleBridge } from '@/core/MessageBus';
+import { Permission, UserRole } from '@/shared/types/auth.types';
 
-// Create admin module bridge
-export const adminBridge = createModuleBridge('admin');
-
-// Module state type
-interface ModuleState {
-  initialized: boolean;
-  eventHandlersRegistered: boolean;
+// Module registration interface
+interface Module {
+  id: string;
+  name: string;
+  description: string;
+  path: string;
+  icon: string;
+  requiredRole: UserRole | UserRole[];
+  requiredPermission: Permission[];
+  category: 'core' | 'content' | 'system' | 'users' | 'analytics';
+  enabled: boolean;
+  order: number;
 }
 
-// Initialize module state
-const moduleState: ModuleState = {
-  initialized: false,
-  eventHandlersRegistered: false,
-};
+// Admin modules registry
+class AdminModuleRegistry {
+  private modules: Module[] = [];
+  private logger: any;
 
-/**
- * Initialize the admin module
- */
-export function initializeAdminModule(): void {
-  if (moduleState.initialized) {
-    return;
+  constructor() {
+    // Logger will be initialized later
+    this.logger = console;
   }
 
-  const logger = getLogger();
-  logger.info('Initializing admin module', {
-    category: LogCategory.ADMIN,
-    source: 'ModuleRegistry'
-  });
-
-  // Register event handlers if not already done
-  if (!moduleState.eventHandlersRegistered) {
-    registerEventHandlers();
-    moduleState.eventHandlersRegistered = true;
+  // Initialize with logger
+  init(logger: any) {
+    this.logger = logger;
+    this.logger.info('Admin module registry initialized', {}, LogCategory.ADMIN);
   }
-
-  moduleState.initialized = true;
-}
-
-/**
- * Register event handlers for admin module
- */
-function registerEventHandlers(): void {
-  const logger = getLogger();
   
-  // Subscribe to auth events
-  subscribeToAuthEvents('AUTH_STATE_CHANGE', (event) => {
-    logger.info(`Admin module received auth event: ${event.type}`, {
-      category: LogCategory.ADMIN,
-      source: 'ModuleRegistry',
-      details: { eventType: event.type }
-    });
-
-    // Handle auth events specific to admin functionality
-    switch (event.type) {
-      case 'AUTH_SIGNED_IN':
-        // Handle sign in if needed
-        break;
-      case 'AUTH_SIGNED_OUT':
-        // Handle sign out if needed
-        break;
+  // Register a new module
+  register(module: Module) {
+    // Check if module already exists
+    const existingModuleIndex = this.modules.findIndex(m => m.id === module.id);
+    
+    if (existingModuleIndex >= 0) {
+      // Update existing module
+      this.modules[existingModuleIndex] = { ...this.modules[existingModuleIndex], ...module };
+      this.logger.debug(`Admin module ${module.id} updated`, { module }, LogCategory.ADMIN);
+    } else {
+      // Add new module
+      this.modules.push(module);
+      this.logger.debug(`Admin module ${module.id} registered`, { module }, LogCategory.ADMIN);
     }
-  });
+    
+    // Sort modules by order
+    this.modules.sort((a, b) => a.order - b.order);
+    
+    return this;
+  }
   
-  // Publish admin module initialized event
-  adminBridge.publish('system', {
-    type: 'module-initialized',
-    module: 'admin',
-    timestamp: new Date()
-  });
+  // Get all modules
+  getModules() {
+    return [...this.modules];
+  }
+  
+  // Get modules by category
+  getModulesByCategory(category: Module['category']) {
+    return this.modules.filter(m => m.category === category);
+  }
+  
+  // Get enabled modules
+  getEnabledModules() {
+    return this.modules.filter(m => m.enabled);
+  }
+  
+  // Get a specific module by ID
+  getModule(id: string) {
+    return this.modules.find(m => m.id === id);
+  }
+  
+  // Enable a module
+  enableModule(id: string) {
+    const module = this.getModule(id);
+    if (module) {
+      module.enabled = true;
+      this.logger.debug(`Admin module ${id} enabled`, { module }, LogCategory.ADMIN);
+    }
+    return this;
+  }
+  
+  // Disable a module
+  disableModule(id: string) {
+    const module = this.getModule(id);
+    if (module) {
+      module.enabled = false;
+      this.logger.debug(`Admin module ${id} disabled`, { module }, LogCategory.ADMIN);
+    }
+    return this;
+  }
 }
 
-/**
- * Subscribe to admin events
- */
-export function subscribeToAdminEvents(channel: string, listener: (message: any) => void) {
-  return adminBridge.subscribe(channel, listener);
-}
-
-/**
- * Publish admin event
- */
-export function publishAdminEvent(channel: string, message: any) {
-  return adminBridge.publish(channel, message);
-}
-
+// Create and export the singleton instance
+export const adminModuleRegistry = new AdminModuleRegistry();

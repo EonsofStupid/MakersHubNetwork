@@ -1,11 +1,11 @@
 
 import { Link } from "react-router-dom";
-import { Button } from "@/ui/core/button";
+import { Button } from "@/shared/ui/core/button";
 import { UserMenu } from "@/ui/auth/UserMenu";
 import { useAuth } from "@/auth/hooks/useAuth";
 
 export function MainNav() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, status } = useAuth();
 
   return (
     <div className="flex w-full items-center justify-between">
@@ -26,8 +26,8 @@ export function MainNav() {
         </nav>
       </div>
       <div className="flex items-center gap-2">
-        {isAuthenticated ? (
-          <UserMenu user={user} />
+        {status.isAuthenticated ? (
+          <UserMenu user={user!} />
         ) : (
           <>
             <Button asChild variant="ghost" size="sm">

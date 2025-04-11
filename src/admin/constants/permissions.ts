@@ -1,61 +1,80 @@
 
-import { PERMISSIONS, PermissionValue } from '@/auth/permissions';
-import { ROLE_PERMISSIONS } from '@/auth/rbac/roles';
+import { Permission, UserRole } from '@/shared/types/auth.types';
+import { rolePermissions } from '@/auth/rbac/roles';
 
-// Re-export central permissions as admin-specific types
-export const ADMIN_PERMISSIONS = {
-  // Admin dashboard access
-  ADMIN_ACCESS: PERMISSIONS.ADMIN.ACCESS,
-  ADMIN_VIEW: PERMISSIONS.ADMIN.VIEW,
-  ADMIN_EDIT: PERMISSIONS.ADMIN.EDIT,
-  
-  // User management 
-  USERS_VIEW: PERMISSIONS.USERS.VIEW,
-  USERS_CREATE: PERMISSIONS.USERS.CREATE,
-  USERS_EDIT: PERMISSIONS.USERS.EDIT,
-  USERS_DELETE: PERMISSIONS.USERS.DELETE,
-  
-  // Content management
-  CONTENT_VIEW: PERMISSIONS.CONTENT.VIEW,
-  CONTENT_CREATE: PERMISSIONS.CONTENT.CREATE,
-  CONTENT_EDIT: PERMISSIONS.CONTENT.EDIT,
-  CONTENT_DELETE: PERMISSIONS.CONTENT.DELETE,
-  CONTENT_PUBLISH: PERMISSIONS.CONTENT.PUBLISH,
-  
-  // Build management
-  BUILDS_VIEW: PERMISSIONS.BUILDS_VIEW,
-  BUILDS_CREATE: PERMISSIONS.BUILDS_CREATE,
-  BUILDS_EDIT: PERMISSIONS.BUILDS_EDIT,
-  BUILDS_APPROVE: PERMISSIONS.BUILDS_APPROVE,
-  
-  // Settings management
-  SETTINGS_VIEW: PERMISSIONS.SETTINGS.VIEW,
-  SETTINGS_EDIT: PERMISSIONS.SETTINGS.EDIT,
-  
-  // System management
-  SYSTEM_VIEW: PERMISSIONS.SYSTEM.VIEW,
-  SYSTEM_SETTINGS: PERMISSIONS.SYSTEM.SETTINGS,
-  SYSTEM_LOGS: PERMISSIONS.SYSTEM.LOGS,
-  SYSTEM_RESTART: PERMISSIONS.SYSTEM.RESTART,
-  
-  // Add missing permissions
-  THEMES_VIEW: PERMISSIONS.THEMES_VIEW,
-  THEMES_EDIT: PERMISSIONS.THEMES_EDIT,
-  THEMES_DELETE: PERMISSIONS.THEMES_DELETE,
-  
-  DATA_VIEW: PERMISSIONS.DATA_VIEW,
-  DATA_EDIT: PERMISSIONS.DATA_EDIT,
-  DATA_IMPORT: PERMISSIONS.DATA_IMPORT,
-  DATA_EXPORT: PERMISSIONS.DATA_EXPORT,
-  
-  ANALYTICS_VIEW: PERMISSIONS.ANALYTICS_VIEW,
-  
-  // Super admin
-  SUPER_ADMIN: PERMISSIONS.SUPER_ADMIN
-} as const;
+// Re-export the role permissions from auth
+export { rolePermissions };
 
-// Type for admin permission values
-export type AdminPermissionValue = PermissionValue;
+// Define permission groups for easier management in the UI
+export const PERMISSION_GROUPS = {
+  USERS: [
+    'users:read',
+    'users:write',
+    'users:delete'
+  ] as Permission[],
+  
+  CONTENT: [
+    'content:read',
+    'content:write',
+    'content:delete'
+  ] as Permission[],
+  
+  BUILDS: [
+    'builds:read',
+    'builds:write',
+    'builds:delete',
+    'builds:approve',
+    'builds:reject'
+  ] as Permission[],
+  
+  SETTINGS: [
+    'settings:read',
+    'settings:write'
+  ] as Permission[],
+  
+  ADMIN: [
+    'admin:access',
+    'admin:super'
+  ] as Permission[],
+  
+  THEMES: [
+    'themes:read',
+    'themes:write',
+    'themes:delete'
+  ] as Permission[],
+  
+  LAYOUTS: [
+    'layouts:read',
+    'layouts:write',
+    'layouts:delete'
+  ] as Permission[],
+  
+  CHATS: [
+    'chats:read',
+    'chats:write',
+    'chats:delete',
+    'chats:moderate'
+  ] as Permission[]
+};
 
-// Re-export the role permissions mapping
-export { ROLE_PERMISSIONS } from '@/auth/rbac/roles';
+// Group descriptions for the UI
+export const PERMISSION_GROUP_DESCRIPTIONS = {
+  USERS: 'Manage user accounts and permissions',
+  CONTENT: 'Create, edit, and delete content',
+  BUILDS: 'Manage and approve user builds',
+  SETTINGS: 'Configure system settings',
+  ADMIN: 'Administrative access',
+  THEMES: 'Manage visual themes',
+  LAYOUTS: 'Configure page layouts',
+  CHATS: 'Manage chat features and moderation'
+};
+
+// Role descriptions for the UI
+export const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
+  user: 'Basic user with limited permissions',
+  maker: 'Can create and edit their own content',
+  editor: 'Can edit and manage all content',
+  moderator: 'Can moderate content and user interactions',
+  admin: 'Has access to most admin features',
+  super_admin: 'Has unrestricted access to all features'
+};

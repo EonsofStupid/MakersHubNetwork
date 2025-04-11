@@ -1,30 +1,16 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { MainNav } from '@/app/components/MainNav';
-import { Toaster } from '@/ui/core/toaster';
-import { LoggingProvider } from '@/logging/context/LoggingContext';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { Routes } from '@/app/routes';
+import { Toaster } from '@/shared/ui/core/toaster';
 
-// App-specific pages would be imported here
-import HomePage from './pages/HomePage';
-import FeaturesPage from './pages/FeaturesPage';
-import AboutPage from './pages/AboutPage';
-
-// This ensures App module isolation while using shared services via bridges
-const App: React.FC = () => {
+function App() {
   return (
-    <LoggingProvider>
-      <MainNav />
-      <main className="pt-16">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/features" element={<FeaturesPage />} />
-          <Route path="/about" element={<AboutPage />} />
-        </Routes>
-      </main>
+    <Router>
+      <Routes />
       <Toaster />
-    </LoggingProvider>
+    </Router>
   );
-};
+}
 
 export default App;

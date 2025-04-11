@@ -1,29 +1,30 @@
 
 import React from 'react';
 import { useAuthState } from '@/auth/hooks/useAuthState';
-import { Card } from '@/ui/core/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/ui/core/avatar';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { User } from '@/types/user';
+import { Card } from '@/shared/ui/core/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/core/avatar';
+import { useLogger } from '@/shared/hooks/use-logger';
+import { LogCategory } from '@/shared/types/logging';
+import { User, UserMetadata } from '@/shared/types/auth.types';
 
 export function ProfileDisplay() {
-  const { user, profile, isAuthenticated, isLoading } = useAuthState();
+  const { user, profile, status } = useAuthState();
   const logger = useLogger('ProfileDisplay', LogCategory.UI);
   
   // Cast user to proper type
   const typedUser = user as User | null;
   
   // Display avatar and basic user info
-  const displayName = profile?.display_name || typedUser?.user_metadata?.full_name || typedUser?.email || 'User';
-  const avatarUrl = profile?.avatar_url || typedUser?.user_metadata?.avatar_url as string;
-  const userInitial = (typedUser?.email as string || 'U').charAt(0).toUpperCase();
+  const userMetadata = typedUser?.user_metadata as UserMetadata | undefined;
+  const displayName = profile?.display_name || userMetadata?.full_name || typedUser?.email || 'User';
+  const avatarUrl = profile?.avatar_url || userMetadata?.avatar_url;
+  const userInitial = (typedUser?.email || 'U').charAt(0).toUpperCase();
   
-  if (isLoading) {
+  if (status.isLoading) {
     return <div>Loading profile...</div>;
   }
   
-  if (!isAuthenticated || !user) {
+  if (!status.isAuthenticated || !user) {
     return <div>Please sign in to view your profile</div>;
   }
   

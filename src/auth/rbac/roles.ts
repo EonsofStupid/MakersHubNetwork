@@ -1,61 +1,97 @@
 
 import { Permission, UserRole } from '@/shared/types/auth.types';
 
-// Define permissions for each role
+// Define all the permissions per role
 export const rolePermissions: Record<UserRole, Permission[]> = {
   user: [
-    'read:users',
+    'content:read'
   ],
-  
-  builder: [
-    'read:users',
-    'manage:builds',
-    'manage:content',
+  maker: [
+    'content:read',
+    'content:write',
+    'builds:read',
+    'builds:write'
   ],
-  
+  editor: [
+    'content:read',
+    'content:write',
+    'content:delete',
+    'builds:read'
+  ],
+  moderator: [
+    'content:read',
+    'content:write',
+    'content:delete',
+    'builds:read',
+    'builds:write',
+    'builds:approve',
+    'builds:reject',
+    'chats:read',
+    'chats:moderate'
+  ],
   admin: [
-    'create:users',
-    'read:users',
-    'update:users',
-    'delete:users',
-    'manage:content',
-    'manage:layouts',
-    'manage:settings',
-    'view:admin',
-    'view:analytics',
-    'manage:builds',
+    'users:read',
+    'users:write',
+    'content:read',
+    'content:write',
+    'content:delete',
+    'builds:read',
+    'builds:write',
+    'builds:delete',
+    'builds:approve',
+    'builds:reject',
+    'settings:read',
+    'settings:write',
+    'admin:access',
+    'themes:read',
+    'themes:write',
+    'layouts:read', 
+    'layouts:write',
+    'chats:read',
+    'chats:write',
+    'chats:moderate'
   ],
-  
   super_admin: [
-    'create:users',
-    'read:users',
-    'update:users',
-    'delete:users',
-    'manage:content',
-    'manage:layouts',
-    'manage:settings',
-    'view:admin',
-    'view:analytics',
-    'manage:builds',
-  ],
-
-  content_manager: [
-    'read:users',
-    'manage:content',
-    'view:admin',
-  ],
+    'users:read',
+    'users:write',
+    'users:delete',
+    'content:read',
+    'content:write',
+    'content:delete',
+    'builds:read',
+    'builds:write',
+    'builds:delete',
+    'builds:approve',
+    'builds:reject',
+    'settings:read',
+    'settings:write',
+    'admin:access',
+    'admin:super',
+    'themes:read',
+    'themes:write',
+    'themes:delete',
+    'layouts:read',
+    'layouts:write',
+    'layouts:delete',
+    'chats:read',
+    'chats:write',
+    'chats:delete',
+    'chats:moderate'
+  ]
 };
 
-// Helper function to map roles to permissions
-export const mapRolesToPermissions = (roles: UserRole[] = []): Permission[] => {
-  const permissions: Set<Permission> = new Set();
+// Function to get permissions for a specific role or roles
+export function getPermissionsForRole(role: UserRole | UserRole[]): Permission[] {
+  if (Array.isArray(role)) {
+    // Combine all permissions from all roles and remove duplicates
+    return [...new Set(role.flatMap(r => rolePermissions[r] || []))];
+  }
   
-  // Add permissions for each role
-  roles.forEach(role => {
-    if (rolePermissions[role]) {
-      rolePermissions[role].forEach(permission => permissions.add(permission));
-    }
-  });
+  return rolePermissions[role] || [];
+}
 
-  return Array.from(permissions);
-};
+// Function to check if a role has a specific permission
+export function hasPermission(role: UserRole | UserRole[], permission: Permission): boolean {
+  const permissions = getPermissionsForRole(role);
+  return permissions.includes(permission);
+}
