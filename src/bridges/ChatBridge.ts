@@ -1,150 +1,99 @@
 
-import { ChatBridgeImplementation, ChatMessage, ChatSession, ChatSessionUpdates } from '@/chat/types/bridge.types';
-import { nanoid } from 'nanoid';
+// Define chat event types
+export type ChatEventType = 
+  | 'CHAT_MESSAGE_RECEIVED'
+  | 'CHAT_SESSION_STARTED'
+  | 'CHAT_SESSION_ENDED'
+  | 'CHAT_SESSION_UPDATED'
+  | 'CHAT_TYPING_STARTED'
+  | 'CHAT_TYPING_ENDED';
 
-/**
- * Event listeners for chat events
- */
-const listeners: ((event: any) => void)[] = [];
-
-/**
- * ChatBridge implementation for handling chat functionality
- */
-export const chatBridge: ChatBridgeImplementation = {
-  async createSession(options = {}) {
-    const sessionId = nanoid();
-    
-    const session: ChatSession = {
-      id: sessionId,
-      title: options.title || 'New Chat',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      status: 'active',
-      messages: []
-    };
-    
-    return session;
-  },
-  
-  async getSession(sessionId) {
-    // Mock implementation
-    console.log('[ChatBridge] Get session', sessionId);
-    return {
-      id: sessionId,
-      title: 'Retrieved Chat',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      status: 'active',
-      messages: []
-    };
-  },
-  
-  async listSessions() {
-    // Mock implementation
-    console.log('[ChatBridge] List sessions');
-    return [
-      {
-        id: 'session-1',
-        title: 'Chat 1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        status: 'active',
-        messages: []
-      },
-      {
-        id: 'session-2',
-        title: 'Chat 2',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        status: 'active',
-        messages: []
-      }
-    ];
-  },
-  
-  async sendMessage(sessionId, content, role = 'user') {
-    const messageId = nanoid();
-    const timestamp = new Date();
-    
-    const message: ChatMessage = {
-      id: messageId,
-      sessionId,
-      content,
-      role,
-      timestamp
-    };
-    
-    // Publish message event
-    publishChatEvent({
-      type: 'MESSAGE_SENT',
-      payload: message,
-      sessionId
-    });
-    
-    // Mock AI response
-    setTimeout(() => {
-      const responseId = nanoid();
-      const responseMessage: ChatMessage = {
-        id: responseId,
-        sessionId,
-        content: `Response to: ${content}`,
-        role: 'assistant',
-        timestamp: new Date()
-      };
-      
-      publishChatEvent({
-        type: 'MESSAGE_RECEIVED',
-        payload: responseMessage,
-        sessionId
-      });
-    }, 1000);
-    
-    return message;
-  },
-  
-  async updateSession(sessionId, updates) {
-    // Mock implementation
-    console.log('[ChatBridge] Update session', sessionId, updates);
-    // Create a complete ChatSession object to return
-    return {
-      id: sessionId,
-      title: updates.title || 'Updated Chat',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      status: updates.status || 'active',
-      messages: []
-    };
-  },
-  
-  async deleteSession(sessionId) {
-    // Mock implementation
-    console.log('[ChatBridge] Delete session', sessionId);
-    return true;
-  }
+export type ChatEvent = {
+  type: ChatEventType;
+  payload?: any;
 };
 
-/**
- * Subscribe to chat events
- */
-export function subscribeToChatEvents(listener: (event: any) => void) {
-  listeners.push(listener);
-  return () => {
-    const index = listeners.indexOf(listener);
-    if (index > -1) {
-      listeners.splice(index, 1);
-    }
-  };
+export type ChatEventHandler = (event: ChatEvent) => void;
+
+// Chat bridge interface
+export interface ChatBridgeImplementation {
+  sendMessage: (message: string) => Promise<void>;
+  getHistory: () => any[];
+  clearHistory: () => void;
+  startSession: () => void;
+  endSession: () => void;
+  subscribe: (handler: ChatEventHandler) => () => void;
+  publish: (event: ChatEvent) => void;
 }
 
-/**
- * Publish chat event to subscribers
- */
-export function publishChatEvent(event: any) {
-  listeners.forEach(listener => {
-    try {
-      listener(event);
-    } catch (error) {
-      console.error('[ChatBridge] Error in chat event listener', error);
-    }
-  });
+// Simple implementation
+class ChatBridgeClass implements ChatBridgeImplementation {
+  private history: any[] = [];
+  private eventHandlers: ChatEventHandler[] = [];
+  private sessionActive: boolean = false;
+
+  sendMessage(message: string) {
+    console.log('ChatBridge: sendMessage called', { message });
+    const messageObj = {
+      id: `msg-${Date.now()}`,
+      content: message,
+      timestamp: new Date().toISOString(),
+      sender: 'user'
+    };
+    
+    this.history.push(messageObj);
+    this.publish({
+      type: 'CHAT_MESSAGE_RECEIVED',
+      payload: { message: messageObj }
+    });
+    
+    return Promise.resolve();
+  }
+
+  getHistory() {
+    return this.history;
+  }
+
+  clearHistory() {
+    this.history = [];
+  }
+
+  startSession() {
+    this.sessionActive = true;
+    this.publish({
+      type: 'CHAT_SESSION_STARTED',
+      payload: { timestamp: new Date().toISOString() }
+    });
+  }
+
+  endSession() {
+    this.sessionActive = false;
+    this.publish({
+      type: 'CHAT_SESSION_ENDED',
+      payload: { timestamp: new Date().toISOString() }
+    });
+  }
+
+  subscribe(handler: ChatEventHandler) {
+    this.eventHandlers.push(handler);
+    return () => {
+      this.eventHandlers = this.eventHandlers.filter(h => h !== handler);
+    };
+  }
+
+  publish(event: ChatEvent) {
+    this.eventHandlers.forEach(handler => handler(event));
+  }
 }
+
+// Create singleton instance
+export const chatBridge: ChatBridgeImplementation = new ChatBridgeClass();
+
+// Export event subscription and publishing functions
+export const subscribeToChatEvents = (handler: ChatEventHandler) => {
+  return chatBridge.subscribe(handler);
+};
+
+export const publishChatEvent = (event: ChatEvent) => {
+  chatBridge.publish(event);
+};

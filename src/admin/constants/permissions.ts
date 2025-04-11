@@ -1,52 +1,56 @@
 
-/**
- * Permissions for the admin panel
- */
+// Define admin-specific permissions
 export const ADMIN_PERMISSIONS = {
   // Access permissions
   ACCESS: 'admin:access',
-  ADMIN_ACCESS: 'admin:access',
-
-  // User management
-  USERS_READ: 'admin:users:read',
-  USERS_WRITE: 'admin:users:write',
-  USERS_VIEW: 'admin:users:view',
-
-  // Theme management
-  THEMES_READ: 'admin:themes:read',
-  THEMES_WRITE: 'admin:themes:write',
-  THEMES_VIEW: 'admin:themes:view',
-
-  // Layout management
-  LAYOUTS_READ: 'admin:layouts:read',
-  LAYOUTS_WRITE: 'admin:layouts:write',
-
-  // Content management
-  CONTENT_READ: 'admin:content:read',
-  CONTENT_WRITE: 'admin:content:write',
-  CONTENT_VIEW: 'admin:content:view',
-
-  // Setting management
-  SETTINGS_READ: 'admin:settings:read',
-  SETTINGS_WRITE: 'admin:settings:write',
-  SETTINGS_VIEW: 'admin:settings:view',
-
-  // Analytics
-  ANALYTICS_VIEW: 'admin:analytics:view',
-
-  // System
-  SYSTEM_VIEW: 'admin:system:view',
-  SYSTEM_EDIT: 'admin:system:edit',
-  SYSTEM_LOGS: 'admin:system:logs',
-  SYSTEM_SETTINGS: 'admin:system:settings',
-  SYSTEM_WRITE: 'admin:system:write',
-
-  // Build management
-  BUILDS_VIEW: 'admin:builds:view',
-
-  // Admin roles
-  ADMIN_VIEW: 'admin:roles:view',
-  ADMIN_EDIT: 'admin:roles:edit',
+  ADMIN_ACCESS: 'admin:full-access',
+  
+  // User management permissions
+  USERS_READ: 'users:read',
+  USERS_WRITE: 'users:write',
+  USERS_VIEW: 'users:view',
+  USERS_EDIT: 'users:edit',
+  USERS_DELETE: 'users:delete',
+  
+  // Theme permissions
+  THEMES_READ: 'themes:read',
+  THEMES_WRITE: 'themes:write',
+  THEMES_VIEW: 'themes:view',
+  THEMES_EDIT: 'themes:edit',
+  THEMES_DELETE: 'themes:delete',
+  
+  // Layout permissions
+  LAYOUTS_READ: 'layouts:read',
+  LAYOUTS_WRITE: 'layouts:write',
+  
+  // Settings permissions
+  SETTINGS_READ: 'settings:read',
+  SETTINGS_WRITE: 'settings:write',
+  SETTINGS_EDIT: 'settings:edit',
+  
+  // Content permissions
+  CONTENT_READ: 'content:read',
+  CONTENT_WRITE: 'content:write',
+  CONTENT_VIEW: 'content:view',
+  CONTENT_EDIT: 'content:edit',
+  CONTENT_DELETE: 'content:delete',
+  
+  // Build permissions
+  BUILDS_READ: 'builds:read',
+  BUILDS_WRITE: 'builds:write',
+  BUILDS_APPROVE: 'builds:approve',
+  BUILDS_REJECT: 'builds:reject',
+  
+  // Data permissions
+  DATA_READ: 'data:read',
+  DATA_WRITE: 'data:write',
+  DATA_VIEW: 'data:view',
+  DATA_IMPORT: 'data:import',
+  
+  // Super admin permission
+  SUPER_ADMIN: 'admin:super',
+  
+  // Admin mode permissions
+  ADMIN_VIEW: 'admin:view',
+  ADMIN_EDIT: 'admin:edit',
 };
-
-export type AdminPermissionValue = keyof typeof ADMIN_PERMISSIONS;

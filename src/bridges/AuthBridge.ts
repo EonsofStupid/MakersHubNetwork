@@ -1,132 +1,195 @@
 
-import { AuthBridge, AuthBridgeImplementation, AuthEvent } from '@/auth/types/bridge.types';
-import { User } from '@/shared/types/user';
-import { UserRole } from '@/shared/types/shared.types';
+import { User, UserProfile, UserRole } from '@/shared/types/shared.types';
 
-/**
- * Event listeners for auth events
- */
-const listeners: ((event: AuthEvent) => void)[] = [];
+// Define auth event types
+export type AuthEventType = 
+  | 'AUTH_STATE_CHANGED'
+  | 'AUTH_USER_CHANGED'
+  | 'AUTH_PROFILE_CHANGED' 
+  | 'AUTH_PERMISSION_CHANGED';
 
-/**
- * AuthBridge implementation for handling authentication
- */
-export const authBridge: AuthBridgeImplementation = {
-  user: null,
-  status: {
-    isAuthenticated: false,
-    isLoading: true,
-  },
+export type AuthEvent = {
+  type: AuthEventType;
+  payload?: any;
+};
+
+export type AuthEventHandler = (event: AuthEvent) => void;
+
+// Auth bridge implementation interface
+export interface AuthBridgeImplementation {
+  getUser: () => User | null;
+  getProfile: () => UserProfile | null;
+  getUserRoles: () => UserRole[];
+  signIn: (email: string, password: string) => Promise<User | null>;
+  signInWithGoogle: () => Promise<User | null>;
+  signOut: () => Promise<void>;
+  updateProfile: (profile: Partial<UserProfile>) => Promise<UserProfile | null>;
+  subscribeToAuthEvents: (handler: AuthEventHandler) => () => void;
+  publishAuthEvent: (event: AuthEvent) => void;
+}
+
+// Create a simple implementation
+class AuthBridgeClass implements AuthBridgeImplementation {
+  private user: User | null = null;
+  private profile: UserProfile | null = null;
+  private roles: UserRole[] = [];
+  private eventHandlers: AuthEventHandler[] = [];
+
+  constructor() {
+    // Initialize with demo user for development if needed
+    if (import.meta.env.DEV && import.meta.env.VITE_USE_DEMO_USER === 'true') {
+      this.user = {
+        id: 'demo-user-id',
+        email: 'demo@example.com',
+        user_metadata: {
+          name: 'Demo User',
+          avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=demo'
+        },
+        app_metadata: {
+          roles: ['admin']
+        }
+      };
+      
+      this.profile = {
+        id: 'demo-profile-id',
+        user_id: this.user.id,
+        display_name: 'Demo User',
+        avatar_url: this.user.user_metadata?.avatar_url,
+        roles: ['admin'],
+      };
+      
+      this.roles = ['admin'];
+    }
+  }
+
+  getUser() {
+    return this.user;
+  }
+  
+  getProfile() {
+    return this.profile;
+  }
+  
+  getUserRoles() {
+    return this.roles;
+  }
 
   async signIn(email: string, password: string) {
-    console.log('[AuthBridge] Sign in', email);
+    console.log('AuthBridge: signIn called', { email, password });
     // Mock implementation
-    const mockUser: User = {
+    this.user = {
       id: 'user-123',
       email,
       user_metadata: {
-        name: 'Test User',
-        avatar_url: ''
+        name: email.split('@')[0],
+        avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=custom'
       },
       app_metadata: {
         roles: ['user']
       }
     };
-
-    authBridge.user = mockUser;
-    authBridge.status.isAuthenticated = true;
-    authBridge.status.isLoading = false;
-
-    // Publish auth event
-    publishAuthEvent({ type: 'SIGNED_IN', payload: mockUser });
-
-    return mockUser;
-  },
+    
+    this.profile = {
+      id: 'profile-123',
+      user_id: this.user.id,
+      display_name: email.split('@')[0],
+      avatar_url: this.user.user_metadata?.avatar_url,
+    };
+    
+    this.roles = ['user'];
+    
+    // Publish auth state changed event
+    this.publishAuthEvent({ type: 'AUTH_STATE_CHANGED', payload: { user: this.user } });
+    return this.user;
+  }
 
   async signInWithGoogle() {
-    console.log('[AuthBridge] Sign in with Google');
+    console.log('AuthBridge: signInWithGoogle called');
+    
     // Mock implementation
-    const mockUser: User = {
-      id: 'user-123',
+    this.user = {
+      id: 'google-user-123',
       email: 'google-user@example.com',
       user_metadata: {
         name: 'Google User',
-        avatar_url: ''
+        avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=google'
       },
       app_metadata: {
         roles: ['user']
       }
     };
-
-    authBridge.user = mockUser;
-    authBridge.status.isAuthenticated = true;
-    authBridge.status.isLoading = false;
-
-    // Publish auth event
-    publishAuthEvent({ type: 'SIGNED_IN', payload: mockUser });
-
-    return mockUser;
-  },
-
-  async logout() {
-    console.log('[AuthBridge] Logout');
-    const prevUser = authBridge.user;
-    authBridge.user = null;
-    authBridge.status.isAuthenticated = false;
-
-    // Publish auth event
-    publishAuthEvent({ type: 'SIGNED_OUT', payload: prevUser });
     
-    return true;
-  },
-
-  getUser() {
-    return authBridge.user;
-  },
-
-  hasRole(role: UserRole | UserRole[]) {
-    if (!authBridge.user) return false;
+    this.profile = {
+      id: 'google-profile-123',
+      user_id: this.user.id,
+      display_name: 'Google User',
+      avatar_url: this.user.user_metadata?.avatar_url,
+    };
     
-    const userRoles = authBridge.user.app_metadata?.roles || [];
+    this.roles = ['user'];
     
-    if (Array.isArray(role)) {
-      return role.some(r => userRoles.includes(r));
+    // Publish auth state changed event
+    this.publishAuthEvent({ type: 'AUTH_STATE_CHANGED', payload: { user: this.user } });
+    return this.user;
+  }
+
+  async signOut() {
+    console.log('AuthBridge: signOut called');
+    
+    // Clear user data
+    this.user = null;
+    this.profile = null;
+    this.roles = [];
+    
+    // Publish auth state changed event
+    this.publishAuthEvent({ type: 'AUTH_STATE_CHANGED', payload: { user: null } });
+    return;
+  }
+  
+  async updateProfile(profileData: Partial<UserProfile>) {
+    console.log('AuthBridge: updateProfile called', profileData);
+    
+    if (!this.user || !this.profile) {
+      console.error('Cannot update profile: No user is signed in');
+      return null;
     }
     
-    return userRoles.includes(role);
-  },
-
-  isAdmin() {
-    return this.hasRole('admin') || this.hasRole('superadmin');
-  },
-
-  isSuperAdmin() {
-    return this.hasRole('superadmin');
+    // Update profile with new data
+    this.profile = {
+      ...this.profile,
+      ...profileData,
+      updated_at: new Date().toISOString()
+    };
+    
+    // Publish profile changed event
+    this.publishAuthEvent({ 
+      type: 'AUTH_PROFILE_CHANGED', 
+      payload: { profile: this.profile } 
+    });
+    
+    return this.profile;
   }
+
+  subscribeToAuthEvents(handler: AuthEventHandler) {
+    this.eventHandlers.push(handler);
+    return () => {
+      this.eventHandlers = this.eventHandlers.filter(h => h !== handler);
+    };
+  }
+
+  publishAuthEvent(event: AuthEvent) {
+    this.eventHandlers.forEach(handler => handler(event));
+  }
+}
+
+// Create singleton instance
+export const authBridge: AuthBridgeImplementation = new AuthBridgeClass();
+
+// Export event subscription and publishing functions
+export const subscribeToAuthEvents = (handler: AuthEventHandler) => {
+  return authBridge.subscribeToAuthEvents(handler);
 };
 
-/**
- * Subscribe to auth events
- */
-export function subscribeToAuthEvents(listener: (event: AuthEvent) => void) {
-  listeners.push(listener);
-  return () => {
-    const index = listeners.indexOf(listener);
-    if (index > -1) {
-      listeners.splice(index, 1);
-    }
-  };
-}
-
-/**
- * Publish auth event to subscribers
- */
-export function publishAuthEvent(event: AuthEvent) {
-  listeners.forEach(listener => {
-    try {
-      listener(event);
-    } catch (error) {
-      console.error('[AuthBridge] Error in auth event listener', error);
-    }
-  });
-}
+export const publishAuthEvent = (event: AuthEvent) => {
+  authBridge.publishAuthEvent(event);
+};
