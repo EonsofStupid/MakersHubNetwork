@@ -1,11 +1,14 @@
 import * as React from "react"
 
-import type { ToastActionElement, ToastProps } from "@/shared/ui/toast"
+import type {
+  ToastActionElement,
+  ToastProps,
+} from "@/shared/ui/toast"
 
-const TOAST_LIMIT = 10
+const TOAST_LIMIT = 5
 const TOAST_REMOVE_DELAY = 1000000
 
-export type ToastVariant = "default" | "destructive" | "success"
+type ToastVariant = "default" | "destructive" | "success"
 
 type ToasterToast = ToastProps & {
   id: string
@@ -25,7 +28,7 @@ const actionTypes = {
 let count = 0
 
 function genId() {
-  count = (count + 1) % Number.MAX_SAFE_INTEGER
+  count = (count + 1) % Number.MAX_VALUE
   return count.toString()
 }
 
@@ -42,11 +45,11 @@ type Action =
     }
   | {
       type: ActionType["DISMISS_TOAST"]
-      toastId?: ToasterToast["id"]
+      toastId?: string
     }
   | {
       type: ActionType["REMOVE_TOAST"]
-      toastId?: ToasterToast["id"]
+      toastId?: string
     }
 
 interface State {
@@ -137,9 +140,11 @@ function dispatch(action: Action) {
   })
 }
 
-interface Toast extends Omit<ToasterToast, "id"> {}
+type Toast = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
+function toast({
+  ...props
+}: Toast) {
   const id = genId()
 
   const update = (props: ToasterToast) =>

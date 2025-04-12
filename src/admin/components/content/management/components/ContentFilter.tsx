@@ -5,8 +5,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../../components/ui/select';
-import { ContentStatus, ContentFilter } from '../../../../admin/types/content';
+} from '@/shared/ui/select';
+import { ContentStatus, ContentFilter } from '@/admin/types/content';
 
 // Define ContentType interface properly
 interface ContentType {

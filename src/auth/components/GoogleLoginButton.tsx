@@ -3,8 +3,8 @@ import React from 'react';
 import { Button } from '@/shared/ui/button';
 import { FcGoogle } from 'react-icons/fc';
 import { authBridge } from '@/auth/bridge';
-import { useToast } from '@/shared/hooks/use-toast';
-import { cn } from '@/shared/utils/cn';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface GoogleLoginButtonProps {
   className?: string;
@@ -29,7 +29,8 @@ export function GoogleLoginButton({
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
-      await authBridge.signInWithGoogle();
+      // Use the correct method name from the auth bridge
+      await authBridge.signInWithOAuth('google');
       onSuccess?.();
     } catch (error) {
       console.error('Google login error:', error);
@@ -80,3 +81,5 @@ export function GoogleLoginButton({
     </Button>
   );
 }
+
+export default GoogleLoginButton;

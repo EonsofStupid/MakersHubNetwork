@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { useThemeStore } from '@/stores/theme/store';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@/shared/ui/popover';
 import { Theme } from '@/types/theme';
 
 interface ThemeInfoPopupProps {
@@ -64,5 +64,3 @@ export function ThemeInfoPopup({ triggerComponent, onClose }: ThemeInfoPopupProp
     </Popover>
   );
 }
-
-export default ThemeInfoPopup;
