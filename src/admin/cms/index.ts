@@ -1,6 +1,6 @@
 
 // Re-export components
-export { default as CategoryManagement } from './components/categories/CategoryManagement';
+export { CategoryManagement } from './components/categories/CategoryManagement';
 
 // Re-export hooks
 export {

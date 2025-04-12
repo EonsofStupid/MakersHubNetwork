@@ -3,9 +3,9 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 import { Input } from '@/shared/ui/input';
 import { Button } from '@/shared/ui/button';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/auth/lib/supabase';
 import { toast } from '@/hooks/use-toast';
-import { useAdmin } from '@/hooks/useAdmin';
+import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 import {
   ChevronDown,
   ChevronUp,
@@ -16,7 +16,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/shared/ui/table';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/cn';
 
 // Add slugify function
 function slugify(text: string): string {
@@ -41,6 +41,7 @@ interface Category {
   updated_at: string;
 }
 
+// Export named component, not default
 export function CategoryManagement() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +52,7 @@ export function CategoryManagement() {
   const [newCategoryDescription, setNewCategoryDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const logger = useLogger('CategoryManagement', LogCategory.CONTENT);
-  const { hasPermission } = useAdmin();
+  const { hasPermission } = useAdminPermissions();
 
   useEffect(() => {
     fetchCategories();
@@ -67,13 +68,17 @@ export function CategoryManagement() {
 
       if (error) {
         setError(error.message);
-        logger.error('Failed to fetch categories', { details: error });
+        logger.error('Failed to fetch categories', { 
+          details: { error: error.message } 
+        });
       } else {
         setCategories(data || []);
       }
     } catch (err) {
       setError('Failed to fetch categories');
-      logger.error('Failed to fetch categories', { details: err });
+      logger.error('Failed to fetch categories', { 
+        details: { error: String(err) } 
+      });
     } finally {
       setLoading(false);
     }
@@ -110,13 +115,17 @@ export function CategoryManagement() {
           description: error.message,
           variant: 'destructive',
         });
-        logger.error('Failed to update category', { details: error });
+        logger.error('Failed to update category', { 
+          details: { error: error.message } 
+        });
       } else {
         toast({
           title: 'Category updated',
           description: 'Category updated successfully.',
         });
-        logger.info('Category updated successfully', { details: { categoryId: id } });
+        logger.info('Category updated successfully', { 
+          details: { categoryId: id } 
+        });
         fetchCategories();
       }
     } catch (err) {
@@ -125,7 +134,9 @@ export function CategoryManagement() {
         description: 'Failed to update category.',
         variant: 'destructive',
       });
-      logger.error('Failed to update category', { details: err });
+      logger.error('Failed to update category', { 
+        details: { error: String(err) } 
+      });
     } finally {
       setEditingCategory(null);
     }
@@ -144,13 +155,17 @@ export function CategoryManagement() {
           description: error.message,
           variant: 'destructive',
         });
-        logger.error('Failed to delete category', { details: error });
+        logger.error('Failed to delete category', { 
+          details: { error: error.message } 
+        });
       } else {
         toast({
           title: 'Category deleted',
           description: 'Category deleted successfully.',
         });
-        logger.info('Category deleted successfully', { details: { categoryId: id } });
+        logger.info('Category deleted successfully', { 
+          details: { categoryId: id } 
+        });
         fetchCategories();
       }
     } catch (err) {
@@ -159,7 +174,9 @@ export function CategoryManagement() {
         description: 'Failed to delete category.',
         variant: 'destructive',
       });
-      logger.error('Failed to delete category', { details: err });
+      logger.error('Failed to delete category', { 
+        details: { error: String(err) } 
+      });
     }
   };
 
@@ -177,13 +194,17 @@ export function CategoryManagement() {
           description: error.message,
           variant: 'destructive',
         });
-        logger.error('Failed to create category', { details: error });
+        logger.error('Failed to create category', { 
+          details: { error: error.message } 
+        });
       } else {
         toast({
           title: 'Category created',
           description: 'Category created successfully.',
         });
-        logger.info('Category created successfully', { details: { categoryName: newCategoryName } });
+        logger.info('Category created successfully', { 
+          details: { categoryName: newCategoryName } 
+        });
         fetchCategories();
         setNewCategoryName('');
         setNewCategoryDescription('');
@@ -194,7 +215,9 @@ export function CategoryManagement() {
         description: 'Failed to create category.',
         variant: 'destructive',
       });
-      logger.error('Failed to create category', { details: err });
+      logger.error('Failed to create category', { 
+        details: { error: String(err) } 
+      });
     } finally {
       setIsCreating(false);
     }

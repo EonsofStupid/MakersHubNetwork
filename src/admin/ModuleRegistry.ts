@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { authBridge } from '@/bridges/AuthBridge';
 import { LogCategory, AuthEventType } from '@/shared/types/shared.types';
+import type { LogDetails } from '@/shared/types/logging.types';
 
 // Module interface
 export interface AdminModule {
@@ -27,7 +28,7 @@ class AdminModuleRegistry {
       this.logger.warn(`Module with ID ${module.id} is already registered`, {
         details: {
           moduleName: module.name
-        }
+        } as LogDetails
       });
       return;
     }
@@ -36,7 +37,7 @@ class AdminModuleRegistry {
     this.logger.debug(`Registered module: ${module.name}`, {
       details: {
         moduleId: module.id
-      }
+      } as LogDetails
     });
   }
 
@@ -59,7 +60,7 @@ class AdminModuleRegistry {
         this.logger.error(`Failed to initialize module: ${module.name}`, {
           details: {
             errorMessage: error
-          }
+          } as LogDetails
         });
       }
     }
@@ -81,7 +82,7 @@ class AdminModuleRegistry {
         this.logger.error(`Failed to cleanup module: ${module.name}`, {
           details: {
             errorMessage: error
-          }
+          } as LogDetails
         });
       }
     }
@@ -119,7 +120,7 @@ export function useAdminModuleRegistry() {
         logger.error('Failed to initialize admin module registry', {
           details: {
             errorMessage: error
-          }
+          } as LogDetails
         });
       }
     };
