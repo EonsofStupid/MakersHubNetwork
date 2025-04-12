@@ -1,6 +1,5 @@
-
 import { create } from 'zustand';
-import { LogCategory } from '@/shared/types/shared.types';
+import { LogLevel, LogCategory, LogEntry } from '@/shared/types/shared.types';
 import { loggingBridge } from '@/logging/bridge';
 
 export interface DebugState {
@@ -35,7 +34,7 @@ export const useDebugStore = create<DebugState>((set, get) => ({
     // Log debug mode state change
     loggingBridge.log({
       id: crypto.randomUUID(),
-      level: 'info',
+      level: 'info' as LogLevel,
       message: `Debug mode ${value ? 'enabled' : 'disabled'}`,
       timestamp: Date.now(),
       source: 'DebugStore',
@@ -50,7 +49,7 @@ export const useDebugStore = create<DebugState>((set, get) => ({
     // Log debug mode toggle
     loggingBridge.log({
       id: crypto.randomUUID(),
-      level: 'info',
+      level: 'info' as LogLevel,
       message: `Debug mode toggled to ${newState ? 'enabled' : 'disabled'}`,
       timestamp: Date.now(),
       source: 'DebugStore',
@@ -70,7 +69,7 @@ export const useDebugStore = create<DebugState>((set, get) => ({
     // Log admin overlay toggle
     loggingBridge.log({
       id: crypto.randomUUID(),
-      level: 'info',
+      level: 'info' as LogLevel,
       message: `Admin overlay toggled to ${newState ? 'visible' : 'hidden'}`,
       timestamp: Date.now(),
       source: 'DebugStore',

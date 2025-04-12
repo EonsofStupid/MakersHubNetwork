@@ -1,4 +1,3 @@
-
 // Re-export alert-dialog component from shadcn
 export {
   AlertDialog,
@@ -10,4 +9,4 @@ export {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger
-} from '@/components/ui/alert-dialog';
+} from '@/shared/ui/alert-dialog/alert-dialog.component';
