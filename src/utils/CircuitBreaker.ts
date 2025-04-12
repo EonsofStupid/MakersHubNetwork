@@ -1,125 +1,116 @@
+
 /**
- * CircuitBreaker utility to prevent infinite loops or excessive function calls
- * 
- * Usage:
- * const breaker = new CircuitBreaker('my-operation', 3, 1000);
- * 
- * if (breaker.isOpen) {
- *   console.warn('Circuit breaker is open, skipping operation');
- *   return;
- * }
- * 
- * try {
- *   // Your code that might cause issues if called too frequently
- *   breaker.success();
- * } catch (error) {
- *   breaker.fail();
- *   throw error;
- * }
+ * CircuitBreaker - A simple circuit breaker implementation to prevent 
+ * repeated calls to a failing resource
  */
 export class CircuitBreaker {
-  private static instances: Record<string, CircuitBreaker> = {};
-
-  private failCount: number = 0;
-  private lastFailTime: number = 0;
-  private _isOpen: boolean = false;
+  private name: string;
+  private maxFailures: number;
+  private resetTimeout: number;
+  private failureCount: number = 0;
+  private lastFailureTime: number | null = null;
+  private isOpen: boolean = false;
 
   /**
-   * Creates a new CircuitBreaker instance or returns an existing one
+   * Creates a new CircuitBreaker
    * 
-   * @param id Unique identifier for this circuit breaker
-   * @param maxFailures Number of failures before the circuit breaker opens
-   * @param resetTimeMs Time in milliseconds before the circuit breaker resets
+   * @param name Name of the circuit for identification
+   * @param maxFailures Number of failures before opening the circuit
+   * @param resetTimeout Time in ms before resetting the circuit
    */
-  constructor(
-    private id: string, 
-    private maxFailures: number = 3,
-    private resetTimeMs: number = 5000
-  ) {
-    // If an instance with this ID already exists, return it
-    if (CircuitBreaker.instances[id]) {
-      return CircuitBreaker.instances[id];
-    }
-    
-    // Otherwise store this instance
-    CircuitBreaker.instances[id] = this;
+  constructor(name: string, maxFailures = 3, resetTimeout = 5000) {
+    this.name = name;
+    this.maxFailures = maxFailures;
+    this.resetTimeout = resetTimeout;
   }
 
   /**
-   * Initialize a circuit breaker without creating a class instance
-   */
-  static init(id: string, maxFailures: number = 3, resetTimeMs: number = 5000): void {
-    if (!CircuitBreaker.instances[id]) {
-      CircuitBreaker.instances[id] = new CircuitBreaker(id, maxFailures, resetTimeMs);
-    }
-  }
-
-  /**
-   * Check if this circuit breaker is currently open (preventing operations)
-   */
-  get isOpen(): boolean {
-    // If the circuit is open, check if it's time to reset
-    if (this._isOpen && Date.now() - this.lastFailTime > this.resetTimeMs) {
-      this._isOpen = false;
-      this.failCount = 0;
-    }
-    
-    return this._isOpen;
-  }
-
-  /**
-   * Call when an operation fails
-   */
-  fail(): void {
-    this.failCount++;
-    this.lastFailTime = Date.now();
-    
-    if (this.failCount >= this.maxFailures) {
-      this._isOpen = true;
-    }
-  }
-
-  /**
-   * Call when an operation succeeds
-   */
-  success(): void {
-    this.failCount = 0;
-  }
-
-  /**
-   * Reset this circuit breaker
-   */
-  reset(): void {
-    this.failCount = 0;
-    this._isOpen = false;
-  }
-
-  /**
-   * Execute a function with circuit breaker protection
+   * Executes a function with circuit breaker protection
    * 
-   * @param fn Function to execute
+   * @param fn The function to execute
    * @param fallback Optional fallback function to call if circuit is open
-   * @returns Result of the function or fallback
+   * @returns The result of the function or fallback
    */
-  async execute<T>(fn: () => Promise<T>, fallback?: () => T | Promise<T>): Promise<T> {
+  async execute<T>(
+    fn: () => Promise<T>, 
+    fallback?: () => T | Promise<T>
+  ): Promise<T> {
+    // Check if circuit is open
     if (this.isOpen) {
-      if (fallback) {
-        return await Promise.resolve(fallback());
+      // Check if we should allow a test request
+      const now = Date.now();
+      if (this.lastFailureTime && (now - this.lastFailureTime) > this.resetTimeout) {
+        // Try to reset the circuit with a test request
+        this.isOpen = false;
+      } else if (fallback) {
+        // Circuit is still open, use fallback
+        return fallback();
+      } else {
+        // Circuit is open with no fallback
+        throw new Error(`Circuit [${this.name}] is open`);
       }
-      throw new Error(`Circuit ${this.id} is open`);
     }
-    
+
+    // Execute the function
     try {
       const result = await fn();
-      this.success();
+      // Success, reset failure count
+      this.reset();
       return result;
     } catch (error) {
-      this.fail();
+      // Handle failure
+      this.recordFailure();
       
-      if (fallback) {
-        return await Promise.resolve(fallback());
+      // Check if we've hit the threshold and open the circuit
+      if (this.failureCount >= this.maxFailures) {
+        this.isOpen = true;
+        this.lastFailureTime = Date.now();
       }
+      
+      // Use fallback if available
+      if (fallback) {
+        return fallback();
+      }
+      
+      // No fallback, re-throw the error
       throw error;
     }
+  }
+  
+  /**
+   * Reset the circuit breaker
+   */
+  reset(): void {
+    this.failureCount = 0;
+    this.isOpen = false;
+    this.lastFailureTime = null;
+  }
+  
+  /**
+   * Record a failure and increment the count
+   */
+  recordFailure(): void {
+    this.failureCount++;
+  }
+  
+  /**
+   * Get the current failure count
+   */
+  getFailureCount(): number {
+    return this.failureCount;
+  }
+  
+  /**
+   * Check if the circuit is currently open
+   */
+  isCircuitOpen(): boolean {
+    // If circuit was open, check if it's time to reset
+    if (this.isOpen && this.lastFailureTime) {
+      const now = Date.now();
+      if ((now - this.lastFailureTime) > this.resetTimeout) {
+        this.isOpen = false;
+      }
+    }
+    return this.isOpen;
   }
 }

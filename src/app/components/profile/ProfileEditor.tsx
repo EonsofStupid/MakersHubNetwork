@@ -7,6 +7,8 @@ import { useToast } from "@/shared/hooks/use-toast";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { User, Upload, X, Save } from "lucide-react";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/shared/types/shared.types";
 
 interface ProfileEditorProps {
   onClose: () => void;
@@ -14,6 +16,7 @@ interface ProfileEditorProps {
 
 export const ProfileEditor = ({ onClose }: ProfileEditorProps) => {
   const { toast } = useToast();
+  const logger = useLogger("ProfileEditor", LogCategory.USER);
   const user = useAuthStore((state) => state.user);
   const profile = useAuthStore((state) => state.profile);
   const updateUserProfile = useAuthStore((state) => state.updateUserProfile);
@@ -39,7 +42,7 @@ export const ProfileEditor = ({ onClose }: ProfileEditorProps) => {
         description: "Avatar updated successfully",
       });
     } catch (error) {
-      console.error("Error uploading avatar:", error);
+      logger.error("Error uploading avatar", { details: { error } });
       toast({
         variant: "destructive",
         title: "Error",
@@ -69,7 +72,7 @@ export const ProfileEditor = ({ onClose }: ProfileEditorProps) => {
       });
       onClose();
     } catch (error) {
-      console.error("Error updating profile:", error);
+      logger.error("Error updating profile", { details: { error } });
       toast({
         variant: "destructive",
         title: "Error",
@@ -89,7 +92,7 @@ export const ProfileEditor = ({ onClose }: ProfileEditorProps) => {
         "w-[600px] max-w-[90vw] rounded-lg overflow-hidden",
         "bg-background/20 backdrop-blur-xl",
         "border border-primary/30",
-        "shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]",
+        "shadow-[0_0_32px_0_rgba(0,240,255,0.2)]",
         "relative z-50"
       )}
     >
@@ -116,9 +119,9 @@ export const ProfileEditor = ({ onClose }: ProfileEditorProps) => {
           <div className="flex flex-col items-center gap-4">
             <div className="relative group">
               <div className="w-24 h-24 rounded-full border-2 border-primary/50 overflow-hidden">
-                {user?.user_metadata?.avatar_url ? (
+                {profile?.avatar_url ? (
                   <img
-                    src={user.user_metadata.avatar_url}
+                    src={profile.avatar_url}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />

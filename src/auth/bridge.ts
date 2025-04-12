@@ -1,277 +1,121 @@
 
-// Auth bridge implementation
-import { nanoid } from 'nanoid';
-import { AuthEvent, AuthEventType, User, UserProfile, UserRole } from '@/shared/types/shared.types';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/shared/types/shared.types';
+import { createClient } from '@supabase/supabase-js';
+import { UserRole } from '@/shared/types/shared.types';
 
-const logger = getLogger('AuthBridge', LogCategory.AUTH);
+// Type for authentication status
+export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
-type AuthEventListener = (event: AuthEvent) => void;
-let listeners: AuthEventListener[] = [];
-
-/**
- * Subscribe to auth events
- */
-export function subscribeToAuthEvents(listener: AuthEventListener): () => void {
-  listeners.push(listener);
-  return () => {
-    listeners = listeners.filter(l => l !== listener);
-  };
+// Type for user profile
+export interface UserProfile {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  theme_preference: string | null;
+  motion_enabled: boolean | null;
 }
 
-/**
- * Dispatch an auth event
- */
-function dispatchAuthEvent(event: AuthEvent): void {
-  logger.debug(`Auth event dispatched: ${event.type}`, {
-    details: { event }
-  });
-  
-  listeners.forEach(listener => {
-    try {
-      listener(event);
-    } catch (error) {
-      logger.error('Error in auth event listener', {
-        details: { error }
-      });
-    }
-  });
-}
+// Supabase authentication client
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || '',
+  import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+);
 
-/**
- * Auth Bridge Implementation
- */
+// Auth event types
+export type AuthEventType = 'AUTH_SIGNED_IN' | 'AUTH_SIGNED_OUT' | 'AUTH_USER_UPDATED' | 'AUTH_SESSION_DELETED';
+
+// Auth Bridge implementation
 export class AuthBridgeImpl {
-  private mockUser: User | null = null;
-  
-  /**
-   * Initialize the auth service
-   */
-  async initialize(): Promise<(() => void) | undefined> {
-    logger.info('Initializing auth bridge');
+  // Methods for authentication
+  async signInWithEmail(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     
-    // For demo purposes, create a mock user
-    this.mockUser = {
-      id: nanoid(),
-      email: 'demo@example.com',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user_metadata: {
-        display_name: 'Demo User',
-        avatar_url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=demo',
-      },
-      app_metadata: {
-        roles: ['user']
-      }
+    if (error) throw error;
+    return data;
+  }
+  
+  async signInWithGoogle() {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    });
+    
+    if (error) throw error;
+    return data;
+  }
+  
+  async signUp(email: string, password: string) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    
+    if (error) throw error;
+    return data;
+  }
+  
+  async signOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  }
+  
+  async getCurrentSession() {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    return data.session;
+  }
+  
+  async getUserProfile(userId: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+      
+    if (error) throw error;
+    return data as UserProfile;
+  }
+  
+  async updateProfile(profile: Partial<UserProfile>) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(profile)
+      .eq('id', profile.id!)
+      .select()
+      .single();
+      
+    if (error) throw error;
+    return data as UserProfile;
+  }
+  
+  getStatus(): { status: 'AUTHENTICATED' | 'UNAUTHENTICATED' } {
+    const session = supabase.auth.getSession();
+    return {
+      status: session ? 'AUTHENTICATED' : 'UNAUTHENTICATED'
     };
-    
-    return undefined;
   }
   
-  /**
-   * Sign in with email and password
-   */
-  async signInWithEmail(email: string, password: string): Promise<User> {
-    logger.info('Signing in with email', { details: { email } });
-    
-    if (email && password) {
-      // Simulate successful login
-      const user = {
-        id: nanoid(),
-        email: email,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_metadata: {
-          display_name: email.split('@')[0],
-          avatar_url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${email}`,
-        },
-        app_metadata: {
-          roles: ['user'] as UserRole[]
-        }
-      };
-      
-      // Store the mock user
-      this.mockUser = user;
-      
-      // Emit auth event
-      dispatchAuthEvent({
-        type: AuthEventType.AUTH_SIGNIN,
-        payload: { user },
-        timestamp: Date.now()
-      });
-      
-      return user;
-    }
-    
-    if (this.mockUser) {
-      const user = this.mockUser;
-      const email = this.mockUser.email;
-      const roles = this.mockUser.app_metadata.roles;
-      
-      // Emit auth event
-      dispatchAuthEvent({
-        type: AuthEventType.AUTH_SIGNIN,
-        payload: { user, email, roles },
-        timestamp: Date.now()
-      });
-      
-      return user;
-    }
-    
-    throw new Error('Authentication failed');
+  isAuthenticated() {
+    return Boolean(supabase.auth.getSession());
   }
   
-  /**
-   * Sign in with Google
-   */
-  async signInWithGoogle(): Promise<User> {
-    logger.info('Signing in with Google');
-    
-    // Simulate successful login
-    const user = {
-      id: nanoid(),
-      email: 'google-user@example.com',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user_metadata: {
-        display_name: 'Google User',
-        avatar_url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=google',
-      },
-      app_metadata: {
-        roles: ['user'] as UserRole[]
-      }
-    };
-    
-    // Store the mock user
-    this.mockUser = user;
-    
-    // Emit auth event
-    dispatchAuthEvent({
-      type: AuthEventType.AUTH_SIGNIN,
-      payload: { user },
-      timestamp: Date.now()
-    });
-    
-    if (this.mockUser) {
-      const user = this.mockUser;
-      const email = this.mockUser.email;
-      const roles = this.mockUser.app_metadata.roles;
-      
-      // Emit auth event
-      dispatchAuthEvent({
-        type: AuthEventType.AUTH_SIGNIN,
-        payload: { user, email, roles },
-        timestamp: Date.now()
-      });
-      
-      return user;
-    }
-    
-    throw new Error('Authentication failed');
+  isAdmin() {
+    // This would need to check roles from the auth store or supabase session
+    return false;
   }
   
-  /**
-   * Sign out the current user
-   */
-  async signOut(): Promise<void> {
-    logger.info('Signing out');
-    
-    // Clear the user
-    this.mockUser = null;
-    
-    // Emit auth event
-    dispatchAuthEvent({
-      type: AuthEventType.AUTH_SIGNOUT,
-      timestamp: Date.now()
-    });
+  isSuperAdmin() {
+    // This would need to check roles from the auth store or supabase session
+    return false;
   }
   
-  /**
-   * Check if the user has a specific role
-   */
-  hasRole(role: UserRole | UserRole[]): boolean {
-    if (!this.mockUser) return false;
-    
-    const userRoles = this.mockUser.app_metadata.roles || [];
-    
-    if (Array.isArray(role)) {
-      return role.some(r => userRoles.includes(r));
-    }
-    
-    return userRoles.includes(role);
-  }
-  
-  /**
-   * Check if the user is an admin
-   */
-  isAdmin(): boolean {
-    return this.hasRole(['admin', 'super_admin']);
-  }
-  
-  /**
-   * Get the current user
-   */
-  getUser(): User | null {
-    return this.mockUser;
-  }
-  
-  /**
-   * Update the user profile
-   */
-  async updateProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
-    logger.info('Updating user profile', { details: { updates } });
-    
-    if (!this.mockUser) {
-      throw new Error('No user signed in');
-    }
-    
-    // Update the user metadata
-    this.mockUser.user_metadata = {
-      ...this.mockUser.user_metadata,
-      bio: updates.bio || this.mockUser.user_metadata.bio,
-      display_name: updates.display_name || this.mockUser.user_metadata.display_name,
-      avatar_url: updates.avatar_url || this.mockUser.user_metadata.avatar_url,
-      theme_preference: updates.theme_preference || this.mockUser.user_metadata.theme_preference,
-      full_name: updates.full_name || this.mockUser.user_metadata.full_name,
-      motion_enabled: updates.motion_enabled !== undefined ? updates.motion_enabled : this.mockUser.user_metadata.motion_enabled,
-      website: updates.website || this.mockUser.user_metadata.website
-    };
-    
-    // Emit auth event
-    dispatchAuthEvent({
-      type: AuthEventType.AUTH_USER_UPDATED,
-      payload: { profile: this.mockUser.user_metadata },
-      timestamp: Date.now()
-    });
-    
-    return this.mockUser.user_metadata;
-  }
-  
-  /**
-   * Link a social account
-   */
-  async linkSocialAccount(provider: string): Promise<void> {
-    logger.info('Linking social account', { details: { provider } });
-    
-    // For demo purposes, just emit an event
-    dispatchAuthEvent({
-      type: AuthEventType.AUTH_USER_UPDATED,
-      payload: { linkedAccount: provider },
-      timestamp: Date.now()
-    });
-  }
-  
-  /**
-   * Get current auth status
-   */
-  getStatus() {
-    return this.mockUser ? 'AUTHENTICATED' : 'UNAUTHENTICATED';
+  subscribeToEvent(event: AuthEventType, callback: () => void) {
+    // Implementation would use supabase.auth.onAuthStateChange
+    return { unsubscribe: () => {} };
   }
 }
 
-// Create and export singleton instance
+// Export a singleton instance of AuthBridge
 export const authBridge = new AuthBridgeImpl();
-export const AuthBridge = authBridge; // To maintain compatibility with existing code
-
-// Also create a types file for export
