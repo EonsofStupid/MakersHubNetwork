@@ -5,7 +5,7 @@ import {
   ToastProps,
 } from "@/shared/ui/toast";
 
-import { useToast as useToastBase } from "@/shared/ui/use-toast";
+import { useToast as useToastUI } from "@/shared/ui/use-toast";
 
 type ToasterToast = Toast & {
   id: string;
@@ -14,6 +14,7 @@ type ToasterToast = Toast & {
   action?: ToastActionElement;
 };
 
-export const useToast = useToastBase;
+export const useToast = useToastUI;
+export const toast = useToastUI().toast;
 
-export type { ToasterToast }
+export type { ToasterToast };

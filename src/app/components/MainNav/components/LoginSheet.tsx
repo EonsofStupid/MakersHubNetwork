@@ -1,109 +1,114 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/shared/ui/sheet';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
-import { useAuthStore } from '@/auth/store/auth.store';
 import { useToast } from '@/shared/hooks/use-toast';
+import { useState } from 'react';
+import { authBridge } from '@/auth/bridge';
 import { GoogleLoginButton } from '@/auth/components/GoogleLoginButton';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/shared/ui/sheet';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging/constants/log-category';
 
 export function LoginSheet() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { signIn, signUp } = useAuthStore();
   const { toast } = useToast();
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const logger = useLogger('LoginSheet', LogCategory.AUTH);
+  
+  // Get auth state from store
+  const { status } = authBridge.getStatus();
+  const isAuthenticated = authBridge.isAuthenticated();
+  
+  // If already authenticated, don't show the login button
+  if (isAuthenticated) return null;
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
+    
+    if (!email || !password) {
+      toast({
+        title: 'Error',
+        description: 'Please enter both email and password',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setLoading(true);
+    
     try {
-      await signIn(email, password);
+      await authBridge.signInWithEmail(email, password);
       toast({
         title: 'Success',
-        description: 'You have been logged in successfully.',
+        description: 'You have successfully logged in.',
       });
       setIsOpen(false);
     } catch (error) {
+      logger.error('Login failed', { details: { error } });
       toast({
         title: 'Login failed',
-        description: error instanceof Error ? error.message : 'Invalid credentials',
+        description: error instanceof Error ? error.message : 'An error occurred during login',
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignup = async () => {
-    setIsLoading(true);
-
-    try {
-      await signUp(email, password);
-      toast({
-        title: 'Success',
-        description: 'Account created successfully. Please check your email for verification.',
-      });
-      setIsOpen(false);
-    } catch (error) {
-      toast({
-        title: 'Sign up failed',
-        description: error instanceof Error ? error.message : 'Something went wrong',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="secondary" size="sm">
-          Login
+        <Button variant="outline" size="sm">
+          Sign In
         </Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="sm:max-w-sm">
         <SheetHeader>
-          <SheetTitle>Login or Sign Up</SheetTitle>
+          <SheetTitle>Sign In</SheetTitle>
+          <SheetDescription>
+            Enter your credentials or use a social provider to sign in.
+          </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleLogin} className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Password
-            </label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              required
-            />
-          </div>
-          <div className="flex flex-col space-y-2">
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Processing...' : 'Login'}
+        
+        <div className="flex flex-col gap-4 py-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">
+                Email
+              </label>
+              <Input
+                id="email"
+                placeholder="hello@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium">
+                Password
+              </label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            <Button className="w-full" type="submit" disabled={loading}>
+              {loading ? 'Signing In...' : 'Sign In'}
             </Button>
-            <Button type="button" variant="outline" onClick={handleSignup} disabled={isLoading}>
-              Sign Up
-            </Button>
-          </div>
+          </form>
+          
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -114,8 +119,19 @@ export function LoginSheet() {
               </span>
             </div>
           </div>
-          <GoogleLoginButton fullWidth />
-        </form>
+          
+          <GoogleLoginButton
+            fullWidth
+            variant="outline"
+            onSuccess={() => {
+              setIsOpen(false);
+              toast({
+                title: 'Success',
+                description: 'You have successfully logged in with Google.',
+              });
+            }}
+          />
+        </div>
       </SheetContent>
     </Sheet>
   );

@@ -59,24 +59,24 @@ export function GoogleLoginButton({
       >
         <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-primary/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
         <FcGoogle className="h-5 w-5" />
-        <span className="font-medium">Sign in with Google</span>
+        <span>{isLoading ? 'Connecting...' : 'Sign in with Google'}</span>
       </button>
     );
   }
   
   return (
-    <Button 
-      variant={variant} 
+    <Button
+      variant={variant}
       onClick={handleGoogleLogin}
       disabled={isLoading}
       className={cn(
-        "flex items-center gap-2",
-        fullWidth && "w-full",
+        'flex items-center gap-2',
+        fullWidth && 'w-full',
         className
       )}
     >
       <FcGoogle className="h-5 w-5" />
-      <span>{isLoading ? "Loading..." : "Sign in with Google"}</span>
+      {isLoading ? 'Connecting...' : 'Sign in with Google'}
     </Button>
   );
 }

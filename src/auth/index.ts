@@ -1,41 +1,17 @@
 
-import { AuthProvider, useAuth } from './components/AuthProvider';
-import { RequireAuth } from './components/RequireAuth';
-import { RequirePermission } from './components/RequirePermission';
-import { AdminOnly } from './components/AdminOnly';
-import { GoogleLoginButton } from './components/GoogleLoginButton';
-import { LinkedAccountAlert } from './components/LinkedAccountAlert';
-import { AccountLinkingModal } from './components/AccountLinkingModal';
-import { useAuthState } from './hooks/useAuthState';
-import { useHasRole } from './hooks/useHasRole';
-import { authBridge } from '@/bridges/AuthBridge';
-import { UserMenu } from './components/UserMenu';
-import { UserAvatar } from './components/UserAvatar';
+// Export auth components
+export { GoogleLoginButton } from './components/GoogleLoginButton';
+export { LinkedAccountAlert } from './components/LinkedAccountAlert';
+export { RequireAuth } from './components/RequireAuth';
+export { AccountLinkingModal } from './components/AccountLinkingModal';
+export { UserAvatar } from './components/UserAvatar';
+export { UserMenu } from './components/UserMenu';
 
-// Hook for composing auth utilities
-import { useAuthStore } from './store/auth.store';
+// Export hooks
+export { useHasRole, useHasAdminAccess, useIsSuperAdmin } from './hooks/useHasRole';
 
-// Utils
-import { redirectIfAuthenticated, redirectIfUnauthenticated, redirectIfNotAdmin } from './utils/redirect';
-import { hasRole } from './utils/hasRole';
+// Export store
+export { useAuthStore } from './store/auth.store';
 
-export {
-  AuthProvider,
-  useAuth,
-  RequireAuth,
-  RequirePermission,
-  AdminOnly,
-  GoogleLoginButton,
-  UserMenu,
-  UserAvatar,
-  LinkedAccountAlert,
-  AccountLinkingModal,
-  useAuthState,
-  useHasRole,
-  useAuthStore,
-  authBridge,
-  redirectIfAuthenticated,
-  redirectIfUnauthenticated,
-  redirectIfNotAdmin,
-  hasRole
-};
+// Export bridge
+export { authBridge, subscribeToAuthEvents } from './bridge';

@@ -1,77 +1,96 @@
 
-import React, { useState, useEffect } from 'react';
-import { Alert, AlertDescription } from '@/shared/ui/alert';
+import React, { useEffect, useState } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
-import { authBridge } from '@/auth/bridge';
+import { FcGoogle } from 'react-icons/fc';
+import { Link as LinkIcon, X } from 'lucide-react';
+import { authBridge, subscribeToAuthEvents } from '@/auth/bridge';
 import { useToast } from '@/shared/hooks/use-toast';
-import { useAuthStore } from '../store/auth.store';
+import { AuthEventType } from '@/shared/types/shared.types';
 
 export function LinkedAccountAlert() {
-  const [pendingLink, setPendingLink] = useState(false);
+  const [show, setShow] = useState(false);
+  const [provider, setProvider] = useState<string | null>(null);
+  const [linking, setLinking] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuthStore();
-
+  
   useEffect(() => {
-    // Check for pending links in URL
-    const checkForPendingLinks = async () => {
-      try {
-        const hasPending = await authBridge.checkForPendingAccountLink();
-        setPendingLink(hasPending);
-      } catch (error) {
-        console.error('Error checking pending links:', error);
+    // Listen for AUTH_LINKING_REQUIRED events
+    const unsubscribe = subscribeToAuthEvents((event) => {
+      if (event.type === 'AUTH_LINKING_REQUIRED' && event.payload?.provider) {
+        setProvider(event.payload.provider);
+        setShow(true);
       }
-    };
-
-    if (user) {
-      checkForPendingLinks();
-    }
-  }, [user]);
-
-  const handleConfirmLink = async () => {
+    });
+    
+    return () => unsubscribe();
+  }, []);
+  
+  // Don't render anything if not showing
+  if (!show || !provider) return null;
+  
+  const handleLink = async () => {
     try {
-      await authBridge.confirmAccountLink();
-      toast({
-        title: 'Success',
-        description: 'Your accounts have been linked successfully.',
-      });
-      setPendingLink(false);
+      setLinking(true);
+      
+      if (provider === 'google') {
+        await authBridge.linkSocialAccount('google');
+        
+        toast({
+          title: 'Account linked successfully',
+          description: 'You can now sign in with either method',
+        });
+        
+        setShow(false);
+      }
     } catch (error) {
       toast({
-        title: 'Error',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Failed to link accounts. Please try again.',
+        title: 'Failed to link account',
+        description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
+    } finally {
+      setLinking(false);
     }
   };
-
-  const handleCancelLink = () => {
-    authBridge.cancelAccountLink();
-    setPendingLink(false);
-  };
-
-  if (!pendingLink) {
-    return null;
-  }
-
+  
   return (
-    <Alert className="mb-4">
-      <AlertDescription className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <span>
-          We detected you're trying to link an account. Would you like to
-          connect these accounts?
-        </span>
-        <div className="flex gap-2 self-end">
-          <Button variant="outline" size="sm" onClick={handleCancelLink}>
-            Cancel
-          </Button>
-          <Button size="sm" onClick={handleConfirmLink}>
-            Link Accounts
-          </Button>
+    <Alert className="fixed bottom-4 left-4 w-80 z-50 shadow-lg animate-in fade-in slide-in-from-bottom-10 duration-300">
+      <div className="flex justify-between items-start">
+        <div className="flex-1">
+          <AlertTitle className="flex items-center gap-2">
+            <LinkIcon className="h-4 w-4" />
+            Link your accounts
+          </AlertTitle>
+          <AlertDescription className="mt-2">
+            {provider === 'google' ? (
+              <div className="space-y-2">
+                <p>Link your Google account for easier sign in</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleLink}
+                  disabled={linking}
+                  className="flex items-center gap-2 w-full"
+                >
+                  <FcGoogle className="h-4 w-4" />
+                  {linking ? 'Linking...' : 'Link Google Account'}
+                </Button>
+              </div>
+            ) : (
+              <p>Link your accounts for easier sign in</p>
+            )}
+          </AlertDescription>
         </div>
-      </AlertDescription>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-7 w-7 p-0" 
+          onClick={() => setShow(false)}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
     </Alert>
   );
 }
