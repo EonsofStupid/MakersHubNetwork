@@ -1,11 +1,11 @@
 
 import { atom } from 'jotai';
 
-// Inspector state
+// Debugging and inspection atoms
 export const inspectorVisibleAtom = atom<boolean>(false);
-export const inspectorPositionAtom = atom<{ x: number, y: number }>({ x: 0, y: 0 });
-export const inspectorComponentAtom = atom<string | null>(null);
-export const inspectorTabAtom = atom<'styles' | 'data' | 'rules'>('styles');
+export const inspectedComponentAtom = atom<string | null>(null);
+export const inspectorPositionAtom = atom<{ x: number; y: number }>({ x: 0, y: 0 });
+export const inspectorModeAtom = atom<'normal' | 'detailed' | 'code'>('normal');
 
-// Alt key tracking for inspector
-export const altKeyPressedAtom = atom<boolean>(false);
+// Component selection atom
+export const selectedElementAtom = atom<HTMLElement | null>(null);

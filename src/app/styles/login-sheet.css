@@ -11,6 +11,11 @@
   );
   border-left: 2px solid var(--primary);
   box-shadow: -5px 0 15px rgba(0, 240, 255, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.trapezoid-sheet:hover {
+  box-shadow: -8px 0 25px rgba(0, 240, 255, 0.3);
 }
 
 /* Background darkening effect when hovering */
@@ -60,4 +65,42 @@
   height: 1px;
   background: linear-gradient(90deg, var(--primary), transparent);
   opacity: 0.6;
+}
+
+/* Admin button shimmer animation */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Apply shimmer effect to UI elements */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(0, 240, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-100%);
+}
+
+.shimmer:hover::after {
+  animation: shimmer 2s infinite;
+}
+
+/* Group hover effect for buttons */
+.group:hover .group-hover\:animate-shimmer {
+  animation: shimmer 2s infinite;
 }
