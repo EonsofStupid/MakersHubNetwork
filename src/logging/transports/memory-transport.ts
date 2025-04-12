@@ -1,125 +1,112 @@
 
-import { LogCategory, LogEntry, LogLevel, LogTransport } from '../types';
-import { nodeToSearchableString } from '@/shared/utils/render';
-import { isLogLevelAtLeast } from '../utils/map-log-level';
+import { v4 as uuidv4 } from 'uuid';
+import { LogCategory, LogEntry, LogLevel } from '../types';
+import { LogFilter, LogTransport } from '../types';
 
-/**
- * Options for filtering logs in memory transport
- */
-interface LogFilterOptions {
-  level?: LogLevel;
-  category?: LogCategory;
-  source?: string;
-  userId?: string;
-  search?: string;
-  fromDate?: Date;
-  toDate?: Date;
-  limit?: number;
-}
-
-/**
- * Memory transport stores logs in memory for display in UI components
- */
 export class MemoryTransport implements LogTransport {
-  private logs: LogEntry[] = [];
   private maxEntries: number;
-  
+  private entries: LogEntry[] = [];
+  private listeners: ((entries: LogEntry[]) => void)[] = [];
+
   constructor(maxEntries = 1000) {
     this.maxEntries = maxEntries;
   }
-  
-  /**
-   * Log an entry to memory
-   */
-  log(entry: LogEntry): void {
-    this.logs.unshift(entry); // Add to beginning for most recent first
-    
-    // Trim if we exceed max entries
-    if (this.logs.length > this.maxEntries) {
-      this.logs = this.logs.slice(0, this.maxEntries);
+
+  public log(entry: LogEntry): void {
+    // Ensure entry has an ID
+    if (!entry.id) {
+      entry = {
+        ...entry,
+        id: uuidv4()
+      };
     }
+    
+    // Add to front if we're using a reversed view
+    this.entries.unshift(entry);
+    
+    // Trim if over the limit
+    if (this.entries.length > this.maxEntries) {
+      this.entries = this.entries.slice(0, this.maxEntries);
+    }
+    
+    // Notify listeners
+    this.notifyListeners();
   }
-  
-  /**
-   * Get all logs in memory
-   */
-  getLogs(): LogEntry[] {
-    return [...this.logs];
+
+  public clear(): void {
+    this.entries = [];
+    this.notifyListeners();
   }
-  
-  /**
-   * Get logs filtered by specified criteria
-   */
-  getFilteredLogs(options: LogFilterOptions = {}): LogEntry[] {
-    let filteredLogs = [...this.logs];
-    
-    // Filter by level
-    if (options.level !== undefined) {
-      filteredLogs = filteredLogs.filter(log => isLogLevelAtLeast(log.level, options.level!));
-    }
-    
-    // Filter by category
-    if (options.category) {
-      filteredLogs = filteredLogs.filter(log => log.category === options.category);
-    }
-    
-    // Filter by source
-    if (options.source) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.source && log.source.includes(options.source!)
-      );
-    }
-    
-    // Filter by user ID
-    if (options.userId) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.userId && log.userId === options.userId
-      );
-    }
-    
-    // Filter by search text
-    if (options.search) {
-      const searchLower = options.search.toLowerCase();
-      filteredLogs = filteredLogs.filter(log => {
-        // Convert message to searchable string
-        const messageStr = nodeToSearchableString(log.message).toLowerCase();
-        const sourceStr = log.source ? log.source.toLowerCase() : '';
-        const categoryStr = log.category.toLowerCase();
-        
-        return messageStr.includes(searchLower) || 
-               sourceStr.includes(searchLower) || 
-               categoryStr.includes(searchLower);
-      });
-    }
-    
-    // Filter by date range
-    if (options.fromDate) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.timestamp >= options.fromDate!
-      );
-    }
-    
-    if (options.toDate) {
-      filteredLogs = filteredLogs.filter(log => 
-        log.timestamp <= options.toDate!
-      );
-    }
-    
-    // Apply limit
-    if (options.limit && options.limit > 0) {
-      filteredLogs = filteredLogs.slice(0, options.limit);
-    }
-    
-    return filteredLogs;
+
+  public getEntries(): LogEntry[] {
+    return [...this.entries];
   }
-  
-  /**
-   * Clear all logs from memory
-   */
-  clear(): void {
-    this.logs = [];
+
+  public filter(filter: LogFilter): LogEntry[] {
+    return this.entries.filter(entry => {
+      // Filter by level
+      if (filter.level !== undefined) {
+        if (entry.level !== filter.level) return false;
+      }
+      
+      // Filter by category
+      if (filter.category !== undefined) {
+        if (entry.category !== filter.category) return false;
+      }
+      
+      // Filter by source
+      if (filter.source !== undefined) {
+        if (entry.source !== filter.source) return false;
+      }
+      
+      // Filter by search text
+      if (filter.search !== undefined && filter.search !== '') {
+        const searchLower = filter.search.toLowerCase();
+        const messageMatches = entry.message.toLowerCase().includes(searchLower);
+        const sourceMatches = entry.source.toLowerCase().includes(searchLower);
+        const detailsMatch = entry.details ? 
+          JSON.stringify(entry.details).toLowerCase().includes(searchLower) : 
+          false;
+          
+        if (!(messageMatches || sourceMatches || detailsMatch)) return false;
+      }
+      
+      // Filter by user ID if applicable
+      if (entry.userId && filter.userId) {
+        if (entry.userId !== filter.userId) return false;
+      }
+      
+      // Filter by start time
+      if (filter.startTime) {
+        if (entry.timestamp < filter.startTime.getTime()) return false;
+      }
+      
+      // Filter by end time
+      if (filter.endTime) {
+        if (entry.timestamp > filter.endTime.getTime()) return false;
+      }
+      
+      return true;
+    });
+  }
+
+  public addChangeListener(listener: (entries: LogEntry[]) => void): () => void {
+    this.listeners.push(listener);
+    listener([...this.entries]);
+    
+    return () => {
+      const index = this.listeners.indexOf(listener);
+      if (index !== -1) {
+        this.listeners.splice(index, 1);
+      }
+    };
+  }
+
+  private notifyListeners(): void {
+    const entriesCopy = [...this.entries];
+    this.listeners.forEach(listener => listener(entriesCopy));
   }
 }
 
-// Create singleton instance
+// Create and export a singleton instance
 export const memoryTransport = new MemoryTransport();

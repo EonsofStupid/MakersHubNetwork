@@ -1,66 +1,54 @@
 
-import { useCallback, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { UserRole, ROLES } from '@/types/shared';
-import { AuthBridge } from '@/auth/bridge';
+import { LogCategory } from '@/shared/types/shared.types';
+import { authBridge } from '@/auth/bridge';
 
 /**
- * Hook for checking admin access permissions
- * Centralizes admin access logic and provides useful derived values
+ * Hook for checking and managing admin access
+ * 
+ * Provides comprehensive data about user's admin status and permissions
  */
 export function useAdminAccess() {
-  const { isAuthenticated, roles, isLoading } = useAuthStore(state => ({
-    isAuthenticated: state.isAuthenticated,
-    roles: state.roles,
-    isLoading: state.isLoading
-  }));
-  const logger = useLogger('useAdminAccess', LogCategory.ADMIN);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const user = useAuthStore(state => state.user);
+  const roles = useAuthStore(state => state.roles);
+  const status = useAuthStore(state => state.status);
+  const logger = useLogger('AdminAccess', LogCategory.ADMIN);
   
-  // Calculate derived permissions based on roles
-  const isAdmin = useMemo(() => {
-    return AuthBridge.isAdmin();
-  }, []);
+  const isAdmin = authBridge.isAdmin();
+  const isSuperAdmin = authBridge.isSuperAdmin();
+  const hasAdminAccess = isAdmin || isSuperAdmin;
   
-  const isSuperAdmin = useMemo(() => {
-    return AuthBridge.isSuperAdmin();
-  }, []);
-  
-  const hasAdminAccess = useMemo(() => {
-    const hasAccess = isAdmin || isSuperAdmin;
-    
-    if (hasAccess) {
-      logger.debug('User has admin access', { 
-        details: { 
-          isAdmin, 
-          isSuperAdmin,
-          roles 
-        } 
+  // Log admin access check
+  useEffect(() => {
+    if (isAuthenticated && hasAdminAccess) {
+      logger.info('Admin access granted', {
+        details: {
+          userId: user?.id,
+          roles,
+          isAdmin,
+          isSuperAdmin
+        }
+      });
+    } else if (isAuthenticated) {
+      logger.debug('Admin access check - user is not admin', {
+        details: {
+          userId: user?.id,
+          roles
+        }
       });
     }
-    
-    return hasAccess;
-  }, [isAdmin, isSuperAdmin, roles, logger]);
+  }, [isAuthenticated, hasAdminAccess, user?.id, roles, logger, isAdmin, isSuperAdmin]);
   
-  // Determine debug access - only super_admin can access debugging tools
-  const hasDebugAccess = useMemo(() => {
-    return isSuperAdmin;
-  }, [isSuperAdmin]);
-
-  // Check if user has specific role
-  const hasRole = useCallback((role: UserRole | UserRole[]): boolean => {
-    return AuthBridge.hasRole(role);
-  }, []);
-
   return {
     isAuthenticated,
     isAdmin,
     isSuperAdmin,
     hasAdminAccess,
-    hasDebugAccess,
-    hasRole,
     roles,
-    isLoading
+    isLoading: status === 'LOADING',
+    user
   };
 }

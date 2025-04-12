@@ -1,73 +1,66 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, AlertTriangle, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserRole } from '@/types/shared';
+import { Shield, AlertCircle } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
+import { UserRole } from '@/shared/types/shared.types';
 
 interface AccessDeniedProps {
   missingRole?: UserRole | UserRole[];
+  message?: string;
 }
 
-export function AccessDenied({ missingRole }: AccessDeniedProps) {
-  // Format missing role(s) for display
-  const formatRoles = (roles?: UserRole | UserRole[]): string => {
-    if (!roles) return '';
-    
-    if (Array.isArray(roles)) {
-      if (roles.length === 1) return roles[0];
-      if (roles.length === 2) return `${roles[0]} or ${roles[1]}`;
-      return roles.slice(0, -1).join(', ') + ', or ' + roles[roles.length - 1];
-    }
-    
-    return roles;
+export function AccessDenied({ 
+  missingRole, 
+  message = "You don't have permission to access this area."
+}: AccessDeniedProps) {
+  // Format role for display
+  const formatRole = (role: string) => {
+    return role.replace('_', ' ').split(' ').map(
+      word => word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
   };
 
+  // Get formatted role requirements
+  const roleRequirement = missingRole 
+    ? (Array.isArray(missingRole) 
+        ? missingRole.map(formatRole).join(' or ') 
+        : formatRole(missingRole)) 
+    : null;
+
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-background/80">
-      <Card className="max-w-md w-full border-destructive/50">
-        <CardHeader className="space-y-1 flex flex-col items-center text-center pb-2">
-          <div className="h-12 w-12 rounded-full bg-destructive/20 flex items-center justify-center mb-2">
-            <AlertTriangle className="h-6 w-6 text-destructive" />
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background text-foreground">
+      <div className="max-w-md w-full bg-background/20 backdrop-blur-xl border border-primary/30 rounded-lg shadow-xl p-8">
+        <div className="flex justify-center mb-6">
+          <div className="h-20 w-20 rounded-full bg-destructive/10 flex items-center justify-center">
+            <Shield className="h-10 w-10 text-destructive" />
           </div>
-          <CardTitle className="text-2xl">Access Denied</CardTitle>
-          <CardDescription className="text-destructive">
-            You don't have permission to access this area
-          </CardDescription>
-        </CardHeader>
+        </div>
         
-        <CardContent className="space-y-4 text-center pt-2">
-          <div className="p-4 border border-border rounded-md bg-muted/50">
-            <div className="flex items-center gap-2 justify-center mb-2">
-              <Shield className="h-5 w-5 text-primary" />
-              <span className="font-semibold">Required Permission</span>
-            </div>
-            
-            {missingRole ? (
-              <p className="text-sm">
-                You need <span className="font-semibold">{formatRoles(missingRole)}</span> role to access this page.
-              </p>
-            ) : (
-              <p className="text-sm">
-                This page requires administrator privileges.
-              </p>
-            )}
-          </div>
-          
-          <p className="text-sm text-muted-foreground">
-            Please contact your system administrator if you believe you should have access.
+        <h1 className="text-2xl font-bold text-center mb-2">Access Denied</h1>
+        
+        <div className="text-center mb-6">
+          <p className="text-muted-foreground mb-2">
+            {message}
           </p>
-        </CardContent>
+          
+          {roleRequirement && (
+            <div className="flex items-center justify-center gap-2 text-sm p-2 bg-destructive/10 rounded-md">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <span>Required role: <strong>{roleRequirement}</strong></span>
+            </div>
+          )}
+        </div>
         
-        <CardFooter className="flex flex-col space-y-2">
-          <Button asChild className="w-full">
-            <Link to="/">
-              <Home className="mr-2 h-4 w-4" />
-              Return to Home
-            </Link>
+        <div className="flex flex-col gap-3">
+          <Button asChild>
+            <Link to="/">Return to Home</Link>
           </Button>
-        </CardFooter>
-      </Card>
+          <Button variant="outline" asChild>
+            <Link to="/login">Sign in with Another Account</Link>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
