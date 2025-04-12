@@ -20,7 +20,7 @@ export enum ContentStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
   ARCHIVED = 'archived',
-  SCHEDULED = 'scheduled' // Adding missing SCHEDULED status
+  SCHEDULED = 'scheduled'
 }
 
 export enum PartStatus {
@@ -39,7 +39,7 @@ export enum UserRole {
   ADMIN = 'admin',
   USER = 'user',
   MODERATOR = 'moderator',
-  SUPERADMIN = 'superadmin', // Fixed to match usage
+  SUPERADMIN = 'superadmin',
   EDITOR = 'editor',
   BUILDER = 'builder',
   MAKER = 'maker', 
@@ -72,11 +72,11 @@ export enum LogCategory {
   THEME = 'THEME',
   ADMIN = 'ADMIN',
   SYSTEM = 'SYSTEM',
-  CONTENT = 'CONTENT', // Added missing CONTENT category
+  CONTENT = 'CONTENT',
   CHAT = 'CHAT',
   NETWORK = 'NETWORK',
   DEFAULT = 'DEFAULT',
-  APP = 'APP' // Added missing APP category
+  APP = 'APP'
 }
 
 // Log level values for numeric comparison
@@ -151,14 +151,14 @@ export interface Build extends BaseEntity {
   status: BuildStatus;
   submitted_by: string;
   complexity_score: number;
-  complexity?: number; // Added for compatibility
+  complexity?: number;
   parts_count: number;
   mods_count: number;
-  parts?: any[]; // Added for compatibility
-  mods?: any[]; // Added for compatibility
+  parts?: any[]; 
+  mods?: any[];
   images?: string[];
-  image_urls?: string[]; // Added for compatibility
-  user?: { // Added for compatibility
+  image_urls?: string[]; 
+  user?: {
     id: string;
     displayName?: string;
     email?: string;
@@ -175,11 +175,11 @@ export interface BuildReview extends BaseEntity {
   rating: number;
   title: string;
   body: string;
-  content?: string; // Added for compatibility
+  content?: string;
   approved: boolean;
   category?: string[];
-  categories?: string[]; // Added for compatibility
-  is_verified_purchase?: boolean; // Added for compatibility
+  categories?: string[];
+  is_verified_purchase?: boolean;
   image_urls?: string[];
   updated_at: string;
   user?: {
@@ -200,7 +200,7 @@ export interface BuildPart {
 export interface ReviewStats {
   totalReviews: number;
   averageRating: number;
-  avgRating?: number; // Added for compatibility
+  avgRating?: number;
   ratingCounts: Record<number, number>;
   recentReviews: BuildReview[];
 }
@@ -233,7 +233,7 @@ export interface LogEntry {
   level: LogLevel;
   message: string;
   category: LogCategory;
-  timestamp: string; // Keep as string for base type
+  timestamp: string;
   source?: string;
   details?: LogDetails;
 }

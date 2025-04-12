@@ -2,11 +2,11 @@
 import { LogCategory, LogLevel, LogDetails, LogEntry as SharedLogEntry, LogEvent as SharedLogEvent, LogFilter as SharedLogFilter } from '@/shared/types/shared.types';
 
 // Re-export shared types with a more specific naming
-export type { LogCategory, LogLevel, LogDetails };
+export { LogCategory, LogLevel, LogDetails };
 
 // Extend the LogEntry for logging-specific functionality
 export interface LogEntry extends SharedLogEntry {
-  timestamp: number; // Override as number for the logging module
+  timestamp: string; // Ensure consistent timestamp type (string)
 }
 
 export interface LogEvent extends SharedLogEvent {
@@ -17,7 +17,7 @@ export interface LogEvent extends SharedLogEvent {
 export type LogFilter = SharedLogFilter;
 
 export interface LogOptions {
-  timestamp?: number;
+  timestamp?: string; // Ensure consistent timestamp type (string)
   details?: LogDetails;
   source?: string;
 }

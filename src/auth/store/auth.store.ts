@@ -1,7 +1,6 @@
+
 import { create } from 'zustand';
-import { supabase } from '@/lib/supabase';
-import { User } from '@supabase/supabase-js';
-import { UserRole } from '@/shared/types/shared.types';
+import { UserRole, AuthStatus } from '@/shared/types/shared.types';
 import { authBridge } from '@/auth/bridge';
 
 // Re-export UserProfile type
@@ -13,8 +12,6 @@ export interface UserProfile {
   theme_preference: string | null;
   motion_enabled: boolean | null;
 }
-
-export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
 export interface AuthState {
   user: User | null;
@@ -45,7 +42,7 @@ export interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
-  status: 'loading',
+  status: AuthStatus.LOADING,
   roles: [],
   error: null,
   initialized: false,
@@ -53,14 +50,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   
   initialize: async () => {
     try {
-      set({ status: 'loading' });
+      set({ status: AuthStatus.LOADING });
       
       const session = await authBridge.getCurrentSession();
       
       if (session) {
         set({ 
           user: session.user,
-          status: 'authenticated',
+          status: AuthStatus.AUTHENTICATED,
           isAuthenticated: true
         });
         
@@ -73,19 +70,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ 
           user: null,
           profile: null,
-          status: 'unauthenticated',
+          status: AuthStatus.UNAUTHENTICATED,
           isAuthenticated: false,
           roles: []
         });
       }
       
       // Set up auth state change listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      const { data: { subscription } } = authBridge.auth.onAuthStateChange(
         async (event, session) => {
           if (event === 'SIGNED_IN' && session) {
             set({ 
               user: session.user, 
-              status: 'authenticated',
+              status: AuthStatus.AUTHENTICATED,
               isAuthenticated: true
             });
             
@@ -96,7 +93,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             set({ 
               user: null, 
               profile: null,
-              status: 'unauthenticated',
+              status: AuthStatus.UNAUTHENTICATED,
               isAuthenticated: false,
               roles: []
             });
@@ -116,7 +113,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       set({ 
         error: error instanceof Error ? error : new Error('Failed to initialize auth'),
-        status: 'unauthenticated',
+        status: AuthStatus.UNAUTHENTICATED,
         isAuthenticated: false,
         initialized: true
       });
@@ -125,14 +122,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   
   refreshSession: async () => {
     try {
-      set({ status: 'loading' });
+      set({ status: AuthStatus.LOADING });
       
       const session = await authBridge.getCurrentSession();
       
       if (session) {
         set({ 
           user: session.user, 
-          status: 'authenticated',
+          status: AuthStatus.AUTHENTICATED,
           isAuthenticated: true 
         });
         
@@ -143,7 +140,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ 
           user: null, 
           profile: null,
-          status: 'unauthenticated',
+          status: AuthStatus.UNAUTHENTICATED,
           isAuthenticated: false,
           roles: [] 
         });
@@ -151,7 +148,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       set({ 
         error: error instanceof Error ? error : new Error('Failed to refresh session'),
-        status: 'unauthenticated',
+        status: AuthStatus.UNAUTHENTICATED,
         isAuthenticated: false 
       });
     }
@@ -177,28 +174,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       // This is a mock implementation. In a real app, you'd fetch roles from your database
       // based on the user ID or claims from the session
-      const mockRoles: UserRole[] = ['user'];
+      const mockRoles: UserRole[] = [UserRole.USER];
       
       // Check if the user's email contains "admin" to mock admin roles
       if (user.email?.includes('admin')) {
-        mockRoles.push('admin');
+        mockRoles.push(UserRole.ADMIN);
       }
       
       // Check if the user's email contains "super" to mock superadmin roles
       if (user.email?.includes('super')) {
-        mockRoles.push('super_admin');
+        mockRoles.push(UserRole.SUPERADMIN);
       }
       
       set({ roles: mockRoles });
     } catch (error) {
       console.error('Failed to load user roles:', error);
-      set({ roles: ['user'] }); // Default to basic user role
+      set({ roles: [UserRole.USER] }); // Default to basic user role
     }
   },
   
   signInWithEmail: async (email, password) => {
     try {
-      set({ status: 'loading' });
+      set({ status: AuthStatus.LOADING });
       
       await authBridge.signInWithEmail(email, password);
       
@@ -207,7 +204,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       set({ 
         error: error instanceof Error ? error : new Error('Failed to sign in'),
-        status: 'unauthenticated',
+        status: AuthStatus.UNAUTHENTICATED,
         isAuthenticated: false 
       });
       throw error;
@@ -216,16 +213,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   
   signInWithGoogle: async () => {
     try {
-      set({ status: 'loading' });
+      set({ status: AuthStatus.LOADING });
       
-      await authBridge.signInWithGoogle();
+      await authBridge.signInWithOAuth('google');
       
       // Session state will be updated via the onAuthStateChange listener
       
     } catch (error) {
       set({ 
         error: error instanceof Error ? error : new Error('Failed to sign in with Google'),
-        status: 'unauthenticated',
+        status: AuthStatus.UNAUTHENTICATED,
         isAuthenticated: false 
       });
       throw error;
@@ -234,19 +231,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   
   signUp: async (email, password) => {
     try {
-      set({ status: 'loading' });
+      set({ status: AuthStatus.LOADING });
       
       await authBridge.signUp(email, password);
-      
-      // For Supabase with email confirmation disabled, this would immediately sign in the user
-      // Otherwise, it would require email verification
       
       const session = await authBridge.getCurrentSession();
       
       if (session) {
         set({ 
           user: session.user, 
-          status: 'authenticated',
+          status: AuthStatus.AUTHENTICATED,
           isAuthenticated: true 
         });
         
@@ -258,7 +252,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } else {
         set({ 
           user: null, 
-          status: 'unauthenticated',
+          status: AuthStatus.UNAUTHENTICATED,
           isAuthenticated: false,
           error: new Error('Signup successful but requires email verification before login') 
         });
@@ -266,7 +260,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       set({ 
         error: error instanceof Error ? error : new Error('Failed to sign up'),
-        status: 'unauthenticated',
+        status: AuthStatus.UNAUTHENTICATED,
         isAuthenticated: false
       });
       throw error;
@@ -291,7 +285,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (!user || !profile) throw new Error('User not authenticated');
       
       // Update profile with new data
-      const updatedProfile = await authBridge.updateProfile({
+      const updatedProfile = await authBridge.updateUserProfile({
         ...profileData,
         id: user.id
       });
@@ -314,11 +308,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   
   isAdmin: () => {
     const { roles } = get();
-    return roles.includes('admin') || roles.includes('super_admin');
+    return roles.includes(UserRole.ADMIN) || roles.includes(UserRole.SUPERADMIN);
   },
   
   isSuperAdmin: () => {
     const { roles } = get();
-    return roles.includes('super_admin');
+    return roles.includes(UserRole.SUPERADMIN);
   }
 }));
