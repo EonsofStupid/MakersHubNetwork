@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { 
   BuildAdminStore, 
@@ -33,6 +32,16 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
     pageSize: 10,
     total: 0,
     totalPages: 1
+  },
+  
+  // Update pagination
+  updatePagination: (paginationUpdate) => {
+    set(state => ({
+      pagination: { ...state.pagination, ...paginationUpdate }
+    }));
+    
+    // Refetch with new pagination
+    get().fetchBuilds();
   },
   
   // Fetch builds with filters and pagination
@@ -163,9 +172,9 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
   },
   
   // Update filters
-  updateFilters: (filters: Partial<BuildFilters>) => {
+  updateFilters: (filtersUpdate) => {
     set(state => ({
-      filters: { ...state.filters, ...filters },
+      filters: { ...state.filters, ...filtersUpdate },
       pagination: { ...state.pagination, page: 1 } // Reset to first page on filter change
     }));
     
@@ -173,7 +182,7 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
     get().fetchBuilds();
   },
   
-  // Update pagination
+  // Change page
   changePage: (page: number) => {
     set(state => ({
       pagination: { ...state.pagination, page }

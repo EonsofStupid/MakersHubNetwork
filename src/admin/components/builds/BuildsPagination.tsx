@@ -18,11 +18,11 @@ import {
 
 export function BuildsPagination() {
   const { pagination, updatePagination } = useBuildAdminStore();
-  const { page, perPage, total } = pagination;
+  const { page, pageSize, total } = pagination;
   
-  const totalPages = Math.ceil(total / perPage);
-  const startRecord = (page - 1) * perPage + 1;
-  const endRecord = Math.min(startRecord + perPage - 1, total);
+  const totalPages = Math.ceil(total / pageSize);
+  const startRecord = (page - 1) * pageSize + 1;
+  const endRecord = Math.min(startRecord + pageSize - 1, total);
   
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -31,7 +31,7 @@ export function BuildsPagination() {
   };
   
   const handlePerPageChange = (value: string) => {
-    updatePagination({ perPage: parseInt(value), page: 1 });
+    updatePagination({ pageSize: parseInt(value), page: 1 });
   };
   
   return (
@@ -39,7 +39,7 @@ export function BuildsPagination() {
       <div className="text-sm text-muted-foreground flex items-center gap-2">
         <span>Show</span>
         <Select
-          value={perPage.toString()}
+          value={pageSize.toString()}
           onValueChange={handlePerPageChange}
         >
           <SelectTrigger className="w-[70px] h-8">

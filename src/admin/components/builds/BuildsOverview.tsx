@@ -1,7 +1,7 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
 import { useBuildAdminStore } from "@/admin/store/buildAdmin.store";
 import { BuildsFilters } from "./BuildsFilters";
 import { BuildsDataTable } from "./BuildsDataTable";

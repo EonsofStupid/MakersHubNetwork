@@ -105,5 +105,6 @@ export interface BuildAdminStore {
   updateFilters: (filters: Partial<BuildFilters>) => void;
   changePage: (page: number) => void;
   changePageSize: (size: number) => void;
+  updatePagination: (pagination: Partial<BuildPagination>) => void;
   clearError: () => void;
 }

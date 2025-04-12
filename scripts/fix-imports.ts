@@ -34,6 +34,14 @@ files.forEach(file => {
         return `import ${importName} from '@/shared/ui/${componentPath}'`;
       }
     )
+    // Fix hooks imports
+    .replace(
+      /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/hooks\/([^'"]+)['"]/g,
+      (match, importClause, hooksPath) => {
+        updatedCount++;
+        return `import ${importClause} from '@/shared/hooks/${hooksPath}'`;
+      }
+    )
     // Fix types imports
     .replace(
       /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/types\/([^'"]+)['"]/g,
@@ -72,6 +80,14 @@ files.forEach(file => {
       (match, importClause, storePath) => {
         updatedCount++;
         return `import ${importClause} from '@/shared/stores/theme/${storePath}'`;
+      }
+    )
+    // Fix hooks/use-toast import
+    .replace(
+      /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/hooks\/use-toast['"]/g,
+      (match, importClause) => {
+        updatedCount++;
+        return `import ${importClause} from '@/shared/hooks/use-toast'`;
       }
     );
   
