@@ -1,3 +1,4 @@
+
 import { Theme } from "@/types/theme";
 import { TextWithPopup } from "./TextWithPopup";
 
@@ -53,4 +54,4 @@ export function ThemeInfoTab({ currentTheme }: ThemeInfoTabProps) {
       </div>
     </div>
   );
-} 
+}

@@ -7,6 +7,7 @@ export enum LogLevel {
   WARN = 'warn',
   ERROR = 'error',
   FATAL = 'fatal',
+  CRITICAL = 'critical',
   SILENT = 'silent'
 }
 
@@ -18,5 +19,6 @@ export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
   [LogLevel.WARN]: 4,
   [LogLevel.ERROR]: 5,
   [LogLevel.FATAL]: 6,
-  [LogLevel.SILENT]: 7
+  [LogLevel.CRITICAL]: 7,
+  [LogLevel.SILENT]: 8
 };

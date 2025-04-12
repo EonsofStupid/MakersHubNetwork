@@ -1,5 +1,6 @@
 
-import { LogLevel, LogCategory } from "@/shared/types/shared.types";
+import { LogCategory } from './constants/log-category';
+import { LogLevel } from './constants/log-level';
 
 export interface LogEntry {
   id: string;
@@ -16,28 +17,26 @@ export interface LogEvent {
 }
 
 export interface LogFilter {
-  minLevel?: LogLevel;
-  categories?: LogCategory[];
+  level?: LogLevel;
+  category?: LogCategory;
   source?: string;
+  search?: string;
+}
+
+export interface LoggingConfig {
+  minLevel: LogLevel;
+  enabled: boolean;
+  categories: Record<LogCategory, boolean>;
+  detailed: boolean;
+  source: string;
+  console: boolean;
+  ui: boolean;
+  remoteLogging: boolean;
 }
 
 export interface LogTransport {
-  log(entry: LogEntry): void;
+  log: (entry: LogEntry) => void;
+  dispose?: () => void;
 }
 
-export interface LoggerOptions {
-  source?: string;
-  category?: LogCategory;
-  transports?: LogTransport[];
-  filter?: LogFilter;
-}
-
-export interface Logger {
-  trace(message: string, details?: Record<string, unknown>): void;
-  debug(message: string, details?: Record<string, unknown>): void;
-  info(message: string, details?: Record<string, unknown>): void;
-  success(message: string, details?: Record<string, unknown>): void;
-  warn(message: string, details?: Record<string, unknown>): void;
-  error(message: string, details?: Record<string, unknown>): void;
-  fatal(message: string, details?: Record<string, unknown>): void;
-}
+export { LogCategory, LogLevel };

@@ -1,57 +1,77 @@
 
-export type ContentStatus = 'draft' | 'published' | 'archived' | 'scheduled';
+// Content management types
+import { ContentStatus } from '@/shared/types/shared.types';
 
 export interface ContentItem {
   id: string;
   title: string;
   slug: string;
+  type: string;
   status: ContentStatus;
-  authorId: string;
-  authorName?: string;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt?: string;
-  type: 'post' | 'page' | 'product' | 'model' | 'other';
+  author_id: string;
+  created_at: string;
+  updated_at: string;
+  published_at?: string;
+  content: string;
   excerpt?: string;
-  featuredImage?: string;
-  tags?: string[];
-  categories?: string[];
-  metadata?: Record<string, any>;
+  featured_image?: string;
+  meta?: ContentMeta;
+}
+
+export interface ContentMeta {
+  title?: string;
+  description?: string;
+  keywords?: string[];
+  og_image?: string;
 }
 
 export interface ContentFilter {
-  status?: ContentStatus | 'all';
+  status?: ContentStatus;
   type?: string;
   search?: string;
-  tags?: string[];
-  categories?: string[];
   authorId?: string;
-  dateRange?: {
-    from: string;
-    to: string;
-  };
+  fromDate?: string;
+  toDate?: string;
 }
 
-export interface ContentStats {
+export interface ContentPagination {
+  page: number;
+  perPage: number;
   total: number;
-  published: number;
-  draft: number;
-  archived: number;
-  scheduled: number;
 }
 
-export interface ContentCategory {
+export interface ContentSortOption {
+  field: 'title' | 'created_at' | 'updated_at' | 'published_at';
+  direction: 'asc' | 'desc';
+}
+
+export interface ContentTypeDefinition {
   id: string;
   name: string;
-  slug: string;
   description?: string;
-  parentId?: string;
-  count: number;
+  fields: ContentField[];
+  defaultStatus: ContentStatus;
 }
 
-export interface ContentTag {
+export type ContentFieldType = 
+  | 'text' 
+  | 'textarea' 
+  | 'richtext' 
+  | 'number' 
+  | 'boolean'
+  | 'date'
+  | 'image'
+  | 'gallery'
+  | 'select'
+  | 'multiselect'
+  | 'reference';
+
+export interface ContentField {
   id: string;
   name: string;
-  slug: string;
-  count: number;
+  type: ContentFieldType;
+  required: boolean;
+  default?: any;
+  options?: string[]; // For select/multiselect fields
+  reference?: string; // For reference fields (references another content type)
 }
