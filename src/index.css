@@ -1,303 +1,187 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import './styles/effects/cyber-effects.css';
-@import './components/landing/styles/feature-cta.css';
-@import './components/landing/styles/build-showcase.css';
+/* Remove missing CSS imports */
 @import './theme/site-theme.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: var(--site-background);
-    --foreground: var(--site-foreground);
-    --card: var(--site-card);
-    --card-foreground: var(--site-card-foreground);
-    --popover: var(--site-card);
-    --popover-foreground: var(--site-card-foreground);
-    --primary: var(--site-primary);
-    --primary-foreground: var(--site-primary-foreground);
-    --secondary: var(--site-secondary);
-    --secondary-foreground: var(--site-secondary-foreground);
-    --muted: var(--site-muted);
-    --muted-foreground: var(--site-muted-foreground);
-    --accent: var(--site-accent);
-    --accent-foreground: var(--site-accent-foreground);
-    --destructive: var(--site-destructive);
-    --destructive-foreground: var(--site-destructive-foreground);
-    --border: var(--site-border);
-    --input: var(--site-input);
-    --ring: var(--site-ring);
-    --radius: var(--site-radius-md);
-    --effect-color: var(--site-effect-color);
-  }
-
-  * {
-    @apply border-border selection:bg-primary/20 selection:text-primary;
-  }
-  
-  body {
-    @apply bg-background text-foreground min-h-screen overflow-x-hidden;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
-  }
+/* Add base layer styles here */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+  line-height: 1.6;
 }
 
-@layer components {
-  /* Footer-specific styles - prefixed with footer- to ensure uniqueness */
-  .footer-container {
-    @apply fixed bottom-0 left-0 right-0 w-full z-40 transition-all ease-in-out;
-    animation: footer-float 3s ease-in-out infinite;
-    transition-duration: 1500ms;
-  }
-
-  .footer-base {
-    @apply bg-background/20 backdrop-blur-xl shadow-[0_-8px_32px_0_rgba(0,240,255,0.2)] border-t border-primary/30;
-  }
-
-  .footer-gradient {
-    @apply before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:via-secondary/10 before:to-primary/10 before:opacity-100 before:transition-opacity;
-    transition-duration: 1000ms;
-  }
-
-  .footer-transform {
-    transform: perspective(1000px) rotateX(1deg);
-    clip-path: polygon(0 100%, 100% 100%, 98% 0%, 2% 0%);
-  }
-
-  @keyframes footer-float {
-    0%, 100% {
-      transform: perspective(1000px) rotateX(1deg) translateY(0);
-    }
-    50% {
-      transform: perspective(1000px) rotateX(2deg) translateY(-10px);
-    }
-  }
-
-  @keyframes footer-pulse {
-    0%, 100% {
-      opacity: 0.8;
-      box-shadow: 0 -8px 32px 0 rgba(0,240,255,0.2);
-    }
-    50% {
-      opacity: 1;
-      box-shadow: 0 -12px 48px 0 rgba(0,240,255,0.3);
-    }
-  }
-
-  .footer-animate {
-    animation: footer-pulse 4s ease-in-out infinite;
-  }
-
-  /* Simpler, more performant cyber-text effects */
-  .cyber-text {
-    @apply relative inline-block;
-  }
-
-  .mad-scientist-hover {
-    @apply relative overflow-hidden transition-all duration-300;
-  }
-
-  .mad-scientist-hover::before {
-    @apply content-[''] absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 translate-x-[-200%] animate-pulse-slow;
-  }
-
-  .mad-scientist-hover:hover::before {
-    @apply translate-x-[200%] transition-transform duration-1000;
-  }
-
-  .mad-scientist-hover:hover {
-    @apply text-primary shadow-[0_0_15px_rgba(0,240,255,0.5)] scale-105;
-  }
-
-  .glass-morphism {
-    @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)];
-  }
-  
-  .neo-blur {
-    @apply backdrop-blur-2xl bg-black/40 border border-white/10;
-  }
-
-  /* Enhanced CTA Styles and Effects */
-  .cyber-card {
-    @apply relative overflow-hidden rounded-lg border border-primary/20 bg-background/40 backdrop-blur-xl
-           transition-all duration-300 hover:border-primary/40
-           before:absolute before:inset-0 before:bg-gradient-to-br 
-           before:from-primary/5 before:via-secondary/5 before:to-primary/5;
-  }
-
-  .cyber-glow {
-    @apply relative
-           after:absolute after:inset-0 
-           after:bg-gradient-to-r after:from-primary/0 after:via-primary/30 after:to-primary/0
-           after:blur-xl after:opacity-0
-           hover:after:opacity-100 after:transition-opacity after:duration-500;
-  }
-
-  /* New Random CTA Effects */
-  .cyber-glitch {
-    animation: cta-glitch 0.5s ease-in-out infinite alternate;
-  }
-
-  .cyber-particles::before,
-  .cyber-particles::after {
-    content: '';
-    @apply absolute pointer-events-none;
-    width: 3px;
-    height: 3px;
-    background-color: var(--effect-color, #00F0FF);
-    box-shadow: 
-      20px 10px var(--effect-color, #00F0FF),
-      -40px 30px var(--effect-color, #00F0FF),
-      80px -20px var(--effect-color, #00F0FF),
-      -100px -40px var(--effect-color, #00F0FF);
-    animation: cta-particles 2s linear infinite;
-    opacity: 0.8;
-  }
-
-  .cyber-gradient-flow {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .cyber-gradient-flow::before {
-    content: "";
-    @apply absolute inset-0 opacity-60;
-    background: linear-gradient(90deg, transparent, var(--effect-color, #00F0FF), transparent);
-    background-size: 200% 100%;
-    animation: cta-gradient-flow 1.5s linear infinite;
-  }
-
-  .particles-effect {
-    @apply absolute inset-0 overflow-hidden;
-  }
-
-  .particles-effect::before,
-  .particles-effect::after {
-    content: '';
-    position: absolute;
-    width: 3px;
-    height: 3px;
-    background-color: var(--effect-color, #00F0FF);
-    border-radius: 50%;
-    opacity: 0;
-    animation: particle-burst 0.8s ease-out forwards;
-  }
-
-  .particles-effect::before {
-    left: 30%;
-    top: 40%;
-  }
-
-  .particles-effect::after {
-    left: 70%;
-    top: 60%;
-  }
-
-  /* CTA Effect Animations */
-  @keyframes cta-glitch {
-    0% {
-      transform: translate(0);
-      text-shadow: 0 0 0 var(--effect-color, #00F0FF);
-    }
-    25% {
-      transform: translate(-2px, 2px);
-      text-shadow: -1px 0 2px var(--effect-color, #00F0FF);
-    }
-    50% {
-      transform: translate(0);
-      text-shadow: 0 0 0 var(--effect-color, #00F0FF);
-    }
-    75% {
-      transform: translate(2px, -2px);
-      text-shadow: 1px 0 2px var(--effect-color, #00F0FF);
-    }
-    100% {
-      transform: translate(0);
-      text-shadow: 0 0 0 var(--effect-color, #00F0FF);
-    }
-  }
-
-  @keyframes cta-particles {
-    0% { transform: translateY(0) translateX(0); }
-    25% { transform: translateY(-20px) translateX(10px); }
-    50% { transform: translateY(0) translateX(20px); }
-    75% { transform: translateY(20px) translateX(10px); }
-    100% { transform: translateY(0) translateX(0); }
-  }
-
-  @keyframes cta-gradient-flow {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  @keyframes particle-burst {
-    0% {
-      transform: scale(0);
-      opacity: 0;
-    }
-    20% {
-      opacity: 1;
-    }
-    80% {
-      transform: scale(10);
-      opacity: 0.8;
-    }
-    100% {
-      transform: scale(20);
-      opacity: 0;
-    }
-  }
-
-  .text-gradient {
-    @apply bg-gradient-to-br from-primary via-white to-secondary bg-clip-text text-transparent;
-  }
-
-  .border-glow {
-    @apply border border-primary/20 shadow-[0_0_15px_rgba(0,240,255,0.2)]
-           hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.4)]
-           transition-all duration-300;
-  }
-  
-  /* Safe animation definition for gradient backgrounds */
-  @keyframes gradient-flow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  
-  .animate-gradient {
-    background-size: 200% 200%;
-    animation: gradient-flow 3s ease infinite;
-  }
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
 }
 
-@layer utilities {
-  .animation-delay-2000 {
-    animation-delay: 2s;
-  }
-  .animation-delay-4000 {
-    animation-delay: 4s;
-  }
+h1 {
+  font-size: 2.5rem;
 }
 
-/* Custom scrollbar styles */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+h2 {
+  font-size: 2rem;
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
+h3 {
+  font-size: 1.75rem;
 }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-primary/30 rounded-full;
+h4 {
+  font-size: 1.5rem;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary/50;
+h5 {
+  font-size: 1.25rem;
 }
+
+h6 {
+  font-size: 1rem;
+}
+
+/* Links */
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Form elements */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Buttons */
+button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.primary-button {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+}
+
+.primary-button:hover {
+  background-color: var(--primary-hover);
+}
+
+.secondary-button {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  border: none;
+}
+
+.secondary-button:hover {
+  background-color: var(--secondary-hover);
+}
+
+/* Cards */
+.card {
+  background-color: var(--card);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Lists */
+ul, ol {
+  margin-bottom: 1rem;
+}
+
+li {
+  margin-left: 1.5rem;
+}
+
+/* Code blocks */
+pre {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  padding: 1rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+}
+
+code {
+  font-family: monospace;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  font-weight: 600;
+}
+
+/* Utility classes */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.mt-0 {
+  margin-top: 0;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.italic {
+  font-style: italic;
+}
+
+/* Add more global styles as needed */

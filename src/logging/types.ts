@@ -1,54 +1,53 @@
 
-import { LogCategory } from './constants/log-category';
-import { LogLevel } from './constants/log-level';
+import { LogCategory, LogLevel, LogDetails } from '@/shared/types/shared.types';
+
+export interface LogOptions {
+  timestamp?: number;
+  details?: LogDetails;
+  source?: string;
+}
 
 export interface LogEntry {
   id: string;
   level: LogLevel;
   message: string;
-  timestamp: number;
-  source: string;
   category: LogCategory;
-  details?: Record<string, unknown>;
+  timestamp: number;
+  source?: string;
+  details?: LogDetails;
 }
 
 export interface LogEvent {
+  type: string;
   entry: LogEntry;
 }
 
 export interface LogFilter {
   level?: LogLevel;
   category?: LogCategory;
-  source?: string;
   search?: string;
-  // Additional filter properties
   userId?: string;
-  startTime?: number;
-  endTime?: number;
+  startTime?: Date;
+  endTime?: Date;
+  source?: string;
 }
 
-export interface LoggingConfig {
-  minLevel: LogLevel;
-  enabled: boolean;
-  categories: Record<LogCategory, boolean>;
-  detailed: boolean;
-  source: string;
-  console: boolean;
-  ui: boolean;
-  remoteLogging: boolean;
-  // Additional config properties
-  defaultCategory?: LogCategory;
-  transports?: string[];
-}
-
-export interface LogTransport {
-  log: (entry: LogEntry) => void;
-  dispose?: () => void;
-  // Add these properties to fix errors
+export interface LoggerOptions {
   minLevel?: LogLevel;
-  details?: {
-    excludeCategories?: LogCategory[];
-  };
+  defaultCategory?: LogCategory;
+  includeSource?: boolean;
+  enableConsole?: boolean;
+  enableStorage?: boolean;
+  maxEntries?: number;
 }
 
-export { LogCategory, LogLevel };
+export interface Transport {
+  log(entry: LogEntry): void;
+  setMinLevel(level: LogLevel): void;
+  getMinLevel(): LogLevel;
+}
+
+export interface TransportOptions {
+  minLevel?: LogLevel;
+  maxEntries?: number;
+}

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAdminStore } from '../store/admin.store';
 import { useAdminPermissions } from '../hooks/useAdminPermissions';
+import { UserRole } from '@/shared/types/shared.types';
 
 const AdminSidebar: React.FC = () => {
   const { user, logout } = useAdminStore();
@@ -17,49 +18,49 @@ const AdminSidebar: React.FC = () => {
       label: 'Dashboard',
       icon: <LayoutDashboard size={18} />,
       path: '/admin/dashboard',
-      requiredRoles: ['ADMIN', 'MODERATOR', 'SUPERADMIN']
+      requiredRoles: [UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPERADMIN]
     },
     {
       label: 'Users',
       icon: <Users size={18} />,
       path: '/admin/users',
-      requiredRoles: ['ADMIN', 'SUPERADMIN']
+      requiredRoles: [UserRole.ADMIN, UserRole.SUPERADMIN]
     },
     {
       label: 'Content',
       icon: <FileText size={18} />,
       path: '/admin/content',
-      requiredRoles: ['ADMIN', 'MODERATOR', 'SUPERADMIN']
+      requiredRoles: [UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPERADMIN]
     },
     {
       label: 'Analytics',
       icon: <PieChart size={18} />,
       path: '/admin/analytics',
-      requiredRoles: ['ADMIN', 'SUPERADMIN']
+      requiredRoles: [UserRole.ADMIN, UserRole.SUPERADMIN]
     },
     {
       label: 'Layouts',
       icon: <Layers size={18} />,
       path: '/admin/layouts',
-      requiredRoles: ['ADMIN', 'SUPERADMIN']
+      requiredRoles: [UserRole.ADMIN, UserRole.SUPERADMIN]
     },
     {
       label: 'Themes',
       icon: <Palette size={18} />,
       path: '/admin/themes',
-      requiredRoles: ['ADMIN', 'SUPERADMIN']
+      requiredRoles: [UserRole.ADMIN, UserRole.SUPERADMIN]
     },
     {
       label: 'Settings',
       icon: <Settings size={18} />,
       path: '/admin/settings',
-      requiredRoles: ['ADMIN', 'SUPERADMIN']
+      requiredRoles: [UserRole.ADMIN, UserRole.SUPERADMIN]
     },
     {
       label: 'Logs',
       icon: <AlertCircle size={18} />,
       path: '/admin/logs',
-      requiredRoles: ['SUPERADMIN']
+      requiredRoles: [UserRole.SUPERADMIN]
     }
   ];
 

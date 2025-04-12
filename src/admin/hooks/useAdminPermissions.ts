@@ -1,48 +1,71 @@
 
-import { UserRole } from '@/shared/types/shared.types';
+import { useCallback } from 'react';
 import { useAdminStore } from '../store/admin.store';
+import { UserRole } from '@/shared/types/shared.types';
 
-export interface UseHasRoleOptions {
-  requireAll?: boolean;
+export interface UseAdminPermissionsResult {
+  hasRole: (roles: UserRole | UserRole[]) => boolean;
+  hasPermission: (permission: string) => boolean;
+  canEdit: (resource: string) => boolean;
+  canView: (resource: string) => boolean;
+  canManage: (resource: string) => boolean;
+  isSuperAdmin: () => boolean;
 }
 
-export function useAdminPermissions() {
+export const useAdminPermissions = (): UseAdminPermissionsResult => {
   const { user } = useAdminStore();
   
-  const hasRole = (role: UserRole | UserRole[], options: UseHasRoleOptions = {}) => {
-    if (!user || !user.roles || user.roles.length === 0) {
-      return false;
+  const hasRole = useCallback((requiredRoles: UserRole | UserRole[]): boolean => {
+    if (!user || !user.roles || user.roles.length === 0) return false;
+    
+    // If user is super admin, they have all roles
+    if (user.roles.includes(UserRole.SUPERADMIN)) return true;
+    
+    // Check if user has at least one of the required roles
+    if (Array.isArray(requiredRoles)) {
+      return requiredRoles.some(role => user.roles.includes(role));
     }
     
-    const { requireAll = false } = options;
-    const rolesToCheck = Array.isArray(role) ? role : [role];
-    
-    if (requireAll) {
-      return rolesToCheck.every(r => user.roles?.includes(r));
-    }
-    
-    return rolesToCheck.some(r => user.roles?.includes(r));
-  };
+    return user.roles.includes(requiredRoles);
+  }, [user]);
   
-  const hasPermission = (permission: string | string[], options: UseHasRoleOptions = {}) => {
-    if (!user) return false;
-    
-    // This is a simplified implementation - in a real app we would check
-    // against actual permissions stored in the user object or derived from roles
-    return hasRole('ADMIN', options) || hasRole('SUPERADMIN', options);
-  };
+  const isSuperAdmin = useCallback((): boolean => {
+    return hasRole(UserRole.SUPERADMIN);
+  }, [hasRole]);
   
-  const isAdmin = hasRole('ADMIN');
-  const isModerator = hasRole('MODERATOR');
-  const isSuperAdmin = hasRole('SUPERADMIN');
+  const hasPermission = useCallback((permission: string): boolean => {
+    // Implement permission check based on roles
+    // This is a simplified implementation - you may want to extend with a more detailed permission system
+    if (isSuperAdmin()) return true;
+    
+    // Map roles to permissions or check against a predefined mapping
+    // For now, we just check if the user has admin role
+    return hasRole([UserRole.ADMIN, UserRole.MODERATOR]);
+  }, [hasRole, isSuperAdmin]);
+  
+  const canEdit = useCallback((resource: string): boolean => {
+    if (isSuperAdmin()) return true;
+    return hasPermission(`edit:${resource}`);
+  }, [isSuperAdmin, hasPermission]);
+  
+  const canView = useCallback((resource: string): boolean => {
+    if (isSuperAdmin()) return true;
+    return hasPermission(`view:${resource}`);
+  }, [isSuperAdmin, hasPermission]);
+  
+  const canManage = useCallback((resource: string): boolean => {
+    if (isSuperAdmin()) return true;
+    return hasPermission(`manage:${resource}`);
+  }, [isSuperAdmin, hasPermission]);
   
   return {
     hasRole,
     hasPermission,
-    isAdmin,
-    isModerator,
+    canEdit,
+    canView,
+    canManage,
     isSuperAdmin
   };
-}
+};
 
 export default useAdminPermissions;

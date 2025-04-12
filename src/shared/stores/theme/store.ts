@@ -1,102 +1,62 @@
 
 import { create } from 'zustand';
-import { ThemeState, ThemeVariables, ThemeToken, ComponentTokens, ComponentStyles } from '@/shared/types/theme.types';
+import { Theme, ThemeState, ComponentTokens, DesignTokens } from '@/shared/types/theme.types';
 
-// Default theme variables
-const defaultVariables: ThemeVariables = {
-  background: "hsl(240 10% 3.9%)",
-  foreground: "hsl(0 0% 98%)",
-  card: "hsl(240 10% 3.9%)",
-  cardForeground: "hsl(0 0% 98%)",
-  primary: "hsl(0 0% 98%)",
-  primaryForeground: "hsl(240 5.9% 10%)",
-  secondary: "hsl(240 3.7% 15.9%)",
-  secondaryForeground: "hsl(0 0% 98%)",
-  muted: "hsl(240 3.7% 15.9%)",
-  mutedForeground: "hsl(240 5% 64.9%)",
-  accent: "hsl(240 3.7% 15.9%)",
-  accentForeground: "hsl(0 0% 98%)",
-  destructive: "hsl(0 62.8% 30.6%)",
-  destructiveForeground: "hsl(0 0% 98%)",
-  border: "hsl(240 3.7% 15.9%)",
-  input: "hsl(240 3.7% 15.9%)",
-  ring: "hsl(240 4.9% 83.9%)",
-  
-  // Special effects
-  effectColor: "#00F0FF",
-  effectSecondary: "#FF2D6E",
-  effectTertiary: "#00FF9D",
-  
-  // Animation timing
-  transitionFast: "150ms",
-  transitionNormal: "300ms",
-  transitionSlow: "500ms",
-  animationFast: "300ms",
-  animationNormal: "500ms",
-  animationSlow: "1000ms",
-  
-  // Radii
-  radiusSm: "0.25rem",
-  radiusMd: "0.5rem",
-  radiusLg: "0.75rem",
-  radiusFull: "9999px"
-};
-
-// Default theme state
+// Initial state
 const initialState: ThemeState = {
-  theme: 'dark',
-  tokens: [],
-  componentTokens: [],
-  variables: defaultVariables,
-  componentStyles: {},
-  isLoaded: false,
-  currentTheme: null,
-  adminComponents: []
+  themes: [],
+  activeTheme: '',
+  componentTokens: {},
+  isLoading: false,
+  error: null
 };
 
-// Create theme store
-export const useThemeStore = create<ThemeState>(() => initialState);
+// Create the store
+const useThemeStore = create<ThemeState & {
+  setThemes: (themes: Theme[]) => void;
+  setActiveTheme: (themeId: string) => void;
+  setDesignTokens: (tokens: DesignTokens) => void;
+  setComponentTokens: (tokens: ComponentTokens) => void;
+  setIsLoading: (isLoading: boolean) => void;
+  setError: (error: string | null) => void;
+}>((set) => ({
+  ...initialState,
 
-// Helper functions
-export const setTheme = (theme: string) => {
-  useThemeStore.setState({ theme });
-};
+  setThemes: (themes) => {
+    set({ themes });
+  },
 
-export const setTokens = (tokens: ThemeToken[]) => {
-  useThemeStore.setState({ tokens });
-};
+  setActiveTheme: (themeId) => {
+    set({ activeTheme: themeId });
+  },
 
-export const setComponentTokens = (componentTokens: ComponentTokens[]) => {
-  useThemeStore.setState({ componentTokens });
-};
+  setDesignTokens: (tokens) => {
+    set((state) => {
+      const activeTheme = state.themes.find(theme => theme.id === state.activeTheme);
+      if (activeTheme) {
+        const updatedThemes = state.themes.map(theme => {
+          if (theme.id === state.activeTheme) {
+            return { ...theme, design_tokens: tokens };
+          }
+          return theme;
+        });
+        return { themes: updatedThemes };
+      }
+      return { themes: state.themes };
+    });
+  },
 
-export const setVariables = (variables: Partial<ThemeVariables>) => {
-  useThemeStore.setState(state => ({
-    variables: { ...state.variables, ...variables }
-  }));
-};
+  setComponentTokens: (tokens) => {
+    set({ componentTokens: tokens });
+  },
 
-export const setComponentStyles = (componentStyles: ComponentStyles) => {
-  useThemeStore.setState({ componentStyles });
-};
+  setIsLoading: (isLoading) => {
+    set({ isLoading });
+  },
 
-export const setThemeLoaded = (isLoaded: boolean) => {
-  useThemeStore.setState({ isLoaded });
-};
+  setError: (error) => {
+    set({ error });
+  },
+}));
 
-// Initialize theme system
-export const initializeTheme = () => {
-  // Set default theme
-  setThemeLoaded(true);
-};
-
-// Additional theme state functions
-export const loadAdminComponents = async () => {
-  // Mock function for now
-  return [];
-};
-
-// Theme selectors
-export const selectCurrentTheme = (state: ThemeState) => state.currentTheme;
-export const selectThemeTokens = (state: ThemeState) => state.tokens;
-export const selectThemeComponents = (state: ThemeState) => state.componentTokens;
+export { useThemeStore };

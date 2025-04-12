@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory, AuthStatus } from '@/shared/types/shared.types';
+import { LogCategory, AuthStatus, UserRole } from '@/shared/types/shared.types';
 import { AccessDenied } from './auth/AccessDenied';
 
 interface AdminAuthGuardProps {
@@ -20,10 +20,9 @@ export function AdminAuthGuard({
   const { 
     status, 
     user, 
-    isAdmin, 
-    hasRole, 
-    initialize, 
-    initialized 
+    initialize,
+    initialized,
+    hasRole
   } = useAuthStore();
   const navigate = useNavigate();
   const logger = useLogger('AdminAuthGuard', LogCategory.AUTH);
@@ -68,13 +67,13 @@ export function AdminAuthGuard({
   }
   
   // Check if user has admin role
-  if (!isAdmin()) {
+  if (!hasRole(UserRole.ADMIN)) {
     logger.warn(`Access denied: User ${user?.id} is not an admin`);
     return <AccessDenied message="You need administrator privileges to access this area." />;
   }
   
   // If a specific permission is required, check for it
-  if (requirePermission && !hasRole('admin')) {
+  if (requirePermission && !hasRole(UserRole.ADMIN)) {
     logger.warn(`Access denied: User ${user?.id} lacks required permission: ${requirePermission}`);
     return <AccessDenied message={`You don't have the required permission: ${requirePermission}`} />;
   }

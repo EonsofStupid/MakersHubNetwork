@@ -1,57 +1,85 @@
 
-// Theme token types
+import { ThemeContext, ThemeStatus } from './shared.types';
+
 export interface ThemeToken {
   id: string;
+  theme_id: string;
   token_name: string;
   token_value: string;
   category: string;
-  fallback_value?: string;
   description?: string;
+  fallback_value?: string;
 }
 
-// Design tokens are a collection of theme tokens by category
-export interface DesignTokens {
-  [category: string]: Record<string, string>;
-}
-
-// Component tokens are specific styles for components
 export interface ComponentTokens {
   [key: string]: Record<string, string>;
 }
 
-// Theme state interface
+export interface DesignTokens {
+  colors?: Record<string, string>;
+  typography?: Record<string, string>;
+  spacing?: Record<string, string>;
+  radii?: Record<string, string>;
+  shadows?: Record<string, string>;
+  [key: string]: Record<string, string> | undefined;
+}
+
 export interface ThemeState {
   themes: Theme[];
   activeTheme: string;
   componentTokens: ComponentTokens;
-  designTokens: DesignTokens;
   isLoading: boolean;
+  error: string | null;
 }
 
-// Theme interface
 export interface Theme {
   id: string;
   name: string;
   description?: string;
+  status: ThemeStatus;
+  context: ThemeContext;
+  design_tokens: DesignTokens;
+  component_tokens: ComponentTokens;
+  is_default: boolean;
+  is_system: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  version: number;
   parent_theme_id?: string;
-  is_system?: boolean;
-  is_default?: boolean;
-  status?: string;
-  version?: number;
-  context?: string;
-  preview_url?: string;
 }
 
-// Theme log details
-export interface ThemeLogDetails {
-  themeId?: string;
-  operation?: string;
-  component?: string;
-  tokenCount?: number;
+export type ThemeEffectType = 
+  | 'glow'
+  | 'flicker'
+  | 'pulse'
+  | 'shimmer'
+  | 'neon'
+  | 'cyber'
+  | 'noise'
+  | 'distortion'
+  | 'glitch'
+  | 'gradient'
+  | 'particle'
+  | 'morph';
+
+export interface ThemeEffect {
+  type: ThemeEffectType;
+  enabled: boolean;
+  intensity?: number;
+  color?: string;
   duration?: number;
+  delay?: number;
+  options?: Record<string, any>;
 }
 
-// Theme variables
-export interface ThemeVariables {
-  [key: string]: string;
+export interface ThemeEffectProps {
+  effect: ThemeEffect;
+  children: React.ReactNode;
+}
+
+export interface ThemeEffectProviderProps {
+  children: React.ReactNode;
+  className?: string;
+  effect?: ThemeEffect;
 }
