@@ -1,7 +1,7 @@
 
 import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { BuildStatus } from "@/admin/types/build.types";
+import { Badge } from "@/shared/ui/badge";
+import { BuildStatus } from "@/shared/types/build.types";
 import { AlertCircle, CheckCircle, XCircle, RotateCcw } from "lucide-react";
 
 interface BuildStatusBadgeProps {
@@ -11,25 +11,25 @@ interface BuildStatusBadgeProps {
 export function BuildStatusBadge({ status }: BuildStatusBadgeProps) {
   const getStatusDetails = (status: BuildStatus) => {
     switch (status) {
-      case 'pending':
+      case BuildStatus.PENDING:
         return { 
           label: 'Pending Review', 
           variant: 'outline', 
           icon: <AlertCircle className="w-3.5 h-3.5 mr-1.5" /> 
         };
-      case 'approved':
+      case BuildStatus.APPROVED:
         return { 
           label: 'Approved', 
           variant: 'default', 
           icon: <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> 
         };
-      case 'rejected':
+      case BuildStatus.REJECTED:
         return { 
           label: 'Rejected', 
           variant: 'destructive', 
           icon: <XCircle className="w-3.5 h-3.5 mr-1.5" /> 
         };
-      case 'needs_revision':
+      case BuildStatus.NEEDS_REVISION:
         return { 
           label: 'Needs Revision', 
           variant: 'warning', 

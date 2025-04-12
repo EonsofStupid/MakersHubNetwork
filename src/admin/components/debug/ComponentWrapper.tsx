@@ -1,7 +1,8 @@
 
 import React, { forwardRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/useAuth';
+import { useHasRole } from '@/auth/hooks/useHasRole';
+import { UserRole } from '@/shared/types/shared.types';
 
 interface ComponentWrapperProps {
   children: React.ReactNode;
@@ -13,9 +14,9 @@ interface ComponentWrapperProps {
 
 export const ComponentWrapper = forwardRef<HTMLDivElement, ComponentWrapperProps>(
   ({ children, componentName, className, id, onClick, ...props }, ref) => {
-    const { hasRole } = useAuth();
+    const { hasRole } = useHasRole();
     // Check if user is a super_admin
-    const isSuperAdmin = hasRole('super_admin');
+    const isSuperAdmin = hasRole(UserRole.SUPER_ADMIN);
     
     // Generate a stable component ID that won't change on re-renders
     const stableId = useMemo(() => {

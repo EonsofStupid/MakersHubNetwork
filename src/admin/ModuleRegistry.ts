@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useLogger } from '@/hooks/use-logger';
 import { authBridge } from '@/bridges/AuthBridge';
-import { LogCategory, AuthEventType } from '@/shared/types/shared.types';
+import { LogCategory } from '@/shared/types/shared.types';
+import { AuthEventType } from '@/shared/types/auth-event.types';
 import type { LogDetails } from '@/shared/types/logging.types';
 
 // Module interface
@@ -91,7 +92,7 @@ class AdminModuleRegistry {
   // Listen for auth changes
   setupAuthListeners(): () => void {
     return authBridge.subscribeToAuthEvents(async (event) => {
-      if (event.type === AuthEventType.AUTH_STATE_CHANGE) {
+      if (event === AuthEventType.AUTH_STATE_CHANGE) {
         this.logger.debug('Auth state changed, reinitializing modules');
         await this.cleanupAll();
         await this.initializeAll();
