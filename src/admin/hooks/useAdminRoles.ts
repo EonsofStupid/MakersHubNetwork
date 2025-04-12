@@ -1,86 +1,100 @@
 
-import { useAuthStore } from "@/auth/store/auth.store";
-import { useLogger } from "@/hooks/use-logger";
-import { LogCategory, UserRole } from "@/shared/types/shared.types";
+import { useCallback } from 'react';
+import { useAdminAuth } from './useAdminAuth';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory, UserRole } from '@/shared/types/shared.types';
 
 /**
- * Check if a user has a specific role
+ * Hook for role-based access control in the admin panel
  */
-export function useHasAdminRole(requiredRole: UserRole | UserRole[]): boolean {
-  const roles = useAuthStore(state => state.roles);
-  const logger = useLogger("useHasAdminRole", LogCategory.ADMIN);
+export function useAdminRoles() {
+  const auth = useAdminAuth();
+  const logger = useLogger('useAdminRoles', LogCategory.AUTH);
 
-  // If user is a super_admin, they have all roles
-  if (roles.includes("super_admin")) {
-    logger.debug("User has super_admin role, granting access", {
-      details: { requiredRole }
-    });
-    return true;
-  }
+  // Check if user is a Super Admin
+  const isSuperAdmin = useCallback(() => {
+    return auth.hasRole(UserRole.SUPER_ADMIN);
+  }, [auth]);
 
-  // Check if role matches any of the required roles
-  if (Array.isArray(requiredRole)) {
-    const hasRole = requiredRole.some(role => roles.includes(role));
-    
-    logger.debug(`User role check: ${hasRole ? "granted" : "denied"}`, {
-      details: { 
-        userRoles: roles,
-        requiredRoles: requiredRole,
-        hasAccess: hasRole
-      }
-    });
-    
-    return hasRole;
-  }
-  
-  const hasRole = roles.includes(requiredRole);
+  // Check if user is an Admin
+  const isAdmin = useCallback(() => {
+    return auth.hasRole(UserRole.ADMIN);
+  }, [auth]);
 
-  logger.debug(`User role check: ${hasRole ? "granted" : "denied"}`, {
-    details: { 
-      userRoles: roles,
-      requiredRole,
-      hasAccess: hasRole
+  // Check if user is a Moderator
+  const isModerator = useCallback(() => {
+    return auth.hasRole(UserRole.MODERATOR);
+  }, [auth]);
+
+  // Check if user is a Builder
+  const isBuilder = useCallback(() => {
+    return auth.hasRole(UserRole.BUILDER);
+  }, [auth]);
+
+  // Check if user has at least one of the given roles
+  const hasAnyRole = useCallback((roles: UserRole[]) => {
+    return roles.some(role => auth.hasRole(role));
+  }, [auth]);
+
+  // Get the highest role for UI display (Super Admin > Admin > Moderator > Builder > User)
+  const getHighestRole = useCallback((): UserRole => {
+    if (auth.hasRole(UserRole.SUPER_ADMIN)) return UserRole.SUPER_ADMIN;
+    if (auth.hasRole(UserRole.ADMIN)) return UserRole.ADMIN;
+    if (auth.hasRole(UserRole.MODERATOR)) return UserRole.MODERATOR;
+    if (auth.hasRole(UserRole.BUILDER)) return UserRole.BUILDER;
+    return UserRole.USER;
+  }, [auth]);
+
+  // Check if user has elevated privileges (admin or higher)
+  const hasElevatedPrivileges = useCallback(() => {
+    return auth.hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  }, [auth]);
+
+  // Check if user can see a specific admin section
+  const canAccessAdminSection = useCallback((adminSection: string) => {
+    // Super admins can access everything
+    if (auth.hasRole(UserRole.SUPER_ADMIN)) return true;
+
+    // Section-specific permissions
+    const sectionPermissions: Record<string, UserRole[]> = {
+      'dashboard': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      'users': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      'builds': [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      'settings': [UserRole.SUPER_ADMIN],
+      'analytics': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      'content': [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      'reviews': [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+    };
+
+    const allowedRoles = sectionPermissions[adminSection];
+    if (!allowedRoles) {
+      logger.warn(`Unknown admin section: ${adminSection}`);
+      return false;
     }
-  });
-  
-  return hasRole;
-}
 
-/**
- * Check if a user has either admin or super_admin role
- */
-export function useIsAdmin(): boolean {
-  return useHasAdminRole(["admin", "super_admin"]);
-}
+    return allowedRoles.some(role => auth.hasRole(role));
+  }, [auth, logger]);
 
-/**
- * Check if a user has the super_admin role
- */
-export function useIsSuperAdmin(): boolean {
-  return useHasAdminRole("super_admin");
-}
+  // Get available role labels (for UI displays, selects, etc)
+  const getRoleLabels = () => {
+    return {
+      [UserRole.SUPER_ADMIN]: 'Super Admin',
+      [UserRole.ADMIN]: 'Admin',
+      [UserRole.MODERATOR]: 'Moderator',
+      [UserRole.BUILDER]: 'Builder',
+      [UserRole.USER]: 'User',
+    };
+  };
 
-/**
- * Get the highest role a user has
- */
-export function useHighestRole(): UserRole {
-  const roles = useAuthStore(state => state.roles);
-  
-  if (roles.includes("super_admin")) {
-    return "super_admin";
-  }
-  
-  if (roles.includes("admin")) {
-    return "admin";
-  }
-  
-  if (roles.includes("moderator")) {
-    return "moderator";
-  }
-  
-  if (roles.includes("builder")) {
-    return "builder";
-  }
-  
-  return "user";
+  return {
+    isSuperAdmin,
+    isAdmin,
+    isModerator,
+    isBuilder,
+    hasAnyRole,
+    getHighestRole,
+    hasElevatedPrivileges,
+    canAccessAdminSection,
+    getRoleLabels,
+  };
 }

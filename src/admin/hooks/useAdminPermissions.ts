@@ -1,45 +1,52 @@
 
-import { useMemo } from 'react';
-import { useAuthState } from '@/auth/hooks/useAuthState';
+import { useCallback } from 'react';
 import { useAdminStore } from '@/admin/store/admin.store';
-import { PERMISSIONS } from '@/auth/permissions';
+import { useAdminAuth } from './useAdminAuth';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { AdminPermissionValue } from '@/admin/types/permissions';
+import { LogCategory, UserRole } from '@/shared/types/shared.types';
 
 /**
  * Hook for checking admin permissions
- * Uses both auth store (for user/roles) and admin store (for permissions)
  */
 export function useAdminPermissions() {
-  const { status, roles } = useAuthState();
-  const adminStore = useAdminStore();
-  const permissions = adminStore.permissions;
-  const isLoadingPermissions = adminStore.isLoadingPermissions;
-  
-  const isLoading = status === 'loading' || isLoadingPermissions;
-  const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
-  
-  // Memoize the hasPermission function to prevent recreating on each render
-  const hasPermission = useMemo(() => {
-    return (permission: AdminPermissionValue): boolean => {
-      // If loading, be conservative and deny access
-      if (isLoading) {
-        return false;
-      }
-      
-      // Super admin permission grants access to everything
-      if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) {
-        return true;
-      }
-      
-      return permissions.includes(permission);
+  const auth = useAdminAuth();
+  const adminState = useAdminStore();
+  const logger = useLogger('useAdminPermissions', LogCategory.AUTH);
+
+  // Check if user has permission
+  const hasPermission = useCallback((permission: string): boolean => {
+    // If still loading, default to false
+    if (adminState.isLoading) {
+      return false;
+    }
+
+    // Super admins always have all permissions
+    if (auth.hasRole(UserRole.SUPER_ADMIN)) {
+      return true;
+    }
+
+    // Check standard permission mapping
+    // This is a simplified implementation - you would typically check against
+    // a more sophisticated permission system stored in your auth state
+    const permissionMap: Record<string, UserRole[]> = {
+      'admin.access': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      'admin.users.edit': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      'admin.users.view': [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MODERATOR],
+      'admin.builds.approve': [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MODERATOR],
+      'admin.settings': [UserRole.ADMIN, UserRole.SUPER_ADMIN]
     };
-  }, [permissions, isLoading]);
+
+    const requiredRoles = permissionMap[permission];
+    if (!requiredRoles) {
+      logger.warn(`Unknown permission requested: ${permission}`);
+      return false;
+    }
+
+    return requiredRoles.some(role => auth.hasRole(role));
+  }, [auth, adminState.isLoading, logger]);
 
   return {
-    permissions,
     hasPermission,
-    isLoading
+    isLoading: adminState.isLoading || auth.isLoading
   };
 }

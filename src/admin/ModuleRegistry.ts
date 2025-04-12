@@ -1,92 +1,115 @@
 
-import { createStore } from 'zustand';
-import { authBridge } from '@/auth/bridge';
-import { UserRole } from '@/shared/types/shared.types';
+import { useEffect, useState } from 'react';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
+import { authBridge } from '@/bridges/AuthBridge';
+import { LogCategory, AuthEventType } from '@/shared/types/shared.types';
 
-// Define the store state
-interface ModuleRegistryState {
-  registeredModules: Record<string, AdminModule>;
-  activeModule: string | null;
-  setActiveModule: (moduleId: string | null) => void;
-  registerModule: (module: AdminModule) => void;
-  unregisterModule: (moduleId: string) => void;
-  isInitialized: boolean;
-  initialize: () => Promise<void>;
-}
-
-// Define the admin module interface
+// Module interface
 export interface AdminModule {
   id: string;
-  title: string;
+  name: string;
   description?: string;
-  icon?: React.ReactNode;
-  route: string;
-  component: React.ComponentType<any>;
-  requiredRoles?: UserRole[];
-  settings?: Record<string, any>;
+  version: string;
+  enabled: boolean;
+  initialize: () => Promise<void>;
+  cleanup?: () => Promise<void>;
 }
 
-// Create the registry store
-export const useModuleRegistry = createStore<ModuleRegistryState>((set, get) => ({
-  registeredModules: {},
-  activeModule: null,
-  isInitialized: false,
-  
-  setActiveModule: (moduleId) => {
-    set({ activeModule: moduleId });
-  },
-  
-  registerModule: (module) => {
-    set((state) => ({
-      registeredModules: {
-        ...state.registeredModules,
-        [module.id]: module
-      }
-    }));
-  },
-  
-  unregisterModule: (moduleId) => {
-    set((state) => {
-      const { [moduleId]: _, ...rest } = state.registeredModules;
-      return { registeredModules: rest };
-    });
-  },
-  
-  initialize: async () => {
-    const logger = useLogger('ModuleRegistry', LogCategory.ADMIN);
+// Registry for admin modules
+class AdminModuleRegistry {
+  private modules: Map<string, AdminModule> = new Map();
+  private initializedModules: Set<string> = new Set();
+  private logger = useLogger('AdminModuleRegistry', LogCategory.SYSTEM);
+
+  // Register a module
+  register(module: AdminModule): void {
+    if (this.modules.has(module.id)) {
+      this.logger.warn(`Module with ID ${module.id} is already registered`, { module: module.name });
+      return;
+    }
+
+    this.modules.set(module.id, module);
+    this.logger.debug(`Registered module: ${module.name}`, { moduleId: module.id });
+  }
+
+  // Initialize all modules
+  async initializeAll(): Promise<void> {
+    this.logger.info('Initializing all admin modules');
     
-    try {
-      logger.info('Initializing Admin Module Registry');
+    for (const [id, module] of this.modules.entries()) {
+      if (!module.enabled) {
+        this.logger.debug(`Skipping disabled module: ${module.name}`);
+        continue;
+      }
       
-      // Listen for auth state changes to update modules based on permissions
-      const unsubscribe = authBridge.subscribeToAuthEvents((event) => {
-        if (event.type === 'AUTH_STATE_CHANGE') {
-          logger.info('Auth state changed, updating module registry');
-          
-          // Here we would:
-          // 1. Filter modules based on user permissions
-          // 2. Update available modules
-          // 3. Redirect if needed
-        }
-      });
-      
-      set({ isInitialized: true });
-      
-      logger.info('Admin Module Registry initialized');
-      
-      // Return unsubscribe function for cleanup - converted to void to match return type
-      return Promise.resolve();
-    } catch (error) {
-      logger.error('Failed to initialize Admin Module Registry', {
-        details: {
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }
-      });
-      
-      // Ensure we still resolve the promise
-      return Promise.resolve();
+      try {
+        await module.initialize();
+        this.initializedModules.add(id);
+        this.logger.info(`Initialized module: ${module.name}`);
+      } catch (error) {
+        this.logger.error(`Failed to initialize module: ${module.name}`, { error });
+      }
     }
   }
-}));
+
+  // Cleanup all modules (on app shutdown/auth change)
+  async cleanupAll(): Promise<void> {
+    this.logger.info('Cleaning up admin modules');
+    
+    for (const [id, module] of this.modules.entries()) {
+      if (!this.initializedModules.has(id) || !module.cleanup) continue;
+      
+      try {
+        await module.cleanup();
+        this.initializedModules.delete(id);
+        this.logger.info(`Cleaned up module: ${module.name}`);
+      } catch (error) {
+        this.logger.error(`Failed to cleanup module: ${module.name}`, { error });
+      }
+    }
+  }
+
+  // Listen for auth changes
+  setupAuthListeners(): () => void {
+    return authBridge.subscribeToAuthEvents(async (event) => {
+      if (event.type === AuthEventType.AUTH_STATE_CHANGE) {
+        this.logger.debug('Auth state changed, reinitializing modules');
+        await this.cleanupAll();
+        await this.initializeAll();
+      }
+    });
+  }
+}
+
+// Export singleton instance
+export const adminRegistry = new AdminModuleRegistry();
+
+// React hook to use the module registry
+export function useAdminModuleRegistry() {
+  const [initialized, setInitialized] = useState(false);
+  const logger = useLogger('useAdminModuleRegistry', LogCategory.SYSTEM);
+  
+  useEffect(() => {
+    const init = async () => {
+      logger.debug('Initializing admin module registry');
+      
+      try {
+        await adminRegistry.initializeAll();
+        setInitialized(true);
+      } catch (error) {
+        logger.error('Failed to initialize admin module registry', { error });
+      }
+    };
+    
+    init();
+    
+    const unsubscribe = adminRegistry.setupAuthListeners();
+    
+    return () => {
+      unsubscribe();
+      adminRegistry.cleanupAll();
+    };
+  }, [logger]);
+  
+  return { initialized };
+}

@@ -1,109 +1,96 @@
 
-import React, { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory, AuthStatus, UserRole } from '@/shared/types/shared.types';
+import React, { useEffect, useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { AccessDenied } from './auth/AccessDenied';
-import { useToast } from '@/shared/hooks/use-toast';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { useHasRole, useHasAdminAccess } from '@/auth/hooks/useHasRole';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
+import { UserRole, AuthStatus } from '@/shared/types/shared.types';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
   requiredRole?: UserRole | UserRole[];
+  requiredPermission?: string;
+  redirectPath?: string;
 }
 
-/**
- * AdminAuthGuard
- * 
- * Protects admin routes to ensure only authorized users can access them.
- * Redirects unauthenticated users to login and unauthorized users to access denied.
- * Uses the standardized role checking system.
- */
 export function AdminAuthGuard({ 
   children, 
-  requiredRole 
+  requiredRole = UserRole.ADMIN, 
+  requiredPermission, 
+  redirectPath = '/login' 
 }: AdminAuthGuardProps) {
-  // Get auth status directly from authStore to ensure consistency
-  const user = useAuthStore(state => state.user);
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const status = useAuthStore(state => state.status);
-  const roles = useAuthStore(state => state.roles);
+  const auth = useAuth();
+  const location = useLocation();
+  const logger = useLogger('AdminAuthGuard', LogCategory.AUTH);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   
-  // Use our standardized hooks
-  const hasAdminAccess = useHasAdminAccess();
-  
-  // Other hooks
-  const logger = useLogger('AdminAuthGuard', LogCategory.ADMIN);
-  const { toast } = useToast();
-  
-  // Check if user has required role using our hook
-  const hasRequiredRole = requiredRole 
-    ? useHasRole(requiredRole)
-    : true;
-  
-  // Execute guard check on mount
   useEffect(() => {
-    if (!isAuthenticated) {
-      logger.warn('Unauthenticated user attempted to access admin route');
-      return;
-    }
-    
-    if (!hasAdminAccess) {
-      logger.warn('Non-admin user attempted to access admin route', {
-        details: { roles, requiredRole }
-      });
+    const checkAuth = async () => {
+      // Wait for auth state to be ready
+      if (auth.isLoading) {
+        return;
+      }
+
+      if (!auth.isAuthenticated) {
+        logger.info('User not authenticated', { 
+          redirectPath,
+          requiredRole,
+          requiredPermission
+        });
+        setIsAuthorized(false);
+        return;
+      }
       
-      toast({
-        title: 'Access Denied',
-        description: 'You do not have permission to access this admin area',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    // Always log admin access attempts for debugging
-    if (hasAdminAccess) {
-      logger.info('Admin user accessing protected route', {
-        details: { 
-          userId: user?.id,
-          roles,
-          hasAdminAccess,
-          requiredRole
+      // Check role if required
+      if (requiredRole) {
+        const hasRequiredRole = auth.hasRole(requiredRole);
+        if (!hasRequiredRole) {
+          logger.warn('User lacks required role', { 
+            requiredRole,
+            userRoles: auth.roles
+          });
+          setIsAuthorized(false);
+          return;
         }
-      });
-    }
-  }, [isAuthenticated, hasAdminAccess, logger, roles, requiredRole, toast, user]);
+      }
+      
+      // Check permission if required
+      if (requiredPermission) {
+        // This would call a permission check function if you have one
+        const hasPermission = true; // Placeholder
+        if (!hasPermission) {
+          logger.warn('User lacks required permission', { 
+            requiredPermission 
+          });
+          setIsAuthorized(false);
+          return;
+        }
+      }
+      
+      // If we get here, user is authorized
+      logger.debug('User authorized for admin access');
+      setIsAuthorized(true);
+    };
+    
+    checkAuth();
+  }, [auth.isAuthenticated, auth.isLoading, auth.roles, auth.hasRole, requiredRole, requiredPermission, redirectPath, logger]);
   
-  // Show nothing while authenticating
-  if (status === AuthStatus.LOADING || status === AuthStatus.INITIAL) {
-    return (
-      <div className="flex items-center justify-center h-screen w-full">
-        <div className="relative">
-          <div className="h-32 w-32 rounded-full border-t-2 border-b-2 border-primary animate-spin"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-16 w-16 rounded-full border-r-2 border-l-2 border-secondary animate-spin animate-reverse"></div>
-          </div>
-        </div>
-      </div>
-    );
+  // Show loading state while checking
+  if (auth.status === AuthStatus.LOADING || auth.status === AuthStatus.INITIAL) {
+    return <div>Loading...</div>;
   }
   
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  // Not authenticated, redirect to login
+  if (!auth.isAuthenticated) {
+    return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
   
-  // Check for admin access
-  if (!hasAdminAccess) {
-    return <AccessDenied />;
+  // Authentication check complete but not authorized for this admin section
+  if (isAuthorized === false) {
+    return <AccessDenied requiredRole={requiredRole} />;
   }
   
-  // Check for specific roles if required
-  if (requiredRole && !hasRequiredRole) {
-    return <AccessDenied missingRole={requiredRole} />;
-  }
-  
-  // User has access, render children
+  // All checks passed, render children
   return <>{children}</>;
 }

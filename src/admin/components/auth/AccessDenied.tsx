@@ -1,63 +1,49 @@
 
-import React from "react";
-import { Shield, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { UserRole } from "@/shared/types/shared.types";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { UserRole } from '@/shared/types/shared.types';
+import { Button } from '@/shared/ui/button';
 
 interface AccessDeniedProps {
-  missingRole?: UserRole | UserRole[];
+  requiredRole?: UserRole | UserRole[];
 }
 
-export function AccessDenied({ missingRole }: AccessDeniedProps) {
-  const formattedRole = React.useMemo(() => {
-    if (!missingRole) return "appropriate permissions";
+export function AccessDenied({ requiredRole }: AccessDeniedProps) {
+  const navigate = useNavigate();
+  
+  const roleDisplay = () => {
+    if (!requiredRole) return '';
     
-    if (Array.isArray(missingRole)) {
-      if (missingRole.length === 1) {
-        return `'${missingRole[0]}' role`;
-      }
-      if (missingRole.length === 2) {
-        return `'${missingRole[0]}' or '${missingRole[1]}' role`;
-      }
-      const lastRole = missingRole[missingRole.length - 1];
-      const otherRoles = missingRole.slice(0, -1).join("', '");
-      return `'${otherRoles}', or '${lastRole}' role`;
+    if (Array.isArray(requiredRole)) {
+      return requiredRole.join(' or ');
     }
     
-    return `'${missingRole}' role`;
-  }, [missingRole]);
-
+    return requiredRole;
+  };
+  
   return (
-    <div className="flex items-center justify-center min-h-[80vh]">
-      <div className="max-w-md p-8 border border-red-200 bg-red-50 rounded-lg shadow-lg space-y-6 text-center">
-        <div className="flex justify-center">
-          <div className="relative">
-            <Shield className="h-16 w-16 text-red-300" />
-            <AlertTriangle className="h-8 w-8 absolute bottom-0 right-0 text-red-500" />
-          </div>
-        </div>
-        
-        <h1 className="text-2xl font-bold text-red-800">Access Denied</h1>
-        
-        <p className="text-red-600">
-          {missingRole ? (
-            <>
-              You need {formattedRole} to access this area.
-            </>
-          ) : (
-            <>
-              You don't have permission to access this area.
-            </>
+    <div className="flex flex-col items-center justify-center min-h-[70vh] p-4">
+      <div className="bg-destructive/10 p-6 rounded-lg border border-destructive/30 max-w-md w-full text-center">
+        <h1 className="text-2xl font-bold text-destructive mb-2">Access Denied</h1>
+        <p className="mb-4 text-muted-foreground">
+          You don't have permission to access this area.
+          {requiredRole && (
+            <span className="block mt-2">
+              Required role: <strong>{roleDisplay()}</strong>
+            </span>
           )}
         </p>
-        
-        <div className="pt-4 space-y-3">
-          <Button asChild variant="outline" className="w-full">
-            <Link to="/admin">Return to Dashboard</Link>
+        <div className="flex gap-4 justify-center">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/')}
+          >
+            Go Home
           </Button>
-          <Button asChild variant="default" className="w-full">
-            <Link to="/">Return to Home</Link>
+          <Button
+            onClick={() => navigate(-1)}
+          >
+            Go Back
           </Button>
         </div>
       </div>

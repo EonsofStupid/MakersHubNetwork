@@ -1,5 +1,3 @@
 
-// Re-export from the components directory
-import { useToast, toast } from "@/shared/ui/use-toast";
-
-export { useToast, toast };
+// Re-export from the shared UI components
+export { useToast, toast } from "@/shared/ui/use-toast";
