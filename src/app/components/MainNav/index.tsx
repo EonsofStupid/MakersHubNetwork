@@ -6,7 +6,7 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/shared
 import { Button } from '@/shared/ui/button';
 import { UserMenu } from '@/auth/components/UserMenu';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { SearchButton } from './components/SearchButton';
+import { LoginSheet } from './components/LoginSheet';
 import { useAdminNavigation } from '@/admin/hooks/useAdminNavigation';
 import { Shield } from 'lucide-react';
 
@@ -15,7 +15,7 @@ export function MainNav() {
   const { status, isAuthenticated } = useAuthStore();
   const isLoading = status === 'loading';
   const { navigateToAdmin, hasAdminAccess } = useAdminNavigation();
-
+  
   return (
     <div className="flex justify-between items-center py-3">
       <NavigationMenu>
@@ -80,19 +80,12 @@ export function MainNav() {
       </NavigationMenu>
 
       <div className="flex items-center space-x-2">
-        <SearchButton />
         {isLoading ? (
           <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
         ) : isAuthenticated ? (
           <UserMenu />
         ) : (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate('/login')}
-          >
-            Sign In
-          </Button>
+          <LoginSheet />
         )}
       </div>
     </div>

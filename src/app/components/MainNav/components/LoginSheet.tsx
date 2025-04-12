@@ -46,7 +46,9 @@ export function LoginSheet() {
       });
       setIsOpen(false);
     } catch (error) {
-      logger.error('Login failed', { details: { error } });
+      logger.error('Login failed', { 
+        details: { error }
+      });
       toast({
         title: 'Login failed',
         description: error instanceof Error ? error.message : 'An error occurred during login',

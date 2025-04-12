@@ -13,6 +13,7 @@ export enum UserRole {
 
 // Authentication status
 export enum AuthStatus {
+  INITIAL = "INITIAL",
   LOADING = "LOADING",
   AUTHENTICATED = "AUTHENTICATED",
   UNAUTHENTICATED = "UNAUTHENTICATED",
@@ -31,7 +32,8 @@ export enum LogCategory {
   DATABASE = "database",
   PERFORMANCE = "performance",
   ERROR = "error",
-  SECURITY = "security"
+  SECURITY = "security",
+  CONTENT = "content" // Adding missing CONTENT category
 }
 
 // Log levels
@@ -114,4 +116,37 @@ export type LogDetails = Record<string, unknown>;
 // Event types
 export interface LogEvent {
   entry: LogEntry;
+}
+
+// User profile type
+export interface User {
+  id: string;
+  email?: string | null;
+  user_metadata?: Record<string, any>;
+  app_metadata?: {
+    roles?: UserRole[];
+  };
+}
+
+export interface UserProfile {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  theme_preference: string | null;
+  motion_enabled: boolean | null;
+}
+
+// Auth event types
+export type AuthEventType = 
+  | 'SIGNED_IN'
+  | 'SIGNED_UP' 
+  | 'SIGNED_OUT'
+  | 'PASSWORD_UPDATED'
+  | 'PROFILE_UPDATED';
+
+export interface AuthEvent {
+  type: AuthEventType;
+  user?: User;
+  payload?: any;
 }
