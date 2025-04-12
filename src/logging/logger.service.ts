@@ -1,12 +1,22 @@
 
 import { nanoid } from "nanoid";
-import { LogCategory, LogLevel, LOG_LEVEL_VALUES } from "@/shared/types/shared.types";
+import { LogCategory, LogLevel } from "@/shared/types/shared.types";
 import { ConsoleTransport } from "./transports/console-transport";
 import { LogTransport } from "./types";
 import type { LogEvent } from "./types";
 
 // Create the level values mapping
-const levelValues: Record<LogLevel, number> = LOG_LEVEL_VALUES;
+const levelValues: Record<string, number> = {
+  [LogLevel.TRACE]: 0,
+  [LogLevel.DEBUG]: 1,
+  [LogLevel.INFO]: 2,
+  [LogLevel.SUCCESS]: 3,
+  [LogLevel.WARN]: 4,
+  [LogLevel.ERROR]: 5,
+  [LogLevel.FATAL]: 6,
+  [LogLevel.CRITICAL]: 7,
+  [LogLevel.SILENT]: 8
+};
 
 // Default transports
 const defaultTransports: LogTransport[] = [

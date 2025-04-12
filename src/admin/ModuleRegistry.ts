@@ -61,7 +61,7 @@ export const useModuleRegistry = createStore<ModuleRegistryState>((set, get) => 
       logger.info('Initializing Admin Module Registry');
       
       // Listen for auth state changes to update modules based on permissions
-      const unsubscribe = authBridge.onAuthEvent((event) => {
+      const unsubscribe = authBridge.subscribeToAuthEvents((event) => {
         if (event.type === 'AUTH_STATE_CHANGE') {
           logger.info('Auth state changed, updating module registry');
           
@@ -76,14 +76,17 @@ export const useModuleRegistry = createStore<ModuleRegistryState>((set, get) => 
       
       logger.info('Admin Module Registry initialized');
       
-      // Return unsubscribe function for cleanup
-      return () => unsubscribe();
+      // Return unsubscribe function for cleanup - converted to void to match return type
+      return Promise.resolve();
     } catch (error) {
       logger.error('Failed to initialize Admin Module Registry', {
         details: {
           error: error instanceof Error ? error.message : 'Unknown error'
         }
       });
+      
+      // Ensure we still resolve the promise
+      return Promise.resolve();
     }
   }
 }));
