@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { authBridge } from '@/bridges/AuthBridge';
-import { UserRole } from '@/shared/types';
+import { UserRole } from '@/shared/types/shared.types';
 import { ADMIN_PERMISSIONS } from '../constants/permissions';
 
 export interface AdminState {
@@ -29,15 +29,15 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     
     try {
       // Subscribe to auth events
-      const unsubscribe = authBridge.subscribeToEvent('AUTH_STATE_CHANGE', (user) => {
-        if (user) {
+      const unsubscribe = authBridge.subscribeToEvent('AUTH_STATE_CHANGE', (event) => {
+        if (event.user) {
           // Extract roles from user
-          const roles = (user.app_metadata?.roles || []) as UserRole[];
+          const roles = (event.user?.app_metadata?.roles || []) as UserRole[];
           
           // Derive permissions from roles
           const permissions: string[] = [];
           
-          if (roles.includes('superadmin')) {
+          if (roles.includes('super_admin')) {
             // Superadmin has all permissions
             Object.values(ADMIN_PERMISSIONS).forEach(permission => {
               permissions.push(permission);
@@ -65,10 +65,6 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       });
       
       set({ isInitialized: true, isLoading: false });
-      
-      return () => {
-        unsubscribe();
-      };
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to initialize admin store',

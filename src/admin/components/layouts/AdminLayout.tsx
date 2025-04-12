@@ -12,17 +12,19 @@ import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";
 import { LogConsole } from "@/logging/components/LogConsole";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging";
+import { LogCategory } from "@/shared/types/shared.types";
 import { useAdminAccess } from "../../hooks/useAdminAccess";
 import { EditModeToggle } from "../ui/EditModeToggle";
 
 interface AdminLayoutProps {
+  children?: React.ReactNode;
   title?: string;
   fullWidth?: boolean;
   className?: string;
 }
 
 export function AdminLayout({ 
+  children,
   title = "Admin Dashboard",
   fullWidth = false,
   className
@@ -67,7 +69,7 @@ export function AdminLayout({
       
       navigate("/");
     }
-  }, [isAuthenticated, hasAdminAccess]); // Reduced dependencies to prevent excessive re-renders
+  }, [isAuthenticated, hasAdminAccess, logger, permissions, isEditMode, toast, navigate]);
 
   // If user is not authenticated or doesn't have admin access, don't render the layout
   if (!isAuthenticated || !hasAdminAccess) {
@@ -82,7 +84,7 @@ export function AdminLayout({
         <AdminHeader title={title} />
         
         <main className={`flex-1 overflow-auto p-4 sm:p-6 ${fullWidth ? 'max-w-full' : ''}`}>
-          <Outlet />
+          {children || <Outlet />}
         </main>
       </div>
       

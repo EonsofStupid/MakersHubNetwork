@@ -48,7 +48,7 @@ export function useAdminAccess() {
     isSuperAdmin,
     hasAdminAccess,
     roles,
-    isLoading: status === 'LOADING',
+    isLoading: status === 'loading',
     user
   };
 }

@@ -1,64 +1,54 @@
+import React, { useState } from 'react';
+import { PanelRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { useChatPersistence } from '@/chat/hooks/useChatPersistence';
+import { cn } from '@/lib/utils';
+import { authBridge } from '@/bridges/AuthBridge';
+import { ChatWrapper } from './ChatWrapper';
 
-import React, { useEffect, useRef, useMemo, useState } from 'react';
-import { ChatWidget } from './ChatWidget';
-import { useLocation } from 'react-router-dom';
-import { useChat } from '../context/ChatProvider';
-import { useHasAdminAccess } from '@/auth/hooks/useHasRole';
-import { AuthBridge } from '@/bridges/AuthBridge';
-import { getLogger } from '@/logging';
-import { withDetails } from '@/logging/utils/log-helpers';
-import { CircuitBreaker } from '@/utils/CircuitBreaker';
+interface FloatingChatProps {
+  className?: string;
+}
 
-export function FloatingChat() {
-  const logger = getLogger();
-  const location = useLocation();
-  const isAuthenticated = AuthBridge.isAuthenticated();
+export function FloatingChat({ className }: FloatingChatProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { isChatEnabled } = useChatPersistence();
   
-  // Use our standardized hook
-  const hasAdminAccess = useHasAdminAccess();
+  // Check if user is authenticated
+  const isAuthenticated = authBridge.isAuthenticated();
   
-  const { isOpen } = useChat();
-  const renderedRef = useRef(false);
-  const [shouldRender, setShouldRender] = useState(true); // Always render for all users
-  
-  const pathname = useMemo(() => location.pathname, [location.pathname]);
-  const inChatRoute = useMemo(() => pathname.startsWith('/chat'), [pathname]);
-  
-  useEffect(() => {
-    if (renderedRef.current) return;
-    renderedRef.current = true;
-    
-    // Use static method or create an instance once
-    const breakerInstance = new CircuitBreaker('floating-chat-render', 3, 500);
-    
-    logger.debug('FloatingChat rendered with state:', 
-      withDetails({
-        shouldRender, 
-        isAuthenticated, 
-        hasAdminAccess, 
-        path: pathname 
-      }));
-    
-    return () => {
-      breakerInstance.reset();
-    };
-  }, []);
-  
-  // Create a circuit breaker to prevent render loops
-  const tripBreaker = new CircuitBreaker('floating-chat-render', 3, 500);
-  if (tripBreaker.isOpen) {
-    logger.warn('Circuit breaker triggered in FloatingChat - preventing render loop');
+  // Don't render if chat is disabled or user is not authenticated
+  if (!isChatEnabled || !isAuthenticated) {
     return null;
   }
   
-  // Don't show when in a chat route to prevent duplicates
-  if (inChatRoute) {
-    return null;
-  }
+  const toggleChat = () => {
+    setIsOpen(!isOpen);
+  };
   
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <ChatWidget />
+      <motion.div
+        className="overflow-hidden rounded-lg shadow-lg"
+        initial={{ height: 0, opacity: 0 }}
+        animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      >
+        <ChatWrapper />
+      </motion.div>
+      
+      <Button
+        variant="secondary"
+        onClick={toggleChat}
+        className={cn(
+          "w-40 flex items-center justify-center gap-2",
+          className
+        )}
+      >
+        <PanelRight className="h-4 w-4" />
+        {isOpen ? 'Close Chat' : 'Open Chat'}
+      </Button>
     </div>
   );
 }

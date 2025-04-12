@@ -15,7 +15,11 @@ import { cn } from '@/shared/utils/cn';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { UserAvatar } from '@/shared/ui/user-avatar';
 
-export function AdminHeader() {
+interface AdminHeaderProps {
+  title?: string;
+}
+
+export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
   const navigate = useNavigate();
   const { toggle: toggleSidebar } = useAdminSidebar();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -54,6 +58,9 @@ export function AdminHeader() {
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle sidebar</span>
         </Button>
+        {title && (
+          <h1 className="text-xl font-semibold">{title}</h1>
+        )}
       </div>
 
       {/* User menu */}
@@ -65,12 +72,12 @@ export function AdminHeader() {
           >
             <UserAvatar
               user={user}
-              fallbackText={user?.user_metadata?.name?.charAt(0) || 'U'}
+              fallbackText={user?.user_metadata?.full_name?.charAt(0) || 'U'}
               size="sm"
               className="h-8 w-8"
             />
             <span className="hidden text-sm font-medium md:inline-block">
-              {user?.user_metadata?.name || 'Admin User'}
+              {user?.user_metadata?.full_name || 'Admin User'}
             </span>
             <ChevronDown
               className={cn(

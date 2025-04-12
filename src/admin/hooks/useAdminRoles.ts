@@ -1,59 +1,86 @@
 
-import { useEffect, useState } from 'react';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { authBridge } from '@/bridges/AuthBridge';
-import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
-import { UserRole } from '@/shared/types';
+import { useAuthStore } from "@/auth/store/auth.store";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory, UserRole } from "@/shared/types/shared.types";
 
-export function useAdminRoles() {
-  const [adminRoles, setAdminRoles] = useState<UserRole[]>([]);
-  const { roles } = useAuthStore();
+/**
+ * Check if a user has a specific role
+ */
+export function useHasAdminRole(requiredRole: UserRole | UserRole[]): boolean {
+  const roles = useAuthStore(state => state.roles);
+  const logger = useLogger("useHasAdminRole", LogCategory.ADMIN);
 
-  useEffect(() => {
-    // Filter only admin roles
-    const filterAdminRoles = () => {
-      const adminRoleList = roles.filter(role => 
-        role === 'admin' || role === 'superadmin' || role === 'moderator'
-      ) as UserRole[];
-      
-      setAdminRoles(adminRoleList);
-    };
-
-    filterAdminRoles();
-
-    // Subscribe to auth events
-    const unsubscribe = authBridge.subscribeToEvent('AUTH_STATE_CHANGE', () => {
-      filterAdminRoles();
+  // If user is a super_admin, they have all roles
+  if (roles.includes("super_admin")) {
+    logger.debug("User has super_admin role, granting access", {
+      details: { requiredRole }
     });
+    return true;
+  }
 
-    return () => {
-      unsubscribe();
-    };
-  }, [roles]);
-
-  const hasAdminPermission = (permission: string) => {
-    if (adminRoles.includes('superadmin')) return true;
+  // Check if role matches any of the required roles
+  if (Array.isArray(requiredRole)) {
+    const hasRole = requiredRole.some(role => roles.includes(role));
     
-    // Check specific permissions based on roles
-    switch (permission) {
-      case ADMIN_PERMISSIONS.VIEW_ADMIN_PANEL:
-        return adminRoles.length > 0;
-      case ADMIN_PERMISSIONS.MANAGE_USERS:
-        return adminRoles.includes('admin') || adminRoles.includes('moderator');
-      case ADMIN_PERMISSIONS.MANAGE_CONTENT:
-        return adminRoles.includes('admin') || adminRoles.includes('moderator');
-      case ADMIN_PERMISSIONS.MANAGE_SETTINGS:
-        return adminRoles.includes('admin');
-      default:
-        return false;
-    }
-  };
+    logger.debug(`User role check: ${hasRole ? "granted" : "denied"}`, {
+      details: { 
+        userRoles: roles,
+        requiredRoles: requiredRole,
+        hasAccess: hasRole
+      }
+    });
+    
+    return hasRole;
+  }
+  
+  const hasRole = roles.includes(requiredRole);
 
-  return {
-    adminRoles,
-    hasAdminPermission,
-    isSuperAdmin: adminRoles.includes('superadmin'),
-    isAdmin: adminRoles.includes('admin'),
-    isModerator: adminRoles.includes('moderator')
-  };
+  logger.debug(`User role check: ${hasRole ? "granted" : "denied"}`, {
+    details: { 
+      userRoles: roles,
+      requiredRole,
+      hasAccess: hasRole
+    }
+  });
+  
+  return hasRole;
+}
+
+/**
+ * Check if a user has either admin or super_admin role
+ */
+export function useIsAdmin(): boolean {
+  return useHasAdminRole(["admin", "super_admin"]);
+}
+
+/**
+ * Check if a user has the super_admin role
+ */
+export function useIsSuperAdmin(): boolean {
+  return useHasAdminRole("super_admin");
+}
+
+/**
+ * Get the highest role a user has
+ */
+export function useHighestRole(): UserRole {
+  const roles = useAuthStore(state => state.roles);
+  
+  if (roles.includes("super_admin")) {
+    return "super_admin";
+  }
+  
+  if (roles.includes("admin")) {
+    return "admin";
+  }
+  
+  if (roles.includes("moderator")) {
+    return "moderator";
+  }
+  
+  if (roles.includes("builder")) {
+    return "builder";
+  }
+  
+  return "user";
 }

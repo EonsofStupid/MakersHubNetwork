@@ -1,186 +1,124 @@
 
-import { LogTransport, LogEvent, LogLevel, LogCategory } from '../types';
-import { create } from 'zustand';
+import { LogEntry, LogLevel, LogCategory } from '@/shared/types/shared.types';
+import { LOG_LEVEL_VALUES } from '../constants/log-level';
 
-// Type for UI Log item with additional UI-specific properties
-export interface UILogItem extends LogEvent {
-  id: string;
-  read: boolean;
-  important: boolean;
-  pinned: boolean;
+type NotificationType = 'toast' | 'banner' | 'console';
+
+interface UITransportOptions {
+  minLevel: LogLevel;
+  showInConsole?: boolean;
+  showToasts?: boolean;
+  categories?: LogCategory[];
 }
-
-// Toast configuration for log events
-export interface Toast {
-  id: string;
-  title: string;
-  description?: string;
-  variant?: 'default' | 'destructive' | 'success';
-  duration?: number;
-}
-
-// State interface for the logs store
-interface LogsState {
-  logs: UILogItem[];
-  unreadCount: number;
-  pinnedLogs: UILogItem[];
-  toasts: Toast[];
-  
-  // Actions
-  addLog: (log: LogEvent) => void;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
-  pinLog: (id: string) => void;
-  unpinLog: (id: string) => void;
-  clearLogs: () => void;
-  addToast: (toast: Toast) => void;
-  dismissToast: (id: string) => void;
-}
-
-// Create store
-export const useLogsStore = create<LogsState>((set) => ({
-  logs: [],
-  unreadCount: 0,
-  pinnedLogs: [],
-  toasts: [],
-  
-  addLog: (log: LogEvent) => {
-    const newLog: UILogItem = {
-      ...log,
-      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      read: false,
-      important: log.level === 'error' || log.level === 'critical',
-      pinned: false,
-    };
-    
-    set((state) => ({
-      logs: [newLog, ...state.logs].slice(0, 1000), // Keep only last 1000 logs
-      unreadCount: state.unreadCount + 1,
-    }));
-    
-    // Create toast for errors and critical logs
-    if (log.level === 'error' || log.level === 'critical') {
-      set((state) => ({
-        toasts: [
-          ...state.toasts,
-          {
-            id: newLog.id,
-            title: `${log.level === 'critical' ? 'Critical Error' : 'Error'}: ${log.source}`,
-            description: log.message,
-            variant: 'destructive',
-            duration: log.level === 'critical' ? 10000 : 5000,
-            icon: 'alert-triangle'
-          }
-        ]
-      }));
-    }
-  },
-  
-  markAsRead: (id: string) => {
-    set((state) => ({
-      logs: state.logs.map(log => 
-        log.id === id ? { ...log, read: true } : log
-      ),
-      unreadCount: state.logs.find(log => log.id === id && !log.read) 
-        ? state.unreadCount - 1 
-        : state.unreadCount
-    }));
-  },
-  
-  markAllAsRead: () => {
-    set((state) => ({
-      logs: state.logs.map(log => ({ ...log, read: true })),
-      unreadCount: 0
-    }));
-  },
-  
-  pinLog: (id: string) => {
-    set((state) => {
-      const logToPin = state.logs.find(log => log.id === id);
-      
-      if (!logToPin || logToPin.pinned) {
-        return state;
-      }
-      
-      const updatedLogs = state.logs.map(log => 
-        log.id === id ? { ...log, pinned: true } : log
-      );
-      
-      return {
-        logs: updatedLogs,
-        pinnedLogs: [...state.pinnedLogs, { ...logToPin, pinned: true }]
-      };
-    });
-  },
-  
-  unpinLog: (id: string) => {
-    set((state) => ({
-      logs: state.logs.map(log => 
-        log.id === id ? { ...log, pinned: false } : log
-      ),
-      pinnedLogs: state.pinnedLogs.filter(log => log.id !== id)
-    }));
-  },
-  
-  clearLogs: () => {
-    set((state) => ({
-      logs: state.pinnedLogs,
-      unreadCount: state.pinnedLogs.filter(log => !log.read).length
-    }));
-  },
-  
-  addToast: (toast: Toast) => {
-    set((state) => ({
-      toasts: [...state.toasts, toast]
-    }));
-  },
-  
-  dismissToast: (id: string) => {
-    set((state) => ({
-      toasts: state.toasts.filter(toast => toast.id !== id)
-    }));
-  }
-}));
 
 /**
- * A transport that sends logs to the UI
+ * Transport for displaying logs in the UI
  */
-export class UITransport implements LogTransport {
-  id: string;
-  private minLevel: LogLevel;
-  private categories: LogCategory[] | null;
+export class UITransport {
+  private options: UITransportOptions;
+  private toastHandler?: (entry: LogEntry) => void;
+  private bannerHandler?: (entry: LogEntry) => void;
 
-  constructor(id: string = 'ui-transport', minLevel: LogLevel = 'info', categories: LogCategory[] | null = null) {
-    this.id = id;
-    this.minLevel = minLevel;
-    this.categories = categories;
+  constructor(options: UITransportOptions) {
+    this.options = {
+      minLevel: LogLevel.INFO,
+      showInConsole: true,
+      showToasts: true,
+      ...options,
+    };
   }
 
-  log(event: LogEvent): void {
-    // Check if this category should be logged
-    if (
-      this.categories !== null && 
-      !this.categories.includes(event.category)
-    ) {
+  log(entry: LogEntry): void {
+    // Check if we should process this log
+    if (!this.shouldProcess(entry)) {
       return;
     }
-    
-    // Add the log to the store
-    useLogsStore.getState().addLog(event);
+
+    // Handle based on level and configuration
+    if (this.options.showInConsole) {
+      this.logToConsole(entry);
+    }
+
+    // Show UI notifications for important logs
+    if (this.options.showToasts && 
+        LOG_LEVEL_VALUES[entry.level] >= LOG_LEVEL_VALUES[LogLevel.WARN]) {
+      this.showToast(entry);
+    }
+
+    // Show banner for critical errors
+    if (entry.level === LogLevel.CRITICAL) {
+      this.showBanner(entry);
+    }
   }
 
-  getMinLevel(): LogLevel {
-    return this.minLevel;
+  // Required by LogTransport interface
+  clear(): void {
+    // No persistent storage to clear
   }
 
-  setMinLevel(level: LogLevel): void {
-    this.minLevel = level;
+  private shouldProcess(entry: LogEntry): boolean {
+    // Check if level is high enough to process
+    if (LOG_LEVEL_VALUES[entry.level] < LOG_LEVEL_VALUES[this.options.minLevel]) {
+      return false;
+    }
+
+    // Check if category is included
+    if (this.options.categories && 
+        !this.options.categories.includes(entry.category)) {
+      return false;
+    }
+
+    return true;
   }
 
-  setCategories(categories: LogCategory[] | null): void {
-    this.categories = categories;
+  private logToConsole(entry: LogEntry): void {
+    const prefix = `[${entry.level.toUpperCase()}] [${entry.category}] ${entry.source ? `[${entry.source}]` : ''}`;
+    const message = typeof entry.message === 'string' ? entry.message : entry.message;
+    const details = entry.details ? entry.details : undefined;
+
+    switch (entry.level) {
+      case LogLevel.DEBUG:
+      case LogLevel.TRACE:
+        console.debug(prefix, message, details);
+        break;
+      case LogLevel.INFO:
+      case LogLevel.SUCCESS:
+        console.info(prefix, message, details);
+        break;
+      case LogLevel.WARN:
+        console.warn(prefix, message, details);
+        break;
+      case LogLevel.ERROR:
+      case LogLevel.CRITICAL:
+        console.error(prefix, message, details);
+        break;
+    }
+  }
+
+  setToastHandler(handler: (entry: LogEntry) => void): void {
+    this.toastHandler = handler;
+  }
+
+  setBannerHandler(handler: (entry: LogEntry) => void): void {
+    this.bannerHandler = handler;
+  }
+
+  private showToast(entry: LogEntry): void {
+    if (this.toastHandler) {
+      this.toastHandler(entry);
+    }
+  }
+
+  private showBanner(entry: LogEntry): void {
+    if (this.bannerHandler) {
+      this.bannerHandler(entry);
+    }
   }
 }
 
-// Create and export a singleton instance
-export const uiTransport = new UITransport();
+// Default UI transport with typical settings
+export const uiTransport = new UITransport({
+  minLevel: LogLevel.INFO,
+  showInConsole: true,
+  showToasts: true,
+});

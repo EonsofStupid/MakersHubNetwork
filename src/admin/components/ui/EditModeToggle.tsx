@@ -1,32 +1,30 @@
 
 import React from 'react';
+import { Edit } from 'lucide-react';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
-import { Edit, Eye } from 'lucide-react';
-import { AdminTooltip } from './AdminTooltip';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 export function EditModeToggle() {
-  const [isEditMode, setEditMode] = useAtom(adminEditModeAtom);
+  const [isEditMode, setIsEditMode] = useAtom(adminEditModeAtom);
   
   return (
-    <AdminTooltip 
-      content={isEditMode ? "Exit Edit Mode" : "Enter Edit Mode"}
-      side="left"
+    <motion.button
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={() => setIsEditMode(prev => !prev)}
+      className={cn(
+        "fixed bottom-4 right-4 h-12 w-12 rounded-full flex items-center justify-center z-50",
+        "shadow-lg transition-colors duration-300",
+        isEditMode 
+          ? "bg-primary text-primary-foreground" 
+          : "bg-muted text-muted-foreground"
+      )}
     >
-      <button
-        onClick={() => setEditMode(!isEditMode)}
-        className={`fixed right-4 top-20 z-50 flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all
-          ${isEditMode 
-            ? 'bg-red-500 text-white hover:bg-red-600' 
-            : 'bg-primary text-primary-foreground hover:bg-primary/90'
-          }`}
-      >
-        {isEditMode ? (
-          <Eye className="h-5 w-5" />
-        ) : (
-          <Edit className="h-5 w-5" />
-        )}
-      </button>
-    </AdminTooltip>
+      <Edit className="h-5 w-5" />
+    </motion.button>
   );
 }

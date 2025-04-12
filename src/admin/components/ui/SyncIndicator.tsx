@@ -1,54 +1,43 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { useAdminSync } from '@/admin/hooks/useAdminSync';
-import { Loader } from 'lucide-react';
-import { AdminTooltip } from './AdminTooltip';
+
+import React, { useState, useEffect } from 'react';
+import { RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function SyncIndicator() {
-  const { isSyncing, lastSynced, sync } = useAdminSync();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   
-  const formatLastSynced = () => {
-    if (!lastSynced) return 'Never synced';
+  useEffect(() => {
+    // Simulate a sync event every 30 seconds
+    const interval = setInterval(() => {
+      // Set syncing to true for 1 second
+      setIsSyncing(true);
+      
+      setTimeout(() => {
+        setIsSyncing(false);
+        setShowSuccess(true);
+        
+        // Hide success indicator after 2 seconds
+        setTimeout(() => setShowSuccess(false), 2000);
+      }, 1000);
+    }, 30000);
     
-    // If synced less than 1 minute ago
-    const diff = Math.floor((Date.now() - lastSynced.getTime()) / 1000);
-    if (diff < 60) return 'Just now';
-    
-    // If synced less than 1 hour ago
-    if (diff < 3600) {
-      const minutes = Math.floor(diff / 60);
-      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    }
-    
-    // Otherwise show time
-    return lastSynced.toLocaleTimeString();
-  };
+    return () => clearInterval(interval);
+  }, []);
   
   return (
-    <AdminTooltip content={`Last synced: ${formatLastSynced()}`} side="bottom">
-      <button 
-        onClick={() => !isSyncing && sync()}
-        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[var(--impulse-border-hover)] text-[var(--impulse-text-primary)]"
-        disabled={isSyncing}
-      >
-        {isSyncing ? (
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          >
-            <Loader className="w-4 h-4 text-[var(--impulse-primary)]" />
-          </motion.div>
-        ) : (
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <div className="w-4 h-4 rounded-full border-2 border-[var(--impulse-primary)] flex items-center justify-center">
-              <div className="w-2 h-2 bg-[var(--impulse-primary)] rounded-full" />
-            </div>
-          </motion.div>
-        )}
-      </button>
-    </AdminTooltip>
+    <div className="flex items-center">
+      <div className={cn(
+        "transition-all duration-200 ease-in-out flex items-center gap-1",
+        showSuccess ? "opacity-100" : "opacity-0"
+      )}>
+        <span className="text-xs text-green-500">Synced</span>
+      </div>
+      
+      <RefreshCw className={cn(
+        "w-4 h-4 transition-all ml-1",
+        isSyncing ? "text-primary animate-spin" : "text-muted-foreground"
+      )} />
+    </div>
   );
 }

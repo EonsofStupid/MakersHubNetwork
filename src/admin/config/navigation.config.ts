@@ -1,97 +1,67 @@
 
-import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  Settings,
-  Wrench,
-  Palette,
-  Server,
-  Shield,
-  LineChart,
-  FileCode,
-} from 'lucide-react';
-import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import { LayoutDashboard, Users, FileText, Settings, Palette, Bell } from "lucide-react";
+import { ADMIN_PERMISSIONS } from "../constants/permissions";
+import { NavigationItemType } from "@/shared/types/shared.types";
 
-export const adminNavigationItems = [
+export const adminNavigation: NavigationItemType[] = [
   {
-    id: 'dashboard',
-    label: 'Dashboard',
-    path: '/admin/dashboard',
+    name: "Dashboard",
+    href: "/admin",
     icon: LayoutDashboard,
-    permission: ADMIN_PERMISSIONS.ADMIN_ACCESS,
-    section: 'General'
+    requiredRole: ["admin", "super_admin"],
   },
   {
-    id: 'users',
-    label: 'Users',
-    path: '/admin/users',
+    name: "Users",
+    href: "/admin/users",
     icon: Users,
-    permission: ADMIN_PERMISSIONS.USERS_VIEW,
-    section: 'Management'
+    requiredRole: ["admin", "super_admin"],
   },
   {
-    id: 'builds',
-    label: 'Builds',
-    path: '/admin/builds',
-    icon: Wrench,
-    permission: ADMIN_PERMISSIONS.BUILDS_VIEW,
-    section: 'Management'
-  },
-  {
-    id: 'parts',
-    label: 'Parts',
-    path: '/admin/parts',
-    icon: Wrench,
-    permission: ADMIN_PERMISSIONS.CONTENT_VIEW,
-    section: 'Management'
-  },
-  {
-    id: 'content',
-    label: 'Content',
-    path: '/admin/content',
+    name: "Content",
+    href: "/admin/content",
     icon: FileText,
-    permission: ADMIN_PERMISSIONS.CONTENT_VIEW,
-    section: 'Management'
+    requiredRole: ["admin", "super_admin", "moderator"],
   },
   {
-    id: 'themes',
-    label: 'Themes',
-    path: '/admin/themes',
-    icon: Palette,
-    permission: ADMIN_PERMISSIONS.THEMES_VIEW,
-    section: 'Customization'
-  },
-  {
-    id: 'analytics',
-    label: 'Analytics',
-    path: '/admin/analytics',
-    icon: LineChart,
-    permission: ADMIN_PERMISSIONS.ANALYTICS_VIEW,
-    section: 'Insights'
-  },
-  {
-    id: 'logs',
-    label: 'System Logs',
-    path: '/admin/logs',
-    icon: FileCode,
-    permission: ADMIN_PERMISSIONS.SYSTEM_LOGS,
-    section: 'System'
-  },
-  {
-    id: 'permissions',
-    label: 'Permissions',
-    path: '/admin/permissions',
-    icon: Shield,
-    permission: ADMIN_PERMISSIONS.SYSTEM_SETTINGS,
-    section: 'System'
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    path: '/admin/settings',
+    name: "Settings",
+    href: "/admin/settings",
     icon: Settings,
-    permission: ADMIN_PERMISSIONS.SETTINGS_VIEW,
-    section: 'System'
-  }
+    requiredRole: ["admin", "super_admin"],
+  },
+  {
+    name: "Themes",
+    href: "/admin/themes",
+    icon: Palette,
+    requiredRole: ["admin", "super_admin"],
+  },
+  {
+    name: "Logs",
+    href: "/admin/logs",
+    icon: Bell,
+    requiredRole: ["admin", "super_admin"],
+  },
+];
+
+export const adminActions = [
+  {
+    id: "view-dashboard",
+    title: "View Dashboard",
+    icon: LayoutDashboard,
+    href: "/admin",
+    permission: ADMIN_PERMISSIONS.ADMIN_VIEW,
+  },
+  {
+    id: "manage-users",
+    title: "Manage Users",
+    icon: Users,
+    href: "/admin/users",
+    permission: ADMIN_PERMISSIONS.MANAGE_USERS,
+  },
+  {
+    id: "manage-content",
+    title: "Manage Content",
+    icon: FileText,
+    href: "/admin/content",
+    permission: ADMIN_PERMISSIONS.MANAGE_CONTENT,
+  },
 ];

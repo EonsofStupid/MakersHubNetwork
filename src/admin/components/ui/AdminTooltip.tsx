@@ -8,33 +8,25 @@ import {
 } from '@/components/ui/tooltip';
 
 interface AdminTooltipProps {
-  children: React.ReactNode;
   content: React.ReactNode;
-  side?: 'top' | 'right' | 'bottom' | 'left';
-  align?: 'start' | 'center' | 'end';
-  className?: string;
+  children: React.ReactNode;
+  side?: "top" | "right" | "bottom" | "left";
+  align?: "start" | "center" | "end";
+  sideOffset?: number;
 }
 
 export function AdminTooltip({
-  children,
   content,
-  side = 'top',
-  align = 'center',
-  className,
+  children,
+  side = "right",
+  align = "center",
+  sideOffset = 4,
 }: AdminTooltipProps) {
   return (
     <TooltipProvider>
       <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
-          <div className="cursor-pointer">
-            {children}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent 
-          side={side} 
-          align={align}
-          className={`cyber-tooltip ${className || ''}`}
-        >
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent side={side} align={align} sideOffset={sideOffset}>
           {content}
         </TooltipContent>
       </Tooltip>

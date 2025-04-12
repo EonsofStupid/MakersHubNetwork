@@ -1,42 +1,42 @@
 
 /**
- * Core shared types across all boundaries
+ * Shared type definitions used across multiple boundaries
  */
 
-// Auth related shared types
+// Auth related types
 export enum AuthStatus {
-  INITIAL = 'INITIAL',
-  LOADING = 'LOADING',
-  AUTHENTICATED = 'AUTHENTICATED',
-  UNAUTHENTICATED = 'UNAUTHENTICATED',
-  ERROR = 'ERROR'
+  INITIAL = 'idle',
+  LOADING = 'loading',
+  AUTHENTICATED = 'authenticated',
+  UNAUTHENTICATED = 'unauthenticated',
+  ERROR = 'error'
 }
 
-export type User = {
+// User roles - used throughout the system
+export type UserRole = 'admin' | 'user' | 'super_admin' | 'moderator' | 'builder';
+
+export interface User {
   id: string;
-  email?: string;
+  email: string;
   user_metadata?: {
     avatar_url?: string;
     full_name?: string;
-    display_name?: string;
-    bio?: string;
-    theme_preference?: string;
-    motion_enabled?: boolean;
-    website?: string;
+    name?: string; // Legacy
+    display_name?: string; // Legacy
   };
   app_metadata?: {
     roles?: UserRole[];
-    permissions?: string[];
   };
+  created_at: string;
+  updated_at: string;
 }
-
-export type UserRole = 'user' | 'admin' | 'super_admin';
 
 export interface UserProfile {
   id: string;
   user_id: string;
-  display_name?: string;
   avatar_url?: string;
+  full_name?: string;
+  display_name?: string;
   bio?: string;
   theme_preference?: string;
   motion_enabled?: boolean;
@@ -45,87 +45,73 @@ export interface UserProfile {
   updated_at?: string;
 }
 
-// Auth events
 export type AuthEventType = 
-  | 'AUTH_STATE_CHANGE'
-  | 'AUTH_SIGNIN'
-  | 'AUTH_SIGNOUT'
-  | 'AUTH_ERROR'
-  | 'AUTH_USER_UPDATED'
+  | 'AUTH_STATE_CHANGE' 
+  | 'AUTH_SIGNED_IN' 
+  | 'AUTH_SIGNED_OUT'
   | 'AUTH_PROFILE_UPDATED'
-  | '*';
+  | 'AUTH_LINKING_REQUIRED';
 
 export interface AuthEvent {
   type: AuthEventType;
+  user?: User | null;
+  session?: any;
   payload?: Record<string, any>;
-  timestamp: number;
 }
 
-// Logging related shared types
+// Logging related types
 export enum LogLevel {
-  DEBUG = 'debug',
+  TRACE = 'trace',
+  DEBUG = 'debug', 
   INFO = 'info',
+  SUCCESS = 'success',
   WARN = 'warn',
   ERROR = 'error',
   CRITICAL = 'critical',
-  SUCCESS = 'success',
-  TRACE = 'trace',
   SILENT = 'silent'
 }
 
 export enum LogCategory {
-  SYSTEM = 'SYSTEM',
-  AUTH = 'AUTH',
-  UI = 'UI',
-  API = 'API',
-  DATABASE = 'DATABASE',
-  DEFAULT = 'DEFAULT',
-  CHAT = 'CHAT',
-  CONTENT = 'CONTENT',
-  NETWORK = 'NETWORK',
-  ADMIN = 'ADMIN'
+  APP = 'app',
+  ADMIN = 'admin',
+  AUTH = 'auth',
+  API = 'api',
+  USER = 'user',
+  UI = 'ui',
+  CHAT = 'chat',
+  CONTENT = 'content',
+  SYSTEM = 'system',
+  THEME = 'theme',
+  NETWORK = 'network',
+  PERFORMANCE = 'performance'
 }
 
 export interface LogEntry {
   id: string;
-  timestamp: number;
   level: LogLevel;
-  category: LogCategory;
+  message: string | any;
+  timestamp: Date;
   source: string;
-  message: string;
+  category: LogCategory;
   details?: Record<string, unknown>;
-  userId?: string;
 }
 
 export interface LogEvent {
   entry: LogEntry;
 }
 
-export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
-  [LogLevel.DEBUG]: 0,
-  [LogLevel.TRACE]: 1,
-  [LogLevel.INFO]: 2,
-  [LogLevel.SUCCESS]: 3,
-  [LogLevel.WARN]: 4,
-  [LogLevel.ERROR]: 5,
-  [LogLevel.CRITICAL]: 6,
-  [LogLevel.SILENT]: 100
-};
-
-// Navigation types
-export interface NavigationItemType {
-  title: string;
-  href: string;
-  icon?: React.ReactNode;
-  requiredPermission?: string;
-  badge?: string;
-  children?: NavigationItemType[];
-}
-
-// Layout types
+// Layout related types
 export interface AdminLayoutProps {
   children: React.ReactNode;
-  fullWidth?: boolean;
   className?: string;
+  fullWidth?: boolean;
   title?: string;
+}
+
+export interface NavigationItemType {
+  name: string;
+  href: string;
+  icon?: React.ComponentType<any>;
+  children?: NavigationItemType[];
+  requiredRole?: UserRole | UserRole[];
 }

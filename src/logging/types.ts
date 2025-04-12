@@ -1,6 +1,6 @@
 
 // Re-export shared logging types
-export { LogLevel, LogCategory, LogEntry, LogEvent } from '@/shared/types/shared.types';
+export type { LogLevel, LogCategory, LogEntry, LogEvent } from '@/shared/types/shared.types';
 
 // Logging specific types not shared with other boundaries
 export interface LoggingConfig {
@@ -22,4 +22,5 @@ export interface LogFilter {
   search?: string;
   startTime?: Date;
   endTime?: Date;
+  userId?: string;
 }
