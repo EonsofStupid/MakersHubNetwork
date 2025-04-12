@@ -1,68 +1,71 @@
 
-import { PermissionValue, PERMISSIONS } from '@/auth/permissions';
-import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
+import { UserRole } from '@/shared/types';
 
 /**
- * Utility functions for admin permissions
+ * Checks if a user has admin permission based on roles and permission
+ * @param roles User roles
+ * @param permission Permission to check
+ * @returns Boolean indicating if user has permission
  */
-export const hasPermission = (
-  permission: PermissionValue,
-  userPermissions: PermissionValue[]
-): boolean => {
+export function hasAdminPermission(roles: string[], permission: string): boolean {
   // Super admin has all permissions
-  if (userPermissions.includes(PERMISSIONS.SUPER_ADMIN)) {
+  if (roles.includes('superadmin')) {
+    return true;
+  }
+
+  // Admin role
+  if (roles.includes('admin')) {
+    // Admin can do everything except critical system operations
     return true;
   }
   
-  return userPermissions.includes(permission);
-};
-
-/**
- * Hook for checking admin permissions
- * @param requiredPermission The permission to check
- * @returns Object with hasPermission boolean and loading state
- */
-export const usePermissionCheck = (requiredPermission?: PermissionValue) => {
-  const { hasPermission, isLoading } = useAdminPermissions();
-  
-  if (!requiredPermission) {
-    return { hasPermission: true, isLoading };
+  // Moderator role has limited permissions
+  if (roles.includes('moderator')) {
+    // List of permissions allowed for moderators
+    const moderatorPermissions = [
+      'view_admin_panel',
+      'manage_content',
+      'view_users'
+    ];
+    
+    return moderatorPermissions.includes(permission);
   }
   
-  return {
-    hasPermission: hasPermission(requiredPermission),
-    isLoading
-  };
-};
+  return false;
+}
 
 /**
- * Map a permission to its display name
- * @param permission Permission to get display name for
+ * Checks if a user has specific role
+ * @param userRoles User roles
+ * @param requiredRole Required role to check
+ * @returns Boolean indicating if user has the role
  */
-export function getPermissionDisplayName(permission: PermissionValue): string {
-  const displayNames: Record<string, string> = {
-    [PERMISSIONS.ADMIN_ACCESS]: 'Admin Access',
-    [PERMISSIONS.ADMIN_VIEW]: 'View Admin Panel',
-    [PERMISSIONS.ADMIN_EDIT]: 'Edit Admin Settings',
-    [PERMISSIONS.CONTENT_VIEW]: 'View Content',
-    [PERMISSIONS.CONTENT_EDIT]: 'Edit Content',
-    [PERMISSIONS.CONTENT_DELETE]: 'Delete Content',
-    [PERMISSIONS.USERS_VIEW]: 'View Users',
-    [PERMISSIONS.USERS_EDIT]: 'Edit Users',
-    [PERMISSIONS.USERS_DELETE]: 'Delete Users',
-    [PERMISSIONS.BUILDS_VIEW]: 'View Builds',
-    [PERMISSIONS.BUILDS_APPROVE]: 'Approve Builds',
-    [PERMISSIONS.BUILDS_REJECT]: 'Reject Builds',
-    [PERMISSIONS.THEMES_VIEW]: 'View Themes',
-    [PERMISSIONS.THEMES_EDIT]: 'Edit Themes',
-    [PERMISSIONS.THEMES_DELETE]: 'Delete Themes',
-    [PERMISSIONS.DATA_VIEW]: 'View Data',
-    [PERMISSIONS.DATA_IMPORT]: 'Import/Export Data',
-    [PERMISSIONS.SETTINGS_VIEW]: 'View Settings',
-    [PERMISSIONS.SETTINGS_EDIT]: 'Edit Settings',
-    [PERMISSIONS.SYSTEM_SETTINGS]: 'System Settings',
-    [PERMISSIONS.SUPER_ADMIN]: 'All Permissions'
-  };
+export function hasRole(userRoles: UserRole[], requiredRole: UserRole | UserRole[]): boolean {
+  if (!userRoles) return false;
   
-  return displayNames[permission] || permission;
+  if (Array.isArray(requiredRole)) {
+    return requiredRole.some(role => userRoles.includes(role));
+  }
+  
+  return userRoles.includes(requiredRole);
+}
+
+/**
+ * Formats a list of roles for display
+ * @param roles User roles
+ * @returns Formatted string of roles
+ */
+export function formatRoles(roles: UserRole[]): string {
+  if (!roles || roles.length === 0) {
+    return 'No roles';
+  }
+  
+  return roles.map(role => {
+    // Capitalize first letter and replace underscores with spaces
+    const formatted = role.replace(/_/g, ' ').replace(/\w\S*/g, 
+      txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+    );
+    
+    return formatted;
+  }).join(', ');
 }

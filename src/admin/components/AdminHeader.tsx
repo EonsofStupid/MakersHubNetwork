@@ -1,127 +1,92 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { LogOut, Sun, Moon, User, Bell } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { AdminTooltip } from './ui/AdminTooltip';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useTheme } from '@/components/ui/theme-provider';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from 'react';
+import { ChevronDown, Menu } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/shared/ui/dropdown-menu';
+import { Button } from '@/shared/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/shared/ui/sheet';
+import { useNavigate } from 'react-router-dom';
+import { useAdminSidebar } from '../hooks/useAdminSidebar';
+import { cn } from '@/shared/utils/cn';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { UserAvatar } from '@/shared/ui/user-avatar';
 
-interface AdminHeaderProps {
-  title?: string;
-}
-
-export function AdminHeader({ title = 'Dashboard' }: AdminHeaderProps) {
-  const { user, logout } = useAuth();
-  const { setTheme, theme } = useTheme();
-  const { toast } = useToast();
+export function AdminHeader() {
   const navigate = useNavigate();
-  
+  const { toggle: toggleSidebar } = useAdminSidebar();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { user, logout } = useAuthStore();
+
   const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-      toast({
-        title: 'Logged out',
-        description: 'You have been logged out successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to log out. Please try again.',
-        variant: 'destructive',
-      });
-    }
+    await logout();
+    navigate('/');
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+  const navigateToSection = (path: string) => {
+    navigate(path);
+    setUserMenuOpen(false);
   };
-  
-  const displayName = user?.user_metadata?.name || user?.email || 'User';
-  const initials = displayName
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
 
   return (
-    <header className={cn(
-      "h-16 border-b border-[var(--impulse-border-normal)]",
-      "bg-[var(--impulse-bg-header)] px-4 flex items-center justify-between"
-    )}>
-      {/* Title */}
-      <h1 className="text-xl font-heading text-[var(--impulse-text-primary)]">
-        {title}
-      </h1>
-      
-      {/* Actions */}
-      <div className="flex items-center space-x-1">
-        {/* Theme toggle */}
-        <AdminTooltip content={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
-          <button
-            onClick={toggleTheme}
-            className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-[var(--impulse-bg-hover)]"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </button>
-        </AdminTooltip>
-        
-        {/* Notifications */}
-        <AdminTooltip content="Notifications">
-          <button className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-[var(--impulse-bg-hover)]">
-            <Bell className="h-5 w-5" />
-          </button>
-        </AdminTooltip>
-        
-        {/* User menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center space-x-2 rounded-full hover:bg-[var(--impulse-bg-hover)] p-1">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.user_metadata?.avatar_url} />
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>
-              <div className="flex flex-col space-y-1">
-                <span className="font-normal text-sm">{displayName}</span>
-                <span className="text-xs font-normal text-muted-foreground">{user?.email}</span>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => navigate('/profile')}>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex items-center gap-2">
+        <Sheet>
+          <SheetTrigger asChild className="lg:hidden">
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="border-r border-primary/10">
+            {/* Mobile sidebar content */}
+          </SheetContent>
+        </Sheet>
+        <Button
+          variant="ghost"
+          className="hidden lg:flex"
+          size="icon"
+          onClick={toggleSidebar}
+        >
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle sidebar</span>
+        </Button>
       </div>
+
+      {/* User menu */}
+      <DropdownMenu open={userMenuOpen} onOpenChange={setUserMenuOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="group flex items-center gap-2 rounded-full px-2"
+          >
+            <UserAvatar
+              user={user}
+              fallbackText={user?.user_metadata?.name?.charAt(0) || 'U'}
+              size="sm"
+              className="h-8 w-8"
+            />
+            <span className="hidden text-sm font-medium md:inline-block">
+              {user?.user_metadata?.name || 'Admin User'}
+            </span>
+            <ChevronDown
+              className={cn(
+                'h-4 w-4 transition-transform',
+                userMenuOpen && 'rotate-180'
+              )}
+            />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem onClick={() => navigateToSection('/admin/settings')}>
+            Settings
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </header>
   );
 }

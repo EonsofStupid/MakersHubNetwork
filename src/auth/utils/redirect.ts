@@ -1,75 +1,76 @@
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { useAuthState } from "../hooks/useAuthState";
-import { canAccessAdmin } from "../rbac/enforce";
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/auth.store';
+import { UserRole } from '@/shared/types';
 
 /**
- * Redirect to login if the user is not authenticated
+ * Hook to redirect authenticated users
+ * @param redirectPath Path to redirect to
+ * @param condition Optional condition to determine if redirect should happen
  */
-export const useRedirectUnauthenticated = (
-  redirectTo: string = "/login",
-  message: string = "Please log in to access this page"
-) => {
+export function redirectIfAuthenticated(
+  redirectPath: string = '/dashboard',
+  condition: () => boolean = () => true
+): void {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuthState();
+  const { status } = useAuthStore();
+  const { isAuthenticated, isLoading } = status;
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: message,
-        variant: "destructive",
-      });
-      navigate(redirectTo);
+    if (!isLoading && isAuthenticated && condition()) {
+      navigate(redirectPath, { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate, redirectTo, toast, message]);
-
-  return { isLoading, isAuthenticated };
-};
+  }, [isAuthenticated, isLoading, navigate, redirectPath, condition]);
+}
 
 /**
- * Redirect if the user is not an admin
+ * Hook to redirect unauthenticated users
+ * @param redirectPath Path to redirect to
+ * @param condition Optional condition to determine if redirect should happen
  */
-export const useRedirectNonAdmin = (
-  redirectTo: string = "/",
-  message: string = "You do not have permission to access this page"
-) => {
+export function redirectIfUnauthenticated(
+  redirectPath: string = '/auth',
+  condition: () => boolean = () => true
+): void {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { roles, isAuthenticated, isLoading } = useAuthState();
-  const hasAccess = canAccessAdmin(roles);
+  const { status } = useAuthStore();
+  const { isAuthenticated, isLoading } = status;
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && !hasAccess) {
-      toast({
-        title: "Access Denied",
-        description: message,
-        variant: "destructive",
-      });
-      navigate(redirectTo);
+    if (!isLoading && !isAuthenticated && condition()) {
+      navigate(redirectPath, { replace: true });
     }
-  }, [hasAccess, isAuthenticated, isLoading, navigate, redirectTo, toast, message]);
-
-  return { isLoading, isAuthenticated, hasAccess };
-};
+  }, [isAuthenticated, isLoading, navigate, redirectPath, condition]);
+}
 
 /**
- * Redirect authenticated users (e.g., away from login page)
+ * Hook to redirect users without admin role
+ * @param redirectPath Path to redirect to
+ * @param requiredRoles Roles that are allowed access
  */
-export const useRedirectAuthenticated = (
-  redirectTo: string = "/"
-) => {
+export function redirectIfNotAdmin(
+  redirectPath: string = '/',
+  requiredRoles: UserRole[] = ['admin', 'superadmin']
+): void {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading } = useAuthState();
+  const { status, hasRole } = useAuthStore();
+  const { isAuthenticated, isLoading } = status;
+  const hasRequiredRole = hasRole(requiredRoles);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate(redirectTo);
+    // Only check roles if authenticated and not loading
+    if (!isLoading) {
+      // If not authenticated, redirect to login
+      if (!isAuthenticated) {
+        navigate('/auth', { replace: true });
+        return;
+      }
+      
+      // If authenticated but doesn't have the required role, redirect
+      if (!hasRequiredRole) {
+        navigate(redirectPath, { replace: true });
+      }
     }
-  }, [isAuthenticated, isLoading, navigate, redirectTo]);
-
-  return { isLoading, isAuthenticated };
-};
+  }, [isAuthenticated, isLoading, hasRequiredRole, navigate, redirectPath]);
+}

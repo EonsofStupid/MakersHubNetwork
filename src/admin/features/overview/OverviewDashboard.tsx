@@ -1,155 +1,174 @@
 
-import React from "react";
-import { motion } from "framer-motion";
-import { CyberCard } from "@/admin/components/ui/CyberCard";
-import { 
-  Users, Activity, BarChart3, LineChart, 
-  Cpu, Zap, Clock, GaugeCircle 
-} from "lucide-react";
+import React from 'react';
+import { Activity, Users, Database, Settings } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { cn } from '@/shared/utils/cn';
+import { useToast } from '@/shared/hooks/use-toast';
+import { CyberCard } from '@/shared/ui/cyber-card';
 
-interface StatsCardProps {
-  title: string;
-  value: string | number;
-  icon: React.ElementType;
-  trend?: number;
-  delay?: number;
-}
+// Sample data for charts
+const usageData = [
+  { name: 'Mon', value: 400 },
+  { name: 'Tue', value: 300 },
+  { name: 'Wed', value: 500 },
+  { name: 'Thu', value: 350 },
+  { name: 'Fri', value: 450 },
+  { name: 'Sat', value: 300 },
+  { name: 'Sun', value: 250 },
+];
 
-const StatsCard = ({ title, value, icon: Icon, trend = 0, delay = 0 }: StatsCardProps) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: delay * 0.1, duration: 0.5 }}
-  >
-    <CyberCard interactive className="h-32">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-[var(--impulse-text-secondary)]">{title}</h3>
-        <Icon className="w-5 h-5 text-[var(--impulse-text-accent)]" />
-      </div>
-      <div className="mt-2">
-        <p className="text-2xl font-bold text-[var(--impulse-text-primary)]">{value}</p>
-        {trend !== 0 && (
-          <div className="flex items-center mt-1">
-            <span 
-              className={
-                trend > 0 
-                  ? "text-emerald-400" 
-                  : "text-red-400"
-              }
-            >
-              {trend > 0 ? '+' : ''}{trend}%
-            </span>
-            <span className="text-xs ml-1 text-[var(--impulse-text-secondary)]">vs last month</span>
-          </div>
-        )}
-      </div>
-    </CyberCard>
-  </motion.div>
-);
+export function OverviewDashboard() {
+  const { toast } = useToast();
 
-export default function OverviewDashboard() {
+  const showFeatureToast = () => {
+    toast({
+      title: 'Coming Soon',
+      description: 'This feature is under development.',
+    });
+  };
+
   return (
-    <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-center justify-between mb-6"
-      >
-        <h1 className="text-2xl font-bold text-[var(--impulse-text-primary)]">
-          Admin Dashboard
-        </h1>
-        <div className="text-sm text-[var(--impulse-text-secondary)]">
-          Last updated: {new Date().toLocaleString()}
-        </div>
-      </motion.div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard 
-          title="Total Users" 
-          value="1,234"
-          icon={Users}
-          trend={12.5}
-          delay={0}
-        />
-        <StatsCard 
-          title="Active Now" 
-          value="56"
-          icon={Activity}
-          trend={-3.2}
-          delay={1}
-        />
-        <StatsCard 
-          title="Builds This Week" 
-          value="87"
-          icon={BarChart3}
-          trend={24.8}
-          delay={2}
-        />
-        <StatsCard 
-          title="Community Score" 
-          value="94.2"
-          icon={LineChart}
-          trend={5.1}
-          delay={3}
-        />
+    <div className="space-y-8 p-6">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <p className="text-muted-foreground">
+          Welcome to your admin dashboard. Here's an overview of your system.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="lg:col-span-2"
-        >
-          <CyberCard title="Performance Metrics" className="h-[300px]">
-            <div className="h-[240px] flex items-center justify-center text-[var(--impulse-text-secondary)]">
-              Graph coming soon
-            </div>
-          </CyberCard>
-        </motion.div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-primary/20 bg-background/60 backdrop-blur-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1,257</div>
+            <p className="text-xs text-muted-foreground">+5% from last month</p>
+          </CardContent>
+        </Card>
+        <Card className="border-primary/20 bg-background/60 backdrop-blur-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Database Usage</CardTitle>
+            <Database className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">345 MB</div>
+            <p className="text-xs text-muted-foreground">
+              +12% from last week
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-primary/20 bg-background/60 backdrop-blur-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Activity</CardTitle>
+            <Activity className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">127</div>
+            <p className="text-xs text-muted-foreground">
+              Actions in the past 24h
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-primary/20 bg-background/60 backdrop-blur-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Settings</CardTitle>
+            <Settings className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">12</div>
+            <p className="text-xs text-muted-foreground">
+              Changes this month
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <CyberCard title="System Status" glow className="h-[300px]">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className={cn(
+          "col-span-4 border-primary/20",
+          "bg-background/60 backdrop-blur-md"
+        )}>
+          <CardHeader>
+            <CardTitle>Usage Analytics</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={usageData}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(15,15,15,0.8)',
+                    border: '1px solid rgba(0, 240, 255, 0.2)',
+                    borderRadius: '4px',
+                  }}
+                />
+                <Bar dataKey="value" fill="rgba(0, 240, 255, 0.6)" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        <Card className={cn(
+          "col-span-3 border-primary/20",
+          "bg-background/60 backdrop-blur-md"
+        )}>
+          <CardHeader>
+            <CardTitle>System Status</CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-[var(--impulse-text-accent)]" />
-                  <span className="text-[var(--impulse-text-secondary)]">CPU Usage</span>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-1 flex flex-col space-y-1">
+                  <span className="text-xs text-muted-foreground">CPU</span>
+                  <span className="text-xl font-bold">24%</span>
                 </div>
-                <span className="text-[var(--impulse-text-primary)]">28%</span>
+                <div className="col-span-1 flex flex-col space-y-1">
+                  <span className="text-xs text-muted-foreground">Memory</span>
+                  <span className="text-xl font-bold">512MB</span>
+                </div>
+                <div className="col-span-1 flex flex-col space-y-1">
+                  <span className="text-xs text-muted-foreground">Storage</span>
+                  <span className="text-xl font-bold">1.2GB</span>
+                </div>
               </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-[var(--impulse-text-accent)]" />
-                  <span className="text-[var(--impulse-text-secondary)]">Memory</span>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    System Health
+                  </span>
+                  <span className="text-xs font-medium text-green-500">
+                    Operational
+                  </span>
                 </div>
-                <span className="text-[var(--impulse-text-primary)]">1.2 GB</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[var(--impulse-text-accent)]" />
-                  <span className="text-[var(--impulse-text-secondary)]">Uptime</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    Last Backup
+                  </span>
+                  <span className="text-xs font-medium">2 hours ago</span>
                 </div>
-                <span className="text-[var(--impulse-text-primary)]">99.8%</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <GaugeCircle className="w-4 h-4 text-[var(--impulse-text-accent)]" />
-                  <span className="text-[var(--impulse-text-secondary)]">Response Time</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    API Status
+                  </span>
+                  <span className="text-xs font-medium text-green-500">
+                    Online
+                  </span>
                 </div>
-                <span className="text-[var(--impulse-text-primary)]">126ms</span>
               </div>
             </div>
-          </CyberCard>
-        </motion.div>
+          </CardContent>
+        </Card>
       </div>
+
+      <CyberCard className="border-primary/20 bg-background/60 backdrop-blur-md p-4">
+        <h3 className="text-xl font-bold mb-3">Latest Updates</h3>
+        <div className="text-sm text-muted-foreground">
+          Your system is up to date. No pending actions required.
+        </div>
+      </CyberCard>
     </div>
   );
 }

@@ -1,62 +1,48 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/hooks/useAuth';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { authBridge } from '@/auth/bridge';
+import { useState } from 'react';
 
-export interface ChatIndexProps {
-  title?: string;
-}
+export default function Index() {
+  const [isLoading, setIsLoading] = useState(false);
+  const auth = {
+    user: null,
+    status: {
+      isAuthenticated: false,
+      isLoading: false,
+    },
+    signIn: async () => null,
+    signInWithGoogle: async () => null,
+    logout: async () => {},
+    hasRole: () => false,
+    isAdmin: () => false,
+    isSuperAdmin: () => false,
+  };
 
-export const ChatIndex: React.FC<ChatIndexProps> = ({ 
-  title = 'Chat Module'
-}) => {
-  const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
-  const logger = useLogger('ChatIndex', LogCategory.CHAT);
-  
-  const handleStartChat = () => {
-    logger.info('User started chat session', {
-      details: {
-        userId: user?.id || 'anonymous'
-      }
-    });
-    navigate('/chat/session');
+  const handleLogin = async () => {
+    setIsLoading(true);
+    try {
+      await authBridge.signIn('test@example.com', 'password123');
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
-  
-  const handleGoToAdmin = () => {
-    // Use relative path instead of absolute path
-    navigate('/admin');
-  };
-  
+
   return (
-    <div className="container mx-auto p-4">
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>Start a new chat session or manage existing ones</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-4">
-            {isAuthenticated 
-              ? `Welcome back, ${user?.email}!` 
-              : 'You are currently using chat as a guest'}
-          </p>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={handleGoToAdmin}>
-            Admin Panel
-          </Button>
-          <Button onClick={handleStartChat}>
-            Start New Chat
-          </Button>
-        </CardFooter>
-      </Card>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-4">Chat Application</h1>
+      
+      <div className="flex flex-col space-y-4">
+        <Button
+          onClick={handleLogin}
+          disabled={isLoading || auth.status.isAuthenticated}
+        >
+          {isLoading ? 'Logging in...' : auth.status.isAuthenticated ? 'Logged In' : 'Login'}
+        </Button>
+      </div>
     </div>
   );
-};
-
-export default ChatIndex;
+}

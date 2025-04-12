@@ -1,42 +1,59 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { AdminPermissionValue, ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { ROLES } from '@/types/shared';
+import { authBridge } from '@/bridges/AuthBridge';
+import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import { UserRole } from '@/shared/types';
 
-/**
- * Maps user roles to admin permissions
- * This hook bridges the auth store with the admin store
- */
 export function useAdminRoles() {
-  const { user, roles, status } = useAuthStore();
-  const { loadPermissions, permissions } = useAdminStore();
-  const logger = useLogger('useAdminRoles', LogCategory.ADMIN);
-  
+  const [adminRoles, setAdminRoles] = useState<UserRole[]>([]);
+  const { roles } = useAuthStore();
+
   useEffect(() => {
-    // Only load permissions when user is authenticated and roles are loaded
-    if (status === 'authenticated' && roles && roles.length > 0) {
-      logger.info('Loading admin permissions for user roles', {
-        details: { 
-          userId: user?.id,
-          roles 
-        }
-      });
+    // Filter only admin roles
+    const filterAdminRoles = () => {
+      const adminRoleList = roles.filter(role => 
+        role === 'admin' || role === 'superadmin' || role === 'moderator'
+      ) as UserRole[];
       
-      loadPermissions().catch(error => {
-        logger.error('Error loading admin permissions', {
-          details: { error }
-        });
-      });
+      setAdminRoles(adminRoleList);
+    };
+
+    filterAdminRoles();
+
+    // Subscribe to auth events
+    const unsubscribe = authBridge.subscribeToEvent('AUTH_STATE_CHANGE', () => {
+      filterAdminRoles();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [roles]);
+
+  const hasAdminPermission = (permission: string) => {
+    if (adminRoles.includes('superadmin')) return true;
+    
+    // Check specific permissions based on roles
+    switch (permission) {
+      case ADMIN_PERMISSIONS.VIEW_ADMIN_PANEL:
+        return adminRoles.length > 0;
+      case ADMIN_PERMISSIONS.MANAGE_USERS:
+        return adminRoles.includes('admin') || adminRoles.includes('moderator');
+      case ADMIN_PERMISSIONS.MANAGE_CONTENT:
+        return adminRoles.includes('admin') || adminRoles.includes('moderator');
+      case ADMIN_PERMISSIONS.MANAGE_SETTINGS:
+        return adminRoles.includes('admin');
+      default:
+        return false;
     }
-  }, [status, roles, loadPermissions, user, logger]);
-  
+  };
+
   return {
-    isAdmin: Boolean(roles?.includes(ROLES.ADMIN) || roles?.includes(ROLES.SUPER_ADMIN)),
-    isSuperAdmin: Boolean(roles?.includes(ROLES.SUPER_ADMIN)),
-    permissions
+    adminRoles,
+    hasAdminPermission,
+    isSuperAdmin: adminRoles.includes('superadmin'),
+    isAdmin: adminRoles.includes('admin'),
+    isModerator: adminRoles.includes('moderator')
   };
 }
