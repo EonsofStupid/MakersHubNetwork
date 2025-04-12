@@ -17,7 +17,7 @@ export function AdminLayout() {
   // Check if user has admin access
   useEffect(() => {
     const checkAccess = async () => {
-      const hasAccess = hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+      const hasAccess = hasRole([UserRole.ADMIN, UserRole.SUPERADMIN]);
       
       if (!hasAccess) {
         logger.warn('Unauthorized access attempt to admin area');
