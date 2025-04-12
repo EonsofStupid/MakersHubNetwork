@@ -1,231 +1,173 @@
 
-import { AuthBridge, AuthState } from "./types/auth.bridge";
-import { User, UserProfile, UserRole, AuthStatus, AuthEvent, AuthEventType } from "@/shared/types/shared.types";
-import { mapSupabaseUserToAppUser } from "@/shared/types/user.types";
-import { supabase } from "@/lib/supabase";
+import { AuthBridgeImpl } from './types/auth.types';
+import { supabase } from './lib/supabase';
+import { mapSupabaseUser } from '@/shared/types/auth-mapped.types';
+import { User, UserRole, LogCategory } from '@/shared/types/shared.types';
+import { EventEmitter } from 'events';
 
-class AuthBridgeImpl implements AuthBridge {
-  private listeners: ((event: AuthEvent) => void)[] = [];
-  private currentUser: User | null = null;
-  private currentRoles: UserRole[] = [];
+// Event emitter for auth events
+const eventEmitter = new EventEmitter();
+
+/**
+ * Auth Bridge Implementation
+ * Provides a consistent interface for auth operations across the application
+ */
+export const authBridge: AuthBridgeImpl = {
   
-  // Subscribe to auth events
-  subscribeToAuthEvents(callback: (event: AuthEvent) => void): () => void {
-    this.listeners.push(callback);
-    return () => {
-      this.listeners = this.listeners.filter(listener => listener !== callback);
+  // Auth state getters
+  getUser: async (): Promise<User | null> => {
+    const { data } = await supabase.auth.getUser();
+    return mapSupabaseUser(data.user);
+  },
+  
+  // Session methods
+  getSession: async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session;
+  },
+
+  getStatus: () => {
+    return {
+      status: 'loading', // Default status
     };
-  }
+  },
 
-  // Get current session
-  async getCurrentSession(): Promise<any | null> {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (session?.user) {
-      // Map the Supabase user to our app user type
-      this.currentUser = mapSupabaseUserToAppUser(session.user);
-      
-      // Notify listeners
-      this.notifyListeners({
-        type: AuthEventType.AUTH_STATE_CHANGE,
-        user: this.currentUser
-      });
-    }
-    
-    return session;
-  }
-
-  // Get user profile
-  async getUserProfile(userId: string): Promise<UserProfile | null> {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-      
-    if (error || !data) {
-      console.error('Failed to fetch user profile:', error);
-      return null;
-    }
-    
-    return data as UserProfile;
-  }
-
-  // Sign in with email
-  async signInWithEmail(email: string, password: string): Promise<{ 
-    user: User | null; 
-    session: any | null; 
-    error: Error | null 
-  }> {
+  isAuthenticated: () => {
+    const session = supabase.auth.session();
+    return !!session;
+  },
+  
+  // Sign in methods
+  signInWithEmail: async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
     
-    if (error) {
-      return { user: null, session: null, error };
-    }
+    if (error) throw error;
     
-    this.currentUser = mapSupabaseUserToAppUser(data.user);
-    
-    // Update roles from metadata
-    this.currentRoles = (data.user?.app_metadata?.roles || ['user']) as UserRole[];
-    
-    // Notify listeners
-    this.notifyListeners({
-      type: AuthEventType.SIGNED_IN,
-      user: this.currentUser
+    eventEmitter.emit('SIGNED_IN', { 
+      user: mapSupabaseUser(data.user),
+      session: data.session
     });
     
-    return { 
-      user: this.currentUser, 
-      session: data.session, 
-      error: null 
-    };
-  }
+    return mapSupabaseUser(data.user);
+  },
 
-  // Sign in with OAuth provider
-  async signInWithOAuth(provider: 'google' | 'github' | 'facebook'): Promise<void> {
-    await supabase.auth.signInWithOAuth({
-      provider: provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
-  }
-
-  // Sign up with email
-  async signUp(email: string, password: string): Promise<{ 
-    user: User | null; 
-    session: any | null; 
-    error: Error | null 
-  }> {
+  signUpWithEmail: async (email, password, metadata = {}) => {
     const { data, error } = await supabase.auth.signUp({
       email,
-      password
+      password,
+      options: { data: metadata }
     });
     
-    if (error) {
-      return { user: null, session: null, error };
-    }
+    if (error) throw error;
     
-    this.currentUser = mapSupabaseUserToAppUser(data.user);
-    
-    // New users get basic role
-    this.currentRoles = [UserRole.USER];
-    
-    // Notify listeners
-    this.notifyListeners({
-      type: AuthEventType.SIGNED_IN,
-      user: this.currentUser
+    eventEmitter.emit('SIGNED_UP', { 
+      user: mapSupabaseUser(data.user),
+      session: data.session
     });
     
-    return { 
-      user: this.currentUser, 
-      session: data.session, 
-      error: null 
-    };
-  }
-
-  // Sign out
-  async signOut(): Promise<void> {
-    await supabase.auth.signOut();
+    return mapSupabaseUser(data.user);
+  },
+  
+  // Sign out method
+  signOut: async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
     
-    this.currentUser = null;
-    this.currentRoles = [];
+    eventEmitter.emit('SIGNED_OUT', {});
     
-    // Notify listeners
-    this.notifyListeners({
-      type: AuthEventType.SIGNED_OUT,
-      user: null
-    });
-  }
-
-  // Update user profile
-  async updateUserProfile(profile: Partial<UserProfile> & { id: string }): Promise<UserProfile | null> {
+    return true;
+  },
+  
+  // User profile methods
+  updateUserProfile: async (userId, updates) => {
     const { data, error } = await supabase
       .from('profiles')
-      .update(profile)
-      .eq('id', profile.id)
+      .update(updates)
+      .eq('id', userId)
       .select()
       .single();
+    
+    if (error) throw error;
+
+    eventEmitter.emit('PROFILE_UPDATED', { 
+      user: await authBridge.getUser(),
+      profile: data
+    });
+    
+    return data;
+  },
+  
+  // Password methods
+  resetPassword: async (email) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password',
+    });
+    
+    if (error) throw error;
+    
+    return true;
+  },
+  
+  updatePassword: async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    if (error) throw error;
+    
+    eventEmitter.emit('PASSWORD_UPDATED', {});
+    
+    return true;
+  },
+  
+  // Role and permissions
+  hasRole: (requiredRole) => {
+    return async () => {
+      const user = await authBridge.getUser();
       
-    if (error) {
-      console.error('Failed to update profile:', error);
-      return null;
-    }
-    
-    // Notify listeners
-    this.notifyListeners({
-      type: AuthEventType.USER_UPDATED,
-      user: this.currentUser
-    });
-    
-    return data as UserProfile;
-  }
-
-  // Update password
-  async updatePassword(password: string): Promise<void> {
-    await supabase.auth.updateUser({ password });
-  }
-
-  // Reset password
-  async resetPassword(email: string): Promise<void> {
-    await supabase.auth.resetPasswordForEmail(email);
-  }
-
-  // Has role
-  hasRole(role: UserRole | UserRole[]): boolean {
-    // Super admin has all roles
-    if (this.currentRoles.includes(UserRole.SUPER_ADMIN)) {
-      return true;
-    }
-    
-    if (Array.isArray(role)) {
-      return role.some(r => this.currentRoles.includes(r));
-    }
-    
-    return this.currentRoles.includes(role);
-  }
-
-  // Is admin
-  isAdmin(): boolean {
-    return this.hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-  }
-
-  // Is super admin
-  isSuperAdmin(): boolean {
-    return this.hasRole(UserRole.SUPER_ADMIN);
-  }
-
-  // Link account
-  async linkAccount(provider: string): Promise<void> {
-    // This would need to be implemented based on your auth provider
-    console.log(`Linking ${provider} account`);
-  }
-
-  // Unlink account
-  async unlinkAccount(provider: string): Promise<void> {
-    // This would need to be implemented based on your auth provider
-    console.log(`Unlinking ${provider} account`);
-  }
-
-  // Get linked accounts
-  async getLinkedAccounts(): Promise<string[]> {
-    // This would need to be implemented based on your auth provider
-    return [];
-  }
-
-  // Private method to notify all listeners
-  private notifyListeners(event: AuthEvent): void {
-    this.listeners.forEach(listener => {
-      try {
-        listener(event);
-      } catch (error) {
-        console.error('Error in auth event listener:', error);
+      if (!user) return false;
+      
+      // Get roles from user metadata
+      const roles = user.app_metadata?.roles || [];
+      
+      if (!roles.length) return false;
+      
+      // Check if user has any of the required roles
+      if (Array.isArray(requiredRole)) {
+        return requiredRole.some(role => roles.includes(role));
       }
-    });
-  }
-}
+      
+      return roles.includes(requiredRole);
+    };
+  },
+  
+  // Event methods
+  subscribeToAuthEvents: (callback) => {
+    const authListener = (event: string, payload: any) => {
+      callback(event, payload);
+    };
 
-export const authBridge = new AuthBridgeImpl();
+    // Add listeners for all auth events
+    eventEmitter.on('SIGNED_IN', (payload) => authListener('SIGNED_IN', payload));
+    eventEmitter.on('SIGNED_UP', (payload) => authListener('SIGNED_UP', payload)); 
+    eventEmitter.on('SIGNED_OUT', (payload) => authListener('SIGNED_OUT', payload));
+    eventEmitter.on('PROFILE_UPDATED', (payload) => authListener('PROFILE_UPDATED', payload));
+    eventEmitter.on('PASSWORD_UPDATED', (payload) => authListener('PASSWORD_UPDATED', payload));
+
+    // Set up Supabase auth state change listener
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      const eventName = event.toUpperCase();
+      const user = session?.user ? mapSupabaseUser(session.user) : null;
+      eventEmitter.emit(eventName, { user, session });
+    });
+
+    // Return unsubscribe function
+    return () => {
+      eventEmitter.removeAllListeners();
+      data.subscription.unsubscribe();
+    };
+  }
+};

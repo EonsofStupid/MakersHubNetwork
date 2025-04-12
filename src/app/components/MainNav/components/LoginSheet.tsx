@@ -4,23 +4,43 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { useToast } from '@/shared/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { authBridge } from '@/auth/bridge';
 import { GoogleLoginButton } from '@/auth/components/GoogleLoginButton';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging/constants/log-category';
+import { LogCategory } from '@/shared/types/shared.types';
+import { useNavigate } from 'react-router-dom';
+import { Shield } from 'lucide-react';
+import { useAuthStore } from '@/auth/store/auth.store';
 
 export function LoginSheet() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const { toast } = useToast();
   const logger = useLogger('LoginSheet', LogCategory.AUTH);
+  const navigate = useNavigate();
   
   // Get auth state from store
-  const { status } = authBridge.getStatus();
-  const isAuthenticated = authBridge.isAuthenticated();
+  const { user, roles } = useAuthStore();
+  const isAuthenticated = !!user;
+  
+  // Check for admin access
+  useEffect(() => {
+    if (isAuthenticated && roles) {
+      const isAdmin = roles.some(role => 
+        role === 'ADMIN' || 
+        role === 'SUPER_ADMIN' || 
+        role === 'admin' || 
+        role === 'super_admin'
+      );
+      setHasAdminAccess(isAdmin);
+    } else {
+      setHasAdminAccess(false);
+    }
+  }, [isAuthenticated, roles]);
   
   // If already authenticated, don't show the login button
   if (isAuthenticated) return null;
@@ -58,6 +78,11 @@ export function LoginSheet() {
     }
   };
 
+  const handleAdminClick = () => {
+    setIsOpen(false);
+    navigate("/admin");
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -65,7 +90,7 @@ export function LoginSheet() {
           Sign In
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-sm">
+      <SheetContent className="sm:max-w-sm trapezoid-sheet">
         <SheetHeader>
           <SheetTitle>Sign In</SheetTitle>
           <SheetDescription>
@@ -108,6 +133,19 @@ export function LoginSheet() {
               {loading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
+
+          {hasAdminAccess && (
+            <div className="pt-2">
+              <Button
+                variant="outline"
+                className="w-full bg-primary/5 hover:bg-primary/10"
+                onClick={handleAdminClick}
+              >
+                <Shield className="mr-2 h-4 w-4 text-primary" />
+                <span className="text-primary">Admin Dashboard</span>
+              </Button>
+            </div>
+          )}
           
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

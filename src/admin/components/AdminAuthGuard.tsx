@@ -4,8 +4,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { AccessDenied } from './auth/AccessDenied';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
-import { UserRole, AuthStatus } from '@/shared/types/shared.types';
+import { LogCategory, UserRole, AuthStatus } from '@/shared/types/shared.types';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
@@ -36,7 +35,7 @@ export function AdminAuthGuard({
         logger.info('User not authenticated', { 
           details: {
             path: redirectPath,
-            required: requiredRole ? JSON.stringify(requiredRole) : null,
+            required: requiredRole ? JSON.stringify(requiredRole) : undefined,
             permission: requiredPermission
           }
         });

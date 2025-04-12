@@ -1,0 +1,54 @@
+
+/* Trapezoid sheet styling */
+.trapezoid-sheet {
+  position: relative;
+  /* Create counter-clockwise turned trapezoid shape */
+  clip-path: polygon(
+    0 0,           /* Top-left */
+    100% 0,        /* Top-right */
+    100% 100%,     /* Bottom-right */
+    0 85%          /* Bottom-left offset to create slant */
+  );
+}
+
+.trapezoid-sheet::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.trapezoid-sheet:hover::before {
+  opacity: 1;
+}
+
+/* Make sure the sheet has a background */
+.trapezoid-sheet > div {
+  background: var(--background);
+  height: 100%;
+}
+
+/* Cyber effect styling for the sheet */
+.trapezoid-sheet {
+  border-left: 2px solid var(--primary);
+  box-shadow: -5px 0 15px rgba(0, 240, 255, 0.2);
+}
+
+.trapezoid-sheet::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 15%;
+  width: 20px;
+  height: 2px;
+  background: var(--primary);
+  transform: rotate(45deg);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}

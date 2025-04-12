@@ -74,7 +74,12 @@ export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
             className="group flex items-center gap-2 rounded-full px-2"
           >
             <UserAvatar
-              user={user}
+              user={user ? {
+                id: user.id,
+                email: user.email || '',
+                user_metadata: user.user_metadata,
+                display_name: user.user_metadata?.full_name
+              } : undefined}
               fallbackText={userInitial}
               size="sm"
               className="h-8 w-8"

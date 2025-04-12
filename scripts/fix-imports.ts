@@ -22,11 +22,25 @@ files.forEach(file => {
         return `import ${importClause} from '@/shared/ui/${componentPath}'`;
       }
     )
+    // Fix single imports from @/components/ui to @/shared/ui
+    .replace(
+      /import\s+?([A-Za-z0-9_]+)\s+?from\s+?['"]@\/components\/ui\/([^'"]+)['"]/g,
+      (match, importName, componentPath) => {
+        return `import ${importName} from '@/shared/ui/${componentPath}'`;
+      }
+    )
     // Fix types imports
     .replace(
       /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/types\/([^'"]+)['"]/g,
       (match, importClause, typesPath) => {
         return `import ${importClause} from '@/shared/types/${typesPath}'`;
+      }
+    )
+    // Fix store imports
+    .replace(
+      /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/stores\/theme\/([^'"]+)['"]/g,
+      (match, importClause, storePath) => {
+        return `import ${importClause} from '@/shared/stores/theme/${storePath}'`;
       }
     );
   
