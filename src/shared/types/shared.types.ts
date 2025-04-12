@@ -1,68 +1,8 @@
 
-/**
- * Shared type definitions used across multiple boundaries
- */
-
-// Auth related types
-export enum AuthStatus {
-  INITIAL = 'idle',
-  LOADING = 'loading',
-  AUTHENTICATED = 'authenticated',
-  UNAUTHENTICATED = 'unauthenticated',
-  ERROR = 'error'
-}
-
-// User roles - used throughout the system
-export type UserRole = 'admin' | 'user' | 'super_admin' | 'moderator' | 'builder';
-
-export interface User {
-  id: string;
-  email: string;
-  user_metadata?: {
-    avatar_url?: string;
-    full_name?: string;
-    name?: string; // Legacy
-    display_name?: string; // Legacy
-  };
-  app_metadata?: {
-    roles?: UserRole[];
-  };
-  created_at: string;
-  updated_at: string;
-}
-
-export interface UserProfile {
-  id: string;
-  user_id: string;
-  avatar_url?: string;
-  full_name?: string;
-  display_name?: string;
-  bio?: string;
-  theme_preference?: string;
-  motion_enabled?: boolean;
-  website?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export type AuthEventType = 
-  | 'AUTH_STATE_CHANGE' 
-  | 'AUTH_SIGNED_IN' 
-  | 'AUTH_SIGNED_OUT'
-  | 'AUTH_PROFILE_UPDATED'
-  | 'AUTH_LINKING_REQUIRED';
-
-export interface AuthEvent {
-  type: AuthEventType;
-  user?: User | null;
-  session?: any;
-  payload?: Record<string, any>;
-}
-
-// Logging related types
+// Re-export or define shared types used throughout the application
 export enum LogLevel {
   TRACE = 'trace',
-  DEBUG = 'debug', 
+  DEBUG = 'debug',
   INFO = 'info',
   SUCCESS = 'success',
   WARN = 'warn',
@@ -71,47 +11,105 @@ export enum LogLevel {
   SILENT = 'silent'
 }
 
+export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
+  [LogLevel.TRACE]: 0,
+  [LogLevel.DEBUG]: 1,
+  [LogLevel.INFO]: 2,
+  [LogLevel.SUCCESS]: 3,
+  [LogLevel.WARN]: 4,
+  [LogLevel.ERROR]: 5,
+  [LogLevel.CRITICAL]: 6,
+  [LogLevel.SILENT]: 7
+};
+
 export enum LogCategory {
+  DEFAULT = 'default',
+  SYSTEM = 'system',
   APP = 'app',
-  ADMIN = 'admin',
   AUTH = 'auth',
   API = 'api',
-  USER = 'user',
+  DATA = 'data',
   UI = 'ui',
   CHAT = 'chat',
-  CONTENT = 'content',
-  SYSTEM = 'system',
   THEME = 'theme',
-  NETWORK = 'network',
-  PERFORMANCE = 'performance'
+  ADMIN = 'admin',
+  USER = 'user',
+  PERFORMANCE = 'perf',
+  BRIDGE = 'bridge'
+}
+
+// Auth types
+export enum AuthStatus {
+  INITIAL = 'INITIAL',
+  LOADING = 'LOADING',
+  AUTHENTICATED = 'AUTHENTICATED',
+  UNAUTHENTICATED = 'UNAUTHENTICATED',
+  ERROR = 'ERROR'
+}
+
+export enum AuthEventType {
+  AUTH_SIGNIN = 'AUTH_SIGNIN',
+  AUTH_SIGNOUT = 'AUTH_SIGNOUT',
+  AUTH_ERROR = 'AUTH_ERROR',
+  AUTH_USER_UPDATED = 'AUTH_USER_UPDATED',
+  AUTH_LINKING_REQUIRED = 'AUTH_LINKING_REQUIRED'
+}
+
+export interface AuthEvent {
+  type: AuthEventType;
+  payload?: Record<string, unknown>;
+  timestamp?: number;
+}
+
+export type UserRole = 'user' | 'admin' | 'maker' | 'moderator' | 'super_admin';
+
+export interface User {
+  id: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+  user_metadata: UserProfile;
+  app_metadata: {
+    roles: UserRole[];
+  };
+}
+
+export interface UserProfile {
+  avatar_url?: string;
+  full_name?: string;
+  name?: string; 
+  display_name?: string;
+  bio?: string;
+  theme_preference?: string;
+  motion_enabled?: boolean;
+  website?: string;
+}
+
+export interface LogFilter {
+  level?: LogLevel;
+  category?: LogCategory | LogCategory[];
+  source?: string;
+  search?: string;
+  startTime?: Date;
+  endTime?: Date;
 }
 
 export interface LogEntry {
   id: string;
+  timestamp: number;
   level: LogLevel;
-  message: string | any;
-  timestamp: Date;
-  source: string;
   category: LogCategory;
+  source: string;
+  message: string;
   details?: Record<string, unknown>;
 }
 
-export interface LogEvent {
-  entry: LogEntry;
-}
-
-// Layout related types
+// Admin layout props
 export interface AdminLayoutProps {
   children: React.ReactNode;
-  className?: string;
   fullWidth?: boolean;
-  title?: string;
+  className?: string;
 }
 
-export interface NavigationItemType {
-  name: string;
-  href: string;
-  icon?: React.ComponentType<any>;
-  children?: NavigationItemType[];
-  requiredRole?: UserRole | UserRole[];
-}
+// Navigation item type
+export type NavigationItemType = 'link' | 'group' | 'divider';

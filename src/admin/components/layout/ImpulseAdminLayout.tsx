@@ -1,27 +1,23 @@
 
-import React from 'react';
-import { AdminLayout } from '@/admin/components/AdminLayout';
-import { cn } from '@/lib/utils';
+import React, { ReactNode } from 'react';
+import { AdminLayout } from './AdminLayout';
 
 interface ImpulseAdminLayoutProps {
-  children: React.ReactNode;
-  title?: string;
+  children: ReactNode;
   fullWidth?: boolean;
   className?: string;
 }
 
-export function ImpulseAdminLayout({ 
-  children, 
-  title = 'Admin Dashboard',
+/**
+ * Admin layout specifically for Impulse admin panels
+ */
+export function ImpulseAdminLayout({
+  children,
   fullWidth = false,
-  className 
+  className = ''
 }: ImpulseAdminLayoutProps) {
   return (
-    <AdminLayout 
-      title={title}
-      fullWidth={fullWidth}
-      className={cn("impulse-admin-content", className)}
-    >
+    <AdminLayout fullWidth={fullWidth} className={className}>
       {children}
     </AdminLayout>
   );

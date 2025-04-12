@@ -3,6 +3,5 @@
 export * from './logger.service';
 export * from './bridge';
 export * from './types';
-export { LogCategory } from './constants/log-category';
-export { LogLevel } from '@/shared/types/shared.types';
+export * from '@/shared/types/shared.types'; // Export LogCategory and LogLevel directly
 export { memoryTransport } from './transports/memory-transport';

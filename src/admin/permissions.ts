@@ -1,29 +1,30 @@
 
-/**
- * Extended admin permissions based on the core ADMIN_PERMISSIONS
- */
-import { ADMIN_PERMISSIONS } from './constants/permissions';
+// Permission constants for admin section
 
-export const ADMIN_VIEW_PERMISSIONS = {
-  ...ADMIN_PERMISSIONS,
-  ADMIN_VIEW: 'admin_view',
-  ADMIN_ACCESS: 'admin_access',
-  ADMIN_EDIT: 'admin_edit',
-  USERS_VIEW: 'users_view',
-  USERS_EDIT: 'users_edit',
-  BUILDS_VIEW: 'builds_view',
-  BUILDS_EDIT: 'builds_edit',
-  CONTENT_VIEW: 'content_view',
-  CONTENT_EDIT: 'content_edit',
-  THEMES_VIEW: 'themes_view',
-  THEMES_EDIT: 'themes_edit',
-  ANALYTICS_VIEW: 'analytics_view',
-  SYSTEM_LOGS: 'system_logs',
-  SYSTEM_SETTINGS: 'system_settings',
-  SETTINGS_VIEW: 'settings_view',
-  SETTINGS_EDIT: 'settings_edit',
-  DATA_VIEW: 'data_view',
-  DATA_EDIT: 'data_edit',
+export const PERMISSIONS = {
+  // View permissions
+  VIEW_ADMIN_PANEL: "admin:panel",
+  MANAGE_USERS: "admin:users",
+  MANAGE_CONTENT: "admin:content",
+  MANAGE_SETTINGS: "admin:settings",
+  SYSTEM_CRITICAL: "system:critical",
+  
+  // Admin panels access
+  ADMIN_VIEW: "admin:view",
+  USERS_VIEW: "admin:users:view",
+  BUILDS_VIEW: "admin:builds:view",
+  CONTENT_VIEW: "admin:content:view",
+  SETTINGS_VIEW: "admin:settings:view",
+  THEMES_VIEW: "admin:themes:view",
+  DATA_VIEW: "admin:data:view",
+  ANALYTICS_VIEW: "admin:analytics:view",
+  LOGS_VIEW: "admin:logs:view",
+  
+  // Admin edit permissions
+  ADMIN_EDIT: "admin:edit",
+  USERS_EDIT: "admin:users:edit",
+  BUILDS_EDIT: "admin:builds:edit",
+  CONTENT_EDIT: "admin:content:edit",
+  SETTINGS_EDIT: "admin:settings:edit",
+  THEMES_EDIT: "admin:themes:edit"
 };
-
-export type AdminPermission = keyof typeof ADMIN_VIEW_PERMISSIONS;
