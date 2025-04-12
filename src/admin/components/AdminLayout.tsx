@@ -1,46 +1,52 @@
 
-import React, { ReactNode } from 'react';
-import { AdminSidebar } from './AdminSidebar';
-import { AdminHeader } from './AdminHeader';
-import { AdminProvider } from '../context/AdminContext';
-import { cn } from '@/shared/utils/cn';
-import { useAdminSidebar } from '../hooks/useAdminSidebar';
-import { RequireAuth } from '@/auth/components/RequireAuth';
-import { RequirePermission } from '@/auth/components/RequirePermission';
-import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import React, { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/logging";
 
-interface AdminLayoutProps {
-  children: ReactNode;
+/**
+ * @deprecated Use AdminLayout from @/admin/components/layouts/AdminLayout instead
+ * This component is kept for backward compatibility
+ */
+export const AdminLayout: React.FC<{
+  children: React.ReactNode;
+  title?: string;
+  fullWidth?: boolean;
   className?: string;
-}
+}> = ({ 
+  children, 
+  title = "Admin Dashboard",
+  fullWidth = false,
+  className 
+}) => {
+  const navigate = useNavigate();
+  const logger = useLogger("AdminLayout (deprecated)", LogCategory.ADMIN);
+  const loggedWarningRef = useRef(false);
 
-export function AdminLayout({ children, className }: AdminLayoutProps) {
-  const { isOpen } = useAdminSidebar();
+  useEffect(() => {
+    // Only log the warning once to prevent log spam
+    if (!loggedWarningRef.current) {
+      loggedWarningRef.current = true;
+      logger.warn("Using deprecated AdminLayout component. Please update imports to @/admin/components/layouts/AdminLayout");
+    }
+    
+    // Don't automatically navigate as this can cause unexpected behavior
+    // Just render a warning message instead
+  }, [logger]);
 
   return (
-    <RequireAuth redirectTo="/auth">
-      <RequirePermission
-        permission={ADMIN_PERMISSIONS.VIEW_ADMIN_PANEL}
-        fallback={<div>You don't have permission to access this area.</div>}
-      >
-        <AdminProvider>
-          <div className="flex h-screen flex-col overflow-hidden">
-            <AdminHeader />
-            <div className="flex flex-1 overflow-hidden">
-              <AdminSidebar className="hidden lg:block" />
-              <main
-                className={cn(
-                  'flex-1 overflow-y-auto transition-all',
-                  isOpen ? 'lg:pl-64' : 'lg:pl-0',
-                  className
-                )}
-              >
-                {children}
-              </main>
-            </div>
-          </div>
-        </AdminProvider>
-      </RequirePermission>
-    </RequireAuth>
+    <div className="p-4 border border-red-300 bg-red-50 rounded-md">
+      <h2 className="text-lg font-medium text-red-800 mb-2">Deprecated Component</h2>
+      <p className="text-red-600 mb-4">
+        This AdminLayout component is deprecated. Please update your imports to use:
+        <br />
+        <code className="bg-red-100 px-2 py-1 rounded">@/admin/components/layouts/AdminLayout</code>
+      </p>
+      <div className="mt-4">
+        {children}
+      </div>
+    </div>
   );
-}
+};
+
+export default AdminLayout;
