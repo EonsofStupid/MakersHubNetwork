@@ -13,21 +13,11 @@ export interface UseAdminPermissionsResult {
 }
 
 export const useAdminPermissions = (): UseAdminPermissionsResult => {
-  const { user } = useAdminStore();
+  const { user, hasRole: storeHasRole } = useAdminStore();
   
   const hasRole = useCallback((requiredRoles: UserRole | UserRole[]): boolean => {
-    if (!user || !user.roles || user.roles.length === 0) return false;
-    
-    // If user is super admin, they have all roles
-    if (user.roles.includes(UserRole.SUPERADMIN)) return true;
-    
-    // Check if user has at least one of the required roles
-    if (Array.isArray(requiredRoles)) {
-      return requiredRoles.some(role => user.roles.includes(role));
-    }
-    
-    return user.roles.includes(requiredRoles);
-  }, [user]);
+    return storeHasRole(requiredRoles);
+  }, [storeHasRole]);
   
   const isSuperAdmin = useCallback((): boolean => {
     return hasRole(UserRole.SUPERADMIN);

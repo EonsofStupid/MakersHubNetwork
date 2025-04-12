@@ -1,50 +1,78 @@
 
 import { 
   LayoutDashboard, 
-  User, 
+  Users, 
   Settings, 
-  FileText, 
-  Edit, 
-  Box 
-} from "lucide-react";
-import { NavigationItemType } from "../types/navigation.types";
-import { UserRole } from "@/shared/types/shared.types";
+  FileStack, 
+  PaintBucket,
+  BarChart3,
+  MessageSquare,
+  FileJson,
+  AlertCircle,
+  Database
+} from 'lucide-react';
+import { UserRole } from '@/shared/types/shared.types';
+import { NavigationItemType } from '../types/navigation.types';
 
-export const adminNavigation: NavigationItemType[] = [
+export const navigationItems: NavigationItemType[] = [
   {
-    name: "Dashboard",
-    href: "/admin",
+    name: 'Dashboard',
+    href: '/admin',
     icon: LayoutDashboard,
-    requiredRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    requiredRole: UserRole.ADMIN,
   },
   {
-    name: "Users",
-    href: "/admin/users",
-    icon: User,
-    requiredRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    name: 'Users',
+    href: '/admin/users',
+    icon: Users,
+    requiredRole: UserRole.ADMIN,
   },
   {
-    name: "Content",
-    href: "/admin/content",
-    icon: FileText,
-    requiredRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.EDITOR]
+    name: 'Content',
+    href: '/admin/content',
+    icon: FileStack,
+    requiredRole: UserRole.ADMIN,
   },
   {
-    name: "Editor",
-    href: "/admin/editor",
-    icon: Edit,
-    requiredRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.EDITOR]
+    name: 'Builds',
+    href: '/admin/builds',
+    icon: FileJson,
+    requiredRole: UserRole.ADMIN,
   },
   {
-    name: "Products",
-    href: "/admin/products",
-    icon: Box,
-    requiredRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    name: 'Analytics',
+    href: '/admin/analytics',
+    icon: BarChart3,
+    requiredRole: UserRole.ADMIN,
   },
   {
-    name: "Settings",
-    href: "/admin/settings",
+    name: 'Themes',
+    href: '/admin/themes',
+    icon: PaintBucket,
+    requiredRole: UserRole.SUPERADMIN,
+  },
+  {
+    name: 'Settings',
+    href: '/admin/settings',
     icon: Settings,
-    requiredRole: [UserRole.SUPER_ADMIN]
-  }
+    requiredRole: UserRole.ADMIN,
+  },
+  {
+    name: 'Chat Management',
+    href: '/admin/chat',
+    icon: MessageSquare,
+    requiredRole: UserRole.ADMIN,
+  },
+  {
+    name: 'Logs',
+    href: '/admin/logs',
+    icon: AlertCircle,
+    requiredRole: UserRole.SUPERADMIN,
+  },
+  {
+    name: 'Data Management',
+    href: '/admin/data',
+    icon: Database,
+    requiredRole: UserRole.SUPERADMIN,
+  },
 ];

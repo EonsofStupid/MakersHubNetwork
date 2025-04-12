@@ -1,32 +1,17 @@
 
 import { UserRole, AuthStatus } from './shared.types';
+import { UserProfile } from './shared.types';
 
 export interface UserSession {
   access_token: string;
   refresh_token?: string;
   expires_in?: number;
   expires_at?: number;
-  user: User;
-}
-
-export interface User {
-  id: string;
-  email?: string;
-  created_at?: string;
-  updated_at?: string;
-  user_metadata?: {
-    full_name?: string;
-    avatar_url?: string;
-    [key: string]: any;
-  };
-  app_metadata?: {
-    roles?: string[];
-    [key: string]: any;
-  };
+  user: UserProfile;
 }
 
 export interface AuthState {
-  user: User | null;
+  user: UserProfile | null;
   status: AuthStatus;
   error: string | null;
   isAuthenticated: boolean;
@@ -41,7 +26,7 @@ export interface AuthState {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
-  updateUserProfile: (profile: Partial<User>) => Promise<void>;
+  updateUserProfile: (profile: Partial<UserProfile>) => Promise<void>;
   initialize: () => Promise<void>;
   hasRole: (role: UserRole | UserRole[]) => boolean;
   isAdmin: () => boolean;

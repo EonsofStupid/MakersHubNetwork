@@ -49,6 +49,11 @@ export interface Theme {
   parent_theme_id?: string;
 }
 
+// Theme variables interface
+export interface ThemeVariables {
+  [key: string]: string | ThemeVariables;
+}
+
 export type ThemeEffectType = 
   | 'glow'
   | 'flicker'
@@ -64,6 +69,7 @@ export type ThemeEffectType =
   | 'morph';
 
 export interface ThemeEffect {
+  id?: string;
   type: ThemeEffectType;
   enabled: boolean;
   intensity?: number;
