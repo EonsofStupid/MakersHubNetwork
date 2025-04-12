@@ -1,156 +1,146 @@
 
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { ReviewCategory, ReviewDraft, ReviewRating } from "../types/review.types";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { create } from 'zustand';
+import { ReviewDraft, ReviewRating } from '@/shared/types/shared.types';
 
 interface ReviewDraftState {
   draft: Partial<ReviewDraft>;
-  isSubmitting: boolean;
-  error: string | null;
-}
-
-interface ReviewDraftActions {
-  setDraft: (draft: Partial<ReviewDraft>) => void;
-  resetDraft: () => void;
-  setRating: (rating: ReviewRating) => void;
-  setTitle: (title: string) => void;
-  setBody: (body: string) => void;
-  addCategory: (category: ReviewCategory) => void;
-  removeCategory: (category: ReviewCategory) => void;
+  isDirty: boolean;
+  
+  // Actions
+  setRating: (rating: number) => void;
+  setContent: (content: string) => void;
+  setBuildId: (buildId: string) => void;
+  setProductId: (productId: string) => void;
+  toggleCategory: (category: string) => void;
   addImageUrl: (url: string) => void;
   removeImageUrl: (url: string) => void;
-  submitReview: () => Promise<boolean>;
+  resetDraft: () => void;
+  setDraft: (draft: Partial<ReviewDraft>) => void;
+  
+  // Submit handlers
+  canSubmit: () => boolean;
+  prepareDraftForSubmission: () => ReviewDraft | null;
 }
 
-type ReviewDraftStore = ReviewDraftState & ReviewDraftActions;
+// Initial empty draft
+const INITIAL_STATE: Partial<ReviewDraft> = {
+  content: '',
+  rating: 0 as ReviewRating,
+  categories: [],
+  image_urls: []
+};
 
-export const useReviewDraftStore = create<ReviewDraftStore>()(
-  persist(
-    (set, get) => ({
-      draft: {},
-      isSubmitting: false,
-      error: null,
-
-      setDraft: (draft) => set({ draft: { ...get().draft, ...draft } }),
+export const useReviewDraftStore = create<ReviewDraftState>((set, get) => ({
+  draft: { ...INITIAL_STATE },
+  isDirty: false,
+  
+  setRating: (rating) => {
+    set(state => ({
+      draft: { ...state.draft, rating: rating as ReviewRating },
+      isDirty: true
+    }));
+  },
+  
+  setContent: (content) => {
+    set(state => ({
+      draft: { ...state.draft, content },
+      isDirty: true
+    }));
+  },
+  
+  setBuildId: (buildId) => {
+    set(state => ({
+      draft: { ...state.draft, build_id: buildId },
+      isDirty: true
+    }));
+  },
+  
+  setProductId: (productId) => {
+    set(state => ({
+      draft: { ...state.draft, product_id: productId },
+      isDirty: true
+    }));
+  },
+  
+  toggleCategory: (category) => {
+    set(state => {
+      const categories = state.draft.categories || [];
+      const newCategories = categories.includes(category)
+        ? categories.filter(c => c !== category)
+        : [...categories, category];
       
-      resetDraft: () => set({ draft: {}, error: null }),
-      
-      setRating: (rating) => set({ draft: { ...get().draft, rating } }),
-      
-      setTitle: (title) => set({ draft: { ...get().draft, title } }),
-      
-      setBody: (body) => set({ draft: { ...get().draft, body } }),
-      
-      addCategory: (category) => {
-        const currentCategories = get().draft.categories || [];
-        if (!currentCategories.includes(category)) {
-          set({
-            draft: {
-              ...get().draft,
-              categories: [...currentCategories, category]
-            }
-          });
-        }
-      },
-      
-      removeCategory: (category) => {
-        const currentCategories = get().draft.categories || [];
-        set({
-          draft: {
-            ...get().draft,
-            categories: currentCategories.filter(c => c !== category)
-          }
-        });
-      },
-      
-      addImageUrl: (url) => {
-        const currentUrls = get().draft.imageUrls || [];
-        set({
-          draft: {
-            ...get().draft,
-            imageUrls: [...currentUrls, url]
-          }
-        });
-      },
-      
-      removeImageUrl: (url) => {
-        const currentUrls = get().draft.imageUrls || [];
-        set({
-          draft: {
-            ...get().draft,
-            imageUrls: currentUrls.filter(u => u !== url)
-          }
-        });
-      },
-      
-      submitReview: async () => {
-        const { draft } = get();
-        
-        // Validate the draft
-        if (!draft.buildId) {
-          set({ error: "Build ID is required" });
-          return false;
-        }
-        
-        if (!draft.rating) {
-          set({ error: "Rating is required" });
-          return false;
-        }
-        
-        if (!draft.title || draft.title.trim() === '') {
-          set({ error: "Title is required" });
-          return false;
-        }
-        
-        if (!draft.body || draft.body.trim() === '') {
-          set({ error: "Review content is required" });
-          return false;
-        }
-        
-        try {
-          set({ isSubmitting: true, error: null });
-          
-          // Get the current user
-          const { data: { user } } = await supabase.auth.getUser();
-          
-          if (!user) {
-            set({ error: "You must be logged in to submit a review", isSubmitting: false });
-            return false;
-          }
-          
-          // Submit the review
-          const { error } = await supabase
-            .from('build_reviews')
-            .insert({
-              build_id: draft.buildId,
-              user_id: user.id,
-              rating: draft.rating,
-              title: draft.title,
-              body: draft.body,
-              category: draft.categories || [],
-              image_urls: draft.imageUrls || []
-            });
-          
-          if (error) throw error;
-          
-          toast.success("Review submitted successfully and is awaiting approval");
-          
-          // Reset the draft after successful submission
-          set({ draft: {}, isSubmitting: false });
-          return true;
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to submit review';
-          set({ error: errorMessage, isSubmitting: false });
-          toast.error(errorMessage);
-          return false;
-        }
-      }
-    }),
-    {
-      name: "review-draft-storage",
-      partialize: (state) => ({ draft: state.draft })
+      return {
+        draft: { ...state.draft, categories: newCategories },
+        isDirty: true
+      };
+    });
+  },
+  
+  addImageUrl: (url) => {
+    set(state => {
+      const imageUrls = state.draft.image_urls || [];
+      return {
+        draft: { ...state.draft, image_urls: [...imageUrls, url] },
+        isDirty: true
+      };
+    });
+  },
+  
+  removeImageUrl: (url) => {
+    set(state => {
+      const imageUrls = state.draft.image_urls || [];
+      return {
+        draft: { ...state.draft, image_urls: imageUrls.filter(imgUrl => imgUrl !== url) },
+        isDirty: true
+      };
+    });
+  },
+  
+  resetDraft: () => {
+    set({
+      draft: { ...INITIAL_STATE },
+      isDirty: false
+    });
+  },
+  
+  setDraft: (draft) => {
+    set({
+      draft,
+      isDirty: true
+    });
+  },
+  
+  canSubmit: () => {
+    const { draft } = get();
+    return (
+      (!!draft.build_id || !!draft.product_id) &&
+      (draft.rating as number) > 0 &&
+      !!draft.content &&
+      draft.content.length >= 10 &&
+      (draft.categories?.length ?? 0) > 0
+    );
+  },
+  
+  prepareDraftForSubmission: () => {
+    const { draft, canSubmit } = get();
+    
+    if (!canSubmit()) {
+      return null;
     }
-  )
-);
+    
+    // Ensure the draft has all required fields
+    // If we're missing required fields, return null
+    if (!draft.content || !draft.rating || !draft.categories) {
+      return null;
+    }
+    
+    return {
+      build_id: draft.build_id,
+      product_id: draft.product_id,
+      rating: draft.rating,
+      content: draft.content,
+      categories: draft.categories,
+      image_urls: draft.image_urls
+    } as ReviewDraft;
+  }
+}));

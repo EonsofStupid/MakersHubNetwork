@@ -1,3 +1,3 @@
 
 // Re-export toast component from shadcn
-export * from '@/components/ui/toast';
+export { Toast, ToastAction, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport, type ToastActionElement, type ToastProps } from '@/components/ui/toast';

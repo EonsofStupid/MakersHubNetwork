@@ -15,7 +15,7 @@ import { Button } from "@/shared/ui/button";
 import { useBuildAdminStore } from "@/admin/store/buildAdmin.store";
 import { formatDistance } from "date-fns";
 import { Eye, AlertCircle, CheckCircle, XCircle, RotateCcw } from "lucide-react";
-import { BuildStatus } from "@/shared/types/build.types";
+import { BuildStatus } from "@/shared/types/shared.types";
 
 export function BuildsDataTable() {
   const navigate = useNavigate();

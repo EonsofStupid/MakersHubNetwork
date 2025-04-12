@@ -1,99 +1,82 @@
 
-import React, { useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { AccessDenied } from './auth/AccessDenied';
+import React, { useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory, UserRole, AuthStatus } from '@/shared/types/shared.types';
+import { LogCategory, AuthStatus } from '@/shared/types/shared.types';
+import { AccessDenied } from './auth/AccessDenied';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
-  requiredRole?: UserRole | UserRole[];
-  requiredPermission?: string;
-  redirectPath?: string;
+  requirePermission?: string;
+  fallbackPath?: string;
 }
 
 export function AdminAuthGuard({ 
   children, 
-  requiredRole = UserRole.ADMIN, 
-  requiredPermission, 
-  redirectPath = '/login' 
+  requirePermission,
+  fallbackPath = '/admin/unauthorized'
 }: AdminAuthGuardProps) {
-  const auth = useAuth();
-  const location = useLocation();
+  const { 
+    status, 
+    user, 
+    isAdmin, 
+    hasRole, 
+    initialize, 
+    initialized 
+  } = useAuthStore();
+  const navigate = useNavigate();
   const logger = useLogger('AdminAuthGuard', LogCategory.AUTH);
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   
+  // Initialize auth store if not already initialized
   useEffect(() => {
-    const checkAuth = async () => {
-      // Wait for auth state to be ready
-      if (auth.isLoading) {
-        return;
-      }
-
-      if (!auth.isAuthenticated) {
-        logger.info('User not authenticated', { 
-          details: {
-            path: redirectPath,
-            required: requiredRole ? JSON.stringify(requiredRole) : undefined,
-            permission: requiredPermission
-          }
-        });
-        setIsAuthorized(false);
-        return;
-      }
-      
-      // Check role if required
-      if (requiredRole) {
-        const hasRequiredRole = auth.hasRole(requiredRole);
-        if (!hasRequiredRole) {
-          logger.warn('User lacks required role', { 
-            details: {
-              required: JSON.stringify(requiredRole),
-              userRoles: JSON.stringify(auth.roles)
-            }
-          });
-          setIsAuthorized(false);
-          return;
-        }
-      }
-      
-      // Check permission if required
-      if (requiredPermission) {
-        // This would call a permission check function if you have one
-        const hasPermission = true; // Placeholder
-        if (!hasPermission) {
-          logger.warn('User lacks required permission', { 
-            details: {
-              requiredPerm: requiredPermission 
-            }
-          });
-          setIsAuthorized(false);
-          return;
-        }
-      }
-      
-      // If we get here, user is authorized
-      logger.debug('User authorized for admin access');
-      setIsAuthorized(true);
-    };
-    
-    checkAuth();
-  }, [auth.isAuthenticated, auth.isLoading, auth.roles, auth.hasRole, requiredRole, requiredPermission, redirectPath, logger]);
+    if (!initialized) {
+      initialize();
+    }
+  }, [initialize, initialized]);
   
-  // Show loading state while checking
-  if (auth.status === AuthStatus.LOADING || auth.status === AuthStatus.INITIAL) {
-    return <div>Loading...</div>;
+  // Wait for authentication to complete
+  if (status === AuthStatus.LOADING || status === AuthStatus.IDLE) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
   }
   
-  // Not authenticated, redirect to login
-  if (!auth.isAuthenticated) {
-    return <Navigate to={redirectPath} state={{ from: location }} replace />;
+  // If not authenticated, redirect to login
+  if (status === AuthStatus.UNAUTHENTICATED) {
+    logger.info('User not authenticated, redirecting to login');
+    return <Navigate to="/login" replace state={{ from: window.location.pathname }} />;
   }
   
-  // Authentication check complete but not authorized for this admin section
-  if (isAuthorized === false) {
-    return <AccessDenied requiredRole={requiredRole} />;
+  // If authentication failed, show error
+  if (status === AuthStatus.ERROR) {
+    logger.error('Authentication error');
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <h1 className="text-2xl font-bold text-destructive mb-4">Authentication Error</h1>
+        <p className="text-gray-600 mb-6">There was a problem authenticating your account.</p>
+        <button
+          className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition-colors"
+          onClick={() => navigate('/login')}
+        >
+          Return to Login
+        </button>
+      </div>
+    );
+  }
+  
+  // Check if user has admin role
+  if (!isAdmin()) {
+    logger.warn(`Access denied: User ${user?.id} is not an admin`);
+    return <AccessDenied message="You need administrator privileges to access this area." />;
+  }
+  
+  // If a specific permission is required, check for it
+  if (requirePermission && !hasRole('admin')) {
+    logger.warn(`Access denied: User ${user?.id} lacks required permission: ${requirePermission}`);
+    return <AccessDenied message={`You don't have the required permission: ${requirePermission}`} />;
   }
   
   // All checks passed, render children

@@ -1,110 +1,74 @@
 
-/**
- * Build types for the application
- */
+// Re-export types from shared module for backwards compatibility
+import { 
+  BuildStatus
+} from './shared.types';
 
-// Build status enum
-export enum BuildStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  NEEDS_REVISION = 'needs_revision',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  CANCELED = 'canceled',
+export interface Build {
+  id: string;
+  title: string;
+  description: string;
+  status: BuildStatus;
+  created_at: string;
+  updated_at?: string;
+  submitted_by: string;
+  complexity?: number;
+  parts?: BuildPart[];
+  mods?: BuildMod[];
+  images?: string[];
+  user?: {
+    displayName?: string;
+    avatarUrl?: string;
+  };
 }
 
-// Build part interface
 export interface BuildPart {
   id: string;
-  name: string;
+  build_id: string;
+  part_id: string;
   quantity: number;
   notes?: string;
-  build_id: string;
-  created_at: string;
+  name?: string;
 }
 
-// Build mod interface
 export interface BuildMod {
   id: string;
-  name: string;
-  description: string;
-  complexity?: number;
-  status?: BuildStatus;
   build_id: string;
-  created_at: string;
-  reviewed_at?: string;
+  name: string;
+  description?: string;
+  complexity?: number;
 }
 
-// Build filters
 export interface BuildFilters {
-  status?: BuildStatus | null;
+  status?: BuildStatus | 'all';
+  userId?: string;
   search?: string;
-  category?: string | string[];
-  dateRange?: {
-    from?: Date;
-    to?: Date;
-  };
-  approved?: boolean;
-  sortBy?: 'newest' | 'oldest' | 'complexity' | 'alphabetical';
+  complexity?: 'low' | 'medium' | 'high' | 'all';
 }
 
-// Build pagination
 export interface BuildPagination {
   page: number;
-  pageSize: number;
+  perPage: number;
   total: number;
   totalPages: number;
 }
 
-// Build user interface (simplified from full User)
-interface BuildUser {
-  displayName?: string | null;
-  avatarUrl?: string | null;
-}
-
-// Build interface
-export interface Build {
-  id: string;
-  title: string;
-  description?: string;
-  status: BuildStatus;
-  creator_id: string;
-  created_at: string;
-  updated_at: string;
-  complexity?: number;
-  category?: string[];
-  approved?: boolean;
-  reviewed_by?: string;
-  reviewed_at?: string;
-  parts?: BuildPart[];
-  mods?: BuildMod[];
-  user?: BuildUser;
-  image_urls?: string[];
-  tags?: string[];
-  featured?: boolean;
-  views?: number;
-  likes?: number;
-}
-
-// Build admin store interface
 export interface BuildAdminStore {
   builds: Build[];
   selectedBuild: Build | null;
-  filters: BuildFilters;
-  pagination: BuildPagination;
   isLoading: boolean;
   error: string | null;
+  filters: BuildFilters;
+  pagination: BuildPagination;
   
-  // Actions
   fetchBuilds: () => Promise<void>;
-  fetchBuild: (id: string) => Promise<Build | null>;
-  approveBuild: (id: string, comment?: string) => Promise<void>;
-  rejectBuild: (id: string, reason: string) => Promise<void>;
-  requestRevision: (id: string, feedback: string) => Promise<void>;
+  fetchBuildById: (id: string) => Promise<void>;
   updateFilters: (filters: Partial<BuildFilters>) => void;
-  changePage: (page: number) => void;
-  changePageSize: (size: number) => void;
   updatePagination: (pagination: Partial<BuildPagination>) => void;
-  clearError: () => void;
+  approveBuild: (id: string) => Promise<void>;
+  rejectBuild: (id: string, reason: string) => Promise<void>;
+  requestRevisions: (id: string, feedback: string) => Promise<void>;
 }
+
+// Re-export the status enum
+export { BuildStatus };
